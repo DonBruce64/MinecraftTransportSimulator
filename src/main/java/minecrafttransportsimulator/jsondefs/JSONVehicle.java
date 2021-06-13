@@ -47,6 +47,9 @@ public class JSONVehicle extends AJSONPartProvider{
     	@JSONDescription("Set this to true if you want the vehicle to have skidSteer functionality.  This allows the vehicle to turn in-place when stopped in neutral.  This will also automatically invert the rotation of the wheels and treads to match the steering orientation, so no need to mess with JSON bits.  Do keep in mind, however, that variables tied to the driveshaft won't work, as these use the engine's current gear, which will be 0!")
     	public boolean hasSkidSteer;
     	
+    	@JSONDescription("Set this to true if you want the vehicle to have incremental throttle.  This is only active for vehicles that are not aircraft, and will give the vehicle an aircraft-like throttle that increments in 1/100 units when the gas is pressed, and decrements in 1/100 units when the brake is pressed.  Mainly for boats and other constant-throttle vehicles.")
+    	public boolean hasIncrementalThrottle;
+    	
     	@JSONDescription("The mass of this vehicle, when empty, in kg.  Note that fuel, cargo, players, and player inventories all count as weight, so this mass will not be the mass of the vehicle during normal operation.  Not too important in cars, but in aircraft this value should be as close to the real-life value as possible to avoid physics issues.")
     	public int emptyMass;
     	

@@ -305,54 +305,8 @@ public final class ControlSystem{
 		}
 		
 		//Check brake and gas.  Depends on how the controls are configured.
-		if(ConfigSystem.configObject.clientControls.simpleThrottle.value){
-			if(!powered.engines.values().isEmpty()){
-				//Get the current gear.
-				byte currentGear = 0;
-				for(PartEngine engine : powered.engines.values()){
-					currentGear = engine.currentGear;
-				}
-				
-				//Get the brake value.
-				short brakeValue = 0;
-				if(InterfaceInput.isJoystickPresent(ControlsJoystick.CAR_BRAKE.config.joystickName)){
-					brakeValue = ControlsJoystick.CAR_BRAKE.getAxisState((short) 0);
-				}else if(ControlsKeyboard.CAR_BRAKE.isPressed() || ControlsJoystick.CAR_BRAKE_DIGITAL.isPressed()){
-					 brakeValue = EntityVehicleF_Physics.MAX_BRAKE;
-				}
-				
-				//Get the throttle value.
-				short throttleValue = 0;
-				if(InterfaceInput.isJoystickPresent(ControlsJoystick.CAR_GAS.config.joystickName)){
-					throttleValue = ControlsJoystick.CAR_GAS.getAxisState((short) 0);
-				}else if(ControlsKeyboardDynamic.CAR_SLOW.isPressed()){
-					throttleValue = ConfigSystem.configObject.clientControls.halfThrottle.value ? EntityVehicleF_Physics.MAX_THROTTLE : EntityVehicleF_Physics.MAX_THROTTLE/2; 
-				}else if(ControlsKeyboard.CAR_GAS.isPressed()){
-					throttleValue = ConfigSystem.configObject.clientControls.halfThrottle.value ? EntityVehicleF_Physics.MAX_THROTTLE/2 : EntityVehicleF_Physics.MAX_THROTTLE;
-				}
-				
-				//If we don't have velocity, and we have the appropriate control, shift.
-				if(brakeValue > EntityVehicleF_Physics.MAX_BRAKE/4F && currentGear >= 0 && powered.axialVelocity < 0.01F){
-					InterfacePacket.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.SHIFT_DN, false));
-				}else if(throttleValue > EntityVehicleF_Physics.MAX_THROTTLE/4F && currentGear <= 0 && powered.axialVelocity < 0.01F){
-					InterfacePacket.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.SHIFT_UP, false));
-				}
-				
-				//If we are going slow, and don't have gas or brake, automatically set the brake.
-				//Otherwise send normal values if we are in neutral or forwards,
-				//and invert controls if we are in a reverse gear.
-				if(throttleValue == 0 && brakeValue == 0 && powered.axialVelocity < PartEngine.MAX_SHIFT_SPEED){
-					InterfacePacket.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.BRAKE, EntityVehicleF_Physics.MAX_BRAKE, Byte.MAX_VALUE));
-				}else if(currentGear >= 0){
-					InterfacePacket.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.BRAKE, brakeValue, Byte.MAX_VALUE));
-					InterfacePacket.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, throttleValue, Byte.MAX_VALUE));
-				}else{
-					InterfacePacket.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.BRAKE, throttleValue, Byte.MAX_VALUE));
-					InterfacePacket.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, brakeValue, Byte.MAX_VALUE));
-				}
-			}
-		}else{
-			//Check brake and gas and set to on or off.
+		if(powered.definition.motorized.hasIncrementalThrottle){
+			//Check brake and gas.  Brake always changes, gas goes up-down.
 			controlBrake(powered, ControlsKeyboardDynamic.CAR_PARK, ControlsJoystick.CAR_BRAKE, ControlsJoystick.CAR_BRAKE_DIGITAL, ControlsJoystick.CAR_PARK);
 			if(InterfaceInput.isJoystickPresent(ControlsJoystick.CAR_GAS.config.joystickName)){
 				//Send throttle over if throttle if cruise control is off, or if throttle is less than the axis level.
@@ -361,22 +315,87 @@ public final class ControlSystem{
 					InterfacePacket.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, ControlsJoystick.CAR_GAS.getAxisState((short) 0), Byte.MAX_VALUE));
 				}
 			}else{
-				if(ControlsKeyboardDynamic.CAR_SLOW.isPressed()){
-					if(!ConfigSystem.configObject.clientControls.halfThrottle.value){
-						InterfacePacket.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, (short) (EntityVehicleF_Physics.MAX_THROTTLE/2), Byte.MAX_VALUE));
-					}else{
-						InterfacePacket.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, EntityVehicleF_Physics.MAX_THROTTLE, Byte.MAX_VALUE));
+				if(ControlsKeyboard.CAR_GAS.isPressed()){
+					InterfacePacket.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, (short) 1, (byte) 0));
+				}
+				if(ControlsKeyboard.CAR_BRAKE.isPressed() || ControlsJoystick.CAR_BRAKE_DIGITAL.isPressed()){
+					InterfacePacket.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, (short) -1, (byte) 0));
+				}
+			}
+		}else{
+			if(ConfigSystem.configObject.clientControls.simpleThrottle.value){
+				if(!powered.engines.values().isEmpty()){
+					//Get the current gear.
+					byte currentGear = 0;
+					for(PartEngine engine : powered.engines.values()){
+						currentGear = engine.currentGear;
 					}
-				}else if(ControlsKeyboard.CAR_GAS.isPressed()){
-					if(!ConfigSystem.configObject.clientControls.halfThrottle.value){
-						InterfacePacket.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, EntityVehicleF_Physics.MAX_THROTTLE, Byte.MAX_VALUE));
+					
+					//Get the brake value.
+					short brakeValue = 0;
+					if(InterfaceInput.isJoystickPresent(ControlsJoystick.CAR_BRAKE.config.joystickName)){
+						brakeValue = ControlsJoystick.CAR_BRAKE.getAxisState((short) 0);
+					}else if(ControlsKeyboard.CAR_BRAKE.isPressed() || ControlsJoystick.CAR_BRAKE_DIGITAL.isPressed()){
+						 brakeValue = EntityVehicleF_Physics.MAX_BRAKE;
+					}
+					
+					//Get the throttle value.
+					short throttleValue = 0;
+					if(InterfaceInput.isJoystickPresent(ControlsJoystick.CAR_GAS.config.joystickName)){
+						throttleValue = ControlsJoystick.CAR_GAS.getAxisState((short) 0);
+					}else if(ControlsKeyboardDynamic.CAR_SLOW.isPressed()){
+						throttleValue = ConfigSystem.configObject.clientControls.halfThrottle.value ? EntityVehicleF_Physics.MAX_THROTTLE : EntityVehicleF_Physics.MAX_THROTTLE/2; 
+					}else if(ControlsKeyboard.CAR_GAS.isPressed()){
+						throttleValue = ConfigSystem.configObject.clientControls.halfThrottle.value ? EntityVehicleF_Physics.MAX_THROTTLE/2 : EntityVehicleF_Physics.MAX_THROTTLE;
+					}
+					
+					//If we don't have velocity, and we have the appropriate control, shift.
+					if(brakeValue > EntityVehicleF_Physics.MAX_BRAKE/4F && currentGear >= 0 && powered.axialVelocity < 0.01F){
+						InterfacePacket.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.SHIFT_DN, false));
+					}else if(throttleValue > EntityVehicleF_Physics.MAX_THROTTLE/4F && currentGear <= 0 && powered.axialVelocity < 0.01F){
+						InterfacePacket.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.SHIFT_UP, false));
+					}
+					
+					//If we are going slow, and don't have gas or brake, automatically set the brake.
+					//Otherwise send normal values if we are in neutral or forwards,
+					//and invert controls if we are in a reverse gear.
+					if(throttleValue == 0 && brakeValue == 0 && powered.axialVelocity < PartEngine.MAX_SHIFT_SPEED){
+						InterfacePacket.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.BRAKE, EntityVehicleF_Physics.MAX_BRAKE, Byte.MAX_VALUE));
+					}else if(currentGear >= 0){
+						InterfacePacket.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.BRAKE, brakeValue, Byte.MAX_VALUE));
+						InterfacePacket.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, throttleValue, Byte.MAX_VALUE));
 					}else{
-						InterfacePacket.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, (short) (EntityVehicleF_Physics.MAX_THROTTLE/2), Byte.MAX_VALUE));
+						InterfacePacket.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.BRAKE, throttleValue, Byte.MAX_VALUE));
+						InterfacePacket.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, brakeValue, Byte.MAX_VALUE));
+					}
+				}
+			}else{
+				//Check brake and gas and set to on or off.
+				controlBrake(powered, ControlsKeyboardDynamic.CAR_PARK, ControlsJoystick.CAR_BRAKE, ControlsJoystick.CAR_BRAKE_DIGITAL, ControlsJoystick.CAR_PARK);
+				if(InterfaceInput.isJoystickPresent(ControlsJoystick.CAR_GAS.config.joystickName)){
+					//Send throttle over if throttle if cruise control is off, or if throttle is less than the axis level.
+					short throttleLevel = ControlsJoystick.CAR_GAS.getAxisState((short) 0);
+					if(!powered.autopilot || powered.throttle < throttleLevel){
+						InterfacePacket.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, ControlsJoystick.CAR_GAS.getAxisState((short) 0), Byte.MAX_VALUE));
 					}
 				}else{
-					//Don't send gas off packet if we have cruise on.
-					if(!powered.autopilot){
-						InterfacePacket.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, (short) 0, Byte.MAX_VALUE));
+					if(ControlsKeyboardDynamic.CAR_SLOW.isPressed()){
+						if(!ConfigSystem.configObject.clientControls.halfThrottle.value){
+							InterfacePacket.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, (short) (EntityVehicleF_Physics.MAX_THROTTLE/2), Byte.MAX_VALUE));
+						}else{
+							InterfacePacket.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, EntityVehicleF_Physics.MAX_THROTTLE, Byte.MAX_VALUE));
+						}
+					}else if(ControlsKeyboard.CAR_GAS.isPressed()){
+						if(!ConfigSystem.configObject.clientControls.halfThrottle.value){
+							InterfacePacket.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, EntityVehicleF_Physics.MAX_THROTTLE, Byte.MAX_VALUE));
+						}else{
+							InterfacePacket.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, (short) (EntityVehicleF_Physics.MAX_THROTTLE/2), Byte.MAX_VALUE));
+						}
+					}else{
+						//Don't send gas off packet if we have cruise on.
+						if(!powered.autopilot){
+							InterfacePacket.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, (short) 0, Byte.MAX_VALUE));
+						}
 					}
 				}
 			}
