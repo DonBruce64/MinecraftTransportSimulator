@@ -5,7 +5,6 @@ import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition.AnimationComponentType;
 import minecrafttransportsimulator.sound.InterfaceSound;
 import minecrafttransportsimulator.sound.SoundInstance;
-//import minecrafttransportsimulator.rendering.components.AnimationVariableEasing;
 
 /**Class designed for maintaining the state of a duration/delay for an animation.
  * This is used anything that queries animation states.
