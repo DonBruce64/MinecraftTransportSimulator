@@ -2,10 +2,11 @@ package minecrafttransportsimulator.entities.instances;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
+
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 
 import minecrafttransportsimulator.baseclasses.NavBeacon;
 import minecrafttransportsimulator.baseclasses.Point3d;
@@ -56,8 +57,7 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 	public EntityFluidTank fuelTank;
 	
 	//Part maps.
-	public final Map<Byte, PartEngine> engines = new HashMap<Byte, PartEngine>();
-	public final List<PartGroundDevice> wheels = new ArrayList<PartGroundDevice>();
+	public final BiMap<Byte, PartEngine> engines = HashBiMap.create();
 	
 	//Map containing incoming missiles, sorted by distance, which is the value for this map.
 	public final List<EntityBullet> missilesIncoming = new ArrayList<EntityBullet>();
@@ -304,40 +304,32 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 			for(JSONPartDefinition partDef : definition.parts){
 				for(String type : partDef.types){
 					if(type.startsWith("engine")){
+						//Part goes into this slot.
 						if(part.placementOffset.equals(partDef.pos)){
 							engines.put(engineNumber, (PartEngine) part);
 							return;
 						}
 						++engineNumber;
+						break;
 					}
 				}
 			}
-		}else if(!part.placementDefinition.isSpare){
-			if(part instanceof PartGroundDevice){
-				if(part.definition.ground.isWheel || part.definition.ground.isTread){
-					wheels.add((PartGroundDevice) part);
-				}
-			}
+			
+			//Engine position not found.  Get the next free slot and add it.
+			while(engines.containsKey(engineNumber++));
+			engineNumber--;
+			engines.put(engineNumber, (PartEngine) part);
+		}else if(!part.placementDefinition.isSpare && part instanceof PartGroundDevice){
+			groundDeviceCollective.addGroundDevice((PartGroundDevice) part);
 		}
 	}
 	
 	@Override
 	public void removePart(APart part, Iterator<APart> iterator){
 		super.removePart(part, iterator);
-		byte engineNumber = 0;
-		for(JSONPartDefinition partDef : definition.parts){
-			for(String type : partDef.types){
-				if(type.startsWith("engine")){
-					if(part.placementOffset.equals(partDef.pos)){
-						engines.remove(engineNumber);
-						return;
-					}
-					++engineNumber;
-				}
-			}
-		}
-		if(wheels.contains(part)){
-			wheels.remove(part);
+		engines.inverse().remove(part);
+		if(!part.placementDefinition.isSpare && part instanceof PartGroundDevice){
+			groundDeviceCollective.removeGroundDevice((PartGroundDevice) part);
 		}
 	}
 	

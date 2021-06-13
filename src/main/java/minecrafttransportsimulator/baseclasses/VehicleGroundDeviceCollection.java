@@ -1,7 +1,9 @@
 package minecrafttransportsimulator.baseclasses;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
@@ -20,7 +22,8 @@ public class VehicleGroundDeviceCollection{
 	private final VehicleGroundDeviceBox frontRightGDB;
 	private final VehicleGroundDeviceBox rearLeftGDB;
 	private final VehicleGroundDeviceBox rearRightGDB;
-	public final List<PartGroundDevice> groundedGroundDevices = new ArrayList<PartGroundDevice>();
+	public final Set<PartGroundDevice> groundedGroundDevices = new HashSet<PartGroundDevice>();
+	public final Set<PartGroundDevice> drivenWheels = new HashSet<PartGroundDevice>();
 	
 	public VehicleGroundDeviceCollection(EntityVehicleF_Physics vehicle){
 		this.vehicle = vehicle;
@@ -28,6 +31,24 @@ public class VehicleGroundDeviceCollection{
 		this.frontRightGDB = new VehicleGroundDeviceBox(vehicle, true, false);
 		this.rearLeftGDB = new VehicleGroundDeviceBox(vehicle, false, true);
 		this.rearRightGDB = new VehicleGroundDeviceBox(vehicle, false, false);
+	}
+	
+	/**
+	 * Adds a ground device to this collection.  Should be done whenever one ia added to the vehicle.
+	 * This ensures that the {@link #drivenWheels} are kept in-sync.
+	 */
+	public void addGroundDevice(PartGroundDevice ground){
+		if((ground.definition.ground.isWheel || ground.definition.ground.isTread) && ((ground.placementOffset.z > 0 && vehicle.definition.motorized.isFrontWheelDrive) || (ground.placementOffset.z <= 0 && vehicle.definition.motorized.isRearWheelDrive))){
+			drivenWheels.add(ground);
+		}
+	}
+	
+	/**
+	 * Removes a ground device from this collection.  Should be done whenever one ia added to the vehicle.
+	 * This ensures that the {@link #drivenWheels} are kept in-sync.
+	 */
+	public void removeGroundDevice(PartGroundDevice ground){
+		drivenWheels.remove(ground);
 	}
 	
 	/**
@@ -247,15 +268,6 @@ public class VehicleGroundDeviceCollection{
 			xAxisPoint = rearRightGDB.contactPoint.x;
 		}
 		return xAxisPoint != 0;
-	}
-	
-	/**
-	 * Returns true if the passed-in ground device can provide motive force.  This checks the vehicle's drivetrain to see
-	 * if it could power the ground device.  Note that just because the ground device can provide power, doesn't mean it is.
-	 * Wheels in the air don't do much good.  For this reason, ensure checks for force use {@link #groundedGroundDevices}
-	 */
-	public boolean canDeviceProvideForce(PartGroundDevice ground){
-		return (ground.placementOffset.z > 0 && vehicle.definition.motorized.isFrontWheelDrive) || (ground.placementOffset.z <= 0 && vehicle.definition.motorized.isRearWheelDrive);
 	}
 	
 	/**

@@ -2,6 +2,7 @@ package minecrafttransportsimulator.baseclasses;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
@@ -194,7 +195,7 @@ public class VehicleGroundDeviceBox{
 	 * Updates this boxes' collision properties to take into account its new position.
 	 * If the passed-in list is non-null, all grounded ground devices will be added to it.
 	 */
-	public void updateCollisionStatuses(List<PartGroundDevice> groundedGroundDevices){
+	public void updateCollisionStatuses(Set<PartGroundDevice> groundedGroundDevices){
 		//Initialize all values.
 		isCollided = false;
 		isGrounded = false;
