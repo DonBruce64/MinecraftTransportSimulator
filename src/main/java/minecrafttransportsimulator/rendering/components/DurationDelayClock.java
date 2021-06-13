@@ -5,7 +5,7 @@ import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition.AnimationComponentType;
 import minecrafttransportsimulator.sound.InterfaceSound;
 import minecrafttransportsimulator.sound.SoundInstance;
-import minecrafttransportsimulator.rendering.components.AnimationVariableEasing;
+//import minecrafttransportsimulator.rendering.components.AnimationVariableEasing;
 
 /**Class designed for maintaining the state of a duration/delay for an animation.
  * This is used anything that queries animation states.
@@ -31,7 +31,8 @@ public class DurationDelayClock{
 		this.isUseful = shouldDoFactoring || animation.animationType.equals(AnimationComponentType.VISIBILITY)  || animation.animationType.equals(AnimationComponentType.INHIBITOR)  || animation.animationType.equals(AnimationComponentType.ACTIVATOR) || animation.forwardsStartSound != null || animation.forwardsEndSound != null || animation.reverseStartSound != null || animation.reverseEndSound != null;
 	}
 	
-	/**Returns the interpolated animation values
+	/**
+	 * Returns the interpolated animation values
 	 * It calls the interpolation methods equivalent to the easing type
 	 */
 	public double getEasingValue(JSONAnimationDefinition animation, long timeMoved, boolean isReverse) {
@@ -43,11 +44,6 @@ public class DurationDelayClock{
 			//Check if reverseEasing is not omitted
 			if (animation.reverseEasing != null) {
 				return AnimationVariableEasing.getEasingType(animation.reverseEasing, time);
-				
-			//If it is, then check if forwardsEasing isn't omitted
-			//We can use it's value to apply an easing type to the reverse animation
-			} else if (animation.forwardsEasing != null) {
-				return AnimationVariableEasing.getEasingType(animation.forwardsEasing, time);
 				
 			//If both are omitted, then apply linear easing
 			} else {
