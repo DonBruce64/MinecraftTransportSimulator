@@ -8,7 +8,7 @@ import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
  *
  * @author TurboDefender
  */
-public class AnimationVariableEasing {
+public class DurationDelayEasing {
 	
 	private static final double c1 = 1.70518;
 	private static final double c2 = c1 * 1.525;

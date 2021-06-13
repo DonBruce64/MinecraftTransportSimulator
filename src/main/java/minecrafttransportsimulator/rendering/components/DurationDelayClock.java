@@ -42,7 +42,7 @@ public class DurationDelayClock{
 			
 			//Check if reverseEasing is not omitted
 			if (animation.reverseEasing != null) {
-				return AnimationVariableEasing.getEasingType(animation.reverseEasing, time);
+				return DurationDelayEasing.getEasingType(animation.reverseEasing, time);
 				
 			//If both are omitted, then apply linear easing
 			} else {
@@ -54,7 +54,7 @@ public class DurationDelayClock{
 			
 			//Check if forwardsEasing isn't omitted
 			if (animation.forwardsEasing != null) {
-				return AnimationVariableEasing.getEasingType(animation.forwardsEasing, time);
+				return DurationDelayEasing.getEasingType(animation.forwardsEasing, time);
 				
 			//If it is, then apply linear easing
 			} else {
