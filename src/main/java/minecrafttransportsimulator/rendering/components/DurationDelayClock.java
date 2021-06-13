@@ -31,7 +31,7 @@ public class DurationDelayClock{
 		this.isUseful = shouldDoFactoring || animation.animationType.equals(AnimationComponentType.VISIBILITY)  || animation.animationType.equals(AnimationComponentType.INHIBITOR)  || animation.animationType.equals(AnimationComponentType.ACTIVATOR) || animation.forwardsStartSound != null || animation.forwardsEndSound != null || animation.reverseStartSound != null || animation.reverseEndSound != null;
 	}
 	
-	/* Returns the interpolated animation values
+	/**Returns the interpolated animation values
 	 * It calls the interpolation methods equivalent to the easing type
 	 */
 	public double getEasingValue(JSONAnimationDefinition animation, long timeMoved, boolean isReverse) {

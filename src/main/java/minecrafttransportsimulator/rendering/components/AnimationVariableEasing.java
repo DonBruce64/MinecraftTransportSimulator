@@ -19,8 +19,12 @@ public class AnimationVariableEasing {
 	private static final double n1 = 7.5625;
 	private static final double d1 = 2.75;
 	
-	/**This is used to check the easing type defined in the JSON
-	 * And call the respective easing function to return a value
+	/**This is used to check the easing type defined in the JSON fields
+	 * and call the respective easing function to return a value
+	 * 
+	 * @param direction The JSON field either {@code forwardsEasing} or {@code reverseEasing}.
+	 * 
+	 * @param time The time that has elapsed for an animation or the percent complete from 0 to 1.
 	 */
 	public static double getEasingType(JSONAnimationDefinition.AnimationEasingType direction, double time) {
 		switch(direction) {
@@ -58,8 +62,8 @@ public class AnimationVariableEasing {
 		}
 	}
 	
-	/**Below are functions that calculate the graph of each easing curve
-	 * It returns a value according to the time elapsed in an animation
+	/*Below are functions that calculate the graph of each easing curve
+	 *It returns a value according to the time elapsed in an animation
 	 */
 	public 	static double easeInQuad(double time) {
 		return time * time;
