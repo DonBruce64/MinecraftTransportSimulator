@@ -87,10 +87,12 @@ abstract class AEntityVehicleC_Colliding extends AEntityVehicleB_Rideable{
 		//If we collided, so check to see if we can break some blocks or if we need to explode.
 		//Don't bother with this logic if it's impossible for us to break anything.
 		if(box.updateCollidingBlocks(world, collisionMotion)){
+			float hardnessHitThisBox = 0;
 			for(Point3d blockPosition : box.collidingBlockPositions){
 				float blockHardness = world.getBlockHardness(blockPosition);
 				if(!world.isBlockLiquid(blockPosition) && blockHardness <= velocity*currentMass/250F && blockHardness >= 0){
 					if(ConfigSystem.configObject.general.blockBreakage.value){
+						hardnessHitThisBox += blockHardness;
 						hardnessHitThisTick += blockHardness;
 						motion.multiply(Math.max(1.0F - blockHardness*0.5F/((1000F + currentMass)/1000F), 0.0F));
 						if(!world.isClient()){
@@ -110,7 +112,13 @@ abstract class AEntityVehicleC_Colliding extends AEntityVehicleB_Rideable{
 			
 			if(ConfigSystem.configObject.general.vehicleDestruction.value && hardnessHitThisTick > currentMass/(0.75 + velocity)/250F){
 				if(!world.isClient()){
-					destroyAt(box.globalCenter);
+					APart partHit = getPartWithBox(box);
+					if(partHit != null){
+						hardnessHitThisTick -= hardnessHitThisBox;
+						removePart(partHit, null);
+					}else{
+						destroyAt(box.globalCenter);
+					}
 				}
 				return -1;
 			}else if(xAxis){

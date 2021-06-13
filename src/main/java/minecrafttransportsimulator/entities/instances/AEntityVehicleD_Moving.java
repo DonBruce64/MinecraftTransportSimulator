@@ -142,7 +142,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 				}
 			}
 		}
-		return true; 
+		return super.canCollideWith(entityToCollide); 
 	}
 	
 	@Override
