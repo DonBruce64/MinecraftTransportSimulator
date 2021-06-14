@@ -31,7 +31,7 @@ public class PacketEntityTrailerConnection extends APacketEntityInteract<AEntity
 			this.connect = entity.towedByConnection == null;
 		}else{
 			boolean foundConnection = false;
-			for(TrailerConnection connection : entity.towingConnections){
+			for(TrailerConnection connection : entity.getTowingConnections()){
 				if(connection.hitchGroupIndex == connectionGroupIndex){
 					foundConnection = true;
 				}
@@ -98,7 +98,7 @@ public class PacketEntityTrailerConnection extends APacketEntityInteract<AEntity
 			if(fromTrailer){
 				entity.towedByConnection.hitchEntity.disconnectTrailer(entity.towedByConnection);
 			}else{
-				for(TrailerConnection connection : entity.towingConnections){
+				for(TrailerConnection connection : entity.getTowingConnections()){
 					if(connection.hitchGroupIndex == connectionGroupIndex){
 						entity.disconnectTrailer(connection);
 						player.sendPacket(new PacketPlayerChatMessage(player, "interact.trailer.disconnect"));
@@ -121,7 +121,7 @@ public class PacketEntityTrailerConnection extends APacketEntityInteract<AEntity
 			return false; //Hookup is a part on hitch.
 		}else{
 			//Check to make sure the hookupEntity isn't towing the hitchEntity.
-			for(TrailerConnection connection : hookupEntity.towingConnections){
+			for(TrailerConnection connection : hookupEntity.getTowingConnections()){
 				if(connection.hookupEntity.equals(hitchEntity) || connection.hookupBaseEntity.equals(hitchEntity)){
 					return false;
 				}

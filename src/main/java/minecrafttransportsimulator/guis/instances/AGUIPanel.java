@@ -68,9 +68,11 @@ public abstract class AGUIPanel extends AGUIBase{
 			}
 			
 			//Also check things we are towing, if we are set to do so.
-			for(TrailerConnection connection : entity.towingConnections){
-				if(connection.hookupConnectionGroup.canIntiateSubConnections){
-					setupTowingButtons(connection.hookupBaseEntity);
+			if(!(entity instanceof APart)){
+				for(TrailerConnection connection : entity.getTowingConnections()){
+					if(connection.hookupConnectionGroup.canIntiateSubConnections){
+						setupTowingButtons(connection.hookupBaseEntity);
+					}
 				}
 			}
 		}

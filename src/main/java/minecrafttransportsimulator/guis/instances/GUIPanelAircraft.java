@@ -429,7 +429,7 @@ public class GUIPanelAircraft extends AGUIPanel{
 				trailerSelector.selectorState = switchDef.entityOn.towedByConnection != null ? 0 : 1;
 			}else{
 				trailerSelector.selectorState = 1;
-				for(TrailerConnection connection : switchDef.entityOn.towingConnections){
+				for(TrailerConnection connection : switchDef.entityOn.getTowingConnections()){
 					if(connection.hitchGroupIndex == switchDef.connectionGroupIndex){
 						trailerSelector.selectorState = 0;
 						break;

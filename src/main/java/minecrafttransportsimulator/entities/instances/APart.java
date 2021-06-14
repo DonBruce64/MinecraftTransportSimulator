@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
@@ -197,6 +198,11 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 	@Override
 	public void disconnectAsTrailer(){
 		entityOn.disconnectAsTrailer();
+	}
+	
+	@Override
+	public Set<TrailerConnection> getTowingConnections(){
+		return entityOn.getTowingConnections();
 	}
 	
 	/**

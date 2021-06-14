@@ -118,7 +118,7 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 	
 	//Connection data.
 	public TrailerConnection towedByConnection;
-	public final Set<TrailerConnection> towingConnections = new HashSet<TrailerConnection>();
+	protected final Set<TrailerConnection> towingConnections = new HashSet<TrailerConnection>();
 	private TrailerConnection savedTowedByConnection;
 	private final Set<TrailerConnection> savedTowingConnections = new HashSet<TrailerConnection>();
 	
@@ -566,6 +566,14 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 	 */
 	public void disconnectAsTrailer(){
 		towedByConnection = null;
+	}
+	
+	/**
+	 * Returns the towing connections for this entity.  Normally just returns the connections,
+	 * but can be overriden to return others.
+	 */
+	public Set<TrailerConnection> getTowingConnections(){
+		return towingConnections;
 	}
 	
 	/**

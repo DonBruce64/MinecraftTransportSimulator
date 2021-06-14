@@ -289,7 +289,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 	
 	@Override
 	public boolean canCollideWith(AEntityB_Existing entityToCollide){
-		return !parts.contains(entityToCollide);
+		return !(entityToCollide instanceof APart);
 	}
 	
 	@Override

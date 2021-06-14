@@ -246,7 +246,7 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 				}
 			}
 			
-			for(TrailerConnection connection : interactable.towingConnections){
+			for(TrailerConnection connection : interactable.getTowingConnections()){
 				if(connection.hitchConnection.connectors != null){
 					for(JSONConnectionConnector connector : connection.hitchConnection.connectors){
 						GL11.glPushMatrix();
