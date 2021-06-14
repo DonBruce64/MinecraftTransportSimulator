@@ -9,11 +9,9 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.baseclasses.TrailerConnection;
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
-import minecrafttransportsimulator.jsondefs.JSONConnection.JSONConnectionConnector;
 import minecrafttransportsimulator.jsondefs.JSONInstrumentDefinition;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
@@ -31,15 +29,6 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 
 	//Instrument transforms for each instrument slot.
 	private final Map<String, Map<Integer, RenderableTransform<RenderedEntity>>> instrumentTransforms = new HashMap<String, Map<Integer, RenderableTransform<RenderedEntity>>>();
-	
-	//CONNECTOR MAPS.  Maps are keyed by model name.
-	private static final Map<String, Integer> connectorParsedVertexLists = new HashMap<String, Integer>();
-	
-	//Connecter temp list for rendering all connectors in batches.
-	private static final List<TrailerConnection> connections = new ArrayList<TrailerConnection>();
-	
-	//Connector data to prevent re-binding textures.
-	private static String lastBoundConnectorTexture;
 	
 	//Static map for caching created render instances to know which ones to send events to.
 	private static final List<ARenderEntity<?>> createdRenderers = new ArrayList<ARenderEntity<?>>();
@@ -108,9 +97,6 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 			
 			//Render any additional model bits before we render text.
 			renderAdditionalModels(entity, blendingEnabled, partialTicks);
-			
-			//Render any connectors.
-			renderConnectors(entity);
 			
 			//Render all instruments.  These use flat shading.
 			GL11.glShadeModel(GL11.GL_FLAT);
@@ -224,73 +210,6 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 	 *  on them that need to render with the main entity.
 	 */
 	protected void renderSupplementalModels(RenderedEntity entity, boolean blendingEnabled, float partialTicks){}
-	
-	/**
-	 *  Renders all connectors on the entity.  These come from connected connections.
-	 *  All connector models are cached in DisplayLists for efficiency.  The actual
-	 *  model is based on the pack with the connector.  So if a pack A entity is towing a pack B entity,
-	 *  then pack A's connector model is used on the hitch, and pack B's connector model is used on the hookup.
-	 */
-	private void renderConnectors(RenderedEntity entity){
-		if(entity instanceof AEntityD_Interactable){
-			AEntityD_Interactable<?> interactable = (AEntityD_Interactable<?>) entity;
-			lastBoundConnectorTexture = "";
-			connections.clear();
-			if(interactable.towedByConnection != null){
-				if(interactable.towedByConnection.hookupConnection.connectors != null){
-					for(JSONConnectionConnector connector : interactable.towedByConnection.hookupConnection.connectors){
-						GL11.glPushMatrix();
-						renderConnector(connector, interactable.definition.packID);
-						GL11.glPopMatrix();
-					}
-				}
-			}
-			
-			for(TrailerConnection connection : interactable.getTowingConnections()){
-				if(connection.hitchConnection.connectors != null){
-					for(JSONConnectionConnector connector : connection.hitchConnection.connectors){
-						GL11.glPushMatrix();
-						renderConnector(connector, interactable.definition.packID);
-						GL11.glPopMatrix();
-					}
-				}
-			}
-		}
-	}
-	
-	/**
-	 *  Renders a single connector.  Used to isolate connector rendering from the above method.
-	 */
-	private static void renderConnector(JSONConnectionConnector connector, String connectorPackID){
-		String connectorName = "/assets/" + connectorPackID + "/connectors/" + connector.modelName;
-		String modelLocation = connectorName + ".obj";
-		String textureLocation = connectorName + ".png";
-		if(!connectorParsedVertexLists.containsKey(modelLocation)){
-			connectorParsedVertexLists.put(modelLocation, InterfaceRender.cacheVertices(AModelParser.parseModel(modelLocation).values()));
-		}
-		
-		//Get the total connector distance, and the spacing between the connectors.
-		double connectorDistance = connector.startingPos.distanceTo(connector.endingPos);
-		int numberConnectors = (int) Math.floor(connectorDistance/connector.segmentLength);
-		double segmentDistance = (connectorDistance%connector.segmentLength)/numberConnectors + connector.segmentLength;
-		
-		//Get the rotation required to go from the start to end point.
-		Point3d vector = connector.endingPos.copy().subtract(connector.startingPos).normalize();
-		double yRotation = Math.toDegrees(Math.atan2(vector.x, vector.z));
-		double xRotation = Math.toDegrees(Math.acos(vector.y));
-		
-		GL11.glTranslated(connector.startingPos.x, connector.startingPos.y, connector.startingPos.z);
-		GL11.glRotated(yRotation, 0, 1, 0);
-		GL11.glRotated(xRotation, 1, 0, 0);
-		if(!textureLocation.equals(lastBoundConnectorTexture)){
-			InterfaceRender.bindTexture(textureLocation);
-			lastBoundConnectorTexture = textureLocation;
-		}
-		for(int i=0; i<numberConnectors; ++i){
-			InterfaceRender.renderVertices(connectorParsedVertexLists.get(modelLocation));
-			GL11.glTranslated(0, segmentDistance, 0);
-		}
-	}
 	
 	/**
 	 *  Renders all instruments on the entity.  Uses the instrument's render code.

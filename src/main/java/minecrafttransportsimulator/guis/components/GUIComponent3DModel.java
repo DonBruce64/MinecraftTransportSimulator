@@ -56,8 +56,8 @@ public class GUIComponent3DModel{
 			if(modelLocation != null){
 				if(!modelParsedVertexLists.containsKey(modelLocation)){
 					Map<String, Float[][]> parsedModel = AModelParser.parseModel(modelLocation);
-					//Remove any windows from the model.  We don't want to render those.
-					parsedModel.keySet().removeIf(objectName -> objectName.toLowerCase().contains("window"));
+					//Remove any windows and "commented" objects from the model.  We don't want to render those.
+					parsedModel.keySet().removeIf(objectName -> objectName.toLowerCase().contains("window") || objectName.startsWith("#"));
 					
 					//Get the min/max vertex values for the model so we know how much to scale it.
 					float minX = 999;
