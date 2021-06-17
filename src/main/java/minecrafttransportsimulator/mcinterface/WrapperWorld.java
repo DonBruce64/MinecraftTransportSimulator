@@ -917,6 +917,18 @@ public class WrapperWorld{
 	}
 	
 	/**
+	 *  Tries to remove any snow at the passed-in position.
+	 */
+	public void removeSnow(Point3d position){
+		BlockPos pos = new BlockPos(position.x, position.y, position.z);
+		IBlockState state = world.getBlockState(pos);
+		if(state.getMaterial().equals(Material.SNOW) || state.getMaterial().equals(Material.CRAFTED_SNOW)){
+			world.setBlockToAir(pos);
+			world.playSound(pos.getX(), pos.getY(), pos.getZ(), SoundEvents.BLOCK_SNOW_BREAK, SoundCategory.BLOCKS, 1.0F, 1.0F, false);
+		}
+	}
+	
+	/**
 	 *  Spawns the passed-in item as an item entity at the passed-in point.
 	 *  This should be called only on servers, as spawning items on clients
 	 *  leads to phantom items that can't be picked up. 

@@ -400,9 +400,6 @@ public class JSONPart extends AJSONPartProvider{
 		@JSONDescription("The type of the effector.  This defines what this effector does.")
     	public EffectorComponentType type;
 		
-		@JSONDescription("This determines the width of the part and how wide an area it effects.  This should be an odd number (1, 3, 5, etc.), as it's centered on the part point.  Even numbers may work, but will cause un-defined behavior.  Use with caution.")
-    	public int blocksWide;
-		
 		@JSONDescription("A listing of animation objects for determining if this effector is active.  Leaving this blank will make for an effector that is always active.  Visibility transforms will turn the effector on and off.  Inhibitor and activator transforms may be used in conjunction with these for advanced on/off logic.")
 		public List<JSONAnimationDefinition> activeAnimations;
     }
@@ -415,7 +412,9 @@ public class JSONPart extends AJSONPartProvider{
 		@JSONDescription("Will plant any plant-able items located in vehicle crate parts onto farmland. Does not work with cactus, reeds, or other non-farmland-based plants.")
 		PLANTER,
 		@JSONDescription("Turns dirt and grass into farmland, and coarse dirt into dirt.")
-		PLOW;
+		PLOW,
+		@JSONDescription("Removes snow from the world when touched.")
+		SNOWPLOW;
 	}
     
     @Deprecated

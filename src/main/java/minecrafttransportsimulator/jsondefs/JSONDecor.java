@@ -30,6 +30,12 @@ public class JSONDecor extends AJSONMultiModelProvider{
 		
 		@JSONDescription("A optional crafting definition for this decor.  If this is included, the decor will open a GUI for crafting pack components when clicked.")
 		public JSONCraftingBench crafting;
+		
+		@JSONDescription("An optional number of inventory units for this decor.  If set, it will make this decor act like a chest and hold items.  This is how many rows (of 9 slots) the inventory has.")
+    	public float inventoryUnits;
+		
+		@JSONDescription("The texture for the GUI if the decor has an inventory.  Only used if this decor has an inventory.  If not set, the default is used.")
+    	public String inventoryTexture;
     	
     	@Deprecated
     	public List<String> itemTypes;

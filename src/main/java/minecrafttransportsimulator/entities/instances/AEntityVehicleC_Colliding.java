@@ -48,7 +48,7 @@ abstract class AEntityVehicleC_Colliding extends AEntityVehicleB_Rideable{
 			axialVelocity = Math.abs(motion.dotProduct(headingVector));
 			
 			//Update mass.
-			currentMass = getCurrentMass();
+			currentMass = getMass();
 			
 			//Auto-close any open doors that should be closed.
 			//Only do this once a second to prevent lag.

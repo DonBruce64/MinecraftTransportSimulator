@@ -11,6 +11,7 @@ import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemBullet;
 import minecrafttransportsimulator.items.instances.ItemPartGun;
+import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.BuilderItem;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
@@ -375,17 +376,17 @@ public class PartGun extends APart{
 					if(definition.gun.autoReload){
 						//Iterate through all the inventory slots in crates to try to find matching ammo.
 						for(APart part : entityOn.parts){
-							if(part instanceof PartInteractable){
-								if(part.definition.interactable.feedsVehicles){
-									for(ItemStack stack : ((PartInteractable) part).inventory){
-										Item item = stack.getItem();
-										if(item instanceof BuilderItem && ((BuilderItem) item).item instanceof ItemBullet){
-											if(tryToReload((ItemBullet) ((BuilderItem) item).item)){
-												//Bullet is right type, and we can fit it.  Remove from crate and add to the gun.
-												//Return here to ensure we don't set the loadedBullet to blank since we found bullets.
-												stack.shrink(1);
-												return true;
-											}
+							if(part instanceof PartInteractable && part.definition.interactable.interactionType.equals(InteractableComponentType.CRATE) && part.definition.interactable.feedsVehicles){
+								EntityInventoryContainer inventory = ((PartInteractable) part).inventory;
+								for(int i=0; i<inventory.getSize(); ++i){
+									ItemStack stack = inventory.getStack(i);
+									Item item = stack.getItem();
+									if(item instanceof BuilderItem && ((BuilderItem) item).item instanceof ItemBullet){
+										if(tryToReload((ItemBullet) ((BuilderItem) item).item)){
+											//Bullet is right type, and we can fit it.  Remove from crate and add to the gun.
+											//Return here to ensure we don't set the loadedBullet to blank since we found bullets.
+											inventory.removeItems(i, 1, true);
+											return true;
 										}
 									}
 								}

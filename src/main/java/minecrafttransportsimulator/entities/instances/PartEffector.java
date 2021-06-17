@@ -4,26 +4,22 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
-import minecrafttransportsimulator.jsondefs.JSONPart.EffectorComponentType;
+import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.rendering.components.DurationDelayClock;
 import net.minecraft.item.ItemStack;
 
 public class PartEffector extends APart{
-	private final Point3d[] lastBlocksModified;
-	private final Point3d[] affectedBlocks;
 	private boolean isActive;
 	
 	private final LinkedHashMap<JSONAnimationDefinition, DurationDelayClock> effectorActiveClocks = new LinkedHashMap<JSONAnimationDefinition, DurationDelayClock>();
 	
 	public PartEffector(AEntityE_Multipart<?> entityOn, JSONPartDefinition placementDefinition, WrapperNBT data, APart parentPart){
 		super(entityOn, placementDefinition, data, parentPart);
-		lastBlocksModified = new Point3d[definition.effector.blocksWide];
-		affectedBlocks = new Point3d[definition.effector.blocksWide];
 		populateMaps();
 	}
 	
@@ -97,92 +93,83 @@ public class PartEffector extends APart{
 			}
 			
 			//If we are active, do effector things.
-			if(isActive){
-				int startingIndex = -definition.effector.blocksWide/2;
-				for(int i=0; i<definition.effector.blocksWide; ++i){
-					int xOffset = startingIndex + i;
-					affectedBlocks[i] = new Point3d(xOffset, 0, 0).rotateCoarse(angles).add(position);
-					if(definition.effector.type.equals(EffectorComponentType.PLANTER) || definition.effector.type.equals(EffectorComponentType.PLOW)){
-						affectedBlocks[i].add(0, -1, 0);
-					}
-				}
-				
-				for(byte i=0; i<affectedBlocks.length; ++i){
-					if(!affectedBlocks[i].equals(lastBlocksModified[i])){
-						switch(definition.effector.type){
-							case FERTILIZER: {
-								//Search all inventories for fertilizer and try to use it.
-								for(APart part : entityOn.parts){
-									if(part instanceof PartInteractable){
-										if(part.definition.interactable.feedsVehicles){
-											for(ItemStack stack : ((PartInteractable) part).inventory){
-												if(world.fertilizeBlock(affectedBlocks[i], stack)){
-													stack.shrink(1);
-													break;
-												}
-											}
+			if(isActive && !world.isClient()){
+				for(BoundingBox box : collisionBoxes){
+					switch(definition.effector.type){
+						case FERTILIZER: {
+							//Search all inventories for fertilizer and try to use it.
+							for(APart part : entityOn.parts){
+								if(part instanceof PartInteractable && part.definition.interactable.interactionType.equals(InteractableComponentType.CRATE) && part.definition.interactable.feedsVehicles){
+									EntityInventoryContainer inventory = ((PartInteractable) part).inventory;
+									for(int i=0; i<inventory.getSize(); ++i){
+										ItemStack stack = inventory.getStack(i);
+										if(world.fertilizeBlock(box.globalCenter, stack)){
+											inventory.removeItems(i, 1, true);
+											break;
 										}
 									}
 								}
-								break;
 							}
-							case HARVESTER: {
-								//Harvest drops, and add to inventories.
-								List<ItemStack> drops = world.harvestBlock(affectedBlocks[i]);
-								if(drops != null){
-									Iterator<ItemStack> iterator = drops.iterator();
-									while(iterator.hasNext()){
-										ItemStack dropStack = iterator.next();
-										for(APart part : entityOn.parts){
-											if(part instanceof PartInteractable){
-												((PartInteractable) part).addStackToInventory(dropStack);
-												if(dropStack.isEmpty()){
-													iterator.remove();
-													break;
-												}
-											}
-										}
-									}
-									
-									//Check our drops.  If we couldn't add any of them to any inventory, drop them on the ground instead.
-									for(ItemStack stack : drops){
-										world.spawnItemStack(stack, position);
-									}
-								}
-								break;
-							}
-							case PLANTER: {
-								//Search all inventories for seeds and try to plant them.
-								for(APart part : entityOn.parts){
-									if(part instanceof PartInteractable){
-										if(part.definition.interactable.feedsVehicles){
-											for(ItemStack stack : ((PartInteractable) part).inventory){
-												if(world.plantBlock(affectedBlocks[i], stack)){
-													stack.shrink(1);
-													break;
-												}
-											}
-										}
-									}
-								}
-								break;
-							}
-							case PLOW:{
-								if(world.plowBlock(affectedBlocks[i])){
-									//Harvest blocks on top of this block in case they need to be dropped.
-									List<ItemStack> drops = world.harvestBlock(affectedBlocks[i].copy().add(0, 1, 0));
-									if(drops != null){
-										for(ItemStack stack : drops){
-											if(stack.getCount() > 0){
-												world.spawnItemStack(stack, position);
-											}
-										}
-									}
-								}
-								break;
-							}
+							break;
 						}
-						lastBlocksModified[i] = affectedBlocks[i];
+						case HARVESTER: {
+							//Harvest drops, and add to inventories.
+							List<ItemStack> drops = world.harvestBlock(box.globalCenter);
+							if(drops != null){
+								Iterator<ItemStack> iterator = drops.iterator();
+								while(iterator.hasNext()){
+									ItemStack dropStack = iterator.next();
+									for(APart part : entityOn.parts){
+										if(part instanceof PartInteractable && part.definition.interactable.interactionType.equals(InteractableComponentType.CRATE)){
+											if(((PartInteractable) part).inventory.addStack(dropStack, true) == dropStack.getCount()){
+												iterator.remove();
+												break;
+											}
+										}
+									}
+								}
+								
+								//Check our drops.  If we couldn't add any of them to any inventory, drop them on the ground instead.
+								for(ItemStack stack : drops){
+									world.spawnItemStack(stack, position);
+								}
+							}
+							break;
+						}
+						case PLANTER: {
+							//Search all inventories for seeds and try to plant them.
+							for(APart part : entityOn.parts){
+								if(part instanceof PartInteractable && part.definition.interactable.interactionType.equals(InteractableComponentType.CRATE) && part.definition.interactable.feedsVehicles){
+									EntityInventoryContainer inventory = ((PartInteractable) part).inventory;
+									for(int i=0; i<inventory.getSize(); ++i){
+										ItemStack stack = inventory.getStack(i);
+										if(world.plantBlock(box.globalCenter, stack)){
+											inventory.removeItems(i, 1, true);
+											break;
+										}
+									}
+								}
+							}
+							break;
+						}
+						case PLOW:{
+							if(world.plowBlock(box.globalCenter)){
+								//Harvest blocks on top of this block in case they need to be dropped.
+								List<ItemStack> drops = world.harvestBlock(box.globalCenter);
+								if(drops != null){
+									for(ItemStack stack : drops){
+										if(stack.getCount() > 0){
+											world.spawnItemStack(stack, position);
+										}
+									}
+								}
+							}
+							break;
+						}
+						case SNOWPLOW:{
+							world.removeSnow(box.globalCenter);
+							break;
+						}
 					}
 				}
 			}

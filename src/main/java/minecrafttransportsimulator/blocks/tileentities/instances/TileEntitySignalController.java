@@ -1,7 +1,9 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
@@ -52,8 +54,11 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 	public final Set<Point3d> componentLocations = new HashSet<Point3d>();
 	private final Set<TileEntityPole> foundPoles = new HashSet<TileEntityPole>();
 	
-	//Signal blocks used in this controller.  Based on components.
+	/**Signal blocks used in this controller.  Based on components.**/
 	private final Set<SignalGroup> signalGroups = new HashSet<SignalGroup>();
+	
+	/**Lane widths for each lane for each axis.  Used with the groups to determine intersection bounds.**/
+	public final Map<Axis, Map<SignalDirection, Double>> laneWidths = new HashMap<Axis, Map<SignalDirection, Double>>();
 	
 	public TileEntitySignalController(WrapperWorld world, Point3d position, WrapperNBT data){
 		super(world, position, data);
@@ -195,6 +200,7 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 		protected final Axis axis;
 		protected final SignalDirection direction;
 		protected final boolean isMainSignal;
+		
 		protected LightType currentLight;
 		protected LightType requestedLight;
 		protected int currentCooldown;

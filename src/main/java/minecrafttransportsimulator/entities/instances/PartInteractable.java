@@ -1,14 +1,10 @@
 package minecrafttransportsimulator.entities.instances;
 
-import java.util.Map;
-
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
-import minecrafttransportsimulator.items.instances.ItemBullet;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
-import minecrafttransportsimulator.mcinterface.BuilderItem;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -16,15 +12,10 @@ import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperTileEntity;
 import minecrafttransportsimulator.packets.instances.PacketPartInteractable;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
-import minecrafttransportsimulator.systems.ConfigSystem;
-import net.minecraft.inventory.ItemStackHelper;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.NonNullList;
 
 public final class PartInteractable extends APart{
 	private final WrapperTileEntity interactable;
-	public final NonNullList<ItemStack> inventory;
+	public final EntityInventoryContainer inventory;
 	public final EntityFluidTank tank;
 	public PartInteractable linkedPart;
 	public String jerrycanFluid;
@@ -42,8 +33,7 @@ public final class PartInteractable extends APart{
 			case CRAFTING_BENCH: this.interactable = null; break;
 			default: throw new IllegalArgumentException(definition.interactable.interactionType + " is not a valid type of interactable part.");
 		}
-		this.inventory = NonNullList.<ItemStack>withSize((int) (definition.interactable.inventoryUnits*9F), ItemStack.EMPTY);
-		ItemStackHelper.loadAllItems(data.tag, inventory);
+		this.inventory = definition.interactable.interactionType.equals(InteractableComponentType.CRATE) ? new EntityInventoryContainer(world, data.getDataOrNew("inventory"), (int) (definition.interactable.inventoryUnits*9F)) : null;
 		this.tank = definition.interactable.interactionType.equals(InteractableComponentType.BARREL) ? new EntityFluidTank(world, data.getDataOrNew("tank"), (int) definition.interactable.inventoryUnits*10000) : null;
 		this.jerrycanFluid = data.getString("jerrycanFluid");
 	}
@@ -150,69 +140,48 @@ public final class PartInteractable extends APart{
 	}
 	
 	@Override
+	public double getMass(){
+		//Return our mass, plus our inventory or tank.
+		double currentMass = super.getMass();
+		if(inventory != null){
+			currentMass += inventory.getMass();
+		}else if(tank != null){
+			currentMass += tank.getMass();
+		}
+		return currentMass;
+	}
+	
+	@Override
 	public double getRawVariableValue(String variable, float partialTicks){
 		switch(variable){
-			case("interactable_count"): return getInventoryCount();
-			case("interactable_percent"): return getInventoryPercent();
-			case("interactable_capacity"): return getInventoryCapacity();
+			case("interactable_count"): {
+				if(inventory != null){
+					return inventory.getCount();
+				}else{
+					return 0;
+				}
+			}
+			case("interactable_percent"): {
+				if(inventory != null){
+					return inventory.getCount()/(double)inventory.getSize();
+				}else if(tank != null){
+					return tank.getFluidLevel()/tank.getMaxLevel();
+				}else{
+					return 0;
+				}
+			}
+			case("interactable_capacity"): {
+				if(inventory != null){
+					return inventory.getSize();
+				}else if(tank != null){
+					return tank.getMaxLevel()/1000;
+				}else{
+					return 0;
+				}
+			}
 		}
 		
 		return super.getRawVariableValue(variable, partialTicks);
-	}
-	
-	public int getInventoryCount(){
-		int count = 0;
-		for(ItemStack stack : inventory){
-			if(!stack.isEmpty()){
-				++count;
-			}
-		}
-		return count;
-	}
-	
-	public double getInventoryPercent(){
-		if(tank != null){
-			return tank.getFluidLevel()/tank.getMaxLevel();
-		}else{
-			return getInventoryCount()/(double)inventory.size();
-		}
-	}
-	
-	public int getInventoryCapacity(){
-		if(tank != null){
-			return tank.getMaxLevel()/1000;
-		}else{
-			return inventory.size();
-		}
-	}
-	
-	public double getInventoryWeight(){
-		if(tank != null){
-			return tank.getWeight();
-		}else{
-			return getInventoryWeight(ConfigSystem.configObject.general.itemWeights.weights);
-		}
-	}
-	
-	/**
-	 *  Tries to add the passed-in stack to this inventory.  Removes as many items from the
-	 *  stack as possible, but may or may not remove all of them.  As such, the actual number of items
-	 *  removed is returned.
-	 */
-	public int addStackToInventory(ItemStack stackToAdd){
-		int priorCount = stackToAdd.getCount();
-		for(int i=0; i<inventory.size() && !stackToAdd.isEmpty(); ++i){
-			ItemStack stack = inventory.get(i);
-			if(stack.isEmpty()){
-				inventory.set(i, stackToAdd.copy());
-				stackToAdd.setCount(0);
-			}else if(stackToAdd.isItemEqual(stack) && (stackToAdd.hasTagCompound() ? stackToAdd.getTagCompound().equals(stack.getTagCompound()) : !stack.hasTagCompound())){
-				int amountToAdd = stack.getMaxStackSize() - stack.getCount();
-				stack.grow(amountToAdd);
-				stackToAdd.shrink(amountToAdd);
-			}
-		}
-		return priorCount - stackToAdd.getCount();
 	}
 	
 	/**
@@ -221,54 +190,28 @@ public final class PartInteractable extends APart{
 	 *  that fuel-containing items are stable enough to not blow up when this container is hit.
 	 */
 	public double getExplosiveContribution(){
-		if(tank != null){
+		if(inventory != null){
+			return inventory.getExplosiveness();
+		}else if(tank != null){
 			return tank.getExplosiveness();
 		}else{
-			double explosivePower = 0;
-			for(ItemStack stack : inventory){
-				Item item = stack.getItem();
-				if(item instanceof BuilderItem && ((BuilderItem) item).item instanceof ItemBullet){
-					ItemBullet bullet = (ItemBullet) ((BuilderItem) item).item;
-					if(bullet.definition.bullet != null){
-						double blastSize = bullet.definition.bullet.blastStrength == 0 ? bullet.definition.bullet.diameter/10D : bullet.definition.bullet.blastStrength;
-						explosivePower += stack.getCount()*blastSize/10D;
-					}
-				}
-			}
-			return explosivePower;
+			return 0;
 		}
-	}
-	
-	/**
-	 * Gets the weight of this inventory.
-	 */
-	public float getInventoryWeight(Map<String, Double> heavyItems){
-		float weight = 0;
-		for(ItemStack stack : inventory){
-			if(stack != null){
-				double weightMultiplier = 1.0;
-				for(String heavyItemName : heavyItems.keySet()){
-					if(stack.getItem().getRegistryName().toString().contains(heavyItemName)){
-						weightMultiplier = heavyItems.get(heavyItemName);
-						break;
-					}
-				}
-				weight += 5F*stack.getCount()/stack.getMaxStackSize()*weightMultiplier;
-			}
-		}
-		return weight;
 	}
 	
 	@Override
 	public void save(WrapperNBT data){
 		super.save(data);
-		ItemStackHelper.saveAllItems(data.tag, inventory);
-		if(interactable != null){
-			interactable.save(data);
+		if(inventory != null){
+			WrapperNBT inventoryData = new WrapperNBT();
+			inventory.save(inventoryData);
+			data.setData("inventory", inventoryData);
 		}else if(tank != null){
 			WrapperNBT tankData = new WrapperNBT();
 			tank.save(tankData);
 			data.setData("tank", tankData);
+		}else if(interactable != null){
+			interactable.save(data);
 		}else if(definition.interactable.interactionType.equals(InteractableComponentType.JERRYCAN)){
 			data.setString("jerrycanFluid", jerrycanFluid);
 		}

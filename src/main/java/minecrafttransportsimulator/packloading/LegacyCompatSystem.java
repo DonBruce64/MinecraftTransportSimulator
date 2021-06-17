@@ -489,25 +489,21 @@ public final class LegacyCompatSystem{
 					definition.generic.type = "effector_fertilizer";
 					definition.effector = definition.new JSONPartEffector();
 					definition.effector.type = EffectorComponentType.FERTILIZER;
-					definition.effector.blocksWide = 1;
 					break;
 				}case("harvester"):{
 					definition.generic.type = "effector_harvester";
 					definition.effector = definition.new JSONPartEffector();
 					definition.effector.type = EffectorComponentType.HARVESTER;
-					definition.effector.blocksWide = 1;
 					break;
 				}case("planter"):{
 					definition.generic.type = "effector_planter";
 					definition.effector = definition.new JSONPartEffector();
 					definition.effector.type = EffectorComponentType.PLANTER;
-					definition.effector.blocksWide = 1;
 					break;
 				}case("plow"):{
 					definition.generic.type = "effector_plow";
 					definition.effector = definition.new JSONPartEffector();
 					definition.effector.type = EffectorComponentType.PLOW;
-					definition.effector.blocksWide = 1;
 					break;
 				}case("custom"):{
 					definition.generic.type = "generic";

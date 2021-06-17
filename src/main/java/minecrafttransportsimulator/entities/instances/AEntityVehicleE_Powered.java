@@ -290,8 +290,8 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 	}
 	
 	@Override
-	protected int getCurrentMass(){
-		return super.getCurrentMass() + fuelTank.getWeight();
+	public double getMass(){
+		return super.getMass() + fuelTank.getMass();
 	}
 	
 	@Override

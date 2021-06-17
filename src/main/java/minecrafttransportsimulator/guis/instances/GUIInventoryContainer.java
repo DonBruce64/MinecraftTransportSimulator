@@ -3,7 +3,7 @@ package minecrafttransportsimulator.guis.instances;
 import java.util.ArrayList;
 import java.util.List;
 
-import minecrafttransportsimulator.entities.instances.PartInteractable;
+import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
@@ -12,16 +12,16 @@ import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.WrapperInventory;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
-import minecrafttransportsimulator.packets.instances.PacketPartInteractable;
+import minecrafttransportsimulator.packets.instances.PacketPlayerItemTransfer;
 import net.minecraft.item.ItemStack;
 
-/**A GUI that is used to interface intractable parts.  Displays the player's items on the bottom,
- * and the items in the parts in the top.  Works a bit differently than the MC GUIs, as it
+/**A GUI that is used to interface with inventory containers.   Displays the player's items on the bottom,
+ * and the items in the container in the top.  Works a bit differently than the MC GUIs, as it
  * doesn't support item dragging or movement.  Just storage to the first available slot.
  * 
  * @author don_bruce
  */
-public class GUIInteractableCrate extends AGUIBase{
+public class GUIInventoryContainer extends AGUIBase{
 	private static final int ITEM_BUTTON_SIZE = 18;
 	private static final int MAX_ITEMS_PER_SCREEN = 54;
 	
@@ -30,7 +30,8 @@ public class GUIInteractableCrate extends AGUIBase{
 	private GUIComponentButton nextRowButton;
 	private final int maxRowIncrements;
 	
-	private final PartInteractable interactable;
+	private final EntityInventoryContainer inventory;
+	private final String texture;
 	private final WrapperPlayer player;
 	private final WrapperInventory playerInventory;
 	private final List<ItemSelectionButton> interactableSlotButtons = new ArrayList<ItemSelectionButton>();
@@ -41,11 +42,12 @@ public class GUIInteractableCrate extends AGUIBase{
 	//Runtime variables.
 	private int rowOffset;
 	
-	public GUIInteractableCrate(PartInteractable interactable){
-		this.interactable = interactable;
+	public GUIInventoryContainer(EntityInventoryContainer inventory, String texture){
+		this.inventory = inventory;
+		this.texture = texture != null ? texture : "mts:textures/guis/inventory.png";
 		this.player = InterfaceClient.getClientPlayer();
 		this.playerInventory = player.getInventory();
-		this.maxRowIncrements = interactable.inventory.size() > MAX_ITEMS_PER_SCREEN ? (interactable.inventory.size() - MAX_ITEMS_PER_SCREEN)/9 + 1 : 0;
+		this.maxRowIncrements = inventory.getSize() > MAX_ITEMS_PER_SCREEN ? (inventory.getSize() - MAX_ITEMS_PER_SCREEN)/9 + 1 : 0;
 	}
 
 	@Override
@@ -95,13 +97,13 @@ public class GUIInteractableCrate extends AGUIBase{
 		//However, one page can hold 6 rows, so we make all those slots and adjust as appropriate.
 		interactableSlotButtons.clear();
 		interactableSlotIcons.clear();
-		int slotsToMake = Math.min(interactable.inventory.size(), MAX_ITEMS_PER_SCREEN);
+		int slotsToMake = Math.min(inventory.getSize(), MAX_ITEMS_PER_SCREEN);
 		int inventoryRowOffset = (MAX_ITEMS_PER_SCREEN - slotsToMake)*ITEM_BUTTON_SIZE/9/2;
 		for(byte i=0; i<slotsToMake; ++i){				
 			ItemSelectionButton itemButton = new ItemSelectionButton(guiLeft + 8 + ITEM_BUTTON_SIZE*(i%9), guiTop + 12 + inventoryRowOffset + ITEM_BUTTON_SIZE*(i/9)){
 				@Override
 				public void onClicked(){
-					InterfacePacket.sendToServer(new PacketPartInteractable(interactable, player, interactableSlotButtons.indexOf(this), -1));
+					InterfacePacket.sendToServer(new PacketPlayerItemTransfer(inventory, player, interactableSlotButtons.indexOf(this), -1));
 				}
 			};
 			addButton(itemButton);
@@ -122,7 +124,7 @@ public class GUIInteractableCrate extends AGUIBase{
 			ItemSelectionButton itemButton = new ItemSelectionButton(guiLeft + 7 + ITEM_BUTTON_SIZE*(i%9), guiTop + yOffset){
 				@Override
 				public void onClicked(){
-					InterfacePacket.sendToServer(new PacketPartInteractable(interactable, player, -1, playerSlotButtons.indexOf(this)));
+					InterfacePacket.sendToServer(new PacketPlayerItemTransfer(inventory, player, -1, playerSlotButtons.indexOf(this)));
 				}
 			};
 			addButton(itemButton);
@@ -160,8 +162,8 @@ public class GUIInteractableCrate extends AGUIBase{
 		//Set other item icons to other inventory.
 		for(int i=0; i<interactableSlotButtons.size(); ++i){
 			int index = i + 9*rowOffset;
-			if(interactable.inventory.size() > index){
-				ItemStack stack = interactable.inventory.get(index);
+			if(inventory.getSize() > index){
+				ItemStack stack = inventory.getStack(index);
 				interactableSlotButtons.get(i).visible = true;
 				interactableSlotButtons.get(i).enabled = !stack.isEmpty();
 				interactableSlotIcons.get(i).stack = stack;
@@ -184,7 +186,7 @@ public class GUIInteractableCrate extends AGUIBase{
 	
 	@Override
 	public String getTexture(){
-		return interactable.definition.interactable.inventoryTexture != null ? interactable.definition.interactable.inventoryTexture : "mts:textures/guis/inventory.png";
+		return texture;
 	}
 	
 	/**Custom implementation of the button class that doesn't use textures for the button rendering.

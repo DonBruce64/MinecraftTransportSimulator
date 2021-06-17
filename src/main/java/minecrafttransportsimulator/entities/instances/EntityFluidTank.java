@@ -36,6 +36,11 @@ public class EntityFluidTank extends AEntityA_Base{
 		this.fluidDispensed = data.getDouble("fluidDispensed");
 	}
 	
+	@Override
+	public double getMass(){
+		return fluidLevel/50D;
+	}
+	
 	/**
 	 *  Gets the current fluid level.
 	 */
@@ -190,13 +195,6 @@ public class EntityFluidTank extends AEntityA_Base{
 			}
 		}
 		return 0;
-	}
-	
-	/**
-	 *  Gets the weight of the fluid in this tank.
-	 */
-	public int getWeight(){
-		return (int) (fluidLevel/50D);
 	}
 	
 	/**

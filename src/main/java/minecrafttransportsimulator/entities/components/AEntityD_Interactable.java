@@ -46,11 +46,10 @@ import minecrafttransportsimulator.systems.PackParserSystem;
 public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteractableEntity> extends AEntityC_Definable<JSONDefinition>{
 	
 	/**List of bounding boxes that should be used for collision of other entities with this entity.
-	 * This includes {@link #collisionBoxes}, and {@link #blockCollisionBoxes}, but may include others.**/
+	 * This includes {@link #blockCollisionBoxes}, but may include others.**/
 	public final List<BoundingBox> collisionBoxes = new ArrayList<BoundingBox>();
 	
-	/**List of bounding boxes that should be used to check collision of this entity with blocks.
-	 * This only includes {@link #blockCollisionBoxes}, as it's only for blocks.**/
+	/**List of bounding boxes that should be used to check collision of this entity with blocks.**/
 	public final List<BoundingBox> blockCollisionBoxes = new ArrayList<BoundingBox>();
 	
 	/**List of bounding boxes that should be used for interaction of other entities with this entity.
@@ -269,6 +268,11 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 		}else{
 			return false;
 		}
+	}
+	
+	@Override
+	public double getMass(){
+		return 100*locationRiderMap.values().size();
 	}
 	
 	@Override

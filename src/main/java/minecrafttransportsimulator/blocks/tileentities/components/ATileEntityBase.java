@@ -1,15 +1,14 @@
 package minecrafttransportsimulator.blocks.tileentities.components;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
-import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import net.minecraft.item.ItemStack;
 
 /**Base Tile Entity class.  In essence, this class holds the data and state of a Tile Entity in the world.
  * All TileEntities are used for making pack-based blocks, so they have JSON parameters
@@ -52,13 +51,12 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONMultiModelProv
 	}
 	
 	/**
-	 *  Returns all items that make up this TE.  Used to spawn
-	 *  items when broken.  Note that such items do NOT save
-	 *  their NBT state.  Middle-clicking changes this.
+	 *  Populates the passed-in list with item stacks that will drop when this TE is broken.
+	 *  This is different than what is used for middle-clicking, as that will
+	 *  return the current block's state, which may differ from what it drops.
+	 * @param drops TODO
 	 */
-	public List<AItemPack<JSONDefinition>> getDrops(){
-		List<AItemPack<JSONDefinition>> drops = new ArrayList<AItemPack<JSONDefinition>>();
-		drops.add(getItem());
-		return drops;
+	public void addDropsToList(List<ItemStack> drops){
+		drops.add(getItem().getNewStack());
 	}
 }

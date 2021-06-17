@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,7 +10,6 @@ import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
-import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent.PoleComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
@@ -19,6 +17,7 @@ import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.rendering.instances.RenderPole;
 import minecrafttransportsimulator.systems.PackParserSystem;
+import net.minecraft.item.ItemStack;
 
 /**Pole tile entity.  Remembers what components we have attached and the state of the components.
  * This tile entity does not tick, as states can be determined without ticks or are controlled
@@ -124,14 +123,12 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent> implement
 	}
 	
 	@Override
-	public List<AItemPack<JSONPoleComponent>> getDrops(){
-		List<AItemPack<JSONPoleComponent>> drops = new ArrayList<AItemPack<JSONPoleComponent>>();
+	public void addDropsToList(List<ItemStack> drops){
 		for(Axis axis : Axis.values()){
 			if(components.containsKey(axis)){
-				drops.add(components.get(axis).getItem());
+				drops.add(components.get(axis).getItem().getNewStack());
 			}
 		}
-		return drops;
 	}
 	
 	@Override

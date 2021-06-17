@@ -162,6 +162,14 @@ public abstract class AEntityA_Base{
 			entityMaps.get(world).remove(lookupID);
 		}
 	}
+
+	/**
+	 * Returns the mass of this entity for physics calculations.  Normally un-used except in the multiple sub-classes,
+	 * but since anything can have mass, we put this at the A-level.
+	 */
+	public double getMass(){
+		return 0;
+	}
 	
 	/**
 	 *  Called when the entity needs to be saved to disk.  The passed-in wrapper

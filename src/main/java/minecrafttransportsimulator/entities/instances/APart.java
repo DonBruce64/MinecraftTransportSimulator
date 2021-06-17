@@ -168,6 +168,11 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 	}
 	
 	@Override
+	public double getMass(){
+		return definition.generic.mass;
+	}
+	
+	@Override
 	public void remove(){
 		super.remove();
 		if(parentPart != null){

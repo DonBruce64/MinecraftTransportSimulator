@@ -12,10 +12,14 @@ import minecrafttransportsimulator.packets.instances.PacketBeaconListingChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityCSHandshakeClient;
 import minecrafttransportsimulator.packets.instances.PacketEntityCSHandshakeServer;
 import minecrafttransportsimulator.packets.instances.PacketEntityColorChange;
+import minecrafttransportsimulator.packets.instances.PacketEntityInstrumentChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityTextChange;
+import minecrafttransportsimulator.packets.instances.PacketEntityTrailerChange;
+import minecrafttransportsimulator.packets.instances.PacketEntityTrailerConnection;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketFluidTankChange;
+import minecrafttransportsimulator.packets.instances.PacketInventoryContainerChange;
 import minecrafttransportsimulator.packets.instances.PacketPartChange;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine;
 import minecrafttransportsimulator.packets.instances.PacketPartGroundDevice;
@@ -25,6 +29,7 @@ import minecrafttransportsimulator.packets.instances.PacketPartInteractable;
 import minecrafttransportsimulator.packets.instances.PacketPartSeat;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketPlayerCraftItem;
+import minecrafttransportsimulator.packets.instances.PacketPlayerItemTransfer;
 import minecrafttransportsimulator.packets.instances.PacketRadioStateChange;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityFluidLoaderConnection;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpConnection;
@@ -36,11 +41,8 @@ import minecrafttransportsimulator.packets.instances.PacketTileEntitySignalContr
 import minecrafttransportsimulator.packets.instances.PacketVehicleBeaconChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
-import minecrafttransportsimulator.packets.instances.PacketEntityInstrumentChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleInteract;
 import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement;
-import minecrafttransportsimulator.packets.instances.PacketEntityTrailerChange;
-import minecrafttransportsimulator.packets.instances.PacketEntityTrailerConnection;
 import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataCSHandshake;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraftforge.fml.common.FMLCommonHandler;
@@ -91,6 +93,9 @@ public class InterfacePacket{
 		//Fluid tank packets.
 		registerPacket(packetIndex++, PacketFluidTankChange.class);
 		
+		//Inventory container packets.
+		registerPacket(packetIndex++, PacketInventoryContainerChange.class);
+		
 		//Part packets.
 		registerPacket(packetIndex++, PacketPartChange.class);
 		registerPacket(packetIndex++, PacketPartGunBulletHit.class);
@@ -103,6 +108,7 @@ public class InterfacePacket{
 		//Player packets.
 		registerPacket(packetIndex++, PacketPlayerChatMessage.class);
 		registerPacket(packetIndex++, PacketPlayerCraftItem.class);
+		registerPacket(packetIndex++, PacketPlayerItemTransfer.class);
 		
 		//Radio packets.
 		registerPacket(packetIndex++, PacketRadioStateChange.class);

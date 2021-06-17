@@ -191,9 +191,7 @@ public class BuilderBlock extends Block{
     		if(tile instanceof BuilderTileEntity){
     			if(((BuilderTileEntity<?>) tile).tileEntity != null){
     				List<ItemStack> drops = new ArrayList<ItemStack>();
-        			for(AItemPack<?> item : ((BuilderTileEntity<?>) tile).tileEntity.getDrops()){
-        				drops.add(item.getNewStack());
-        			}
+    				((BuilderTileEntity<?>) tile).tileEntity.addDropsToList(drops);
         			dropsAtPositions.put(pos, drops);
     			}
     		}

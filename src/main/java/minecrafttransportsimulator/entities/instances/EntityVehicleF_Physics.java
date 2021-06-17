@@ -141,10 +141,10 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	}
 	
 	@Override
-	protected int getCurrentMass(){
+	public double getMass(){
 		//Need to use a list here to make sure we don't end up with infinite recursion due to bad trailer linkings.
 		//This could lock up a world if not detected!
-		int combinedMass = super.getCurrentMass();
+		double combinedMass = super.getMass();
 		if(!towingConnections.isEmpty()){
 			EntityVehicleF_Physics otherVehicle = null;
 			for(TrailerConnection connection : towingConnections){
@@ -156,7 +156,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 						break;
 					}else{
 						towedVehiclesCheckedForWeights.add(otherVehicle);
-						combinedMass += otherVehicle.getCurrentMass();
+						combinedMass += otherVehicle.getMass();
 						otherVehicle = null;
 						towedVehiclesCheckedForWeights.clear();
 					}

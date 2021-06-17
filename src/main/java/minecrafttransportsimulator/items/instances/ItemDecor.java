@@ -2,6 +2,7 @@ package minecrafttransportsimulator.items.instances;
 
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.instances.BlockBeacon;
+import minecrafttransportsimulator.blocks.instances.BlockChest;
 import minecrafttransportsimulator.blocks.instances.BlockDecor;
 import minecrafttransportsimulator.blocks.instances.BlockFluidLoader;
 import minecrafttransportsimulator.blocks.instances.BlockFuelPump;
@@ -33,6 +34,8 @@ public class ItemDecor extends AItemSubTyped<JSONDecor> implements IItemBlock{
 	public static enum DecorComponentType{
 		@JSONDescription("Will make the decor have no functionality.")
 		GENERIC,
+		@JSONDescription("Will make the decor have chest functionality.")
+		CHEST,
 		@JSONDescription("Will make the decor have beacon functionality.")
 		BEACON,
 		@JSONDescription("Will make the decor have signal controller functionality.")
@@ -50,6 +53,7 @@ public class ItemDecor extends AItemSubTyped<JSONDecor> implements IItemBlock{
 		public static Class<? extends ABlockBase> getBlockClass(DecorComponentType type){
 			if(type != null){
 				switch(type){
+					case CHEST : return BlockChest.class;		
 					case BEACON : return BlockBeacon.class;	
 					case SIGNAL_CONTROLLER : return BlockSignalController.class;
 					case FUEL_PUMP : return BlockFuelPump.class;

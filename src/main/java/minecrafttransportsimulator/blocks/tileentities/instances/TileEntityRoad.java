@@ -14,7 +14,6 @@ import minecrafttransportsimulator.blocks.instances.BlockCollision;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadClickData;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLane;
-import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemRoadComponent;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent.JSONLaneSector;
@@ -27,6 +26,7 @@ import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityRoadCollisionUpdate;
 import minecrafttransportsimulator.rendering.instances.RenderRoad;
 import minecrafttransportsimulator.systems.PackParserSystem;
+import net.minecraft.item.ItemStack;
 
 /**Road tile entity.  Contains the definition so we know how
  * to render this in the TESR call, as well as stores the "fake"
@@ -116,14 +116,12 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	}
 	
 	@Override
-	public List<AItemPack<JSONRoadComponent>> getDrops(){
-		List<AItemPack<JSONRoadComponent>> drops = new ArrayList<AItemPack<JSONRoadComponent>>();
+	public void addDropsToList(List<ItemStack> drops){
 		for(RoadComponent componentType : RoadComponent.values()){
 			if(components.containsKey(componentType)){
-				drops.add(components.get(componentType));
+				drops.add(components.get(componentType).getNewStack());
 			}
 		}
-		return drops;
 	}
 	
 	/**

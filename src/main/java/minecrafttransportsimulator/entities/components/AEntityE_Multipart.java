@@ -174,6 +174,16 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 	}
 	
 	@Override
+	public double getMass(){
+		//Return our mass, plus our parts.
+		double currentMass = super.getMass();
+		for(APart part : parts){
+			currentMass += part.getMass();
+		}
+		return currentMass;
+	}
+	
+	@Override
 	public boolean addRider(WrapperEntity rider, Point3d riderLocation){
 		//Auto-close doors for the rider in the seat they are going in, if such doors exist.
 		if(super.addRider(rider, riderLocation)){

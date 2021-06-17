@@ -36,6 +36,11 @@ abstract class AEntityVehicleB_Rideable extends AEntityE_Multipart<JSONVehicle>{
 	}
 	
 	@Override
+	public double getMass(){
+		return super.getMass() + definition.motorized.emptyMass;
+	}
+	
+	@Override
 	public void updateRider(WrapperEntity rider, Iterator<WrapperEntity> iterator){
 		//We override the default rider update behavior here as the riders can move depending
 		//on how the part they are riding moves.  If we modified the rider position, then we'd
@@ -196,20 +201,5 @@ abstract class AEntityVehicleB_Rideable extends AEntityE_Multipart<JSONVehicle>{
 			}
 		}
 		return null;
-	}
-	
-	/**
-	 * Calculates the current mass of the vehicle.
-	 * Includes core mass, player weight, and cargo.
-	 */
-	protected int getCurrentMass(){
-		int currentMass = definition.motorized.emptyMass + 100*locationRiderMap.values().size();
-		for(APart part : parts){
-			currentMass += part.definition.generic.mass;
-			if(part instanceof PartInteractable){
-				currentMass += ((PartInteractable) part).getInventoryWeight();
-			}
-		}
-		return currentMass;
 	}
 }
