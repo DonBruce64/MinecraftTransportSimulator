@@ -324,7 +324,7 @@ public class GUIPanelAircraft extends AGUIPanel{
 				@Override
 				public void onClicked(boolean leftSide){
 					SwitchEntry switchDef = trailerSwitchDefs.get(0);
-					InterfacePacket.sendToServer(new PacketEntityTrailerConnection(vehicle, InterfaceClient.getClientPlayer(), switchDef.connectionGroupIndex));
+					InterfacePacket.sendToServer(new PacketEntityTrailerConnection(switchDef.entityOn, InterfaceClient.getClientPlayer(), switchDef.connectionGroupIndex));
 				}
 				
 				@Override
@@ -347,7 +347,7 @@ public class GUIPanelAircraft extends AGUIPanel{
 				@Override
 				public void onClicked(boolean leftSide){
 					SwitchEntry switchDef = trailerSwitchDefs.get(0);
-					InterfacePacket.sendToServer(new PacketEntityTrailerConnection(vehicle, InterfaceClient.getClientPlayer(), switchDef.connectionGroupIndex));
+					InterfacePacket.sendToServer(new PacketEntityTrailerConnection(switchDef.entityOn, InterfaceClient.getClientPlayer(), switchDef.connectionGroupIndex));
 				}
 				
 				@Override
