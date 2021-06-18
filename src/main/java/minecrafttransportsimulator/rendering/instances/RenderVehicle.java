@@ -64,7 +64,7 @@ public final class RenderVehicle extends ARenderEntityMultipart<EntityVehicleF_P
 	 *  needs to be rendered in pass 1 to do alpha blending.
 	 */
 	private static void renderPartBoxes(EntityVehicleF_Physics vehicle){
-		//Disable lighting and texture rendering, and enable blending.
+		//Disable lighting and texture rendering.
 		InterfaceRender.setLightingState(false);
 		InterfaceRender.setTextureState(false);
 		
@@ -193,5 +193,9 @@ public final class RenderVehicle extends ARenderEntityMultipart<EntityVehicleF_P
 				GL11.glPopMatrix();
 			}
 		}
+		
+		//Re-enable lighting and texture rendering.
+		InterfaceRender.setLightingState(true);
+		InterfaceRender.setTextureState(true);
 	}
 }

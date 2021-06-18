@@ -175,7 +175,7 @@ public class JSONConfig{
 		public JSONConfigEntry<Boolean> flaresBright = new JSONConfigEntry<Boolean>(false, "If false, light flares from vehicles and lamps will not do brightness blending.  Normally false, but can be set to true if it makes shaders better.");		
 		public JSONConfigEntry<Boolean> beamsBright = new JSONConfigEntry<Boolean>(true, "If false, beam-based lights from vehicles and lamps will not do brightness blending.  Useful if you have shaders and this is causing troubles.");
 		
-		public JSONConfigEntry<Boolean> instBlending = new JSONConfigEntry<Boolean>(true, "If false, instruments will not get a lighted overlay on them that blends to make them light up in the dark.  They will still have bright textures.  Useful if you have shaders and this is turning lit instruments black on vehicles.");
+		public JSONConfigEntry<Boolean> instLights = new JSONConfigEntry<Boolean>(true, "If false, instruments will not get a lighted overlay on them that blends to make them light up in the dark.  Rather, they will use normal alpha blending.  Useful if you have shaders and this is turning lit instruments black on vehicles.");
 		public JSONConfigEntry<Boolean> lightsSolid = new JSONConfigEntry<Boolean>(false, "If true, light rendering will happen on the first (solid) render pass.  For performance and compatibility, this should normally be false, but may be set to true if it helps with shaders.");
 		
 		public JSONConfigEntry<Boolean> playerTweaks = new JSONConfigEntry<Boolean>(true, "If true, player hands will be modified when holding guns, and hands and legs will be modified when riding in vehicles.  Set this to false if mods cause issues, like two-hand rendering or player model issues.");

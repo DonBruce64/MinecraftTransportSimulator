@@ -47,8 +47,7 @@ public final class RenderInstrument{
 		//Finally, render the instrument based on the JSON instrument.definitions.
 		for(byte i=0; i<instrument.definition.components.size(); ++i){
 			Component component = instrument.definition.components.get(i);
-			//If the overlay lights up, only render it when the lights are on.
-			if((component.overlayTexture && ConfigSystem.configObject.clientRendering.instBlending.value) ? (!component.lightUpTexture || lightsOn) && blendingEnabled : !blendingEnabled){
+			if(component.overlayTexture ? blendingEnabled : !blendingEnabled){
 				//If we have text, do a text render.  Otherwise, do a normal instrument render.
 				//Also translate slightly away from the instrument location to prevent clipping.
 				GL11.glPushMatrix();
@@ -64,7 +63,7 @@ public final class RenderInstrument{
 						textNumeric = 0;
 					}
 					String text = String.format("%0" + component.textObject.maxLength + "d", (int) textNumeric);
-					if(component.lightUpTexture && lightsOn){
+					if(component.lightUpTexture && lightsOn && ConfigSystem.configObject.clientRendering.instLights.value){
 						InterfaceRender.setLightingState(false);
 						InterfaceGUI.drawScaledText(text, component.textObject.fontName, (int) component.textObject.pos.x, (int) component.textObject.pos.y, Color.decode(component.textObject.color), TextPosition.values()[component.textObject.renderPosition], component.textObject.wrapWidth, component.textObject.scale, component.textObject.autoScale);
 						InterfaceRender.setLightingState(true);
@@ -235,8 +234,8 @@ public final class RenderInstrument{
 						//Translate to the component.
 						GL11.glTranslatef(component.xCenter, component.yCenter, 0.0F);
 						
-						//If the shape is lit, disable lighting.
-						if(component.lightUpTexture && lightsOn){
+						//If the shape is lit, disable lighting for blending.
+						if(component.lightUpTexture && lightsOn && ConfigSystem.configObject.clientRendering.instLights.value){
 							InterfaceRender.setLightingState(false);
 							renderSquareUV(component.textureWidth, component.textureHeight);
 							InterfaceRender.setLightingState(true);
