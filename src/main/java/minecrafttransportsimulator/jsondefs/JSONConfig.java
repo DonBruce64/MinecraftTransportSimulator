@@ -2,7 +2,9 @@ package minecrafttransportsimulator.jsondefs;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemPartEngine;
@@ -26,22 +28,23 @@ public class JSONConfig{
 	public ConfigControls controls = new ConfigControls();
 	
 	public static class ConfigGeneral{
-		public ConfigBoolean dumpCraftingConfig = new ConfigBoolean(false, "If true, then all recipes for all items in packs will be dumped into the config file at boot.  WARNING: this will overwrite your existing crafting overrides file!");
-		public ConfigBoolean opSignEditingOnly = new ConfigBoolean(false, "If true, only OPs will be able to edit signs on servers.  Does not affect client worlds.");
-		public ConfigBoolean opPickupVehiclesOnly = new ConfigBoolean(false, "If true, only OPs will be able to pick up vehicles with wrenches.  Does not affect client worlds.");
-		public ConfigBoolean creativePickupVehiclesOnly = new ConfigBoolean(false, "If true, vehicles can only be picked up in creative mode.");
-		public ConfigBoolean blockBreakage = new ConfigBoolean(true, "Whether or not vehicles and guns can break blocks when they hit them.  If false, vehicles will simply stop when they hit blocks, and guns won't break blocks when they hit them.  This will also disable explosive block breakage, though not explosions themselves.");
-		public ConfigBoolean vehicleDestruction = new ConfigBoolean(true, "Whether or not vehicles can be destroyed by ramming into blocks at high speeds.  Set this to false if you don't like loosing vehicles to badly-placed walls.");
-		public ConfigBoolean noclipVehicles = new ConfigBoolean(false, "If true, vehicles will not be able to collide with blocks.  This also prevents them from moving if they do not have wheels on them, as otherwise they would phase through the ground into the void.");
-		public ConfigBoolean creativeDamage = new ConfigBoolean(false, "If true, damage from vehicles and guns will be applied to creative players.");
-		public ConfigBoolean chunkloadVehicles = new ConfigBoolean(true, "If true, vehicles will be chunkloaded when on roads/tracks.  This allows them to travel into unloaded chunks.");
-		public ConfigDouble speedFactor = new ConfigDouble(0.35D, "Factor to apply to vehicle movement.  1 is the realistic value, but this makes vehicles move too fast for Minecraft. Adjust with caution.");
-		public ConfigDouble fuelUsageFactor = new ConfigDouble(1.0D, "Factor times which engines use fuel.  Change this if you think engines use fuel too fast or slow.");
-		public ConfigDouble engineHoursFactor = new ConfigDouble(1.0D, "Factor times which engines hours accumulate.  Change this if you want to adjust how fast engines wear out.");
-		public ConfigDouble climbSpeed = new ConfigDouble(0.125D, "How far a vehicle will 'climb' blocks every tick when the wheels go into the ground.  Higher values make vehicles climb blocks quicker at the cost of smooth movement.");
-		public ConfigDouble gravityFactor = new ConfigDouble(1.0D, "Factor for gravitational forces applied to vehicles.  Can be adjusted if you think cars are too 'floaty'.  Does not affect aircraft.");
-		public ConfigDouble engineSpeedTempFactor = new ConfigDouble(1.0D, "Factor for how RPM affects engine temp.  Higher values will make engines heat up quicker at higher RPMs.");
-		public ConfigDouble engineBiomeTempFactor = new ConfigDouble(1.0D, "Factor for how biome temp affects engine temp.  Higher values will make engines heat up quicker in hotter biomes.");
+		public JSONConfigEntry<Boolean> dumpCraftingConfig = new JSONConfigEntry<Boolean>(false, "If true, then all recipes for all items in packs will be dumped into the config file at boot.  WARNING: this will overwrite your existing crafting overrides file!");
+		public JSONConfigEntry<Boolean> opSignEditingOnly = new JSONConfigEntry<Boolean>(false, "If true, only OPs will be able to edit signs on servers.  Does not affect client worlds.");
+		public JSONConfigEntry<Boolean> opPickupVehiclesOnly = new JSONConfigEntry<Boolean>(false, "If true, only OPs will be able to pick up vehicles with wrenches.  Does not affect client worlds.");
+		public JSONConfigEntry<Boolean> creativePickupVehiclesOnly = new JSONConfigEntry<Boolean>(false, "If true, vehicles can only be picked up in creative mode.");
+		public JSONConfigEntry<Boolean> blockBreakage = new JSONConfigEntry<Boolean>(true, "Whether or not vehicles and guns can break blocks when they hit them.  If false, vehicles will simply stop when they hit blocks, and guns won't break blocks when they hit them.  This will also disable explosive block breakage, though not explosions themselves.");
+		public JSONConfigEntry<Boolean> vehicleDestruction = new JSONConfigEntry<Boolean>(true, "Whether or not vehicles can be destroyed by ramming into blocks at high speeds.  Set this to false if you don't like loosing vehicles to badly-placed walls.");
+		public JSONConfigEntry<Boolean> noclipVehicles = new JSONConfigEntry<Boolean>(false, "If true, vehicles will not be able to collide with blocks.  This also prevents them from moving if they do not have wheels on them, as otherwise they would phase through the ground into the void.");
+		public JSONConfigEntry<Boolean> creativeDamage = new JSONConfigEntry<Boolean>(false, "If true, damage from vehicles and guns will be applied to creative players.");
+		public JSONConfigEntry<Boolean> chunkloadVehicles = new JSONConfigEntry<Boolean>(true, "If true, vehicles will be chunkloaded when on roads/tracks.  This allows them to travel into unloaded chunks.");
+		public JSONConfigEntry<Double> speedFactor = new JSONConfigEntry<Double>(0.35D, "Factor to apply to vehicle movement.  1 is the realistic value, but this makes vehicles move too fast for Minecraft. Adjust with caution.");
+		public JSONConfigEntry<Double> fuelUsageFactor = new JSONConfigEntry<Double>(1.0D, "Factor times which engines use fuel.  Change this if you think engines use fuel too fast or slow.");
+		public JSONConfigEntry<Double> engineHoursFactor = new JSONConfigEntry<Double>(1.0D, "Factor times which engines hours accumulate.  Change this if you want to adjust how fast engines wear out.");
+		public JSONConfigEntry<Double> climbSpeed = new JSONConfigEntry<Double>(0.125D, "How far a vehicle will 'climb' blocks every tick when the wheels go into the ground.  Higher values make vehicles climb blocks quicker at the cost of smooth movement.");
+		public JSONConfigEntry<Double> gravityFactor = new JSONConfigEntry<Double>(1.0D, "Factor for gravitational forces applied to vehicles.  Can be adjusted if you think cars are too 'floaty'.  Does not affect aircraft.");
+		public JSONConfigEntry<Double> engineSpeedTempFactor = new JSONConfigEntry<Double>(1.0D, "Factor for how RPM affects engine temp.  Higher values will make engines heat up quicker at higher RPMs.");
+		public JSONConfigEntry<Double> engineBiomeTempFactor = new JSONConfigEntry<Double>(1.0D, "Factor for how biome temp affects engine temp.  Higher values will make engines heat up quicker in hotter biomes.");
+		public JSONConfigEntry<Set<String>> joinedPlayers = new JSONConfigEntry<Set<String>>(new HashSet<String>(), "Listing of players that have joined this world.  Players will be given the manual on their first join.");
 		public ConfigItemWeights itemWeights = new ConfigItemWeights();
 		
 		public static class ConfigItemWeights{
@@ -64,17 +67,17 @@ public class JSONConfig{
 	}
 	
 	public static class ConfigDamage{
-		public ConfigBoolean explosions = new ConfigBoolean(true, "Whether or not vehicles explode when crashed or shot down.");
-		public ConfigBoolean wheelBreakage = new ConfigBoolean(true, "Whether or not wheels can be broken (go flat).");
-		public ConfigBoolean wheelDamageIgnoreVelocity = new ConfigBoolean(false, "Whether or not velocity is ignored when calculating wheel damage.");
-		public ConfigDouble propellerDamageFactor = new ConfigDouble(1.0D, "Factor for damage caused by a propeller.");
-		public ConfigDouble jetDamageFactor = new ConfigDouble(1.0D, "Factor for damage caused by a jet engine.");
-		public ConfigDouble wheelDamageFactor = new ConfigDouble(1.0D, "Factor for damage caused by wheels on vehicles.");
-		public ConfigDouble crashDamageFactor = new ConfigDouble(1.0D, "Factor for damage caused by crashes.");
-		public ConfigDouble bulletDamageFactor = new ConfigDouble(1.0D, "Factor for damage caused by bullets on vehicles.");
-		public ConfigDouble engineLeakProbability = new ConfigDouble(0.01D, "Chance an engine will spring a leak if hit.  Explosions cause 10x this chance.");
-		public ConfigDouble crashItemDropPercentage = new ConfigDouble(0.75D, "Percent that a crafting ingredient will be dropped when a vehicle is crashed.  Note that fire/explosions may destroy these items if enabled, so just because they drop does not mean you will get all of them.");
-		public ConfigDouble wheelDamageMinimumVelocity = new ConfigDouble(0.2D, "Minimum velocity (blocks/second) which vehicles must be going to damage entities with their wheels.");
+		public JSONConfigEntry<Boolean> explosions = new JSONConfigEntry<Boolean>(true, "Whether or not vehicles explode when crashed or shot down.");
+		public JSONConfigEntry<Boolean> wheelBreakage = new JSONConfigEntry<Boolean>(true, "Whether or not wheels can be broken (go flat).");
+		public JSONConfigEntry<Boolean> wheelDamageIgnoreVelocity = new JSONConfigEntry<Boolean>(false, "Whether or not velocity is ignored when calculating wheel damage.");
+		public JSONConfigEntry<Double> propellerDamageFactor = new JSONConfigEntry<Double>(1.0D, "Factor for damage caused by a propeller.");
+		public JSONConfigEntry<Double> jetDamageFactor = new JSONConfigEntry<Double>(1.0D, "Factor for damage caused by a jet engine.");
+		public JSONConfigEntry<Double> wheelDamageFactor = new JSONConfigEntry<Double>(1.0D, "Factor for damage caused by wheels on vehicles.");
+		public JSONConfigEntry<Double> crashDamageFactor = new JSONConfigEntry<Double>(1.0D, "Factor for damage caused by crashes.");
+		public JSONConfigEntry<Double> bulletDamageFactor = new JSONConfigEntry<Double>(1.0D, "Factor for damage caused by bullets on vehicles.");
+		public JSONConfigEntry<Double> engineLeakProbability = new JSONConfigEntry<Double>(0.01D, "Chance an engine will spring a leak if hit.  Explosions cause 10x this chance.");
+		public JSONConfigEntry<Double> crashItemDropPercentage = new JSONConfigEntry<Double>(0.75D, "Percent that a crafting ingredient will be dropped when a vehicle is crashed.  Note that fire/explosions may destroy these items if enabled, so just because they drop does not mean you will get all of them.");
+		public JSONConfigEntry<Double> wheelDamageMinimumVelocity = new JSONConfigEntry<Double>(0.2D, "Minimum velocity (blocks/second) which vehicles must be going to damage entities with their wheels.");
 	}
 	
 	public static class ConfigFuel{
@@ -154,52 +157,52 @@ public class JSONConfig{
 	}
 	
 	public static class ConfigClientRendering{
-		public ConfigBoolean renderHUD_1P = new ConfigBoolean(true, "If false, the HUD in vehicles will not render in 1st-person mode.");
-		public ConfigBoolean renderHUD_3P = new ConfigBoolean(true, "If false, the HUD in vehicles will not render in 3rd-person mode.");
+		public JSONConfigEntry<Boolean> renderHUD_1P = new JSONConfigEntry<Boolean>(true, "If false, the HUD in vehicles will not render in 1st-person mode.");
+		public JSONConfigEntry<Boolean> renderHUD_3P = new JSONConfigEntry<Boolean>(true, "If false, the HUD in vehicles will not render in 3rd-person mode.");
 		
-		public ConfigBoolean fullHUD_1P = new ConfigBoolean(false, "If true, the full-size HUD will render in 1st-person rather than the half-size HUD.");
-		public ConfigBoolean fullHUD_3P = new ConfigBoolean(false, "If true, the full-size HUD will render in 3rd-person rather than the half-size HUD.");
+		public JSONConfigEntry<Boolean> fullHUD_1P = new JSONConfigEntry<Boolean>(false, "If true, the full-size HUD will render in 1st-person rather than the half-size HUD.");
+		public JSONConfigEntry<Boolean> fullHUD_3P = new JSONConfigEntry<Boolean>(false, "If true, the full-size HUD will render in 3rd-person rather than the half-size HUD.");
 		
-		public ConfigBoolean transpHUD_1P = new ConfigBoolean(false, "If true, the background textures for the HUD will not be rendered in 1st-person.");
-		public ConfigBoolean transpHUD_3P = new ConfigBoolean(false, "If true, the background textures for the HUD will not be rendered in 1st-person.");
+		public JSONConfigEntry<Boolean> transpHUD_1P = new JSONConfigEntry<Boolean>(false, "If true, the background textures for the HUD will not be rendered in 1st-person.");
+		public JSONConfigEntry<Boolean> transpHUD_3P = new JSONConfigEntry<Boolean>(false, "If true, the background textures for the HUD will not be rendered in 1st-person.");
 		
-		public ConfigBoolean renderWindows = new ConfigBoolean(true, "Should the glass on windows be rendered on vehicles?");
-		public ConfigBoolean innerWindows = new ConfigBoolean(false, "Should the glass on windows be rendered on the inside of the vehicle?  Note: if renderWindows is false, this config has no effect.");
+		public JSONConfigEntry<Boolean> renderWindows = new JSONConfigEntry<Boolean>(true, "Should the glass on windows be rendered on vehicles?");
+		public JSONConfigEntry<Boolean> innerWindows = new JSONConfigEntry<Boolean>(false, "Should the glass on windows be rendered on the inside of the vehicle?  Note: if renderWindows is false, this config has no effect.");
 		
-		public ConfigBoolean vehicleBeams = new ConfigBoolean(true, "If false, beams on vehicles will not render.");
-		public ConfigBoolean blockBeams = new ConfigBoolean(true, "If false, beams on blocks (decor) will not render.");
+		public JSONConfigEntry<Boolean> vehicleBeams = new JSONConfigEntry<Boolean>(true, "If false, beams on vehicles will not render.");
+		public JSONConfigEntry<Boolean> blockBeams = new JSONConfigEntry<Boolean>(true, "If false, beams on blocks (decor) will not render.");
 		
-		public ConfigBoolean flaresBright = new ConfigBoolean(false, "If false, light flares from vehicles and lamps will not do brightness blending.  Normally false, but can be set to true if it makes shaders better.");		
-		public ConfigBoolean beamsBright = new ConfigBoolean(true, "If false, beam-based lights from vehicles and lamps will not do brightness blending.  Useful if you have shaders and this is causing troubles.");
+		public JSONConfigEntry<Boolean> flaresBright = new JSONConfigEntry<Boolean>(false, "If false, light flares from vehicles and lamps will not do brightness blending.  Normally false, but can be set to true if it makes shaders better.");		
+		public JSONConfigEntry<Boolean> beamsBright = new JSONConfigEntry<Boolean>(true, "If false, beam-based lights from vehicles and lamps will not do brightness blending.  Useful if you have shaders and this is causing troubles.");
 		
-		public ConfigBoolean instBlending = new ConfigBoolean(true, "If false, instruments will not get a lighted overlay on them that blends to make them light up in the dark.  They will still have bright textures.  Useful if you have shaders and this is turning lit instruments black on vehicles.");
-		public ConfigBoolean lightsSolid = new ConfigBoolean(false, "If true, light rendering will happen on the first (solid) render pass.  For performance and compatibility, this should normally be false, but may be set to true if it helps with shaders.");
+		public JSONConfigEntry<Boolean> instBlending = new JSONConfigEntry<Boolean>(true, "If false, instruments will not get a lighted overlay on them that blends to make them light up in the dark.  They will still have bright textures.  Useful if you have shaders and this is turning lit instruments black on vehicles.");
+		public JSONConfigEntry<Boolean> lightsSolid = new JSONConfigEntry<Boolean>(false, "If true, light rendering will happen on the first (solid) render pass.  For performance and compatibility, this should normally be false, but may be set to true if it helps with shaders.");
 		
-		public ConfigBoolean playerTweaks = new ConfigBoolean(true, "If true, player hands will be modified when holding guns, and hands and legs will be modified when riding in vehicles.  Set this to false if mods cause issues, like two-hand rendering or player model issues.");
-		public ConfigBoolean vehicleBlklt = new ConfigBoolean(false, "If true, vehicles will spawn invisible light blocks to force shaders to render them brighter.  Use this only if the other light options fail to work.");
+		public JSONConfigEntry<Boolean> playerTweaks = new JSONConfigEntry<Boolean>(true, "If true, player hands will be modified when holding guns, and hands and legs will be modified when riding in vehicles.  Set this to false if mods cause issues, like two-hand rendering or player model issues.");
+		public JSONConfigEntry<Boolean> vehicleBlklt = new JSONConfigEntry<Boolean>(false, "If true, vehicles will spawn invisible light blocks to force shaders to render them brighter.  Use this only if the other light options fail to work.");
 		
 		
 		
-		public ConfigInteger renderReductionHeight = new ConfigInteger(250, "When riding in a vehicle above this height MTS will reduce the render distance to 1.  This provides a significant speedup for worldgen and render lag.  Note that this is only active on Singleplayer.");
+		public JSONConfigEntry<Integer> renderReductionHeight = new JSONConfigEntry<Integer>(250, "When riding in a vehicle above this height MTS will reduce the render distance to 1.  This provides a significant speedup for worldgen and render lag.  Note that this is only active on Singleplayer.");
 	}
 	
 	public static class ConfigClientControls{
-		public ConfigBoolean mouseYoke = new ConfigBoolean(false, "Enable mouse yoke for vehicles? Prevents looking around unless unlocked.  Think MCHeli controls.");
-		public ConfigBoolean kbOverride = new ConfigBoolean(true, "Should keyboard controls be ignored when a joystick control is mapped?  Leave true to free up the keyboard while using a joysick.");
+		public JSONConfigEntry<Boolean> mouseYoke = new JSONConfigEntry<Boolean>(false, "Enable mouse yoke for vehicles? Prevents looking around unless unlocked.  Think MCHeli controls.");
+		public JSONConfigEntry<Boolean> kbOverride = new JSONConfigEntry<Boolean>(true, "Should keyboard controls be ignored when a joystick control is mapped?  Leave true to free up the keyboard while using a joysick.");
 		
-		public ConfigBoolean simpleThrottle = new ConfigBoolean(true, "If true, then vehicles will automatically go into reverse after stopped with the brake rather than staying stopped and waiting for you to shift.  When going in reverse, the opposite is true: the vehicle will shift into forwards when pressing forwards when stopped.  Additionally, the parking brake will automatically be set when leaving the vehicle.");
-		public ConfigBoolean halfThrottle = new ConfigBoolean(false, "If true, then the gas key will only be a half-throttle, with the MOD+Throttle key becoming the full-speed control.  Useful if you want a more controlled vehicle experience.  Only valid on car/boat types with on-off throttles, and does not work in conjunction with simpleThrottle as that changes how the MOD key works with gas and brake keys.");
+		public JSONConfigEntry<Boolean> simpleThrottle = new JSONConfigEntry<Boolean>(true, "If true, then vehicles will automatically go into reverse after stopped with the brake rather than staying stopped and waiting for you to shift.  When going in reverse, the opposite is true: the vehicle will shift into forwards when pressing forwards when stopped.  Additionally, the parking brake will automatically be set when leaving the vehicle.");
+		public JSONConfigEntry<Boolean> halfThrottle = new JSONConfigEntry<Boolean>(false, "If true, then the gas key will only be a half-throttle, with the MOD+Throttle key becoming the full-speed control.  Useful if you want a more controlled vehicle experience.  Only valid on car/boat types with on-off throttles, and does not work in conjunction with simpleThrottle as that changes how the MOD key works with gas and brake keys.");
 		
-		public ConfigBoolean autostartEng = new ConfigBoolean(true, "If true, engines will automatically start when a driver enters a vehicle, and will turn off when they leave.  The parking brake will also be applied when leaving the vehicle.  Note: this does not bypass the fuel or electrical system.");
-		public ConfigBoolean autoTrnSignals = new ConfigBoolean(true, "If true, turns signals will come on automatically when you start a turn, and will turn off when the turn completes.  If this is false, then they will only be able to be activated with the keybinds or via the panel.");
+		public JSONConfigEntry<Boolean> autostartEng = new JSONConfigEntry<Boolean>(true, "If true, engines will automatically start when a driver enters a vehicle, and will turn off when they leave.  The parking brake will also be applied when leaving the vehicle.  Note: this does not bypass the fuel or electrical system.");
+		public JSONConfigEntry<Boolean> autoTrnSignals = new JSONConfigEntry<Boolean>(true, "If true, turns signals will come on automatically when you start a turn, and will turn off when the turn completes.  If this is false, then they will only be able to be activated with the keybinds or via the panel.");
 		
-		public ConfigBoolean north360 = new ConfigBoolean(false, "If true, instruments will represent North as 360 degrees, instead of the Minecraft default of 180. Allows using the heading system that real-world pilots and militaries do.");
-		public ConfigBoolean devMode = new ConfigBoolean(false, "If enabled, MTS will allow access to the dev mode GUI while sitting in vehicles.  The GUI allows editing JSONs in-game without the need to restart.");
+		public JSONConfigEntry<Boolean> north360 = new JSONConfigEntry<Boolean>(false, "If true, instruments will represent North as 360 degrees, instead of the Minecraft default of 180. Allows using the heading system that real-world pilots and militaries do.");
+		public JSONConfigEntry<Boolean> devMode = new JSONConfigEntry<Boolean>(false, "If enabled, MTS will allow access to the dev mode GUI while sitting in vehicles.  The GUI allows editing JSONs in-game without the need to restart.");
 		
-		public ConfigInteger controlSurfaceCooldown = new ConfigInteger(4, "How long (in ticks) it takes before control surfaces try to return to their natural angle.  This is not used when using a joystick.");
-		public ConfigInteger steeringIncrement = new ConfigInteger(20, "How many units (1/10 of a degree) to turn the wheels on vehicles for every tick the button is held down.  This is not used when using a joystick.");
-		public ConfigInteger flightIncrement = new ConfigInteger(6, "How many units (1/10 of a degree) to move the elevators and ailerons on aircraft for every tick the button is held down.  This is not used when using a joystick.");
-		public ConfigDouble joystickDeadZone = new ConfigDouble(0.03D, "Dead zone for joystick axis.  This is NOT joystick specific.");
+		public JSONConfigEntry<Integer> controlSurfaceCooldown = new JSONConfigEntry<Integer>(4, "How long (in ticks) it takes before control surfaces try to return to their natural angle.  This is not used when using a joystick.");
+		public JSONConfigEntry<Integer> steeringIncrement = new JSONConfigEntry<Integer>(20, "How many units (1/10 of a degree) to turn the wheels on vehicles for every tick the button is held down.  This is not used when using a joystick.");
+		public JSONConfigEntry<Integer> flightIncrement = new JSONConfigEntry<Integer>(6, "How many units (1/10 of a degree) to move the elevators and ailerons on aircraft for every tick the button is held down.  This is not used when using a joystick.");
+		public JSONConfigEntry<Double> joystickDeadZone = new JSONConfigEntry<Double>(0.03D, "Dead zone for joystick axis.  This is NOT joystick specific.");
 	}
 	
 	public static class ConfigControls{
@@ -208,43 +211,13 @@ public class JSONConfig{
 	}
 	
 	
-	public static class Config<ConfigType>{
+	public static class JSONConfigEntry<ConfigType>{
 		public ConfigType value;
 		public String comment;
 		
-		public Config(ConfigType defaultValue, String comment){
+		public JSONConfigEntry(ConfigType defaultValue, String comment){
 			this.value = defaultValue;
 			this.comment = comment;
-		}
-	}
-	
-	public static class ConfigBoolean extends Config<Boolean>{
-		public ConfigBoolean(Boolean defaultValue, String comment){
-			super(defaultValue, comment);
-		}
-	}
-	
-	public static class ConfigInteger extends Config<Integer>{
-		public ConfigInteger(Integer defaultValue, String comment){
-			super(defaultValue, comment);
-		}
-	}
-	
-	public static class ConfigDouble extends Config<Double>{
-		public ConfigDouble(Double defaultValue, String comment){
-			super(defaultValue, comment);
-		}
-	}
-	
-	public static class ConfigString extends Config<String>{
-		public ConfigString(String defaultValue, String comment){
-			super(defaultValue, comment);
-		}
-	}
-	
-	public static class ConfigStringArray extends Config<String[]>{
-		public ConfigStringArray(String[] defaultValue, String comment){
-			super(defaultValue, comment);
 		}
 	}
 	

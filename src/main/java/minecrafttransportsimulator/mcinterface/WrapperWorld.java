@@ -32,6 +32,7 @@ import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataCSHandshake;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockBush;
 import net.minecraft.block.BlockCrops;
@@ -976,7 +977,13 @@ public class WrapperWorld{
    @SubscribeEvent
    public static void on(EntityJoinWorldEvent event){
 	   if(event.getEntity() instanceof EntityPlayer && !event.getWorld().isRemote){
-		   ticksSincePlayerJoin.put((EntityPlayer) event.getEntity(), 0);
+		   EntityPlayer player = (EntityPlayer) event.getEntity();
+		   ticksSincePlayerJoin.put(player, 0);
+		   if(!ConfigSystem.configObject.general.joinedPlayers.value.contains(player.getCachedUniqueIdString())){
+			   player.addItemStackToInventory(PackParserSystem.getItem("mts", "handbook_en").getNewStack());
+			   ConfigSystem.configObject.general.joinedPlayers.value.add(player.getCachedUniqueIdString());
+			   ConfigSystem.saveToDisk();
+		   }
 	   }
    }
    

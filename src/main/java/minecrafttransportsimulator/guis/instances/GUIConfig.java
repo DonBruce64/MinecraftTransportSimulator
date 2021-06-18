@@ -12,7 +12,7 @@ import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.guis.components.InterfaceGUI;
-import minecrafttransportsimulator.jsondefs.JSONConfig.ConfigBoolean;
+import minecrafttransportsimulator.jsondefs.JSONConfig.JSONConfigEntry;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.InterfaceInput;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -30,8 +30,8 @@ public class GUIConfig extends AGUIBase{
 	//Config variables.
 	private boolean configuringControls = true;
 	private boolean configuringRendering = false;
-	private Map<GUIComponentButton, ConfigBoolean> renderConfigButtons = new HashMap<GUIComponentButton, ConfigBoolean>();
-	private Map<GUIComponentButton, ConfigBoolean> controlConfigButtons = new HashMap<GUIComponentButton, ConfigBoolean>();
+	private Map<GUIComponentButton, JSONConfigEntry<Boolean>> renderConfigButtons = new HashMap<GUIComponentButton, JSONConfigEntry<Boolean>>();
+	private Map<GUIComponentButton, JSONConfigEntry<Boolean>> controlConfigButtons = new HashMap<GUIComponentButton, JSONConfigEntry<Boolean>>();
 	
 	//Keybind selection variables.
 	private String vehicleConfiguring = "";
@@ -487,32 +487,35 @@ public class GUIConfig extends AGUIBase{
 		}
 	}
 	
-	private void populateConfigButtonList(int guiLeft, int guiTop, Map<GUIComponentButton, ConfigBoolean> configButtons, Object configObject){
+	@SuppressWarnings("unchecked")
+	private void populateConfigButtonList(int guiLeft, int guiTop, Map<GUIComponentButton, JSONConfigEntry<Boolean>> configButtons, Object configObject){
 		configButtons.clear();
 		for(Field field : configObject.getClass().getFields()){
-			if(field.getType().equals(ConfigBoolean.class)){
+			if(field.getType().equals(JSONConfigEntry.class)){
 				try{
-					ConfigBoolean config = (ConfigBoolean) field.get(configObject);
-					GUIComponentButton button = new GUIComponentButton(guiLeft + 85 + 120*(configButtons.size()%2), guiTop + 20 + 16*(configButtons.size()/2), 40, String.valueOf(config.value), 16, true){
-						@Override
-						public void onClicked(){
-							configButtons.get(this).value = !Boolean.valueOf(text);
-							ConfigSystem.saveToDisk();
-							text = String.valueOf(configButtons.get(this).value);
-						}
-						
-						@Override
-						public void renderTooltip(AGUIBase gui, int mouseX, int mouseY){
-							if(visible){
-								if(mouseX >= x && mouseY >= y && mouseX < x + width && mouseY < y + height){
-									InterfaceGUI.drawGenericTooltip(gui, mouseX, mouseY, config.comment);
+					JSONConfigEntry<?> configEntry = (JSONConfigEntry<?>) field.get(configObject);
+					if(configEntry.value.getClass().equals(Boolean.class)){
+						GUIComponentButton button = new GUIComponentButton(guiLeft + 85 + 120*(configButtons.size()%2), guiTop + 20 + 16*(configButtons.size()/2), 40, String.valueOf(configEntry.value), 16, true){
+							@Override
+							public void onClicked(){
+								configButtons.get(this).value = !Boolean.valueOf(text);
+								ConfigSystem.saveToDisk();
+								text = String.valueOf(configButtons.get(this).value);
+							}
+							
+							@Override
+							public void renderTooltip(AGUIBase gui, int mouseX, int mouseY){
+								if(visible){
+									if(mouseX >= x && mouseY >= y && mouseX < x + width && mouseY < y + height){
+										InterfaceGUI.drawGenericTooltip(gui, mouseX, mouseY, configEntry.comment);
+									}
 								}
 							}
-						}
-					};
-					addButton(button);
-					configButtons.put(button, config);
-					addLabel(new GUIComponentLabel(button.x - 75, button.y + 5, Color.BLACK, field.getName()).setButton(button));
+						};
+						addButton(button);
+						configButtons.put(button, (JSONConfigEntry<Boolean>) configEntry);
+						addLabel(new GUIComponentLabel(button.x - 75, button.y + 5, Color.BLACK, field.getName()).setButton(button));
+					}
 				}catch(Exception e){
 					//How the heck does this even happen?
 				}
