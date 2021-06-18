@@ -123,10 +123,9 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityTi
 	}
 	
 	@Override
-	public void save(WrapperNBT data){
+	public WrapperNBT save(WrapperNBT data){
 		super.save(data);
-		WrapperNBT tankData = new WrapperNBT();
-		tank.save(tankData);
-		data.setData("tank", tankData);
+		data.setData("tank", tank.save(new WrapperNBT()));
+		return data;
 	}
 }

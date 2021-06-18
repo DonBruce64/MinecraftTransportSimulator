@@ -231,12 +231,13 @@ public final class PartSeat extends APart{
 	}
 	
 	@Override
-	public void save(WrapperNBT data){
+	public WrapperNBT save(WrapperNBT data){
 		super.save(data);
 		if(activeGun != null){
 			data.setString("activeGunPackID", activeGun.definition.packID);
 			data.setString("activeGunSystemName", activeGun.definition.systemName);
 			data.setString("activeGunSubName", activeGun.subName);
 		}
+		return data;
 	}
 }

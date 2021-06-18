@@ -933,7 +933,7 @@ public class PartEngine extends APart{
 	}
 	
 	@Override
-	public void save(WrapperNBT data){
+	public WrapperNBT save(WrapperNBT data){
 		super.save(data);
 		data.setBoolean("isCreative", isCreative);
 		data.setBoolean("oilLeak", oilLeak);
@@ -945,6 +945,7 @@ public class PartEngine extends APart{
 		data.setDouble("temp", temp);
 		data.setDouble("pressure", pressure);
 		data.setInteger("state", (byte) state.ordinal());
+		return data;
 	}
 	
 	public enum EngineStates{

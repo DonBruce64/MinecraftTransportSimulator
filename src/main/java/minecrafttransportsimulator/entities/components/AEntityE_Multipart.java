@@ -887,7 +887,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 		
 	
 	@Override
-	public void save(WrapperNBT data){
+	public WrapperNBT save(WrapperNBT data){
 		super.save(data);
 		List<APart> allParts = new ArrayList<APart>();
 		allParts.addAll(parts);
@@ -896,8 +896,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 		for(APart part : allParts){
 			//Don't save the part if it's not valid or a fake part.
 			if(part.isValid && !part.isFake()){
-				WrapperNBT partData = new WrapperNBT();
-				part.save(partData);
+				WrapperNBT partData = part.save(new WrapperNBT());
 				//We need to set some extra data here for the part to allow this entity to know where it went.
 				//This only gets set here during saving/loading, and is NOT returned in the item that comes from the part.
 				partData.setPoint3d("offset", part.placementOffset);
@@ -906,5 +905,6 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 			}
 		}
 		data.setInteger("totalParts", totalParts);
+		return data;
 	}
 }

@@ -201,10 +201,11 @@ public class EntityFluidTank extends AEntityA_Base{
 	 *  Saves tank data to the passed-in NBT.
 	 */
 	@Override
-	public void save(WrapperNBT data){
+	public WrapperNBT save(WrapperNBT data){
 		super.save(data);
 		data.setString("currentFluid", currentFluid);
 		data.setDouble("fluidLevel", fluidLevel);
 		data.setDouble("fluidDispensed", fluidDispensed);
+		return data;
 	}
 }

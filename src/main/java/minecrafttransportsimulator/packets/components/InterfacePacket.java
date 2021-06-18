@@ -21,6 +21,7 @@ import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketFluidTankChange;
 import minecrafttransportsimulator.packets.instances.PacketInventoryContainerChange;
 import minecrafttransportsimulator.packets.instances.PacketPartChange;
+import minecrafttransportsimulator.packets.instances.PacketPartEffector;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine;
 import minecrafttransportsimulator.packets.instances.PacketPartGroundDevice;
 import minecrafttransportsimulator.packets.instances.PacketPartGun;
@@ -100,6 +101,7 @@ public class InterfacePacket{
 		registerPacket(packetIndex++, PacketPartChange.class);
 		registerPacket(packetIndex++, PacketPartGunBulletHit.class);
 		registerPacket(packetIndex++, PacketPartGun.class);
+		registerPacket(packetIndex++, PacketPartEffector.class);
 		registerPacket(packetIndex++, PacketPartEngine.class);
 		registerPacket(packetIndex++, PacketPartGroundDevice.class);
 		registerPacket(packetIndex++, PacketPartInteractable.class);

@@ -38,7 +38,7 @@ public class BlockCollision extends ABlockBase{
 			//destroying all collisions, including this one.  However, since
 			//we check if the road block is isActive, and that gets set before destroying
 			//all collision blocks, the recursive call won't make it down here.
-			world.destroyBlock(((ATileEntityBase<?>) masterBlock).position);
+			world.destroyBlock(((ATileEntityBase<?>) masterBlock).position, true);
 			return;
     	}
     }

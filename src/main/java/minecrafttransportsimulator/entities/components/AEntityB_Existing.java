@@ -172,7 +172,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
     }
 	
 	@Override
-	public void save(WrapperNBT data){
+	public WrapperNBT save(WrapperNBT data){
 		super.save(data);
 		if(shouldSavePosition()){
 			data.setPoint3d("position", position);
@@ -181,9 +181,8 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 			data.setPoint3d("rotation", rotation);
 		}
 		if(radio != null){
-			WrapperNBT radioData = new WrapperNBT();
-			radio.save(radioData);
-			data.setData("radio", radioData);
+			data.setData("radio", radio.save(new WrapperNBT()));
 		}
+		return data;
 	}
 }

@@ -174,9 +174,11 @@ public abstract class AEntityA_Base{
 	/**
 	 *  Called when the entity needs to be saved to disk.  The passed-in wrapper
 	 *  should be written to at this point with any data needing to be saved.
+	 *  Returns the passed-in data wrapper for convenience.
 	 */
-	public void save(WrapperNBT data){
+	public WrapperNBT save(WrapperNBT data){
 		data.setInteger("lookupID", lookupID);
 		data.setString("uniqueUUID", uniqueUUID);
+		return data;
 	}
 }

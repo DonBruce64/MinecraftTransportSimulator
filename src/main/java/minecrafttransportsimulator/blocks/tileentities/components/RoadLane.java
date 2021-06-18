@@ -265,7 +265,8 @@ public class RoadLane{
 		return null;
 	}
 	
-	public void save(WrapperNBT data){
+	public WrapperNBT getData(){
+		WrapperNBT data = new WrapperNBT();
 		data.setInteger("sectorNumber", sectorNumber);
 		data.setInteger("laneNumber", laneNumber);
 		for(int i=0; i<curves.size(); ++i){
@@ -285,6 +286,7 @@ public class RoadLane{
 			}
 			data.setInteger("numberNextConnections" + i, nextCurveConnections.size());
 		}
+		return data;
 	}
 	
 	public static enum LaneSelectionRequest{

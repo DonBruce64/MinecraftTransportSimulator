@@ -184,7 +184,7 @@ public class Radio extends AEntityB_Existing{
 	
 	
 	@Override
-	public void save(WrapperNBT data){
+	public WrapperNBT save(WrapperNBT data){
 		super.save(data);
 		data.setInteger("currentSource", currentSource.ordinal());
 		data.setInteger("volume", volume);
@@ -192,5 +192,6 @@ public class Radio extends AEntityB_Existing{
 		data.setBoolean("randomOrder", randomOrder);
 		data.setInteger("preset", preset);
 		data.setString("currentURL", currentURL);
+		return data;
 	}
 }

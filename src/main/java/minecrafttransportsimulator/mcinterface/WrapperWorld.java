@@ -470,6 +470,18 @@ public class WrapperWorld{
 	}
 	
 	/**
+	 *  Returns a list of block drops for the block at the passed-in position.
+	 *  Does not actually destroy the block and make it drop anything.
+	 */
+	public List<ItemStack> getBlockDrops(Point3d position){
+		BlockPos pos = new BlockPos(position.x, position.y, position.z);
+		IBlockState state = world.getBlockState(pos);
+		NonNullList<ItemStack> drops = NonNullList.create();
+		state.getBlock().getDrops(drops, world, pos, state, 0);
+		return drops;
+	}
+	
+	/**
 	 *  Returns the position where the first block along the path can be hit, or null if there are
 	 *  no blocks along the path.
 	 */
@@ -764,12 +776,13 @@ public class WrapperWorld{
 	}
 	
 	/**
-	 *  Destroys the block at the position, dropping it as whatever drop it drops as.
+	 *  Destroys the block at the position, dropping it as whatever drop it drops as if set.
 	 *  This does no sanity checks, so make sure you're
 	 *  actually allowed to do such a thing before calling.
+	 * @param spawnDrops TODO
 	 */
-	public void destroyBlock(Point3d position){
-		world.destroyBlock(new BlockPos(position.x, position.y, position.z), true);
+	public void destroyBlock(Point3d position, boolean spawnDrops){
+		world.destroyBlock(new BlockPos(position.x, position.y, position.z), spawnDrops);
 	}
 	
 	/**
@@ -827,17 +840,17 @@ public class WrapperWorld{
 	/**
 	 *  Tries to harvest the block at the passed-in position.  If the harvest was
 	 *  successful, and the block harvested was crops, the result returned is a list
-	 *  of the drops from the crops.  If the crops couldn't be harvested, null is returned.
+	 *  of the drops from the crops.  If the crops couldn't be harvested, an empty list is returned.
 	 *  If the block was harvested, but not crops, then the resulting drops
 	 *  are dropped on the ground and an empty list is returned.
 	 */
 	public List<ItemStack> harvestBlock(Point3d position){
 		BlockPos pos = new BlockPos(position.x, position.y, position.z);
 		IBlockState state = world.getBlockState(pos);
+		List<ItemStack> cropDrops = new ArrayList<ItemStack>();
 		if((state.getBlock() instanceof BlockCrops && ((BlockCrops) state.getBlock()).isMaxAge(state)) || state.getBlock() instanceof BlockBush){
 			Block harvestedBlock = state.getBlock();
 			NonNullList<ItemStack> drops = NonNullList.create();
-			List<ItemStack> cropDrops = new ArrayList<ItemStack>();
 			world.playSound(pos.getX(), pos.getY(), pos.getZ(), harvestedBlock.getSoundType(state, world, pos, null).getBreakSound(), SoundCategory.BLOCKS, 1.0F, 1.0F, false);
 			
 			//Only return drops on servers.  Clients don't do items.
@@ -856,9 +869,8 @@ public class WrapperWorld{
 					}
 				}
 			}
-			return cropDrops;
 		}
-		return null;
+		return cropDrops;
 	}
 	
 	/**

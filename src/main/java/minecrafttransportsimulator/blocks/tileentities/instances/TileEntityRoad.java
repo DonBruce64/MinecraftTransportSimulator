@@ -270,7 +270,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	}
 	
 	@Override
-    public void save(WrapperNBT data){
+    public WrapperNBT save(WrapperNBT data){
 		super.save(data);
 		//Save isActive state.
 		data.setBoolean("isActive", isActive);
@@ -291,19 +291,13 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 		
 		//Save lane data.
 		for(int laneNumber=0; laneNumber < lanes.size(); ++laneNumber){
-			RoadLane lane = lanes.get(laneNumber);
-			WrapperNBT laneData = new WrapperNBT();
-			lane.save(laneData);
-			if(definition.road.isDynamic){
-				data.setData("lane" + laneNumber, laneData);
-			}else{
-				data.setData("lane" + laneNumber, laneData);
-			}
+			data.setData("lane" + laneNumber, lanes.get(laneNumber).getData());
 		}
 		
 		//Save cure collision point data.
 		data.setPoint3dsCompact("collisionBlockOffsets", collisionBlockOffsets);
 		data.setPoint3dsCompact("collidingBlockOffsets", collidingBlockOffsets);
+		return data;
     }
 	
 	/**

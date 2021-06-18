@@ -60,12 +60,11 @@ public class TileEntityChest extends TileEntityDecor{
 	}
 	
 	@Override
-	public void save(WrapperNBT data){
+	public WrapperNBT save(WrapperNBT data){
 		super.save(data);
 		if(inventory != null){
-			WrapperNBT inventoryData = new WrapperNBT();
-			inventory.save(inventoryData);
-			data.setData("inventory", inventoryData);
+			data.setData("inventory", inventory.save(new WrapperNBT()));
 		}
+		return data;
 	}
 }

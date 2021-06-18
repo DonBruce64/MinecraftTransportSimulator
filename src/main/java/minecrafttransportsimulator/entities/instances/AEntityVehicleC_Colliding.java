@@ -97,7 +97,7 @@ abstract class AEntityVehicleC_Colliding extends AEntityVehicleB_Rideable{
 						motion.multiply(Math.max(1.0F - blockHardness*0.5F/((1000F + currentMass)/1000F), 0.0F));
 						if(!world.isClient()){
 							if(ticksExisted > 500){
-								world.destroyBlock(blockPosition);
+								world.destroyBlock(blockPosition, true);
 							}else{
 								motion.set(0D, 0D, 0D);
 								return -1;

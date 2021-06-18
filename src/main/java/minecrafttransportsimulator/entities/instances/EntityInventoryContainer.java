@@ -167,8 +167,9 @@ public class EntityInventoryContainer extends AEntityA_Base{
 	 *  Saves tank data to the passed-in NBT.
 	 */
 	@Override
-	public void save(WrapperNBT data){
+	public WrapperNBT save(WrapperNBT data){
 		super.save(data);
 		ItemStackHelper.saveAllItems(data.tag, inventory);
+		return data;
 	}
 }

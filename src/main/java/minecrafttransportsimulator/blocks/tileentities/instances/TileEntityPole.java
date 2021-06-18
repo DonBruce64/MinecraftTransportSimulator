@@ -141,13 +141,12 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent> implement
 	}
 	
 	@Override
-    public void save(WrapperNBT data){
+    public WrapperNBT save(WrapperNBT data){
 		super.save(data);
 		//Save all components.
 		for(Entry<Axis, ATileEntityPole_Component> connectedObjectEntry : components.entrySet()){
-			WrapperNBT componentData = new WrapperNBT();
-			connectedObjectEntry.getValue().save(componentData);
-			data.setData(connectedObjectEntry.getKey().name(), componentData);
+			data.setData(connectedObjectEntry.getKey().name(), connectedObjectEntry.getValue().save(new WrapperNBT()));
 		}
+		return data;
 	}
 }

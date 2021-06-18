@@ -248,8 +248,9 @@ public class PartGroundDevice extends APart{
 	}
 	
 	@Override
-	public void save(WrapperNBT data){
+	public WrapperNBT save(WrapperNBT data){
 		super.save(data);
 		data.setBoolean("isFlat", isFlat);
+		return data;
 	}
 }

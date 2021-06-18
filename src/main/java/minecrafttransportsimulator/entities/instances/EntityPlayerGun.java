@@ -270,10 +270,11 @@ public class EntityPlayerGun extends AEntityE_Multipart<JSONPlayerGun>{
 	}
 	
 	@Override
-	public void save(WrapperNBT data){
+	public WrapperNBT save(WrapperNBT data){
 		super.save(data);
 		if(player != null){
 			data.setString("playerUUID", player.getID());
 		}
+		return data;
 	}
 }

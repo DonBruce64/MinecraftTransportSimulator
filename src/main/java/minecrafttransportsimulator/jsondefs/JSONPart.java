@@ -402,6 +402,15 @@ public class JSONPart extends AJSONPartProvider{
 		
 		@JSONDescription("A listing of animation objects for determining if this effector is active.  Leaving this blank will make for an effector that is always active.  Visibility transforms will turn the effector on and off.  Inhibitor and activator transforms may be used in conjunction with these for advanced on/off logic.")
 		public List<JSONAnimationDefinition> activeAnimations;
+		
+		@JSONDescription("How hard a block the effector can break.  Only valid for drills.")
+		public float drillHardness;
+		
+		@JSONDescription("How fast a drill can break a block at the specified hardness.  Softer blocks will break quicker.")
+		public float drillSpeed;
+		
+		@JSONDescription("How many blocks the drill can break before it itself breaks.")
+		public int drillDurability;
     }
     
     public static enum EffectorComponentType{
@@ -414,7 +423,9 @@ public class JSONPart extends AJSONPartProvider{
 		@JSONDescription("Turns dirt and grass into farmland, and coarse dirt into dirt.")
 		PLOW,
 		@JSONDescription("Removes snow from the world when touched.")
-		SNOWPLOW;
+		SNOWPLOW,
+		@JSONDescription("Removes blocks matching the parameters from the world when touched.")
+		DRILL;
 	}
     
     @Deprecated

@@ -357,7 +357,7 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 	}
 	
 	@Override
-	public void save(WrapperNBT data){
+	public WrapperNBT save(WrapperNBT data){
 		super.save(data);
 		data.setBoolean("hornOn", hornOn);
 		data.setBoolean("reverseThrust", reverseThrust);
@@ -365,8 +365,7 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 		data.setInteger("throttle", throttle);
 		data.setDouble("electricPower", electricPower);
 		data.setString("selectedBeaconName", selectedBeaconName);
-		WrapperNBT fuelTankData = new WrapperNBT();
-		fuelTank.save(fuelTankData);
-		data.setData("fuelTank", fuelTankData);
+		data.setData("fuelTank", fuelTank.save(new WrapperNBT()));
+		return data;
 	}
 }

@@ -87,8 +87,9 @@ public class TileEntityBeacon extends TileEntityDecor{
 	}
 	
 	@Override
-	public void save(WrapperNBT data){
+	public WrapperNBT save(WrapperNBT data){
 		super.save(data);
 		data.setString("beaconName", beaconName);
+		return data;
 	}
 }

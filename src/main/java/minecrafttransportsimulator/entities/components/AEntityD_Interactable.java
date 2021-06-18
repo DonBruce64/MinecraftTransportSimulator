@@ -613,7 +613,7 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 	}
 	
 	@Override
-	public void save(WrapperNBT data){
+	public WrapperNBT save(WrapperNBT data){
 		super.save(data);
 		data.setPoint3ds("savedRiderLocations", locationRiderMap.keySet());
 		data.setBoolean("locked", locked);
@@ -639,6 +639,7 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 				}
 			}
 		}
+		return data;
 	}
 	
 	/**

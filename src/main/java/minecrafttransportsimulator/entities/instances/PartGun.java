@@ -622,7 +622,7 @@ public class PartGun extends APart{
 	}
 	
 	@Override
-	public void save(WrapperNBT data){
+	public WrapperNBT save(WrapperNBT data){
 		super.save(data);
 		data.setBoolean("firing", firing);
 		data.setInteger("shotsFired", bulletsFired);
@@ -633,5 +633,6 @@ public class PartGun extends APart{
 			data.setString("loadedBulletPack", loadedBullet.definition.packID);
 			data.setString("loadedBulletName", loadedBullet.definition.systemName);
 		}
+		return data;
 	}
 }

@@ -213,8 +213,9 @@ public class PartPropeller extends APart{
 	}
 	
 	@Override
-	public void save(WrapperNBT data){
+	public WrapperNBT save(WrapperNBT data){
 		super.save(data);
 		data.setDouble("damageAmount", damageAmount);
+		return data;
 	}
 }

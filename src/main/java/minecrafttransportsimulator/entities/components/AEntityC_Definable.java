@@ -699,7 +699,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
     }
 	
 	@Override
-	public void save(WrapperNBT data){
+	public WrapperNBT save(WrapperNBT data){
 		super.save(data);
 		data.setString("packID", definition.packID);
 		data.setString("systemName", definition.systemName);
@@ -709,5 +709,6 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 			data.setString("textLine" + lineNumber++, textLine);
 		}
 		data.setStrings("variablesOn", variablesOn);
+		return data;
 	}
 }

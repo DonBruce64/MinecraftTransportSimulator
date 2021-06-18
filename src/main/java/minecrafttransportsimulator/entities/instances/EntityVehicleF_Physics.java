@@ -691,7 +691,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	}
     
 	@Override
-	public void save(WrapperNBT data){
+	public WrapperNBT save(WrapperNBT data){
 		super.save(data);
 		data.setInteger("aileronAngle", aileronAngle);
 		data.setInteger("elevatorAngle", elevatorAngle);
@@ -705,5 +705,6 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 		data.setBoolean("autopilot", autopilot);
 		data.setDouble("altitudeSetting", altitudeSetting);
 		data.setDouble("speedSetting", speedSetting);
+		return data;
 	}
 }

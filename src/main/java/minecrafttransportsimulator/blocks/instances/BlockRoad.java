@@ -57,7 +57,7 @@ public class BlockRoad extends ABlockBase implements IBlockTileEntity<TileEntity
 				//Check to make sure we don't destroy non-road blocks.
 				//This is required in case our TE is corrupt or someone messes with it.
 				if(world.getBlock(blockLocation) instanceof BlockCollision){
-					world.destroyBlock(blockLocation);
+					world.destroyBlock(blockLocation, true);
 				}
 			}
 		}

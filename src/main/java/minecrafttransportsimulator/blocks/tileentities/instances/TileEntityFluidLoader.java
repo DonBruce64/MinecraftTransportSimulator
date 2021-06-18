@@ -23,7 +23,7 @@ public class TileEntityFluidLoader extends TileEntityDecor implements ITileEntit
 
     public TileEntityFluidLoader(WrapperWorld world, Point3d position, WrapperNBT data){
     	super(world, position, data);
-    	this.tank = new EntityFluidTank(world, data, 1000);
+    	this.tank = new EntityFluidTank(world, data.getDataOrNew("tank"), 1000);
     	this.unloadMode = data.getBoolean("unloadMode");
     }
 	
@@ -134,9 +134,10 @@ public class TileEntityFluidLoader extends TileEntityDecor implements ITileEntit
 	}
 	
 	@Override
-	public void save(WrapperNBT data){
+	public WrapperNBT save(WrapperNBT data){
 		super.save(data);
-		tank.save(data);
+		data.setData("tank", tank.save(new WrapperNBT()));
 		data.setBoolean("unloadMode", unloadMode);
+		return data;
 	}
 }

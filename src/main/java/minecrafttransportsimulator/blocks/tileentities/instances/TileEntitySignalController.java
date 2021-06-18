@@ -164,7 +164,7 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 	}
     
 	@Override
-    public void save(WrapperNBT data){
+    public WrapperNBT save(WrapperNBT data){
 		super.save(data);
 		data.setBoolean("isRightHandDrive", isRightHandDrive);
 		data.setBoolean("mainDirectionNorthOrNortheast", mainDirectionNorthOrNortheast);
@@ -190,10 +190,9 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
         
         data.setPoint3dsCompact("componentLocations", componentLocations);
         for(SignalGroup signalGroup : signalGroups){
-        	WrapperNBT signalGroupData = new WrapperNBT();
-        	signalGroup.save(signalGroupData);
-        	data.setData(signalGroup.axis.name() + signalGroup.direction.name(), signalGroupData);
+        	data.setData(signalGroup.axis.name() + signalGroup.direction.name(), signalGroup.getData());
         }
+        return data;
     }
 	
 	private abstract class SignalGroup{
@@ -344,12 +343,14 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 		
 		protected abstract boolean isSignalBlocking(SignalGroup otherSignal);
 		
-		protected void save(WrapperNBT data){
+		protected WrapperNBT getData(){
+			WrapperNBT data = new WrapperNBT();
 			data.setString("currentLight", currentLight.name());
 			if(requestedLight != null){
 				data.setString("requestedLight", requestedLight.name());
 			}
 			data.setInteger("currentCooldown", currentCooldown);
+			return data;
 		}
 	}
 	

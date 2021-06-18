@@ -863,12 +863,13 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	
     
 	@Override
-	public void save(WrapperNBT data){
+	public WrapperNBT save(WrapperNBT data){
 		super.save(data);
 		data.setBoolean("parkingBrakeOn", parkingBrakeOn);
 		data.setInteger("brake", brake);
 		
 		data.setPoint3d("serverDeltaM", serverDeltaM);
 		data.setPoint3d("serverDeltaR", serverDeltaR);
+		return data;
 	}
 }
