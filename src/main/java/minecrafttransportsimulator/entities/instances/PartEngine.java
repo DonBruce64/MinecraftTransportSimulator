@@ -243,6 +243,11 @@ public class PartEngine extends APart{
 					}
 				}
 				
+				//Add extra hours if we are running the engine too fast.
+				if(!isCreative && rpm > definition.engine.maxSafeRPM){
+					hours += (rpm - definition.engine.maxSafeRPM)/definition.engine.maxSafeRPM*getTotalWearFactor();
+				}
+				
 				//Do running logic.
 				if(state.running){
 					//Provide electric power to the vehicle we're in.
@@ -251,11 +256,6 @@ public class PartEngine extends APart{
 					//Add hours to the engine.
 					if(!isCreative){
 						hours += 0.001*getTotalWearFactor();
-						
-						//Add extra hours if we are running the engine too fast.
-						if(rpm > definition.engine.maxSafeRPM){
-							hours += (rpm - definition.engine.maxSafeRPM)/definition.engine.maxSafeRPM*getTotalWearFactor();
-						}
 					}
 					
 					//Do engine-type specific update logic.
