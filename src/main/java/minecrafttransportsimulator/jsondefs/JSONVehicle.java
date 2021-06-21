@@ -67,6 +67,9 @@ public class JSONVehicle extends AJSONPartProvider{
 	
     	@JSONDescription("Controls the amount of spinning force a vehicle has while skidding. Can be set to negative for understeer. In most applications, it is ideal to use this in combination with downForce. anything under 8 or 9 should be good, except for specific cases.")
     	public float overSteer;
+	    
+	@JSONDescription("In addition to overSteer, weightTransfer adds rotational force similar to overSteer, but in a more (or less, depending on it's use) controlled manner. Positive values create oversteer when accelrating, and negative values create oversteer when braking")
+    	public float weightTransfer;
     	
     	@JSONDescription("The gear ratio present for the axle of this vehicle.  This is a constant, vehicle-specific ratio that will be multiplied with the gear ratio of the currently-selected gear of the engine to determine the rotation of the wheels.  A good many cars have a 3.55 ratio, but other of course are possible.  All depends on how much power you expect your engine to have, and how fast you want your car to go.  Note that this parameter is required if you want your engine to drive wheels and you have isFrontWheelDrive or isRearWheelDrive set.")
     	public float axleRatio;
