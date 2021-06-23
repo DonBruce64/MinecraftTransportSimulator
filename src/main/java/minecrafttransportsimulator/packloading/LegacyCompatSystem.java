@@ -168,23 +168,6 @@ public final class LegacyCompatSystem{
 			definition.motorized.hookupPos = null;
 		}
 		
-		//Check for old HUD stuff.
-		if(definition.rendering.hudTexture != null){
-			definition.motorized.hudTexture = definition.rendering.hudTexture;
-			definition.rendering.hudTexture = null;
-		}
-		if(definition.rendering.panelTexture != null){
-			definition.motorized.panelTexture = definition.rendering.panelTexture;
-			definition.rendering.panelTexture = null;
-		}
-		if(definition.rendering.panelTextColor != null){
-			definition.motorized.panelTextColor = definition.rendering.panelTextColor;
-			definition.rendering.panelTextColor = null;
-		}
-		if(definition.rendering.panelLitTextColor != null){
-			definition.motorized.panelLitTextColor = definition.rendering.panelLitTextColor;
-			definition.rendering.panelLitTextColor = null;
-		}
 		//Check for old instrument references.
 		if(definition.motorized.instruments != null){
 			definition.instruments = definition.motorized.instruments;
@@ -206,122 +189,6 @@ public final class LegacyCompatSystem{
 			definition.motorized.hasFlaps = false;
 		}
 		
-		for(JSONPartDefinition partDef : definition.parts){
-			try{
-				performVehiclePartDefLegacyCompats(partDef);
-			}catch(Exception e){
-				throw new NullPointerException("Could not perform Legacy Compats on part entry #" + (definition.parts.indexOf(partDef) + 1) + " due to an unknown error.  This is likely due to a missing or incorrectly-named field.");
-			}
-		}
-		
-		performVehicleConnectionLegacyCompats(definition);
-		
-		//Do compats for sounds.
-		if(definition.rendering.sounds == null){
-			definition.rendering.sounds = new ArrayList<JSONSound>();
-			if(definition.motorized.hornSound != null){
-				JSONSound hornSound = new JSONSound();
-				hornSound.name = definition.motorized.hornSound;
-				hornSound.looping = true;
-				hornSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
-				JSONAnimationDefinition hornDef = new JSONAnimationDefinition();
-				hornDef.animationType = AnimationComponentType.VISIBILITY;
-				hornDef.variable = "horn";
-				hornDef.clampMin = 1.0F;
-				hornDef.clampMax = 1.0F;
-				hornSound.activeAnimations.add(hornDef);
-				definition.rendering.sounds.add(hornSound);
-				definition.motorized.hornSound = null;
-			}
-			if(definition.motorized.sirenSound != null){
-				JSONSound sirenSound = new JSONSound();
-				sirenSound.name = definition.motorized.sirenSound;
-				sirenSound.looping = true;
-				sirenSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
-				JSONAnimationDefinition sirenDef = new JSONAnimationDefinition();
-				sirenDef.animationType = AnimationComponentType.VISIBILITY;
-				sirenDef.variable = "siren";
-				sirenDef.clampMin = 1.0F;
-				sirenDef.clampMax = 1.0F;
-				sirenSound.activeAnimations.add(sirenDef);
-				definition.rendering.sounds.add(sirenSound);
-				if(definition.rendering.customVariables == null){
-					definition.rendering.customVariables = new ArrayList<String>();
-				}
-				definition.rendering.customVariables.add("siren");
-				definition.motorized.sirenSound = null;
-			}
-			if(definition.motorized.isBigTruck){
-				JSONSound airbrakeSound = new JSONSound();
-				airbrakeSound.name = MasterLoader.resourceDomain + ":air_brake_activating";
-				airbrakeSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
-				JSONAnimationDefinition airbrakeDef = new JSONAnimationDefinition();
-				airbrakeDef.animationType = AnimationComponentType.VISIBILITY;
-				airbrakeDef.variable = "p_brake";
-				airbrakeDef.clampMin = 1.0F;
-				airbrakeDef.clampMax = 1.0F;
-				airbrakeSound.activeAnimations.add(airbrakeDef);
-				definition.rendering.sounds.add(airbrakeSound);
-				
-				JSONSound backupBeeperSound = new JSONSound();
-				backupBeeperSound.name = MasterLoader.resourceDomain + ":backup_beeper";
-				backupBeeperSound.looping = true;
-				backupBeeperSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
-				JSONAnimationDefinition backupBeeperDef = new JSONAnimationDefinition();
-				backupBeeperDef.animationType = AnimationComponentType.VISIBILITY;
-				backupBeeperDef.variable = "engine_gear_1";
-				backupBeeperDef.clampMin = -10.0F;
-				backupBeeperDef.clampMax = -1.0F;
-				backupBeeperSound.activeAnimations.add(backupBeeperDef);
-				definition.rendering.sounds.add(backupBeeperSound);
-				
-				definition.motorized.isBigTruck = false;
-			}
-		}
-		
-		//Do compats for particles.
-		if(definition.rendering.particles == null){
-			definition.rendering.particles = new ArrayList<JSONParticle>();
-			int engineNumber = 0;
-			for(JSONPartDefinition partDef : definition.parts){
-				if(partDef.particleObjects != null){
-					++engineNumber;
-					int pistonNumber = 0;
-					for(JSONParticle exhaustDef : partDef.particleObjects){
-						++pistonNumber;
-						exhaustDef.type = ParticleType.SMOKE;
-						exhaustDef.activeAnimations = new ArrayList<JSONAnimationDefinition>();
-						exhaustDef.initialVelocity = exhaustDef.velocityVector;
-						exhaustDef.velocityVector = null;
-						JSONAnimationDefinition activeAnimation = new JSONAnimationDefinition();
-						activeAnimation.animationType = AnimationComponentType.VISIBILITY;
-						activeAnimation.variable = "engine_piston_" + pistonNumber + "_" + partDef.particleObjects.size() + "_cam_" + engineNumber;
-						activeAnimation.clampMin = 1.0F;
-						activeAnimation.clampMax = 1.0F;
-						exhaustDef.activeAnimations.add(activeAnimation);
-						definition.rendering.particles.add(exhaustDef);
-						
-						JSONParticle backfireDef = new JSONParticle();
-						backfireDef.type = exhaustDef.type;
-						backfireDef.color = "#000000";
-						backfireDef.scale = 2.5F;
-						backfireDef.quantity = 5;
-						backfireDef.pos = exhaustDef.pos;
-						backfireDef.initialVelocity = exhaustDef.initialVelocity;
-						backfireDef.activeAnimations = new ArrayList<JSONAnimationDefinition>();
-						activeAnimation = new JSONAnimationDefinition();
-						activeAnimation.animationType = AnimationComponentType.VISIBILITY;
-						activeAnimation.variable = "engine_backfired_" + engineNumber;
-						activeAnimation.clampMin = 1.0F;
-						activeAnimation.clampMax = 1.0F;
-						backfireDef.activeAnimations.add(activeAnimation);
-						definition.rendering.particles.add(backfireDef);
-					}
-					partDef.particleObjects = null;
-				}
-			}
-		}
-		
 		//Check if we didn't specify a braking force.
 		if(definition.motorized.brakingFactor == 0){
 			definition.motorized.brakingFactor = 1.0F;
@@ -333,10 +200,147 @@ public final class LegacyCompatSystem{
 			definition.motorized.hasCruiseControl = false;
 		}
 		
-		try{
-			performAnimationLegacyCompats(definition.rendering);
-		}catch(Exception e){
-			throw new NullPointerException("Could not perform Legacy Compats on rendering section due to an unknown error.  This is likely due to a missing or incorrectly-named field.");
+		for(JSONPartDefinition partDef : definition.parts){
+			try{
+				performVehiclePartDefLegacyCompats(partDef);
+			}catch(Exception e){
+				throw new NullPointerException("Could not perform Legacy Compats on part entry #" + (definition.parts.indexOf(partDef) + 1) + " due to an unknown error.  This is likely due to a missing or incorrectly-named field.");
+			}
+		}
+		
+		performVehicleConnectionLegacyCompats(definition);
+		
+		//Do rendering compats.
+		if(definition.rendering != null){
+			//Check for old HUD stuff.
+			if(definition.rendering.hudTexture != null){
+				definition.motorized.hudTexture = definition.rendering.hudTexture;
+				definition.rendering.hudTexture = null;
+			}
+			if(definition.rendering.panelTexture != null){
+				definition.motorized.panelTexture = definition.rendering.panelTexture;
+				definition.rendering.panelTexture = null;
+			}
+			if(definition.rendering.panelTextColor != null){
+				definition.motorized.panelTextColor = definition.rendering.panelTextColor;
+				definition.rendering.panelTextColor = null;
+			}
+			if(definition.rendering.panelLitTextColor != null){
+				definition.motorized.panelLitTextColor = definition.rendering.panelLitTextColor;
+				definition.rendering.panelLitTextColor = null;
+			}
+		
+			//Do compats for sounds.
+			if(definition.rendering.sounds == null){
+				definition.rendering.sounds = new ArrayList<JSONSound>();
+				if(definition.motorized.hornSound != null){
+					JSONSound hornSound = new JSONSound();
+					hornSound.name = definition.motorized.hornSound;
+					hornSound.looping = true;
+					hornSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
+					JSONAnimationDefinition hornDef = new JSONAnimationDefinition();
+					hornDef.animationType = AnimationComponentType.VISIBILITY;
+					hornDef.variable = "horn";
+					hornDef.clampMin = 1.0F;
+					hornDef.clampMax = 1.0F;
+					hornSound.activeAnimations.add(hornDef);
+					definition.rendering.sounds.add(hornSound);
+					definition.motorized.hornSound = null;
+				}
+				if(definition.motorized.sirenSound != null){
+					JSONSound sirenSound = new JSONSound();
+					sirenSound.name = definition.motorized.sirenSound;
+					sirenSound.looping = true;
+					sirenSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
+					JSONAnimationDefinition sirenDef = new JSONAnimationDefinition();
+					sirenDef.animationType = AnimationComponentType.VISIBILITY;
+					sirenDef.variable = "siren";
+					sirenDef.clampMin = 1.0F;
+					sirenDef.clampMax = 1.0F;
+					sirenSound.activeAnimations.add(sirenDef);
+					definition.rendering.sounds.add(sirenSound);
+					if(definition.rendering.customVariables == null){
+						definition.rendering.customVariables = new ArrayList<String>();
+					}
+					definition.rendering.customVariables.add("siren");
+					definition.motorized.sirenSound = null;
+				}
+				if(definition.motorized.isBigTruck){
+					JSONSound airbrakeSound = new JSONSound();
+					airbrakeSound.name = MasterLoader.resourceDomain + ":air_brake_activating";
+					airbrakeSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
+					JSONAnimationDefinition airbrakeDef = new JSONAnimationDefinition();
+					airbrakeDef.animationType = AnimationComponentType.VISIBILITY;
+					airbrakeDef.variable = "p_brake";
+					airbrakeDef.clampMin = 1.0F;
+					airbrakeDef.clampMax = 1.0F;
+					airbrakeSound.activeAnimations.add(airbrakeDef);
+					definition.rendering.sounds.add(airbrakeSound);
+					
+					JSONSound backupBeeperSound = new JSONSound();
+					backupBeeperSound.name = MasterLoader.resourceDomain + ":backup_beeper";
+					backupBeeperSound.looping = true;
+					backupBeeperSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
+					JSONAnimationDefinition backupBeeperDef = new JSONAnimationDefinition();
+					backupBeeperDef.animationType = AnimationComponentType.VISIBILITY;
+					backupBeeperDef.variable = "engine_gear_1";
+					backupBeeperDef.clampMin = -10.0F;
+					backupBeeperDef.clampMax = -1.0F;
+					backupBeeperSound.activeAnimations.add(backupBeeperDef);
+					definition.rendering.sounds.add(backupBeeperSound);
+					
+					definition.motorized.isBigTruck = false;
+				}
+			}
+			
+			//Do compats for particles.
+			if(definition.rendering.particles == null){
+				definition.rendering.particles = new ArrayList<JSONParticle>();
+				int engineNumber = 0;
+				for(JSONPartDefinition partDef : definition.parts){
+					if(partDef.particleObjects != null){
+						++engineNumber;
+						int pistonNumber = 0;
+						for(JSONParticle exhaustDef : partDef.particleObjects){
+							++pistonNumber;
+							exhaustDef.type = ParticleType.SMOKE;
+							exhaustDef.activeAnimations = new ArrayList<JSONAnimationDefinition>();
+							exhaustDef.initialVelocity = exhaustDef.velocityVector;
+							exhaustDef.velocityVector = null;
+							JSONAnimationDefinition activeAnimation = new JSONAnimationDefinition();
+							activeAnimation.animationType = AnimationComponentType.VISIBILITY;
+							activeAnimation.variable = "engine_piston_" + pistonNumber + "_" + partDef.particleObjects.size() + "_cam_" + engineNumber;
+							activeAnimation.clampMin = 1.0F;
+							activeAnimation.clampMax = 1.0F;
+							exhaustDef.activeAnimations.add(activeAnimation);
+							definition.rendering.particles.add(exhaustDef);
+							
+							JSONParticle backfireDef = new JSONParticle();
+							backfireDef.type = exhaustDef.type;
+							backfireDef.color = "#000000";
+							backfireDef.scale = 2.5F;
+							backfireDef.quantity = 5;
+							backfireDef.pos = exhaustDef.pos;
+							backfireDef.initialVelocity = exhaustDef.initialVelocity;
+							backfireDef.activeAnimations = new ArrayList<JSONAnimationDefinition>();
+							activeAnimation = new JSONAnimationDefinition();
+							activeAnimation.animationType = AnimationComponentType.VISIBILITY;
+							activeAnimation.variable = "engine_backfired_" + engineNumber;
+							activeAnimation.clampMin = 1.0F;
+							activeAnimation.clampMax = 1.0F;
+							backfireDef.activeAnimations.add(activeAnimation);
+							definition.rendering.particles.add(backfireDef);
+						}
+						partDef.particleObjects = null;
+					}
+				}
+			}
+			
+			try{
+				performAnimationLegacyCompats(definition.rendering);
+			}catch(Exception e){
+				throw new NullPointerException("Could not perform Legacy Compats on rendering section due to an unknown error.  This is likely due to a missing or incorrectly-named field.");
+			}
 		}
     }
 	
