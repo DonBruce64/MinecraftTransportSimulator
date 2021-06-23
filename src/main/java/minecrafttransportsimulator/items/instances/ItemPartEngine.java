@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.items.instances;
 
 import java.util.List;
+import java.util.Map.Entry;
 
 import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
@@ -11,6 +12,7 @@ import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.systems.ConfigSystem;
 
 public class ItemPartEngine extends AItemPart{
 	
@@ -42,6 +44,16 @@ public class ItemPartEngine extends AItemPart{
 			tooltipLines.add(InterfaceCore.translate("info.item.engine.bypassratio") + definition.engine.bypassRatio);
 		}
 		tooltipLines.add(InterfaceCore.translate("info.item.engine.fueltype") + definition.engine.fuelType);
+		if(ConfigSystem.configObject.fuel.fuels.containsKey(definition.engine.fuelType)){
+			String line = InterfaceCore.translate("info.item.engine.fluids");
+			for(Entry<String, Double> fuelEntry : ConfigSystem.configObject.fuel.fuels.get(definition.engine.fuelType).entrySet()){
+				String fluidName = InterfaceCore.getFluidName(fuelEntry.getKey());
+				if(!fluidName.equals("INVALID")){
+					line += InterfaceCore.getFluidName(fuelEntry.getKey()) + "@" + fuelEntry.getValue() + ", ";
+				}
+			}
+			tooltipLines.add(line.substring(0, line.length() - 2));
+		}
 		tooltipLines.add(InterfaceCore.translate("info.item.engine.hours") + Math.round(data.getDouble("hours")*100D)/100D);
 		
 		if(definition.engine.gearRatios.size() > 3){

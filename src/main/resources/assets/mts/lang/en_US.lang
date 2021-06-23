@@ -251,6 +251,7 @@ info.item.engine.supercharged=Supercharged
 info.item.engine.superchargerfuelconsumption=Supercharger fuel use (mb/t): 
 info.item.engine.superchargerefficiency=Supercharger efficiency: 
 info.item.engine.fueltype=Fuel type: 
+info.item.engine.fluids=Takes Fluids: 
 info.item.engine.hours=Runtime hours: 
 info.item.engine.oilleak=Has an oil leak!
 info.item.engine.fuelleak=Has a fuel leak!

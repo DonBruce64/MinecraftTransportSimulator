@@ -45,6 +45,7 @@ public class InterfaceCore{
 	
 	/**
 	 *  Returns the text-based name for the passed-in fluid.
+	 *  Returns "INVALID" if the name does not exist.
 	 */
 	public static String getFluidName(String fluidID){
 		return FluidRegistry.getFluid(fluidID) != null ? new FluidStack(FluidRegistry.getFluid(fluidID), 1).getLocalizedName() : "INVALID";
