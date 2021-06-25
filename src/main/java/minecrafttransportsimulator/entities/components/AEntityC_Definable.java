@@ -91,6 +91,10 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 		//Load variables.
 		this.variablesOn.addAll(data.getStrings("variablesOn"));
 		
+		if(definition.rendering != null && definition.rendering.constants != null){
+			variablesOn.addAll(definition.rendering.constants);
+		}
+		
 		//Make sure the generic light is in the variable set.
 		this.variablesOn.add(LightType.GENERICLIGHT.lowercaseName);
 		
@@ -106,6 +110,11 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 		
 		//Make sure the generic light is in the variable set.
 		this.variablesOn.add(LightType.GENERICLIGHT.lowercaseName);
+		
+		//Add constants.
+		if(definition.rendering != null && definition.rendering.constants != null){
+			variablesOn.addAll(definition.rendering.constants);
+		}
 		
 		//Create all clocks.
 		populateMaps();
