@@ -68,7 +68,7 @@ public class PartGroundDevice extends APart{
 	@Override
 	public boolean update(){
 		if(super.update()){
-			if(vehicleOn != null){
+			if(vehicleOn != null && !placementDefinition.isSpare){
 				if(vehicleOn.groundDeviceCollective.groundedGroundDevices.contains(this)){
 					//If we aren't skipping angular calcs, change our velocity accordingly.
 					if(!skipAngularCalcs){

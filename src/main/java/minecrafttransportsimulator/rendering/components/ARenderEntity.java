@@ -25,7 +25,7 @@ import minecrafttransportsimulator.rendering.instances.RenderInstrument;
  */
 public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>>{
 	//Object lists for models parsed in this renderer.  Maps are keyed by the model name.
-	protected final Map<String, List<RenderableModelObject<RenderedEntity>>> objectLists = new HashMap<String, List<RenderableModelObject<RenderedEntity>>>();
+	private final Map<String, List<RenderableModelObject<RenderedEntity>>> objectLists = new HashMap<String, List<RenderableModelObject<RenderedEntity>>>();
 
 	//Instrument transforms for each instrument slot.
 	private final Map<String, Map<Integer, RenderableTransform<RenderedEntity>>> instrumentTransforms = new HashMap<String, Map<Integer, RenderableTransform<RenderedEntity>>>();

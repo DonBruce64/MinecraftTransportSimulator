@@ -337,8 +337,9 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 				correctedPartDef.pos.x -= 2*subPartDef.pos.x;
 			}
 			
-			//Use the parent's turnsWithSteer variable, as that's based on the vehicle, not the part.
+			//Use the parent's turnsWithSteer and isSpare variables, as that's based on the vehicle, not the part.
 			correctedPartDef.turnsWithSteer = placementDefinition.turnsWithSteer;
+			correctedPartDef.isSpare= placementDefinition.isSpare;
 			
 			//Save the corrected pack into the mappings for later use.
 	        subpackMappings.put(subPartDef, correctedPartDef);
