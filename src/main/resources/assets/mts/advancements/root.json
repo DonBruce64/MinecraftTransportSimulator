@@ -25,8 +25,8 @@
 	},
 	"rewards": {
 		"recipes": [
-			"mts:handbook_en",
-			"mts:handbook_ru"
+			"mts:handbook_car",
+			"mts:handbook_plane"
 		]
 	}
 }

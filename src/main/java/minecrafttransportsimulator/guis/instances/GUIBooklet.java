@@ -38,13 +38,13 @@ public class GUIBooklet extends AGUIBase{
 		//Page navigation buttons.
 		//We auto-calculate the texture size from here based on the GUI size.
 		//This is needed to tell the buttons what texture size they are using.
-		addButton(leftButton = new GUIComponentButton(guiLeft + 10, guiTop + 150, 20, "<", 20, true, 20, 20, 0, 196, getTextureWidth(), getTextureHeight()){
+		addButton(leftButton = new GUIComponentButton(guiLeft + 20, guiTop + 150, 20, "", 20, true, 20, 20, 0, 196, getTextureWidth(), getTextureHeight()){
 			@Override
 			public void onClicked(){
 				--booklet.pageNumber;
 			}
 		});
-		addButton(rightButton = new GUIComponentButton(guiLeft + 250, guiTop + 150, 20, ">", 20, true, 20, 20, 0, 196, getTextureWidth(), getTextureHeight()){
+		addButton(rightButton = new GUIComponentButton(guiLeft + booklet.definition.booklet.textureWidth - 40, guiTop + 150, 20, "", 20, true, 20, 20, 20, 196, getTextureWidth(), getTextureHeight()){
 			@Override
 			public void onClicked(){
 				++booklet.pageNumber;
@@ -63,7 +63,7 @@ public class GUIBooklet extends AGUIBase{
 		//Contents text labels and buttons.
 		if(!booklet.definition.booklet.disableTOC){
 			//TOC page label.
-			GUIComponentLabel contentsLabel = new GUIComponentLabel(guiLeft + 50, guiTop + 25, Color.BLACK, "CONTENTS");
+			GUIComponentLabel contentsLabel = new GUIComponentLabel(guiLeft + booklet.definition.booklet.textureWidth/4 - 20, guiTop + 25, Color.BLACK, "CONTENTS");
 			addLabel(contentsLabel);
 			List<GUIComponentLabel> contentsLabels = new ArrayList<GUIComponentLabel>();
 			contentsLabels.add(contentsLabel);
@@ -72,7 +72,7 @@ public class GUIBooklet extends AGUIBase{
 			//TOC buttons with text for pages.
 			contentsButtons.clear();
 			int leftSideOffset = guiLeft + 20;
-			int rightSideOffset = guiLeft + 155;
+			int rightSideOffset = guiLeft + booklet.definition.booklet.textureWidth/2 + 20;
 			for(int i=0; i<booklet.definition.booklet.pages.size(); ++i){
 				ContentsButton contentsHyperlink = new ContentsButton(i < 10 ? leftSideOffset : rightSideOffset, guiTop + 45 + 10*(i%10), i){
 					@Override
@@ -85,7 +85,7 @@ public class GUIBooklet extends AGUIBase{
 			}
 			
 			//Button on other pages to go back to TOC.
-			addButton(contentsButton = new GUIComponentButton(leftButton.x + leftButton.width, guiTop + 150, 30, "TOC", 20, true, 20, 20, 0, 196, getTextureWidth(), getTextureHeight()){
+			addButton(contentsButton = new GUIComponentButton(leftButton.x + leftButton.width, guiTop + 150, 20, "", 20, true, 20, 20, 40, 196, getTextureWidth(), getTextureHeight()){
 				@Override
 				public void onClicked(){
 					booklet.pageNumber = 1;

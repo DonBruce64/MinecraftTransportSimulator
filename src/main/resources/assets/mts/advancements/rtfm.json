@@ -2,7 +2,7 @@
 	"parent": "mts:root",
 	"display": {
 		"icon": {
-            "item": "mts:handbook_en"
+            "item": "mts:handbook_car"
         },
         "title": {
             "translate": "advancements.mts.rtfm.title"
@@ -17,7 +17,7 @@
 		  "conditions": {
 			"items": [
 			  {
-				"item": "mts:handbook_en"
+				"item": "mts:handbook_car"
 			  }
 			]
 		  }

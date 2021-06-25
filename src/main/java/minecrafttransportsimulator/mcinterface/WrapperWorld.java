@@ -980,7 +980,8 @@ public class WrapperWorld{
 		   EntityPlayer player = (EntityPlayer) event.getEntity();
 		   ticksSincePlayerJoin.put(player, 0);
 		   if(!ConfigSystem.configObject.general.joinedPlayers.value.contains(player.getCachedUniqueIdString())){
-			   player.addItemStackToInventory(PackParserSystem.getItem("mts", "handbook_en").getNewStack());
+			   player.addItemStackToInventory(PackParserSystem.getItem("mts", "handbook_car").getNewStack());
+			   player.addItemStackToInventory(PackParserSystem.getItem("mts", "handbook_plane").getNewStack());
 			   ConfigSystem.configObject.general.joinedPlayers.value.add(player.getCachedUniqueIdString());
 			   ConfigSystem.saveToDisk();
 		   }

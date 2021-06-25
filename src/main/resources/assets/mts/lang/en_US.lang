@@ -300,7 +300,6 @@ info.item.jerrycan.contains=Can contains:
 tile.fuelpump.level=LVL:
 tile.fuelpump.dispensed=DISP:
 
-itemGroup.tabMTSCore=MTS Core Components
 key.categories.mts=Minecraft Transport Simulator
 key.mts.config=Open configuration screen
 

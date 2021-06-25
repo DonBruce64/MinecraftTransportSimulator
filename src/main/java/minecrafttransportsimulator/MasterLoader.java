@@ -49,7 +49,7 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 public class MasterLoader{
 	public static final String MODID = "mts";
 	public static final String MODNAME = "Minecraft Transport Simulator";
-	public static final String MODVER = "20.0.0-BETA46";
+	public static final String MODVER = "20.0.0-BETA51";
 	
 	public static Logger logger;
 	public static String resourceDomain;
@@ -90,8 +90,8 @@ public class MasterLoader{
 			
 			Map<String, ItemClassification> defaultItems = new HashMap<String, ItemClassification>();
 			defaultItems.put("fuelhose", ItemClassification.ITEM);
-			defaultItems.put("handbook_en", ItemClassification.ITEM);
-			defaultItems.put("handbook_ru", ItemClassification.ITEM);
+			defaultItems.put("handbook_car", ItemClassification.ITEM);
+			defaultItems.put("handbook_plane", ItemClassification.ITEM);
 			defaultItems.put("jumpercable", ItemClassification.ITEM);
 			defaultItems.put("jumperpack", ItemClassification.ITEM);
 			defaultItems.put("key", ItemClassification.ITEM);
