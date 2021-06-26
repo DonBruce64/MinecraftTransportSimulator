@@ -28,19 +28,10 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 	public boolean isRightHandDrive;
 	public boolean isDiagonalIntersection;
 	public boolean mainDirectionNorthOrNortheast;
+	public boolean timedMode;
 	public boolean unsavedClientChangesPreset;
 	
 	//Settings for trigger operation.
-	public double mainLaneWidth;
-	public double mainRoadWidth;
-	public double crossLaneWidth;
-	public double crossRoadWidth;
-	public int mainLeftLaneCount;
-	public int mainCenterLaneCount;
-	public int mainRightLaneCount;
-	public int crossLeftLaneCount;
-	public int crossCenterLaneCount;
-	public int crossRightLaneCount;
 	public Point3d intersectionCenterPoint;
 	
 	//Settings for timed operation.
@@ -50,15 +41,15 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 	public int yellowCrossTime = 2;
 	public int allRedTime = 1;
 	
-	//Locations of blocks where signals are.
+	/*8Locations of blocks where signals are.**/
 	public final Set<Point3d> componentLocations = new HashSet<Point3d>();
 	private final Set<TileEntityPole> foundPoles = new HashSet<TileEntityPole>();
 	
 	/**Signal blocks used in this controller.  Based on components.**/
-	private final Set<SignalGroup> signalGroups = new HashSet<SignalGroup>();
+	public final Set<SignalGroup> signalGroups = new HashSet<SignalGroup>();
 	
-	/**Lane widths for each lane for each axis.  Used with the groups to determine intersection bounds.**/
-	public final Map<Axis, Map<SignalDirection, Double>> laneWidths = new HashMap<Axis, Map<SignalDirection, Double>>();
+	/**Lane counts and intersection widths.**/
+	public final Map<Axis, IntersectionProperties> intersectionProperties = new HashMap<Axis, IntersectionProperties>();
 	
 	public TileEntitySignalController(WrapperWorld world, Point3d position, WrapperNBT data){
 		super(world, position, data);
@@ -81,10 +72,12 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 							for(Axis axis : Axis.values()){
 								ATileEntityPole_Component component = pole.components.get(axis);
 								if(component instanceof TileEntityPole_TrafficSignal){
+									//Add to valid poles and set signals for all groups that have that axis.
 									foundPoles.add(pole);
 									for(SignalGroup signalGroup : signalGroups){
 										if(signalGroup.axis.equals(axis)){
 											signalGroup.setSignals(null, signalGroup.currentLight);
+											break;
 										}
 									}
 								}
@@ -113,18 +106,17 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 		//Load state data.
 		isRightHandDrive = data.getBoolean("isRightHandDrive");
 		mainDirectionNorthOrNortheast = data.getBoolean("mainDirectionNorthOrNortheast");
+		timedMode = data.getBoolean("timedMode");
 		
-		mainLaneWidth = data.getInteger("mainLaneWidth");
-		mainRoadWidth = data.getDouble("mainRoadWidth");
-		crossLaneWidth = data.getInteger("crossLaneWidth");
-		crossRoadWidth = data.getDouble("crossRoadWidth");
-		mainLeftLaneCount = data.getInteger("mainLeftLaneCount");
-		mainCenterLaneCount = data.getInteger("mainCenterLaneCount");
-		mainRightLaneCount = data.getInteger("mainRightLaneCount");
-		crossLeftLaneCount = data.getInteger("crossLeftLaneCount");
-		crossCenterLaneCount = data.getInteger("crossCenterLaneCount");
-		crossRightLaneCount = data.getInteger("crossRightLaneCount");
-		intersectionCenterPoint = data.getPoint3dCompact("intersectionCenterPoint");
+		intersectionCenterPoint = data.getPoint3d("intersectionCenterPoint");
+		if(intersectionCenterPoint.isZero()){
+			intersectionCenterPoint.setTo(position);
+		}
+		
+		//Got saved lane info.
+		for(Axis axis : Axis.values()){
+			intersectionProperties.put(axis, new IntersectionProperties(data.getDataOrNew(axis.name() + "properties")));
+		}
 		
 		if(data.getBoolean("hasCustomTimes")){
 			greenMainTime = data.getInteger("greenMainTime");
@@ -154,10 +146,9 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
         //Create all applicable signal groups.
         signalGroups.clear();
         for(Axis axis : activeAxis){
-        	boolean isAxisMain = mainDirectionNorthOrNortheast ? axis.equals(Axis.NORTH) || axis.equals(Axis.NORTHEAST) || axis.equals(Axis.SOUTH) || axis.equals(Axis.SOUTHWEST) : axis.equals(Axis.EAST) || axis.equals(Axis.SOUTHEAST) || axis.equals(Axis.WEST) || axis.equals(Axis.NORTHWEST); 
-        	signalGroups.add(new SignalGroupCenter(axis, data.getData(axis.name() + SignalDirection.CENTER.name())));
-        	if(isAxisMain ? mainLeftLaneCount > 0 : crossLeftLaneCount > 0)signalGroups.add(new SignalGroupLeft(axis, data.getData(axis.name() + SignalDirection.LEFT.name())));
-        	if(isAxisMain ? mainRightLaneCount > 0 : crossRightLaneCount > 0)signalGroups.add(new SignalGroupRight(axis, data.getData(axis.name() + SignalDirection.RIGHT.name())));
+        	signalGroups.add(new SignalGroupCenter(axis, data.getDataOrNew(axis.name() + SignalDirection.CENTER.name())));
+        	signalGroups.add(new SignalGroupLeft(axis, data.getDataOrNew(axis.name() + SignalDirection.LEFT.name())));
+        	signalGroups.add(new SignalGroupRight(axis, data.getDataOrNew(axis.name() + SignalDirection.RIGHT.name())));
         }
         
         isDiagonalIntersection = activeAxis.contains(Axis.NORTHEAST) || activeAxis.contains(Axis.SOUTHWEST);
@@ -168,18 +159,13 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 		super.save(data);
 		data.setBoolean("isRightHandDrive", isRightHandDrive);
 		data.setBoolean("mainDirectionNorthOrNortheast", mainDirectionNorthOrNortheast);
+		data.setBoolean("timedMode", timedMode);
 		
-		data.setDouble("mainLaneWidth", mainLaneWidth);
-		data.setDouble("mainRoadWidth", mainRoadWidth);
-		data.setDouble("crossLaneWidth", crossLaneWidth);
-		data.setDouble("crossRoadWidth", crossRoadWidth);
-		data.setInteger("mainLeftLaneCount", mainLeftLaneCount);
-		data.setInteger("mainCenterLaneCount", mainCenterLaneCount);
-		data.setInteger("mainRightLaneCount", mainRightLaneCount);
-		data.setInteger("crossLeftLaneCount", crossLeftLaneCount);
-		data.setInteger("crossCenterLaneCount", crossCenterLaneCount);
-		data.setInteger("crossRightLaneCount", crossRightLaneCount);
-		data.setPoint3dCompact("intersectionCenterPoint", intersectionCenterPoint);
+		data.setPoint3d("intersectionCenterPoint", intersectionCenterPoint);
+		
+		for(Axis axis : intersectionProperties.keySet()){
+			data.setData(axis.name() + "properties", intersectionProperties.get(axis).getData());
+		}
 		
 		data.setBoolean("hasCustomTimes", true);
         data.setInteger("greenMainTime", greenMainTime);
@@ -195,10 +181,39 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
         return data;
     }
 	
-	private abstract class SignalGroup{
-		protected final Axis axis;
-		protected final SignalDirection direction;
-		protected final boolean isMainSignal;
+	public static class IntersectionProperties{
+		public int centerLaneCount;
+		public int leftLaneCount;
+		public int rightLaneCount;
+		public double laneWidth;
+		public double centerDistance;
+		public double centerOffset;
+		
+		public IntersectionProperties(WrapperNBT data){
+			this.centerLaneCount = data.getInteger("centerLaneCount");
+			this.leftLaneCount = data.getInteger("leftLaneCount");
+			this.rightLaneCount = data.getInteger("rightLaneCount");
+			this.laneWidth = data.getDouble("laneWidth");
+			this.centerDistance = data.getDouble("centerDistance");
+			this.centerOffset = data.getDouble("centerOffset");
+		}
+		
+		public WrapperNBT getData(){
+			WrapperNBT data = new WrapperNBT();
+			data.setInteger("centerLaneCount", centerLaneCount);
+			data.setInteger("leftLaneCount", leftLaneCount);
+			data.setInteger("rightLaneCount", rightLaneCount);
+			data.setDouble("laneWidth", laneWidth);
+			data.setDouble("centerDistance", centerDistance);
+			data.setDouble("centerOffset", centerOffset);
+			return data;
+		}
+	}
+	
+	public abstract class SignalGroup{
+		public final Axis axis;
+		public final SignalDirection direction;
+		public final boolean isMainSignal;
 		
 		protected LightType currentLight;
 		protected LightType requestedLight;
@@ -207,12 +222,14 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 		
 		//Parameters for this signal boxes bounds.  These are all based with a south-facing reference.
 		//when checking, the point will be rotated to be in this reference plane.
-		protected final double signalLineWidth;
-		protected final Point3d signalLineCenter;
+		public final double signalLineWidth;
+		public final Point3d signalLineCenter;
 		
 		private SignalGroup(Axis axis, SignalDirection direction, WrapperNBT data){
 			this.axis = axis;
 			this.direction = direction;
+			
+			//Determine if we are a main signal.
 			if(mainDirectionNorthOrNortheast){
 				if(isDiagonalIntersection){
 					isMainSignal = axis.equals(Axis.NORTHEAST) || axis.equals(Axis.SOUTHWEST);
@@ -227,9 +244,12 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 				}
 			}
 			
+			//Get saved light status.
 			String currentLightName = data.getString("currentLight");
 			if(!currentLightName.isEmpty()){
 				currentLight = LightType.valueOf(currentLightName);
+			}else{
+				currentLight = getRedLight();
 			}
 			String requestedLightName = data.getString("requestedLight");
 			if(!requestedLightName.isEmpty()){
@@ -237,30 +257,22 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 			}
 			currentCooldown = data.getInteger("currentCooldown");
 			
-			double totalRoadWidth;
-			double distanceToSignalsFromCenter;
-			if(isMainSignal){
-				totalRoadWidth = mainRoadWidth;
-				distanceToSignalsFromCenter = (crossLeftLaneCount + crossCenterLaneCount + crossRightLaneCount)*crossLaneWidth/2D;
-			}else{
-				totalRoadWidth = crossRoadWidth;
-				distanceToSignalsFromCenter = (mainLeftLaneCount + mainCenterLaneCount + mainRightLaneCount)*mainLaneWidth/2D;
-			}
+			//Create hitbox bounds.
+			IntersectionProperties properties = intersectionProperties.get(axis);
 			switch(direction){
 				case CENTER: {
-					this.signalLineWidth = isMainSignal ? mainCenterLaneCount*mainLaneWidth : crossCenterLaneCount*crossLaneWidth;
-					double leftSegmentWidth = isMainSignal ? mainLeftLaneCount*mainLaneWidth : crossLeftLaneCount*crossLaneWidth;
-					this.signalLineCenter = new Point3d(-totalRoadWidth/2D + leftSegmentWidth + signalLineWidth/2D, 0, distanceToSignalsFromCenter);
+					this.signalLineWidth = properties.centerLaneCount*properties.laneWidth;
+					this.signalLineCenter = new Point3d(properties.centerOffset + (properties.leftLaneCount + properties.centerLaneCount/2D)*properties.laneWidth, 0, properties.centerDistance);
 					break;
 				}
 				case LEFT: {
-					this.signalLineWidth = isMainSignal ? mainLeftLaneCount*mainLaneWidth : crossLeftLaneCount*crossLaneWidth;
-					this.signalLineCenter = new Point3d(-totalRoadWidth/2D + signalLineWidth/2D, 0, distanceToSignalsFromCenter);
+					this.signalLineWidth = properties.leftLaneCount*properties.laneWidth;
+					this.signalLineCenter = new Point3d(properties.centerOffset + properties.leftLaneCount*properties.laneWidth/2D, 0, properties.centerDistance);
 					break;
 				}
 				case RIGHT: {
-					this.signalLineWidth = isMainSignal ? mainRightLaneCount*mainLaneWidth : crossRightLaneCount*crossLaneWidth;
-					this.signalLineCenter = new Point3d(totalRoadWidth/2D - signalLineWidth/2D, 0, distanceToSignalsFromCenter);
+					this.signalLineWidth = properties.rightLaneCount*properties.laneWidth;
+					this.signalLineCenter = new Point3d(properties.centerOffset + (properties.leftLaneCount + properties.centerLaneCount + properties.rightLaneCount/2D)*properties.laneWidth, 0, properties.centerDistance);
 					break;
 				}
 				default: throw new IllegalStateException("We'll never get here, shut up compiler!");
@@ -285,7 +297,7 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 					for(AEntityC_Definable<?> entity : AEntityC_Definable.getRenderableEntities(world)){
 						if(entity instanceof EntityVehicleF_Physics){
 							Point3d adjustedPos = entity.position.copy().subtract(intersectionCenterPoint).rotateY(-axis.yRotation);
-							if(adjustedPos.x > signalLineCenter.x - signalLineWidth/2D && adjustedPos.x < signalLineCenter.x + signalLineWidth/2D && adjustedPos.z > signalLineCenter.z && adjustedPos.z < signalLineCenter.z + 16){
+							if(adjustedPos.x > signalLineCenter.x && adjustedPos.x < signalLineCenter.x + signalLineWidth && adjustedPos.z > signalLineCenter.z && adjustedPos.z < signalLineCenter.z + 16){
 								//Vehicle present.  If we are blocked, send the respective signal states to the other signals to change them.
 								//Flag this signal as pending changes to blocked signals to avoid checking until those signals change.
 								for(SignalGroup otherSignal : signalGroups){
@@ -561,7 +573,7 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 		}
 	}
 	
-	private static enum SignalDirection{
+	public static enum SignalDirection{
 		CENTER,
 		LEFT,
 		RIGHT;

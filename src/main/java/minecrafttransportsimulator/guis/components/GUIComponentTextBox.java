@@ -88,8 +88,11 @@ public class GUIComponentTextBox{
 			}
 		}else if(Character.isLetterOrDigit(typedChar) || VALID_SPECIAL_CHARS.contains(Character.toString(typedChar))){
 			if(text.length() < maxTextLength){
-				text = text.substring(0, position) + typedChar + text.substring(position, text.length());
-				++position;
+				String newText = text.substring(0, position) + typedChar + text.substring(position, text.length());
+				if(validateText(newText)){
+					text = newText;
+					++position;
+				}
 			}
 		}
 		
@@ -101,6 +104,16 @@ public class GUIComponentTextBox{
 		}else{
 			flashText = text.substring(0, position) + "_" + text.substring(position + 1, text.length());
 		}
+	}
+	
+	/**
+	 *  Validates the text.  This is called with new text prior to setting it.
+	 *  If the function returns false, then the text will not change.
+	 *  This is only called for key presses, as it is assumed that the code-based
+	 *  text will already be validated to the appropriate data type.
+	 */
+	public boolean validateText(String newText){
+		return true;
 	}
 	
 	/**

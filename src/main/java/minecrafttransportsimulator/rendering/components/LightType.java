@@ -24,6 +24,7 @@ public enum LightType{
 	GENERICLIGHT(false, false),
 	
 	//The following light types are only for block-based systems.
+	UNLINKEDLIGHT(false, false),
 	STOPLIGHT(false, false),
 	CAUTIONLIGHT(false, false),
 	GOLIGHT(false, false),
