@@ -80,7 +80,7 @@ public class PacketTileEntityPoleChange extends APacketEntityInteract<TileEntity
 					WrapperNBT removedComponentData = new WrapperNBT();
 					component.save(removedComponentData);
 					if(world.isClient() || player.isCreative() || player.getInventory().addItem(component.getItem(), removedComponentData)){
-						pole.components.remove(axis);
+						pole.components.remove(axis).remove();
 						pole.updateLightState();
 						return true;
 					}
