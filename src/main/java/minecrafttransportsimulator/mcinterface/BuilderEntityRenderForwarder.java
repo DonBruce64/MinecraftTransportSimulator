@@ -32,6 +32,7 @@ public class BuilderEntityRenderForwarder extends ABuilderEntityBase{
 	private long[] lastTickRendered = new long[]{0L, 0L, 0L};
 	private float[] lastPartialTickRendered = new float[]{0F, 0F, 0F};
 	private boolean doneRenderingShaders;
+	private static int framesShadersDetected;
 	private static boolean shadersDetected;
 	
 	public BuilderEntityRenderForwarder(World world){
@@ -98,8 +99,15 @@ public class BuilderEntityRenderForwarder extends ABuilderEntityBase{
 		//We always render on pass 0 and 1, but we only render on pass 2 if we haven't rendered on pass 0 or 1.
 		//If we are rendering on pass 0 or 1 a second time (before pass 2), it means shaders are present.
 		//Set bit to detect these buggers and keep vehicles from rendering funny or disappearing.
-		if(renderPass != 2 && lastTickRendered[renderPass] > lastTickRendered[2] && lastTickRendered[2] > 0){
-			shadersDetected = true;
+		//Note that we wait 1000 frames for this, as we might have a rendering glitch that would cause a no-render on a few frames.
+		if(!shadersDetected){
+			if(renderPass != 2 && lastTickRendered[renderPass] > lastTickRendered[2] && lastTickRendered[2] > 0){
+				if(++framesShadersDetected == 1000){
+					shadersDetected = true;
+				}
+			}else{
+				framesShadersDetected = 0;
+			}
 		}
 		
 		//If we are rendering the object, update times.
