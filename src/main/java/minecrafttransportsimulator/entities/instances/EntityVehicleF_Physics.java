@@ -618,6 +618,8 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 			case("fuel"): return fuelTank.getFluidLevel()/fuelTank.getMaxLevel();
 			case("electric_power"): return electricPower;
 			case("electric_usage"): return electricFlow*20D;
+			case("engines_on"): return enginesOn ? 1 : 0;
+			case("engines_running"): return enginesRunning ? 1 : 0;
 			case("p_brake"): return parkingBrakeOn ? 1 : 0;
 			case("reverser"): return reverseThrust ? 1 : 0;
 			case("horn"): return hornOn ? 1 : 0;

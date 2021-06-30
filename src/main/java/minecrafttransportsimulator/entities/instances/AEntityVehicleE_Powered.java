@@ -43,6 +43,8 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 	public boolean reverseThrust;
 	public boolean gearUpCommand;
 	public boolean beingFueled;
+	public boolean enginesOn;
+	public boolean enginesRunning;
 	public static final byte MAX_THROTTLE = 100;
 	public byte throttle;
 	
@@ -127,14 +129,26 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 					parkingBrakeOn = true;
 				}
 			}else{
-				//Turn on the DRLs if we have an engine on.
-				variablesOn.remove(LightType.DAYTIMELIGHT.lowercaseName);
+				//Set engine state mapping variables.
+				enginesOn = false;
+				enginesRunning = false;
 				for(PartEngine engine : engines.values()){
-					if(engine.state.running){
-						variablesOn.add(LightType.DAYTIMELIGHT.lowercaseName);
-						break;
+					if(engine.state.magnetoOn){
+						enginesOn = true;
+						if(engine.state.running){
+							enginesRunning = true;
+							break;
+						}
 					}
 				}
+				
+				//Turn on the DRLs if we have an engine on.
+				if(enginesOn){
+					variablesOn.add(LightType.DAYTIMELIGHT.lowercaseName);
+				}else{
+					variablesOn.remove(LightType.DAYTIMELIGHT.lowercaseName);
+				}
+				
 				
 				//Turn on brake lights and indicator lights.
 				if(brake > 0){
