@@ -23,7 +23,7 @@ public class RenderDecor extends ARenderTileEntityBase<TileEntityDecor>{
 				InterfaceRender.setTextureState(false);
 				
 				for(SignalGroup signalGroup : controller.signalGroups){ 
-					if(signalGroup.signalLineWidth != 0){
+					if(signalGroup.signalLineWidth != 0 && !signalGroup.controlledSignals.isEmpty()){
 						
 						BoundingBox box = new BoundingBox(signalGroup.signalLineCenter.copy().add(0, 0, 8).rotateY(signalGroup.axis.yRotation).add(controller.intersectionCenterPoint).subtract(controller.position), signalGroup.signalLineWidth/2D, 2, 8);
 						GL11.glPushMatrix();
