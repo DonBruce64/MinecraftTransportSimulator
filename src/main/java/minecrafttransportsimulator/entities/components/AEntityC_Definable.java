@@ -373,11 +373,11 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 			case("rain_strength"): return (int) world.getRainStrength(position);
 			case("rain_sin"): {
 				int rainStrength = (int) world.getRainStrength(position); 
-				return rainStrength > 0 ? Math.sin(rainStrength*Math.toRadians(360*System.currentTimeMillis()/1000))/2D + 0.5: 0;
+				return rainStrength > 0 ? Math.sin(rainStrength*Math.toRadians(360*(world.getTick() + partialTicks)/20))/2D + 0.5: 0;
 			}
 			case("rain_cos"): {
 				int rainStrength = (int) world.getRainStrength(position); 
-				return rainStrength > 0 ? Math.cos(rainStrength*Math.toRadians(360*System.currentTimeMillis()/1000))/2D + 0.5 : 0;
+				return rainStrength > 0 ? Math.cos(rainStrength*Math.toRadians(360*(world.getTick() + partialTicks)/20))/2D + 0.5 : 0;
 			}	
 			case("light_sunlight"): return world.getLightBrightness(position, false);
 			case("light_total"): return world.getLightBrightness(position, true);
@@ -385,10 +385,9 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 		}
 		
 		//Check if this is a cycle variable.
-		if(variable.startsWith("cycle")){
-			int ticksCycle = Integer.valueOf(variable.substring(variable.indexOf('_') + 1, variable.lastIndexOf('_')));
-			int startTick = Integer.valueOf(variable.substring(variable.lastIndexOf('_') + 1));
-			return world.getTick()%ticksCycle >= startTick ? 1 : 0;
+		if(variable.endsWith("cycle")){
+			String[] parsedVariable = variable.split("_");
+			return world.getTick()%Integer.valueOf(parsedVariable[1]) < Integer.valueOf(parsedVariable[0]) ? 1 : 0;
 		}
 		
 		//Check if this is a generic variable.  This contains lights in most cases.
