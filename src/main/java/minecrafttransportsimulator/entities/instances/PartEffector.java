@@ -3,26 +3,20 @@ package minecrafttransportsimulator.entities.instances;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
-import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketPartEffector;
-import minecrafttransportsimulator.rendering.components.DurationDelayClock;
 import net.minecraft.item.ItemStack;
 
 public class PartEffector extends APart{
-	private boolean isActive;
-	
-	private final LinkedHashMap<JSONAnimationDefinition, DurationDelayClock> effectorActiveClocks = new LinkedHashMap<JSONAnimationDefinition, DurationDelayClock>();
 	
 	private final List<ItemStack> drops = new ArrayList<ItemStack>();
 	
@@ -35,78 +29,11 @@ public class PartEffector extends APart{
 	public PartEffector(AEntityE_Multipart<?> entityOn, JSONPartDefinition placementDefinition, WrapperNBT data, APart parentPart){
 		super(entityOn, placementDefinition, data, parentPart);
 		this.blocksBroken = data.getInteger("blocksBroken");
-		populateMaps();
-	}
-	
-	/**
-	 *  Helper method for populating effector maps.
-	 */
-	private void populateMaps(){
-		effectorActiveClocks.clear();
-		if(definition.effector.activeAnimations != null){
-			for(JSONAnimationDefinition animation : definition.effector.activeAnimations){
-				effectorActiveClocks.put(animation, new DurationDelayClock(animation));
-			}
-		}
 	}
 	
 	@Override
 	public boolean update(){
 		if(super.update()){
-			//Update active state.
-			isActive = true;
-			if(definition.effector.activeAnimations != null && !definition.effector.activeAnimations.isEmpty()){
-				boolean inhibitAnimations = false;
-				for(JSONAnimationDefinition animation : definition.effector.activeAnimations){
-					switch(animation.animationType){
-						case VISIBILITY :{
-							if(!inhibitAnimations){
-								double variableValue = animation.offset + getAnimatedVariableValue(animation, 0, effectorActiveClocks.get(animation), 0);
-								if(variableValue < animation.clampMin || variableValue > animation.clampMax){
-									isActive = false;
-								}
-							}
-							break;
-						}
-						case INHIBITOR :{
-							if(!inhibitAnimations){
-								double variableValue = getAnimatedVariableValue(animation, 0, effectorActiveClocks.get(animation), 0);
-								if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
-									inhibitAnimations = true;
-								}
-							}
-							break;
-						}
-						case ACTIVATOR :{
-							if(inhibitAnimations){
-								double variableValue = getAnimatedVariableValue(animation, 0, effectorActiveClocks.get(animation), 0);
-								if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
-									inhibitAnimations = false;
-								}
-							}
-							break;
-						}
-						case TRANSLATION :{
-							//Do nothing.
-							break;
-						}
-						case ROTATION :{
-							//Do nothing.
-							break;
-						}
-						case SCALING :{
-							//Do nothing.
-							break;
-						}
-					}
-					
-					if(!isActive){
-						//Don't need to process any further as we can't play.
-						break;
-					}
-				}
-			}
-			
 			//If we are active, do effector things.
 			if(isActive && !world.isClient()){
 				drops.clear();
@@ -228,12 +155,6 @@ public class PartEffector extends APart{
 			return false;
 		}
 	}
-	
-	@Override
-    public void onDefinitionReset(){
-		super.onDefinitionReset();
-    	populateMaps();
-    }
 	
 	@Override
 	public double getRawVariableValue(String variable, float partialTicks){

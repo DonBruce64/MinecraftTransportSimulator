@@ -279,7 +279,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
     			for(JSONPartDefinition packDef : definition.parts){
     				if(packDef.pos.equals(part.placementDefinition.pos)){
     					part.placementDefinition.animations = packDef.animations;
-    					part.createMovementClocks();
+    					part.createClocks();
     					break;
     				}
     			}

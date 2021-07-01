@@ -98,6 +98,9 @@ public class JSONPart extends AJSONPartProvider{
 
     	@JSONDescription("The mass of this part.  Is normally 0 to avoid heavy seats, but may be used for generic parts or engines or the like.")
     	public int mass;
+    	
+    	@JSONDescription("A listing of animation objects for determining if this part is active.  Leaving this blank will make for a part that is always active.  Visibility transforms will turn the part on and off.  Inhibitor and activator transforms may be used in conjunction with these for advanced on/off logic.  The exact thing that an 'active' part does depends on the part.  Effectors only effect when they are active.  Guns can only be used when active.  Seats can only be sat in when active.  etc.")
+		public List<JSONAnimationDefinition> activeAnimations;
     }
     
     public class JSONPartEngine{
@@ -399,9 +402,6 @@ public class JSONPart extends AJSONPartProvider{
     	@JSONRequired
 		@JSONDescription("The type of the effector.  This defines what this effector does.")
     	public EffectorComponentType type;
-		
-		@JSONDescription("A listing of animation objects for determining if this effector is active.  Leaving this blank will make for an effector that is always active.  Visibility transforms will turn the effector on and off.  Inhibitor and activator transforms may be used in conjunction with these for advanced on/off logic.")
-		public List<JSONAnimationDefinition> activeAnimations;
 		
 		@JSONDescription("How hard a block the effector can break.  Only valid for drills.")
 		public float drillHardness;

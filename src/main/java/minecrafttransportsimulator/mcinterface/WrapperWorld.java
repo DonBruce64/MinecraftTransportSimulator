@@ -780,7 +780,6 @@ public class WrapperWorld{
 	 *  Destroys the block at the position, dropping it as whatever drop it drops as if set.
 	 *  This does no sanity checks, so make sure you're
 	 *  actually allowed to do such a thing before calling.
-	 * @param spawnDrops TODO
 	 */
 	public void destroyBlock(Point3d position, boolean spawnDrops){
 		world.destroyBlock(new BlockPos(position.x, position.y, position.z), spawnDrops);

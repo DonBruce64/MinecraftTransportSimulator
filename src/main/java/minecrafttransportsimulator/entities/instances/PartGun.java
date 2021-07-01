@@ -57,10 +57,10 @@ public class PartGun extends APart{
 	public ItemBullet loadedBullet;
 	
 	//These variables are used during firing and will be reset on loading.
-	public boolean firing;
+	public boolean firingEnabled;
 	public boolean firedThisCommand;
 	public boolean firedThisTick;
-	public boolean active;
+	public boolean gunEnabled;
 	public int cooldownTimeRemaining;
 	public int reloadTimeRemaining;
 	public int windupTimeCurrent;
@@ -114,7 +114,7 @@ public class PartGun extends APart{
 		}
 		
 		//Load saved data.
-		this.firing = data.getBoolean("firing");
+		this.firingEnabled = data.getBoolean("firingEnabled");
 		this.bulletsFired = data.getInteger("shotsFired");
 		this.bulletsLeft = data.getInteger("bulletsLeft");
 		this.bulletsReloading = data.getInteger("bulletsReloading");
@@ -170,25 +170,25 @@ public class PartGun extends APart{
 			//If this gun type can only have one selected at a time, check that this has the selected index.
 			if(controller != null){
 				if(playerHolding != null){
-					active = true;
+					gunEnabled = true;
 				}else{
 					PartSeat controllerSeat = (PartSeat) entityOn.getPartAtLocation(entityOn.locationRiderMap.inverse().get(controller));
-					active = !placementDefinition.isSpare && controller != null && controllerSeat != null && getItem().equals(controllerSeat.activeGun) && (!definition.gun.fireSolo || entityOn.partsByItem.get(gunItem).get(controllerSeat.gunIndex).equals(this));
+					gunEnabled = !placementDefinition.isSpare && controller != null && controllerSeat != null && getItem().equals(controllerSeat.activeGun) && (!definition.gun.fireSolo || entityOn.partsByItem.get(gunItem).get(controllerSeat.gunIndex).equals(this));
 				}
 			}else{
-				active = false;
+				gunEnabled = false;
 			}
 			
 			//Adjust aim to face direction controller is facing.
 			//Aim speed depends on gun size, with smaller and shorter guns moving quicker.
 			//Pitch and yaw only depend on where the controller is looking, and where the gun is pointed.
 			//This allows for guns to be mounted anywhere on a vehicle and at any angle.
-			if(active || definition.gun.resetPosition){
-				boolean lockedOn = active;
+			if(isActive && (gunEnabled || definition.gun.resetPosition)){
+				boolean lockedOn = gunEnabled;
 				//If the controller isn't a player, but is a NPC, make them look at the nearest hostile mob.
 				//We also get a flag to see if the gun is currently pointed to the hostile mob.
 				//If not, then we don't fire the gun, as that'd waste ammo.
-				if(active && !(controller instanceof WrapperPlayer)){
+				if(gunEnabled && !(controller instanceof WrapperPlayer)){
 					WrapperEntity hostile = world.getNearestHostile(controller, 48);
 					if(hostile != null){
 						//Need to aim for the middle of the mob, not their base (feet).
@@ -202,9 +202,9 @@ public class PartGun extends APart{
 						controller.setYaw(yawHostile);
 						controller.setHeadYaw(yawHostile);
 						controller.setPitch(pitchHostile);
-						firing = true;
+						firingEnabled = true;
 					}else{
-						firing = false;
+						firingEnabled = false;
 					}
 				}
 				
@@ -216,7 +216,7 @@ public class PartGun extends APart{
 				if(playerHolding != null){
 					targetYaw = 0;
 					targetPitch = 0;
-				}else if(active){
+				}else if(gunEnabled){
 					//Get the actual angle this gun is as.  This needs to remove all part-based animations we applied to this gun.
 					//This is because if the gun moves based on those animations, we shouldn't take them into account.
 					//For pitch, we need to find the relative angle of the player to the entity's 0-pitch plane.
@@ -296,7 +296,7 @@ public class PartGun extends APart{
 				//This keeps NPCs from wasting ammo.
 				if(!(controller instanceof WrapperPlayer)){
 					if(!lockedOn || currentOrientation.y == minYaw || currentOrientation.y == maxYaw || currentOrientation.x == minPitch || currentOrientation.x == maxPitch){
-						firing = false;
+						firingEnabled = false;
 					}
 				}
 				
@@ -309,13 +309,13 @@ public class PartGun extends APart{
 					internalOrientation.x = 0;
 				}
 			}else{
-				firing = false;
+				firingEnabled = false;
 			}
 			
 			//Increment or decrement windup.
-			if(firing && windupTimeCurrent < definition.gun.windupTime){
+			if(isActive && firingEnabled && windupTimeCurrent < definition.gun.windupTime){
 				++windupTimeCurrent;
-			}else if(!firing && windupTimeCurrent > 0){
+			}else if(!firingEnabled && windupTimeCurrent > 0){
 				--windupTimeCurrent;
 			}
 			windupRotation += windupTimeCurrent;
@@ -327,7 +327,7 @@ public class PartGun extends APart{
 			//easier on MC to leave clients to handle lots of bullets than the server and network systems.
 			//We still need to run the gun code on the server, however, as we need to mess with inventory.
 			firedThisTick = false;
-			if(firing && windupTimeCurrent == definition.gun.windupTime && bulletsLeft > 0 && cooldownTimeRemaining == 0 && (!definition.gun.isSemiAuto || !firedThisCommand)){
+			if(firingEnabled && windupTimeCurrent == definition.gun.windupTime && bulletsLeft > 0 && cooldownTimeRemaining == 0 && (!definition.gun.isSemiAuto || !firedThisCommand)){
 				//First update gun number so we know if we need to apply a cam offset.
 				//We would fire a bullet here, but that's for the SFXSystem to handle, not the update loop.
 				//Make sure to add-on an offset to our firing point to allow for multi-gun units.
@@ -349,14 +349,14 @@ public class PartGun extends APart{
 			}
 			
 			//Reset fire command bit if we aren't firing.
-			if(!firing){
+			if(!firingEnabled){
 				firedThisCommand = false;
 			}
 			
 			//If we can accept bullets, and aren't currently loading any, re-load ourselves from any inventories.
 			//While the reload method checks for reload time, we check here to save on code processing.
 			//No sense in looking for bullets if we can't load them anyways.
-			if(!world.isClient() && bulletsLeft < definition.gun.capacity && bulletsReloading == 0){
+			if(isActive && !world.isClient() && bulletsLeft < definition.gun.capacity && bulletsReloading == 0){
 				if(playerHolding != null){
 					if(definition.gun.autoReload || bulletsLeft == 0){
 						//Check the player's inventory for bullets.
@@ -396,14 +396,16 @@ public class PartGun extends APart{
 				}
 			}
 			
-			//If we are reloading, decrement the reloading timer.
-			//If we are done reloading, add the new bullets.
-			//This comes after the reloading block as we need a 0/1 state-change for the various animations.
-			if(reloadTimeRemaining > 0){
-				--reloadTimeRemaining;
-			}else if(bulletsReloading != 0){
-				bulletsLeft += bulletsReloading;
-				bulletsReloading = 0;
+			if(isActive){
+				//If we are reloading, decrement the reloading timer.
+				//If we are done reloading, add the new bullets.
+				//This comes after the reloading block as we need a 0/1 state-change for the various animations.
+				if(reloadTimeRemaining > 0){
+					--reloadTimeRemaining;
+				}else if(bulletsReloading != 0){
+					bulletsLeft += bulletsReloading;
+					bulletsReloading = 0;
+				}
 			}
 			
 			//Decrement cooldown time blocking gun from firing, if we have any.
@@ -481,8 +483,8 @@ public class PartGun extends APart{
 		}
 		switch(variable){
 			case("gun_inhand"): return entityOn instanceof EntityPlayerGun ? 1 : 0;	
-			case("gun_active"): return active ? 1 : 0;
-			case("gun_firing"): return firing ? 1 : 0;
+			case("gun_active"): return gunEnabled ? 1 : 0;
+			case("gun_firing"): return firingEnabled ? 1 : 0;
 			case("gun_fired"): return firedThisTick ? 1 : 0;
 			case("gun_pitch"): return prevOrientation.x + (currentOrientation.x - prevOrientation.x)*partialTicks;
 			case("gun_yaw"): return prevOrientation.y + (currentOrientation.y - prevOrientation.y)*partialTicks;
@@ -624,7 +626,7 @@ public class PartGun extends APart{
 	@Override
 	public WrapperNBT save(WrapperNBT data){
 		super.save(data);
-		data.setBoolean("firing", firing);
+		data.setBoolean("firingEnabled", firingEnabled);
 		data.setInteger("shotsFired", bulletsFired);
 		data.setInteger("bulletsLeft", bulletsLeft);
 		data.setInteger("bulletsReloading", bulletsReloading);

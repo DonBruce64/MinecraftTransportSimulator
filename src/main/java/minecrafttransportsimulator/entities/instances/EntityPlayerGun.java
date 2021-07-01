@@ -204,9 +204,9 @@ public class EntityPlayerGun extends AEntityE_Multipart<JSONPlayerGun>{
 					
 					if(!world.isClient()){
 						//Save gun data if we stopped firing the prior tick.
-						if(activeGun.firing){
+						if(activeGun.firingEnabled){
 							didGunFireLastTick = true;
-						}else if(!activeGun.firing && didGunFireLastTick){
+						}else if(!activeGun.firingEnabled && didGunFireLastTick){
 							saveGun(false);
 						}
 					}else{

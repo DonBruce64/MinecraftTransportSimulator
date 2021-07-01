@@ -50,14 +50,16 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 	/**Children to this part.  Can be either additional parts or sub-parts.*/
 	public final List<APart> childParts = new ArrayList<APart>();
 	
-	//Runtime variables.
-	private final List<DurationDelayClock> clocks = new ArrayList<DurationDelayClock>();
+	//Runtime variables.	
+	private final List<DurationDelayClock> activeClocks = new ArrayList<DurationDelayClock>();
+	private final List<DurationDelayClock> movementClocks = new ArrayList<DurationDelayClock>();
 	/**Cached pack definition mappings for sub-part packs.  First key is the parent part definition, which links to a map.
 	 * This second map is keyed by a part definition, with the value equal to a corrected definition.  This means that
 	 * in total, this object contains all sub-packs created on any entity for any part with sub-packs.  This is done as parts with
 	 * sub-parts use relative locations, and thus we need to ensure we have the correct position for them on any entity part location.*/
 	private final Map<JSONPartDefinition, JSONPartDefinition> subpackMappings = new HashMap<JSONPartDefinition, JSONPartDefinition>();
 	public boolean isDisabled;
+	public boolean isActive;
 	public double prevScale = 1.0;
 	public double scale = 1.0;
 	public final Point3d localOffset;
@@ -101,8 +103,8 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 			interactionBoxes.add(boundingBox);
 		}
 		
-		//Create movement animation clocks.
-		createMovementClocks();
+		//Create clocks.
+		createClocks();
 		
 		//Set initial position and rotation.
 		position.setTo(localOffset).rotateFine(entityOn.angles).add(entityOn.position);
@@ -114,11 +116,17 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 	/**
 	 *  Helper method for creating duration/delay clocks.
 	 */
-	public void createMovementClocks(){
-		clocks.clear();
+	public void createClocks(){
+		movementClocks.clear();
 		if(placementDefinition.animations != null){
 			for(JSONAnimationDefinition animation : placementDefinition.animations){
-				clocks.add(new DurationDelayClock(animation));
+				movementClocks.add(new DurationDelayClock(animation));
+			}
+		}
+		activeClocks.clear();
+		if(definition.generic.activeAnimations != null){
+			for(JSONAnimationDefinition animation : definition.generic.activeAnimations){
+				activeClocks.add(new DurationDelayClock(animation));
 			}
 		}
 	}
@@ -126,6 +134,61 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 	@Override
 	public boolean update(){
 		if(super.update()){
+			//Update active state.
+			isActive = placementDefinition.isSubPart ? parentPart.isActive : true;
+			if(isActive && !activeClocks.isEmpty()){
+				boolean inhibitAnimations = false;
+				for(DurationDelayClock clock : activeClocks){
+					JSONAnimationDefinition animation = clock.animation;
+					switch(animation.animationType){
+						case VISIBILITY :{
+							if(!inhibitAnimations){
+								double variableValue = animation.offset + getAnimatedVariableValue(animation, 0, clock, 0);
+								if(variableValue < animation.clampMin || variableValue > animation.clampMax){
+									isActive = false;
+								}
+							}
+							break;
+						}
+						case INHIBITOR :{
+							if(!inhibitAnimations){
+								double variableValue = getAnimatedVariableValue(animation, 0, clock, 0);
+								if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
+									inhibitAnimations = true;
+								}
+							}
+							break;
+						}
+						case ACTIVATOR :{
+							if(inhibitAnimations){
+								double variableValue = getAnimatedVariableValue(animation, 0, clock, 0);
+								if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
+									inhibitAnimations = false;
+								}
+							}
+							break;
+						}
+						case TRANSLATION :{
+							//Do nothing.
+							break;
+						}
+						case ROTATION :{
+							//Do nothing.
+							break;
+						}
+						case SCALING :{
+							//Do nothing.
+							break;
+						}
+					}
+				
+					if(!isActive){
+						//Don't need to process any further as we can't play.
+						break;
+					}
+				}
+			}
+			
 			prevMotion.setTo(entityOn.prevMotion);
 			motion.setTo(entityOn.motion);
 			prevLocalOffset.setTo(localOffset);
@@ -166,6 +229,12 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 			return false;
 		}
 	}
+	
+	@Override
+    public void onDefinitionReset(){
+		super.onDefinitionReset();
+    	createClocks();
+    }
 	
 	@Override
 	public double getMass(){
@@ -224,8 +293,8 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 		scale = placementDefinition.isSubPart && parentPart != null ? parentPart.scale : 1.0;
 		localOffset.set(0D, 0D, 0D);
 		localAngles.set(0D, 0D, 0D);
-		if(!clocks.isEmpty()){
-			for(DurationDelayClock clock : clocks){
+		if(!movementClocks.isEmpty()){
+			for(DurationDelayClock clock : movementClocks){
 				JSONAnimationDefinition animation = clock.animation;
 				switch(animation.animationType){
 					case TRANSLATION :{

@@ -27,63 +27,65 @@ public final class PartSeat extends APart{
 	public boolean interact(WrapperPlayer player){
 		//See if we can interact with the seats of this vehicle.
 		//This can happen if the vehicle is not locked, or we're already inside a locked vehicle.
-		if(!entityOn.locked || entityOn.equals(player.getEntityRiding())){
-			WrapperEntity riderForSeat = entityOn.locationRiderMap.get(placementOffset);
-			if(riderForSeat != null){
-				//We already have a rider for this seat.  If it's not us, mark the seat as taken.
-				//If it's an entity that can be leashed, dismount the entity and leash it.
-				if(riderForSeat instanceof WrapperPlayer){
-					if(!player.equals(riderForSeat)){
+		if(isActive){
+			if(!entityOn.locked || entityOn.equals(player.getEntityRiding())){
+				WrapperEntity riderForSeat = entityOn.locationRiderMap.get(placementOffset);
+				if(riderForSeat != null){
+					//We already have a rider for this seat.  If it's not us, mark the seat as taken.
+					//If it's an entity that can be leashed, dismount the entity and leash it.
+					if(riderForSeat instanceof WrapperPlayer){
+						if(!player.equals(riderForSeat)){
+							player.sendPacket(new PacketPlayerChatMessage(player, "interact.failure.seattaken"));
+						}
+					}else if(!riderForSeat.leashTo(player)){
+						//Can't leash up this entity, so mark the seat as taken.
 						player.sendPacket(new PacketPlayerChatMessage(player, "interact.failure.seattaken"));
 					}
-				}else if(!riderForSeat.leashTo(player)){
-					//Can't leash up this entity, so mark the seat as taken.
-					player.sendPacket(new PacketPlayerChatMessage(player, "interact.failure.seattaken"));
-				}
-			}else{
-				//Seat is free.  Either mount this seat, or if we have a leashed animal, set it in that seat.
-				WrapperEntity leashedEntity = player.getLeashedEntity();
-				if(leashedEntity != null){
-					entityOn.addRider(leashedEntity, placementOffset);
 				}else{
-					//Didn't find an animal.  Just mount the player.
-					//Don't mount them if they are sneaking, however.  This will confuse MC.
-					if(!player.isSneaking()){
-						//Check if the rider is riding something before adding them.
-						//If they aren't riding us our the entity we are on, we need to remove them.
-						if(player.getEntityRiding() != null && !entityOn.equals(player.getEntityRiding())){
-							player.getEntityRiding().removeRider(player, null);
-						}
-						entityOn.addRider(player, placementOffset);
-						//If this seat can control a gun, and isn't controlling one, set it now.
-						//This prevents the need to select a gun when initially mounting.
-						//If we do have an active gun, validate that it's still correct.
-						if(activeGun == null){
-							setNextActiveGun();
-							InterfacePacket.sendToAllClients(new PacketPartSeat(this));
-						}else{
-							for(AItemPart partItem : entityOn.partsByItem.keySet()){
-								if(partItem.definition.gun != null){
-									for(APart part : entityOn.partsByItem.get(partItem)){
-										if(player.equals(((PartGun) part).getController())){
-											if(partItem.equals(activeGun)){
-												return true;
+					//Seat is free.  Either mount this seat, or if we have a leashed animal, set it in that seat.
+					WrapperEntity leashedEntity = player.getLeashedEntity();
+					if(leashedEntity != null){
+						entityOn.addRider(leashedEntity, placementOffset);
+					}else{
+						//Didn't find an animal.  Just mount the player.
+						//Don't mount them if they are sneaking, however.  This will confuse MC.
+						if(!player.isSneaking()){
+							//Check if the rider is riding something before adding them.
+							//If they aren't riding us our the entity we are on, we need to remove them.
+							if(player.getEntityRiding() != null && !entityOn.equals(player.getEntityRiding())){
+								player.getEntityRiding().removeRider(player, null);
+							}
+							entityOn.addRider(player, placementOffset);
+							//If this seat can control a gun, and isn't controlling one, set it now.
+							//This prevents the need to select a gun when initially mounting.
+							//If we do have an active gun, validate that it's still correct.
+							if(activeGun == null){
+								setNextActiveGun();
+								InterfacePacket.sendToAllClients(new PacketPartSeat(this));
+							}else{
+								for(AItemPart partItem : entityOn.partsByItem.keySet()){
+									if(partItem.definition.gun != null){
+										for(APart part : entityOn.partsByItem.get(partItem)){
+											if(player.equals(((PartGun) part).getController())){
+												if(partItem.equals(activeGun)){
+													return true;
+												}
 											}
 										}
 									}
 								}
+								
+								//Invalid active gun detected.  Select a new one.
+								activeGun = null;
+								setNextActiveGun();
+								InterfacePacket.sendToAllClients(new PacketPartSeat(this));
 							}
-							
-							//Invalid active gun detected.  Select a new one.
-							activeGun = null;
-							setNextActiveGun();
-							InterfacePacket.sendToAllClients(new PacketPartSeat(this));
 						}
 					}
 				}
+			}else{
+				player.sendPacket(new PacketPlayerChatMessage(player, "interact.failure.vehiclelocked"));
 			}
-		}else{
-			player.sendPacket(new PacketPlayerChatMessage(player, "interact.failure.vehiclelocked"));
 		}
 		return true;
     }

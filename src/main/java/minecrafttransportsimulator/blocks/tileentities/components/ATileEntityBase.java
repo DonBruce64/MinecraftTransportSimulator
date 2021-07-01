@@ -54,7 +54,6 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONMultiModelProv
 	 *  Populates the passed-in list with item stacks that will drop when this TE is broken.
 	 *  This is different than what is used for middle-clicking, as that will
 	 *  return the current block's state, which may differ from what it drops.
-	 * @param drops TODO
 	 */
 	public void addDropsToList(List<ItemStack> drops){
 		drops.add(getItem().getNewStack());

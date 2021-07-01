@@ -72,7 +72,7 @@ public class PacketPartGun extends APacketEntity<PartGun>{
 	@Override
 	public boolean handle(WrapperWorld world, PartGun gun){
 		if(controlPulse){
-			gun.firing = triggerState && gun.active;
+			gun.firingEnabled = triggerState && gun.gunEnabled;
 			return true;
 		}else{
 			return gun.tryToReload(PackParserSystem.getItem(bulletPackID, bulletSystemName, bulletSubName));
