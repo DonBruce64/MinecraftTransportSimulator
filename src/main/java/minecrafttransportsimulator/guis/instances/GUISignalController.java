@@ -347,7 +347,7 @@ public class GUISignalController extends AGUIBase{
 		trafficSignalCount.visible = !onLaneScreen;
 		laneWidthText.visible = !onLaneScreen;
 		
-		greenMainTimeText.visible = !onLaneScreen && controller.timedMode;
+		greenMainTimeText.visible = !onLaneScreen;
 		greenCrossTimeText.visible = !onLaneScreen;
 		yellowMainTimeText.visible = !onLaneScreen;
 		yellowCrossTimeText.visible = !onLaneScreen;

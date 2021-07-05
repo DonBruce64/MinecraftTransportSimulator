@@ -17,7 +17,7 @@ public class RenderDecor extends ARenderTileEntityBase<TileEntityDecor>{
 		//Render lane holo-boxes if we are a signal controller that's being edited.
 		if(blendingEnabled && decor instanceof TileEntitySignalController){
 			TileEntitySignalController controller = (TileEntitySignalController) decor;
-			if(controller.unsavedClientChangesPreset){
+			if(controller.unsavedClientChangesPreset || InterfaceRender.shouldRenderBoundingBoxes()){
 				//Disable lighting and texture rendering.
 				InterfaceRender.setLightingState(false);
 				InterfaceRender.setTextureState(false);
