@@ -53,7 +53,6 @@ public class PartGun extends APart{
 	public int currentMuzzle;
 	public final Point3d currentOrientation;
 	public final Point3d prevOrientation;
-	private final Point3d internalOrientation;
 	public ItemBullet loadedBullet;
 	
 	//These variables are used during firing and will be reset on loading.
@@ -120,7 +119,6 @@ public class PartGun extends APart{
 		this.bulletsReloading = data.getInteger("bulletsReloading");
 		this.currentOrientation = data.getPoint3d("currentOrientation");
 		this.prevOrientation = currentOrientation.copy();
-		this.internalOrientation = currentOrientation.copy();
 		String loadedBulletPack = data.getString("loadedBulletPack");
 		String loadedBulletName = data.getString("loadedBulletName");
 		if(!loadedBulletPack.isEmpty()){
@@ -299,15 +297,6 @@ public class PartGun extends APart{
 						firingEnabled = false;
 					}
 				}
-				
-				//Set internal orientation for use in other functions as this has changed.
-				internalOrientation.setTo(currentOrientation);
-				if(!definition.gun.yawIsInternal){
-					internalOrientation.y = 0;
-				}
-				if(!definition.gun.pitchIsInternal){
-					internalOrientation.x = 0;
-				}
 			}else{
 				firingEnabled = false;
 			}
@@ -454,22 +443,6 @@ public class PartGun extends APart{
 	}
 	
 	@Override
-	public boolean updateLocals(){
-		if(super.updateLocals()){
-			return true;
-		}else{
-			//Need to use prev orientation here, as otherwise we get into a feedback loop.
-			if(!definition.gun.yawIsInternal){
-				localAngles.add(0, prevOrientation.y, 0);
-			}
-			if(!definition.gun.pitchIsInternal){
-				localAngles.add(prevOrientation.x, 0, 0);
-			}
-			return false;
-		}
-	}
-	
-	@Override
 	public double getRawVariableValue(String variable, float partialTicks){
 		//Check for an instance of a gun_muzzle_# variable, since these requires additional parsing
 		if(variable.startsWith("gun_muzzle_")){
@@ -554,7 +527,6 @@ public class PartGun extends APart{
 			if(definition.gun.bulletSpreadFactor > 0){
 				spreadAngle.add((Math.random() - 0.5F)*definition.gun.bulletSpreadFactor, (Math.random() - 0.5F)*definition.gun.bulletSpreadFactor, 0D);
 			}
-			spreadAngle.add(internalOrientation);
 			
 			//Set the bullet's direction the the provider's orientation.
 			Point3d bulletVelocity = new Point3d(0D, 0D, 1D).rotateFine(spreadAngle);
@@ -608,7 +580,7 @@ public class PartGun extends APart{
 	 * Helper method for getting the firing origin of the gun.
 	 */
 	public Point3d getFiringOrigin(){
-		Point3d firingOrigin = new Point3d(0, 0, definition.gun.length).rotateFine(internalOrientation);
+		Point3d firingOrigin = new Point3d(0, 0, definition.gun.length);
 		//If muzzle count is the same as capacity, use the muzzles in order
 		//Otherwise, iterate through the available muzzles.
 		if(definition.gun.muzzlePositions != null) {

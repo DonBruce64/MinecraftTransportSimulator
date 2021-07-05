@@ -118,6 +118,11 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 	 */
 	public void createClocks(){
 		movementClocks.clear();
+		if(definition.generic.movementAnimations != null){
+			for(JSONAnimationDefinition animation : definition.generic.movementAnimations){
+				movementClocks.add(new DurationDelayClock(animation));
+			}
+		}
 		if(placementDefinition.animations != null){
 			for(JSONAnimationDefinition animation : placementDefinition.animations){
 				movementClocks.add(new DurationDelayClock(animation));
@@ -286,7 +291,7 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 	 * to the parent entity.  If the part should be invisible, given the animations, true is returned.
 	 * This can be used to disable both the part and the hitbox, if desired.
 	 */
-	protected boolean updateLocals(){
+	private boolean updateLocals(){
 		boolean inhibitAnimations = false;
 		boolean disablePart = false;
 		prevScale = scale;
