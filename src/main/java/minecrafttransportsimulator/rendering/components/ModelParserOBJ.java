@@ -22,7 +22,7 @@ public final class ModelParserOBJ extends AModelParser{
 	
 	@Override
 	protected Map<String, Float[][]> parseModelInternal(String modelLocation){
-		Map<String, Float[][]> partMap = new HashMap<String, Float[][]>();
+		Map<String, Float[][]> objectMap = new HashMap<String, Float[][]>();
 		BufferedReader reader;
 		try{
 			reader = new BufferedReader(new InputStreamReader(ModelParserOBJ.class.getResourceAsStream(modelLocation)));
@@ -48,7 +48,7 @@ public final class ModelParserOBJ extends AModelParser{
 					//Declaration of an object.
 					//Save current part we are parsing (if any) and start new part.
 					if(partName != null){
-						partMap.put(partName, compileVertexArray(vertexList, normalList, textureList, faceList, partName.toLowerCase().contains("window")));
+						compileVertexArray(objectMap, vertexList, normalList, textureList, faceList, partName);
 						vertexList.clear();
 						normalList.clear();
 						textureList.clear();
@@ -103,19 +103,20 @@ public final class ModelParserOBJ extends AModelParser{
 			
 			//End of file.  Save the last part in process and close the file.
 			try{
-				partMap.put(partName, compileVertexArray(vertexList, normalList, textureList, faceList, partName.toLowerCase().contains("window")));
+				compileVertexArray(objectMap, vertexList, normalList, textureList, faceList, partName);
 			}catch(Exception e){
 				throw new IllegalArgumentException("Could not compile points of: " + modelLocation + ".  This is likely due to missing UV mapping on some or all faces.");
 			}
 			reader.close();
-			return partMap;
+			return objectMap;
 			
 		}catch(IOException e){
 			throw new IllegalStateException("Could not finish parsing: " + modelLocation + " due to IOException error.  Did the file change state during parsing?");
 		}
 	}
 	
-	private static Float[][] compileVertexArray(List<Float[]> vertexList, List<Float[]> normalList, List<Float[]> textureList, List<String> faceList, boolean isWindow){
+	private static void compileVertexArray(Map<String, Float[][]> objectMap, List<Float[]> vertexList, List<Float[]> normalList, List<Float[]> textureList, List<String> faceList, String objectName){
+		boolean isWindow = objectName.toLowerCase().contains("window");
 		List<Integer[]> vertexDataSets = new ArrayList<Integer[]>();
 		for(String faceString : faceList){
 			List<Integer[]> faceVertexData = new ArrayList<Integer[]>();	
@@ -216,7 +217,24 @@ public final class ModelParserOBJ extends AModelParser{
 				normalArray.get(i)[2]
 			});
 		}
+		objectMap.put(objectName, compiledArray.toArray(new Float[compiledArray.size()][8]));
 		
-		return compiledArray.toArray(new Float[compiledArray.size()][8]);
+		//If we are a window, add an interior face.
+		if(isWindow){
+			compiledArray = new ArrayList<Float[]>();
+			for(int i=vertexArray.size() - 1; i>=0; --i){
+				compiledArray.add(new Float[]{
+					vertexArray.get(i)[0],
+					vertexArray.get(i)[1],
+					vertexArray.get(i)[2],
+					textureArray.get(i)[0],
+					textureArray.get(i)[1],
+					normalArray.get(i)[0],
+					normalArray.get(i)[1],
+					normalArray.get(i)[2]
+				});
+			}
+			objectMap.put(objectName + "_autogen_interior", compiledArray.toArray(new Float[compiledArray.size()][8]));
+		}
 	}
 }

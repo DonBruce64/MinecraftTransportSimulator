@@ -81,7 +81,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 			transforms.add(lightTransform);
 		}
 		if(objectName.toLowerCase().contains("window")){
-			transforms.add(new TransformWindow<AnimationEntity>(vertices));
+			transforms.add(new TransformWindow<AnimationEntity>(objectName.toLowerCase().endsWith("_autogen_interior")));
 		}
 		if(objectName.toLowerCase().startsWith("url") || objectName.toLowerCase().endsWith("url")){
 			transforms.add(new TransformOnlineTexture<AnimationEntity>(objectName));
