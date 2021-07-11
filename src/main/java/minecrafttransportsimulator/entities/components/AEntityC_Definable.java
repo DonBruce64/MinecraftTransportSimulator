@@ -387,7 +387,9 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 		//Check if this is a cycle variable.
 		if(variable.endsWith("cycle")){
 			String[] parsedVariable = variable.split("_");
-			return world.getTick()%Integer.valueOf(parsedVariable[1]) < Integer.valueOf(parsedVariable[0]) ? 1 : 0;
+			int onTime = Integer.valueOf(parsedVariable[0]);
+			int totalTime = onTime + Integer.valueOf(parsedVariable[1]); 
+			return world.getTick()%totalTime < onTime ? 1 : 0;
 		}
 		
 		//Check if this is a generic variable.  This contains lights in most cases.
