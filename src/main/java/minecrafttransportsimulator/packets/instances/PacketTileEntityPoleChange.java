@@ -11,7 +11,6 @@ import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntityInteract;
-import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**Packet sent to poles to change their states.  This gets sent when a player clicks a pole on the client.
@@ -88,7 +87,6 @@ public class PacketTileEntityPoleChange extends APacketEntityInteract<TileEntity
 			}else if(addition && !pole.components.containsKey(axis)){
 				//Player clicked with a component.  Add it.
 				ATileEntityPole_Component newComponent = PoleComponentType.createComponent(pole, data);
-				newComponent.variablesOn.add(LightType.STREETLIGHT.lowercaseName);
 				pole.components.put(axis, newComponent);
 				pole.updateLightState();
 				if(!player.isCreative()){

@@ -116,7 +116,6 @@ public final class ModelParserOBJ extends AModelParser{
 	}
 	
 	private static void compileVertexArray(Map<String, Float[][]> objectMap, List<Float[]> vertexList, List<Float[]> normalList, List<Float[]> textureList, List<String> faceList, String objectName){
-		boolean isWindow = objectName.toLowerCase().contains("window");
 		List<Integer[]> vertexDataSets = new ArrayList<Integer[]>();
 		for(String faceString : faceList){
 			List<Integer[]> faceVertexData = new ArrayList<Integer[]>();	
@@ -174,27 +173,9 @@ public final class ModelParserOBJ extends AModelParser{
 		}
 		
 		//Now populate the texture array.
-		//If we are parsing windows override the texture coords.
 		List<Float[]> textureArray = new ArrayList<Float[]>();
-		if(isWindow){
-			for(int i=0; i<vertexDataSets.size(); i+=3){
-				textureArray.add(new Float[]{0.0F, 1.0F});
-				textureArray.add(new Float[]{1.0F, 1.0F});
-				textureArray.add(new Float[]{1.0F, 0.0F});
-				//If we have only 3 points, it means this window is just a single triangle.
-				//Don't add the 4th fake point and just end compilation here.
-				if(vertexArray.size() > 3){
-					textureArray.add(new Float[]{0.0F, 1.0F});
-					textureArray.add(new Float[]{1.0F, 0.0F});
-					textureArray.add(new Float[]{0.0F, 0.0F});
-				}else{
-					break;
-				}
-			}
-		}else{
-			for(Integer[] face : vertexDataSets){
-				textureArray.add(textureList.get(face[1] - textureOffset));
-			}
+		for(Integer[] face : vertexDataSets){
+			textureArray.add(textureList.get(face[1] - textureOffset));
 		}
 		
 		//Finally, populate the normal array.
@@ -218,23 +199,5 @@ public final class ModelParserOBJ extends AModelParser{
 			});
 		}
 		objectMap.put(objectName, compiledArray.toArray(new Float[compiledArray.size()][8]));
-		
-		//If we are a window, add an interior face.
-		if(isWindow){
-			compiledArray = new ArrayList<Float[]>();
-			for(int i=vertexArray.size() - 1; i>=0; --i){
-				compiledArray.add(new Float[]{
-					vertexArray.get(i)[0],
-					vertexArray.get(i)[1],
-					vertexArray.get(i)[2],
-					textureArray.get(i)[0],
-					textureArray.get(i)[1],
-					normalArray.get(i)[0],
-					normalArray.get(i)[1],
-					normalArray.get(i)[2]
-				});
-			}
-			objectMap.put(objectName + "_autogen_interior", compiledArray.toArray(new Float[compiledArray.size()][8]));
-		}
 	}
 }

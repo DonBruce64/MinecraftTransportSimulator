@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.jsondefs;
 
 import java.util.List;
+import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
@@ -121,6 +122,10 @@ public class JSONVehicle extends AJSONPartProvider{
         
         @JSONDescription("A listing of notches for flap deployment.  These will be used to determine the requested flap setting for vehicles that have them.  Only functional for vehicles where isAircraft is set to true.  Both 0 and the highest notch should be included")
         public List<Float> flapNotches;
+        
+        @JSONRequired(dependentField="isTrailer", dependentValues={"true"})
+        @JSONDescription("A listing of variables that will be checked off the towing vehicle if this vehicle is a trailer and connected.  Used by trailers to get the states of their towing vehicles for light and door animations.")
+        public Set<String> hookupVariables;
     	
         @Deprecated
     	public boolean hasFlaps;

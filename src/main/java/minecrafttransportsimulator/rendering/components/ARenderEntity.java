@@ -60,6 +60,9 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 	        InterfaceRender.setLightingToPosition(entity.position);
 	        --entity.position.y;
 	        
+	        //Update internal lighting states.
+	        entity.updateLightBrightness(partialTicks);
+	        
 	        //Use smooth shading for main model rendering.
 			GL11.glShadeModel(GL11.GL_SMOOTH);
 	        
@@ -149,7 +152,7 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 	 *  Make sure you call super to ensure the model caches get parsed!
 	 */
 	public void parseModel(RenderedEntity entity, String modelLocation){
-		objectLists.put(modelLocation, AModelParser.generateRenderables(entity, modelLocation, entity.definition.rendering != null ? entity.definition.rendering.animatedObjects : null));
+		objectLists.put(modelLocation, AModelParser.generateRenderables(entity, modelLocation, entity.definition.rendering != null ? entity.definition.rendering.animatedObjects : null, entity.definition.rendering != null ? entity.definition.rendering.lightObjects : null));
 		//Got the normal transforms.  Now check the JSON for any instrument animation transforms.
 		Map<Integer, RenderableTransform<RenderedEntity>> instrumentSlotTransforms = new HashMap<Integer, RenderableTransform<RenderedEntity>>();
 		if(entity instanceof AEntityD_Interactable){
@@ -300,22 +303,6 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 	protected void resetModelCache(String modelLocation){
 		objectLists.remove(modelLocation);
 		instrumentTransforms.remove(modelLocation);
-	}
-	
-	/**
-	 *  Returns true if this entity has the passed-in light on it.
-	 */
-	public boolean doesEntityHaveLight(RenderedEntity entity, LightType light){
-		for(RenderableModelObject<RenderedEntity> modelObject : objectLists.get(entity.definition.getModelLocation(entity.subName))){
-			for(ATransform<RenderedEntity> transform : modelObject.transforms){
-				if(transform instanceof TransformLight){
-					if(((TransformLight<RenderedEntity>) transform).type.equals(light)){
-						return true;
-					}
-				}
-			}
-		}
-		return false;
 	}
 	
 	/**

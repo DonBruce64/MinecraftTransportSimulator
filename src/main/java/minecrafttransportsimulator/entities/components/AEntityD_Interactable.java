@@ -97,7 +97,7 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 	 * this map as needed.  The map will only be modified when the JSON definition for this entity is
 	 * reloaded, in which case all clocks will be reset as the JSON may have changed animations.
 	 **/
-	public final Map<JSONAnimationDefinition, DurationDelayClock> instrumentAnimationClocks = new HashMap<JSONAnimationDefinition, DurationDelayClock>();
+	public Map<JSONAnimationDefinition, DurationDelayClock> instrumentAnimationClocks;
 	
 	/**Locked state.  Locked entities should not be able to be interacted with except by entities riding them,
 	 * their owners, or OP players (server admins).
@@ -182,6 +182,12 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 				}
 			}
 		}
+	}
+	
+	@Override
+	public void initializeAnimations(){
+		super.initializeAnimations();
+		instrumentAnimationClocks = new HashMap<JSONAnimationDefinition, DurationDelayClock>();
 	}
 	
 	@Override
@@ -273,12 +279,6 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 	@Override
 	public double getMass(){
 		return 100*locationRiderMap.values().size();
-	}
-	
-	@Override
-	public void onDefinitionReset(){
-		super.onDefinitionReset();
-		instrumentAnimationClocks.clear();
 	}
 	
 	@Override

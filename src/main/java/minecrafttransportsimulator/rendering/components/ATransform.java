@@ -1,10 +1,6 @@
 package minecrafttransportsimulator.rendering.components;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
-import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 
 /**Class that when extended allows for a common method of applying
  * transforms.  Transforms are a way to modify the rendering routines
@@ -15,29 +11,14 @@ import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
  * @author don_bruce
  */
 public abstract class ATransform<AnimationEntity extends AEntityC_Definable<?>>{
-	public final JSONAnimationDefinition definition; 
-	private final Map<AnimationEntity, DurationDelayClock> clocks = new HashMap<AnimationEntity, DurationDelayClock>();
-	
-	public ATransform(JSONAnimationDefinition definition){
-		this.definition = definition;
-	}
 	
 	/**
 	 *  This method should return true if this transform should be rendered.
-	 *  By default, all transforms are rendered, but this may be overridden should
+	 *  By default, all objects  are rendered, but this may be overridden should
 	 *  the object this transform is on need to be made invisible.  If this transform
 	 *  is not rendered, than all objects dependent on this one will not render either.
 	 */
 	public boolean shouldRender(AnimationEntity entity, boolean blendingEnabled, float partialTicks){
-		return true;
-	}
-	
-	/**
-	 *  This method should return true if this transform should be rendered with the specified
-	 *  blending state.  This will disable further transforms, but will not disable rendering of
-	 *  objects that depend on this one.
-	 */
-	public boolean shouldRenderWithBlendState(AnimationEntity entity, boolean blendingEnabled){
 		return true;
 	}
 	
@@ -69,15 +50,4 @@ public abstract class ATransform<AnimationEntity extends AEntityC_Definable<?>>{
 	 *  or transform clean-up (say if lighting was modified).
 	 */
 	public void doPostRenderLogic(AnimationEntity entity, boolean blendingEnabled, float partialTicks){};
-	
-	/**
-	 *  Returns the current animation clock for the passed-in entity.  Clocks are not shared between
-	 *  entities to allow each vehicle to have their own running clocks for each animation.
-	 */
-	public DurationDelayClock getClock(AnimationEntity entity){
-		if(!clocks.containsKey(entity)){
-			clocks.put(entity, new DurationDelayClock(definition));
-		}
-		return clocks.get(entity);
-	}
 }

@@ -99,6 +99,7 @@ public class CameraSystem{
 						}
 					}
 					for(APart part : multipart.parts){
+						//FIXME add camera objects clocks here.
 						if(part.definition.rendering != null && part.definition.rendering.cameraObjects != null){
 							for(JSONCameraObject testCamera : part.definition.rendering.cameraObjects){
 								if(isCameraActive(testCamera, part, partialTicks)){
@@ -138,7 +139,7 @@ public class CameraSystem{
 					if(camera.animations != null){
 						boolean inhibitAnimations = false;
         				for(JSONAnimationDefinition animation : camera.animations){
-        					double variableValue = cameraProvider.getAnimatedVariableValue(animation, 0, null, partialTicks);
+        					double variableValue = cameraProvider.getAnimatedVariableValue(null, 0, partialTicks);
         					switch(animation.animationType){
 	        					case TRANSLATION :{
             						if(!inhibitAnimations && variableValue != 0){
@@ -283,7 +284,7 @@ public class CameraSystem{
 		if(camera.animations != null){
 			for(JSONAnimationDefinition animation : camera.animations){
 				if(animation.animationType.equals(AnimationComponentType.VISIBILITY)){
-					double value = entity.getAnimatedVariableValue(animation, 0, null, partialTicks);
+					double value = entity.getAnimatedVariableValue(null, 0, partialTicks);
 					if(value < animation.clampMin || value > animation.clampMax){
 						return false;
 					}

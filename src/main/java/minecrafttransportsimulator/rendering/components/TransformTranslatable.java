@@ -10,7 +10,7 @@ import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
  *
  * @author don_bruce
  */
-public class TransformTranslatable<AnimationEntity extends AEntityC_Definable<?>> extends ATransform<AnimationEntity>{
+public class TransformTranslatable<AnimationEntity extends AEntityC_Definable<?>> extends ATransformDefinable<AnimationEntity>{
 	private final Point3d translationAxis;
 	
 	public TransformTranslatable(JSONAnimationDefinition definition){
@@ -22,7 +22,7 @@ public class TransformTranslatable<AnimationEntity extends AEntityC_Definable<?>
 
 	@Override
 	public double applyTransform(AnimationEntity entity, boolean blendingEnabled, float partialTicks, double offset){
-		double translation = entity.getAnimatedVariableValue(definition, offset, getClock(entity), partialTicks);
+		double translation = entity.getAnimatedVariableValue(entity.renderAnimationClocks.get(definition), offset, partialTicks);
 		//Do the actual translation, if we aren't 0.
 		if(definition.addPriorOffset){
 			GL11.glTranslated((translation - offset)*translationAxis.x, (translation - offset)*translationAxis.y, (translation - offset)*translationAxis.z);

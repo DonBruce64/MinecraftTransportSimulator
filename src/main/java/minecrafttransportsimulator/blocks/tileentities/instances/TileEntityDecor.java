@@ -61,9 +61,4 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> implements ITile
 		}
 		return renderer;
 	}
-	
-	@Override
-	public float getLightPower(){
-		return (15 - world.getRedstonePower(position))/15F;
-	}
 }

@@ -14,20 +14,6 @@ import minecrafttransportsimulator.mcinterface.InterfaceRender;
 public abstract class ARenderEntityMultipart<RenderedEntity extends AEntityE_Multipart<?>> extends ARenderEntity<RenderedEntity>{
 	
 	@Override
-	public boolean doesEntityHaveLight(RenderedEntity entity, LightType light){
-		if(!super.doesEntityHaveLight(entity, light)){
-			for(APart part : ((AEntityE_Multipart<?>) entity).parts){
-				if(part.getRenderer().doesEntityHaveLight(part, light)){
-					return true;
-				}
-			}
-			return false;
-		}else{
-			return true;
-		}
-	}
-	
-	@Override
 	protected void renderBoundingBoxes(RenderedEntity entity, Point3d entityPositionDelta){
 		super.renderBoundingBoxes(entity, entityPositionDelta);
 		//Draw part center points.

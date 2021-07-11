@@ -106,27 +106,14 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 			//Do trailer-specific logic, if we are one and towed.
 			//Otherwise, do normal update logic for DRLs.
 			if(definition.motorized.isTrailer){
-				//If we are being towed update our light variables to match the vehicle we are being towed by.
-				//Also set the brake state to the same as the towing vehicle.
+				//If we are being towed set the brake state to the same as the towing vehicle.
 				//If we aren't being towed, set the parking brake.
 				if(towedByConnection != null){
-					for(LightType light : LightType.values()){
-						if(towedByConnection.hitchBaseEntity.variablesOn.contains(light.lowercaseName)){
-							variablesOn.add(light.lowercaseName);
-						}else{
-							variablesOn.remove(light.lowercaseName);
-						}
-					}
 					parkingBrakeOn = false;
 					brake = ((AEntityVehicleE_Powered) towedByConnection.hitchBaseEntity).brake;
 				}else{
-					//Remove all lights besides the generic one.
-					for(LightType light : LightType.values()){
-						if(!light.equals(LightType.GENERICLIGHT)){
-							variablesOn.remove(light.lowercaseName);
-						}
-					}
 					parkingBrakeOn = true;
+					brake = 0;
 				}
 			}else{
 				//Set engine state mapping variables.
@@ -141,43 +128,6 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 						}
 					}
 				}
-				
-				//Turn on the DRLs if we have an engine on.
-				if(enginesOn){
-					variablesOn.add(LightType.DAYTIMELIGHT.lowercaseName);
-				}else{
-					variablesOn.remove(LightType.DAYTIMELIGHT.lowercaseName);
-				}
-				
-				
-				//Turn on brake lights and indicator lights.
-				if(brake > 0){
-					variablesOn.add(LightType.BRAKELIGHT.lowercaseName);
-					if(variablesOn.contains(LightType.LEFTTURNLIGHT.lowercaseName)){
-						variablesOn.remove(LightType.LEFTINDICATORLIGHT.lowercaseName);
-					}else{
-						variablesOn.add(LightType.LEFTINDICATORLIGHT.lowercaseName);
-					}
-					if(variablesOn.contains(LightType.RIGHTTURNLIGHT.lowercaseName)){
-						variablesOn.remove(LightType.RIGHTINDICATORLIGHT.lowercaseName);
-					}else{
-						variablesOn.add(LightType.RIGHTINDICATORLIGHT.lowercaseName);
-					}
-				}else{
-					variablesOn.remove(LightType.BRAKELIGHT.lowercaseName);
-					variablesOn.remove(LightType.LEFTINDICATORLIGHT.lowercaseName);
-					variablesOn.remove(LightType.RIGHTINDICATORLIGHT.lowercaseName);
-				}
-				
-				//Set backup light state.
-				variablesOn.remove(LightType.BACKUPLIGHT.lowercaseName);
-				for(PartEngine engine : engines.values()){
-					if(engine.currentGear < 0){
-						variablesOn.add(LightType.BACKUPLIGHT.lowercaseName);
-						break;
-					}
-				}
-				
 			}
 			
 			//Set electric usage based on light status.
@@ -358,11 +308,6 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 	@Override
 	public boolean hasRadio(){
 		return true;
-	}
-	
-	@Override
-	public float getLightPower(){
-		return (float) (electricPower/12F);
 	}
 	
 	@Override

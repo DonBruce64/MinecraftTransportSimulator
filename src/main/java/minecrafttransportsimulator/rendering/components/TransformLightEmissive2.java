@@ -6,6 +6,7 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
+import minecrafttransportsimulator.jsondefs.JSONLight;
 import minecrafttransportsimulator.mcinterface.InterfaceRender;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
@@ -14,14 +15,11 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 *
 * @author don_bruce
 */
-public class TransformLight<AnimationEntity extends AEntityC_Definable<?>> extends ATransform<AnimationEntity>{
-	public final LightType type;
-	public final boolean isLightupTexture;
+public class TransformLightEmissive2<AnimationEntity extends AEntityC_Definable<?>> extends ATransformLight<AnimationEntity>{
 	
 	private final Color color;
 	private final int flashBits;
 	private final boolean renderFlare;
-	private final boolean renderColor;
 	private final boolean renderCover;
 	private final boolean renderBeam;
 	
@@ -36,8 +34,8 @@ public class TransformLight<AnimationEntity extends AEntityC_Definable<?>> exten
 	private float sunLight;
 	private float lightBrightness;
 	
-	public TransformLight(String modelName, String objectName, Float[][] masterVertices){
-		super(null);
+	public TransformLightEmissive2(JSONLight definition){
+		super(definition);
 		this.type = getTypeFromName(objectName);
 		//Lights are in the format of "&NAME_XXXXXX_YYYYY_ZZZZ"
 		//Where NAME is what switch it goes to.
@@ -105,9 +103,6 @@ public class TransformLight<AnimationEntity extends AEntityC_Definable<?>> exten
 			this.centerPoints = null;
 			this.size = null;
 		}
-		
-		//Set the light-up texture status.
-		this.isLightupTexture = !renderColor && !renderFlare && !renderCover && !renderBeam;
 	}
 	
 	@Override
@@ -126,20 +121,10 @@ public class TransformLight<AnimationEntity extends AEntityC_Definable<?>> exten
 		//Don't do this when we apply transforms, as those might block rendering if we have more than one.
 		//That would lead to an un-defined state if we had active lighting changes.
 		//If we aren't, but we should light-up color, set states to render that color rather than the model.
-		if(isLightupTexture){
-			InterfaceRender.setLightingState(!(lightOn && electricFactor > 0));
-			return true;
+		if(blendingEnabled){
+			return false;
 		}else{
-			if(blendingEnabled){
-				return false;
-			}else{
-				if(renderColor && lightOn && electricFactor > 0){
-					InterfaceRender.bindTexture("mts:textures/rendering/light.png");
-					InterfaceRender.setLightingState(false);
-					InterfaceRender.setColorState(color.getRed()/255F, color.getGreen()/255F, color.getBlue()/255F, electricFactor);
-				}
-				return true;
-			}
+			return true;
 		}
 	}
 
@@ -151,88 +136,24 @@ public class TransformLight<AnimationEntity extends AEntityC_Definable<?>> exten
 	
 	@Override
 	public void doPostRenderLogic(AnimationEntity entity, boolean blendingEnabled, float partialTicks){
-		if(isLightupTexture){
-			//Reset lighting state.
-			InterfaceRender.setLightingState(true);
-		}else{
-			//We cheat here and render our light bits at this point.
-			//It's safe to do this, as we'll already have applied all the other transforms we need, 
-			//and we'll have rendered the object so we can safely change textures.
-			//We won't have to worry about the light-up textures, as those lighting changes will be overridden here.
-			
-			//Render the cover in the solid pass.
-			if(!blendingEnabled && renderCover){
-				//If the light is on, and the vehicle has power, we want to make the cover bright.
-				renderCover(lightOn && electricFactor > 0);
-			}
-			
-			//Flag for flare and beam rendering.
-			boolean doBlendRenders = lightBrightness > 0 && (ConfigSystem.configObject.clientRendering.lightsSolid.value ? !blendingEnabled : blendingEnabled); 
-			
-			//If we need to render a flare, and the light is on, and our brightness is non-zero, do so now.
-			//This needs to be done in pass 1 or -1 to do blending.
-			if(renderFlare && lightOn && doBlendRenders){
-				renderFlare(lightBrightness, blendingEnabled);
-			}
-			
-			//Render beam if the light is on and the brightness is non-zero.
-			//This must be done in pass 1 or -1 to do proper blending.
-			//Beams stop rendering before the light brightness reaches 0 as an indicator of low electricity.
-			if(entity.shouldRenderBeams() && renderBeam && lightOn && doBlendRenders){
-				renderBeam(Math.min(electricPower > 0.25 ? 1.0F : 0, lightBrightness), blendingEnabled);
-			}
-			
-			//Reset states and recall texture.
-			InterfaceRender.resetStates();
-			InterfaceRender.recallTexture();
+		//We cheat here and render our light bits at this point.
+		//It's safe to do this, as we'll already have applied all the other transforms we need, 
+		//and we'll have rendered the object so we can safely change textures.
+		//We won't have to worry about the light-up textures, as those lighting changes will be overridden here.
+		
+		//Flag for flare and beam rendering.
+		boolean doBlendRenders = lightBrightness > 0 && (ConfigSystem.configObject.clientRendering.lightsSolid.value ? !blendingEnabled : blendingEnabled); 
+		
+		//Render beam if the light is on and the brightness is non-zero.
+		//This must be done in pass 1 or -1 to do proper blending.
+		//Beams stop rendering before the light brightness reaches 0 as an indicator of low electricity.
+		if(entity.shouldRenderBeams() && renderBeam && lightOn && doBlendRenders){
+			renderBeam(Math.min(electricPower > 0.25 ? 1.0F : 0, lightBrightness), blendingEnabled);
 		}
-	}
-	
-	/**
-	 *  Renders the cover of this light, if so configured.  Parameter
-	 *  passed-in will disable lighting for the cover if true.
-	 */
-	private void renderCover(boolean disableLighting){
-		InterfaceRender.bindTexture("minecraft:textures/blocks/glass.png");
-		InterfaceRender.setLightingState(!disableLighting);
-		InterfaceRender.setColorState(1.0F, 1.0F, 1.0F, 1.0F);
-		GL11.glBegin(GL11.GL_TRIANGLES);
-		for(Float[] vertex : vertices){
-			//Add a slight translation and scaling to the cover coords based on the normals to make the light
-			//a little bit off of the main shape.  Prevents z-fighting.
-			GL11.glTexCoord2f(vertex[3], vertex[4]);
-			GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
-			GL11.glVertex3f(vertex[0]+vertex[5]*0.002F, vertex[1]+vertex[6]*0.002F, vertex[2]+vertex[7]*0.002F);	
-		}
-		GL11.glEnd();
-	}
-	
-	/**
-	 *  Renders the flare portion of this light, if so configured.
-	 *  Parameter is the alpha value for the light.  Need to disable
-	 *  both lighting and lightmap here to prevent the flare from being dim.
-	 */
-	private void renderFlare(float alphaValue, boolean blendingEnabled){
-		InterfaceRender.bindTexture("mts:textures/rendering/lensflare.png");
-		InterfaceRender.setLightingState(false);
-		if(blendingEnabled){
-			InterfaceRender.setBlendBright(ConfigSystem.configObject.clientRendering.flaresBright.value);
-		}
-		InterfaceRender.setColorState(color.getRed()/255F, color.getGreen()/255F, color.getBlue()/255F, alphaValue);
-		GL11.glBegin(GL11.GL_TRIANGLES);
-		for(int i=0; i<centerPoints.length; ++i){
-			for(byte j=0; j<6; ++j){
-				Float[] vertex = vertices[(i)*6+j];
-				//Add a slight translation to the light size to make the flare move off it.
-				//Then apply scaling factor to make the flare larger than the light.
-				GL11.glTexCoord2f(vertex[3], vertex[4]);
-				GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
-				GL11.glVertex3d(vertex[0]+vertex[5]*0.002F + (vertex[0] - centerPoints[i].x)*(2 + size[i]*0.25F), 
-						vertex[1]+vertex[6]*0.002F + (vertex[1] - centerPoints[i].y)*(2 + size[i]*0.25F), 
-						vertex[2]+vertex[7]*0.002F + (vertex[2] - centerPoints[i].z)*(2 + size[i]*0.25F));	
-			}
-		}
-		GL11.glEnd();
+		
+		//Reset states and recall texture.
+		InterfaceRender.resetStates();
+		InterfaceRender.recallTexture();
 	}
 	
 	/**
@@ -240,13 +161,6 @@ public class TransformLight<AnimationEntity extends AEntityC_Definable<?>> exten
 	 *  Parameter is the alpha value for the light.
 	 */
 	private void renderBeam(float alphaValue, boolean blendingEnabled){
-		InterfaceRender.bindTexture("mts:textures/rendering/lightbeam.png");
-		InterfaceRender.setLightingState(false);
-		if(blendingEnabled){
-			InterfaceRender.setBlendBright(ConfigSystem.configObject.clientRendering.beamsBright.value);
-		}
-		InterfaceRender.setColorState(color.getRed()/255F, color.getGreen()/255F, color.getBlue()/255F, alphaValue);
-		
 		//As we can have more than one light per definition, we will only render 6 vertices at a time.
 		//Use the center point arrays for this; normals are the same for all 6 vertex sets so use whichever.
 		for(byte pass=0; pass<=1; ++pass){
@@ -281,19 +195,5 @@ public class TransformLight<AnimationEntity extends AEntityC_Definable<?>> exten
 			GL11.glVertex3d(radius*Math.cos(theta), radius*Math.sin(theta), radius*3F);
 		}
 		GL11.glEnd();
-	}
-	
-	/**
-	 *  Helper method to get the {@link LightType} for this LightPart.
-	 *  This allows easier static assignment.
-	 */
-	private static LightType getTypeFromName(String lightName){
-		for(LightType light : LightType.values()){
-			//Convert light name to uppercase to match enum name.
-			if(lightName.toUpperCase().contains(light.name())){
-				return light;
-			}
-		}
-		throw new IllegalArgumentException("Attempted to parse light:" + lightName + ", but no lights exist with this name.  Is this light name spelled correctly?");
 	}
 }

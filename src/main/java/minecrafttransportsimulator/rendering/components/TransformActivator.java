@@ -9,7 +9,7 @@ import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
  *
  * @author gyro_hero
  */
-public class TransformActivator<AnimationEntity extends AEntityC_Definable<?>> extends ATransform<AnimationEntity>{
+public class TransformActivator<AnimationEntity extends AEntityC_Definable<?>> extends ATransformDefinable<AnimationEntity>{
 	
 	public TransformActivator(JSONAnimationDefinition definition){
 		super(definition);
@@ -17,7 +17,7 @@ public class TransformActivator<AnimationEntity extends AEntityC_Definable<?>> e
 	
 	@Override
 	public boolean shouldActivate(AnimationEntity entity, boolean blendingEnabled, float partialTicks){
-		double value = definition.offset + entity.getAnimatedVariableValue(definition, 0, getClock(entity), partialTicks);
+		double value = definition.offset + entity.getAnimatedVariableValue(entity.renderAnimationClocks.get(definition), 0, partialTicks);
 		return value >= definition.clampMin && value <= definition.clampMax;
 	}
 

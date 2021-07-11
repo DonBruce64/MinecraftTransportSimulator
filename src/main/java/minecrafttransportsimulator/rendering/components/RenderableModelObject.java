@@ -12,6 +12,7 @@ import minecrafttransportsimulator.entities.instances.PartGroundDevice;
 import minecrafttransportsimulator.jsondefs.AJSONPartProvider;
 import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
+import minecrafttransportsimulator.jsondefs.JSONLight;
 import minecrafttransportsimulator.mcinterface.InterfaceRender;
 
 /**This class represents an object that can be rendered from an model.  This object is a set of
@@ -30,8 +31,8 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 	
 	private static final Map<String, Map<String, Integer>> cachedVertexIndexLists = new HashMap<String, Map<String, Integer>>();
 	
-	public RenderableModelObject(String modelName, String objectName, JSONAnimatedObject definition, Float[][] vertices, AnimationEntity entity){
-		super(definition != null ? definition.animations : new ArrayList<JSONAnimationDefinition>());
+	public RenderableModelObject(String modelName, String objectName, JSONAnimatedObject animationDefinition, JSONLight lightAnimation, Float[][] vertices, AnimationEntity entity){
+		super(animationDefinition != null ? animationDefinition.animations : new ArrayList<JSONAnimationDefinition>());
 		
 		//Cache the displayList, if we haven't already.
 		if(!cachedVertexIndexLists.containsKey(modelName) || !cachedVertexIndexLists.get(modelName).containsKey(objectName)){
@@ -44,12 +45,12 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 		
 		//Set all parameters for the appropriate transforms.
 		this.objectName = objectName;
-		if(definition != null){
-			this.applyAfter = definition.applyAfter;
+		if(animationDefinition != null){
+			this.applyAfter = animationDefinition.applyAfter;
 		}else{
 			this.applyAfter = null;
 			//Roller found.  Create a transform for it.
-			if(objectName.toLowerCase().contains("roller")){
+			if(objectName.toLowerCase().contains(AModelParser.ROLLER_OBJECT_NAME)){
 				transforms.add(new TransformTreadRoller<AnimationEntity>(objectName, vertices, ((AJSONPartProvider) entity.definition).parts));
 			}else if(entity instanceof PartGroundDevice){
 				PartGroundDevice grounder = (PartGroundDevice) entity;
@@ -60,31 +61,37 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 			}
 		}
 		
-		//Get the light transform, if we have it.
-		TransformLight<AnimationEntity> lightTransform = null;
-		if(objectName.contains("&")){
-			lightTransform = new TransformLight<AnimationEntity>(modelName, objectName, vertices);
+		//Check if this is a window or online texture.
+		if(objectName.toLowerCase().contains(AModelParser.WINDOW_OBJECT_NAME)){
+			transforms.add(new TransformWindow<AnimationEntity>(objectName.toLowerCase().endsWith(AModelParser.INTERIOR_WINDOW_SUFFIX)));
 		}
-		
-		//If we have a light transform, and it's not a light-up texture, don't add other transforms.
-		//If it is a light-up texture, add other transforms before the light.  This prevents us from
-		//calling the light transform's calls if we shouldn't even be rendering it.
-		if(lightTransform == null || lightTransform.isLightupTexture){
-			if(objectName.toLowerCase().contains("translucent")){
-				transforms.add(new TransformTranslucent<AnimationEntity>());
-			}else{
-				transforms.add(new TransformSolid<AnimationEntity>());
-			}
-		}
-		
-		if(lightTransform != null){
-			transforms.add(lightTransform);
-		}
-		if(objectName.toLowerCase().contains("window")){
-			transforms.add(new TransformWindow<AnimationEntity>(objectName.toLowerCase().endsWith("_autogen_interior")));
-		}
-		if(objectName.toLowerCase().startsWith("url") || objectName.toLowerCase().endsWith("url")){
+		if(objectName.toLowerCase().startsWith(AModelParser.ONLINE_TEXTURE_OBJECT_NAME) || objectName.toLowerCase().endsWith(AModelParser.ONLINE_TEXTURE_OBJECT_NAME)){
 			transforms.add(new TransformOnlineTexture<AnimationEntity>(objectName));
+		}
+		
+		//Check if this is a light.  Depending on if it's a light-up texture or not we adjust our final render pass.
+		boolean isBlendedLight = false;
+		if(objectName.endsWith(AModelParser.LIGHT_COVER_SUFFIX)){
+			transforms.add(new TransformLight_Cover<AnimationEntity>(lightAnimation));
+		}else if(objectName.endsWith(AModelParser.LIGHT_FLARE_SUFFIX)){
+			transforms.add(new TransformLight_Flare<AnimationEntity>(lightAnimation));
+			isBlendedLight = true;
+		}else if(objectName.endsWith(AModelParser.LIGHT_BEAM_SUFFIX)){
+			transforms.add(new TransformLight_Beam<AnimationEntity>(lightAnimation));
+			isBlendedLight = true;
+		}else if(lightAnimation != null && !lightAnimation.emissive){
+			transforms.add(new TransformLight_LightupTexture<AnimationEntity>(lightAnimation));
+		}else if(lightAnimation != null && lightAnimation.emissive){
+			transforms.add(new TransformLight_Emissive<AnimationEntity>(lightAnimation));
+			isBlendedLight = true;
+		}
+		
+		//Add the main blending/not blending transform to the start of the transform list now that we have all others.
+		//This prevents excess operations if we can't even render the object in the current pass.
+		if(objectName.toLowerCase().contains(AModelParser.TRANSLUCENT_OBJECT_NAME) || isBlendedLight){
+			transforms.add(0, new TransformTranslucent<AnimationEntity>());
+		}else{
+			transforms.add(0, new TransformSolid<AnimationEntity>());
 		}
 	}
 	
@@ -95,10 +102,8 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 	public void render(AnimationEntity entity, boolean blendingEnabled, float partialTicks, List<RenderableModelObject<AnimationEntity>> allObjects){
 		GL11.glPushMatrix();
 		if(doPreRenderTransforms(entity, blendingEnabled, partialTicks)){
-			if(renderModelWithBlendState(entity, blendingEnabled)){
-				//Render the model.
-				InterfaceRender.renderVertices(cachedVertexIndex);
-			}
+			//Render the model.
+			InterfaceRender.renderVertices(cachedVertexIndex);
 			
 			//Do post-render logic.
 			doPostRenderTransforms(entity, blendingEnabled, partialTicks);

@@ -103,7 +103,7 @@ public final class RenderInstrument{
 								entity.instrumentAnimationClocks.put(animation, animationClock);
 							}
 							
-							double variableValue = entity.getAnimatedVariableValue(animation, 0, animationClock, 0);
+							double variableValue = entity.getAnimatedVariableValue(animationClock, 0, 0);
 							if(addSuffix){
 								animation.variable = animation.variable.substring(0, animation.variable.length() - ("_" + partNumber).length());
 							}

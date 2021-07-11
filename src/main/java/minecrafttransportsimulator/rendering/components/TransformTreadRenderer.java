@@ -28,7 +28,6 @@ public class TransformTreadRenderer<AnimationEntity extends AEntityC_Definable<?
 	private static final Map<String, Map<Float, List<Double[]>>> treadPoints = new HashMap<String, Map<Float, List<Double[]>>>();
 	
 	public TransformTreadRenderer(int cachedVertexIndex){
-		super(null);
 		//Need to save this as we render multiple instances of our model object for this transform.
 		this.cachedVertexIndex = cachedVertexIndex;
 	}
@@ -139,7 +138,7 @@ public class TransformTreadRenderer<AnimationEntity extends AEntityC_Definable<?
 		//If we don't have the deltas, calculate them based on the points of the rollers on the model.			
 		//Search through rotatable parts on the model and grab the rollers.
 		Map<Integer, TransformTreadRoller<TreadEntity>> parsedRollers = new HashMap<Integer, TransformTreadRoller<TreadEntity>>();
-		for(RenderableModelObject<TreadEntity> modelObject : ModelParserOBJ.generateRenderables(entityTreadAttachedTo, treadPathModel, null)){
+		for(RenderableModelObject<TreadEntity> modelObject : ModelParserOBJ.generateRenderables(entityTreadAttachedTo, treadPathModel, null, null)){
 			for(ATransform<TreadEntity> transform : modelObject.transforms){
 				if(transform instanceof TransformTreadRoller){
 					TransformTreadRoller<TreadEntity> treadTransform = (TransformTreadRoller<TreadEntity>) transform;

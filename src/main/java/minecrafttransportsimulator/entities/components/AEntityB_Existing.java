@@ -127,21 +127,10 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	/**
 	 *  This method returns how much light this entity is providing.  Used to send lighting status to various
 	 *  systems for rendering in the world to provide actual light rather than rendered light.
-	 *  This is different than {@link #getLightPower()}, which is for internally-rendered lights.
 	 */
 	public float getLightProvided(){
     	return 0.0F;
 	}
-	
-	/**
-   	 *  Returns how much power the lights on the entity have.
-   	 *  1 is full power, 0 is no power.  Note that this does not directly
-   	 *  correspond to rendering of the lights due to different light sections
-   	 *  rendering differently at different power levels.
-   	 */
-    public float getLightPower(){
-    	return 1.0F;
-    }
     
     /**
    	 *  Returns true if this entity should render light beams.  This is entity-specific in the config,

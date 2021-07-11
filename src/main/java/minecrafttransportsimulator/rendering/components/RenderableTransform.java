@@ -68,24 +68,12 @@ public class RenderableTransform<AnimationEntity extends AEntityC_Definable<?>>{
 					return false;
 				}else{
 					//If the transform is a cumulative offset, send the prior operation's offset down the pipeline. 
-					if(transform.definition != null && transform.definition.addPriorOffset){
+					if(transform instanceof ATransformDefinable && ((ATransformDefinable<AnimationEntity>) transform).definition.addPriorOffset){
 						priorOffset = transform.applyTransform(entity, blendingEnabled, partialTicks, priorOffset);
 					}else{
 						priorOffset = transform.applyTransform(entity, blendingEnabled, partialTicks, 0);
 					}
 				}
-			}
-		}
-		return true;
-	}
-	
-	/**
-	 *  Returns true if this model should render with the blend state, false if not.
-	 */
-	public boolean renderModelWithBlendState(AnimationEntity entity, boolean blendingEnabled){
-		for(ATransform<AnimationEntity> transform : transforms){
-			if(!transform.shouldRenderWithBlendState(entity, blendingEnabled)){
-				return false;
 			}
 		}
 		return true;

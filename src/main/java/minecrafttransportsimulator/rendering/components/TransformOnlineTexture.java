@@ -15,7 +15,6 @@ public class TransformOnlineTexture<AnimationEntity extends AEntityC_Definable<?
 	private final String objectName;
 	
 	public TransformOnlineTexture(String objectName){
-		super(null);
 		this.objectName = objectName;
 	}
 	

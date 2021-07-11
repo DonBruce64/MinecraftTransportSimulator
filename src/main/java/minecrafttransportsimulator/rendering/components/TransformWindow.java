@@ -13,7 +13,6 @@ public class TransformWindow<AnimationEntity extends AEntityC_Definable<?>> exte
 	private final boolean interior;
 	
 	public TransformWindow(boolean interior){
-		super(null);
 		this.interior = interior;
 	}
 	

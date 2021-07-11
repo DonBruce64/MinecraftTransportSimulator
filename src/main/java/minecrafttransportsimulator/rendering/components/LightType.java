@@ -11,17 +11,11 @@ public enum LightType{
 	STROBELIGHT(false, false),
 	TAXILIGHT(true, true),
 	LANDINGLIGHT(true, true),
-	BRAKELIGHT(false, false),
-	BACKUPLIGHT(false, false),
 	LEFTTURNLIGHT(false, false),
 	RIGHTTURNLIGHT(false, false),
-	LEFTINDICATORLIGHT(false, false),
-	RIGHTINDICATORLIGHT(false, false),
 	RUNNINGLIGHT(false, true),
 	HEADLIGHT(true, true),
 	EMERGENCYLIGHT(false, false),
-	DAYTIMELIGHT(false, false),
-	GENERICLIGHT(false, false),
 	
 	//The following light types are only for block-based systems.
 	UNLINKEDLIGHT(false, false),
@@ -37,8 +31,7 @@ public enum LightType{
 	CAUTIONLIGHTRIGHT(false, false),
 	GOLIGHTRIGHT(false, false),
 	
-	STREETLIGHT(true, true),
-	DECORLIGHT(false, false);
+	STREETLIGHT(true, true);
 	
 	public final boolean hasBeam;
 	public final boolean providesLight;
