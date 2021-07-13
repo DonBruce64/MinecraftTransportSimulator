@@ -87,6 +87,11 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			//This is required to move the GDBs if the GDs move.
 			for(APart part : parts){
 				if(part instanceof PartGroundDevice){
+					if(part.prevActive != part.isActive){
+						groundDeviceCollective.updateMembers();
+						groundDeviceCollective.updateBounds();
+						break;
+					}
 					if(!part.localOffset.equals(part.prevLocalOffset) || part.scale != part.prevScale){
 						groundDeviceCollective.updateBounds();
 						break;

@@ -95,7 +95,7 @@ public class VehicleGroundDeviceBox{
 		canRollOnGround = false;
 		for(APart part : vehicle.parts){
 			if(part instanceof PartGroundDevice){
-				if(!part.placementDefinition.isSpare){
+				if(!part.placementDefinition.isSpare && part.isActive){
 					//X-offsets of 0 are both left and right as they are center points.
 					//This ensures we don't roll to try and align a center point.
 					if(isFront && part.placementOffset.z > 0){
@@ -200,7 +200,12 @@ public class VehicleGroundDeviceBox{
 		isCollided = false;
 		isGrounded = false;
 		isAbleToDoGroundOperations = false;
+		isCollidedLiquid = false;
+		isGroundedLiquid = false;
+		isAbleToDoGroundOperationsLiquid = false;
+		isLiquidCollidedWithGround = false;
 		collisionDepth = 0;
+		
 		Point3d vehicleMotionOffset = vehicle.motion.copy().multiply(EntityVehicleF_Physics.SPEED_FACTOR);
 		Point3d groundCollisionOffset = vehicleMotionOffset.copy().add(PartGroundDevice.groundDetectionOffset);
 		if(!groundDevices.isEmpty()){

@@ -59,7 +59,8 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 	 * sub-parts use relative locations, and thus we need to ensure we have the correct position for them on any entity part location.*/
 	private final Map<JSONPartDefinition, JSONPartDefinition> subpackMappings = new HashMap<JSONPartDefinition, JSONPartDefinition>();
 	public boolean isDisabled;
-	public boolean isActive;
+	public boolean isActive = true;
+	public boolean prevActive = true;
 	public double prevScale = 1.0;
 	public double scale = 1.0;
 	public final Point3d localOffset;
@@ -140,6 +141,7 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 	public boolean update(){
 		if(super.update()){
 			//Update active state.
+			prevActive = isActive;
 			isActive = placementDefinition.isSubPart ? parentPart.isActive : true;
 			if(isActive && !activeClocks.isEmpty()){
 				boolean inhibitAnimations = false;
