@@ -243,10 +243,24 @@ public class VehicleGroundDeviceCollection{
 	}
 	
 	/**
-	 * Returns the number of devices on the ground.
+	 * Returns true if any devices are on the ground.
 	 */
 	public boolean isAnythingOnGround(){
 		return frontLeftGDB.isGrounded || frontRightGDB.isGrounded || rearLeftGDB.isGrounded || rearRightGDB.isGrounded;
+	}
+	
+	/**
+	 * Returns true if the passed-in device is actually on the ground.
+	 * This is different than the {@link #groundedGroundDevices}, as
+	 * this is the actual on-ground state rather than the state where phyiscs
+	 * calculations can be performed.
+	 */
+	public boolean isActuallyOnGround(PartGroundDevice groundDevice){
+		if(frontLeftGDB.isPartofBox(groundDevice)) return frontLeftGDB.isGrounded;
+		if(frontRightGDB.isPartofBox(groundDevice)) return frontRightGDB.isGrounded;
+		if(rearLeftGDB.isPartofBox(groundDevice)) return rearLeftGDB.isGrounded;
+		if(rearRightGDB.isPartofBox(groundDevice)) return rearRightGDB.isGrounded;
+		return false;
 	}
 	
 	/**

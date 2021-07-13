@@ -353,4 +353,11 @@ public class VehicleGroundDeviceBox{
 	public BoundingBox getBoundingBox(){
 		return isAbleToDoGroundOperationsLiquid || groundDevices.isEmpty() ? liquidBox : solidBox;
 	}
+	
+	/**
+	 * Returns true if the passed-in ground device is part of this box.
+	 */
+	public boolean isPartofBox(PartGroundDevice groundDevice){
+		return groundDevices.contains(groundDevice) || liquidDevices.contains(groundDevice);
+	}
 }
