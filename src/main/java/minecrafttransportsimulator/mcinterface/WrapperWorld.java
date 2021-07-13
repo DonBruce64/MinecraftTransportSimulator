@@ -262,7 +262,7 @@ public class WrapperWorld{
 		Point3d lookerLos = entityLooking.getLineOfSight(searchRadius).add(entityLooking.getPosition());
 		Vec3d losVector = new Vec3d(lookerLos.x, lookerLos.y, lookerLos.z);
 		for(Entity entity : world.getEntitiesWithinAABBExcludingEntity(mcLooker, mcLooker.getEntityBoundingBox().grow(searchRadius))){
-			if(!entity.equals(mcLooker.getRidingEntity())){
+			if(!entity.equals(mcLooker.getRidingEntity()) && !(entity instanceof BuilderEntityRenderForwarder)){
 				float distance = mcLooker.getDistance(entity);
 				if(distance < smallestDistance){
 					smallestDistance = distance;

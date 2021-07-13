@@ -65,6 +65,7 @@ public class PartGun extends APart{
 	public int windupTimeCurrent;
 	public int windupRotation;
 	public WrapperEntity lastController;
+	private WrapperEntity entityTarget;
 	private long lastTimeFired;
 	private long timeToFire;
 	private final Set<EntityBullet> activeBullets = new HashSet<EntityBullet>();
@@ -297,8 +298,18 @@ public class PartGun extends APart{
 						firingEnabled = false;
 					}
 				}
+				
+				//If we are on a client, check for a target for this gun if we have a lock-on missile.
+				//Only do this once every 1/2 second.
+				if(world.isClient() && isActive && controller != null && loadedBullet != null && loadedBullet.definition.bullet.turnFactor > 0){
+					//Try to find the entity the controller is looking at.
+					entityTarget = world.getEntityLookingAt(controller, 750);
+				}else{
+					entityTarget = null;
+				}
 			}else{
 				firingEnabled = false;
+				entityTarget = null;
 			}
 			
 			//Increment or decrement windup.
@@ -459,6 +470,7 @@ public class PartGun extends APart{
 			case("gun_active"): return gunEnabled ? 1 : 0;
 			case("gun_firing"): return firingEnabled ? 1 : 0;
 			case("gun_fired"): return firedThisTick ? 1 : 0;
+			case("gun_lockedon"): return entityTarget != null ? 1 : 0;
 			case("gun_pitch"): return prevOrientation.x + (currentOrientation.x - prevOrientation.x)*partialTicks;
 			case("gun_yaw"): return prevOrientation.y + (currentOrientation.y - prevOrientation.y)*partialTicks;
 			case("gun_pitching"): return prevOrientation.x != currentOrientation.x ? 1 : 0;
@@ -548,8 +560,6 @@ public class PartGun extends APart{
 			//Add the bullet as a particle.
 			//If the bullet is a missile, give it a target.
 			if(loadedBullet.definition.bullet.turnFactor > 0){
-				//Try to find the entity the controller is looking at.
-				WrapperEntity entityTarget = world.getEntityLookingAt(lastController, 2000F);
 				if(entityTarget != null){
 					activeBullets.add(new EntityBullet(bulletPosition, bulletVelocity, this, entityTarget));
 				}else{
