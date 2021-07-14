@@ -286,11 +286,6 @@ public class PartEngine extends APart{
 							hours += 0.01*getTotalWearFactor();
 						}
 						
-						//Add extra hours if we tried to run the engine fast without it being warmed up.
-						if(rpm > definition.engine.idleRPM*1.5 && temp < COLD_TEMP && !isCreative){
-							hours += 0.001*(rpm/definition.engine.idleRPM - 1)*getTotalWearFactor();
-						}
-						
 						//Add extra hours, and possibly explode the engine, if its too hot.
 						if(temp > OVERHEAT_TEMP_1 && !isCreative){
 							hours += 0.001*(temp - OVERHEAT_TEMP_1)*getTotalWearFactor();
