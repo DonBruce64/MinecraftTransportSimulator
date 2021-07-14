@@ -264,7 +264,7 @@ public class GUIConfig extends AGUIBase{
 			public void onClicked(){
 				for(ControlsJoystick joystickControl : ControlsJoystick.values()){
 					if(selectedJoystick.equals(joystickControl.config.joystickName)){
-						if(joystickControl.config.buttonIndex == joystickComponentId && joystickControl.systemName.startsWith(vehicleConfiguring)){
+						if((joystickControl.isAxis ^ assigningDigital) && joystickControl.config.buttonIndex == joystickComponentId && joystickControl.systemName.startsWith(vehicleConfiguring)){
 							joystickControl.clearControl();
 						}
 					}
@@ -424,7 +424,7 @@ public class GUIConfig extends AGUIBase{
 				//If this joystick is assigned to a control, append that to the text string.
 				for(ControlsJoystick joystickControl : ControlsJoystick.values()){
 					if(selectedJoystick.equals(joystickControl.config.joystickName)){
-						if(joystickControl.config.buttonIndex == i+scrollSpot && joystickControl.systemName.startsWith(vehicleConfiguring)){
+						if(joystickControl.config.buttonIndex == (joystickControl.isAxis ? controlIndex : controlIndex - selectedJoystickAxisCount) && joystickControl.systemName.startsWith(vehicleConfiguring)){
 							button.text += String.format("          %s", joystickControl.translatedName);
 						}
 					}
