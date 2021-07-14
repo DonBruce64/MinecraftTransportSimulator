@@ -40,6 +40,7 @@ public class InterfaceInput{
 	private static InhibitableMouseHelper customMouseHelper = new InhibitableMouseHelper();
 	
 	//Joystick variables.
+	private static boolean joystickLoadingAttempted = false;
 	private static boolean joystickEnabled = false;
 	private static boolean joystickInhibited = false;
 	private static final Map<String, Controller> joystickMap = new HashMap<String, Controller>();
@@ -47,16 +48,14 @@ public class InterfaceInput{
 	private static final Map<String, Integer> joystickNameCounters = new HashMap<String, Integer>();
 	
 	/**
-	 *  Static initializer to set up the master keybinding after the main MC systems have started.
-	 *  Also gets a list of available controllers and populates the default keybinding map with the correct keyCodes.
+	 *  Tries to populate all joysticks into the map.  Called automatically on first key-press seen on the keyboard as we can be
+	 *  assured the game is running and the configs are loaded by that time.  May be called manually at other times when
+	 *  the joysticks mapped needs to be refreshed.
 	 */
-	static{
-		//Set the master config key.
-		configKey = new KeyBinding("key.mts.config", Keyboard.KEY_P, "key.categories." + MasterLoader.MODID);
-		ClientRegistry.registerKeyBinding(configKey);
-		
+	public static void initJoysticks(){
 		//Populate the joystick device map.
 		//Joystick will be enabled if at least one controller is found.  If none are found, we likely have an error.
+		//We can re-try this if the user removes their mouse and we re-run this method.
 		try{
 			if(!Controllers.isCreated()){
 				Controllers.create();
@@ -64,6 +63,7 @@ public class InterfaceInput{
 			for(int i=0; i<Controllers.getControllerCount(); ++i){
 				Controller joystick = Controllers.getController(i);
 				joystickEnabled = true;
+				joystickNameCounters.clear();
 				if(joystick.getAxisCount() > 0 && joystick.getButtonCount() > 0 && joystick.getName() != null){
 					String joystickName = joystick.getName();
 					//Add an index on this joystick to be sure we don't override multi-component units.
@@ -259,9 +259,23 @@ public class InterfaceInput{
 	
 	/**
      * Opens the config screen when the config key is pressed.
+     * Also init the joystick system if we haven't already.
      */
     @SubscribeEvent
     public static void on(InputEvent.KeyInputEvent event){
+    	//Init joysticks if we haven't already tried.
+    	if(!joystickLoadingAttempted){
+    		initJoysticks();
+    		joystickLoadingAttempted = true;
+    	}
+    	
+    	//Set the master config key if we don't have it yet.
+    	if(configKey == null){
+			configKey = new KeyBinding("key.mts.config", Keyboard.KEY_P, "key.categories." + MasterLoader.MODID);
+			ClientRegistry.registerKeyBinding(configKey);
+    	}
+    	
+    	//Check if we pressed the config key.
         if(configKey.isPressed() && InterfaceGUI.getActiveGUI() == null){
         	InterfaceGUI.openGUI(new GUIConfig());
         }
