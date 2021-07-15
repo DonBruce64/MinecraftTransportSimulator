@@ -12,6 +12,7 @@ import minecrafttransportsimulator.packets.instances.PacketBeaconListingChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityCSHandshakeClient;
 import minecrafttransportsimulator.packets.instances.PacketEntityCSHandshakeServer;
 import minecrafttransportsimulator.packets.instances.PacketEntityColorChange;
+import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 import minecrafttransportsimulator.packets.instances.PacketEntityInstrumentChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityTextChange;
@@ -19,6 +20,7 @@ import minecrafttransportsimulator.packets.instances.PacketEntityTrailerChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityTrailerConnection;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketFluidTankChange;
+import minecrafttransportsimulator.packets.instances.PacketGUIRequest;
 import minecrafttransportsimulator.packets.instances.PacketInventoryContainerChange;
 import minecrafttransportsimulator.packets.instances.PacketPartChange;
 import minecrafttransportsimulator.packets.instances.PacketPartEffector;
@@ -96,6 +98,10 @@ public class InterfacePacket{
 		
 		//Inventory container packets.
 		registerPacket(packetIndex++, PacketInventoryContainerChange.class);
+		
+		//GUI packets.
+		registerPacket(packetIndex++, PacketGUIRequest.class);
+		registerPacket(packetIndex++, PacketEntityGUIRequest.class);
 		
 		//Part packets.
 		registerPacket(packetIndex++, PacketPartChange.class);

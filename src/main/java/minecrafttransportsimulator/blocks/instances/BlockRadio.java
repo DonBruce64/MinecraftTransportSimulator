@@ -3,11 +3,10 @@ package minecrafttransportsimulator.blocks.instances;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.components.ABlockBaseDecor;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRadio;
-import minecrafttransportsimulator.guis.components.InterfaceGUI;
-import minecrafttransportsimulator.guis.instances.GUIRadio;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 
 public class BlockRadio extends ABlockBaseDecor<TileEntityRadio>{
 	
@@ -17,8 +16,8 @@ public class BlockRadio extends ABlockBaseDecor<TileEntityRadio>{
 	
 	@Override
 	public boolean onClicked(WrapperWorld world, Point3d position, Axis axis, WrapperPlayer player){
-		if(world.isClient()){
-			InterfaceGUI.openGUI(new GUIRadio(((TileEntityRadio) world.getTileEntity(position)).radio));
+		if(!world.isClient()){
+			player.sendPacket(new PacketEntityGUIRequest(world.getTileEntity(position), player, PacketEntityGUIRequest.EntityGUIType.RADIO));
 		}
 		return true;
 	}

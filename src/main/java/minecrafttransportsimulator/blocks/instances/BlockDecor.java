@@ -3,17 +3,14 @@ package minecrafttransportsimulator.blocks.instances;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.components.ABlockBaseDecor;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
-import minecrafttransportsimulator.guis.components.InterfaceGUI;
-import minecrafttransportsimulator.guis.instances.GUIPartBench;
-import minecrafttransportsimulator.guis.instances.GUITextEditor;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.items.instances.ItemItem.ItemComponentType;
-import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
+import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 
 public class BlockDecor extends ABlockBaseDecor<TileEntityDecor>{
@@ -30,12 +27,13 @@ public class BlockDecor extends ABlockBaseDecor<TileEntityDecor>{
 			//Don't do decor actions if we are holding a paint gun.
 			return false;
 		}else if(decor.definition.decor.crafting != null){
-			if(world.isClient() && player.equals(InterfaceClient.getClientPlayer())){
-				InterfaceGUI.openGUI(new GUIPartBench(decor.definition.decor.crafting));
+			if(!world.isClient()){
+				player.sendPacket(new PacketEntityGUIRequest(decor, player, PacketEntityGUIRequest.EntityGUIType.PART_BENCH));
+				
 			}
 		}else if(!decor.text.isEmpty()){
-			if(world.isClient()){
-				InterfaceGUI.openGUI(new GUITextEditor(decor));
+			if(!world.isClient()){
+				player.sendPacket(new PacketEntityGUIRequest(decor, player, PacketEntityGUIRequest.EntityGUIType.TEXT_EDITOR));
 			}
 		}
 		if(!world.isClient()){

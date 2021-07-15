@@ -3,11 +3,10 @@ package minecrafttransportsimulator.blocks.instances;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.components.ABlockBaseDecor;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityChest;
-import minecrafttransportsimulator.guis.components.InterfaceGUI;
-import minecrafttransportsimulator.guis.instances.GUIInventoryContainer;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 
 public class BlockChest extends ABlockBaseDecor<TileEntityChest>{
 	
@@ -17,9 +16,8 @@ public class BlockChest extends ABlockBaseDecor<TileEntityChest>{
 	
 	@Override
 	public boolean onClicked(WrapperWorld world, Point3d position, Axis axis, WrapperPlayer player){
-		if(world.isClient()){
-			TileEntityChest chest = (TileEntityChest) world.getTileEntity(position);
-			InterfaceGUI.openGUI(new GUIInventoryContainer(chest.inventory, chest.definition.decor.inventoryTexture));
+		if(!world.isClient()){
+			player.sendPacket(new PacketEntityGUIRequest(world.getTileEntity(position), player, PacketEntityGUIRequest.EntityGUIType.INVENTORY_CHEST));
 		}
 		return true;
 	}

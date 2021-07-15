@@ -3,11 +3,10 @@ package minecrafttransportsimulator.blocks.instances;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.components.ABlockBaseDecor;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityBeacon;
-import minecrafttransportsimulator.guis.components.InterfaceGUI;
-import minecrafttransportsimulator.guis.instances.GUITextEditor;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 import minecrafttransportsimulator.systems.NavBeaconSystem;
 
 public class BlockBeacon extends ABlockBaseDecor<TileEntityBeacon>{
@@ -18,8 +17,8 @@ public class BlockBeacon extends ABlockBaseDecor<TileEntityBeacon>{
     
     @Override
 	public boolean onClicked(WrapperWorld world, Point3d position, Axis axis, WrapperPlayer player){
-		if(world.isClient()){
-			InterfaceGUI.openGUI(new GUITextEditor(world.getTileEntity(position)));
+		if(!world.isClient()){
+			player.sendPacket(new PacketEntityGUIRequest(world.getTileEntity(position), player, PacketEntityGUIRequest.EntityGUIType.TEXT_EDITOR));
 		}
 		return true;
 	}

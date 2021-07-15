@@ -3,11 +3,10 @@ package minecrafttransportsimulator.blocks.instances;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.components.ABlockBaseDecor;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController;
-import minecrafttransportsimulator.guis.components.InterfaceGUI;
-import minecrafttransportsimulator.guis.instances.GUISignalController;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 
 public class BlockSignalController extends ABlockBaseDecor<TileEntitySignalController>{
 	
@@ -17,8 +16,8 @@ public class BlockSignalController extends ABlockBaseDecor<TileEntitySignalContr
 	
 	@Override
 	public boolean onClicked(WrapperWorld world, Point3d position, Axis axis, WrapperPlayer player){
-		if(world.isClient()){
-			InterfaceGUI.openGUI(new GUISignalController((TileEntitySignalController) world.getTileEntity(position)));
+		if(!world.isClient()){
+			player.sendPacket(new PacketEntityGUIRequest(world.getTileEntity(position), player, PacketEntityGUIRequest.EntityGUIType.SIGNAL_CONTROLLER));
 		}
 		return true;
 	}
