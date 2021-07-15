@@ -26,7 +26,11 @@ public class TransformRotatable<AnimationEntity extends AEntityC_Definable<?>> e
 		double rotation = entity.getAnimatedVariableValue(definition, offset, getClock(entity), partialTicks);
 		
 		//Do rotation.
-		if(rotation != 0){
+		if(definition.addPriorOffset){
+			GL11.glTranslated(definition.centerPoint.x, definition.centerPoint.y, definition.centerPoint.z);
+			GL11.glRotated(rotation - offset, rotationAxis.x, rotationAxis.y, rotationAxis.z);
+			GL11.glTranslated(-definition.centerPoint.x, -definition.centerPoint.y, -definition.centerPoint.z);
+		}else if(rotation != 0){
 			GL11.glTranslated(definition.centerPoint.x, definition.centerPoint.y, definition.centerPoint.z);
 			GL11.glRotated(rotation, rotationAxis.x, rotationAxis.y, rotationAxis.z);
 			GL11.glTranslated(-definition.centerPoint.x, -definition.centerPoint.y, -definition.centerPoint.z);

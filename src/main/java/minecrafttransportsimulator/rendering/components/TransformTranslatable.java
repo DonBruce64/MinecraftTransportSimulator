@@ -24,7 +24,9 @@ public class TransformTranslatable<AnimationEntity extends AEntityC_Definable<?>
 	public double applyTransform(AnimationEntity entity, boolean blendingEnabled, float partialTicks, double offset){
 		double translation = entity.getAnimatedVariableValue(definition, offset, getClock(entity), partialTicks);
 		//Do the actual translation, if we aren't 0.
-		if(translation != 0){
+		if(definition.addPriorOffset){
+			GL11.glTranslated((translation - offset)*translationAxis.x, (translation - offset)*translationAxis.y, (translation - offset)*translationAxis.z);
+		}else if(translation != 0){
 			GL11.glTranslated(translation*translationAxis.x, translation*translationAxis.y, translation*translationAxis.z);
 		}
 		return translation;
