@@ -392,7 +392,7 @@ public class PartEngine extends APart{
 					lowestWheelVelocity = 999F;
 					desiredWheelVelocity = -999F;
 					wheelFriction = 0;
-					engineTargetRPM = !state.esOn ? vehicleOn.throttle/100F*(definition.engine.maxRPM - definition.engine.idleRPM/1.25 - hours*10) + definition.engine.idleRPM/1.25 : definition.engine.idleRPM*1.2;
+					engineTargetRPM = !state.esOn ? vehicleOn.throttle/100F*(definition.engine.maxRPM - definition.engine.idleRPM)/(1 + hours/500) + definition.engine.idleRPM : definition.engine.idleRPM*1.2;
 					
 					//Update wheel friction and velocity.
 					for(PartGroundDevice wheel : vehicleOn.groundDeviceCollective.drivenWheels){
@@ -451,7 +451,7 @@ public class PartEngine extends APart{
 							
 							if(state.running){
 								propellerFeedback += propellerForcePenalty*50;
-								engineTargetRPM = vehicleOn.throttle/100F*(definition.engine.maxRPM - definition.engine.idleRPM*1.25 - hours) + definition.engine.idleRPM*1.25;
+								engineTargetRPM = vehicleOn.throttle/100F*(definition.engine.maxRPM - definition.engine.idleRPM)/(1 + hours/500) + definition.engine.idleRPM;
 								double engineRPMDifference = engineTargetRPM - rpm;
 								
 								//propellerFeedback can't make an engine stall, but hours can.
@@ -471,7 +471,7 @@ public class PartEngine extends APart{
 				//Or, if we are not on, just slowly spin the engine down.
 				if((wheelFriction == 0 && !havePropeller) || currentGearRatio == 0){
 					if(state.running){
-						engineTargetRPM = vehicleOn.throttle/100F*(definition.engine.maxRPM - definition.engine.idleRPM*1.25 - hours*10) + definition.engine.idleRPM*1.25;
+						engineTargetRPM = vehicleOn.throttle/100F*(definition.engine.maxRPM - definition.engine.idleRPM)/(1 + hours/500) + definition.engine.idleRPM;
 						rpm += (engineTargetRPM - rpm)/(definition.engine.revResistance*3);
 						if(rpm > definition.engine.maxSafeRPM && definition.engine.jetPowerFactor == 0){
 							rpm -= Math.abs(engineTargetRPM - rpm)/definition.engine.revResistance;
