@@ -62,6 +62,12 @@ public class PacketVehicleControlDigital extends APacketEntity<EntityVehicleF_Ph
 				}
 				return didShift;
 			}
+			case SHIFT_NEUTRAL : {
+				for(PartEngine engine : vehicle.engines.values()){
+					engine.currentGear = 0;
+				}
+				return true;
+			}
 			case REVERSE : {
 				if(vehicle.definition.motorized.isBlimp){
 					for(PartEngine engine : vehicle.engines.values()){
@@ -115,6 +121,7 @@ public class PacketVehicleControlDigital extends APacketEntity<EntityVehicleF_Ph
 		HORN,
 		SHIFT_UP,
 		SHIFT_DN,
+		SHIFT_NEUTRAL,
 		REVERSE,
 		GEAR,
 		AUTOPILOT,

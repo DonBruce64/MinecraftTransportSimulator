@@ -431,11 +431,15 @@ public final class ControlSystem{
 		}
 		
 		//Check if we are shifting.
-		if(ControlsKeyboard.CAR_SHIFT_U.isPressed()){
-			InterfacePacket.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.SHIFT_UP, false));
-		}
-		if(ControlsKeyboard.CAR_SHIFT_D.isPressed()){
-			InterfacePacket.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.SHIFT_DN, false));
+		if(ControlsKeyboardDynamic.CAR_SHIFT_NU.isPressed() || ControlsKeyboardDynamic.CAR_SHIFT_ND.isPressed()){
+			InterfacePacket.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.SHIFT_NEUTRAL, false));
+		}else{
+			if(ControlsKeyboard.CAR_SHIFT_U.isPressed()){
+				InterfacePacket.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.SHIFT_UP, false));
+			}
+			if(ControlsKeyboard.CAR_SHIFT_D.isPressed()){
+				InterfacePacket.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.SHIFT_DN, false));
+			}
 		}
 		
 		//Check if horn button is pressed.
@@ -732,7 +736,9 @@ public final class ControlSystem{
 		AIRCRAFT_PARK(ControlsKeyboard.AIRCRAFT_BRAKE, ControlsKeyboard.AIRCRAFT_MOD),
 		
 		CAR_PARK(ControlsKeyboard.CAR_BRAKE, ControlsKeyboard.CAR_MOD),
-		CAR_SLOW(ControlsKeyboard.CAR_GAS, ControlsKeyboard.CAR_MOD);
+		CAR_SLOW(ControlsKeyboard.CAR_GAS, ControlsKeyboard.CAR_MOD),
+		CAR_SHIFT_NU(ControlsKeyboard.CAR_SHIFT_U, ControlsKeyboard.CAR_MOD),
+		CAR_SHIFT_ND(ControlsKeyboard.CAR_SHIFT_D, ControlsKeyboard.CAR_MOD);
 		
 		public final String translatedName;
 		public final ControlsKeyboard mainControl;
