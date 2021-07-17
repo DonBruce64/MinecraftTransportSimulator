@@ -69,13 +69,21 @@ public class GUIComponentTextBox{
 			if(control.equals(TextBoxControlKey.BACKSPACE)){
 				if(position != 0){
 					//Remove the char before the current position.
-					text = text.substring(0, position - 1) + text.substring(position, text.length());
-					--position;
+					String newText = text.substring(0, position - 1) + text.substring(position, text.length()); 
+					if(validateText(newText)){
+						text = newText;
+						--position;
+						handleTextChange();
+					}
 				}
 			}else if(control.equals(TextBoxControlKey.DELETE)){
 				if(position != text.length()){
 					//Remove the char at the current position.
-					text = text.substring(0, position) + text.substring(position + 1, text.length());
+					String newText = text.substring(0, position) + text.substring(position + 1, text.length());
+					if(validateText(newText)){
+						text = newText;
+						handleTextChange();
+					}
 				}
 			}else if(control.equals(TextBoxControlKey.LEFT)){
 				if(position > 0){
@@ -92,6 +100,7 @@ public class GUIComponentTextBox{
 				if(validateText(newText)){
 					text = newText;
 					++position;
+					handleTextChange();
 				}
 			}
 		}
@@ -148,6 +157,12 @@ public class GUIComponentTextBox{
 			flashText = text.substring(0, position) + text.substring(position + 1);
 		} 
 	}
+	
+	/**
+	 *  Called when text is changed in this text box.  This happens only after a keypress
+	 *  changes the text.  By default does nothing, but may be extended if desired.
+	 */
+	public void handleTextChange(){}
 	
 	/**
 	 *  Renders the box's background and text.  The background will always be a solid color

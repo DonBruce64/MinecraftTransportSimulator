@@ -264,7 +264,7 @@
             "rot": [0.0,0.0,0.0],
             "scale": 1.0,
             "fieldName": "",
-            "defaultText": "Each engine has a fuel type that is associated with it.  This type is not the name of the fluid it takes a fuel.  Rather, it is a general name for the fuel that the engine uses.  Fuel types can be served by multiple fluids, but by default lava is works for all engines.  Some of the more common fuel types allow for usage of other mod's fluids out of the box.  For example, gasoline engines support Immersive Petroleum gasoline and Immersive Engineering ethanol.",
+            "defaultText": "Note that if you connect a pipe to the bottom of the pump you can set an item-based cost for using the pump.  Simply put the item stack you wish to charge in your inventory, then click the pump with a wrench to open the price GUI.  From there you can click a slot to set the item and the amount of fuel that item will allow.  This may only be done by the person who placed the pump, or a server admin.",
             "color": "0x000000",
             "wrapWidth": 180,
             "renderPosition": 1
@@ -273,14 +273,14 @@
       },
       {
         "pageTexture": "mts:textures/guis/manual_car_pages.png",
-        "title": "Fuel Potency",
+        "title": "Fuel Types",
         "pageText": [
           {
             "pos": [111.0,25.0,0.0],
             "rot": [0.0,0.0,0.0],
             "scale": 1.0,
             "fieldName": "",
-            "defaultText": "Fuel Potency",
+            "defaultText": "Fuel Types",
             "color": "0x000000"
           },
           {
@@ -288,7 +288,7 @@
             "rot": [0.0,0.0,0.0],
             "scale": 1.0,
             "fieldName": "",
-            "defaultText": "All fluids are not created equal.  While an engine may take multiple fluids as a fuel, each fluid's potency will likely differ.  Potency is how much energy that fluid has, with higher-potency fluids lasting longer in vehicles.  For example, diesel engines take diesel at 1.0, biodiesel at 0.8, oil at 0.5, and lava at 1.0.  Valid fluids for each engine and the potencies are displayed in the item tooltip.",
+            "defaultText": "Each engine has a fuel type that is associated with it.  Fuel types can be served by multiple fluids, but each fluid's potency will likely differ.  Potency is how much energy that fluid has, with higher-potency fluids lasting longer in vehicles.  Valid fluids for each engine and the potencies are displayed in the item tooltip.",
             "color": "0x000000",
             "wrapWidth": 180,
             "renderPosition": 1

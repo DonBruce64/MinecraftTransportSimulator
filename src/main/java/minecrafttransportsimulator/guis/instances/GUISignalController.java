@@ -389,8 +389,7 @@ public class GUISignalController extends AGUIBase{
 		}
 		
 		@Override
-		public void handleKeyTyped(char typedChar, int typedCode, TextBoxControlKey control){
-			super.handleKeyTyped(typedChar, typedCode, control);
+		public void handleTextChange(){
 			controller.unsavedClientChangesPreset = true;
 		}
 		

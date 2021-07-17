@@ -9,12 +9,15 @@ import minecrafttransportsimulator.entities.instances.EntityFluidTank;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartEngine;
 import minecrafttransportsimulator.items.components.AItemBase;
+import minecrafttransportsimulator.items.instances.ItemItem;
+import minecrafttransportsimulator.items.instances.ItemItem.ItemComponentType;
 import minecrafttransportsimulator.items.instances.ItemPartInteractable;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
+import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpConnection;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -24,6 +27,13 @@ public class BlockFuelPump extends ABlockBaseDecor<TileEntityFuelPump>{
 	
 	public BlockFuelPump(){
 		super();
+	}
+	
+	@Override
+	public void onPlaced(WrapperWorld world, Point3d position, WrapperPlayer player){
+		//Set placing player for reference.
+		TileEntityFuelPump pump = world.getTileEntity(position);
+		pump.placingPlayerID = player.getID();
 	}
 	
 	@Override
@@ -54,6 +64,19 @@ public class BlockFuelPump extends ABlockBaseDecor<TileEntityFuelPump>{
 					}
 					return true;
 				}
+			}
+			
+			//Check if the item is a wrench, and the player can configure this pump..
+			AItemBase heldItem = player.getHeldItem();
+			if(heldItem instanceof ItemItem && ((ItemItem) heldItem).definition.item.type.equals(ItemComponentType.WRENCH) && (player.getID().equals(pump.placingPlayerID) || player.isOP())){
+				player.sendPacket(new PacketEntityGUIRequest(pump, player, PacketEntityGUIRequest.EntityGUIType.FUEL_PUMP_CONFIG));
+				return true;
+			}
+			
+			//If we aren't a creative pump, and we don't have fuel, bring up the GUI so the player can buy some.
+			if(!pump.isCreative && pump.fuelPurchasedRemaining == 0 && tank.getFluidLevel() == 0){
+				player.sendPacket(new PacketEntityGUIRequest(pump, player, PacketEntityGUIRequest.EntityGUIType.FUEL_PUMP));
+				return true;
 			}
         	
 			//We don't have a vehicle connected.  Try to connect one now.

@@ -1,16 +1,9 @@
 package minecrafttransportsimulator.guis.instances;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
-import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.guis.components.InterfaceGUI;
-import minecrafttransportsimulator.mcinterface.InterfaceClient;
-import minecrafttransportsimulator.mcinterface.WrapperInventory;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketPlayerItemTransfer;
 import net.minecraft.item.ItemStack;
@@ -21,8 +14,7 @@ import net.minecraft.item.ItemStack;
  * 
  * @author don_bruce
  */
-public class GUIInventoryContainer extends AGUIBase{
-	private static final int ITEM_BUTTON_SIZE = 18;
+public class GUIInventoryContainer extends AGUIInventory{
 	private static final int MAX_ITEMS_PER_SCREEN = 54;
 	
 	//GUIs components created at opening.
@@ -31,27 +23,20 @@ public class GUIInventoryContainer extends AGUIBase{
 	private final int maxRowIncrements;
 	
 	private final EntityInventoryContainer inventory;
-	private final String texture;
-	private final WrapperPlayer player;
-	private final WrapperInventory playerInventory;
-	private final List<ItemSelectionButton> interactableSlotButtons = new ArrayList<ItemSelectionButton>();
-	private final List<GUIComponentItem> interactableSlotIcons = new ArrayList<GUIComponentItem>();
-	private final List<ItemSelectionButton> playerSlotButtons = new ArrayList<ItemSelectionButton>();
-	private final List<GUIComponentItem> playerSlotIcons = new ArrayList<GUIComponentItem>();
 	
 	//Runtime variables.
 	private int rowOffset;
 	
 	public GUIInventoryContainer(EntityInventoryContainer inventory, String texture){
+		super(texture);
 		this.inventory = inventory;
-		this.texture = texture != null ? texture : "mts:textures/guis/inventory.png";
-		this.player = InterfaceClient.getClientPlayer();
-		this.playerInventory = player.getInventory();
 		this.maxRowIncrements = inventory.getSize() > MAX_ITEMS_PER_SCREEN ? (inventory.getSize() - MAX_ITEMS_PER_SCREEN)/9 + 1 : 0;
 	}
 
 	@Override
 	public void setupComponents(int guiLeft, int guiTop){
+		super.setupComponents(guiLeft, guiTop);
+		
 		//Create the slider.  This is a button, but doesn't do anything.
 		if(maxRowIncrements > 0){
 			//Create the prior and next row buttons.
@@ -95,12 +80,10 @@ public class GUIInventoryContainer extends AGUIBase{
 		
 		//Create all inventory slots.  This is variable based on the size of the inventory, and can result in multiple pages.
 		//However, one page can hold 6 rows, so we make all those slots and adjust as appropriate.
-		interactableSlotButtons.clear();
-		interactableSlotIcons.clear();
 		int slotsToMake = Math.min(inventory.getSize(), MAX_ITEMS_PER_SCREEN);
-		int inventoryRowOffset = (MAX_ITEMS_PER_SCREEN - slotsToMake)*ITEM_BUTTON_SIZE/9/2;
+		int inventoryRowOffset = (MAX_ITEMS_PER_SCREEN - slotsToMake)*GUIComponentButton.ITEM_BUTTON_SIZE/9/2;
 		for(byte i=0; i<slotsToMake; ++i){				
-			ItemSelectionButton itemButton = new ItemSelectionButton(guiLeft + 8 + ITEM_BUTTON_SIZE*(i%9), guiTop + 12 + inventoryRowOffset + ITEM_BUTTON_SIZE*(i/9)){
+			GUIComponentButton itemButton = new GUIComponentButton(guiLeft + 8 + GUIComponentButton.ITEM_BUTTON_SIZE*(i%9), guiTop + 12 + inventoryRowOffset + GUIComponentButton.ITEM_BUTTON_SIZE*(i/9)){
 				@Override
 				public void onClicked(){
 					InterfacePacket.sendToServer(new PacketPlayerItemTransfer(inventory, player, interactableSlotButtons.indexOf(this), -1));
@@ -110,53 +93,19 @@ public class GUIInventoryContainer extends AGUIBase{
 			interactableSlotButtons.add(itemButton);
 			
 			//Item icons are normally rendered as 16x16 textures, so scale them to fit over the buttons.
-			GUIComponentItem itemIcon = new GUIComponentItem(itemButton.x, itemButton.y, ITEM_BUTTON_SIZE/16F, null);
+			GUIComponentItem itemIcon = new GUIComponentItem(itemButton.x, itemButton.y, GUIComponentButton.ITEM_BUTTON_SIZE/16F, null);
 			addItem(itemIcon);
 			interactableSlotIcons.add(itemIcon);
-		}
-		
-		//Create the player item buttons and icons.  This is a static list of all 36 slots.
-		//Rendering will occur if the player has an item in that slot.
-		playerSlotButtons.clear();
-		playerSlotIcons.clear();
-		int yOffset = 197;
-		for(byte i=0; i<36; ++i){				
-			ItemSelectionButton itemButton = new ItemSelectionButton(guiLeft + 7 + ITEM_BUTTON_SIZE*(i%9), guiTop + yOffset){
-				@Override
-				public void onClicked(){
-					InterfacePacket.sendToServer(new PacketPlayerItemTransfer(inventory, player, -1, playerSlotButtons.indexOf(this)));
-				}
-			};
-			addButton(itemButton);
-			playerSlotButtons.add(itemButton);
-			
-			//Item icons are normally rendered as 16x16 textures, so scale them to fit over the buttons.
-			GUIComponentItem itemIcon = new GUIComponentItem(itemButton.x, itemButton.y, ITEM_BUTTON_SIZE/16F, null);
-			addItem(itemIcon);
-			playerSlotIcons.add(itemIcon);
-			
-			//Move offset up to next row if required.
-			if(i == 8){
-				yOffset = 175;
-			}else if(i == 17 || i == 26){
-				yOffset -= ITEM_BUTTON_SIZE;
-			}
 		}
 	}
 
 	@Override
 	public void setStates(){
+		super.setStates();
 		//Set next and prior row button states, if we have scrolling.
 		if(maxRowIncrements > 0){
 			priorRowButton.enabled = rowOffset > 0;
 			nextRowButton.enabled = rowOffset < maxRowIncrements;
-		}
-		
-		//Set player item icons to player inventory.
-		for(int i=0; i<playerSlotButtons.size(); ++i){
-			ItemStack stack = playerInventory.getStackInSlot(i);
-			playerSlotButtons.get(i).enabled = !stack.isEmpty();
-			playerSlotIcons.get(i).stack = stack;
 		}
 		
 		//Set other item icons to other inventory.
@@ -175,29 +124,7 @@ public class GUIInventoryContainer extends AGUIBase{
 	}
 	
 	@Override
-	public int getWidth(){
-		return 194;
-	}
-	
-	@Override
-	public int getHeight(){
-		return 221;
-	}
-	
-	@Override
-	public String getTexture(){
-		return texture;
-	}
-	
-	/**Custom implementation of the button class that doesn't use textures for the button rendering.
-	 * This is needed for this GUI for rendering over items to let us select them.
-	 *
-	 * @author don_bruce
-	 */
-	private abstract class ItemSelectionButton extends GUIComponentButton{
-
-		public ItemSelectionButton(int x, int y){
-			super(x, y, ITEM_BUTTON_SIZE, "", ITEM_BUTTON_SIZE, true, ITEM_BUTTON_SIZE, ITEM_BUTTON_SIZE, 194, 0, 256, 256);
-		}
+	protected void handlePlayerItemClick(int slotClicked){
+		InterfacePacket.sendToServer(new PacketPlayerItemTransfer(inventory, player, -1, slotClicked));
 	}
 }

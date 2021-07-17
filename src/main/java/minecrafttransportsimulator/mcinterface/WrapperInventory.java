@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.mcinterface;
 
+import java.util.ConcurrentModificationException;
+
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.packloading.PackMaterialComponent;
@@ -131,25 +133,35 @@ public class WrapperInventory{
 	/**
 	 *  Attempts to remove the passed-in number of items matching those in the stack
 	 *  from this inventory.  Returns true if all the items were removed, false if
-	 *  only some of the items were removed.
+	 *  there are not enough items to remove according to the quantity.  If there
+	 *  arenm't enough items, then the inventory is not modified.
 	 */
 	public boolean removeStack(ItemStack stack, int qtyToRemove){
-		int qtyRemoved = 0;
+		//Check items for number we can remove.
+		int qtyLeftToRemove = qtyToRemove;
         for(int i=0; i<getSize(); ++i){
             ItemStack currentStack = inventory.getStackInSlot(i);
             if(OreDictionary.itemMatches(stack, currentStack, false)){
-                int qtyRemovedFromStack = Math.min(qtyToRemove - qtyRemoved, currentStack.getCount());
-                qtyRemoved += qtyRemovedFromStack;
-                if(qtyToRemove != 0){
-                    currentStack.shrink(qtyRemovedFromStack);
-                    if(currentStack.isEmpty()){
-                        inventory.setInventorySlotContents(i, ItemStack.EMPTY);
-                        inventory.markDirty();
-                    }
-                    if(qtyRemoved == qtyToRemove){
-                        return true;
+            	qtyLeftToRemove -= Math.min(qtyLeftToRemove, currentStack.getCount());
+            }
+            if(qtyLeftToRemove == 0){
+            	qtyLeftToRemove = qtyToRemove;
+            	for(int j=0; j<getSize(); ++j){
+                    currentStack = inventory.getStackInSlot(j);
+                    if(OreDictionary.itemMatches(stack, currentStack, false)){
+                        int qtyRemovedFromStack = Math.min(qtyLeftToRemove, currentStack.getCount());
+                        currentStack.shrink(qtyRemovedFromStack);
+                        qtyLeftToRemove -= qtyRemovedFromStack;
+                        if(currentStack.isEmpty()){
+                            inventory.setInventorySlotContents(j, ItemStack.EMPTY);
+                            inventory.markDirty();
+                        }
+                        if(qtyLeftToRemove == 0){
+                            return true;
+                        }
                     }
                 }
+            	throw new ConcurrentModificationException("Had items be removed from inventory while we were also removing them.  Some other mod is doing Bad Stuff!");
             }
         }
         return false;

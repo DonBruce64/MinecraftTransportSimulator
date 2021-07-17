@@ -1,0 +1,113 @@
+package minecrafttransportsimulator.guis.instances;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityFuelPump;
+import minecrafttransportsimulator.guis.components.GUIComponentButton;
+import minecrafttransportsimulator.guis.components.GUIComponentItem;
+import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
+import minecrafttransportsimulator.packets.components.InterfacePacket;
+import minecrafttransportsimulator.packets.instances.PacketInventoryContainerChange;
+import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpDispense;
+import net.minecraft.item.ItemStack;
+
+/**A GUI that is used to set up fuel pumps as a pay-to-use system.  Allows for setting various items
+ * for various fluid amounts.  Opened when the pump is clicked by a wrench from an OP player.
+ * Will also open when a non-OP clicks the pump to let them select which item to spend on the fuel.
+ * 
+ * @author don_bruce
+ */
+public class GUIFuelPump extends AGUIInventory{
+	
+	private final TileEntityFuelPump pump;
+	private final boolean configuring;
+	private final List<GUIComponentTextBox> interactableSlotBoxes = new ArrayList<GUIComponentTextBox>();
+	
+	public GUIFuelPump(TileEntityFuelPump pump, boolean configuring){
+		super(null);
+		this.pump = pump;
+		this.configuring = configuring;
+	}
+
+	@Override
+	public void setupComponents(int guiLeft, int guiTop){
+		super.setupComponents(guiLeft, guiTop);
+		
+		//Create all currency slots.
+		interactableSlotBoxes.clear();
+		int xOffset = 8;
+		for(int i=0; i<pump.fuelItems.getSize(); ++i){
+			ItemStack stack = pump.fuelItems.getStack(i);
+			GUIComponentButton itemButton = new GUIComponentButton(guiLeft + xOffset, guiTop + 12 + 22*(i%5)){
+				@Override
+				public void onClicked(){
+					if(configuring){
+						//Remove stack from slot as we don't want this item available.
+						ItemStack changedStack = pump.fuelItems.getStack(interactableSlotButtons.indexOf(this));
+						changedStack.setCount(0);
+						InterfacePacket.sendToServer(new PacketInventoryContainerChange(pump.fuelItems, interactableSlotButtons.indexOf(this), changedStack));
+					}else{
+						//Send off packet to see if we need to remove stack count from player to pay for fuel.
+						InterfacePacket.sendToServer(new PacketTileEntityFuelPumpDispense(pump, player, interactableSlotButtons.indexOf(this)));
+					}
+				}
+			};
+			itemButton.visible = !stack.isEmpty() || configuring;
+			addButton(itemButton);
+			interactableSlotButtons.add(itemButton);
+			
+			//Item icons are normally rendered as 16x16 textures, so scale them to fit over the buttons.
+			GUIComponentItem itemIcon = new GUIComponentItem(itemButton.x, itemButton.y, GUIComponentButton.ITEM_BUTTON_SIZE/16F, stack);
+			addItem(itemIcon);
+			interactableSlotIcons.add(itemIcon);
+			
+			GUIComponentTextBox fuelAmount = new GUIComponentTextBox(itemButton.x + itemButton.width + 4, itemButton.y, 50, String.valueOf(pump.fuelAmounts.get(i))){
+				@Override
+				public boolean validateText(String newText){
+					//Only allow whole numbers.
+					return newText.matches("[0-9]+");
+				}
+				
+				@Override
+				public void handleTextChange(){
+					//Set new values on the pump.
+					InterfacePacket.sendToServer(new PacketTileEntityFuelPumpDispense(pump, player, interactableSlotBoxes.indexOf(this), Integer.valueOf(this.getText())));
+				}
+			};
+			fuelAmount.visible = !stack.isEmpty() || configuring;
+			fuelAmount.enabled = configuring;
+			addTextBox(fuelAmount);
+			interactableSlotBoxes.add(fuelAmount);
+			
+			if(i == 4){
+				xOffset += 100;
+			}
+		}
+	}
+
+	@Override
+	public void setStates(){
+		super.setStates();
+		//If we are configuring, change item states.
+		if(configuring){
+			for(int i=0; i<interactableSlotButtons.size(); ++i){
+				interactableSlotIcons.get(i).stack = pump.fuelItems.getStack(i);
+			}
+		}
+	}
+	
+	@Override
+	protected void handlePlayerItemClick(int slotClicked){
+		if(configuring){
+			//player clicked on item during config.  Set stack in next free slot.
+			for(int i=0; i<pump.fuelItems.getSize(); ++i){
+				ItemStack stack = pump.fuelItems.getStack(i);
+				if(stack.isEmpty()){
+					InterfacePacket.sendToServer(new PacketInventoryContainerChange(pump.fuelItems, i, playerInventory.getStackInSlot(slotClicked)));
+					return;
+				}
+			}
+		}
+	}
+}

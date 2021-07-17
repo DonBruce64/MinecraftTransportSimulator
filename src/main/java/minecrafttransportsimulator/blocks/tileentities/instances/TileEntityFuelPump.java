@@ -1,5 +1,8 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
@@ -7,6 +10,7 @@ import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityFlu
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.EntityFluidTank;
+import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -18,16 +22,51 @@ import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpCon
 
 public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityTickable, ITileEntityFluidTankProvider{
 	public EntityVehicleF_Physics connectedVehicle;
-    private EntityFluidTank tank;
+    private final EntityFluidTank tank;
+    public final EntityInventoryContainer fuelItems;
+    public final List<Integer> fuelAmounts = new ArrayList<Integer>();
+    public int fuelPurchasedRemaining;
+    public boolean isCreative;
+	public String placingPlayerID;
 
     public TileEntityFuelPump(WrapperWorld world, Point3d position, WrapperNBT data){
     	super(world, position, data);
-    	this.tank = new EntityFluidTank(world, data.getDataOrNew("tank"), 15000);
+    	this.tank = new EntityFluidTank(world, data.getDataOrNew("tank"), 15000){
+    		@Override
+    		public double fill(String fluid, double maxAmount, boolean doFill){
+    			if(!isCreative){
+					//We are a pump with a set cost, ensure we have purchased fuel.
+					if(maxAmount > fuelPurchasedRemaining){
+						maxAmount = fuelPurchasedRemaining;
+					}
+					double amountFilled = super.fill(fluid, maxAmount, doFill);
+					if(doFill){
+						fuelPurchasedRemaining -= amountFilled;
+					}
+					return amountFilled;
+				}
+    			return super.fill(fluid, maxAmount, doFill);
+    		}
+    	};
+    	this.fuelItems = new EntityInventoryContainer(world, data.getDataOrNew("inventory"), 10);
+    	for(int i=0; i<fuelItems.getSize(); ++i){
+    		this.fuelAmounts.add(data.getInteger("fuelAmount" + i));
+    	}
+    	this.fuelPurchasedRemaining = data.getInteger("fuelPurchasedRemaining");
+    	this.placingPlayerID = data.getString("placingPlayerID");
     }
 	
 	@Override
 	public boolean update(){
 		if(super.update()){
+			//Update creative status.
+			isCreative = true;
+			for(int i=0; i<fuelItems.getSize(); ++i){
+				if(!fuelItems.getStack(i).isEmpty()){
+					isCreative = false;
+				}
+			}
+			
 			//Update text lines to the current tank status if required.
 			//Only do this on clients, as servers don't render any text.
 			if(world.isClient() && definition.rendering != null && definition.rendering.textObjects != null){
@@ -117,6 +156,8 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityTi
 			case("fuelpump_active"): return connectedVehicle != null ? 1 : 0;	
 			case("fuelpump_stored"): return getTank().getFluidLevel();
 			case("fuelpump_dispensed"): return getTank().getAmountDispensed();
+			case("fuelpump_free"): return isCreative ? 1 : 0;
+			case("fuelpump_purchased"): return fuelPurchasedRemaining;
 		}
 		
 		return super.getRawVariableValue(variable, partialTicks);
@@ -126,6 +167,12 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityTi
 	public WrapperNBT save(WrapperNBT data){
 		super.save(data);
 		data.setData("tank", tank.save(new WrapperNBT()));
+		data.setData("inventory", fuelItems.save(new WrapperNBT()));
+		for(int i=0; i<fuelItems.getSize(); ++i){
+    		data.setInteger("fuelAmount" + i, fuelAmounts.get(i));
+    	}
+		data.setInteger("fuelPurchasedRemaining", fuelPurchasedRemaining);
+		data.setString("placingPlayerID", placingPlayerID);
 		return data;
 	}
 }

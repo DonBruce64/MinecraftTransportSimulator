@@ -3,10 +3,12 @@ package minecrafttransportsimulator.packets.instances;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityChest;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
+import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityFuelPump;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController;
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.guis.components.InterfaceGUI;
+import minecrafttransportsimulator.guis.instances.GUIFuelPump;
 import minecrafttransportsimulator.guis.instances.GUIInstruments;
 import minecrafttransportsimulator.guis.instances.GUIInventoryContainer;
 import minecrafttransportsimulator.guis.instances.GUIPackExporter;
@@ -50,6 +52,8 @@ public class PacketEntityGUIRequest extends APacketEntityInteract<AEntityC_Defin
 		switch(guiRequested){
 			case INSTRUMENTS: InterfaceGUI.openGUI(new GUIInstruments((EntityVehicleF_Physics) entity)); break;
 			case INVENTORY_CHEST: InterfaceGUI.openGUI(new GUIInventoryContainer(((TileEntityChest) entity).inventory, ((TileEntityChest) entity).definition.decor.inventoryTexture)); break;
+			case FUEL_PUMP: InterfaceGUI.openGUI(new GUIFuelPump((TileEntityFuelPump) entity, false)); break;
+			case FUEL_PUMP_CONFIG: InterfaceGUI.openGUI(new GUIFuelPump((TileEntityFuelPump) entity, true)); break;
 			case PACK_EXPORTER: InterfaceGUI.openGUI(new GUIPackExporter((EntityVehicleF_Physics) entity));	break;
 			case PAINT_GUN: InterfaceGUI.openGUI(new GUIPaintGun(entity, player));	break;
 			case PART_BENCH: InterfaceGUI.openGUI(new GUIPartBench(((TileEntityDecor) entity).definition.decor.crafting)); break;
@@ -63,6 +67,8 @@ public class PacketEntityGUIRequest extends APacketEntityInteract<AEntityC_Defin
 	public static enum EntityGUIType{
 		INSTRUMENTS,
 		INVENTORY_CHEST,
+		FUEL_PUMP,
+		FUEL_PUMP_CONFIG,
 		PACK_EXPORTER,
 		PAINT_GUN,
 		PART_BENCH,

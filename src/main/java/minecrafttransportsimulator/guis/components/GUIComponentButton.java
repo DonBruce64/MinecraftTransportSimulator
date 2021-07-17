@@ -22,6 +22,7 @@ public abstract class GUIComponentButton{
 	private static final int DEFAULT_BUTTON_SECTION_HEIGHT = 20;
 	private static final int DEFAULT_BUTTON_SECTION_WIDTH_OFFSET = 0;
 	private static final int DEFAULT_BUTTON_SECTION_HEIGHT_OFFSET = 196;
+	public static final int ITEM_BUTTON_SIZE = 18;
 	
 	public final int x;
 	public final int y;
@@ -38,15 +39,23 @@ public abstract class GUIComponentButton{
 	public boolean visible = true;
 	public boolean enabled = true;
 	public String text;
-	    	
+	
+	/**A Simple button with a set height of 20**/
 	public GUIComponentButton(int x, int y, int width, String text){
 		this(x, y, width, text, 20, true);
 	}
 	
+	/**A button made to render with item slots.  Renders the set item size, and does not render with a texture.**/
+	public GUIComponentButton(int x, int y){
+		this(x, y, ITEM_BUTTON_SIZE, "", ITEM_BUTTON_SIZE, true, ITEM_BUTTON_SIZE, ITEM_BUTTON_SIZE, 194, 0, DEFAULT_TEXTURE_WIDTH, DEFAULT_TEXTURE_HEIGHT);
+	}
+	
+	/**A complex button with a custom height and text alignment.**/
 	public GUIComponentButton(int x, int y, int width, String text, int height, boolean centeredText){
 		this(x, y, width, text, height, centeredText, DEFAULT_BUTTON_SECTION_WIDTH, DEFAULT_BUTTON_SECTION_HEIGHT, DEFAULT_BUTTON_SECTION_WIDTH_OFFSET, DEFAULT_BUTTON_SECTION_HEIGHT_OFFSET, DEFAULT_TEXTURE_WIDTH, DEFAULT_TEXTURE_HEIGHT);
 	}
 	
+	/**A fully-customizable button with custom texture alignment.**/
 	public GUIComponentButton(int x, int y, int width, String text, int height, boolean centeredText, int buttonSectionWidth, int buttonSectionHeight, int buttonSectionWidthOffset, int buttonSectionHeightOffset, int textureWidth, int textureHeight){
 		this.x = x;
 		this.y = y;

@@ -1,0 +1,96 @@
+package minecrafttransportsimulator.guis.instances;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import minecrafttransportsimulator.guis.components.AGUIBase;
+import minecrafttransportsimulator.guis.components.GUIComponentButton;
+import minecrafttransportsimulator.guis.components.GUIComponentItem;
+import minecrafttransportsimulator.mcinterface.InterfaceClient;
+import minecrafttransportsimulator.mcinterface.WrapperInventory;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import net.minecraft.item.ItemStack;
+
+/**Abstract GUI class used as the base for GUIs with inventory slots.  By default, it sets up slots
+ * for all the player's items and populates them.
+ * 
+ * @author don_bruce
+ */
+public abstract class AGUIInventory extends AGUIBase{
+	
+	private final String texture;
+	protected final WrapperPlayer player;
+	protected final WrapperInventory playerInventory;
+	private final List<GUIComponentButton> playerSlotButtons = new ArrayList<GUIComponentButton>();
+	private final List<GUIComponentItem> playerSlotIcons = new ArrayList<GUIComponentItem>();
+	protected final List<GUIComponentButton> interactableSlotButtons = new ArrayList<GUIComponentButton>();
+	protected final List<GUIComponentItem> interactableSlotIcons = new ArrayList<GUIComponentItem>();
+	
+	public AGUIInventory(String texture){
+		this.texture = texture != null ? texture : "mts:textures/guis/inventory.png";
+		this.player = InterfaceClient.getClientPlayer();
+		this.playerInventory = player.getInventory();
+	}
+
+	@Override
+	public void setupComponents(int guiLeft, int guiTop){
+		//Create the player item buttons and icons.  This is a static list of all 36 slots.
+		//Rendering will occur if the player has an item in that slot.
+		playerSlotButtons.clear();
+		playerSlotIcons.clear();
+		int yOffset = 197;
+		for(byte i=0; i<36; ++i){				
+			GUIComponentButton itemButton = new GUIComponentButton(guiLeft + 7 + GUIComponentButton.ITEM_BUTTON_SIZE*(i%9), guiTop + yOffset){
+				@Override
+				public void onClicked(){
+					handlePlayerItemClick(playerSlotButtons.indexOf(this));
+				}
+			};
+			addButton(itemButton);
+			playerSlotButtons.add(itemButton);
+			
+			//Item icons are normally rendered as 16x16 textures, so scale them to fit over the buttons.
+			GUIComponentItem itemIcon = new GUIComponentItem(itemButton.x, itemButton.y, GUIComponentButton.ITEM_BUTTON_SIZE/16F, null);
+			addItem(itemIcon);
+			playerSlotIcons.add(itemIcon);
+			
+			//Move offset to next row if required.
+			if(i == 8){
+				yOffset = 139;
+			}else if(i == 17 || i == 26){
+				yOffset += GUIComponentButton.ITEM_BUTTON_SIZE;
+			}
+		}
+		
+		//Clear intractable slots.
+		interactableSlotButtons.clear();
+		interactableSlotIcons.clear();
+	}
+
+	@Override
+	public void setStates(){
+		//Set player item icons to player inventory.
+		for(int i=0; i<playerSlotButtons.size(); ++i){
+			ItemStack stack = playerInventory.getStackInSlot(i);
+			playerSlotButtons.get(i).enabled = !stack.isEmpty();
+			playerSlotIcons.get(i).stack = stack;
+		}
+	}
+	
+	protected abstract void handlePlayerItemClick(int slotClicked);
+	
+	@Override
+	public int getWidth(){
+		return 194;
+	}
+	
+	@Override
+	public int getHeight(){
+		return 221;
+	}
+	
+	@Override
+	public String getTexture(){
+		return texture;
+	}
+}
