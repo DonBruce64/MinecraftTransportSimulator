@@ -143,7 +143,7 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 		//Create door boxes.
 		if(definition.doors != null){
 			for(JSONDoor doorDef : definition.doors){
-				BoundingBox box = new BoundingBox(doorDef.closedPos, doorDef.closedPos.copy(), doorDef.width/2D, doorDef.height/2D, doorDef.width/2D, false, true, false, 0);
+				BoundingBox box = new BoundingBox(doorDef.closedPos, doorDef.closedPos.copy(), doorDef.width/2D, doorDef.height/2D, doorDef.width/2D, false, true, false, doorDef.armorThickness);
 				doorBoxes.put(box, doorDef);
 				collisionBoxes.add(box);
 			}

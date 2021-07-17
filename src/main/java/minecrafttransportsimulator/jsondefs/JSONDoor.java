@@ -23,6 +23,9 @@ public class JSONDoor{
 	@JSONDescription("Same as width, just for the Y direction.")
     public float height;
 	
+	@JSONDescription("How much armor this door box has.  Values greater than 0 will make this box use armor code to block bullets from passing through it.  Leaving this value out will make all bullets pass through it (no armor).")
+    public float armorThickness;
+	
 	@JSONDescription("Normally, all doors are open when the object is spawned to let players access core areas such as the engine bay and interior to put in engines and seats.  However, this may not be desirable for some doors.  Setting this to true will make the door closed when the object is spawned rather than open.")
     public boolean closedByDefault;
 	
