@@ -11,6 +11,6 @@
 		"c":{"item": "minecraft:glass_pane"}
     },
     "result":{
-        "item": "mts:vehiclebench"
+        "item": "mts:mts.vehiclebench"
     }
 }

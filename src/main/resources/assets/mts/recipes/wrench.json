@@ -9,6 +9,6 @@
         "a":{"type": "forge:ore_dict", "ore": "ingotIron"}
     },
     "result":{
-        "item": "mts:wrench"
+        "item": "mts:mts.wrench"
     }
 }

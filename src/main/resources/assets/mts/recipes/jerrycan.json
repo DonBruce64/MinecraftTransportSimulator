@@ -10,6 +10,6 @@
 		"b":{"type": "forge:ore_dict", "ore" : "dyeRed"}
     },
     "result":{
-        "item": "mts:jerrycan"
+        "item": "mts:mts.jerrycan"
     }
 }

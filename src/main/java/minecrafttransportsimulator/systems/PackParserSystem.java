@@ -42,6 +42,7 @@ import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.packloading.JSONParser;
+import minecrafttransportsimulator.packloading.LegacyCompatSystem;
 import minecrafttransportsimulator.packloading.PackResourceLoader.ItemClassification;
 import minecrafttransportsimulator.packloading.PackResourceLoader.PackStructure;
 
@@ -56,8 +57,7 @@ public final class PackParserSystem{
 	private static Map<String, File> packJarMap = new HashMap<String, File>();
 	
 	/**All registered pack definitions are stored in this list as they are added.  Used to handle loading operations.**/
-	public static Map<String, JSONPack> packMap = new HashMap<String, JSONPack>();
-	//TODO make this private when we get rid of the old loader system.
+	private static Map<String, JSONPack> packMap = new HashMap<String, JSONPack>();
 	
 	/**Part creators are put here during the boot process prior to parsing.  This allows for creators to be added after first parsing for custom items.**/
 	private static List<AItemPartCreator> partCreators = new ArrayList<AItemPartCreator>();
@@ -81,7 +81,7 @@ public final class PackParserSystem{
     //-----START OF NEW INIT LOGIC-----
 	/**
      * Called to parse all packs and set up the main mod.  All directories in the passed-in list will be checked
-     * for pack definitions.  After this, they will be created and loaded into the main mod.  Note that all
+     * for pack definitions.  After this, they will be created and loaded into the main mod.
      */
     public static void parsePacks(List<File> packDirectories){
     	//First get all pack definitions from the passed-in directories.
@@ -104,6 +104,64 @@ public final class PackParserSystem{
     	
     	//Have the config system dump the crafting, if so required.
     	ConfigSystem.initCraftingOverrides();
+    }
+    
+    /**
+     * This should only be called once.  This adds the default internal items
+     * into the mod.  These are hard-coded to the main mod itself.  Normally,
+     * we would just let the parser get these items.  But we can't do this as
+     * when in a decompiled dev environment the items are in folders, not a jar. 
+     */
+    public static void addDefaultItems(){
+		try{
+			JSONPack packDef = new JSONPack();
+			packDef.packID = MasterLoader.MODID;
+			packDef.fileStructure = 0;
+			packDef.packName = InterfaceCore.getModName(MasterLoader.MODID);
+			packDef.packItem = "wrench";
+			PackParserSystem.packMap.put(MasterLoader.MODID, packDef);
+			
+			Map<String, ItemClassification> defaultItems = new HashMap<String, ItemClassification>();
+			defaultItems.put("fuelhose", ItemClassification.ITEM);
+			defaultItems.put("handbook_car", ItemClassification.ITEM);
+			defaultItems.put("handbook_plane", ItemClassification.ITEM);
+			defaultItems.put("jumpercable", ItemClassification.ITEM);
+			defaultItems.put("jumperpack", ItemClassification.ITEM);
+			defaultItems.put("key", ItemClassification.ITEM);
+			defaultItems.put("jumperpack", ItemClassification.ITEM);
+			defaultItems.put("paintgun", ItemClassification.ITEM);
+			defaultItems.put("partscanner", ItemClassification.ITEM);
+			defaultItems.put("ticket", ItemClassification.ITEM);
+			defaultItems.put("wrench", ItemClassification.ITEM);
+			defaultItems.put("y2kbutton", ItemClassification.ITEM);
+			defaultItems.put("jerrycan", ItemClassification.PART);
+			defaultItems.put("fuelpump", ItemClassification.DECOR);
+			defaultItems.put("vehiclebench", ItemClassification.DECOR);
+			defaultItems.put("enginebench", ItemClassification.DECOR);
+			defaultItems.put("propellerbench", ItemClassification.DECOR);
+			defaultItems.put("wheelbench", ItemClassification.DECOR);
+			defaultItems.put("seatbench", ItemClassification.DECOR);
+			defaultItems.put("gunbench", ItemClassification.DECOR);
+			defaultItems.put("custombench", ItemClassification.DECOR);
+			defaultItems.put("instrumentbench", ItemClassification.DECOR);
+			defaultItems.put("decorbench", ItemClassification.DECOR);
+			defaultItems.put("itembench", ItemClassification.DECOR);
+			
+			String prefixFolders = "/assets/" + MasterLoader.MODID + "/jsondefs/";
+			for(Entry<String, ItemClassification> defaultItem : defaultItems.entrySet()){
+				String systemName = defaultItem.getKey();
+				ItemClassification classification = defaultItem.getValue();
+				InputStreamReader reader = new InputStreamReader(MasterLoader.class.getResourceAsStream(prefixFolders + classification.toDirectory() + systemName + ".json"), "UTF-8");
+				AJSONItem itemDef = JSONParser.parseStream(reader, classification.representingClass, packDef.packID, systemName);
+				itemDef.packID = packDef.packID;
+				itemDef.systemName = systemName;
+				itemDef.classification = classification;
+				itemDef.prefixFolders = prefixFolders;
+				PackParserSystem.registerItem(itemDef);
+			}
+		}catch(Exception e){
+			e.printStackTrace();
+		}
     }
     
     /**
@@ -290,8 +348,16 @@ public final class PackParserSystem{
      * <br><br>
      * Note that no matter what method you you use, {@link AJSONItem#packID}, {@link AJSONItem#systemName},
      * {@link AJSONItem#classification}, and {@link AJSONItem#prefixFolders} MUST be set before calling this method.
+     * <br><br>
+     * Also note that any Legacy Compatibility code and JSON validation is performed prior to registration.
+     * A fault in the compatibility system or in the validation will result in the item not being registered. 
      */
     public static void registerItem(AJSONItem itemDef){
+    	//Do legacy compats before validating the JSON.
+    	//This will populate any required fields that were not in older versions.
+		LegacyCompatSystem.performLegacyCompats(itemDef);
+		JSONParser.validateFields(itemDef, "/", 1);
+    			
     	//Create all required items.
 		if(itemDef instanceof AJSONMultiModelProvider){
 			//Check if the definition is a skin.  If so, we need to just add it to the skin map for processing later.
@@ -423,9 +489,6 @@ public final class PackParserSystem{
     			}
     			
     		});
-    		for(AItemPack<?> item : packItems){
-    			MasterLoader.createItem(item);
-    		}
     	}
     	
 		//Check to make sure we have all our fuels.  We may have loaded a new engine type this launch.
@@ -442,128 +505,6 @@ public final class PackParserSystem{
 		if(newFuel){
 			ConfigSystem.saveToDisk();
 		}
-    }
-	
-    //-----START OF OLD INIT LOGIC-----
-    /**Packs should call this upon load to add their content to the mod.
-     * This will return an array of strings that correspond to content types.
-     * These content types will be content that has items in the jsondefs folder
-     * that the pack should send to MTS.  The pack should only send the location
-     * of such an item as it will allow MTS to load the information in modpacks.**/
-    public static String[] getValidPackContentNames(){
-    	return ItemClassification.getAllTypesAsStrings().toArray(new String[ItemClassification.values().length]);
-    }
-    
-    /**Packs should call this upon load to add their vehicles to the mod.**/
-    public static void addVehicleDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
-    	try{
-    		JSONVehicle definition = JSONParser.parseStream(jsonReader, JSONVehicle.class, null, null);
-    		for(JSONSubDefinition subDefinition : definition.definitions){
-    			setupItem(new ItemVehicle(definition, subDefinition.subName, packID), packID, jsonFileName, subDefinition.subName, "", ItemClassification.VEHICLE);
-    		}
-    	}catch(Exception e){
-    		InterfaceCore.logError("An error was encountered when trying to parse: " + packID + ":" + jsonFileName);
-    		InterfaceCore.logError(e.getMessage());
-    	}
-    }
-    
-    /**Packs should call this upon load to add their parts to the mod.**/
-    public static void addPartDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
-    	try{
-    		JSONPart definition = JSONParser.parseStream(jsonReader, JSONPart.class, null, null);
-    		for(AItemPartCreator creator : partCreators){
-				if(creator.isCreatorValid(definition)){
-					for(JSONSubDefinition subDefinition : definition.definitions){
-	        			setupItem(creator.createItem(definition, subDefinition.subName, packID), packID, jsonFileName, subDefinition.subName, "", ItemClassification.PART);
-	        		}
-					return;
-				}
-			}
-    		InterfaceCore.logError("OBSOLETE LOADER DETECTED: Was told to parse part from " + packID + " with part type " + definition.generic.type + ", but that's not a valid type for creating a part.");
-    	}catch(Exception e){
-    		InterfaceCore.logError("An error was encountered when trying to parse: " + packID + ":" + jsonFileName);
-    		InterfaceCore.logError(e.getMessage());
-    	}
-    }
-    
-    /**Packs should call this upon load to add their instrument set to the mod.**/
-    public static void addInstrumentDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
-    	try{
-    		JSONInstrument definition = JSONParser.parseStream(jsonReader, JSONInstrument.class, null, null);
-    		setupItem(new ItemInstrument(definition), packID, jsonFileName, "", "", ItemClassification.INSTRUMENT);
-    	}catch(Exception e){
-    		InterfaceCore.logError("An error was encountered when trying to parse: " + packID + ":" + jsonFileName);
-    		InterfaceCore.logError(e.getMessage());
-    	}
-    }
-    
-    /**Packs should call this upon load to add their pole components to the mod.**/
-    public static void addPoleDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
-    	try{
-    		JSONPoleComponent definition = JSONParser.parseStream(jsonReader, JSONPoleComponent.class, null, null);
-    		for(JSONSubDefinition subDefinition : definition.definitions){
-    			setupItem(new ItemPoleComponent(definition, subDefinition.subName, packID), packID, jsonFileName, subDefinition.subName, "", ItemClassification.POLE);
-    		}
-    	}catch(Exception e){
-    		InterfaceCore.logError("An error was encountered when trying to parse: " + packID + ":" + jsonFileName);
-    		InterfaceCore.logError(e.getMessage());
-    	}
-    }
-    
-    /**Packs should call this upon load to add their road components to the mod.**/
-    public static void addRoadDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
-    	//NOOP.  Packs better get used to that new loader if they want these!
-    }
-    
-    /**Packs should call this upon load to add their decor blocks to the mod.**/
-    public static void addDecorDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
-    	try{
-    		JSONDecor definition = JSONParser.parseStream(jsonReader, JSONDecor.class, null, null);
-    		for(JSONSubDefinition subDefinition : definition.definitions){
-    			setupItem(new ItemDecor(definition, subDefinition.subName, packID), packID, jsonFileName, subDefinition.subName, "", ItemClassification.DECOR);
-    		}
-    	}catch(Exception e){
-    		InterfaceCore.logError("An error was encountered when trying to parse: " + packID + ":" + jsonFileName);
-    		InterfaceCore.logError(e.getMessage());
-    	}
-    }
-    
-    /**Packs should call this upon load to add their bullet components to the mod.**/
-    public static void addBulletDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
-    	//NOOP.  Packs better get used to that new loader if they want these!
-    }
-    
-    /**Packs should call this upon load to add their crafting items to the mod.**/
-    public static void addItemDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){
-    	try{
-    		setupItem(new ItemItem(JSONParser.parseStream(jsonReader, JSONItem.class, null, null)), packID, jsonFileName, "", "", ItemClassification.ITEM);
-    	}catch(Exception e){
-    		InterfaceCore.logError("An error was encountered when trying to parse: " + packID + ":" + jsonFileName);
-    		InterfaceCore.logError(e.getMessage());
-    	}
-    }
-
-	/**Skins aren't supported by the old packloader.  This section is here simply to prevent the old loader from crashing.**/
-    public static void addSkinDefinition(InputStreamReader jsonReader, String jsonFileName, String packID){}
-    
-    /**
-     * Sets up the item in the system. Item must be created prior to this as we can't use generics for instantiation.
-     */
-    private static AItemPack<?> setupItem(AItemPack<?> item, String packID, String systemName, String subName, String prefixFolders, ItemClassification classification){
-    	//Set code-based definition values.
-    	item.definition.packID = packID;
-    	item.definition.systemName = systemName;
-    	item.definition.prefixFolders = prefixFolders;
-    	item.definition.classification = classification;
-    	
-    	//Put the item in the map in the registry.
-    	if(!packItemMap.containsKey(packID)){
-    		packItemMap.put(packID, new TreeMap<String, AItemPack<?>>());
-    	}
-    	packItemMap.get(packID).put(item.definition.systemName + subName, item);
-    	
-    	//Return the item for construction convenience.
-    	return item;
     }
     
     

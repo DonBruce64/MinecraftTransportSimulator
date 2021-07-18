@@ -13,6 +13,6 @@
 		"d":{"type": "forge:ore_dict", "ore": "ingotIron"}
     },
     "result":{
-        "item": "mts:decorbench"
+        "item": "mts:mts.decorbench"
     }
 }

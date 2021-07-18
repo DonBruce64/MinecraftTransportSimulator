@@ -40,10 +40,10 @@ public class JSONLight{
 		@JSONDescription("The width of the flare to render.")
 		public float flareWidth;
 		
-		@JSONDescription("How big of a beam to render for this light.  This determines the diameter of the end of the cone for the beam.")
-		public float beamSize;
+		@JSONDescription("The diameter of the beam to render.")
+		public float beamDiameter;
 		
-		@JSONDescription("How long of a beam to render for this light.  This determines the distance from the center to the end of the cone.")
+		@JSONDescription("The length of the beam to render.")
 		public float beamLength;
 	}
 }

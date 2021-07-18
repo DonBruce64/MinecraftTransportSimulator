@@ -123,18 +123,13 @@ public class InterfaceEventsModelLoader{
 		defaultPacks.add(new PackResourcePack(MasterLoader.MODID + "_packs"));
 		
 		//Now register items for the packs.
-		//If we ever register a pack item from a non-external pack, we'll need to make a resource loader for it.
+		//When we register a pack item from an external pack, we'll need to make a resource loader for it.
 		//This is done to allow MC/Forge to play nice with item textures.
 		for(AItemPack<?> packItem : PackParserSystem.getAllPackItems()){
-			//TODO remove this when the internal system actually works.
-			if(PackParserSystem.getPackConfiguration(packItem.definition.packID) == null || PackParserSystem.getPackConfiguration(packItem.definition.packID).internallyGenerated){
-				ModelLoader.setCustomModelResourceLocation(packItem.getBuilder(), 0, new ModelResourceLocation(MasterLoader.MODID + "_packs:" + packItem.definition.packID + AItemPack.PACKID_SEPARATOR + packItem.getRegistrationName(), "inventory"));
-			}else{
-				if(!PackResourcePack.createdLoaders.containsKey(packItem.definition.packID)){
-					defaultPacks.add(new PackResourcePack(packItem.definition.packID));
-				}
-				ModelLoader.setCustomModelResourceLocation(packItem.getBuilder(), 0, new ModelResourceLocation(MasterLoader.MODID + "_packs:" + packItem.getRegistrationName(), "inventory"));
+			if(!PackResourcePack.createdLoaders.containsKey(packItem.definition.packID)){
+				defaultPacks.add(new PackResourcePack(packItem.definition.packID));
 			}
+			ModelLoader.setCustomModelResourceLocation(packItem.getBuilder(), 0, new ModelResourceLocation(MasterLoader.MODID + "_packs:" + packItem.getRegistrationName(), "inventory"));
 		}
 		
 		//Now that we've created all the pack loaders, reload the resource manager to add them to the systems.
@@ -169,7 +164,7 @@ public class InterfaceEventsModelLoader{
 				//Strip the suffix from the packInfo, and then test to see if it's an internal
 				//JSON reference from an item JSON, or if it's the primary JSON for the item being loaded..
 				String strippedSuffix = rawPackInfo.substring(0, rawPackInfo.lastIndexOf("."));
-				if(!strippedSuffix.contains(AItemPack.PACKID_SEPARATOR)){
+				if(!strippedSuffix.contains(".")){
 					//JSON reference.  Get the specified file.
 					stream = getClass().getResourceAsStream("/assets/" + domain + "/" + rawPackInfo);
 					if(stream == null){
@@ -186,8 +181,8 @@ public class InterfaceEventsModelLoader{
 					
 					//Get the pack information, and try to load the resource.
 					try{
-						String packID = combinedPackInfo.substring(0, combinedPackInfo.indexOf(AItemPack.PACKID_SEPARATOR));
-						String systemName = combinedPackInfo.substring(combinedPackInfo.indexOf(AItemPack.PACKID_SEPARATOR) + 1);
+						String packID = combinedPackInfo.substring(0, combinedPackInfo.indexOf("."));
+						String systemName = combinedPackInfo.substring(combinedPackInfo.indexOf(".") + 1);
 						AItemPack<?> packItem = PackParserSystem.getItem(packID, systemName);
 						resourcePath = PackResourceLoader.getPackResource(packItem.definition, ResourceType.ITEM_JSON, systemName);
 						
@@ -199,13 +194,6 @@ public class InterfaceEventsModelLoader{
 							
 							//Remove the "/assets/packID/" portion as it's implied with JSON.
 							itemTexturePath = itemTexturePath.substring(("/assets/"  + packID + "/").length());
-							
-							//If the packloader is internal, remove the "textures/" prefix.  This is auto-generated.
-							//If we don't do this, then the assets won't load right.
-							//TODO remove this when generators aren't internal.
-							if(PackParserSystem.getPackConfiguration(packID).internallyGenerated){
-								itemTexturePath = itemTexturePath.substring("textures/".length());
-							}
 							
 							//Remove the .png suffix as it's also implied.
 							itemTexturePath = itemTexturePath.substring(0, itemTexturePath.length() - ".png".length());

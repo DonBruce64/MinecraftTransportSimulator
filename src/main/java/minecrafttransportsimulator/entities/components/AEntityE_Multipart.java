@@ -45,7 +45,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 	 * operations are performed.  Note that if you are iterating over this list when you call one of those
 	 * methods, and you don't pass the method an iterator instance, you will get a CME!.
 	 */
-	public final List<APart> parts = new ArrayList<APart>();
+	public List<APart> parts;
 	
 	/**This map is similar to {@link #parts}, except it's keyed by the part item.  It serves as a way
 	 * to obtain all parts of a specific type on this entity in cases where such information is needed.
@@ -109,8 +109,12 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 	@Override
     public void initializeAnimations(){
     	super.initializeAnimations();
-    	//Also reset any parts on us.
+    	//Reset any parts on us.
     	//Don't reset sub-parts though, as they don't use the JSONs on us for movement.
+    	//If we haven't created the parts list yet, do so now.
+    	if(parts == null){
+    		parts = new ArrayList<APart>();
+    	}
     	for(APart part : parts){
     		if(!part.placementDefinition.isSubPart){
     			//Find the actual definition in the JSON and get the new animations to use.

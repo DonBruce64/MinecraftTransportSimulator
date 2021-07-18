@@ -147,7 +147,7 @@ public abstract class AModelParser{
 					if(component.flareHeight > 0){
 						flareDefs.add(component);
 					}
-					if(component.beamSize > 0){
+					if(component.beamDiameter > 0){
 						beamDefs.add(component);
 					}
 				}
@@ -208,20 +208,25 @@ public abstract class AModelParser{
 	}
 	
 	private static void normalizeUVs(Float[][] parsedObject){
-		for(int i=0; i<parsedObject.length; i+=4){
-			parsedObject[i][3] = 0.0F;
-			parsedObject[i][4] = 1.0F;
-			parsedObject[i + 1][3] = 1.0F;
-			parsedObject[i + 1][4] = 1.0F;
-			parsedObject[i + 2][3] = 1.0F;
-			parsedObject[i + 2][4] = 0.0F;
-			//If we have only 3 points, it means this object is just a single triangle.
-			//Don't adjust the 4th UV as it doesn't exist.
-			if(i == 0 && parsedObject.length > 3){
-				parsedObject[i + 3][3] = 0.0F;
-				parsedObject[i + 3][4] = 0.0F;
+		for(int i=0; i<parsedObject.length; ++i){
+			if(parsedObject.length == 6 && i >= 3){
+				//Second-half of a quad.
+				switch(i){
+					case(3): parsedObject[i][3] = 0.0F; parsedObject[i][4] = 0.0F; break;
+					case(4): parsedObject[i][3] = 1.0F; parsedObject[i][4] = 1.0F; break;
+					case(5): parsedObject[i][3] = 1.0F; parsedObject[i][4] = 0.0F; break;
+				}
 			}else{
-				break;
+				//Normal tri or first half of quad using tri mapping.
+				switch(i%6){
+					case(0): parsedObject[i][3] = 0.0F; parsedObject[i][4] = 0.0F; break;
+					case(1): parsedObject[i][3] = 0.0F; parsedObject[i][4] = 1.0F; break;
+					case(2): parsedObject[i][3] = 1.0F; parsedObject[i][4] = 1.0F; break;
+					
+					case(3): parsedObject[i][3] = 1.0F; parsedObject[i][4] = 1.0F; break;
+					case(4): parsedObject[i][3] = 1.0F; parsedObject[i][4] = 0.0F; break;
+					case(5): parsedObject[i][3] = 0.0F; parsedObject[i][4] = 0.0F; break;
+				}
 			}
 		}
 	}

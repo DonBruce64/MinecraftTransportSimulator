@@ -13,6 +13,6 @@
 		"e":{"item": "minecraft:stone_slab", "data" : 0}
     },
     "result":{
-        "item": "mts:fuelpump"
+        "item": "mts:mts.fuelpump"
     }
 }

@@ -370,9 +370,9 @@ public class JSONParser{
 				.registerTypeAdapter(new TypeToken<List<Integer>>(){}.getType(), intListAdapter)
 				.registerTypeAdapter(new TypeToken<List<Float>>(){}.getType(), floatListAdapter)
 				.registerTypeAdapter(new TypeToken<List<String>>(){}.getType(), stringListAdapter)
+				.registerTypeAdapterFactory(lowercaseEnumFactory)
 				//FIXME make this work when we get the lights convereted.
-				//.registerTypeAdapterFactory(lowercaseEnumFactory)
-				.registerTypeAdapterFactory(formattedCollectionFactory)
+				//.registerTypeAdapterFactory(formattedCollectionFactory)
 				.create();
 	}
 	
@@ -380,14 +380,7 @@ public class JSONParser{
 	 *  Parses the passed in stream to the passed-in JSON type.
 	 */
 	public static <JSONClass extends Object> JSONClass parseStream(InputStreamReader jsonReader, Class<JSONClass> retClass, String packID, String systemName){
-		JSONClass retObj = packParser.fromJson(jsonReader, retClass);
-		//Do legacy compats if we need before validating the JSON.
-		if(retObj instanceof AJSONItem){
-			LegacyCompatSystem.performLegacyCompats((AJSONItem) retObj, packID, systemName);
-		}
-		//Check for proper fields.
-		validateFields(retObj, "/", 1);
-		return retObj;
+		return packParser.fromJson(jsonReader, retClass);
 	}
 	
 	/**
@@ -555,7 +548,7 @@ public class JSONParser{
 	/**
 	 *  Helper method to validate fields.  Used for recursion.
 	 */
-	private static void validateFields(Object obj, String priorObjects, int index){
+	public static void validateFields(Object obj, String priorObjects, int index){
 		//First get all fields that have the annotation with no values.
 		for(Field field : obj.getClass().getFields()){
 			String errorValue = checkRequiredState(field, obj, priorObjects, index);

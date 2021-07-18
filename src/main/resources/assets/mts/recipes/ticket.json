@@ -11,6 +11,6 @@
 		"c":{"type": "forge:ore_dict", "ore" : "dyeYellow"}
     },
     "result":{
-        "item": "mts:ticket"
+        "item": "mts:mts.ticket"
     }
 }

@@ -2,7 +2,7 @@
 	"parent": "mts:rtfm",
 	"display": {
 		"icon": {
-            "item": "mts:enginebench"
+            "item": "mts:mts.enginebench"
         },
         "title": {
             "translate": "advancements.mts.enginebench.title"
@@ -17,7 +17,7 @@
 			"conditions": {
 				"items": [
 					{
-						"item": "mts:enginebench"
+						"item": "mts:mts.enginebench"
 					}
 				]
 			}

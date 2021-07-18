@@ -14,6 +14,6 @@
 		"f":{"item": "minecraft:stone_button"}
     },
     "result":{
-        "item": "mts:partscanner"
+        "item": "mts:mts.partscanner"
     }
 }

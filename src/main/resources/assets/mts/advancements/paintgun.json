@@ -2,7 +2,7 @@
 	"parent": "mts:vehiclebench",
 	"display": {
 		"icon": {
-            "item": "mts:paintgun"
+            "item": "mts:mts.paintgun"
         },
         "title": {
             "translate": "advancements.mts.paintgun.title"
@@ -17,7 +17,7 @@
 			"conditions": {
 				"items": [
 					{
-						"item": "mts:paintgun"
+						"item": "mts:mts.paintgun"
 					}
 				]
 			}

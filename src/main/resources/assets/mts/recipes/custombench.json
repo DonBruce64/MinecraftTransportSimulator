@@ -10,6 +10,6 @@
 		"b":{"item": "minecraft:crafting_table"}
     },
     "result":{
-        "item": "mts:custombench"
+        "item": "mts:mts.custombench"
     }
 }

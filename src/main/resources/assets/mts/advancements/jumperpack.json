@@ -2,7 +2,7 @@
 	"parent": "mts:enginebench",
 	"display": {
 		"icon": {
-            "item": "mts:jumperpack"
+            "item": "mts:mts.jumperpack"
         },
         "title": {
             "translate": "advancements.mts.jumperpack.title"
@@ -17,7 +17,7 @@
 			"conditions": {
 				"items": [
 					{
-						"item": "mts:jumperpack"
+						"item": "mts:mts.jumperpack"
 					}
 				]
 			}

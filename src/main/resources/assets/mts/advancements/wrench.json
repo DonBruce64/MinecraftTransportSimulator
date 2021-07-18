@@ -2,7 +2,7 @@
 	"parent": "mts:vehiclebench",
 	"display": {
 		"icon": {
-            "item": "mts:wrench"
+            "item": "mts:mts.wrench"
         },
         "title": {
             "translate": "advancements.mts.wrench.title"
@@ -17,7 +17,7 @@
 			"conditions": {
 				"items": [
 					{
-						"item": "mts:wrench"
+						"item": "mts:mts.wrench"
 					}
 				]
 			}

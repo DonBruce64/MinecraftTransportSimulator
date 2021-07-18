@@ -2,7 +2,7 @@
 	"parent": "mts:rtfm",
 	"display": {
 		"icon": {
-            "item": "mts:seatbench"
+            "item": "mts:mts.seatbench"
         },
         "title": {
             "translate": "advancements.mts.seatbench.title"
@@ -17,7 +17,7 @@
 			"conditions": {
 				"items": [
 					{
-						"item": "mts:seatbench"
+						"item": "mts:mts.seatbench"
 					}
 				]
 			}

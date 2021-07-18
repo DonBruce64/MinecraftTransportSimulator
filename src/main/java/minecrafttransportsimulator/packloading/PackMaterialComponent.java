@@ -83,7 +83,6 @@ public class PackMaterialComponent{
 	    	//Return all materials.
 	    	return components;
 		}catch(Exception e){
-			e.printStackTrace();
 			throw new NullPointerException("Could not parse crafting ingredients for item: " + item.definition.packID + item.definition.systemName + currentSubName + ".  Report this to the pack author!");
 		}
 	}

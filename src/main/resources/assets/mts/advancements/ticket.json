@@ -2,7 +2,7 @@
 	"parent": "mts:vehiclebench",
 	"display": {
 		"icon": {
-            "item": "mts:ticket"
+            "item": "mts:mts.ticket"
         },
         "title": {
             "translate": "advancements.mts.ticket.title"
@@ -17,7 +17,7 @@
 			"conditions": {
 				"items": [
 					{
-						"item": "mts:ticket"
+						"item": "mts:mts.ticket"
 					}
 				]
 			}

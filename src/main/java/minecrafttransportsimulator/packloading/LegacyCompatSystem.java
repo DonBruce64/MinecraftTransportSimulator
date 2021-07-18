@@ -58,11 +58,11 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 @SuppressWarnings("deprecation")
 public final class LegacyCompatSystem{
 	
-	public static void performLegacyCompats(AJSONItem definition, String packID, String systemName){
+	public static void performLegacyCompats(AJSONItem definition){
 		if(definition instanceof JSONVehicle){
 			performVehicleLegacyCompats((JSONVehicle) definition);
 		}else if(definition instanceof JSONPart){
-			performPartLegacyCompats((JSONPart) definition, packID, systemName);
+			performPartLegacyCompats((JSONPart) definition);
 		}else if(definition instanceof JSONInstrument){
 			performInstrumentLegacyCompats((JSONInstrument) definition);
 		}else if(definition instanceof JSONPoleComponent){
@@ -84,8 +84,8 @@ public final class LegacyCompatSystem{
 		}
 		
 		//Parse the model and do LCs on it if we need to do so for lights.
-		if(ConfigSystem.configObject.general.doLegacyLightCompats.value && definition instanceof AJSONMultiModelProvider){
-			performLightLegacyCompats((AJSONMultiModelProvider) definition, packID, systemName);
+		if(ConfigSystem.configObject != null && ConfigSystem.configObject.general.doLegacyLightCompats.value && definition instanceof AJSONMultiModelProvider){
+			performLightLegacyCompats((AJSONMultiModelProvider) definition);
 		}
 	}
 	
@@ -369,7 +369,7 @@ public final class LegacyCompatSystem{
 		}
     }
 	
-	private static void performPartLegacyCompats(JSONPart definition, String packID, String systemName){
+	private static void performPartLegacyCompats(JSONPart definition){
 		//Move general things to generic section.
 		if(definition.general.type != null){
 			if(definition.generic == null){
@@ -596,7 +596,7 @@ public final class LegacyCompatSystem{
 				
 				//Starting sound plays when engine goes from stopped to running.
 				JSONSound startingSound = new JSONSound();
-				startingSound.name = packID + ":" + systemName + "_starting";
+				startingSound.name = definition.packID + ":" + definition.systemName + "_starting";
 				startingSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
 				JSONAnimationDefinition startingActiveDef = new JSONAnimationDefinition();
 				startingActiveDef.animationType = AnimationComponentType.VISIBILITY;
@@ -608,7 +608,7 @@ public final class LegacyCompatSystem{
 				
 				//Stopping sound plays when engine goes from running to stopped.
 				JSONSound stoppingSound = new JSONSound();
-				stoppingSound.name = packID + ":" + systemName + "_stopping";
+				stoppingSound.name = definition.packID + ":" + definition.systemName + "_stopping";
 				stoppingSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
 				JSONAnimationDefinition stoppingActiveDef = new JSONAnimationDefinition();
 				stoppingActiveDef.animationType = AnimationComponentType.VISIBILITY;
@@ -620,7 +620,7 @@ public final class LegacyCompatSystem{
 				
 				//Sputtering sound plays when engine backfires.
 				JSONSound sputteringSound = new JSONSound();
-				sputteringSound.name = packID + ":" + systemName + "_sputter";
+				sputteringSound.name = definition.packID + ":" + definition.systemName + "_sputter";
 				sputteringSound.forceSound = true;
 				sputteringSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
 				JSONAnimationDefinition sputteringActiveDef = new JSONAnimationDefinition();
@@ -646,7 +646,7 @@ public final class LegacyCompatSystem{
 				
 				//Cranking sound plays when engine starters are engaged.  May be pitch-shifted depending on state.
 				JSONSound crankingSound = new JSONSound();
-				crankingSound.name = packID + ":" + systemName + "_cranking";
+				crankingSound.name = definition.packID + ":" + definition.systemName + "_cranking";
 				crankingSound.looping = true;
 				crankingSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
 				JSONAnimationDefinition crankingActiveDef = new JSONAnimationDefinition();
@@ -728,7 +728,7 @@ public final class LegacyCompatSystem{
 					definition.engine.customSoundset = null;
 				}else{
 					JSONSound runningSound = new JSONSound();
-					runningSound.name = packID + ":" + systemName + "_running";
+					runningSound.name = definition.packID + ":" + definition.systemName + "_running";
 					runningSound.looping = true;
 					runningSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
 					JSONAnimationDefinition runningVolumeDef = new JSONAnimationDefinition();
@@ -759,7 +759,7 @@ public final class LegacyCompatSystem{
 				}
 				
 				JSONSound firingSound = new JSONSound();
-				firingSound.name = packID + ":" + systemName + "_firing";
+				firingSound.name = definition.packID + ":" + definition.systemName + "_firing";
 				firingSound.forceSound = true;
 				firingSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
 				JSONAnimationDefinition firingDef = new JSONAnimationDefinition();
@@ -771,7 +771,7 @@ public final class LegacyCompatSystem{
 				definition.rendering.sounds.add(firingSound);
 				
 				JSONSound reloadingSound = new JSONSound();
-				reloadingSound.name = packID + ":" + systemName + "_reloading";
+				reloadingSound.name = definition.packID + ":" + definition.systemName + "_reloading";
 				reloadingSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
 				JSONAnimationDefinition reloadingDef = new JSONAnimationDefinition();
 				reloadingDef.animationType = AnimationComponentType.VISIBILITY;
@@ -1503,108 +1503,124 @@ public final class LegacyCompatSystem{
     	}
     }
     
-    private static void performLightLegacyCompats(AJSONMultiModelProvider definition, String packID, String systemName){
-    	try{
-			if(definition.rendering == null){
-				definition.rendering = new JSONRendering();
-			}
-			if(definition.rendering.lightObjects == null){
+    private static void performLightLegacyCompats(AJSONMultiModelProvider definition){
+		if(definition.rendering == null){
+			definition.rendering = new JSONRendering();
+		}
+		if(definition.rendering.lightObjects == null){
+			try{
 				definition.rendering.lightObjects = new ArrayList<JSONLight>();
-			}
-			Map<String, Float[][]> parsedModel = AModelParser.parseModel(definition.getModelLocation(definition.definitions.get(0).modelName));
-			for(String objectName : parsedModel.keySet()){
-				if(objectName.contains("&")){
-					JSONLight lightDef = new JSONLight();
-					lightDef.brightnessAnimations = new ArrayList<JSONAnimationDefinition>();
-					lightDef.color = "#" + objectName.substring(objectName.indexOf('_') + 1, objectName.indexOf('_') + 7);
-					lightDef.brightnessAnimations = new ArrayList<JSONAnimationDefinition>();
-					
-					//Add standard animation variable for light name.
-					String lightName = objectName.substring(objectName.indexOf("&") + 1, objectName.indexOf("_")).toLowerCase();
-					if(!lightName.equals("genericlight") && !lightName.equals("decorlight")){
-						JSONAnimationDefinition activeAnimation = new JSONAnimationDefinition();
-						activeAnimation.animationType = AnimationComponentType.TRANSLATION;
-						switch(lightName){
-							case("brakelight") : activeAnimation.variable = "brake"; activeAnimation.axis = new Point3d(0, 1, 0); break;
-							case("backuplight") : activeAnimation.variable = "engine_gear_1"; activeAnimation.axis = new Point3d(0, -1, 0); activeAnimation.clampMax = 1; break;
-							case("daytimelight") : activeAnimation.variable = "engines_on"; activeAnimation.axis = new Point3d(0, 1, 0); break;
-							case("navigationlight") : activeAnimation.variable = "navigation_light"; activeAnimation.axis = new Point3d(0, 1, 0); break;
-							case("strobelight") : activeAnimation.variable = "strobe_light"; activeAnimation.axis = new Point3d(0, 1, 0); break;
-							case("taxilight") : activeAnimation.variable = "taxi_light"; activeAnimation.axis = new Point3d(0, 1, 0); break;
-							case("landinglight") : activeAnimation.variable = "landing_light"; activeAnimation.axis = new Point3d(0, 1, 0); break;
-							case("leftturnlight") : activeAnimation.variable = "left_turn_signal"; activeAnimation.axis = new Point3d(0, 1, 0); break;
-							case("rightturnlight") : activeAnimation.variable = "right_turn_signal"; activeAnimation.axis = new Point3d(0, 1, 0); break;
-							case("runninglight") : activeAnimation.variable = "running_light"; activeAnimation.axis = new Point3d(0, 1, 0); break;
-							case("headlight") : activeAnimation.variable = "headlight"; activeAnimation.axis = new Point3d(0, 1, 0); break;
-							case("emergencylight") : activeAnimation.variable = "emergency_light"; activeAnimation.axis = new Point3d(0, 1, 0); break;
-						}
-						lightDef.brightnessAnimations.add(activeAnimation);
-					}
-					
-					//If we are a part or vehicle, add electric power.
-					if(definition instanceof JSONVehicle || definition instanceof JSONPart){
-						JSONAnimationDefinition electricAnimation = new JSONAnimationDefinition();
-						electricAnimation.variable = "electric_power";
-						electricAnimation.axis = new Point3d(0, 1/0.75D/12D, 0);
-						electricAnimation.offset = -0.15F;
-						electricAnimation.clampMin = 0.0001F;
-						electricAnimation.clampMax = 1.0F;
-						lightDef.brightnessAnimations.add(electricAnimation);
-					}
-					
-					//If we are a decor, add redstone power.
-					if(definition instanceof JSONDecor){
-						JSONAnimationDefinition redstoneAnimation = new JSONAnimationDefinition();
-						redstoneAnimation.variable = "redstone_level";
-						redstoneAnimation.axis = new Point3d(0, -1/15D, 0);
-						lightDef.brightnessAnimations.add(redstoneAnimation);
-					}
-					
-					//FIXME fix cycle animation and change this to be correct and match.
-					int flashBits = Integer.decode("0x" + objectName.substring(objectName.indexOf('_', objectName.indexOf('_') + 7) + 1, objectName.lastIndexOf('_')));
-					
-					
-					String lightProperties = objectName.substring(objectName.lastIndexOf('_') + 1);
-					boolean renderFlare = Integer.valueOf(lightProperties.substring(0, 1)) > 0;
-					lightDef.emissive = Integer.valueOf(lightProperties.substring(1, 2)) > 0;
-					lightDef.covered = Integer.valueOf(lightProperties.substring(2, 3)) > 0;
-					boolean renderBeam = lightProperties.length() == 4 ? Integer.valueOf(lightProperties.substring(3)) > 0 : (objectName.contains("headlight") || objectName.contains("landinglight") || objectName.contains("taxilight") || objectName.contains("streetlight"));
-					
-					if(renderFlare || renderBeam){
-						if(lightDef.blendableComponents == null){
-							lightDef.blendableComponents = new ArrayList<JSONLightBlendableComponent>();
+				Map<String, Float[][]> parsedModel = AModelParser.parseModel(definition.getModelLocation(definition.definitions.get(0).subName));
+				for(String objectName : parsedModel.keySet()){
+					if(objectName.contains("&")){
+						JSONLight lightDef = new JSONLight();
+						lightDef.brightnessAnimations = new ArrayList<JSONAnimationDefinition>();
+						lightDef.color = "#" + objectName.substring(objectName.indexOf('_') + 1, objectName.indexOf('_') + 7);
+						lightDef.brightnessAnimations = new ArrayList<JSONAnimationDefinition>();
+						
+						//Add standard animation variable for light name.
+						String lightName = objectName.substring(objectName.indexOf("&") + 1, objectName.indexOf("_")).toLowerCase();
+						if(!lightName.equals("genericlight") && !lightName.equals("decorlight")){
+							JSONAnimationDefinition activeAnimation = new JSONAnimationDefinition();
+							activeAnimation.animationType = AnimationComponentType.TRANSLATION;
+							//FIXME make lights add their names to set variables to make switches appear in the panel.
+							switch(lightName){
+								case("brakelight") : activeAnimation.variable = "brake"; activeAnimation.axis = new Point3d(0, 1, 0); break;
+								case("backuplight") : activeAnimation.variable = "engine_gear_1"; activeAnimation.axis = new Point3d(0, -1, 0); activeAnimation.clampMax = 1; break;
+								case("daytimelight") : activeAnimation.variable = "engines_on"; activeAnimation.axis = new Point3d(0, 1, 0); break;
+								case("navigationlight") : activeAnimation.variable = "navigation_light"; activeAnimation.axis = new Point3d(0, 1, 0); break;
+								case("strobelight") : activeAnimation.variable = "strobe_light"; activeAnimation.axis = new Point3d(0, 1, 0); break;
+								case("taxilight") : activeAnimation.variable = "taxi_light"; activeAnimation.axis = new Point3d(0, 1, 0); break;
+								case("landinglight") : activeAnimation.variable = "landing_light"; activeAnimation.axis = new Point3d(0, 1, 0); break;
+								case("leftturnlight") : activeAnimation.variable = "left_turn_signal"; activeAnimation.axis = new Point3d(0, 1, 0); break;
+								case("rightturnlight") : activeAnimation.variable = "right_turn_signal"; activeAnimation.axis = new Point3d(0, 1, 0); break;
+								case("runninglight") : activeAnimation.variable = "running_light"; activeAnimation.axis = new Point3d(0, 1, 0); break;
+								case("headlight") : activeAnimation.variable = "headlight"; activeAnimation.axis = new Point3d(0, 1, 0); break;
+								case("emergencylight"): {
+									activeAnimation.variable = "E-LTS";
+									activeAnimation.axis = new Point3d(0, 1, 0);
+									if(definition.rendering.customVariables == null){
+										definition.rendering.customVariables = new ArrayList<String>();
+									}
+									definition.rendering.customVariables.add("E-LTS");
+									break;
+								}
+							}
+							lightDef.brightnessAnimations.add(activeAnimation);
 						}
 						
-						Float[][] masterVertices = parsedModel.get(objectName);
-						for(int i=0; i<masterVertices.length/6; ++i){
-							double minX = 999;
-							double maxX = -999;
-							double minY = 999;
-							double maxY = -999;
-							double minZ = 999;
-							double maxZ = -999;
-							for(byte j=0; j<6; ++j){
-								Float[] masterVertex = masterVertices[i*6 + j];
-								minX = Math.min(masterVertex[0], minX);
-								maxX = Math.max(masterVertex[0], maxX);
-								minY = Math.min(masterVertex[1], minY);
-								maxY = Math.max(masterVertex[1], maxY);
-								minZ = Math.min(masterVertex[2], minZ);
-								maxZ = Math.max(masterVertex[2], maxZ);
+						//If we are a part or vehicle, add electric power.
+						if(definition instanceof JSONVehicle || definition instanceof JSONPart){
+							JSONAnimationDefinition electricAnimation = new JSONAnimationDefinition();
+							electricAnimation.variable = "electric_power";
+							electricAnimation.axis = new Point3d(0, 1/0.75D/12D, 0);
+							electricAnimation.offset = -0.15F;
+							electricAnimation.clampMin = 0.0001F;
+							electricAnimation.clampMax = 1.0F;
+							lightDef.brightnessAnimations.add(electricAnimation);
+						}
+						
+						//If we are a decor, add redstone power.
+						if(definition instanceof JSONDecor){
+							JSONAnimationDefinition redstoneAnimation = new JSONAnimationDefinition();
+							redstoneAnimation.variable = "redstone_level";
+							redstoneAnimation.axis = new Point3d(0, -1/15D, 0);
+							lightDef.brightnessAnimations.add(redstoneAnimation);
+						}
+						
+						//Get flashing cycle rate and convert to cycle variable if required.
+						
+						
+						//FIXME fix cycle animation and change this to be correct and match.
+						int flashBits = Integer.decode("0x" + objectName.substring(objectName.indexOf('_', objectName.indexOf('_') + 7) + 1, objectName.lastIndexOf('_')));
+						
+						
+						String lightProperties = objectName.substring(objectName.lastIndexOf('_') + 1);
+						boolean renderFlare = Integer.valueOf(lightProperties.substring(0, 1)) > 0;
+						lightDef.emissive = Integer.valueOf(lightProperties.substring(1, 2)) > 0;
+						lightDef.covered = Integer.valueOf(lightProperties.substring(2, 3)) > 0;
+						boolean renderBeam = lightProperties.length() == 4 ? Integer.valueOf(lightProperties.substring(3)) > 0 : (objectName.contains("headlight") || objectName.contains("landinglight") || objectName.contains("taxilight") || objectName.contains("streetlight"));
+						
+						if(renderFlare || renderBeam){
+							if(lightDef.blendableComponents == null){
+								lightDef.blendableComponents = new ArrayList<JSONLightBlendableComponent>();
 							}
-							JSONLightBlendableComponent blendable = lightDef.new JSONLightBlendableComponent();
-							if(renderFlare){
-								blendable.flareHeight = (float) (minX + (maxX - minX)/2D);
-								blendable.flareWidth = (float) (minX + (maxX - minX)/2D);
+							
+							Float[][] masterVertices = parsedModel.get(objectName);
+							for(int i=0; i<masterVertices.length/6; ++i){
+								double minX = 999;
+								double maxX = -999;
+								double minY = 999;
+								double maxY = -999;
+								double minZ = 999;
+								double maxZ = -999;
+								for(byte j=0; j<6; ++j){
+									Float[] masterVertex = masterVertices[i*6 + j];
+									minX = Math.min(masterVertex[0], minX);
+									maxX = Math.max(masterVertex[0], maxX);
+									minY = Math.min(masterVertex[1], minY);
+									maxY = Math.max(masterVertex[1], maxY);
+									minZ = Math.min(masterVertex[2], minZ);
+									maxZ = Math.max(masterVertex[2], maxZ);
+								}
+								JSONLightBlendableComponent blendable = lightDef.new JSONLightBlendableComponent();
+								if(renderFlare){
+									blendable.flareHeight = (float) (minX + (maxX - minX)/2D);
+									blendable.flareWidth = (float) (minX + (maxX - minX)/2D);
+								}
+								if(renderBeam){
+									blendable.beamDiameter = (float) Math.max(Math.max(maxX - minX, maxZ - minZ), maxY - minY)*64F;
+									blendable.beamLength = blendable.beamDiameter*3;
+								}
+								blendable.pos = new Point3d(minX + (maxX - minX)/2D, minY + (maxY - minY)/2D, minZ + (maxZ - minZ)/2D);
 							}
-							//FIXME add beam params.
-							blendable.pos = new Point3d(minX + (maxX - minX)/2D, minY + (maxY - minY)/2D, minZ + (maxZ - minZ)/2D);
 						}
 					}
 				}
+			}catch(Exception e){
+				InterfaceCore.logError("Could not do light-based legacy compats on " + definition.packID + ":" + definition.systemName + ".  Lights will likely not be present on this model.");
+				InterfaceCore.logError(e.getMessage());
 			}
-		}catch(Exception e){
-			InterfaceCore.logError("Could not do light-based legacy compats on " + packID + ":" + systemName + ".  Lights will likely not be present on this model.");
-		}
+    	}
     }
 }

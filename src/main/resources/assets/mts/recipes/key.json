@@ -10,6 +10,6 @@
 		"b":{"item": "minecraft:string"}
     },
     "result":{
-        "item": "mts:key"
+        "item": "mts:mts.key"
     }
 }
