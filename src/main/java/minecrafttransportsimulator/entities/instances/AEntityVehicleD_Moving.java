@@ -4,8 +4,8 @@ import java.util.Iterator;
 
 import minecrafttransportsimulator.baseclasses.BezierCurve;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.TrailerConnection;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.TrailerConnection;
 import minecrafttransportsimulator.baseclasses.VehicleGroundDeviceCollection;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.instances.BlockCollision;
@@ -19,7 +19,6 @@ import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement;
-import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**At the final basic vehicle level we add in the functionality for state-based movement.
@@ -476,11 +475,11 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		roadRotation.set(0, 0, 0);
 		if(frontFollower != null && rearFollower != null){
 			//Check for the potential to change the requested segment.
-			//We can only do this if both our followers are on the same semgnt.
+			//We can only do this if both our followers are on the same segment.
 			LaneSelectionRequest requestedSegment;
-			if(!(variablesOn.contains(LightType.LEFTTURNLIGHT.lowercaseName) ^ variablesOn.contains(LightType.RIGHTTURNLIGHT.lowercaseName))){
+			if(!(variablesOn.contains("left_turn_signal") ^ variablesOn.contains("right_turn_signal"))){
 				requestedSegment = LaneSelectionRequest.NONE;
-			}else if(variablesOn.contains(LightType.LEFTTURNLIGHT.lowercaseName)){
+			}else if(variablesOn.contains("left_turn_signal")){
 				requestedSegment = goingInReverse ? LaneSelectionRequest.RIGHT : LaneSelectionRequest.LEFT;
 			}else{
 				requestedSegment = goingInReverse ? LaneSelectionRequest.LEFT : LaneSelectionRequest.RIGHT;

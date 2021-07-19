@@ -15,27 +15,22 @@ public class TransformLight_Emissive<AnimationEntity extends AEntityC_Definable<
 	private final Color color;
 	
 	public TransformLight_Emissive(JSONLight definition){
-		super(definition);
+		super(definition, true);
 		color = Color.decode(definition.color);
 	}
 
 	@Override
 	public double applyTransform(AnimationEntity entity, boolean blendingEnabled, float partialTicks, double offset){
-		super.applyTransform(entity, blendingEnabled, partialTicks, offset);
-		if(lightLevel > 0){
-			InterfaceRender.bindTexture("mts:textures/rendering/light.png");
-			InterfaceRender.setLightingState(false);
-			InterfaceRender.setColorState(color.getRed()/255F, color.getGreen()/255F, color.getBlue()/255F, lightLevel);
-		}
+		InterfaceRender.bindTexture("mts:textures/rendering/light.png");
+		InterfaceRender.setLightingState(false);
+		InterfaceRender.setColorState(color.getRed()/255F, color.getGreen()/255F, color.getBlue()/255F, lightLevel);
 		return 0;
 	}
 	
 	@Override
 	public void doPostRenderLogic(AnimationEntity entity, boolean blendingEnabled, float partialTicks){
-		if(lightLevel > 0){
-			InterfaceRender.setLightingState(true);
-			InterfaceRender.setColorState(1.0F, 1.0F, 1.0F, 1.0F);
-			InterfaceRender.recallTexture();
-		}
+		InterfaceRender.setLightingState(true);
+		InterfaceRender.setColorState(1.0F, 1.0F, 1.0F, 1.0F);
+		InterfaceRender.recallTexture();
 	}
 }

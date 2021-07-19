@@ -12,12 +12,11 @@ import minecrafttransportsimulator.mcinterface.InterfaceRender;
 public class TransformLight_LightupTexture<AnimationEntity extends AEntityC_Definable<?>> extends ATransformLight<AnimationEntity>{
 	
 	public TransformLight_LightupTexture(JSONLight definition){
-		super(definition);
+		super(definition, false);
 	}
 
 	@Override
 	public double applyTransform(AnimationEntity entity, boolean blendingEnabled, float partialTicks, double offset){
-		super.applyTransform(entity, blendingEnabled, partialTicks, offset);
 		if(lightLevel > 0){
 			InterfaceRender.setLightingState(false);
 		}

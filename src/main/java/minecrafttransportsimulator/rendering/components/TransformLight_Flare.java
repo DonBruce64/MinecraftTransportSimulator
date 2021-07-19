@@ -14,36 +14,41 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 */
 public class TransformLight_Flare<AnimationEntity extends AEntityC_Definable<?>> extends ATransformLight<AnimationEntity>{
 	private final Color color;
+	private float flareBrightness;
 	
 	public TransformLight_Flare(JSONLight definition){
-		super(definition);
+		super(definition, true);
 		color = Color.decode(definition.color);
+	}
+	
+	@Override
+	public boolean shouldRender(AnimationEntity entity, boolean blendingEnabled, float partialTicks){
+		if(super.shouldRender(entity, blendingEnabled, partialTicks)){
+			flareBrightness = Math.min((1 - entity.world.getLightBrightness(entity.position, false))*lightLevel, 1);
+			return flareBrightness > 0;
+		}else{
+			return false;
+		}
 	}
 
 	@Override
 	public double applyTransform(AnimationEntity entity, boolean blendingEnabled, float partialTicks, double offset){
-		super.applyTransform(entity, blendingEnabled, partialTicks, offset);
-		float flareBrightness = Math.min((1 - entity.world.getLightBrightness(entity.position, false))*lightLevel, 1);
-		if(flareBrightness > 0){
-			InterfaceRender.bindTexture("mts:textures/rendering/lensflare.png");
-			if(ConfigSystem.configObject.clientRendering.flaresBright.value){
-				InterfaceRender.setLightingState(false);
-				InterfaceRender.setBlendBright(true);
-			}
-			InterfaceRender.setColorState(color.getRed()/255F, color.getGreen()/255F, color.getBlue()/255F, flareBrightness);
+		InterfaceRender.bindTexture("mts:textures/rendering/lensflare.png");
+		InterfaceRender.setLightingState(false);
+		if(ConfigSystem.configObject.clientRendering.flaresBright.value){
+			InterfaceRender.setBlendBright(true);
 		}
+		InterfaceRender.setColorState(color.getRed()/255F, color.getGreen()/255F, color.getBlue()/255F, flareBrightness);
 		return 0;
 	}
 	
 	@Override
 	public void doPostRenderLogic(AnimationEntity entity, boolean blendingEnabled, float partialTicks){
-		if(lightLevel > 0){
-			if(ConfigSystem.configObject.clientRendering.flaresBright.value){
-				InterfaceRender.setBlendBright(false);
-				InterfaceRender.setLightingState(true);
-			}
-			InterfaceRender.setColorState(1.0F, 1.0F, 1.0F, 1.0F);
-			InterfaceRender.recallTexture();
+		InterfaceRender.setLightingState(true);
+		if(ConfigSystem.configObject.clientRendering.flaresBright.value){
+			InterfaceRender.setBlendBright(false);
 		}
+		InterfaceRender.setColorState(1.0F, 1.0F, 1.0F, 1.0F);
+		InterfaceRender.recallTexture();
 	}
 }

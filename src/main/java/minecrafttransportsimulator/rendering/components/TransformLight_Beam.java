@@ -14,36 +14,41 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 */
 public class TransformLight_Beam<AnimationEntity extends AEntityC_Definable<?>> extends ATransformLight<AnimationEntity>{
 	private final Color color;
+	private float beamBrightness;
 	
 	public TransformLight_Beam(JSONLight definition){
-		super(definition);
+		super(definition, true);
 		color = Color.decode(definition.color);
+	}
+	
+	@Override
+	public boolean shouldRender(AnimationEntity entity, boolean blendingEnabled, float partialTicks){
+		if(super.shouldRender(entity, blendingEnabled, partialTicks)){
+			beamBrightness = Math.min((1 - entity.world.getLightBrightness(entity.position, false))*lightLevel, 1);
+			return beamBrightness > 0;
+		}else{
+			return false;
+		}
 	}
 
 	@Override
 	public double applyTransform(AnimationEntity entity, boolean blendingEnabled, float partialTicks, double offset){
-		super.applyTransform(entity, blendingEnabled, partialTicks, offset);
-		float beamBrightness = Math.min((1 - entity.world.getLightBrightness(entity.position, false))*lightLevel, 1);
-		if(beamBrightness > 0){
-			InterfaceRender.bindTexture("mts:textures/rendering/lightbeam.png");
-			if(ConfigSystem.configObject.clientRendering.beamsBright.value){
-				InterfaceRender.setLightingState(false);
-				InterfaceRender.setBlendBright(true);
-			}
-			InterfaceRender.setColorState(color.getRed()/255F, color.getGreen()/255F, color.getBlue()/255F, beamBrightness);
+		InterfaceRender.bindTexture("mts:textures/rendering/lightbeam.png");
+		if(ConfigSystem.configObject.clientRendering.beamsBright.value){
+			InterfaceRender.setLightingState(false);
+			InterfaceRender.setBlendBright(true);
 		}
+		InterfaceRender.setColorState(color.getRed()/255F, color.getGreen()/255F, color.getBlue()/255F, beamBrightness);
 		return 0;
 	}
 	
 	@Override
 	public void doPostRenderLogic(AnimationEntity entity, boolean blendingEnabled, float partialTicks){
-		if(lightLevel > 0){
-			if(ConfigSystem.configObject.clientRendering.beamsBright.value){
-				InterfaceRender.setBlendBright(false);
-				InterfaceRender.setLightingState(true);
-			}
-			InterfaceRender.setColorState(1.0F, 1.0F, 1.0F, 1.0F);
-			InterfaceRender.recallTexture();
+		if(ConfigSystem.configObject.clientRendering.beamsBright.value){
+			InterfaceRender.setBlendBright(false);
+			InterfaceRender.setLightingState(true);
 		}
+		InterfaceRender.setColorState(1.0F, 1.0F, 1.0F, 1.0F);
+		InterfaceRender.recallTexture();
 	}
 }

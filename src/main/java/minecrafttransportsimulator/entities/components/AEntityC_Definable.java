@@ -51,22 +51,26 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	/**The current subName for this entity.  Used to select which definition represents this entity.*/
 	public String subName;
 	
+	/**Variable for saving animation initialized state.  Is set true on the first tick, but may be set false afterwards to re-initialize animations.*/
+	public boolean animationsInitialized;
+	
 	/**Map containing text lines for saved text provided by this entity.**/
 	public final LinkedHashMap<JSONText, String> text = new LinkedHashMap<JSONText, String>();
 	
 	/**Set of variables that are "on" for this entity.  Used for animations.**/
 	public final Set<String> variablesOn = new HashSet<String>();
 	
-	private List<JSONSound> allSoundDefs;
-	private Map<JSONSound, List<DurationDelayClock>> soundActiveClocks;
-	private Map<JSONSound, List<DurationDelayClock>> soundVolumeClocks;
-	private Map<JSONSound, List<DurationDelayClock>> soundPitchClocks;
-	private Map<JSONLight, List<DurationDelayClock>> lightBrightnessClocks;
-	private Map<JSONParticle, List<DurationDelayClock>> particleActiveClocks;
-	private Map<JSONParticle, Long> lastTickParticleSpawned;
+	private final List<JSONSound> allSoundDefs = new ArrayList<JSONSound>();
+	private final Map<JSONSound, List<DurationDelayClock>> soundActiveClocks = new HashMap<JSONSound, List<DurationDelayClock>>();
+	private final Map<JSONSound, List<DurationDelayClock>> soundVolumeClocks = new HashMap<JSONSound, List<DurationDelayClock>>();
+	private final Map<JSONSound, List<DurationDelayClock>> soundPitchClocks = new HashMap<JSONSound, List<DurationDelayClock>>();
+	private final Map<JSONLight, List<DurationDelayClock>> lightBrightnessClocks = new HashMap<JSONLight, List<DurationDelayClock>>();
+	private final Map<JSONParticle, List<DurationDelayClock>> particleActiveClocks = new HashMap<JSONParticle, List<DurationDelayClock>>();
+	private final Map<JSONParticle, Long> lastTickParticleSpawned = new HashMap<JSONParticle, Long>();
 	
 	/**Maps rendering animations to their respective clocks.  Used only for the rendering JSON section.**/
 	public Map<JSONAnimationDefinition, DurationDelayClock> renderAnimationClocks;
+	
 	/**Maps light definitions to their current brightness.  This is updated every frame prior to rendering.**/
 	public Map<JSONLight, Float> lightBrightnessValues;
 	
@@ -101,9 +105,6 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 		if(definition.rendering != null && definition.rendering.constants != null){
 			variablesOn.addAll(definition.rendering.constants);
 		}
-		
-		//Create all clocks.
-		initializeAnimations();
 	}
 	
 	/**Constructor for un-synced entities.  Allows for specification of position/motion/angles.**/
@@ -116,9 +117,19 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 		if(definition.rendering != null && definition.rendering.constants != null){
 			variablesOn.addAll(definition.rendering.constants);
 		}
-		
-		//Create all clocks.
-		initializeAnimations();
+	}
+	
+	@Override
+	public boolean update(){
+		if(super.update()){
+			if(!animationsInitialized){
+				initializeAnimations();
+				animationsInitialized = true;
+			}
+			return true;
+		}else{
+			return false;
+		}
 	}
 	
 	/**
@@ -150,12 +161,10 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	}
 	
 	/**
-	 *  Called when this entity is first constructed, and when the definition on it is reset via hotloading.
-	 *  This should create (and reset) all animation clocks and other static objects that depend on the definition.
-	 *  Note that due to class hierarchy, the top-level method will be called from the bottom-most constructor, so
-	 *  all variables should be assumed to be non-initialized unless otherwise checked.
+	 *  Called the first update tick after this entity is first constructed, and when the definition on it is reset via hotloading.
+	 *  This should create (and reset) all animation clocks and other static objects that depend on the definition. 
 	 */
-	public void initializeAnimations(){
+	protected void initializeAnimations(){
 		//Add us to the entity rendering list.
 		Set<AEntityC_Definable<?>> worldEntities = renderableEntities.get(world);
 		if(worldEntities == null){
@@ -164,10 +173,10 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 		}
 		worldEntities.add(this);
 		
-		allSoundDefs = new ArrayList<JSONSound>();
-		soundActiveClocks = new HashMap<JSONSound, List<DurationDelayClock>>();
-		soundVolumeClocks = new HashMap<JSONSound, List<DurationDelayClock>>();
-		soundPitchClocks = new HashMap<JSONSound, List<DurationDelayClock>>();
+		allSoundDefs.clear();
+		soundActiveClocks.clear();
+		soundVolumeClocks.clear();
+		soundPitchClocks.clear();
 		if(definition.rendering != null && definition.rendering.sounds != null){
 			for(JSONSound soundDef : definition.rendering.sounds){
 				allSoundDefs.add(soundDef);
@@ -198,7 +207,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 			}
 		}
 		
-		lightBrightnessClocks = new HashMap<JSONLight, List<DurationDelayClock>>();
+		lightBrightnessClocks.clear();
 		lightBrightnessValues = new HashMap<JSONLight, Float>();
 		if(definition.rendering != null && definition.rendering.lightObjects != null){
 			for(JSONLight lightDef : definition.rendering.lightObjects){
@@ -213,7 +222,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 			}
 		}
 		
-		particleActiveClocks = new HashMap<JSONParticle, List<DurationDelayClock>>();
+		particleActiveClocks.clear();
 		if(definition.rendering != null && definition.rendering.particles != null){
 			for(JSONParticle particleDef : definition.rendering.particles){
 				List<DurationDelayClock> activeClocks = new ArrayList<DurationDelayClock>();
@@ -464,11 +473,13 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 		}
 		
 		//Check if this is a cycle variable.
-		if(variable.endsWith("cycle")){
+		if(variable.endsWith("_cycle")){
 			String[] parsedVariable = variable.split("_");
-			int onTime = Integer.valueOf(parsedVariable[0]);
-			int totalTime = onTime + Integer.valueOf(parsedVariable[1]); 
-			return world.getTick()%totalTime < onTime ? 1 : 0;
+			int offTime = Integer.valueOf(parsedVariable[0]);
+			int onTime = Integer.valueOf(parsedVariable[1]);
+			int totalTime = offTime + onTime + Integer.valueOf(parsedVariable[2]);
+			long timeInCycle = world.getTick()%totalTime;
+			return timeInCycle > offTime && timeInCycle - offTime < onTime ? 1 : 0;
 		}
 		
 		//Check if this is a generic variable.  This contains lights in most cases.

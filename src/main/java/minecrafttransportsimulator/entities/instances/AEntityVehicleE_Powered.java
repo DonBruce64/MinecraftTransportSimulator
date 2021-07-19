@@ -22,7 +22,6 @@ import minecrafttransportsimulator.packets.instances.PacketPartEngine;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine.Signal;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
-import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.NavBeaconSystem;
 
@@ -137,12 +136,8 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 					electricPower = ((AEntityVehicleE_Powered) towedByConnection.hitchBaseEntity).electricPower;
 				}
 			}else{
-				if(electricPower > 2){
-					for(LightType light : LightType.values()){
-						if(light.hasBeam && light.isInCollection(variablesOn)){
-							electricUsage += 0.0005F;
-						}
-					}
+				if(electricPower > 2 && renderTextLit()){
+					electricUsage += 0.001F;
 				}
 				electricPower = Math.max(0, Math.min(13, electricPower -= electricUsage));
 				electricFlow = electricUsage;
@@ -228,7 +223,7 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 	
 	@Override
 	public float getLightProvided(){
-		return ConfigSystem.configObject.clientRendering.vehicleBlklt.value && LightType.isCollectionProvidingLight(variablesOn) && electricPower > 3 ? 1.0F : 0.0F;
+		return ConfigSystem.configObject.clientRendering.vehicleBlklt.value && renderTextLit() ? 1.0F : 0.0F;
 	}
 	
 	@Override
@@ -312,7 +307,13 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 	
 	@Override
 	public boolean renderTextLit(){
-		return LightType.isCollectionProvidingLight(variablesOn) && electricPower > 3;
+		if(definition.motorized.hasRunningLights && variablesOn.contains("running_light")) return electricPower > 3;
+		if(definition.motorized.hasHeadlights && variablesOn.contains("headlight")) return electricPower > 3;
+		if(definition.motorized.hasNavLights && variablesOn.contains("navigation_light")) return electricPower > 3;
+		if(definition.motorized.hasStrobeLights && variablesOn.contains("strobe_light")) return electricPower > 3;
+		if(definition.motorized.hasTaxiLights && variablesOn.contains("taxi_light")) return electricPower > 3;
+		if(definition.motorized.hasLandingLights && variablesOn.contains("landing_light")) return electricPower > 3;
+		return false;
 	}
 	
 	@Override

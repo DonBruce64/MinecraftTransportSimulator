@@ -492,7 +492,7 @@ public class JSONParser{
 				if(entity instanceof AEntityC_Definable){
 					AEntityC_Definable<?> definableEntity = (AEntityC_Definable<?>) entity;
 					if(definitionToOverride.packID.equals(definableEntity.definition.packID) && definitionToOverride.systemName.equals(definableEntity.definition.systemName)){
-						((AEntityC_Definable<?>) entity).initializeAnimations();
+						((AEntityC_Definable<?>) entity).animationsInitialized = false;
 					}
 				}
 			}

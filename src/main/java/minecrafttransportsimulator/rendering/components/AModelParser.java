@@ -26,9 +26,13 @@ public abstract class AModelParser{
 	public static final String ONLINE_TEXTURE_OBJECT_NAME = "url";
 	public static final String TRANSLUCENT_OBJECT_NAME = "translucent";
 	public static final String INTERIOR_WINDOW_SUFFIX = "_autogen_interior";
-	public static final String LIGHT_COVER_SUFFIX = "_autogen_cover";
+	public static final String LIGHT_COLOR_SUFFIX = "_autogen_color";
 	public static final String LIGHT_FLARE_SUFFIX = "_autogen_flare";
+	public static final String LIGHT_COVER_SUFFIX = "_autogen_cover";
 	public static final String LIGHT_BEAM_SUFFIX = "_autogen_beam";
+	private static final float COLOR_OFFSET = 0.0001F;
+	private static final float FLARE_OFFSET = 0.0002F;
+	private static final float COVER_OFFSET = 0.0003F;
 	
 	public AModelParser(){
 		parsers.put(getModelSuffix(), this);
@@ -120,16 +124,30 @@ public abstract class AModelParser{
 				modelObjects.add(new RenderableModelObject<AnimationEntity>(modelLocation, parsedObjectName + INTERIOR_WINDOW_SUFFIX, animationDefinition, lightDefinition, invertedObject, entity));
 			}
 			
+			//If we are a light with emissive color, make a duplicate set of vertices with an offset for the color rendering.
+			if(lightDefinition != null && lightDefinition.emissive){
+				Float[][] parsedObject = parsedModelObjects.get(parsedObjectName);
+				Float[][] offsetObject = new Float[parsedObject.length][8];
+				for(int i=0; i<parsedObject.length; ++i){
+					offsetObject[i][0] = parsedObject[i][0] + parsedObject[i][5]*COLOR_OFFSET;
+					offsetObject[i][1] = parsedObject[i][1] + parsedObject[i][6]*COLOR_OFFSET;
+					offsetObject[i][2] = parsedObject[i][2] + parsedObject[i][7]*COLOR_OFFSET;
+					offsetObject[i][5] = parsedObject[i][5];
+					offsetObject[i][6] = parsedObject[i][6];
+					offsetObject[i][7] = parsedObject[i][7];
+				}
+				normalizeUVs(offsetObject);
+				modelObjects.add(new RenderableModelObject<AnimationEntity>(modelLocation, parsedObjectName + LIGHT_COLOR_SUFFIX, animationDefinition, lightDefinition, offsetObject, entity));
+			}
+			
 			//If we are a light with a cover, make a duplicate set of vertices with an offset for the cover rendering.
 			if(lightDefinition != null && lightDefinition.covered){
 				Float[][] parsedObject = parsedModelObjects.get(parsedObjectName);
 				Float[][] offsetObject = new Float[parsedObject.length][8];
 				for(int i=0; i<parsedObject.length; ++i){
-					offsetObject[i][0] = parsedObject[i][0] + parsedObject[i][5]*0.002F;
-					offsetObject[i][1] = parsedObject[i][1] + parsedObject[i][6]*0.002F;
-					offsetObject[i][2] = parsedObject[i][2] + parsedObject[i][7]*0.002F;
-					offsetObject[i][3] = parsedObject[i][3];
-					offsetObject[i][4] = parsedObject[i][4];
+					offsetObject[i][0] = parsedObject[i][0] + parsedObject[i][5]*COVER_OFFSET;
+					offsetObject[i][1] = parsedObject[i][1] + parsedObject[i][6]*COVER_OFFSET;
+					offsetObject[i][2] = parsedObject[i][2] + parsedObject[i][7]*COVER_OFFSET;
 					offsetObject[i][5] = parsedObject[i][5];
 					offsetObject[i][6] = parsedObject[i][6];
 					offsetObject[i][7] = parsedObject[i][7];
@@ -157,11 +175,11 @@ public abstract class AModelParser{
 					for(int i=0; i<flareDefs.size(); ++i){
 						JSONLightBlendableComponent flareDef = flareDefs.get(i);
 						//Get the angle that is needed to rotate points to the normalized vector.
-						double theta = Math.acos(flareDef.axis.z);
-						double phi = Math.asin(flareDef.axis.y/Math.sin(theta));
-						Point3d rotation = new Point3d(Math.toDegrees(phi), Math.toDegrees(theta), 0);
+						double theta = Math.asin(flareDef.axis.y);
+						double phi = Math.atan2(flareDef.axis.x, flareDef.axis.z);
+						Point3d rotation = new Point3d(-Math.toDegrees(theta), Math.toDegrees(phi), 0);
 						Point3d vertexOffset = new Point3d();
-						Point3d centerOffset = flareDef.axis.copy().multiply(0.002D).add(flareDef.pos);
+						Point3d centerOffset = flareDef.axis.copy().multiply(FLARE_OFFSET).add(flareDef.pos);
 						for(int j=0; j<6; ++j){
 							Float[] newVertex = new Float[8];
 							//Get the current UV points.
@@ -189,7 +207,7 @@ public abstract class AModelParser{
 							newVertex[7] = (float) flareDef.axis.z;
 							
 							//Set the actual vertex.
-							flareObject[i] = newVertex;
+							flareObject[i*6 + j] = newVertex;
 						}
 					}
 					modelObjects.add(new RenderableModelObject<AnimationEntity>(modelLocation, parsedObjectName + LIGHT_FLARE_SUFFIX, animationDefinition, lightDefinition, flareObject, entity));
@@ -209,9 +227,9 @@ public abstract class AModelParser{
 	
 	private static void normalizeUVs(Float[][] parsedObject){
 		for(int i=0; i<parsedObject.length; ++i){
-			if(parsedObject.length == 6 && i >= 3){
+			if(parsedObject.length > 3 && i%6 >= 3){
 				//Second-half of a quad.
-				switch(i){
+				switch(i%6){
 					case(3): parsedObject[i][3] = 0.0F; parsedObject[i][4] = 0.0F; break;
 					case(4): parsedObject[i][3] = 1.0F; parsedObject[i][4] = 1.0F; break;
 					case(5): parsedObject[i][3] = 1.0F; parsedObject[i][4] = 0.0F; break;

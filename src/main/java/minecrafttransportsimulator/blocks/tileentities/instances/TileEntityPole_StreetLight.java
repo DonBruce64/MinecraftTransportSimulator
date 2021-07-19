@@ -2,7 +2,6 @@ package minecrafttransportsimulator.blocks.tileentities.instances;
 
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.rendering.components.LightType;
 
 /**Lighted pole component.  Renders a constant beam when turned on.
  * 
@@ -16,6 +15,6 @@ public class TileEntityPole_StreetLight extends ATileEntityPole_Component{
 
 	@Override
 	public float getLightProvided(){
-		return variablesOn.contains(LightType.STREETLIGHT.lowercaseName) ? 12F/15F : 0.0F;
+		return 12F/15F;
 	}
 }

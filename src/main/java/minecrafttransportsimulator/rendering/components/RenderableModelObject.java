@@ -71,19 +71,22 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 		
 		//Check if this is a light.  Depending on if it's a light-up texture or not we adjust our final render pass.
 		boolean isBlendedLight = false;
-		if(objectName.endsWith(AModelParser.LIGHT_COVER_SUFFIX)){
-			transforms.add(new TransformLight_Cover<AnimationEntity>(lightAnimation));
+		if(objectName.endsWith(AModelParser.LIGHT_COLOR_SUFFIX)){
+			transforms.add(new TransformLight_Emissive<AnimationEntity>(lightAnimation));
+			isBlendedLight = true;
 		}else if(objectName.endsWith(AModelParser.LIGHT_FLARE_SUFFIX)){
 			transforms.add(new TransformLight_Flare<AnimationEntity>(lightAnimation));
+			isBlendedLight = true;
+		}else if(objectName.endsWith(AModelParser.LIGHT_COVER_SUFFIX)){
+			transforms.add(new TransformLight_Cover<AnimationEntity>(lightAnimation));
+		}else if(objectName.endsWith(AModelParser.LIGHT_BEAM_SUFFIX)){
+			transforms.add(new TransformLight_Beam<AnimationEntity>(lightAnimation));
 			isBlendedLight = true;
 		}else if(objectName.endsWith(AModelParser.LIGHT_BEAM_SUFFIX)){
 			transforms.add(new TransformLight_Beam<AnimationEntity>(lightAnimation));
 			isBlendedLight = true;
-		}else if(lightAnimation != null && !lightAnimation.emissive){
+		}else if(lightAnimation != null){
 			transforms.add(new TransformLight_LightupTexture<AnimationEntity>(lightAnimation));
-		}else if(lightAnimation != null && lightAnimation.emissive){
-			transforms.add(new TransformLight_Emissive<AnimationEntity>(lightAnimation));
-			isBlendedLight = true;
 		}
 		
 		//Add the main blending/not blending transform to the start of the transform list now that we have all others.

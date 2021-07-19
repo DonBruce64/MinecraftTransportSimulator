@@ -51,8 +51,8 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 	public final List<APart> childParts = new ArrayList<APart>();
 	
 	//Runtime variables.	
-	private List<DurationDelayClock> activeClocks;
-	private List<DurationDelayClock> movementClocks;
+	private final List<DurationDelayClock> activeClocks = new ArrayList<DurationDelayClock>();
+	private final List<DurationDelayClock> movementClocks = new ArrayList<DurationDelayClock>();;
 	
 	/**Cached pack definition mappings for sub-part packs.  First key is the parent part definition, which links to a map.
 	 * This second map is keyed by a part definition, with the value equal to a corrected definition.  This means that
@@ -113,9 +113,9 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 	}
 	
 	@Override
-	public void initializeAnimations(){
+	protected void initializeAnimations(){
 		super.initializeAnimations();
-		movementClocks = new ArrayList<DurationDelayClock>();
+		movementClocks.clear();
 		if(definition.generic.movementAnimations != null){
 			for(JSONAnimationDefinition animation : definition.generic.movementAnimations){
 				movementClocks.add(new DurationDelayClock(animation));
@@ -126,7 +126,7 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 				movementClocks.add(new DurationDelayClock(animation));
 			}
 		}
-		activeClocks = new ArrayList<DurationDelayClock>();
+		activeClocks.clear();
 		if(definition.generic.activeAnimations != null){
 			for(JSONAnimationDefinition animation : definition.generic.activeAnimations){
 				activeClocks.add(new DurationDelayClock(animation));

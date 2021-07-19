@@ -51,6 +51,27 @@ public class JSONVehicle extends AJSONPartProvider{
     	@JSONDescription("Set this to true if you want the vehicle to have incremental throttle.  This is only active for vehicles that are not aircraft, and will give the vehicle an aircraft-like throttle that increments in 1/100 units when the gas is pressed, and decrements in 1/100 units when the brake is pressed.  Mainly for boats and other constant-throttle vehicles.")
     	public boolean hasIncrementalThrottle;
     	
+    	@JSONDescription("Set this to true if the vehicle has these lights.  This will make the respective switch apper in the panel.")
+    	public boolean hasRunningLights;
+    	
+    	@JSONDescription("Set this to true if the vehicle has these lights.  This will make the respective switch apper in the panel.")
+    	public boolean hasHeadlights;
+    	
+    	@JSONDescription("Set this to true if the vehicle has these lights.  This will make the respective switch apper in the panel.")
+    	public boolean hasTurnSignals;
+    	
+    	@JSONDescription("Set this to true if the vehicle has these lights.  This will make the respective switch apper in the panel.")
+    	public boolean hasNavLights;
+    	
+    	@JSONDescription("Set this to true if the vehicle has these lights.  This will make the respective switch apper in the panel.")
+    	public boolean hasStrobeLights;
+    	
+    	@JSONDescription("Set this to true if the vehicle has these lights.  This will make the respective switch apper in the panel.")
+    	public boolean hasTaxiLights;
+    	
+    	@JSONDescription("Set this to true if the vehicle has these lights.  This will make the respective switch apper in the panel.")
+    	public boolean hasLandingLights;
+    	
     	@JSONDescription("The mass of this vehicle, when empty, in kg.  Note that fuel, cargo, players, and player inventories all count as weight, so this mass will not be the mass of the vehicle during normal operation.  Not too important in cars, but in aircraft this value should be as close to the real-life value as possible to avoid physics issues.")
     	public int emptyMass;
     	

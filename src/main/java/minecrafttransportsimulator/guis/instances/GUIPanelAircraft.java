@@ -25,7 +25,6 @@ import minecrafttransportsimulator.packets.instances.PacketPartEngine;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine.Signal;
 import minecrafttransportsimulator.packets.instances.PacketVehicleBeaconChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
-import minecrafttransportsimulator.rendering.components.LightType;
 
 /**A GUI/control system hybrid, this takes the place of the HUD when called up.
  * Used for controlling engines, lights, trim, and other things.
@@ -58,7 +57,7 @@ public class GUIPanelAircraft extends AGUIPanel{
 	private static final int TRAILER_TEXTURE_WIDTH_OFFSET = CUSTOM_TEXTURE_WIDTH_OFFSET + 20;
 	private static final int TRAILER_TEXTURE_HEIGHT_OFFSET = 216;
 	
-	private final Map<LightType, GUIComponentSelector> lightSelectors = new HashMap<LightType, GUIComponentSelector>();
+	private final Map<String, GUIComponentSelector> lightSelectors = new HashMap<String, GUIComponentSelector>();
 	private final Map<Byte, GUIComponentSelector> magnetoSelectors = new HashMap<Byte, GUIComponentSelector>();
 	private final Map<Byte, GUIComponentSelector> starterSelectors = new HashMap<Byte, GUIComponentSelector>();
 	private final List<GUIComponentSelector> customSelectors = new ArrayList<GUIComponentSelector>();
@@ -84,30 +83,57 @@ public class GUIPanelAircraft extends AGUIPanel{
 	protected void setupLightComponents(int guiLeft, int guiTop){
 		lightSelectors.clear();
 		//Create up to four lights depending on how many this vehicle has.
-		for(LightType lightType : new LightType[]{LightType.NAVIGATIONLIGHT, LightType.STROBELIGHT, LightType.TAXILIGHT, LightType.LANDINGLIGHT}){
-			final int LIGHT_TEXTURE_WIDTH_OFFSET;
-			final int LIGHT_TEXTURE_HEIGHT_OFFSET;
-			switch(lightType){
-				case NAVIGATIONLIGHT:  LIGHT_TEXTURE_WIDTH_OFFSET = NAVIGATION_TEXTURE_WIDTH_OFFSET; LIGHT_TEXTURE_HEIGHT_OFFSET = NAVIGATION_TEXTURE_HEIGHT_OFFSET; break;
-				case STROBELIGHT:  LIGHT_TEXTURE_WIDTH_OFFSET = STROBE_TEXTURE_WIDTH_OFFSET; LIGHT_TEXTURE_HEIGHT_OFFSET = STROBE_TEXTURE_HEIGHT_OFFSET; break;
-				case TAXILIGHT:  LIGHT_TEXTURE_WIDTH_OFFSET = TAXI_TEXTURE_WIDTH_OFFSET; LIGHT_TEXTURE_HEIGHT_OFFSET = TAXI_TEXTURE_HEIGHT_OFFSET; break;
-				case LANDINGLIGHT:  LIGHT_TEXTURE_WIDTH_OFFSET = LANDING_TEXTURE_WIDTH_OFFSET; LIGHT_TEXTURE_HEIGHT_OFFSET = LANDING_TEXTURE_HEIGHT_OFFSET; break;
-				default: throw new IllegalArgumentException(lightType + " has no texture assigned in the panel!");
-			}
-			if(vehicle.getRenderer().doesEntityHaveLight(vehicle, lightType)){
-				String lightName = InterfaceCore.translate("gui.panel." + lightType.name().toLowerCase() + "s");
-				GUIComponentSelector lightSwitch = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + lightSelectors.size()*(GAP_BETWEEN_SELECTORS + SELECTOR_SIZE), SELECTOR_SIZE, SELECTOR_SIZE, lightName, vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, LIGHT_TEXTURE_WIDTH_OFFSET, LIGHT_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
-					@Override
-					public void onClicked(boolean leftSide){
-						InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, lightType.lowercaseName));
-					}
-					
-					@Override
-					public void onReleased(){}
-				};
-				lightSelectors.put(lightType, lightSwitch);
-				addSelector(lightSwitch);
-			}
+		if(vehicle.definition.motorized.hasNavLights){
+			GUIComponentSelector lightSwitch = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + lightSelectors.size()*(GAP_BETWEEN_SELECTORS + SELECTOR_SIZE), SELECTOR_SIZE, SELECTOR_SIZE, "NAV", vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, NAVIGATION_TEXTURE_WIDTH_OFFSET, NAVIGATION_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
+				@Override
+				public void onClicked(boolean leftSide){
+					InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, "navigation_light"));
+				}
+				
+				@Override
+				public void onReleased(){}
+			};
+			lightSelectors.put("navigation_light", lightSwitch);
+			addSelector(lightSwitch);
+		}
+		if(vehicle.definition.motorized.hasStrobeLights){
+			GUIComponentSelector lightSwitch = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + lightSelectors.size()*(GAP_BETWEEN_SELECTORS + SELECTOR_SIZE), SELECTOR_SIZE, SELECTOR_SIZE, "STROBE", vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, STROBE_TEXTURE_WIDTH_OFFSET, STROBE_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
+				@Override
+				public void onClicked(boolean leftSide){
+					InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, "strobe_light"));
+				}
+				
+				@Override
+				public void onReleased(){}
+			};
+			lightSelectors.put("strobe_light", lightSwitch);
+			addSelector(lightSwitch);
+		}
+		if(vehicle.definition.motorized.hasTaxiLights){
+			GUIComponentSelector lightSwitch = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + lightSelectors.size()*(GAP_BETWEEN_SELECTORS + SELECTOR_SIZE), SELECTOR_SIZE, SELECTOR_SIZE, "TAXI", vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, TAXI_TEXTURE_WIDTH_OFFSET, TAXI_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
+				@Override
+				public void onClicked(boolean leftSide){
+					InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, "taxi_light"));
+				}
+				
+				@Override
+				public void onReleased(){}
+			};
+			lightSelectors.put("taxi_light", lightSwitch);
+			addSelector(lightSwitch);
+		}
+		if(vehicle.definition.motorized.hasLandingLights){
+			GUIComponentSelector lightSwitch = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + lightSelectors.size()*(GAP_BETWEEN_SELECTORS + SELECTOR_SIZE), SELECTOR_SIZE, SELECTOR_SIZE, "LAND", vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, LANDING_TEXTURE_WIDTH_OFFSET, LANDING_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
+				@Override
+				public void onClicked(boolean leftSide){
+					InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, "landing_light"));
+				}
+				
+				@Override
+				public void onReleased(){}
+			};
+			lightSelectors.put("landing_light", lightSwitch);
+			addSelector(lightSwitch);
 		}
 	}
 	
@@ -360,8 +386,8 @@ public class GUIPanelAircraft extends AGUIPanel{
 	@Override
 	public void setStates(){
 		//Set the states of the light selectors.
-		for(Entry<LightType, GUIComponentSelector> lightEntry : lightSelectors.entrySet()){
-			lightEntry.getValue().selectorState = vehicle.variablesOn.contains(lightEntry.getKey().lowercaseName) ? 1 : 0;
+		for(Entry<String, GUIComponentSelector> lightEntry : lightSelectors.entrySet()){
+			lightEntry.getValue().selectorState = vehicle.variablesOn.contains(lightEntry.getKey()) ? 1 : 0;
 		}
 		
 		//Set the states of the magneto selectors.

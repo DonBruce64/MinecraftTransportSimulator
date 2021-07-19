@@ -25,7 +25,6 @@ import minecrafttransportsimulator.packets.instances.PacketPartEngine;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine.Signal;
 import minecrafttransportsimulator.packets.instances.PacketVehicleBeaconChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
-import minecrafttransportsimulator.rendering.components.LightType;
 
 
 /**A GUI/control system hybrid, this takes the place of the HUD when called up.
@@ -38,11 +37,11 @@ public class GUIPanelGround extends AGUIPanel{
 	private static final int LIGHT_TEXTURE_HEIGHT_OFFSET = 196;
 	private static final int TURNSIGNAL_TEXTURE_WIDTH_OFFSET = LIGHT_TEXTURE_WIDTH_OFFSET + 20;
 	private static final int TURNSIGNAL_TEXTURE_HEIGHT_OFFSET = 176;
-	private static final int EMERGENCY_TEXTURE_WIDTH_OFFSET = TURNSIGNAL_TEXTURE_WIDTH_OFFSET + 20;
-	private static final int EMERGENCY_TEXTURE_HEIGHT_OFFSET = 216;
+	//private static final int EMERGENCY_TEXTURE_WIDTH_OFFSET = TURNSIGNAL_TEXTURE_WIDTH_OFFSET + 20;
+	//private static final int EMERGENCY_TEXTURE_HEIGHT_OFFSET = 216;
 	//private static final int SIREN_TEXTURE_WIDTH_OFFSET = EMERGENCY_TEXTURE_WIDTH_OFFSET + 20;
 	//private static final int SIREN_TEXTURE_HEIGHT_OFFSET = 216;
-	private static final int ENGINE_TEXTURE_WIDTH_OFFSET = EMERGENCY_TEXTURE_WIDTH_OFFSET + 20 + 20;
+	private static final int ENGINE_TEXTURE_WIDTH_OFFSET = TURNSIGNAL_TEXTURE_WIDTH_OFFSET + 20 + 20 + 20;
 	private static final int ENGINE_TEXTURE_HEIGHT_OFFSET = 196;
 	private static final int TRAILER_TEXTURE_WIDTH_OFFSET = ENGINE_TEXTURE_WIDTH_OFFSET + 20;
 	private static final int TRAILER_TEXTURE_HEIGHT_OFFSET = 216;
@@ -57,7 +56,6 @@ public class GUIPanelGround extends AGUIPanel{
 	
 	private GUIComponentSelector lightSelector;
 	private GUIComponentSelector turnSignalSelector;
-	private GUIComponentSelector emergencySelector;
 	private GUIComponentSelector reverseSelector;
 	private GUIComponentSelector cruiseControlSelector;
 	private GUIComponentSelector gearSelector;
@@ -74,25 +72,25 @@ public class GUIPanelGround extends AGUIPanel{
 	protected void setupLightComponents(int guiLeft, int guiTop){
 		//Create a tri-state selector for the running lights and headlights.
 		//For the tri-state we need to make sure we don't try to turn on running lights if we don't have any.
-		if(vehicle.getRenderer().doesEntityHaveLight(vehicle, LightType.RUNNINGLIGHT) || vehicle.getRenderer().doesEntityHaveLight(vehicle, LightType.HEADLIGHT)){
-			lightSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 0*(GAP_BETWEEN_SELECTORS + SELECTOR_SIZE), SELECTOR_SIZE, SELECTOR_SIZE, InterfaceCore.translate("gui.panel.headlights"), vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, LIGHT_TEXTURE_WIDTH_OFFSET, LIGHT_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
+		if(vehicle.definition.motorized.hasRunningLights || vehicle.definition.motorized.hasHeadlights){
+			lightSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 0*(GAP_BETWEEN_SELECTORS + SELECTOR_SIZE), SELECTOR_SIZE, SELECTOR_SIZE, "LIGHTS", vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, LIGHT_TEXTURE_WIDTH_OFFSET, LIGHT_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
 				public void onClicked(boolean leftSide){
 					if(leftSide){
 						if(selectorState == 2){
-							InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, LightType.HEADLIGHT.lowercaseName));
+							InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, "headlight"));
 						}else if(selectorState == 1){
-							InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, LightType.RUNNINGLIGHT.lowercaseName));
+							InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, "running_light"));
 						}
 					}else{
 						if(selectorState == 0){
-							if(vehicle.getRenderer().doesEntityHaveLight(vehicle, LightType.RUNNINGLIGHT)){
-								InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, LightType.RUNNINGLIGHT.lowercaseName));
+							if(vehicle.definition.motorized.hasRunningLights){
+								InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, "running_light"));
 							}else{
-								InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, LightType.HEADLIGHT.lowercaseName));
+								InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, "headlight"));
 							}
 						}else if(selectorState == 1){
-							InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, LightType.HEADLIGHT.lowercaseName));
+							InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, "headlight"));
 						}
 					}
 				}
@@ -104,14 +102,14 @@ public class GUIPanelGround extends AGUIPanel{
 		}
 		
 		//Add the turn signal selector if we have turn signals.
-		if(vehicle.getRenderer().doesEntityHaveLight(vehicle, LightType.LEFTTURNLIGHT) || vehicle.getRenderer().doesEntityHaveLight(vehicle, LightType.RIGHTTURNLIGHT)){
-			turnSignalSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 1*(GAP_BETWEEN_SELECTORS + SELECTOR_SIZE), SELECTOR_SIZE, SELECTOR_SIZE, InterfaceCore.translate("gui.panel.turnsignals"), vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, TURNSIGNAL_TEXTURE_WIDTH_OFFSET, TURNSIGNAL_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
+		if(vehicle.definition.motorized.hasTurnSignals){
+			turnSignalSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 1*(GAP_BETWEEN_SELECTORS + SELECTOR_SIZE), SELECTOR_SIZE, SELECTOR_SIZE, "TURNSGNL", vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, TURNSIGNAL_TEXTURE_WIDTH_OFFSET, TURNSIGNAL_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
 				public void onClicked(boolean leftSide){
 					if(leftSide){
-						InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, LightType.LEFTTURNLIGHT.lowercaseName));
+						InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, "left_turn_signal"));
 					}else{
-						InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, LightType.RIGHTTURNLIGHT.lowercaseName));
+						InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, "right_turn_signal"));
 					}
 				}
 				
@@ -119,20 +117,6 @@ public class GUIPanelGround extends AGUIPanel{
 				public void onReleased(){}
 			};
 			addSelector(turnSignalSelector);
-		}
-		
-		//Add the emergency light selector if we have those.
-		if(vehicle.getRenderer().doesEntityHaveLight(vehicle, LightType.EMERGENCYLIGHT)){
-			emergencySelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 2*(GAP_BETWEEN_SELECTORS + SELECTOR_SIZE), SELECTOR_SIZE, SELECTOR_SIZE, InterfaceCore.translate("gui.panel.emergencylights"), vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, EMERGENCY_TEXTURE_WIDTH_OFFSET, EMERGENCY_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
-				@Override
-				public void onClicked(boolean leftSide){
-					InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, LightType.EMERGENCYLIGHT.lowercaseName));
-				}
-				
-				@Override
-				public void onReleased(){}
-			};
-			addSelector(emergencySelector);
 		}
 		
 		if(vehicle.definition.motorized.hasRadioNav){
@@ -317,29 +301,23 @@ public class GUIPanelGround extends AGUIPanel{
 	public void setStates(){
 		//Set the state of the light selector.
 		if(lightSelector != null){
-			lightSelector.selectorState = vehicle.variablesOn.contains(LightType.HEADLIGHT.lowercaseName) ? 2 : (vehicle.variablesOn.contains(LightType.RUNNINGLIGHT.lowercaseName) ? 1 : 0);
+			lightSelector.selectorState = vehicle.variablesOn.contains("running_light") ? 2 : (vehicle.variablesOn.contains("headlight") ? 1 : 0);
 		}
 		
 		//Set the state of the turn signal selector.
 		if(turnSignalSelector != null){
 			boolean halfSecondClock = inClockPeriod(20, 10);
-			if(vehicle.variablesOn.contains(LightType.LEFTTURNLIGHT.lowercaseName) && halfSecondClock){
-				if(vehicle.variablesOn.contains(LightType.RIGHTTURNLIGHT.lowercaseName)){
+			if(vehicle.variablesOn.contains("left_turn_signal") && halfSecondClock){
+				if(vehicle.variablesOn.contains("right_turn_signal")){
 					turnSignalSelector.selectorState = 3;
 				}else{
 					turnSignalSelector.selectorState = 1;
 				}
-			}else if(vehicle.variablesOn.contains(LightType.RIGHTTURNLIGHT.lowercaseName) && halfSecondClock){
+			}else if(vehicle.variablesOn.contains("right_turn_signal") && halfSecondClock){
 				turnSignalSelector.selectorState = 2;
 			}else{
 				turnSignalSelector.selectorState = 0;
 			}
-		}
-		 
-		
-		//If we have emergency lights, set the state of the emergency light selector.
-		if(emergencySelector != null){
-			emergencySelector.selectorState = vehicle.variablesOn.contains(LightType.EMERGENCYLIGHT.lowercaseName) ? 1 : 0;
 		}
 		
 		//Set the state of the engine selectors.
