@@ -227,11 +227,6 @@ public class BuilderItem extends Item{
 	 */
 	@SubscribeEvent
 	public static void registerItems(RegistryEvent.Register<Item> event){
-		//Create all pack items.
-		for(AItemPack<?> packItem : PackParserSystem.getAllPackItems()){
-			new BuilderItem(packItem);
-		}
-		
 		//Register all items in our wrapper map.
 		for(Entry<AItemBase, BuilderItem> entry : itemMap.entrySet()){
 			AItemBase item = entry.getKey();

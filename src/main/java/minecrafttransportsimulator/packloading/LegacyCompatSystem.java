@@ -84,7 +84,7 @@ public final class LegacyCompatSystem{
 		}
 		
 		//Parse the model and do LCs on it if we need to do so for lights.
-		if(ConfigSystem.configObject != null && ConfigSystem.configObject.general.doLegacyLightCompats.value && definition instanceof AJSONMultiModelProvider){
+		if(ConfigSystem.configObject != null && ConfigSystem.configObject.general.doLegacyLightCompats.value && definition instanceof AJSONMultiModelProvider && !(definition instanceof JSONSkin)){
 			performLightLegacyCompats((AJSONMultiModelProvider) definition);
 		}
 	}
@@ -1618,7 +1618,7 @@ public final class LegacyCompatSystem{
 						boolean renderFlare = Integer.valueOf(lightProperties.substring(0, 1)) > 0;
 						lightDef.emissive = Integer.valueOf(lightProperties.substring(1, 2)) > 0;
 						lightDef.covered = Integer.valueOf(lightProperties.substring(2, 3)) > 0;
-						boolean renderBeam = lightProperties.length() == 4 ? Integer.valueOf(lightProperties.substring(3)) > 0 : (objectName.contains("headlight") || objectName.contains("landinglight") || objectName.contains("taxilight") || objectName.contains("streetlight"));
+						boolean renderBeam = lightProperties.length() == 4 ? Integer.valueOf(lightProperties.substring(3)) > 0 : (lowerCaseName.contains("headlight") || lowerCaseName.contains("landinglight") || lowerCaseName.contains("taxilight") || lowerCaseName.contains("streetlight"));
 						
 						if(renderFlare || renderBeam){
 							if(lightDef.blendableComponents == null){
@@ -1664,7 +1664,6 @@ public final class LegacyCompatSystem{
 			}catch(Exception e){
 				InterfaceCore.logError("Could not do light-based legacy compats on " + definition.packID + ":" + definition.systemName + ".  Lights will likely not be present on this model.");
 				InterfaceCore.logError(e.getMessage());
-				e.printStackTrace();
 			}
     	}
     }

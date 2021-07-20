@@ -33,6 +33,8 @@ public abstract class AModelParser{
 	private static final float COLOR_OFFSET = 0.0001F;
 	private static final float FLARE_OFFSET = 0.0002F;
 	private static final float COVER_OFFSET = 0.0003F;
+	private static final float BEAM_OFFSET = -0.15F;
+	private static final int BEAM_SEGMENTS = 40;
 	
 	public AModelParser(){
 		parsers.put(getModelSuffix(), this);
@@ -175,9 +177,7 @@ public abstract class AModelParser{
 					for(int i=0; i<flareDefs.size(); ++i){
 						JSONLightBlendableComponent flareDef = flareDefs.get(i);
 						//Get the angle that is needed to rotate points to the normalized vector.
-						double theta = Math.asin(flareDef.axis.y);
-						double phi = Math.atan2(flareDef.axis.x, flareDef.axis.z);
-						Point3d rotation = new Point3d(-Math.toDegrees(theta), Math.toDegrees(phi), 0);
+						Point3d rotation = flareDef.axis.getAngles();
 						Point3d vertexOffset = new Point3d();
 						Point3d centerOffset = flareDef.axis.copy().multiply(FLARE_OFFSET).add(flareDef.pos);
 						for(int j=0; j<6; ++j){
@@ -215,7 +215,57 @@ public abstract class AModelParser{
 				
 				if(!beamDefs.isEmpty()){
 					//3 vertices per cone-face, each share the same center point.
-					//FIXME code beams.
+					//Number of cone faces is equal to the number of segments for beams.
+					//We render two beams.  One inner and one outer.
+					Float[][] beamObject = new Float[beamDefs.size()*2*BEAM_SEGMENTS*3][8];
+					for(int i=0; i<beamDefs.size(); ++i){
+						JSONLightBlendableComponent beamDef = beamDefs.get(i);
+						//Get the angle that is needed to rotate points to the normalized vector.
+						Point3d rotation = beamDef.axis.getAngles();
+						Point3d vertexOffset = new Point3d();
+						Point3d centerOffset = beamDef.axis.copy().multiply(BEAM_OFFSET).add(beamDef.pos);
+						//Go from negative to positive to render both beam-faces in the same loop.
+						for(int j=-BEAM_SEGMENTS; j<BEAM_SEGMENTS; ++j){
+							for(int k=0; k<3; ++k){
+								Float[] newVertex = new Float[8];
+								//Get the current UV points.
+								//Point 0 is always the center of the beam, 1 and 2 are the outer points.
+								switch(k%3){
+									case(0): newVertex[3] = 0.0F; newVertex[4] = 0.0F; break;
+									case(1): newVertex[3] = 0.0F; newVertex[4] = 1.0F; break;
+									case(2): newVertex[3] = 1.0F; newVertex[4] = 1.0F; break;
+								}
+								
+								//Based on the UVs and the axis for the beam, calculate the vertices.
+								double currentAngleRad;
+								if(j<0){
+									currentAngleRad = newVertex[3] == 0.0F ? 2D*Math.PI*((j+1)/(double)BEAM_SEGMENTS) : 2D*Math.PI*(j/(double)BEAM_SEGMENTS);
+								}else{
+									currentAngleRad = newVertex[3] == 0.0F ? 2D*Math.PI*(j/(double)BEAM_SEGMENTS) : 2D*Math.PI*((j+1)/(double)BEAM_SEGMENTS);
+								}
+								if(newVertex[4] == 0.0){
+									vertexOffset.set(0, 0, 0);
+								}else{
+									vertexOffset.x = beamDef.beamDiameter/2F*Math.cos(currentAngleRad);
+									vertexOffset.y = beamDef.beamDiameter/2F*Math.sin(currentAngleRad);
+									vertexOffset.z = beamDef.beamLength;
+								}
+								vertexOffset.rotateFine(rotation).add(centerOffset);
+								newVertex[0] = (float) vertexOffset.x;
+								newVertex[1] = (float) vertexOffset.y;
+								newVertex[2] = (float) vertexOffset.z;
+								
+								//Don't care about normals for beam rendering as it's a blending face, so we just set them to 0.
+								newVertex[5] = 0F;
+								newVertex[6] = 0F;
+								newVertex[7] = 0F;
+								
+								//Set the actual vertex.
+								beamObject[i*2*BEAM_SEGMENTS*3 + (j + BEAM_SEGMENTS)*3 + k] = newVertex;
+							}
+						}
+					}
+					modelObjects.add(new RenderableModelObject<AnimationEntity>(modelLocation, parsedObjectName + LIGHT_BEAM_SUFFIX, animationDefinition, lightDefinition, beamObject, entity));
 				}
 			}
 			

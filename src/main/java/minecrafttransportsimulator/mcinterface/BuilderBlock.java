@@ -20,6 +20,7 @@ import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTic
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.IItemBlock;
+import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockHorizontal;
 import net.minecraft.block.material.Material;
@@ -290,6 +291,13 @@ public class BuilderBlock extends Block{
 	 */
 	@SubscribeEvent
 	public static void registerBlocks(RegistryEvent.Register<Block> event){
+		//Create all pack items.  We need to do this here in the blocks because
+		//block registration comes first, and we use the items registered to determine
+		//which blocks we need to register.
+		for(AItemPack<?> packItem : PackParserSystem.getAllPackItems()){
+			new BuilderItem(packItem);
+		}
+		
 		//Register the TEs.
 		GameRegistry.registerTileEntity(BuilderTileEntity.class, new ResourceLocation(MasterLoader.MODID, BuilderTileEntity.class.getSimpleName()));
 		GameRegistry.registerTileEntity(BuilderTileEntity.Tickable.class, new ResourceLocation(MasterLoader.MODID, BuilderTileEntity.class.getSimpleName() + BuilderTileEntity.Tickable.class.getSimpleName()));

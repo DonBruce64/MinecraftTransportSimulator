@@ -37,7 +37,6 @@ public class JSONConfig{
 		public JSONConfigEntry<Boolean> noclipVehicles = new JSONConfigEntry<Boolean>(false, "If true, vehicles will not be able to collide with blocks.  This also prevents them from moving if they do not have wheels on them, as otherwise they would phase through the ground into the void.");
 		public JSONConfigEntry<Boolean> creativeDamage = new JSONConfigEntry<Boolean>(false, "If true, damage from vehicles and guns will be applied to creative players.");
 		public JSONConfigEntry<Boolean> chunkloadVehicles = new JSONConfigEntry<Boolean>(true, "If true, vehicles will be chunkloaded when on roads/tracks.  This allows them to travel into unloaded chunks.");
-		//FIXME remove this when we release.
 		public JSONConfigEntry<Boolean> doLegacyLightCompats = new JSONConfigEntry<Boolean>(true, "If true, legacy compatibility code will be performed on all models to make their lights work with newer versions.  This code will significantly slow down boot times due to needing to parse all models on boot, however, packs may not have functional lights without it.  Choose wisely if you want speed or features.");
 		public JSONConfigEntry<Double> speedFactor = new JSONConfigEntry<Double>(0.35D, "Factor to apply to vehicle movement.  1 is the realistic value, but this makes vehicles move too fast for Minecraft. Adjust with caution.");
 		public JSONConfigEntry<Double> fuelUsageFactor = new JSONConfigEntry<Double>(1.0D, "Factor times which engines use fuel.  Change this if you think engines use fuel too fast or slow.");

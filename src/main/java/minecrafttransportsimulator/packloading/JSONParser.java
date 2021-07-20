@@ -10,8 +10,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Field;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -260,6 +258,41 @@ public class JSONParser{
 		}
 	};
 	
+	private static final TypeAdapter<Set<String>> stringSetAdapter = new TypeAdapter<Set<String>>(){	
+		@Override
+		public Set<String> read(JsonReader reader) throws IOException{
+			if(reader.peek() == JsonToken.NULL){
+				reader.nextNull();
+				return null;
+			}else{
+				Set<String> value = new HashSet<String>();
+				reader.beginArray();
+				while(reader.hasNext()){
+					value.add(reader.nextString());
+				}
+				reader.endArray();
+				return value;
+			}
+		}
+		
+		@Override
+		public void write(JsonWriter writer, Set<String> value) throws IOException{
+			if(value == null){
+				writer.nullValue();
+			}else{
+				//Setting the indent to nothing prevents GSON from applying newlines to lists.
+				//We need to set the indent to the value afterwards though to keep pretty printing.
+				writer.beginArray();
+				writer.setIndent("");
+				for(String item : value){
+					writer.value(item);
+				}
+				writer.endArray();
+				writer.setIndent("  ");
+			}
+		}
+	};
+	
 	private static final TypeAdapterFactory lowercaseEnumFactory = new TypeAdapterFactory(){
 		@Override
 		public <EnumType> TypeAdapter<EnumType> create(Gson gson, TypeToken<EnumType> type){
@@ -299,63 +332,6 @@ public class JSONParser{
 		}
 	};
 	
-	private static final TypeAdapterFactory formattedCollectionFactory = new TypeAdapterFactory(){
-		@SuppressWarnings({ "rawtypes", "unchecked" })
-		@Override
-		public TypeAdapter create(Gson gson, TypeToken type){
-			Class<?> variableClass = type.getRawType();
-			if(Collection.class.isInstance(variableClass)){
-				//Return the new type adapter.
-				final Type genericParameter = ((ParameterizedType) type).getActualTypeArguments()[0];
-				final TypeAdapter elementAdapter = gson.getAdapter(TypeToken.get(genericParameter));
-				return new TypeAdapter<Collection<?>>(){
-					@Override
-					public Collection<?> read(JsonReader reader) throws IOException{
-						if(reader.peek() == JsonToken.NULL){
-							reader.nextNull();
-							return null;
-						}else{
-							Collection value;
-							if(List.class.isInstance(variableClass)){
-								value = new ArrayList();
-							}else if(Set.class.isInstance(variableClass)){
-								value = new HashSet();
-							}else{
-								throw new IllegalArgumentException("Failed to find class for generic collection type of " + variableClass.getName());
-							}
-							
-							reader.beginArray();
-							while(reader.hasNext()){
-								value.add(elementAdapter.read(reader));
-							}
-							reader.endArray();
-							return value;
-						}
-					}
-					
-					@Override
-					public void write(JsonWriter writer, Collection<?> value) throws IOException{
-						if(value == null){
-							writer.nullValue();
-						}else{
-							//Setting the indent to nothing prevents GSON from applying newlines to lists.
-							//We need to set the indent to the value afterwards though to keep pretty printing.
-							writer.beginArray();
-							writer.setIndent("");
-							for(Object item : value){
-								elementAdapter.write(writer, genericParameter.getClass().cast(item));
-							}
-							writer.endArray();
-							writer.setIndent("  ");
-						}
-					}
-				};
-			}else{
-				return null;
-			}
-		}
-	};
-	
 	//This needs to go down here AFTER we create the type adapters.
 	private static final Gson packParser = getParserWithAdapters();
 	
@@ -370,9 +346,8 @@ public class JSONParser{
 				.registerTypeAdapter(new TypeToken<List<Integer>>(){}.getType(), intListAdapter)
 				.registerTypeAdapter(new TypeToken<List<Float>>(){}.getType(), floatListAdapter)
 				.registerTypeAdapter(new TypeToken<List<String>>(){}.getType(), stringListAdapter)
+				.registerTypeAdapter(new TypeToken<Set<String>>(){}.getType(), stringSetAdapter)
 				.registerTypeAdapterFactory(lowercaseEnumFactory)
-				//FIXME make this work when we get the lights convereted.
-				//.registerTypeAdapterFactory(formattedCollectionFactory)
 				.create();
 	}
 	

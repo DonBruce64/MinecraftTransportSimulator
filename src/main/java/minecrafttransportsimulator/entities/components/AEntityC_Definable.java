@@ -19,6 +19,7 @@ import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
+import minecrafttransportsimulator.jsondefs.JSONCameraObject;
 import minecrafttransportsimulator.jsondefs.JSONLight;
 import minecrafttransportsimulator.jsondefs.JSONParticle;
 import minecrafttransportsimulator.jsondefs.JSONSound;
@@ -69,10 +70,13 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	private final Map<JSONParticle, Long> lastTickParticleSpawned = new HashMap<JSONParticle, Long>();
 	
 	/**Maps rendering animations to their respective clocks.  Used only for the rendering JSON section.**/
-	public Map<JSONAnimationDefinition, DurationDelayClock> renderAnimationClocks;
+	public final Map<JSONAnimationDefinition, DurationDelayClock> renderAnimationClocks = new HashMap<JSONAnimationDefinition, DurationDelayClock>();
+	
+	/**Maps camera animations to their respective clocks.  Used only for the camera JSON section.**/
+	public final Map<JSONAnimationDefinition, DurationDelayClock> cameraAnimationClocks = new HashMap<JSONAnimationDefinition, DurationDelayClock>();
 	
 	/**Maps light definitions to their current brightness.  This is updated every frame prior to rendering.**/
-	public Map<JSONLight, Float> lightBrightnessValues;
+	public final Map<JSONLight, Float> lightBrightnessValues = new HashMap<JSONLight, Float>();
 	
 	/**Constructor for synced entities**/
 	public AEntityC_Definable(WrapperWorld world, WrapperNBT data){
@@ -208,7 +212,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 		}
 		
 		lightBrightnessClocks.clear();
-		lightBrightnessValues = new HashMap<JSONLight, Float>();
+		lightBrightnessValues.clear();
 		if(definition.rendering != null && definition.rendering.lightObjects != null){
 			for(JSONLight lightDef : definition.rendering.lightObjects){
 				List<DurationDelayClock> lightClocks = new ArrayList<DurationDelayClock>();
@@ -236,13 +240,26 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 			}
 		}
 		
-		renderAnimationClocks = new HashMap<JSONAnimationDefinition, DurationDelayClock>();
+		renderAnimationClocks.clear();
 		if(definition.rendering != null){
 			if(definition.rendering.animatedObjects != null){
 				for(JSONAnimatedObject animatedObject : definition.rendering.animatedObjects){
 					if(animatedObject.animations != null){
 						for(JSONAnimationDefinition animation : animatedObject.animations){
 							renderAnimationClocks.put(animation, new DurationDelayClock(animation));
+						}
+					}
+				}
+			}
+		}
+		
+		cameraAnimationClocks.clear();
+		if(definition.rendering != null){
+			if(definition.rendering.cameraObjects != null){
+				for(JSONCameraObject cameraObject : definition.rendering.cameraObjects){
+					if(cameraObject.animations != null){
+						for(JSONAnimationDefinition animation : cameraObject.animations){
+							cameraAnimationClocks.put(animation, new DurationDelayClock(animation));
 						}
 					}
 				}

@@ -23,7 +23,7 @@ public class TransformLight_Beam<AnimationEntity extends AEntityC_Definable<?>> 
 	
 	@Override
 	public boolean shouldRender(AnimationEntity entity, boolean blendingEnabled, float partialTicks){
-		if(super.shouldRender(entity, blendingEnabled, partialTicks)){
+		if(super.shouldRender(entity, blendingEnabled, partialTicks) && entity.shouldRenderBeams()){
 			beamBrightness = Math.min((1 - entity.world.getLightBrightness(entity.position, false))*lightLevel, 1);
 			return beamBrightness > 0;
 		}else{
@@ -34,8 +34,8 @@ public class TransformLight_Beam<AnimationEntity extends AEntityC_Definable<?>> 
 	@Override
 	public double applyTransform(AnimationEntity entity, boolean blendingEnabled, float partialTicks, double offset){
 		InterfaceRender.bindTexture("mts:textures/rendering/lightbeam.png");
+		InterfaceRender.setLightingState(false);
 		if(ConfigSystem.configObject.clientRendering.beamsBright.value){
-			InterfaceRender.setLightingState(false);
 			InterfaceRender.setBlendBright(true);
 		}
 		InterfaceRender.setColorState(color.getRed()/255F, color.getGreen()/255F, color.getBlue()/255F, beamBrightness);
@@ -44,8 +44,8 @@ public class TransformLight_Beam<AnimationEntity extends AEntityC_Definable<?>> 
 	
 	@Override
 	public void doPostRenderLogic(AnimationEntity entity, boolean blendingEnabled, float partialTicks){
+		InterfaceRender.setBlendBright(false);
 		if(ConfigSystem.configObject.clientRendering.beamsBright.value){
-			InterfaceRender.setBlendBright(false);
 			InterfaceRender.setLightingState(true);
 		}
 		InterfaceRender.setColorState(1.0F, 1.0F, 1.0F, 1.0F);
