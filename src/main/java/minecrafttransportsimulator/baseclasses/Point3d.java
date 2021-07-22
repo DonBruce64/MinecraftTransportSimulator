@@ -189,6 +189,18 @@ public class Point3d{
 		}
 		return deltaYaw;
     }
+    
+    /**
+	 * This operation is only valid on points that represent a normalized vector.
+	 * It will return a new point with the component angles of the vector.
+	 * Note that since there is no "roll" for vectors, the z-value will always be 0.
+	 */
+	public Point3d getAngles(){
+		double theta = Math.asin(y);
+		double phi = Math.atan2(x, z);
+		//Positive acos for theta maybe?  Other code shows this.
+		return new Point3d(-Math.toDegrees(theta), Math.toDegrees(phi), 0);
+	}
 	
 	/**
 	 * Returns a copy of this point as a new object.

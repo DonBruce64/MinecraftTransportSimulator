@@ -2,10 +2,10 @@
     "type": "minecraft:crafting_shapeless",
 	 "ingredients": [
         {
-            "item": "mts:key"
+            "item": "mts:mts.key"
         }
     ],
     "result":{
-        "item": "mts:key"
+        "item": "mts:mts.key"
     }
 }

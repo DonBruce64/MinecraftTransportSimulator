@@ -10,7 +10,7 @@ import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
  *
  * @author don_bruce
  */
-public class TransformScaleable<AnimationEntity extends AEntityC_Definable<?>> extends ATransform<AnimationEntity>{
+public class TransformScaleable<AnimationEntity extends AEntityC_Definable<?>> extends ATransformDefinable<AnimationEntity>{
 	private final Point3d scalingAxis;
 	private final Point3d scalingValue = new Point3d();
 	
@@ -23,7 +23,7 @@ public class TransformScaleable<AnimationEntity extends AEntityC_Definable<?>> e
 
 	@Override
 	public double applyTransform(AnimationEntity entity, boolean blendingEnabled, float partialTicks, double offset){
-		double scaling = entity.getAnimatedVariableValue(definition, offset, getClock(entity), partialTicks);
+		double scaling = entity.getAnimatedVariableValue(entity.renderAnimationClocks.get(definition), offset, partialTicks);
 		scalingValue.setTo(scalingAxis).multiply(scaling);
 		if(scalingAxis.x == 0){
 			scalingValue.x = 1.0;

@@ -22,7 +22,6 @@ import minecrafttransportsimulator.packets.instances.PacketPartEngine;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine.Signal;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
-import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.NavBeaconSystem;
 
@@ -106,27 +105,14 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 			//Do trailer-specific logic, if we are one and towed.
 			//Otherwise, do normal update logic for DRLs.
 			if(definition.motorized.isTrailer){
-				//If we are being towed update our light variables to match the vehicle we are being towed by.
-				//Also set the brake state to the same as the towing vehicle.
+				//If we are being towed set the brake state to the same as the towing vehicle.
 				//If we aren't being towed, set the parking brake.
 				if(towedByConnection != null){
-					for(LightType light : LightType.values()){
-						if(towedByConnection.hitchBaseEntity.variablesOn.contains(light.lowercaseName)){
-							variablesOn.add(light.lowercaseName);
-						}else{
-							variablesOn.remove(light.lowercaseName);
-						}
-					}
 					parkingBrakeOn = false;
 					brake = ((AEntityVehicleE_Powered) towedByConnection.hitchBaseEntity).brake;
 				}else{
-					//Remove all lights besides the generic one.
-					for(LightType light : LightType.values()){
-						if(!light.equals(LightType.GENERICLIGHT)){
-							variablesOn.remove(light.lowercaseName);
-						}
-					}
 					parkingBrakeOn = true;
+					brake = 0;
 				}
 			}else{
 				//Set engine state mapping variables.
@@ -141,43 +127,6 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 						}
 					}
 				}
-				
-				//Turn on the DRLs if we have an engine on.
-				if(enginesOn){
-					variablesOn.add(LightType.DAYTIMELIGHT.lowercaseName);
-				}else{
-					variablesOn.remove(LightType.DAYTIMELIGHT.lowercaseName);
-				}
-				
-				
-				//Turn on brake lights and indicator lights.
-				if(brake > 0){
-					variablesOn.add(LightType.BRAKELIGHT.lowercaseName);
-					if(variablesOn.contains(LightType.LEFTTURNLIGHT.lowercaseName)){
-						variablesOn.remove(LightType.LEFTINDICATORLIGHT.lowercaseName);
-					}else{
-						variablesOn.add(LightType.LEFTINDICATORLIGHT.lowercaseName);
-					}
-					if(variablesOn.contains(LightType.RIGHTTURNLIGHT.lowercaseName)){
-						variablesOn.remove(LightType.RIGHTINDICATORLIGHT.lowercaseName);
-					}else{
-						variablesOn.add(LightType.RIGHTINDICATORLIGHT.lowercaseName);
-					}
-				}else{
-					variablesOn.remove(LightType.BRAKELIGHT.lowercaseName);
-					variablesOn.remove(LightType.LEFTINDICATORLIGHT.lowercaseName);
-					variablesOn.remove(LightType.RIGHTINDICATORLIGHT.lowercaseName);
-				}
-				
-				//Set backup light state.
-				variablesOn.remove(LightType.BACKUPLIGHT.lowercaseName);
-				for(PartEngine engine : engines.values()){
-					if(engine.currentGear < 0){
-						variablesOn.add(LightType.BACKUPLIGHT.lowercaseName);
-						break;
-					}
-				}
-				
 			}
 			
 			//Set electric usage based on light status.
@@ -187,12 +136,8 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 					electricPower = ((AEntityVehicleE_Powered) towedByConnection.hitchBaseEntity).electricPower;
 				}
 			}else{
-				if(electricPower > 2){
-					for(LightType light : LightType.values()){
-						if(light.hasBeam && light.isInCollection(variablesOn)){
-							electricUsage += 0.0005F;
-						}
-					}
+				if(electricPower > 2 && renderTextLit()){
+					electricUsage += 0.001F;
 				}
 				electricPower = Math.max(0, Math.min(13, electricPower -= electricUsage));
 				electricFlow = electricUsage;
@@ -278,7 +223,7 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 	
 	@Override
 	public float getLightProvided(){
-		return ConfigSystem.configObject.clientRendering.vehicleBlklt.value && LightType.isCollectionProvidingLight(variablesOn) && electricPower > 3 ? 1.0F : 0.0F;
+		return ConfigSystem.configObject.clientRendering.vehicleBlklt.value && renderTextLit() ? 1.0F : 0.0F;
 	}
 	
 	@Override
@@ -361,13 +306,14 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 	}
 	
 	@Override
-	public float getLightPower(){
-		return (float) (electricPower/12F);
-	}
-	
-	@Override
 	public boolean renderTextLit(){
-		return LightType.isCollectionProvidingLight(variablesOn) && electricPower > 3;
+		if(definition.motorized.hasRunningLights && variablesOn.contains("running_light")) return electricPower > 3;
+		if(definition.motorized.hasHeadlights && variablesOn.contains("headlight")) return electricPower > 3;
+		if(definition.motorized.hasNavLights && variablesOn.contains("navigation_light")) return electricPower > 3;
+		if(definition.motorized.hasStrobeLights && variablesOn.contains("strobe_light")) return electricPower > 3;
+		if(definition.motorized.hasTaxiLights && variablesOn.contains("taxi_light")) return electricPower > 3;
+		if(definition.motorized.hasLandingLights && variablesOn.contains("landing_light")) return electricPower > 3;
+		return false;
 	}
 	
 	@Override

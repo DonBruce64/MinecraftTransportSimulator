@@ -107,6 +107,25 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 	}
 	
 	@Override
+	protected void initializeAnimations(){
+    	super.initializeAnimations();
+    	//Reset any parts on us.
+    	//Don't reset sub-parts though, as they don't use the JSONs on us for movement.
+    	for(APart part : parts){
+    		if(!part.placementDefinition.isSubPart){
+    			//Find the actual definition in the JSON and get the new animations to use.
+    			for(JSONPartDefinition packDef : definition.parts){
+    				if(packDef.pos.equals(part.placementDefinition.pos)){
+    					part.placementDefinition.animations = packDef.animations;
+    					part.animationsInitialized = false;
+    					break;
+    				}
+    			}
+    		}
+    	}
+    }
+	
+	@Override
 	public boolean update(){
 		if(super.update()){
 			//If we have any NBT parts, add them now.
@@ -267,25 +286,6 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 			}
 		}
 	}
-	
-	@Override
-    public void onDefinitionReset(){
-    	super.onDefinitionReset();
-    	//Also reset any parts on us.
-    	//Don't reset sub-parts though, as they don't use our movement.
-    	for(APart part : parts){
-    		if(!part.placementDefinition.isSubPart){
-    			//Find the actual definition in the JSON and get the new animations to use.
-    			for(JSONPartDefinition packDef : definition.parts){
-    				if(packDef.pos.equals(part.placementDefinition.pos)){
-    					part.placementDefinition.animations = packDef.animations;
-    					part.createClocks();
-    					break;
-    				}
-    			}
-    		}
-    	}
-    }
 	
 	@Override
     public Collection<BoundingBox> getCollisionBoxes(){

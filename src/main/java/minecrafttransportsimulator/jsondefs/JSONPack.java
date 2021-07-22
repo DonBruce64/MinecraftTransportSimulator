@@ -8,8 +8,6 @@ import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 
 @JSONDescription("For MTS to even consider something as a pack, it must have a packdefinition.json file inside of it.  This file tells MTS the packID, what files to load, and where they will be found.  This file also controls dynamic loading, which allows packs to only load specific components if specific mods or packs are present.\nNo matter what you want to put into your pack, you'll have put it in the right place, otherwise MTS won't find it.  As such, there is a specific pack folder structure for all packs, though the exact structure varies depending on how you want to lay out your assets.\nNo matter which structure you follow, there is one constant: ALL assets must be located inside “assets/[yourpackid]/”  This is because all assets are loaded from the asset folder, and because pack assets are stored in their pack-specific folders.  After this, however, the folder structure varies based on what you chose for the fileStructure parameter.")
 public class JSONPack{
-	public boolean internallyGenerated;
-	
 	@JSONRequired
 	@JSONDescription("The ID for your pack.  This must be unique!")
 	public String packID;

@@ -74,7 +74,7 @@ public class BlockFuelPump extends ABlockBaseDecor<TileEntityFuelPump>{
 			}
 			
 			//If we aren't a creative pump, and we don't have fuel, bring up the GUI so the player can buy some.
-			if(!pump.isCreative && pump.fuelPurchasedRemaining == 0 && tank.getFluidLevel() == 0){
+			if(!pump.isCreative && pump.fuelPurchasedRemaining == 0 && tank.getFluidLevel() < 1){
 				player.sendPacket(new PacketEntityGUIRequest(pump, player, PacketEntityGUIRequest.EntityGUIType.FUEL_PUMP));
 				return true;
 			}

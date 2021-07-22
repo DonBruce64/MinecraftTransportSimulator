@@ -2,7 +2,7 @@
 	"parent": "mts:rtfm",
 	"display": {
 		"icon": {
-            "item": "mts:propellerbench"
+            "item": "mts:mts.propellerbench"
         },
         "title": {
             "translate": "advancements.mts.propellerbench.title"
@@ -17,7 +17,7 @@
 			"conditions": {
 				"items": [
 					{
-						"item": "mts:propellerbench"
+						"item": "mts:mts.propellerbench"
 					}
 				]
 			}

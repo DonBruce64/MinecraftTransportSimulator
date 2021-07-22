@@ -8,12 +8,10 @@ import minecrafttransportsimulator.entities.components.AEntityC_Definable;
  */
 public class TransformSolid<AnimationEntity extends AEntityC_Definable<?>> extends ATransform<AnimationEntity>{
 	
-	public TransformSolid(){
-		super(null);
-	}
+	public TransformSolid(){}
 	
 	@Override
-	public boolean shouldRenderWithBlendState(AnimationEntity entity, boolean blendingEnabled){
+	public boolean shouldRender(AnimationEntity entity, boolean blendingEnabled, float partialTicks){
 		return !blendingEnabled;
 	}
 

@@ -8,7 +8,7 @@ import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
  *
  * @author don_bruce
  */
-public class TransformVisibile<AnimationEntity extends AEntityC_Definable<?>> extends ATransform<AnimationEntity>{
+public class TransformVisibile<AnimationEntity extends AEntityC_Definable<?>> extends ATransformDefinable<AnimationEntity>{
 	
 	public TransformVisibile(JSONAnimationDefinition definition){
 		super(definition);
@@ -16,7 +16,7 @@ public class TransformVisibile<AnimationEntity extends AEntityC_Definable<?>> ex
 	
 	@Override
 	public boolean shouldRender(AnimationEntity entity, boolean blendingEnabled, float partialTicks){
-		double value = definition.offset + entity.getAnimatedVariableValue(definition, 0, getClock(entity), partialTicks);
+		double value = definition.offset + entity.getAnimatedVariableValue(entity.renderAnimationClocks.get(definition), 0, partialTicks);
 		return value >= definition.clampMin && value <= definition.clampMax;
 	}
 

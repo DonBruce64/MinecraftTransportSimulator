@@ -11,6 +11,6 @@
 		"c":{"item": "minecraft:leather"}
     },
     "result":{
-        "item": "mts:fuelhose"
+        "item": "mts:mts.fuelhose"
     }
 }

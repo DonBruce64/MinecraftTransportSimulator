@@ -185,6 +185,12 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 	}
 	
 	@Override
+	protected void initializeAnimations(){
+		super.initializeAnimations();
+		instrumentAnimationClocks.clear();
+	}
+	
+	@Override
 	public boolean update(){
 		//Do validity checks for towing variables.  We could do this whenever we disconnect,
 		//but there are tons of ways this could happen.  The trailer could blow up, the 
@@ -273,12 +279,6 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 	@Override
 	public double getMass(){
 		return 100*locationRiderMap.values().size();
-	}
-	
-	@Override
-	public void onDefinitionReset(){
-		super.onDefinitionReset();
-		instrumentAnimationClocks.clear();
 	}
 	
 	@Override

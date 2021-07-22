@@ -12,6 +12,6 @@
 		"d":{"item": "minecraft:paper"}
     },
     "result":{
-        "item": "mts:handbook_plane"
+        "item": "mts:mts.handbook_plane"
     }
 }

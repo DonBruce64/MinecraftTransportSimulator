@@ -36,7 +36,6 @@ import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
-import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.item.ItemStack;
 
@@ -349,16 +348,8 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 							engine.setMagnetoStatus(false);
 							InterfacePacket.sendToAllClients(new PacketPartEngine(engine, Signal.MAGNETO_OFF));
 						}
-						Iterator<String> variableIterator = vehicle.variablesOn.iterator();
-						while(variableIterator.hasNext()){
-							String variableName = variableIterator.next();
-							for(LightType light : LightType.values()){
-								if(light.lowercaseName.equals(variableName)){
-									InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(vehicle, variableName));
-									variableIterator.remove();
-									break;
-								}
-							}
+						for(String variable : vehicle.variablesOn){
+							InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(vehicle, variable));
 						}
 					}
 				}

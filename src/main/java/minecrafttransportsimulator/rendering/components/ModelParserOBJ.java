@@ -22,7 +22,7 @@ public final class ModelParserOBJ extends AModelParser{
 	
 	@Override
 	protected Map<String, Float[][]> parseModelInternal(String modelLocation){
-		Map<String, Float[][]> partMap = new HashMap<String, Float[][]>();
+		Map<String, Float[][]> objectMap = new HashMap<String, Float[][]>();
 		BufferedReader reader;
 		try{
 			reader = new BufferedReader(new InputStreamReader(ModelParserOBJ.class.getResourceAsStream(modelLocation)));
@@ -48,7 +48,7 @@ public final class ModelParserOBJ extends AModelParser{
 					//Declaration of an object.
 					//Save current part we are parsing (if any) and start new part.
 					if(partName != null){
-						partMap.put(partName, compileVertexArray(vertexList, normalList, textureList, faceList, partName.toLowerCase().contains("window")));
+						compileVertexArray(objectMap, vertexList, normalList, textureList, faceList, partName);
 						vertexList.clear();
 						normalList.clear();
 						textureList.clear();
@@ -103,19 +103,19 @@ public final class ModelParserOBJ extends AModelParser{
 			
 			//End of file.  Save the last part in process and close the file.
 			try{
-				partMap.put(partName, compileVertexArray(vertexList, normalList, textureList, faceList, partName.toLowerCase().contains("window")));
+				compileVertexArray(objectMap, vertexList, normalList, textureList, faceList, partName);
 			}catch(Exception e){
 				throw new IllegalArgumentException("Could not compile points of: " + modelLocation + ".  This is likely due to missing UV mapping on some or all faces.");
 			}
 			reader.close();
-			return partMap;
+			return objectMap;
 			
 		}catch(IOException e){
 			throw new IllegalStateException("Could not finish parsing: " + modelLocation + " due to IOException error.  Did the file change state during parsing?");
 		}
 	}
 	
-	private static Float[][] compileVertexArray(List<Float[]> vertexList, List<Float[]> normalList, List<Float[]> textureList, List<String> faceList, boolean isWindow){
+	private static void compileVertexArray(Map<String, Float[][]> objectMap, List<Float[]> vertexList, List<Float[]> normalList, List<Float[]> textureList, List<String> faceList, String objectName){
 		List<Integer[]> vertexDataSets = new ArrayList<Integer[]>();
 		for(String faceString : faceList){
 			List<Integer[]> faceVertexData = new ArrayList<Integer[]>();	
@@ -173,27 +173,9 @@ public final class ModelParserOBJ extends AModelParser{
 		}
 		
 		//Now populate the texture array.
-		//If we are parsing windows override the texture coords.
 		List<Float[]> textureArray = new ArrayList<Float[]>();
-		if(isWindow){
-			for(int i=0; i<vertexDataSets.size(); i+=3){
-				textureArray.add(new Float[]{0.0F, 1.0F});
-				textureArray.add(new Float[]{1.0F, 1.0F});
-				textureArray.add(new Float[]{1.0F, 0.0F});
-				//If we have only 3 points, it means this window is just a single triangle.
-				//Don't add the 4th fake point and just end compilation here.
-				if(vertexArray.size() > 3){
-					textureArray.add(new Float[]{0.0F, 1.0F});
-					textureArray.add(new Float[]{1.0F, 0.0F});
-					textureArray.add(new Float[]{0.0F, 0.0F});
-				}else{
-					break;
-				}
-			}
-		}else{
-			for(Integer[] face : vertexDataSets){
-				textureArray.add(textureList.get(face[1] - textureOffset));
-			}
+		for(Integer[] face : vertexDataSets){
+			textureArray.add(textureList.get(face[1] - textureOffset));
 		}
 		
 		//Finally, populate the normal array.
@@ -216,7 +198,6 @@ public final class ModelParserOBJ extends AModelParser{
 				normalArray.get(i)[2]
 			});
 		}
-		
-		return compiledArray.toArray(new Float[compiledArray.size()][8]);
+		objectMap.put(objectName, compiledArray.toArray(new Float[compiledArray.size()][8]));
 	}
 }

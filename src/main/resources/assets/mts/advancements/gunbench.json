@@ -2,7 +2,7 @@
 	"parent": "mts:rtfm",
 	"display": {
 		"icon": {
-            "item": "mts:gunbench"
+            "item": "mts:mts.gunbench"
         },
         "title": {
             "translate": "advancements.mts.gunbench.title"
@@ -17,7 +17,7 @@
 			"conditions": {
 				"items": [
 					{
-						"item": "mts:gunbench"
+						"item": "mts:mts.gunbench"
 					}
 				]
 			}

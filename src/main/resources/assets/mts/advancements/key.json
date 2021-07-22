@@ -2,7 +2,7 @@
 	"parent": "mts:vehiclebench",
 	"display": {
 		"icon": {
-            "item": "mts:key"
+            "item": "mts:mts.key"
         },
         "title": {
             "translate": "advancements.mts.key.title"
@@ -17,7 +17,7 @@
 			"conditions": {
 				"items": [
 					{
-						"item": "mts:key"
+						"item": "mts:mts.key"
 					}
 				]
 			}

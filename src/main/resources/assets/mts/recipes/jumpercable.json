@@ -11,6 +11,6 @@
 		"c":{"item": "minecraft:redstone"}
     },
     "result":{
-        "item": "mts:jumpercable"
+        "item": "mts:mts.jumpercable"
     }
 }

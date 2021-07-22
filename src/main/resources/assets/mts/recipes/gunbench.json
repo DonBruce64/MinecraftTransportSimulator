@@ -12,6 +12,6 @@
 		"d":{"type": "forge:ore_dict", "ore" : "dyeGreen"}
     },
     "result":{
-        "item": "mts:gunbench"
+        "item": "mts:mts.gunbench"
     }
 }

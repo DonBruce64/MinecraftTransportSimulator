@@ -11,35 +11,35 @@ import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 @JSONDescription("Parts go on vehicles.  Simple, no?  There's not much to most part JSONs, and some parts, like seats, will have less than 10 lines to mess with.\nNote: while every part type has its own section, there is one cross-over: the “generic” section.  Being generic, it can be used on all parts to define their generic properties.  This may not apply on some parts, such as wheels, which define properties like height based on other parameters, but it will work on the majority of parts for more fine-tuning of things like interaction box size.")
 public class JSONPart extends AJSONPartProvider{
 	
-	@JSONRequired(dependentField="type", dependentValues={"generic"}, subField="general")
+	@JSONRequired
 	@JSONDescription("Properties for all parts.")
     public JSONPartGeneric generic;
 	
-	@JSONRequired(dependentField="type", dependentValues={"engine"}, subField="general")
+	@JSONRequired(dependentField="type", dependentValues={"engine"}, subField="generic")
 	@JSONDescription("Properties for engines.")
     public JSONPartEngine engine;
 	
-	@JSONRequired(dependentField="type", dependentValues={"ground"}, subField="general")
+	@JSONRequired(dependentField="type", dependentValues={"ground"}, subField="generic")
 	@JSONDescription("Properties for ground devices.")
     public JSONPartGroundDevice ground;
 	
-	@JSONRequired(dependentField="type", dependentValues={"propeller"}, subField="general")
+	@JSONRequired(dependentField="type", dependentValues={"propeller"}, subField="generic")
 	@JSONDescription("Properties for propellers.")
     public JSONPartPropeller propeller;
 	
-	@JSONRequired(dependentField="type", dependentValues={"seat"}, subField="general")
+	@JSONRequired(dependentField="type", dependentValues={"seat"}, subField="generic")
 	@JSONDescription("Properties for seats.")
     public JSONPartSeat seat;
 	
-	@JSONRequired(dependentField="type", dependentValues={"gun"}, subField="general")
+	@JSONRequired(dependentField="type", dependentValues={"gun"}, subField="generic")
 	@JSONDescription("Properties for guns.")
     public JSONPartGun gun;
 	
-	@JSONRequired(dependentField="type", dependentValues={"interactable"}, subField="general")
+	@JSONRequired(dependentField="type", dependentValues={"interactable"}, subField="generic")
 	@JSONDescription("Properties for interactables.")
     public JSONPartInteractable interactable;
 	
-	@JSONRequired(dependentField="type", dependentValues={"effector"}, subField="general")
+	@JSONRequired(dependentField="type", dependentValues={"effector"}, subField="generic")
 	@JSONDescription("Properties for effectors.")
     public JSONPartEffector effector;
 

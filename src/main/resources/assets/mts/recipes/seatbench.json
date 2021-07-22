@@ -10,6 +10,6 @@
 		"b":{"item": "minecraft:iron_axe"}
     },
     "result":{
-        "item": "mts:seatbench"
+        "item": "mts:mts.seatbench"
     }
 }

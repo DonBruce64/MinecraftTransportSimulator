@@ -2,7 +2,7 @@
 	"parent": "mts:fuelpump",
 	"display": {
 		"icon": {
-            "item": "mts:jerrycan"
+            "item": "mts:mts.jerrycan"
         },
         "title": {
             "translate": "advancements.mts.jerrycan.title"
@@ -17,7 +17,7 @@
 			"conditions": {
 				"items": [
 					{
-						"item": "mts:jerrycan"
+						"item": "mts:mts.jerrycan"
 					}
 				]
 			}

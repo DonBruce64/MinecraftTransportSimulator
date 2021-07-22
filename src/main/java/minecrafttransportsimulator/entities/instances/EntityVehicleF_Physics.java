@@ -594,14 +594,19 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	
 	@Override
 	public double getRawVariableValue(String variable, float partialTicks){
+		//If we are a forwarded variable and are a connected trailer, do that now.
+		if(definition.motorized.isTrailer && towedByConnection != null && definition.motorized.hookupVariables.contains(variable)){
+			return towedByConnection.hitchBaseEntity.getRawVariableValue(variable, partialTicks);
+		}
+				
 		//If we have a variable with a suffix, we need to get that part first and pass
 		//it into this method rather than trying to run through the code now.
 		int partNumber = getVariableNumber(variable);
 		if(partNumber != -1){
 			return getSpecificPartAnimation(this, variable, partNumber, partialTicks);
 		}
-
-		//Not a part variable that needs forwarding.  Try vehicle variables.
+		
+		//Not a part of a forwarded variable.  Just return normally.
 		switch(variable){
 			//Vehicle world state cases.
 			case("yaw"): return angles.y;

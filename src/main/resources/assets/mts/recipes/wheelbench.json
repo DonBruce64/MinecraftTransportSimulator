@@ -11,6 +11,6 @@
 		"c":{"item": "minecraft:anvil", "data": 0}
     },
     "result":{
-        "item": "mts:wheelbench"
+        "item": "mts:mts.wheelbench"
     }
 }

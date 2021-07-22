@@ -2,7 +2,7 @@
 	"parent": "mts:rtfm",
 	"display": {
 		"icon": {
-            "item": "mts:vehiclebench"
+            "item": "mts:mts.vehiclebench"
         },
         "title": {
             "translate": "advancements.mts.vehiclebench.title"
@@ -17,7 +17,7 @@
 			"conditions": {
 				"items": [
 					{
-						"item": "mts:vehiclebench"
+						"item": "mts:mts.vehiclebench"
 					}
 				]
 			}

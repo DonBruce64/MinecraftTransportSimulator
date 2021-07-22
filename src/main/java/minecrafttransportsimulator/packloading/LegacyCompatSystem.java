@@ -1,6 +1,8 @@
 package minecrafttransportsimulator.packloading;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Map;
 
 import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.baseclasses.Point3d;
@@ -25,6 +27,8 @@ import minecrafttransportsimulator.jsondefs.JSONInstrument;
 import minecrafttransportsimulator.jsondefs.JSONInstrumentDefinition;
 import minecrafttransportsimulator.jsondefs.JSONItem;
 import minecrafttransportsimulator.jsondefs.JSONItem.JSONBooklet.BookletPage;
+import minecrafttransportsimulator.jsondefs.JSONLight;
+import minecrafttransportsimulator.jsondefs.JSONLight.JSONLightBlendableComponent;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPart.EffectorComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
@@ -40,6 +44,9 @@ import minecrafttransportsimulator.jsondefs.JSONSound;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
+import minecrafttransportsimulator.mcinterface.InterfaceCore;
+import minecrafttransportsimulator.rendering.components.AModelParser;
+import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**
  * Class responsible for applying legacy compat code to JSONs.  All legacy compat code should
@@ -51,11 +58,11 @@ import minecrafttransportsimulator.jsondefs.JSONVehicle;
 @SuppressWarnings("deprecation")
 public final class LegacyCompatSystem{
 	
-	public static void performLegacyCompats(AJSONItem definition, String packID, String systemName){
+	public static void performLegacyCompats(AJSONItem definition){
 		if(definition instanceof JSONVehicle){
 			performVehicleLegacyCompats((JSONVehicle) definition);
 		}else if(definition instanceof JSONPart){
-			performPartLegacyCompats((JSONPart) definition, packID, systemName);
+			performPartLegacyCompats((JSONPart) definition);
 		}else if(definition instanceof JSONInstrument){
 			performInstrumentLegacyCompats((JSONInstrument) definition);
 		}else if(definition instanceof JSONPoleComponent){
@@ -74,6 +81,11 @@ public final class LegacyCompatSystem{
 				subDef.modelName = definition.general.modelName;
 			}
 			definition.general.modelName = null;
+		}
+		
+		//Parse the model and do LCs on it if we need to do so for lights.
+		if(ConfigSystem.configObject != null && ConfigSystem.configObject.general.doLegacyLightCompats.value && definition instanceof AJSONMultiModelProvider && !(definition instanceof JSONSkin)){
+			performLightLegacyCompats((AJSONMultiModelProvider) definition);
 		}
 	}
 	
@@ -198,6 +210,19 @@ public final class LegacyCompatSystem{
 		if(definition.motorized.hasCruiseControl){
 			definition.motorized.hasAutopilot = true;
 			definition.motorized.hasCruiseControl = false;
+		}
+		
+		//Add hookup variables if we are a trailer and don't have them.
+		if(definition.motorized.isTrailer && definition.motorized.hookupVariables == null){
+			definition.motorized.hookupVariables = new HashSet<String>();
+			definition.motorized.hookupVariables.add("electric_power");
+			definition.motorized.hookupVariables.add("engine_gear_1");
+			definition.motorized.hookupVariables.add("engines_on");
+			definition.motorized.hookupVariables.add("right_turn_signal");
+			definition.motorized.hookupVariables.add("left_turn_signal");
+			definition.motorized.hookupVariables.add("runninglight");
+			definition.motorized.hookupVariables.add("headlight");
+			definition.motorized.hookupVariables.add("emergencylight");
 		}
 		
 		for(JSONPartDefinition partDef : definition.parts){
@@ -344,7 +369,7 @@ public final class LegacyCompatSystem{
 		}
     }
 	
-	private static void performPartLegacyCompats(JSONPart definition, String packID, String systemName){
+	private static void performPartLegacyCompats(JSONPart definition){
 		//Move general things to generic section.
 		if(definition.general.type != null){
 			if(definition.generic == null){
@@ -571,7 +596,7 @@ public final class LegacyCompatSystem{
 				
 				//Starting sound plays when engine goes from stopped to running.
 				JSONSound startingSound = new JSONSound();
-				startingSound.name = packID + ":" + systemName + "_starting";
+				startingSound.name = definition.packID + ":" + definition.systemName + "_starting";
 				startingSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
 				JSONAnimationDefinition startingActiveDef = new JSONAnimationDefinition();
 				startingActiveDef.animationType = AnimationComponentType.VISIBILITY;
@@ -583,7 +608,7 @@ public final class LegacyCompatSystem{
 				
 				//Stopping sound plays when engine goes from running to stopped.
 				JSONSound stoppingSound = new JSONSound();
-				stoppingSound.name = packID + ":" + systemName + "_stopping";
+				stoppingSound.name = definition.packID + ":" + definition.systemName + "_stopping";
 				stoppingSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
 				JSONAnimationDefinition stoppingActiveDef = new JSONAnimationDefinition();
 				stoppingActiveDef.animationType = AnimationComponentType.VISIBILITY;
@@ -595,7 +620,7 @@ public final class LegacyCompatSystem{
 				
 				//Sputtering sound plays when engine backfires.
 				JSONSound sputteringSound = new JSONSound();
-				sputteringSound.name = packID + ":" + systemName + "_sputter";
+				sputteringSound.name = definition.packID + ":" + definition.systemName + "_sputter";
 				sputteringSound.forceSound = true;
 				sputteringSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
 				JSONAnimationDefinition sputteringActiveDef = new JSONAnimationDefinition();
@@ -621,7 +646,7 @@ public final class LegacyCompatSystem{
 				
 				//Cranking sound plays when engine starters are engaged.  May be pitch-shifted depending on state.
 				JSONSound crankingSound = new JSONSound();
-				crankingSound.name = packID + ":" + systemName + "_cranking";
+				crankingSound.name = definition.packID + ":" + definition.systemName + "_cranking";
 				crankingSound.looping = true;
 				crankingSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
 				JSONAnimationDefinition crankingActiveDef = new JSONAnimationDefinition();
@@ -703,7 +728,7 @@ public final class LegacyCompatSystem{
 					definition.engine.customSoundset = null;
 				}else{
 					JSONSound runningSound = new JSONSound();
-					runningSound.name = packID + ":" + systemName + "_running";
+					runningSound.name = definition.packID + ":" + definition.systemName + "_running";
 					runningSound.looping = true;
 					runningSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
 					JSONAnimationDefinition runningVolumeDef = new JSONAnimationDefinition();
@@ -734,7 +759,7 @@ public final class LegacyCompatSystem{
 				}
 				
 				JSONSound firingSound = new JSONSound();
-				firingSound.name = packID + ":" + systemName + "_firing";
+				firingSound.name = definition.packID + ":" + definition.systemName + "_firing";
 				firingSound.forceSound = true;
 				firingSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
 				JSONAnimationDefinition firingDef = new JSONAnimationDefinition();
@@ -746,7 +771,7 @@ public final class LegacyCompatSystem{
 				definition.rendering.sounds.add(firingSound);
 				
 				JSONSound reloadingSound = new JSONSound();
-				reloadingSound.name = packID + ":" + systemName + "_reloading";
+				reloadingSound.name = definition.packID + ":" + definition.systemName + "_reloading";
 				reloadingSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
 				JSONAnimationDefinition reloadingDef = new JSONAnimationDefinition();
 				reloadingDef.animationType = AnimationComponentType.VISIBILITY;
@@ -1475,6 +1500,208 @@ public final class LegacyCompatSystem{
     	    	object.animations.add(animation);
 			}
     		rendering.translatableModelObjects = null;
+    	}
+    }
+    
+    private static void performLightLegacyCompats(AJSONMultiModelProvider definition){
+		if(definition.rendering == null){
+			definition.rendering = new JSONRendering();
+		}
+		if(definition.rendering.lightObjects == null){
+			try{
+				definition.rendering.lightObjects = new ArrayList<JSONLight>();
+				Map<String, Float[][]> parsedModel = AModelParser.parseModel(definition.getModelLocation(definition.definitions.get(0).subName));
+				for(String objectName : parsedModel.keySet()){
+					if(objectName.contains("&")){
+						JSONLight lightDef = new JSONLight();
+						lightDef.objectName = objectName;
+						lightDef.brightnessAnimations = new ArrayList<JSONAnimationDefinition>();
+						lightDef.color = "#" + objectName.substring(objectName.indexOf('_') + 1, objectName.indexOf('_') + 7);
+						lightDef.brightnessAnimations = new ArrayList<JSONAnimationDefinition>();
+						
+						//Add standard animation variable for light name.
+						String lowerCaseName = objectName.toLowerCase();
+						JSONAnimationDefinition activeAnimation = new JSONAnimationDefinition();
+						activeAnimation.axis = new Point3d(0, 1, 0);
+						if(lowerCaseName.contains("brakelight")){
+							activeAnimation.variable = "brake";
+						}else if(lowerCaseName.contains("backuplight")){
+							activeAnimation.variable = "engine_reversed_1";
+						}else if(lowerCaseName.contains("daytimelight")){
+							activeAnimation.variable = "engines_on";
+						}else if(lowerCaseName.contains("navigationlight")){
+							activeAnimation.variable = "navigation_light";
+							if(definition instanceof JSONVehicle)((JSONVehicle) definition).motorized.hasNavLights = true;
+						}else if(lowerCaseName.contains("strobelight")){
+							activeAnimation.variable = "strobe_light";
+							if(definition instanceof JSONVehicle)((JSONVehicle) definition).motorized.hasStrobeLights = true;
+						}else if(lowerCaseName.contains("taxilight")){
+							activeAnimation.variable = "taxi_light";
+							if(definition instanceof JSONVehicle)((JSONVehicle) definition).motorized.hasTaxiLights = true;
+						}else if(lowerCaseName.contains("landinglight")){
+							activeAnimation.variable = "landing_light";
+							if(definition instanceof JSONVehicle)((JSONVehicle) definition).motorized.hasLandingLights = true;
+						}else if(lowerCaseName.contains("runninglight")){
+							activeAnimation.variable = "running_light";
+							if(definition instanceof JSONVehicle)((JSONVehicle) definition).motorized.hasRunningLights = true;
+						}else if(lowerCaseName.contains("headlight")){
+							activeAnimation.variable = "headlight";
+							if(definition instanceof JSONVehicle)((JSONVehicle) definition).motorized.hasHeadlights = true;
+						}else if(lowerCaseName.contains("leftturnlight")){
+							activeAnimation.variable = "left_turn_signal";
+							if(definition instanceof JSONVehicle)((JSONVehicle) definition).motorized.hasTurnSignals = true;
+						}else if(lowerCaseName.contains("rightturnlight")){
+							activeAnimation.variable = "right_turn_signal";
+							if(definition instanceof JSONVehicle)((JSONVehicle) definition).motorized.hasTurnSignals = true;
+						}else if(lowerCaseName.contains("emergencylight")){
+							activeAnimation.variable = "EMERLTS";
+							if(definition.rendering.customVariables == null){
+								definition.rendering.customVariables = new ArrayList<String>();
+							}
+							if(definition instanceof JSONVehicle)definition.rendering.customVariables.add("EMERLTS");
+						}else if(lowerCaseName.contains("stoplight") || lowerCaseName.contains("cautionlight") || lowerCaseName.contains("golight")){
+							//Traffic signal detected.  Get light name for variable.
+							String[] lightNames = lowerCaseName.split("light");
+							lightNames[0] = lightNames[0].replace("&", "");
+							activeAnimation.variable = lightNames[0] + "_" + "light";
+							if(lightNames.length > 2){
+								activeAnimation.variable += "_" + lightNames[2];
+							}
+							
+							//If the light is a stop light, create a cycle for it for un-linked states.
+							if(lightNames[0].equals("stop")){
+								JSONAnimationDefinition cycleInhibitor = new JSONAnimationDefinition();
+								cycleInhibitor.animationType = AnimationComponentType.INHIBITOR;
+								cycleInhibitor.variable = "linked";
+								cycleInhibitor.clampMin = 1.0F;
+								cycleInhibitor.clampMax = 1.0F;
+								lightDef.brightnessAnimations.add(cycleInhibitor);
+								
+								JSONAnimationDefinition cycleAnimation = new JSONAnimationDefinition();
+								cycleAnimation.animationType = AnimationComponentType.TRANSLATION;
+								cycleAnimation.variable = "0_10_10_cycle";
+								cycleAnimation.axis = new Point3d(0, 1, 0);
+								lightDef.brightnessAnimations.add(cycleAnimation);
+								
+								JSONAnimationDefinition lightActivator = new JSONAnimationDefinition();
+								lightActivator.animationType = AnimationComponentType.ACTIVATOR;
+								lightActivator.variable = "linked";
+								lightActivator.clampMin = 1.0F;
+								lightActivator.clampMax = 1.0F;
+								lightDef.brightnessAnimations.add(lightActivator);
+								
+								JSONAnimationDefinition lightInhibitor = new JSONAnimationDefinition();
+								lightInhibitor.animationType = AnimationComponentType.INHIBITOR;
+								lightInhibitor.variable = "linked";
+								lightInhibitor.clampMin = 0.0F;
+								lightInhibitor.clampMax = 0.0F;
+								lightDef.brightnessAnimations.add(lightInhibitor);
+							}
+						}
+						
+						if(activeAnimation.variable != null){
+							activeAnimation.animationType = AnimationComponentType.TRANSLATION;
+							lightDef.brightnessAnimations.add(activeAnimation);
+						}
+						
+						//If we are a part or vehicle, add electric power.
+						if(definition instanceof JSONVehicle || definition instanceof JSONPart){
+							JSONAnimationDefinition electricAnimation = new JSONAnimationDefinition();
+							electricAnimation.animationType = AnimationComponentType.TRANSLATION;
+							electricAnimation.variable = "electric_power";
+							electricAnimation.axis = new Point3d(0, 1/0.75D/12D, 0);
+							electricAnimation.offset = -0.15F;
+							electricAnimation.clampMin = 0.0001F;
+							electricAnimation.clampMax = 1.0F;
+							lightDef.brightnessAnimations.add(electricAnimation);
+						}
+						
+						//If we are a decor, add redstone power.
+						if(definition instanceof JSONDecor){
+							JSONAnimationDefinition redstoneAnimation = new JSONAnimationDefinition();
+							redstoneAnimation.animationType = AnimationComponentType.TRANSLATION;
+							redstoneAnimation.variable = "redstone_level";
+							redstoneAnimation.axis = new Point3d(0, -1/15D, 0);
+							lightDef.brightnessAnimations.add(redstoneAnimation);
+						}
+						
+						//Get flashing cycle rate and convert to cycle variable if required.
+						//Look at flash bits from right to left until we hit one that's not on.  Count how many ticks are on and use that for cycle.
+						int flashBits = Integer.decode("0x" + objectName.substring(objectName.indexOf('_', objectName.indexOf('_') + 7) + 1, objectName.lastIndexOf('_')));
+						int ticksTillOn = 0;
+						int ticksOn = 0;
+						boolean foundOn = false;
+						for(byte i=0; i<20; ++i){
+							if(((flashBits >> i) & 1) != 1){
+								if(foundOn){
+									break;
+								}
+							}else if(!foundOn){
+								foundOn = true;
+								ticksTillOn = i;
+							}
+							++ticksOn;
+						}
+						if((ticksOn - ticksTillOn) != 20){
+							JSONAnimationDefinition cycleAnimation = new JSONAnimationDefinition();
+							cycleAnimation.animationType = AnimationComponentType.TRANSLATION;
+							cycleAnimation.variable = ticksTillOn + "_" + ticksOn + "_" + (20-ticksOn-ticksTillOn) + "_cycle";
+							cycleAnimation.axis = new Point3d(0, 1, 0);
+							lightDef.brightnessAnimations.add(cycleAnimation);
+						}
+						
+						
+						String lightProperties = objectName.substring(objectName.lastIndexOf('_') + 1);
+						boolean renderFlare = Integer.valueOf(lightProperties.substring(0, 1)) > 0;
+						lightDef.emissive = Integer.valueOf(lightProperties.substring(1, 2)) > 0;
+						lightDef.covered = Integer.valueOf(lightProperties.substring(2, 3)) > 0;
+						boolean renderBeam = lightProperties.length() == 4 ? Integer.valueOf(lightProperties.substring(3)) > 0 : (lowerCaseName.contains("headlight") || lowerCaseName.contains("landinglight") || lowerCaseName.contains("taxilight") || lowerCaseName.contains("streetlight"));
+						
+						if(renderFlare || renderBeam){
+							if(lightDef.blendableComponents == null){
+								lightDef.blendableComponents = new ArrayList<JSONLightBlendableComponent>();
+							}
+							
+							Float[][] masterVertices = parsedModel.get(objectName);
+							for(int i=0; i<masterVertices.length/6; ++i){
+								double minX = 999;
+								double maxX = -999;
+								double minY = 999;
+								double maxY = -999;
+								double minZ = 999;
+								double maxZ = -999;
+								for(byte j=0; j<6; ++j){
+									Float[] masterVertex = masterVertices[i*6 + j];
+									minX = Math.min(masterVertex[0], minX);
+									maxX = Math.max(masterVertex[0], maxX);
+									minY = Math.min(masterVertex[1], minY);
+									maxY = Math.max(masterVertex[1], maxY);
+									minZ = Math.min(masterVertex[2], minZ);
+									maxZ = Math.max(masterVertex[2], maxZ);
+								}
+								JSONLightBlendableComponent blendable = lightDef.new JSONLightBlendableComponent();
+								if(renderFlare){
+									blendable.flareHeight = (float) (3*Math.max(Math.max((maxX - minX), (maxY - minY)), (maxZ - minZ)));
+									blendable.flareWidth = blendable.flareHeight;
+								}
+								if(renderBeam){
+									blendable.beamDiameter = (float) Math.max(Math.max(maxX - minX, maxZ - minZ), maxY - minY)*64F;
+									blendable.beamLength = blendable.beamDiameter*3;
+								}
+								blendable.pos = new Point3d(minX + (maxX - minX)/2D, minY + (maxY - minY)/2D, minZ + (maxZ - minZ)/2D);;
+								blendable.axis = new Point3d(masterVertices[i*6][5], masterVertices[i*6][6], masterVertices[i*6][7]);
+								
+								lightDef.blendableComponents.add(blendable);
+							}
+						}
+						
+						definition.rendering.lightObjects.add(lightDef);
+					}
+				}
+			}catch(Exception e){
+				InterfaceCore.logError("Could not do light-based legacy compats on " + definition.packID + ":" + definition.systemName + ".  Lights will likely not be present on this model.");
+				InterfaceCore.logError(e.getMessage());
+			}
     	}
     }
 }

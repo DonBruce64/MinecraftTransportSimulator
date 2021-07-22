@@ -45,7 +45,6 @@ import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.event.RegistryEvent;
-import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
@@ -236,13 +235,8 @@ public class BuilderItem extends Item{
 			//First check if the creative tab is set/created.
 			String tabID = item.getCreativeTabID();
 			if(!BuilderCreativeTab.createdTabs.containsKey(tabID)){
-				if(item instanceof AItemPack && PackParserSystem.getPackConfiguration(tabID) != null){
-					JSONPack packConfiguration = PackParserSystem.getPackConfiguration(tabID);
-					BuilderCreativeTab.createdTabs.put(tabID, new BuilderCreativeTab(packConfiguration.packName, packConfiguration.packItem != null ? PackParserSystem.getItem(packConfiguration.packID,  packConfiguration.packItem) : null)); 
-				}else{
-					//TODO remove this when all packs use the new system.
-					BuilderCreativeTab.createdTabs.put(tabID, new BuilderCreativeTab(Loader.instance().getIndexedModList().get(tabID).getName(), item));
-				}
+				JSONPack packConfiguration = PackParserSystem.getPackConfiguration(tabID);
+				BuilderCreativeTab.createdTabs.put(tabID, new BuilderCreativeTab(packConfiguration.packName, packConfiguration.packItem != null ? PackParserSystem.getItem(packConfiguration.packID,  packConfiguration.packItem) : null)); 
 			}
 			BuilderCreativeTab.createdTabs.get(tabID).addItem(item);
 			

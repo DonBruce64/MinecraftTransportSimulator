@@ -10,7 +10,7 @@ import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
  *
  * @author don_bruce
  */
-public class TransformRotatable<AnimationEntity extends AEntityC_Definable<?>> extends ATransform<AnimationEntity>{
+public class TransformRotatable<AnimationEntity extends AEntityC_Definable<?>> extends ATransformDefinable<AnimationEntity>{
 	protected final Point3d rotationAxis;
 	
 	public TransformRotatable(JSONAnimationDefinition definition){
@@ -23,7 +23,7 @@ public class TransformRotatable<AnimationEntity extends AEntityC_Definable<?>> e
 	@Override
 	public double applyTransform(AnimationEntity entity, boolean blendingEnabled, float partialTicks, double offset){
 		//Get rotation.
-		double rotation = entity.getAnimatedVariableValue(definition, offset, getClock(entity), partialTicks);
+		double rotation = entity.getAnimatedVariableValue(entity.renderAnimationClocks.get(definition), offset, partialTicks);
 		
 		//Do rotation.
 		if(definition.addPriorOffset){

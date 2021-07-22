@@ -17,7 +17,10 @@ import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
+import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
+import minecrafttransportsimulator.jsondefs.JSONCameraObject;
+import minecrafttransportsimulator.jsondefs.JSONLight;
 import minecrafttransportsimulator.jsondefs.JSONParticle;
 import minecrafttransportsimulator.jsondefs.JSONSound;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
@@ -28,7 +31,6 @@ import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.rendering.components.ARenderEntity;
 import minecrafttransportsimulator.rendering.components.DurationDelayClock;
-import minecrafttransportsimulator.rendering.components.LightType;
 import minecrafttransportsimulator.sound.InterfaceSound;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -50,6 +52,9 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	/**The current subName for this entity.  Used to select which definition represents this entity.*/
 	public String subName;
 	
+	/**Variable for saving animation initialized state.  Is set true on the first tick, but may be set false afterwards to re-initialize animations.*/
+	public boolean animationsInitialized;
+	
 	/**Map containing text lines for saved text provided by this entity.**/
 	public final LinkedHashMap<JSONText, String> text = new LinkedHashMap<JSONText, String>();
 	
@@ -57,17 +62,27 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	public final Set<String> variablesOn = new HashSet<String>();
 	
 	private final List<JSONSound> allSoundDefs = new ArrayList<JSONSound>();
-	private final LinkedHashMap<JSONSound, LinkedHashMap<JSONAnimationDefinition, DurationDelayClock>> soundActiveClocks = new LinkedHashMap<JSONSound, LinkedHashMap<JSONAnimationDefinition, DurationDelayClock>>();
-	private final LinkedHashMap<JSONSound, LinkedHashMap<JSONAnimationDefinition, DurationDelayClock>> soundVolumeClocks = new LinkedHashMap<JSONSound, LinkedHashMap<JSONAnimationDefinition, DurationDelayClock>>();
-	private final LinkedHashMap<JSONSound, LinkedHashMap<JSONAnimationDefinition, DurationDelayClock>> soundPitchClocks = new LinkedHashMap<JSONSound, LinkedHashMap<JSONAnimationDefinition, DurationDelayClock>>();
-	private final LinkedHashMap<JSONParticle, LinkedHashMap<JSONAnimationDefinition, DurationDelayClock>> particleActiveClocks = new LinkedHashMap<JSONParticle, LinkedHashMap<JSONAnimationDefinition, DurationDelayClock>>();
-	private final LinkedHashMap<JSONParticle, Long> lastTickParticleSpawned = new LinkedHashMap<JSONParticle, Long>();
+	private final Map<JSONSound, List<DurationDelayClock>> soundActiveClocks = new HashMap<JSONSound, List<DurationDelayClock>>();
+	private final Map<JSONSound, List<DurationDelayClock>> soundVolumeClocks = new HashMap<JSONSound, List<DurationDelayClock>>();
+	private final Map<JSONSound, List<DurationDelayClock>> soundPitchClocks = new HashMap<JSONSound, List<DurationDelayClock>>();
+	private final Map<JSONLight, List<DurationDelayClock>> lightBrightnessClocks = new HashMap<JSONLight, List<DurationDelayClock>>();
+	private final Map<JSONParticle, List<DurationDelayClock>> particleActiveClocks = new HashMap<JSONParticle, List<DurationDelayClock>>();
+	private final Map<JSONParticle, Long> lastTickParticleSpawned = new HashMap<JSONParticle, Long>();
+	
+	/**Maps rendering animations to their respective clocks.  Used only for the rendering JSON section.**/
+	public final Map<JSONAnimationDefinition, DurationDelayClock> renderAnimationClocks = new HashMap<JSONAnimationDefinition, DurationDelayClock>();
+	
+	/**Maps camera animations to their respective clocks.  Used only for the camera JSON section.**/
+	public final Map<JSONAnimationDefinition, DurationDelayClock> cameraAnimationClocks = new HashMap<JSONAnimationDefinition, DurationDelayClock>();
+	
+	/**Maps light definitions to their current brightness.  This is updated every frame prior to rendering.**/
+	public final Map<JSONLight, Float> lightBrightnessValues = new HashMap<JSONLight, Float>();
 	
 	/**Constructor for synced entities**/
 	public AEntityC_Definable(WrapperWorld world, WrapperNBT data){
 		super(world, data);
 		//Set definition and current subName.
-		//TODO remove when packs have converted, as we previously used these fields on TEs.
+		//TODO remove forwarding in V21.
 		this.subName = data.getString("subName");
 		if(subName.isEmpty()){
 			subName = data.getString("currentSubName");
@@ -94,12 +109,6 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 		if(definition.rendering != null && definition.rendering.constants != null){
 			variablesOn.addAll(definition.rendering.constants);
 		}
-		
-		//Make sure the generic light is in the variable set.
-		this.variablesOn.add(LightType.GENERICLIGHT.lowercaseName);
-		
-		//Create all clocks.
-		populateMaps();
 	}
 	
 	/**Constructor for un-synced entities.  Allows for specification of position/motion/angles.**/
@@ -108,16 +117,23 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 		this.subName = creatingItem.subName;
 		this.definition = creatingItem.definition;
 		
-		//Make sure the generic light is in the variable set.
-		this.variablesOn.add(LightType.GENERICLIGHT.lowercaseName);
-		
 		//Add constants.
 		if(definition.rendering != null && definition.rendering.constants != null){
 			variablesOn.addAll(definition.rendering.constants);
 		}
-		
-		//Create all clocks.
-		populateMaps();
+	}
+	
+	@Override
+	public boolean update(){
+		if(super.update()){
+			if(!animationsInitialized){
+				initializeAnimations();
+				animationsInitialized = true;
+			}
+			return true;
+		}else{
+			return false;
+		}
 	}
 	
 	/**
@@ -149,10 +165,11 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	}
 	
 	/**
-	 *  Helper method for populating rendering, sound, and particle maps.
+	 *  Called the first update tick after this entity is first constructed, and when the definition on it is reset via hotloading.
+	 *  This should create (and reset) all animation clocks and other static objects that depend on the definition. 
 	 */
-	private void populateMaps(){
-		//Add us to the entity rendering list..
+	protected void initializeAnimations(){
+		//Add us to the entity rendering list.
 		Set<AEntityC_Definable<?>> worldEntities = renderableEntities.get(world);
 		if(worldEntities == null){
 			worldEntities = new HashSet<AEntityC_Definable<?>>();
@@ -168,42 +185,84 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 			for(JSONSound soundDef : definition.rendering.sounds){
 				allSoundDefs.add(soundDef);
 				
-				LinkedHashMap<JSONAnimationDefinition, DurationDelayClock> activeClocks = new LinkedHashMap<JSONAnimationDefinition, DurationDelayClock>();
+				List<DurationDelayClock> activeClocks = new ArrayList<DurationDelayClock>();
 				if(soundDef.activeAnimations !=  null){
 					for(JSONAnimationDefinition animation : soundDef.activeAnimations){
-						activeClocks.put(animation, new DurationDelayClock(animation));
+						activeClocks.add(new DurationDelayClock(animation));
 					}
 				}
 				soundActiveClocks.put(soundDef, activeClocks);
 				
-				LinkedHashMap<JSONAnimationDefinition, DurationDelayClock> volumeClocks = new LinkedHashMap<JSONAnimationDefinition, DurationDelayClock>();
+				List<DurationDelayClock> volumeClocks = new ArrayList<DurationDelayClock>();
 				if(soundDef.volumeAnimations !=  null){
 					for(JSONAnimationDefinition animation : soundDef.volumeAnimations){
-						volumeClocks.put(animation, new DurationDelayClock(animation));
+						volumeClocks.add(new DurationDelayClock(animation));
 					}
 				}
 				soundVolumeClocks.put(soundDef, volumeClocks);
 				
-				LinkedHashMap<JSONAnimationDefinition, DurationDelayClock> pitchClocks = new LinkedHashMap<JSONAnimationDefinition, DurationDelayClock>();
+				List<DurationDelayClock> pitchClocks = new ArrayList<DurationDelayClock>();
 				if(soundDef.pitchAnimations != null){
 					for(JSONAnimationDefinition animation : soundDef.pitchAnimations){
-						pitchClocks.put(animation, new DurationDelayClock(animation));
+						pitchClocks.add(new DurationDelayClock(animation));
 					}
 				}
 				soundPitchClocks.put(soundDef, pitchClocks);
 			}
 		}
+		
+		lightBrightnessClocks.clear();
+		lightBrightnessValues.clear();
+		if(definition.rendering != null && definition.rendering.lightObjects != null){
+			for(JSONLight lightDef : definition.rendering.lightObjects){
+				List<DurationDelayClock> lightClocks = new ArrayList<DurationDelayClock>();
+				if(lightDef.brightnessAnimations !=  null){
+					for(JSONAnimationDefinition animation : lightDef.brightnessAnimations){
+						lightClocks.add(new DurationDelayClock(animation));
+					}
+				}
+				lightBrightnessClocks.put(lightDef, lightClocks);
+				lightBrightnessValues.put(lightDef, 0F);
+			}
+		}
+		
 		particleActiveClocks.clear();
 		if(definition.rendering != null && definition.rendering.particles != null){
 			for(JSONParticle particleDef : definition.rendering.particles){
-				LinkedHashMap<JSONAnimationDefinition, DurationDelayClock> activeClocks = new LinkedHashMap<JSONAnimationDefinition, DurationDelayClock>();
+				List<DurationDelayClock> activeClocks = new ArrayList<DurationDelayClock>();
 				if(particleDef.activeAnimations !=  null){
 					for(JSONAnimationDefinition animation : particleDef.activeAnimations){
-						activeClocks.put(animation, new DurationDelayClock(animation));
+						activeClocks.add(new DurationDelayClock(animation));
 					}
 				}
 				particleActiveClocks.put(particleDef, activeClocks);
 				lastTickParticleSpawned.put(particleDef, ticksExisted);
+			}
+		}
+		
+		renderAnimationClocks.clear();
+		if(definition.rendering != null){
+			if(definition.rendering.animatedObjects != null){
+				for(JSONAnimatedObject animatedObject : definition.rendering.animatedObjects){
+					if(animatedObject.animations != null){
+						for(JSONAnimationDefinition animation : animatedObject.animations){
+							renderAnimationClocks.put(animation, new DurationDelayClock(animation));
+						}
+					}
+				}
+			}
+		}
+		
+		cameraAnimationClocks.clear();
+		if(definition.rendering != null){
+			if(definition.rendering.cameraObjects != null){
+				for(JSONCameraObject cameraObject : definition.rendering.cameraObjects){
+					if(cameraObject.animations != null){
+						for(JSONAnimationDefinition animation : cameraObject.animations){
+							cameraAnimationClocks.put(animation, new DurationDelayClock(animation));
+						}
+					}
+				}
 			}
 		}
 	}
@@ -266,14 +325,6 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
     }
     
     /**
-	 *  Called to reset the definition for this entity.  At this point, the definition will
-	 *  already updated, so this is more for updating cached variables.
-	 */
-    public void onDefinitionReset(){
-    	populateMaps();
-    }
-    
-    /**
    	 *  Spawns particles for this entity.  This is called after every render frame, so
    	 *  watch your methods to prevent spam.  Note that this method is not called if the
    	 *  game is paused, as particles are assumed to only be spawned during normal entity
@@ -281,24 +332,24 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
    	 */
     public void spawnParticles(float partialTicks){
     	//Check all particle defs and update the existing particles accordingly.
-    	for(JSONParticle particleDef : particleActiveClocks.keySet()){
+    	for(Entry<JSONParticle, List<DurationDelayClock>> particleEntry : particleActiveClocks.entrySet()){
+    		JSONParticle particleDef = particleEntry.getKey();
     		//Check if the particle should be spawned this tick.
     		boolean shouldParticleSpawn = true;
 			boolean anyClockMovedThisUpdate = false;
 			if(particleDef.activeAnimations != null){
 				boolean inhibitAnimations = false;
-				for(JSONAnimationDefinition animation : particleDef.activeAnimations){
-					switch(animation.animationType){
+				for(DurationDelayClock clock : particleEntry.getValue()){
+					switch(clock.animation.animationType){
 						case VISIBILITY :{
 							//We use the clock here to check if the state of the variable changed, not
 							//to clamp the value used in the testing.
 							if(!inhibitAnimations){
-								DurationDelayClock clock = particleActiveClocks.get(particleDef).get(animation);
-								double variableValue = animation.offset + getAnimatedVariableValue(animation, 0, clock, partialTicks);
+								double variableValue = clock.animation.offset + getAnimatedVariableValue(clock, 0, partialTicks);
 								if(!anyClockMovedThisUpdate){
 									anyClockMovedThisUpdate = clock.movedThisUpdate;
 								}
-								if(variableValue < animation.clampMin || variableValue > animation.clampMax){
+								if(variableValue < clock.animation.clampMin || variableValue > clock.animation.clampMax){
 									shouldParticleSpawn = false;
 								}
 							}
@@ -306,8 +357,8 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 						}
 						case INHIBITOR :{
 							if(!inhibitAnimations){
-								double variableValue = getAnimatedVariableValue(animation, 0, particleActiveClocks.get(particleDef).get(animation), partialTicks);
-								if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
+								double variableValue = getAnimatedVariableValue(clock, 0, partialTicks);
+								if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
 									inhibitAnimations = true;
 								}
 							}
@@ -315,8 +366,8 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 						}
 						case ACTIVATOR :{
 							if(inhibitAnimations){
-								double variableValue = getAnimatedVariableValue(animation, 0, particleActiveClocks.get(particleDef).get(animation), partialTicks);
-								if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
+								double variableValue = getAnimatedVariableValue(clock, 0, partialTicks);
+								if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
 									inhibitAnimations = false;
 								}
 							}
@@ -356,6 +407,60 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 			}
     	}
     }
+    
+    /**
+   	 *  Updates the light brightness values contained in {@link #lightBrightnessValues}.  This is done
+   	 *  every frame for all light definitions to prevent excess calculations caused by multiple
+   	 *  lighting components for the light re-calculating the same value multiple times a frame.
+   	 *  An example of this is a light with a bean and flare component. 
+   	 */
+    public void updateLightBrightness(float partialTicks){
+		for(JSONLight lightObject : lightBrightnessClocks.keySet()){
+			float lightLevel = 1.0F;
+			boolean inhibitAnimations = false;
+			for(DurationDelayClock clock : lightBrightnessClocks.get(lightObject)){
+				switch(clock.animation.animationType){
+					case VISIBILITY :{
+						//Do nothing.
+						break;
+					}
+					case INHIBITOR :{
+						if(!inhibitAnimations){
+							double variableValue = getAnimatedVariableValue(clock, 0, partialTicks);
+							if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
+								inhibitAnimations = true;
+							}
+						}
+						break;
+					}
+					case ACTIVATOR :{
+						if(inhibitAnimations){
+							double variableValue = getAnimatedVariableValue(clock, 0, partialTicks);
+							if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
+								inhibitAnimations = false;
+							}
+						}
+						break;
+					}
+					case TRANSLATION :{
+						if(!inhibitAnimations){
+							lightLevel *= getAnimatedVariableValue(clock, 0, partialTicks);
+						}
+						break;
+					}
+					case ROTATION :{
+						//Do nothing.
+						break;
+					}
+					case SCALING :{
+						//Do nothing.
+						break;
+					}
+				}
+			}
+			lightBrightnessValues.put(lightObject, lightLevel);
+		}
+    }
 	
 	/**
 	 *  Returns the raw value for the passed-in variable.  If the variable is not present, NaM
@@ -385,11 +490,13 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 		}
 		
 		//Check if this is a cycle variable.
-		if(variable.endsWith("cycle")){
+		if(variable.endsWith("_cycle")){
 			String[] parsedVariable = variable.split("_");
-			int onTime = Integer.valueOf(parsedVariable[0]);
-			int totalTime = onTime + Integer.valueOf(parsedVariable[1]); 
-			return world.getTick()%totalTime < onTime ? 1 : 0;
+			int offTime = Integer.valueOf(parsedVariable[0]);
+			int onTime = Integer.valueOf(parsedVariable[1]);
+			int totalTime = offTime + onTime + Integer.valueOf(parsedVariable[2]);
+			long timeInCycle = world.getTick()%totalTime;
+			return timeInCycle > offTime && timeInCycle - offTime < onTime ? 1 : 0;
 		}
 		
 		//Check if this is a generic variable.  This contains lights in most cases.
@@ -407,15 +514,15 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	 *  this functionality is not required.  The passed-in clock may be null to prevent duration/delay functionality.
 	 *  Returns the value of the variable, or 0 if the variable is not valid.
 	 */
-	public final double getAnimatedVariableValue(JSONAnimationDefinition animation, double offset, DurationDelayClock clock, float partialTicks){
-		double value = getRawVariableValue(animation.variable, partialTicks);
+	public final double getAnimatedVariableValue(DurationDelayClock clock, double offset, float partialTicks){
+		double value = getRawVariableValue(clock.animation.variable, partialTicks);
 		if(Double.isNaN(value)){
 			value = 0;
 		}
-		if(clock == null || !clock.isUseful){
-			return clampAndScale(value, animation, offset);
+		if(!clock.isUseful){
+			return clampAndScale(value, clock.animation, offset);
 		}else{
-			return clampAndScale(clock.getFactoredState(this, value), animation, offset);
+			return clampAndScale(clock.getFactoredState(this, value), clock.animation, offset);
 		}
 	}
 	
@@ -468,20 +575,19 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
     		boolean playerRidingEntity = this.equals(entityRiding) || (this instanceof APart && ((APart) this).entityOn.equals(entityRiding));
     		boolean shouldSoundPlay = playerRidingEntity && InterfaceClient.inFirstPerson() ? !soundDef.isExterior : !soundDef.isInterior;
 			boolean anyClockMovedThisUpdate = false;
-			if(shouldSoundPlay && soundDef.activeAnimations != null){
+			if(shouldSoundPlay && soundActiveClocks.containsKey(soundDef)){
 				boolean inhibitAnimations = false;
-				for(JSONAnimationDefinition animation : soundDef.activeAnimations){
-					switch(animation.animationType){
+				for(DurationDelayClock clock : soundActiveClocks.get(soundDef)){
+					switch(clock.animation.animationType){
 						case VISIBILITY :{
 							//We use the clock here to check if the state of the variable changed, not
 							//to clamp the value used in the testing.
 							if(!inhibitAnimations){
-								DurationDelayClock clock = soundActiveClocks.get(soundDef).get(animation);
-								double variableValue = animation.offset + getAnimatedVariableValue(animation, 0, clock, 0);
+								double variableValue = clock.animation.offset + getAnimatedVariableValue(clock, 0, 0);
 								if(!anyClockMovedThisUpdate){
 									anyClockMovedThisUpdate = clock.movedThisUpdate;
 								}
-								if(variableValue < animation.clampMin || variableValue > animation.clampMax){
+								if(variableValue < clock.animation.clampMin || variableValue > clock.animation.clampMax){
 									shouldSoundPlay = false;
 								}
 							}
@@ -489,8 +595,8 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 						}
 						case INHIBITOR :{
 							if(!inhibitAnimations){
-								double variableValue = getAnimatedVariableValue(animation, 0, soundActiveClocks.get(soundDef).get(animation), 0);
-								if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
+								double variableValue = getAnimatedVariableValue(clock, 0, 0);
+								if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
 									inhibitAnimations = true;
 								}
 							}
@@ -498,8 +604,8 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 						}
 						case ACTIVATOR :{
 							if(inhibitAnimations){
-								double variableValue = getAnimatedVariableValue(animation, 0, soundActiveClocks.get(soundDef).get(animation), 0);
-								if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
+								double variableValue = getAnimatedVariableValue(clock, 0, 0);
+								if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
 									inhibitAnimations = false;
 								}
 							}
@@ -574,17 +680,17 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 			if(sound != null){
 				//Adjust volume.
 				sound.volume = 1;
-				if(soundDef.volumeAnimations != null && !soundDef.volumeAnimations.isEmpty()){
+				if(soundVolumeClocks.containsKey(soundDef)){
 					boolean inhibitAnimations = false;
 					boolean definedVolume = false;
 					inhibitAnimations = false;
 					sound.volume = 0;
-					for(JSONAnimationDefinition animation : soundDef.volumeAnimations){
-						switch(animation.animationType){
+					for(DurationDelayClock clock : soundVolumeClocks.get(soundDef)){
+						switch(clock.animation.animationType){
 							case TRANSLATION :{
 								if(!inhibitAnimations){
 									definedVolume = true;
-									sound.volume += Math.signum(animation.axis.y)*getAnimatedVariableValue(animation, -animation.offset, soundVolumeClocks.get(soundDef).get(animation), 0) + animation.offset;
+									sound.volume += Math.signum(clock.animation.axis.y)*getAnimatedVariableValue(clock, -clock.animation.offset, 0) + clock.animation.offset;
 								}
 								break;
 							}
@@ -592,22 +698,22 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 								if(!inhibitAnimations){
 									definedVolume = true;
 									//Need to parse out parabola params here to not upset the axis calcs.
-									double parabolaParamA = animation.axis.x;
-									animation.axis.x = 0;
-									double parabolaParamH = animation.axis.z;
-									animation.axis.z = 0;
-									double parabolaValue = Math.signum(animation.axis.y)*getAnimatedVariableValue(animation, -animation.offset, soundVolumeClocks.get(soundDef).get(animation), 0);
-									sound.volume += parabolaParamA*Math.pow(parabolaValue - parabolaParamH, 2) + animation.offset;
+									double parabolaParamA = clock.animation.axis.x;
+									clock.animation.axis.x = 0;
+									double parabolaParamH = clock.animation.axis.z;
+									clock.animation.axis.z = 0;
+									double parabolaValue = Math.signum(clock.animation.axis.y)*getAnimatedVariableValue(clock, -clock.animation.offset, 0);
+									sound.volume += parabolaParamA*Math.pow(parabolaValue - parabolaParamH, 2) + clock.animation.offset;
 									
-									animation.axis.x = parabolaParamA;
-									animation.axis.z = parabolaParamH;
+									clock.animation.axis.x = parabolaParamA;
+									clock.animation.axis.z = parabolaParamH;
 								}
 								break;
 							}
 							case INHIBITOR :{
 								if(!inhibitAnimations){
-									double variableValue = getAnimatedVariableValue(animation, 0, soundVolumeClocks.get(soundDef).get(animation), 0);
-									if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
+									double variableValue = getAnimatedVariableValue(clock, 0, 0);
+									if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
 										inhibitAnimations = true;
 									}
 								}
@@ -615,8 +721,8 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 							}
 							case ACTIVATOR :{
 								if(inhibitAnimations){
-									double variableValue = getAnimatedVariableValue(animation, 0, soundVolumeClocks.get(soundDef).get(animation), 0);
-									if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
+									double variableValue = getAnimatedVariableValue(clock, 0, 0);
+									if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
 										inhibitAnimations = false;
 									}
 								}
@@ -646,36 +752,36 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 				}
 				
 				//Adjust pitch.
-				if(soundDef.pitchAnimations != null && !soundDef.pitchAnimations.isEmpty()){
+				if(soundPitchClocks.containsKey(soundDef)){
 					boolean inhibitAnimations = false;
 					sound.pitch = 0;
-					for(JSONAnimationDefinition animation : soundDef.pitchAnimations){
-						switch(animation.animationType){
+					for(DurationDelayClock clock : soundPitchClocks.get(soundDef)){
+						switch(clock.animation.animationType){
 							case TRANSLATION :{
 								if(!inhibitAnimations){
-									sound.pitch += Math.signum(animation.axis.y)*getAnimatedVariableValue(animation, -animation.offset, soundPitchClocks.get(soundDef).get(animation), 0) + animation.offset;
+									sound.pitch += Math.signum(clock.animation.axis.y)*getAnimatedVariableValue(clock, -clock.animation.offset, 0) + clock.animation.offset;
 								}
 								break;
 							}
 							case ROTATION :{
 								if(!inhibitAnimations){
 									//Need to parse out parabola params here to not upset the axis calcs.
-									double parabolaParamA = animation.axis.x;
-									animation.axis.x = 0;
-									double parabolaParamH = animation.axis.z;
-									animation.axis.z = 0;
-									double parabolaValue = Math.signum(animation.axis.y)*getAnimatedVariableValue(animation, -animation.offset, soundPitchClocks.get(soundDef).get(animation), 0);
-									sound.pitch += parabolaParamA*Math.pow(parabolaValue - parabolaParamH, 2) + animation.offset;
+									double parabolaParamA = clock.animation.axis.x;
+									clock.animation.axis.x = 0;
+									double parabolaParamH = clock.animation.axis.z;
+									clock.animation.axis.z = 0;
+									double parabolaValue = Math.signum(clock.animation.axis.y)*getAnimatedVariableValue(clock, -clock.animation.offset, 0);
+									sound.pitch += parabolaParamA*Math.pow(parabolaValue - parabolaParamH, 2) + clock.animation.offset;
 									
-									animation.axis.x = parabolaParamA;
-									animation.axis.z = parabolaParamH;
+									clock.animation.axis.x = parabolaParamA;
+									clock.animation.axis.z = parabolaParamH;
 								}
 								break;
 							}
 							case INHIBITOR :{
 								if(!inhibitAnimations){
-									double variableValue = getAnimatedVariableValue(animation, 0, soundPitchClocks.get(soundDef).get(animation), 0);
-									if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
+									double variableValue = getAnimatedVariableValue(clock, 0, 0);
+									if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
 										inhibitAnimations = true;
 									}
 								}
@@ -683,8 +789,8 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 							}
 							case ACTIVATOR :{
 								if(inhibitAnimations){
-									double variableValue = getAnimatedVariableValue(animation, 0, soundPitchClocks.get(soundDef).get(animation), 0);
-									if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
+									double variableValue = getAnimatedVariableValue(clock, 0, 0);
+									if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
 										inhibitAnimations = false;
 									}
 								}

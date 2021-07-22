@@ -570,6 +570,7 @@ public class PartEngine extends APart{
 			case("engine_clutch_upshift"): return upshiftCountdown > 0 ? 1 : 0;
 			case("engine_clutch_downshift"): return downshiftCountdown > 0 ? 1 : 0;
 			case("engine_badshift"): return badShift ? 1 : 0;
+			case("engine_reversed"): return currentGear < 0 ? 1 : 0;
 			case("engine_magneto"): return state.magnetoOn ? 1 : 0;
 			case("engine_starter"): return state.esOn || state.hsOn ? 1 : 0;
 			case("engine_running"): return state.running ? 1 : 0;

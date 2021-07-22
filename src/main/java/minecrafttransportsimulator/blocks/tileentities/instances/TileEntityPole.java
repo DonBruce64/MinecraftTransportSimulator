@@ -38,16 +38,16 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent> implement
 		for(Axis axis : Axis.values()){
 			WrapperNBT componentData = data.getData(axis.name());
 			if(componentData != null){
-				ATileEntityPole_Component newComponent = PoleComponentType.createComponent(this, componentData);
+				ATileEntityPole_Component newComponent = PoleComponentType.createComponent(this, axis, componentData);
 				components.put(axis, newComponent);
 			}else if(axis.equals(Axis.NONE)){
 				//Add our core component to the NONE axis.
 				//This is done for ease of rendering and lookup routines.
-				components.put(axis, PoleComponentType.createComponent(this, getItem().validateData(null)));
+				components.put(axis, PoleComponentType.createComponent(this, axis, getItem().validateData(null)));
 			}
 		}
 		
-		//TODO remove legacy loader a few versions down the line.
+		//TODO remove legacy NBT loading code in V21.
 		for(Axis axis : Axis.values()){
 			String componentPackID = data.getString("packID" + axis.ordinal());
 			if(!componentPackID.isEmpty()){
@@ -65,7 +65,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent> implement
 					}
 				}
 				
-				ATileEntityPole_Component newComponent = PoleComponentType.createComponent(this, fakeData);
+				ATileEntityPole_Component newComponent = PoleComponentType.createComponent(this, axis, fakeData);
 				components.put(axis, newComponent);
 			}
 		}
@@ -78,6 +78,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent> implement
 			for(Axis axis : Axis.values()){
 				if(components.containsKey(axis)){
 					ATileEntityPole_Component component = components.get(axis);
+					component.update();
 					if(axis.equals(Axis.NONE)){
 						component.position.setTo(position);
 						component.angles.setTo(angles);

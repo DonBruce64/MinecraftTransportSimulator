@@ -2,7 +2,7 @@
 	"parent": "mts:seatbench",
 	"display": {
 		"icon": {
-            "item": "mts:fuelhose"
+            "item": "mts:mts.fuelhose"
         },
         "title": {
             "translate": "advancements.mts.fuelhose.title"
@@ -17,7 +17,7 @@
 			"conditions": {
 				"items": [
 					{
-						"item": "mts:fuelhose"
+						"item": "mts:mts.fuelhose"
 					}
 				]
 			}

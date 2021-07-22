@@ -69,19 +69,17 @@ public class GUIComponentTextBox{
 			if(control.equals(TextBoxControlKey.BACKSPACE)){
 				if(position != 0){
 					//Remove the char before the current position.
-					String newText = text.substring(0, position - 1) + text.substring(position, text.length()); 
-					if(validateText(newText)){
-						text = newText;
-						--position;
+					text = text.substring(0, position - 1) + text.substring(position, text.length());
+					--position;
+					if(isTextValid(text)){
 						handleTextChange();
 					}
 				}
 			}else if(control.equals(TextBoxControlKey.DELETE)){
 				if(position != text.length()){
 					//Remove the char at the current position.
-					String newText = text.substring(0, position) + text.substring(position + 1, text.length());
-					if(validateText(newText)){
-						text = newText;
+					text = text.substring(0, position) + text.substring(position + 1, text.length());
+					if(isTextValid(text)){
 						handleTextChange();
 					}
 				}
@@ -96,10 +94,9 @@ public class GUIComponentTextBox{
 			}
 		}else if(Character.isLetterOrDigit(typedChar) || VALID_SPECIAL_CHARS.contains(Character.toString(typedChar))){
 			if(text.length() < maxTextLength){
-				String newText = text.substring(0, position) + typedChar + text.substring(position, text.length());
-				if(validateText(newText)){
-					text = newText;
-					++position;
+				text = text.substring(0, position) + typedChar + text.substring(position, text.length());
+				++position;
+				if(isTextValid(text)){
 					handleTextChange();
 				}
 			}
@@ -116,12 +113,10 @@ public class GUIComponentTextBox{
 	}
 	
 	/**
-	 *  Validates the text.  This is called with new text prior to setting it.
-	 *  If the function returns false, then the text will not change.
-	 *  This is only called for key presses, as it is assumed that the code-based
-	 *  text will already be validated to the appropriate data type.
+	 *  Returns true if this text is valid for this text box.  This won't prevent invalid text from being entered,
+	 *  but will prevent {@link #handleTextChange()} from being called if the text is invalid.
 	 */
-	public boolean validateText(String newText){
+	public boolean isTextValid(String newText){
 		return true;
 	}
 	
@@ -160,7 +155,8 @@ public class GUIComponentTextBox{
 	
 	/**
 	 *  Called when text is changed in this text box.  This happens only after a keypress
-	 *  changes the text.  By default does nothing, but may be extended if desired.
+	 *  changes the text, and {@link #isTextValid(String)} returns true.  This ensures that
+	 *  only valid text changes are processed.  By default this method does nothing.
 	 */
 	public void handleTextChange(){}
 	

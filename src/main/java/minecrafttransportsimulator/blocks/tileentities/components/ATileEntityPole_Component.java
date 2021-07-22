@@ -16,12 +16,14 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 public abstract class ATileEntityPole_Component extends AEntityC_Definable<JSONPoleComponent>{
 	
 	public final TileEntityPole core;
+	public final Axis axis;
 	
 	private static RenderPoleComponent renderer;
 	
-	public ATileEntityPole_Component(TileEntityPole core, WrapperNBT data){
+	public ATileEntityPole_Component(TileEntityPole core, Axis axis, WrapperNBT data){
 		super(core.world, data);
 		this.core = core;
+		this.axis = axis;
 	}
 	
 	@Override
@@ -38,14 +40,14 @@ public abstract class ATileEntityPole_Component extends AEntityC_Definable<JSONP
 		
 		//Check connector variables.
 		if(variable.startsWith("neighbor_present_")){
-			Axis axis = Axis.valueOf(variable.substring("neighbor_present_".length()).toUpperCase());
+			Axis connectionAxis = Axis.valueOf(variable.substring("neighbor_present_".length()).toUpperCase());
 			ABlockBase componentBlock = world.getBlock(core.position);
-			return componentBlock != null && componentBlock.equals(world.getBlock(axis.getOffsetPoint(position))) ? 1 : 0;
+			return componentBlock != null && componentBlock.equals(world.getBlock(connectionAxis.getOffsetPoint(position))) ? 1 : 0;
 		}
 		//Check solid block variables.
 		if(variable.startsWith("solid_present_")){
-			Axis axis = Axis.valueOf(variable.substring("solid_present_".length()).toUpperCase());
-			return world.isBlockSolid(axis.getOffsetPoint(position), axis.getOpposite()) ? 1 : 0;
+			Axis connectionAxis = Axis.valueOf(variable.substring("solid_present_".length()).toUpperCase());
+			return world.isBlockSolid(connectionAxis.getOffsetPoint(position), connectionAxis.getOpposite()) ? 1 : 0;
 		}
 		//Check slab variables.
 		switch(variable){

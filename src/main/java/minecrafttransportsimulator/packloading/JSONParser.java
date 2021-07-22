@@ -13,8 +13,10 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -256,6 +258,41 @@ public class JSONParser{
 		}
 	};
 	
+	private static final TypeAdapter<Set<String>> stringSetAdapter = new TypeAdapter<Set<String>>(){	
+		@Override
+		public Set<String> read(JsonReader reader) throws IOException{
+			if(reader.peek() == JsonToken.NULL){
+				reader.nextNull();
+				return null;
+			}else{
+				Set<String> value = new HashSet<String>();
+				reader.beginArray();
+				while(reader.hasNext()){
+					value.add(reader.nextString());
+				}
+				reader.endArray();
+				return value;
+			}
+		}
+		
+		@Override
+		public void write(JsonWriter writer, Set<String> value) throws IOException{
+			if(value == null){
+				writer.nullValue();
+			}else{
+				//Setting the indent to nothing prevents GSON from applying newlines to lists.
+				//We need to set the indent to the value afterwards though to keep pretty printing.
+				writer.beginArray();
+				writer.setIndent("");
+				for(String item : value){
+					writer.value(item);
+				}
+				writer.endArray();
+				writer.setIndent("  ");
+			}
+		}
+	};
+	
 	private static final TypeAdapterFactory lowercaseEnumFactory = new TypeAdapterFactory(){
 		@Override
 		public <EnumType> TypeAdapter<EnumType> create(Gson gson, TypeToken<EnumType> type){
@@ -309,6 +346,7 @@ public class JSONParser{
 				.registerTypeAdapter(new TypeToken<List<Integer>>(){}.getType(), intListAdapter)
 				.registerTypeAdapter(new TypeToken<List<Float>>(){}.getType(), floatListAdapter)
 				.registerTypeAdapter(new TypeToken<List<String>>(){}.getType(), stringListAdapter)
+				.registerTypeAdapter(new TypeToken<Set<String>>(){}.getType(), stringSetAdapter)
 				.registerTypeAdapterFactory(lowercaseEnumFactory)
 				.create();
 	}
@@ -317,14 +355,7 @@ public class JSONParser{
 	 *  Parses the passed in stream to the passed-in JSON type.
 	 */
 	public static <JSONClass extends Object> JSONClass parseStream(InputStreamReader jsonReader, Class<JSONClass> retClass, String packID, String systemName){
-		JSONClass retObj = packParser.fromJson(jsonReader, retClass);
-		//Do legacy compats if we need before validating the JSON.
-		if(retObj instanceof AJSONItem){
-			LegacyCompatSystem.performLegacyCompats((AJSONItem) retObj, packID, systemName);
-		}
-		//Check for proper fields.
-		validateFields(retObj, "/", 1);
-		return retObj;
+		return packParser.fromJson(jsonReader, retClass);
 	}
 	
 	/**
@@ -436,7 +467,7 @@ public class JSONParser{
 				if(entity instanceof AEntityC_Definable){
 					AEntityC_Definable<?> definableEntity = (AEntityC_Definable<?>) entity;
 					if(definitionToOverride.packID.equals(definableEntity.definition.packID) && definitionToOverride.systemName.equals(definableEntity.definition.systemName)){
-						((AEntityC_Definable<?>) entity).onDefinitionReset();
+						((AEntityC_Definable<?>) entity).animationsInitialized = false;
 					}
 				}
 			}
@@ -492,7 +523,7 @@ public class JSONParser{
 	/**
 	 *  Helper method to validate fields.  Used for recursion.
 	 */
-	private static void validateFields(Object obj, String priorObjects, int index){
+	public static void validateFields(Object obj, String priorObjects, int index){
 		//First get all fields that have the annotation with no values.
 		for(Field field : obj.getClass().getFields()){
 			String errorValue = checkRequiredState(field, obj, priorObjects, index);

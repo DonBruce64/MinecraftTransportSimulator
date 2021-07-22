@@ -2,7 +2,7 @@
 	"parent": "mts:rtfm",
 	"display": {
 		"icon": {
-            "item": "mts:partscanner"
+            "item": "mts:mts.partscanner"
         },
         "title": {
             "translate": "advancements.mts.partscanner.title"
@@ -17,7 +17,7 @@
 			"conditions": {
 				"items": [
 					{
-						"item": "mts:partscanner"
+						"item": "mts:mts.partscanner"
 					}
 				]
 			}
