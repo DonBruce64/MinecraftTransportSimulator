@@ -39,7 +39,7 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> implements ITile
 				variablesOn.remove("clicked");
 			}
 			
-			//TODO Convert block-based rotation to internal variable rotation.  This is required for compats moving forwards.  Needs to be here, as the block won't be loaded during TE construction due to MC being stupid.
+			//TODO remove legacy rotation code in V21.
 			if(!converted){
 				if(!world.isAir(position)){
 					this.angles.y = -world.getBlockRotation(position);

@@ -79,7 +79,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 			isBlendedLight = true;
 		}else if(objectName.endsWith(AModelParser.LIGHT_COVER_SUFFIX)){
 			transforms.add(new TransformLight_Cover<AnimationEntity>(lightAnimation));
-		}else if(objectName.endsWith(AModelParser.LIGHT_BEAM_SUFFIX)){
+		}else if(objectName.endsWith(AModelParser.LIGHT_BEAM_SUFFIX) || (lightAnimation != null && lightAnimation.isBeam)){
 			transforms.add(new TransformLight_Beam<AnimationEntity>(lightAnimation));
 			isBlendedLight = true;
 		}else if(lightAnimation != null){

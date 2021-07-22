@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
+import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 
@@ -9,8 +10,8 @@ import minecrafttransportsimulator.mcinterface.WrapperNBT;
  */
 public class TileEntityPole_StreetLight extends ATileEntityPole_Component{
 	
-	public TileEntityPole_StreetLight(TileEntityPole core, WrapperNBT data){
-		super(core, data);
+	public TileEntityPole_StreetLight(TileEntityPole core, Axis axis, WrapperNBT data){
+		super(core, axis, data);
 	}
 
 	@Override

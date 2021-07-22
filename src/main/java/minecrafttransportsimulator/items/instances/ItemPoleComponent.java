@@ -53,13 +53,13 @@ public class ItemPoleComponent extends AItemSubTyped<JSONPoleComponent> implemen
 		 *  Helper method to create a component for the passed-in pole.  Does not add the component
 		 *  to the pole, only creates it.
 		 */
-		public static ATileEntityPole_Component createComponent(TileEntityPole pole, WrapperNBT data){
+		public static ATileEntityPole_Component createComponent(TileEntityPole pole, Axis axis, WrapperNBT data){
 			ItemPoleComponent item = PackParserSystem.getItem(data.getString("packID"), data.getString("systemName"), data.getString("subName"));
 			switch(item.definition.pole.type){
-				case CORE : return new TileEntityPole_Core(pole, data);	
-				case TRAFFIC_SIGNAL : return new TileEntityPole_TrafficSignal(pole, data);
-				case STREET_LIGHT : return new TileEntityPole_StreetLight(pole, data);
-				case SIGN : return new TileEntityPole_Sign(pole, data);
+				case CORE : return new TileEntityPole_Core(pole, axis, data);	
+				case TRAFFIC_SIGNAL : return new TileEntityPole_TrafficSignal(pole, axis, data);
+				case STREET_LIGHT : return new TileEntityPole_StreetLight(pole, axis, data);
+				case SIGN : return new TileEntityPole_Sign(pole, axis, data);
 			}
 			//We'll never get here.
 			return null;

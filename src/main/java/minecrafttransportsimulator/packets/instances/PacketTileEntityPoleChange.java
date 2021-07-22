@@ -86,7 +86,7 @@ public class PacketTileEntityPoleChange extends APacketEntityInteract<TileEntity
 				}
 			}else if(addition && !pole.components.containsKey(axis)){
 				//Player clicked with a component.  Add it.
-				ATileEntityPole_Component newComponent = PoleComponentType.createComponent(pole, data);
+				ATileEntityPole_Component newComponent = PoleComponentType.createComponent(pole, axis, data);
 				pole.components.put(axis, newComponent);
 				pole.updateLightState();
 				if(!player.isCreative()){

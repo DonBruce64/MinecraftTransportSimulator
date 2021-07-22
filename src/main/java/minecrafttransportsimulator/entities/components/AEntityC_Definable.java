@@ -82,7 +82,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	public AEntityC_Definable(WrapperWorld world, WrapperNBT data){
 		super(world, data);
 		//Set definition and current subName.
-		//TODO remove when packs have converted, as we previously used these fields on TEs.
+		//TODO remove forwarding in V21.
 		this.subName = data.getString("subName");
 		if(subName.isEmpty()){
 			subName = data.getString("currentSubName");

@@ -176,7 +176,8 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 	 *  that this will NOT disable supplemental model rendering via {@link #renderSupplementalModels(AEntityC_Definable, float)}.
 	 */
 	public boolean disableMainRendering(RenderedEntity entity, float partialTicks){
-		return false;
+		//Don't render on the first tick, as we might have not created some variables yet.
+		return entity.ticksExisted == 0;
 	}
 	
 	/**

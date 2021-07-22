@@ -1541,27 +1541,64 @@ public final class LegacyCompatSystem{
 						}else if(lowerCaseName.contains("landinglight")){
 							activeAnimation.variable = "landing_light";
 							if(definition instanceof JSONVehicle)((JSONVehicle) definition).motorized.hasLandingLights = true;
-						}else if(lowerCaseName.contains("leftturnlight")){
-							activeAnimation.variable = "left_turn_signal";
-							if(definition instanceof JSONVehicle)((JSONVehicle) definition).motorized.hasTurnSignals = true;
-						}else if(lowerCaseName.contains("rightturnlight")){
-							activeAnimation.variable = "right_turn_signal";
-							if(definition instanceof JSONVehicle)((JSONVehicle) definition).motorized.hasTurnSignals = true;
 						}else if(lowerCaseName.contains("runninglight")){
 							activeAnimation.variable = "running_light";
 							if(definition instanceof JSONVehicle)((JSONVehicle) definition).motorized.hasRunningLights = true;
 						}else if(lowerCaseName.contains("headlight")){
 							activeAnimation.variable = "headlight";
 							if(definition instanceof JSONVehicle)((JSONVehicle) definition).motorized.hasHeadlights = true;
+						}else if(lowerCaseName.contains("leftturnlight")){
+							activeAnimation.variable = "left_turn_signal";
+							if(definition instanceof JSONVehicle)((JSONVehicle) definition).motorized.hasTurnSignals = true;
+						}else if(lowerCaseName.contains("rightturnlight")){
+							activeAnimation.variable = "right_turn_signal";
+							if(definition instanceof JSONVehicle)((JSONVehicle) definition).motorized.hasTurnSignals = true;
 						}else if(lowerCaseName.contains("emergencylight")){
 							activeAnimation.variable = "EMERLTS";
 							if(definition.rendering.customVariables == null){
 								definition.rendering.customVariables = new ArrayList<String>();
 							}
 							if(definition instanceof JSONVehicle)definition.rendering.customVariables.add("EMERLTS");
+						}else if(lowerCaseName.contains("stoplight") || lowerCaseName.contains("cautionlight") || lowerCaseName.contains("golight")){
+							//Traffic signal detected.  Get light name for variable.
+							String[] lightNames = lowerCaseName.split("light");
+							lightNames[0] = lightNames[0].replace("&", "");
+							activeAnimation.variable = lightNames[0] + "_" + "light";
+							if(lightNames.length > 2){
+								activeAnimation.variable += "_" + lightNames[2];
+							}
+							
+							//If the light is a stop light, create a cycle for it for un-linked states.
+							if(lightNames[0].equals("stop")){
+								JSONAnimationDefinition cycleInhibitor = new JSONAnimationDefinition();
+								cycleInhibitor.animationType = AnimationComponentType.INHIBITOR;
+								cycleInhibitor.variable = "linked";
+								cycleInhibitor.clampMin = 1.0F;
+								cycleInhibitor.clampMax = 1.0F;
+								lightDef.brightnessAnimations.add(cycleInhibitor);
+								
+								JSONAnimationDefinition cycleAnimation = new JSONAnimationDefinition();
+								cycleAnimation.animationType = AnimationComponentType.TRANSLATION;
+								cycleAnimation.variable = "0_10_10_cycle";
+								cycleAnimation.axis = new Point3d(0, 1, 0);
+								lightDef.brightnessAnimations.add(cycleAnimation);
+								
+								JSONAnimationDefinition lightActivator = new JSONAnimationDefinition();
+								lightActivator.animationType = AnimationComponentType.ACTIVATOR;
+								lightActivator.variable = "linked";
+								lightActivator.clampMin = 1.0F;
+								lightActivator.clampMax = 1.0F;
+								lightDef.brightnessAnimations.add(lightActivator);
+								
+								JSONAnimationDefinition lightInhibitor = new JSONAnimationDefinition();
+								lightInhibitor.animationType = AnimationComponentType.INHIBITOR;
+								lightInhibitor.variable = "linked";
+								lightInhibitor.clampMin = 0.0F;
+								lightInhibitor.clampMax = 0.0F;
+								lightDef.brightnessAnimations.add(lightInhibitor);
+							}
 						}
 						
-						//FIXME add signal lights here as well as linking states for the stop light.
 						if(activeAnimation.variable != null){
 							activeAnimation.animationType = AnimationComponentType.TRANSLATION;
 							lightDef.brightnessAnimations.add(activeAnimation);

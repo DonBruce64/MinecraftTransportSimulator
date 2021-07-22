@@ -14,7 +14,6 @@ import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.rendering.components.LightType;
 
 /**Traffic signal controller tile entity.  Responsible for keeping the state of traffic
  * intersections.
@@ -39,12 +38,13 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 	public int yellowCrossTime = 2*20;
 	public int allRedTime = 1*20;
 	
-	/*8Locations of blocks where signals are.**/
+	/*Locations of blocks where signals are.**/
 	public final Set<Point3d> componentLocations = new HashSet<Point3d>();
-	private final Set<TileEntityPole> foundPoles = new HashSet<TileEntityPole>();
+	private final Set<Point3d> missingLocations = new HashSet<Point3d>();
 	
 	/**Signal blocks used in this controller.  Based on components.**/
-	public final Set<SignalGroup> signalGroups = new HashSet<SignalGroup>();
+	public final Map<Axis, Set<SignalGroup>> signalGroups = new HashMap<Axis, Set<SignalGroup>>();
+	public final Set<TileEntityPole_TrafficSignal> controlledSignals = new HashSet<TileEntityPole_TrafficSignal>();
 	
 	/**Lane counts and intersection widths.**/
 	public final Map<Axis, IntersectionProperties> intersectionProperties = new HashMap<Axis, IntersectionProperties>();
@@ -62,23 +62,20 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 			//We also check if we're doing changes on the client, as that needs to happen instantly.
 			if(world.getTick()%20 == 0 || unsavedClientChangesPreset){
 				//Check for any missing components, if we are missing some.
-				if(componentLocations.size() > foundPoles.size()){
-					Iterator<Point3d> iterator = componentLocations.iterator();
+				if(!missingLocations.isEmpty()){
+					Iterator<Point3d> iterator = missingLocations.iterator();
 					while(iterator.hasNext()){
 						Point3d poleLocation = iterator.next();
 						TileEntityPole pole = (TileEntityPole) world.getTileEntity(poleLocation);
-						if(pole != null && !foundPoles.contains(pole)){
-							foundPoles.add(pole);
+						if(pole != null){
+							iterator.remove();
 							for(Axis axis : Axis.values()){
 								ATileEntityPole_Component component = pole.components.get(axis);
 								if(component instanceof TileEntityPole_TrafficSignal){
-									//Add to valid poles and set signals for all groups that have that axis.
-									for(SignalGroup signalGroup : signalGroups){
-										if(signalGroup.axis.equals(axis)){
-											signalGroup.controlledSignals.add((TileEntityPole_TrafficSignal) component);
-											signalGroup.setSignals(signalGroup.currentLight);
-										}
-									}
+									TileEntityPole_TrafficSignal signal = (TileEntityPole_TrafficSignal) component;
+									intersectionProperties.get(axis).isActive = true;
+									signal.linkedController = this;
+									controlledSignals.add(signal);
 								}
 							}
 						}
@@ -87,15 +84,24 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 			}
 			
 			//All valid poles and components found.  Update signal blocks that have signals..
-			for(SignalGroup signalGroup : signalGroups){
-				if(!signalGroup.controlledSignals.isEmpty() && signalGroup.laneCount != 0){
-					signalGroup.update();
-				}
+			for(Set<SignalGroup> signalGroupSet : signalGroups.values()){
+	        	for(SignalGroup signalGroup : signalGroupSet){
+					if(signalGroup.laneCount != 0){
+						signalGroup.update();
+					}
+	        	}
 			}
 			return true;
 		}else{
 			return false;
 		}
+	}
+	
+	@Override
+	public void remove(){
+		super.remove();
+		//Clear found poles so signals know we don't exist anymore and to remove their references.
+		clearFoundPoles();
 	}
 	
 	/**
@@ -105,45 +111,55 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 	 *  If the GUI is used, pass null in here to prevent data re-parsing.  Otherwise, pass-in the data.
 	 */
 	public void initializeController(WrapperNBT data){
-		if(data != null){
-			//Load state data.
-			isRightHandDrive = data.getBoolean("isRightHandDrive");
-			timedMode = data.getBoolean("timedMode");
-			String axisName = data.getString("mainDirectionAxis");
-			mainDirectionAxis = axisName.isEmpty() ? Axis.NORTH : Axis.valueOf(axisName);
-			
-			intersectionCenterPoint = data.getPoint3d("intersectionCenterPoint");
-			if(intersectionCenterPoint.isZero()){
-				intersectionCenterPoint.setTo(position);
-			}
-			
-			//Got saved lane info.
-			for(Axis axis : Axis.values()){
+		if(data == null){
+			data = save(new WrapperNBT());
+		}
+		
+		//Load state data.
+		isRightHandDrive = data.getBoolean("isRightHandDrive");
+		timedMode = data.getBoolean("timedMode");
+		String axisName = data.getString("mainDirectionAxis");
+		mainDirectionAxis = axisName.isEmpty() ? Axis.NORTH : Axis.valueOf(axisName);
+		
+		intersectionCenterPoint = data.getPoint3d("intersectionCenterPoint");
+		if(intersectionCenterPoint.isZero()){
+			intersectionCenterPoint.setTo(position);
+		}
+		
+		//Got saved lane info.
+		for(Axis axis : Axis.values()){
+			if(axis.xzPlanar){
 				intersectionProperties.put(axis, new IntersectionProperties(data.getDataOrNew(axis.name() + "properties")));
 			}
-			
-			if(data.getBoolean("hasCustomTimes")){
-				greenMainTime = data.getInteger("greenMainTime");
-		        greenCrossTime = data.getInteger("greenCrossTime");
-		        yellowMainTime = data.getInteger("yellowMainTime");
-		        yellowCrossTime = data.getInteger("yellowCrossTime");
-		        allRedTime = data.getInteger("allRedTime");
-			}
-					
-	        //Set new component locations. 
-			componentLocations.clear();
-	        componentLocations.addAll(data.getPoint3dsCompact("componentLocations"));
-	        
-	        //Create all signal groups.
-	        signalGroups.clear();
-	        for(Axis axis : Axis.values()){
-	        	signalGroups.add(new SignalGroupCenter(axis, data.getDataOrNew(axis.name() + SignalDirection.CENTER.name())));
-	        	signalGroups.add(new SignalGroupLeft(axis, data.getDataOrNew(axis.name() + SignalDirection.LEFT.name())));
-	        	signalGroups.add(new SignalGroupRight(axis, data.getDataOrNew(axis.name() + SignalDirection.RIGHT.name())));
-	        }
-	        
-	        //Set all signals to red, except the main-center ones.
-	        for(SignalGroup signalGroup : signalGroups){
+		}
+		
+		if(data.getBoolean("hasCustomTimes")){
+			greenMainTime = data.getInteger("greenMainTime");
+	        greenCrossTime = data.getInteger("greenCrossTime");
+	        yellowMainTime = data.getInteger("yellowMainTime");
+	        yellowCrossTime = data.getInteger("yellowCrossTime");
+	        allRedTime = data.getInteger("allRedTime");
+		}
+				
+        //Set new component locations.
+		componentLocations.clear();
+        componentLocations.addAll(data.getPoint3dsCompact("componentLocations"));
+        
+        //Create all signal groups.
+        signalGroups.clear();
+        for(Axis axis : Axis.values()){
+        	if(axis.xzPlanar){
+	        	Set<SignalGroup> signalSet = new HashSet<SignalGroup>();
+	        	signalSet.add(new SignalGroupCenter(axis, data.getDataOrNew(axis.name() + SignalDirection.CENTER.name())));
+	        	signalSet.add(new SignalGroupLeft(axis, data.getDataOrNew(axis.name() + SignalDirection.LEFT.name())));
+	        	signalSet.add(new SignalGroupRight(axis, data.getDataOrNew(axis.name() + SignalDirection.RIGHT.name())));
+	        	signalGroups.put(axis, signalSet);
+        	}
+        }
+        
+        //Set all signals to red, except the main-center ones.
+        for(Set<SignalGroup> signalGroupSet : signalGroups.values()){
+        	for(SignalGroup signalGroup : signalGroupSet){
 	        	if(signalGroup.isMainSignal && signalGroup.direction.equals(SignalDirection.CENTER)){
 	        		signalGroup.requestedLight = signalGroup.getGreenLight();
 	        	}else{
@@ -153,11 +169,20 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 	        		signalGroup.requestedLight = null;
 	        	}
 	        	signalGroup.currentCooldown = 0;
-	        }
+        	}
 		}
         
         //Clear all found poles as they won't be found anymore for the set groups.
-        foundPoles.clear();
+		clearFoundPoles();
+	}
+	
+	/**
+	 *  Clear found pole variables.  This is done on controller init or when we are removed.
+	 */
+	public void clearFoundPoles(){
+		controlledSignals.clear();
+		missingLocations.clear();
+		missingLocations.addAll(componentLocations);
 	}
     
 	@Override
@@ -170,7 +195,9 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 		data.setPoint3d("intersectionCenterPoint", intersectionCenterPoint);
 		
 		for(Axis axis : intersectionProperties.keySet()){
-			data.setData(axis.name() + "properties", intersectionProperties.get(axis).getData());
+			if(intersectionProperties.containsKey(axis)){
+				data.setData(axis.name() + "properties", intersectionProperties.get(axis).getData());
+			}
 		}
 		
 		data.setBoolean("hasCustomTimes", true);
@@ -181,13 +208,16 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
         data.setInteger("allRedTime", allRedTime);
         
         data.setPoint3dsCompact("componentLocations", componentLocations);
-        for(SignalGroup signalGroup : signalGroups){
-        	data.setData(signalGroup.axis.name() + signalGroup.direction.name(), signalGroup.getData());
+        for(Set<SignalGroup> signalGroupSet : signalGroups.values()){
+        	for(SignalGroup signalGroup : signalGroupSet){
+        		data.setData(signalGroup.axis.name() + signalGroup.direction.name(), signalGroup.getData());
+        	}
         }
         return data;
     }
 	
 	public static class IntersectionProperties{
+		public boolean isActive;
 		public int centerLaneCount;
 		public int leftLaneCount;
 		public int rightLaneCount;
@@ -220,7 +250,7 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 		public final Axis axis;
 		public final SignalDirection direction;
 		public final boolean isMainSignal;
-		public final Set<TileEntityPole_TrafficSignal> controlledSignals = new HashSet<TileEntityPole_TrafficSignal>();
+		public boolean isActive;
 		
 		protected LightType currentLight;
 		protected LightType requestedLight;
@@ -253,7 +283,8 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 			
 			//Create hitbox bounds.
 			IntersectionProperties properties = intersectionProperties.get(axis);
-			double laneWidth = properties.roadWidth/(properties.leftLaneCount + properties.centerLaneCount + properties.rightLaneCount);
+			int totalLaneCount = properties.leftLaneCount + properties.centerLaneCount + properties.rightLaneCount;
+			double laneWidth = totalLaneCount != 0 ? properties.roadWidth/totalLaneCount : 0;
 			switch(direction){
 				case CENTER: {
 					this.laneCount = properties.centerLaneCount;
@@ -284,13 +315,12 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 			if(requestedLight != null){
 				//Currently changing lights.  Handle this logic instead of signal-based logic.
 				if(currentCooldown == 0){
-					LightType nextLight = getNextLight();
-					setSignals(nextLight);
-					if(nextLight.equals(requestedLight)){
+					currentLight = getNextLight();
+					if(currentLight.equals(requestedLight)){
 						requestedLight = null;
 						//Need to double cooldown here to prevent us from changing the next tick due to the
 						//Opposite light being red.  This prevents us from grabbing the "next" cycle.
-						currentCooldown = nextLight.equals(getRedLight()) ? allRedTime + 20 : 0;
+						currentCooldown = currentLight.equals(getRedLight()) ? allRedTime + 20 : 0;
 					}else{
 						currentCooldown = getSignalCooldown();
 					}
@@ -334,15 +364,17 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 				//Check for blocking signals.  If some are present, don't change state.
 				//Instead, set those to red if we can, and change when able.
 				boolean foundBlockingSignal = false;
-				for(SignalGroup otherSignal : signalGroups){
-					if(!otherSignal.currentLight.equals(otherSignal.getRedLight()) && isSignalBlocking(otherSignal)){
-						//Found blocking signal.  Set to red if able.  Don't do any further checks.
-						foundBlockingSignal = true;
-						if(otherSignal.requestedLight == null && otherSignal.currentCooldown == 0){
-							otherSignal.requestedLight = otherSignal.getRedLight();
-							otherSignal.currentCooldown = otherSignal.getSignalCooldown();
+				for(Set<SignalGroup> signalGroupSet : signalGroups.values()){
+		        	for(SignalGroup otherSignal : signalGroupSet){
+						if(!otherSignal.currentLight.equals(otherSignal.getRedLight()) && isSignalBlocking(otherSignal)){
+							//Found blocking signal.  Set to red if able.  Don't do any further checks.
+							foundBlockingSignal = true;
+							if(otherSignal.requestedLight == null && otherSignal.currentCooldown == 0){
+								otherSignal.requestedLight = otherSignal.getRedLight();
+								otherSignal.currentCooldown = otherSignal.getSignalCooldown();
+							}
 						}
-					}
+		        	}
 				}
 				if(!foundBlockingSignal){
 					//No blocking signals, or signals were just un-blocked.  Do state-change.
@@ -351,16 +383,6 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 					stateChangeRequested = false;
 				}
 			}
-		}
-		
-		protected void setSignals(LightType newLight){
-			for(TileEntityPole_TrafficSignal signal : controlledSignals){
-				if(currentLight != null){
-					signal.variablesOn.remove(currentLight.lowercaseName);
-				}
-				signal.variablesOn.add(newLight.lowercaseName);
-			}
-			currentLight = newLight;
 		}
 		
 		protected abstract LightType getNextLight();
@@ -388,35 +410,35 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 		
 		private SignalGroupCenter(Axis axis, WrapperNBT data){
 			super(axis, SignalDirection.CENTER, data);
-			this.requestedLight = LightType.STOPLIGHT;
+			this.requestedLight = LightType.STOP_LIGHT;
 		}
 		
 		@Override
 		protected LightType getNextLight(){
 			switch(currentLight){
-				case GOLIGHT: return LightType.CAUTIONLIGHT;
-				case CAUTIONLIGHT: return LightType.STOPLIGHT;
-				case STOPLIGHT: return LightType.GOLIGHT;
+				case GO_LIGHT: return LightType.CAUTION_LIGHT;
+				case CAUTION_LIGHT: return LightType.STOP_LIGHT;
+				case STOP_LIGHT: return LightType.GO_LIGHT;
 				default: return null;
 			}
 		}
 		
 		@Override
 		protected LightType getRedLight(){
-			return LightType.STOPLIGHT;
+			return LightType.STOP_LIGHT;
 		}
 		
 		@Override
 		protected LightType getGreenLight(){
-			return LightType.GOLIGHT;
+			return LightType.GO_LIGHT;
 		}
 		
 		@Override
 		protected int getSignalCooldown(){
 			switch(currentLight){
-				case GOLIGHT: return isMainSignal ? greenMainTime : greenCrossTime;
-				case CAUTIONLIGHT: return isMainSignal ? yellowMainTime : yellowCrossTime;
-				case STOPLIGHT: return allRedTime;
+				case GO_LIGHT: return isMainSignal ? greenMainTime : greenCrossTime;
+				case CAUTION_LIGHT: return isMainSignal ? yellowMainTime : yellowCrossTime;
+				case STOP_LIGHT: return allRedTime;
 				default: return 0;
 			}
 		}
@@ -457,35 +479,35 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 		
 		private SignalGroupLeft(Axis axis, WrapperNBT data){
 			super(axis, SignalDirection.LEFT, data);
-			this.requestedLight = LightType.STOPLIGHTLEFT;
+			this.requestedLight = LightType.STOP_LIGHT_LEFT;
 		}
 		
 		@Override
 		protected LightType getNextLight(){
 			switch(currentLight){
-				case GOLIGHTLEFT: return LightType.CAUTIONLIGHTLEFT;
-				case CAUTIONLIGHTLEFT: return LightType.STOPLIGHTLEFT;
-				case STOPLIGHTLEFT: return LightType.GOLIGHTLEFT;
+				case GO_LIGHT_LEFT: return LightType.CAUTION_LIGHT_LEFT;
+				case CAUTION_LIGHT_LEFT: return LightType.STOP_LIGHT_LEFT;
+				case STOP_LIGHT_LEFT: return LightType.GO_LIGHT_LEFT;
 				default: return null;
 			}
 		}
 		
 		@Override
 		protected LightType getRedLight(){
-			return LightType.STOPLIGHTLEFT;
+			return LightType.STOP_LIGHT_LEFT;
 		}
 		
 		@Override
 		protected LightType getGreenLight(){
-			return LightType.GOLIGHTLEFT;
+			return LightType.GO_LIGHT_LEFT;
 		}
 		
 		@Override
 		protected int getSignalCooldown(){
 			switch(currentLight){
-				case GOLIGHTLEFT: return (isMainSignal ? greenMainTime : greenCrossTime)/4;
-				case CAUTIONLIGHTLEFT: return (isMainSignal ? yellowMainTime : yellowCrossTime)/4;
-				case STOPLIGHTLEFT: return allRedTime;
+				case GO_LIGHT_LEFT: return (isMainSignal ? greenMainTime : greenCrossTime)/4;
+				case CAUTION_LIGHT_LEFT: return (isMainSignal ? yellowMainTime : yellowCrossTime)/4;
+				case STOP_LIGHT_LEFT: return allRedTime;
 				default: return 0;
 			}
 		}
@@ -526,35 +548,35 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 		
 		private SignalGroupRight(Axis axis, WrapperNBT data){
 			super(axis, SignalDirection.RIGHT, data);
-			this.requestedLight = LightType.STOPLIGHTRIGHT;
+			this.requestedLight = LightType.STOP_LIGHT_RIGHT;
 		}
 		
 		@Override
 		protected LightType getNextLight(){
 			switch(currentLight){
-				case GOLIGHTRIGHT: return LightType.CAUTIONLIGHTRIGHT;
-				case CAUTIONLIGHTRIGHT: return LightType.STOPLIGHTRIGHT;
-				case STOPLIGHTRIGHT: return LightType.GOLIGHTRIGHT;
+				case GO_LIGHT_RIGHT: return LightType.CAUTION_LIGHT_RIGHT;
+				case CAUTION_LIGHT_RIGHT: return LightType.STOP_LIGHT_RIGHT;
+				case STOP_LIGHT_RIGHT: return LightType.GO_LIGHT_RIGHT;
 				default: return null;
 			}
 		}
 		
 		@Override
 		protected LightType getRedLight(){
-			return LightType.STOPLIGHTRIGHT;
+			return LightType.STOP_LIGHT_RIGHT;
 		}
 		
 		@Override
 		protected LightType getGreenLight(){
-			return LightType.GOLIGHTRIGHT;
+			return LightType.GO_LIGHT_RIGHT;
 		}
 		
 		@Override
 		protected int getSignalCooldown(){
 			switch(currentLight){
-				case GOLIGHTRIGHT: return (isMainSignal ? greenMainTime : greenCrossTime)/4;
-				case CAUTIONLIGHTRIGHT: return (isMainSignal ? yellowMainTime : yellowCrossTime)/4;
-				case STOPLIGHTRIGHT: return allRedTime;
+				case GO_LIGHT_RIGHT: return (isMainSignal ? greenMainTime : greenCrossTime)/4;
+				case CAUTION_LIGHT_RIGHT: return (isMainSignal ? yellowMainTime : yellowCrossTime)/4;
+				case STOP_LIGHT_RIGHT: return allRedTime;
 				default: return 0;
 			}
 		}
@@ -588,6 +610,26 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 				}
 				default : return true; //Unknown direction.
 			}
+		}
+	}
+	
+	public static enum LightType{
+		STOP_LIGHT,
+		CAUTION_LIGHT,
+		GO_LIGHT,
+		
+		STOP_LIGHT_LEFT,
+		CAUTION_LIGHT_LEFT,
+		GO_LIGHT_LEFT,
+		
+		STOP_LIGHT_RIGHT,
+		CAUTION_LIGHT_RIGHT,
+		GO_LIGHT_RIGHT;
+		
+		public final String lowercaseName;
+		
+		private LightType(){
+			this.lowercaseName = name().toLowerCase();
 		}
 	}
 	

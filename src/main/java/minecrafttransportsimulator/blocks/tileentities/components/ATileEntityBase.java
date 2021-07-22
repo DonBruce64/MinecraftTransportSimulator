@@ -28,7 +28,7 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONMultiModelProv
 		super(world, data);
 		this.position.setTo(position);
 		
-		//TODO remove when packs have converted, as we previously used these fields on TEs.
+		//TODO remove in V21 as we previously used these fields on TEs.
 		if(rotation.y == 0){
 			rotation.y = data.getDouble("rotation");
 		}

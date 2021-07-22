@@ -64,7 +64,7 @@ public class GUIFuelPump extends AGUIInventory{
 			
 			GUIComponentTextBox fuelAmount = new GUIComponentTextBox(itemButton.x + itemButton.width + 4, itemButton.y, 50, String.valueOf(pump.fuelAmounts.get(i))){
 				@Override
-				public boolean validateText(String newText){
+				public boolean isTextValid(String newText){
 					//Only allow whole numbers.
 					return newText.matches("[0-9]+");
 				}
