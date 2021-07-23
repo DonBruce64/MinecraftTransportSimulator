@@ -79,7 +79,7 @@ public class GUIPackExporter extends AGUIBase{
 							return;
 						}	
 					}
-					for(AItemPack<?> packItem : PackParserSystem.getAllItemsForPack(packID)){
+					for(AItemPack<?> packItem : PackParserSystem.getAllItemsForPack(packID, false)){
 						try{
 							File jsonFile = new File(packDir, packItem.definition.classification.toDirectory() + packItem.definition.prefixFolders);
 							jsonFile.mkdirs();
@@ -133,7 +133,7 @@ public class GUIPackExporter extends AGUIBase{
 						for(String packID : PackParserSystem.getAllPackIDs()){
 							File packDir = new File(jsonDir, packID);
 							if(packDir.exists()){
-								for(AItemPack<?> packItem : PackParserSystem.getAllItemsForPack(packID)){
+								for(AItemPack<?> packItem : PackParserSystem.getAllItemsForPack(packID, false)){
 									File jsonFile = new File(packDir, packItem.definition.classification.toDirectory() + packItem.definition.prefixFolders + packItem.definition.systemName + ".json");
 									if(!parsedFiles.contains(jsonFile)){
 										if(jsonFile.lastModified() > lastTimeModified){

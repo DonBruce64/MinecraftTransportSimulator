@@ -136,7 +136,7 @@ public class GUIPaintGun extends AGUIBase{
 	 */
 	private void updateNames(){
 		//Get all pack indexes.		
-		List<AItemPack<?>> packItems = PackParserSystem.getAllItemsForPack(currentItem.definition.packID);
+		List<AItemPack<?>> packItems = PackParserSystem.getAllItemsForPack(currentItem.definition.packID, true);
 		int currentItemIndex = packItems.indexOf(currentItem);
 		
 		//Loop forwards in our pack to find the next item in that pack.

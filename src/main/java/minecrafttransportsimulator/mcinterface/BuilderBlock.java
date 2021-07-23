@@ -294,8 +294,10 @@ public class BuilderBlock extends Block{
 		//Create all pack items.  We need to do this here in the blocks because
 		//block registration comes first, and we use the items registered to determine
 		//which blocks we need to register.
-		for(AItemPack<?> packItem : PackParserSystem.getAllPackItems()){
-			new BuilderItem(packItem);
+		for(String packID : PackParserSystem.getAllPackIDs()){
+			for(AItemPack<?> packItem : PackParserSystem.getAllItemsForPack(packID, true)){
+				new BuilderItem(packItem);
+			}
 		}
 		
 		//Register the TEs.

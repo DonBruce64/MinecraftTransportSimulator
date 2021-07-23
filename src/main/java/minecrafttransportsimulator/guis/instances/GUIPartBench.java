@@ -285,7 +285,7 @@ public class GUIPartBench extends AGUIBase{
 		nextPack = null;
 		if(currentPackIndex < packIDs.size()){
 			for(int i=currentPackIndex+1; i<packIDs.size() && nextPack == null; ++i){
-				for(AItemPack<?> packItem : PackParserSystem.getAllItemsForPack(packIDs.get(i))){
+				for(AItemPack<?> packItem : PackParserSystem.getAllItemsForPack(packIDs.get(i), true)){
 					if(packItem.isBenchValid(definition)){
 						nextPack = packIDs.get(i);
 						break;
@@ -299,7 +299,7 @@ public class GUIPartBench extends AGUIBase{
 		prevPack = null;
 		if(currentPackIndex > 0){
 			for(int i=currentPackIndex-1; i>=0 && prevPack == null; --i){
-				for(AItemPack<?> packItem : PackParserSystem.getAllItemsForPack(packIDs.get(i))){
+				for(AItemPack<?> packItem : PackParserSystem.getAllItemsForPack(packIDs.get(i), true)){
 					if(packItem.isBenchValid(definition)){
 						prevPack = packIDs.get(i);
 						break;
@@ -314,14 +314,14 @@ public class GUIPartBench extends AGUIBase{
 		if(currentPack == null){
 			return;
 		}
-		List<AItemPack<?>> packItems = PackParserSystem.getAllItemsForPack(currentPack);
+		List<AItemPack<?>> packItems = PackParserSystem.getAllItemsForPack(currentPack, true);
 		int currentItemIndex = packItems.indexOf(currentItem);
 		//If currentItem is null, it means we switched packs and need to re-set it to the first item of the new pack.
 		//Do so now before we do looping to prevent crashes.
 		//Find a pack that has the item we are supposed to craft and set it.
 		//If we are for a subTyped item, make sure to set the next subItem if we can.
 		if(currentItem == null){
-			for(AItemPack<?> packItem : PackParserSystem.getAllItemsForPack(currentPack)){
+			for(AItemPack<?> packItem : packItems){
 				if(currentItem == null || (currentItem.definition instanceof AJSONMultiModelProvider && nextSubItem == null)){
 					if(packItem.isBenchValid(definition)){
 						if(currentItem == null){

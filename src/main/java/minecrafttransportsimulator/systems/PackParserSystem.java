@@ -17,6 +17,7 @@ import java.util.zip.ZipFile;
 
 import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.items.components.AItemPack;
+import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.components.AItemPart.AItemPartCreator;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.instances.ItemBullet;
@@ -54,28 +55,61 @@ import minecrafttransportsimulator.packloading.PackResourceLoader.PackStructure;
  */
 public final class PackParserSystem{
 	/**Links packs to the jar files that they are a part of.  Used for pack loading only: asset loading uses Java classpath systems.**/
-	private static Map<String, File> packJarMap = new HashMap<String, File>();
+	private static final Map<String, File> packJarMap = new HashMap<String, File>();
 	
 	/**All registered pack definitions are stored in this list as they are added.  Used to handle loading operations.**/
-	private static Map<String, JSONPack> packMap = new HashMap<String, JSONPack>();
+	private static final Map<String, JSONPack> packMap = new HashMap<String, JSONPack>();
 	
 	/**Part creators are put here during the boot process prior to parsing.  This allows for creators to be added after first parsing for custom items.**/
-	private static List<AItemPartCreator> partCreators = new ArrayList<AItemPartCreator>();
+	private static final List<AItemPartCreator> partCreators = new ArrayList<AItemPartCreator>();
 
 	/**All registered skin definitions are stored in this list as they are added.  These have to be added after all packs are loaded.**/
-	private static Map<String, Map<String, JSONSkin>> skinMap = new HashMap<String, Map<String, JSONSkin>>();
+	private static final Map<String, Map<String, JSONSkin>> skinMap = new HashMap<String, Map<String, JSONSkin>>();
 	
 	/**List of pack faults.  This is for packs that didn't get loaded due to missing dependencies.**/
-	public static Map<String, List<String>> faultMap = new HashMap<String, List<String>>();
+	public static final Map<String, List<String>> faultMap = new HashMap<String, List<String>>();
 	
 	/**All registered pack items are stored in this map as they are added.  Used to sort items in the creative tab,
 	 * and will be sent to packs for item registration when so asked via {@link #getItemsForPack(String)}.  May also
 	 * be used if we need to lookup a registered part item.  Map is keyed by packID to allow sorting for items from 
-	 * different packs, while the sub-map is keyed by the part's {@link AJSONItem#systemName}.  Both maps are tree-maps
-	 * to allow pack-item auto-sorting in their respective GUIs irrespective of when they were loaded in the JSON.  This is
-	 * because sub-folders only matter for the creative tabs, where all items are together.  Not the benches, where items only
-	 * appear one-at-a-time.**/
-	private static TreeMap<String, TreeMap<String, AItemPack<?>>> packItemMap = new TreeMap<String, TreeMap<String, AItemPack<?>>>();
+	 * different packs, while the sub-map is keyed by the part's {@link AJSONItem#systemName}.  The pack-map is a tree
+	 * map to keep consistent tab and sorting order as packs can load at different times.  The actual items are in a 
+	 * hash map and remain un-sorted.  A sorted list may be obtained by {@link #getAllItemsForPack(String, boolean)},
+	 * however this is an expensive operation as the sorted list is created each call.**/
+	private static final TreeMap<String, HashMap<String, AItemPack<?>>> packItemMap = new TreeMap<String, HashMap<String, AItemPack<?>>>();
+	
+	/**Comparator used for sorting pack items.**/
+	private static final Comparator<AItemPack<?>> packComparator = new Comparator<AItemPack<?>>(){
+    	@Override
+		public int compare(AItemPack<?> itemA, AItemPack<?> itemB){
+			String totalAName = itemA.definition.classification.toDirectory() + itemA.definition.prefixFolders + itemA.definition.systemName;
+			if(itemA instanceof AItemSubTyped){
+				totalAName += ((AItemSubTyped<?>) itemA).subName;
+			}
+			String totalBName = itemB.definition.classification.toDirectory() + itemB.definition.prefixFolders + itemB.definition.systemName;
+			if(itemB instanceof AItemSubTyped){
+				totalBName += ((AItemSubTyped<?>) itemB).subName;
+			}
+			
+			if(itemA.getClass().equals(itemB.getClass())){
+				return totalAName.compareTo(totalBName);
+			}else{
+				return Integer.compare(getItemPriority(itemA), getItemPriority(itemB));
+			}
+		}
+    	
+    	private int getItemPriority(AItemPack<?> item){
+    		if(item instanceof ItemVehicle) return 0;
+    		if(item instanceof AItemPart) return 1;
+    		if(item instanceof ItemBullet) return 2;
+    		if(item instanceof ItemDecor) return 3;
+    		if(item instanceof ItemPoleComponent) return 4;
+    		if(item instanceof ItemRoadComponent) return 5;
+    		if(item instanceof ItemItem) return 6;
+    		if(item instanceof ItemInstrument) return 7;
+    		return Integer.MAX_VALUE;
+    	}
+    };
 	
 
     //-----START OF NEW INIT LOGIC-----
@@ -99,8 +133,17 @@ public final class PackParserSystem{
     	//Check for custom skins.
     	parseAllSkins();
     	
-    	//Now that all the items and skins are parsed, create them.
-    	createAllItems();
+    	//Check to make sure we have all our fuels.  We may have loaded a new engine type this launch.
+    	if(ConfigSystem.configObject.fuel.fuels == null){
+    		ConfigSystem.configObject.fuel.fuels = new HashMap<String, Map<String, Double>>();
+    	}
+		for(Entry<String, Map<String, Double>> fuelValues : JSONConfig.ConfigFuel.getDefaultFuels().entrySet()){
+			if(!ConfigSystem.configObject.fuel.fuels.containsKey(fuelValues.getKey())){
+				ConfigSystem.configObject.fuel.fuels.put(fuelValues.getKey(), fuelValues.getValue());
+				ConfigSystem.saveToDisk();
+				break;
+			}
+		}
     	
     	//Have the config system dump the crafting, if so required.
     	ConfigSystem.initCraftingOverrides();
@@ -383,7 +426,7 @@ public final class PackParserSystem{
 	    	
 	    	//Put the item in the map in the registry.
 	    	if(!packItemMap.containsKey(item.definition.packID)){
-	    		packItemMap.put(item.definition.packID, new TreeMap<String, AItemPack<?>>());
+	    		packItemMap.put(item.definition.packID, new HashMap<String, AItemPack<?>>());
 	    	}
 	    	packItemMap.get(item.definition.packID).put(item.definition.systemName, item);
 		}
@@ -462,49 +505,30 @@ public final class PackParserSystem{
     	
     	//All definitions were okay.  Add items to the registry.
     	if(!packItemMap.containsKey(mainDefinition.packID)){
-    		packItemMap.put(mainDefinition.packID, new TreeMap<String, AItemPack<?>>());
+    		packItemMap.put(mainDefinition.packID, new HashMap<String, AItemPack<?>>());
     	}
     	packItemMap.get(mainDefinition.packID).putAll(packItems);
     }
     
     /**
-     * Called to sort and create all pack items.  This must be called after all pack item processing to ensure proper sorting order.
+     * Called after adding all items to a pack to sort it.
+     * This is normally called internally here after creating all items,
+     * but may be called by external loaders that need to sort after
+     * adding their items.
      */
-    private static void createAllItems(){
-    	for(String packID : packItemMap.keySet()){
-    		List<AItemPack<?>> packItems = new ArrayList<AItemPack<?>>();
-    		packItems.addAll(packItemMap.get(packID).values());
-    		packItems.sort(new Comparator<AItemPack<?>>(){
-    			@Override
-    			public int compare(AItemPack<?> itemA, AItemPack<?> itemB){
-    				String totalAName = itemA.definition.classification.toDirectory() + itemA.definition.prefixFolders + itemA.definition.systemName;
-    				if(itemA instanceof AItemSubTyped){
-    					totalAName += ((AItemSubTyped<?>) itemA).subName;
-    				}
-    				String totalBName = itemB.definition.classification.toDirectory() + itemB.definition.prefixFolders + itemB.definition.systemName;
-    				if(itemB instanceof AItemSubTyped){
-    					totalBName += ((AItemSubTyped<?>) itemB).subName;
-    				}
-    				return totalAName.compareTo(totalBName);
-    			}
-    			
-    		});
+    public static void sortPackItems(String packID){
+    	List<AItemPack<?>> packItems = new ArrayList<AItemPack<?>>();
+    	HashMap<String, AItemPack<?>> packSpecificItemMap = packItemMap.get(packID);
+    	packItems.addAll(packSpecificItemMap.values());
+    	packItems.sort(packComparator);
+    	packSpecificItemMap.clear();
+    	for(AItemPack<?> packItem : packItems){
+    		if(packItem.definition instanceof AJSONMultiModelProvider){
+    			packSpecificItemMap.put(packItem.definition.systemName, packItem);
+    		}else{
+    			packSpecificItemMap.put(packItem.definition.systemName, packItem);
+    		}
     	}
-    	
-		//Check to make sure we have all our fuels.  We may have loaded a new engine type this launch.
-    	boolean newFuel = false;
-    	if(ConfigSystem.configObject.fuel.fuels == null){
-    		ConfigSystem.configObject.fuel.fuels = new HashMap<String, Map<String, Double>>();
-    	}
-		for(Entry<String, Map<String, Double>> fuelValues : JSONConfig.ConfigFuel.getDefaultFuels().entrySet()){
-			if(!ConfigSystem.configObject.fuel.fuels.containsKey(fuelValues.getKey())){
-				ConfigSystem.configObject.fuel.fuels.put(fuelValues.getKey(), fuelValues.getValue());
-				newFuel = true;
-			}
-		}
-		if(newFuel){
-			ConfigSystem.saveToDisk();
-		}
     }
     
     
@@ -534,14 +558,18 @@ public final class PackParserSystem{
     	return packMap.get(packID);
     }
     
-    public static List<AItemPack<?>> getAllItemsForPack(String packID){
-    	return new ArrayList<AItemPack<?>>(packItemMap.get(packID).values());
+    public static List<AItemPack<?>> getAllItemsForPack(String packID, boolean sorted){
+    	List<AItemPack<?>> packItems = new ArrayList<AItemPack<?>>(packItemMap.get(packID).values());
+    	if(sorted){
+    		packItems.sort(packComparator);
+    	}
+    	return packItems;
     }
     
     public static List<AItemPack<?>> getAllPackItems(){
     	List<AItemPack<?>> packItems = new ArrayList<AItemPack<?>>();
     	for(String packID : packItemMap.keySet()){
-    		packItems.addAll(getAllItemsForPack(packID));
+    		packItems.addAll(getAllItemsForPack(packID, false));
     	}
     	return packItems;
     }
