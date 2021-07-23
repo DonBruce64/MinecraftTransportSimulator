@@ -301,7 +301,7 @@ public class GUIPanelGround extends AGUIPanel{
 	public void setStates(){
 		//Set the state of the light selector.
 		if(lightSelector != null){
-			lightSelector.selectorState = vehicle.variablesOn.contains("running_light") ? 2 : (vehicle.variablesOn.contains("headlight") ? 1 : 0);
+			lightSelector.selectorState = vehicle.variablesOn.contains("headlight") ? 2 : (vehicle.variablesOn.contains("running_light") ? 1 : 0);
 		}
 		
 		//Set the state of the turn signal selector.
