@@ -384,6 +384,7 @@ public class JSONParser{
 				case VEHICLE : {
 					JSONVehicle vehicleDefinition = (JSONVehicle) definitionToOverride;
 					JSONVehicle loadedVehicleDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONVehicle.class, vehicleDefinition.packID, vehicleDefinition.systemName);
+					JSONParser.validateFields(loadedVehicleDefinition, "/", 1);
 					vehicleDefinition.motorized = loadedVehicleDefinition.motorized;
 					loadedDefinition = loadedVehicleDefinition;
 					break;
@@ -391,6 +392,7 @@ public class JSONParser{
 				case PART : {
 					JSONPart partDefinition = (JSONPart) definitionToOverride;
 					JSONPart loadedPartDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONPart.class, partDefinition.packID, partDefinition.systemName);
+					JSONParser.validateFields(loadedPartDefinition, "/", 1);
 					partDefinition.generic = loadedPartDefinition.generic;
 					partDefinition.engine = loadedPartDefinition.engine;
 					partDefinition.ground = loadedPartDefinition.ground;
@@ -405,6 +407,7 @@ public class JSONParser{
 				case INSTRUMENT : {
 					JSONInstrument instrumentDefinition = (JSONInstrument) definitionToOverride;
 					JSONInstrument loadedInstrumentDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONInstrument.class, instrumentDefinition.packID, instrumentDefinition.systemName);
+					JSONParser.validateFields(loadedInstrumentDefinition, "/", 1);
 					instrumentDefinition.components = loadedInstrumentDefinition.components;
 					loadedDefinition = loadedInstrumentDefinition;
 					break;
@@ -412,6 +415,7 @@ public class JSONParser{
 				case DECOR : {
 					JSONDecor decorDefinition = (JSONDecor) definitionToOverride;
 					JSONDecor loadedDecorDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONDecor.class, decorDefinition.packID, decorDefinition.systemName);
+					JSONParser.validateFields(loadedDecorDefinition, "/", 1);
 					decorDefinition.decor = loadedDecorDefinition.decor;
 					loadedDefinition = loadedDecorDefinition;
 					break;
@@ -419,12 +423,14 @@ public class JSONParser{
 				case POLE : {
 					JSONPoleComponent poleDefinition = (JSONPoleComponent) definitionToOverride;
 					JSONPoleComponent loadedPoleDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONPoleComponent.class, poleDefinition.packID, poleDefinition.systemName);
+					JSONParser.validateFields(loadedPoleDefinition, "/", 1);
 					loadedDefinition = loadedPoleDefinition;
 					break;
 				}
 				case BULLET : {
 					JSONBullet bulletDefinition = (JSONBullet) definitionToOverride;
 					JSONBullet loadedBulletDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONBullet.class, bulletDefinition.packID, bulletDefinition.systemName);
+					JSONParser.validateFields(loadedBulletDefinition, "/", 1);
 					bulletDefinition.bullet = loadedBulletDefinition.bullet;
 					loadedDefinition = loadedBulletDefinition;
 					break;
@@ -432,6 +438,7 @@ public class JSONParser{
 				case ITEM : {
 					JSONItem itemDefinition = (JSONItem) definitionToOverride;
 					JSONItem loadedItemDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONItem.class, itemDefinition.packID, itemDefinition.systemName);
+					JSONParser.validateFields(loadedItemDefinition, "/", 1);
 					itemDefinition.item = loadedItemDefinition.item;
 					itemDefinition.booklet = loadedItemDefinition.booklet;
 					itemDefinition.food = loadedItemDefinition.food;
