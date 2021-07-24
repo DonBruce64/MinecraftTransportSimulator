@@ -91,7 +91,7 @@ public final class PackParserSystem{
 				totalBName += ((AItemSubTyped<?>) itemB).subName;
 			}
 			
-			if(itemA.getClass().equals(itemB.getClass())){
+			if(itemA.getClass().equals(itemB.getClass()) || (itemA instanceof AItemPart && itemB instanceof AItemPart)){
 				return totalAName.compareTo(totalBName);
 			}else{
 				return Integer.compare(getItemPriority(itemA), getItemPriority(itemB));
