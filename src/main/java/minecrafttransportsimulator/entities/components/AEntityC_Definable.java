@@ -575,8 +575,8 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
     		boolean playerRidingEntity = this.equals(entityRiding) || (this instanceof APart && ((APart) this).entityOn.equals(entityRiding));
     		boolean shouldSoundPlay = playerRidingEntity && InterfaceClient.inFirstPerson() ? !soundDef.isExterior : !soundDef.isInterior;
 			boolean anyClockMovedThisUpdate = false;
-			if(shouldSoundPlay && soundActiveClocks.containsKey(soundDef)){
-				boolean inhibitAnimations = false;
+			boolean inhibitAnimations = false;
+			if(shouldSoundPlay){
 				for(DurationDelayClock clock : soundActiveClocks.get(soundDef)){
 					switch(clock.animation.animationType){
 						case VISIBILITY :{
@@ -679,70 +679,66 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 			
 			if(sound != null){
 				//Adjust volume.
-				sound.volume = 1;
-				if(soundVolumeClocks.containsKey(soundDef)){
-					boolean inhibitAnimations = false;
-					boolean definedVolume = false;
-					inhibitAnimations = false;
-					sound.volume = 0;
-					for(DurationDelayClock clock : soundVolumeClocks.get(soundDef)){
-						switch(clock.animation.animationType){
-							case TRANSLATION :{
-								if(!inhibitAnimations){
-									definedVolume = true;
-									sound.volume += Math.signum(clock.animation.axis.y)*getAnimatedVariableValue(clock, -clock.animation.offset, 0) + clock.animation.offset;
+				boolean definedVolume = false;
+				inhibitAnimations = false;
+				sound.volume = 0;
+				for(DurationDelayClock clock : soundVolumeClocks.get(soundDef)){
+					switch(clock.animation.animationType){
+						case TRANSLATION :{
+							if(!inhibitAnimations){
+								definedVolume = true;
+								sound.volume += Math.signum(clock.animation.axis.y)*getAnimatedVariableValue(clock, -clock.animation.offset, 0) + clock.animation.offset;
+							}
+							break;
+						}
+						case ROTATION :{
+							if(!inhibitAnimations){
+								definedVolume = true;
+								//Need to parse out parabola params here to not upset the axis calcs.
+								double parabolaParamA = clock.animation.axis.x;
+								clock.animation.axis.x = 0;
+								double parabolaParamH = clock.animation.axis.z;
+								clock.animation.axis.z = 0;
+								double parabolaValue = Math.signum(clock.animation.axis.y)*getAnimatedVariableValue(clock, -clock.animation.offset, 0);
+								sound.volume += parabolaParamA*Math.pow(parabolaValue - parabolaParamH, 2) + clock.animation.offset;
+								
+								clock.animation.axis.x = parabolaParamA;
+								clock.animation.axis.z = parabolaParamH;
+							}
+							break;
+						}
+						case INHIBITOR :{
+							if(!inhibitAnimations){
+								double variableValue = getAnimatedVariableValue(clock, 0, 0);
+								if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
+									inhibitAnimations = true;
 								}
-								break;
 							}
-							case ROTATION :{
-								if(!inhibitAnimations){
-									definedVolume = true;
-									//Need to parse out parabola params here to not upset the axis calcs.
-									double parabolaParamA = clock.animation.axis.x;
-									clock.animation.axis.x = 0;
-									double parabolaParamH = clock.animation.axis.z;
-									clock.animation.axis.z = 0;
-									double parabolaValue = Math.signum(clock.animation.axis.y)*getAnimatedVariableValue(clock, -clock.animation.offset, 0);
-									sound.volume += parabolaParamA*Math.pow(parabolaValue - parabolaParamH, 2) + clock.animation.offset;
-									
-									clock.animation.axis.x = parabolaParamA;
-									clock.animation.axis.z = parabolaParamH;
+							break;
+						}
+						case ACTIVATOR :{
+							if(inhibitAnimations){
+								double variableValue = getAnimatedVariableValue(clock, 0, 0);
+								if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
+									inhibitAnimations = false;
 								}
-								break;
 							}
-							case INHIBITOR :{
-								if(!inhibitAnimations){
-									double variableValue = getAnimatedVariableValue(clock, 0, 0);
-									if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
-										inhibitAnimations = true;
-									}
-								}
-								break;
-							}
-							case ACTIVATOR :{
-								if(inhibitAnimations){
-									double variableValue = getAnimatedVariableValue(clock, 0, 0);
-									if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
-										inhibitAnimations = false;
-									}
-								}
-								break;
-							}
-							case SCALING :{
-								//Do nothing.
-								break;
-							}
-							case VISIBILITY :{
-								//Do nothing.
-								break;
-							}
+							break;
+						}
+						case SCALING :{
+							//Do nothing.
+							break;
+						}
+						case VISIBILITY :{
+							//Do nothing.
+							break;
 						}
 					}
-					if(!definedVolume){
-						sound.volume = 1;
-					}else if(sound.volume < 0){
-						sound.volume = 0;
-					}
+				}
+				if(!definedVolume){
+					sound.volume = 1;
+				}else if(sound.volume < 0){
+					sound.volume = 0;
 				}
 				
 				//If the player is in a closed-top vehicle that isn't this one, dampen the sound
@@ -752,63 +748,66 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 				}
 				
 				//Adjust pitch.
-				if(soundPitchClocks.containsKey(soundDef)){
-					boolean inhibitAnimations = false;
-					sound.pitch = 0;
-					for(DurationDelayClock clock : soundPitchClocks.get(soundDef)){
-						switch(clock.animation.animationType){
-							case TRANSLATION :{
-								if(!inhibitAnimations){
-									sound.pitch += Math.signum(clock.animation.axis.y)*getAnimatedVariableValue(clock, -clock.animation.offset, 0) + clock.animation.offset;
+				boolean definedPitch = false;
+				inhibitAnimations = false;
+				sound.pitch = 0;
+				for(DurationDelayClock clock : soundPitchClocks.get(soundDef)){
+					switch(clock.animation.animationType){
+						case TRANSLATION :{
+							if(!inhibitAnimations){
+								definedPitch = true;
+								sound.pitch += Math.signum(clock.animation.axis.y)*getAnimatedVariableValue(clock, -clock.animation.offset, 0) + clock.animation.offset;
+							}
+							break;
+						}
+						case ROTATION :{
+							if(!inhibitAnimations){
+								definedPitch = true;
+								//Need to parse out parabola params here to not upset the axis calcs.
+								double parabolaParamA = clock.animation.axis.x;
+								clock.animation.axis.x = 0;
+								double parabolaParamH = clock.animation.axis.z;
+								clock.animation.axis.z = 0;
+								double parabolaValue = Math.signum(clock.animation.axis.y)*getAnimatedVariableValue(clock, -clock.animation.offset, 0);
+								sound.pitch += parabolaParamA*Math.pow(parabolaValue - parabolaParamH, 2) + clock.animation.offset;
+								
+								clock.animation.axis.x = parabolaParamA;
+								clock.animation.axis.z = parabolaParamH;
+							}
+							break;
+						}
+						case INHIBITOR :{
+							if(!inhibitAnimations){
+								double variableValue = getAnimatedVariableValue(clock, 0, 0);
+								if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
+									inhibitAnimations = true;
 								}
-								break;
 							}
-							case ROTATION :{
-								if(!inhibitAnimations){
-									//Need to parse out parabola params here to not upset the axis calcs.
-									double parabolaParamA = clock.animation.axis.x;
-									clock.animation.axis.x = 0;
-									double parabolaParamH = clock.animation.axis.z;
-									clock.animation.axis.z = 0;
-									double parabolaValue = Math.signum(clock.animation.axis.y)*getAnimatedVariableValue(clock, -clock.animation.offset, 0);
-									sound.pitch += parabolaParamA*Math.pow(parabolaValue - parabolaParamH, 2) + clock.animation.offset;
-									
-									clock.animation.axis.x = parabolaParamA;
-									clock.animation.axis.z = parabolaParamH;
+							break;
+						}
+						case ACTIVATOR :{
+							if(inhibitAnimations){
+								double variableValue = getAnimatedVariableValue(clock, 0, 0);
+								if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
+									inhibitAnimations = false;
 								}
-								break;
 							}
-							case INHIBITOR :{
-								if(!inhibitAnimations){
-									double variableValue = getAnimatedVariableValue(clock, 0, 0);
-									if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
-										inhibitAnimations = true;
-									}
-								}
-								break;
-							}
-							case ACTIVATOR :{
-								if(inhibitAnimations){
-									double variableValue = getAnimatedVariableValue(clock, 0, 0);
-									if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
-										inhibitAnimations = false;
-									}
-								}
-								break;
-							}
-							case SCALING :{
-								//Do nothing.
-								break;
-							}
-							case VISIBILITY :{
-								//Do nothing.
-								break;
-							}
+							break;
+						}
+						case SCALING :{
+							//Do nothing.
+							break;
+						}
+						case VISIBILITY :{
+							//Do nothing.
+							break;
 						}
 					}
-					if(sound.pitch < 0){
-						sound.pitch = 0;
-					}
+				}
+				if(!definedPitch){
+					sound.pitch = 1;
+				}else if(sound.pitch < 0){
+					sound.pitch = 0;
 				}
 			}
     	}
