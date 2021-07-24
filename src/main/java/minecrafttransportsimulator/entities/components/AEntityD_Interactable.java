@@ -188,6 +188,16 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 	protected void initializeAnimations(){
 		super.initializeAnimations();
 		instrumentAnimationClocks.clear();
+		if(definition.instruments != null){
+			for(int i=0; i<definition.instruments.size(); ++i){
+				JSONInstrumentDefinition packInstrument = definition.instruments.get(i);
+				if(packInstrument.animations != null){
+					for(JSONAnimationDefinition animation : packInstrument.animations){
+						renderAnimationClocks.put(animation, new DurationDelayClock(animation));
+					}
+				}
+			}
+		}
 	}
 	
 	@Override
