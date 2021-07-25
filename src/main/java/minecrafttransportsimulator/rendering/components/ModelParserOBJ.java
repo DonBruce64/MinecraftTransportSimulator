@@ -38,30 +38,33 @@ public final class ModelParserOBJ extends AModelParser{
 		
 		try{
 			int lineNumber = 0;
+			boolean parsingFaces = false;
 			while(reader.ready()){
 				String line = reader.readLine();
 				++lineNumber;
 				if(line.isEmpty()){
 					continue;
 				}
-				if(line.startsWith("o")){
-					//Declaration of an object.
-					//Save current part we are parsing (if any) and start new part.
-					if(partName != null){
-						compileVertexArray(objectMap, vertexList, normalList, textureList, faceList, partName);
-						vertexList.clear();
-						normalList.clear();
-						textureList.clear();
-						faceList.clear();
-					}
-					try{
-						partName = line.trim().substring(2, line.length());
-					}catch(Exception e){
-						throw new IllegalArgumentException("Object found with no name at line: " + lineNumber + " of: " + modelLocation + ".  Make sure your model exporter isn't making things into groups rather than objects.");
-					}
-				}
-				if(partName != null){
-					if(line.startsWith("v ")){
+				if(line.startsWith("f ")){
+					parsingFaces = true;
+					faceList.add(line.trim().substring(2, line.trim().length()));
+				}else{
+					//Do normal parsing.
+					if(line.startsWith("o ")){
+						if(parsingFaces){
+							compileVertexArray(objectMap, vertexList, normalList, textureList, faceList, modelLocation, partName);
+							parsingFaces = false;
+						}
+						try{
+							partName = line.trim().substring(2, line.length());
+						}catch(Exception e){
+							throw new IllegalArgumentException("Object found with no name at line: " + lineNumber + " of: " + modelLocation + ".  Make sure your model exporter isn't making things into groups rather than objects.");
+						}
+					}else if(line.startsWith("v ")){
+						if(parsingFaces){
+							compileVertexArray(objectMap, vertexList, normalList, textureList, faceList, modelLocation, partName);
+							parsingFaces = false;
+						}
 						try{
 							Float[] coords = new Float[3];
 							line = line.trim().substring(2, line.trim().length()).trim();
@@ -73,6 +76,10 @@ public final class ModelParserOBJ extends AModelParser{
 							throw new NumberFormatException("Could not parse vertex info at line: " + lineNumber + " of: " + modelLocation + " due to bad formatting.  Vertex lines must consist of only three numbers (X, Y, Z).");
 						}
 					}else if(line.startsWith("vt ")){
+						if(parsingFaces){
+							compileVertexArray(objectMap, vertexList, normalList, textureList, faceList, modelLocation, partName);
+							parsingFaces = false;
+						}
 						try{
 							Float[] coords = new Float[2];
 							line = line.trim().substring(3, line.trim().length()).trim();
@@ -85,6 +92,10 @@ public final class ModelParserOBJ extends AModelParser{
 							throw new NumberFormatException("Could not parse vertex texture info at line: " + lineNumber + " of: " + modelLocation + " due to bad formatting.  Vertex texture lines must consist of only two numbers (U, V).");
 						}
 					}else if(line.startsWith("vn ")){
+						if(parsingFaces){
+							compileVertexArray(objectMap, vertexList, normalList, textureList, faceList, modelLocation, partName);
+							parsingFaces = false;
+						}
 						try{
 							Float[] coords = new Float[3];
 							line = line.trim().substring(2, line.trim().length()).trim();
@@ -95,17 +106,13 @@ public final class ModelParserOBJ extends AModelParser{
 						}catch(Exception e){
 							throw new NumberFormatException("Could not parse normals info at line: " + lineNumber + " of: " + modelLocation + " due to bad formatting.  Normals lines must consist of only three numbers (Xn, Yn, Zn).");
 						}
-					}else if(line.startsWith("f ")){
-						faceList.add(line.trim().substring(2, line.trim().length()));
 					}
 				}
 			}
 			
-			//End of file.  Save the last part in process and close the file.
-			try{
-				compileVertexArray(objectMap, vertexList, normalList, textureList, faceList, partName);
-			}catch(Exception e){
-				throw new IllegalArgumentException("Could not compile points of: " + modelLocation + ".  This is likely due to missing UV mapping on some or all faces.");
+			//End of file.  Save the last part in process (if we have one) and close the file.
+			if(parsingFaces){
+				compileVertexArray(objectMap, vertexList, normalList, textureList, faceList, modelLocation, partName);
 			}
 			reader.close();
 			return objectMap;
@@ -115,89 +122,101 @@ public final class ModelParserOBJ extends AModelParser{
 		}
 	}
 	
-	private static void compileVertexArray(Map<String, Float[][]> objectMap, List<Float[]> vertexList, List<Float[]> normalList, List<Float[]> textureList, List<String> faceList, String objectName){
-		List<Integer[]> vertexDataSets = new ArrayList<Integer[]>();
-		for(String faceString : faceList){
-			List<Integer[]> faceVertexData = new ArrayList<Integer[]>();	
-			while(!faceString.isEmpty()){
-				//Get the face string in format X/Y/Z.  Use the space as a separator between vertices making up the face.
-				int defEnd = faceString.indexOf(' ');
-				String faceDef;
-				if(defEnd != -1){
-					//Take the faceDef from the faceString and store it.
-					faceDef = faceString.substring(0, defEnd);
-					faceString = faceString.substring(defEnd + 1);
-				}else{
-					//We are at the last face vertex here, so just mark the face as the existing string.
-					faceDef = faceString;
-					faceString = "";
+	private static void compileVertexArray(Map<String, Float[][]> objectMap, List<Float[]> vertexList, List<Float[]> normalList, List<Float[]> textureList, List<String> faceList, String modelLocation, String objectName){
+		if(objectName == null){
+			throw new IllegalArgumentException("Could not compile points in OBJ " + modelLocation + " due to missing object name.  Are you using groups instead of objects by mistake?");
+		}
+		
+		try{
+			List<Integer[]> vertexDataSets = new ArrayList<Integer[]>();
+			for(String faceString : faceList){
+				List<Integer[]> faceVertexData = new ArrayList<Integer[]>();	
+				while(!faceString.isEmpty()){
+					//Get the face string in format X/Y/Z.  Use the space as a separator between vertices making up the face.
+					int defEnd = faceString.indexOf(' ');
+					String faceDef;
+					if(defEnd != -1){
+						//Take the faceDef from the faceString and store it.
+						faceDef = faceString.substring(0, defEnd);
+						faceString = faceString.substring(defEnd + 1);
+					}else{
+						//We are at the last face vertex here, so just mark the face as the existing string.
+						faceDef = faceString;
+						faceString = "";
+					}
+					
+					//Vertex number is the first entry before the slash.
+					//Texture number is the second entry between the two slashes.
+					//Normal number is the third entry after the second slash.
+					//Parse all these out and store them in the array.
+					int firstSlash = faceDef.indexOf('/');
+					int secondSlash = faceDef.lastIndexOf('/');
+					int vertexNumber = Integer.valueOf(faceDef.substring(0, firstSlash)) - 1;
+					int textureNumber = Integer.valueOf(faceDef.substring(firstSlash + 1, secondSlash)) - 1;
+					int normalNumber = Integer.valueOf(faceDef.substring(secondSlash + 1)) - 1;
+					
+					//If we have three or more points in faceValues, it means we need to make a triangle out of this shape.
+					//Add the first point, the most recent point, and this point to make a triangle.
+					//Otherwise, just add the face as-is.
+					if(faceVertexData.size() >= 3){
+						faceVertexData.add(faceVertexData.get(0));
+						faceVertexData.add(faceVertexData.get(faceVertexData.size() - 2));
+					}
+					faceVertexData.add(new Integer[]{vertexNumber, textureNumber, normalNumber});
 				}
-				
-				//Vertex number is the first entry before the slash.
-				//Texture number is the second entry between the two slashes.
-				//Normal number is the third entry after the second slash.
-				//Parse all these out and store them in the array.
-				int firstSlash = faceDef.indexOf('/');
-				int secondSlash = faceDef.lastIndexOf('/');
-				int vertexNumber = Integer.valueOf(faceDef.substring(0, firstSlash)) - 1;
-				int textureNumber = Integer.valueOf(faceDef.substring(firstSlash + 1, secondSlash)) - 1;
-				int normalNumber = Integer.valueOf(faceDef.substring(secondSlash + 1)) - 1;
-				
-				//If we have three or more points in faceValues, it means we need to make a triangle out of this shape.
-				//Add the first point, the most recent point, and this point to make a triangle.
-				//Otherwise, just add the face as-is.
-				if(faceVertexData.size() >= 3){
-					faceVertexData.add(faceVertexData.get(0));
-					faceVertexData.add(faceVertexData.get(faceVertexData.size() - 2));
-				}
-				faceVertexData.add(new Integer[]{vertexNumber, textureNumber, normalNumber});
+				vertexDataSets.addAll(faceVertexData);
 			}
-			vertexDataSets.addAll(faceVertexData);
+			
+			//Get the correct offset for face values in the lists.
+			//Find the smallest face number and use that as the offset.
+			int vertexOffset = Integer.MAX_VALUE;
+			int textureOffset = Integer.MAX_VALUE;
+			int normalOffset = Integer.MAX_VALUE;
+			for(Integer[] vertexData : vertexDataSets){
+				vertexOffset = Math.min(vertexOffset, vertexData[0]);
+				textureOffset = Math.min(textureOffset, vertexData[1]);
+				normalOffset = Math.min(normalOffset, vertexData[2]);
+			}
+			
+			//Populate the vertex array in order of the vertices used in the faces.
+			List<Float[]> vertexArray = new ArrayList<Float[]>();
+			for(Integer[] vertexData : vertexDataSets){
+				vertexArray.add(vertexList.get(vertexData[0] - vertexOffset));
+			}
+			
+			//Now populate the texture array.
+			List<Float[]> textureArray = new ArrayList<Float[]>();
+			for(Integer[] face : vertexDataSets){
+				textureArray.add(textureList.get(face[1] - textureOffset));
+			}
+			
+			//Finally, populate the normal array.
+			List<Float[]> normalArray = new ArrayList<Float[]>();
+			for(Integer[] face : vertexDataSets){
+				normalArray.add(normalList.get(face[2] - normalOffset));
+			}
+	
+			//Compile arrays and return.
+			List<Float[]> compiledArray = new ArrayList<Float[]>();
+			for(int i=0; i<vertexArray.size(); ++i){
+				compiledArray.add(new Float[]{
+					vertexArray.get(i)[0],
+					vertexArray.get(i)[1],
+					vertexArray.get(i)[2],
+					textureArray.get(i)[0],
+					textureArray.get(i)[1],
+					normalArray.get(i)[0],
+					normalArray.get(i)[1],
+					normalArray.get(i)[2]
+				});
+			}
+			vertexList.clear();
+			textureList.clear();
+			normalList.clear();
+			faceList.clear();
+			objectMap.put(objectName, compiledArray.toArray(new Float[compiledArray.size()][8]));
+		}catch(Exception e){
+			throw new IllegalArgumentException("Could not compile points of: " + modelLocation + ":" + objectName + ".  This is likely due to missing UV mapping on some or all faces.");
 		}
-		
-		//Get the correct offset for face values in the lists.
-		//Find the smallest face number and use that as the offset.
-		int vertexOffset = Integer.MAX_VALUE;
-		int textureOffset = Integer.MAX_VALUE;
-		int normalOffset = Integer.MAX_VALUE;
-		for(Integer[] vertexData : vertexDataSets){
-			vertexOffset = Math.min(vertexOffset, vertexData[0]);
-			textureOffset = Math.min(textureOffset, vertexData[1]);
-			normalOffset = Math.min(normalOffset, vertexData[2]);
-		}
-		
-		//Populate the vertex array in order of the vertices used in the faces.
-		List<Float[]> vertexArray = new ArrayList<Float[]>();
-		for(Integer[] vertexData : vertexDataSets){
-			vertexArray.add(vertexList.get(vertexData[0] - vertexOffset));
-		}
-		
-		//Now populate the texture array.
-		List<Float[]> textureArray = new ArrayList<Float[]>();
-		for(Integer[] face : vertexDataSets){
-			textureArray.add(textureList.get(face[1] - textureOffset));
-		}
-		
-		//Finally, populate the normal array.
-		List<Float[]> normalArray = new ArrayList<Float[]>();
-		for(Integer[] face : vertexDataSets){
-			normalArray.add(normalList.get(face[2] - normalOffset));
-		}
-
-		//Compile arrays and return.
-		List<Float[]> compiledArray = new ArrayList<Float[]>();
-		for(int i=0; i<vertexArray.size(); ++i){
-			compiledArray.add(new Float[]{
-				vertexArray.get(i)[0],
-				vertexArray.get(i)[1],
-				vertexArray.get(i)[2],
-				textureArray.get(i)[0],
-				textureArray.get(i)[1],
-				normalArray.get(i)[0],
-				normalArray.get(i)[1],
-				normalArray.get(i)[2]
-			});
-		}
-		objectMap.put(objectName, compiledArray.toArray(new Float[compiledArray.size()][8]));
 	}
 }
