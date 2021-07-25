@@ -269,7 +269,7 @@ public class GUIPackEditor extends JFrame{
 							newComponent.setBackground(Color.CYAN);
 						}
 					}
-				}catch(Exception e){}
+				}catch(Exception e){e.printStackTrace();}
 				
 				
 				if(newComponent != null){
@@ -350,7 +350,7 @@ public class GUIPackEditor extends JFrame{
 				obj = createNewObjectInstance(fieldClass, declaringObject);
 				try{
 					field.set(declaringObject, obj);
-				}catch(Exception e){}
+				}catch(Exception e){e.printStackTrace();}
 			}
 				
 			JPanel subPanel = new JPanel();
@@ -510,9 +510,9 @@ public class GUIPackEditor extends JFrame{
 	private static Object createNewObjectInstance(Class<?> fieldClass, Object declaringObject){
 		try{
 			if(fieldClass.isMemberClass()){
-				for(Class<?> objectClass : declaringObject.getClass().getDeclaredClasses()){
+				for(Class<?> objectClass : declaringObject.getClass().getClasses()){
 					if(fieldClass.isAssignableFrom(objectClass)){
-						return objectClass.getConstructor(declaringObject.getClass()).newInstance(declaringObject);
+						return objectClass.getConstructor(fieldClass.getDeclaringClass()).newInstance(declaringObject);
 					}
 				}
 				return null;
