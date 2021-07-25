@@ -59,7 +59,6 @@ public class PartEngine extends APart{
 	private double prevEngineRotation;
 	private double driveshaftRotation;
 	private double prevDriveshaftRotation;
-	private final int stallRPM;
 	private final Point3d engineForce = new Point3d();
 	
 	//Constants and static variables.
@@ -90,7 +89,6 @@ public class PartEngine extends APart{
 				++forwardsGears;
 			}
 		}
-		this.stallRPM = (int) (definition.engine.idleRPM*0.65);
 		
 		//If we are on an aircraft, set our gear to 1 as aircraft don't have shifters.
 		//Well, except blimps, but that's a special case.
@@ -236,10 +234,10 @@ public class PartEngine extends APart{
 				//If the starter is running, adjust RPM.
 				if(starterLevel > 0){
 					--starterLevel;
-					if(rpm < definition.engine.idleRPM*1.2){
-						rpm = Math.min(rpm + definition.engine.starterPower, definition.engine.idleRPM*1.2);
+					if(rpm < definition.engine.startRPM*2){
+						rpm = Math.min(rpm + definition.engine.starterPower, definition.engine.startRPM*2);
 					}else{
-						rpm = Math.max(rpm - definition.engine.starterPower, definition.engine.idleRPM*1.2);
+						rpm = Math.max(rpm - definition.engine.starterPower, definition.engine.startRPM*2);
 					}
 				}
 				
@@ -310,7 +308,7 @@ public class PartEngine extends APart{
 							}else if(!isCreative && vehicleOn.fuelTank.getFluidLevel() == 0){
 								stallEngine(Signal.FUEL_OUT);
 								InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.FUEL_OUT));
-							}else if(rpm < stallRPM){
+							}else if(rpm < definition.engine.stallRPM){
 								stallEngine(Signal.TOO_SLOW);
 								InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.TOO_SLOW));
 							}
@@ -374,7 +372,7 @@ public class PartEngine extends APart{
 					//Start engine if the RPM is high enough to cause it to start by itself.
 					//Used for drowned engines that come out of the water, or engines that don't
 					//have the ability to engage a starter.
-					if(rpm > definition.engine.idleRPM && !world.isClient()){
+					if(rpm > definition.engine.startRPM && !world.isClient()){
 						if(isCreative || vehicleOn.fuelTank.getFluidLevel() > 0){
 							if(!isInLiquid() && state.magnetoOn){
 								startEngine();
@@ -392,7 +390,7 @@ public class PartEngine extends APart{
 					lowestWheelVelocity = 999F;
 					desiredWheelVelocity = -999F;
 					wheelFriction = 0;
-					engineTargetRPM = !state.esOn ? vehicleOn.throttle/100F*(definition.engine.maxRPM - definition.engine.idleRPM)/(1 + hours/500) + definition.engine.idleRPM : definition.engine.idleRPM*1.2;
+					engineTargetRPM = !state.esOn ? vehicleOn.throttle/100F*(definition.engine.maxRPM - definition.engine.idleRPM)/(1 + hours/500) + definition.engine.idleRPM : definition.engine.startRPM;
 					
 					//Update wheel friction and velocity.
 					for(PartGroundDevice wheel : vehicleOn.groundDeviceCollective.drivenWheels){
@@ -411,8 +409,8 @@ public class PartEngine extends APart{
 						if(wheelFriction > 0){
 							double desiredRPM = lowestWheelVelocity*1200F*currentGearRatio*vehicleOn.definition.motorized.axleRatio;
 							rpm += (desiredRPM - rpm)/definition.engine.revResistance;
-							if(rpm < stallRPM && state.running){
-								rpm = stallRPM;
+							if(rpm < definition.engine.stallRPM && state.running){
+								rpm = definition.engine.stallRPM;
 							}
 						}else{
 							//No wheel force.  Adjust wheels to engine speed.
@@ -455,10 +453,10 @@ public class PartEngine extends APart{
 								double engineRPMDifference = engineTargetRPM - rpm;
 								
 								//propellerFeedback can't make an engine stall, but hours can.
-								if(rpm + engineRPMDifference/10 > stallRPM && rpm + engineRPMDifference/10 - propellerFeedback < stallRPM){
-									rpm = stallRPM;
+								if(rpm + engineRPMDifference/definition.engine.revResistance > definition.engine.stallRPM && rpm + engineRPMDifference/definition.engine.revResistance - propellerFeedback < definition.engine.stallRPM){
+									rpm = definition.engine.stallRPM;
 								}else{
-									rpm += engineRPMDifference/10 - propellerFeedback;
+									rpm += engineRPMDifference/definition.engine.revResistance - propellerFeedback;
 								}
 							}else if(!state.esOn && !state.hsOn){
 								rpm -= propellerFeedback*Math.abs(propellerGearboxRatio);

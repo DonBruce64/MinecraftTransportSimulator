@@ -61,7 +61,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	public double altitudeSetting;
 	
 	//Internal states.
-	public boolean isVTOL;
+	public boolean hasRotors;
 	private double pitchDirectionFactor;
 	private double currentWingArea;
 	public double trackAngle;
@@ -220,33 +220,16 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 				
 				thrustForce.add(partForce);
 				
-				//If the part is a propeller or jet engine, we add thrust torque.
-				//If it's a rotor, we also add control surface torque.
-				//Torque added is relative to the propeller force output, factored by the angle of the control surface.
+				//If the part is a propeller or jet engine (not a car engine), we add thrust torque.
+				//If it's a rotor, we also add control surface torque to allow the vehicle to tilt.
 				if(isPropeller || jetPower > 0){
 					thrustTorque.add(partForce.y*-part.placementOffset.z, partForce.z*part.placementOffset.x, partForce.y*part.placementOffset.x);
 				}
 				if(isRotor){
-					isVTOL = true;
-					if(!autopilot){
-						rotorRotation.add(-5D*elevatorAngle/MAX_ELEVATOR_ANGLE, -5D*rudderAngle/MAX_RUDDER_ANGLE, 5D*aileronAngle/MAX_AILERON_ANGLE);
-					}else{
-						if(angles.x < -1){
-							rotorRotation.x = 1;
-						}else if(angles.x > 1){
-							rotorRotation.x = -1;
-						}else{
-							rotorRotation.x = -angles.x;
-						}
-						if(angles.z < -1){
-							rotorRotation.z = 1;
-						}else if(angles.z > 1){
-							rotorRotation.z = -1;
-						}else{
-							rotorRotation.z = -angles.z;
-						}
-						rotorRotation.y = -5D*rudderAngle/MAX_RUDDER_ANGLE;
-					}
+					hasRotors = true;
+					rotorRotation.set((-elevatorAngle - angles.x*10)/MAX_ELEVATOR_ANGLE, -5D*rudderAngle/MAX_RUDDER_ANGLE, (aileronAngle - angles.z*10)/MAX_AILERON_ANGLE);
+				}else{
+					rotorRotation.set(0, 0, 0);
 				}
 			}
 			
@@ -462,8 +445,8 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 			}
 		}
 		
-		if(isVTOL){
-			//VTOL craft.  Do auto-hover code if required.
+		if(hasRotors){
+			//Helicopter.  Do auto-hover code if required.
 			if(autopilot){
 				//Change throttle to maintain altitude.
 				//Only do this once every 1/2 second to allow for thrust changes.

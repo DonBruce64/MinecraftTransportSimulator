@@ -133,8 +133,14 @@ public class JSONPart extends AJSONPartProvider{
 		@JSONDescription("The max safe (redline) RPM for this engine.  If left out, MTS will auto-calculate this value for you.  Normally this is fine, but SOME folks may not like the math, so manually-specifiying it is an option.")
     	public int maxSafeRPM;
 		
-		@JSONDescription("The RPM where this engine will start and idle, provided it is turned on and isn't drowned or out of fuel.")
+		@JSONDescription("The RPM where this engine will idle, provided it is turned on and isn't drowned or out of fuel.")
     	public int idleRPM;
+		
+		@JSONDescription("The RPM where this engine will start, after starting the engine will try to maintain the speed set by the idleRPM and maxRPM.  May be lower than the idleRPM, as the engine will stall based on the stallRPM, not this value.")
+    	public int startRPM;
+		
+		@JSONDescription("The RPM where this engine will stall.  Should be below the idleRPM to prevent the engine automatically shutting off on low throttle.")
+    	public int stallRPM;
 		
 		@JSONDescription("How many mb/t the engine uses, and how powerful the engine is. This value is calculated at maxRPM and scaled down based on the percentage of speed the engine is at, so an engine with a maxRPM of 4000 with a fuel consumption of 1.0 running at 2000RPM is actually running at a rate of 0.5.  This value is the key to determining the raw power output of your engine, as it's directly related to how much force the engine can output.  However, even the most powerful engines won't do much if they're geared improperly, and even weak engines with low consumption can reach high speeds if they can maintain high RPMs.")
     	public float fuelConsumption;

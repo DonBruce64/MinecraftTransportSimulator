@@ -58,16 +58,24 @@ public class PartPropeller extends APart{
 				isValid = false;
 				return false;
 			}
-			//If we are a dynamic-pitch propeller, adjust ourselves to the speed of the engine.
-			if(definition.propeller.isDynamicPitch && vehicleOn != null){
-				if(vehicleOn.reverseThrust && currentPitch > -MIN_DYNAMIC_PITCH){
-					--currentPitch;
-				}else if(!vehicleOn.reverseThrust && currentPitch < MIN_DYNAMIC_PITCH){
-					++currentPitch;
-				}else if(connectedEngine.rpm < connectedEngine.definition.engine.maxSafeRPM*0.60 && currentPitch > MIN_DYNAMIC_PITCH){
-					--currentPitch;
-				}else if(connectedEngine.rpm > connectedEngine.definition.engine.maxSafeRPM*0.85 && currentPitch < definition.propeller.pitch){
-					++currentPitch;
+			//If we are a dynamic-pitch propeller or rotor, adjust ourselves to the speed of the engine.
+			if(vehicleOn != null){
+				if(definition.propeller.isRotor){
+					if(vehicleOn.throttle/100D < currentPitch/(double)definition.propeller.pitch){
+						--currentPitch;
+					}else if(vehicleOn.throttle/100D > currentPitch/(double)definition.propeller.pitch){
+						++currentPitch;
+					}
+				}else if(definition.propeller.isDynamicPitch){
+					if(vehicleOn.reverseThrust && currentPitch > -MIN_DYNAMIC_PITCH){
+						--currentPitch;
+					}else if(!vehicleOn.reverseThrust && currentPitch < MIN_DYNAMIC_PITCH){
+						++currentPitch;
+					}else if(connectedEngine.rpm < connectedEngine.definition.engine.maxSafeRPM*0.60 && currentPitch > MIN_DYNAMIC_PITCH){
+						--currentPitch;
+					}else if(connectedEngine.rpm > connectedEngine.definition.engine.maxSafeRPM*0.85 && currentPitch < definition.propeller.pitch){
+						++currentPitch;
+					}
 				}
 			}
 			
@@ -130,7 +138,7 @@ public class PartPropeller extends APart{
 			case("propeller_pitch_deg"): return Math.toDegrees(Math.atan(currentPitch / (definition.propeller.diameter*0.75D*Math.PI)));
 			case("propeller_pitch_in"): return currentPitch;
 			case("propeller_pitch_percent"): return 1D*(currentPitch - PartPropeller.MIN_DYNAMIC_PITCH)/(definition.propeller.pitch - PartPropeller.MIN_DYNAMIC_PITCH);
-			case("propeller_rotation"): return getRenderingRotation(partialTicks, true).z;
+			case("propeller_rotation"): return (angularPosition + angularVelocity*partialTicks)*360D;
 		}
 		
 		return super.getRawVariableValue(variable, partialTicks);
@@ -148,15 +156,7 @@ public class PartPropeller extends APart{
 
 	@Override
 	public Point3d getRenderingRotation(float partialTicks, boolean animationValue){
-		if(definition.propeller.isRotor && vehicleOn != null){
-			Point3d rotations = new Point3d(vehicleOn.elevatorAngle*10D/EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE, vehicleOn.aileronAngle*10D/EntityVehicleF_Physics.MAX_AILERON_ANGLE, (angularPosition + angularVelocity*partialTicks)*360D);
-			if(vehicleOn.isVTOL){
-				rotations.add(vehicleOn.elevatorTrim*20D/EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE, vehicleOn.aileronTrim*20D/EntityVehicleF_Physics.MAX_AILERON_ANGLE, 0);
-			}
-			return rotations;
-		}else{
-			return new Point3d(0, 0, (angularPosition + angularVelocity*partialTicks)*360D);
-		}
+		return new Point3d(0, 0, (angularPosition + angularVelocity*partialTicks)*360D);
 	}
 	
 	public Point3d getForceOutput(){
@@ -199,14 +199,7 @@ public class PartPropeller extends APart{
 				
 				//Add propeller force to total engine force as a vector.
 				//Depends on propeller orientation, as upward propellers provide upwards thrust.
-				Point3d propellerThrustVector = new Point3d(0D, 0D, thrust);
-				if(definition.propeller.isRotor){
-					//Get the X and Y coords of the action rotation for thrust vectoring on rotors.
-					Point3d propellerActionRotation = getRenderingRotation(0, false);
-					propellerActionRotation.z = 0;
-					propellerThrustVector.rotateCoarse(propellerActionRotation); 
-				}
-				propellerForce.add(propellerThrustVector.rotateCoarse(localAngles));
+				propellerForce.add(new Point3d(0D, 0D, thrust).rotateCoarse(localAngles));
 			}
 		}
 		return propellerForce;
