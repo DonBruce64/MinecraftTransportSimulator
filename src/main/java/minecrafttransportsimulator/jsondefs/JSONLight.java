@@ -20,6 +20,9 @@ public class JSONLight{
 	@JSONDescription("If true, this light will be considered a beam and will do beam-blending.  Useful for creating your own custom beam shapes.")
 	public boolean isBeam;
 	
+	@JSONDescription("Causes the light to automatically dim relative to the electric power of the thing it is on. Should normally be true to prevent vehicles from having lights with dead batteries.")
+	public boolean isElectric;
+	
 	@JSONRequired(dependentField="emissive", dependentValues={"true"})
     @JSONDescription("A hexadecimal color code.  This tells MTS what color this light should be.  Required for emissive lights and lights with blendableComponents.")
     public String color;

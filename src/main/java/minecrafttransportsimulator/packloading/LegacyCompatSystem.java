@@ -1603,26 +1603,8 @@ public final class LegacyCompatSystem{
 							lightDef.brightnessAnimations.add(activeAnimation);
 						}
 						
-						//If we are a part or vehicle, add electric power.
-						if(definition instanceof JSONVehicle || definition instanceof JSONPart){
-							JSONAnimationDefinition electricAnimation = new JSONAnimationDefinition();
-							electricAnimation.animationType = AnimationComponentType.TRANSLATION;
-							electricAnimation.variable = "electric_power";
-							electricAnimation.axis = new Point3d(0, 1/0.75D/12D, 0);
-							electricAnimation.offset = -0.15F;
-							electricAnimation.clampMin = 0.0001F;
-							electricAnimation.clampMax = 1.0F;
-							lightDef.brightnessAnimations.add(electricAnimation);
-						}
-						
-						//If we are a decor, add redstone power.
-						if(definition instanceof JSONDecor){
-							JSONAnimationDefinition redstoneAnimation = new JSONAnimationDefinition();
-							redstoneAnimation.animationType = AnimationComponentType.TRANSLATION;
-							redstoneAnimation.variable = "redstone_level";
-							redstoneAnimation.axis = new Point3d(0, -1/15D, 0);
-							lightDef.brightnessAnimations.add(redstoneAnimation);
-						}
+						//Set light to be electric.
+						lightDef.isElectric = true;
 						
 						//Get flashing cycle rate and convert to cycle variable if required.
 						//Look at flash bits from right to left until we hit one that's not on.  Count how many ticks are on and use that for cycle.
@@ -1631,15 +1613,19 @@ public final class LegacyCompatSystem{
 						int ticksOn = 0;
 						boolean foundOn = false;
 						for(byte i=0; i<20; ++i){
-							if(((flashBits >> i) & 1) != 1){
+							if(((flashBits >> i) & 1) == 1){
+								//We are on, increment on counter and set on.
+								if(!foundOn){
+									foundOn = true;
+									ticksTillOn = i;
+								}
+								++ticksOn;	
+							}else{
+								//If we were previously on, we are at the end of the cycle.
 								if(foundOn){
 									break;
 								}
-							}else if(!foundOn){
-								foundOn = true;
-								ticksTillOn = i;
 							}
-							++ticksOn;
 						}
 						if((ticksOn - ticksTillOn) != 20){
 							JSONAnimationDefinition cycleAnimation = new JSONAnimationDefinition();
