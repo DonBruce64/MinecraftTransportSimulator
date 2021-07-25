@@ -258,7 +258,7 @@ public class GUIPackEditor extends JFrame{
 					if(field.isAnnotationPresent(JSONDefaults.class)){
 						newComponent = createNewStringBox(field.getAnnotation(JSONDefaults.class).value(), listenter);
 					}else{
-						newComponent = getComponentForObject(field.get(objectToParse), field.getType(), listenter);
+						newComponent = getComponentForObject(field.get(objectToParse), field.getType(), listenter, listenter);
 					}
 					
 					if(newComponent == null){
@@ -362,24 +362,25 @@ public class GUIPackEditor extends JFrame{
 		}
 	}
 		
-	private static JComponent getComponentForObject(Object obj, Class<?> objectClass, FocusListener listener){
+	private static JComponent getComponentForObject(Object obj, Class<?> objectClass, FocusListener focusListener, ActionListener actionListener){
 		if(objectClass.equals(Boolean.TYPE)){
 			JCheckBox checkBox = new JCheckBox();
 			checkBox.setSelected((Boolean) obj);
+			checkBox.addActionListener(actionListener);
 			return checkBox;
 		}else if(objectClass.equals(Integer.TYPE)){
 			JTextField textBox = new JTextField();
 			textBox.setFont(NORMAL_FONT);
 			textBox.setText(String.valueOf(obj));
 			textBox.setPreferredSize(NUMBER_TEXT_BOX_DIM);
-			textBox.addFocusListener(listener);
+			textBox.addFocusListener(focusListener);
 			return textBox;
 		}else if(objectClass.equals(Float.TYPE)){
 			JTextField textBox = new JTextField();
 			textBox.setFont(NORMAL_FONT);
 			textBox.setText(String.valueOf(obj));
 			textBox.setPreferredSize(NUMBER_TEXT_BOX_DIM);
-			textBox.addFocusListener(listener);
+			textBox.addFocusListener(focusListener);
 			return textBox;
 		}else if(objectClass.equals(String.class)){
 			JTextField textBox = new JTextField();
@@ -389,31 +390,31 @@ public class GUIPackEditor extends JFrame{
 			}else{
 				textBox.setText("");
 			}
-			textBox.addFocusListener(listener);
+			textBox.addFocusListener(focusListener);
 			return textBox;
 		}else if(objectClass.equals(Point3d.class)){
 			JPanel pointPanel = new JPanel();
 			pointPanel.setLayout(new FlowLayout());
 			pointPanel.setBorder(BorderFactory.createLoweredBevelBorder());
-			pointPanel.addFocusListener(listener);
+			pointPanel.addFocusListener(focusListener);
 			
 			JLabel xLabel = new JLabel("X:"); 
 			xLabel.setFont(NORMAL_FONT);
 			JTextField xText = new JTextField();
 			xText.setPreferredSize(NUMBER_TEXT_BOX_DIM);
-			xText.addFocusListener(new FocusForwarder(listener));
+			xText.addFocusListener(new FocusForwarder(focusListener));
 			
 			JLabel yLabel = new JLabel("Y:"); 
 			yLabel.setFont(NORMAL_FONT);
 			JTextField yText = new JTextField();
 			yText.setPreferredSize(NUMBER_TEXT_BOX_DIM);
-			yText.addFocusListener(new FocusForwarder(listener));
+			yText.addFocusListener(new FocusForwarder(focusListener));
 			
 			JLabel zLabel = new JLabel("Z:"); 
 			zLabel.setFont(NORMAL_FONT);
 			JTextField zText = new JTextField();
 			zText.setPreferredSize(NUMBER_TEXT_BOX_DIM);
-			zText.addFocusListener(new FocusForwarder(listener));
+			zText.addFocusListener(new FocusForwarder(focusListener));
 			
 			if(obj != null){
 				Point3d point = ((Point3d) obj);
@@ -434,7 +435,7 @@ public class GUIPackEditor extends JFrame{
 			pointPanel.add(zText);
 			return pointPanel;
 		}else if(objectClass.isEnum()){
-			return createNewEnumBox(obj, objectClass, listener);
+			return createNewEnumBox(obj, objectClass, focusListener);
 		}else{
 			return null;
 		}
@@ -557,7 +558,7 @@ public class GUIPackEditor extends JFrame{
 			//If we are a list entry for a single field, add that to the buttonPanel.
 			//If not, we need to parse our fields and add them in their own layout.
 			ListElementChanger listenter = new ListElementChanger(list, listEntry);
-			JComponent newComponent = getComponentForObject(listEntry, listEntry.getClass(), listenter);
+			JComponent newComponent = getComponentForObject(listEntry, listEntry.getClass(), listenter, null);
 			if(newComponent != null){
 				listenter.component = newComponent;
 				buttonPanel.add(newComponent);
@@ -623,10 +624,7 @@ public class GUIPackEditor extends JFrame{
 		@Override
 		public void focusLost(FocusEvent arg0){
 			try{
-				if(objectClass.equals(Boolean.TYPE)){
-					list.set(index, ((JCheckBox) component).isSelected());
-					return;
-				}if(objectClass.equals(Integer.TYPE)){
+				if(objectClass.equals(Integer.TYPE)){
 					list.set(index, Integer.valueOf(((JTextField) component).getText()));
 				}else if(objectClass.equals(Float.TYPE)){
 					list.set(index, Float.valueOf(((JTextField) component).getText()));
@@ -664,7 +662,7 @@ public class GUIPackEditor extends JFrame{
 		}
 	}
 	
-	private static class FieldChanger implements FocusListener, ItemListener{
+	private static class FieldChanger implements FocusListener, ItemListener, ActionListener{
 
 		private final Field objectField;
 		private final Class<?> objectClass;
@@ -683,10 +681,7 @@ public class GUIPackEditor extends JFrame{
 		@Override
 		public void focusLost(FocusEvent arg0){
 			try{
-				if(objectClass.equals(Boolean.TYPE)){
-					objectField.set(declaringObject, ((JCheckBox) component).isSelected());
-					return;
-				}if(objectClass.equals(Integer.TYPE)){
+				if(objectClass.equals(Integer.TYPE)){
 					objectField.set(declaringObject, Integer.valueOf(((JTextField) component).getText()));
 				}else if(objectClass.equals(Float.TYPE)){
 					objectField.set(declaringObject, Float.valueOf(((JTextField) component).getText()));
@@ -744,9 +739,19 @@ public class GUIPackEditor extends JFrame{
 						component.setBackground(Color.WHITE);
 					}
 				}catch(Exception e){
-					e.printStackTrace();
 					component.setBackground(Color.RED);
 				}
+			}
+		}
+
+		@Override
+		public void actionPerformed(ActionEvent arg0){
+			try{
+				if(objectClass.equals(Boolean.TYPE)){
+					objectField.set(declaringObject, ((JCheckBox) component).isSelected());
+				}
+			}catch(Exception e){
+				component.setBackground(Color.RED);
 			}
 		}
 	}

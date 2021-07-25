@@ -117,7 +117,7 @@ public class PartGroundDevice extends APart{
 						boundingBox.widthRadius -= 0.25;
 						boundingBox.depthRadius -= 0.25;
 					}
-				}else if((placementOffset.z > 0 && !vehicleOn.definition.motorized.isFrontWheelDrive) || (placementOffset.z <= 0 && !vehicleOn.definition.motorized.isRearWheelDrive)){
+				}else if(!vehicleOn.groundDeviceCollective.drivenWheels.contains(this)){
 					if(vehicleOn.brake > 0 || vehicleOn.parkingBrakeOn){
 						angularVelocity = 0;
 					}else if(angularVelocity>0){
@@ -149,7 +149,7 @@ public class PartGroundDevice extends APart{
 	@Override
 	public double getRawVariableValue(String variable, float partialTicks){
 		switch(variable){
-			case("ground_rotation"): return getRenderingRotation(partialTicks, true).x;
+			case("ground_rotation"): return EntityVehicleF_Physics.SPEED_FACTOR*(angularPosition + angularVelocity*partialTicks)*360D;
 			case("ground_onground"): return vehicleOn != null && vehicleOn.groundDeviceCollective.isActuallyOnGround(this) ? 1 : 0;
 			case("ground_inliquid"): return isInLiquid() ? 1 : 0;
 			case("ground_isflat"): return isFlat ? 1 : 0;
@@ -214,7 +214,7 @@ public class PartGroundDevice extends APart{
 	}
 	
 	public double getDesiredAngularVelocity(){
-		if(vehicleOn != null){
+		if(vehicleOn != null && (definition.ground.isWheel || definition.ground.isTread)){
 			if(vehicleOn.skidSteerActive){
 				if(placementOffset.x > 0){
 					return getLongPartOffset() == 0 ? vehicleOn.rudderAngle/2000D/(getHeight()*Math.PI) : vehicleOn.rudderAngle/2000D;
