@@ -24,7 +24,10 @@ import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.relauncher.Side;
 
 /**Interface for MC input classes.  Used to query various input settings
- * for the {@link ControlSystem}.
+ * for the {@link ControlSystem}.  Note that {@link #initJoysticks()} runs
+ * in a thread.  As such do NOT call any joystick methods except {@link #isJoystickSupportEnabled()}
+ * until it returns true.  Once it does, joysicks may be used.  If it does not, it means joysick
+ * support is not enabled.  
  *
  * @author don_bruce
  */
@@ -42,6 +45,7 @@ public class InterfaceInput{
 	//Joystick variables.
 	private static boolean joystickLoadingAttempted = false;
 	private static boolean joystickEnabled = false;
+	private static boolean joystickBlocked = false;
 	private static boolean joystickInhibited = false;
 	private static final Map<String, Controller> joystickMap = new HashMap<String, Controller>();
 	private static final Set<Controller> rumblingControllers = new HashSet<Controller>();
@@ -56,25 +60,33 @@ public class InterfaceInput{
 		//Populate the joystick device map.
 		//Joystick will be enabled if at least one controller is found.  If none are found, we likely have an error.
 		//We can re-try this if the user removes their mouse and we re-run this method.
-		try{
-			if(!Controllers.isCreated()){
-				Controllers.create();
-			}
-			for(int i=0; i<Controllers.getControllerCount(); ++i){
-				Controller joystick = Controllers.getController(i);
-				joystickEnabled = true;
-				joystickNameCounters.clear();
-				if(joystick.getAxisCount() > 0 && joystick.getButtonCount() > 0 && joystick.getName() != null){
-					String joystickName = joystick.getName();
-					//Add an index on this joystick to be sure we don't override multi-component units.
-					if(!joystickNameCounters.containsKey(joystickName)){
-						joystickNameCounters.put(joystickName, 0);
+		joystickBlocked = true;
+		Thread joystickThread = new Thread(){
+			@Override
+			public void run(){
+				try{
+					if(!Controllers.isCreated()){
+						Controllers.create();
 					}
-					joystickMap.put(joystickName + "_" + joystickNameCounters.get(joystickName), joystick);
-					joystickNameCounters.put(joystickName, joystickNameCounters.get(joystickName) + 1);
-				}
+					for(int i=0; i<Controllers.getControllerCount(); ++i){
+						Controller joystick = Controllers.getController(i);
+						joystickNameCounters.clear();
+						if(joystick.getAxisCount() > 0 && joystick.getButtonCount() > 0 && joystick.getName() != null){
+							String joystickName = joystick.getName();
+							//Add an index on this joystick to be sure we don't override multi-component units.
+							if(!joystickNameCounters.containsKey(joystickName)){
+								joystickNameCounters.put(joystickName, 0);
+							}
+							joystickMap.put(joystickName + "_" + joystickNameCounters.get(joystickName), joystick);
+							joystickNameCounters.put(joystickName, joystickNameCounters.get(joystickName) + 1);
+						}
+						joystickEnabled = true;
+					}
+					joystickBlocked = false;
+				}catch(Exception e){}
 			}
-		}catch(Exception e){}
+		};
+		joystickThread.start();
 	}
 	
 	/**
@@ -105,6 +117,14 @@ public class InterfaceInput{
 	 */
 	public static boolean isJoystickSupportEnabled(){
 		return joystickEnabled;
+	}
+	
+	/**
+	 *  Returns true if joystick support is blocked.  This happens if the joysick support
+	 *  wasn't able to be checked, either due to a bad driver or locked-up thread.
+	 */
+	public static boolean isJoystickSupportBlocked(){
+		return joystickBlocked;
 	}
 	
 	/**

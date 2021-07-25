@@ -208,6 +208,7 @@ gui.config.controls.car.keyboard=CAR/BOAT KEYBOARD
 gui.config.controls.car.joystick=CAR/BOAT JOYSTICK
 gui.config.controls.confirm=Confirm
 gui.config.joystick.error=ERROR: MTS could not initialize the control system!  This is likely due to a device mis-representing itself as a joystick to Java.  Mice have been known to have this issue, especially Corsair mice, so try a different mouse.  You may also try un-plugging your mouse, and then opening this GUI to re-poll the joysticks.  This won't make controls work on boot, but can be used if you only have one mouse.
+gui.config.joystick.disabled=ERROR: The control system locked up when MTS tried to initialize it.  This is likely a driver issue, and happens for some reason on some machines.  The root cause is not known, but if you find out how to make this erorr go away, let us know!  For now, joysick support will be disabled.
 gui.config.joystick.select=Choose a joystick:
 gui.config.joystick.name=Name:
 gui.config.joystick.type=Type:
