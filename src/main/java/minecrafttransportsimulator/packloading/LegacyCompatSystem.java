@@ -1,7 +1,6 @@
 package minecrafttransportsimulator.packloading;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Map;
 
 import minecrafttransportsimulator.MasterLoader;
@@ -214,7 +213,7 @@ public final class LegacyCompatSystem{
 		
 		//Add hookup variables if we are a trailer and don't have them.
 		if(definition.motorized.isTrailer && definition.motorized.hookupVariables == null){
-			definition.motorized.hookupVariables = new HashSet<String>();
+			definition.motorized.hookupVariables = new ArrayList<String>();
 			definition.motorized.hookupVariables.add("electric_power");
 			definition.motorized.hookupVariables.add("engine_gear_1");
 			definition.motorized.hookupVariables.add("engines_on");

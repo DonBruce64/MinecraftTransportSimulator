@@ -77,7 +77,6 @@ public class GUIPackEditor extends JFrame{
 	private static final GridBagConstraints FIELD_CONSTRAINTS = new GridBagConstraints();
 	
 	//Run-time variables.
-	private static File lastDirectoryAccessed = new File(MasterLoader.gameDirectory);
 	private static File lastFileAccessed = new File(MasterLoader.gameDirectory);
 	private Class<?> currentJSONClass = null;
 	private Object currentJSON = null;
@@ -125,7 +124,7 @@ public class GUIPackEditor extends JFrame{
         openButton.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent event){
-				JFileChooser fileSelection = lastDirectoryAccessed != null ? new JFileChooser(lastDirectoryAccessed) : new JFileChooser();
+				JFileChooser fileSelection = lastFileAccessed != null ? new JFileChooser(lastFileAccessed.getParent()) : new JFileChooser();
 		        fileSelection.setFont(MAIN_BUTTON_FONT);
 		        fileSelection.setDialogTitle(openButton.getText());
 		        if(fileSelection.showOpenDialog(filePanel) == JFileChooser.APPROVE_OPTION){
@@ -134,7 +133,7 @@ public class GUIPackEditor extends JFrame{
 			        	FileReader reader = new FileReader(file);
 			            currentJSON = JSONParser.parseStream(reader, currentJSONClass, null, null);
 			            reader.close();
-			            lastDirectoryAccessed = file.getParentFile();
+			            lastFileAccessed = file;
 			            if(currentJSON != null){
 			            	initEditor();
 			            	lastFileAccessed = file;
@@ -153,7 +152,7 @@ public class GUIPackEditor extends JFrame{
         saveButton.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent event){
-				JFileChooser fileSelection = lastDirectoryAccessed != null ? new JFileChooser(lastDirectoryAccessed) : new JFileChooser();
+				JFileChooser fileSelection = lastFileAccessed != null ? new JFileChooser(lastFileAccessed.getParent()) : new JFileChooser();
 				fileSelection.setApproveButtonText("Save");
 				fileSelection.setApproveButtonToolTipText("Saves the JSON in the editor to the file.");				
 		        fileSelection.setFont(MAIN_BUTTON_FONT);
@@ -167,7 +166,7 @@ public class GUIPackEditor extends JFrame{
 			        	FileWriter writer = new FileWriter(file);
 			        	JSONParser.exportStream(currentJSON, writer);
 			            writer.close();
-			            lastDirectoryAccessed = file.getParentFile();
+			            lastFileAccessed = file;
 			            try{
 			            	if(currentJSON instanceof AJSONItem){
 			            		AJSONItem definition = (AJSONItem) currentJSON;
@@ -302,6 +301,9 @@ public class GUIPackEditor extends JFrame{
 		if(List.class.isAssignableFrom(fieldClass)){
 			if(obj == null){
 				obj = new ArrayList<>();
+				try{
+					field.set(declaringObject, obj);
+				}catch(Exception e){}
 			}
 			Class<?> paramClass = (Class<?>) ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
 			@SuppressWarnings("unchecked")
@@ -346,6 +348,9 @@ public class GUIPackEditor extends JFrame{
 		}else{
 			if(obj == null){
 				obj = createNewObjectInstance(fieldClass, declaringObject);
+				try{
+					field.set(declaringObject, obj);
+				}catch(Exception e){}
 			}
 				
 			JPanel subPanel = new JPanel();
