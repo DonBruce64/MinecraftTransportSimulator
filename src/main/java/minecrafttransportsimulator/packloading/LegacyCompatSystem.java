@@ -1586,7 +1586,7 @@ public final class LegacyCompatSystem{
 							lightDef.brightnessAnimations.add(cycleInhibitor);
 							
 							JSONAnimationDefinition cycleAnimation = new JSONAnimationDefinition();
-							cycleAnimation.animationType = AnimationComponentType.TRANSLATION;
+							cycleAnimation.animationType = AnimationComponentType.VISIBILITY;
 							cycleAnimation.variable = "0_10_10_cycle";
 							cycleAnimation.axis = new Point3d(0, 1, 0);
 							lightDef.brightnessAnimations.add(cycleAnimation);
@@ -1608,7 +1608,7 @@ public final class LegacyCompatSystem{
 					}
 					
 					if(activeAnimation.variable != null){
-						activeAnimation.animationType = AnimationComponentType.TRANSLATION;
+						activeAnimation.animationType = AnimationComponentType.VISIBILITY;
 						lightDef.brightnessAnimations.add(activeAnimation);
 					}
 					
@@ -1638,7 +1638,7 @@ public final class LegacyCompatSystem{
 					}
 					if((ticksOn - ticksTillOn) != 20){
 						JSONAnimationDefinition cycleAnimation = new JSONAnimationDefinition();
-						cycleAnimation.animationType = AnimationComponentType.TRANSLATION;
+						cycleAnimation.animationType = AnimationComponentType.VISIBILITY;
 						cycleAnimation.variable = ticksTillOn + "_" + ticksOn + "_" + (20-ticksOn-ticksTillOn) + "_cycle";
 						cycleAnimation.axis = new Point3d(0, 1, 0);
 						lightDef.brightnessAnimations.add(cycleAnimation);

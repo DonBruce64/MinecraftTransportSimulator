@@ -418,12 +418,19 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
    	 */
     public void updateLightBrightness(float partialTicks){
 		for(JSONLight lightObject : lightBrightnessClocks.keySet()){
+			boolean definedBrightness = false;
 			float lightLevel = 0.0F;
 			boolean inhibitAnimations = false;
+			boolean inhibitLight = false;
 			for(DurationDelayClock clock : lightBrightnessClocks.get(lightObject)){
 				switch(clock.animation.animationType){
 					case VISIBILITY :{
-						//Do nothing.
+						if(!inhibitAnimations){
+							double variableValue = getAnimatedVariableValue(clock, 0, partialTicks);
+							if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
+								inhibitLight = true;
+							}
+						}
 						break;
 					}
 					case INHIBITOR :{
@@ -459,6 +466,15 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 						break;
 					}
 				}
+				if(inhibitLight){
+					//No need to process further.
+					break;
+				}
+			}
+			if(inhibitLight || lightLevel < 0){
+				lightLevel = 0;
+			}else if(!definedBrightness || lightLevel > 1){
+				lightLevel = 1;
 			}
 			lightBrightnessValues.put(lightObject, lightLevel);
 		}
