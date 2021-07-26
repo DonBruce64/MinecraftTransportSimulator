@@ -7,9 +7,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -61,7 +61,7 @@ public class InterfaceEventsModelLoader{
 			@Override
 			public Render<? super BuilderEntityRenderForwarder> createRenderFor(RenderManager manager){
 			return new Render<BuilderEntityRenderForwarder>(manager){
-				Collection<AEntityC_Definable<?>> entities = new HashSet<AEntityC_Definable<?>>();
+				LinkedHashSet<AEntityC_Definable<?>> entities = new LinkedHashSet<AEntityC_Definable<?>>();
 				@Override
 				protected ResourceLocation getEntityTexture(BuilderEntityRenderForwarder builder){
 					return null;
@@ -78,7 +78,7 @@ public class InterfaceEventsModelLoader{
 					//Get all entities in the world, and render them manually for this one builder.
 					//Only do this if the player the builder is following is the client player.
 					if(Minecraft.getMinecraft().player.equals(builder.playerFollowing) && builder.shouldRenderEntity(partialTicks)){
-						Collection<AEntityC_Definable<?>> allEntities = AEntityC_Definable.getRenderableEntities(WrapperWorld.getWrapperFor(builder.world));
+						LinkedHashSet<AEntityC_Definable<?>> allEntities = AEntityC_Definable.getRenderableEntities(WrapperWorld.getWrapperFor(builder.world));
 						if(allEntities != null){
 							//Need to put all entities into a collection in case we spawn them as particles during this rendering operation.
 							entities.clear();

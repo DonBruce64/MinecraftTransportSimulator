@@ -1,10 +1,10 @@
 package minecrafttransportsimulator.entities.components;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -42,7 +42,7 @@ import minecrafttransportsimulator.systems.PackParserSystem;
  */
 public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelProvider> extends AEntityB_Existing{
 	/**Map of created entities that can be rendered in the world, including those without {@link #lookupID}s.**/
-	private static final Map<WrapperWorld, Set<AEntityC_Definable<?>>> renderableEntities = new HashMap<WrapperWorld, Set<AEntityC_Definable<?>>>();
+	private static final Map<WrapperWorld, LinkedHashSet<AEntityC_Definable<?>>> renderableEntities = new HashMap<WrapperWorld, LinkedHashSet<AEntityC_Definable<?>>>();
 	
 	/**The pack definition for this entity.  May contain extra sections if the super-classes
 	 * have them in their respective JSONs.
@@ -141,9 +141,11 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	 * both tracked and un-tracked entities.  This list may be null on the
 	 * first frame before any entities have been spawned, and entities
 	 * may be removed from this list at any time, so watch out for CMEs!
+	 * Note that this listing is a linked hash set, so iteration will be
+	 * in the same order entities were added.
 	 * 
 	 */
-	public static Collection<AEntityC_Definable<?>> getRenderableEntities(WrapperWorld world){
+	public static LinkedHashSet<AEntityC_Definable<?>> getRenderableEntities(WrapperWorld world){
 		return renderableEntities.get(world);
 	}
 	
@@ -152,10 +154,10 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	 * a world is un-loaded because no players are in it anymore.
 	 */
 	public static void removaAllEntities(WrapperWorld world){
-		Collection<AEntityC_Definable<?>> existingEntities = renderableEntities.get(world);
+		LinkedHashSet<AEntityC_Definable<?>> existingEntities = renderableEntities.get(world);
 		if(existingEntities != null){
 			//Need to copy the entities so we don't CME the map keys.
-			Set<AEntityA_Base> entities = new HashSet<AEntityA_Base>();
+			LinkedHashSet<AEntityA_Base> entities = new LinkedHashSet<AEntityA_Base>();
 			entities.addAll(existingEntities);
 			for(AEntityA_Base entity : entities){
 				entity.remove();
@@ -170,9 +172,9 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	 */
 	protected void initializeAnimations(){
 		//Add us to the entity rendering list.
-		Set<AEntityC_Definable<?>> worldEntities = renderableEntities.get(world);
+		LinkedHashSet<AEntityC_Definable<?>> worldEntities = renderableEntities.get(world);
 		if(worldEntities == null){
-			worldEntities = new HashSet<AEntityC_Definable<?>>();
+			worldEntities = new LinkedHashSet<AEntityC_Definable<?>>();
 			renderableEntities.put(world, worldEntities);
 		}
 		worldEntities.add(this);
@@ -416,7 +418,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
    	 */
     public void updateLightBrightness(float partialTicks){
 		for(JSONLight lightObject : lightBrightnessClocks.keySet()){
-			float lightLevel = 1.0F;
+			float lightLevel = 0.0F;
 			boolean inhibitAnimations = false;
 			for(DurationDelayClock clock : lightBrightnessClocks.get(lightObject)){
 				switch(clock.animation.animationType){
@@ -444,7 +446,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 					}
 					case TRANSLATION :{
 						if(!inhibitAnimations){
-							lightLevel *= getAnimatedVariableValue(clock, 0, partialTicks);
+							lightLevel += getAnimatedVariableValue(clock, 0, partialTicks);
 						}
 						break;
 					}

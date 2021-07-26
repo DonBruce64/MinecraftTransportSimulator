@@ -40,16 +40,16 @@ public class TransformTreadRenderer<AnimationEntity extends AEntityC_Definable<?
 		if(tread.definition.ground != null && tread.definition.ground.isTread && !tread.placementDefinition.isSpare){
 			AEntityC_Definable<?> entityTreadAttachedTo = tread.placementDefinition.isSubPart ? tread.parentPart : tread.entityOn;
 			String treadPathModel = entityTreadAttachedTo.definition.getModelLocation(entityTreadAttachedTo.subName); 
-			Map<Float, List<Double[]>> objectMap = treadPoints.get(treadPathModel);
-			if(objectMap == null){
-				objectMap = new HashMap<Float, List<Double[]>>();
+			Map<Float, List<Double[]>> treadPointsMap = treadPoints.get(treadPathModel);
+			if(treadPointsMap == null){
+				treadPointsMap = new HashMap<Float, List<Double[]>>();
 			}
-			List<Double[]> points = objectMap.get(tread.definition.ground.spacing);
+			List<Double[]> points = treadPointsMap.get(tread.definition.ground.spacing);
 			
 			if(points == null){
-				points = generatePoints(entityTreadAttachedTo, treadPathModel, objectMap, tread);
-				objectMap.put(tread.definition.ground.spacing, points);
-				treadPoints.put(treadPathModel, objectMap);
+				points = generatePoints(entityTreadAttachedTo, treadPathModel, treadPointsMap, tread);
+				treadPointsMap.put(tread.definition.ground.spacing, points);
+				treadPoints.put(treadPathModel, treadPointsMap);
 			}
 					
 			//Render the treads along their points.
@@ -134,13 +134,14 @@ public class TransformTreadRenderer<AnimationEntity extends AEntityC_Definable<?
 		return false;
 	}
 	
-	private static <TreadEntity extends AEntityC_Definable<?>> List<Double[]> generatePoints(TreadEntity entityTreadAttachedTo, String treadPathModel, Map<Float, List<Double[]>> objectMap, PartGroundDevice tread){
+	private static <TreadEntity extends AEntityC_Definable<?>> List<Double[]> generatePoints(TreadEntity entityTreadAttachedTo, String treadPathModel, Map<Float, List<Double[]>> treadPointsMap, PartGroundDevice tread){
 		//If we don't have the deltas, calculate them based on the points of the rollers on the model.			
 		//Search through rotatable parts on the model and grab the rollers.
 		Map<Integer, TransformTreadRoller<TreadEntity>> parsedRollers = new HashMap<Integer, TransformTreadRoller<TreadEntity>>();
-		for(RenderableModelObject<TreadEntity> modelObject : ModelParserOBJ.generateRenderables(entityTreadAttachedTo, treadPathModel, null, null)){
-			for(ATransform<TreadEntity> transform : modelObject.transforms){
+		for(RenderableModelObject<?> modelObject : entityTreadAttachedTo.getRenderer().objectLists.get(treadPathModel)){
+			for(ATransform<?> transform : modelObject.transforms){
 				if(transform instanceof TransformTreadRoller){
+					@SuppressWarnings("unchecked")
 					TransformTreadRoller<TreadEntity> treadTransform = (TransformTreadRoller<TreadEntity>) transform;
 					if(!treadTransform.isLeft){
 						parsedRollers.put(treadTransform.rollerNumber, treadTransform);
@@ -239,8 +240,8 @@ public class TransformTreadRenderer<AnimationEntity extends AEntityC_Definable<?
 			
 			//Add the first point here, and add more as we follow the path.
 			if(i == 0){
-				yPoint = roller.yPos + roller.radius*Math.cos(Math.toRadians(currentAngle));
-				zPoint = roller.zPos + roller.radius*Math.sin(Math.toRadians(currentAngle));
+				yPoint = roller.centerPoint.y + roller.radius*Math.cos(Math.toRadians(currentAngle));
+				zPoint = roller.centerPoint.z + roller.radius*Math.sin(Math.toRadians(currentAngle));
 				points.add(new Double[]{yPoint, zPoint, currentAngle + 180});
 			}
 			
@@ -254,8 +255,8 @@ public class TransformTreadRenderer<AnimationEntity extends AEntityC_Definable<?
 					//Then increment currentAngle to account for the new point made.
 					//Add an angle relative to the point on the roller.
 					Double[] lastPoint = points.get(points.size() - 1);
-					yPoint = roller.yPos + roller.radius*Math.cos(Math.toRadians(currentAngle));
-					zPoint = roller.zPos + roller.radius*Math.sin(Math.toRadians(currentAngle));
+					yPoint = roller.centerPoint.y + roller.radius*Math.cos(Math.toRadians(currentAngle));
+					zPoint = roller.centerPoint.z + roller.radius*Math.sin(Math.toRadians(currentAngle));
 					double pointDist = Math.hypot(yPoint - lastPoint[0], zPoint - lastPoint[1]);
 					double normalizedY = (yPoint - lastPoint[0])/pointDist;
 					double normalizedZ = (zPoint - lastPoint[1])/pointDist;
@@ -271,8 +272,8 @@ public class TransformTreadRenderer<AnimationEntity extends AEntityC_Definable<?
 					//Go to and add the next point on the roller path.
 					rollerPathLength -= deltaDist;
 					currentAngle += 360D*(deltaDist/roller.circumference);
-					yPoint = roller.yPos + roller.radius*Math.cos(Math.toRadians(currentAngle));
-					zPoint = roller.zPos + roller.radius*Math.sin(Math.toRadians(currentAngle));
+					yPoint = roller.centerPoint.y + roller.radius*Math.cos(Math.toRadians(currentAngle));
+					zPoint = roller.centerPoint.z + roller.radius*Math.sin(Math.toRadians(currentAngle));
 					points.add(new Double[]{yPoint, zPoint, currentAngle + 180});
 				}
 				

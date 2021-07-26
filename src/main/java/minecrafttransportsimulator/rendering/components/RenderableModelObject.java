@@ -9,7 +9,6 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.entities.instances.PartGroundDevice;
-import minecrafttransportsimulator.jsondefs.AJSONPartProvider;
 import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONLight;
@@ -49,10 +48,8 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 			this.applyAfter = animationDefinition.applyAfter;
 		}else{
 			this.applyAfter = null;
-			//Roller found.  Create a transform for it.
-			if(objectName.toLowerCase().contains(AModelParser.ROLLER_OBJECT_NAME)){
-				transforms.add(new TransformTreadRoller<AnimationEntity>(objectName, vertices, ((AJSONPartProvider) entity.definition).parts));
-			}else if(entity instanceof PartGroundDevice){
+			//If we are a tread, create a transform for rendering us.
+			if(entity instanceof PartGroundDevice){
 				PartGroundDevice grounder = (PartGroundDevice) entity;
 				if(grounder.definition.ground != null && grounder.definition.ground.isTread){
 					//Found tread-based ground device.  Need a transform for tread rendering.
@@ -61,7 +58,10 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 			}
 		}
 		
-		//Check if this is a window or online texture.
+		//Check if this is a roller, window, or online texture.
+		if(objectName.toLowerCase().contains(AModelParser.ROLLER_OBJECT_NAME)){
+			transforms.add(new TransformTreadRoller<AnimationEntity>(animationDefinition));
+		}
 		if(objectName.toLowerCase().contains(AModelParser.WINDOW_OBJECT_NAME)){
 			transforms.add(new TransformWindow<AnimationEntity>(objectName.toLowerCase().endsWith(AModelParser.INTERIOR_WINDOW_SUFFIX)));
 		}
@@ -115,7 +115,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 				}
 			}
 			
-			//Render any parts that depend on us before we pop our state.
+			//Render any objects that depend on us before we pop our state.
 			for(RenderableModelObject<AnimationEntity> modelObject : allObjects){
 				if(objectName.equals(modelObject.applyAfter)){
 					modelObject.render(entity, blendingEnabled, partialTicks, allObjects);

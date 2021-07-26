@@ -225,7 +225,6 @@ public class BuilderEntityExisting extends ABuilderEntityBase{
 		super.onRemovedFromWorld();
 		//Catch unloaded entities from when the chunk goes away.
 		if(!isDead){
-			System.out.println("REM");
 			setDead();
 		}
 	}

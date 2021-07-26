@@ -1,12 +1,8 @@
 package minecrafttransportsimulator.rendering.components;
 
-import java.util.List;
-
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
-import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
-import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition.AnimationComponentType;
-import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
+import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
 
 /**A specific class of {@link TransformRotatable}, designed
  * for tread rollers.  Contains an extra method for calculating things.
@@ -14,13 +10,13 @@ import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
  *
  * @author don_bruce
  */
-public class TransformTreadRoller<AnimationEntity extends AEntityC_Definable<?>> extends TransformRotatable<AnimationEntity>{
+public class TransformTreadRoller<AnimationEntity extends AEntityC_Definable<?>> extends ATransform<AnimationEntity>{
 	public final boolean isLeft;
 	public final int rollerNumber;
-	public final double yPos;
-	public final double zPos;
+	public final Point3d centerPoint;
 	public final double radius;
 	public final double circumference;
+	
 	
 	public double startY;
 	public double startZ;
@@ -29,54 +25,13 @@ public class TransformTreadRoller<AnimationEntity extends AEntityC_Definable<?>>
 	public double endZ;
 	public double endAngle;
 	
-	public TransformTreadRoller(String objectName, Float[][] vertices, List<JSONPartDefinition> partDefs){
-		super(generateDefaultDefinition(partDefs, objectName.toLowerCase().startsWith("l")));
-		this.isLeft = objectName.toLowerCase().startsWith("l");
-		this.rollerNumber = Integer.valueOf(objectName.substring(objectName.lastIndexOf('_') + 1));
-		
-		//Get the points that define this roller.
-		double minY = 999;
-		double maxY = -999;
-		double minZ = 999;
-		double maxZ = -999;
-		for(Float[] point : vertices){
-			minY = Math.min(minY, point[1]);
-			maxY = Math.max(maxY, point[1]);
-			minZ = Math.min(minZ, point[2]);
-			maxZ = Math.max(maxZ, point[2]);
-		}
-		this.yPos = minY + (maxY - minY)/2D;
-		this.zPos = minZ + (maxZ - minZ)/2D;
-		this.radius = (maxZ - minZ)/2D;
+	public TransformTreadRoller(JSONAnimatedObject animationDefinition){
+		super();
+		this.isLeft = animationDefinition.objectName.toLowerCase().startsWith("l");
+		this.rollerNumber = Integer.valueOf(animationDefinition.objectName.substring(animationDefinition.objectName.lastIndexOf('_') + 1));
+		this.centerPoint = animationDefinition.animations.get(0).centerPoint;
+		this.radius = (1.0D/Math.PI)/(2D*animationDefinition.animations.get(0).axis.x);
 		this.circumference = 2*Math.PI*radius;
-		
-		//Set the center point and axis.
-		//360 degrees is 1 block, so if we have a roller of circumference of 1,
-		//then we want a axis of 1 so it will have a linear movement of 1 every 360 degrees.
-		//Knowing this, we can calculate the linear velocity for this roller, as a roller with
-		//half the circumference needs double the factor, and vice-versa.  Basically, we get
-		//the ratio of the two circumferences of the "standard" roller and our roller.
-		definition.centerPoint.set(0D, yPos, zPos);
-		definition.axis.x = (1.0D/Math.PI)/(radius*2D);
-		this.rotationAxis.set(1.0, 0, 0);
-	}
-	
-	private static JSONAnimationDefinition generateDefaultDefinition(List<JSONPartDefinition> partDefs, boolean isLeft){
-		JSONAnimationDefinition definition = new JSONAnimationDefinition();
-		definition.animationType = AnimationComponentType.ROTATION;
-		int partIndex = 1;
-		for(JSONPartDefinition partDef : partDefs){
-			if(partDef.types.contains("ground_tread")){
-				if(!(partDef.pos.x >= 0 ^ isLeft)){
-					break;
-				}
-				++partIndex;
-			}
-		}
-		definition.variable = "ground_rotation_" + partIndex;
-		definition.centerPoint = new Point3d();
-		definition.axis = new Point3d();
-		return definition;
 	}
 	
 	/**
@@ -94,26 +49,26 @@ public class TransformTreadRoller<AnimationEntity extends AEntityC_Definable<?>>
 			//From this, we can calculate the end angle for this roller as perpendicular to
 			//the vector.  We rotate 90 degrees as we know the roller orientation will be
 			//counter-clockwise, and thus we always want the tread to be on that side.
-			endAngle = Math.toDegrees(Math.atan2(nextRoller.zPos - zPos, nextRoller.yPos - yPos)) - 90D;
+			endAngle = Math.toDegrees(Math.atan2(nextRoller.centerPoint.z - centerPoint.z, nextRoller.centerPoint.y - centerPoint.y)) - 90D;
 			nextRoller.startAngle = endAngle;
 			
 			//Now that we know the start and end angles, we can calculate the start and end points.
 			//Simple polar to rectangular coord conversion here.
-			endY = yPos + radius*Math.cos(Math.toRadians(endAngle));
-			endZ = zPos + radius*Math.sin(Math.toRadians(endAngle));
-			nextRoller.startY = nextRoller.yPos + nextRoller.radius*Math.cos(Math.toRadians(endAngle));
-			nextRoller.startZ = nextRoller.zPos + nextRoller.radius*Math.sin(Math.toRadians(endAngle));
+			endY = centerPoint.y + radius*Math.cos(Math.toRadians(endAngle));
+			endZ = centerPoint.z + radius*Math.sin(Math.toRadians(endAngle));
+			nextRoller.startY = nextRoller.centerPoint.y + nextRoller.radius*Math.cos(Math.toRadians(endAngle));
+			nextRoller.startZ = nextRoller.centerPoint.z + nextRoller.radius*Math.sin(Math.toRadians(endAngle));
 		}else{
 			//First, get the distance between the roller centers.
-			double centerDistance = Math.hypot(nextRoller.zPos - zPos, nextRoller.yPos - yPos);
+			double centerDistance = Math.hypot(nextRoller.centerPoint.z - centerPoint.z, nextRoller.centerPoint.y - centerPoint.y);
 			
 			//The next parts depend which roller is bigger.  From here on out, the
 			//smaller roller is r1, and the larger is r2.
 			boolean nextRollerLarger = radius < nextRoller.radius;
-			double r1CenterY = nextRollerLarger ? yPos : nextRoller.yPos;
-			double r1CenterZ = nextRollerLarger ? zPos : nextRoller.zPos;
-			double r2CenterY = !nextRollerLarger ? yPos : nextRoller.yPos;
-			double r2CenterZ = !nextRollerLarger ? zPos : nextRoller.zPos;
+			double r1CenterY = nextRollerLarger ? centerPoint.y : nextRoller.centerPoint.y;
+			double r1CenterZ = nextRollerLarger ? centerPoint.z : nextRoller.centerPoint.z;
+			double r2CenterY = !nextRollerLarger ? centerPoint.y : nextRoller.centerPoint.y;
+			double r2CenterZ = !nextRollerLarger ? centerPoint.z : nextRoller.centerPoint.z;
 			double r1Radius = nextRollerLarger ? radius : nextRoller.radius;
 			double r2Radius = !nextRollerLarger ? radius : nextRoller.radius;
 			
@@ -141,10 +96,16 @@ public class TransformTreadRoller<AnimationEntity extends AEntityC_Definable<?>>
 			
 			//Now that we know the start and end angles, we can calculate the start and end points.
 			//Simple polar to rectangular coord conversion here.
-			endY = yPos + radius*Math.cos(Math.toRadians(endAngle));
-			endZ = zPos + radius*Math.sin(Math.toRadians(endAngle));
-			nextRoller.startY = nextRoller.yPos + nextRoller.radius*Math.cos(Math.toRadians(endAngle));
-			nextRoller.startZ = nextRoller.zPos + nextRoller.radius*Math.sin(Math.toRadians(endAngle));
+			endY = centerPoint.y + radius*Math.cos(Math.toRadians(endAngle));
+			endZ = centerPoint.z + radius*Math.sin(Math.toRadians(endAngle));
+			nextRoller.startY = nextRoller.centerPoint.y + nextRoller.radius*Math.cos(Math.toRadians(endAngle));
+			nextRoller.startZ = nextRoller.centerPoint.z + nextRoller.radius*Math.sin(Math.toRadians(endAngle));
 		}
+	}
+
+	@Override
+	public double applyTransform(AnimationEntity entity, boolean blendingEnabled, float partialTicks, double offset) {
+		//Do nothing.  This transform just holds data for the renderer.
+		return 0;
 	}
 }
