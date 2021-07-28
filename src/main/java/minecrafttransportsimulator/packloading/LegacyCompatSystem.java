@@ -212,6 +212,11 @@ public final class LegacyCompatSystem{
 			definition.motorized.hasCruiseControl = false;
 		}
 		
+		//If downforce is greater than 1, set it to 0.5 to prevent spinny vehicles.
+		if(definition.motorized.downForce > 1){
+			definition.motorized.downForce = 0.5F;
+		}
+		
 		//Add hookup variables if we are a trailer and don't have them.
 		if(definition.motorized.isTrailer && definition.motorized.hookupVariables == null){
 			definition.motorized.hookupVariables = new ArrayList<String>();
