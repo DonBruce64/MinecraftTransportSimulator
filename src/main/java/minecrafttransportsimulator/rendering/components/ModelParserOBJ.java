@@ -53,7 +53,10 @@ public final class ModelParserOBJ extends AModelParser{
 					if(line.startsWith("o ")){
 						if(parsingFaces){
 							compileVertexArray(objectMap, vertexList, normalList, textureList, faceList, modelLocation, partName);
+							partName = null;
 							parsingFaces = false;
+						}else if(partName != null){
+							throw new IllegalArgumentException("Object " + partName + " found with no faces defined at line: " + lineNumber + " in: " + modelLocation + ".  This is NOT allowed.");
 						}
 						try{
 							partName = line.trim().substring(2, line.length());
@@ -63,6 +66,7 @@ public final class ModelParserOBJ extends AModelParser{
 					}else if(line.startsWith("v ")){
 						if(parsingFaces){
 							compileVertexArray(objectMap, vertexList, normalList, textureList, faceList, modelLocation, partName);
+							partName = null;
 							parsingFaces = false;
 						}
 						try{
@@ -78,6 +82,7 @@ public final class ModelParserOBJ extends AModelParser{
 					}else if(line.startsWith("vt ")){
 						if(parsingFaces){
 							compileVertexArray(objectMap, vertexList, normalList, textureList, faceList, modelLocation, partName);
+							partName = null;
 							parsingFaces = false;
 						}
 						try{
@@ -94,6 +99,7 @@ public final class ModelParserOBJ extends AModelParser{
 					}else if(line.startsWith("vn ")){
 						if(parsingFaces){
 							compileVertexArray(objectMap, vertexList, normalList, textureList, faceList, modelLocation, partName);
+							partName = null;
 							parsingFaces = false;
 						}
 						try{
