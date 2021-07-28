@@ -52,6 +52,16 @@ public class InterfaceInput{
 	private static final Map<String, Integer> joystickNameCounters = new HashMap<String, Integer>();
 	
 	/**
+	 *  Called to set the master config key.  This is used by MC to allow us to use MC-controls to open
+	 *  the config menu.  Done here as players should at least see something in the controls menu to
+	 *  cause them to open the config menu for the actual control configuration.
+	 */
+	public static void initConfigKey(){
+		configKey = new KeyBinding("key.mts.config", Keyboard.KEY_P, "key.categories." + MasterLoader.MODID);
+		ClientRegistry.registerKeyBinding(configKey);
+	}
+	
+	/**
 	 *  Tries to populate all joysticks into the map.  Called automatically on first key-press seen on the keyboard as we can be
 	 *  assured the game is running and the configs are loaded by that time.  May be called manually at other times when
 	 *  the joysticks mapped needs to be refreshed.
@@ -287,12 +297,6 @@ public class InterfaceInput{
     	if(!joystickLoadingAttempted){
     		initJoysticks();
     		joystickLoadingAttempted = true;
-    	}
-    	
-    	//Set the master config key if we don't have it yet.
-    	if(configKey == null){
-			configKey = new KeyBinding("key.mts.config", Keyboard.KEY_P, "key.categories." + MasterLoader.MODID);
-			ClientRegistry.registerKeyBinding(configKey);
     	}
     	
     	//Check if we pressed the config key.

@@ -16,6 +16,7 @@ import minecrafttransportsimulator.items.instances.ItemPartPropeller;
 import minecrafttransportsimulator.items.instances.ItemPartSeat;
 import minecrafttransportsimulator.mcinterface.InterfaceChunkloader;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
+import minecrafttransportsimulator.mcinterface.InterfaceInput;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -38,7 +39,7 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 public class MasterLoader{
 	public static final String MODID = "mts";
 	public static final String MODNAME = "Minecraft Transport Simulator";
-	public static final String MODVER = "20.0.0-BETA75";
+	public static final String MODVER = "20.0.0-BETA77";
 	
 	public static Logger logger;
 	public static String resourceDomain;
@@ -104,5 +105,10 @@ public class MasterLoader{
 		
 		//Init chunkloader system.
 		ForgeChunkManager.setForcedChunkLoadingCallback(INSTANCE, InterfaceChunkloader.INSTANCE);
+		
+		//Init keybinds if we're on the client.
+		if(event.getSide().isClient()){
+			InterfaceInput.initConfigKey();
+		}
 	}
 }
