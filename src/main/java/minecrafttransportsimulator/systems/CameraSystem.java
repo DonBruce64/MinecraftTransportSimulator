@@ -45,6 +45,13 @@ public class CameraSystem{
 		return customCameraOverlay;
 	}
 	
+	/**
+	 *  Returns true if custom cameras are active, false if regular cameras are being used.
+	 */
+	public static boolean areCustomCamerasActive(){
+		return runningCustomCameras;
+	}
+	
     /**
 	 * Call to have the camera position and rotation set to whatever the camera system required.
 	 * Passed-in position and rotation should be zero, and will be set to the desired position
