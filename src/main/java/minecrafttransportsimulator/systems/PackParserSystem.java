@@ -396,40 +396,44 @@ public final class PackParserSystem{
      * A fault in the compatibility system or in the validation will result in the item not being registered. 
      */
     public static void registerItem(AJSONItem itemDef){
-    	//Do legacy compats before validating the JSON.
-    	//This will populate any required fields that were not in older versions.
-		LegacyCompatSystem.performLegacyCompats(itemDef);
-		JSONParser.validateFields(itemDef, "/", 1);
-    			
-    	//Create all required items.
-		if(itemDef instanceof AJSONMultiModelProvider){
-			//Check if the definition is a skin.  If so, we need to just add it to the skin map for processing later.
-			//We don't create skin items right away as the pack they go to might not yet be loaded.
-			if(itemDef instanceof JSONSkin){
-				JSONSkin skinDef = (JSONSkin) itemDef;
-				if(!skinMap.containsKey(skinDef.skin.packID)){
-					skinMap.put(skinDef.skin.packID, new HashMap<String, JSONSkin>());
+    	try{
+	    	//Do legacy compats before validating the JSON.
+	    	//This will populate any required fields that were not in older versions.
+			LegacyCompatSystem.performLegacyCompats(itemDef);
+			JSONParser.validateFields(itemDef, itemDef.packID + ":" + itemDef.systemName + "/", 1);
+	    			
+	    	//Create all required items.
+			if(itemDef instanceof AJSONMultiModelProvider){
+				//Check if the definition is a skin.  If so, we need to just add it to the skin map for processing later.
+				//We don't create skin items right away as the pack they go to might not yet be loaded.
+				if(itemDef instanceof JSONSkin){
+					JSONSkin skinDef = (JSONSkin) itemDef;
+					if(!skinMap.containsKey(skinDef.skin.packID)){
+						skinMap.put(skinDef.skin.packID, new HashMap<String, JSONSkin>());
+					}
+					skinMap.get(skinDef.skin.packID).put(skinDef.skin.systemName, skinDef);
+				}else{
+					parseAllDefinitions((AJSONMultiModelProvider) itemDef, ((AJSONMultiModelProvider) itemDef).definitions, itemDef.packID);
 				}
-				skinMap.get(skinDef.skin.packID).put(skinDef.skin.systemName, skinDef);
 			}else{
-				parseAllDefinitions((AJSONMultiModelProvider) itemDef, ((AJSONMultiModelProvider) itemDef).definitions, itemDef.packID);
-			}
-		}else{
-			AItemPack<?> item;
-			switch(itemDef.classification){
-				case INSTRUMENT : item = new ItemInstrument((JSONInstrument) itemDef); break;
-				case ITEM : item = new ItemItem((JSONItem) itemDef); break;
-				default : {
-					throw new IllegalArgumentException("No corresponding classification found for asset: " + itemDef.prefixFolders + " Contact the mod author!");
+				AItemPack<?> item;
+				switch(itemDef.classification){
+					case INSTRUMENT : item = new ItemInstrument((JSONInstrument) itemDef); break;
+					case ITEM : item = new ItemItem((JSONItem) itemDef); break;
+					default : {
+						throw new IllegalArgumentException("No corresponding classification found for asset: " + itemDef.prefixFolders + " Contact the mod author!");
+					}
 				}
+		    	
+		    	//Put the item in the map in the registry.
+		    	if(!packItemMap.containsKey(item.definition.packID)){
+		    		packItemMap.put(item.definition.packID, new HashMap<String, AItemPack<?>>());
+		    	}
+		    	packItemMap.get(item.definition.packID).put(item.definition.systemName, item);
 			}
-	    	
-	    	//Put the item in the map in the registry.
-	    	if(!packItemMap.containsKey(item.definition.packID)){
-	    		packItemMap.put(item.definition.packID, new HashMap<String, AItemPack<?>>());
-	    	}
-	    	packItemMap.get(item.definition.packID).put(item.definition.systemName, item);
-		}
+    	}catch(Exception e){
+    		InterfaceCore.logError(e.getMessage());
+    	}
     }
     
     /**
