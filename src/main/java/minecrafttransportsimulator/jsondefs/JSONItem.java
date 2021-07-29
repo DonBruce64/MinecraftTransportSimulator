@@ -12,15 +12,15 @@ public class JSONItem extends AJSONItem{
 	@JSONDescription("Properties for all items..")
 	public JSONItemGeneric item;
 	
-	@JSONRequired(dependentField="type", dependentValues={"booklet"}, subField="general")
+	@JSONRequired(dependentField="type", dependentValues={"booklet"}, subField="item")
 	@JSONDescription("Booklet-specific item section.")
 	public JSONBooklet booklet;
 	
-	@JSONRequired(dependentField="type", dependentValues={"food"}, subField="general")
+	@JSONRequired(dependentField="type", dependentValues={"food"}, subField="item")
 	@JSONDescription("Food-specific item section.")
 	public JSONFood food;
 	
-	@JSONRequired(dependentField="type", dependentValues={"weapon"}, subField="general")
+	@JSONRequired(dependentField="type", dependentValues={"weapon"}, subField="item")
 	@JSONDescription("Weapon-specific item section.")
 	public JSONWeapon weapon;
 

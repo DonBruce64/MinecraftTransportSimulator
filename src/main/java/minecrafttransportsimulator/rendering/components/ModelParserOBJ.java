@@ -8,6 +8,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import minecrafttransportsimulator.mcinterface.InterfaceCore;
+
 /**Class responsible for parsing OBJ models into arrays that can be fed to the GPU.
  * Much more versatile than the Forge system.
  * 
@@ -56,7 +58,7 @@ public final class ModelParserOBJ extends AModelParser{
 							partName = null;
 							parsingFaces = false;
 						}else if(partName != null){
-							throw new IllegalArgumentException("Object " + partName + " found with no faces defined at line: " + lineNumber + " in: " + modelLocation + ".  This is NOT allowed.");
+							InterfaceCore.logError("Object " + partName + " found with no faces defined at line: " + lineNumber + " in: " + modelLocation + ".  This is NOT allowed.");
 						}
 						try{
 							partName = line.trim().substring(2, line.length());
