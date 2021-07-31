@@ -510,6 +510,10 @@ public class JSONParser{
     }
 	
 	@Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.FIELD)
+	public static @interface JSONPopulatedCollection{}
+	
+	@Retention(RetentionPolicy.RUNTIME)
     @Target({ElementType.TYPE, ElementType.FIELD})
 	public static @interface JSONDescription{
 		/**
@@ -610,6 +614,13 @@ public class JSONParser{
 					return pathPrefix + field.getName() + ", entry #" + index + ", is missing from the JSON and is required!";
 				}
 			}
+		}else if(field.isAnnotationPresent(JSONPopulatedCollection.class)){
+			try{
+				Collection<?> testCollection = (Collection<?>) field.get(objectOn);
+				if(testCollection != null && testCollection.isEmpty()){
+					return pathPrefix + field.getName() + " is a list, but has no elements.  This is NOT allowed!";
+				}
+			}catch(Exception e){}
 		}
 		return null;
 	}

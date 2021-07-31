@@ -10,6 +10,7 @@ import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONLight;
 import minecrafttransportsimulator.jsondefs.JSONLight.JSONLightBlendableComponent;
+import minecrafttransportsimulator.rendering.instances.ModelParserOBJ;
 
 /**Abstract class for parsing models.  This contains methods for determining what models
  * the parser can parse, and the operations for parsing them into the form MTS needs.
