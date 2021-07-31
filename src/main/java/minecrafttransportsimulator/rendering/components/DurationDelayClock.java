@@ -8,10 +8,20 @@ import minecrafttransportsimulator.sound.SoundInstance;
 
 /**Class designed for maintaining the state of a duration/delay for an animation.
  * This is used anything that queries animation states.
+ * This also contains a method for calculating easing equations and returning the interpolated values
+ * This is used for interpolating animation values with non-linear equations.
  *
- * @author don_bruce
+ * @author don_bruce, TurboDefender
  */
 public class DurationDelayClock{
+	private static final double c1 = 1.70518;
+	private static final double c2 = c1 * 1.525;
+	private static final double c3 = c1 + 1;
+	private static final double c4 = (2 * Math.PI) / 3;
+	private static final double c5 = (2 * Math.PI) / 4.5;
+	private static final double n1 = 7.5625;
+	private static final double d1 = 2.75;
+	
 	public final JSONAnimationDefinition animation;
 	public final boolean isUseful;
 	public boolean movedThisUpdate;
@@ -97,9 +107,10 @@ public class DurationDelayClock{
 				long timeMoved = currentTime - (timeCommandedForwards + animation.forwardsDelay*50);
 				if(timeMoved < animation.duration*50 && !animation.skipForwardsMovement){
 					movedThisUpdate = true;
-					movementFactor =  getEasingValue(timeMoved, false);
-					
-					
+					movementFactor = timeMoved/(double)(animation.duration*50);
+					if(animation.forwardsEasing != null){
+						movementFactor = getEasingType(animation.forwardsEasing, movementFactor);
+					}
 				}else{
 					movementFactor = 1;
 					if(!endedForwardsMovement){
@@ -123,7 +134,10 @@ public class DurationDelayClock{
 				long timeMoved = currentTime - (timeCommandedReverse + animation.reverseDelay*50);
 				if(timeMoved < animation.duration*50 && !animation.skipReverseMovement){
 					movedThisUpdate = true;
-					movementFactor =  getEasingValue(timeMoved, true);
+					movementFactor = timeMoved/(double)(animation.duration*50);
+					if(animation.reverseEasing != null){
+						movementFactor = getEasingType(animation.reverseEasing, movementFactor);
+					}
 				}else{
 					movementFactor = 1;
 					if(!endedReverseMovement){
@@ -148,21 +162,79 @@ public class DurationDelayClock{
 	}
 	
 	/**
-	 * Returns the interpolated animation values
-	 * It calls the interpolation methods equivalent to the easing type
+	 * This is used to check the easing type defined in the JSON fields
+	 * and call the respective easing function to return a value
+	 * 
+	 * @param direction The JSON field either {@code forwardsEasing} or {@code reverseEasing}.
+	 * 
+	 * @param time The time that has elapsed for an animation or the percent complete from 0 to 1.
 	 */
-	public double getEasingValue(long timeMoved, boolean isReverse){
-		//If the animation is in reverse, and has reverse easing, use that.
-		//If it's in forwards, and has forwards easing, use that.
-		//Otherwise, just use the linear value.
-		double time = timeMoved/(double)(animation.duration*50);
-		if(isReverse && animation.reverseEasing != null){
-			return DurationDelayEasing.getEasingType(animation.reverseEasing, time);
+	private static double getEasingType(JSONAnimationDefinition.AnimationEasingType direction, double time) {
+		switch(direction) {
+			case LINEAR: return time;
+			case EASEINQUAD: return time * time;
+			case EASEOUTQUAD: return time * (2 - time);
+			case EASEINOUTQUAD: return time < 0.5 ? 2 * time * time : -1 + (4 - 2 * time) * time;
+			case EASEINCUBIC: return time * time * time;
+			case EASEOUTCUBIC: return  --time * time * time + 1;
+			case EASEINOUTCUBIC: return time < 0.5 ? 4 * time * time * time : (time - 1) * (2 * time - 2) * (2 * time - 2) + 1;
+			case EASEINQUART: return time * time * time * time;
+			case EASEOUTQUART: return 1 - (--time) * time * time * time;
+			case EASEINOUTQUART: return time < 0.5 ? 8 * time * time * time * time : 1 - 8 * (--time) * time * time * time;
+			case EASEINQUINT: return time * time * time * time * time;
+			case EASEOUTQUINT: return 1 + (--time) * time * time * time * time;
+			case EASEINOUTQUINT: return time < 0.5 ? 16 * time * time * time * time * time : 1 + 16 * (--time) * time * time * time * time;
+			case EASEINCIRC: return 1 - Math.sqrt(1 - Math.pow(time, 2));
+			case EASEOUTCIRC: return Math.sqrt(1 - Math.pow(time - 1, 2));
+			case EASEINOUTCIRC: return time < 0.5 ? (1 - Math.sqrt(1 - Math.pow(2 * time, 2))) / 2 : (Math.sqrt(1 - Math.pow(-2 * time + 2, 2)) + 1) / 2;
+			case EASEINBACK: return c3 * time * time * time - c1 * time * time;
+			case EASEOUTBACK: return 1 + c3 * Math.pow(time - 1, 3) + c1 * Math.pow(time - 1, 2);
+			case EASEINOUTBACK: return time < 0.5 ? (Math.pow(2 * time, 2) * ((c2 + 1) * 2 * time - c2)) / 2 : (Math.pow(2 * time - 2, 2) * ((c2 + 1) * (time * 2 - 2) + c2) + 2) / 2;
+			case EASEINELASTIC:{
+				if (time == 0) {
+					return 0;
+				} else if (time == 1) {
+					return 1;
+				} else {
+					return -Math.pow(2, 10 * time - 10) * Math.sin((time * 10 - 10.75) * c4);
+				}
+			}
+			case EASEOUTELASTIC: {
+				if (time == 0) {
+					return 0;
+				} else if (time == 1) {
+					return 1;
+				} else {
+					return Math.pow(2, -10 * time) * Math.sin((time * 10 - 0.75) * c4) + 1;
+				}
+			}
+			case EASEINOUTELASTIC: {
+				if (time == 0) {
+					return 0;
+				} else if (time == 1) {
+					return 1;
+				} else if (time < 0.5 ){
+					return -(Math.pow(2, 20 * time - 10) * Math.sin((20 * time - 11.125) * c5)) /2;
+				} else {
+					return (Math.pow(2, -20 * time + 10) * Math.sin((20 * time - 11.125) * c5)) / 2 + 1;
+				}
+			}
+			case EASEINBOUNCE: return 1 - getEasingType(JSONAnimationDefinition.AnimationEasingType.EASEOUTBOUNCE, 1 - time);
+			case EASEOUTBOUNCE: {
+				if (time < 1 / d1) {
+					return n1 * time * time;
+				} else if (time < 2 / d1) {
+					return n1 * (time -= 1.5 / d1) * time + 0.75;
+				} else if (time < 2.5 / d1) {
+					return n1 * (time -= 2.25 / d1) * time + 0.9375;
+				} else {
+					return n1 * (time -= 2.625 / d1) * time + 0.984375;
+				}
+			}
+			case EASEINOUTBOUNCE: return time < 0.5 ? (1 - getEasingType(JSONAnimationDefinition.AnimationEasingType.EASEOUTBOUNCE, 1 - 2 * time)) / 2 : (1 + getEasingType(JSONAnimationDefinition.AnimationEasingType.EASEINBOUNCE, 2 * time - 1)) / 2;
 			
-		}else if(!isReverse && animation.forwardsEasing != null){
-			return DurationDelayEasing.getEasingType(animation.forwardsEasing, time);
-		}else{
-			return time;
+			//Easing type is invalid. Default to linear.
+			default: return time;
 		}
-	}	
+	}
 }
