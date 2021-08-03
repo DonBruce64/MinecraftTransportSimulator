@@ -708,6 +708,7 @@ public final class LegacyCompatSystem{
 						if(customSound.volumeAdvanced){
 							runningVolumeDef.animationType = AnimationComponentType.ROTATION;
 							runningVolumeDef.variable = "engine_rpm";
+							runningVolumeDef.centerPoint = new Point3d();
 							runningVolumeDef.axis = new Point3d(-0.000001/(customSound.volumeLength/1000), 0, customSound.volumeCenter);
 							runningVolumeDef.offset = (customSound.volumeLength/20000) + 1;
 						}else{
@@ -723,6 +724,7 @@ public final class LegacyCompatSystem{
 						if(customSound.pitchAdvanced){
 							runningPitchDef.animationType = AnimationComponentType.ROTATION;
 							runningPitchDef.variable = "engine_rpm";
+							runningPitchDef.centerPoint = new Point3d();
 							runningPitchDef.axis = new Point3d(-0.000001/(customSound.pitchLength/1000), 0, customSound.pitchCenter);
 							runningPitchDef.offset = (customSound.pitchLength/20000) + 1;
 						}else{
