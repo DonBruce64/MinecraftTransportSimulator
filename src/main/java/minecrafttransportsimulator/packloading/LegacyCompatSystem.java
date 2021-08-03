@@ -1537,7 +1537,6 @@ public final class LegacyCompatSystem{
 					//Add standard animation variable for light name.
 					String lowerCaseName = objectName.toLowerCase();
 					JSONAnimationDefinition activeAnimation = new JSONAnimationDefinition();
-					activeAnimation.axis = new Point3d(0, 1, 0);
 					if(lowerCaseName.contains("brakelight")){
 						activeAnimation.variable = "brake";
 					}else if(lowerCaseName.contains("backuplight")){
@@ -1595,7 +1594,8 @@ public final class LegacyCompatSystem{
 							JSONAnimationDefinition cycleAnimation = new JSONAnimationDefinition();
 							cycleAnimation.animationType = AnimationComponentType.VISIBILITY;
 							cycleAnimation.variable = "0_10_10_cycle";
-							cycleAnimation.axis = new Point3d(0, 1, 0);
+							cycleAnimation.clampMin = 1.0F;
+							cycleAnimation.clampMax = 1.0F;
 							lightDef.brightnessAnimations.add(cycleAnimation);
 							
 							JSONAnimationDefinition lightActivator = new JSONAnimationDefinition();
@@ -1616,6 +1616,8 @@ public final class LegacyCompatSystem{
 					
 					if(activeAnimation.variable != null){
 						activeAnimation.animationType = AnimationComponentType.VISIBILITY;
+						activeAnimation.clampMin = 1.0F;
+						activeAnimation.clampMax = 1.0F;
 						lightDef.brightnessAnimations.add(activeAnimation);
 					}
 					
@@ -1647,7 +1649,8 @@ public final class LegacyCompatSystem{
 						JSONAnimationDefinition cycleAnimation = new JSONAnimationDefinition();
 						cycleAnimation.animationType = AnimationComponentType.VISIBILITY;
 						cycleAnimation.variable = ticksTillOn + "_" + ticksOn + "_" + (20-ticksOn-ticksTillOn) + "_cycle";
-						cycleAnimation.axis = new Point3d(0, 1, 0);
+						cycleAnimation.clampMin = 1.0F;
+						cycleAnimation.clampMax = 1.0F;
 						lightDef.brightnessAnimations.add(cycleAnimation);
 					}
 					

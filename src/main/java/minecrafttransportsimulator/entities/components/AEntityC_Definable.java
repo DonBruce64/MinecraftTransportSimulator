@@ -428,7 +428,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 					case VISIBILITY :{
 						if(!inhibitAnimations){
 							double variableValue = getAnimatedVariableValue(clock, 0, partialTicks);
-							if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
+							if(variableValue < clock.animation.clampMin || variableValue > clock.animation.clampMax){
 								inhibitLight = true;
 							}
 						}
@@ -454,7 +454,13 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 					}
 					case TRANSLATION :{
 						if(!inhibitAnimations){
-							lightLevel += getAnimatedVariableValue(clock, 0, partialTicks);
+							if(clock.animation.axis.x != 0){
+								lightLevel *= getAnimatedVariableValue(clock, 0, partialTicks);
+							}else if(clock.animation.axis.y != 0){
+								lightLevel += getAnimatedVariableValue(clock, 0, partialTicks);
+							}else{
+								lightLevel = (float) getAnimatedVariableValue(clock, 0, partialTicks);
+							}
 						}
 						break;
 					}
