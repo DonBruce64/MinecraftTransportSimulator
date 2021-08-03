@@ -364,15 +364,14 @@ public class InterfaceRender{
 	 *  This also allows for playing the block breaking sound.
 	 *  It does not actually break the block.  Such breakage must be done on the server.
 	 */
-	public static void spawnBlockBreakParticles(Point3d position, boolean playSound){
+	//TODO remove this on bullets (potentially LC if needed?)
+	public static void spawnBlockBreakParticles(Point3d position){
 		if(Minecraft.getMinecraft().effectRenderer != null){
 			BlockPos pos = new BlockPos(position.x, position.y, position.z);
 			if(!Minecraft.getMinecraft().world.isAirBlock(pos)){
 				Minecraft.getMinecraft().effectRenderer.addBlockHitEffects(pos, EnumFacing.UP);
-				if(playSound){
-					SoundType soundType = Minecraft.getMinecraft().world.getBlockState(pos).getBlock().getSoundType(Minecraft.getMinecraft().world.getBlockState(pos), Minecraft.getMinecraft().player.world, pos, null);
-					Minecraft.getMinecraft().world.playSound(Minecraft.getMinecraft().player, pos, soundType.getBreakSound(), SoundCategory.BLOCKS, soundType.getVolume(), soundType.getPitch());
-				}
+				SoundType soundType = Minecraft.getMinecraft().world.getBlockState(pos).getBlock().getSoundType(Minecraft.getMinecraft().world.getBlockState(pos), Minecraft.getMinecraft().player.world, pos, null);
+				Minecraft.getMinecraft().world.playSound(Minecraft.getMinecraft().player, pos, soundType.getBreakSound(), SoundCategory.BLOCKS, soundType.getVolume(), soundType.getPitch());
 			}
 		}
 	}

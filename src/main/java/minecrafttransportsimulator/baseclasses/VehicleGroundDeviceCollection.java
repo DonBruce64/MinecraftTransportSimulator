@@ -8,7 +8,6 @@ import java.util.Set;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartGroundDevice;
-import minecrafttransportsimulator.mcinterface.InterfaceRender;
 
 /**This class is a collection for a set of four vehicle ground device points.  This allows for less
  * boilerplate code when we need to do operations on all four points in a vehicle.
@@ -81,25 +80,6 @@ public class VehicleGroundDeviceCollection{
 		frontRightGDB.updateCollisionStatuses(groundedGroundDevices);
 		rearLeftGDB.updateCollisionStatuses(groundedGroundDevices);
 		rearRightGDB.updateCollisionStatuses(groundedGroundDevices);
-	}
-	
-	/**
-	 * Spawns block particles under all wheels if they are part of a collective that's on the ground.
-	 * Used for fancy slipping animations.  Only call this on the CLIENT!
-	 */
-	public void spawnSlippingParticles(){
-		if(frontLeftGDB.isGrounded){
-			InterfaceRender.spawnBlockBreakParticles(frontLeftGDB.contactPoint.copy().rotateCoarse(vehicle.angles).add(vehicle.position).add(0, -1, 0), false);
-		}
-		if(frontRightGDB.isGrounded){
-			InterfaceRender.spawnBlockBreakParticles(frontRightGDB.contactPoint.copy().rotateCoarse(vehicle.angles).add(vehicle.position).add(0, -1, 0), false);
-		}
-		if(rearLeftGDB.isGrounded){
-			InterfaceRender.spawnBlockBreakParticles(rearLeftGDB.contactPoint.copy().rotateCoarse(vehicle.angles).add(vehicle.position).add(0, -1, 0), false);
-		}
-		if(rearRightGDB.isGrounded){
-			InterfaceRender.spawnBlockBreakParticles(rearRightGDB.contactPoint.copy().rotateCoarse(vehicle.angles).add(vehicle.position).add(0, -1, 0), false);
-		}
 	}
 	
 	/**

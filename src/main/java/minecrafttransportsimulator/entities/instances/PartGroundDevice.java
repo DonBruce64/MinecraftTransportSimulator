@@ -154,7 +154,8 @@ public class PartGroundDevice extends APart{
 			case("ground_inliquid"): return isInLiquid() ? 1 : 0;
 			case("ground_isflat"): return isFlat ? 1 : 0;
 			case("ground_contacted"): return contactThisTick ? 1 : 0;
-			case("ground_slipping"): return skipAngularCalcs ? 1 : 0;
+			case("ground_skidding"): return skipAngularCalcs ? 1 : 0;
+			case("ground_slipping"): return vehicleOn != null && vehicleOn.slipping && vehicleOn.groundDeviceCollective.isActuallyOnGround(this) ? 1 : 0;
 		}
 		
 		return super.getRawVariableValue(variable, partialTicks);

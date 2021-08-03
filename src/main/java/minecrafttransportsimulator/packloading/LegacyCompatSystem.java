@@ -930,6 +930,8 @@ public final class LegacyCompatSystem{
 				particleDef.type = ParticleType.SMOKE;
 				particleDef.color = "#FFFFFF";
 				particleDef.quantity = 4;
+				particleDef.spawnEveryTick = true;
+				particleDef.pos = new Point3d(0, -definition.ground.height/2, 0);
 				particleDef.initialVelocity = new Point3d(0, 0.15, 0);
 				particleDef.activeAnimations = new ArrayList<JSONAnimationDefinition>();
 				activeAnimation = new JSONAnimationDefinition();
@@ -940,12 +942,33 @@ public final class LegacyCompatSystem{
 				particleDef.activeAnimations.add(activeAnimation);
 				definition.rendering.particles.add(particleDef);
 				
-				//Wheel dirt.
+				//Wheel dirt for skidding (burnouts).
 				particleDef = new JSONParticle();
 				particleDef.type = ParticleType.BREAK;
-				particleDef.color = "#FFFFFF";
-				particleDef.quantity = 1;
-				particleDef.initialVelocity = new Point3d(0, 0.2, -0.2);
+				particleDef.color = "#999999";
+				particleDef.quantity = 4;
+				particleDef.scale = 0.3F;
+				particleDef.spawnEveryTick = true;
+				particleDef.pos = new Point3d(0, -definition.ground.height/2, 0);
+				particleDef.initialVelocity = new Point3d(0, 1.5, -1.5);
+				particleDef.activeAnimations = new ArrayList<JSONAnimationDefinition>();
+				activeAnimation = new JSONAnimationDefinition();
+				activeAnimation.animationType = AnimationComponentType.VISIBILITY;
+				activeAnimation.variable = "ground_skidding";
+				activeAnimation.clampMin = 1.0F;
+				activeAnimation.clampMax = 1.0F;
+				particleDef.activeAnimations.add(activeAnimation);
+				definition.rendering.particles.add(particleDef);
+				
+				//Wheel dirt for slipping (turning too fast).
+				particleDef = new JSONParticle();
+				particleDef.type = ParticleType.BREAK;
+				particleDef.color = "#999999";
+				particleDef.quantity = 4;
+				particleDef.scale = 0.3F;
+				particleDef.spawnEveryTick = true;
+				particleDef.pos = new Point3d(0, -definition.ground.height/2, 0);
+				particleDef.initialVelocity = new Point3d(0, 1.5, 0.0);
 				particleDef.activeAnimations = new ArrayList<JSONAnimationDefinition>();
 				activeAnimation = new JSONAnimationDefinition();
 				activeAnimation.animationType = AnimationComponentType.VISIBILITY;

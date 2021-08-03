@@ -286,16 +286,9 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 				motion.x = idealMotion.x;
 				motion.z = idealMotion.z;
 				
-				//If we are slipping while turning, spawn block particles.
-				//Only do this as a main vehicle.  If we are a trailer, we don't do this unless the vehicle towing us is.
-				if(towedByConnection == null ? (world.isClient() && motionFactor != 1 && velocity > 0.75) : (towedByConnection != null && towedByConnection.hitchBaseEntity instanceof AEntityVehicleD_Moving && ((AEntityVehicleD_Moving) towedByConnection.hitchBaseEntity).slipping)){
-					slipping = true;
-					for(byte i=0; i<4; ++i){
-						groundDeviceCollective.spawnSlippingParticles();
-					}
-				}else{
-					slipping = false;
-				}
+				//If we are slipping while turning, set the slipping variable to let other systems know.
+				//Only do this as a main vehicle.  If we are a trailer, we don't do this unless the vehicle towing us is slipping.
+				slipping = towedByConnection == null ? (world.isClient() && motionFactor != 1 && velocity > 0.75) : (towedByConnection != null && towedByConnection.hitchBaseEntity instanceof AEntityVehicleD_Moving && ((AEntityVehicleD_Moving) towedByConnection.hitchBaseEntity).slipping);
 			}
 		}
 	}

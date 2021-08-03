@@ -120,7 +120,12 @@ public class EntityParticle extends AEntityB_Existing{
 						break;
 					}
 					case BREAK: {
-						//Breaking particles aren't affected by motion.
+						//Breaking just fall down quickly.
+						if(!touchingBlocks){
+							motion.multiply(0.98).add(0D, -0.04D, 0D);
+						}else{
+							motion.multiply(0.0);
+						}
 						break;
 					}
 				}
@@ -181,7 +186,7 @@ public class EntityParticle extends AEntityB_Existing{
 	 *  to take the scale of the particle into account.
 	 */
 	public float getSize(){
-		return definition.type.equals(ParticleType.DRIP) ? 0.1F : 0.2F;
+		return definition.type.equals(ParticleType.DRIP) || definition.type.equals(ParticleType.BREAK) ? 0.1F : 0.2F;
 	}
 	
 	/**

@@ -158,7 +158,7 @@ public class PacketPartGunBulletHit extends APacketEntity<PartGun>{
 		}else{
 			//We only get a packet back if we hit a block and didn't break it.
 			//If this is the case, play the block break sound and spawn some particles.
-			InterfaceRender.spawnBlockBreakParticles(globalCenter, true);
+			InterfaceRender.spawnBlockBreakParticles(globalCenter);
 		}
 		return false;
 	}
