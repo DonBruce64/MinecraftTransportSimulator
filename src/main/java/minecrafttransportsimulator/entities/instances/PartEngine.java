@@ -276,7 +276,8 @@ public class PartEngine extends APart{
 						temp += Math.max(0, (7*rpm/definition.engine.maxRPM - temp/(COLD_TEMP*2))/20)*ConfigSystem.configObject.general.engineSpeedTempFactor.value;
 						
 						//Adjust oil pressure based on RPM and leak status.
-						pressure = Math.min(90 - temp/10, pressure + rpm/definition.engine.idleRPM - 0.5*(oilLeak ? 5F : 1F)*(pressure/LOW_OIL_PRESSURE));
+						//Need abs here to prevent negative idles from doing Bad Maths.
+						pressure = Math.min(90 - temp/10, pressure + Math.abs(rpm/definition.engine.idleRPM) - 0.5*(oilLeak ? 5F : 1F)*(pressure/LOW_OIL_PRESSURE));
 									
 						//Add extra hours and temp if we have low oil.
 						if(pressure < LOW_OIL_PRESSURE && !isCreative){
