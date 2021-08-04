@@ -273,7 +273,11 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	@Override
 	public void remove(){
 		super.remove();
-		renderableEntities.get(world).remove(this);
+		//Need to check for null, as this key may not exist if we were an entity spawned in a world but never ticked.
+		LinkedHashSet<AEntityC_Definable<?>> entities = renderableEntities.get(world);
+		if(entities != null){
+			renderableEntities.get(world).remove(this);
+		}
 	}
 	
 	/**
