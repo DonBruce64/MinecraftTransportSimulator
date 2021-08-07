@@ -70,12 +70,14 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 						if(pole != null){
 							iterator.remove();
 							for(Axis axis : Axis.values()){
-								ATileEntityPole_Component component = pole.components.get(axis);
-								if(component instanceof TileEntityPole_TrafficSignal){
-									TileEntityPole_TrafficSignal signal = (TileEntityPole_TrafficSignal) component;
-									intersectionProperties.get(axis).isActive = true;
-									signal.linkedController = this;
-									controlledSignals.add(signal);
+								if(axis.xzPlanar){
+									ATileEntityPole_Component component = pole.components.get(axis);
+									if(component instanceof TileEntityPole_TrafficSignal){
+										TileEntityPole_TrafficSignal signal = (TileEntityPole_TrafficSignal) component;
+										intersectionProperties.get(axis).isActive = true;
+										signal.linkedController = this;
+										controlledSignals.add(signal);
+									}
 								}
 							}
 						}
