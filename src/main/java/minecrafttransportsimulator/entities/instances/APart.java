@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.TrailerConnection;
 import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
@@ -17,6 +18,7 @@ import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packloading.JSONParser;
 import minecrafttransportsimulator.rendering.components.DurationDelayClock;
 import minecrafttransportsimulator.rendering.instances.RenderPart;
@@ -231,6 +233,29 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 		}else{
 			return false;
 		}
+	}
+	
+	@Override
+	public void attack(Damage damage){
+		//Check if we can be removed by this attack.
+		if(definition.generic.canBeRemovedByHand && !placementDefinition.isPermanent && damage.entityResponsible instanceof WrapperPlayer){
+			//Attacked a removable part, remove us to the player's inventory.
+			//If the inventory can't fit us, don't remove us.
+			WrapperPlayer player = (WrapperPlayer) damage.entityResponsible;
+			if(entityOn.locked){
+				player.sendPacket(new PacketPlayerChatMessage(player, "interact.failure.vehiclelocked"));
+			}else{
+				if(player.getInventory().addItem(getItem(), save(new WrapperNBT()))){
+					disconnectAllConnections();
+					entityOn.removePart(this, null);
+				}
+			}
+		}
+	}
+	
+	@Override
+	public PlayerOwnerState getOwnerState(WrapperPlayer player){
+		return entityOn.getOwnerState(player);
 	}
 	
 	@Override

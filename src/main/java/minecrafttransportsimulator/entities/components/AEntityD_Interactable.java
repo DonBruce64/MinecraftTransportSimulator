@@ -28,6 +28,7 @@ import minecrafttransportsimulator.jsondefs.JSONInstrumentDefinition;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
@@ -447,6 +448,15 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 	}
 	
 	/**
+	 *  Returns the owner state of the passed-in player, relative to this entity.
+	 *  Takes into account player OP status and {@link #ownerUUID}, if set.
+	 */
+	public PlayerOwnerState getOwnerState(WrapperPlayer player){
+		boolean canPlayerEdit = player.isOP() || ownerUUID.isEmpty() || player.getID().equals(ownerUUID);
+		return player.isOP() ? PlayerOwnerState.ADMIN : (canPlayerEdit ? PlayerOwnerState.OWNER : PlayerOwnerState.USER);
+	}
+	
+	/**
 	 *  Called when the entity is attacked.
 	 *  This should ONLY be called on the server; clients will sync via packets.
 	 */
@@ -650,6 +660,15 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 			}
 		}
 		return data;
+	}
+	
+	/**
+	 * Emum for easier functions for owner states.
+	 */
+	public static enum PlayerOwnerState{
+		USER,
+		OWNER,
+		ADMIN;
 	}
 	
 	/**

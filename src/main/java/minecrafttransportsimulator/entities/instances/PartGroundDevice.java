@@ -60,8 +60,11 @@ public class PartGroundDevice extends APart{
 	
 	@Override
 	public void attack(Damage damage){
-		if(!damage.isWater && (damage.isExplosion || Math.random() < 0.5)){
-			setFlatState(true);
+		super.attack(damage);
+		if(isValid){
+			if(!damage.isWater && (damage.isExplosion || Math.random() < 0.5)){
+				setFlatState(true);
+			}
 		}
 	}
 	

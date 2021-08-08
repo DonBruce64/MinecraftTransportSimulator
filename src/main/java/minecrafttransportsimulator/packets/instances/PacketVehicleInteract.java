@@ -5,12 +5,12 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
+import minecrafttransportsimulator.entities.components.AEntityD_Interactable.PlayerOwnerState;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.components.IItemVehicleInteractable;
-import minecrafttransportsimulator.items.components.IItemVehicleInteractable.PlayerOwnerState;
 import minecrafttransportsimulator.jsondefs.JSONDoor;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
@@ -56,8 +56,7 @@ public class PacketVehicleInteract extends APacketEntityInteract<EntityVehicleF_
 
 	@Override
 	public boolean handle(WrapperWorld world, EntityVehicleF_Physics vehicle, WrapperPlayer player){
-		boolean canPlayerEditVehicle = player.isOP() || vehicle.ownerUUID.isEmpty() || player.getID().equals(vehicle.ownerUUID);
-		PlayerOwnerState ownerState = player.isOP() ? PlayerOwnerState.ADMIN : (canPlayerEditVehicle ? PlayerOwnerState.OWNER : PlayerOwnerState.USER);
+		PlayerOwnerState ownerState = vehicle.getOwnerState(player);
 		ItemStack heldStack = player.getHeldStack();
 		AItemBase heldItem = player.getHeldItem();
 		
@@ -93,7 +92,7 @@ public class PacketVehicleInteract extends APacketEntityInteract<EntityVehicleF_
 		//should always be checked before part interaction.
 		if(vehicle.allPartSlotBoxes.containsKey(hitBox)){
 			//Only owners can add vehicle parts.
-			if(!canPlayerEditVehicle){
+			if(ownerState.equals(PlayerOwnerState.USER)){
 				player.sendPacket(new PacketPlayerChatMessage(player, "interact.failure.vehicleowned"));
 			}else{
 				//Attempt to add a part.  Vehicle is responsible for callback packet here.

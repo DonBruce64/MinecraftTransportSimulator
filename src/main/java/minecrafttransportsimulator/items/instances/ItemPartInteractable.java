@@ -2,6 +2,7 @@ package minecrafttransportsimulator.items.instances;
 
 import java.util.List;
 
+import minecrafttransportsimulator.entities.components.AEntityD_Interactable.PlayerOwnerState;
 import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityFluidTank;

@@ -38,15 +38,18 @@ public class PartPropeller extends APart{
 	
 	@Override
 	public void attack(Damage damage){
-		if(!damage.isWater){
-			if(damage.entityResponsible instanceof WrapperPlayer && ((WrapperPlayer) damage.entityResponsible).getHeldStack().isEmpty()){
-				if(!entityOn.equals(damage.entityResponsible.getEntityRiding())){
-					connectedEngine.handStartEngine();
-					InterfacePacket.sendToAllClients(new PacketPartEngine(connectedEngine, Signal.HS_ON));
+		super.attack(damage);
+		if(isValid){
+			if(!damage.isWater){
+				if(damage.entityResponsible instanceof WrapperPlayer && ((WrapperPlayer) damage.entityResponsible).getHeldStack().isEmpty()){
+					if(!entityOn.equals(damage.entityResponsible.getEntityRiding())){
+						connectedEngine.handStartEngine();
+						InterfacePacket.sendToAllClients(new PacketPartEngine(connectedEngine, Signal.HS_ON));
+					}
+					return;
 				}
-				return;
+				this.damageAmount += damage.amount;
 			}
-			this.damageAmount += damage.amount;
 		}
 	}
 	
