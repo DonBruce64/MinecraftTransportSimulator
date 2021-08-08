@@ -37,13 +37,13 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityTi
     			if(!isCreative){
 					//We are a pump with a set cost, ensure we have purchased fuel.
     				//Make sure to add a small amount to ensure that the pump displays the name of the fluid in it.
-    				if(fuelPurchasedRemaining == 0 && getFluidLevel() == 0){
+    				if(fuelPurchasedRemaining == 0 && connectedVehicle == null && getFluidLevel() == 0){
     					maxAmount = 1;
 					}else if(maxAmount > fuelPurchasedRemaining){
 						maxAmount = fuelPurchasedRemaining;
 					}
 					double amountFilled = super.fill(fluid, maxAmount, doFill);
-					if(doFill){
+					if(doFill && fuelPurchasedRemaining > 0){
 						fuelPurchasedRemaining -= amountFilled;
 					}
 					return amountFilled;
