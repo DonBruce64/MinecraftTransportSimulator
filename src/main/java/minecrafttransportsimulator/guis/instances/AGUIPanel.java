@@ -13,6 +13,9 @@ import minecrafttransportsimulator.entities.instances.PartPropeller;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentInstrument;
 import minecrafttransportsimulator.jsondefs.JSONConnectionGroup;
+import minecrafttransportsimulator.packets.components.InterfacePacket;
+import minecrafttransportsimulator.packets.instances.PacketPartEngine;
+import minecrafttransportsimulator.packets.instances.PacketPartEngine.Signal;
 
 /**A GUI/control system hybrid, this takes the place of the HUD when called up.
  * This class is abstract and contains the base code for rendering things common to
@@ -167,6 +170,14 @@ public abstract class AGUIPanel extends AGUIBase{
 	@Override
 	public String getTexture(){
 		return vehicle.definition.motorized.panelTexture != null ? vehicle.definition.motorized.panelTexture : "mts:textures/guis/panel.png";
+	}
+	
+	@Override
+	public void onClosed(){
+		//Turn starters off.  This prevents stuck engine starters.
+		for(PartEngine engine : vehicle.engines.values()){
+			InterfacePacket.sendToServer(new PacketPartEngine(engine, Signal.ES_OFF));
+		}
 	}
 	
 	protected static class SwitchEntry{

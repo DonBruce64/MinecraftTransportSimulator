@@ -247,6 +247,11 @@ public class BuilderGUI extends GuiScreen{
 	}
 	
 	@Override
+	public void onGuiClosed(){
+		gui.onClosed();
+    }
+	
+	@Override
 	public boolean doesGuiPauseGame(){
 		return gui.pauseOnOpen();
 	}

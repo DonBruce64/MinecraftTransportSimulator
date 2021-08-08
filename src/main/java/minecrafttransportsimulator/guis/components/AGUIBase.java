@@ -44,6 +44,12 @@ public abstract class AGUIBase{
 	public abstract void setStates();
 	
 	/**
+	 *  Called right after the GUI is closed.  Normally does nothing, but can be
+	 *  used for closure events. 
+	 */
+	public void onClosed(){}
+	
+	/**
 	 *  If this is false, then no background texture will be rendered.
 	 */
 	public boolean renderBackground(){

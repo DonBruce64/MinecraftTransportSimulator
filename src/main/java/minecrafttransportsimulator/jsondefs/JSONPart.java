@@ -90,7 +90,7 @@ public class JSONPart extends AJSONPartProvider{
     	@JSONDescription("This parameter is optional.  If included and set to true, this part will use the texture of the vehicle rather than the texture that corresponds to the part.  Useful for parts that need to pull vehicle textures for their rendering, such as tank turrets and vehicle bolt-on components.")
     	public boolean useVehicleTexture;
     	
-    	@JSONDescription("If true, this part will be able to be removed by hand and without a wrench.  This also bypassed owner requirements.  Useful for small parts like luggage that anyone should be able to remove at any time..")
+    	@JSONDescription("If true, this part will be able to be removed by hand and without a wrench.  This also bypasses owner requirements (but not vehicle locking).  Useful for small parts like luggage that anyone should be able to remove at any time.")
     	public boolean canBeRemovedByHand;
     	
 		@JSONDescription("The width of the part.")
