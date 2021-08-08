@@ -6,6 +6,7 @@ import minecrafttransportsimulator.entities.components.AEntityD_Interactable.Pla
 import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityFluidTank;
+import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartInteractable;
 import minecrafttransportsimulator.items.components.AItemPart;
@@ -16,6 +17,8 @@ import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.packets.instances.PacketItemInteractable;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import net.minecraft.item.ItemStack;
 
@@ -107,6 +110,20 @@ public class ItemPartInteractable extends AItemPart implements IItemVehicleInter
 		}
 		return CallbackType.SKIP;
 	}
+	
+	@Override
+	public boolean onUsed(WrapperWorld world, WrapperPlayer player){
+		if(definition.interactable.canBeOpenedInHand && definition.interactable.interactionType.equals(InteractableComponentType.CRATE)){
+			if(!world.isClient()){
+				EntityInventoryContainer inventory = new EntityInventoryContainer(world, new WrapperNBT(player.getHeldStack()).getDataOrNew("inventory"), (int) (definition.interactable.inventoryUnits*9F));
+				player.sendPacket(new PacketItemInteractable(player, inventory, definition.interactable.inventoryTexture));
+			}
+			return true;
+		}else{
+			return false;
+		}
+        
+    }
 	
 	public static final AItemPartCreator CREATOR = new AItemPartCreator(){
 		@Override

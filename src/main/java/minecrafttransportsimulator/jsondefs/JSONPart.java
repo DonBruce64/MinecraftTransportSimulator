@@ -383,6 +383,9 @@ public class JSONPart extends AJSONPartProvider{
 		@JSONDescription("If set, this part's inventory can be used by the vehicle and its parts.  This does not affect loader/unloader operations.")
     	public boolean feedsVehicles;
 		
+		@JSONDescription("If set, this inventory will be able to be opened while in the player's hand.  Only valid for chests.")
+    	public boolean canBeOpenedInHand;
+		
 		@JSONDescription("If this part is a crate or barrel, this defines the size of its inventory. This is also what is used for min/max value calculations on vehicles.  For crates, this is how many rows (of 9 slots) the inventory has.  For barrels, this is how many buckets the barrel can store x10.  The idea being that 1 unit for crates holds a bit less than 1 unit of barrels, as with barrels you're storing the raw material, and not the container.")
     	public float inventoryUnits;
 		

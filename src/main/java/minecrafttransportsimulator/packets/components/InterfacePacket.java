@@ -22,6 +22,7 @@ import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketFluidTankChange;
 import minecrafttransportsimulator.packets.instances.PacketGUIRequest;
 import minecrafttransportsimulator.packets.instances.PacketInventoryContainerChange;
+import minecrafttransportsimulator.packets.instances.PacketItemInteractable;
 import minecrafttransportsimulator.packets.instances.PacketPartChange;
 import minecrafttransportsimulator.packets.instances.PacketPartEffector;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine;
@@ -99,6 +100,7 @@ public class InterfacePacket{
 		
 		//Inventory container packets.
 		registerPacket(packetIndex++, PacketInventoryContainerChange.class);
+		registerPacket(packetIndex++, PacketItemInteractable.class);
 		
 		//GUI packets.
 		registerPacket(packetIndex++, PacketGUIRequest.class);
