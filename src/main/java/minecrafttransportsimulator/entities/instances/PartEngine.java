@@ -279,13 +279,15 @@ public class PartEngine extends APart{
 						temp += Math.max(0, (7*rpm/definition.engine.maxRPM - temp/(COLD_TEMP*2))/20)*ConfigSystem.configObject.general.engineSpeedTempFactor.value;
 						
 						//Adjust oil pressure based on RPM and leak status.
-						//Need abs here to prevent negative idles from doing Bad Maths.
-						pressure = Math.min(90 - temp/10, pressure + Math.abs(rpm/definition.engine.idleRPM) - 0.5*(oilLeak ? 5F : 1F)*(pressure/LOW_OIL_PRESSURE));
-									
-						//Add extra hours and temp if we have low oil.
-						if(pressure < LOW_OIL_PRESSURE && !isCreative){
-							temp += Math.max(0, (20*rpm/definition.engine.maxRPM)/20);
-							hours += 0.01*getTotalWearFactor();
+						//If this is a 0-idle RPM engine, assume it's electric and doesn't have oil.
+						if(definition.engine.idleRPM != 0){
+							pressure = Math.min(90 - temp/10, pressure + rpm/definition.engine.idleRPM - 0.5*(oilLeak ? 5F : 1F)*(pressure/LOW_OIL_PRESSURE));
+							
+							//Add extra hours and temp if we have low oil.
+							if(pressure < LOW_OIL_PRESSURE && !isCreative){
+								temp += Math.max(0, (20*rpm/definition.engine.maxRPM)/20);
+								hours += 0.01*getTotalWearFactor();
+							}
 						}
 						
 						//Add extra hours, and possibly explode the engine, if its too hot.
@@ -376,7 +378,7 @@ public class PartEngine extends APart{
 					//Start engine if the RPM is high enough to cause it to start by itself.
 					//Used for drowned engines that come out of the water, or engines that don't
 					//have the ability to engage a starter.
-					if(rpm > definition.engine.startRPM && !world.isClient()){
+					if(rpm >= definition.engine.startRPM && !world.isClient()){
 						if(isCreative || vehicleOn.fuelTank.getFluidLevel() > 0){
 							if(!isInLiquid() && state.magnetoOn){
 								startEngine();
