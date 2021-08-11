@@ -5,6 +5,8 @@ import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartEngine;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
+import minecrafttransportsimulator.packets.components.InterfacePacket;
+import minecrafttransportsimulator.packets.instances.PacketPartEngine.Signal;
 
 /**Packet used for controlling vehicles.  Responsible for handing singular button presses.
  * 
@@ -45,22 +47,20 @@ public class PacketVehicleControlDigital extends APacketEntity<EntityVehicleF_Ph
 				break;
 			}
 			case SHIFT_UP : {
-				boolean didShift = false;
 				for(PartEngine engine : vehicle.engines.values()){
-					if(engine.shiftUp(controlState) && !didShift){
-						didShift = true;
+					if(engine.shiftUp(controlState)){
+						InterfacePacket.sendToAllClients(new PacketPartEngine(engine, Signal.SHIFT_UP_MANUAL));
 					}
 				}
-				return didShift;
+				return false;
 			}
 			case SHIFT_DN : {
-				boolean didShift = false;
 				for(PartEngine engine : vehicle.engines.values()){
-					if(engine.shiftDown(controlState) && !didShift){
-						didShift = true;
+					if(engine.shiftDown(controlState)){
+						InterfacePacket.sendToAllClients(new PacketPartEngine(engine, Signal.SHIFT_DN_MANUAL));
 					}
 				}
-				return didShift;
+				return false;
 			}
 			case SHIFT_NEUTRAL : {
 				for(PartEngine engine : vehicle.engines.values()){

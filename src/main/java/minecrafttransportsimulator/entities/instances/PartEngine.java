@@ -11,7 +11,6 @@ import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine.Signal;
-import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 public class PartEngine extends APart{
@@ -330,12 +329,12 @@ public class PartEngine extends APart{
 									if(currentGear > 0){
 										if(shiftUp(true)){
 											shiftCooldown = definition.engine.shiftSpeed;
-											InterfacePacket.sendToAllClients(new PacketVehicleControlDigital(vehicleOn, PacketVehicleControlDigital.Controls.SHIFT_UP, true));
+											InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.SHIFT_UP_AUTO));
 										}
 									}else{
 										if(shiftDown(true)){
 											shiftCooldown = definition.engine.shiftSpeed;
-											InterfacePacket.sendToAllClients(new PacketVehicleControlDigital(vehicleOn, PacketVehicleControlDigital.Controls.SHIFT_DN, true));
+											InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.SHIFT_DN_AUTO));
 										}
 									}
 								}
@@ -346,12 +345,12 @@ public class PartEngine extends APart{
 									if(currentGear > 0){
 										if(shiftDown(true)){
 											shiftCooldown = definition.engine.shiftSpeed;
-											InterfacePacket.sendToAllClients(new PacketVehicleControlDigital(vehicleOn, PacketVehicleControlDigital.Controls.SHIFT_DN, true));
+											InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.SHIFT_DN_AUTO));
 										}
 									}else{
 										if(shiftUp(true)){
 											shiftCooldown = definition.engine.shiftSpeed;
-											InterfacePacket.sendToAllClients(new PacketVehicleControlDigital(vehicleOn, PacketVehicleControlDigital.Controls.SHIFT_UP, true));
+											InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.SHIFT_UP_AUTO));
 										}
 									}
 								}
