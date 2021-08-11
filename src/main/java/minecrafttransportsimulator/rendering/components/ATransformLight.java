@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.rendering.components;
 
+import java.awt.Color;
+
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.jsondefs.JSONLight;
@@ -14,6 +16,7 @@ public abstract class ATransformLight<AnimationEntity extends AEntityC_Definable
 	private final boolean rendersWithLights;
 	protected final JSONLight definition;
 	protected float lightLevel;
+	protected Color color;
 	
 	public ATransformLight(JSONLight definition, boolean rendersWithLights){
 		this.definition = definition;
@@ -23,6 +26,7 @@ public abstract class ATransformLight<AnimationEntity extends AEntityC_Definable
 	@Override
 	public boolean shouldRender(AnimationEntity entity, boolean blendingEnabled, float partialTicks){
 		lightLevel = entity.lightBrightnessValues.get(definition);
+		color = entity.lightColorValues.get(definition);
 		if(definition.isElectric && entity instanceof EntityVehicleF_Physics){
 			//Light start dimming at 10V, then go dark at 3V.
 			double electricPower = ((EntityVehicleF_Physics) entity).electricPower;
