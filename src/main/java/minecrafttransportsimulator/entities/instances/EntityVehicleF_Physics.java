@@ -223,7 +223,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 				//If the part is a propeller or jet engine (not a car engine), we add thrust torque.
 				//If it's a rotor, we also add control surface torque to allow the vehicle to tilt.
 				if(isPropeller || jetPower > 0){
-					thrustTorque.add(partForce.y*-part.placementOffset.z, partForce.z*part.placementOffset.x, partForce.y*part.placementOffset.x);
+					thrustTorque.add(partForce.y*-part.localOffset.z, partForce.z*part.localOffset.x, partForce.y*part.localOffset.x);
 				}
 				if(isRotor){
 					hasRotors = true;
