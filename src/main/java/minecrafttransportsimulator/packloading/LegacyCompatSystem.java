@@ -1189,6 +1189,17 @@ public final class LegacyCompatSystem{
 			definition.decor.type = DecorComponentType.GENERIC;
 		}
 		
+		//If we are a decor with a type of fuel pump, then set defaults for invalid/missing values.
+		if(definition.decor.type == DecorComponentType.FUEL_PUMP){
+			if (definition.decor.fuelCapacity <= 0) {
+				definition.decor.fuelCapacity = 15;
+			}
+			
+			if (definition.decor.pumpQuantity <= 0) {
+				definition.decor.pumpQuantity = 10;
+			}
+		}
+		
 		//If we are a decor without a definition, add one so we don't crash on other systems.
 		if(definition.definitions == null){
 			definition.definitions = new ArrayList<JSONSubDefinition>();

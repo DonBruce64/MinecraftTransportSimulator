@@ -26,12 +26,13 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityTi
     public final EntityInventoryContainer fuelItems;
     public final List<Integer> fuelAmounts = new ArrayList<Integer>();
     public int fuelPurchasedRemaining;
+	public int fuelCapacity = definition.decor.fuelCapacity*1000;
     public boolean isCreative;
 	public String placingPlayerID;
 
     public TileEntityFuelPump(WrapperWorld world, Point3d position, WrapperNBT data){
     	super(world, position, data);
-    	this.tank = new EntityFluidTank(world, data.getDataOrNew("tank"), 15000){
+    	this.tank = new EntityFluidTank(world, data.getDataOrNew("tank"), this.fuelCapacity){
     		@Override
     		public double fill(String fluid, double maxAmount, boolean doFill){
     			if(!isCreative){
@@ -80,8 +81,8 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityTi
 				for(int i=0; i<definition.rendering.textObjects.size(); ++i){
 					switch(i%3){
 						case(0) : text.put(definition.rendering.textObjects.get(i), fluidName); break;
-						case(1) : text.put(definition.rendering.textObjects.get(i),fluidLevel); break;
-						case(2) : text.put(definition.rendering.textObjects.get(i),fluidDispensed); break;
+						case(1) : text.put(definition.rendering.textObjects.get(i), fluidLevel); break;
+						case(2) : text.put(definition.rendering.textObjects.get(i), fluidDispensed); break;
 					}
 				}
 			}
@@ -109,7 +110,7 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityTi
 				}
 				//If we have room for fuel, try to add it to the vehicle.
 				if(tank.getFluidLevel() > 0){
-					double amountToFill = connectedVehicle.fuelTank.fill(tank.getFluid(), 10, false);
+					double amountToFill = connectedVehicle.fuelTank.fill(tank.getFluid(), definition.decor.pumpQuantity, false);
 					if(amountToFill > 0){
 						double amountToDrain = tank.drain(tank.getFluid(), amountToFill, false);
 						connectedVehicle.fuelTank.fill(tank.getFluid(), amountToDrain, true);
