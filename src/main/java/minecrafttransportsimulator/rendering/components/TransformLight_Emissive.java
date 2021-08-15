@@ -1,7 +1,5 @@
 package minecrafttransportsimulator.rendering.components;
 
-import java.awt.Color;
-
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.jsondefs.JSONLight;
 import minecrafttransportsimulator.mcinterface.InterfaceRender;
@@ -12,11 +10,9 @@ import minecrafttransportsimulator.mcinterface.InterfaceRender;
 * @author don_bruce
 */
 public class TransformLight_Emissive<AnimationEntity extends AEntityC_Definable<?>> extends ATransformLight<AnimationEntity>{
-	private final Color color;
 	
 	public TransformLight_Emissive(JSONLight definition){
 		super(definition, true);
-		color = Color.decode(definition.color);
 	}
 
 	@Override

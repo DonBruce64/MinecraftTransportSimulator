@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.entities.components;
 
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -78,6 +79,9 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	
 	/**Maps light definitions to their current brightness.  This is updated every frame prior to rendering.**/
 	public final Map<JSONLight, Float> lightBrightnessValues = new HashMap<JSONLight, Float>();
+	
+	/**Maps light definitions to their current color.  This is updated every frame prior to rendering.**/
+	public final Map<JSONLight, Color> lightColorValues = new HashMap<JSONLight, Color>();
 	
 	/**Constructor for synced entities**/
 	public AEntityC_Definable(WrapperWorld world, WrapperNBT data){
@@ -216,6 +220,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 		
 		lightBrightnessClocks.clear();
 		lightBrightnessValues.clear();
+		lightColorValues.clear();
 		if(definition.rendering != null && definition.rendering.lightObjects != null){
 			for(JSONLight lightDef : definition.rendering.lightObjects){
 				List<DurationDelayClock> lightClocks = new ArrayList<DurationDelayClock>();
@@ -226,6 +231,9 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 				}
 				lightBrightnessClocks.put(lightDef, lightClocks);
 				lightBrightnessValues.put(lightDef, 0F);
+				if(lightDef.color != null){
+					lightColorValues.put(lightDef, Color.decode(lightDef.color));
+				}
 			}
 		}
 		
@@ -427,6 +435,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 			float lightLevel = 0.0F;
 			boolean inhibitAnimations = false;
 			boolean inhibitLight = false;
+			Color customColor = null;
 			for(DurationDelayClock clock : lightBrightnessClocks.get(lightObject)){
 				switch(clock.animation.animationType){
 					case VISIBILITY :{
@@ -458,6 +467,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 					}
 					case TRANSLATION :{
 						if(!inhibitAnimations){
+							definedBrightness = true;
 							if(clock.animation.axis.x != 0){
 								lightLevel *= getAnimatedVariableValue(clock, 0, partialTicks);
 							}else if(clock.animation.axis.y != 0){
@@ -469,7 +479,14 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 						break;
 					}
 					case ROTATION :{
-						//Do nothing.
+						if(!inhibitAnimations){
+							double colorFactor = getAnimatedVariableValue(clock, -clock.animation.offset, partialTicks)/clock.animation.axis.length();
+							if(customColor == null){
+								customColor = new Color((float) Math.min(clock.animation.axis.x*colorFactor + clock.animation.offset, 1.0), (float) Math.min(clock.animation.axis.y*colorFactor + clock.animation.offset, 1.0), (float) Math.min(clock.animation.axis.z*colorFactor + clock.animation.offset, 1.0));
+							}else{
+								customColor = new Color((float) Math.min(clock.animation.axis.x*colorFactor + clock.animation.offset + customColor.getRed()/255F, 1.0), (float) Math.min(clock.animation.axis.y*colorFactor + clock.animation.offset + customColor.getGreen()/255F, 1.0), (float) Math.min(clock.animation.axis.z*colorFactor + clock.animation.offset + customColor.getBlue()/255F, 1.0));
+							}
+						}
 						break;
 					}
 					case SCALING :{
@@ -488,6 +505,11 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 				lightLevel = 1;
 			}
 			lightBrightnessValues.put(lightObject, lightLevel);
+			if(customColor != null){
+				lightColorValues.put(lightObject, customColor);
+			}else{
+				lightColorValues.put(lightObject, Color.decode(lightObject.color));
+			}
 		}
     }
 	
