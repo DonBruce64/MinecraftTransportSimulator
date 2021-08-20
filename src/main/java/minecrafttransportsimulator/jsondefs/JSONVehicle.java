@@ -51,6 +51,9 @@ public class JSONVehicle extends AJSONPartProvider{
     	@JSONDescription("Set this to true if you want the vehicle to have incremental throttle.  This is only active for vehicles that are not aircraft, and will give the vehicle an aircraft-like throttle that increments in 1/100 units when the gas is pressed, and decrements in 1/100 units when the brake is pressed.  Mainly for boats and other constant-throttle vehicles.")
     	public boolean hasIncrementalThrottle;
     	
+    	@JSONDescription("Set this to true if you want only one engine control button to control all engines on the panel.  Useful if you have multiple engines in a vehicle, but want them all to start at the same time.")
+    	public boolean hasSingleEngineControl;
+    	
     	@JSONDescription("Set this to true if the vehicle has these lights.  This will make the respective switch apper in the panel.")
     	public boolean hasRunningLights;
     	
