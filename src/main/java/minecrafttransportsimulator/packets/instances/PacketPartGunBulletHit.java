@@ -110,7 +110,7 @@ public class PacketPartGunBulletHit extends APacketEntity<PartGun>{
 							//Create damage object and attack the entity.
 							WrapperEntity attacker = world.getEntity(controllerEntityID);
 							double damageAmount = bulletVelocity*bulletItem.definition.bullet.diameter/5D*ConfigSystem.configObject.damage.bulletDamageFactor.value;
-							Damage damage = new Damage("bullet", damageAmount, hitBox, gun, attacker).ignoreCooldown();
+							Damage damage = new Damage("bullet", damageAmount, hitBox, gun, attacker).ignoreCooldown().setEffects(bulletItem.definition.bullet.effects);
 							if(bulletItem.definition.bullet.types.contains(BulletType.WATER)){
 								damage.isWater = true;
 							}
