@@ -115,7 +115,7 @@ public class InterfaceSound{
 					AL10.alSourceStop(sound.sourceIndex);
 				}else{
 					//Update position and volume.
-					AL10.alSource3f(sound.sourceIndex, AL10.AL_POSITION, (float) sound.entity.position.x, (float) sound.entity.position.y, (float) sound.entity.position.z);
+					AL10.alSource3f(sound.sourceIndex, AL10.AL_POSITION, (float) sound.position.x, (float) sound.position.y, (float) sound.position.z);
 					AL10.alSourcef(sound.sourceIndex, AL10.AL_GAIN, sound.volume);
 					
 					//If the sound is looping, and the player isn't riding the source, calculate doppler pitch effect.

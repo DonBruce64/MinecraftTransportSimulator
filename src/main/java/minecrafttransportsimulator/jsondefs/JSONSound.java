@@ -2,6 +2,7 @@ package minecrafttransportsimulator.jsondefs;
 
 import java.util.List;
 
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 
@@ -30,4 +31,10 @@ public class JSONSound{
 	
 	@JSONDescription("Like isInterior, but blocks this sound if the player is in first-person and riding this entity.")
 	public boolean isExterior;
+	
+	@JSONDescription("The x, y, z position that this animation should be performed at.  If this is rotation, it is the rotation point.")
+	public Point3d centerPoint;
+	
+	@JSONDescription("An entry of x, y, and z coordinates that define the center point of where this sound will be played relative to the center of the object.  May be omitted if you just want the sound to play at the center.")
+	public Point3d pos;
 }

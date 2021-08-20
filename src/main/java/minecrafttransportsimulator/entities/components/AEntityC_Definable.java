@@ -852,6 +852,13 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 				}else if(sound.pitch < 0){
 					sound.pitch = 0;
 				}
+				
+				//Adjust position.
+				if(soundDef.pos != null){
+					sound.position.setTo(soundDef.pos).rotateFine(angles).add(position);
+				}else{
+					sound.position.setTo(position);
+				}
 			}
     	}
     }
