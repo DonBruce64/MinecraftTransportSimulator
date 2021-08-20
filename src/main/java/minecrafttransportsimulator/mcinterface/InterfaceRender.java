@@ -46,6 +46,7 @@ public class InterfaceRender{
 	private static final Map<String, Integer> textures = new HashMap<String, Integer>();
 	private static final Map<String, ParsedGIF> animatedGIFs = new HashMap<String, ParsedGIF>();
 	private static String pushedTextureLocation;
+	private static boolean boundSinceLastPush;
 	
 	/**
 	 *  Caches the vertices in some form for quick rendering.  This form is version-dependent,
@@ -97,6 +98,19 @@ public class InterfaceRender{
 	}
 	
 	/**
+	 *  Renders a set of raw vertices without any caching.
+	 */
+	public static void renderVertices(Float[][] vertices){
+		GL11.glBegin(GL11.GL_TRIANGLES);
+		for(Float[] vertex : vertices){
+			GL11.glTexCoord2f(vertex[3], vertex[4]);
+			GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
+			GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
+		}
+		GL11.glEnd();
+	}
+	
+	/**
 	 *  Deletes the cached vertices with the specified index.
 	 */
 	public static void deleteVertices(int index){
@@ -136,6 +150,7 @@ public class InterfaceRender{
 			}
 		}
 		GlStateManager.bindTexture(textures.get(textureLocation));
+		boundSinceLastPush = true;
 	}
 	
 	/**
@@ -202,6 +217,7 @@ public class InterfaceRender{
 			ParsedGIF parsedGIF = animatedGIFs.get(textureURL);
 			GlStateManager.bindTexture(parsedGIF.getCurrentTextureIndex());
 		}
+		boundSinceLastPush = true;
 		return null;
 	}
 	
@@ -214,13 +230,14 @@ public class InterfaceRender{
 	public static void setTexture(String textureLocation){
 		pushedTextureLocation = textureLocation;
 		bindTexture(textureLocation);
+		boundSinceLastPush = false;
 	}
 	
 	/**
-	 *  Re-binds the last saved texture.
+	 *  Re-binds the last saved texture.  If this texture is already bound, then no re-binding occurs.
 	 */
 	public static void recallTexture(){
-		if(pushedTextureLocation != null){
+		if(pushedTextureLocation != null && boundSinceLastPush){
 			GlStateManager.bindTexture(textures.get(pushedTextureLocation));
 		}
 	}
@@ -324,10 +341,9 @@ public class InterfaceRender{
 	 *  Resets all the rendering states.
 	 *  Useful after doing a rendering routine where states may not be correct.
 	 */
+	//TODO move away from this.  It's a hack for bad code!
 	public static void resetStates(){
 		setColorState(1.0F, 1.0F, 1.0F, 1.0F);
-		setTextureState(true);
-		setBlendBright(false);
 		setLightingState(true);
 	}
 	

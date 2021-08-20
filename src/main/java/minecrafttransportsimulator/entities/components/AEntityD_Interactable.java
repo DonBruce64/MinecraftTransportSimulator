@@ -93,13 +93,6 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 	 **/
 	public final Map<Integer, ItemInstrument> instruments = new HashMap<Integer, ItemInstrument>();
 	
-	/**Maps instrument animations to their respective clocks.  Each animation has its own clock, which
-	 * will be used when the instrument is rendered and animated.  Clocks should be created and added to
-	 * this map as needed.  The map will only be modified when the JSON definition for this entity is
-	 * reloaded, in which case all clocks will be reset as the JSON may have changed animations.
-	 **/
-	public final Map<JSONAnimationDefinition, DurationDelayClock> instrumentAnimationClocks = new HashMap<JSONAnimationDefinition, DurationDelayClock>();
-	
 	/**Locked state.  Locked entities should not be able to be interacted with except by entities riding them,
 	 * their owners, or OP players (server admins).
 	 **/
@@ -188,13 +181,12 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 	@Override
 	protected void initializeAnimations(){
 		super.initializeAnimations();
-		instrumentAnimationClocks.clear();
 		if(definition.instruments != null){
 			for(int i=0; i<definition.instruments.size(); ++i){
 				JSONInstrumentDefinition packInstrument = definition.instruments.get(i);
 				if(packInstrument.animations != null){
 					for(JSONAnimationDefinition animation : packInstrument.animations){
-						renderAnimationClocks.put(animation, new DurationDelayClock(animation));
+						animationClocks.put(animation, new DurationDelayClock(animation));
 					}
 				}
 			}

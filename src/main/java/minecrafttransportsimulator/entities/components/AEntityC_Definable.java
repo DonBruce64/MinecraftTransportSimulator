@@ -71,17 +71,20 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	private final Map<JSONParticle, List<DurationDelayClock>> particleActiveClocks = new HashMap<JSONParticle, List<DurationDelayClock>>();
 	private final Map<JSONParticle, Long> lastTickParticleSpawned = new HashMap<JSONParticle, Long>();
 	
-	/**Maps rendering animations to their respective clocks.  Used only for the rendering JSON section.**/
-	public final Map<JSONAnimationDefinition, DurationDelayClock> renderAnimationClocks = new HashMap<JSONAnimationDefinition, DurationDelayClock>();
+	/**Maps animations to their respective clocks.  Used for anything that has an animation block.**/
+	public final Map<JSONAnimationDefinition, DurationDelayClock> animationClocks = new HashMap<JSONAnimationDefinition, DurationDelayClock>();
 	
-	/**Maps camera animations to their respective clocks.  Used only for the camera JSON section.**/
-	public final Map<JSONAnimationDefinition, DurationDelayClock> cameraAnimationClocks = new HashMap<JSONAnimationDefinition, DurationDelayClock>();
+	/**Maps animated (model) object names to their definitions.  This is created from the JSON definition to prevent the need to do loops.**/
+	public final Map<String, JSONAnimatedObject> animatedObjectDefinitions = new HashMap<String, JSONAnimatedObject>();
 	
 	/**Maps light definitions to their current brightness.  This is updated every frame prior to rendering.**/
 	public final Map<JSONLight, Float> lightBrightnessValues = new HashMap<JSONLight, Float>();
 	
 	/**Maps light definitions to their current color.  This is updated every frame prior to rendering.**/
 	public final Map<JSONLight, Color> lightColorValues = new HashMap<JSONLight, Color>();
+	
+	/**Maps light (model) object names to their definitions.  This is created from the JSON definition to prevent the need to do loops.**/
+	public final Map<String, JSONLight> lightObjectDefinitions = new HashMap<String, JSONLight>();
 	
 	/**Constructor for synced entities**/
 	public AEntityC_Definable(WrapperWorld world, WrapperNBT data){
@@ -221,8 +224,10 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 		lightBrightnessClocks.clear();
 		lightBrightnessValues.clear();
 		lightColorValues.clear();
+		lightObjectDefinitions.clear();
 		if(definition.rendering != null && definition.rendering.lightObjects != null){
 			for(JSONLight lightDef : definition.rendering.lightObjects){
+				lightObjectDefinitions.put(lightDef.objectName, lightDef);
 				List<DurationDelayClock> lightClocks = new ArrayList<DurationDelayClock>();
 				if(lightDef.brightnessAnimations !=  null){
 					for(JSONAnimationDefinition animation : lightDef.brightnessAnimations){
@@ -251,26 +256,24 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 			}
 		}
 		
-		renderAnimationClocks.clear();
+		animationClocks.clear();
+		animatedObjectDefinitions.clear();
 		if(definition.rendering != null){
 			if(definition.rendering.animatedObjects != null){
-				for(JSONAnimatedObject animatedObject : definition.rendering.animatedObjects){
-					if(animatedObject.animations != null){
-						for(JSONAnimationDefinition animation : animatedObject.animations){
-							renderAnimationClocks.put(animation, new DurationDelayClock(animation));
+				for(JSONAnimatedObject animatedDef : definition.rendering.animatedObjects){
+					animatedObjectDefinitions.put(animatedDef.objectName, animatedDef);
+					if(animatedDef.animations != null){
+						for(JSONAnimationDefinition animation : animatedDef.animations){
+							animationClocks.put(animation, new DurationDelayClock(animation));
 						}
 					}
 				}
 			}
-		}
-		
-		cameraAnimationClocks.clear();
-		if(definition.rendering != null){
 			if(definition.rendering.cameraObjects != null){
-				for(JSONCameraObject cameraObject : definition.rendering.cameraObjects){
-					if(cameraObject.animations != null){
-						for(JSONAnimationDefinition animation : cameraObject.animations){
-							cameraAnimationClocks.put(animation, new DurationDelayClock(animation));
+				for(JSONCameraObject cameraDef : definition.rendering.cameraObjects){
+					if(cameraDef.animations != null){
+						for(JSONAnimationDefinition animation : cameraDef.animations){
+							animationClocks.put(animation, new DurationDelayClock(animation));
 						}
 					}
 				}
@@ -360,7 +363,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 							//We use the clock here to check if the state of the variable changed, not
 							//to clamp the value used in the testing.
 							if(!inhibitAnimations){
-								double variableValue = clock.animation.offset + getAnimatedVariableValue(clock, 0, partialTicks);
+								double variableValue = getAnimatedVariableValue(clock, 0, partialTicks);
 								if(!anyClockMovedThisUpdate){
 									anyClockMovedThisUpdate = clock.movedThisUpdate;
 								}
@@ -469,18 +472,18 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 						if(!inhibitAnimations){
 							definedBrightness = true;
 							if(clock.animation.axis.x != 0){
-								lightLevel *= getAnimatedVariableValue(clock, 0, partialTicks);
+								lightLevel *= clock.animation.axis.x*getAnimatedVariableValue(clock, 0, partialTicks);
 							}else if(clock.animation.axis.y != 0){
-								lightLevel += getAnimatedVariableValue(clock, 0, partialTicks);
+								lightLevel += clock.animation.axis.y*getAnimatedVariableValue(clock, 0, partialTicks);
 							}else{
-								lightLevel = (float) getAnimatedVariableValue(clock, 0, partialTicks);
+								lightLevel = (float) (clock.animation.axis.z*getAnimatedVariableValue(clock, 0, partialTicks));
 							}
 						}
 						break;
 					}
 					case ROTATION :{
 						if(!inhibitAnimations){
-							double colorFactor = getAnimatedVariableValue(clock, -clock.animation.offset, partialTicks)/clock.animation.axis.length();
+							double colorFactor = getAnimatedVariableValue(clock, -clock.animation.offset, partialTicks);
 							if(customColor == null){
 								customColor = new Color((float) Math.min(clock.animation.axis.x*colorFactor + clock.animation.offset, 1.0), (float) Math.min(clock.animation.axis.y*colorFactor + clock.animation.offset, 1.0), (float) Math.min(clock.animation.axis.z*colorFactor + clock.animation.offset, 1.0));
 							}else{
@@ -562,8 +565,9 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	/**
 	 *  Returns the value for the passed-in variable, subject to the clamping, and duration/delay requested in the 
 	 *  animation definition.  The passed-in offset is used to allow for stacking animations, and should be 0 if 
-	 *  this functionality is not required.  The passed-in clock may be null to prevent duration/delay functionality.
-	 *  Returns the value of the variable, or 0 if the variable is not valid.
+	 *  this functionality is not required.  The scaledWithAxis boolean will result in the returned value being multiplied
+	 *  by the length of the axis in the clock's animation.  This is useful for situations where you don't care about the
+	 *  axis components, just that the variable is multiplied by one of them.
 	 */
 	public final double getAnimatedVariableValue(DurationDelayClock clock, double offset, float partialTicks){
 		double value = getRawVariableValue(clock.animation.variable, partialTicks);
@@ -583,14 +587,16 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	 */
 	private static double clampAndScale(double value, JSONAnimationDefinition animation, double offset){
 		if(animation.axis != null){
-			value = animation.axis.length()*(animation.absolute ? Math.abs(value) : value) + animation.offset + offset;
+			value = (animation.absolute ? Math.abs(value) : value) + animation.offset + offset;
 			if(animation.clampMin != 0 && value < animation.clampMin){
 				value = animation.clampMin;
 			}else if(animation.clampMax != 0 && value > animation.clampMax){
 				value = animation.clampMax;
 			}
+			return value;
+		}else{
+			return (animation.absolute ? Math.abs(value) : value) + animation.offset;
 		}
-		return animation.absolute ? Math.abs(value) : value;
 	}
 	
 	/**
@@ -634,7 +640,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 							//We use the clock here to check if the state of the variable changed, not
 							//to clamp the value used in the testing.
 							if(!inhibitAnimations){
-								double variableValue = clock.animation.offset + getAnimatedVariableValue(clock, 0, 0);
+								double variableValue = getAnimatedVariableValue(clock, 0, 0);
 								if(!anyClockMovedThisUpdate){
 									anyClockMovedThisUpdate = clock.movedThisUpdate;
 								}
@@ -738,23 +744,16 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 						case TRANSLATION :{
 							if(!inhibitAnimations){
 								definedVolume = true;
-								sound.volume += Math.signum(clock.animation.axis.y)*getAnimatedVariableValue(clock, -clock.animation.offset, 0) + clock.animation.offset;
+								sound.volume += clock.animation.axis.y*getAnimatedVariableValue(clock, -clock.animation.offset, 0) + clock.animation.offset;
 							}
 							break;
 						}
 						case ROTATION :{
 							if(!inhibitAnimations){
 								definedVolume = true;
-								//Need to parse out parabola params here to not upset the axis calcs.
-								double parabolaParamA = clock.animation.axis.x;
-								clock.animation.axis.x = 0;
-								double parabolaParamH = clock.animation.axis.z;
-								clock.animation.axis.z = 0;
-								double parabolaValue = Math.signum(clock.animation.axis.y)*getAnimatedVariableValue(clock, -clock.animation.offset, 0);
-								sound.volume += parabolaParamA*Math.pow(parabolaValue - parabolaParamH, 2) + clock.animation.offset;
-								
-								clock.animation.axis.x = parabolaParamA;
-								clock.animation.axis.z = parabolaParamH;
+								//Parobola is defined with parameter A being x, and H being z.
+								double parabolaValue = clock.animation.axis.y*getAnimatedVariableValue(clock, -clock.animation.offset, 0);
+								sound.volume += clock.animation.axis.x*Math.pow(parabolaValue - clock.animation.axis.z, 2) + clock.animation.offset;
 							}
 							break;
 						}
@@ -807,23 +806,16 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 						case TRANSLATION :{
 							if(!inhibitAnimations){
 								definedPitch = true;
-								sound.pitch += Math.signum(clock.animation.axis.y)*getAnimatedVariableValue(clock, -clock.animation.offset, 0) + clock.animation.offset;
+								sound.pitch += clock.animation.axis.y*getAnimatedVariableValue(clock, -clock.animation.offset, 0) + clock.animation.offset;
 							}
 							break;
 						}
 						case ROTATION :{
 							if(!inhibitAnimations){
 								definedPitch = true;
-								//Need to parse out parabola params here to not upset the axis calcs.
-								double parabolaParamA = clock.animation.axis.x;
-								clock.animation.axis.x = 0;
-								double parabolaParamH = clock.animation.axis.z;
-								clock.animation.axis.z = 0;
-								double parabolaValue = Math.signum(clock.animation.axis.y)*getAnimatedVariableValue(clock, -clock.animation.offset, 0);
-								sound.pitch += parabolaParamA*Math.pow(parabolaValue - parabolaParamH, 2) + clock.animation.offset;
-								
-								clock.animation.axis.x = parabolaParamA;
-								clock.animation.axis.z = parabolaParamH;
+								//Parobola is defined with parameter A being x, and H being z.
+								double parabolaValue = clock.animation.axis.y*getAnimatedVariableValue(clock, -clock.animation.offset, 0);
+								sound.pitch += clock.animation.axis.x*Math.pow(parabolaValue - clock.animation.axis.z, 2) + clock.animation.offset;
 							}
 							break;
 						}

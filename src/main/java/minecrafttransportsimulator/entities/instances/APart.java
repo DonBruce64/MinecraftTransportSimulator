@@ -148,7 +148,7 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 					switch(clock.animation.animationType){
 						case VISIBILITY :{
 							if(!inhibitAnimations){
-								double variableValue = clock.animation.offset + getAnimatedVariableValue(clock, 0, 0);
+								double variableValue = getAnimatedVariableValue(clock, 0, 0);
 								if(variableValue < clock.animation.clampMin || variableValue > clock.animation.clampMax){
 									isActive = false;
 								}
@@ -323,7 +323,7 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 							//Found translation.  This gets applied in the translation axis direction directly.
 							//This axis needs to be rotated by the rollingRotation to ensure it's in the correct spot.
 							double variableValue = getAnimatedVariableValue(clock, 0, 0);
-							Point3d appliedTranslation = clock.animation.axis.copy().normalize().multiply(variableValue);
+							Point3d appliedTranslation = clock.animation.axis.copy().multiply(variableValue);
 							localOffset.add(appliedTranslation.rotateFine(localAngles));
 						}
 						break;
@@ -332,7 +332,7 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 						if(!inhibitAnimations){
 							//Found rotation.  Get angles that needs to be applied.
 							double variableValue = getAnimatedVariableValue(clock, 0, 0);
-							Point3d appliedRotation = clock.animation.axis.copy().normalize().multiply(variableValue);
+							Point3d appliedRotation = clock.animation.axis.copy().multiply(variableValue);
 							
 							//Check if we need to apply a translation based on this rotation.
 							if(!clock.animation.centerPoint.isZero()){
@@ -351,7 +351,7 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 						if(!inhibitAnimations){
 							//Found scaling.  This gets applied during rendering, so we don't directly use the value here.
 							//Instead, we save it and use it later.
-							scale *= getAnimatedVariableValue(clock, 0, 0);
+							scale *= getAnimatedVariableValue(clock, 0, 0)*clock.animation.axis.length();
 							//Update bounding box, as scale changes width/height.
 							boundingBox.widthRadius = getWidth()/2D;
 							boundingBox.heightRadius = getHeight()/2D;

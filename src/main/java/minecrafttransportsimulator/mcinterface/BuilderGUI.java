@@ -70,8 +70,8 @@ public class BuilderGUI extends GuiScreen{
 	 *  lists and set the appropriate states.
 	 */
 	@Override
-    public void drawScreen(int mouseX, int mouseY, float renderPartialTicks){
-		super.drawScreen(mouseX, mouseY, renderPartialTicks);
+    public void drawScreen(int mouseX, int mouseY, float partialTicks){
+		super.drawScreen(mouseX, mouseY, partialTicks);
 		//First set the states for things in this GUI.
 		gui.setStates();
 		
@@ -151,12 +151,12 @@ public class BuilderGUI extends GuiScreen{
 		//so the text texture will be overridden at this point.
 		InterfaceRender.setLightingState(true);
 		for(GUIComponentInstrument instrument : gui.instruments){
-			instrument.renderInstrument(false);
+			instrument.renderInstrument(false, partialTicks);
 		}
 		//Now render blended parts of the instrument.
 		InterfaceRender.setBlend(true);
 		for(GUIComponentInstrument instrument : gui.instruments){
-			instrument.renderInstrument(true);
+			instrument.renderInstrument(true, partialTicks);
 		}
 		InterfaceRender.setBlend(false);
 		

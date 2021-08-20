@@ -243,13 +243,13 @@ public class GUIInstruments extends AGUIBase{
 				if(hudSelected ^ packInstrument.placeOnPanel){
 					GUIComponentInstrument vehicleInstrument = new GUIComponentInstrument(guiLeft, guiTop, i, entity){
 						@Override
-						public void renderInstrument(boolean blendingEnabled){
+						public void renderInstrument(boolean blendingEnabled, float partialTicks){
 							//Only render this instrument if it exits in the entity.
 							if(entity.instruments.containsKey(instrumentPackIndex)){
 								GL11.glPushMatrix();
 								GL11.glTranslated(x, y, 0);
 								GL11.glScalef(packInstrument.hudScale, packInstrument.hudScale, packInstrument.hudScale);
-								RenderInstrument.drawInstrument(entity.instruments.get(instrumentPackIndex), packInstrument.optionalPartNumber, entity, blendingEnabled);
+								RenderInstrument.drawInstrument(entity.instruments.get(instrumentPackIndex), packInstrument.optionalPartNumber, entity, blendingEnabled, partialTicks);
 								GL11.glPopMatrix();
 							}
 						}
