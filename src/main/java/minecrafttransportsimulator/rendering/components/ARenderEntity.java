@@ -269,8 +269,10 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 	 */
 	private void resetModelCache(String modelLocation){
 		List<RenderableModelObject<RenderedEntity>> resetObjects = objectLists.remove(modelLocation);
-		for(RenderableModelObject<RenderedEntity> modelObject : resetObjects){
-			modelObject.destroy();
+		if(resetObjects != null){
+			for(RenderableModelObject<RenderedEntity> modelObject : resetObjects){
+				modelObject.destroy();
+			}
 		}
 	}
 	
