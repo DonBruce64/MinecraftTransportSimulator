@@ -26,13 +26,12 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityTi
     public final EntityInventoryContainer fuelItems;
     public final List<Integer> fuelAmounts = new ArrayList<Integer>();
     public int fuelPurchasedRemaining;
-	public int fuelCapacity = definition.decor.fuelCapacity*1000;
     public boolean isCreative;
 	public String placingPlayerID;
 
     public TileEntityFuelPump(WrapperWorld world, Point3d position, WrapperNBT data){
     	super(world, position, data);
-    	this.tank = new EntityFluidTank(world, data.getDataOrNew("tank"), this.fuelCapacity){
+    	this.tank = new EntityFluidTank(world, data.getDataOrNew("tank"), definition.decor.fuelCapacity){
     		@Override
     		public double fill(String fluid, double maxAmount, boolean doFill){
     			if(!isCreative){

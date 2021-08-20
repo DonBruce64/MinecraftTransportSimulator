@@ -9,7 +9,7 @@
 		"width" : 1.0,
 		"height" : 1.0,
 		"depth" : 1.0,
-		"fuelCapacity": 15,
+		"fuelCapacity": 15000,
 		"pumpQuantity": 10
 	},
 

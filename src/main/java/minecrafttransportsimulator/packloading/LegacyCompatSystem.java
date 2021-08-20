@@ -1192,7 +1192,7 @@ public final class LegacyCompatSystem{
 		//If we are a decor with a type of fuel pump, then set defaults for invalid/missing values.
 		if(definition.decor.type == DecorComponentType.FUEL_PUMP){
 			if (definition.decor.fuelCapacity <= 0) {
-				definition.decor.fuelCapacity = 15;
+				definition.decor.fuelCapacity = 15000;
 			}
 			
 			if (definition.decor.pumpQuantity <= 0) {
