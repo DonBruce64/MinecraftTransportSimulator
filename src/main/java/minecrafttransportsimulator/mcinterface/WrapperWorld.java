@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import minecrafttransportsimulator.MasterLoader;
@@ -68,7 +67,6 @@ import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 import net.minecraft.world.storage.WorldSavedData;
 import net.minecraftforge.common.IPlantable;
-import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -85,7 +83,8 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 @EventBusSubscriber
 public class WrapperWorld{
 	private static final Map<World, WrapperWorld> worldWrappers = new HashMap<World, WrapperWorld>();
-	private static final Map<EntityPlayer, Integer> ticksSincePlayerJoin = new HashMap<EntityPlayer, Integer>();
+	private final Map<String, Integer> ticksSincePlayerJoin = new HashMap<String, Integer>();
+	private final Map<String, BuilderEntityRenderForwarder> activePlayerFollowers = new HashMap<String, BuilderEntityRenderForwarder>();
 	
 	public final World world;
 	public InterfaceWorldSavedData savedDataAccessor;
@@ -969,54 +968,64 @@ public class WrapperWorld{
 	public void spawnExplosion(Point3d location, double strength, boolean flames){
 		world.newExplosion(null, location.x, location.y, location.z, (float) strength, flames, ConfigSystem.configObject.general.blockBreakage.value);
 	}
-	
-	/**
-    * Mark the player as joining the world so we can spawn followers.
-    */
-   @SubscribeEvent
-   public static void on(EntityJoinWorldEvent event){
-	   if(event.getEntity() instanceof EntityPlayer && !event.getWorld().isRemote){
-		   EntityPlayer player = (EntityPlayer) event.getEntity();
-		   ticksSincePlayerJoin.put(player, 0);
-		   if(!ConfigSystem.configObject.general.joinedPlayers.value.contains(player.getCachedUniqueIdString())){
-			   player.addItemStackToInventory(PackParserSystem.getItem("mts", "handbook_car").getNewStack());
-			   player.addItemStackToInventory(PackParserSystem.getItem("mts", "handbook_plane").getNewStack());
-			   ConfigSystem.configObject.general.joinedPlayers.value.add(player.getCachedUniqueIdString());
-			   ConfigSystem.saveToDisk();
-		   }
-	   }
-   }
    
    /**
     * Spawn "follower" entities for the player if they don't exist already.
-    * This only happens if the player joined and has been present for 2 seconds.
+    * This only happens 3 seconds after the player joins.
     * This delay is done to ensure all chunks are loaded before spawning any followers.
+    * We also track followers, and ensure that if the player doesn't exist, they are removed.
+    * This handles players leaving.  We could use events for this, but they're not reliable.
     */
    @SubscribeEvent
    public static void on(TickEvent.WorldTickEvent event){
-	   if(!ticksSincePlayerJoin.isEmpty()){
-		   Iterator<Entry<EntityPlayer, Integer>> iterator = ticksSincePlayerJoin.entrySet().iterator();
-		   while(iterator.hasNext()){
-			   Entry<EntityPlayer, Integer> playerJoinEntry = iterator.next();
-			   EntityPlayer player = playerJoinEntry.getKey();
-			   if(event.world.equals(player.world)){
-				   if(playerJoinEntry.getValue() > 60){
-					   //If we don't have a follower, spawn one now.
-					   if(!BuilderEntityRenderForwarder.activeFollowers.containsKey(player.getUniqueID())){
-						   BuilderEntityRenderForwarder forwarder = new BuilderEntityRenderForwarder(player);
-						   player.world.spawnEntity(forwarder);
-					   }
-					
-					   //If we don't have an associated gun entity, spawn one now.
-					   if(!EntityPlayerGun.playerServerGuns.containsKey(player.getUniqueID().toString())){
-						   WrapperWorld worldWrapper = WrapperWorld.getWrapperFor(player.world);
-				       		WrapperPlayer playerWrapper = WrapperPlayer.getWrapperFor(player);
-				       		EntityPlayerGun entity = new EntityPlayerGun(worldWrapper, playerWrapper, new WrapperNBT());
-				       		worldWrapper.spawnEntity(entity);
-					   }
-					   iterator.remove();
+	   if(!event.world.isRemote){
+		   for(EntityPlayer player : event.world.playerEntities){
+			   String playerUUID = player.getCachedUniqueIdString();
+			   WrapperWorld wrapper = getWrapperFor(event.world);
+			   if(wrapper.activePlayerFollowers.containsKey(playerUUID)){
+				   //Follower exists, check if world is the same and it is actually updating.
+				   //We check basic states, and then the watchdog bit that gets reset every tick.
+				   //This way if we're in the world, but not valid we will know.
+				   BuilderEntityRenderForwarder follower = wrapper.activePlayerFollowers.get(playerUUID);
+				   if(follower.world != player.world || follower.playerFollowing != player || player.isDead || follower.isDead || follower.idleTickCounter == 20){
+					   //Follower is not linked.  Remove it and re-create in code below.
+					   follower.setDead();
+					   wrapper.activePlayerFollowers.remove(playerUUID);
+					   wrapper.ticksSincePlayerJoin.remove(playerUUID);
 				   }else{
-					   playerJoinEntry.setValue(playerJoinEntry.getValue() + 1);
+					   ++follower.idleTickCounter;
+					   continue;
+				   }
+			   }
+			   
+			   if(!wrapper.activePlayerFollowers.containsKey(playerUUID)){
+				   //Follower does not exist, check if player has been present for 3 seconds and spawn it.
+				   int totalTicksWaited = 0;
+				   if(wrapper.ticksSincePlayerJoin.containsKey(playerUUID)){
+					   totalTicksWaited = wrapper.ticksSincePlayerJoin.get(playerUUID); 
+				   }
+				   if(++totalTicksWaited == 60){
+					   //Spawn fowarder and gun.
+					   BuilderEntityRenderForwarder follower = new BuilderEntityRenderForwarder(player);
+					   //Set this as we will already have loaded NBT data via spawning and don't need to load it from disk.
+					   follower.loadedFromNBT = true;
+					   event.world.spawnEntity(follower);
+					   wrapper.activePlayerFollowers.put(playerUUID, follower);
+					   
+					   WrapperWorld worldWrapper = WrapperWorld.getWrapperFor(player.world);
+					   WrapperPlayer playerWrapper = WrapperPlayer.getWrapperFor(player);
+					   EntityPlayerGun entity = new EntityPlayerGun(worldWrapper, playerWrapper, new WrapperNBT());
+					   worldWrapper.spawnEntity(entity);
+					   
+					   //If the player is new, also add handbooks.
+					   if(!ConfigSystem.configObject.general.joinedPlayers.value.contains(playerUUID)){
+						   player.addItemStackToInventory(PackParserSystem.getItem("mts", "handbook_car").getNewStack());
+						   player.addItemStackToInventory(PackParserSystem.getItem("mts", "handbook_plane").getNewStack());
+						   ConfigSystem.configObject.general.joinedPlayers.value.add(playerUUID);
+						   ConfigSystem.saveToDisk();
+					   }
+				   }else{
+					   wrapper.ticksSincePlayerJoin.put(playerUUID, totalTicksWaited);
 				   }
 			   }
 		   }
@@ -1034,9 +1043,6 @@ public class WrapperWorld{
     		AEntityC_Definable.removaAllEntities(worldWrappers.get(event.getWorld()));
     		AEntityA_Base.removaAllEntities(worldWrappers.get(event.getWorld()));
 	    	worldWrappers.remove(event.getWorld());
-	    	for(EntityPlayer player : event.getWorld().playerEntities){
-	    		BuilderEntityRenderForwarder.activeFollowers.remove(player.getUniqueID());
-	    	}
     	}
     }
 	
