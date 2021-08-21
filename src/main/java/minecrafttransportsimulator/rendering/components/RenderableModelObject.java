@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.rendering.components;
 
-import java.awt.Color;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -9,6 +8,7 @@ import java.util.Map.Entry;
 
 import org.lwjgl.opengl.GL11;
 
+import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.entities.instances.APart;
@@ -38,15 +38,14 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 	private final boolean isInteriorWindow;
 	private final boolean isOnlineTexture;
 	private final int cachedVertexIndex;
+	private Float[][] colorObject;
+	private Float[][] coverObject;
+	private final Map<JSONLight, Float[][]> flareObjects = new HashMap<JSONLight, Float[][]>();
+	private final Map<JSONLight, Float[][]> beamObjects = new HashMap<JSONLight, Float[][]>();
 	
 	/**Map of tread points, keyed by the model the tread is pathing about, then the spacing of the tread.
 	 * This can be shared for two different treads of the same spacing as they render the same.**/
 	private static final Map<String, Map<Float, List<Double[]>>> treadPoints = new HashMap<String, Map<Float, List<Double[]>>>();
-	private static final Map<String, Map<String, Integer>> cachedVertexIndexLists = new HashMap<String, Map<String, Integer>>();
-	private static final Map<String, Float[][]> colorObjects = new HashMap<String, Float[][]>();
-	private static final Map<String, Float[][]> coverObjects = new HashMap<String, Float[][]>();
-	private static final Map<JSONLight, Float[][]> flareObjects = new HashMap<JSONLight, Float[][]>();
-	private static final Map<JSONLight, Float[][]> beamObjects = new HashMap<JSONLight, Float[][]>();
 	private static final float COLOR_OFFSET = 0.0001F;
 	private static final float FLARE_OFFSET = 0.0002F;
 	private static final float COVER_OFFSET = 0.0003F;
@@ -63,20 +62,14 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 		this.isInteriorWindow = isWindow && objectName.toLowerCase().endsWith(AModelParser.INTERIOR_WINDOW_SUFFIX);
 		this.isOnlineTexture = objectName.toLowerCase().startsWith(AModelParser.ONLINE_TEXTURE_OBJECT_NAME) || objectName.toLowerCase().endsWith(AModelParser.ONLINE_TEXTURE_OBJECT_NAME);
 		
-		//Cache the displayList, if we haven't already.
-		if(!cachedVertexIndexLists.containsKey(modelLocation) || !cachedVertexIndexLists.get(modelLocation).containsKey(objectName)){
-			if(!cachedVertexIndexLists.containsKey(modelLocation)){
-				cachedVertexIndexLists.put(modelLocation, new HashMap<String, Integer>());
-			}
-			cachedVertexIndexLists.get(modelLocation).put(objectName, InterfaceRender.cacheVertices(vertices));
-		}
-		this.cachedVertexIndex = cachedVertexIndexLists.get(modelLocation).get(objectName);
+		//Cache the displayList.
+		this.cachedVertexIndex = InterfaceRender.cacheVertices(vertices);
 		
 		//If we are a light object, create color and cover points.
 		//We may not use these, but it saves on processing later as we don't need to re-parse the model.
 		if(objectName.startsWith("&")){
-			colorObjects.put(objectName, generateColors(vertices));
-			coverObjects.put(objectName, generateCovers(vertices));
+			colorObject = generateColors(vertices);
+			coverObject = generateCovers(vertices);
 		}
 	}
 	
@@ -230,7 +223,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 					case TRANSLATION :{
 						if(!inhibitAnimations){
 							double magnitude = animation.axis.length();
-							variableValue = entity.getAnimatedVariableValue(entity.animationClocks.get(animation), priorOffset, partialTicks)*magnitude;
+							variableValue = entity.getAnimatedVariableValue(entity.animationClocks.get(animation), magnitude, priorOffset, partialTicks);
 							//Do the actual translation, if we aren't 0.
 							if(animation.addPriorOffset){
 								GL11.glTranslated((variableValue - priorOffset)*animation.axis.x/magnitude, (variableValue - priorOffset)*animation.axis.y/magnitude, (variableValue - priorOffset)*animation.axis.z/magnitude);
@@ -243,7 +236,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 					case ROTATION :{
 						if(!inhibitAnimations){
 							double magnitude = animation.axis.length();
-							variableValue = entity.getAnimatedVariableValue(entity.animationClocks.get(animation), priorOffset, partialTicks)*magnitude;
+							variableValue = entity.getAnimatedVariableValue(entity.animationClocks.get(animation), magnitude, priorOffset, partialTicks);
 							//Do rotation.
 							if(animation.addPriorOffset){
 								GL11.glTranslated(animation.centerPoint.x, animation.centerPoint.y, animation.centerPoint.z);
@@ -260,7 +253,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 					case SCALING :{
 						if(!inhibitAnimations){
 							double magnitude = animation.axis.length();
-							variableValue = entity.getAnimatedVariableValue(entity.animationClocks.get(animation), priorOffset, partialTicks)*magnitude;
+							variableValue = entity.getAnimatedVariableValue(entity.animationClocks.get(animation), magnitude, priorOffset, partialTicks);
 							//Do the actual scaling.
 							GL11.glTranslated(animation.centerPoint.x, animation.centerPoint.y, animation.centerPoint.z);
 							GL11.glScaled(animation.axis.x == 0 ? 1.0 : variableValue*animation.axis.x/magnitude, animation.axis.y == 0 ? 1.0 : variableValue*animation.axis.y/magnitude, animation.axis.z == 0 ? 1.0 : variableValue*animation.axis.z/magnitude);
@@ -279,10 +272,8 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 	 *  as it allows for the freeing of OpenGL resources.
 	 */
 	public void destroy(){
-		InterfaceRender.deleteVertices(cachedVertexIndexLists.get(modelLocation).remove(objectName));
+		InterfaceRender.deleteVertices(cachedVertexIndex);
 		treadPoints.remove(modelLocation);
-		colorObjects.remove(objectName);
-		coverObjects.remove(objectName);
 		flareObjects.remove(objectName);
 		beamObjects.remove(objectName);
 	}
@@ -404,21 +395,20 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 		}
 	}
 		
-	private void doLightRendering(AnimationEntity entity, JSONLight lightDef, float lightLevel, Color color, boolean blendingEnabled){
+	private void doLightRendering(AnimationEntity entity, JSONLight lightDef, float lightLevel, ColorRGB color, boolean blendingEnabled){
 		boolean lightingDisabled = false;
 		boolean brightBlendEnabled = false;
 		boolean colorChanged = false;
 		if(blendingEnabled && lightLevel > 0 && lightDef.emissive){
 			//Light color detected on blended render pass.
-			Float[][] colorObject = colorObjects.get(objectName);
 			if(colorObject == null){
-				colorObjects.put(objectName, colorObject = generateColors(AModelParser.parseModel(modelLocation).get(objectName)));
+				colorObject = generateColors(AModelParser.parseModel(modelLocation).get(objectName));
 			}
 			
 			InterfaceRender.bindTexture("mts:textures/rendering/light.png");
 			InterfaceRender.setLightingState(false);
 			lightingDisabled = true;
-			InterfaceRender.setColorState(color.getRed()/255F, color.getGreen()/255F, color.getBlue()/255F, lightLevel);
+			InterfaceRender.setColorState(color, lightLevel);
 			colorChanged = true;
 			InterfaceRender.renderVertices(colorObject);
 			
@@ -459,7 +449,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 						InterfaceRender.setBlendBright(true);
 						brightBlendEnabled = true;
 					}
-					InterfaceRender.setColorState(color.getRed()/255F, color.getGreen()/255F, color.getBlue()/255F, blendableBrightness);
+					InterfaceRender.setColorState(color, blendableBrightness);
 					colorChanged = true;
 					InterfaceRender.renderVertices(flareObject);
 					
@@ -476,7 +466,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 							InterfaceRender.setBlendBright(true);
 							brightBlendEnabled = true;
 						}
-						InterfaceRender.setColorState(color.getRed()/255F, color.getGreen()/255F, color.getBlue()/255F, blendableBrightness);
+						InterfaceRender.setColorState(color, blendableBrightness);
 						colorChanged = true;
 					}else if(brightBlendEnabled && !ConfigSystem.configObject.clientRendering.beamsBright.value){
 						//Bright blend was turned on for flares, turn off for beams.
@@ -489,9 +479,8 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 		}
 		if(!blendingEnabled && lightDef.covered){
 			//Light cover detected on solid render pass.
-			Float[][] coverObject = coverObjects.get(objectName);
 			if(coverObject == null){
-				coverObjects.put(objectName, coverObject = generateCovers(AModelParser.parseModel(modelLocation).get(objectName)));
+				coverObject = generateCovers(AModelParser.parseModel(modelLocation).get(objectName));
 			}
 			
 			InterfaceRender.bindTexture("minecraft:textures/blocks/glass.png");
@@ -511,7 +500,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 			InterfaceRender.setBlendBright(false);
 		}
 		if(colorChanged){
-			InterfaceRender.setColorState(1.0F, 1.0F, 1.0F, 1.0F);
+			InterfaceRender.setColorState(ColorRGB.WHITE, 1.0F);
 		}
 	}
 	

@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.guis.instances;
 
-import java.awt.Color;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -9,6 +8,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.TrailerConnection;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
@@ -121,7 +121,7 @@ public class GUIPanelGround extends AGUIPanel{
 		
 		if(vehicle.definition.motorized.hasRadioNav){
 			//Add beacon text box.  This is at the bottom of the light column where the siren used to be.
-			beaconBox = new GUIComponentTextBox(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE*2, vehicle.selectedBeaconName, SELECTOR_SIZE, vehicle.selectedBeacon != null ? Color.GREEN : Color.RED, Color.BLACK, 5){
+			beaconBox = new GUIComponentTextBox(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE*2, vehicle.selectedBeaconName, SELECTOR_SIZE, vehicle.selectedBeacon != null ? ColorRGB.GREEN : ColorRGB.RED, ColorRGB.BLACK, 5){
 				@Override
 				public void handleKeyTyped(char typedChar, int typedCode, TextBoxControlKey control){
 					super.handleKeyTyped(typedChar, typedCode, control);
@@ -132,7 +132,7 @@ public class GUIPanelGround extends AGUIPanel{
 			addTextBox(beaconBox);
 			
 			//Add beacon text box label.
-			GUIComponentLabel beaconLabel = new GUIComponentLabel(beaconBox.x + beaconBox.width/2, beaconBox.y + beaconBox.height + 1, vehicle.definition.motorized.panelTextColor != null ? Color.decode(vehicle.definition.motorized.panelTextColor) : Color.WHITE, InterfaceCore.translate("gui.panel.beacon"), null, TextPosition.CENTERED, 0, 0.75F, false);
+			GUIComponentLabel beaconLabel = new GUIComponentLabel(beaconBox.x + beaconBox.width/2, beaconBox.y + beaconBox.height + 1, vehicle.definition.motorized.panelTextColor != null ? vehicle.definition.motorized.panelTextColor : ColorRGB.WHITE, InterfaceCore.translate("gui.panel.beacon"), null, TextPosition.CENTERED, 0, 0.75F, false);
 			beaconLabel.setBox(beaconBox);
 			labels.add(beaconLabel);
 		}
@@ -418,7 +418,7 @@ public class GUIPanelGround extends AGUIPanel{
 		
 		//Set the beaconBox text color depending on if we have an active beacon.
 		if(beaconBox != null){
-			beaconBox.fontColor = vehicle.selectedBeacon != null ? Color.GREEN : Color.RED;
+			beaconBox.fontColor = vehicle.selectedBeacon != null ? ColorRGB.GREEN : ColorRGB.RED;
 		}
 		
 		//Iterate through custom selectors and set their states.

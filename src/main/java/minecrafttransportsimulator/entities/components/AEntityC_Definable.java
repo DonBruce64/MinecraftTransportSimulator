@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.entities.components;
 
-import java.awt.Color;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -11,6 +10,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityParticle;
@@ -81,7 +81,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	public final Map<JSONLight, Float> lightBrightnessValues = new HashMap<JSONLight, Float>();
 	
 	/**Maps light definitions to their current color.  This is updated every frame prior to rendering.**/
-	public final Map<JSONLight, Color> lightColorValues = new HashMap<JSONLight, Color>();
+	public final Map<JSONLight, ColorRGB> lightColorValues = new HashMap<JSONLight, ColorRGB>();
 	
 	/**Maps light (model) object names to their definitions.  This is created from the JSON definition to prevent the need to do loops.**/
 	public final Map<String, JSONLight> lightObjectDefinitions = new HashMap<String, JSONLight>();
@@ -237,7 +237,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 				lightBrightnessClocks.put(lightDef, lightClocks);
 				lightBrightnessValues.put(lightDef, 0F);
 				if(lightDef.color != null){
-					lightColorValues.put(lightDef, Color.decode(lightDef.color));
+					lightColorValues.put(lightDef, lightDef.color);
 				}
 			}
 		}
@@ -317,11 +317,11 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
     }
     
     /**
-   	 *  Returns a string that represents this entity's secondary text color.  If this color is set,
-   	 *  and text is told to render from this provider, and that text is told to use this color, then it will.
+   	 *  Returns this entity's secondary text color.  If this color is set, and text is told 
+   	 *  to render from this provider, and that text is told to use this color, then it will.
    	 *  Otherwise, the text will use its default color.
    	 */
-    public String getSecondaryTextColor(){
+    public ColorRGB getSecondaryTextColor(){
     	for(JSONSubDefinition subDefinition : definition.definitions){
 			if(subDefinition.subName.equals(subName)){
 				return subDefinition.secondColor;
@@ -363,7 +363,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 							//We use the clock here to check if the state of the variable changed, not
 							//to clamp the value used in the testing.
 							if(!inhibitAnimations){
-								double variableValue = getAnimatedVariableValue(clock, 0, partialTicks);
+								double variableValue = getAnimatedVariableValue(clock, partialTicks);
 								if(!anyClockMovedThisUpdate){
 									anyClockMovedThisUpdate = clock.movedThisUpdate;
 								}
@@ -375,7 +375,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 						}
 						case INHIBITOR :{
 							if(!inhibitAnimations){
-								double variableValue = getAnimatedVariableValue(clock, 0, partialTicks);
+								double variableValue = getAnimatedVariableValue(clock, partialTicks);
 								if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
 									inhibitAnimations = true;
 								}
@@ -384,7 +384,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 						}
 						case ACTIVATOR :{
 							if(inhibitAnimations){
-								double variableValue = getAnimatedVariableValue(clock, 0, partialTicks);
+								double variableValue = getAnimatedVariableValue(clock, partialTicks);
 								if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
 									inhibitAnimations = false;
 								}
@@ -433,17 +433,17 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
    	 *  An example of this is a light with a bean and flare component. 
    	 */
     public void updateLightBrightness(float partialTicks){
-		for(JSONLight lightObject : lightBrightnessClocks.keySet()){
+		for(JSONLight lightDef : lightBrightnessClocks.keySet()){
 			boolean definedBrightness = false;
 			float lightLevel = 0.0F;
 			boolean inhibitAnimations = false;
 			boolean inhibitLight = false;
-			Color customColor = null;
-			for(DurationDelayClock clock : lightBrightnessClocks.get(lightObject)){
+			ColorRGB customColor = null;
+			for(DurationDelayClock clock : lightBrightnessClocks.get(lightDef)){
 				switch(clock.animation.animationType){
 					case VISIBILITY :{
 						if(!inhibitAnimations){
-							double variableValue = getAnimatedVariableValue(clock, 0, partialTicks);
+							double variableValue = getAnimatedVariableValue(clock, partialTicks);
 							if(variableValue < clock.animation.clampMin || variableValue > clock.animation.clampMax){
 								inhibitLight = true;
 							}
@@ -452,7 +452,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 					}
 					case INHIBITOR :{
 						if(!inhibitAnimations){
-							double variableValue = getAnimatedVariableValue(clock, 0, partialTicks);
+							double variableValue = getAnimatedVariableValue(clock, partialTicks);
 							if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
 								inhibitAnimations = true;
 							}
@@ -461,7 +461,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 					}
 					case ACTIVATOR :{
 						if(inhibitAnimations){
-							double variableValue = getAnimatedVariableValue(clock, 0, partialTicks);
+							double variableValue = getAnimatedVariableValue(clock, partialTicks);
 							if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
 								inhibitAnimations = false;
 							}
@@ -472,22 +472,22 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 						if(!inhibitAnimations){
 							definedBrightness = true;
 							if(clock.animation.axis.x != 0){
-								lightLevel *= clock.animation.axis.x*getAnimatedVariableValue(clock, 0, partialTicks);
+								lightLevel *= getAnimatedVariableValue(clock, clock.animation.axis.x, partialTicks);
 							}else if(clock.animation.axis.y != 0){
-								lightLevel += clock.animation.axis.y*getAnimatedVariableValue(clock, 0, partialTicks);
+								lightLevel += getAnimatedVariableValue(clock, clock.animation.axis.y, partialTicks);
 							}else{
-								lightLevel = (float) (clock.animation.axis.z*getAnimatedVariableValue(clock, 0, partialTicks));
+								lightLevel = (float) (getAnimatedVariableValue(clock, clock.animation.axis.z, partialTicks));
 							}
 						}
 						break;
 					}
 					case ROTATION :{
 						if(!inhibitAnimations){
-							double colorFactor = getAnimatedVariableValue(clock, -clock.animation.offset, partialTicks);
+							double colorFactor = getAnimatedVariableValue(clock, 1.0, -clock.animation.offset, partialTicks);
 							if(customColor == null){
-								customColor = new Color((float) Math.min(clock.animation.axis.x*colorFactor + clock.animation.offset, 1.0), (float) Math.min(clock.animation.axis.y*colorFactor + clock.animation.offset, 1.0), (float) Math.min(clock.animation.axis.z*colorFactor + clock.animation.offset, 1.0));
+								customColor = new ColorRGB((float) Math.min(clock.animation.axis.x*colorFactor + clock.animation.offset, 1.0), (float) Math.min(clock.animation.axis.y*colorFactor + clock.animation.offset, 1.0), (float) Math.min(clock.animation.axis.z*colorFactor + clock.animation.offset, 1.0));
 							}else{
-								customColor = new Color((float) Math.min(clock.animation.axis.x*colorFactor + clock.animation.offset + customColor.getRed()/255F, 1.0), (float) Math.min(clock.animation.axis.y*colorFactor + clock.animation.offset + customColor.getGreen()/255F, 1.0), (float) Math.min(clock.animation.axis.z*colorFactor + clock.animation.offset + customColor.getBlue()/255F, 1.0));
+								customColor = new ColorRGB((float) Math.min(clock.animation.axis.x*colorFactor + clock.animation.offset + customColor.red, 1.0), (float) Math.min(clock.animation.axis.y*colorFactor + clock.animation.offset + customColor.green, 1.0), (float) Math.min(clock.animation.axis.z*colorFactor + clock.animation.offset + customColor.blue, 1.0));
 							}
 						}
 						break;
@@ -507,11 +507,13 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 			}else if(!definedBrightness || lightLevel > 1){
 				lightLevel = 1;
 			}
-			lightBrightnessValues.put(lightObject, lightLevel);
+			lightBrightnessValues.put(lightDef, lightLevel);
 			if(customColor != null){
-				lightColorValues.put(lightObject, customColor);
-			}else{
-				lightColorValues.put(lightObject, Color.decode(lightObject.color));
+				lightColorValues.put(lightDef, customColor);
+			}else if(lightDef.color != null){
+				lightColorValues.put(lightDef, lightDef.color);
+			}else if(lightDef.emissive || (lightDef.blendableComponents != null && !lightDef.blendableComponents.isEmpty())){
+				throw new IllegalArgumentException("Was told to update light " + lightDef.objectName + " on " + definition.packID + ":" + definition.systemName + " but said light is missing a color parameter.  This is required if you have an emissive light or one with flares or beams!");
 			}
 		}
     }
@@ -565,29 +567,44 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	/**
 	 *  Returns the value for the passed-in variable, subject to the clamping, and duration/delay requested in the 
 	 *  animation definition.  The passed-in offset is used to allow for stacking animations, and should be 0 if 
-	 *  this functionality is not required.  The scaledWithAxis boolean will result in the returned value being multiplied
-	 *  by the length of the axis in the clock's animation.  This is useful for situations where you don't care about the
-	 *  axis components, just that the variable is multiplied by one of them.
+	 *  this functionality is not required.  Note that the animation offset is applied AFTER the scaling performed by
+	 *  the scale parameter as only the variable value should be scaled, not the offset..
 	 */
-	public final double getAnimatedVariableValue(DurationDelayClock clock, double offset, float partialTicks){
+	public final double getAnimatedVariableValue(DurationDelayClock clock, double scale, double offset, float partialTicks){
 		double value = getRawVariableValue(clock.animation.variable, partialTicks);
 		if(Double.isNaN(value)){
 			value = 0;
 		}
 		if(!clock.isUseful){
-			return clampAndScale(value, clock.animation, offset);
+			return clampAndScale(value, clock.animation, scale, offset);
 		}else{
-			return clampAndScale(clock.getFactoredState(this, value), clock.animation, offset);
+			return clampAndScale(clock.getFactoredState(this, value), clock.animation, scale, offset);
 		}
+	}
+	
+	/**
+	 *  Short-hand version of {@link #getAnimatedVariableValue(DurationDelayClock, double, double, float)}
+	 *  with an offset of 0.0.
+	 */
+	public final double getAnimatedVariableValue(DurationDelayClock clock, double scale, float partialTicks){
+		return getAnimatedVariableValue(clock, scale, 0.0, partialTicks);
+	}
+	
+	/**
+	 *  Short-hand version of {@link #getAnimatedVariableValue(DurationDelayClock, double, double, float)}
+	 *  with a scale of 1.0 and offset of 0.0.
+	 */
+	public final double getAnimatedVariableValue(DurationDelayClock clock, float partialTicks){
+		return getAnimatedVariableValue(clock, 1.0, 0.0, partialTicks);
 	}
 	
 	/**
 	 *  Helper method to clamp and scale the passed-in variable value based on the passed-in animation, 
 	 *  returning it in the proper form.
 	 */
-	private static double clampAndScale(double value, JSONAnimationDefinition animation, double offset){
+	private static double clampAndScale(double value, JSONAnimationDefinition animation, double scale, double offset){
 		if(animation.axis != null){
-			value = (animation.absolute ? Math.abs(value) : value) + animation.offset + offset;
+			value = (animation.absolute ? Math.abs(value) : value)*scale + animation.offset + offset;
 			if(animation.clampMin != 0 && value < animation.clampMin){
 				value = animation.clampMin;
 			}else if(animation.clampMax != 0 && value > animation.clampMax){
@@ -595,7 +612,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 			}
 			return value;
 		}else{
-			return (animation.absolute ? Math.abs(value) : value) + animation.offset;
+			return (animation.absolute ? Math.abs(value) : value)*scale + animation.offset;
 		}
 	}
 	
@@ -640,7 +657,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 							//We use the clock here to check if the state of the variable changed, not
 							//to clamp the value used in the testing.
 							if(!inhibitAnimations){
-								double variableValue = getAnimatedVariableValue(clock, 0, 0);
+								double variableValue = getAnimatedVariableValue(clock, 0);
 								if(!anyClockMovedThisUpdate){
 									anyClockMovedThisUpdate = clock.movedThisUpdate;
 								}
@@ -652,7 +669,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 						}
 						case INHIBITOR :{
 							if(!inhibitAnimations){
-								double variableValue = getAnimatedVariableValue(clock, 0, 0);
+								double variableValue = getAnimatedVariableValue(clock, 0);
 								if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
 									inhibitAnimations = true;
 								}
@@ -661,7 +678,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 						}
 						case ACTIVATOR :{
 							if(inhibitAnimations){
-								double variableValue = getAnimatedVariableValue(clock, 0, 0);
+								double variableValue = getAnimatedVariableValue(clock, 0);
 								if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
 									inhibitAnimations = false;
 								}
@@ -744,7 +761,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 						case TRANSLATION :{
 							if(!inhibitAnimations){
 								definedVolume = true;
-								sound.volume += clock.animation.axis.y*getAnimatedVariableValue(clock, -clock.animation.offset, 0) + clock.animation.offset;
+								sound.volume += getAnimatedVariableValue(clock, clock.animation.axis.y, 0);
 							}
 							break;
 						}
@@ -752,14 +769,14 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 							if(!inhibitAnimations){
 								definedVolume = true;
 								//Parobola is defined with parameter A being x, and H being z.
-								double parabolaValue = clock.animation.axis.y*getAnimatedVariableValue(clock, -clock.animation.offset, 0);
+								double parabolaValue = getAnimatedVariableValue(clock, clock.animation.axis.y, -clock.animation.offset, 0);
 								sound.volume += clock.animation.axis.x*Math.pow(parabolaValue - clock.animation.axis.z, 2) + clock.animation.offset;
 							}
 							break;
 						}
 						case INHIBITOR :{
 							if(!inhibitAnimations){
-								double variableValue = getAnimatedVariableValue(clock, 0, 0);
+								double variableValue = getAnimatedVariableValue(clock, 0);
 								if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
 									inhibitAnimations = true;
 								}
@@ -768,7 +785,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 						}
 						case ACTIVATOR :{
 							if(inhibitAnimations){
-								double variableValue = getAnimatedVariableValue(clock, 0, 0);
+								double variableValue = getAnimatedVariableValue(clock, 0);
 								if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
 									inhibitAnimations = false;
 								}
@@ -806,7 +823,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 						case TRANSLATION :{
 							if(!inhibitAnimations){
 								definedPitch = true;
-								sound.pitch += clock.animation.axis.y*getAnimatedVariableValue(clock, -clock.animation.offset, 0) + clock.animation.offset;
+								sound.pitch += getAnimatedVariableValue(clock, clock.animation.axis.y, 0);
 							}
 							break;
 						}
@@ -814,14 +831,14 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 							if(!inhibitAnimations){
 								definedPitch = true;
 								//Parobola is defined with parameter A being x, and H being z.
-								double parabolaValue = clock.animation.axis.y*getAnimatedVariableValue(clock, -clock.animation.offset, 0);
+								double parabolaValue = getAnimatedVariableValue(clock, clock.animation.axis.y, -clock.animation.offset, 0);
 								sound.pitch += clock.animation.axis.x*Math.pow(parabolaValue - clock.animation.axis.z, 2) + clock.animation.offset;
 							}
 							break;
 						}
 						case INHIBITOR :{
 							if(!inhibitAnimations){
-								double variableValue = getAnimatedVariableValue(clock, 0, 0);
+								double variableValue = getAnimatedVariableValue(clock, 0);
 								if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
 									inhibitAnimations = true;
 								}
@@ -830,7 +847,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 						}
 						case ACTIVATOR :{
 							if(inhibitAnimations){
-								double variableValue = getAnimatedVariableValue(clock, 0, 0);
+								double variableValue = getAnimatedVariableValue(clock, 0);
 								if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
 									inhibitAnimations = false;
 								}

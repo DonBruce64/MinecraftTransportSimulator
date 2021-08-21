@@ -2,6 +2,7 @@ package minecrafttransportsimulator.jsondefs;
 
 import java.util.List;
 
+import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONPopulatedCollection;
@@ -139,10 +140,10 @@ public class JSONVehicle extends AJSONPartProvider{
         public String panelTexture;
         
         @JSONDescription("The color for the text in the panel that renders below components.  If this is not included MTS will default to white.")
-        public String panelTextColor;
+        public ColorRGB panelTextColor;
         
         @JSONDescription("Same as panelTextColor, but for the text when the vehicle's lights are on.")
-        public String panelLitTextColor;
+        public ColorRGB panelLitTextColor;
         
         @JSONPopulatedCollection
         @JSONDescription("A listing of notches for flap deployment.  These will be used to determine the requested flap setting for vehicles that have them.  Only functional for vehicles where isAircraft is set to true.  Both 0 and the highest notch should be included")

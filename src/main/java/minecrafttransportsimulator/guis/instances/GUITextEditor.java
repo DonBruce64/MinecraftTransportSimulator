@@ -1,19 +1,19 @@
 package minecrafttransportsimulator.guis.instances;
 
-import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.lwjgl.opengl.GL11;
 
+import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_Sign;
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.guis.components.AGUIBase;
+import minecrafttransportsimulator.guis.components.GUIComponent3DModel;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
-import minecrafttransportsimulator.guis.components.GUIComponent3DModel;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.guis.components.InterfaceGUI;
 import minecrafttransportsimulator.jsondefs.JSONText;
@@ -63,7 +63,7 @@ public class GUITextEditor extends AGUIBase{
 			signTextLabels.clear();
 			for(byte i=0; i<textObjects.size(); ++i){
 				JSONText textObject = textObjects.get(i);
-				GUIComponentLabel label = new GUIComponentLabel(modelRender.x + (int) (textObject.pos.x*64F), modelRender.y - (int) (textObject.pos.y*64F), Color.decode(textObject.color), textLines.get(i), textObject.fontName, TextPosition.values()[textObject.renderPosition], textObject.wrapWidth, textObject.scale, textObject.autoScale){
+				GUIComponentLabel label = new GUIComponentLabel(modelRender.x + (int) (textObject.pos.x*64F), modelRender.y - (int) (textObject.pos.y*64F), textObject.color, textLines.get(i), textObject.fontName, TextPosition.values()[textObject.renderPosition], textObject.wrapWidth, textObject.scale, textObject.autoScale){
 					@Override
 					public void renderText(){
 						GL11.glPushMatrix();
@@ -99,10 +99,10 @@ public class GUITextEditor extends AGUIBase{
 		for(JSONText textObject : textObjects){
 			if(!textInputFieldNames.contains(textObject.fieldName)){
 				//No text box present for the field name.  Create a new one.
-				GUIComponentLabel label = new GUIComponentLabel(guiLeft + 20, guiTop + 30 + currentOffset, Color.BLACK, textObject.fieldName);
+				GUIComponentLabel label = new GUIComponentLabel(guiLeft + 20, guiTop + 30 + currentOffset, ColorRGB.BLACK, textObject.fieldName);
 				addLabel(label);
 				int textRowsRequired = 1 + 5*textObject.maxLength/boxWidth;
-				GUIComponentTextBox box = new GUIComponentTextBox(guiLeft + 20, label.y + 10, boxWidth, textLines.get(textObjects.indexOf(textObject)), 12*textRowsRequired, Color.WHITE, Color.BLACK, textObject.maxLength);
+				GUIComponentTextBox box = new GUIComponentTextBox(guiLeft + 20, label.y + 10, boxWidth, textLines.get(textObjects.indexOf(textObject)), 12*textRowsRequired, ColorRGB.WHITE, ColorRGB.BLACK, textObject.maxLength);
 				addTextBox(box);
 				textInputBoxes.add(box);
 				currentOffset += box.height + 12;

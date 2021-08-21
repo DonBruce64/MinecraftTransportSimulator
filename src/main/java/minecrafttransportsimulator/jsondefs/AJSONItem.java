@@ -2,6 +2,7 @@ package minecrafttransportsimulator.jsondefs;
 
 import java.util.List;
 
+import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 import minecrafttransportsimulator.packloading.PackResourceLoader.ItemClassification;
@@ -117,7 +118,7 @@ public abstract class AJSONItem{
         	public float yPos;
         	public float zPos;
         	public float scale;
-        	public String color;
+        	public ColorRGB color;
         }
     }
 }

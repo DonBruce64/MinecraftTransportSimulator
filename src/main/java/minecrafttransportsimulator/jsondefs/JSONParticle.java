@@ -2,6 +2,7 @@ package minecrafttransportsimulator.jsondefs;
 
 import java.util.List;
 
+import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
@@ -18,10 +19,10 @@ public class JSONParticle{
 	public boolean spawnEveryTick;
 	
 	@JSONDescription("A string in hexadecimal format representing the particle's color.  Defaults to white if not set, which essentially does no color modification.")
-	public String color;
+	public ColorRGB color;
 	
 	@JSONDescription("Like above, but tells the particle to gradually change from its initial color to this value.  Defaults to be the same as the initial color.")
-	public String toColor;
+	public ColorRGB toColor;
 	
 	@JSONDescription("A number between 0.0 and 1.0 describing how transparent the particle should be.  If both this and toTransparency are not set, they are assumed to be 1.0 for both and no transparency changes will be performed.")
 	public float transparency;

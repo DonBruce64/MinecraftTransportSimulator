@@ -148,7 +148,7 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 					switch(clock.animation.animationType){
 						case VISIBILITY :{
 							if(!inhibitAnimations){
-								double variableValue = getAnimatedVariableValue(clock, 0, 0);
+								double variableValue = getAnimatedVariableValue(clock, 0);
 								if(variableValue < clock.animation.clampMin || variableValue > clock.animation.clampMax){
 									isActive = false;
 								}
@@ -157,7 +157,7 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 						}
 						case INHIBITOR :{
 							if(!inhibitAnimations){
-								double variableValue = getAnimatedVariableValue(clock, 0, 0);
+								double variableValue = getAnimatedVariableValue(clock, 0);
 								if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
 									inhibitAnimations = true;
 								}
@@ -166,7 +166,7 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 						}
 						case ACTIVATOR :{
 							if(inhibitAnimations){
-								double variableValue = getAnimatedVariableValue(clock, 0, 0);
+								double variableValue = getAnimatedVariableValue(clock, 0);
 								if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
 									inhibitAnimations = false;
 								}
@@ -322,7 +322,7 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 						if(!inhibitAnimations){
 							//Found translation.  This gets applied in the translation axis direction directly.
 							//This axis needs to be rotated by the rollingRotation to ensure it's in the correct spot.
-							double variableValue = getAnimatedVariableValue(clock, 0, 0);
+							double variableValue = getAnimatedVariableValue(clock, 0);
 							Point3d appliedTranslation = clock.animation.axis.copy().multiply(variableValue);
 							localOffset.add(appliedTranslation.rotateFine(localAngles));
 						}
@@ -331,8 +331,8 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 					case ROTATION :{
 						if(!inhibitAnimations){
 							//Found rotation.  Get angles that needs to be applied.
-							double variableValue = getAnimatedVariableValue(clock, 0, 0);
-							Point3d appliedRotation = clock.animation.axis.copy().multiply(variableValue);
+							double variableValue = getAnimatedVariableValue(clock, 1.0, -clock.animation.offset, 0);
+							Point3d appliedRotation = clock.animation.axis.copy().multiply(variableValue).add(clock.animation.offset, clock.animation.offset, clock.animation.offset);
 							
 							//Check if we need to apply a translation based on this rotation.
 							if(!clock.animation.centerPoint.isZero()){
@@ -347,11 +347,10 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 						break;
 					}
 					case SCALING :{
-						//Do nothing.
 						if(!inhibitAnimations){
 							//Found scaling.  This gets applied during rendering, so we don't directly use the value here.
 							//Instead, we save it and use it later.
-							scale *= getAnimatedVariableValue(clock, 0, 0)*clock.animation.axis.length();
+							scale *= getAnimatedVariableValue(clock, clock.animation.axis.length(), 0);
 							//Update bounding box, as scale changes width/height.
 							boundingBox.widthRadius = getWidth()/2D;
 							boundingBox.heightRadius = getHeight()/2D;
@@ -361,7 +360,7 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 					}
 					case VISIBILITY :{
 						if(!inhibitAnimations){
-							double variableValue = getAnimatedVariableValue(clock, 0, 0);
+							double variableValue = getAnimatedVariableValue(clock, 0);
 							if(variableValue < clock.animation.clampMin || variableValue > clock.animation.clampMax){
 								disablePart = true;
 							}
@@ -370,7 +369,7 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 					}
 					case INHIBITOR :{
 						if(!inhibitAnimations){
-							double variableValue = getAnimatedVariableValue(clock, 0, 0);
+							double variableValue = getAnimatedVariableValue(clock, 0);
 							if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
 								inhibitAnimations = true;
 							}
@@ -379,7 +378,7 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 					}
 					case ACTIVATOR :{
 						if(inhibitAnimations){
-							double variableValue = getAnimatedVariableValue(clock, 0, 0);
+							double variableValue = getAnimatedVariableValue(clock, 0);
 							if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
 								inhibitAnimations = false;
 							}

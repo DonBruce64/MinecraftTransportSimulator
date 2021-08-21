@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Map;
 
 import minecrafttransportsimulator.MasterLoader;
+import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
@@ -234,6 +235,7 @@ public final class LegacyCompatSystem{
 			try{
 				performVehiclePartDefLegacyCompats(partDef);
 			}catch(Exception e){
+				e.printStackTrace();
 				throw new NullPointerException("Could not perform Legacy Compats on part entry #" + (definition.parts.indexOf(partDef) + 1) + " due to an unknown error.  This is likely due to a missing or incorrectly-named field.");
 			}
 		}
@@ -347,7 +349,7 @@ public final class LegacyCompatSystem{
 							
 							JSONParticle backfireDef = new JSONParticle();
 							backfireDef.type = exhaustDef.type;
-							backfireDef.color = "#000000";
+							backfireDef.color = ColorRGB.BLACK;
 							backfireDef.scale = 2.5F;
 							backfireDef.quantity = 5;
 							backfireDef.pos = exhaustDef.pos;
@@ -845,7 +847,7 @@ public final class LegacyCompatSystem{
 				//Small overheat.
 				JSONParticle particleDef = new JSONParticle();
 				particleDef.type = ParticleType.SMOKE;
-				particleDef.color = "#000000";
+				particleDef.color = ColorRGB.BLACK;
 				particleDef.spawnEveryTick = true;
 				particleDef.activeAnimations = new ArrayList<JSONAnimationDefinition>();
 				JSONAnimationDefinition activeAnimation = new JSONAnimationDefinition();
@@ -859,7 +861,7 @@ public final class LegacyCompatSystem{
 				//Large overheat.
 				particleDef = new JSONParticle();
 				particleDef.type = ParticleType.SMOKE;
-				particleDef.color = "#000000";
+				particleDef.color = ColorRGB.BLACK;
 				particleDef.spawnEveryTick = true;
 				particleDef.quantity = 1;
 				particleDef.scale = 2.5F;
@@ -875,7 +877,7 @@ public final class LegacyCompatSystem{
 				//Oil drip.
 				particleDef = new JSONParticle();
 				particleDef.type = ParticleType.DRIP;
-				particleDef.color = "#000000";
+				particleDef.color = ColorRGB.BLACK;
 				particleDef.activeAnimations = new ArrayList<JSONAnimationDefinition>();
 				activeAnimation = new JSONAnimationDefinition();
 				activeAnimation.animationType = AnimationComponentType.VISIBILITY;
@@ -894,7 +896,7 @@ public final class LegacyCompatSystem{
 				//Fuel drip.
 				particleDef = new JSONParticle();
 				particleDef.type = ParticleType.DRIP;
-				particleDef.color = "#FF0000";
+				particleDef.color = ColorRGB.RED;
 				particleDef.activeAnimations = new ArrayList<JSONAnimationDefinition>();
 				activeAnimation = new JSONAnimationDefinition();
 				activeAnimation.animationType = AnimationComponentType.VISIBILITY;
@@ -913,7 +915,7 @@ public final class LegacyCompatSystem{
 				//Contact smoke.
 				JSONParticle particleDef = new JSONParticle();
 				particleDef.type = ParticleType.SMOKE;
-				particleDef.color = "#FFFFFF";
+				particleDef.color = ColorRGB.WHITE;
 				particleDef.quantity = 4;
 				particleDef.initialVelocity = new Point3d(0, 0.15, 0);
 				particleDef.activeAnimations = new ArrayList<JSONAnimationDefinition>();
@@ -928,7 +930,7 @@ public final class LegacyCompatSystem{
 				//Burnout smoke.
 				particleDef = new JSONParticle();
 				particleDef.type = ParticleType.SMOKE;
-				particleDef.color = "#FFFFFF";
+				particleDef.color = ColorRGB.WHITE;
 				particleDef.quantity = 4;
 				particleDef.spawnEveryTick = true;
 				particleDef.pos = new Point3d(0, -definition.ground.height/2, 0);
@@ -945,7 +947,7 @@ public final class LegacyCompatSystem{
 				//Wheel dirt for skidding (burnouts).
 				particleDef = new JSONParticle();
 				particleDef.type = ParticleType.BREAK;
-				particleDef.color = "#999999";
+				particleDef.color = new ColorRGB("999999");
 				particleDef.quantity = 4;
 				particleDef.scale = 0.3F;
 				particleDef.spawnEveryTick = true;
@@ -963,7 +965,7 @@ public final class LegacyCompatSystem{
 				//Wheel dirt for slipping (turning too fast).
 				particleDef = new JSONParticle();
 				particleDef.type = ParticleType.BREAK;
-				particleDef.color = "#999999";
+				particleDef.color = new ColorRGB("999999");
 				particleDef.quantity = 4;
 				particleDef.scale = 0.3F;
 				particleDef.spawnEveryTick = true;
@@ -1311,7 +1313,7 @@ public final class LegacyCompatSystem{
 				particle.pos = new Point3d(partDef.exhaustPos[i], partDef.exhaustPos[i+1], partDef.exhaustPos[i+2]);
 				particle.velocityVector = new Point3d(partDef.exhaustVelocity[i], partDef.exhaustVelocity[i+1], partDef.exhaustVelocity[i+2]);
 				particle.scale = 1.0F;
-				particle.color = "#D9D9D9";
+				particle.color = new ColorRGB("#D9D9D9");
 				particle.transparency = 0.25F;
 				particle.toTransparency = 0.25F;
 				partDef.particleObjects.add(particle);
@@ -1327,7 +1329,7 @@ public final class LegacyCompatSystem{
 				particle.pos = exhaust.pos;
 				particle.velocityVector = exhaust.velocity;
 				particle.scale = exhaust.scale;
-				particle.color = "#D9D9D9";
+				particle.color = new ColorRGB("#D9D9D9");
 				particle.transparency = 0.25F;
 				particle.toTransparency = 0.25F;
 				partDef.particleObjects.add(particle);
@@ -1554,7 +1556,7 @@ public final class LegacyCompatSystem{
 					JSONLight lightDef = new JSONLight();
 					lightDef.objectName = objectName;
 					lightDef.brightnessAnimations = new ArrayList<JSONAnimationDefinition>();
-					lightDef.color = "#" + objectName.substring(objectName.indexOf('_') + 1, objectName.indexOf('_') + 7);
+					lightDef.color = new ColorRGB(objectName.substring(objectName.indexOf('_') + 1, objectName.indexOf('_') + 7));
 					lightDef.brightnessAnimations = new ArrayList<JSONAnimationDefinition>();
 					
 					//Add standard animation variable for light name.

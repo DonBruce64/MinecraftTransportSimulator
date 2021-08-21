@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.rendering.instances;
 
-import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
@@ -9,6 +8,7 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.guis.components.AGUIBase.TextPosition;
@@ -49,14 +49,14 @@ public final class RenderVehicle extends ARenderEntityMultipart<EntityVehicleF_P
 	protected void renderBoundingBoxes(EntityVehicleF_Physics vehicle, Point3d entityPositionDelta){
 		super.renderBoundingBoxes(vehicle, entityPositionDelta);
 		//Draw the ground bounding boxes.
-		InterfaceRender.setColorState(0.0F, 0.0F, 1.0F, 1.0F);
+		InterfaceRender.setColorState(ColorRGB.BLUE);
 		for(BoundingBox box : vehicle.groundDeviceCollective.getGroundBounds()){
 			Point3d boxCenterDelta = box.globalCenter.copy().subtract(vehicle.position).add(entityPositionDelta);
 			GL11.glTranslated(boxCenterDelta.x, boxCenterDelta.y, boxCenterDelta.z);
 			RenderBoundingBox.renderWireframe(box);
 			GL11.glTranslated(-boxCenterDelta.x, -boxCenterDelta.y, -boxCenterDelta.z);
 		}
-		InterfaceRender.setColorState(1.0F, 1.0F, 1.0F, 1.0F);
+		InterfaceRender.setColorState(ColorRGB.WHITE);
 	}
 	
 	/**
@@ -94,10 +94,10 @@ public final class RenderVehicle extends ARenderEntityMultipart<EntityVehicleF_P
 					GL11.glRotated(-vehicle.angles.y, 0, 1, 0);
 					GL11.glTranslated(partBox.globalCenter.x - vehicle.position.x, partBox.globalCenter.y - vehicle.position.y, partBox.globalCenter.z - vehicle.position.z);
 					if(isPartValid){
-						InterfaceRender.setColorState(0, 1, 0, 0.5F);
+						InterfaceRender.setColorState(ColorRGB.GREEN, 0.5F);
 						RenderBoundingBox.renderSolid(partBox);
 					}else{
-						InterfaceRender.setColorState(1, 0, 0, 0.5F);
+						InterfaceRender.setColorState(ColorRGB.RED, 0.5F);
 						RenderBoundingBox.renderSolid(partBox);
 					}
 					GL11.glPopMatrix();
@@ -114,7 +114,7 @@ public final class RenderVehicle extends ARenderEntityMultipart<EntityVehicleF_P
 			for(Entry<BoundingBox, JSONPartDefinition> partSlotEntry : vehicle.allPartSlotBoxes.entrySet()){
 				JSONPartDefinition placementDefinition = partSlotEntry.getValue();
 				if(!vehicle.areDoorsBlocking(placementDefinition, player) && (placementDefinition.validSubNames == null || placementDefinition.validSubNames.contains(vehicle.subName))){
-					InterfaceRender.setColorState(0, 0, 1, 0.5F);
+					InterfaceRender.setColorState(ColorRGB.BLUE, 0.5F);
 					BoundingBox currentBox = partSlotEntry.getKey();
 					GL11.glPushMatrix();
 					GL11.glTranslated(currentBox.globalCenter.x - vehicle.position.x, currentBox.globalCenter.y - vehicle.position.y, currentBox.globalCenter.z - vehicle.position.z);
@@ -159,14 +159,14 @@ public final class RenderVehicle extends ARenderEntityMultipart<EntityVehicleF_P
 				
 				//Translate to the spot above where the item would render and render the standard text.
 				GL11.glTranslated(0, -1.75F, 0);
-				InterfaceGUI.drawScaledText("Types: " + packVehicleDef.types.toString(), null, 0, 0, Color.BLACK, TextPosition.CENTERED, 0, 1/64F, false);
+				InterfaceGUI.drawScaledText("Types: " + packVehicleDef.types.toString(), null, 0, 0, ColorRGB.BLACK, TextPosition.CENTERED, 0, 1/64F, false);
 				GL11.glTranslated(0, 0.15F, 0);
-				InterfaceGUI.drawScaledText("Min/Max: " + String.valueOf(packVehicleDef.minValue) + "/" + String.valueOf(packVehicleDef.maxValue), null, 0, 0, Color.BLACK, TextPosition.CENTERED, 0, 1/64F, false);
+				InterfaceGUI.drawScaledText("Min/Max: " + String.valueOf(packVehicleDef.minValue) + "/" + String.valueOf(packVehicleDef.maxValue), null, 0, 0, ColorRGB.BLACK, TextPosition.CENTERED, 0, 1/64F, false);
 				GL11.glTranslated(0, 0.15F, 0);
 				if(packVehicleDef.customTypes != null){
-					InterfaceGUI.drawScaledText("CustomTypes: " + packVehicleDef.customTypes.toString(), null, 0, 0, Color.BLACK, TextPosition.CENTERED, 0, 1/64F, false);
+					InterfaceGUI.drawScaledText("CustomTypes: " + packVehicleDef.customTypes.toString(), null, 0, 0, ColorRGB.BLACK, TextPosition.CENTERED, 0, 1/64F, false);
 				}else{
-					InterfaceGUI.drawScaledText("CustomTypes: None", null, 0, 0, Color.BLACK, TextPosition.CENTERED, 0, 1/64F, false);
+					InterfaceGUI.drawScaledText("CustomTypes: None", null, 0, 0, ColorRGB.BLACK, TextPosition.CENTERED, 0, 1/64F, false);
 				}
 				GL11.glTranslated(0, 0.25F, 0);
 				
@@ -182,7 +182,7 @@ public final class RenderVehicle extends ARenderEntityMultipart<EntityVehicleF_P
 					}
 					
 					//Render the part's name.
-					InterfaceGUI.drawScaledText(partToRender.getItemName(), null, 0, 0, Color.BLACK, TextPosition.CENTERED, 0, 1/64F, false);
+					InterfaceGUI.drawScaledText(partToRender.getItemName(), null, 0, 0, ColorRGB.BLACK, TextPosition.CENTERED, 0, 1/64F, false);
 					
 					//Do translations to get to the center of where the item will render and render it.
 					//Items also need to be offset by -150 units due to how MC does rendering.

@@ -1,8 +1,7 @@
 package minecrafttransportsimulator.entities.instances;
 
-import java.awt.Color;
-
 import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
@@ -21,9 +20,9 @@ public class EntityParticle extends AEntityB_Existing{
 	public final JSONParticle definition;
 	public final int maxAge;
 	
-	private final Color startColor;
-	private final Color endColor;
-	private final Color staticColor;
+	private final ColorRGB startColor;
+	private final ColorRGB endColor;
+	private final ColorRGB staticColor;
 
 	//Runtime variables.
 	public boolean touchingBlocks;
@@ -48,18 +47,18 @@ public class EntityParticle extends AEntityB_Existing{
 		this.maxAge = generateMaxAge();
 		if(definition.color != null){
 			if(definition.toColor != null){
-				this.startColor = Color.decode(definition.color);
-				this.endColor = Color.decode(definition.toColor);
+				this.startColor = definition.color;
+				this.endColor = definition.toColor;
 				this.staticColor = null;
 			}else{
 				this.startColor = null;
 				this.endColor = null;
-				this.staticColor = Color.decode(definition.color);	
+				this.staticColor = definition.color;	
 			}
 		}else{
 			this.startColor = null;
 			this.endColor = null;
-			this.staticColor = Color.decode("#FFFFFF"); 
+			this.staticColor = ColorRGB.WHITE; 
 		}
 	}
 	
@@ -195,9 +194,9 @@ public class EntityParticle extends AEntityB_Existing{
 	 */
 	public float getRed(){
 		if(staticColor != null){
-			return staticColor.getRed()/255F;
+			return staticColor.red;
 		}else{
-			return startColor.getRed() + (endColor.getRed() - startColor.getRed())*(float)age/maxAge/256F;
+			return startColor.red + (endColor.red - startColor.red)*age/maxAge;
 		}
 	}
 	
@@ -207,9 +206,9 @@ public class EntityParticle extends AEntityB_Existing{
 	 */
 	public float getGreen(){
 		if(staticColor != null){
-			return staticColor.getGreen()/255F;
+			return staticColor.green;
 		}else{
-			return startColor.getGreen() + (endColor.getGreen() - startColor.getGreen())*(float)age/maxAge/256F;
+			return startColor.green + (endColor.green - startColor.green)*age/maxAge;
 		}
 	}
 	
@@ -219,9 +218,9 @@ public class EntityParticle extends AEntityB_Existing{
 	 */
 	public float getBlue(){
 		if(staticColor != null){
-			return staticColor.getBlue()/255F;
+			return staticColor.blue/255F;
 		}else{
-			return startColor.getBlue() + (endColor.getBlue() - startColor.getBlue())*(float)age/maxAge/256F;
+			return startColor.blue + (endColor.blue - startColor.blue)*age/maxAge;
 		}
 	}
 	

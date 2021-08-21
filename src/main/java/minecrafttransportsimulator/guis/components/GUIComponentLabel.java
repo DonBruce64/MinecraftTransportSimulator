@@ -1,7 +1,6 @@
 package minecrafttransportsimulator.guis.components;
 
-import java.awt.Color;
-
+import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.guis.components.AGUIBase.TextPosition;
 
 /**Custom label class.  Allows for batch rendering of text, and easier rendering of labels using
@@ -14,7 +13,7 @@ import minecrafttransportsimulator.guis.components.AGUIBase.TextPosition;
 public class GUIComponentLabel{
 	public final int x;
 	public final int y;
-	public final Color color;
+	public final ColorRGB color;
 	public final String fontName;
 	public final TextPosition renderMode;
 	public final int wrapWidth;
@@ -26,11 +25,11 @@ public class GUIComponentLabel{
 	private GUIComponentButton button;
 	private GUIComponentTextBox box;
 
-	public GUIComponentLabel(int x, int y, Color color, String text){
+	public GUIComponentLabel(int x, int y, ColorRGB color, String text){
 		this(x, y, color, text, null, TextPosition.LEFT_ALIGNED, 0, 1.0F, false);
 	}
 	
-	public GUIComponentLabel(int x, int y, Color color, String text, String fontName, TextPosition renderMode, int wrapWidth, float scale, boolean autoScale){
+	public GUIComponentLabel(int x, int y, ColorRGB color, String text, String fontName, TextPosition renderMode, int wrapWidth, float scale, boolean autoScale){
 		this.x = x;
 		this.y = y;
 		this.color = color;

@@ -1,16 +1,15 @@
 package minecrafttransportsimulator.rendering.components;
 
-import java.awt.Color;
-
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
 import minecrafttransportsimulator.entities.instances.APart;
-import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.EntityFluidTank;
+import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartInteractable;
 import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.guis.components.AGUIBase;
@@ -105,7 +104,7 @@ public class InterfaceEventsOverlay{
 								EntityFluidTank tank = ((PartInteractable) part).tank;
 								if(tank != null){
 									String tankText = tank.getFluid().isEmpty() ? "EMPTY" : tank.getFluid().toUpperCase() + " : " + tank.getFluidLevel() + "/" + tank.getMaxLevel();
-									InterfaceGUI.drawBasicText(tankText, null, screenWidth/2 + 4, screenHeight/2, Color.WHITE, TextPosition.LEFT_ALIGNED, 0);
+									InterfaceGUI.drawBasicText(tankText, null, screenWidth/2 + 4, screenHeight/2, ColorRGB.WHITE, TextPosition.LEFT_ALIGNED, 0);
 								}
 							}
 						}
@@ -122,12 +121,12 @@ public class InterfaceEventsOverlay{
 						
 						//If we are in a seat controlling a gun, render a text line for it.
 						if(seat.canControlGuns && !InterfaceClient.isChatOpen()){
-							InterfaceGUI.drawBasicText("Active Gun:", null, screenWidth, 0, Color.WHITE, TextPosition.RIGHT_ALIGNED, 0);
+							InterfaceGUI.drawBasicText("Active Gun:", null, screenWidth, 0, ColorRGB.WHITE, TextPosition.RIGHT_ALIGNED, 0);
 							if(seat.activeGun != null){
 								String gunNumberText = seat.activeGun.definition.gun.fireSolo ? " [" + (seat.gunIndex + 1) + "]" : "";
-								InterfaceGUI.drawBasicText(seat.activeGun.getItemName() + gunNumberText, null, screenWidth, 8, Color.WHITE, TextPosition.RIGHT_ALIGNED, 0);
+								InterfaceGUI.drawBasicText(seat.activeGun.getItemName() + gunNumberText, null, screenWidth, 8, ColorRGB.WHITE, TextPosition.RIGHT_ALIGNED, 0);
 							}else{
-								InterfaceGUI.drawBasicText("None", null, screenWidth, 8, Color.WHITE, TextPosition.RIGHT_ALIGNED, 0);
+								InterfaceGUI.drawBasicText("None", null, screenWidth, 8, ColorRGB.WHITE, TextPosition.RIGHT_ALIGNED, 0);
 							}
 						}
 						

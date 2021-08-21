@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.guis.instances;
 
-import java.awt.Color;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -9,6 +8,7 @@ import java.util.TreeMap;
 
 import org.lwjgl.opengl.GL11;
 
+import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
@@ -137,7 +137,7 @@ public class GUIInstruments extends AGUIBase{
 		}
 		
 		//Create the pack name label.
-		addLabel(packName = new GUIComponentLabel(guiLeft + 40, guiTop - 85, Color.WHITE, ""));
+		addLabel(packName = new GUIComponentLabel(guiLeft + 40, guiTop - 85, ColorRGB.WHITE, ""));
 
 		//Create the clear button.
 		addButton(clearButton = new TexturelessButton(guiLeft + getWidth() - 2*instrumentButtonSize, guiTop - 75, 2*instrumentButtonSize, InterfaceCore.translate("gui.instruments.clear"), 2*instrumentButtonSize, true){
@@ -174,7 +174,7 @@ public class GUIInstruments extends AGUIBase{
 		});
 		
 		//Create the info label.
-		addLabel(infoLabel = new GUIComponentLabel(guiLeft + getWidth()/2, guiTop - 20, Color.WHITE, "", null, TextPosition.CENTERED, 150, 1.0F, false));
+		addLabel(infoLabel = new GUIComponentLabel(guiLeft + getWidth()/2, guiTop - 20, ColorRGB.WHITE, "", null, TextPosition.CENTERED, 150, 1.0F, false));
 		
 		//Get all entities with instruments and adds them to the list. definitions, and add them to a map-list.
 		//These come from the vehicle and all parts.
@@ -218,7 +218,7 @@ public class GUIInstruments extends AGUIBase{
 								if(inClockPeriod(40, 20)){
 									GL11.glPushMatrix();
 									GL11.glTranslatef(0, 0, 1.0F);
-									InterfaceGUI.renderRectangle(this.x, this.y, 2*selectedInstrumentRadius, 2*selectedInstrumentRadius, Color.WHITE);
+									InterfaceGUI.renderRectangle(this.x, this.y, 2*selectedInstrumentRadius, 2*selectedInstrumentRadius, ColorRGB.WHITE);
 									GL11.glPopMatrix();
 								}
 							}
@@ -351,12 +351,12 @@ public class GUIInstruments extends AGUIBase{
 			if(visible){
 				if(enabled){
 					if(mouseX >= x && mouseY >= y && mouseX < x + width && mouseY < y + height){
-						InterfaceGUI.renderRectangle(this.x, this.y, this.width, this.height, Color.LIGHT_GRAY);
+						InterfaceGUI.renderRectangle(this.x, this.y, this.width, this.height, ColorRGB.LIGHT_GRAY);
 					}else{
-						InterfaceGUI.renderRectangle(this.x, this.y, this.width, this.height, Color.GRAY);
+						InterfaceGUI.renderRectangle(this.x, this.y, this.width, this.height, ColorRGB.GRAY);
 					}
 				}else{
-					InterfaceGUI.renderRectangle(this.x, this.y, this.width, this.height, Color.BLACK);
+					InterfaceGUI.renderRectangle(this.x, this.y, this.width, this.height, ColorRGB.BLACK);
 				}
 			}
 		}

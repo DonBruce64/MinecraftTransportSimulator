@@ -1,11 +1,11 @@
 package minecrafttransportsimulator.guis.instances;
 
-import java.awt.Color;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
@@ -141,7 +141,7 @@ public class GUISignalController extends AGUIBase{
 				controller.intersectionCenterPoint.z = getDoubleValue();
 			}
 		});
-		addLabel(new GUIComponentLabel(leftTextOffset, topOffset, Color.WHITE, "Center (X/Z):").setBox(scanCenterXText));
+		addLabel(new GUIComponentLabel(leftTextOffset, topOffset, ColorRGB.WHITE, "Center (X/Z):").setBox(scanCenterXText));
 		topOffset += scanCenterXText.height + rowSpacing;
 		
 		
@@ -150,10 +150,10 @@ public class GUISignalController extends AGUIBase{
 		
 		//Scan distance.
 		addTextBox(scanDistanceText = new GUIComponentNumericTextBox(leftObjectOffset, topOffset, "25"));
-		addLabel(new GUIComponentLabel(leftTextOffset, topOffset, Color.WHITE, "Radius:").setBox(scanDistanceText));
+		addLabel(new GUIComponentLabel(leftTextOffset, topOffset, ColorRGB.WHITE, "Radius:").setBox(scanDistanceText));
 		
 		//Found count.
-		addLabel(trafficSignalCount = new GUIComponentLabel(scanDistanceText.x + scanDistanceText.width + 5, topOffset, Color.WHITE, "Found: " + String.valueOf(controller.componentLocations.size())));
+		addLabel(trafficSignalCount = new GUIComponentLabel(scanDistanceText.x + scanDistanceText.width + 5, topOffset, ColorRGB.WHITE, "Found: " + String.valueOf(controller.componentLocations.size())));
 		topOffset += scanDistanceText.height + rowSpacing*3;
 		
 		
@@ -205,7 +205,7 @@ public class GUISignalController extends AGUIBase{
 		
 		//Lane width defaults.
 		addTextBox(laneWidthText = new GUIComponentNumericTextBox(middleObjectOffset + 60, topOffset, "4.0", 40));
-		addLabel(new GUIComponentLabel(middleObjectOffset, topOffset, Color.WHITE, "Lane Width:").setBox(laneWidthText));
+		addLabel(new GUIComponentLabel(middleObjectOffset, topOffset, ColorRGB.WHITE, "Lane Width:").setBox(laneWidthText));
 		topOffset += 15 + rowSpacing*3;
 		
 		
@@ -219,7 +219,7 @@ public class GUISignalController extends AGUIBase{
 				controller.greenMainTime = getIntegerValue()*20;
 			}
 		});
-		addLabel(new GUIComponentLabel(leftTextOffset, topOffset, Color.WHITE, "Green Time (Main):").setBox(greenMainTimeText));
+		addLabel(new GUIComponentLabel(leftTextOffset, topOffset, ColorRGB.WHITE, "Green Time (Main):").setBox(greenMainTimeText));
 		topOffset += GUIComponentNumericTextBox.NUMERIC_HEIGHT;
 		
 		addTextBox(greenCrossTimeText = new GUIComponentNumericTextBox(middleObjectOffset, topOffset, String.valueOf(controller.greenCrossTime/20)){
@@ -228,7 +228,7 @@ public class GUISignalController extends AGUIBase{
 				controller.greenCrossTime = getIntegerValue()*20;
 			}
 		});
-		addLabel(new GUIComponentLabel(leftTextOffset, topOffset, Color.WHITE, "Green Time (Cross):").setBox(greenCrossTimeText));
+		addLabel(new GUIComponentLabel(leftTextOffset, topOffset, ColorRGB.WHITE, "Green Time (Cross):").setBox(greenCrossTimeText));
 		topOffset += GUIComponentNumericTextBox.NUMERIC_HEIGHT;
 		
 		addTextBox(yellowMainTimeText = new GUIComponentNumericTextBox(middleObjectOffset, topOffset, String.valueOf(controller.yellowMainTime/20)){
@@ -237,7 +237,7 @@ public class GUISignalController extends AGUIBase{
 				controller.yellowMainTime = getIntegerValue()*20;
 			}
 		});
-		addLabel(new GUIComponentLabel(leftTextOffset, topOffset, Color.WHITE, "Yellow Time (Main):").setBox(yellowMainTimeText));
+		addLabel(new GUIComponentLabel(leftTextOffset, topOffset, ColorRGB.WHITE, "Yellow Time (Main):").setBox(yellowMainTimeText));
 		topOffset += GUIComponentNumericTextBox.NUMERIC_HEIGHT;
 		
 		addTextBox(yellowCrossTimeText = new GUIComponentNumericTextBox(middleObjectOffset, topOffset, String.valueOf(controller.yellowCrossTime/20)){
@@ -246,7 +246,7 @@ public class GUISignalController extends AGUIBase{
 				controller.yellowCrossTime = getIntegerValue()*20;
 			}
 		});
-		addLabel(new GUIComponentLabel(leftTextOffset, topOffset, Color.WHITE, "Yellow Time (Cross):").setBox(yellowCrossTimeText));
+		addLabel(new GUIComponentLabel(leftTextOffset, topOffset, ColorRGB.WHITE, "Yellow Time (Cross):").setBox(yellowCrossTimeText));
 		topOffset += GUIComponentNumericTextBox.NUMERIC_HEIGHT;
 		
 		addTextBox(allRedTimeText = new GUIComponentNumericTextBox(middleObjectOffset, topOffset, String.valueOf(controller.allRedTime/20)){
@@ -255,7 +255,7 @@ public class GUISignalController extends AGUIBase{
 				controller.allRedTime = getIntegerValue()*20;
 			}
 		});
-		addLabel(new GUIComponentLabel(leftTextOffset, topOffset, Color.WHITE, "All Red Time:").setBox(allRedTimeText));
+		addLabel(new GUIComponentLabel(leftTextOffset, topOffset, ColorRGB.WHITE, "All Red Time:").setBox(allRedTimeText));
 		topOffset += GUIComponentNumericTextBox.NUMERIC_HEIGHT + rowSpacing*4;
 		
 		
@@ -305,12 +305,12 @@ public class GUISignalController extends AGUIBase{
 				
 				List<GUIComponentLabel> currentList = axis.blockBased ? upperPropertyLabels : lowerPropertyLabels;
 				if(currentList.isEmpty()){
-					currentList.add(new GUIComponentLabel(guiLeft + 10, topOffset + 10, Color.WHITE, "# Left Lanes:", null, TextPosition.LEFT_ALIGNED, 0, 0.75F, false));
-					currentList.add(new GUIComponentLabel(guiLeft + 10, topOffset + 20, Color.WHITE, "# Center Lanes:", null, TextPosition.LEFT_ALIGNED, 0, 0.75F, false));
-					currentList.add(new GUIComponentLabel(guiLeft + 10, topOffset + 30, Color.WHITE, "# Right Lanes:", null, TextPosition.LEFT_ALIGNED, 0, 0.75F, false));
-					currentList.add(new GUIComponentLabel(guiLeft + 10, topOffset + 40, Color.WHITE, "Road Width:", null, TextPosition.LEFT_ALIGNED, 0, 0.75F, false));
-					currentList.add(new GUIComponentLabel(guiLeft + 10, topOffset + 50, Color.WHITE, "Dist Center->Road:", null, TextPosition.LEFT_ALIGNED, 0, 0.75F, false));
-					currentList.add(new GUIComponentLabel(guiLeft + 10, topOffset + 60, Color.WHITE, "Dist Road->Median:", null, TextPosition.LEFT_ALIGNED, 0, 0.75F, false));
+					currentList.add(new GUIComponentLabel(guiLeft + 10, topOffset + 10, ColorRGB.WHITE, "# Left Lanes:", null, TextPosition.LEFT_ALIGNED, 0, 0.75F, false));
+					currentList.add(new GUIComponentLabel(guiLeft + 10, topOffset + 20, ColorRGB.WHITE, "# Center Lanes:", null, TextPosition.LEFT_ALIGNED, 0, 0.75F, false));
+					currentList.add(new GUIComponentLabel(guiLeft + 10, topOffset + 30, ColorRGB.WHITE, "# Right Lanes:", null, TextPosition.LEFT_ALIGNED, 0, 0.75F, false));
+					currentList.add(new GUIComponentLabel(guiLeft + 10, topOffset + 40, ColorRGB.WHITE, "Road Width:", null, TextPosition.LEFT_ALIGNED, 0, 0.75F, false));
+					currentList.add(new GUIComponentLabel(guiLeft + 10, topOffset + 50, ColorRGB.WHITE, "Dist Center->Road:", null, TextPosition.LEFT_ALIGNED, 0, 0.75F, false));
+					currentList.add(new GUIComponentLabel(guiLeft + 10, topOffset + 60, ColorRGB.WHITE, "Dist Road->Median:", null, TextPosition.LEFT_ALIGNED, 0, 0.75F, false));
 					for(GUIComponentLabel label : currentList){
 						addLabel(label);
 					}
@@ -373,12 +373,12 @@ public class GUISignalController extends AGUIBase{
 		private static final int NUMERIC_HEIGHT = 10;
 
 		public GUIComponentNumericTextBox(int x, int y, String text){
-			super(x, y, 40, text, NUMERIC_HEIGHT, Color.WHITE, Color.BLACK, 5);
+			super(x, y, 40, text, NUMERIC_HEIGHT, ColorRGB.WHITE, ColorRGB.BLACK, 5);
 			this.floatingPoint = false;
 		}
 		
 		public GUIComponentNumericTextBox(int x, int y, String text, int width){
-			super(x, y, width, text, NUMERIC_HEIGHT, Color.WHITE, Color.BLACK, 7);
+			super(x, y, width, text, NUMERIC_HEIGHT, ColorRGB.WHITE, ColorRGB.BLACK, 7);
 			this.floatingPoint = true;
 		}
 		
@@ -430,7 +430,7 @@ public class GUISignalController extends AGUIBase{
 		private GUIComponentIntersectionProperties(int guiLeft, int guiTop, int leftOffset, int topOffset, Axis axis){
 			this.axis = axis;
 			IntersectionProperties properties = controller.intersectionProperties.get(axis);
-			addLabel(axisLabel = new GUIComponentLabel(leftOffset, topOffset, Color.WHITE, axis.name(), null, TextPosition.LEFT_ALIGNED, 0, axis.blockBased ? 1.0F : 0.65F, false));
+			addLabel(axisLabel = new GUIComponentLabel(leftOffset, topOffset, ColorRGB.WHITE, axis.name(), null, TextPosition.LEFT_ALIGNED, 0, axis.blockBased ? 1.0F : 0.65F, false));
 			addTextBox(leftLaneText = new GUIComponentNumericTextBox(leftOffset, topOffset + 10, String.valueOf(properties.leftLaneCount)){
 				@Override
 				public void setVariable(){

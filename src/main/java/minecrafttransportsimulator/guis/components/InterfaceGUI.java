@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.guis.components;
 
-import java.awt.Color;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -10,6 +9,7 @@ import java.util.Map;
 import org.apache.commons.io.IOUtils;
 import org.lwjgl.opengl.GL11;
 
+import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.guis.components.AGUIBase.TextPosition;
 import minecrafttransportsimulator.mcinterface.BuilderGUI;
 import net.minecraft.client.Minecraft;
@@ -131,7 +131,7 @@ public class InterfaceGUI{
 	 *  then the wordWrap method will be called to render multi-line text.  Note that after this operation the font texture 
 	 *  will be bound, so take care when calling this method in the middle of rendering operations.
 	 */
-	public static void drawBasicText(String text, String customFontName, int x, int y, Color color, TextPosition renderPosition, int wrapWidth){
+	public static void drawBasicText(String text, String customFontName, int x, int y, ColorRGB color, TextPosition renderPosition, int wrapWidth){
 		FontRenderer fontRenderer = getRenderer(customFontName);
 		if(renderPosition.equals(TextPosition.CENTERED)){
 			if(wrapWidth == 0){
@@ -148,18 +148,18 @@ public class InterfaceGUI{
 		}
 		
 		if(wrapWidth == 0){
-			fontRenderer.drawString(text, x, y, color.getRGB());
+			fontRenderer.drawString(text, x, y, color.rgbInt);
 		}else{
-			fontRenderer.drawSplitString(text, x, y, wrapWidth, color.getRGB());
+			fontRenderer.drawSplitString(text, x, y, wrapWidth, color.rgbInt);
 		}
 	}
 	
 	/**
-	 *  Similar to {@link #drawBasicText(String, int, int, Color, TextPosition, int)}, except this method
+	 *  Similar to {@link #drawBasicText(String, int, int, ColorRGB, TextPosition, int)}, except this method
 	 *  does OpenGL scaling to render the text bigger or smaller than normal.  Requires a few different bits
 	 *  to get this to work, so it's in it's own method for code simplicity.
 	 */
-	public static void drawScaledText(String text, String customFontName, int x, int y, Color color, TextPosition renderPosition, int wrapWidth, float scale, boolean autoScaled){
+	public static void drawScaledText(String text, String customFontName, int x, int y, ColorRGB color, TextPosition renderPosition, int wrapWidth, float scale, boolean autoScaled){
 		FontRenderer fontRenderer = getRenderer(customFontName);
 		//Check for auto-scaling.
 		float heightOffset = 0F;
@@ -261,8 +261,8 @@ public class InterfaceGUI{
 	 *  Draws a colored rectangle at the specified point.  This does NOT change the currently-bound
 	 *  texture, nor does it modify any OpelGL states, so it may safely be called during rendering operations.
 	 */
-	public static void renderRectangle(int x, int y, int width, int height, Color color){
-		GuiScreen.drawRect(x, y, x + width, y + height, color.getRGB());
+	public static void renderRectangle(int x, int y, int width, int height, ColorRGB color){
+		GuiScreen.drawRect(x, y, x + width, y + height, color.rgbInt);
 	}
 	
 	/**

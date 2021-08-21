@@ -8,6 +8,7 @@ import java.util.Map;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
@@ -242,16 +243,16 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 			for(BoundingBox box : interactable.interactionBoxes){
 				if(interactable.doorBoxes.containsKey(box)){
 					//Green for doors.
-					InterfaceRender.setColorState(0.0F, 1.0F, 0.0F, 1.0F);
+					InterfaceRender.setColorState(ColorRGB.GREEN);
 				}else if(interactable.blockCollisionBoxes.contains(box)){
 					//Red for block collisions.
-					InterfaceRender.setColorState(1.0F, 0.0F, 0.0F, 1.0F);
+					InterfaceRender.setColorState(ColorRGB.RED);
 				}else if(interactable.collisionBoxes.contains(box)){
 					//Black for general collisions.
-					InterfaceRender.setColorState(0.0F, 0.0F, 0.0F, 1.0F);
+					InterfaceRender.setColorState(ColorRGB.BLACK);
 				}else{
 					//None of the above.  Must be an interaction box.  Yellow.
-					InterfaceRender.setColorState(1.0F, 1.0F, 0.0F, 1.0F);
+					InterfaceRender.setColorState(ColorRGB.YELLOW);
 				}
 				
 				Point3d boxCenterDelta = box.globalCenter.copy().subtract(entity.position).add(entityPositionDelta);
@@ -259,7 +260,7 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 				RenderBoundingBox.renderWireframe(box);
 				GL11.glTranslated(-boxCenterDelta.x, -boxCenterDelta.y, -boxCenterDelta.z);
 			}
-			InterfaceRender.setColorState(1.0F, 1.0F, 1.0F, 1.0F);
+			InterfaceRender.setColorState(ColorRGB.WHITE);
 		}
 	}
 	

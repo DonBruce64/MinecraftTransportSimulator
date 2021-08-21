@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.mcinterface;
 
-import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.net.URL;
 import java.net.URLConnection;
@@ -17,6 +16,7 @@ import javax.imageio.stream.ImageInputStream;
 
 import org.lwjgl.opengl.GL11;
 
+import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
@@ -317,12 +317,19 @@ public class InterfaceRender{
 	}
 	
 	/**
-	 *  Sets MC color to the passed-in color.  Required when needing to keep MC states happy.
+	 *  Sets MC color to the passed-in color and alpha.  Required when needing to keep MC states happy.
 	 *  In particular, this is needed if colors are changed during MC internal draw calls,
 	 *  such as rendering a string, changing the color, and then rendering another string.
 	 */
-	public static void setColorState(float red, float green, float blue, float alpha){
-		GlStateManager.color(red, green, blue, alpha);
+	public static void setColorState(ColorRGB color, float alpha){
+		GlStateManager.color(color.red, color.green, color.blue, alpha);
+	}
+	
+	/**
+	 *  Like {@link #setColorState(ColorRGB, float)}, but assumes no alpha (alpha is 1.0).
+	 */
+	public static void setColorState(ColorRGB color){
+		setColorState(color, 1.0F);
 	}
 	
 	/**
@@ -343,7 +350,7 @@ public class InterfaceRender{
 	 */
 	//TODO move away from this.  It's a hack for bad code!
 	public static void resetStates(){
-		setColorState(1.0F, 1.0F, 1.0F, 1.0F);
+		setColorState(ColorRGB.WHITE, 1.0F);
 		setLightingState(true);
 	}
 	
@@ -438,9 +445,9 @@ public class InterfaceRender{
 				//Scale by 1/16.  This converts us from block units to pixel units, which is what the GUIs use.
 				GL11.glScalef(1F/16F, 1F/16F, 1F/16F);
 				//Finally, render the text.
-				String inheritedColor = entity.getSecondaryTextColor();
-				String colorString = textDefinition.colorInherited && inheritedColor != null ? inheritedColor : textDefinition.color;
-				InterfaceGUI.drawScaledText(text, textDefinition.fontName, 0, 0, Color.decode(colorString), TextPosition.values()[textDefinition.renderPosition], textDefinition.wrapWidth, textDefinition.scale, textDefinition.autoScale);
+				ColorRGB inheritedColor = entity.getSecondaryTextColor();
+				ColorRGB color = textDefinition.colorInherited && inheritedColor != null ? inheritedColor : textDefinition.color;
+				InterfaceGUI.drawScaledText(text, textDefinition.fontName, 0, 0, color, TextPosition.values()[textDefinition.renderPosition], textDefinition.wrapWidth, textDefinition.scale, textDefinition.autoScale);
 				GL11.glPopMatrix();
 			}
 		}
@@ -452,7 +459,7 @@ public class InterfaceRender{
 		if(!systemLightingEnabled){
 			setSystemLightingState(true);
 			//Set color back to white, the font renderer sets this to not-white.
-			setColorState(1.0F, 1.0F, 1.0F, 1.0F);
+			setColorState(ColorRGB.WHITE);
 			return true;
 		}else{
 			return false;
