@@ -2,6 +2,7 @@ package minecrafttransportsimulator.rendering.components;
 
 import org.lwjgl.opengl.GL11;
 
+import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
@@ -17,7 +18,7 @@ public abstract class ARenderEntityMultipart<RenderedEntity extends AEntityE_Mul
 	protected void renderBoundingBoxes(RenderedEntity entity, Point3d entityPositionDelta){
 		super.renderBoundingBoxes(entity, entityPositionDelta);
 		//Draw part center points.
-		InterfaceRender.setColorState(1.0F, 1.0F, 0.0F, 1.0F);
+		InterfaceRender.setColorState(ColorRGB.YELLOW);
 		GL11.glBegin(GL11.GL_LINES);
 		for(APart part : ((AEntityE_Multipart<?>) entity).parts){
 			if(!part.isFake()){
@@ -27,6 +28,6 @@ public abstract class ARenderEntityMultipart<RenderedEntity extends AEntityE_Mul
 			}
 		}
 		GL11.glEnd();
-		InterfaceRender.setColorState(1.0F, 1.0F, 1.0F, 1.0F);
+		InterfaceRender.setColorState(ColorRGB.WHITE);
 	}
 }

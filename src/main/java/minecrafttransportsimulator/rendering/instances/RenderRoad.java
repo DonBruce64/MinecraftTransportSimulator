@@ -9,6 +9,7 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.BezierCurve;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLane;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLaneConnection;
@@ -40,7 +41,7 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 		if(!road.isActive()){
 			if(blendingEnabled){
 				InterfaceRender.setTextureState(false);
-				InterfaceRender.setColorState(0.0F, 1.0F, 0.0F, 0.5F);
+				InterfaceRender.setColorState(ColorRGB.GREEN, 0.5F);
 			}else{
 				return;
 			}
@@ -166,7 +167,7 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 		
 		//If we are inactive render the blocking blocks and the main block.
 		if(!road.isActive()){
-			InterfaceRender.setColorState(1.0F, 0.0F, 0.0F, 0.5F);
+			InterfaceRender.setColorState(ColorRGB.RED, 0.5F);
 			for(Point3d location : road.collidingBlockOffsets){
 				BoundingBox blockingBox = new BoundingBox(location.copy().add(0, 0.5, 0), 0.55, 0.55, 0.55);
 				GL11.glPushMatrix();
@@ -174,7 +175,7 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 				RenderBoundingBox.renderSolid(blockingBox);
 				GL11.glPopMatrix();
 			}
-			InterfaceRender.setColorState(0.0F, 0.0F, 1.0F, 0.5F);
+			InterfaceRender.setColorState(ColorRGB.BLUE, 0.5F);
 			BoundingBox mainBlockBox = new BoundingBox(new Point3d(0, 0.75, 0), 0.15, 1.5, 0.15);
 			GL11.glPushMatrix();
 			GL11.glTranslated(mainBlockBox.localCenter.x, mainBlockBox.localCenter.y, mainBlockBox.localCenter.z);
@@ -195,7 +196,7 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 			//First render the actual curve if we are a dynamic road.
 			if(road.dynamicCurve != null){
 				//Render actual curve.
-				InterfaceRender.setColorState(0, 1, 0, 1);
+				InterfaceRender.setColorState(ColorRGB.GREEN);
 				for(float f=0; f<road.dynamicCurve.pathLength; f+=0.1){
 					road.dynamicCurve.setPointToPositionAt(position, f);
 					GL11.glVertex3d(position.x, position.y, position.z);
@@ -203,7 +204,7 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 				}
 				
 				//Render the outer border bounds.
-				InterfaceRender.setColorState(0, 1, 1, 1);
+				InterfaceRender.setColorState(ColorRGB.CYAN);
 				for(float f=0; f<road.dynamicCurve.pathLength; f+=0.1){
 					road.dynamicCurve.setPointToRotationAt(rotation, f);
 					position.set(road.definition.road.borderOffset, 0, 0).rotateFine(rotation);
@@ -218,7 +219,7 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 			for(RoadLane lane : road.lanes){
 				for(BezierCurve laneCurve : lane.curves){
 					//Render the curve bearing indicator
-					InterfaceRender.setColorState(1, 0, 0, 1);
+					InterfaceRender.setColorState(ColorRGB.RED);
 					GL11.glVertex3d(laneCurve.startPos.x, laneCurve.startPos.y, laneCurve.startPos.z);
 					GL11.glVertex3d(laneCurve.startPos.x, laneCurve.startPos.y + 3, laneCurve.startPos.z);
 					GL11.glVertex3d(laneCurve.startPos.x, laneCurve.startPos.y + 3, laneCurve.startPos.z);
@@ -226,7 +227,7 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 					GL11.glVertex3d(bearingPos.x, bearingPos.y + 3, bearingPos.z);
 					
 					//Render all the points on the curve.
-					InterfaceRender.setColorState(1, 1, 0, 1);
+					InterfaceRender.setColorState(ColorRGB.YELLOW);
 					laneCurve.setPointToPositionAt(position, 0);
 					for(float f=0; f<laneCurve.pathLength; f+=0.1){
 						laneCurve.setPointToPositionAt(position, f);
@@ -237,7 +238,7 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 			}
 			
 			//Render the lane connections.
-			InterfaceRender.setColorState(1.0F, 0.7F, 0.7F, 1);
+			InterfaceRender.setColorState(ColorRGB.PINK);
 			for(RoadLane lane : road.lanes){
 				for(List<RoadLaneConnection> curvePriorConnections : lane.priorConnections){
 					BezierCurve currentCurve = lane.curves.get(lane.priorConnections.indexOf(curvePriorConnections));
@@ -265,7 +266,7 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 					}
 				}
 			}
-			InterfaceRender.setColorState(0.5F, 0.0F, 1.0F, 1);
+			InterfaceRender.setColorState(ColorRGB.ORANGE);
 			for(RoadLane lane : road.lanes){
 				for(List<RoadLaneConnection> curveNextConnections : lane.nextConnections){
 					BezierCurve currentCurve = lane.curves.get(lane.nextConnections.indexOf(curveNextConnections));

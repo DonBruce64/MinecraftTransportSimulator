@@ -29,6 +29,7 @@ public abstract class AGUIPanel extends AGUIBase{
 	protected static final int GAP_BETWEEN_SELECTORS = 12;
 	protected static final int SELECTOR_SIZE = 20;
 	protected static final int SELECTOR_TEXTURE_SIZE = 20;
+	protected static final byte ENGINE_SINGLE_SELECTOR_INDEX = -1;
 	
 	public final EntityVehicleF_Physics vehicle;
 	protected final boolean haveReverseThrustOption;

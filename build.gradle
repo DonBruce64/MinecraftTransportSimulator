@@ -9,7 +9,7 @@ buildscript {
 }
 apply plugin: 'net.minecraftforge.gradle.forge'
 
-version = "1.12.2-20.0.4-BETA1"
+version = "1.12.2-20.1.0-BETA3"
 group= "minecrafttransportsimulator" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "Immersive Vehicles"
 

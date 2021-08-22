@@ -3,6 +3,7 @@ package minecrafttransportsimulator.rendering.instances;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.PartGun;
@@ -42,12 +43,12 @@ public final class RenderPart extends ARenderEntity<APart>{
 		super.renderBoundingBoxes(part, entityPositionDelta);
 		//Draw the gun muzzle bounding boxes.
 		if(part instanceof PartGun){
-			InterfaceRender.setColorState(0.0F, 0.0F, 1.0F, 1.0F);
-			Point3d origin = ((PartGun) part).getFiringOrigin().rotateFine(part.localAngles).rotateFine(part.entityOn.angles).add(entityPositionDelta);
+			InterfaceRender.setColorState(ColorRGB.BLUE);
+			Point3d origin = new Point3d(0, 0, part.definition.gun.length).rotateFine(part.localAngles).rotateFine(part.entityOn.angles).add(entityPositionDelta);
 			GL11.glTranslated(origin.x, origin.y, origin.z);
 			RenderBoundingBox.renderWireframe(new BoundingBox(origin, 0.25, 0.25, 0.25));
 			GL11.glTranslated(-origin.x, -origin.y, -origin.z);
-			InterfaceRender.setColorState(1.0F, 1.0F, 1.0F, 1.0F);
+			InterfaceRender.setColorState(ColorRGB.WHITE);
 		}
 	}
 }

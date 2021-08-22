@@ -1,9 +1,5 @@
 package minecrafttransportsimulator.mcinterface;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-
 import minecrafttransportsimulator.MasterLoader;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
@@ -27,8 +23,7 @@ import net.minecraftforge.fml.common.registry.EntityEntryBuilder;
 public class BuilderEntityRenderForwarder extends ABuilderEntityBase{
 	
 	public EntityPlayer playerFollowing;
-	public static final Map<UUID, BuilderEntityRenderForwarder> activeFollowers = new HashMap<UUID, BuilderEntityRenderForwarder>();
-	
+	public int idleTickCounter;
 	private long[] lastTickRendered = new long[]{0L, 0L, 0L};
 	private float[] lastPartialTickRendered = new float[]{0F, 0F, 0F};
 	private boolean doneRenderingShaders;
@@ -39,9 +34,9 @@ public class BuilderEntityRenderForwarder extends ABuilderEntityBase{
 		super(world);
 		setSize(0.05F, 0.05F);
 		if(!world.isRemote){
-			//Need to set this so we don't try to re-load the player data.
-			//We'll then get marked dead on the next update.
-			loadedFromNBT = true;
+			//Don't restore saved entities on the server.
+			//These get loaded, but might not tick if they're out of chunk range.
+			setDead();
 		}
 	}
 	
@@ -50,33 +45,20 @@ public class BuilderEntityRenderForwarder extends ABuilderEntityBase{
 		setSize(0.25F, 0.25F);
 		this.playerFollowing = playerFollowing;
 		this.setPosition(playerFollowing.posX, playerFollowing.posY, playerFollowing.posZ);
-		activeFollowers.put(playerFollowing.getUniqueID(), this);
-		//Need to set this as we don't spawn this builder normally.
-		loadedFromNBT = true;
 	}
 	
     @Override
     public void onEntityUpdate(){
     	super.onEntityUpdate();
-    	if(playerFollowing != null && !playerFollowing.isDead && playerFollowing.world == this.world){
+    	if(playerFollowing != null && playerFollowing.world == this.world && !playerFollowing.isDead){
     		//Need to move the fake entity forwards to account for the partial ticks interpolation MC does.
     		//If we don't do this, and we move faster than 1 block per tick, we'll get flickering.
     		double playerVelocity = Math.sqrt(playerFollowing.motionX*playerFollowing.motionX + playerFollowing.motionY*playerFollowing.motionY + playerFollowing.motionZ*playerFollowing.motionZ);
     		Vec3d playerEyesVec = playerFollowing.getLookVec().scale(Math.max(1, playerVelocity/2));
     		setPosition(playerFollowing.posX + playerEyesVec.x, playerFollowing.posY + playerFollowing.eyeHeight + playerEyesVec.y, playerFollowing.posZ + playerEyesVec.z);
-    	}else if(!world.isRemote){
-    		//Forwarder with no player, or no living player.  Player either left, or is dead.  Remove.
-    		setDead();
     	}
+    	idleTickCounter = 0;
     }
-    
-	@Override
-	public void setDead(){
-		super.setDead();
-		if(!world.isRemote && playerFollowing != null){
-			activeFollowers.remove(playerFollowing.getUniqueID());
-		}
-	}
     
     @Override
     public boolean shouldRenderInPass(int pass){
@@ -141,13 +123,6 @@ public class BuilderEntityRenderForwarder extends ABuilderEntityBase{
 	@Override
 	public void handleLoadedNBT(NBTTagCompound tag){
 		playerFollowing = world.getPlayerEntityByUUID(tag.getUniqueId("playerFollowing"));
-		if(!world.isRemote){
-			if(playerFollowing == null){
-				setDead();
-			}else{
-				activeFollowers.put(playerFollowing.getUniqueID(), this);
-			}
-		}
 	}
     
 	@Override

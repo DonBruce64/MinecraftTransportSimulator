@@ -5,6 +5,7 @@ import java.util.Set;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController.SignalDirection;
@@ -36,13 +37,13 @@ public class RenderDecor extends ARenderTileEntityBase<TileEntityDecor>{
 							
 							
 							if(signalGroup.direction.equals(SignalDirection.LEFT)){
-								InterfaceRender.setColorState(0, 0, 1, 0.5F);
+								InterfaceRender.setColorState(ColorRGB.BLUE, 0.5F);
 								RenderBoundingBox.renderSolid(box);
 							}else if(signalGroup.direction.equals(SignalDirection.RIGHT)){
-								InterfaceRender.setColorState(1, 1, 0, 0.5F);
+								InterfaceRender.setColorState(ColorRGB.YELLOW, 0.5F);
 								RenderBoundingBox.renderSolid(box);
 							}else if(signalGroup.direction.equals(SignalDirection.CENTER)){
-								InterfaceRender.setColorState(0, 1, 0, 0.5F);
+								InterfaceRender.setColorState(ColorRGB.GREEN, 0.5F);
 								RenderBoundingBox.renderSolid(box);
 							}
 							GL11.glPopMatrix();
@@ -50,7 +51,8 @@ public class RenderDecor extends ARenderTileEntityBase<TileEntityDecor>{
 		        	}
 				}
 				
-				//Re-enable lighting and texture rendering.
+				//Re-enable lighting and texture rendering, and set color back to white.
+				InterfaceRender.setColorState(ColorRGB.WHITE);
 				InterfaceRender.setLightingState(true);
 				InterfaceRender.setTextureState(true);
 			}

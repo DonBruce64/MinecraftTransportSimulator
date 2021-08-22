@@ -8,10 +8,12 @@ import java.util.Map;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
+import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONInstrumentDefinition;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
@@ -26,9 +28,6 @@ import minecrafttransportsimulator.rendering.instances.RenderInstrument;
 public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>>{
 	//Object lists for models parsed in this renderer.  Maps are keyed by the model name.
 	protected final Map<String, List<RenderableModelObject<RenderedEntity>>> objectLists = new HashMap<String, List<RenderableModelObject<RenderedEntity>>>();
-
-	//Instrument transforms for each instrument slot.
-	private final Map<String, Map<Integer, RenderableTransform<RenderedEntity>>> instrumentTransforms = new HashMap<String, Map<Integer, RenderableTransform<RenderedEntity>>>();
 	
 	//Static map for caching created render instances to know which ones to send events to.
 	private static final List<ARenderEntity<?>> createdRenderers = new ArrayList<ARenderEntity<?>>();
@@ -78,7 +77,7 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 	        InterfaceRender.setTexture(getTexture(entity));
 	        String modelLocation = entity.definition.getModelLocation(entity.subName);
 	        if(!objectLists.containsKey(modelLocation)){
-	        	parseModel(entity, modelLocation);
+	        	objectLists.put(modelLocation, AModelParser.generateRenderables(modelLocation));
 	        }
 	        
 	        boolean mirrored = isMirrored(entity);
@@ -91,10 +90,10 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
     		}
 			
 			//Render all modelObjects.
-			List<RenderableModelObject<RenderedEntity>> modelObjects = objectLists.get(modelLocation);
-			for(RenderableModelObject<RenderedEntity> modelObject : modelObjects){
-				if(modelObject.applyAfter == null){
-					modelObject.render(entity, blendingEnabled, partialTicks, modelObjects);
+			for(RenderableModelObject<RenderedEntity> modelObject : objectLists.get(modelLocation)){
+				JSONAnimatedObject animation = entity.animatedObjectDefinitions.get(modelObject.objectName);
+				if(animation == null || animation.applyAfter == null){
+					modelObject.render(entity, blendingEnabled, partialTicks);
 				}
 			}
 			
@@ -103,7 +102,7 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 			
 			//Render all instruments.  These use flat shading.
 			GL11.glShadeModel(GL11.GL_FLAT);
-			renderInstruments(entity, blendingEnabled);
+			renderInstruments(entity, blendingEnabled, partialTicks);
 			
 			//Render any static text.
 			if(!blendingEnabled){
@@ -133,6 +132,10 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 			if(!blendingEnabled && !InterfaceClient.isGamePaused()){
 				entity.spawnParticles(partialTicks);
 			}
+			
+			//Handle sounds.  These will be partial-tick only ones.
+			//Normal sounds are handled on the main tick loop.
+			entity.updateSounds(partialTicks);
 		}
 		
 		//Render supplementals.
@@ -145,28 +148,6 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 	 */
 	public String getTexture(RenderedEntity entity){
 		return entity.definition.getTextureLocation(entity.subName);
-	}
-	
-	/**
-	 *  Called to parse out this model for the modelObjects.  This can be used to set-up any additional caches.
-	 *  Make sure you call super to ensure the model caches get parsed!
-	 */
-	public void parseModel(RenderedEntity entity, String modelLocation){
-		objectLists.put(modelLocation, AModelParser.generateRenderables(entity, modelLocation, entity.definition.rendering != null ? entity.definition.rendering.animatedObjects : null, entity.definition.rendering != null ? entity.definition.rendering.lightObjects : null));
-		//Got the normal transforms.  Now check the JSON for any instrument animation transforms.
-		Map<Integer, RenderableTransform<RenderedEntity>> instrumentSlotTransforms = new HashMap<Integer, RenderableTransform<RenderedEntity>>();
-		if(entity instanceof AEntityD_Interactable){
-			AEntityD_Interactable<?> interactable = (AEntityD_Interactable<?>) entity;
-			if(interactable.definition.instruments != null){
-				for(int i=0; i<interactable.definition.instruments.size(); ++i){
-					JSONInstrumentDefinition packInstrument = interactable.definition.instruments.get(i);
-					if(packInstrument.animations != null){
-						instrumentSlotTransforms.put(i, new RenderableTransform<RenderedEntity>(packInstrument.animations));
-					}
-				}
-			}
-			instrumentTransforms.put(modelLocation, instrumentSlotTransforms);
-		}
 	}
 	
 	/**
@@ -221,7 +202,7 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 	 *  Normalization is required here, as otherwise the normals get scaled with the
 	 *  scaling operations, and shading gets applied funny. 
 	 */
-	protected void renderInstruments(RenderedEntity entity, boolean blendingEnabled){
+	protected void renderInstruments(RenderedEntity entity, boolean blendingEnabled, float partialTicks){
 		if(entity instanceof AEntityD_Interactable){
 			AEntityD_Interactable<?> interactable = (AEntityD_Interactable<?>) entity;
 			if(interactable.definition.instruments != null){
@@ -237,23 +218,13 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 						GL11.glRotated(packInstrument.rot.y, 0, 1, 0);
 						GL11.glRotated(packInstrument.rot.z, 0, 0, 1);
 						
-						//Do transforms if required.
-						RenderableTransform<RenderedEntity> transform = instrumentTransforms.get(entity.definition.getModelLocation(entity.subName)).get(i);
-						boolean doRender = true;
-						if(transform != null){
-							doRender = transform.doPreRenderTransforms(entity, blendingEnabled, 0);
-						}
-						
-						if(doRender){
+						//Do transforms if required and render if allowed.
+						if(RenderableModelObject.doPreRenderTransforms(entity, packInstrument.animations, blendingEnabled, partialTicks)){
 							//Need to scale by -1 to get the coordinate system to behave and align to the texture-based coordinate system.
 							GL11.glScalef(-packInstrument.scale/16F, -packInstrument.scale/16F, -packInstrument.scale/16F);
 							
 							//Render instrument.
-							RenderInstrument.drawInstrument(interactable.instruments.get(i), packInstrument.optionalPartNumber, interactable, blendingEnabled);
-						}
-						
-						if(transform != null){
-							transform.doPostRenderTransforms(entity, blendingEnabled, 0);
+							RenderInstrument.drawInstrument(interactable.instruments.get(i), packInstrument.optionalPartNumber, interactable, blendingEnabled, partialTicks);
 						}
 						GL11.glPopMatrix();
 					}
@@ -276,16 +247,16 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 			for(BoundingBox box : interactable.interactionBoxes){
 				if(interactable.doorBoxes.containsKey(box)){
 					//Green for doors.
-					InterfaceRender.setColorState(0.0F, 1.0F, 0.0F, 1.0F);
+					InterfaceRender.setColorState(ColorRGB.GREEN);
 				}else if(interactable.blockCollisionBoxes.contains(box)){
 					//Red for block collisions.
-					InterfaceRender.setColorState(1.0F, 0.0F, 0.0F, 1.0F);
+					InterfaceRender.setColorState(ColorRGB.RED);
 				}else if(interactable.collisionBoxes.contains(box)){
 					//Black for general collisions.
-					InterfaceRender.setColorState(0.0F, 0.0F, 0.0F, 1.0F);
+					InterfaceRender.setColorState(ColorRGB.BLACK);
 				}else{
 					//None of the above.  Must be an interaction box.  Yellow.
-					InterfaceRender.setColorState(1.0F, 1.0F, 0.0F, 1.0F);
+					InterfaceRender.setColorState(ColorRGB.YELLOW);
 				}
 				
 				Point3d boxCenterDelta = box.globalCenter.copy().subtract(entity.position).add(entityPositionDelta);
@@ -293,7 +264,7 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 				RenderBoundingBox.renderWireframe(box);
 				GL11.glTranslated(-boxCenterDelta.x, -boxCenterDelta.y, -boxCenterDelta.z);
 			}
-			InterfaceRender.setColorState(1.0F, 1.0F, 1.0F, 1.0F);
+			InterfaceRender.setColorState(ColorRGB.WHITE);
 		}
 	}
 	
@@ -301,9 +272,13 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 	 *  Call to clear out the object caches for this model.  This resets all caches to cause the rendering
 	 *  JSON to be re-parsed.
 	 */
-	protected void resetModelCache(String modelLocation){
-		objectLists.remove(modelLocation);
-		instrumentTransforms.remove(modelLocation);
+	private void resetModelCache(String modelLocation){
+		List<RenderableModelObject<RenderedEntity>> resetObjects = objectLists.remove(modelLocation);
+		if(resetObjects != null){
+			for(RenderableModelObject<RenderedEntity> modelObject : resetObjects){
+				modelObject.destroy();
+			}
+		}
 	}
 	
 	/**

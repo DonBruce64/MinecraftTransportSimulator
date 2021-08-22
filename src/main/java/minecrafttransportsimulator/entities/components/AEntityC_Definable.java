@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.entities.components;
 
-import java.awt.Color;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -11,6 +10,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityParticle;
@@ -71,17 +71,20 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	private final Map<JSONParticle, List<DurationDelayClock>> particleActiveClocks = new HashMap<JSONParticle, List<DurationDelayClock>>();
 	private final Map<JSONParticle, Long> lastTickParticleSpawned = new HashMap<JSONParticle, Long>();
 	
-	/**Maps rendering animations to their respective clocks.  Used only for the rendering JSON section.**/
-	public final Map<JSONAnimationDefinition, DurationDelayClock> renderAnimationClocks = new HashMap<JSONAnimationDefinition, DurationDelayClock>();
+	/**Maps animations to their respective clocks.  Used for anything that has an animation block.**/
+	public final Map<JSONAnimationDefinition, DurationDelayClock> animationClocks = new HashMap<JSONAnimationDefinition, DurationDelayClock>();
 	
-	/**Maps camera animations to their respective clocks.  Used only for the camera JSON section.**/
-	public final Map<JSONAnimationDefinition, DurationDelayClock> cameraAnimationClocks = new HashMap<JSONAnimationDefinition, DurationDelayClock>();
+	/**Maps animated (model) object names to their definitions.  This is created from the JSON definition to prevent the need to do loops.**/
+	public final Map<String, JSONAnimatedObject> animatedObjectDefinitions = new HashMap<String, JSONAnimatedObject>();
 	
 	/**Maps light definitions to their current brightness.  This is updated every frame prior to rendering.**/
 	public final Map<JSONLight, Float> lightBrightnessValues = new HashMap<JSONLight, Float>();
 	
 	/**Maps light definitions to their current color.  This is updated every frame prior to rendering.**/
-	public final Map<JSONLight, Color> lightColorValues = new HashMap<JSONLight, Color>();
+	public final Map<JSONLight, ColorRGB> lightColorValues = new HashMap<JSONLight, ColorRGB>();
+	
+	/**Maps light (model) object names to their definitions.  This is created from the JSON definition to prevent the need to do loops.**/
+	public final Map<String, JSONLight> lightObjectDefinitions = new HashMap<String, JSONLight>();
 	
 	/**Constructor for synced entities**/
 	public AEntityC_Definable(WrapperWorld world, WrapperNBT data){
@@ -221,8 +224,10 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 		lightBrightnessClocks.clear();
 		lightBrightnessValues.clear();
 		lightColorValues.clear();
+		lightObjectDefinitions.clear();
 		if(definition.rendering != null && definition.rendering.lightObjects != null){
 			for(JSONLight lightDef : definition.rendering.lightObjects){
+				lightObjectDefinitions.put(lightDef.objectName, lightDef);
 				List<DurationDelayClock> lightClocks = new ArrayList<DurationDelayClock>();
 				if(lightDef.brightnessAnimations !=  null){
 					for(JSONAnimationDefinition animation : lightDef.brightnessAnimations){
@@ -232,7 +237,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 				lightBrightnessClocks.put(lightDef, lightClocks);
 				lightBrightnessValues.put(lightDef, 0F);
 				if(lightDef.color != null){
-					lightColorValues.put(lightDef, Color.decode(lightDef.color));
+					lightColorValues.put(lightDef, lightDef.color);
 				}
 			}
 		}
@@ -251,26 +256,24 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 			}
 		}
 		
-		renderAnimationClocks.clear();
+		animationClocks.clear();
+		animatedObjectDefinitions.clear();
 		if(definition.rendering != null){
 			if(definition.rendering.animatedObjects != null){
-				for(JSONAnimatedObject animatedObject : definition.rendering.animatedObjects){
-					if(animatedObject.animations != null){
-						for(JSONAnimationDefinition animation : animatedObject.animations){
-							renderAnimationClocks.put(animation, new DurationDelayClock(animation));
+				for(JSONAnimatedObject animatedDef : definition.rendering.animatedObjects){
+					animatedObjectDefinitions.put(animatedDef.objectName, animatedDef);
+					if(animatedDef.animations != null){
+						for(JSONAnimationDefinition animation : animatedDef.animations){
+							animationClocks.put(animation, new DurationDelayClock(animation));
 						}
 					}
 				}
 			}
-		}
-		
-		cameraAnimationClocks.clear();
-		if(definition.rendering != null){
 			if(definition.rendering.cameraObjects != null){
-				for(JSONCameraObject cameraObject : definition.rendering.cameraObjects){
-					if(cameraObject.animations != null){
-						for(JSONAnimationDefinition animation : cameraObject.animations){
-							cameraAnimationClocks.put(animation, new DurationDelayClock(animation));
+				for(JSONCameraObject cameraDef : definition.rendering.cameraObjects){
+					if(cameraDef.animations != null){
+						for(JSONAnimationDefinition animation : cameraDef.animations){
+							animationClocks.put(animation, new DurationDelayClock(animation));
 						}
 					}
 				}
@@ -314,11 +317,11 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
     }
     
     /**
-   	 *  Returns a string that represents this entity's secondary text color.  If this color is set,
-   	 *  and text is told to render from this provider, and that text is told to use this color, then it will.
+   	 *  Returns this entity's secondary text color.  If this color is set, and text is told 
+   	 *  to render from this provider, and that text is told to use this color, then it will.
    	 *  Otherwise, the text will use its default color.
    	 */
-    public String getSecondaryTextColor(){
+    public ColorRGB getSecondaryTextColor(){
     	for(JSONSubDefinition subDefinition : definition.definitions){
 			if(subDefinition.subName.equals(subName)){
 				return subDefinition.secondColor;
@@ -360,7 +363,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 							//We use the clock here to check if the state of the variable changed, not
 							//to clamp the value used in the testing.
 							if(!inhibitAnimations){
-								double variableValue = clock.animation.offset + getAnimatedVariableValue(clock, 0, partialTicks);
+								double variableValue = getAnimatedVariableValue(clock, partialTicks);
 								if(!anyClockMovedThisUpdate){
 									anyClockMovedThisUpdate = clock.movedThisUpdate;
 								}
@@ -372,7 +375,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 						}
 						case INHIBITOR :{
 							if(!inhibitAnimations){
-								double variableValue = getAnimatedVariableValue(clock, 0, partialTicks);
+								double variableValue = getAnimatedVariableValue(clock, partialTicks);
 								if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
 									inhibitAnimations = true;
 								}
@@ -381,7 +384,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 						}
 						case ACTIVATOR :{
 							if(inhibitAnimations){
-								double variableValue = getAnimatedVariableValue(clock, 0, partialTicks);
+								double variableValue = getAnimatedVariableValue(clock, partialTicks);
 								if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
 									inhibitAnimations = false;
 								}
@@ -430,17 +433,17 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
    	 *  An example of this is a light with a bean and flare component. 
    	 */
     public void updateLightBrightness(float partialTicks){
-		for(JSONLight lightObject : lightBrightnessClocks.keySet()){
+		for(JSONLight lightDef : lightBrightnessClocks.keySet()){
 			boolean definedBrightness = false;
 			float lightLevel = 0.0F;
 			boolean inhibitAnimations = false;
 			boolean inhibitLight = false;
-			Color customColor = null;
-			for(DurationDelayClock clock : lightBrightnessClocks.get(lightObject)){
+			ColorRGB customColor = null;
+			for(DurationDelayClock clock : lightBrightnessClocks.get(lightDef)){
 				switch(clock.animation.animationType){
 					case VISIBILITY :{
 						if(!inhibitAnimations){
-							double variableValue = getAnimatedVariableValue(clock, 0, partialTicks);
+							double variableValue = getAnimatedVariableValue(clock, partialTicks);
 							if(variableValue < clock.animation.clampMin || variableValue > clock.animation.clampMax){
 								inhibitLight = true;
 							}
@@ -449,7 +452,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 					}
 					case INHIBITOR :{
 						if(!inhibitAnimations){
-							double variableValue = getAnimatedVariableValue(clock, 0, partialTicks);
+							double variableValue = getAnimatedVariableValue(clock, partialTicks);
 							if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
 								inhibitAnimations = true;
 							}
@@ -458,7 +461,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 					}
 					case ACTIVATOR :{
 						if(inhibitAnimations){
-							double variableValue = getAnimatedVariableValue(clock, 0, partialTicks);
+							double variableValue = getAnimatedVariableValue(clock, partialTicks);
 							if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
 								inhibitAnimations = false;
 							}
@@ -469,22 +472,22 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 						if(!inhibitAnimations){
 							definedBrightness = true;
 							if(clock.animation.axis.x != 0){
-								lightLevel *= getAnimatedVariableValue(clock, 0, partialTicks);
+								lightLevel *= getAnimatedVariableValue(clock, clock.animation.axis.x, partialTicks);
 							}else if(clock.animation.axis.y != 0){
-								lightLevel += getAnimatedVariableValue(clock, 0, partialTicks);
+								lightLevel += getAnimatedVariableValue(clock, clock.animation.axis.y, partialTicks);
 							}else{
-								lightLevel = (float) getAnimatedVariableValue(clock, 0, partialTicks);
+								lightLevel = (float) (getAnimatedVariableValue(clock, clock.animation.axis.z, partialTicks));
 							}
 						}
 						break;
 					}
 					case ROTATION :{
 						if(!inhibitAnimations){
-							double colorFactor = getAnimatedVariableValue(clock, -clock.animation.offset, partialTicks)/clock.animation.axis.length();
+							double colorFactor = getAnimatedVariableValue(clock, 1.0, -clock.animation.offset, partialTicks);
 							if(customColor == null){
-								customColor = new Color((float) Math.min(clock.animation.axis.x*colorFactor + clock.animation.offset, 1.0), (float) Math.min(clock.animation.axis.y*colorFactor + clock.animation.offset, 1.0), (float) Math.min(clock.animation.axis.z*colorFactor + clock.animation.offset, 1.0));
+								customColor = new ColorRGB((float) Math.min(clock.animation.axis.x*colorFactor + clock.animation.offset, 1.0), (float) Math.min(clock.animation.axis.y*colorFactor + clock.animation.offset, 1.0), (float) Math.min(clock.animation.axis.z*colorFactor + clock.animation.offset, 1.0));
 							}else{
-								customColor = new Color((float) Math.min(clock.animation.axis.x*colorFactor + clock.animation.offset + customColor.getRed()/255F, 1.0), (float) Math.min(clock.animation.axis.y*colorFactor + clock.animation.offset + customColor.getGreen()/255F, 1.0), (float) Math.min(clock.animation.axis.z*colorFactor + clock.animation.offset + customColor.getBlue()/255F, 1.0));
+								customColor = new ColorRGB((float) Math.min(clock.animation.axis.x*colorFactor + clock.animation.offset + customColor.red, 1.0), (float) Math.min(clock.animation.axis.y*colorFactor + clock.animation.offset + customColor.green, 1.0), (float) Math.min(clock.animation.axis.z*colorFactor + clock.animation.offset + customColor.blue, 1.0));
 							}
 						}
 						break;
@@ -504,11 +507,13 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 			}else if(!definedBrightness || lightLevel > 1){
 				lightLevel = 1;
 			}
-			lightBrightnessValues.put(lightObject, lightLevel);
+			lightBrightnessValues.put(lightDef, lightLevel);
 			if(customColor != null){
-				lightColorValues.put(lightObject, customColor);
-			}else{
-				lightColorValues.put(lightObject, Color.decode(lightObject.color));
+				lightColorValues.put(lightDef, customColor);
+			}else if(lightDef.color != null){
+				lightColorValues.put(lightDef, lightDef.color);
+			}else if(lightDef.emissive || (lightDef.blendableComponents != null && !lightDef.blendableComponents.isEmpty())){
+				throw new IllegalArgumentException("Was told to update light " + lightDef.objectName + " on " + definition.packID + ":" + definition.systemName + " but said light is missing a color parameter.  This is required if you have an emissive light or one with flares or beams!");
 			}
 		}
     }
@@ -562,35 +567,53 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	/**
 	 *  Returns the value for the passed-in variable, subject to the clamping, and duration/delay requested in the 
 	 *  animation definition.  The passed-in offset is used to allow for stacking animations, and should be 0 if 
-	 *  this functionality is not required.  The passed-in clock may be null to prevent duration/delay functionality.
-	 *  Returns the value of the variable, or 0 if the variable is not valid.
+	 *  this functionality is not required.  Note that the animation offset is applied AFTER the scaling performed by
+	 *  the scale parameter as only the variable value should be scaled, not the offset..
 	 */
-	public final double getAnimatedVariableValue(DurationDelayClock clock, double offset, float partialTicks){
+	public final double getAnimatedVariableValue(DurationDelayClock clock, double scale, double offset, float partialTicks){
 		double value = getRawVariableValue(clock.animation.variable, partialTicks);
 		if(Double.isNaN(value)){
 			value = 0;
 		}
 		if(!clock.isUseful){
-			return clampAndScale(value, clock.animation, offset);
+			return clampAndScale(value, clock.animation, scale, offset);
 		}else{
-			return clampAndScale(clock.getFactoredState(this, value), clock.animation, offset);
+			return clampAndScale(clock.getFactoredState(this, value), clock.animation, scale, offset);
 		}
+	}
+	
+	/**
+	 *  Short-hand version of {@link #getAnimatedVariableValue(DurationDelayClock, double, double, float)}
+	 *  with an offset of 0.0.
+	 */
+	public final double getAnimatedVariableValue(DurationDelayClock clock, double scale, float partialTicks){
+		return getAnimatedVariableValue(clock, scale, 0.0, partialTicks);
+	}
+	
+	/**
+	 *  Short-hand version of {@link #getAnimatedVariableValue(DurationDelayClock, double, double, float)}
+	 *  with a scale of 1.0 and offset of 0.0.
+	 */
+	public final double getAnimatedVariableValue(DurationDelayClock clock, float partialTicks){
+		return getAnimatedVariableValue(clock, 1.0, 0.0, partialTicks);
 	}
 	
 	/**
 	 *  Helper method to clamp and scale the passed-in variable value based on the passed-in animation, 
 	 *  returning it in the proper form.
 	 */
-	private static double clampAndScale(double value, JSONAnimationDefinition animation, double offset){
+	private static double clampAndScale(double value, JSONAnimationDefinition animation, double scale, double offset){
 		if(animation.axis != null){
-			value = animation.axis.length()*(animation.absolute ? Math.abs(value) : value) + animation.offset + offset;
+			value = (animation.absolute ? Math.abs(value) : value)*scale + animation.offset + offset;
 			if(animation.clampMin != 0 && value < animation.clampMin){
 				value = animation.clampMin;
 			}else if(animation.clampMax != 0 && value > animation.clampMax){
 				value = animation.clampMax;
 			}
+			return value;
+		}else{
+			return (animation.absolute ? Math.abs(value) : value)*scale + animation.offset;
 		}
-		return animation.absolute ? Math.abs(value) : value;
 	}
 	
 	/**
@@ -617,250 +640,241 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	public abstract <RendererInstance extends ARenderEntity<AnimationEntity>, AnimationEntity extends AEntityC_Definable<?>> RendererInstance getRenderer();
     
     @Override
-    public void updateSounds(){
-    	super.updateSounds();
+    public void updateSounds(float partialTicks){
+    	super.updateSounds(partialTicks);
     	//Check all sound defs and update the existing sounds accordingly.
     	for(JSONSound soundDef : allSoundDefs){
-    		//Check if the sound should be playing before we try to update state.
-    		AEntityD_Interactable<?> entityRiding = InterfaceClient.getClientPlayer().getEntityRiding();
-    		boolean playerRidingEntity = this.equals(entityRiding) || (this instanceof APart && ((APart) this).entityOn.equals(entityRiding));
-    		boolean shouldSoundPlay = playerRidingEntity && InterfaceClient.inFirstPerson() && !CameraSystem.areCustomCamerasActive() ? !soundDef.isExterior : !soundDef.isInterior;
-			boolean anyClockMovedThisUpdate = false;
-			boolean inhibitAnimations = false;
-			if(shouldSoundPlay){
-				for(DurationDelayClock clock : soundActiveClocks.get(soundDef)){
-					switch(clock.animation.animationType){
-						case VISIBILITY :{
-							//We use the clock here to check if the state of the variable changed, not
-							//to clamp the value used in the testing.
-							if(!inhibitAnimations){
-								double variableValue = clock.animation.offset + getAnimatedVariableValue(clock, 0, 0);
-								if(!anyClockMovedThisUpdate){
-									anyClockMovedThisUpdate = clock.movedThisUpdate;
+    		if(soundDef.canPlayOnPartialTicks ^ partialTicks == 0){
+	    		//Check if the sound should be playing before we try to update state.
+	    		AEntityD_Interactable<?> entityRiding = InterfaceClient.getClientPlayer().getEntityRiding();
+	    		boolean playerRidingEntity = this.equals(entityRiding) || (this instanceof APart && ((APart) this).entityOn.equals(entityRiding));
+	    		boolean shouldSoundPlay = playerRidingEntity && InterfaceClient.inFirstPerson() && !CameraSystem.areCustomCamerasActive() ? !soundDef.isExterior : !soundDef.isInterior;
+				boolean anyClockMovedThisUpdate = false;
+				boolean inhibitAnimations = false;
+				if(shouldSoundPlay){
+					for(DurationDelayClock clock : soundActiveClocks.get(soundDef)){
+						switch(clock.animation.animationType){
+							case VISIBILITY :{
+								//We use the clock here to check if the state of the variable changed, not
+								//to clamp the value used in the testing.
+								if(!inhibitAnimations){
+									double variableValue = getAnimatedVariableValue(clock, partialTicks);
+									if(!anyClockMovedThisUpdate){
+										anyClockMovedThisUpdate = clock.movedThisUpdate;
+									}
+									if(variableValue < clock.animation.clampMin || variableValue > clock.animation.clampMax){
+										shouldSoundPlay = false;
+									}
 								}
-								if(variableValue < clock.animation.clampMin || variableValue > clock.animation.clampMax){
-									shouldSoundPlay = false;
-								}
+								break;
 							}
-							break;
-						}
-						case INHIBITOR :{
-							if(!inhibitAnimations){
-								double variableValue = getAnimatedVariableValue(clock, 0, 0);
-								if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
-									inhibitAnimations = true;
+							case INHIBITOR :{
+								if(!inhibitAnimations){
+									double variableValue = getAnimatedVariableValue(clock, partialTicks);
+									if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
+										inhibitAnimations = true;
+									}
 								}
+								break;
 							}
-							break;
-						}
-						case ACTIVATOR :{
-							if(inhibitAnimations){
-								double variableValue = getAnimatedVariableValue(clock, 0, 0);
-								if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
-									inhibitAnimations = false;
+							case ACTIVATOR :{
+								if(inhibitAnimations){
+									double variableValue = getAnimatedVariableValue(clock, partialTicks);
+									if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
+										inhibitAnimations = false;
+									}
 								}
+								break;
 							}
+							case TRANSLATION :{
+								//Do nothing.
+								break;
+							}
+							case ROTATION :{
+								//Do nothing.
+								break;
+							}
+							case SCALING :{
+								//Do nothing.
+								break;
+							}
+						}
+						
+						if(!shouldSoundPlay){
+							//Don't need to process any further as we can't play.
 							break;
 						}
-						case TRANSLATION :{
-							//Do nothing.
-							break;
+					}
+				}
+				
+				//If we aren't a looping or repeating sound, check if we had a clock-movement to trigger us.
+				//If we didn't, then we shouldn't play, even if all states are true.
+				if(!soundDef.looping && !soundDef.forceSound && !anyClockMovedThisUpdate){
+					shouldSoundPlay = false;
+				}
+				
+				if(shouldSoundPlay){
+					//Sound should play.  If it's not playing, start it.
+					boolean isSoundPlaying = false;
+					if(!soundDef.forceSound){
+						for(SoundInstance sound : sounds){
+							if(sound.soundName.equals(soundDef.name)){
+								isSoundPlaying = true;
+								break;
+							}
 						}
-						case ROTATION :{
-							//Do nothing.
-							break;
-						}
-						case SCALING :{
-							//Do nothing.
-							break;
+					}
+					if(!isSoundPlaying){
+						InterfaceSound.playQuickSound(new SoundInstance(this, soundDef.name, soundDef.looping));
+					}
+				}else{
+					if(soundDef.looping){
+						//If sound is playing, stop it.
+						for(SoundInstance sound : sounds){
+							if(sound.soundName.equals(soundDef.name)){
+								sound.stopSound = true;
+								break;
+							}
 						}
 					}
 					
-					if(!shouldSoundPlay){
-						//Don't need to process any further as we can't play.
-						break;
-					}
-				}
-			}
-			
-			//If we aren't a looping or repeating sound, check if we had a clock-movement to trigger us.
-			//If we didn't, then we shouldn't play, even if all states are true.
-			if(!soundDef.looping && !soundDef.forceSound && !anyClockMovedThisUpdate){
-				shouldSoundPlay = false;
-			}
-			
-			if(shouldSoundPlay){
-				//Sound should play.  If it's not playing, start it.
-				boolean isSoundPlaying = false;
-				if(!soundDef.forceSound){
-					for(SoundInstance sound : sounds){
-						if(sound.soundName.equals(soundDef.name)){
-							isSoundPlaying = true;
-							break;
-						}
-					}
-				}
-				if(!isSoundPlaying){
-					InterfaceSound.playQuickSound(new SoundInstance(this, soundDef.name, soundDef.looping));
-				}
-			}else{
-				if(soundDef.looping){
-					//If sound is playing, stop it.
-					for(SoundInstance sound : sounds){
-						if(sound.soundName.equals(soundDef.name)){
-							sound.stopSound = true;
-							break;
-						}
-					}
+					//Go to the next soundDef.  No need to change properties on sounds that shouldn't play.
+					continue;
 				}
 				
-				//Go to the next soundDef.  No need to change properties on sounds that shouldn't play.
-				continue;
-			}
-			
-			//Sound should be playing.  If it's part of the sound list, update properties.
-			//Sounds may not be in the list if they have just been queued and haven't started yet.
-			SoundInstance sound = null;
-			for(SoundInstance activeSound : sounds){
-				if(activeSound.soundName.equals(soundDef.name)){
-					sound = activeSound;
-					break;
-				}
-			}
-			
-			if(sound != null){
-				//Adjust volume.
-				boolean definedVolume = false;
-				inhibitAnimations = false;
-				sound.volume = 0;
-				for(DurationDelayClock clock : soundVolumeClocks.get(soundDef)){
-					switch(clock.animation.animationType){
-						case TRANSLATION :{
-							if(!inhibitAnimations){
-								definedVolume = true;
-								sound.volume += Math.signum(clock.animation.axis.y)*getAnimatedVariableValue(clock, -clock.animation.offset, 0) + clock.animation.offset;
-							}
-							break;
-						}
-						case ROTATION :{
-							if(!inhibitAnimations){
-								definedVolume = true;
-								//Need to parse out parabola params here to not upset the axis calcs.
-								double parabolaParamA = clock.animation.axis.x;
-								clock.animation.axis.x = 0;
-								double parabolaParamH = clock.animation.axis.z;
-								clock.animation.axis.z = 0;
-								double parabolaValue = Math.signum(clock.animation.axis.y)*getAnimatedVariableValue(clock, -clock.animation.offset, 0);
-								sound.volume += parabolaParamA*Math.pow(parabolaValue - parabolaParamH, 2) + clock.animation.offset;
-								
-								clock.animation.axis.x = parabolaParamA;
-								clock.animation.axis.z = parabolaParamH;
-							}
-							break;
-						}
-						case INHIBITOR :{
-							if(!inhibitAnimations){
-								double variableValue = getAnimatedVariableValue(clock, 0, 0);
-								if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
-									inhibitAnimations = true;
+				//Sound should be playing.  If it's part of the sound list, update properties.
+				//Sounds may not be in the list if they have just been queued and haven't started yet.
+				for(SoundInstance sound : sounds){
+					if(sound.soundName.equals(soundDef.name)){
+						if(sound != null){
+							//Adjust volume.
+							boolean definedVolume = false;
+							inhibitAnimations = false;
+							sound.volume = 0;
+							for(DurationDelayClock clock : soundVolumeClocks.get(soundDef)){
+								switch(clock.animation.animationType){
+									case TRANSLATION :{
+										if(!inhibitAnimations){
+											definedVolume = true;
+											sound.volume += getAnimatedVariableValue(clock, clock.animation.axis.y, partialTicks);
+										}
+										break;
+									}
+									case ROTATION :{
+										if(!inhibitAnimations){
+											definedVolume = true;
+											//Parobola is defined with parameter A being x, and H being z.
+											double parabolaValue = getAnimatedVariableValue(clock, clock.animation.axis.y, -clock.animation.offset, partialTicks);
+											sound.volume += clock.animation.axis.x*Math.pow(parabolaValue - clock.animation.axis.z, 2) + clock.animation.offset;
+										}
+										break;
+									}
+									case INHIBITOR :{
+										if(!inhibitAnimations){
+											double variableValue = getAnimatedVariableValue(clock, partialTicks);
+											if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
+												inhibitAnimations = true;
+											}
+										}
+										break;
+									}
+									case ACTIVATOR :{
+										if(inhibitAnimations){
+											double variableValue = getAnimatedVariableValue(clock, partialTicks);
+											if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
+												inhibitAnimations = false;
+											}
+										}
+										break;
+									}
+									case SCALING :{
+										//Do nothing.
+										break;
+									}
+									case VISIBILITY :{
+										//Do nothing.
+										break;
+									}
 								}
 							}
-							break;
-						}
-						case ACTIVATOR :{
-							if(inhibitAnimations){
-								double variableValue = getAnimatedVariableValue(clock, 0, 0);
-								if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
-									inhibitAnimations = false;
+							if(!definedVolume){
+								sound.volume = 1;
+							}else if(sound.volume < 0){
+								sound.volume = 0;
+							}
+							
+							//If the player is in a closed-top vehicle that isn't this one, dampen the sound
+							//Unless it's a radio, in which case don't do so.
+							if(!playerRidingEntity && sound.radio == null && entityRiding instanceof EntityVehicleF_Physics && !((EntityVehicleF_Physics) entityRiding).definition.motorized.hasOpenTop && InterfaceClient.inFirstPerson() && !CameraSystem.areCustomCamerasActive()){
+								sound.volume *= 0.5F;
+							}
+							
+							//Adjust pitch.
+							boolean definedPitch = false;
+							inhibitAnimations = false;
+							sound.pitch = 0;
+							for(DurationDelayClock clock : soundPitchClocks.get(soundDef)){
+								switch(clock.animation.animationType){
+									case TRANSLATION :{
+										if(!inhibitAnimations){
+											definedPitch = true;
+											sound.pitch += getAnimatedVariableValue(clock, clock.animation.axis.y, partialTicks);
+										}
+										break;
+									}
+									case ROTATION :{
+										if(!inhibitAnimations){
+											definedPitch = true;
+											//Parobola is defined with parameter A being x, and H being z.
+											double parabolaValue = getAnimatedVariableValue(clock, clock.animation.axis.y, -clock.animation.offset, partialTicks);
+											sound.pitch += clock.animation.axis.x*Math.pow(parabolaValue - clock.animation.axis.z, 2) + clock.animation.offset;
+										}
+										break;
+									}
+									case INHIBITOR :{
+										if(!inhibitAnimations){
+											double variableValue = getAnimatedVariableValue(clock, partialTicks);
+											if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
+												inhibitAnimations = true;
+											}
+										}
+										break;
+									}
+									case ACTIVATOR :{
+										if(inhibitAnimations){
+											double variableValue = getAnimatedVariableValue(clock, partialTicks);
+											if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
+												inhibitAnimations = false;
+											}
+										}
+										break;
+									}
+									case SCALING :{
+										//Do nothing.
+										break;
+									}
+									case VISIBILITY :{
+										//Do nothing.
+										break;
+									}
 								}
 							}
-							break;
-						}
-						case SCALING :{
-							//Do nothing.
-							break;
-						}
-						case VISIBILITY :{
-							//Do nothing.
-							break;
-						}
+							if(!definedPitch){
+								sound.pitch = 1;
+							}else if(sound.pitch < 0){
+								sound.pitch = 0;
+							}
+							
+							//Adjust position.
+							if(soundDef.pos != null){
+								sound.position.setTo(soundDef.pos).rotateFine(angles).add(position);
+							}else{
+								sound.position.setTo(position);
+							}
+						}						
 					}
 				}
-				if(!definedVolume){
-					sound.volume = 1;
-				}else if(sound.volume < 0){
-					sound.volume = 0;
-				}
-				
-				//If the player is in a closed-top vehicle that isn't this one, dampen the sound
-				//Unless it's a radio, in which case don't do so.
-				if(!playerRidingEntity && sound.radio == null && entityRiding instanceof EntityVehicleF_Physics && !((EntityVehicleF_Physics) entityRiding).definition.motorized.hasOpenTop && InterfaceClient.inFirstPerson() && !CameraSystem.areCustomCamerasActive()){
-					sound.volume *= 0.5F;
-				}
-				
-				//Adjust pitch.
-				boolean definedPitch = false;
-				inhibitAnimations = false;
-				sound.pitch = 0;
-				for(DurationDelayClock clock : soundPitchClocks.get(soundDef)){
-					switch(clock.animation.animationType){
-						case TRANSLATION :{
-							if(!inhibitAnimations){
-								definedPitch = true;
-								sound.pitch += Math.signum(clock.animation.axis.y)*getAnimatedVariableValue(clock, -clock.animation.offset, 0) + clock.animation.offset;
-							}
-							break;
-						}
-						case ROTATION :{
-							if(!inhibitAnimations){
-								definedPitch = true;
-								//Need to parse out parabola params here to not upset the axis calcs.
-								double parabolaParamA = clock.animation.axis.x;
-								clock.animation.axis.x = 0;
-								double parabolaParamH = clock.animation.axis.z;
-								clock.animation.axis.z = 0;
-								double parabolaValue = Math.signum(clock.animation.axis.y)*getAnimatedVariableValue(clock, -clock.animation.offset, 0);
-								sound.pitch += parabolaParamA*Math.pow(parabolaValue - parabolaParamH, 2) + clock.animation.offset;
-								
-								clock.animation.axis.x = parabolaParamA;
-								clock.animation.axis.z = parabolaParamH;
-							}
-							break;
-						}
-						case INHIBITOR :{
-							if(!inhibitAnimations){
-								double variableValue = getAnimatedVariableValue(clock, 0, 0);
-								if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
-									inhibitAnimations = true;
-								}
-							}
-							break;
-						}
-						case ACTIVATOR :{
-							if(inhibitAnimations){
-								double variableValue = getAnimatedVariableValue(clock, 0, 0);
-								if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
-									inhibitAnimations = false;
-								}
-							}
-							break;
-						}
-						case SCALING :{
-							//Do nothing.
-							break;
-						}
-						case VISIBILITY :{
-							//Do nothing.
-							break;
-						}
-					}
-				}
-				if(!definedPitch){
-					sound.pitch = 1;
-				}else if(sound.pitch < 0){
-					sound.pitch = 0;
-				}
-			}
+    		}
     	}
     }
 	

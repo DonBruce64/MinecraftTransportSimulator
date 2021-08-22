@@ -55,6 +55,9 @@ public class JSONBullet extends AJSONMultiModelProvider{
 		
 		@JSONDescription("If used, this defines the size of the vertical angle (in degrees), from which a guided bullet will try to approach its target. The bullet will stay level or even climb up to come down on its target on this angle. This works like a Javelin missile in Call of Duty, and it's useful for making sure that the bullet doesn't hit the ground before it reaches your target. Note that this only affects bullets where the turnFactor is > 1, and this should be a positive number.")
     	public float angleOfAttack;
+		
+		@JSONDescription("A optional list of effects that this bullet will impart on the entity that it hits.")
+    	public List<JSONPotionEffect> effects;
     }
     
     public static enum BulletType{

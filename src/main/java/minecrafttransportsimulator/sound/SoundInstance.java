@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.sound;
 
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 
 /**Class that holds sound information.  One class is created for each sound that's playing
@@ -13,6 +14,7 @@ import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 public class SoundInstance{
 	public final AEntityB_Existing entity;
 	public final String soundName;
+	public final Point3d position = new Point3d();
 	public final boolean looping;
 	public final Radio radio;
 	

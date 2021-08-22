@@ -891,6 +891,11 @@ public class PartEngine extends APart{
 							}
 						}
 					}
+				}else if(currentGearRatio == 0){
+					//Tell the wheels to not skid if they are already doing so.
+					for(PartGroundDevice wheel : vehicleOn.groundDeviceCollective.drivenWheels){
+						wheel.skipAngularCalcs = false;
+					}
 				}
 				
 				//Don't let us have negative engine force at low speeds.

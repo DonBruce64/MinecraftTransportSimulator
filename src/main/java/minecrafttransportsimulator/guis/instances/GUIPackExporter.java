@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.guis.instances;
 
-import java.awt.Color;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -12,11 +11,12 @@ import java.util.List;
 import java.util.Set;
 
 import minecrafttransportsimulator.MasterLoader;
+import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.guis.components.AGUIBase;
+import minecrafttransportsimulator.guis.components.GUIComponent3DModel;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
-import minecrafttransportsimulator.guis.components.GUIComponent3DModel;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.packloading.JSONParser;
@@ -208,7 +208,7 @@ public class GUIPackExporter extends AGUIBase{
 		});
 		
 		//Create debug output box.
-		addTextBox(debug = new GUIComponentTextBox(guiLeft, guiTop + 20, getWidth(), "", getHeight() - 20, Color.WHITE, Color.BLACK, 1200));
+		addTextBox(debug = new GUIComponentTextBox(guiLeft, guiTop + 20, getWidth(), "", getHeight() - 20, ColorRGB.WHITE, ColorRGB.BLACK, 1200));
 		
 		//Create data entry boxes and labels.
 		dataEntryBoxes.clear();
@@ -216,8 +216,8 @@ public class GUIPackExporter extends AGUIBase{
 		int currentRow = 15;
 		for(byte i=0; i<5; ++i){
 			int height = i < 2 ? 40 : 10;
-			GUIComponentTextBox dataEntryBox = new GUIComponentTextBox(guiLeft + 100, guiTop + currentRow, 140, "", height, Color.WHITE, Color.BLACK, 100);
-			GUIComponentLabel dataEntryLabel = new GUIComponentLabel(guiLeft + 15, dataEntryBox.y, Color.WHITE, "").setBox(dataEntryBox);
+			GUIComponentTextBox dataEntryBox = new GUIComponentTextBox(guiLeft + 100, guiTop + currentRow, 140, "", height, ColorRGB.WHITE, ColorRGB.BLACK, 100);
+			GUIComponentLabel dataEntryLabel = new GUIComponentLabel(guiLeft + 15, dataEntryBox.y, ColorRGB.WHITE, "").setBox(dataEntryBox);
 			dataEntryBoxes.add(dataEntryBox);
 			dataEntryLabels.add(dataEntryLabel);
 			addTextBox(dataEntryBox);

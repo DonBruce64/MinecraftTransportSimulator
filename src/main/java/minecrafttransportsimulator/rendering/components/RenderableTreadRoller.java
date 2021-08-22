@@ -1,16 +1,17 @@
 package minecrafttransportsimulator.rendering.components;
 
+import java.util.List;
+
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
-import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
 
-/**A specific class of {@link TransformRotatable}, designed
+/**A specific class of {@link RenderableModelObject}, designed
  * for tread rollers.  Contains an extra method for calculating things.
  * Also auto-creates rotatableModelObject definitions in the relevant JSON.
  *
  * @author don_bruce
  */
-public class TransformTreadRoller<AnimationEntity extends AEntityC_Definable<?>> extends ATransform<AnimationEntity>{
+public class RenderableTreadRoller<AnimationEntity extends AEntityC_Definable<?>> extends RenderableModelObject<AnimationEntity>{
 	public final boolean isLeft;
 	public final int rollerNumber;
 	public final Point3d centerPoint;
@@ -25,12 +26,24 @@ public class TransformTreadRoller<AnimationEntity extends AEntityC_Definable<?>>
 	public double endZ;
 	public double endAngle;
 	
-	public TransformTreadRoller(JSONAnimatedObject animationDefinition){
-		super();
-		this.isLeft = animationDefinition.objectName.toLowerCase().startsWith("l");
-		this.rollerNumber = Integer.valueOf(animationDefinition.objectName.substring(animationDefinition.objectName.lastIndexOf('_') + 1));
-		this.centerPoint = animationDefinition.animations.get(0).centerPoint;
-		this.radius = (1.0D/Math.PI)/(2D*animationDefinition.animations.get(0).axis.x);
+	public RenderableTreadRoller(String modelLocation, String objectName, List<RenderableModelObject<AnimationEntity>> allObjects, Float[][] vertices){
+		super(modelLocation, objectName, allObjects, vertices);
+		this.isLeft = objectName.toLowerCase().startsWith("l");
+		this.rollerNumber = Integer.valueOf(objectName.substring(objectName.lastIndexOf('_') + 1));
+		
+		//Calculate the center and radius from the model.
+		double minY = 999;
+		double maxY = -999;
+		double minZ = 999;
+		double maxZ = -999;
+		for(Float[] point : vertices){
+			minY = Math.min(minY, point[1]);
+			maxY = Math.max(maxY, point[1]);
+			minZ = Math.min(minZ, point[2]);
+			maxZ = Math.max(maxZ, point[2]);
+		}
+		this.centerPoint = new Point3d(0, minY + (maxY - minY)/2D, minZ + (maxZ - minZ)/2D);
+		this.radius = (maxZ - minZ)/2D;
 		this.circumference = 2*Math.PI*radius;
 	}
 	
@@ -41,7 +54,7 @@ public class TransformTreadRoller<AnimationEntity extends AEntityC_Definable<?>>
 	 * Additionally, we know we'll start on the bottom of a roller, so between
 	 * those two things we can tell which tangent we should follow.
 	 */
-	public void calculateEndpoints(TransformTreadRoller<AnimationEntity> nextRoller){
+	public void calculateEndpoints(RenderableTreadRoller<AnimationEntity> nextRoller){
 		//What calculations we do depend on if the rollers are the same size.
 		//If so, we can do simple calcs.  If not, we get to do trig.
 		if(radius == nextRoller.radius){
@@ -101,11 +114,5 @@ public class TransformTreadRoller<AnimationEntity extends AEntityC_Definable<?>>
 			nextRoller.startY = nextRoller.centerPoint.y + nextRoller.radius*Math.cos(Math.toRadians(endAngle));
 			nextRoller.startZ = nextRoller.centerPoint.z + nextRoller.radius*Math.sin(Math.toRadians(endAngle));
 		}
-	}
-
-	@Override
-	public double applyTransform(AnimationEntity entity, boolean blendingEnabled, float partialTicks, double offset) {
-		//Do nothing.  This transform just holds data for the renderer.
-		return 0;
 	}
 }

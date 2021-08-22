@@ -1,15 +1,15 @@
 package minecrafttransportsimulator.guis.instances;
 
-import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 
+import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.guis.components.AGUIBase;
+import minecrafttransportsimulator.guis.components.GUIComponent3DModel;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
-import minecrafttransportsimulator.guis.components.GUIComponent3DModel;
 import minecrafttransportsimulator.guis.components.InterfaceGUI;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
@@ -75,7 +75,7 @@ public class GUIPaintGun extends AGUIBase{
 				updateNames();
 			}
 		});
-		addLabel(partName = new GUIComponentLabel(guiLeft + 60, guiTop + 120, Color.WHITE, "", null, TextPosition.LEFT_ALIGNED, 98, 1.0F, false));
+		addLabel(partName = new GUIComponentLabel(guiLeft + 60, guiTop + 120, ColorRGB.WHITE, "", null, TextPosition.LEFT_ALIGNED, 98, 1.0F, false));
 		
 		//Create the crafting item slots.  8 18X18 slots (8X2) need to be made here.
 		craftingItemIcons.clear();

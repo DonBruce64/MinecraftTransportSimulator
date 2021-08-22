@@ -32,6 +32,7 @@ public class PartGroundDevice extends APart{
 	//Internal states for control and physics.
 	public boolean isFlat;
 	public boolean contactThisTick = false;
+	private boolean animateAsOnGround;
 	private int ticksCalcsSkipped = 0;
 	private double prevAngularVelocity;
 	private final PartGroundDeviceFake fakePart;
@@ -73,6 +74,8 @@ public class PartGroundDevice extends APart{
 		if(super.update()){
 			if(vehicleOn != null && !placementDefinition.isSpare){
 				if(vehicleOn.groundDeviceCollective.groundedGroundDevices.contains(this)){
+					animateAsOnGround = true;
+					
 					//If we aren't skipping angular calcs, change our velocity accordingly.
 					if(!skipAngularCalcs){
 						prevAngularVelocity = angularVelocity;
@@ -120,11 +123,16 @@ public class PartGroundDevice extends APart{
 						boundingBox.widthRadius -= 0.25;
 						boundingBox.depthRadius -= 0.25;
 					}
-				}else if(!vehicleOn.groundDeviceCollective.drivenWheels.contains(this)){
-					if(vehicleOn.brake > 0 || vehicleOn.parkingBrakeOn){
-						angularVelocity = 0;
-					}else if(angularVelocity>0){
-						angularVelocity = (float) Math.max(angularVelocity - 0.05, 0);
+				}else{
+					if(!vehicleOn.groundDeviceCollective.drivenWheels.contains(this)){
+						if(vehicleOn.brake > 0 || vehicleOn.parkingBrakeOn){
+							angularVelocity = 0;
+						}else if(angularVelocity>0){
+							angularVelocity = (float) Math.max(angularVelocity - 0.05, 0);
+						}
+					}
+					if(animateAsOnGround && !vehicleOn.groundDeviceCollective.isActuallyOnGround(this)){
+						animateAsOnGround = false;
 					}
 				}
 				angularPosition += angularVelocity;
@@ -153,12 +161,12 @@ public class PartGroundDevice extends APart{
 	public double getRawVariableValue(String variable, float partialTicks){
 		switch(variable){
 			case("ground_rotation"): return EntityVehicleF_Physics.SPEED_FACTOR*(angularPosition + angularVelocity*partialTicks)*360D;
-			case("ground_onground"): return vehicleOn != null && vehicleOn.groundDeviceCollective.isActuallyOnGround(this) ? 1 : 0;
+			case("ground_onground"): return vehicleOn != null && animateAsOnGround ? 1 : 0;
 			case("ground_inliquid"): return isInLiquid() ? 1 : 0;
 			case("ground_isflat"): return isFlat ? 1 : 0;
 			case("ground_contacted"): return contactThisTick ? 1 : 0;
 			case("ground_skidding"): return skipAngularCalcs ? 1 : 0;
-			case("ground_slipping"): return vehicleOn != null && vehicleOn.slipping && vehicleOn.groundDeviceCollective.isActuallyOnGround(this) ? 1 : 0;
+			case("ground_slipping"): return vehicleOn != null && vehicleOn.slipping && animateAsOnGround ? 1 : 0;
 		}
 		
 		return super.getRawVariableValue(variable, partialTicks);

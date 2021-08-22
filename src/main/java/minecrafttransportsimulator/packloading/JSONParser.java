@@ -27,6 +27,7 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
 
+import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
@@ -149,6 +150,31 @@ public class JSONParser{
 				writer.value(value.z);
 				writer.endArray();
 				writer.setIndent("  ");
+			}
+		}
+	};
+	
+	private static final TypeAdapter<ColorRGB> colorAdapter = new TypeAdapter<ColorRGB>(){	
+		@Override
+		public ColorRGB read(JsonReader reader) throws IOException{
+			if(reader.peek() == JsonToken.NULL){
+				reader.nextNull();
+				return null;
+			}else{
+				return new ColorRGB(reader.nextString());
+			}
+		}
+		
+		@Override
+		public void write(JsonWriter writer, ColorRGB value) throws IOException{
+			if(value == null){
+				writer.nullValue();
+			}else{
+				String hexString = Integer.toHexString(value.rgbInt).toUpperCase();
+				while(hexString.length() < 6){
+					hexString = "0" + hexString;
+				}
+				writer.value(hexString);
 			}
 		}
 	};
@@ -343,6 +369,7 @@ public class JSONParser{
 				.registerTypeAdapter(Integer.class, integerAdapter)
 				.registerTypeAdapter(Float.class, floatAdapter)
 				.registerTypeAdapter(Point3d.class, point3dAdapter)
+				.registerTypeAdapter(ColorRGB.class, colorAdapter)
 				.registerTypeAdapter(new TypeToken<List<Integer>>(){}.getType(), intListAdapter)
 				.registerTypeAdapter(new TypeToken<List<Float>>(){}.getType(), floatListAdapter)
 				.registerTypeAdapter(new TypeToken<List<String>>(){}.getType(), stringListAdapter)
@@ -510,10 +537,6 @@ public class JSONParser{
     }
 	
 	@Retention(RetentionPolicy.RUNTIME)
-    @Target(ElementType.FIELD)
-	public static @interface JSONPopulatedCollection{}
-	
-	@Retention(RetentionPolicy.RUNTIME)
     @Target({ElementType.TYPE, ElementType.FIELD})
 	public static @interface JSONDescription{
 		/**
@@ -614,13 +637,6 @@ public class JSONParser{
 					return pathPrefix + field.getName() + ", entry #" + index + ", is missing from the JSON and is required!";
 				}
 			}
-		}else if(field.isAnnotationPresent(JSONPopulatedCollection.class)){
-			try{
-				Collection<?> testCollection = (Collection<?>) field.get(objectOn);
-				if(testCollection != null && testCollection.isEmpty()){
-					return pathPrefix + field.getName() + " is a list, but has no elements.  This is NOT allowed!";
-				}
-			}catch(Exception e){}
 		}
 		return null;
 	}

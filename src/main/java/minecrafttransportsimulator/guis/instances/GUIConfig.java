@@ -1,12 +1,12 @@
 package minecrafttransportsimulator.guis.instances;
 
-import java.awt.Color;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
@@ -126,7 +126,7 @@ public class GUIConfig extends AGUIBase{
 		//Vehicle selection buttons and text.
 		//We only have two types.  Car and aircraft.
 		vehicleSelectionButtons.clear();		
-		addLabel(vehicleSelectionFaultLabel = new GUIComponentLabel(guiLeft+10, guiTop+90, Color.BLACK, InterfaceInput.isJoystickSupportBlocked() ? InterfaceCore.translate("gui.config.joystick.disabled") : InterfaceCore.translate("gui.config.joystick.error"), null, TextPosition.LEFT_ALIGNED, 240, 1.0F, false));
+		addLabel(vehicleSelectionFaultLabel = new GUIComponentLabel(guiLeft+10, guiTop+90, ColorRGB.BLACK, InterfaceInput.isJoystickSupportBlocked() ? InterfaceCore.translate("gui.config.joystick.disabled") : InterfaceCore.translate("gui.config.joystick.error"), null, TextPosition.LEFT_ALIGNED, 240, 1.0F, false));
 		for(String vehicleType : vehicleTypes){
 			GUIComponentButton buttonKeyboard = new GUIComponentButton(guiLeft + 68, guiTop + 30 + 20*(vehicleSelectionButtons.size()/(InterfaceInput.isJoystickSupportEnabled() ? 2 : 1)), 120, InterfaceCore.translate("gui.config.controls." + vehicleType + ".keyboard")){
 				@Override
@@ -140,7 +140,7 @@ public class GUIConfig extends AGUIBase{
 			addButton(buttonKeyboard);
 			//Add screen label if we haven't already.
 			if(vehicleSelectionButtons.size() == 1){
-				addLabel(new GUIComponentLabel(guiLeft+20, guiTop+10, Color.BLACK, InterfaceCore.translate("gui.config.controls.title")).setButton(buttonKeyboard));
+				addLabel(new GUIComponentLabel(guiLeft+20, guiTop+10, ColorRGB.BLACK, InterfaceCore.translate("gui.config.controls.title")).setButton(buttonKeyboard));
 			}
 			
 			if(InterfaceInput.isJoystickSupportEnabled()){
@@ -170,7 +170,7 @@ public class GUIConfig extends AGUIBase{
 			for(ControlsKeyboard keyboardControl : ControlSystem.ControlsKeyboard.values()){
 				if(keyboardControl.systemName.contains(vehicleType)){
 					//First create the text box for input.
-					GUIComponentTextBox box = new GUIComponentTextBox(guiLeft + horizontalOffset, guiTop + verticalOffset, 40, "", 10, Color.WHITE, Color.BLACK, 5){
+					GUIComponentTextBox box = new GUIComponentTextBox(guiLeft + horizontalOffset, guiTop + verticalOffset, 40, "", 10, ColorRGB.WHITE, ColorRGB.BLACK, 5){
 						@Override
 						public void handleKeyTyped(char typedChar, int typedCode, TextBoxControlKey control){
 							setText(InterfaceInput.getNameForKeyCode(typedCode));
@@ -183,7 +183,7 @@ public class GUIConfig extends AGUIBase{
 					addTextBox(box);
 					
 					//Now create the label.
-					addLabel(new GUIComponentLabel(box.x - 70, box.y + 2, Color.BLACK, keyboardControl.translatedName + ":").setBox(box));
+					addLabel(new GUIComponentLabel(box.x - 70, box.y + 2, ColorRGB.BLACK, keyboardControl.translatedName + ":").setBox(box));
 					
 					verticalOffset += 11;
 					if(verticalOffset > 20 + 11*9){
@@ -199,7 +199,7 @@ public class GUIConfig extends AGUIBase{
 			Map<GUIComponentLabel, ControlsKeyboardDynamic> dynamicLabels = new HashMap<GUIComponentLabel, ControlsKeyboardDynamic>();
 			for(ControlsKeyboardDynamic dynamicControl : ControlsKeyboardDynamic.values()){
 				if(dynamicControl.name().toLowerCase().contains(vehicleType)){
-					GUIComponentLabel label = new GUIComponentLabel(guiLeft + 10, guiTop + 135 + offset, Color.BLACK, ""); 
+					GUIComponentLabel label = new GUIComponentLabel(guiLeft + 10, guiTop + 135 + offset, ColorRGB.BLACK, ""); 
 					dynamicLabels.put(label, dynamicControl);
 					addLabel(label);
 					offset+=11;
@@ -226,8 +226,8 @@ public class GUIConfig extends AGUIBase{
 			
 			//Link the header text to the first joystick button.
 			if(joystickSelectionButtons.size() == 1){
-				addLabel(new GUIComponentLabel(guiLeft+20, guiTop+10, Color.BLACK, InterfaceCore.translate("gui.config.joystick.select")).setButton(button));
-				addLabel(new GUIComponentLabel(guiLeft+15, guiTop+25, Color.BLACK, InterfaceCore.translate("gui.config.joystick.name")).setButton(button));
+				addLabel(new GUIComponentLabel(guiLeft+20, guiTop+10, ColorRGB.BLACK, InterfaceCore.translate("gui.config.joystick.select")).setButton(button));
+				addLabel(new GUIComponentLabel(guiLeft+15, guiTop+25, ColorRGB.BLACK, InterfaceCore.translate("gui.config.joystick.name")).setButton(button));
 			}
 		}
 		
@@ -250,11 +250,11 @@ public class GUIConfig extends AGUIBase{
 		public void onClicked(){ConfigSystem.configObject.clientControls.joystickDeadZone.value = ((ConfigSystem.configObject.clientControls.joystickDeadZone.value*100 + 1)/100F);}});
 		addTextBox(deadzone_text = new GUIComponentTextBox(guiLeft + 120, guiTop + 10, 100, ""));
 		
-		addLabel(new GUIComponentLabel(guiLeft+15, guiTop+20, Color.BLACK, InterfaceCore.translate("gui.config.joystick.mapping")).setButton(componentListUpButton));
-		addLabel(new GUIComponentLabel(guiLeft+15, guiTop+35, Color.BLACK, "#").setButton(componentListUpButton));
-		addLabel(new GUIComponentLabel(guiLeft+30, guiTop+35, Color.BLACK, InterfaceCore.translate("gui.config.joystick.name")).setButton(componentListUpButton));
-		addLabel(new GUIComponentLabel(guiLeft+100, guiTop+35, Color.BLACK, InterfaceCore.translate("gui.config.joystick.state")).setButton(componentListUpButton));
-		addLabel(new GUIComponentLabel(guiLeft+140, guiTop+35, Color.BLACK, InterfaceCore.translate("gui.config.joystick.assignment")).setButton(componentListUpButton));
+		addLabel(new GUIComponentLabel(guiLeft+15, guiTop+20, ColorRGB.BLACK, InterfaceCore.translate("gui.config.joystick.mapping")).setButton(componentListUpButton));
+		addLabel(new GUIComponentLabel(guiLeft+15, guiTop+35, ColorRGB.BLACK, "#").setButton(componentListUpButton));
+		addLabel(new GUIComponentLabel(guiLeft+30, guiTop+35, ColorRGB.BLACK, InterfaceCore.translate("gui.config.joystick.name")).setButton(componentListUpButton));
+		addLabel(new GUIComponentLabel(guiLeft+100, guiTop+35, ColorRGB.BLACK, InterfaceCore.translate("gui.config.joystick.state")).setButton(componentListUpButton));
+		addLabel(new GUIComponentLabel(guiLeft+140, guiTop+35, ColorRGB.BLACK, InterfaceCore.translate("gui.config.joystick.assignment")).setButton(componentListUpButton));
 
 		
 		
@@ -275,7 +275,7 @@ public class GUIConfig extends AGUIBase{
 				joystickComponentId = -1;
 			}
 		});
-		addLabel(new GUIComponentLabel(guiLeft+20, guiTop+10, Color.BLACK, InterfaceCore.translate("gui.config.joystick.choosemap")).setButton(clearAssignmentButton));
+		addLabel(new GUIComponentLabel(guiLeft+20, guiTop+10, ColorRGB.BLACK, InterfaceCore.translate("gui.config.joystick.choosemap")).setButton(clearAssignmentButton));
 		
 		
 		
@@ -351,8 +351,8 @@ public class GUIConfig extends AGUIBase{
 		axisMinBoundsTextBox.enabled = false;
 		addTextBox(axisMaxBoundsTextBox = new GUIComponentTextBox(guiLeft+50, guiTop+60, 150, "0.0"));
 		axisMaxBoundsTextBox.enabled = false;
-		addLabel(new GUIComponentLabel(guiLeft+20, guiTop+10, Color.BLACK, InterfaceCore.translate("gui.config.joystick.calibrate1")).setButton(confirmBoundsButton));
-		addLabel(new GUIComponentLabel(guiLeft+20, guiTop+20, Color.BLACK, InterfaceCore.translate("gui.config.joystick.calibrate2")).setButton(confirmBoundsButton));
+		addLabel(new GUIComponentLabel(guiLeft+20, guiTop+10, ColorRGB.BLACK, InterfaceCore.translate("gui.config.joystick.calibrate1")).setButton(confirmBoundsButton));
+		addLabel(new GUIComponentLabel(guiLeft+20, guiTop+20, ColorRGB.BLACK, InterfaceCore.translate("gui.config.joystick.calibrate2")).setButton(confirmBoundsButton));
 	}
 	
 	@Override
@@ -517,7 +517,7 @@ public class GUIConfig extends AGUIBase{
 						};
 						addButton(button);
 						configButtons.put(button, (JSONConfigEntry<Boolean>) configEntry);
-						addLabel(new GUIComponentLabel(button.x - 75, button.y + 5, Color.BLACK, field.getName()).setButton(button));
+						addLabel(new GUIComponentLabel(button.x - 75, button.y + 5, ColorRGB.BLACK, field.getName()).setButton(button));
 					}
 				}catch(Exception e){
 					//How the heck does this even happen?
@@ -560,15 +560,15 @@ public class GUIConfig extends AGUIBase{
 				int controlIndex = buttonIndex + scrollSpot;
 				if(controlIndex < selectedJoystickAxisCount){
 					float pollData = InterfaceInput.getJoystickAxisValue(selectedJoystick, controlIndex);
-					InterfaceGUI.renderRectangle(x + 85, y + 2, 40, height - 4, Color.BLACK);
+					InterfaceGUI.renderRectangle(x + 85, y + 2, 40, height - 4, ColorRGB.BLACK);
 					if(Math.abs(pollData) > ConfigSystem.configObject.clientControls.joystickDeadZone.value){
-						InterfaceGUI.renderRectangle(x + 85 + 20, y + 2, (int) (pollData*20), height - 4, Color.RED);
+						InterfaceGUI.renderRectangle(x + 85 + 20, y + 2, (int) (pollData*20), height - 4, ColorRGB.RED);
 					}
 				}else{
 					if(InterfaceInput.getJoystickButtonValue(selectedJoystick, controlIndex - selectedJoystickAxisCount)){
-						InterfaceGUI.renderRectangle(x + 85 + 20 - (height - 4)/2, y + 2, height - 4, height - 4, Color.RED);
+						InterfaceGUI.renderRectangle(x + 85 + 20 - (height - 4)/2, y + 2, height - 4, height - 4, ColorRGB.RED);
 					}else{
-						InterfaceGUI.renderRectangle(x + 85 + 20 - (height - 4)/2, y + 2, height - 4, height - 4, Color.BLACK);
+						InterfaceGUI.renderRectangle(x + 85 + 20 - (height - 4)/2, y + 2, height - 4, height - 4, ColorRGB.BLACK);
 					}
 				}
 			}

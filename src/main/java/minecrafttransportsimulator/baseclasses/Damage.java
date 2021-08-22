@@ -1,6 +1,9 @@
 package minecrafttransportsimulator.baseclasses;
 
+import java.util.List;
+
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
+import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 
 /**Basic damage class.  Used to make instances of damage to apply to entities.  Allows for quick addition
@@ -30,6 +33,7 @@ public class Damage{
 	public boolean isExplosion;
 	public boolean ignoreArmor;
 	public boolean ignoreCooldown;
+	public List<JSONPotionEffect> effects;
 	
 	public Damage(String name, double amount, BoundingBox box, AEntityB_Existing damgeSource, WrapperEntity entityResponsible){
 		this.name = name;
@@ -63,6 +67,15 @@ public class Damage{
 	 */
 	public Damage setExplosive(){
 		this.isExplosion = true;
+		return this;
+	}
+	
+	/**
+	 * Sets this damages potion effects.
+	 * Returns object for construction simplicity.
+	 */
+	public Damage setEffects(List<JSONPotionEffect> effects){
+		this.effects = effects;
 		return this;
 	}
 	

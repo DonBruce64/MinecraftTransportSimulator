@@ -145,18 +145,18 @@ public class CameraSystem{
 					if(camera.animations != null){
 						boolean inhibitAnimations = false;
         				for(JSONAnimationDefinition animation : camera.animations){
-        					double variableValue = cameraProvider.getAnimatedVariableValue(cameraProvider.cameraAnimationClocks.get(animation), 0, partialTicks);
+        					double variableValue = cameraProvider.getAnimatedVariableValue(cameraProvider.animationClocks.get(animation), partialTicks);
         					switch(animation.animationType){
 	        					case TRANSLATION :{
             						if(!inhibitAnimations && variableValue != 0){
-            							Point3d translationAmount = animation.axis.copy().normalize().multiply(variableValue).rotateFine(cameraRotation);
+            							Point3d translationAmount = animation.axis.copy().multiply(variableValue).rotateFine(cameraRotation);
             							cameraPosition.add(translationAmount);
             						}
             						break;
             					}
 	        					case ROTATION :{
 	        						if(!inhibitAnimations && variableValue != 0){
-            							Point3d rotationAmount = animation.axis.copy().normalize().multiply(variableValue);
+            							Point3d rotationAmount = animation.axis.copy().multiply(variableValue);
             							Point3d rotationOffset = camera.pos.copy().subtract(animation.centerPoint);
             							if(!rotationOffset.isZero()){
             								cameraPosition.subtract(rotationOffset).add(rotationOffset.rotateFine(rotationAmount));
@@ -290,7 +290,7 @@ public class CameraSystem{
 		if(camera.animations != null){
 			for(JSONAnimationDefinition animation : camera.animations){
 				if(animation.animationType.equals(AnimationComponentType.VISIBILITY)){
-					double value = entity.getAnimatedVariableValue(entity.cameraAnimationClocks.get(animation), 0, partialTicks);
+					double value = entity.getAnimatedVariableValue(entity.animationClocks.get(animation), partialTicks);
 					if(value < animation.clampMin || value > animation.clampMax){
 						return false;
 					}

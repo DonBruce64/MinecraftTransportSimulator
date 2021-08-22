@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.mcinterface;
 
-import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.net.URL;
 import java.net.URLConnection;
@@ -17,6 +16,7 @@ import javax.imageio.stream.ImageInputStream;
 
 import org.lwjgl.opengl.GL11;
 
+import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
@@ -46,6 +46,7 @@ public class InterfaceRender{
 	private static final Map<String, Integer> textures = new HashMap<String, Integer>();
 	private static final Map<String, ParsedGIF> animatedGIFs = new HashMap<String, ParsedGIF>();
 	private static String pushedTextureLocation;
+	private static boolean boundSinceLastPush;
 	
 	/**
 	 *  Caches the vertices in some form for quick rendering.  This form is version-dependent,
@@ -97,6 +98,19 @@ public class InterfaceRender{
 	}
 	
 	/**
+	 *  Renders a set of raw vertices without any caching.
+	 */
+	public static void renderVertices(Float[][] vertices){
+		GL11.glBegin(GL11.GL_TRIANGLES);
+		for(Float[] vertex : vertices){
+			GL11.glTexCoord2f(vertex[3], vertex[4]);
+			GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
+			GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
+		}
+		GL11.glEnd();
+	}
+	
+	/**
 	 *  Deletes the cached vertices with the specified index.
 	 */
 	public static void deleteVertices(int index){
@@ -136,6 +150,7 @@ public class InterfaceRender{
 			}
 		}
 		GlStateManager.bindTexture(textures.get(textureLocation));
+		boundSinceLastPush = true;
 	}
 	
 	/**
@@ -202,6 +217,7 @@ public class InterfaceRender{
 			ParsedGIF parsedGIF = animatedGIFs.get(textureURL);
 			GlStateManager.bindTexture(parsedGIF.getCurrentTextureIndex());
 		}
+		boundSinceLastPush = true;
 		return null;
 	}
 	
@@ -214,13 +230,14 @@ public class InterfaceRender{
 	public static void setTexture(String textureLocation){
 		pushedTextureLocation = textureLocation;
 		bindTexture(textureLocation);
+		boundSinceLastPush = false;
 	}
 	
 	/**
-	 *  Re-binds the last saved texture.
+	 *  Re-binds the last saved texture.  If this texture is already bound, then no re-binding occurs.
 	 */
 	public static void recallTexture(){
-		if(pushedTextureLocation != null){
+		if(pushedTextureLocation != null && boundSinceLastPush){
 			GlStateManager.bindTexture(textures.get(pushedTextureLocation));
 		}
 	}
@@ -300,12 +317,19 @@ public class InterfaceRender{
 	}
 	
 	/**
-	 *  Sets MC color to the passed-in color.  Required when needing to keep MC states happy.
+	 *  Sets MC color to the passed-in color and alpha.  Required when needing to keep MC states happy.
 	 *  In particular, this is needed if colors are changed during MC internal draw calls,
 	 *  such as rendering a string, changing the color, and then rendering another string.
 	 */
-	public static void setColorState(float red, float green, float blue, float alpha){
-		GlStateManager.color(red, green, blue, alpha);
+	public static void setColorState(ColorRGB color, float alpha){
+		GlStateManager.color(color.red, color.green, color.blue, alpha);
+	}
+	
+	/**
+	 *  Like {@link #setColorState(ColorRGB, float)}, but assumes no alpha (alpha is 1.0).
+	 */
+	public static void setColorState(ColorRGB color){
+		setColorState(color, 1.0F);
 	}
 	
 	/**
@@ -324,10 +348,9 @@ public class InterfaceRender{
 	 *  Resets all the rendering states.
 	 *  Useful after doing a rendering routine where states may not be correct.
 	 */
+	//TODO move away from this.  It's a hack for bad code!
 	public static void resetStates(){
-		setColorState(1.0F, 1.0F, 1.0F, 1.0F);
-		setTextureState(true);
-		setBlendBright(false);
+		setColorState(ColorRGB.WHITE, 1.0F);
 		setLightingState(true);
 	}
 	
@@ -422,9 +445,9 @@ public class InterfaceRender{
 				//Scale by 1/16.  This converts us from block units to pixel units, which is what the GUIs use.
 				GL11.glScalef(1F/16F, 1F/16F, 1F/16F);
 				//Finally, render the text.
-				String inheritedColor = entity.getSecondaryTextColor();
-				String colorString = textDefinition.colorInherited && inheritedColor != null ? inheritedColor : textDefinition.color;
-				InterfaceGUI.drawScaledText(text, textDefinition.fontName, 0, 0, Color.decode(colorString), TextPosition.values()[textDefinition.renderPosition], textDefinition.wrapWidth, textDefinition.scale, textDefinition.autoScale);
+				ColorRGB inheritedColor = entity.getSecondaryTextColor();
+				ColorRGB color = textDefinition.colorInherited && inheritedColor != null ? inheritedColor : textDefinition.color;
+				InterfaceGUI.drawScaledText(text, textDefinition.fontName, 0, 0, color, TextPosition.values()[textDefinition.renderPosition], textDefinition.wrapWidth, textDefinition.scale, textDefinition.autoScale);
 				GL11.glPopMatrix();
 			}
 		}
@@ -436,7 +459,7 @@ public class InterfaceRender{
 		if(!systemLightingEnabled){
 			setSystemLightingState(true);
 			//Set color back to white, the font renderer sets this to not-white.
-			setColorState(1.0F, 1.0F, 1.0F, 1.0F);
+			setColorState(ColorRGB.WHITE);
 			return true;
 		}else{
 			return false;

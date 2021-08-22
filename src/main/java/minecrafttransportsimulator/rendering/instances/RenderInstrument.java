@@ -1,9 +1,8 @@
 package minecrafttransportsimulator.rendering.instances;
 
-import java.awt.Color;
-
 import org.lwjgl.opengl.GL11;
 
+import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
@@ -37,7 +36,7 @@ public final class RenderInstrument{
      * method.  Such transformations will, of course, differ between applications, so care should be taken to ensure
      * OpenGL states are not left out-of-whack after rendering is complete.
      */
-	public static void drawInstrument(ItemInstrument instrument, int partNumber, AEntityD_Interactable<?> entity, boolean blendingEnabled){
+	public static void drawInstrument(ItemInstrument instrument, int partNumber, AEntityD_Interactable<?> entity, boolean blendingEnabled, float partialTicks){
 		//First bind the texture file for this insturment's pack.
 		InterfaceRender.setTexture("/assets/" + instrument.definition.packID + "/textures/instruments.png");
 		
@@ -65,12 +64,12 @@ public final class RenderInstrument{
 					String text = String.format("%0" + component.textObject.maxLength + "d", (int) textNumeric);
 					if(component.lightUpTexture && lightsOn && ConfigSystem.configObject.clientRendering.instLights.value){
 						InterfaceRender.setLightingState(false);
-						InterfaceGUI.drawScaledText(text, component.textObject.fontName, (int) component.textObject.pos.x, (int) component.textObject.pos.y, Color.decode(component.textObject.color), TextPosition.values()[component.textObject.renderPosition], component.textObject.wrapWidth, component.textObject.scale, component.textObject.autoScale);
+						InterfaceGUI.drawScaledText(text, component.textObject.fontName, (int) component.textObject.pos.x, (int) component.textObject.pos.y, component.textObject.color, TextPosition.values()[component.textObject.renderPosition], component.textObject.wrapWidth, component.textObject.scale, component.textObject.autoScale);
 						InterfaceRender.setLightingState(true);
 					}else{
-						InterfaceGUI.drawScaledText(text, component.textObject.fontName, (int) component.textObject.pos.x, (int) component.textObject.pos.y, Color.decode(component.textObject.color), TextPosition.values()[component.textObject.renderPosition], component.textObject.wrapWidth, component.textObject.scale, component.textObject.autoScale);
+						InterfaceGUI.drawScaledText(text, component.textObject.fontName, (int) component.textObject.pos.x, (int) component.textObject.pos.y, component.textObject.color, TextPosition.values()[component.textObject.renderPosition], component.textObject.wrapWidth, component.textObject.scale, component.textObject.autoScale);
 					}
-					InterfaceRender.setColorState(1.0F, 1.0F, 1.0F, 1.0F);
+					InterfaceRender.setColorState(ColorRGB.WHITE);
 					InterfaceRender.recallTexture();
 				}else{
 					//Init variables.
@@ -97,20 +96,15 @@ public final class RenderInstrument{
 								animation.variable += "_" + partNumber;
 							}
 							
-							DurationDelayClock animationClock = entity.instrumentAnimationClocks.get(animation);
+							DurationDelayClock animationClock = entity.animationClocks.get(animation);
 							if(animationClock == null){
 								animationClock = new DurationDelayClock(animation);
-								entity.instrumentAnimationClocks.put(animation, animationClock);
-							}
-							
-							double variableValue = entity.getAnimatedVariableValue(animationClock, 0, 0);
-							if(addSuffix){
-								animation.variable = animation.variable.substring(0, animation.variable.length() - ("_" + partNumber).length());
+								entity.animationClocks.put(animation, animationClock);
 							}
 							
 							switch(animation.animationType){
 								case ROTATION :{
-									variableValue *= Math.signum(animation.axis.z);
+									double variableValue = entity.getAnimatedVariableValue(animationClock, animation.axis.z, partialTicks);
 									//Depending on what variables are set we do different rendering operations.
 									//If we are rotating the window, but not the texture we should offset the texture points to that rotated point.
 									//Otherwise, we apply an OpenGL rotation operation.
@@ -143,9 +137,9 @@ public final class RenderInstrument{
 								case TRANSLATION :{
 									//Offset the coords based on the translated amount.
 									//Adjust the window to either move or scale depending on settings.
-									double axisLength = animation.axis.length();
-									double xTranslation = variableValue*animation.axis.x/axisLength;
-									double yTranslation = variableValue*animation.axis.y/axisLength;
+									double variableValue = entity.getAnimatedVariableValue(animationClock, partialTicks);
+									double xTranslation = variableValue*animation.axis.x;
+									double yTranslation = variableValue*animation.axis.y;
 									if(component.extendWindow){
 										//We need to add to the edge of the window in this case rather than move the entire window.
 										if(animation.axis.x < 0){
@@ -190,13 +184,14 @@ public final class RenderInstrument{
 								}
 								case VISIBILITY:{
 									//Skip rendering this component if this is false.
+									double variableValue = entity.getAnimatedVariableValue(animationClock, partialTicks);
 									skipRender = variableValue < animation.clampMin || variableValue > animation.clampMax;
-									skipFurtherTransforms = skipRender;
 									break;
 								}
 								case INHIBITOR:{
 									//Skip further operations if this is true.
 									if(!skipFurtherTransforms){
+										double variableValue = entity.getAnimatedVariableValue(animationClock, partialTicks);
 										skipFurtherTransforms = variableValue >= animation.clampMin && variableValue <= animation.clampMax;
 									}
 									break;
@@ -204,13 +199,20 @@ public final class RenderInstrument{
 								case ACTIVATOR:{
 									//Prevent skipping  further operations if this is true.
 									if(skipFurtherTransforms){
+										double variableValue = entity.getAnimatedVariableValue(animationClock, partialTicks);
 										skipFurtherTransforms = variableValue >= animation.clampMin && variableValue <= animation.clampMax;
 									}
 									break;
 								}
 							}
 							
-							if(skipFurtherTransforms){
+							//Put suffix back to normal.
+							if(addSuffix){
+								animation.variable = animation.variable.substring(0, animation.variable.length() - ("_" + partNumber).length());
+							}
+							
+							//Don't do any more transforms if we shouldn't render.
+							if(skipRender){
 								break;
 							}
 						}

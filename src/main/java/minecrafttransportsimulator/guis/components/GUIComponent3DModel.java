@@ -85,10 +85,10 @@ public class GUIComponent3DModel{
 				GL11.glPushMatrix();
 				//Translate to position and rotate to isometric view if required.
 				GL11.glTranslatef(x, y, 100);
-				GL11.glRotatef(180, 0, 0, 1);
+				GL11.glRotatef(180, 1, 0, 0);
 				if(isometric){
 					GL11.glRotatef(45, 0, 1, 0);
-					GL11.glRotatef(35.264F, 1, 0, 1);
+					GL11.glRotatef(-35.264F, 1, 0, 1);
 				}
 				
 				//If set to rotate, do so now based on time.

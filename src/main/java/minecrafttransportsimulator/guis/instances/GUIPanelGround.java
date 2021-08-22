@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.guis.instances;
 
-import java.awt.Color;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -9,6 +8,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.TrailerConnection;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
@@ -121,7 +121,7 @@ public class GUIPanelGround extends AGUIPanel{
 		
 		if(vehicle.definition.motorized.hasRadioNav){
 			//Add beacon text box.  This is at the bottom of the light column where the siren used to be.
-			beaconBox = new GUIComponentTextBox(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE*2, vehicle.selectedBeaconName, SELECTOR_SIZE, vehicle.selectedBeacon != null ? Color.GREEN : Color.RED, Color.BLACK, 5){
+			beaconBox = new GUIComponentTextBox(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE*2, vehicle.selectedBeaconName, SELECTOR_SIZE, vehicle.selectedBeacon != null ? ColorRGB.GREEN : ColorRGB.RED, ColorRGB.BLACK, 5){
 				@Override
 				public void handleKeyTyped(char typedChar, int typedCode, TextBoxControlKey control){
 					super.handleKeyTyped(typedChar, typedCode, control);
@@ -132,7 +132,7 @@ public class GUIPanelGround extends AGUIPanel{
 			addTextBox(beaconBox);
 			
 			//Add beacon text box label.
-			GUIComponentLabel beaconLabel = new GUIComponentLabel(beaconBox.x + beaconBox.width/2, beaconBox.y + beaconBox.height + 1, vehicle.definition.motorized.panelTextColor != null ? Color.decode(vehicle.definition.motorized.panelTextColor) : Color.WHITE, InterfaceCore.translate("gui.panel.beacon"), null, TextPosition.CENTERED, 0, 0.75F, false);
+			GUIComponentLabel beaconLabel = new GUIComponentLabel(beaconBox.x + beaconBox.width/2, beaconBox.y + beaconBox.height + 1, vehicle.definition.motorized.panelTextColor != null ? vehicle.definition.motorized.panelTextColor : ColorRGB.WHITE, InterfaceCore.translate("gui.panel.beacon"), null, TextPosition.CENTERED, 0, 0.75F, false);
 			beaconLabel.setBox(beaconBox);
 			labels.add(beaconLabel);
 		}
@@ -141,39 +141,75 @@ public class GUIPanelGround extends AGUIPanel{
 	@Override
 	protected void setupEngineComponents(int guiLeft, int guiTop){
 		engineSelectors.clear();
-		//Create the engine selectors for this vehicle.
-		for(Byte engineNumber : vehicle.engines.keySet()){
-			//Go to next column if we are on our 5th engine.
-			if(engineNumber == 5){
-				xOffset += SELECTOR_SIZE + GAP_BETWEEN_SELECTORS;
+		if(vehicle.definition.motorized.hasSingleEngineControl){
+			if(!vehicle.engines.isEmpty()){
+				GUIComponentSelector engineSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS, SELECTOR_SIZE, SELECTOR_SIZE, InterfaceCore.translate("gui.panel.engine"), vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, ENGINE_TEXTURE_WIDTH_OFFSET, ENGINE_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
+					@Override
+					public void onClicked(boolean leftSide){
+						for(Byte engineNumber : vehicle.engines.keySet()){
+							if(selectorState == 0 && !leftSide){
+								InterfacePacket.sendToServer(new PacketPartEngine(vehicle.engines.get(engineNumber), Signal.MAGNETO_ON));
+							}else if(selectorState == 1 && !leftSide){
+								InterfacePacket.sendToServer(new PacketPartEngine(vehicle.engines.get(engineNumber), Signal.ES_ON));
+							}else if(selectorState == 1 && leftSide){
+								InterfacePacket.sendToServer(new PacketPartEngine(vehicle.engines.get(engineNumber), Signal.MAGNETO_OFF));
+							}else if(selectorState == 2 && leftSide){
+								if(vehicle.engines.get(engineNumber).definition.engine.disableAutomaticStarter){
+									InterfacePacket.sendToServer(new PacketPartEngine(vehicle.engines.get(engineNumber), Signal.MAGNETO_OFF));
+								}else{
+									InterfacePacket.sendToServer(new PacketPartEngine(vehicle.engines.get(engineNumber), Signal.ES_OFF));
+								}
+							}
+						}
+					}
+					
+					@Override
+					public void onReleased(){
+						if(selectorState == 2){
+							for(Byte engineNumber : vehicle.engines.keySet()){
+								InterfacePacket.sendToServer(new PacketPartEngine(vehicle.engines.get(engineNumber), Signal.ES_OFF));
+							}
+						}
+					}
+				};
+				engineSelectors.put(ENGINE_SINGLE_SELECTOR_INDEX, engineSelector);
+				addSelector(engineSelector);
 			}
-			GUIComponentSelector engineSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + (SELECTOR_SIZE + GAP_BETWEEN_SELECTORS)*(engineNumber%4), SELECTOR_SIZE, SELECTOR_SIZE, InterfaceCore.translate("gui.panel.engine"), vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, ENGINE_TEXTURE_WIDTH_OFFSET, ENGINE_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
-				@Override
-				public void onClicked(boolean leftSide){
-					if(selectorState == 0 && !leftSide){
-						InterfacePacket.sendToServer(new PacketPartEngine(vehicle.engines.get(engineNumber), Signal.MAGNETO_ON));
-					}else if(selectorState == 1 && !leftSide){
-						InterfacePacket.sendToServer(new PacketPartEngine(vehicle.engines.get(engineNumber), Signal.ES_ON));
-					}else if(selectorState == 1 && leftSide){
-						InterfacePacket.sendToServer(new PacketPartEngine(vehicle.engines.get(engineNumber), Signal.MAGNETO_OFF));
-					}else if(selectorState == 2 && leftSide){
-						if(vehicle.engines.get(engineNumber).definition.engine.disableAutomaticStarter){
+		}else{
+			//Create the engine selectors for this vehicle.
+			for(Byte engineNumber : vehicle.engines.keySet()){
+				//Go to next column if we are on our 5th engine.
+				if(engineNumber == 5){
+					xOffset += SELECTOR_SIZE + GAP_BETWEEN_SELECTORS;
+				}
+				GUIComponentSelector engineSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + (SELECTOR_SIZE + GAP_BETWEEN_SELECTORS)*(engineNumber%4), SELECTOR_SIZE, SELECTOR_SIZE, InterfaceCore.translate("gui.panel.engine"), vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, ENGINE_TEXTURE_WIDTH_OFFSET, ENGINE_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
+					@Override
+					public void onClicked(boolean leftSide){
+						if(selectorState == 0 && !leftSide){
+							InterfacePacket.sendToServer(new PacketPartEngine(vehicle.engines.get(engineNumber), Signal.MAGNETO_ON));
+						}else if(selectorState == 1 && !leftSide){
+							InterfacePacket.sendToServer(new PacketPartEngine(vehicle.engines.get(engineNumber), Signal.ES_ON));
+						}else if(selectorState == 1 && leftSide){
 							InterfacePacket.sendToServer(new PacketPartEngine(vehicle.engines.get(engineNumber), Signal.MAGNETO_OFF));
-						}else{
+						}else if(selectorState == 2 && leftSide){
+							if(vehicle.engines.get(engineNumber).definition.engine.disableAutomaticStarter){
+								InterfacePacket.sendToServer(new PacketPartEngine(vehicle.engines.get(engineNumber), Signal.MAGNETO_OFF));
+							}else{
+								InterfacePacket.sendToServer(new PacketPartEngine(vehicle.engines.get(engineNumber), Signal.ES_OFF));
+							}
+						}
+					}
+					
+					@Override
+					public void onReleased(){
+						if(selectorState == 2){
 							InterfacePacket.sendToServer(new PacketPartEngine(vehicle.engines.get(engineNumber), Signal.ES_OFF));
 						}
 					}
-				}
-				
-				@Override
-				public void onReleased(){
-					if(selectorState == 2){
-						InterfacePacket.sendToServer(new PacketPartEngine(vehicle.engines.get(engineNumber), Signal.ES_OFF));
-					}
-				}
-			};
-			engineSelectors.put(engineNumber, engineSelector);
-			addSelector(engineSelector);
+				};
+				engineSelectors.put(engineNumber, engineSelector);
+				addSelector(engineSelector);
+			}
 		}
 		
 		//If we have both reverse AND cruise control, render them side-by-side. Otherwise just render one in the middle
@@ -321,13 +357,24 @@ public class GUIPanelGround extends AGUIPanel{
 		}
 		
 		//Set the state of the engine selectors.
-		for(Entry<Byte, GUIComponentSelector> engineEntry : engineSelectors.entrySet()){
-			if(vehicle.engines.containsKey(engineEntry.getKey())){
-				PartEngine engine = vehicle.engines.get(engineEntry.getKey());
+		if(vehicle.definition.motorized.hasSingleEngineControl){
+			for(PartEngine engine : vehicle.engines.values()){
 				if(engine.definition.engine.disableAutomaticStarter){
-					engineEntry.getValue().selectorState = engine.state.magnetoOn ? 2 : 0;
+					engineSelectors.get(ENGINE_SINGLE_SELECTOR_INDEX).selectorState = engine.state.magnetoOn ? 2 : 0;
 				}else{
-					engineEntry.getValue().selectorState = engine.state.magnetoOn ? (engine.state.esOn ? 2 : 1) : 0;
+					engineSelectors.get(ENGINE_SINGLE_SELECTOR_INDEX).selectorState = engine.state.magnetoOn ? (engine.state.esOn ? 2 : 1) : 0;
+				}
+				break;
+			}
+		}else{
+			for(Entry<Byte, GUIComponentSelector> engineEntry : engineSelectors.entrySet()){
+				if(vehicle.engines.containsKey(engineEntry.getKey())){
+					PartEngine engine = vehicle.engines.get(engineEntry.getKey());
+					if(engine.definition.engine.disableAutomaticStarter){
+						engineEntry.getValue().selectorState = engine.state.magnetoOn ? 2 : 0;
+					}else{
+						engineEntry.getValue().selectorState = engine.state.magnetoOn ? (engine.state.esOn ? 2 : 1) : 0;
+					}
 				}
 			}
 		}
@@ -371,7 +418,7 @@ public class GUIPanelGround extends AGUIPanel{
 		
 		//Set the beaconBox text color depending on if we have an active beacon.
 		if(beaconBox != null){
-			beaconBox.fontColor = vehicle.selectedBeacon != null ? Color.GREEN : Color.RED;
+			beaconBox.fontColor = vehicle.selectedBeacon != null ? ColorRGB.GREEN : ColorRGB.RED;
 		}
 		
 		//Iterate through custom selectors and set their states.

@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.jsondefs;
 
+import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
@@ -33,7 +34,7 @@ public class JSONText{
     
 	@JSONRequired
     @JSONDescription("A hexadecimal color code.  This tells MTS what color this text should be.")
-    public String color;
+	public ColorRGB color;
 	
 	@JSONDescription("If true, then this text will get its color from the definition section's secondColor parameter, if one exists.")
 	public boolean colorInherited;

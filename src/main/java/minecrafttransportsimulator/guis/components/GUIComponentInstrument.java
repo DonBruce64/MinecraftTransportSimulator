@@ -37,11 +37,11 @@ public class GUIComponentInstrument{
 	 *  is really just a forwarding call that applies a few GUI-specific transforms prior to calling
 	 *  that function.
 	 */
-    public void renderInstrument(boolean blendingEnabled){
+    public void renderInstrument(boolean blendingEnabled, float partialTicks){
     	GL11.glPushMatrix();
 		GL11.glTranslated(x, y, 0);
 		GL11.glScalef(packInstrument.hudScale, packInstrument.hudScale, packInstrument.hudScale);
-		RenderInstrument.drawInstrument(instrument, packInstrument.optionalPartNumber, entity, blendingEnabled);
+		RenderInstrument.drawInstrument(instrument, packInstrument.optionalPartNumber, entity, blendingEnabled, partialTicks);
 		GL11.glPopMatrix();
     }
 }

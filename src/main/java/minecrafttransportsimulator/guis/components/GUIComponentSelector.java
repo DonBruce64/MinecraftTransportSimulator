@@ -1,7 +1,6 @@
 package minecrafttransportsimulator.guis.components;
 
-import java.awt.Color;
-
+import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.guis.components.AGUIBase.TextPosition;
 
 /**Custom class for selectors.  Selectors are like buttons, except they allow for side-sensitive clicking.
@@ -21,8 +20,8 @@ public abstract class GUIComponentSelector{
 	public final int width;
 	public final int height;
 	public final String text;
-	public final Color regularColor;
-	public final Color litColor;
+	public final ColorRGB regularColor;
+	public final ColorRGB litColor;
 	public final int selectorSectionWidth;
 	public final int selectorSectionHeight;
 	public final int selectorSectionWidthOffset;
@@ -33,14 +32,14 @@ public abstract class GUIComponentSelector{
 	public boolean visible = true;
 	public int selectorState = 0;
 	
-	public GUIComponentSelector(int x, int y, int width, int height, String text, String regularColor, String litColor, int selectorSectionWidth, int selectorSectionHeight, int selectorSectionWidthOffset, int selectorSectionHeightOffset, int textureWidth, int textureHeight){
+	public GUIComponentSelector(int x, int y, int width, int height, String text, ColorRGB regularColor, ColorRGB litColor, int selectorSectionWidth, int selectorSectionHeight, int selectorSectionWidthOffset, int selectorSectionHeightOffset, int textureWidth, int textureHeight){
 		this.x = x;
 		this.y = y;
 		this.width = width;
 		this.height = height;
 		this.text = text;
-		this.regularColor = regularColor != null ? Color.decode(regularColor) : Color.WHITE;
-		this.litColor = regularColor != null ? Color.decode(litColor) : Color.WHITE;
+		this.regularColor = regularColor != null ? regularColor : ColorRGB.WHITE;
+		this.litColor = regularColor != null ? litColor : ColorRGB.WHITE;
 		this.selectorSectionWidth = selectorSectionWidth;
 		this.selectorSectionHeight = selectorSectionHeight;
 		this.selectorSectionWidthOffset = selectorSectionWidthOffset;

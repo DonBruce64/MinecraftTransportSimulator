@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.guis.instances;
 
-import java.awt.Color;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -9,6 +8,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.TrailerConnection;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
@@ -141,41 +141,89 @@ public class GUIPanelAircraft extends AGUIPanel{
 	protected void setupEngineComponents(int guiLeft, int guiTop){
 		magnetoSelectors.clear();
 		starterSelectors.clear();
-		//Create magneto and stater selectors for the engines.
-		for(Byte engineNumber : vehicle.engines.keySet()){
-			//Go to next column if we are on our 5th engine.
-			if(engineNumber == 4){
-				xOffset += 2*SELECTOR_SIZE + GAP_BETWEEN_SELECTORS;
-			}
-			
-			GUIComponentSelector magnetoSwitch = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + (SELECTOR_SIZE + GAP_BETWEEN_SELECTORS)*(engineNumber%4), SELECTOR_SIZE, SELECTOR_SIZE, InterfaceCore.translate("gui.panel.magneto"), vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, ENGINEMAG_TEXTURE_WIDTH_OFFSET, ENGINEMAG_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
-				@Override
-				public void onClicked(boolean leftSide){
-					InterfacePacket.sendToServer(new PacketPartEngine(vehicle.engines.get(engineNumber), vehicle.engines.get(engineNumber).state.magnetoOn ? Signal.MAGNETO_OFF : Signal.MAGNETO_ON));
-				}
-				
-				@Override
-				public void onReleased(){}
-			};
-			magnetoSelectors.put(engineNumber, magnetoSwitch);
-			addSelector(magnetoSwitch);
-			
-			GUIComponentSelector starterSwitch = new GUIComponentSelector(magnetoSwitch.x + SELECTOR_SIZE, magnetoSwitch.y, SELECTOR_SIZE, SELECTOR_SIZE, InterfaceCore.translate("gui.panel.start"), vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, ENGINESTART_TEXTURE_WIDTH_OFFSET, ENGINESTART_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
-				@Override
-				public void onClicked(boolean leftSide){
-					if(vehicle.engines.get(engineNumber).state.magnetoOn){
-						InterfacePacket.sendToServer(new PacketPartEngine(vehicle.engines.get(engineNumber), vehicle.engines.get(engineNumber).state.esOn ? Signal.ES_OFF : Signal.ES_ON));
+		if(vehicle.definition.motorized.hasSingleEngineControl){
+			if(!vehicle.engines.isEmpty()){
+				GUIComponentSelector magnetoSwitch = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS, SELECTOR_SIZE, SELECTOR_SIZE, InterfaceCore.translate("gui.panel.magneto"), vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, ENGINEMAG_TEXTURE_WIDTH_OFFSET, ENGINEMAG_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
+					@Override
+					public void onClicked(boolean leftSide){
+						Signal sentSignal = null;
+						for(PartEngine engine : vehicle.engines.values()){
+							sentSignal = engine.state.magnetoOn ? Signal.MAGNETO_OFF : Signal.MAGNETO_ON;
+							break;
+						}
+						for(PartEngine engine : vehicle.engines.values()){
+							InterfacePacket.sendToServer(new PacketPartEngine(engine, sentSignal));
+						}
 					}
+					
+					@Override
+					public void onReleased(){}
+				};
+				magnetoSelectors.put(ENGINE_SINGLE_SELECTOR_INDEX, magnetoSwitch);
+				addSelector(magnetoSwitch);
+				
+				GUIComponentSelector starterSwitch = new GUIComponentSelector(magnetoSwitch.x + SELECTOR_SIZE, magnetoSwitch.y, SELECTOR_SIZE, SELECTOR_SIZE, InterfaceCore.translate("gui.panel.start"), vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, ENGINESTART_TEXTURE_WIDTH_OFFSET, ENGINESTART_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
+					@Override
+					public void onClicked(boolean leftSide){
+						Signal sentSignal = null;
+						for(PartEngine engine : vehicle.engines.values()){
+							if(!engine.state.magnetoOn){
+								return;
+							}
+							sentSignal = engine.state.esOn ? Signal.ES_OFF : Signal.ES_ON;
+							break;
+						}
+						for(PartEngine engine : vehicle.engines.values()){
+							InterfacePacket.sendToServer(new PacketPartEngine(engine, sentSignal));
+						}
+					}
+					
+					@Override
+					public void onReleased(){
+						for(PartEngine engine : vehicle.engines.values()){
+							InterfacePacket.sendToServer(new PacketPartEngine(engine, Signal.ES_OFF));
+						}
+					}
+				};
+				starterSelectors.put(ENGINE_SINGLE_SELECTOR_INDEX, starterSwitch);
+				addSelector(starterSwitch);
+			}
+		}else{
+			//Create magneto and stater selectors for the engines.
+			for(Byte engineNumber : vehicle.engines.keySet()){
+				//Go to next column if we are on our 5th engine.
+				if(engineNumber == 4){
+					xOffset += 2*SELECTOR_SIZE + GAP_BETWEEN_SELECTORS;
 				}
 				
-				@Override
-				public void onReleased(){
-					InterfacePacket.sendToServer(new PacketPartEngine(vehicle.engines.get(engineNumber), Signal.ES_OFF));
-				}
-			};
-			starterSelectors.put(engineNumber, starterSwitch);
-			addSelector(starterSwitch);
-
+				GUIComponentSelector magnetoSwitch = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + (SELECTOR_SIZE + GAP_BETWEEN_SELECTORS)*(engineNumber%4), SELECTOR_SIZE, SELECTOR_SIZE, InterfaceCore.translate("gui.panel.magneto"), vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, ENGINEMAG_TEXTURE_WIDTH_OFFSET, ENGINEMAG_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
+					@Override
+					public void onClicked(boolean leftSide){
+						InterfacePacket.sendToServer(new PacketPartEngine(vehicle.engines.get(engineNumber), vehicle.engines.get(engineNumber).state.magnetoOn ? Signal.MAGNETO_OFF : Signal.MAGNETO_ON));
+					}
+					
+					@Override
+					public void onReleased(){}
+				};
+				magnetoSelectors.put(engineNumber, magnetoSwitch);
+				addSelector(magnetoSwitch);
+				
+				GUIComponentSelector starterSwitch = new GUIComponentSelector(magnetoSwitch.x + SELECTOR_SIZE, magnetoSwitch.y, SELECTOR_SIZE, SELECTOR_SIZE, InterfaceCore.translate("gui.panel.start"), vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, ENGINESTART_TEXTURE_WIDTH_OFFSET, ENGINESTART_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
+					@Override
+					public void onClicked(boolean leftSide){
+						if(vehicle.engines.get(engineNumber).state.magnetoOn){
+							InterfacePacket.sendToServer(new PacketPartEngine(vehicle.engines.get(engineNumber), vehicle.engines.get(engineNumber).state.esOn ? Signal.ES_OFF : Signal.ES_ON));
+						}
+					}
+					
+					@Override
+					public void onReleased(){
+						InterfacePacket.sendToServer(new PacketPartEngine(vehicle.engines.get(engineNumber), Signal.ES_OFF));
+					}
+				};
+				starterSelectors.put(engineNumber, starterSwitch);
+				addSelector(starterSwitch);
+			}
 		}
 		
 		//Need to offset the xOffset by the selector size to account for the two engine controls.
@@ -317,7 +365,7 @@ public class GUIPanelAircraft extends AGUIPanel{
 		
 		if(vehicle.definition.motorized.hasRadioNav){
 			//Add beacon text box.  This is stacked below the custom selectors.
-			beaconBox = new GUIComponentTextBox(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 2*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE*2, vehicle.selectedBeaconName, SELECTOR_SIZE, vehicle.selectedBeacon != null ? Color.GREEN : Color.RED, Color.BLACK, 5){
+			beaconBox = new GUIComponentTextBox(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 2*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE*2, vehicle.selectedBeaconName, SELECTOR_SIZE, vehicle.selectedBeacon != null ? ColorRGB.GREEN : ColorRGB.RED, ColorRGB.BLACK, 5){
 				@Override
 				public void handleKeyTyped(char typedChar, int typedCode, TextBoxControlKey control){
 					super.handleKeyTyped(typedChar, typedCode, control);
@@ -328,7 +376,7 @@ public class GUIPanelAircraft extends AGUIPanel{
 			addTextBox(beaconBox);
 			
 			//Add beacon text box label.
-			GUIComponentLabel beaconLabel = new GUIComponentLabel(beaconBox.x + beaconBox.width/2, beaconBox.y + beaconBox.height + 1, vehicle.definition.motorized.panelTextColor != null ? Color.decode(vehicle.definition.motorized.panelTextColor) : Color.WHITE, InterfaceCore.translate("gui.panel.beacon"), null, TextPosition.CENTERED, 0, 0.75F, false);
+			GUIComponentLabel beaconLabel = new GUIComponentLabel(beaconBox.x + beaconBox.width/2, beaconBox.y + beaconBox.height + 1, vehicle.definition.motorized.panelTextColor != null ? vehicle.definition.motorized.panelTextColor : ColorRGB.WHITE, InterfaceCore.translate("gui.panel.beacon"), null, TextPosition.CENTERED, 0, 0.75F, false);
 			beaconLabel.setBox(beaconBox);
 			labels.add(beaconLabel);
 		}
@@ -391,18 +439,34 @@ public class GUIPanelAircraft extends AGUIPanel{
 		}
 		
 		//Set the states of the magneto selectors.
-		for(Entry<Byte, GUIComponentSelector> magnetoEntry : magnetoSelectors.entrySet()){
-			if(vehicle.engines.containsKey(magnetoEntry.getKey())){
-				magnetoEntry.getValue().selectorState = vehicle.engines.get(magnetoEntry.getKey()).state.magnetoOn ? 1 : 0;
+		if(vehicle.definition.motorized.hasSingleEngineControl){
+			magnetoSelectors.get((byte)-1).visible = !vehicle.engines.isEmpty();
+			for(PartEngine engine : vehicle.engines.values()){
+				magnetoSelectors.get((byte)-1).selectorState = engine.state.magnetoOn ? 1 : 0;
+				break;
+			}
+		}else{
+			for(Entry<Byte, GUIComponentSelector> magnetoEntry : magnetoSelectors.entrySet()){
+				if(vehicle.engines.containsKey(magnetoEntry.getKey())){
+					magnetoEntry.getValue().selectorState = vehicle.engines.get(magnetoEntry.getKey()).state.magnetoOn ? 1 : 0;
+				}
 			}
 		}
 		
 		//Set the states of the starter selectors.
-		for(Entry<Byte, GUIComponentSelector> starterEntry : starterSelectors.entrySet()){
-			if(vehicle.engines.containsKey(starterEntry.getKey())){
-				PartEngine engine = vehicle.engines.get(starterEntry.getKey());
-				starterEntry.getValue().selectorState = engine.state.magnetoOn ? (engine.state.esOn ? 2 : 1) : 0;
-				starterEntry.getValue().visible = !engine.definition.engine.disableAutomaticStarter;
+		if(vehicle.definition.motorized.hasSingleEngineControl){
+			for(PartEngine engine : vehicle.engines.values()){
+				starterSelectors.get(ENGINE_SINGLE_SELECTOR_INDEX).selectorState = engine.state.magnetoOn ? (engine.state.esOn ? 2 : 1) : 0;
+				starterSelectors.get(ENGINE_SINGLE_SELECTOR_INDEX).visible = !engine.definition.engine.disableAutomaticStarter;
+				break;
+			}
+		}else{
+			for(Entry<Byte, GUIComponentSelector> starterEntry : starterSelectors.entrySet()){
+				if(vehicle.engines.containsKey(starterEntry.getKey())){
+					PartEngine engine = vehicle.engines.get(starterEntry.getKey());
+					starterEntry.getValue().selectorState = engine.state.magnetoOn ? (engine.state.esOn ? 2 : 1) : 0;
+					starterEntry.getValue().visible = !engine.definition.engine.disableAutomaticStarter;
+				}
 			}
 		}
 				
@@ -466,7 +530,7 @@ public class GUIPanelAircraft extends AGUIPanel{
 		
 		//Set the beaconBox text color depending on if we have an active beacon.
 		if(beaconBox != null){
-			beaconBox.fontColor = vehicle.selectedBeacon != null ? Color.GREEN : Color.RED;
+			beaconBox.fontColor = vehicle.selectedBeacon != null ? ColorRGB.GREEN : ColorRGB.RED;
 		}
 		
 		//Iterate through custom selectors and set their states.

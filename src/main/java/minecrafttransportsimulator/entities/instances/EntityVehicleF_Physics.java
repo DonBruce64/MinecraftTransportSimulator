@@ -122,7 +122,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	@Override
 	public boolean update(){
 		if(super.update()){
-			if(definition.motorized.flapNotches != null){
+			if(definition.motorized.flapNotches != null && !definition.motorized.flapNotches.isEmpty()){
 				flapDesiredAngle = definition.motorized.flapNotches.get(flapNotchSelected);
 				//Adjust flaps to current setting.
 				if(flapCurrentAngle < flapDesiredAngle){

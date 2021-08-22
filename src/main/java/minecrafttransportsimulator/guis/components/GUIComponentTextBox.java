@@ -1,7 +1,6 @@
 package minecrafttransportsimulator.guis.components;
 
-import java.awt.Color;
-
+import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.guis.components.AGUIBase.TextPosition;
 
 /**Custom text box class.  This class is designed to remove the need to check for clicking of
@@ -19,8 +18,8 @@ public class GUIComponentTextBox{
 	public final int y;
 	public final int width;
 	public final int height;
-	public Color fontColor;
-	public final Color backgroundColor;
+	public ColorRGB fontColor;
+	public final ColorRGB backgroundColor;
 	
 	public boolean visible = true;
 	public boolean enabled = true;
@@ -32,10 +31,10 @@ public class GUIComponentTextBox{
 	private String flashText;
 	    	
 	public GUIComponentTextBox(int x, int y, int width, String text){
-		this(x, y, width, text, 20, Color.WHITE, Color.BLACK, 32);
+		this(x, y, width, text, 20, ColorRGB.WHITE, ColorRGB.BLACK, 32);
 	}
 	
-	public GUIComponentTextBox(int x, int y, int width, String text, int height, Color fontColor, Color backgroundColor, int maxTextLength){
+	public GUIComponentTextBox(int x, int y, int width, String text, int height, ColorRGB fontColor, ColorRGB backgroundColor, int maxTextLength){
 		this.x = x;
 		this.y = y;
 		this.width = width;
@@ -181,7 +180,7 @@ public class GUIComponentTextBox{
     				InterfaceGUI.drawBasicText(text, null, x + 4, y + (height >= 20 ? 5 : 1 + height/10), fontColor, TextPosition.LEFT_ALIGNED, width);
     			}
     		}else{
-    			InterfaceGUI.drawBasicText(text, null, x + 4, y + (height >= 20 ? 5 : 1 + height/10), Color.GRAY, TextPosition.LEFT_ALIGNED, width);
+    			InterfaceGUI.drawBasicText(text, null, x + 4, y + (height >= 20 ? 5 : 1 + height/10), ColorRGB.GRAY, TextPosition.LEFT_ALIGNED, width);
     		}
     	}
     }

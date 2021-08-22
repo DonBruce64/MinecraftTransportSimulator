@@ -2,6 +2,7 @@ package minecrafttransportsimulator.jsondefs;
 
 import java.util.List;
 
+import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 
@@ -14,7 +15,7 @@ public class JSONSubDefinition{
 	public String secondTone;
 	
 	@JSONDescription("This parameter is optional.  If set, any textObjects marked as colorInherited will use this color rather than their own.  Useful when you have multiple textures for your model that would cause issues with a single text color.")
-	public String secondColor;
+	public ColorRGB secondColor;
 	
 	@JSONDescription("This parameter is optional.  If set, then the model with this name will be used for this definition rather than the default one.  This model must be in the same folder as all other models for this component, but it may be in sub-folders if desired.")
 	public String modelName;

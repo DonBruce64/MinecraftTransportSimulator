@@ -1,9 +1,9 @@
 package minecrafttransportsimulator.guis.instances;
 
-import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 
+import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
@@ -67,7 +67,7 @@ public class GUIRadio extends AGUIBase{
 				teachMode = false;
 			}
 		});
-		addLabel(new GUIComponentLabel(offButton.x + offButton.width/2, offButton.y - 10, Color.BLACK, "SOURCE", null, TextPosition.CENTERED, 0, 1.0F, false).setButton(offButton));
+		addLabel(new GUIComponentLabel(offButton.x + offButton.width/2, offButton.y - 10, ColorRGB.BLACK, "SOURCE", null, TextPosition.CENTERED, 0, 1.0F, false).setButton(offButton));
 		addButton(localButton = new GUIComponentButton(offButton.x, offButton.y + offButton.height, offButton.width, "PC", offButton.height, true){
 			@Override
 			public void onClicked(){				
@@ -126,9 +126,9 @@ public class GUIRadio extends AGUIBase{
 		//Volume controls.
 		addButton(volUpButton = new GUIComponentButton(guiLeft + 205, offButton.y, 30, "UP"){@Override public void onClicked(){InterfacePacket.sendToServer(new PacketRadioStateChange(radio, radio.volume + 1));}});
 		addButton(volDnButton = new GUIComponentButton(volUpButton.x, volUpButton.y + volUpButton.height, volUpButton.width, "DN"){@Override public void onClicked(){InterfacePacket.sendToServer(new PacketRadioStateChange(radio, radio.volume - 1));}});
-		addTextBox(volumeDisplay = new GUIComponentTextBox(guiLeft + 180, volUpButton.y, 25, "", 40, Color.WHITE, Color.BLACK, 32));
+		addTextBox(volumeDisplay = new GUIComponentTextBox(guiLeft + 180, volUpButton.y, 25, "", 40, ColorRGB.WHITE, ColorRGB.BLACK, 32));
 		addButton(equalizerButton = new GUIComponentButton(volumeDisplay.x, volumeDisplay.y + volumeDisplay.height, volumeDisplay.width + volDnButton.width, "EQ", volUpButton.height, true){@Override public void onClicked(){equalizerMode = true;}});
-		addLabel(new GUIComponentLabel(volumeDisplay.x + volumeDisplay.width, volumeDisplay.y - 10, Color.BLACK, "VOLUME", null, TextPosition.CENTERED, 0, 1.0F, false).setButton(volUpButton));
+		addLabel(new GUIComponentLabel(volumeDisplay.x + volumeDisplay.width, volumeDisplay.y - 10, ColorRGB.BLACK, "VOLUME", null, TextPosition.CENTERED, 0, 1.0F, false).setButton(volUpButton));
 		
 		//Preset buttons.
 		presetButtons.clear();
@@ -142,7 +142,7 @@ public class GUIRadio extends AGUIBase{
 		}
 		
 		//Station display box.
-		addTextBox(stationDisplay = new GUIComponentTextBox(guiLeft + 20, guiTop + 105, 220, radio.displayText, 45, Color.WHITE, Color.BLACK, 150));
+		addTextBox(stationDisplay = new GUIComponentTextBox(guiLeft + 20, guiTop + 105, 220, radio.displayText, 45, ColorRGB.WHITE, ColorRGB.BLACK, 150));
 		
 		//Add equalizer screen buttons.
 		addButton(equalizerBackButton = new GUIComponentButton(guiLeft + 40, guiTop + 162, 80, "BACK"){@Override public void onClicked(){equalizerMode = false;}});
@@ -286,14 +286,14 @@ public class GUIRadio extends AGUIBase{
 				
 				//Render a black rectangle between the buttons.
 				int middlePoint = x + width/2;
-				InterfaceGUI.renderRectangle(middlePoint - 2 , lowerBounds, 4, upperBounds - lowerBounds, Color.BLACK);
+				InterfaceGUI.renderRectangle(middlePoint - 2 , lowerBounds, 4, upperBounds - lowerBounds, ColorRGB.BLACK);
 				
 				//Now render a red square where the equalizer value is.
 				///Level is between -1.0 and 1.0, so we need to normalize it.
 				int squareSize = 8;
 				float level = (1.0F + radio.currentStation.equalizer.getBand(bandsToSkip*(equalizerButtons.indexOf(this)/2)))/2F;
 				int bandCenter = lowerBounds - squareSize + (int)(level*((upperBounds+squareSize/2) - (lowerBounds-squareSize/2)));
-				InterfaceGUI.renderRectangle(middlePoint - squareSize/2, bandCenter, squareSize, squareSize, Color.RED);
+				InterfaceGUI.renderRectangle(middlePoint - squareSize/2, bandCenter, squareSize, squareSize, ColorRGB.RED);
 			}
 		}
 	}
