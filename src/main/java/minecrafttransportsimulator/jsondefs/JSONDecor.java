@@ -37,11 +37,11 @@ public class JSONDecor extends AJSONMultiModelProvider{
 		@JSONDescription("The texture for the GUI if the decor has an inventory.  Only used if this decor has an inventory.  If not set, the default is used.")
     	public String inventoryTexture;
 
-		@JSONDescription("The fuel capacity of the decor. Units are in milli-buckets. Only use if this decor is a fuel pump/fluid loader. If not set, a value of 15 is used.")
+		@JSONDescription("The fuel capacity of the decor. Units are in milli-buckets. Only use if this decor is a fuel pump/fluid loader. If not set, a value of 15000 is used.")
 		public int fuelCapacity;
 		
 		@JSONDescription("The quantity of fuel to pump per tick. Units are in milli-buckets. Only use if this decor is a fuel pump/fluid loader. If not set, a value of 10 is used.")
-		public int pumpQuantity;
+		public int pumpRate;
 
     	@Deprecated
     	public List<String> itemTypes;

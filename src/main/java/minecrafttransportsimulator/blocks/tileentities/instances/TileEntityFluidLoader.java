@@ -54,7 +54,7 @@ public class TileEntityFluidLoader extends TileEntityDecor implements ITileEntit
 				if(connectedPart != null){
 					if(unloadMode){
 						String fluidToUnload = connectedPart.tank.getFluid();
-						double amountToUnload = connectedPart.tank.drain(fluidToUnload, definition.decor.pumpQuantity, false);
+						double amountToUnload = connectedPart.tank.drain(fluidToUnload, definition.decor.pumpRate, false);
 						if(amountToUnload > 0){
 							amountToUnload = tank.fill(fluidToUnload, amountToUnload, true);
 							connectedPart.tank.drain(fluidToUnload, amountToUnload, true);
@@ -63,7 +63,7 @@ public class TileEntityFluidLoader extends TileEntityDecor implements ITileEntit
 						}
 					}else{
 						String fluidToLoad = tank.getFluid();
-						double amountToLoad = connectedPart.tank.fill(fluidToLoad, 100, false);
+						double amountToLoad = connectedPart.tank.fill(fluidToLoad, definition.decor.pumpRate, false);
 						if(amountToLoad > 0){
 							amountToLoad = tank.drain(fluidToLoad, amountToLoad, true);
 							connectedPart.tank.fill(fluidToLoad, amountToLoad, true);

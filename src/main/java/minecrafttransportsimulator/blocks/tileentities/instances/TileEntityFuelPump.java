@@ -109,7 +109,7 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityTi
 				}
 				//If we have room for fuel, try to add it to the vehicle.
 				if(tank.getFluidLevel() > 0){
-					double amountToFill = connectedVehicle.fuelTank.fill(tank.getFluid(), definition.decor.pumpQuantity, false);
+					double amountToFill = connectedVehicle.fuelTank.fill(tank.getFluid(), definition.decor.pumpRate, false);
 					if(amountToFill > 0){
 						double amountToDrain = tank.drain(tank.getFluid(), amountToFill, false);
 						connectedVehicle.fuelTank.fill(tank.getFluid(), amountToDrain, true);

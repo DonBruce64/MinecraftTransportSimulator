@@ -10,7 +10,7 @@
 		"height" : 1.0,
 		"depth" : 1.0,
 		"fuelCapacity": 15000,
-		"pumpQuantity": 10
+		"pumpRate": 10
 	},
 
 	"rendering": {
