@@ -218,7 +218,7 @@ public class EntityParticle extends AEntityB_Existing{
 	 */
 	public float getBlue(){
 		if(staticColor != null){
-			return staticColor.blue/255F;
+			return staticColor.blue;
 		}else{
 			return startColor.blue + (endColor.blue - startColor.blue)*age/maxAge;
 		}
