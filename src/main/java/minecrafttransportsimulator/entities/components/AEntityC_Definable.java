@@ -578,7 +578,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 		if(!clock.isUseful){
 			return clampAndScale(value, clock.animation, scale, offset);
 		}else{
-			return clampAndScale(clock.getFactoredState(this, value), clock.animation, scale, offset);
+			return clampAndScale(clock.getFactoredState(this, value, partialTicks), clock.animation, scale, offset);
 		}
 	}
 	
