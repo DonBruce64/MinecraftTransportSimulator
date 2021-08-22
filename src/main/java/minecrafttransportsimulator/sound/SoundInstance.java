@@ -14,7 +14,7 @@ import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 public class SoundInstance{
 	public final AEntityB_Existing entity;
 	public final String soundName;
-	public final Point3d position = new Point3d();
+	public final Point3d position;
 	public final boolean looping;
 	public final Radio radio;
 	
@@ -25,22 +25,17 @@ public class SoundInstance{
 	public boolean stopSound = false;
 	
 	public SoundInstance(AEntityB_Existing entity, String soundName){
-		this.entity = entity;
-		this.soundName = soundName;
-		this.looping = false;
-		this.radio = null;
+		this(entity, soundName, false, null);
 	}
 	
 	public SoundInstance(AEntityB_Existing entity, String soundName, boolean looping){
-		this.entity = entity;
-		this.soundName = soundName;
-		this.looping = looping;
-		this.radio = null;
+		this(entity, soundName, looping, null);
 	}
 
 	public SoundInstance(AEntityB_Existing entity, String soundName, boolean looping, Radio radio){
 		this.entity = entity;
 		this.soundName = soundName;
+		this.position = entity.position.copy();
 		this.looping = looping;
 		this.radio = radio;
 	}
