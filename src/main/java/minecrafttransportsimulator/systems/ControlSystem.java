@@ -210,7 +210,7 @@ public final class ControlSystem{
 		}		
 		
 		//Check flaps.
-		if(aircraft.definition.motorized.flapNotches != null){
+		if(aircraft.definition.motorized.flapNotches != null && !aircraft.definition.motorized.flapNotches.isEmpty()){
 			if(ControlsKeyboard.AIRCRAFT_FLAPS_U.isPressed()){
 				InterfacePacket.sendToServer(new PacketVehicleControlDigital(aircraft, PacketVehicleControlDigital.Controls.FLAPS, false));
 			}
