@@ -459,19 +459,21 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 				if(beamObject != null){
 					InterfaceRender.bindTexture("mts:textures/rendering/lightbeam.png");
 					//Don't set lighting if flares already did so.
-					if(flareObject == null){
+					if(!lightingDisabled){
 						InterfaceRender.setLightingState(false);
 						lightingDisabled = true;
-						if(ConfigSystem.configObject.clientRendering.beamsBright.value){
-							InterfaceRender.setBlendBright(true);
-							brightBlendEnabled = true;
-						}
-						InterfaceRender.setColorState(color, blendableBrightness);
-						colorChanged = true;
-					}else if(brightBlendEnabled && !ConfigSystem.configObject.clientRendering.beamsBright.value){
+					}
+					if(ConfigSystem.configObject.clientRendering.beamsBright.value){
+						InterfaceRender.setBlendBright(true);
+						brightBlendEnabled = true;
+					}else if(brightBlendEnabled){
 						//Bright blend was turned on for flares, turn off for beams.
 						InterfaceRender.setBlendBright(false);
 						brightBlendEnabled = false;
+					}
+					if(flareObject == null){
+						InterfaceRender.setColorState(color, blendableBrightness);
+						colorChanged = true;
 					}
 					InterfaceRender.renderVertices(beamObject);
 				}
