@@ -73,25 +73,22 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 								player.sendPacket(new PacketEntityGUIRequest(vehicle, player, PacketEntityGUIRequest.EntityGUIType.INSTRUMENTS));
 							}
 						}else if(!vehicle.world.isClient()){
-							if(part != null && !player.isSneaking()){
-								//Player can remove part.  Check that the part isn't permanent, or a part with subparts.
-								//If not, spawn item in the world and remove part.
+							if(part != null && !player.isSneaking() && !part.placementDefinition.isPermanent && part.isValid){
+								//Player can remove part,  spawn item in the world and remove part.
 								//Make sure to remove the part before spawning the item.  Some parts
 								//care about this order and won't spawn items unless they've been removed.
-								if(!part.placementDefinition.isPermanent){
-									part.disconnectAllConnections();
-									vehicle.removePart(part, null);
-									AItemPart droppedItem = part.getItem();
-									if(droppedItem != null){
-										WrapperNBT partData = new WrapperNBT();
-										part.save(partData);
-										vehicle.world.spawnItem(droppedItem, partData, part.position);
-									}
+								part.disconnectAllConnections();
+								vehicle.removePart(part, null);
+								AItemPart droppedItem = part.getItem();
+								if(droppedItem != null){
+									WrapperNBT partData = new WrapperNBT();
+									part.save(partData);
+									vehicle.world.spawnItem(droppedItem, partData, part.position);
 								}
 							}else if(player.isSneaking()){
 								//Attacker is a sneaking player with a wrench.
 								//Remove this vehicle if possible.
-								if((!ConfigSystem.configObject.general.opPickupVehiclesOnly.value || ownerState.equals(PlayerOwnerState.ADMIN)) && (!ConfigSystem.configObject.general.creativePickupVehiclesOnly.value || player.isCreative())){
+								if((!ConfigSystem.configObject.general.opPickupVehiclesOnly.value || ownerState.equals(PlayerOwnerState.ADMIN)) && (!ConfigSystem.configObject.general.creativePickupVehiclesOnly.value || player.isCreative()) && vehicle.isValid){
 									vehicle.disconnectAllConnections();
 									for(APart vehiclePart : vehicle.parts){
 										vehiclePart.disconnectAllConnections();

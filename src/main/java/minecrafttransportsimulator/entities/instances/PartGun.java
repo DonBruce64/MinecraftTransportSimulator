@@ -597,7 +597,6 @@ public class PartGun extends APart{
 				firedThisCheck = false;
 			}
 		}
-		//System.out.println(firedThisCheck);
 	}
 	
 	@Override

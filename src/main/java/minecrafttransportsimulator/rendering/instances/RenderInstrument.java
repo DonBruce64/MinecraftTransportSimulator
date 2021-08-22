@@ -137,9 +137,8 @@ public final class RenderInstrument{
 								case TRANSLATION :{
 									//Offset the coords based on the translated amount.
 									//Adjust the window to either move or scale depending on settings.
-									double variableValue = entity.getAnimatedVariableValue(animationClock, partialTicks);
-									double xTranslation = variableValue*animation.axis.x;
-									double yTranslation = variableValue*animation.axis.y;
+									double xTranslation = entity.getAnimatedVariableValue(animationClock, animation.axis.x, partialTicks);
+									double yTranslation = entity.getAnimatedVariableValue(animationClock, animation.axis.y, partialTicks);
 									if(component.extendWindow){
 										//We need to add to the edge of the window in this case rather than move the entire window.
 										if(animation.axis.x < 0){
