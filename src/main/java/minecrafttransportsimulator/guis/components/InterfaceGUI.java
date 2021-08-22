@@ -262,7 +262,8 @@ public class InterfaceGUI{
 	 *  texture, nor does it modify any OpelGL states, so it may safely be called during rendering operations.
 	 */
 	public static void renderRectangle(int x, int y, int width, int height, ColorRGB color){
-		GuiScreen.drawRect(x, y, x + width, y + height, color.rgbInt);
+		//Need to pack in a 255 alpha value or rectangles are invisible.
+		GuiScreen.drawRect(x, y, x + width, y + height, color.rgbInt | -16777216);
 	}
 	
 	/**
