@@ -127,6 +127,10 @@ public class EntityParticle extends AEntityB_Existing{
 						}
 						break;
 					}
+					case GENERIC: {
+						//Generic particles don't do any movement by default.
+						break;
+					}
 				}
 			}
 			
@@ -173,6 +177,7 @@ public class EntityParticle extends AEntityB_Existing{
 				case DRIP: return  (int)(64.0D / (Math.random() * 0.8D + 0.2D));
 				case BUBBLE: return (int)(8.0D / (Math.random() * 0.8D + 0.2D));
 				case BREAK: return (int)(4.0D / (Math.random() * 0.9D + 0.1D));
+				case GENERIC: return (int)(8.0D / (Math.random() * 0.8D + 0.2D));
 			}
 			//We'll never get here, but it makes the compiler happy.
 			return 0;

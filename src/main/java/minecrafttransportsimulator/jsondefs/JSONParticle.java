@@ -12,17 +12,14 @@ public class JSONParticle{
 	@JSONDescription("Which type of particle to use.")
 	public ParticleType type;
 	
-	@JSONDescription("A listing of animation objects for determining if this particle should spawn.  Particles will only spawn when they first become active, unless spawnEveryTick is set.")
-	public List<JSONAnimationDefinition> activeAnimations;
-	
 	@JSONDescription("Foces this particle to spawn every tick it is active.  Useful for constant particle flows, like smoke.")
 	public boolean spawnEveryTick;
 	
-	@JSONDescription("A string in hexadecimal format representing the particle's color.  Defaults to white if not set, which essentially does no color modification.")
-	public ColorRGB color;
+	@JSONDescription("How many of this particle to spawn at a time. Defaults to 1.")
+	public int quantity;
 	
-	@JSONDescription("Like above, but tells the particle to gradually change from its initial color to this value.  Defaults to be the same as the initial color.")
-	public ColorRGB toColor;
+	@JSONDescription("How long, in ticks, the particle should remain.  If not set on a defined type, the age will be auto-calculated the same way it would be for a Vanilla particle.  Defaults to 200 on any other types.")
+	public int duration;
 	
 	@JSONDescription("A number between 0.0 and 1.0 describing how transparent the particle should be.  If both this and toTransparency are not set, they are assumed to be 1.0 for both and no transparency changes will be performed.")
 	public float transparency;
@@ -36,6 +33,15 @@ public class JSONParticle{
 	@JSONDescription("Like above, but tells the particle to gradually change from its initial scale to this value.  Defaults to 1.0 if this and scale are not set.")
 	public float toScale;
 	
+	@JSONDescription("Normally particles use the standard particle texture.  However, one can specify a texture sheet to use if they wish.  Format is packID:path/to/texture.")
+	public String texture;
+	
+	@JSONDescription("A string in hexadecimal format representing the particle's color.  Defaults to white if not set, which essentially does no color modification.")
+	public ColorRGB color;
+	
+	@JSONDescription("Like above, but tells the particle to gradually change from its initial color to this value.  Defaults to be the same as the initial color.")
+	public ColorRGB toColor;
+	
 	@JSONDescription("The position where this particle should be spawned relative to the spawning object.  May be left out if the particle should spawn at the same position.")
 	public Point3d pos;
 	
@@ -48,11 +54,8 @@ public class JSONParticle{
 	@JSONDescription("The max velocity this particle can have in any axis.  Used to prevent particles from going to fast if they move a long way.")
 	public Point3d terminalVelocity;
 	
-	@JSONDescription("How many of this particle to spawn at a time. Defaults to 1.")
-	public int quantity;
-	
-	@JSONDescription("How long, in ticks, the particle should remain.  If not set on a defined type, the age will be auto-calculated the same way it would be for a Vanilla particle.  Defaults to 200 on any other types.")
-	public int duration;
+	@JSONDescription("A listing of animation objects for determining if this particle should spawn.  Particles will only spawn when they first become active, unless spawnEveryTick is set.")
+	public List<JSONAnimationDefinition> activeAnimations;
 	
 	@Deprecated
 	public Point3d velocityVector;
@@ -67,6 +70,8 @@ public class JSONParticle{
 		@JSONDescription("The standard bubble particle.")
 		BUBBLE,
 		@JSONDescription("The standard block breakage particle. The block texture to use will always be the block below this particle when first spawned.")
-		BREAK;
+		BREAK,
+		@JSONDescription("A generic particle.  This has no movement by default, so you will have to specify it.")
+		GENERIC;
 	}
 }
