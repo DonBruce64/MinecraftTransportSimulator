@@ -20,6 +20,7 @@ import minecrafttransportsimulator.jsondefs.AJSONPartProvider;
 import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition.AnimationComponentType;
+import minecrafttransportsimulator.jsondefs.JSONBullet;
 import minecrafttransportsimulator.jsondefs.JSONConnection;
 import minecrafttransportsimulator.jsondefs.JSONConnectionGroup;
 import minecrafttransportsimulator.jsondefs.JSONCraftingBench;
@@ -74,6 +75,8 @@ public final class LegacyCompatSystem{
 			performItemLegacyCompats((JSONItem) definition);
 		}else if(definition instanceof JSONSkin){
 			performSkinLegacyCompats((JSONSkin) definition);
+		}else if(definition instanceof JSONBullet){
+			performBulletLegacyCompats((JSONBullet) definition);
 		}
 		//This goes after we've made default definitions.
 		if(definition.general.modelName != null){
@@ -1293,6 +1296,36 @@ public final class LegacyCompatSystem{
 		}
 		//Make the materials empty, as the parser doesn't like them null.
 		definition.general.materials = new ArrayList<String>();
+	}
+	
+	private static void performBulletLegacyCompats(JSONBullet definition){
+		//Make rendering particle section for bullets for block hitting if it doesn't exist.
+		if(definition.rendering == null || definition.rendering.particles == null){
+			if(definition.rendering == null){
+				definition.rendering = new JSONRendering();
+			}
+			if(definition.rendering.particles == null){
+				definition.rendering.particles = new ArrayList<JSONParticle>();
+			}
+			
+			//Block hit particle.
+			JSONParticle particleDef = new JSONParticle();
+			particleDef = new JSONParticle();
+			particleDef.type = ParticleType.BREAK;
+			particleDef.color = new ColorRGB("999999");
+			particleDef.quantity = 4;
+			particleDef.scale = 0.3F;
+			particleDef.pos = new Point3d(0, 0.5, 0);
+			particleDef.initialVelocity = new Point3d(0, 1.5, 0);
+			particleDef.activeAnimations = new ArrayList<JSONAnimationDefinition>();
+			JSONAnimationDefinition activeAnimation = new JSONAnimationDefinition();
+			activeAnimation.animationType = AnimationComponentType.VISIBILITY;
+			activeAnimation.variable = "bullet_hit_block";
+			activeAnimation.clampMin = 1.0F;
+			activeAnimation.clampMax = 1.0F;
+			particleDef.activeAnimations.add(activeAnimation);
+			definition.rendering.particles.add(particleDef);
+		}
 	}
 	
 	private static void performVehiclePartDefLegacyCompats(JSONPartDefinition partDef){

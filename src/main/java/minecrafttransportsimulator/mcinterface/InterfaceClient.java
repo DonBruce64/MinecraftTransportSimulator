@@ -2,9 +2,13 @@ package minecrafttransportsimulator.mcinterface;
 
 import org.lwjgl.openal.AL;
 
+import minecrafttransportsimulator.baseclasses.Point3d;
+import net.minecraft.block.SoundType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.SoundCategory;
+import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.relauncher.Side;
 
@@ -117,5 +121,16 @@ public class InterfaceClient{
 	 */
 	public static boolean isSoundSystemReady(){
 		return AL.isCreated();
+	}
+	
+	/**
+	 *  Plays the block breaking sound for the block at the passed-in position.
+	 */
+	public static void playBlockBreakSound(Point3d position){
+		BlockPos pos = new BlockPos(position.x, position.y, position.z);
+		if(!Minecraft.getMinecraft().world.isAirBlock(pos)){
+			SoundType soundType = Minecraft.getMinecraft().world.getBlockState(pos).getBlock().getSoundType(Minecraft.getMinecraft().world.getBlockState(pos), Minecraft.getMinecraft().player.world, pos, null);
+			Minecraft.getMinecraft().world.playSound(Minecraft.getMinecraft().player, pos, soundType.getBreakSound(), SoundCategory.BLOCKS, soundType.getVolume(), soundType.getPitch());
+		}
 	}
 }

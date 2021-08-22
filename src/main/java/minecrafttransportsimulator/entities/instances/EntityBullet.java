@@ -31,15 +31,19 @@ import minecrafttransportsimulator.systems.ConfigSystem;
  */
 
 public class EntityBullet extends AEntityC_Definable<JSONBullet>{	
+	//Properties
 	private final PartGun gun;
 	public final int bulletNumber;
 	private final double initialVelocity;
 	private final double anglePerTickSpeed;
 	private final Point3d velocityToAddEachTick;
+	
+	//States
 	private Point3d targetPosition;
 	public double targetDistance;
 	private WrapperEntity externalEntityTargeted;
 	private PartEngine engineTargeted;
+	private HitType lastHit;
 	
 	private static RenderBullet renderer;
 	
@@ -56,7 +60,7 @@ public class EntityBullet extends AEntityC_Definable<JSONBullet>{
         }else{
         	velocityToAddEachTick = new Point3d();
         }
-        angles.set(getPitch(), getYaw(), 0);
+        angles.setTo(motion.copy().normalize().getAngles());
         prevAngles.setTo(angles);
     }
     
@@ -128,12 +132,14 @@ public class EntityBullet extends AEntityC_Definable<JSONBullet>{
 						//If we didn't, see if we hit a part instead.
 						if(armorBoxHit != null){
 							InterfacePacket.sendToServer(new PacketPartGunBulletHit(gun, this, armorBoxHit, entity));
+							lastHit = HitType.ARMOR;
 							remove();
 							return false;
 						}else{
 							for(BoundingBox hitBox : hitBoxes){
 								if(baseEntity instanceof AEntityE_Multipart && ((AEntityE_Multipart<?>) baseEntity).getPartWithBox(hitBox) != null){
 									InterfacePacket.sendToServer(new PacketPartGunBulletHit(gun, this, hitBox, entity));
+									lastHit = HitType.PART;
 									remove();
 									return false;
 								}
@@ -143,6 +149,7 @@ public class EntityBullet extends AEntityC_Definable<JSONBullet>{
 						//Must of hit a normal entity.  Set our box to the entity's box and attack it.
 						boundingBox.globalCenter.setTo(entity.getPosition());
 						InterfacePacket.sendToServer(new PacketPartGunBulletHit(gun, this, boundingBox, entity));
+						lastHit = HitType.ENTITY;
 						remove();
 						return false;
 					}
@@ -154,6 +161,7 @@ public class EntityBullet extends AEntityC_Definable<JSONBullet>{
 			if(hitPos != null){
 				boundingBox.globalCenter.setTo(hitPos);
 				InterfacePacket.sendToServer(new PacketPartGunBulletHit(gun, this, boundingBox, null));
+				lastHit = HitType.BLOCK;
 				remove();
 				return false;
 			}
@@ -164,6 +172,7 @@ public class EntityBullet extends AEntityC_Definable<JSONBullet>{
 					double distanceUntilImpact = position.distanceTo(targetPosition);
 					if(distanceUntilImpact <= definition.bullet.proximityFuze){
 						InterfacePacket.sendToServer(new PacketPartGunBulletHit(gun, this, boundingBox, null));
+						lastHit = externalEntityTargeted != null ? HitType.ENTITY : (engineTargeted != null ? HitType.PART : HitType.BLOCK);
 						remove();
 						return false;
 					}
@@ -171,6 +180,7 @@ public class EntityBullet extends AEntityC_Definable<JSONBullet>{
 				Point3d projectedImpactPoint = world.getBlockHit(position, motion.copy().normalize().multiply(definition.bullet.proximityFuze));
 				if(projectedImpactPoint != null){
 					InterfacePacket.sendToServer(new PacketPartGunBulletHit(gun, this, boundingBox, null));
+					lastHit = HitType.BLOCK;
 					remove();
 					return false;
 				}
@@ -180,6 +190,7 @@ public class EntityBullet extends AEntityC_Definable<JSONBullet>{
 			if(definition.bullet.airBurstDelay != 0) {
 				if(ticksExisted > definition.bullet.airBurstDelay){
 					InterfacePacket.sendToServer(new PacketPartGunBulletHit(gun, this, boundingBox, null));
+					lastHit = HitType.BURST;
 					remove();
 					return false;
 				}
@@ -252,34 +263,33 @@ public class EntityBullet extends AEntityC_Definable<JSONBullet>{
 							}
 						}
 						
-						double deltaYaw = yawTarget - this.getYaw();
-						double deltaPitch = pitchTarget - this.getPitch();
+						Point3d deltas = motion.copy().normalize().getAngles().add(-pitchTarget, -yawTarget, 0).multiply(-1);
 						//Adjust deltaYaw as necessary, then apply it
-						while(deltaYaw > 180)deltaYaw -= 360;
-						while(deltaYaw < -180)deltaYaw += 360;
-						if(deltaYaw < 0){
-							if(deltaYaw < -anglePerTickSpeed){
-								deltaYaw = -anglePerTickSpeed;
+						while(deltas.y > 180)deltas.y -= 360;
+						while(deltas.y < -180)deltas.y += 360;
+						if(deltas.y < 0){
+							if(deltas.y < -anglePerTickSpeed){
+								deltas.y = -anglePerTickSpeed;
 							}
-							motion.rotateFine(new Point3d(0, deltaYaw, 0)); 
-						}else if(deltaYaw > 0){
-							if(deltaYaw > anglePerTickSpeed){
-								deltaYaw = anglePerTickSpeed;
+							motion.rotateY(deltas.y);
+						}else if(deltas.y > 0){
+							if(deltas.y > anglePerTickSpeed){
+								deltas.y = anglePerTickSpeed;
 							}
-							motion.rotateFine(new Point3d(0, deltaYaw, 0)); 
+							motion.rotateY(deltas.y); 
 						}
 						
 						//Axis for pitch is orthogonal to the horizontal velocity vector
-						if(deltaPitch < 0){
-							if(deltaPitch < -anglePerTickSpeed){
-								deltaPitch = -anglePerTickSpeed;
+						if(deltas.x < 0){
+							if(deltas.x < -anglePerTickSpeed){
+								deltas.x = -anglePerTickSpeed;
 							}
-							motion.rotateFine((new Point3d(motion.z, 0, -1*motion.x)).multiply(deltaPitch)); 
-						}else if(deltaPitch > 0){
-							if(deltaPitch > anglePerTickSpeed){
-								deltaPitch = anglePerTickSpeed;
+							motion.rotateFine((new Point3d(motion.z, 0, -1*motion.x)).multiply(deltas.x)); 
+						}else if(deltas.x > 0){
+							if(deltas.x > anglePerTickSpeed){
+								deltas.x = anglePerTickSpeed;
 							}
-							motion.rotateFine((new Point3d(motion.z, 0, -1*motion.x)).multiply(deltaPitch)); 
+							motion.rotateFine((new Point3d(motion.z, 0, -1*motion.x)).multiply(deltas.x)); 
 						}
 					}
 				}	
@@ -288,12 +298,35 @@ public class EntityBullet extends AEntityC_Definable<JSONBullet>{
 			//Add our updated motion to the position.
 			//Then set the angles to match the motion.
 			//Doing this last lets us damage on the first update tick.
-			angles.set(getPitch(), getYaw(), 0);
+			angles.setTo(angles.setTo(motion).normalize().getAngles());
 			position.add(motion);
 			return true;
 		}else{
 			return false;
 		}
+	}
+    
+    @Override
+	public void remove(){
+    	//Check one final time for particles in case we have some that spawn when we hit something.
+    	if(world.isClient()){
+    		this.spawnParticles(0);
+    	}
+    	super.remove();
+    }
+    
+    @Override
+	public double getRawVariableValue(String variable, float partialTicks){
+		switch(variable){
+			case("bullet_hit"): return lastHit != null ? 1 : 0;	
+			case("bullet_hit_block"): return HitType.BLOCK.equals(lastHit) ? 1 : 0;
+			case("bullet_hit_entity"): return HitType.ENTITY.equals(lastHit) ? 1 : 0;
+			case("bullet_hit_part"): return HitType.PART.equals(lastHit) ? 1 : 0;
+			case("bullet_hit_armor"): return HitType.ARMOR.equals(lastHit) ? 1 : 0;
+			case("bullet_hit_burst"): return HitType.BURST.equals(lastHit) ? 1 : 0;
+		}
+		
+		return super.getRawVariableValue(variable, partialTicks);
 	}
 	
 	@Override
@@ -306,14 +339,6 @@ public class EntityBullet extends AEntityC_Definable<JSONBullet>{
 		return false;
 	}
 	
-	private double getYaw(){
-		return Math.toDegrees(Math.atan2(motion.x, motion.z));
-	}
-	
-	private double getPitch(){
-		return -Math.toDegrees(Math.atan2(motion.y, Math.hypot(motion.x, motion.z)));
-	}
-	
 	@Override
 	@SuppressWarnings("unchecked")
 	public RenderBullet getRenderer(){
@@ -321,5 +346,13 @@ public class EntityBullet extends AEntityC_Definable<JSONBullet>{
 			renderer = new RenderBullet();
 		}
 		return renderer;
+	}
+	
+	private static enum HitType{
+		BLOCK,
+		ENTITY,
+		PART,
+		ARMOR,
+		BURST;
 	}
 }

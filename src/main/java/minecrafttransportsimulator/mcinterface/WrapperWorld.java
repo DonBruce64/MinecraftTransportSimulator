@@ -815,6 +815,16 @@ public class WrapperWorld{
 	}
 	
 	/**
+	 *  Extinguishes the block at the passed-in position if it's fire.
+	 *  If it is not fire, then the block is not modified.
+	 *  Note that the position assumes the block hit is the one that is on fire,
+	 *  not that the fire itself was hit.  This is because fire blocks do not have collision.
+	 */
+	public void extinguish(Point3d position){
+		world.extinguishFire(null, new BlockPos(position.x, position.y, position.z), EnumFacing.UP);
+	}
+	
+	/**
 	 *  Tries to fertilize the block at the passed-in position with the passed-in stack.
 	 *  Returns true if the block was fertilized.
 	 */
