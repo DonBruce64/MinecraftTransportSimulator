@@ -23,8 +23,11 @@ public class JSONSound{
 	@JSONDescription("If the sound should loop, set this to true.  Be aware that unless the volume is set to 0 or below, or the sound is blocked via visibility variables or inhibitors, then it will keep playing forever and take up a sound slot!")
 	public boolean looping;
 	
-	@JSONDescription("Normally, sounds won't play if there's already a sound playing.  If you want this sound to be played every tick the activeAnimations say that it should be active, set this to true.  Mainly used for sounds on guns that need to be played every tick the gun fires, even if such a sound is still playing from the last firing tick, but may be used for other things.  Looping sounds is HIGHLY preferred to this if possible.")
+	@JSONDescription("Normally, sounds won't play if there's already a sound playing.  If you want this sound to be played every tick the activeAnimations say that it should be active, set this to true.  Mainly used for sounds on engines and wheels that can occur in the same tick back-to-back, but may be used for other things.  Looping sounds is HIGHLY preferred to this if possible.")
 	public boolean forceSound;
+	
+	@JSONDescription("Normally, sounds are only checked every tick for playing.  However, some sounds, like guns with firing rates of 1 tick or less, or engine cylinder cam-based sounds, will occur more than once a tick.  You may set this to have these sounds play more than once a tick, but be warned that it will result in a drop in FPS, so only set this if absolutely required!")
+	public boolean canPlayOnPartialTicks;
 	
 	@JSONDescription("This causes the sound to only play if the player is riding this entity and is in first-person.")
 	public boolean isInterior;

@@ -132,6 +132,10 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 			if(!blendingEnabled && !InterfaceClient.isGamePaused()){
 				entity.spawnParticles(partialTicks);
 			}
+			
+			//Handle sounds.  These will be partial-tick only ones.
+			//Normal sounds are handled on the main tick loop.
+			entity.updateSounds(partialTicks);
 		}
 		
 		//Render supplementals.

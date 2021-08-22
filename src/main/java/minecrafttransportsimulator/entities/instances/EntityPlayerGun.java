@@ -7,6 +7,7 @@ import java.util.Map;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
+import minecrafttransportsimulator.entities.instances.PartGun.GunState;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemPartGun;
@@ -204,9 +205,9 @@ public class EntityPlayerGun extends AEntityE_Multipart<JSONPlayerGun>{
 					
 					if(!world.isClient()){
 						//Save gun data if we stopped firing the prior tick.
-						if(activeGun.firingEnabled){
+						if(activeGun.state.isAtLeast(GunState.FIRING_CURRENTLY)){
 							didGunFireLastTick = true;
-						}else if(!activeGun.firingEnabled && didGunFireLastTick){
+						}else if(didGunFireLastTick){
 							saveGun(false);
 						}
 					}else{

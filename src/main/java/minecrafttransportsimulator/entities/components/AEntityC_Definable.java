@@ -640,243 +640,241 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	public abstract <RendererInstance extends ARenderEntity<AnimationEntity>, AnimationEntity extends AEntityC_Definable<?>> RendererInstance getRenderer();
     
     @Override
-    public void updateSounds(){
-    	super.updateSounds();
+    public void updateSounds(float partialTicks){
+    	super.updateSounds(partialTicks);
     	//Check all sound defs and update the existing sounds accordingly.
     	for(JSONSound soundDef : allSoundDefs){
-    		//Check if the sound should be playing before we try to update state.
-    		AEntityD_Interactable<?> entityRiding = InterfaceClient.getClientPlayer().getEntityRiding();
-    		boolean playerRidingEntity = this.equals(entityRiding) || (this instanceof APart && ((APart) this).entityOn.equals(entityRiding));
-    		boolean shouldSoundPlay = playerRidingEntity && InterfaceClient.inFirstPerson() && !CameraSystem.areCustomCamerasActive() ? !soundDef.isExterior : !soundDef.isInterior;
-			boolean anyClockMovedThisUpdate = false;
-			boolean inhibitAnimations = false;
-			if(shouldSoundPlay){
-				for(DurationDelayClock clock : soundActiveClocks.get(soundDef)){
-					switch(clock.animation.animationType){
-						case VISIBILITY :{
-							//We use the clock here to check if the state of the variable changed, not
-							//to clamp the value used in the testing.
-							if(!inhibitAnimations){
-								double variableValue = getAnimatedVariableValue(clock, 0);
-								if(!anyClockMovedThisUpdate){
-									anyClockMovedThisUpdate = clock.movedThisUpdate;
+    		if(soundDef.canPlayOnPartialTicks ^ partialTicks == 0){
+	    		//Check if the sound should be playing before we try to update state.
+	    		AEntityD_Interactable<?> entityRiding = InterfaceClient.getClientPlayer().getEntityRiding();
+	    		boolean playerRidingEntity = this.equals(entityRiding) || (this instanceof APart && ((APart) this).entityOn.equals(entityRiding));
+	    		boolean shouldSoundPlay = playerRidingEntity && InterfaceClient.inFirstPerson() && !CameraSystem.areCustomCamerasActive() ? !soundDef.isExterior : !soundDef.isInterior;
+				boolean anyClockMovedThisUpdate = false;
+				boolean inhibitAnimations = false;
+				if(shouldSoundPlay){
+					for(DurationDelayClock clock : soundActiveClocks.get(soundDef)){
+						switch(clock.animation.animationType){
+							case VISIBILITY :{
+								//We use the clock here to check if the state of the variable changed, not
+								//to clamp the value used in the testing.
+								if(!inhibitAnimations){
+									double variableValue = getAnimatedVariableValue(clock, partialTicks);
+									if(!anyClockMovedThisUpdate){
+										anyClockMovedThisUpdate = clock.movedThisUpdate;
+									}
+									if(variableValue < clock.animation.clampMin || variableValue > clock.animation.clampMax){
+										shouldSoundPlay = false;
+									}
 								}
-								if(variableValue < clock.animation.clampMin || variableValue > clock.animation.clampMax){
-									shouldSoundPlay = false;
-								}
+								break;
 							}
-							break;
-						}
-						case INHIBITOR :{
-							if(!inhibitAnimations){
-								double variableValue = getAnimatedVariableValue(clock, 0);
-								if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
-									inhibitAnimations = true;
+							case INHIBITOR :{
+								if(!inhibitAnimations){
+									double variableValue = getAnimatedVariableValue(clock, partialTicks);
+									if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
+										inhibitAnimations = true;
+									}
 								}
+								break;
 							}
-							break;
-						}
-						case ACTIVATOR :{
-							if(inhibitAnimations){
-								double variableValue = getAnimatedVariableValue(clock, 0);
-								if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
-									inhibitAnimations = false;
+							case ACTIVATOR :{
+								if(inhibitAnimations){
+									double variableValue = getAnimatedVariableValue(clock, partialTicks);
+									if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
+										inhibitAnimations = false;
+									}
 								}
+								break;
 							}
+							case TRANSLATION :{
+								//Do nothing.
+								break;
+							}
+							case ROTATION :{
+								//Do nothing.
+								break;
+							}
+							case SCALING :{
+								//Do nothing.
+								break;
+							}
+						}
+						
+						if(!shouldSoundPlay){
+							//Don't need to process any further as we can't play.
 							break;
 						}
-						case TRANSLATION :{
-							//Do nothing.
-							break;
+					}
+				}
+				
+				//If we aren't a looping or repeating sound, check if we had a clock-movement to trigger us.
+				//If we didn't, then we shouldn't play, even if all states are true.
+				if(!soundDef.looping && !soundDef.forceSound && !anyClockMovedThisUpdate){
+					shouldSoundPlay = false;
+				}
+				
+				if(shouldSoundPlay){
+					//Sound should play.  If it's not playing, start it.
+					boolean isSoundPlaying = false;
+					if(!soundDef.forceSound){
+						for(SoundInstance sound : sounds){
+							if(sound.soundName.equals(soundDef.name)){
+								isSoundPlaying = true;
+								break;
+							}
 						}
-						case ROTATION :{
-							//Do nothing.
-							break;
-						}
-						case SCALING :{
-							//Do nothing.
-							break;
+					}
+					if(!isSoundPlaying){
+						InterfaceSound.playQuickSound(new SoundInstance(this, soundDef.name, soundDef.looping));
+					}
+				}else{
+					if(soundDef.looping){
+						//If sound is playing, stop it.
+						for(SoundInstance sound : sounds){
+							if(sound.soundName.equals(soundDef.name)){
+								sound.stopSound = true;
+								break;
+							}
 						}
 					}
 					
-					if(!shouldSoundPlay){
-						//Don't need to process any further as we can't play.
-						break;
-					}
-				}
-			}
-			
-			//If we aren't a looping or repeating sound, check if we had a clock-movement to trigger us.
-			//If we didn't, then we shouldn't play, even if all states are true.
-			if(!soundDef.looping && !soundDef.forceSound && !anyClockMovedThisUpdate){
-				shouldSoundPlay = false;
-			}
-			
-			if(shouldSoundPlay){
-				//Sound should play.  If it's not playing, start it.
-				boolean isSoundPlaying = false;
-				if(!soundDef.forceSound){
-					for(SoundInstance sound : sounds){
-						if(sound.soundName.equals(soundDef.name)){
-							isSoundPlaying = true;
-							break;
-						}
-					}
-				}
-				if(!isSoundPlaying){
-					InterfaceSound.playQuickSound(new SoundInstance(this, soundDef.name, soundDef.looping));
-				}
-			}else{
-				if(soundDef.looping){
-					//If sound is playing, stop it.
-					for(SoundInstance sound : sounds){
-						if(sound.soundName.equals(soundDef.name)){
-							sound.stopSound = true;
-							break;
-						}
-					}
+					//Go to the next soundDef.  No need to change properties on sounds that shouldn't play.
+					continue;
 				}
 				
-				//Go to the next soundDef.  No need to change properties on sounds that shouldn't play.
-				continue;
-			}
-			
-			//Sound should be playing.  If it's part of the sound list, update properties.
-			//Sounds may not be in the list if they have just been queued and haven't started yet.
-			SoundInstance sound = null;
-			for(SoundInstance activeSound : sounds){
-				if(activeSound.soundName.equals(soundDef.name)){
-					sound = activeSound;
-					break;
-				}
-			}
-			
-			if(sound != null){
-				//Adjust volume.
-				boolean definedVolume = false;
-				inhibitAnimations = false;
-				sound.volume = 0;
-				for(DurationDelayClock clock : soundVolumeClocks.get(soundDef)){
-					switch(clock.animation.animationType){
-						case TRANSLATION :{
-							if(!inhibitAnimations){
-								definedVolume = true;
-								sound.volume += getAnimatedVariableValue(clock, clock.animation.axis.y, 0);
-							}
-							break;
-						}
-						case ROTATION :{
-							if(!inhibitAnimations){
-								definedVolume = true;
-								//Parobola is defined with parameter A being x, and H being z.
-								double parabolaValue = getAnimatedVariableValue(clock, clock.animation.axis.y, -clock.animation.offset, 0);
-								sound.volume += clock.animation.axis.x*Math.pow(parabolaValue - clock.animation.axis.z, 2) + clock.animation.offset;
-							}
-							break;
-						}
-						case INHIBITOR :{
-							if(!inhibitAnimations){
-								double variableValue = getAnimatedVariableValue(clock, 0);
-								if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
-									inhibitAnimations = true;
+				//Sound should be playing.  If it's part of the sound list, update properties.
+				//Sounds may not be in the list if they have just been queued and haven't started yet.
+				for(SoundInstance sound : sounds){
+					if(sound.soundName.equals(soundDef.name)){
+						if(sound != null){
+							//Adjust volume.
+							boolean definedVolume = false;
+							inhibitAnimations = false;
+							sound.volume = 0;
+							for(DurationDelayClock clock : soundVolumeClocks.get(soundDef)){
+								switch(clock.animation.animationType){
+									case TRANSLATION :{
+										if(!inhibitAnimations){
+											definedVolume = true;
+											sound.volume += getAnimatedVariableValue(clock, clock.animation.axis.y, partialTicks);
+										}
+										break;
+									}
+									case ROTATION :{
+										if(!inhibitAnimations){
+											definedVolume = true;
+											//Parobola is defined with parameter A being x, and H being z.
+											double parabolaValue = getAnimatedVariableValue(clock, clock.animation.axis.y, -clock.animation.offset, partialTicks);
+											sound.volume += clock.animation.axis.x*Math.pow(parabolaValue - clock.animation.axis.z, 2) + clock.animation.offset;
+										}
+										break;
+									}
+									case INHIBITOR :{
+										if(!inhibitAnimations){
+											double variableValue = getAnimatedVariableValue(clock, partialTicks);
+											if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
+												inhibitAnimations = true;
+											}
+										}
+										break;
+									}
+									case ACTIVATOR :{
+										if(inhibitAnimations){
+											double variableValue = getAnimatedVariableValue(clock, partialTicks);
+											if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
+												inhibitAnimations = false;
+											}
+										}
+										break;
+									}
+									case SCALING :{
+										//Do nothing.
+										break;
+									}
+									case VISIBILITY :{
+										//Do nothing.
+										break;
+									}
 								}
 							}
-							break;
-						}
-						case ACTIVATOR :{
-							if(inhibitAnimations){
-								double variableValue = getAnimatedVariableValue(clock, 0);
-								if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
-									inhibitAnimations = false;
+							if(!definedVolume){
+								sound.volume = 1;
+							}else if(sound.volume < 0){
+								sound.volume = 0;
+							}
+							
+							//If the player is in a closed-top vehicle that isn't this one, dampen the sound
+							//Unless it's a radio, in which case don't do so.
+							if(!playerRidingEntity && sound.radio == null && entityRiding instanceof EntityVehicleF_Physics && !((EntityVehicleF_Physics) entityRiding).definition.motorized.hasOpenTop && InterfaceClient.inFirstPerson() && !CameraSystem.areCustomCamerasActive()){
+								sound.volume *= 0.5F;
+							}
+							
+							//Adjust pitch.
+							boolean definedPitch = false;
+							inhibitAnimations = false;
+							sound.pitch = 0;
+							for(DurationDelayClock clock : soundPitchClocks.get(soundDef)){
+								switch(clock.animation.animationType){
+									case TRANSLATION :{
+										if(!inhibitAnimations){
+											definedPitch = true;
+											sound.pitch += getAnimatedVariableValue(clock, clock.animation.axis.y, partialTicks);
+										}
+										break;
+									}
+									case ROTATION :{
+										if(!inhibitAnimations){
+											definedPitch = true;
+											//Parobola is defined with parameter A being x, and H being z.
+											double parabolaValue = getAnimatedVariableValue(clock, clock.animation.axis.y, -clock.animation.offset, partialTicks);
+											sound.pitch += clock.animation.axis.x*Math.pow(parabolaValue - clock.animation.axis.z, 2) + clock.animation.offset;
+										}
+										break;
+									}
+									case INHIBITOR :{
+										if(!inhibitAnimations){
+											double variableValue = getAnimatedVariableValue(clock, partialTicks);
+											if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
+												inhibitAnimations = true;
+											}
+										}
+										break;
+									}
+									case ACTIVATOR :{
+										if(inhibitAnimations){
+											double variableValue = getAnimatedVariableValue(clock, partialTicks);
+											if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
+												inhibitAnimations = false;
+											}
+										}
+										break;
+									}
+									case SCALING :{
+										//Do nothing.
+										break;
+									}
+									case VISIBILITY :{
+										//Do nothing.
+										break;
+									}
 								}
 							}
-							break;
-						}
-						case SCALING :{
-							//Do nothing.
-							break;
-						}
-						case VISIBILITY :{
-							//Do nothing.
-							break;
-						}
+							if(!definedPitch){
+								sound.pitch = 1;
+							}else if(sound.pitch < 0){
+								sound.pitch = 0;
+							}
+							
+							//Adjust position.
+							if(soundDef.pos != null){
+								sound.position.setTo(soundDef.pos).rotateFine(angles).add(position);
+							}else{
+								sound.position.setTo(position);
+							}
+						}						
 					}
 				}
-				if(!definedVolume){
-					sound.volume = 1;
-				}else if(sound.volume < 0){
-					sound.volume = 0;
-				}
-				
-				//If the player is in a closed-top vehicle that isn't this one, dampen the sound
-				//Unless it's a radio, in which case don't do so.
-				if(!playerRidingEntity && sound.radio == null && entityRiding instanceof EntityVehicleF_Physics && !((EntityVehicleF_Physics) entityRiding).definition.motorized.hasOpenTop && InterfaceClient.inFirstPerson() && !CameraSystem.areCustomCamerasActive()){
-					sound.volume *= 0.5F;
-				}
-				
-				//Adjust pitch.
-				boolean definedPitch = false;
-				inhibitAnimations = false;
-				sound.pitch = 0;
-				for(DurationDelayClock clock : soundPitchClocks.get(soundDef)){
-					switch(clock.animation.animationType){
-						case TRANSLATION :{
-							if(!inhibitAnimations){
-								definedPitch = true;
-								sound.pitch += getAnimatedVariableValue(clock, clock.animation.axis.y, 0);
-							}
-							break;
-						}
-						case ROTATION :{
-							if(!inhibitAnimations){
-								definedPitch = true;
-								//Parobola is defined with parameter A being x, and H being z.
-								double parabolaValue = getAnimatedVariableValue(clock, clock.animation.axis.y, -clock.animation.offset, 0);
-								sound.pitch += clock.animation.axis.x*Math.pow(parabolaValue - clock.animation.axis.z, 2) + clock.animation.offset;
-							}
-							break;
-						}
-						case INHIBITOR :{
-							if(!inhibitAnimations){
-								double variableValue = getAnimatedVariableValue(clock, 0);
-								if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
-									inhibitAnimations = true;
-								}
-							}
-							break;
-						}
-						case ACTIVATOR :{
-							if(inhibitAnimations){
-								double variableValue = getAnimatedVariableValue(clock, 0);
-								if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
-									inhibitAnimations = false;
-								}
-							}
-							break;
-						}
-						case SCALING :{
-							//Do nothing.
-							break;
-						}
-						case VISIBILITY :{
-							//Do nothing.
-							break;
-						}
-					}
-				}
-				if(!definedPitch){
-					sound.pitch = 1;
-				}else if(sound.pitch < 0){
-					sound.pitch = 0;
-				}
-				
-				//Adjust position.
-				if(soundDef.pos != null){
-					sound.position.setTo(soundDef.pos).rotateFine(angles).add(position);
-				}else{
-					sound.position.setTo(position);
-				}
-			}
+    		}
     	}
     }
 	

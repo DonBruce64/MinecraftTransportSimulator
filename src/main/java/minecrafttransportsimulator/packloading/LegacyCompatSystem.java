@@ -776,6 +776,7 @@ public final class LegacyCompatSystem{
 				JSONSound firingSound = new JSONSound();
 				firingSound.name = definition.packID + ":" + definition.systemName + "_firing";
 				firingSound.forceSound = true;
+				firingSound.canPlayOnPartialTicks = definition.gun.fireDelay < 2;
 				firingSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
 				JSONAnimationDefinition firingDef = new JSONAnimationDefinition();
 				firingDef.animationType = AnimationComponentType.VISIBILITY;

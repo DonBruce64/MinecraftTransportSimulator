@@ -309,9 +309,6 @@ public class JSONPart extends AJSONPartProvider{
 		@JSONDescription("The capacity of the gun, in number of bullets.")
     	public int capacity;
 		
-		@JSONDescription("The delay, in ticks, between the firing of bullets.  Setting this value to 1 or less will make a bullet fire every tick.  This means that the max firing rate for guns is 1200 rounds a minute.  While this is less than some guns in real-life, this is also Minecraft and spawning things between ticks and at rapid rates leads to lag.  And that's more deadly than a gun.")
-    	public int fireDelay;
-		
 		@JSONDescription("How long, in ticks, this gun takes to reload.  This is applied for hand-held reloading as well as automatic reloading.  This value should be similar to the duration of your gun _reloading sound to ensure players don't get confused about why they can't fire their guns.")
     	public int reloadTime;
 		
@@ -320,6 +317,9 @@ public class JSONPart extends AJSONPartProvider{
 		
 		@JSONDescription("How fast, in m/s, the bullet will exit the barrel of this gun.  May be 0 in cases where bombers are concerned, as the exit velocity of the barrel is this value PLUS the velocity of the vehicle that's firing the bullet.")
     	public int muzzleVelocity;
+		
+		@JSONDescription("The delay, in ticks, between the firing of bullets.  Allows for fractions for partial tick firing, though if you do this ensure your firing sounds also will play on those partial ticks.")
+    	public float fireDelay;
 		
 		@JSONDescription("How much velocity, each tick, should be added in the -Y direction.  Used to make bullets travel in arcs.")
     	public float gravitationalVelocity;
@@ -370,9 +370,6 @@ public class JSONPart extends AJSONPartProvider{
         @JSONRequired(dependentField="handHeld", dependentValues={"true"})
     	@JSONDescription("Like the normal offset, but this applies when the player starts sneaking/aiming.")
 		public Point3d handHeldAimedOffset;
-        
-		@JSONDescription("An optional list of positions. Bullets will be fired the defined positions (or the origin if no positions are defined) plus one barrel-length in the +Z axis in the direction the gun is rotated. There are 2 possible cases when using muzzlePositions:\nIf there are the same number of muzzlePositions as the capacity of the gun, the gun will cycle through each of the muzzle positions in order. The order will be the same every time, and reloading will reset the order proportionate to how many bullets were reloaded. This is useful for rocket pods, missile launchers, and bombs.\nIf the number of muzzlePositions doesn't match the capacity, the gun will cycle through the positions, resetting to the first muzzle once the last one has been used. This is useful for guns with multiple barrels, like anti-air/flak guns and some airplane turrets. If only one muzzle position is defined, it will use the same position every time.")
-    	public List<Point3d> muzzlePositions;
     }
     
     public class JSONPartInteractable{

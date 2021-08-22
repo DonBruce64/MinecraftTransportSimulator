@@ -70,7 +70,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	public boolean update(){
 		if(super.update()){
 			if(world.isClient()){
-				updateSounds();
+				updateSounds(0);
 			}
 			prevPosition.setTo(position);
 			prevMotion.setTo(motion);
@@ -150,12 +150,13 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
     
     /**
 	 *  This method should start/stop any sounds, and change any existing sound properties when called.
-	 *  Called at the start of every update tick to update sounds, as this catches the updates from the prior tick
-	 *  and allows for use of a simplified super() call in updates while at the same time keeping all sound code isolated.
+	 *  Called at the start of every update tick to update sounds, and on partial tick frames.  You can
+	 *  tell if the method is being called on a partial tick if the partial ticks parameter is non-zero.
+	 *  Use this to ensure you don't query slow-activating sounds every frame.
 	 */
-    public void updateSounds(){
-    	//Update radio of we have one.
-    	if(radio != null){
+    public void updateSounds(float partialTicks){
+    	//Update radio of we have one and we're on the main update.
+    	if(radio != null && partialTicks == 0){
 			radio.update();
 		}
     }

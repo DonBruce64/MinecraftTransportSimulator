@@ -44,7 +44,7 @@ public final class RenderPart extends ARenderEntity<APart>{
 		//Draw the gun muzzle bounding boxes.
 		if(part instanceof PartGun){
 			InterfaceRender.setColorState(ColorRGB.BLUE);
-			Point3d origin = ((PartGun) part).getFiringOrigin().rotateFine(part.localAngles).rotateFine(part.entityOn.angles).add(entityPositionDelta);
+			Point3d origin = new Point3d(0, 0, part.definition.gun.length).rotateFine(part.localAngles).rotateFine(part.entityOn.angles).add(entityPositionDelta);
 			GL11.glTranslated(origin.x, origin.y, origin.z);
 			RenderBoundingBox.renderWireframe(new BoundingBox(origin, 0.25, 0.25, 0.25));
 			GL11.glTranslated(-origin.x, -origin.y, -origin.z);
