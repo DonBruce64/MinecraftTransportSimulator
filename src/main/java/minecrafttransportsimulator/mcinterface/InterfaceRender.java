@@ -14,6 +14,7 @@ import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.stream.ImageInputStream;
 
+import org.lwjgl.opengl.ARBShaderObjects;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
@@ -47,6 +48,8 @@ public class InterfaceRender{
 	private static final Map<String, ParsedGIF> animatedGIFs = new HashMap<String, ParsedGIF>();
 	private static String pushedTextureLocation;
 	private static boolean boundSinceLastPush;
+	private static float lastLightmapX;
+	private static float lastLightmapY;
 	
 	/**
 	 *  Caches the vertices in some form for quick rendering.  This form is version-dependent,
@@ -243,6 +246,13 @@ public class InterfaceRender{
 	}
 	
 	/**
+	 *  Returns true if shaders are active.
+	 */
+	public static boolean areShadersActive(){
+        return ARBShaderObjects.glGetHandleARB(ARBShaderObjects.GL_PROGRAM_OBJECT_ARB) != 0;
+    }
+	
+	/**
 	 *  Helper method to completely disable or enable lighting.
 	 *  This disables both the system lighting and internal lighting.
 	 */
@@ -273,10 +283,21 @@ public class InterfaceRender{
 	 *  lighting calculations for shadowing will still be applied to the model.
 	 */
 	public static void setInternalLightingState(boolean enabled){
-		if(enabled){
-			Minecraft.getMinecraft().entityRenderer.enableLightmap();
+		if(areShadersActive()){
+			if(enabled){
+				OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lastLightmapX, lastLightmapY);
+			}else{
+				lastLightmapX = OpenGlHelper.lastBrightnessX;
+				lastLightmapY = OpenGlHelper.lastBrightnessY;
+				int lightVar = (15 << 20) | (15 << 4);
+				OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lightVar%65536, lightVar/65536);
+			}
 		}else{
-			Minecraft.getMinecraft().entityRenderer.disableLightmap();
+			if(enabled){
+				Minecraft.getMinecraft().entityRenderer.enableLightmap();
+			}else{
+				Minecraft.getMinecraft().entityRenderer.disableLightmap();
+			}
 		}
 	}
 	
