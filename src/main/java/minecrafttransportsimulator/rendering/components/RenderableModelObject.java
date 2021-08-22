@@ -187,15 +187,13 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 			boolean inhibitAnimations = false;
 			for(JSONAnimationDefinition animation : animations){
 				//If the animation is a cumulative offset, we need to add the prior value to our variable. 
-				if(animation.addPriorOffset){
-					priorOffset = variableValue;
-				}
+				priorOffset = animation.addPriorOffset ? variableValue : 0;
 				variableValue = 0;
 				
 				switch(animation.animationType){
 					case VISIBILITY :{
 						if(!inhibitAnimations){
-							variableValue = entity.getAnimatedVariableValue(entity.animationClocks.get(animation), priorOffset, partialTicks);
+							variableValue = entity.getAnimatedVariableValue(entity.animationClocks.get(animation), partialTicks);
 							if(variableValue < animation.clampMin || variableValue > animation.clampMax){
 								return false;
 							}
@@ -204,7 +202,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 					}
 					case INHIBITOR :{
 						if(!inhibitAnimations){
-							variableValue =  entity.getAnimatedVariableValue(entity.animationClocks.get(animation), priorOffset, partialTicks);
+							variableValue =  entity.getAnimatedVariableValue(entity.animationClocks.get(animation), partialTicks);
 							if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
 								inhibitAnimations = true;
 							}
@@ -213,7 +211,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 					}
 					case ACTIVATOR :{
 						if(inhibitAnimations){
-							variableValue = entity.getAnimatedVariableValue(entity.animationClocks.get(animation), priorOffset, partialTicks);
+							variableValue = entity.getAnimatedVariableValue(entity.animationClocks.get(animation), partialTicks);
 							if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
 								inhibitAnimations = false;
 							}
