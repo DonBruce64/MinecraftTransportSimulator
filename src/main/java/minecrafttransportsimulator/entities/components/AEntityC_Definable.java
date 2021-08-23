@@ -527,18 +527,18 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	 */
 	public double getRawVariableValue(String variable, float partialTicks){
 		switch(variable){
-			case("tick"): return world.getTick() + partialTicks;
-			case("tick_sin"): return Math.sin(Math.toRadians(world.getTick() + partialTicks));
-			case("tick_cos"): return Math.cos(Math.toRadians(world.getTick() + partialTicks));
+			case("tick"): return ticksExisted + partialTicks;
+			case("tick_sin"): return Math.sin(Math.toRadians(ticksExisted + partialTicks));
+			case("tick_cos"): return Math.cos(Math.toRadians(ticksExisted + partialTicks));
 			case("time"): return world.getTime();
 			case("rain_strength"): return (int) world.getRainStrength(position);
 			case("rain_sin"): {
 				int rainStrength = (int) world.getRainStrength(position); 
-				return rainStrength > 0 ? Math.sin(rainStrength*Math.toRadians(360*(world.getTick() + partialTicks)/20))/2D + 0.5: 0;
+				return rainStrength > 0 ? Math.sin(rainStrength*Math.toRadians(360*(ticksExisted + partialTicks)/20))/2D + 0.5: 0;
 			}
 			case("rain_cos"): {
 				int rainStrength = (int) world.getRainStrength(position); 
-				return rainStrength > 0 ? Math.cos(rainStrength*Math.toRadians(360*(world.getTick() + partialTicks)/20))/2D + 0.5 : 0;
+				return rainStrength > 0 ? Math.cos(rainStrength*Math.toRadians(360*(ticksExisted + partialTicks)/20))/2D + 0.5 : 0;
 			}	
 			case("light_sunlight"): return world.getLightBrightness(position, false);
 			case("light_total"): return world.getLightBrightness(position, true);
@@ -551,7 +551,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 			int offTime = Integer.valueOf(parsedVariable[0]);
 			int onTime = Integer.valueOf(parsedVariable[1]);
 			int totalTime = offTime + onTime + Integer.valueOf(parsedVariable[2]);
-			long timeInCycle = world.getTick()%totalTime;
+			long timeInCycle = ticksExisted%totalTime;
 			return timeInCycle > offTime && timeInCycle - offTime < onTime ? 1 : 0;
 		}
 		
@@ -578,7 +578,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 		if(!clock.isUseful){
 			return clampAndScale(value, clock.animation, scale, offset);
 		}else{
-			return clampAndScale(clock.getFactoredState(this, value), clock.animation, scale, offset);
+			return clampAndScale(clock.getFactoredState(this, value, partialTicks), clock.animation, scale, offset);
 		}
 	}
 	

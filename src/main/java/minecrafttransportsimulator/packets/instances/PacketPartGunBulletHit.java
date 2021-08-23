@@ -9,7 +9,7 @@ import minecrafttransportsimulator.entities.instances.EntityBullet;
 import minecrafttransportsimulator.entities.instances.PartGun;
 import minecrafttransportsimulator.items.instances.ItemBullet;
 import minecrafttransportsimulator.jsondefs.JSONBullet.BulletType;
-import minecrafttransportsimulator.mcinterface.InterfaceRender;
+import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
@@ -131,10 +131,7 @@ public class PacketPartGunBulletHit extends APacketEntity<PartGun>{
 						//In this case, we need to simply spawn a few block particles to alert the player of a hit.
 						Point3d hitPosition = globalCenter.copy();
 						if(bulletItem.definition.bullet.types.contains(BulletType.WATER)){
-							hitPosition.add(0, 1, 0);
-							if(world.isFire(hitPosition)){
-								world.destroyBlock(hitPosition, true);
-							}
+							world.extinguish(hitPosition);
 						}else{
 							//This block may be null in the case of air bursts or proximity fuses
 							//If we can break the block we hit, do so now.
@@ -148,7 +145,7 @@ public class PacketPartGunBulletHit extends APacketEntity<PartGun>{
 									world.setToFire(hitPosition);
 								}
 							}else{
-								//Couldn't break the block or set it on fire.  Have clients do effects.
+								//Couldn't break the block or set it on fire.  Have clients do sounds.
 								InterfacePacket.sendToAllClients(this);
 							}
 						}
@@ -157,8 +154,8 @@ public class PacketPartGunBulletHit extends APacketEntity<PartGun>{
 			}
 		}else{
 			//We only get a packet back if we hit a block and didn't break it.
-			//If this is the case, play the block break sound and spawn some particles.
-			InterfaceRender.spawnBlockBreakParticles(globalCenter);
+			//If this is the case, play the block break sound.
+			InterfaceClient.playBlockBreakSound(globalCenter);
 		}
 		return false;
 	}

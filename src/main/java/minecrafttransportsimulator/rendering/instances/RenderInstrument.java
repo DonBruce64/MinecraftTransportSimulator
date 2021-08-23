@@ -62,7 +62,7 @@ public final class RenderInstrument{
 						textNumeric = 0;
 					}
 					String text = String.format("%0" + component.textObject.maxLength + "d", (int) textNumeric);
-					if(component.lightUpTexture && lightsOn && ConfigSystem.configObject.clientRendering.instLights.value){
+					if(component.lightUpTexture && lightsOn && ConfigSystem.configObject.clientRendering.brightLights.value){
 						InterfaceRender.setLightingState(false);
 						InterfaceGUI.drawScaledText(text, component.textObject.fontName, (int) component.textObject.pos.x, (int) component.textObject.pos.y, component.textObject.color, TextPosition.values()[component.textObject.renderPosition], component.textObject.wrapWidth, component.textObject.scale, component.textObject.autoScale);
 						InterfaceRender.setLightingState(true);
@@ -236,7 +236,7 @@ public final class RenderInstrument{
 						GL11.glTranslatef(component.xCenter, component.yCenter, 0.0F);
 						
 						//If the shape is lit, disable lighting for blending.
-						if(component.lightUpTexture && lightsOn && ConfigSystem.configObject.clientRendering.instLights.value){
+						if(component.lightUpTexture && lightsOn && ConfigSystem.configObject.clientRendering.brightLights.value){
 							InterfaceRender.setLightingState(false);
 							renderSquareUV(component.textureWidth, component.textureHeight);
 							InterfaceRender.setLightingState(true);

@@ -1,12 +1,17 @@
 package minecrafttransportsimulator.mcinterface;
 
+import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.entities.instances.EntityParticle;
 import minecrafttransportsimulator.jsondefs.JSONParticle.ParticleType;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.Entity;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 
@@ -17,6 +22,8 @@ import net.minecraft.util.math.BlockPos;
  */
 public class BuilderParticle extends Particle{
 	private final EntityParticle particle;
+	private static final TextureAtlasSprite FAKE_SPRITE = new FakeTextureAtlasSprite();
+	private static final ResourceLocation PARTICLE_TEXTURES = new ResourceLocation("textures/particle/particles.png");
 	
     public BuilderParticle(EntityParticle particle){
 		super(particle.world.world, particle.position.x, particle.position.y, particle.position.z);
@@ -31,6 +38,8 @@ public class BuilderParticle extends Particle{
 			BlockPos belowPos = new BlockPos(particle.position.x, particle.position.y - 1, particle.position.z);
 			IBlockState belowState = world.getBlockState(belowPos);
 			this.setParticleTexture(Minecraft.getMinecraft().getBlockRendererDispatcher().getBlockModelShapes().getTexture(belowState));
+		}else if(particle.definition.texture != null){
+			this.particleTexture = FAKE_SPRITE;
 		}
 	}
     
@@ -66,6 +75,7 @@ public class BuilderParticle extends Particle{
 				case DRIP: setParticleTextureIndex(particle.touchingBlocks ? 113 : 112); break;//Drips become flat when they hit the ground.
 				case BUBBLE: setParticleTextureIndex(32); break;
 				case BREAK: break;//Do nothing, as breaking particles don't use the normal texture.
+				case GENERIC: break;//Do nothing, as generic particles don't use the normal texture.
 			}
 		}
     }
@@ -94,6 +104,28 @@ public class BuilderParticle extends Particle{
 		particleBlue = particle.getBlue();
 		particleAlpha = particle.getAlpha();
     	particleScale = particle.getScale(partialTicks);
-    	super.renderParticle(buffer, entityIn, partialTicks, rotationX, rotationZ, rotationYZ, rotationXY, rotationXZ);
+    	if(particle.definition.texture != null){
+    		//Draw what we have in the buffer and then bind our new texture and draw it.
+    		Tessellator.getInstance().draw();
+    		buffer.begin(7, DefaultVertexFormats.PARTICLE_POSITION_TEX_COLOR_LMAP);
+    		InterfaceRender.bindTexture(particle.definition.texture);
+    		super.renderParticle(buffer, entityIn, partialTicks, rotationX, rotationZ, rotationYZ, rotationXY, rotationXZ);
+    		
+    		//Set the buffer back up for default particle rendering for the next particle.
+    		Tessellator.getInstance().draw();
+    		buffer.begin(7, DefaultVertexFormats.PARTICLE_POSITION_TEX_COLOR_LMAP);
+    		Minecraft.getMinecraft().renderEngine.bindTexture(PARTICLE_TEXTURES);
+    	}else{
+    		super.renderParticle(buffer, entityIn, partialTicks, rotationX, rotationZ, rotationYZ, rotationXY, rotationXZ);
+    	}
+    }
+    
+    private static class FakeTextureAtlasSprite extends TextureAtlasSprite{
+    	private FakeTextureAtlasSprite(){
+    		super(MasterLoader.MODID + ":" + "particle");
+    		this.width = 32;
+    		this.height = 32;
+    		initSprite(32, 32, 0, 0, false);
+    	}
     }
 }

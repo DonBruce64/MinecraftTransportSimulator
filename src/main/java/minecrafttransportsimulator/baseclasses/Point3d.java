@@ -198,7 +198,9 @@ public class Point3d{
 	public Point3d getAngles(){
 		double theta = Math.asin(y);
 		double phi = Math.atan2(x, z);
-		//Positive acos for theta maybe?  Other code shows this.
+		//TODO Positive acos for theta maybe?  Other code shows this.
+		//Or maybe this?
+		//-Math.toDegrees(Math.atan2(motion.y, Math.hypot(motion.x, motion.z)));
 		return new Point3d(-Math.toDegrees(theta), Math.toDegrees(phi), 0);
 	}
 	

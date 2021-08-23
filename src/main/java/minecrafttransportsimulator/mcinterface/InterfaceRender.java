@@ -28,14 +28,11 @@ import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.rendering.components.AModelParser;
 import minecrafttransportsimulator.rendering.components.GIFParser;
 import minecrafttransportsimulator.rendering.components.GIFParser.ParsedGIF;
-import net.minecraft.block.SoundType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.texture.TextureUtil;
 import net.minecraft.entity.Entity;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 
 /**Interface for the various MC rendering engines.  This class has functions for
@@ -400,23 +397,6 @@ public class InterfaceRender{
 	public static void spawnParticle(EntityParticle particle){
 		if(Minecraft.getMinecraft().effectRenderer != null){
 			Minecraft.getMinecraft().effectRenderer.addEffect(new BuilderParticle(particle));
-		}
-	}
-	
-	/**
-	 *  Spawns the particles for the block at the passed-in position.
-	 *  This also allows for playing the block breaking sound.
-	 *  It does not actually break the block.  Such breakage must be done on the server.
-	 */
-	//TODO remove this on bullets (potentially LC if needed?)
-	public static void spawnBlockBreakParticles(Point3d position){
-		if(Minecraft.getMinecraft().effectRenderer != null){
-			BlockPos pos = new BlockPos(position.x, position.y, position.z);
-			if(!Minecraft.getMinecraft().world.isAirBlock(pos)){
-				Minecraft.getMinecraft().effectRenderer.addBlockHitEffects(pos, EnumFacing.UP);
-				SoundType soundType = Minecraft.getMinecraft().world.getBlockState(pos).getBlock().getSoundType(Minecraft.getMinecraft().world.getBlockState(pos), Minecraft.getMinecraft().player.world, pos, null);
-				Minecraft.getMinecraft().world.playSound(Minecraft.getMinecraft().player, pos, soundType.getBreakSound(), SoundCategory.BLOCKS, soundType.getVolume(), soundType.getPitch());
-			}
 		}
 	}
 	

@@ -44,9 +44,10 @@ public class DurationDelayClock{
 	 *  Returns the actual 0-1 value for a state-based duration/delay variable.
 	 *  Optionally plays sounds if the state changes appropriately.
 	 */
-	public double getFactoredState(AEntityC_Definable<?> entity, double value){
+	public double getFactoredState(AEntityC_Definable<?> entity, double value, float partialTicks){
 		boolean commandForwards = value > 0;
-		long currentTime = System.currentTimeMillis();
+		//We do all time here in milliseconds, not ticks.  This allows for partial ticks.
+		long currentTime = (long) ((entity.ticksExisted + partialTicks)*50D);
 		long forwardsCycleTime = animation.forwardsDelay*50;
 		if(!animation.skipForwardsMovement){
 			forwardsCycleTime += animation.duration*50 + animation.reverseDelay*50;

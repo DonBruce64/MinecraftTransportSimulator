@@ -33,7 +33,6 @@ import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.World;
 import net.minecraftforge.event.RegistryEvent;
@@ -64,8 +63,6 @@ public class BuilderEntityExisting extends ABuilderEntityBase{
 	public AEntityB_Existing entity;
 	/**Last saved explosion position (used for damage calcs).**/
 	private static Point3d lastExplosionPosition;
-	/**Position where we have spawned a fake light.  Used for shader compatibility.**/
-	private BlockPos fakeLightPosition;
 	/**Collective for interaction boxes.  These are used by this entity to allow players to interact with it.**/
 	private WrapperAABBCollective interactionBoxes;
 	/**Collective for collision boxes.  These are used by this entity to make things collide with it.**/
@@ -171,34 +168,6 @@ public class BuilderEntityExisting extends ABuilderEntityBase{
 		        		}
 	        		}
 	    		}
-	    		
-	    		
-	    		//Update fake block lighting.  This helps with shaders as they sometimes refuse to light things up.
-	    		if(world.isRemote){
-	    			if(entity.getLightProvided() > 0){
-						BlockPos newPos = getPosition();
-						//Check to see if we need to place a light.
-						if(!newPos.equals(fakeLightPosition)){
-							//If our prior position is not null, remove that block.
-							if(fakeLightPosition != null){
-								world.setBlockToAir(fakeLightPosition);
-								world.checkLight(fakeLightPosition);
-								fakeLightPosition = null;
-							}
-							//Set block in world and update pos.  Only do this if the block is air.
-							if(world.isAirBlock(newPos)){
-								world.setBlockState(newPos, BuilderBlockFakeLight.instance.getDefaultState());
-								world.checkLight(newPos);
-								fakeLightPosition = newPos;
-							}
-						}
-	    			}else if(fakeLightPosition != null){
-	    				//Lights are off, turn off fake light.
-	    				world.setBlockToAir(fakeLightPosition);
-	    				world.checkLight(fakeLightPosition);
-	    				fakeLightPosition = null;
-	    			}
-	    		}
     		}
     	}
     }
@@ -206,11 +175,6 @@ public class BuilderEntityExisting extends ABuilderEntityBase{
 	@Override
 	public void setDead(){
 		super.setDead();
-		//Get rid of the fake light (if we have one) before we kill ourselves.
-		if(fakeLightPosition != null){
-			world.setBlockToAir(fakeLightPosition);
-		}
-		
 		//Stop chunkloading of this entity.
 		InterfaceChunkloader.removeEntityTicket(this);
 		

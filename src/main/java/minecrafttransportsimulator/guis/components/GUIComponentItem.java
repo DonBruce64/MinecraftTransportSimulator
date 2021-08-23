@@ -2,7 +2,6 @@ package minecrafttransportsimulator.guis.components;
 
 import java.util.List;
 
-import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import net.minecraft.item.ItemStack;
 
 /**Custom item render class.  This class is designed to render a {@link ItemStack} 
@@ -39,7 +38,7 @@ public class GUIComponentItem{
     	if(stack != null){
     		InterfaceGUI.drawItem(stack, x, y, scale);
     	}else if(stacks != null && !stacks.isEmpty()){
-    		InterfaceGUI.drawItem(stacks.get((int) (InterfaceClient.getClientWorld().getTick()%(stacks.size()*10)/10)), x, y, scale);
+    		InterfaceGUI.drawItem(stacks.get((int) (System.currentTimeMillis()%(stacks.size()*500)/500)), x, y, scale);
     	}
     }
     
@@ -53,7 +52,7 @@ public class GUIComponentItem{
     	if(stack != null){
     		stackToRender = stack;
     	}else if(stacks != null && !stacks.isEmpty()){
-    		stackToRender = stacks.get((int) (InterfaceClient.getClientWorld().getTick()%(stacks.size()*20)/20));
+    		stackToRender = stacks.get((int) (System.currentTimeMillis()%(stacks.size()*1000)/1000));
     	}
     	if(stackToRender != null && !stackToRender.isEmpty()){
     		float itemTooltipBounds = 16*scale;

@@ -53,6 +53,13 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 	 */
 	public final HashMap<AItemPart, List<APart>> partsByItem = new LinkedHashMap<AItemPart, List<APart>>();
 	
+	/**A companion map to {@link #partsByItem}, except this map indicates the last "primary" part for a given
+	 * part item, with said part being a value in the list that has the same key as this map entry.
+	 * Used mostly for guns, but may be extended for other uses in the future.  If there is no primary part,
+	 * then there will not be a key/value mapping for a given item.
+	 */
+	public final HashMap<AItemPart, APart> lastPrimaryPart = new LinkedHashMap<AItemPart, APart>();
+	
 	/**List for parts loaded from NBT.  We can't add these parts on construction as we'd error out
 	 * due to the potential of various sub-class variables not being ready at construction time.  To compensate, 
 	 * we add the parts we wish to add to this list.  Post-construction these will be added to this entity, preventing NPEs.
@@ -512,6 +519,9 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 			AItemPart partItem = part.getItem();
 			if(partsByItem.containsKey(partItem)){
 				partsByItem.get(partItem).remove(part);
+				if(part.equals(lastPrimaryPart.get(partItem))){
+					lastPrimaryPart.remove(partItem);
+				}
 			}
 			
 			//Remove any riders riding this part from the riding map.

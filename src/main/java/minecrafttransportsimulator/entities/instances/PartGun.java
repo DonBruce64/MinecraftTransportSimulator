@@ -9,8 +9,8 @@ import java.util.Set;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
 import minecrafttransportsimulator.items.components.AItemBase;
+import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.instances.ItemBullet;
-import minecrafttransportsimulator.items.instances.ItemPartGun;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.BuilderItem;
@@ -46,6 +46,7 @@ public class PartGun extends APart{
 	private final double defaultYaw;
 	private final double defaultPitch;
 	private final long millisecondFiringDelay;
+	private final AItemPart gunItem;
 	
 	//Stored variables used to determine bullet firing behavior.
 	public int bulletsFired;
@@ -114,6 +115,7 @@ public class PartGun extends APart{
 			this.defaultPitch = -definition.gun.defaultPitch;
 		}
 		this.millisecondFiringDelay = (long) (definition.gun.fireDelay*50);
+		this.gunItem = getItem();
 		
 		//Load saved data.
 		this.state = GunState.values()[data.getInteger("state")];
@@ -150,7 +152,6 @@ public class PartGun extends APart{
 	@Override
 	public boolean update(){
 		if(super.update()){
-			//if(entityOn.definition.systemName.contains("p11") && world.isClient())System.out.println(bulletsLeft);
 			//Set gun state and do updates.
 			if(isActive){				
 				//Get the player holding, if we are a hand-held.
@@ -176,7 +177,6 @@ public class PartGun extends APart{
 						state = state.promote(GunState.CONTROLLED);
 					}else{
 						//If this gun type can only have one selected at a time, check that this has the selected index.
-						ItemPartGun gunItem = getItem();
 						PartSeat controllerSeat = (PartSeat) entityOn.getPartAtLocation(entityOn.locationRiderMap.inverse().get(controller));
 						if(!placementDefinition.isSpare && controller != null && controllerSeat != null && gunItem.equals(controllerSeat.activeGun) && (!definition.gun.fireSolo || entityOn.partsByItem.get(gunItem).get(controllerSeat.gunIndex).equals(this))){
 							state = state.promote(GunState.CONTROLLED);	
@@ -248,27 +248,47 @@ public class PartGun extends APart{
 				boolean ableToFire = windupTimeCurrent == definition.gun.windupTime && bulletsLeft > 0 && (!definition.gun.isSemiAuto || !firedThisRequest);
 				if(ableToFire && state.isAtLeast(GunState.FIRING_REQUESTED)){
 					if(!state.isAtLeast(GunState.FIRING_CURRENTLY)){
+						List<APart> allGuns = entityOn.partsByItem.get(gunItem);
+						//Check if we have a primary gun.  If so, we may need to adjust cams to resume the firing sequence.
+						int sequenceIndex = allGuns.indexOf(this);
+						APart lastPrimaryPart = entityOn.lastPrimaryPart.get(gunItem);
+						if(lastPrimaryPart != null){
+							sequenceIndex = sequenceIndex - 1 - allGuns.indexOf(lastPrimaryPart);
+							if(sequenceIndex < 0){
+								sequenceIndex += allGuns.size();
+							}
+						}
 						state = state.promote(GunState.FIRING_CURRENTLY);
-						List<APart> allGuns = entityOn.partsByItem.get(getItem());
-						millisecondCamOffset = definition.gun.fireSolo ? 0 : millisecondFiringDelay*allGuns.indexOf(this)/allGuns.size();
+						
+						millisecondCamOffset = definition.gun.fireSolo ? 0 : millisecondFiringDelay*sequenceIndex/allGuns.size();
 						lastTimeFired = System.currentTimeMillis() + millisecondCamOffset - millisecondFiringDelay;
 					}
 				}else if(!ableToFire){
 					state = state.demote(GunState.FIRING_REQUESTED);
-					firedThisRequest = false;
 					ticksFiring = 0;
+					if(!state.isAtLeast(GunState.FIRING_REQUESTED)){
+						firedThisRequest = false;
+					}
 				}
 				
 				//If we are on the server, check if we are firing and can remove a bullet this tick.
 				//This uses a total time of firing to account for partial tick firing rates on clients.
-				if(!world.isClient() && state.isAtLeast(GunState.FIRING_CURRENTLY)){
-					int bulletsToRemove = (int) (++ticksFiring/definition.gun.fireDelay - bulletsRemovedThisRequest); 
-					bulletsLeft -= bulletsToRemove;
-					bulletsRemovedThisRequest += bulletsToRemove;
-					bulletsFired += bulletsToRemove;
-					if(bulletsLeft <= 0){
-						bulletsLeft = 0;
-						loadedBullet = null;
+				if(!world.isClient()){
+					if(state.isAtLeast(GunState.FIRING_CURRENTLY)){
+						int bulletsToRemove = definition.gun.isSemiAuto ? 1 : (int) (++ticksFiring/definition.gun.fireDelay - bulletsRemovedThisRequest);
+						if(bulletsToRemove > 0){
+							firedThisRequest = true;
+							bulletsLeft -= bulletsToRemove;
+							bulletsRemovedThisRequest += bulletsToRemove;
+							bulletsFired += bulletsToRemove;
+							entityOn.lastPrimaryPart.put(gunItem, this);
+							if(bulletsLeft <= 0){
+								bulletsLeft = 0;
+								loadedBullet = null;
+							}
+						}
+					}else{
+						bulletsRemovedThisRequest = 0;
 					}
 				}
 				
@@ -370,7 +390,7 @@ public class PartGun extends APart{
 	 * Returns true if the movement was impeded by a clamp.
 	 * Only call this ONCE per update loop as it sets prev value.s
 	 */
-	public boolean handleMovement(double targetPitch, double targetYaw){
+	public boolean handleMovement(double targetYaw, double targetPitch){
 		//Set prev orientation now that we don't need it for the gun delta calculations.
 		//Also create variable to note if we hit a clamp in a yaw or pitch.
 		prevOrientation.setTo(currentOrientation);
@@ -585,6 +605,7 @@ public class PartGun extends APart{
 			}
 			
 			//Update states.
+			entityOn.lastPrimaryPart.put(gunItem, this);
 			lastTimeFired += millisecondFiringDelay;
 			firedThisRequest = true;
 			firedThisCheck = true;

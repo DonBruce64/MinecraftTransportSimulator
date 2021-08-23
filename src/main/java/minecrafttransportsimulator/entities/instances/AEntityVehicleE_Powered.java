@@ -177,9 +177,7 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 			if(world.isClient() && ConfigSystem.configObject.clientControls.autostartEng.value && rider.equals(InterfaceClient.getClientPlayer())){
 				if(rider instanceof WrapperPlayer && locationRiderMap.containsValue(rider) && getPartAtLocation(locationRiderMap.inverse().get(rider)).placementDefinition.isController){
 					for(PartEngine engine : engines.values()){
-						if(!engine.state.running){
-							InterfacePacket.sendToServer(new PacketPartEngine(engine, Signal.AS_ON));
-						}
+						InterfacePacket.sendToServer(new PacketPartEngine(engine, Signal.AS_ON));
 					}
 					InterfacePacket.sendToServer(new PacketVehicleControlDigital((EntityVehicleF_Physics) this, PacketVehicleControlDigital.Controls.P_BRAKE, false));
 				}
@@ -219,11 +217,6 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 			}
 		}
 		super.removeRider(rider, iterator);
-	}
-	
-	@Override
-	public float getLightProvided(){
-		return ConfigSystem.configObject.clientRendering.vehicleBlklt.value && renderTextLit() ? 1.0F : 0.0F;
 	}
 	
 	@Override

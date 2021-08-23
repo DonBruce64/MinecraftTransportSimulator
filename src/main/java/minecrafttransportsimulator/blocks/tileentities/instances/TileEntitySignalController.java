@@ -60,7 +60,7 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 			//Check every 1 seconds to make sure controlled components are in their correct states.
 			//This could have changed due to chunkloading or the components being destroyed.
 			//We also check if we're doing changes on the client, as that needs to happen instantly.
-			if(world.getTick()%20 == 0 || unsavedClientChangesPreset){
+			if(ticksExisted%20 == 0 || unsavedClientChangesPreset){
 				//Check for any missing components, if we are missing some.
 				if(!missingLocations.isEmpty()){
 					Iterator<Point3d> iterator = missingLocations.iterator();
@@ -339,7 +339,7 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 						}else{
 							//See if we have a vehicle in our intersection bounds and need to change other signals.
 							//We only do this once every 2 seconds, and only if we aren't a main-central intersection.
-							if(world.getTick()%40 == 0){
+							if(ticksExisted%40 == 0){
 								if(isMainSignal && direction.equals(SignalDirection.CENTER)){
 									//Just wait until the other signals don't have any cooldown, then set them red.
 									stateChangeRequested = true;

@@ -43,7 +43,6 @@ public class PartEngine extends APart{
 	private boolean isPropellerInLiquid;
 	private boolean autoStarterEngaged;
 	private int starterLevel;
-	private int autoStarterWindDown;
 	private int shiftCooldown;
 	private float currentGearRatio;
 	private double lowestWheelVelocity;
@@ -217,8 +216,7 @@ public class PartEngine extends APart{
 						}
 					}
 					if(autoStarterEngaged){
-						++autoStarterWindDown;
-						if((state.running && autoStarterWindDown >= 20) || (rpm > definition.engine.idleRPM && autoStarterWindDown >= 40)){
+						if(state.running){
 							setElectricStarterStatus(false);
 							InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.ES_OFF));
 						}
@@ -693,10 +691,12 @@ public class PartEngine extends APart{
 	}
 	
 	public void autoStartEngine(){
-		autoStarterEngaged = true;
-		autoStarterWindDown = 0;
-		setMagnetoStatus(true);
-		setElectricStarterStatus(true);
+		//Only engage auto-starter if we aren't running and we have the right fuel.
+		if(!state.running && (isCreative || vehicleOn.fuelTank.getFluidLevel() > 0)){
+			autoStarterEngaged = true;
+			setMagnetoStatus(true);
+			setElectricStarterStatus(true);
+		}
 	}
 	
 	public void stallEngine(Signal signal){

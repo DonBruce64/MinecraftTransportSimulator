@@ -34,7 +34,7 @@ public class TileEntityFluidLoader extends TileEntityDecor implements ITileEntit
 			if(!world.isClient()){
 				if(connectedPart == null){
 					//Check for a new part every second.  We don't want every tick as this would increase server loads.
-					if(world.getTick()%20 == 0){
+					if(ticksExisted%20 == 0){
 						updateNearestPart();
 					}
 				}else{
@@ -46,7 +46,7 @@ public class TileEntityFluidLoader extends TileEntityDecor implements ITileEntit
 				}
 				
 				//Check load/unload state.
-				if(world.getTick()%20 == 0){
+				if(ticksExisted%20 == 0){
 					unloadMode = world.getRedstonePower(position) > 0;
 				}
 	
