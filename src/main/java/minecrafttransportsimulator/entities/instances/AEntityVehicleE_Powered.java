@@ -220,11 +220,6 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 	}
 	
 	@Override
-	public float getLightProvided(){
-		return ConfigSystem.configObject.clientRendering.vehicleBlklt.value && renderTextLit() ? 1.0F : 0.0F;
-	}
-	
-	@Override
 	public void destroyAt(Point3d location){
 		super.destroyAt(location);
 		//Spawn instruments in the world.

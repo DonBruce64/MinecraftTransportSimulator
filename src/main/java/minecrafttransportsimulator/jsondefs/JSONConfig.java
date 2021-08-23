@@ -171,20 +171,13 @@ public class JSONConfig{
 		public JSONConfigEntry<Boolean> innerWindows = new JSONConfigEntry<Boolean>(false, "Should the glass on windows be rendered on the inside of the vehicle?  Note: if renderWindows is false, this config has no effect.");
 		
 		public JSONConfigEntry<Boolean> vehicleBeams = new JSONConfigEntry<Boolean>(true, "If false, beams on vehicles will not render.");
-		public JSONConfigEntry<Boolean> blockBeams = new JSONConfigEntry<Boolean>(true, "If false, beams on blocks (decor) will not render.");
+		public JSONConfigEntry<Boolean> blockBeams = new JSONConfigEntry<Boolean>(true, "If false, beams on blocks will not render.");
 		
-		public JSONConfigEntry<Boolean> flaresBright = new JSONConfigEntry<Boolean>(false, "If false, light flares from vehicles and lamps will not do brightness blending.  Normally false, but can be set to true if it makes shaders better.");		
-		public JSONConfigEntry<Boolean> beamsBright = new JSONConfigEntry<Boolean>(true, "If false, beam-based lights from vehicles and lamps will not do brightness blending.  Useful if you have shaders and this is causing troubles.");
-		
-		public JSONConfigEntry<Boolean> instLights = new JSONConfigEntry<Boolean>(true, "If false, instruments will not get a lighted overlay on them that blends to make them light up in the dark.  Rather, they will use normal alpha blending.  Useful if you have shaders and this is turning lit instruments black on vehicles.");
-		public JSONConfigEntry<Boolean> vehicleBlklt = new JSONConfigEntry<Boolean>(false, "If true, vehicles will spawn invisible light blocks to force shaders to render them brighter.  Use this only if the other light options fail to work.");
+		public JSONConfigEntry<Boolean> brightLights = new JSONConfigEntry<Boolean>(true, "If false, lights from vehicles and blocks will not do brightness blending and will render as if they were part of the model at that same brightness.  Useful if you have shaders and this is causing troubles.");
+		public JSONConfigEntry<Boolean> blendedLights = new JSONConfigEntry<Boolean>(true, "If false, beam-based lights from vehicles and blocks will not do brightness blending.  This is different from the general brightness setting as this will do OpenGL blending on the world to make it brighter, not just the beams themselves.");
 		
 		public JSONConfigEntry<Boolean> playerTweaks = new JSONConfigEntry<Boolean>(true, "If true, player hands will be modified when holding guns, and hands and legs will be modified when riding in vehicles.  Set this to false if mods cause issues, like two-hand rendering or player model issues.");
 		
-		
-		
-		
-		public JSONConfigEntry<Integer> renderReductionHeight = new JSONConfigEntry<Integer>(250, "When riding in a vehicle above this height MTS will reduce the render distance to 1.  This provides a significant speedup for worldgen and render lag.  Note that this is only active on Singleplayer.");
 	}
 	
 	public static class ConfigClientControls{

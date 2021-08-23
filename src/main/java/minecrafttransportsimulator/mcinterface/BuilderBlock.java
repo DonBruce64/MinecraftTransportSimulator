@@ -338,8 +338,5 @@ public class BuilderBlock extends Block{
 			event.getRegistry().register(wrapper.setRegistryName(name).setTranslationKey(name));
 			blockMap.put(collisionBlock, wrapper);
 		}
-		
-		//Register the fake light block.
-		event.getRegistry().register(BuilderBlockFakeLight.instance.setRegistryName(MasterLoader.MODID + ":fake_light"));
 	}
 }

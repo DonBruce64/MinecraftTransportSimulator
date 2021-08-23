@@ -125,19 +125,27 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 				//Check if we are a light-up texture on the solid pass and need to disable lighting this render.
 				//Also check if we are a beam on the translucent pass and need to disable lighting.
 				if(!blendingEnabled && lightDef != null && lightLevel > 0 && !lightDef.emissive && !lightDef.isBeam){
-					InterfaceRender.setLightingState(false);
-					InterfaceRender.renderVertices(cachedVertexIndex);
-					InterfaceRender.setLightingState(true);
-				}else if(blendingEnabled && lightDef != null && lightLevel > 0 && lightDef.isBeam){
-					InterfaceRender.setLightingState(false);
-					if(ConfigSystem.configObject.clientRendering.beamsBright.value){
-						InterfaceRender.setBlendBright(true);
+					if(ConfigSystem.configObject.clientRendering.brightLights.value){
+						InterfaceRender.setLightingState(false);
+						InterfaceRender.renderVertices(cachedVertexIndex);
+						InterfaceRender.setLightingState(true);
+					}else{
+						InterfaceRender.renderVertices(cachedVertexIndex);
 					}
-					InterfaceRender.renderVertices(cachedVertexIndex);
-					if(ConfigSystem.configObject.clientRendering.beamsBright.value){
-						InterfaceRender.setBlendBright(false);
+				}else if(blendingEnabled && lightDef != null && lightLevel > 0 && lightDef.isBeam && entity.shouldRenderBeams()){
+					if(ConfigSystem.configObject.clientRendering.brightLights.value){
+						InterfaceRender.setLightingState(false);
+						if(ConfigSystem.configObject.clientRendering.blendedLights.value){
+							InterfaceRender.setBlendBright(true);
+							InterfaceRender.renderVertices(cachedVertexIndex);
+							InterfaceRender.setBlendBright(false);
+						}else{
+							InterfaceRender.renderVertices(cachedVertexIndex);
+						}
+						InterfaceRender.setLightingState(true);
+					}else{
+						InterfaceRender.renderVertices(cachedVertexIndex);
 					}
-					InterfaceRender.setLightingState(true);
 				}else if(!blendingEnabled && entity instanceof PartGroundDevice && ((PartGroundDevice) entity).definition.ground.isTread && !((PartGroundDevice) entity).placementDefinition.isSpare){
 					//Active tread.  Do tread-path rendering.					
 					doTreadRendering((PartGroundDevice) entity, partialTicks);
@@ -404,8 +412,10 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 			}
 			
 			InterfaceRender.bindTexture("mts:textures/rendering/light.png");
-			InterfaceRender.setLightingState(false);
-			lightingDisabled = true;
+			if(ConfigSystem.configObject.clientRendering.brightLights.value){
+				InterfaceRender.setLightingState(false);
+				lightingDisabled = true;
+			}
 			InterfaceRender.setColorState(color, lightLevel);
 			colorChanged = true;
 			InterfaceRender.renderVertices(colorObject);
@@ -441,11 +451,9 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 				//Render all flares.
 				if(flareObject != null){
 					InterfaceRender.bindTexture("mts:textures/rendering/lensflare.png");
-					InterfaceRender.setLightingState(false);
-					lightingDisabled = true;
-					if(ConfigSystem.configObject.clientRendering.flaresBright.value){
-						InterfaceRender.setBlendBright(true);
-						brightBlendEnabled = true;
+					if(ConfigSystem.configObject.clientRendering.brightLights.value){
+						InterfaceRender.setLightingState(false);
+						lightingDisabled = true;
 					}
 					InterfaceRender.setColorState(color, blendableBrightness);
 					colorChanged = true;
@@ -454,14 +462,14 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 				}
 				
 				//Render all beams.
-				if(beamObject != null){
+				if(beamObject != null && entity.shouldRenderBeams()){
 					InterfaceRender.bindTexture("mts:textures/rendering/lightbeam.png");
 					//Don't set lighting if flares already did so.
-					if(!lightingDisabled){
+					if(!lightingDisabled && ConfigSystem.configObject.clientRendering.brightLights.value){
 						InterfaceRender.setLightingState(false);
 						lightingDisabled = true;
 					}
-					if(ConfigSystem.configObject.clientRendering.beamsBright.value){
+					if(ConfigSystem.configObject.clientRendering.blendedLights.value){
 						InterfaceRender.setBlendBright(true);
 						brightBlendEnabled = true;
 					}else if(brightBlendEnabled){
@@ -485,8 +493,10 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 			
 			InterfaceRender.bindTexture("minecraft:textures/blocks/glass.png");
 			if(lightLevel > 0){
-				InterfaceRender.setLightingState(false);
-				lightingDisabled = true;
+				if(ConfigSystem.configObject.clientRendering.brightLights.value){
+					InterfaceRender.setLightingState(false);
+					lightingDisabled = true;
+				}
 			}
 			InterfaceRender.renderVertices(coverObject);
 			
