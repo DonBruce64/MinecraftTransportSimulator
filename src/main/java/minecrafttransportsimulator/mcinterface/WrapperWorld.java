@@ -122,27 +122,8 @@ public class WrapperWorld{
 	}
 	
 	/**
-	 *  Returns the ID of the current dimension.
-	 *  0 for overworld.
-	 *  1 for the End.
-	 *  -1 for the Nether.
-	 *  Mods may add other values for their dims, so this list is not inclusive.
-	 */
-	public int getDimensionID(){
-		return world.provider.getDimension();
-	}
-	
-	/**
-	 *  Returns the current world tick value.  Useful when you need to sync
-	 *  operations.  For animations, just use the system time.
-	 */
-	public long getTick(){
-		return world.getTotalWorldTime();
-	}
-	
-	/**
-	 *  Returns the time of day of the world, in ticks.  Unlike {@link #getTick()},
-	 *  this method may not increment if the world's internal clock isn't currently
+	 *  Returns the time of day of the world, in ticks.
+	 *  This method will not increment if the world's internal clock isn't currently
 	 *  advancing.
 	 */
 	public long getTime(){

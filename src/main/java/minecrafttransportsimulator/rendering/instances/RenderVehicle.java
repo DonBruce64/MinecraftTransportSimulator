@@ -174,10 +174,10 @@ public final class RenderVehicle extends ARenderEntityMultipart<EntityVehicleF_P
 				if(!validParts.isEmpty()){
 					//Get current part to render based on the cycle.
 					int cycle = player.isSneaking() ? 30 : 15;
-					AItemPart partToRender = validParts.get((int) ((vehicle.world.getTick()/cycle)%validParts.size()));
+					AItemPart partToRender = validParts.get((int) ((vehicle.ticksExisted/cycle)%validParts.size()));
 					
 					//If we are on the start of the cycle, beep.
-					if(vehicle.world.getTick()%cycle == 0){
+					if(vehicle.ticksExisted%cycle == 0){
 						InterfaceSound.playQuickSound(new SoundInstance(vehicle, MasterLoader.resourceDomain + ":scanner_beep"));
 					}
 					

@@ -47,7 +47,7 @@ public class DurationDelayClock{
 	public double getFactoredState(AEntityC_Definable<?> entity, double value, float partialTicks){
 		boolean commandForwards = value > 0;
 		//We do all time here in milliseconds, not ticks.  This allows for partial ticks.
-		long currentTime = (long) ((entity.world.getTick() + partialTicks)*50D);
+		long currentTime = (long) ((entity.ticksExisted + partialTicks)*50D);
 		long forwardsCycleTime = animation.forwardsDelay*50;
 		if(!animation.skipForwardsMovement){
 			forwardsCycleTime += animation.duration*50 + animation.reverseDelay*50;

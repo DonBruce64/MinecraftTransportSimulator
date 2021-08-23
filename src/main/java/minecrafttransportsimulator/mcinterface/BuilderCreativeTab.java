@@ -63,7 +63,7 @@ public class BuilderCreativeTab extends CreativeTabs{
 		if(itemIcon != null){
 			return super.getIcon();
 		}else{
-			return new ItemStack(items.get((int) (InterfaceClient.getClientWorld().getTick()/20%items.size())));
+			return new ItemStack(items.get((int) (System.currentTimeMillis()/1000%items.size())));
 		}
 	}
 

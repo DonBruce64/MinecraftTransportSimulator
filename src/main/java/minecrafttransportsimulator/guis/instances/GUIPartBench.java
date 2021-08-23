@@ -222,7 +222,7 @@ public class GUIPartBench extends AGUIBase{
 		//Get the offset index based on the clock-time and the number of materials.
 		if(currentItem != null){
 			int materialOffset = 1 + (materials.size() - 1)/craftingItemIcons.size();
-			materialOffset = (int) (InterfaceClient.getClientWorld().getTick()%(materialOffset*100)/100);
+			materialOffset = (int) (System.currentTimeMillis()%(materialOffset*5000)/5000);
 			materialOffset *= craftingItemIcons.size();
 			for(byte i=0; i<craftingItemIcons.size(); ++i){
 				int materialIndex = i + materialOffset;
