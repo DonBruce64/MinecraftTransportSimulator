@@ -1013,12 +1013,6 @@ public final class LegacyCompatSystem{
 				animation.offset = component.rotationOffset;
 				animation.clampMin = component.rotationClampMin;
 				animation.clampMax = component.rotationClampMax;
-				if(component.rotationFactor < 0){
-					animation.offset = -animation.offset;
-					float temp = animation.clampMin;
-					animation.clampMin = -animation.clampMax;
-					animation.clampMax = -temp;
-				}
 				animation.absolute = component.rotationAbsoluteValue;
 				component.animations.add(animation);
 				component.rotationVariable = null;
