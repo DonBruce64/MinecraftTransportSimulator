@@ -22,7 +22,6 @@ public abstract class AModelParser{
 	public static final String WINDOW_OBJECT_NAME = "window";
 	public static final String ONLINE_TEXTURE_OBJECT_NAME = "url";
 	public static final String TRANSLUCENT_OBJECT_NAME = "translucent";
-	public static final String INTERIOR_WINDOW_SUFFIX = "_autogen_interior";
 	
 	public AModelParser(){
 		parsers.put(getModelSuffix(), this);
@@ -82,19 +81,6 @@ public abstract class AModelParser{
 		Map<String, Float[][]> parsedModelObjects = parseModel(modelLocation);
 		List<RenderableModelObject<AnimationEntity>> modelObjects = new ArrayList<RenderableModelObject<AnimationEntity>>();
 		for(String parsedObjectName : parsedModelObjects.keySet()){
-			//If we are a window, adjust our UV mapping points to map to a single texture.
-			//Add these adjusted points, and then invert them for the interior component.
-			if(parsedObjectName.toLowerCase().contains(WINDOW_OBJECT_NAME)){
-				Float[][] parsedObject = parsedModelObjects.get(parsedObjectName);
-				normalizeUVs(parsedObject);
-				
-				Float[][] invertedObject = new Float[parsedObject.length][8];
-				for(int i=0, j=parsedObject.length-1; i<parsedObject.length; ++i, --j){
-					invertedObject[j] = parsedObject[i];
-				}
-				modelObjects.add(new RenderableModelObject<AnimationEntity>(modelLocation, parsedObjectName + INTERIOR_WINDOW_SUFFIX, modelObjects, invertedObject));
-			}
-			
 			//If we are a tread roller, make a roller rather than a standard object.
 			if(parsedObjectName.toLowerCase().contains(ROLLER_OBJECT_NAME)){
 				modelObjects.add(new RenderableTreadRoller<AnimationEntity>(modelLocation, parsedObjectName, modelObjects, parsedModelObjects.get(parsedObjectName)));
@@ -103,32 +89,5 @@ public abstract class AModelParser{
 			}
 		}
 		return modelObjects;
-	}
-
-	/**
-	 *  Helper method to normalize a set of UVs for rendering.
-	 */
-	public static void normalizeUVs(Float[][] parsedObject){
-		for(int i=0; i<parsedObject.length; ++i){
-			if(parsedObject.length > 3 && i%6 >= 3){
-				//Second-half of a quad.
-				switch(i%6){
-					case(3): parsedObject[i][3] = 0.0F; parsedObject[i][4] = 0.0F; break;
-					case(4): parsedObject[i][3] = 1.0F; parsedObject[i][4] = 1.0F; break;
-					case(5): parsedObject[i][3] = 1.0F; parsedObject[i][4] = 0.0F; break;
-				}
-			}else{
-				//Normal tri or first half of quad using tri mapping.
-				switch(i%6){
-					case(0): parsedObject[i][3] = 0.0F; parsedObject[i][4] = 0.0F; break;
-					case(1): parsedObject[i][3] = 0.0F; parsedObject[i][4] = 1.0F; break;
-					case(2): parsedObject[i][3] = 1.0F; parsedObject[i][4] = 1.0F; break;
-					
-					case(3): parsedObject[i][3] = 1.0F; parsedObject[i][4] = 1.0F; break;
-					case(4): parsedObject[i][3] = 1.0F; parsedObject[i][4] = 0.0F; break;
-					case(5): parsedObject[i][3] = 0.0F; parsedObject[i][4] = 0.0F; break;
-				}
-			}
-		}
 	}
 }

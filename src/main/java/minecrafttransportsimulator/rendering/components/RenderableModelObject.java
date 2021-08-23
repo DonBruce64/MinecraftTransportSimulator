@@ -35,9 +35,10 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 	private final List<RenderableModelObject<AnimationEntity>> allObjects;
 	private final boolean isTranslucent;
 	private final boolean isWindow;
-	private final boolean isInteriorWindow;
 	private final boolean isOnlineTexture;
 	private final int cachedVertexIndex;
+	private final Float[][] exteriorWindowObject;
+	private final Float[][] interiorWindowObject;
 	private Float[][] colorObject;
 	private Float[][] coverObject;
 	private final Map<JSONLight, Float[][]> flareObjects = new HashMap<JSONLight, Float[][]>();
@@ -59,11 +60,25 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 		this.allObjects = allObjects;
 		this.isTranslucent = objectName.toLowerCase().contains(AModelParser.TRANSLUCENT_OBJECT_NAME);
 		this.isWindow = objectName.toLowerCase().contains(AModelParser.WINDOW_OBJECT_NAME);
-		this.isInteriorWindow = isWindow && objectName.toLowerCase().endsWith(AModelParser.INTERIOR_WINDOW_SUFFIX);
 		this.isOnlineTexture = objectName.toLowerCase().startsWith(AModelParser.ONLINE_TEXTURE_OBJECT_NAME) || objectName.toLowerCase().endsWith(AModelParser.ONLINE_TEXTURE_OBJECT_NAME);
 		
-		//Cache the displayList.
-		this.cachedVertexIndex = InterfaceRender.cacheVertices(vertices);
+		//Cache the displayList if we aren't a window.  If we are, just do raw rendering.
+		//If we are a window, adjust our UV mapping points to map to a single texture.
+		//Set these adjusted points, and then invert them for the interior component.
+		if(isWindow){
+			this.cachedVertexIndex = -1;
+			this.exteriorWindowObject = vertices;
+			normalizeUVs(exteriorWindowObject);
+			
+			this.interiorWindowObject = new Float[exteriorWindowObject.length][8];
+			for(int i=0, j=exteriorWindowObject.length-1; i<exteriorWindowObject.length; ++i, --j){
+				interiorWindowObject[j] = exteriorWindowObject[i];
+			}
+		}else{
+			this.cachedVertexIndex = InterfaceRender.cacheVertices(vertices);
+			this.exteriorWindowObject = null;
+			this.interiorWindowObject = null;
+		}
 		
 		//If we are a light object, create color and cover points.
 		//We may not use these, but it saves on processing later as we don't need to re-parse the model.
@@ -125,6 +140,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 				//Check if we are a light-up texture on the solid pass and need to disable lighting this render.
 				//Also check if we are a beam on the translucent pass and need to disable lighting.
 				if(!blendingEnabled && lightDef != null && lightLevel > 0 && !lightDef.emissive && !lightDef.isBeam){
+					//Color rendering.
 					if(ConfigSystem.configObject.clientRendering.brightLights.value){
 						InterfaceRender.setLightingState(false);
 						InterfaceRender.renderVertices(cachedVertexIndex);
@@ -133,6 +149,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 						InterfaceRender.renderVertices(cachedVertexIndex);
 					}
 				}else if(blendingEnabled && lightDef != null && lightLevel > 0 && lightDef.isBeam && entity.shouldRenderBeams()){
+					//Render model as beam. 
 					if(ConfigSystem.configObject.clientRendering.brightLights.value){
 						InterfaceRender.setLightingState(false);
 						if(ConfigSystem.configObject.clientRendering.blendedLights.value){
@@ -151,7 +168,16 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 					doTreadRendering((PartGroundDevice) entity, partialTicks);
 				}else if(!(blendingEnabled ^ isTranslucent)){
 					//Either solid texture on solid pass, or translucent texture on blended pass.
-					InterfaceRender.renderVertices(cachedVertexIndex);
+					//If we are a window, render inner and outer manually.
+					//Otherwise, render cached vertices.
+					if(isWindow){
+						InterfaceRender.renderVertices(exteriorWindowObject);
+						if(ConfigSystem.configObject.clientRendering.innerWindows.value){
+							InterfaceRender.renderVertices(interiorWindowObject);
+						}
+					}else{
+						InterfaceRender.renderVertices(cachedVertexIndex);
+					}
 				}
 				
 				//Check if we are a light that's not a beam, do light-specific rendering.
@@ -288,7 +314,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 		if(isTranslucent && !blendingEnabled){
 			return false;
 		}
-		if(isWindow && !ConfigSystem.configObject.clientRendering.renderWindows.value || (isInteriorWindow && !ConfigSystem.configObject.clientRendering.innerWindows.value)){
+		if(isWindow && !ConfigSystem.configObject.clientRendering.renderWindows.value){
 			return false;
 		}
 		if(isOnlineTexture){
@@ -525,7 +551,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 			offsetObject[i][6] = parsedObject[i][6];
 			offsetObject[i][7] = parsedObject[i][7];
 		}
-		AModelParser.normalizeUVs(offsetObject);
+		normalizeUVs(offsetObject);
 		return offsetObject;
 	}
 	
@@ -540,7 +566,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 			offsetObject[i][6] = parsedObject[i][6];
 			offsetObject[i][7] = parsedObject[i][7];
 		}
-		AModelParser.normalizeUVs(offsetObject);
+		normalizeUVs(offsetObject);
 		return offsetObject;
 	}
 	
@@ -836,5 +862,32 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 			}
 		}
 		return points;
+	}
+	
+	/**
+	 *  Helper method to normalize a set of UVs for rendering.
+	 */
+	private static void normalizeUVs(Float[][] parsedObject){
+		for(int i=0; i<parsedObject.length; ++i){
+			if(parsedObject.length > 3 && i%6 >= 3){
+				//Second-half of a quad.
+				switch(i%6){
+					case(3): parsedObject[i][3] = 0.0F; parsedObject[i][4] = 0.0F; break;
+					case(4): parsedObject[i][3] = 1.0F; parsedObject[i][4] = 1.0F; break;
+					case(5): parsedObject[i][3] = 1.0F; parsedObject[i][4] = 0.0F; break;
+				}
+			}else{
+				//Normal tri or first half of quad using tri mapping.
+				switch(i%6){
+					case(0): parsedObject[i][3] = 0.0F; parsedObject[i][4] = 0.0F; break;
+					case(1): parsedObject[i][3] = 0.0F; parsedObject[i][4] = 1.0F; break;
+					case(2): parsedObject[i][3] = 1.0F; parsedObject[i][4] = 1.0F; break;
+					
+					case(3): parsedObject[i][3] = 1.0F; parsedObject[i][4] = 1.0F; break;
+					case(4): parsedObject[i][3] = 1.0F; parsedObject[i][4] = 0.0F; break;
+					case(5): parsedObject[i][3] = 0.0F; parsedObject[i][4] = 0.0F; break;
+				}
+			}
+		}
 	}
 }
