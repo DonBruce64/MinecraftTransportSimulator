@@ -38,6 +38,7 @@ public class JSONConfig{
 		public JSONConfigEntry<Boolean> creativeDamage = new JSONConfigEntry<Boolean>(false, "If true, damage from vehicles and guns will be applied to creative players.");
 		public JSONConfigEntry<Boolean> chunkloadVehicles = new JSONConfigEntry<Boolean>(true, "If true, vehicles will be chunkloaded when on roads/tracks.  This allows them to travel into unloaded chunks.");
 		public JSONConfigEntry<Boolean> doLegacyLightCompats = new JSONConfigEntry<Boolean>(true, "If true, legacy compatibility code will be performed on all models to make their lights work with newer versions.  This code will significantly slow down boot times due to needing to parse all models on boot, however, packs may not have functional lights without it.  Choose wisely if you want speed or features.");
+		public JSONConfigEntry<Boolean> useHSV = new JSONConfigEntry<Boolean>(false, "If enabled, the MTS dev mode will export color values as HSV instead of hex.");
 		public JSONConfigEntry<Double> speedFactor = new JSONConfigEntry<Double>(0.35D, "Factor to apply to vehicle movement.  1 is the realistic value, but this makes vehicles move too fast for Minecraft. Adjust with caution.");
 		public JSONConfigEntry<Double> fuelUsageFactor = new JSONConfigEntry<Double>(1.0D, "Factor times which engines use fuel.  Change this if you think engines use fuel too fast or slow.");
 		public JSONConfigEntry<Double> engineHoursFactor = new JSONConfigEntry<Double>(1.0D, "Factor times which engines hours accumulate.  Change this if you want to adjust how fast engines wear out.");
@@ -192,7 +193,7 @@ public class JSONConfig{
 		
 		public JSONConfigEntry<Boolean> north360 = new JSONConfigEntry<Boolean>(false, "If true, instruments will represent North as 360 degrees, instead of the Minecraft default of 180. Allows using the heading system that real-world pilots and militaries do.");
 		public JSONConfigEntry<Boolean> devMode = new JSONConfigEntry<Boolean>(false, "If enabled, MTS will allow access to the dev mode GUI while sitting in vehicles.  The GUI allows editing JSONs in-game without the need to restart.");
-		
+
 		public JSONConfigEntry<Integer> controlSurfaceCooldown = new JSONConfigEntry<Integer>(4, "How long (in ticks) it takes before control surfaces try to return to their natural angle.  This is not used when using a joystick.");
 		public JSONConfigEntry<Integer> steeringIncrement = new JSONConfigEntry<Integer>(20, "How many units (1/10 of a degree) to turn the wheels on vehicles for every tick the button is held down.  This is not used when using a joystick.");
 		public JSONConfigEntry<Integer> flightIncrement = new JSONConfigEntry<Integer>(6, "How many units (1/10 of a degree) to move the elevators and ailerons on aircraft for every tick the button is held down.  This is not used when using a joystick.");

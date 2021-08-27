@@ -44,6 +44,7 @@ import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.rendering.components.ARenderEntity;
+import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**This class contains various methods to parse out JSON data from JSON files.
  * Contains  custom type adapters used in JSON parsing operations, and annotations for fields.
@@ -160,6 +161,22 @@ public class JSONParser{
 			if(reader.peek() == JsonToken.NULL){
 				reader.nextNull();
 				return null;
+			}else if(reader.peek() == JsonToken.BEGIN_ARRAY){
+				
+				List<Integer> hsv = new ArrayList<Integer>();
+
+				reader.beginArray();
+				while(reader.hasNext()){
+					hsv.add(reader.nextInt());
+				}
+				reader.endArray();
+
+				float hue = hsv.get(0);
+				float sat = hsv.get(1);
+				float val = hsv.get(2);
+
+				return new ColorRGB(hue, sat, val, true);
+
 			}else{
 				return new ColorRGB(reader.nextString());
 			}
@@ -169,6 +186,14 @@ public class JSONParser{
 		public void write(JsonWriter writer, ColorRGB value) throws IOException{
 			if(value == null){
 				writer.nullValue();
+			}else if(ConfigSystem.configObject != null && ConfigSystem.configObject.general.useHSV.value){
+				writer.beginArray();
+				writer.setIndent("");
+				for(Integer item : value.hsv){
+					writer.value(item);
+				}
+				writer.endArray();
+				writer.setIndent("  ");
 			}else{
 				String hexString = Integer.toHexString(value.rgbInt).toUpperCase();
 				while(hexString.length() < 6){

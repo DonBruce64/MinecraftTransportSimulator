@@ -1,36 +1,44 @@
 {
 	"general": {
 		"name" : "Fuel Pump",
+		"materials" : []
+	},
+	
+	"decor": {
 		"type" : "fuel_pump",
 		"width" : 1.0,
 		"height" : 1.0,
 		"depth" : 1.0,
-		"materials" : [],
+		"fuelCapacity": 15000,
+		"pumpRate": 10
+	},
+
+	"rendering": {
 		"textObjects": [
-		  {
-			"pos": [0.0, 1.078125, 0.251],
-			"rot": [0.0, 0.0, 0.0],
-			"scale": 0.125,
-			"fieldName": "FluidName",
-			"color": "0xFFC800",
-			"lightsUp": true
-		  },
-		  {
-			"pos": [0.0, 1.0, 0.251],
-			"rot": [0.0, 0.0, 0.0],
-			"scale": 0.125,
-			"fieldName": "FluidLevel",
-			"color": "0xFFC800",
-			"lightsUp": true
-		  },
-		  {
-			"pos": [0.0, 0.921875, 0.251],
-			"rot": [0.0, 0.0, 0.0],
-			"scale": 0.125,
-			"fieldName": "FluidDispensed",
-			"color": "0xFFC800",
-			"lightsUp": true
-		  }
+			{
+				"pos": [0.0, 1.078125, 0.251],
+				"rot": [0.0, 0.0, 0.0],
+				"scale": 0.125,
+				"fieldName": "FluidName",
+				"color": "0xFFC800",
+				"lightsUp": true
+			},
+			{
+				"pos": [0.0, 1.0, 0.251],
+				"rot": [0.0, 0.0, 0.0],
+				"scale": 0.125,
+				"fieldName": "FluidLevel",
+				"color": "0xFFC800",
+				"lightsUp": true
+			},
+			{
+				"pos": [0.0, 0.921875, 0.251],
+				"rot": [0.0, 0.0, 0.0],
+				"scale": 0.125,
+				"fieldName": "FluidDispensed",
+				"color": "0xFFC800",
+				"lightsUp": true
+			}
 		]
 	}
 }
