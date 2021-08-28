@@ -322,8 +322,9 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 						if(!inhibitAnimations){
 							//Found translation.  This gets applied in the translation axis direction directly.
 							//This axis needs to be rotated by the rollingRotation to ensure it's in the correct spot.
-							double variableValue = getAnimatedVariableValue(clock, 0);
-							Point3d appliedTranslation = clock.animation.axis.copy().multiply(variableValue);
+							double magnitude = clock.animation.axis.length();
+							double variableValue = getAnimatedVariableValue(clock, magnitude, 0);
+							Point3d appliedTranslation = clock.animation.axis.copy().normalize().multiply(variableValue);
 							localOffset.add(appliedTranslation.rotateFine(localAngles));
 						}
 						break;
@@ -331,8 +332,9 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 					case ROTATION :{
 						if(!inhibitAnimations){
 							//Found rotation.  Get angles that needs to be applied.
-							double variableValue = getAnimatedVariableValue(clock, 1.0, -clock.animation.offset, 0);
-							Point3d appliedRotation = clock.animation.axis.copy().multiply(variableValue).add(clock.animation.offset, clock.animation.offset, clock.animation.offset);
+							double magnitude = clock.animation.axis.length();
+							double variableValue = getAnimatedVariableValue(clock, magnitude, 0);
+							Point3d appliedRotation = clock.animation.axis.copy().normalize().multiply(variableValue);
 							
 							//Check if we need to apply a translation based on this rotation.
 							if(!clock.animation.centerPoint.isZero()){
