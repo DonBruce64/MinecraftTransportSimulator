@@ -33,16 +33,10 @@ public class BuilderEntityRenderForwarder extends ABuilderEntityBase{
 	public BuilderEntityRenderForwarder(World world){
 		super(world);
 		setSize(0.05F, 0.05F);
-		if(!world.isRemote){
-			//Don't restore saved entities on the server.
-			//These get loaded, but might not tick if they're out of chunk range.
-			setDead();
-		}
 	}
 	
 	public BuilderEntityRenderForwarder(EntityPlayer playerFollowing){
-		super(playerFollowing.world);
-		setSize(0.25F, 0.25F);
+		this(playerFollowing.world);
 		this.playerFollowing = playerFollowing;
 		this.setPosition(playerFollowing.posX, playerFollowing.posY, playerFollowing.posZ);
 	}
@@ -56,7 +50,11 @@ public class BuilderEntityRenderForwarder extends ABuilderEntityBase{
     		double playerVelocity = Math.sqrt(playerFollowing.motionX*playerFollowing.motionX + playerFollowing.motionY*playerFollowing.motionY + playerFollowing.motionZ*playerFollowing.motionZ);
     		Vec3d playerEyesVec = playerFollowing.getLookVec().scale(Math.max(1, playerVelocity/2));
     		setPosition(playerFollowing.posX + playerEyesVec.x, playerFollowing.posY + playerFollowing.eyeHeight + playerEyesVec.y, playerFollowing.posZ + playerEyesVec.z);
-    	}
+    	}else if(!world.isRemote){
+			//Don't restore saved entities on the server.
+			//These get loaded, but might not tick if they're out of chunk range.
+			setDead();
+		}
     	idleTickCounter = 0;
     }
     

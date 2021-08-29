@@ -175,12 +175,14 @@ public class BuilderEntityExisting extends ABuilderEntityBase{
 	@Override
 	public void setDead(){
 		super.setDead();
-		//Stop chunkloading of this entity.
-		InterfaceChunkloader.removeEntityTicket(this);
-		
-		//Notify internal entity of it being invalid.
-		if(entity != null){
-			entity.remove();
+		if(isDead){
+			//Stop chunkloading of this entity.
+			InterfaceChunkloader.removeEntityTicket(this);
+			
+			//Notify internal entity of it being invalid.
+			if(entity != null){
+				entity.remove();
+			}
 		}
 	}
 	

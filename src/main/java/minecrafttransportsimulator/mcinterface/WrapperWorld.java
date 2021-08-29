@@ -83,8 +83,8 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 @EventBusSubscriber
 public class WrapperWorld{
 	private static final Map<World, WrapperWorld> worldWrappers = new HashMap<World, WrapperWorld>();
-	private final Map<String, Integer> ticksSincePlayerJoin = new HashMap<String, Integer>();
-	private final Map<String, BuilderEntityRenderForwarder> activePlayerFollowers = new HashMap<String, BuilderEntityRenderForwarder>();
+	private final Map<WrapperPlayer, Integer> ticksSincePlayerJoin = new HashMap<WrapperPlayer, Integer>();
+	private final Map<WrapperPlayer, BuilderEntityRenderForwarder> activePlayerFollowers = new HashMap<WrapperPlayer, BuilderEntityRenderForwarder>();
 	
 	public final World world;
 	public InterfaceWorldSavedData savedDataAccessor;
@@ -971,29 +971,30 @@ public class WrapperWorld{
    public static void on(TickEvent.WorldTickEvent event){
 	   if(!event.world.isRemote){
 		   for(EntityPlayer player : event.world.playerEntities){
-			   String playerUUID = player.getCachedUniqueIdString();
-			   WrapperWorld wrapper = getWrapperFor(event.world);
-			   if(wrapper.activePlayerFollowers.containsKey(playerUUID)){
+			   WrapperWorld worldWrapper = getWrapperFor(event.world);
+			   //Need to use wrapper here as the player equality tests don't work if there are two players with the same ID.
+			   WrapperPlayer playerWrapper = WrapperPlayer.getWrapperFor(player);
+			   if(worldWrapper.activePlayerFollowers.containsKey(playerWrapper)){
 				   //Follower exists, check if world is the same and it is actually updating.
 				   //We check basic states, and then the watchdog bit that gets reset every tick.
 				   //This way if we're in the world, but not valid we will know.
-				   BuilderEntityRenderForwarder follower = wrapper.activePlayerFollowers.get(playerUUID);
+				   BuilderEntityRenderForwarder follower = worldWrapper.activePlayerFollowers.get(playerWrapper);
 				   if(follower.world != player.world || follower.playerFollowing != player || player.isDead || follower.isDead || follower.idleTickCounter == 20){
 					   //Follower is not linked.  Remove it and re-create in code below.
 					   follower.setDead();
-					   wrapper.activePlayerFollowers.remove(playerUUID);
-					   wrapper.ticksSincePlayerJoin.remove(playerUUID);
+					   worldWrapper.activePlayerFollowers.remove(playerWrapper);
+					   worldWrapper.ticksSincePlayerJoin.remove(playerWrapper);
 				   }else{
 					   ++follower.idleTickCounter;
 					   continue;
 				   }
 			   }
 			   
-			   if(!wrapper.activePlayerFollowers.containsKey(playerUUID)){
+			   if(!worldWrapper.activePlayerFollowers.containsKey(playerWrapper)){
 				   //Follower does not exist, check if player has been present for 3 seconds and spawn it.
 				   int totalTicksWaited = 0;
-				   if(wrapper.ticksSincePlayerJoin.containsKey(playerUUID)){
-					   totalTicksWaited = wrapper.ticksSincePlayerJoin.get(playerUUID); 
+				   if(worldWrapper.ticksSincePlayerJoin.containsKey(playerWrapper)){
+					   totalTicksWaited = worldWrapper.ticksSincePlayerJoin.get(playerWrapper); 
 				   }
 				   if(++totalTicksWaited == 60){
 					   //Spawn fowarder and gun.
@@ -1001,22 +1002,20 @@ public class WrapperWorld{
 					   //Set this as we will already have loaded NBT data via spawning and don't need to load it from disk.
 					   follower.loadedFromNBT = true;
 					   event.world.spawnEntity(follower);
-					   wrapper.activePlayerFollowers.put(playerUUID, follower);
+					   worldWrapper.activePlayerFollowers.put(playerWrapper, follower);
 					   
-					   WrapperWorld worldWrapper = WrapperWorld.getWrapperFor(player.world);
-					   WrapperPlayer playerWrapper = WrapperPlayer.getWrapperFor(player);
 					   EntityPlayerGun entity = new EntityPlayerGun(worldWrapper, playerWrapper, new WrapperNBT());
 					   worldWrapper.spawnEntity(entity);
 					   
 					   //If the player is new, also add handbooks.
-					   if(!ConfigSystem.configObject.general.joinedPlayers.value.contains(playerUUID)){
+					   if(!ConfigSystem.configObject.general.joinedPlayers.value.contains(playerWrapper.getID())){
 						   player.addItemStackToInventory(PackParserSystem.getItem("mts", "handbook_car").getNewStack());
 						   player.addItemStackToInventory(PackParserSystem.getItem("mts", "handbook_plane").getNewStack());
-						   ConfigSystem.configObject.general.joinedPlayers.value.add(playerUUID);
+						   ConfigSystem.configObject.general.joinedPlayers.value.add(playerWrapper.getID());
 						   ConfigSystem.saveToDisk();
 					   }
 				   }else{
-					   wrapper.ticksSincePlayerJoin.put(playerUUID, totalTicksWaited);
+					   worldWrapper.ticksSincePlayerJoin.put(playerWrapper, totalTicksWaited);
 				   }
 			   }
 		   }
