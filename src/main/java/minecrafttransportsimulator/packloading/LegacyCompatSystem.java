@@ -1669,7 +1669,7 @@ public final class LegacyCompatSystem{
 					
 					if(activeAnimation.variable != null){
 						activeAnimation.animationType = AnimationComponentType.VISIBILITY;
-						activeAnimation.clampMin = 1.0F;
+						activeAnimation.clampMin = activeAnimation.variable.equals("brake") ? 0.01F : 1.0F;
 						activeAnimation.clampMax = 1.0F;
 						lightDef.brightnessAnimations.add(activeAnimation);
 					}
