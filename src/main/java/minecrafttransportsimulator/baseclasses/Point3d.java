@@ -191,17 +191,22 @@ public class Point3d{
     }
     
     /**
-	 * This operation is only valid on points that represent a normalized vector.
-	 * It will return a new point with the component angles of the vector.
+	 * Sets this point to the angle values defined by it.  If the point is not normalized,
+	 * pass in true to the boolean to perform this operation.
 	 * Note that since there is no "roll" for vectors, the z-value will always be 0.
+	 * Returns the called object for nested operations.
 	 */
-	public Point3d getAngles(){
+	public Point3d getAngles(boolean normalize){
+		if(normalize){
+			normalize();
+		}
 		double theta = Math.asin(y);
 		double phi = Math.atan2(x, z);
 		//TODO Positive acos for theta maybe?  Other code shows this.
 		//Or maybe this?
 		//-Math.toDegrees(Math.atan2(motion.y, Math.hypot(motion.x, motion.z)));
-		return new Point3d(-Math.toDegrees(theta), Math.toDegrees(phi), 0);
+		set(-Math.toDegrees(theta), Math.toDegrees(phi), 0);
+		return this;
 	}
 	
 	/**

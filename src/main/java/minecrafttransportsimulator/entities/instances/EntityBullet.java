@@ -60,7 +60,7 @@ public class EntityBullet extends AEntityC_Definable<JSONBullet>{
         }else{
         	velocityToAddEachTick = new Point3d();
         }
-        angles.setTo(motion.copy().normalize().getAngles());
+        angles.setTo(motion.copy().getAngles(true));
         prevAngles.setTo(angles);
     }
     
@@ -263,7 +263,7 @@ public class EntityBullet extends AEntityC_Definable<JSONBullet>{
 							}
 						}
 						
-						Point3d deltas = motion.copy().normalize().getAngles().add(-pitchTarget, -yawTarget, 0).multiply(-1);
+						Point3d deltas = motion.copy().getAngles(true).add(-pitchTarget, -yawTarget, 0).multiply(-1);
 						//Adjust deltaYaw as necessary, then apply it
 						while(deltas.y > 180)deltas.y -= 360;
 						while(deltas.y < -180)deltas.y += 360;
@@ -298,7 +298,7 @@ public class EntityBullet extends AEntityC_Definable<JSONBullet>{
 			//Add our updated motion to the position.
 			//Then set the angles to match the motion.
 			//Doing this last lets us damage on the first update tick.
-			angles.setTo(angles.setTo(motion).normalize().getAngles());
+			angles.setTo(angles.setTo(motion).copy().getAngles(true));
 			position.add(motion);
 			return true;
 		}else{

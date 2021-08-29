@@ -95,21 +95,21 @@ public class PartGun extends APart{
 			}
 		}
 		if(definition.gun.minPitch != 0){
-			this.minPitch = placementDefinition.minPitch != 0 ? -Math.max(definition.gun.minPitch, placementDefinition.minPitch) : -definition.gun.minPitch;
+			this.minPitch = placementDefinition.minPitch != 0 ? Math.max(definition.gun.minPitch, placementDefinition.minPitch) : definition.gun.minPitch;
 		}else{
-			this.minPitch = -placementDefinition.minPitch;
+			this.minPitch = placementDefinition.minPitch;
 		}	
 		if(definition.gun.maxPitch != 0){
-			this.maxPitch = placementDefinition.maxPitch != 0 ? -Math.min(definition.gun.maxPitch, placementDefinition.maxPitch) : -definition.gun.maxPitch;
+			this.maxPitch = placementDefinition.maxPitch != 0 ? Math.min(definition.gun.maxPitch, placementDefinition.maxPitch) : definition.gun.maxPitch;
 		}else{
-			this.maxPitch = -placementDefinition.maxPitch;
+			this.maxPitch = placementDefinition.maxPitch;
 		}
 		if(placementDefinition.defaultYaw != 0 && placementDefinition.defaultYaw >= minYaw && placementDefinition.defaultYaw <= maxYaw){
 			this.defaultYaw = placementDefinition.defaultYaw;
 		}else{
 			this.defaultYaw = definition.gun.defaultYaw;
 		}
-		if(placementDefinition.defaultPitch != 0 && placementDefinition.defaultPitch >= minPitch && placementDefinition.defaultPitch <= maxPitch){
+		if(placementDefinition.defaultPitch != 0 && -placementDefinition.defaultPitch >= minPitch && -placementDefinition.defaultPitch <= maxPitch){
 			this.defaultPitch = -placementDefinition.defaultPitch;
 		}else{
 			this.defaultPitch = -definition.gun.defaultPitch;
@@ -193,20 +193,54 @@ public class PartGun extends APart{
 					//If the controller isn't a player, but is a NPC, make them look at the nearest hostile mob.
 					//We also get a flag to see if the gun is currently pointed to the hostile mob.
 					//If not, then we don't fire the gun, as that'd waste ammo.
+					//Need to aim for the middle of the mob, not their base (feet).
+					//Also make the gunner account for bullet delay and movement of the hostile.
+					//This makes them track better when the target is moving.
+					//We only do this 
 					if(!(controller instanceof WrapperPlayer)){
-						WrapperEntity hostile = world.getNearestHostile(controller, 48);
-						if(hostile != null){
-							//Need to aim for the middle of the mob, not their base (feet).
-							Point3d hostilePosition = hostile.getPosition().add(0D, hostile.getEyeHeight()/2D, 0D);
+						Point3d targetAngles = new Point3d();
+						if(entityTarget != null){
+							if(entityTarget.isValid()){
+								//Check if target is still in bounds to hit.  If not, we need to find another.
+								//This could be a valid entity, but might not be.  Do raytracing to make sure we can see them.
+								Point3d positionDelta = entityTarget.getPosition().add(0D, entityTarget.getEyeHeight()/2D, 0D).subtract(position);
+								targetAngles.setTo(positionDelta).getAngles(true).subtract(angles);
+								if(targetAngles.y < -180)targetAngles.y += 360;
+								if(targetAngles.y > 180)targetAngles.y -= 360;
+								if(((minYaw != -180 || maxYaw != 180) && (targetAngles.y < minYaw || targetAngles.y > maxYaw)) || targetAngles.x < minPitch || targetAngles.x > maxPitch || world.getBlockHit(position, positionDelta) != null){
+									entityTarget = null;
+								}
+							}else{
+								entityTarget = null;
+							}
+						}
+						if(entityTarget == null || !entityTarget.isValid()){
+							//Target is null or dead, get another one.
+							for(WrapperEntity entity : world.getEntitiesHostile(controller, 48)){
+								Point3d positionDelta = entity.getPosition().add(0D, entity.getEyeHeight()/2D, 0D).subtract(position);
+								targetAngles.setTo(positionDelta).getAngles(true).subtract(angles);
+								if(targetAngles.y < -180)targetAngles.y += 360;
+								if(targetAngles.y > 180)targetAngles.y -= 360;
+								//Check the distance between this target and our current one, if we have one.
+								//No sense in doing other checks if the testing target is further.
+								if(entityTarget == null || position.distanceTo(entityTarget.getPosition()) > position.distanceTo(entity.getPosition())){
+									//Check if bounds are good.  If so, set target.
+									if(((minYaw == -180 && maxYaw == 180) || (targetAngles.y >= minYaw && targetAngles.y <= maxYaw)) && targetAngles.x >= minPitch && targetAngles.x <= maxPitch && world.getBlockHit(position, positionDelta) == null){
+										entityTarget = entity;
+									}
+								}
+							}
+						}
+						
+						if(entityTarget != null){
+							//Have target in proper bounds, try to fire.
 							//Make the gunner account for bullet delay and movement of the hostile.
 							//This makes them track better when the target is moving.
-							double ticksToTarget = hostilePosition.distanceTo(position)/definition.gun.muzzleVelocity/20D/10D;
-							hostilePosition.add(hostile.getVelocity().copy().multiply(ticksToTarget));
-							double yawHostile = Math.toDegrees(Math.atan2(hostilePosition.x - position.x, hostilePosition.z - position.z));
-							double pitchHostile = -Math.toDegrees(Math.atan2(hostilePosition.y - position.y, Math.hypot(hostilePosition.x - position.x, hostilePosition.z - position.z)));
-							controller.setYaw(yawHostile);
-							controller.setHeadYaw(yawHostile);
-							controller.setPitch(pitchHostile);
+							double ticksToTarget = entityTarget.getPosition().distanceTo(position)/definition.gun.muzzleVelocity/20D/10D;
+							targetAngles = entityTarget.getPosition().add(0D, entityTarget.getEyeHeight()/2D, 0D).add(entityTarget.getVelocity().multiply(ticksToTarget)).subtract(position).getAngles(true);
+							controller.setYaw(targetAngles.y);
+							controller.setHeadYaw(targetAngles.y);
+							controller.setPitch(targetAngles.x);
 							state = state.promote(GunState.FIRING_REQUESTED);
 						}else{
 							state = state.demote(GunState.CONTROLLED);
@@ -225,13 +259,7 @@ public class PartGun extends APart{
 						double entityRollContribution = (entityOn.angles.z + localAngles.z)*Math.sin(Math.toRadians(partYawContribution));
 						double targetYaw = controller.getYaw() - (entityOn.angles.y + partYawContribution);
 						double targetPitch = controller.getPitch() - (entityPitchContribution + entityRollContribution);
-						boolean clampedMovement = handleMovement(targetYaw, targetPitch);
-						
-						//If we told the gun to fire because we saw an entity, but we can't hit it due to the gun clamp don't fire.
-						//This keeps NPCs from wasting ammo.
-						if(!(controller instanceof WrapperPlayer) && clampedMovement){
-							state = state.demote(GunState.CONTROLLED);
-						}
+						handleMovement(targetYaw, targetPitch);
 					}
 				}
 				
@@ -240,8 +268,6 @@ public class PartGun extends APart{
 				if(world.isClient() && loadedBullet != null && loadedBullet.definition.bullet.turnFactor > 0){
 					//Try to find the entity the controller is looking at.
 					entityTarget = world.getEntityLookingAt(controller, 750);
-				}else{
-					entityTarget = null;
 				}
 				
 				//Set final gun active state and variables.
@@ -390,24 +416,20 @@ public class PartGun extends APart{
 	 * Returns true if the movement was impeded by a clamp.
 	 * Only call this ONCE per update loop as it sets prev value.s
 	 */
-	public boolean handleMovement(double targetYaw, double targetPitch){
+	public void handleMovement(double targetYaw, double targetPitch){
 		//Set prev orientation now that we don't need it for the gun delta calculations.
-		//Also create variable to note if we hit a clamp in a yaw or pitch.
 		prevOrientation.setTo(currentOrientation);
-		boolean clampedMovement = false;
 		
 		//Adjust yaw.  We need to normalize the delta here as yaw can go past -180 to 180.
 		double deltaYaw = -currentOrientation.getClampedYDelta(targetYaw);
 		if(deltaYaw < 0){
 			if(deltaYaw < -definition.gun.yawSpeed){
 				deltaYaw = -definition.gun.yawSpeed;
-				clampedMovement = true;
 			}
 			currentOrientation.y += deltaYaw; 
 		}else if(deltaYaw > 0){
 			if(deltaYaw > definition.gun.yawSpeed){
 				deltaYaw = definition.gun.yawSpeed;
-				clampedMovement = true;
 			}
 			currentOrientation.y += deltaYaw;
 		}
@@ -426,11 +448,9 @@ public class PartGun extends APart{
 		}else{
 			if(currentOrientation.y > maxYaw){
 				currentOrientation.y = maxYaw;
-				clampedMovement = true;
 			}
 			if(currentOrientation.y < minYaw){
 				currentOrientation.y = minYaw;
-				clampedMovement = true;
 			}
 		}
 		
@@ -439,27 +459,22 @@ public class PartGun extends APart{
 		if(deltaPitch < 0){
 			if(deltaPitch < -definition.gun.pitchSpeed){
 				deltaPitch = -definition.gun.pitchSpeed;
-				clampedMovement = true;
 			}
 			currentOrientation.x += deltaPitch; 
 		}else if(deltaPitch > 0){
 			if(deltaPitch > definition.gun.pitchSpeed){
 				deltaPitch = definition.gun.pitchSpeed;
-				clampedMovement = true;
 			}
 			currentOrientation.x += deltaPitch;
 		}
 		
 		//Apply pitch clamps.
-		if(currentOrientation.x < maxPitch){
+		if(currentOrientation.x > maxPitch){
 			currentOrientation.x = maxPitch;
-			clampedMovement = true;
 		}
-		if(currentOrientation.x > minPitch){
+		if(currentOrientation.x < minPitch){
 			currentOrientation.x = minPitch;
-			clampedMovement = true;
 		}
-		return clampedMovement;
 	}
 	
 	/**

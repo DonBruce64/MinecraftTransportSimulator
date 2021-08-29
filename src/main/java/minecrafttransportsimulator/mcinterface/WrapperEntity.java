@@ -84,7 +84,7 @@ public class WrapperEntity{
 	 *  to not exist in the world.
 	 */
 	public boolean isValid(){
-		return entity != null && !entity.isDead;
+		return entity != null && !entity.isDead && (!(entity instanceof EntityLivingBase) || ((EntityLivingBase) entity).deathTime == 0);
 	}
 	
 	/**

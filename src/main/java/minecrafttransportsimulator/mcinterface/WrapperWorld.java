@@ -211,23 +211,16 @@ public class WrapperWorld{
 	}
 	
 	/**
-	 *  Returns the nearest hostile entity that can be seen by the passed-in entity.
+	 *  Returns a list of all hostile entities in the specified radius.
 	 */
-	public WrapperEntity getNearestHostile(WrapperEntity entityLooking, int searchRadius){
-		double smallestDistance = searchRadius*2;
-		Entity foundEntity = null;
-		Entity mcLooker = entityLooking.entity;
-		Vec3d mcLookerPos = mcLooker.getPositionVector();
-		for(Entity entity : world.getEntitiesWithinAABBExcludingEntity(mcLooker, mcLooker.getEntityBoundingBox().grow(searchRadius))){
-			float distance = mcLooker.getDistance(entity);
-			if(distance < smallestDistance && entity instanceof IMob && !entity.isDead && (!(entity instanceof EntityLivingBase) || ((EntityLivingBase) entity).deathTime == 0)){
-				//This could be a valid entity, but might not be.  Do raytracing to make sure we can see them.
-				if(world.rayTraceBlocks(mcLookerPos, entity.getPositionVector().add(0, entity.getEyeHeight(), 0), false, true, false) == null){
-					foundEntity = entity;
-				}
+	public List<WrapperEntity> getEntitiesHostile(WrapperEntity lookingEntity, double radius){
+		List<WrapperEntity> entities = new ArrayList<WrapperEntity>();
+		for(Entity entity : world.getEntitiesWithinAABBExcludingEntity(lookingEntity.entity, lookingEntity.entity.getEntityBoundingBox().grow(radius))){
+			if(entity instanceof IMob && !entity.isDead && (!(entity instanceof EntityLivingBase) || ((EntityLivingBase) entity).deathTime == 0)){
+				entities.add(WrapperEntity.getWrapperFor(entity));
 			}
 		}
-		return WrapperEntity.getWrapperFor(foundEntity);
+		return entities;
 	}
 	
 	/**
@@ -403,16 +396,16 @@ public class WrapperWorld{
 	
 	/**
 	 *  Loads all entities that are in the passed-in range into the passed-in entity.
-	 *  Only non-hostile mobs will be loaded.
+	 *  Only non-hostile mobs that are not already riding an entity will be loaded.
 	 */
 	public void loadEntities(BoundingBox box, AEntityD_Interactable<?> entityToLoad){
 		for(Entity entity : world.getEntitiesWithinAABB(Entity.class, box.convert())){
-			if((entity instanceof INpc || entity instanceof EntityCreature) && !(entity instanceof IMob)){
+			if(!entity.isRiding() && (entity instanceof INpc || entity instanceof EntityCreature) && !(entity instanceof IMob)){
 				for(Point3d ridableLocation : entityToLoad.ridableLocations){
 					if(!entityToLoad.locationRiderMap.containsKey(ridableLocation)){
 						if(entityToLoad instanceof EntityVehicleF_Physics){
 							if(((EntityVehicleF_Physics) entityToLoad).getPartAtLocation(ridableLocation).placementDefinition.isController){
-								continue;
+								//continue;
 							}
 						}
 						entityToLoad.addRider(new WrapperEntity(entity), ridableLocation);

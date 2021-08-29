@@ -576,7 +576,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 		for(int i=0; i<flareDefs.size(); ++i){
 			JSONLightBlendableComponent flareDef = flareDefs.get(i);
 			//Get the angle that is needed to rotate points to the normalized vector.
-			Point3d rotation = flareDef.axis.getAngles();
+			Point3d rotation = flareDef.axis.copy().getAngles(false);
 			Point3d vertexOffset = new Point3d();
 			Point3d centerOffset = flareDef.axis.copy().multiply(FLARE_OFFSET).add(flareDef.pos);
 			for(int j=0; j<6; ++j){
@@ -620,7 +620,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 		for(int i=0; i<beamDefs.size(); ++i){
 			JSONLightBlendableComponent beamDef = beamDefs.get(i);
 			//Get the angle that is needed to rotate points to the normalized vector.
-			Point3d rotation = beamDef.axis.getAngles();
+			Point3d rotation = beamDef.axis.copy().getAngles(false);
 			Point3d vertexOffset = new Point3d();
 			Point3d centerOffset = beamDef.axis.copy().multiply(BEAM_OFFSET).add(beamDef.pos);
 			//Go from negative to positive to render both beam-faces in the same loop.
