@@ -86,6 +86,16 @@ public abstract class ABuilderEntityBase extends Entity{
     		}
     	}
     }
+    
+    @Override
+    public void setDead(){
+    	//Don't set us dead if we're not in a chunk.
+    	//For some reason enties don't update their saved positions sometimes so they get removed
+    	//during chunk loading despite them being added to the correct chunk.
+    	if(addedToChunk){
+    		super.setDead();
+    	}
+    }
 	
     @Override
     public void setPositionAndRotationDirect(double posX, double posY, double posZ, float yaw, float pitch, int posRotationIncrements, boolean teleport){
