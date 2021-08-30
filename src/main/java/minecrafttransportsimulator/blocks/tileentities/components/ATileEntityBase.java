@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.blocks.tileentities.components;
 
+import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
@@ -55,5 +56,13 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONMultiModelProv
 	 */
 	public int getRotationIncrement(){
 		return 15;
+    }
+	
+	/**
+	 *  Returns the collision box for this TE.  Returns it in the global space, offset to the
+	 *  TE's center.
+	 */
+	public BoundingBox getCollisionBox(){
+		return boundingBox;
     }
 }

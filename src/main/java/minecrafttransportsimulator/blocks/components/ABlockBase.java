@@ -1,8 +1,5 @@
 package minecrafttransportsimulator.blocks.components;
 
-import java.util.List;
-
-import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.mcinterface.BuilderBlock;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
@@ -18,8 +15,6 @@ public abstract class ABlockBase{
 	public final float hardness;
 	public final float blastResistance;
 	
-	protected static final BoundingBox SINGLE_BLOCK_BOUNDS = new BoundingBox(new Point3d(), 0.5D, 0.5D, 0.5D);
-	
 	public ABlockBase(float hardness, float blastResistance){
 		this.hardness = hardness;
 		this.blastResistance = blastResistance;
@@ -32,26 +27,6 @@ public abstract class ABlockBase{
 	 *  This is ONLY called on the server, so if you have data to sync, do it via packets. 
 	 */
 	public void onBroken(WrapperWorld world, Point3d position){}
-	
-	/**
-	 *  Adds all collision boxes to the passed-in list.  This is sent back to MC
-	 *  to handle collisions with this block.  May be based on state or TE data.
-	 *  Note that all collisions are relative to the block's location.
-	 */
-	public void addCollisionBoxes(WrapperWorld world, Point3d position, List<BoundingBox> collidingBoxes){
-		collidingBoxes.add(SINGLE_BLOCK_BOUNDS);
-	}
-	
-	/**
-	 *  Returns the main bounding box for this block.  This should normally be the standard full-block size
-	 *  to ensure all the appropriate collision checks are done.  However, should the block have a collision
-	 *  mapping smaller than this, then a smaller box should be returned.  This prevents the block from 
-	 *  interfering with player clicking actions and Bad Mods doing Bad Stuff by checking this rather than 
-	 *  the collision box listing.
-	 */
-	public BoundingBox getCollisionBounds(){
-		return SINGLE_BLOCK_BOUNDS;
-	}
 	
 	/**
 	 *  Enums for side-specific stuff.

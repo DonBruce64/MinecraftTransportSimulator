@@ -5,8 +5,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
+import minecrafttransportsimulator.blocks.instances.BlockPole;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
@@ -42,16 +44,19 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent> implement
 	
 	public TileEntityPole(WrapperWorld world, Point3d position, WrapperPlayer placingPlayer, WrapperNBT data){
 		super(world, position, placingPlayer, data);
+		//Need custom bounding box.  Default assumes centered to position.
+		this.boundingBox = new BoundingBox(new Point3d(), 0, 0, 0);
+		
 		//Load components back in.
 		for(Axis axis : Axis.values()){
 			WrapperNBT componentData = data.getData(axis.name());
 			if(componentData != null){
 				ATileEntityPole_Component newComponent = PoleComponentType.createComponent(this, axis, componentData);
-				components.put(axis, newComponent);
+				changeComponent(axis, newComponent);
 			}else if(axis.equals(Axis.NONE)){
 				//Add our core component to the NONE axis.
 				//This is done for ease of rendering and lookup routines.
-				components.put(axis, PoleComponentType.createComponent(this, axis, getItem().validateData(null)));
+				changeComponent(axis, PoleComponentType.createComponent(this, axis, getItem().validateData(null)));
 			}
 		}
 	}
@@ -59,21 +64,9 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent> implement
 	@Override
 	public boolean update(){
 		if(super.update()){
-			//Update positions for our components.
-			for(Axis axis : Axis.values()){
-				if(components.containsKey(axis)){
-					ATileEntityPole_Component component = components.get(axis);
-					component.update();
-					if(axis.equals(Axis.NONE)){
-						component.position.setTo(position);
-						component.angles.setTo(angles);
-					}else{
-						component.position.set(0, 0, definition.pole.radius + 0.001).rotateY(axis.yRotation).add(position);
-						component.angles.set(0, axis.yRotation, 0).add(angles);
-					}
-					component.prevPosition.setTo(component.position);
-					component.prevAngles.setTo(component.angles);
-				}
+			//Forward update call to components.
+			for(ATileEntityPole_Component component : components.values()){
+				component.update();
 			}
 			return true;
 		}else{
@@ -109,8 +102,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent> implement
 						ATileEntityPole_Component component = pole.components.get(axis);
 						WrapperNBT removedComponentData = component.save(new WrapperNBT());
 						if(player.isCreative() || player.getInventory().addItem(component.getItem(), removedComponentData)){
-							pole.components.remove(axis).remove();
-							pole.updateLightState();
+							changeComponent(axis, null);
 							InterfacePacket.sendToAllClients(new PacketTileEntityPoleChange(this, axis, null));
 						}
 						return true;
@@ -123,8 +115,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent> implement
 					//Player is holding component that could be added.  Try and do so.
 					ItemPoleComponent componentItem = (ItemPoleComponent) heldItem;
 					ATileEntityPole_Component newComponent = PoleComponentType.createComponent(pole, axis, componentItem.validateData(new WrapperNBT(heldStack)));
-					pole.components.put(axis, newComponent);
-					pole.updateLightState();
+					changeComponent(axis, newComponent);
 					if(!player.isCreative()){
 						player.getInventory().removeStack(player.getHeldStack(), 1);
 					}
@@ -141,18 +132,84 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent> implement
 		return 360;
     }
 	
-	/**
-	 * Helper method to update light state and re-do world lighting if required.
-	 */
-	public void updateLightState(){
-		float calculatedLevel = 0;
-		for(ATileEntityPole_Component component : components.values()){
-			calculatedLevel = Math.max(calculatedLevel, component.getLightProvided());
+	@Override
+	public BoundingBox getCollisionBox(){
+		//Update collisions before returning.
+		boundingBox.widthRadius = definition.pole.radius;
+		boundingBox.heightRadius = definition.pole.radius;
+		boundingBox.depthRadius = definition.pole.radius;
+		boundingBox.globalCenter.setTo(position);
+		for(Axis axis : Axis.values()){
+			if(axis.blockBased){
+				if(world.getBlock(axis.getOffsetPoint(position)) instanceof BlockPole || world.isBlockSolid(axis.getOffsetPoint(position), axis.getOpposite()) || components.containsKey(axis)){
+					switch(axis){
+						case NORTH: {
+							if(boundingBox.depthRadius == definition.pole.radius){
+								boundingBox.depthRadius = definition.pole.radius + 0.25;
+								boundingBox.globalCenter.z = position.z - (0.5 - definition.pole.radius)/2D;
+							}else{
+								boundingBox.depthRadius = 0.5;
+								boundingBox.globalCenter.z = position.z;
+							}
+							break;
+						}
+						case SOUTH: {
+							if(boundingBox.depthRadius == definition.pole.radius){
+								boundingBox.depthRadius = definition.pole.radius + 0.25;
+								boundingBox.globalCenter.z = position.z + (0.5 - definition.pole.radius)/2D;
+							}else{
+								boundingBox.depthRadius = 0.5;
+								boundingBox.globalCenter.z = position.z;
+							}
+							break;
+						}
+						case EAST: {
+							if(boundingBox.widthRadius == definition.pole.radius){
+								boundingBox.widthRadius = definition.pole.radius + 0.25;
+								boundingBox.globalCenter.x = position.x + (0.5 - definition.pole.radius)/2D;
+							}else{
+								boundingBox.widthRadius = 0.5;
+								boundingBox.globalCenter.x = position.x;
+							}
+							break;
+						}
+						case WEST: {
+							if(boundingBox.widthRadius == definition.pole.radius){
+								boundingBox.widthRadius = definition.pole.radius + 0.25;
+								boundingBox.globalCenter.x = position.x - (0.5 - definition.pole.radius)/2D;
+							}else{
+								boundingBox.widthRadius = 0.5;
+								boundingBox.globalCenter.x = position.x;
+							}
+							break;
+						}
+						case UP: {
+							if(boundingBox.heightRadius == definition.pole.radius){
+								boundingBox.heightRadius = definition.pole.radius + 0.25;
+								boundingBox.globalCenter.y = position.y + (0.5 - definition.pole.radius)/2D;
+							}else{
+								boundingBox.heightRadius = 0.5;
+								boundingBox.globalCenter.y = position.y;
+							}
+							break;
+						}
+						case DOWN: {
+							if(boundingBox.heightRadius == definition.pole.radius){
+								boundingBox.heightRadius = definition.pole.radius + 0.25;
+								boundingBox.globalCenter.y = position.y - (0.5 - definition.pole.radius)/2D;
+							}else{
+								boundingBox.heightRadius = 0.5;
+								boundingBox.globalCenter.y = position.y;
+							}
+							break;
+						}
+						default: break;
+					}
+				}
+			}
 		}
-		if(maxTotalLightLevel != calculatedLevel){
-			world.updateLightBrightness(position);
-		}
-	}
+		return super.getCollisionBox();
+    }
 	
 	@Override
 	public float getLightProvided(){
@@ -165,6 +222,37 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent> implement
 			if(components.containsKey(axis)){
 				drops.add(components.get(axis).getItem().getNewStack());
 			}
+		}
+	}
+	
+	/**
+	 * Helper method to add/remove components to this pole.  Ensures all states are maintained
+	 * for bounding boxes and component position.  To remove a component, pass-in null for the axis.
+	 */
+	public void changeComponent(Axis newAxis, ATileEntityPole_Component newComponent){
+		//Update component map.
+		if(newComponent != null){
+			components.put(newAxis, newComponent);
+			if(newAxis.equals(Axis.NONE)){
+				newComponent.position.setTo(position);
+				newComponent.angles.setTo(angles);
+			}else{
+				newComponent.position.set(0, 0, definition.pole.radius + 0.001).rotateY(newAxis.yRotation).add(position);
+				newComponent.angles.set(0, newAxis.yRotation, 0).add(angles);
+			}
+			newComponent.prevPosition.setTo(newComponent.position);
+			newComponent.prevAngles.setTo(newComponent.angles);
+		}else{
+			components.remove(newAxis);
+		}
+		
+		//Update lighting state.
+		float calculatedLevel = 0;
+		for(ATileEntityPole_Component component : components.values()){
+			calculatedLevel = Math.max(calculatedLevel, component.getLightProvided());
+		}
+		if(maxTotalLightLevel != calculatedLevel){
+			world.updateLightBrightness(position);
 		}
 	}
 	

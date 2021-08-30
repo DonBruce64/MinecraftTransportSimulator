@@ -1,8 +1,5 @@
 package minecrafttransportsimulator.blocks.instances;
 
-import java.util.List;
-
-import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.components.ABlockBaseTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLane;
@@ -15,17 +12,6 @@ public class BlockRoad extends ABlockBaseTileEntity{
 	
     public BlockRoad(){
     	super(10.0F, 5.0F);
-	}
-    
-    @Override
-    public void addCollisionBoxes(WrapperWorld world, Point3d position, List<BoundingBox> collidingBoxes){
-    	//Get collision box from saved instance in the TE.
-    	TileEntityRoad road = (TileEntityRoad) world.getTileEntity(position);
-    	if(road != null){
-    		collidingBoxes.add(road.boundingBox);
-    	}else{
-			super.addCollisionBoxes(world, position, collidingBoxes);
-		}
 	}
 	
 	@Override

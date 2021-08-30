@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
-import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
@@ -23,17 +22,20 @@ import minecrafttransportsimulator.rendering.instances.RenderDecor;
  * @author don_bruce
  */
 public class TileEntityDecor extends ATileEntityBase<JSONDecor> implements ITileEntityTickable{
-	public final BoundingBox[] boundingBoxes = new BoundingBox[4];
 	
 	private static RenderDecor renderer;
 	
 	public TileEntityDecor(WrapperWorld world, Point3d position, WrapperPlayer placingPlayer, WrapperNBT data){
 		super(world, position, placingPlayer, data);
-		//Add a bounding box for each rotation.
-		this.boundingBoxes[0] = new BoundingBox(new Point3d(), definition.decor.width/2D, definition.decor.height/2D, definition.decor.depth/2D);
-		this.boundingBoxes[1] = new BoundingBox(new Point3d(), definition.decor.depth/2D, definition.decor.height/2D, definition.decor.width/2D);
-		this.boundingBoxes[2] = boundingBoxes[0];
-		this.boundingBoxes[3] = boundingBoxes[1];
+		//Set our bounding box based on our rotation and parameters.
+		boundingBox.heightRadius = definition.decor.height/2D;
+		if(Math.abs(angles.y%180) == 0){
+			boundingBox.widthRadius = definition.decor.width/2D;
+			boundingBox.depthRadius = definition.decor.depth/2D;
+		}else{
+			boundingBox.widthRadius = definition.decor.depth/2D;
+			boundingBox.depthRadius = definition.decor.width/2D;
+		}
 	}
 	
 	@Override

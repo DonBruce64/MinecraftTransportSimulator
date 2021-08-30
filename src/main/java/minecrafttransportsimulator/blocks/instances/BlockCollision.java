@@ -10,9 +10,14 @@ import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBas
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 
+/**Slightly-less basic block class.  This class is used for collision operations where a non-standard collision is required.
+ * Mainly used on roads, but could be used on other things in the future.
+ *
+ * @author don_bruce
+ */
 public class BlockCollision extends ABlockBase{
 	public static List<BlockCollision> blockInstances = createCollisionBlocks();
-	private final BoundingBox blockBounds;
+	public final BoundingBox blockBounds;
 	
     public BlockCollision(int collisionHeightInPixels){
     	super(10.0F, 5.0F);
@@ -36,16 +41,6 @@ public class BlockCollision extends ABlockBase{
 			return;
     	}
     }
-    
-    @Override
-    public void addCollisionBoxes(WrapperWorld world, Point3d position, List<BoundingBox> collidingBoxes){
-		collidingBoxes.add(blockBounds);
-	}
-    
-    @Override
-    public BoundingBox getCollisionBounds(){
-		return blockBounds;
-	}
     
     /**
 	 *  Helper method to get the master road instance given the position of a block in the world.

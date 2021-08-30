@@ -8,7 +8,6 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 import minecrafttransportsimulator.MasterLoader;
-import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.ABlockBaseTileEntity;
@@ -65,8 +64,6 @@ public class BuilderBlock extends Block{
 	/**Holding map for block drops.  MC calls breakage code after the TE is removed, so we need to store drops 
 	created during the drop checks here to ensure they actually drop when the block is broken. **/
 	private static final Map<BlockPos, List<ItemStack>> dropsAtPositions = new HashMap<BlockPos, List<ItemStack>>();
-	/**Map to hold AABB representations of BB states.  Used to prevent re-creating them every check.**/
-	private static final Map<BoundingBox, AxisAlignedBB> boundingBoxMap = new HashMap<BoundingBox, AxisAlignedBB>();
 	
 	//TODO remove this when we figure out how to not make blocks go poof.
 	private static final PropertyDirection FACING = BlockHorizontal.FACING;
@@ -196,26 +193,43 @@ public class BuilderBlock extends Block{
     @Override
 	@SuppressWarnings("deprecation")
     public void addCollisionBoxToList(IBlockState state, World world, BlockPos pos, AxisAlignedBB entityBox, List<AxisAlignedBB> collidingBoxes, @Nullable Entity entity, boolean p_185477_7_){
-    	//Gets the collision boxes. We forward this call to the block to handle.
-    	//We add-on 0.5D to offset the box to the correct location.
-    	List<BoundingBox> collisionBoxes = new ArrayList<BoundingBox>();
-    	block.addCollisionBoxes(WrapperWorld.getWrapperFor(world), new Point3d(pos.getX(), pos.getY(), pos.getZ()), collisionBoxes);
-    	for(BoundingBox box : collisionBoxes){
-    		AxisAlignedBB mcBox = box.convertWithOffset(pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D);
-			if(mcBox.intersects(entityBox)){
-				collidingBoxes.add(mcBox);
-			}
-    	}
+    	AxisAlignedBB mcBox = getBlockBox(state, world, pos, true);
+    	if(mcBox.intersects(entityBox)){
+			collidingBoxes.add(mcBox);
+		}
     }
     
     @Override
 	@SuppressWarnings("deprecation")
-    public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess source, BlockPos pos){
-        BoundingBox box = block.getCollisionBounds();
-        if(!boundingBoxMap.containsKey(box)){
-        	boundingBoxMap.put(box, box.convertWithOffset(0.5D, 0.5D, 0.5D));
-        }
-        return boundingBoxMap.get(box);
+    public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess access, BlockPos pos){
+    	return getBlockBox(state, access, pos, false);
+    }
+    
+    private AxisAlignedBB getBlockBox(IBlockState state, IBlockAccess access, BlockPos pos, boolean globalCoords){
+    	//Gets the bounding boxes. We forward this call to the tile entity to handle if we have one.
+    	//Otherwise, get the bounds from the main block, or just the standard bounds.
+    	//We add-on 0.5D to offset the box to the correct location, as our blocks are centered.
+    	//Bounding boxes are not offset, whereas collision are, which is what the boolean paramter is for.
+    	if(block instanceof ABlockBaseTileEntity){
+    		TileEntity mcTile = access.getTileEntity(pos);
+    		if(mcTile instanceof BuilderTileEntity){
+    			ATileEntityBase<?> tile = ((BuilderTileEntity<?>) mcTile).tileEntity;
+    			if(tile != null){
+    				if(globalCoords){
+    					return tile.getCollisionBox().convertWithOffset(0.5D, 0.5D, 0.5D);
+    				}else{
+    					return tile.getCollisionBox().convertWithOffset(-pos.getX() + 0.5D, -pos.getY() + 0.5D, -pos.getZ() + 0.5D);
+    				}
+    			}
+    		}
+    	}else if(block instanceof BlockCollision){
+    		if(globalCoords){
+				return ((BlockCollision) block).blockBounds.convertWithOffset(pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D);
+			}else{
+				return ((BlockCollision) block).blockBounds.convertWithOffset(0.5D, 0.5D, 0.5D);
+			}
+    	}
+    	return FULL_BLOCK_AABB;
     }
 
     @Override
