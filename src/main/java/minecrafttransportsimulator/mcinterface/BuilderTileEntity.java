@@ -1,15 +1,14 @@
 package minecrafttransportsimulator.mcinterface;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.blocks.components.ABlockBaseTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
-import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ITickable;
-import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.world.World;
 
 /**Builder for the MC Tile Entity class   This class interfaces with all the MC-specific 
@@ -26,11 +25,40 @@ import net.minecraft.world.World;
  *
  * @author don_bruce
  */
-public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extends TileEntity{
+public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extends TileEntity implements ITickable{
 	public TileEntityType tileEntity;
+	/**Data loaded on last NBT call.  Saved here to prevent loading of things until the update method.  This prevents
+	 * loading entity data when this entity isn't being ticked.  Some mods love to do this by making a lot of entities
+	 * to do their funky logic.  I'm looking at YOU The One Probe!**/
+	private NBTTagCompound lastLoadedNBT;
 	
 	public BuilderTileEntity(){
 		//Blank constructor for MC.
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Override
+	public void update(){
+		if(tileEntity != null){
+			tileEntity.update();
+		}else if(lastLoadedNBT != null){
+			if(world != null && pos != null){
+				if(world.isBlockLoaded(pos)){
+					try{
+						//Get the block that makes this TE and restore it from saved state.
+						WrapperWorld worldWrapper = WrapperWorld.getWrapperFor(world);
+						Point3d position = new Point3d(pos.getX(), pos.getY(), pos.getZ());
+						ABlockBaseTileEntity block = (ABlockBaseTileEntity) worldWrapper.getBlock(position);
+						tileEntity = (TileEntityType) block.createTileEntity(worldWrapper, position, new WrapperNBT(lastLoadedNBT));
+						lastLoadedNBT = null;
+					}catch(Exception e){
+						InterfaceCore.logError("Failed to load entity on builder from saved NBT.  Did a pack change?");
+						InterfaceCore.logError(e.getMessage());
+						invalidate();
+					}
+				}
+			}
+		}
 	}
 	
 	@Override
@@ -70,51 +98,25 @@ public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extend
 		if(tileEntity != null){
 			//Gets called when we do a blockstate update for this TE.
 			//Done during initial placedown so we need to get the full data for initial state. 
-			WrapperNBT data = new WrapperNBT();
-			tileEntity.save(data);
-			data.setString("teid", tileEntity.getClass().getSimpleName());
-		    return new SPacketUpdateTileEntity(getPos(), -1, data.tag);
+			return new SPacketUpdateTileEntity(getPos(), -1, tileEntity.save(new WrapperNBT()).tag);
 		}else{
 			return super.getUpdatePacket();
 		}
     }
 	
-	@SuppressWarnings("unchecked")
 	@Override
 	public void onDataPacket(NetworkManager net, SPacketUpdateTileEntity pkt){
 		//Called when the client gets a TE update packet.
-		//Create our client-side TE here if required.
-		if(tileEntity == null){
-			//Get the block that makes this TE and restore it from saved state.
-			tileEntity = (TileEntityType) BuilderBlock.tileEntityMap.get(pkt.getNbtCompound().getString("teid")).createTileEntity(WrapperWorld.getWrapperFor(world), new Point3d(pos.getX(), pos.getY(), pos.getZ()), new WrapperNBT(pkt.getNbtCompound()));
-		}
+		//Save the NBT so we can load the TE in the next update call.
+		lastLoadedNBT = pkt.getNbtCompound();
 	}
 	
-	@Override
-	public boolean shouldRenderInPass(int pass){
-		//We can render in all passes.
-        return true;
-    }
-	
-	@Override
-	public AxisAlignedBB getRenderBoundingBox(){
-		//Return a box of size 16x16 here to ensure this entity doesn't disappear when we aren't looking at it exactly.
-		return new AxisAlignedBB(pos).grow(8);
-	}
-	
-	@SuppressWarnings("unchecked")
 	@Override
     public void readFromNBT(NBTTagCompound tag){
 		super.readFromNBT(tag);
-		if(tileEntity == null && tag.hasKey("teid")){
-			try{
-				tileEntity = (TileEntityType) BuilderBlock.tileEntityMap.get(tag.getString("teid")).createTileEntity(WrapperWorld.getWrapperFor(world), new Point3d(pos.getX(), pos.getY(), pos.getZ()), new WrapperNBT(tag));
-			}catch(Exception e){
-				InterfaceCore.logError("Failed to load entity on builder from saved NBT.  Did a pack change?");
-				InterfaceCore.logError(e.getMessage());
-				invalidate();
-			}
-		}
+		//Don't directly load the TE here.  This causes issues because Minecraft loads TEs before blocks.
+		//This is horridly stupid, because then you can't get the block for the TE, but whatever, Mojang be Mojang.
+		lastLoadedNBT = tag;
     }
     
 	@Override
@@ -122,8 +124,6 @@ public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extend
 		super.writeToNBT(tag);
 		if(tileEntity != null){
 			tileEntity.save(new WrapperNBT(tag));
-			//Also save the class ID so we know what to construct when MC loads this TE back up.
-			tag.setString("teid", tileEntity.getClass().getSimpleName());
 		}else{
 			invalidate();
 		}
@@ -134,17 +134,11 @@ public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extend
     *
     * @author don_bruce
     */
-	public static class Tickable<TickableTileEntity extends ATileEntityBase<? extends AJSONItem>> extends BuilderTileEntity<TickableTileEntity> implements ITickable{
+	//TODO remove this when all TEs are converted in V21.
+	public static class Tickable<TickableTileEntity extends ATileEntityBase<? extends AJSONItem>> extends BuilderTileEntity<TickableTileEntity>{
 	    
 		public Tickable(){
 			super();
-		}
-		
-		@Override
-		public void update(){
-			if(tileEntity != null){
-				((ITileEntityTickable) tileEntity).update();
-			}
 		}
 	}
 }

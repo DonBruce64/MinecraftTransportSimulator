@@ -10,7 +10,7 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 
-public class BlockRoad extends ABlockBaseTileEntity<TileEntityRoad>{
+public class BlockRoad extends ABlockBaseTileEntity{
 	
     public BlockRoad(){
     	super(10.0F, 5.0F);
@@ -52,10 +52,5 @@ public class BlockRoad extends ABlockBaseTileEntity<TileEntityRoad>{
     @Override
 	public TileEntityRoad createTileEntity(WrapperWorld world, Point3d position, WrapperNBT data){
 		return new TileEntityRoad(world, position, data);
-	}
-
-	@Override
-	public Class<TileEntityRoad> getTileEntityClass(){
-		return TileEntityRoad.class;
 	}
 }

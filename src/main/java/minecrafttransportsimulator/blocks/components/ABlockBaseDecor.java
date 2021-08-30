@@ -7,7 +7,7 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 
-public abstract class ABlockBaseDecor<DecorClass extends TileEntityDecor> extends ABlockBaseTileEntity<DecorClass>{
+public abstract class ABlockBaseDecor extends ABlockBaseTileEntity{
 	
     public ABlockBaseDecor(){
     	super(10.0F, 5.0F);

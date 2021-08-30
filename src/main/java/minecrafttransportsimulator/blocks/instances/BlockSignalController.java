@@ -6,7 +6,7 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySigna
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 
-public class BlockSignalController extends ABlockBaseDecor<TileEntitySignalController>{
+public class BlockSignalController extends ABlockBaseDecor{
 	
 	public BlockSignalController(){
 		super();
@@ -15,10 +15,5 @@ public class BlockSignalController extends ABlockBaseDecor<TileEntitySignalContr
 	@Override
 	public TileEntitySignalController createTileEntity(WrapperWorld world, Point3d position, WrapperNBT data){
 		return new TileEntitySignalController(world, position, data);
-	}
-
-	@Override
-	public Class<TileEntitySignalController> getTileEntityClass(){
-		return TileEntitySignalController.class;
 	}
 }

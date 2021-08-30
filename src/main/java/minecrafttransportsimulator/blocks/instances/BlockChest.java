@@ -6,7 +6,7 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityChest
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 
-public class BlockChest extends ABlockBaseDecor<TileEntityChest>{
+public class BlockChest extends ABlockBaseDecor{
 	
 	public BlockChest(){
 		super();
@@ -15,10 +15,5 @@ public class BlockChest extends ABlockBaseDecor<TileEntityChest>{
 	@Override
 	public TileEntityChest createTileEntity(WrapperWorld world, Point3d position, WrapperNBT data){
 		return new TileEntityChest(world, position, data);
-	}
-
-	@Override
-	public Class<TileEntityChest> getTileEntityClass(){
-		return TileEntityChest.class;
 	}
 }

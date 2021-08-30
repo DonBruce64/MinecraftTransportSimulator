@@ -8,7 +8,7 @@ import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 
-public class BlockFuelPump extends ABlockBaseDecor<TileEntityFuelPump> implements IBlockFluidTankProvider{
+public class BlockFuelPump extends ABlockBaseDecor implements IBlockFluidTankProvider{
 	
 	public BlockFuelPump(){
 		super();
@@ -24,10 +24,5 @@ public class BlockFuelPump extends ABlockBaseDecor<TileEntityFuelPump> implement
     @Override
 	public TileEntityFuelPump createTileEntity(WrapperWorld world, Point3d position, WrapperNBT data){
 		return new TileEntityFuelPump(world, position, data);
-	}
-
-	@Override
-	public Class<TileEntityFuelPump> getTileEntityClass(){
-		return TileEntityFuelPump.class;
 	}
 }

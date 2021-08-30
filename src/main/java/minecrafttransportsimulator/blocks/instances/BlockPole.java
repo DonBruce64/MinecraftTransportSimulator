@@ -16,7 +16,7 @@ import minecrafttransportsimulator.mcinterface.WrapperWorld;
  *
  * @author don_bruce
  */
-public class BlockPole extends ABlockBaseTileEntity<TileEntityPole>{
+public class BlockPole extends ABlockBaseTileEntity{
 	private final Map<Axis, BoundingBox> axisBounds = new HashMap<Axis, BoundingBox>();
 	
 	public BlockPole(){
@@ -55,10 +55,5 @@ public class BlockPole extends ABlockBaseTileEntity<TileEntityPole>{
 	@Override
 	public TileEntityPole createTileEntity(WrapperWorld world, Point3d position, WrapperNBT data){
 		return new TileEntityPole(world, position, data);
-	}
-
-	@Override
-	public Class<TileEntityPole> getTileEntityClass(){
-		return TileEntityPole.class;
 	}
 }

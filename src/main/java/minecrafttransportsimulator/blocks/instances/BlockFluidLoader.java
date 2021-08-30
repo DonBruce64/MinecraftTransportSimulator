@@ -7,7 +7,7 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityFluid
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 
-public class BlockFluidLoader extends ABlockBaseDecor<TileEntityFluidLoader> implements IBlockFluidTankProvider{
+public class BlockFluidLoader extends ABlockBaseDecor implements IBlockFluidTankProvider{
 	
 	public BlockFluidLoader(){
 		super();
@@ -16,10 +16,5 @@ public class BlockFluidLoader extends ABlockBaseDecor<TileEntityFluidLoader> imp
     @Override
 	public TileEntityFluidLoader createTileEntity(WrapperWorld world, Point3d position, WrapperNBT data){
 		return new TileEntityFluidLoader(world, position, data);
-	}
-
-	@Override
-	public Class<TileEntityFluidLoader> getTileEntityClass(){
-		return TileEntityFluidLoader.class;
 	}
 }

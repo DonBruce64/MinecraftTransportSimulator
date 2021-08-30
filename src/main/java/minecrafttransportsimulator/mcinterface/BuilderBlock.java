@@ -16,7 +16,6 @@ import minecrafttransportsimulator.blocks.components.IBlockFluidTankProvider;
 import minecrafttransportsimulator.blocks.instances.BlockCollision;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityFluidTankProvider;
-import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.IItemBlock;
@@ -60,9 +59,6 @@ import net.minecraftforge.fml.common.registry.GameRegistry;
 public class BuilderBlock extends Block{
 	/**Map of created blocks linked to their builder instances.  Used for interface operations.**/
 	public static final Map<ABlockBase, BuilderBlock> blockMap = new HashMap<ABlockBase, BuilderBlock>();
-	//TODO make this go away when all TEs are tickable.
-	/**Maps TE class names to instances of the IBlockTileEntity class that creates them.**/
-	public static final Map<String, ABlockBaseTileEntity<?>> tileEntityMap = new HashMap<String, ABlockBaseTileEntity<?>>();
 	
 	/**Current block we are built around.**/
 	public final ABlockBase block;
@@ -105,14 +101,8 @@ public class BuilderBlock extends Block{
 	 *  Helper method for creating new Wrapper TEs for this block.
 	 *  Far better than ? all over for generics in the createTileEntity method.
 	 */
-	@SuppressWarnings("unchecked")
 	private static <TileEntityType extends ATileEntityBase<?>> BuilderTileEntity<TileEntityType> getTileEntityGenericWrapper(ABlockBase block){
-		Class<TileEntityType> teClass = ((ABlockBaseTileEntity<TileEntityType>) block).getTileEntityClass();
-		if(ITileEntityTickable.class.isAssignableFrom(teClass)){
-       		return new BuilderTileEntity.Tickable<TileEntityType>();	
-       	}else{
-       		return new BuilderTileEntity<TileEntityType>();
-       	}
+		return new BuilderTileEntity<TileEntityType>();
 	}
 	
 	 /**
@@ -304,10 +294,6 @@ public class BuilderBlock extends Block{
 					event.getRegistry().register(wrapper.setRegistryName(name).setTranslationKey(name));
 					blockMap.put(itemBlockBlock, wrapper);
 					blocksRegistred.add(itemBlockBlock);
-					if(itemBlockBlock instanceof ABlockBaseTileEntity){
-						//Block makes a Tile Entity.  We need to link it to a wrapper.
-						tileEntityMap.put(((ABlockBaseTileEntity<?>) itemBlockBlock).getTileEntityClass().getSimpleName(), (ABlockBaseTileEntity<?>) itemBlockBlock);
-					}
 				}
 			}
 		}
