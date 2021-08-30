@@ -141,7 +141,6 @@ public final class PackParserSystem{
 			if(!ConfigSystem.configObject.fuel.fuels.containsKey(fuelValues.getKey())){
 				ConfigSystem.configObject.fuel.fuels.put(fuelValues.getKey(), fuelValues.getValue());
 				ConfigSystem.saveToDisk();
-				break;
 			}
 		}
     	
