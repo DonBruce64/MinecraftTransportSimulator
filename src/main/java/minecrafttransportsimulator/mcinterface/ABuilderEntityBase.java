@@ -72,6 +72,7 @@ public abstract class ABuilderEntityBase extends Entity{
 	    		}else{
 	    			handleLoadedNBT(lastLoadedNBT);
 	    			loadedFromNBT = true;
+	    			lastLoadedNBT = null;
 	    		}
     		}
     		
@@ -84,16 +85,6 @@ public abstract class ABuilderEntityBase extends Entity{
 	    		}
 	    		playersRequestingData.clear();
     		}
-    	}
-    }
-    
-    @Override
-    public void setDead(){
-    	//Don't set us dead if we're not in a chunk.
-    	//For some reason enties don't update their saved positions sometimes so they get removed
-    	//during chunk loading despite them being added to the correct chunk.
-    	if(addedToChunk){
-    		super.setDead();
     	}
     }
 	
@@ -124,6 +115,9 @@ public abstract class ABuilderEntityBase extends Entity{
 	public NBTTagCompound writeToNBT(NBTTagCompound tag){
 		super.writeToNBT(tag);
 		if(!world.isRemote){
+			//Need to have this here as some mods will load us from NBT and then save us back
+			//without ticking.  This causes data loss if we don't merge the last loaded NBT tag.
+			//If we did tick, then the last loaded will be null and this doesn't apply.
 			if(lastLoadedNBT != null){
 				tag.merge(lastLoadedNBT);
 			}
