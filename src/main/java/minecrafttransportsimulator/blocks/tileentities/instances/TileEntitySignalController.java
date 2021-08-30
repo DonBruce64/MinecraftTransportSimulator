@@ -9,7 +9,6 @@ import java.util.Set;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
-import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -22,7 +21,7 @@ import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 *
 * @author don_bruce
 */
-public class TileEntitySignalController extends TileEntityDecor implements ITileEntityTickable{	
+public class TileEntitySignalController extends TileEntityDecor{	
 		
 	//Main settings for all operation.
 	public boolean isRightHandDrive;

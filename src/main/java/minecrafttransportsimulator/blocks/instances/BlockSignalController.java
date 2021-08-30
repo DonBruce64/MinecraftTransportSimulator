@@ -1,16 +1,16 @@
 package minecrafttransportsimulator.blocks.instances;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.blocks.components.ABlockBaseDecor;
+import minecrafttransportsimulator.blocks.components.ABlockBaseTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 
-public class BlockSignalController extends ABlockBaseDecor{
+public class BlockSignalController extends ABlockBaseTileEntity{
 	
 	public BlockSignalController(){
-		super();
+		super(10.0F, 5.0F);
 	}
 
 	@Override

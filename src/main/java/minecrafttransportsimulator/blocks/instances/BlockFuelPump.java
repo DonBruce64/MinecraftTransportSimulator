@@ -1,17 +1,17 @@
 package minecrafttransportsimulator.blocks.instances;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.blocks.components.ABlockBaseDecor;
+import minecrafttransportsimulator.blocks.components.ABlockBaseTileEntity;
 import minecrafttransportsimulator.blocks.components.IBlockFluidTankProvider;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityFuelPump;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 
-public class BlockFuelPump extends ABlockBaseDecor implements IBlockFluidTankProvider{
+public class BlockFuelPump extends ABlockBaseTileEntity implements IBlockFluidTankProvider{
 	
 	public BlockFuelPump(){
-		super();
+		super(10.0F, 5.0F);
 	}
 	
     @Override

@@ -2,7 +2,6 @@ package minecrafttransportsimulator.blocks.tileentities.instances;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
-import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.items.instances.ItemItem.ItemComponentType;
@@ -21,7 +20,7 @@ import minecrafttransportsimulator.rendering.instances.RenderDecor;
  *
  * @author don_bruce
  */
-public class TileEntityDecor extends ATileEntityBase<JSONDecor> implements ITileEntityTickable{
+public class TileEntityDecor extends ATileEntityBase<JSONDecor>{
 	
 	private static RenderDecor renderer;
 	

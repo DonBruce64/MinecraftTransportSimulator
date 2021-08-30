@@ -7,7 +7,6 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityFluidTankProvider;
-import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityFluidTank;
@@ -31,7 +30,7 @@ import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpCon
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.item.ItemStack;
 
-public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityTickable, ITileEntityFluidTankProvider{
+public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityFluidTankProvider{
 	public EntityVehicleF_Physics connectedVehicle;
     private final EntityFluidTank tank;
     public final EntityInventoryContainer fuelItems;

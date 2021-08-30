@@ -5,7 +5,6 @@ import javax.annotation.Nullable;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityFluidTankProvider;
-import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import net.minecraft.util.EnumFacing;
 import net.minecraftforge.common.capabilities.Capability;
@@ -32,7 +31,7 @@ public class BuilderTileEntityFluidTank<FluidTankTileEntity extends ATileEntityB
 	@Override
 	public void update(){
 		if(tileEntity != null){
-			((ITileEntityTickable) tileEntity).update();
+			tileEntity.update();
 		}
 	}
 
