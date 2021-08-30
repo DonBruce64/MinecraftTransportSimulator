@@ -226,9 +226,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 				}
 				lightBrightnessClocks.put(lightDef, lightClocks);
 				lightBrightnessValues.put(lightDef, 0F);
-				if(lightDef.color != null){
-					lightColorValues.put(lightDef, lightDef.color);
-				}
+				lightColorValues.put(lightDef, new ColorRGB());
 			}
 		}
 		
@@ -444,6 +442,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 			boolean inhibitAnimations = false;
 			boolean inhibitLight = false;
 			ColorRGB customColor = null;
+			
 			for(DurationDelayClock clock : lightBrightnessClocks.get(lightDef)){
 				switch(clock.animation.animationType){
 					case VISIBILITY :{
@@ -507,19 +506,25 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 					break;
 				}
 			}
+			
+			//Set light level.
 			if(inhibitLight || lightLevel < 0){
 				lightLevel = 0;
 			}else if(!definedBrightness || lightLevel > 1){
 				lightLevel = 1;
 			}
 			lightBrightnessValues.put(lightDef, lightLevel);
+			
+			//Set color level.
+			ColorRGB lightColor = lightColorValues.get(lightDef);
 			if(customColor != null){
-				lightColorValues.put(lightDef, customColor);
+				lightColor.setTo(customColor);
 			}else if(lightDef.color != null){
-				lightColorValues.put(lightDef, lightDef.color);
-			}else if(lightDef.emissive || (lightDef.blendableComponents != null && !lightDef.blendableComponents.isEmpty())){
-				throw new IllegalArgumentException("Was told to update light " + lightDef.objectName + " on " + definition.packID + ":" + definition.systemName + " but said light is missing a color parameter.  This is required if you have an emissive light or one with flares or beams!");
+				lightColor.setTo(lightDef.color);
+			}else{
+				lightColor.setTo(ColorRGB.WHITE);
 			}
+			lightColorValues.put(lightDef, lightColor);
 		}
     }
 	

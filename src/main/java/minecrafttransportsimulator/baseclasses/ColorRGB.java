@@ -27,11 +27,11 @@ public class ColorRGB{
 	public static final ColorRGB PINK = new ColorRGB(255, 175, 175);
 	public static final ColorRGB ORANGE = new ColorRGB(255, 200, 0);
 	
-	public final float red;
-	public final float green;
-	public final float blue;
-	public final int rgbInt;
-	public final int[] hsv;
+	public float red;
+	public float green;
+	public float blue;
+	public int rgbInt;
+	public int[] hsv;
 	
 	public ColorRGB(){
 		this(1.0F, 1.0F, 1.0F, false);
@@ -141,5 +141,19 @@ public class ColorRGB{
 	@Override
 	public String toString(){
 		return "[" + red + ", " + green + ", " + blue + "]";
+	}
+	
+	/**
+	 * Sets the color to the passed-in color.
+	 * This is done to keep this object instance for reference while changing it.
+	 * You MUST use this method to change the color values, otherwise it will
+	 * leave this object in an inconsistent state!
+	 */
+	public void setTo(ColorRGB color){
+		this.red = color.red;
+		this.green = color.green;
+		this.blue = color.blue;
+		this.rgbInt = color.rgbInt;
+		this.hsv = color.hsv;
 	}
 }

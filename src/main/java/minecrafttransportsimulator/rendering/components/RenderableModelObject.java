@@ -864,9 +864,6 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 		return points;
 	}
 	
-	/**
-	 *  Helper method to normalize a set of UVs for rendering.
-	 */
 	private static void normalizeUVs(Float[][] parsedObject){
 		for(int i=0; i<parsedObject.length; ++i){
 			if(parsedObject.length > 3 && i%6 >= 3){

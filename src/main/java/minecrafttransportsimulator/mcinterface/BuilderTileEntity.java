@@ -52,7 +52,7 @@ public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extend
 						tileEntity = (TileEntityType) block.createTileEntity(worldWrapper, position, null, new WrapperNBT(lastLoadedNBT));
 						lastLoadedNBT = null;
 					}catch(Exception e){
-						InterfaceCore.logError("Failed to load entity on builder from saved NBT.  Did a pack change?");
+						InterfaceCore.logError("Failed to load tile entity on builder from saved NBT.  Did a pack change?");
 						InterfaceCore.logError(e.getMessage());
 						invalidate();
 					}
@@ -99,7 +99,11 @@ public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extend
 			//Gets called when we do a blockstate update for this TE.
 			//Done during initial placedown so we need to get the full data for initial state. 
 			return new SPacketUpdateTileEntity(getPos(), -1, tileEntity.save(new WrapperNBT()).tag);
+		}else if(lastLoadedNBT != null){
+			return new SPacketUpdateTileEntity(getPos(), -1, lastLoadedNBT);
 		}else{
+			InterfaceCore.logError("Attempted to get Tile Entity data from a Tile Entity without any associated TE or data.  Removing!");
+			invalidate();
 			return super.getUpdatePacket();
 		}
     }
@@ -124,7 +128,10 @@ public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extend
 		super.writeToNBT(tag);
 		if(tileEntity != null){
 			tileEntity.save(new WrapperNBT(tag));
+		}else if(lastLoadedNBT != null){
+			tag = lastLoadedNBT;
 		}else{
+			InterfaceCore.logError("Attempted to save a Tile Entity without any associated TE or data.  Removing!");
 			invalidate();
 		}
         return tag;
