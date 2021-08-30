@@ -72,7 +72,7 @@ public final class PartInteractable extends APart{
 					isValid = false;
 					world.spawnExplosion(position, explosivePower, true);
 					if(vehicleOn != null){
-						vehicleOn.destroyAt(position);
+						vehicleOn.destroy(boundingBox);
 					}
 				}
 			}

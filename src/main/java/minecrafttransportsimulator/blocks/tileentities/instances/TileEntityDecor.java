@@ -4,9 +4,16 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
+import minecrafttransportsimulator.items.components.AItemBase;
+import minecrafttransportsimulator.items.instances.ItemItem;
+import minecrafttransportsimulator.items.instances.ItemItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.packets.components.InterfacePacket;
+import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
+import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.rendering.instances.RenderDecor;
 
 /**Decor tile entity.  Contains the definition so we know how
@@ -19,8 +26,6 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> implements ITile
 	public final BoundingBox[] boundingBoxes = new BoundingBox[4];
 	
 	private static RenderDecor renderer;
-	
-	private boolean converted;
 	
 	public TileEntityDecor(WrapperWorld world, Point3d position, WrapperNBT data){
 		super(world, position, data);
@@ -38,19 +43,44 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> implements ITile
 			if(variablesOn.contains("clicked")){
 				variablesOn.remove("clicked");
 			}
-			
-			//TODO remove legacy rotation code in V21.
-			if(!converted){
-				if(!world.isAir(position)){
-					this.angles.y = -world.getBlockRotation(position);
-					this.prevAngles.y = angles.y;
-					converted = true;
-				}
-			}
 			return true;
 		}else{
 			return false;
 		}
+	}
+	
+	@Override
+	public boolean interact(WrapperPlayer player){
+    	AItemBase heldItem = player.getHeldItem();
+		if(heldItem instanceof ItemItem && ((ItemItem) heldItem).definition.item.equals(ItemComponentType.PAINT_GUN)){
+			//Don't do decor actions if we are holding a paint gun.
+			return false;
+		}else if(definition.decor.crafting != null){
+			if(!world.isClient()){
+				player.sendPacket(new PacketEntityGUIRequest(this, player, PacketEntityGUIRequest.EntityGUIType.PART_BENCH));
+				
+			}
+		}else if(!text.isEmpty()){
+			if(!world.isClient()){
+				player.sendPacket(new PacketEntityGUIRequest(this, player, PacketEntityGUIRequest.EntityGUIType.TEXT_EDITOR));
+			}
+		}
+		if(!world.isClient()){
+			variablesOn.add("clicked");
+			if(variablesOn.contains("activated")){
+				variablesOn.remove("activated");
+			}else{
+				variablesOn.add("activated");
+			}
+			InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(this, "clicked"));
+			InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(this, "activated"));
+		}
+		return true;
+	}
+	
+	@Override
+	public int getRotationIncrement(){
+		return 90;
 	}
 	
 	@Override

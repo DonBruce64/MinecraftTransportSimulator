@@ -11,8 +11,8 @@ import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
-import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
-import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
+import minecrafttransportsimulator.blocks.components.ABlockBaseTileEntity;
+import minecrafttransportsimulator.blocks.components.IBlockFluidTankProvider;
 import minecrafttransportsimulator.blocks.instances.BlockCollision;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityFluidTankProvider;
@@ -30,7 +30,6 @@ import net.minecraft.block.state.BlockFaceShape;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -40,7 +39,6 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.Rotation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
@@ -62,22 +60,24 @@ import net.minecraftforge.fml.common.registry.GameRegistry;
 public class BuilderBlock extends Block{
 	/**Map of created blocks linked to their builder instances.  Used for interface operations.**/
 	public static final Map<ABlockBase, BuilderBlock> blockMap = new HashMap<ABlockBase, BuilderBlock>();
+	//TODO make this go away when all TEs are tickable.
 	/**Maps TE class names to instances of the IBlockTileEntity class that creates them.**/
-	public static final Map<String, IBlockTileEntity<?>> tileEntityMap = new HashMap<String, IBlockTileEntity<?>>();
+	public static final Map<String, ABlockBaseTileEntity<?>> tileEntityMap = new HashMap<String, ABlockBaseTileEntity<?>>();
 	
 	/**Current block we are built around.**/
-	public final ABlockBase mcBlock;
+	public final ABlockBase block;
 	/**Holding map for block drops.  MC calls breakage code after the TE is removed, so we need to store drops 
 	created during the drop checks here to ensure they actually drop when the block is broken. **/
 	private static final Map<BlockPos, List<ItemStack>> dropsAtPositions = new HashMap<BlockPos, List<ItemStack>>();
 	/**Map to hold AABB representations of BB states.  Used to prevent re-creating them every check.**/
 	private static final Map<BoundingBox, AxisAlignedBB> boundingBoxMap = new HashMap<BoundingBox, AxisAlignedBB>();
-	/**Internal property for rotation of this block.**/
-	protected static final PropertyDirection FACING = BlockHorizontal.FACING;
+	
+	//TODO remove this when we figure out how to not make blocks go poof.
+	private static final PropertyDirection FACING = BlockHorizontal.FACING;
 	
     BuilderBlock(ABlockBase block){
 		super(Material.ROCK);
-		this.mcBlock = block;
+		this.block = block;
 		fullBlock = false;
 		setHardness(block.hardness);
 		setResistance(block.blastResistance);
@@ -87,18 +87,17 @@ public class BuilderBlock extends Block{
     @Override
     public boolean hasTileEntity(IBlockState state){
     	//If our block implements the interface to be a TE, we return true.
-        return mcBlock instanceof IBlockTileEntity<?>;
+        return block instanceof ABlockBaseTileEntity;
     }
     
 	@Nullable
 	@Override
     public TileEntity createTileEntity(World world, IBlockState state){
     	//Need to return a wrapper class here, not the actual TE.
-		Class<? extends ATileEntityBase<?>> teClass = ((IBlockTileEntity<?>) mcBlock).getTileEntityClass();
-		if(ITileEntityFluidTankProvider.class.isAssignableFrom(teClass)){
-			return getTileEntityTankWrapper(mcBlock);
+		if(block instanceof IBlockFluidTankProvider){
+			return getTileEntityTankWrapper(block);
 		}else{
-			return getTileEntityGenericWrapper(mcBlock);
+			return getTileEntityGenericWrapper(block);
 		}
     }
 	
@@ -108,7 +107,7 @@ public class BuilderBlock extends Block{
 	 */
 	@SuppressWarnings("unchecked")
 	private static <TileEntityType extends ATileEntityBase<?>> BuilderTileEntity<TileEntityType> getTileEntityGenericWrapper(ABlockBase block){
-		Class<TileEntityType> teClass = ((IBlockTileEntity<TileEntityType>) block).getTileEntityClass();
+		Class<TileEntityType> teClass = ((ABlockBaseTileEntity<TileEntityType>) block).getTileEntityClass();
 		if(ITileEntityTickable.class.isAssignableFrom(teClass)){
        		return new BuilderTileEntity.Tickable<TileEntityType>();	
        	}else{
@@ -127,13 +126,17 @@ public class BuilderBlock extends Block{
 	@Override
 	public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ){
 		//Forward this click to the block.  For left-clicks we'll need to use item attack calls.
-		if(mcBlock instanceof IBlockTileEntity<?>){
-    		TileEntity tile = world.getTileEntity(pos);
-    		if(tile instanceof BuilderTileEntity){
-    			if(((BuilderTileEntity<?>) tile).tileEntity != null){
-    				return mcBlock.onClicked(WrapperWorld.getWrapperFor(world), new Point3d(pos.getX(), pos.getY(), pos.getZ()), Axis.valueOf(side.name()), WrapperPlayer.getWrapperFor(player));
-    			}
-    		}
+		if(block instanceof ABlockBaseTileEntity){
+			if(!world.isRemote){
+	    		TileEntity tile = world.getTileEntity(pos);
+	    		if(tile instanceof BuilderTileEntity){
+	    			if(((BuilderTileEntity<?>) tile).tileEntity != null){
+	    				return ((BuilderTileEntity<?>) tile).tileEntity.interact(WrapperPlayer.getWrapperFor(player));
+	    			}
+	    		}
+			}else{
+				return true;
+			}
 		}
 		return super.onBlockActivated(world, pos, state, player, hand, side, hitX, hitY, hitZ);
 	}
@@ -147,7 +150,7 @@ public class BuilderBlock extends Block{
     	
     	//Note that this method is only used for middle-clicking and nothing else.  Failure to return valid results
     	//here will result in air being grabbed, and no WAILA support.
-    	if(mcBlock instanceof IBlockTileEntity<?>){
+    	if(block instanceof ABlockBaseTileEntity){
     		TileEntity mcTile = world.getTileEntity(pos);
     		if(mcTile instanceof BuilderTileEntity){
     			ATileEntityBase<?> tile = ((BuilderTileEntity<?>) mcTile).tileEntity;
@@ -169,7 +172,7 @@ public class BuilderBlock extends Block{
     @Override
     public void getDrops(NonNullList<ItemStack> drops, IBlockAccess world, BlockPos pos, IBlockState state, int fortune){
     	//If this is a TE, drop TE drops.  Otherwise, drop normal drops.
-    	if(mcBlock instanceof IBlockTileEntity<?>){
+    	if(block instanceof ABlockBaseTileEntity){
     		if(dropsAtPositions.containsKey(pos)){
     			drops.addAll(dropsAtPositions.get(pos));
     			dropsAtPositions.remove(pos);
@@ -183,11 +186,11 @@ public class BuilderBlock extends Block{
     @Override
     public void breakBlock(World world, BlockPos pos, IBlockState state){
     	//Forward the breaking call to the block to allow for breaking logic.
-    	mcBlock.onBroken(WrapperWorld.getWrapperFor(world), new Point3d(pos.getX(), pos.getY(), pos.getZ()));
+    	block.onBroken(WrapperWorld.getWrapperFor(world), new Point3d(pos.getX(), pos.getY(), pos.getZ()));
     	//This gets called before the block is broken to do logic.  Save drops to static map to be
     	//spawned during the getDrops method.  Also notify the block that it's been broken in case
     	//it needs to do operations.
-    	if(mcBlock instanceof IBlockTileEntity<?>){
+    	if(block instanceof ABlockBaseTileEntity){
     		TileEntity tile = world.getTileEntity(pos);
     		if(tile instanceof BuilderTileEntity){
     			if(((BuilderTileEntity<?>) tile).tileEntity != null){
@@ -206,7 +209,7 @@ public class BuilderBlock extends Block{
     	//Gets the collision boxes. We forward this call to the block to handle.
     	//We add-on 0.5D to offset the box to the correct location.
     	List<BoundingBox> collisionBoxes = new ArrayList<BoundingBox>();
-    	mcBlock.addCollisionBoxes(WrapperWorld.getWrapperFor(world), new Point3d(pos.getX(), pos.getY(), pos.getZ()), collisionBoxes);
+    	block.addCollisionBoxes(WrapperWorld.getWrapperFor(world), new Point3d(pos.getX(), pos.getY(), pos.getZ()), collisionBoxes);
     	for(BoundingBox box : collisionBoxes){
     		AxisAlignedBB mcBox = box.convertWithOffset(pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D);
 			if(mcBox.intersects(entityBox)){
@@ -218,37 +221,17 @@ public class BuilderBlock extends Block{
     @Override
 	@SuppressWarnings("deprecation")
     public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess source, BlockPos pos){
-        BoundingBox box = mcBlock.getCollisionBounds();
+        BoundingBox box = block.getCollisionBounds();
         if(!boundingBoxMap.containsKey(box)){
         	boundingBoxMap.put(box, box.convertWithOffset(0.5D, 0.5D, 0.5D));
         }
         return boundingBoxMap.get(box);
-    }
-    
-	@Override
-	public IBlockState getStateForPlacement(World worldIn, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer, EnumHand hand){
-		//Sets the blockstate to the correct state to save rotation data.  Should be opposite facing as what the player placed.
-		return super.getStateForPlacement(worldIn, pos, facing, hitX, hitY, hitZ, meta, placer, hand).withProperty(FACING, placer.getHorizontalFacing().getOpposite());
-    }
-	
-	@Override
-	@SuppressWarnings("deprecation")
-    public IBlockState getStateFromMeta(int meta){
-		//Restores the sate from meta.
-        return this.getDefaultState().withProperty(FACING, EnumFacing.byHorizontalIndex(meta));
     }
 
     @Override
     public int getMetaFromState(IBlockState state){
     	//Saves the state as metadata.
         return state.getValue(FACING).getHorizontalIndex();
-    }
-
-    @Override
-    @SuppressWarnings("deprecation")
-    public IBlockState withRotation(IBlockState state, Rotation rot){
-    	//Returns the state with the applied rotation.  Rotate based on how we're facing.
-        return state.getBlock() != this ? state : state.withProperty(FACING, rot.rotate(state.getValue(FACING)));
     }
 
     @Override
@@ -321,9 +304,9 @@ public class BuilderBlock extends Block{
 					event.getRegistry().register(wrapper.setRegistryName(name).setTranslationKey(name));
 					blockMap.put(itemBlockBlock, wrapper);
 					blocksRegistred.add(itemBlockBlock);
-					if(itemBlockBlock instanceof IBlockTileEntity<?>){
+					if(itemBlockBlock instanceof ABlockBaseTileEntity){
 						//Block makes a Tile Entity.  We need to link it to a wrapper.
-						tileEntityMap.put(((IBlockTileEntity<?>) itemBlockBlock).getTileEntityClass().getSimpleName(), (IBlockTileEntity<?>) itemBlockBlock);
+						tileEntityMap.put(((ABlockBaseTileEntity<?>) itemBlockBlock).getTileEntityClass().getSimpleName(), (ABlockBaseTileEntity<?>) itemBlockBlock);
 					}
 				}
 			}

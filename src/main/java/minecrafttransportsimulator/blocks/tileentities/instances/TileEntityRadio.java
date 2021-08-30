@@ -2,6 +2,7 @@ package minecrafttransportsimulator.blocks.tileentities.instances;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 
 /**Radio tile entity.
@@ -19,6 +20,11 @@ public class TileEntityRadio extends TileEntityDecor{
 	@Override
 	public boolean hasRadio(){
 		return true;
+	}
+	
+	@Override
+	public boolean interact(WrapperPlayer player){
+		return radio.interact(player);
 	}
 	
 	@Override

@@ -13,7 +13,9 @@ import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTic
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 
 /**Traffic signal controller tile entity.  Responsible for keeping the state of traffic
  * intersections.
@@ -104,6 +106,12 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 		super.remove();
 		//Clear found poles so signals know we don't exist anymore and to remove their references.
 		clearFoundPoles();
+	}
+	
+	@Override
+	public boolean interact(WrapperPlayer player){
+		player.sendPacket(new PacketEntityGUIRequest(this, player, PacketEntityGUIRequest.EntityGUIType.SIGNAL_CONTROLLER));
+		return true;
 	}
 	
 	/**
@@ -447,7 +455,7 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 		
 		@Override
 		protected boolean isSignalBlocking(SignalGroup otherSignal){
-			switch(Axis.getFromRotation(otherSignal.axis.yRotation - axis.yRotation)){
+			switch(Axis.getFromRotation(otherSignal.axis.yRotation - axis.yRotation, true)){
 				case SOUTH : { //Same direction.
 					return false;
 				}
@@ -516,7 +524,7 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 		
 		@Override
 		protected boolean isSignalBlocking(SignalGroup otherSignal){
-			switch(Axis.getFromRotation(otherSignal.axis.yRotation - axis.yRotation)){
+			switch(Axis.getFromRotation(otherSignal.axis.yRotation - axis.yRotation, true)){
 				case SOUTH : { //Same direction.
 					return false;
 				}
@@ -585,7 +593,7 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 		
 		@Override
 		protected boolean isSignalBlocking(SignalGroup otherSignal){
-			switch(Axis.getFromRotation(otherSignal.axis.yRotation - axis.yRotation)){
+			switch(Axis.getFromRotation(otherSignal.axis.yRotation - axis.yRotation, true)){
 				case SOUTH : { //Same direction.
 					return false;
 				}

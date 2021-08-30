@@ -5,7 +5,9 @@ import java.util.List;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 import net.minecraft.item.ItemStack;
 
 /**Chest tile entity.
@@ -19,6 +21,12 @@ public class TileEntityChest extends TileEntityDecor{
 	public TileEntityChest(WrapperWorld world, Point3d position, WrapperNBT data){
 		super(world, position, data);
 		this.inventory = new EntityInventoryContainer(world, data.getDataOrNew("inventory"), (int) (definition.decor.inventoryUnits*9F));
+	}
+	
+	@Override
+	public boolean interact(WrapperPlayer player){
+		player.sendPacket(new PacketEntityGUIRequest(this, player, PacketEntityGUIRequest.EntityGUIType.INVENTORY_CHEST));
+		return true;
 	}
 
 	@Override

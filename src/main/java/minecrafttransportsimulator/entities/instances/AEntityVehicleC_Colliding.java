@@ -1,6 +1,8 @@
 package minecrafttransportsimulator.entities.instances;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
@@ -10,7 +12,6 @@ import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packloading.PackMaterialComponent;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.item.ItemStack;
 
@@ -117,7 +118,7 @@ abstract class AEntityVehicleC_Colliding extends AEntityVehicleB_Rideable{
 						hardnessHitThisTick -= hardnessHitThisBox;
 						removePart(partHit, null);
 					}else{
-						destroyAt(box.globalCenter);
+						destroy(box);
 					}
 				}
 				return -1;
@@ -135,33 +136,18 @@ abstract class AEntityVehicleC_Colliding extends AEntityVehicleB_Rideable{
 		}
 	}
 	
-	/**
-	 * Call this to remove this vehicle.  This should be called when the vehicle has crashed, as it
-	 * ejects all parts and damages all players.  Explosions may not occur in crashes depending on config 
-	 * settings or a lack of fuel or explodable cargo.  Call only on the SERVER as this is for item-spawning 
-	 * code and player damage code.
-	 */
-	public void destroyAt(Point3d location){
-		//Do normal removal operations.
-		remove();
+	@Override
+	public void destroy(BoundingBox box){
+		super.destroy(box);
 		
-		//Remove all parts from the vehicle and place them as items.
+		//Spawn drops from us and our parts.
+		List<ItemStack> drops = new ArrayList<ItemStack>();
+		addDropsToList(drops);
 		for(APart part : parts){
-			if(part.getItem() != null){
-				WrapperNBT partData = new WrapperNBT();
-				part.save(partData);
-				world.spawnItem(part.getItem(), partData, part.position);
-			}
+			part.addDropsToList(drops);
 		}
-		
-		//Also drop some crafting ingredients as items.
-		for(PackMaterialComponent material : PackMaterialComponent.parseFromJSON(getItem(), true, true, false)){
-			for(ItemStack stack : material.possibleItems){
-				if(Math.random() < ConfigSystem.configObject.damage.crashItemDropPercentage.value){
-					world.spawnItemStack(new ItemStack(stack.getItem(), material.qty, material.meta), location);
-				}
-				break;
-			}
+		for(ItemStack stack : drops){
+			world.spawnItemStack(stack, box.globalCenter);
 		}
 		
 		//Damage all riders, including the controller.

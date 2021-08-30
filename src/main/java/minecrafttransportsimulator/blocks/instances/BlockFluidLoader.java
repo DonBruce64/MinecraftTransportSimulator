@@ -2,20 +2,15 @@ package minecrafttransportsimulator.blocks.instances;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.components.ABlockBaseDecor;
+import minecrafttransportsimulator.blocks.components.IBlockFluidTankProvider;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityFluidLoader;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 
-public class BlockFluidLoader extends ABlockBaseDecor<TileEntityFluidLoader>{
+public class BlockFluidLoader extends ABlockBaseDecor<TileEntityFluidLoader> implements IBlockFluidTankProvider{
 	
 	public BlockFluidLoader(){
 		super();
-	}
-	
-	@Override
-	public boolean onClicked(WrapperWorld world, Point3d position, Axis axis, WrapperPlayer player){
-		return false;
 	}
 	
     @Override

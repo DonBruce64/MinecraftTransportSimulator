@@ -2,6 +2,8 @@ package minecrafttransportsimulator.sound;
 
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 import minecrafttransportsimulator.sound.RadioManager.RadioSources;
 
 /**Base class for radios.  Used to provide a common set of tools for all radio implementations.
@@ -65,6 +67,12 @@ public class Radio extends AEntityB_Existing{
 		}else{
 			return false;
 		}
+	}
+	
+	@Override
+	public boolean interact(WrapperPlayer player){
+		player.sendPacket(new PacketEntityGUIRequest(this, player, PacketEntityGUIRequest.EntityGUIType.RADIO));
+		return true;
 	}
 	
 	/**

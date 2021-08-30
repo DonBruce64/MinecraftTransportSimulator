@@ -464,16 +464,6 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 	public boolean isFake(){
 		return false;
 	}
-
-	/**
-	 * Called when checking if this part can be interacted with.
-	 * If a part does interactions it should do so and then return true.
-	 * Call this ONLY from the server-side!  The server will handle the
-	 * interaction by notifying the client via packet if appropriate.
-	 */
-	public boolean interact(WrapperPlayer player){
-		return false;
-	}
 	
 	public float getWidth(){
 		return definition.generic.width != 0 ? definition.generic.width : 0.75F;

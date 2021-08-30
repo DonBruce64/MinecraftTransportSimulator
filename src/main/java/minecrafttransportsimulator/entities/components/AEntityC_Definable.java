@@ -36,6 +36,7 @@ import minecrafttransportsimulator.sound.InterfaceSound;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.CameraSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
+import net.minecraft.item.ItemStack;
 
 /**Base class for entities that are defined via JSON definitions and can be modeled in 3D.
  * This level adds various method for said definitions, which include rendering functions. 
@@ -89,20 +90,9 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	/**Constructor for synced entities**/
 	public AEntityC_Definable(WrapperWorld world, WrapperNBT data){
 		super(world, data);
-		//Set definition and current subName.
-		//TODO remove forwarding in V21.
 		this.subName = data.getString("subName");
-		if(subName.isEmpty()){
-			subName = data.getString("currentSubName");
-		}
 		AItemSubTyped<JSONDefinition> item = PackParserSystem.getItem(data.getString("packID"), data.getString("systemName"), subName);
-		if(item != null){
-			this.definition = item.definition;
-			//this.subName = item.subName;
-		}else{
-			this.definition = generateDefaultDefinition();
-			//this.subName = "";
-		}
+		this.definition = item != null ? item.definition : generateDefaultDefinition();
 		
 		//Load text.
 		if(definition.rendering != null && definition.rendering.textObjects != null){
@@ -296,6 +286,21 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	 */
 	public <ItemInstance extends AItemPack<JSONDefinition>> ItemInstance getItem(){
 		return PackParserSystem.getItem(definition.packID, definition.systemName, subName);
+	}
+	
+	/**
+	 *  Populates the passed-in list with item stacks that will drop when this entity is broken.
+	 *  This is different than what is used for middle-clicking, as that will
+	 *  return a stack that can re-create this entity, whereas drops may or may not allow for this.
+	 *  An example is a vehicle that is broken in a crash versus picked up via a wrench.
+	 */
+	public void addDropsToList(List<ItemStack> drops){
+		AItemPack<JSONDefinition> packItem = getItem();
+		if(packItem != null){
+			ItemStack droppedStack = getItem().getNewStack();
+			droppedStack.setTagCompound(save(new WrapperNBT()).tag);
+			drops.add(droppedStack);
+		}
 	}
 	
 	/**

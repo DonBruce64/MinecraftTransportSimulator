@@ -34,30 +34,12 @@ public abstract class ABlockBase{
 	public void onPlaced(WrapperWorld world, Point3d position, WrapperPlayer player){}
 	
 	/**
-	 *  Called when this block is clicked.  Return true if this block does
-	 *  a thing, false if the block just exists to be pretty.  Actions may
-	 *  or may not be taken.  Note that this is called both on the server and
-	 *  on the client, so watch your actions and packets!
-	 */
-	public abstract boolean onClicked(WrapperWorld world, Point3d position, Axis axis, WrapperPlayer player);
-	
-	/**
 	 *  Called when this block is removed from the world.  This occurs when the block is broken
 	 *  by a player, explosion, vehicle, etc.  This method is called prior to the Tile Entity being
 	 *  removed, as logic may be needed to be performed that requires the data from the TE.
 	 *  This is ONLY called on the server, so if you have data to sync, do it via packets. 
 	 */
 	public void onBroken(WrapperWorld world, Point3d position){}
-
-	/**
-	 *  Gets the current rotation of the block at the passed-in point.
-	 *  Angle will be either 0, 90, 180, or 270.  This is internally
-	 *  set by MC-standard methods when the player places the block, and is
-	 *  not modifiable by any block-based code.
-	 */
-	public float getRotation(WrapperWorld world, Point3d position){
-		return world.getBlockRotation(position);
-	}
 	
 	/**
 	 *  Adds all collision boxes to the passed-in list.  This is sent back to MC
@@ -132,12 +114,12 @@ public abstract class ABlockBase{
 			}
 		}
 		
-		public static Axis getFromRotation(double rotation){
+		public static Axis getFromRotation(double rotation, boolean checkDiagonals){
 			rotation = rotation%360;
 			if(rotation < 0){
 				rotation += 360;
 			}
-			int degRotation = (int) (Math.round(rotation/45)*45);
+			int degRotation = checkDiagonals ? (int) (Math.round(rotation/45)*45) : (int) (Math.round(rotation/90)*90);
 			for(Axis axis : values()){
 				if(axis.xzPlanar && axis.yRotation == degRotation){
 					return axis;

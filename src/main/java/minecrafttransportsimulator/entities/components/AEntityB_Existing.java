@@ -6,6 +6,7 @@ import java.util.List;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.sound.Radio;
 import minecrafttransportsimulator.sound.SoundInstance;
@@ -98,6 +99,18 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	}
 	
 	/**
+	 * Called to destroy this entity.  While removal will still allow the entity to be re-created
+	 * into the world on the next loading of the world or the chunk it is is, destruction is the
+	 * permanent removal of this entity from the world.  Think breaking blocks or crashing vehicles.
+	 * The passed-in bounding box may be considered the location of destruction.  Used in cases where
+	 * an entity has multiple bounding boxes and the destruction is location-specific.
+	 */
+	public void destroy(BoundingBox box){
+		//Do normal removal operations.
+		remove();
+	}
+	
+	/**
 	 *  This method returns true if this entity needs to be chunkloaded.  This will prevent it from
 	 *  being unloaded server-side.  Client-side entities will still unload as clients unload their
 	 *  own chunks.
@@ -121,6 +134,15 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	 *  are times where entities should affect collision.
 	 */
 	public boolean canCollideWith(AEntityB_Existing entityToCollide){
+		return false;
+	}
+	
+	/**
+	 * Called when checking if this entity can be interacted with.
+	 * If it does interactions it should do them and then return true.
+	 * This is only called on the server: client modifications will be done via packets.
+	 */
+	public boolean interact(WrapperPlayer player){
 		return false;
 	}
 	

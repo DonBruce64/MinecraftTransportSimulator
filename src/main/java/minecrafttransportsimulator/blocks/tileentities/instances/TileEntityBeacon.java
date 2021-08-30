@@ -2,11 +2,14 @@ package minecrafttransportsimulator.blocks.tileentities.instances;
 
 import java.util.List;
 
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.NavBeacon;
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 import minecrafttransportsimulator.systems.NavBeaconSystem;
 
 /**Beacon tile entity.  Contains code for handling interfacing with
@@ -61,6 +64,18 @@ public class TileEntityBeacon extends TileEntityDecor{
 				setBeaconToDefault();
 			}
 		}
+	}
+	
+	@Override
+    public void destroy(BoundingBox box){
+    	super.destroy(box);
+    	NavBeaconSystem.removeBeacon(world, beaconName);
+    }
+		
+    @Override
+	public boolean interact(WrapperPlayer player){
+		player.sendPacket(new PacketEntityGUIRequest(this, player, PacketEntityGUIRequest.EntityGUIType.TEXT_EDITOR));
+		return true;
 	}
 	
 	@Override

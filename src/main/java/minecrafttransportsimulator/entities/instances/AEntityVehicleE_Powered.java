@@ -8,6 +8,7 @@ import java.util.List;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 
+import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.NavBeacon;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
@@ -220,11 +221,11 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 	}
 	
 	@Override
-	public void destroyAt(Point3d location){
-		super.destroyAt(location);
+	public void destroy(BoundingBox box){
+		super.destroy(box);
 		//Spawn instruments in the world.
 		for(ItemInstrument instrument : instruments.values()){
-			world.spawnItem(instrument, null, location);
+			world.spawnItem(instrument, null, box.globalCenter);
 		}
 		
 		//Oh, and add explosions.  Because those are always fun.
@@ -237,7 +238,7 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 					explosivePower += ((PartInteractable) part).getExplosiveContribution();
 				}
 			}
-			world.spawnExplosion(location, explosivePower + fuelTank.getExplosiveness() + 1D, true);
+			world.spawnExplosion(box.globalCenter, explosivePower + fuelTank.getExplosiveness() + 1D, true);
 		}
 	}
 	

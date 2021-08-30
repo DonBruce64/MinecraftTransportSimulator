@@ -10,12 +10,21 @@ import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityTickable;
+import minecrafttransportsimulator.items.components.AItemBase;
+import minecrafttransportsimulator.items.instances.ItemItem;
+import minecrafttransportsimulator.items.instances.ItemItem.ItemComponentType;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent.PoleComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.packets.components.InterfacePacket;
+import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
+import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest.EntityGUIType;
+import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleChange;
 import minecrafttransportsimulator.rendering.instances.RenderPole;
+import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.item.ItemStack;
 
@@ -104,6 +113,57 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent> implement
 			component.remove();
 		}
 	}
+	
+	@Override
+	public boolean interact(WrapperPlayer player){
+		//Fire a packet to interact with this pole.  Will either add, remove, or allow editing of the pole.
+		//Only fire packet if player is holding a pole component that's not an actual pole, a wrench,
+		//or is clicking a sign with text.
+		TileEntityPole pole = (TileEntityPole) world.getTileEntity(position);
+		if(pole != null){
+			Axis axis = Axis.getFromRotation(player.getYaw(), pole.definition.pole.allowsDiagonals).getOpposite();
+			ItemStack heldStack = player.getHeldStack();
+			AItemBase heldItem = player.getHeldItem();
+			ATileEntityPole_Component clickedComponent = pole.components.get(axis);
+			if(!ConfigSystem.configObject.general.opSignEditingOnly.value || player.isOP()){
+				if(heldItem instanceof ItemItem && ((ItemItem) heldItem).definition.item.type.equals(ItemComponentType.WRENCH)){
+					//Holding a wrench, try to remove the component.
+					//Need to check if it will fit in the player's inventory.
+					if(pole.components.containsKey(axis)){
+						ATileEntityPole_Component component = pole.components.get(axis);
+						WrapperNBT removedComponentData = component.save(new WrapperNBT());
+						if(player.isCreative() || player.getInventory().addItem(component.getItem(), removedComponentData)){
+							pole.components.remove(axis).remove();
+							pole.updateLightState();
+							InterfacePacket.sendToAllClients(new PacketTileEntityPoleChange(this, axis, null));
+						}
+						return true;
+					}
+				}else if(clickedComponent instanceof TileEntityPole_Sign && clickedComponent.definition.rendering != null && clickedComponent.definition.rendering.textObjects != null){
+					//Player clicked a sign with text.  Open the GUI to edit it.
+					player.sendPacket(new PacketEntityGUIRequest(clickedComponent, player, EntityGUIType.TEXT_EDITOR));
+					return true;
+				}else if(heldItem instanceof ItemPoleComponent && !((ItemPoleComponent) heldItem).definition.pole.type.equals(PoleComponentType.CORE)){
+					//Player is holding component that could be added.  Try and do so.
+					ItemPoleComponent componentItem = (ItemPoleComponent) heldItem;
+					ATileEntityPole_Component newComponent = PoleComponentType.createComponent(pole, axis, componentItem.validateData(new WrapperNBT(heldStack)));
+					pole.components.put(axis, newComponent);
+					pole.updateLightState();
+					if(!player.isCreative()){
+						player.getInventory().removeStack(player.getHeldStack(), 1);
+					}
+					InterfacePacket.sendToAllClients(new PacketTileEntityPoleChange(this, axis, newComponent.save(new WrapperNBT())));
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	@Override
+    public int getRotationIncrement(){
+		return 360;
+    }
 	
 	/**
 	 * Helper method to update light state and re-do world lighting if required.

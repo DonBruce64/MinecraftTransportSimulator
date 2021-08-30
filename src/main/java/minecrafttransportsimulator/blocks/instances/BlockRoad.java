@@ -4,15 +4,13 @@ import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.blocks.components.ABlockBase;
-import minecrafttransportsimulator.blocks.components.IBlockTileEntity;
+import minecrafttransportsimulator.blocks.components.ABlockBaseTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLane;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 
-public class BlockRoad extends ABlockBase implements IBlockTileEntity<TileEntityRoad>{
+public class BlockRoad extends ABlockBaseTileEntity<TileEntityRoad>{
 	
     public BlockRoad(){
     	super(10.0F, 5.0F);
@@ -27,18 +25,6 @@ public class BlockRoad extends ABlockBase implements IBlockTileEntity<TileEntity
     	}else{
 			super.addCollisionBoxes(world, position, collidingBoxes);
 		}
-	}
-
-	@Override
-	public boolean onClicked(WrapperWorld world, Point3d position, Axis axis, WrapperPlayer player){
-		if(!world.isClient()){
-			//Check if we aren't active.  If not, try to spawn collision again.
-			TileEntityRoad road = (TileEntityRoad) world.getTileEntity(position);
-	    	if(road != null && !road.isActive()){
-	    		road.spawnCollisionBlocks(player);
-	    	}
-		}
-		return true;
 	}
 	
 	@Override

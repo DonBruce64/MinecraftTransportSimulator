@@ -8,7 +8,6 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 
 public class BlockCollision extends ABlockBase{
@@ -23,11 +22,6 @@ public class BlockCollision extends ABlockBase{
     	float heightRadiusRequired = collisionHeightInPixels/16F/2F;
     	float centerPositionOffset = -(0.5F - heightRadiusRequired);
     	this.blockBounds = new BoundingBox(new Point3d(0, centerPositionOffset, 0), 0.5D, heightRadiusRequired, 0.5D);
-	}
-    
-    @Override
-	public boolean onClicked(WrapperWorld world, Point3d position, Axis axis, WrapperPlayer player){
-		return false;
 	}
     
     @Override

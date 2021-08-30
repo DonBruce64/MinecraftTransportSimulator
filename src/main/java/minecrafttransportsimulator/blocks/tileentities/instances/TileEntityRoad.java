@@ -124,6 +124,37 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 		}
 	}
 	
+	@Override
+    public void destroy(BoundingBox box){
+    	super.destroy(box);
+		if(isActive){
+			//Set the TE to inactive and remove all road connections.
+			setActive(false);
+			for(RoadLane lane : lanes){
+				lane.removeConnections();
+			}
+			
+			//Now remove all collision blocks.
+			for(Point3d blockOffset : collisionBlockOffsets){
+				Point3d blockLocation = position.copy().add(blockOffset);
+				//Check to make sure we don't destroy non-road blocks.
+				//This is required in case our TE is corrupt or someone messes with it.
+				if(world.getBlock(blockLocation) instanceof BlockCollision){
+					world.destroyBlock(blockLocation, true);
+				}
+			}
+		}
+    }
+	
+	@Override
+	public boolean interact(WrapperPlayer player){
+		//Check if we aren't active.  If not, try to spawn collision again.
+    	if(!isActive){
+    		spawnCollisionBlocks(player);
+    	}
+		return true;
+	}
+	
 	/**
 	 *  Helper method to get information on what was clicked.
 	 *  Takes the player's rotation into account, as well as the block they clicked.
@@ -214,7 +245,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 			for(JSONRoadCollisionArea collisionArea : definition.road.collisionAreas){
 				for(double x=collisionArea.firstCorner.x; x<=collisionArea.secondCorner.x; x += 0.5){
 					for(double z=collisionArea.firstCorner.z; z<=collisionArea.secondCorner.z; z += 0.5){
-						Point3d testPoint = new Point3d(x, 0, z).rotateFine(rotation);
+						Point3d testPoint = new Point3d(x, 0, z).rotateFine(angles);
 						
 						if(!testPoint.isZero() && !collisionBlockOffsets.contains(testPoint) && !collidingBlockOffsets.contains(testPoint)){
 							//Offset the point to the global cordinate space, get the block, and offset back.

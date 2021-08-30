@@ -315,7 +315,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 					TileEntityPole pole = (TileEntityPole) tile;
 					if(pole.definition.pole.allowsDiagonals){
 						//Change the axis to match the 8-dim axis for poles.  Blocks only get a 4-dim axis.
-						axis = Axis.getFromRotation(player.getYaw()).getOpposite();
+						axis = Axis.getFromRotation(player.getYaw(), pole.definition.pole.allowsDiagonals).getOpposite();
 					}
 					if(pole.components.containsKey(axis)){
 						player.sendPacket(new PacketEntityGUIRequest(pole.components.get(axis), player, PacketEntityGUIRequest.EntityGUIType.PAINT_GUN));
