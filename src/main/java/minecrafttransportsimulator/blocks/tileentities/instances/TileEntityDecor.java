@@ -27,8 +27,8 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> implements ITile
 	
 	private static RenderDecor renderer;
 	
-	public TileEntityDecor(WrapperWorld world, Point3d position, WrapperNBT data){
-		super(world, position, data);
+	public TileEntityDecor(WrapperWorld world, Point3d position, WrapperPlayer placingPlayer, WrapperNBT data){
+		super(world, position, placingPlayer, data);
 		//Add a bounding box for each rotation.
 		this.boundingBoxes[0] = new BoundingBox(new Point3d(), definition.decor.width/2D, definition.decor.height/2D, definition.decor.depth/2D);
 		this.boundingBoxes[1] = new BoundingBox(new Point3d(), definition.decor.depth/2D, definition.decor.height/2D, definition.decor.width/2D);

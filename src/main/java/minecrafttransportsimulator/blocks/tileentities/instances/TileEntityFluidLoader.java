@@ -10,6 +10,7 @@ import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityFluidTank;
 import minecrafttransportsimulator.entities.instances.PartInteractable;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityFluidLoaderConnection;
@@ -21,8 +22,8 @@ public class TileEntityFluidLoader extends TileEntityDecor implements ITileEntit
 	public boolean unloading;
     private EntityFluidTank tank;
 
-    public TileEntityFluidLoader(WrapperWorld world, Point3d position, WrapperNBT data){
-    	super(world, position, data);
+    public TileEntityFluidLoader(WrapperWorld world, Point3d position, WrapperPlayer placingPlayer, WrapperNBT data){
+		super(world, position, placingPlayer, data);
     	this.tank = new EntityFluidTank(world, data.getDataOrNew("tank"), definition.decor.fuelCapacity);
     	this.unloadMode = data.getBoolean("unloadMode");
     }

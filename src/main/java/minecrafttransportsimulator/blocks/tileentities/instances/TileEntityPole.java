@@ -25,7 +25,6 @@ import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest.Enti
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleChange;
 import minecrafttransportsimulator.rendering.instances.RenderPole;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.item.ItemStack;
 
 /**Pole tile entity.  Remembers what components we have attached and the state of the components.
@@ -41,8 +40,8 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent> implement
 	
 	private float maxTotalLightLevel;
 	
-	public TileEntityPole(WrapperWorld world, Point3d position, WrapperNBT data){
-		super(world, position, data);
+	public TileEntityPole(WrapperWorld world, Point3d position, WrapperPlayer placingPlayer, WrapperNBT data){
+		super(world, position, placingPlayer, data);
 		//Load components back in.
 		for(Axis axis : Axis.values()){
 			WrapperNBT componentData = data.getData(axis.name());
@@ -53,29 +52,6 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent> implement
 				//Add our core component to the NONE axis.
 				//This is done for ease of rendering and lookup routines.
 				components.put(axis, PoleComponentType.createComponent(this, axis, getItem().validateData(null)));
-			}
-		}
-		
-		//TODO remove legacy NBT loading code in V21.
-		for(Axis axis : Axis.values()){
-			String componentPackID = data.getString("packID" + axis.ordinal());
-			if(!componentPackID.isEmpty()){
-				String componentSystemName = data.getString("systemName" + axis.ordinal());
-				String componentSubName = data.getString("subName" + axis.ordinal());
-				ItemPoleComponent poleItem = PackParserSystem.getItem(componentPackID, componentSystemName, componentSubName);
-				
-				WrapperNBT fakeData = new WrapperNBT();
-				fakeData.setString("packID", componentPackID);
-				fakeData.setString("systemName", componentSystemName);
-				fakeData.setString("subName", componentSubName);
-				if(poleItem.definition.rendering != null && poleItem.definition.rendering.textObjects != null){
-					for(int i=0; i<poleItem.definition.rendering.textObjects.size(); ++i){
-						fakeData.setString("textLine" + i, data.getString("textLine" + axis.ordinal() + i));
-					}
-				}
-				
-				ATileEntityPole_Component newComponent = PoleComponentType.createComponent(this, axis, fakeData);
-				components.put(axis, newComponent);
 			}
 		}
 	}

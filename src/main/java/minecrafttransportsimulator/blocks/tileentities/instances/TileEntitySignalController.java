@@ -51,8 +51,8 @@ public class TileEntitySignalController extends TileEntityDecor implements ITile
 	/**Lane counts and intersection widths.**/
 	public final Map<Axis, IntersectionProperties> intersectionProperties = new HashMap<Axis, IntersectionProperties>();
 	
-	public TileEntitySignalController(WrapperWorld world, Point3d position, WrapperNBT data){
-		super(world, position, data);
+	public TileEntitySignalController(WrapperWorld world, Point3d position, WrapperPlayer placingPlayer, WrapperNBT data){
+		super(world, position, placingPlayer, data);
 		initializeController(data);
 	}
 	

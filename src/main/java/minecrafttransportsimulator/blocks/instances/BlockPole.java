@@ -9,6 +9,7 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.components.ABlockBaseTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 
 /**Pole block class.  This class allows for dynamic collision boxes and dynamic
@@ -53,7 +54,7 @@ public class BlockPole extends ABlockBaseTileEntity{
 	}
 	
 	@Override
-	public TileEntityPole createTileEntity(WrapperWorld world, Point3d position, WrapperNBT data){
-		return new TileEntityPole(world, position, data);
+	public TileEntityPole createTileEntity(WrapperWorld world, Point3d position, WrapperPlayer placingPlayer, WrapperNBT data){
+		return new TileEntityPole(world, position, placingPlayer, data);
 	}
 }

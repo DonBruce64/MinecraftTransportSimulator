@@ -58,8 +58,8 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	public static final int MAX_COLLISION_DISTANCE = 32;
 	private static RenderRoad renderer;
 	
-	public TileEntityRoad(WrapperWorld world, Point3d position, WrapperNBT data){
-		super(world, position, data);
+	public TileEntityRoad(WrapperWorld world, Point3d position, WrapperPlayer placingPlayer, WrapperNBT data){
+		super(world, position, placingPlayer, data);
 		//Set the bounding box.
 		this.boundingBox = new BoundingBox(new Point3d(0, (definition.road.collisionHeight - 16)/16D/2D, 0), 0.5D, definition.road.collisionHeight/16D/2D, 0.5D);
 		

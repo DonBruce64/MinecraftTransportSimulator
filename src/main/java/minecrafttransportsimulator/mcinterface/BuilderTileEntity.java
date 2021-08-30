@@ -49,7 +49,7 @@ public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extend
 						WrapperWorld worldWrapper = WrapperWorld.getWrapperFor(world);
 						Point3d position = new Point3d(pos.getX(), pos.getY(), pos.getZ());
 						ABlockBaseTileEntity block = (ABlockBaseTileEntity) worldWrapper.getBlock(position);
-						tileEntity = (TileEntityType) block.createTileEntity(worldWrapper, position, new WrapperNBT(lastLoadedNBT));
+						tileEntity = (TileEntityType) block.createTileEntity(worldWrapper, position, null, new WrapperNBT(lastLoadedNBT));
 						lastLoadedNBT = null;
 					}catch(Exception e){
 						InterfaceCore.logError("Failed to load entity on builder from saved NBT.  Did a pack change?");

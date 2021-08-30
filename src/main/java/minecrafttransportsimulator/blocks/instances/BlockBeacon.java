@@ -4,6 +4,7 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.components.ABlockBaseDecor;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityBeacon;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.systems.NavBeaconSystem;
 
@@ -22,7 +23,7 @@ public class BlockBeacon extends ABlockBaseDecor{
     }
     
     @Override
-	public TileEntityBeacon createTileEntity(WrapperWorld world, Point3d position, WrapperNBT data){
-		return new TileEntityBeacon(world, position, data);
+	public TileEntityBeacon createTileEntity(WrapperWorld world, Point3d position, WrapperPlayer placingPlayer, WrapperNBT data){
+		return new TileEntityBeacon(world, position, placingPlayer, data);
 	}
 }

@@ -11,8 +11,8 @@ import minecrafttransportsimulator.mcinterface.WrapperWorld;
  */
 public class TileEntityRadio extends TileEntityDecor{
 	
-	public TileEntityRadio(WrapperWorld world, Point3d position, WrapperNBT data){
-		super(world, position, data);
+	public TileEntityRadio(WrapperWorld world, Point3d position, WrapperPlayer placingPlayer, WrapperNBT data){
+		super(world, position, placingPlayer, data);
 		//Set position here as we don't tick so the radio won't get update() calls.
 		radio.position.setTo(position);
 	}

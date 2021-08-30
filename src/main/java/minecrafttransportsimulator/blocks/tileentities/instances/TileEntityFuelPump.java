@@ -40,8 +40,8 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityTi
     public boolean isCreative;
 	public String placingPlayerID;
 
-    public TileEntityFuelPump(WrapperWorld world, Point3d position, WrapperNBT data){
-    	super(world, position, data);
+    public TileEntityFuelPump(WrapperWorld world, Point3d position, WrapperPlayer placingPlayer, WrapperNBT data){
+		super(world, position, placingPlayer, data);
     	this.tank = new EntityFluidTank(world, data.getDataOrNew("tank"), definition.decor.fuelCapacity){
     		@Override
     		public double fill(String fluid, double maxAmount, boolean doFill){
@@ -67,7 +67,7 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityTi
     		this.fuelAmounts.add(data.getInteger("fuelAmount" + i));
     	}
     	this.fuelPurchasedRemaining = data.getInteger("fuelPurchasedRemaining");
-    	this.placingPlayerID = data.getString("placingPlayerID");
+    	this.placingPlayerID = placingPlayer != null ? placingPlayer.getID() : data.getString("placingPlayerID");
     }
 	
 	@Override

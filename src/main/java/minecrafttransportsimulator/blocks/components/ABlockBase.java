@@ -5,7 +5,6 @@ import java.util.List;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.mcinterface.BuilderBlock;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 
 /**Base Block class.  This type is used in the constructor of {@link BuilderBlock} to allow us to use
@@ -25,13 +24,6 @@ public abstract class ABlockBase{
 		this.hardness = hardness;
 		this.blastResistance = blastResistance;
 	}
-	
-	/**
-	 *  Called when this block is first placed in the world.  Note that this is called
-	 *  after NBT is loaded into the TE from saved state, or after its definition is
-	 *  set from the item definition if no NBT data was present on the item.
-	 */
-	public void onPlaced(WrapperWorld world, Point3d position, WrapperPlayer player){}
 	
 	/**
 	 *  Called when this block is removed from the world.  This occurs when the block is broken

@@ -27,8 +27,8 @@ public class TileEntityBeacon extends TileEntityDecor{
 	
 	public String beaconName;
 	
-	public TileEntityBeacon(WrapperWorld world, Point3d position, WrapperNBT data){
-		super(world, position, data);
+	public TileEntityBeacon(WrapperWorld world, Point3d position, WrapperPlayer placingPlayer, WrapperNBT data){
+		super(world, position, placingPlayer, data);
 		//Manually add textLines, as these won't be in the JSON.
 		this.nameTextObject = new JSONText();
 		nameTextObject.attachedTo = "NULL";

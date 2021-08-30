@@ -8,6 +8,7 @@ import minecrafttransportsimulator.blocks.components.ABlockBaseTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLane;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 
 public class BlockRoad extends ABlockBaseTileEntity{
@@ -50,7 +51,7 @@ public class BlockRoad extends ABlockBaseTileEntity{
 	}
     
     @Override
-	public TileEntityRoad createTileEntity(WrapperWorld world, Point3d position, WrapperNBT data){
-		return new TileEntityRoad(world, position, data);
+	public TileEntityRoad createTileEntity(WrapperWorld world, Point3d position, WrapperPlayer placingPlayer, WrapperNBT data){
+		return new TileEntityRoad(world, position, placingPlayer, data);
 	}
 }

@@ -666,14 +666,9 @@ public class WrapperWorld{
 				            		}
 		            			}
 		            		}
-		            		
-		            		builderTile.tileEntity = (TileEntityType) ((ABlockBaseTileEntity) block).createTileEntity(this, position, data);
-		            		int clampAngle = builderTile.tileEntity.getRotationIncrement();
-		            		//Need to set the angles so the TE is facing the player, not the direction the player was facing.
-		            		builderTile.tileEntity.angles.y = Math.round((player.getHeadYaw()+180)/clampAngle)*clampAngle%360;
+		            		builderTile.tileEntity = (TileEntityType) ((ABlockBaseTileEntity) block).createTileEntity(this, position, player, data);
 		            	}
-		            	//Send place event to block class, and also send initial update check.
-		            	block.onPlaced(this, position, player);
+		            	//Shrink stack as we placed this block.
 		                stack.shrink(1);
 		                return true;
 		            }
@@ -681,10 +676,6 @@ public class WrapperWorld{
     		}else{
     			IBlockState newState = wrapper.getDefaultState();
     			if(world.setBlockState(pos, newState, 11)){
-    				if(block instanceof ABlockBaseTileEntity){
-    					BuilderTileEntity<TileEntityType> builderTile = (BuilderTileEntity<TileEntityType>) world.getTileEntity(pos);
-    					builderTile.tileEntity = (TileEntityType) ((ABlockBaseTileEntity) block).createTileEntity(this, position, new WrapperNBT());
-    				}
     				return true;
     			}
     		}

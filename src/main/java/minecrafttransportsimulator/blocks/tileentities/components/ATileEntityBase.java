@@ -4,6 +4,7 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
@@ -21,9 +22,14 @@ import minecrafttransportsimulator.systems.ConfigSystem;
  */
 public abstract class ATileEntityBase<JSONDefinition extends AJSONMultiModelProvider> extends AEntityC_Definable<JSONDefinition>{
 	
-	public ATileEntityBase(WrapperWorld world, Point3d position, WrapperNBT data){
+	public ATileEntityBase(WrapperWorld world, Point3d position, WrapperPlayer placingPlayer, WrapperNBT data){
 		super(world, data);
 		this.position.setTo(position);
+		if(placingPlayer != null){
+			int clampAngle = getRotationIncrement();
+			//Need to set the angles so the TE is facing the player, not the direction the player was facing.
+			angles.y = Math.round((placingPlayer.getHeadYaw()+180)/clampAngle)*clampAngle%360;
+		}
 	}
 	
 	@Override

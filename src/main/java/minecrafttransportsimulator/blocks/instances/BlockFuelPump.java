@@ -14,15 +14,8 @@ public class BlockFuelPump extends ABlockBaseDecor implements IBlockFluidTankPro
 		super();
 	}
 	
-	@Override
-	public void onPlaced(WrapperWorld world, Point3d position, WrapperPlayer player){
-		//Set placing player for reference.
-		TileEntityFuelPump pump = world.getTileEntity(position);
-		pump.placingPlayerID = player.getID();
-	}
-	
     @Override
-	public TileEntityFuelPump createTileEntity(WrapperWorld world, Point3d position, WrapperNBT data){
-		return new TileEntityFuelPump(world, position, data);
+	public TileEntityFuelPump createTileEntity(WrapperWorld world, Point3d position, WrapperPlayer placingPlayer, WrapperNBT data){
+		return new TileEntityFuelPump(world, position, placingPlayer, data);
 	}
 }

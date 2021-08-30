@@ -3,6 +3,7 @@ package minecrafttransportsimulator.blocks.components;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 
 /**Abstract class for blocks that have tile entities.  Such tile entities
@@ -26,6 +27,7 @@ public abstract class ABlockBaseTileEntity extends ABlockBase{
 	
 	/**
 	 *  Gets a new Tile Entity for this block.
+	 *  The placingPlayer may be null if this is being loaded from NBT.
 	 */
-	public abstract ATileEntityBase<?> createTileEntity(WrapperWorld world, Point3d position, WrapperNBT data);
+	public abstract ATileEntityBase<?> createTileEntity(WrapperWorld world, Point3d position, WrapperPlayer placingPlayer, WrapperNBT data);
 }

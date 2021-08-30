@@ -4,6 +4,7 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.components.ABlockBaseDecor;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityChest;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 
 public class BlockChest extends ABlockBaseDecor{
@@ -13,7 +14,7 @@ public class BlockChest extends ABlockBaseDecor{
 	}
 
 	@Override
-	public TileEntityChest createTileEntity(WrapperWorld world, Point3d position, WrapperNBT data){
-		return new TileEntityChest(world, position, data);
+	public TileEntityChest createTileEntity(WrapperWorld world, Point3d position, WrapperPlayer placingPlayer, WrapperNBT data){
+		return new TileEntityChest(world, position, placingPlayer, data);
 	}
 }
