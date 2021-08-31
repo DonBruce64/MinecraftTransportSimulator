@@ -213,6 +213,8 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 		//Now check if we can do the actual update based on our towing status.
 		//We want to do the towing checks first, as we don't want to call super if we are blocked by being towed.
 		if((towedByConnection == null || overrideTowingChecks) && super.update()){
+			world.beginProfiling("EntityD_Level", true);
+			
 			//See if we need to link connections.
 			//We need to wait on this in case the entity didn't load at the same time.
 			//That being said, it may be the vehicle we are loading is in another chunk.
@@ -261,11 +263,13 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 			}
 			
 			//Update collision boxes.
+			world.beginProfiling("CollisionBoxUpdates", true);
 			for(BoundingBox box : collisionBoxes){
 				box.updateToEntity(this, null);
 			}
 			
 			//Update door boxes.
+			world.beginProfiling("DoorBoxUpdates", false);
 			for(Entry<BoundingBox, JSONDoor> doorEntry : doorBoxes.entrySet()){
 				if(variablesOn.contains(doorEntry.getValue().name)){
 					doorEntry.getKey().globalCenter.setTo(doorEntry.getValue().openPos).rotateFine(angles).add(position);
@@ -273,6 +277,9 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 					doorEntry.getKey().globalCenter.setTo(doorEntry.getValue().closedPos).rotateFine(angles).add(position);
 				}
 			}
+			
+			world.endProfiling();
+			world.endProfiling();
 			return true;
 		}else{
 			return false;
@@ -332,11 +339,13 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 	public void updatePostMovement(){
 		//If we are towing entities, update them now.
 		if(!towingConnections.isEmpty()){
+			world.beginProfiling("TowedEntities", true);
 			for(TrailerConnection connection : towingConnections){
 				connection.hookupBaseEntity.overrideTowingChecks = true;
 				connection.hookupBaseEntity.update();
 				connection.hookupBaseEntity.overrideTowingChecks = false;
 			}
+			world.endProfiling();
 		}
 	}
 	
@@ -507,10 +516,10 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 							if(hookupConnectionGroup.hookup && (hookupGroupIndex == -1 || hookupEntity.definition.connectionGroups.indexOf(hookupConnectionGroup) == hookupGroupIndex)){
 								//We can potentially connect these two entities.  See if we actually can.
 								for(JSONConnection hitchConnection : hitchConnectionGroup.connections){
-									Point3d hitchPos = hitchConnection.pos.copy().rotateCoarse(angles).add(position);
+									Point3d hitchPos = hitchConnection.pos.copy().rotateFine(angles).add(position);
 									double maxDistance = hitchConnection.distance > 0 ? hitchConnection.distance : 2;
 									for(JSONConnection hookupConnection : hookupConnectionGroup.connections){
-										Point3d hookupPos = hookupConnection.pos.copy().rotateCoarse(hookupEntity.angles).add(hookupEntity.position);
+										Point3d hookupPos = hookupConnection.pos.copy().rotateFine(hookupEntity.angles).add(hookupEntity.position);
 										if(hitchPos.distanceTo(hookupPos) < maxDistance + 10){
 											boolean validType = hitchConnection.type.equals(hookupConnection.type);
 											boolean validDistance = hitchPos.distanceTo(hookupPos) < maxDistance;

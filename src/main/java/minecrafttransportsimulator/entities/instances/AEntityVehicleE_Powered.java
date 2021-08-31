@@ -81,6 +81,7 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 	@Override
 	public boolean update(){
 		if(super.update()){
+			world.beginProfiling("VehicleE_Level", true);
 			//If we have space for fuel, and we have tanks with it, transfer it.
 			if(!world.isClient() && fuelTank.getFluidLevel() < definition.motorized.fuelCapacity - 100){
 				for(APart part : parts){
@@ -166,6 +167,7 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 					return missle1.targetDistance < missile2.targetDistance ? -1 : 1;
 				}
 			});
+			world.endProfiling();
 			return true;
 		}else{
 			return false;

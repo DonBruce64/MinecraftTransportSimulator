@@ -82,10 +82,15 @@ public class BuilderEntityExisting extends ABuilderEntityBase{
     		if(!entity.isValid){
     			setDead();
     		}else{
+    			//Start master profiling section.
+    			entity.world.beginProfiling("MTSEntity_" + getEntityId(), true);
+    			entity.world.beginProfiling("Main_Execution", true);
+    			
 	    		//Forward the update call.
 	    		entity.update();
 	    		
 	    		//Set the new position and rotation.
+	    		entity.world.beginProfiling("MovementOverhead", false);
 	    		setPosition(entity.position.x, entity.position.y, entity.position.z);
 	    		rotationYaw = (float) -entity.angles.y;
 	    		rotationPitch = (float) entity.angles.x;
@@ -93,6 +98,8 @@ public class BuilderEntityExisting extends ABuilderEntityBase{
 	    		//If we are outside valid bounds on the server, set us as dead and exit.
 	    		if(!world.isRemote && posY < 0 && world.isOutsideBuildHeight(getPosition())){
 	    			setDead();
+	    			entity.world.endProfiling();
+	    			entity.world.endProfiling();
 	    			return;
 	    		}
 	    		
@@ -104,7 +111,8 @@ public class BuilderEntityExisting extends ABuilderEntityBase{
 	        		//Only do this after the first tick of the entity, as we might have some states that need updating
 	        		//on that first tick that would cause bad maths.
 	        		//We also do this only every second, as it prevents excess checks.
-	        		interactionBoxes = new WrapperAABBCollective(this, interactable.getInteractionBoxes());
+	    			entity.world.beginProfiling("CollisionOverhead", false);
+	    			interactionBoxes = new WrapperAABBCollective(this, interactable.getInteractionBoxes());
 	        		collisionBoxes = new WrapperAABBCollective(this, interactable.getCollisionBoxes());
 	        		if(interactable.ticksExisted > 1 && interactable.ticksExisted%20 == 0){
 	        			if(entity.boundingBox != null){
@@ -119,6 +127,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase{
 	        		//Check that riders are still present prior to updating them.
 	        		//This handles dismounting of riders from entities in a non-event-driven way.
 	        		//We do this because other mods and Sponge like to screw up the events...
+	        		entity.world.beginProfiling("RiderOverhead", false);
 	        		if(!world.isRemote){
 	    	    		Iterator<WrapperEntity> riderIterator = interactable.locationRiderMap.inverse().keySet().iterator();
 	    	    		while(riderIterator.hasNext()){
@@ -131,6 +140,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase{
 	        		
 	        		//Move all entities that are touching this entity.
 	        		if(!collisionBoxes.boxes.isEmpty()){
+	        			entity.world.beginProfiling("MoveAlongOverhead", false);
 		        		for(Entity mcEntity : world.loadedEntityList){
 		        			//Don't try and move builders, entities riding others, or spectator players.  That's excess collision checks.
 		        			if(!(mcEntity instanceof ABuilderEntityBase) && mcEntity.getRidingEntity() == null && (mcEntity instanceof EntityPlayer ? !((EntityPlayer) mcEntity).isSpectator() : true)){
@@ -168,6 +178,8 @@ public class BuilderEntityExisting extends ABuilderEntityBase{
 		        		}
 	        		}
 	    		}
+	    		entity.world.endProfiling();
+    			entity.world.endProfiling();
     		}
     	}
     }

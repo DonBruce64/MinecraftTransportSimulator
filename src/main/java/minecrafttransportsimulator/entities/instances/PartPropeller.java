@@ -167,7 +167,7 @@ public class PartPropeller extends APart{
 		if(connectedEngine != null && connectedEngine.state.running){
 			//Get the current linear velocity of the propeller, based on our axial velocity.
 			//This is is meters per second.
-			Point3d propellerThrustAxis = new Point3d(0D, 0D, 1D).rotateCoarse(localAngles.copy().add(entityOn.angles));
+			Point3d propellerThrustAxis = new Point3d(0D, 0D, 1D).rotateFine(localAngles.copy().add(entityOn.angles));
 			double currentLinearVelocity = 20D*entityOn.motion.dotProduct(propellerThrustAxis);
 			//Get the desired linear velocity of the propeller, based on the current RPM and pitch.
 			//We add to the desired linear velocity by a small factor.  This is because the actual cruising speed of aircraft
@@ -202,7 +202,7 @@ public class PartPropeller extends APart{
 				
 				//Add propeller force to total engine force as a vector.
 				//Depends on propeller orientation, as upward propellers provide upwards thrust.
-				propellerForce.add(new Point3d(0D, 0D, thrust).rotateCoarse(localAngles));
+				propellerForce.add(new Point3d(0D, 0D, thrust).rotateFine(localAngles));
 			}
 		}
 		return propellerForce;

@@ -124,10 +124,12 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	@Override
 	public boolean update(){
 		if(super.update()){
+			world.beginProfiling("EntityC_Level", true);
 			if(!animationsInitialized){
 				initializeAnimations();
 				animationsInitialized = true;
 			}
+			world.endProfiling();
 			return true;
 		}else{
 			return false;

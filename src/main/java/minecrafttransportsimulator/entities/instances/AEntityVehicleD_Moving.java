@@ -82,8 +82,11 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	@Override
 	public boolean update(){
 		if(super.update()){
+			world.beginProfiling("VehicleD_Level", true);
+			
 			//Update our GDB members if any of our ground devices don't have the same total offset as placement.
 			//This is required to move the GDBs if the GDs move.
+			world.beginProfiling("GroundDevices", true);
 			for(APart part : parts){
 				if(part instanceof PartGroundDevice){
 					if(part.prevActive != part.isActive){
@@ -100,8 +103,11 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			
 			//Now do update calculations and logic.
 			if(!ConfigSystem.configObject.general.noclipVehicles.value || groundDeviceCollective.isReady()){
+				world.beginProfiling("GroundForces", false);
 				getForcesAndMotions();
+				world.beginProfiling("GroundOperations", false);
 				performGroundOperations();
+				world.beginProfiling("TotalMovement", false);
 				moveVehicle();
 				if(!world.isClient()){
 					dampenControlSurfaces();
@@ -109,7 +115,10 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			}
 			
 			//Update parts after all movement is done.
+			world.beginProfiling("PostMovement", false);
 			updatePostMovement();
+			world.endProfiling();
+			world.endProfiling();
 			return true;
 		}else{
 			return false;
@@ -172,7 +181,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	private RoadFollowingState getFollower(){
 		Point3d contactPoint = groundDeviceCollective.getContactPoint(false);
 		if(contactPoint != null){
-			contactPoint.rotateCoarse(angles).add(position);
+			contactPoint.rotateFine(angles).add(position);
 			Point3d testPoint = new Point3d();
 			ABlockBase block =  world.getBlock(contactPoint);
 			if(block instanceof BlockCollision){
@@ -444,11 +453,13 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	 */
 	private void moveVehicle(){
 		//First, update the vehicle ground device boxes.
+		world.beginProfiling("GDBInit", true);
 		collidedEntities.clear();
 		groundDeviceCollective.updateCollisions();
 		
 		//If we aren't on a road, try to find one.
 		//Only do this if we aren't turning, and if we aren't being towed, and we aren't an aircraft.
+		world.beginProfiling("RoadChecks", false);
 		if(towedByConnection != null || definition.motorized.isAircraft){
 			frontFollower = null;
 			rearFollower = null;
@@ -467,6 +478,8 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		roadMotion.set(0, 0, 0);
 		roadRotation.set(0, 0, 0);
 		if(frontFollower != null && rearFollower != null){
+			world.beginProfiling("RoadOperations", false);
+			
 			//Check for the potential to change the requested segment.
 			//We can only do this if both our followers are on the same segment.
 			LaneSelectionRequest requestedSegment;
@@ -538,8 +551,10 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			//whichever is the lower of the two.  If we apply boost, update our collision boxes before the next step.
 			//Note that this logic is not applied on trailers, as they use special checks with only rotations for movement.
 			if(towedByConnection == null){
+				world.beginProfiling("GroundBoostCheck", false);
 				groundCollisionBoost = groundDeviceCollective.getMaxCollisionDepth()/SPEED_FACTOR;
 				if(groundCollisionBoost > 0){
+					world.beginProfiling("GroundBoostApply", false);
 					//If adding our boost would make motion.y positive, set our boost to the positive component.
 					//This will remove this component from the motion once we move the vehicle, and will prevent bad physics.
 					//If we didn't do this, the vehicle would accelerate upwards whenever we corrected ground devices.
@@ -562,7 +577,9 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			//This prevents vehicles from phasing through walls even though they are driving on the ground.
 			//If we are being towed, apply this movement to the towing vehicle, not ourselves, as this can lead to the vehicle getting stuck.
 			//If the collision box is a liquid box, don't use it, as that gets used in ground device calculations instead.
+			world.beginProfiling("CollisionCheck_" + allBlockCollisionBoxes.size(), false);
 			if(isCollisionBoxCollided()){
+				world.beginProfiling("CollisionHandling", false);
 				if(towedByConnection != null){
 					Point3d initalMotion = motion.copy();
 					if(correctCollidingMovement()){
@@ -574,9 +591,11 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 				}
 				
 			}else if(towedByConnection == null || !towedByConnection.hitchConnection.mounted){
+				world.beginProfiling("GroundHandlingPitch", false);
 				groundRotationBoost = groundDeviceCollective.performPitchCorrection(groundCollisionBoost);
 				//Don't do roll correction if we don't have roll.
 				if(groundDeviceCollective.canDoRollChecks()){
+					world.beginProfiling("GroundHandlingRoll", false);
 					groundRotationBoost = groundDeviceCollective.performRollCorrection(groundCollisionBoost + groundRotationBoost);
 				}
 				
@@ -593,6 +612,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		//If we collided with any entities, move us with them.
 		//This allows for transports without mounting.
 		if(!collidedEntities.isEmpty()){
+			world.beginProfiling("EntityMoveAlong", false);
 			for(AEntityD_Interactable<?> interactable : collidedEntities){
 				if(interactable instanceof AEntityVehicleD_Moving){
 					AEntityVehicleD_Moving mainVehicle = (AEntityVehicleD_Moving) interactable;
@@ -629,6 +649,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		}
 
 		//Now that that the movement has been checked, move the vehicle.
+		world.beginProfiling("ApplyMotions", false);
 		motionApplied.setTo(motion).multiply(SPEED_FACTOR).add(roadMotion).add(collisionMotion);
 		rotationApplied.setTo(rotation).add(roadRotation).add(collisionRotation);
 		collisionMotion.set(0, 0, 0);
@@ -691,17 +712,22 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		//We need to strip away any positive motion.y we gave the vehicle to get it out of the ground if it
 		//collided on its ground devices, as well as any motion.y we added when doing rotation adjustments.
 		motion.y -= (groundCollisionBoost + groundRotationBoost);
+		world.endProfiling();
 	}
 	
 	/**
 	 *  Checks if we have a collided collision box.  If so, true is returned.
 	 */
 	private boolean isCollisionBoxCollided(){
-		tempBoxRotation.setTo(rotation);
-		for(BoundingBox box : allBlockCollisionBoxes){
-			tempBoxPosition.setTo(box.globalCenter).subtract(position).rotateCoarse(tempBoxRotation).add(position).add(motion.x*SPEED_FACTOR, motion.y*SPEED_FACTOR, motion.z*SPEED_FACTOR);
-			if(!box.collidesWithLiquids && box.updateCollidingBlocks(world, tempBoxPosition.subtract(box.globalCenter))){
-				return true;
+		if(motion.length() > 0.001){
+			tempBoxRotation.setTo(rotation);
+			boolean clearedCache = false;
+			for(BoundingBox box : allBlockCollisionBoxes){
+				tempBoxPosition.setTo(box.globalCenter).subtract(position).rotateFine(tempBoxRotation).add(position).add(motion.x*SPEED_FACTOR, motion.y*SPEED_FACTOR, motion.z*SPEED_FACTOR);
+				if(!box.collidesWithLiquids && world.checkForCollisions(box, !clearedCache)){
+					return true;
+				}
+				clearedCache = true;
 			}
 		}
 		return false;
@@ -771,7 +797,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			tempBoxRotation.set(0D, rotation.y, 0D);
 			for(BoundingBox box : allBlockCollisionBoxes){
 				while(rotation.y != 0){
-					tempBoxPosition.setTo(box.globalCenter).subtract(position).rotateCoarse(tempBoxRotation).add(position).add(motion.x*SPEED_FACTOR, motion.y*SPEED_FACTOR, motion.z*SPEED_FACTOR);
+					tempBoxPosition.setTo(box.globalCenter).subtract(position).rotateFine(tempBoxRotation).add(position).add(motion.x*SPEED_FACTOR, motion.y*SPEED_FACTOR, motion.z*SPEED_FACTOR);
 					//Raise this box ever so slightly because Floating Point errors are a PITA.
 					tempBoxPosition.add(0D, 0.1D, 0D);
 					if(!box.updateCollidingBlocks(world, tempBoxPosition.subtract(box.globalCenter))){
@@ -792,7 +818,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			tempBoxRotation.set(rotation.x, rotation.y, 0D);
 			for(BoundingBox box : allBlockCollisionBoxes){
 				while(rotation.x != 0){
-					tempBoxPosition.setTo(box.globalCenter).subtract(position).rotateCoarse(tempBoxRotation).add(position).add(motion.x*SPEED_FACTOR, motion.y*SPEED_FACTOR, motion.z*SPEED_FACTOR);
+					tempBoxPosition.setTo(box.globalCenter).subtract(position).rotateFine(tempBoxRotation).add(position).add(motion.x*SPEED_FACTOR, motion.y*SPEED_FACTOR, motion.z*SPEED_FACTOR);
 					if(!box.updateCollidingBlocks(world, tempBoxPosition.subtract(box.globalCenter))){
 						break;
 					}
@@ -810,7 +836,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			tempBoxRotation.setTo(rotation);
 			for(BoundingBox box : allBlockCollisionBoxes){
 				while(rotation.z != 0){
-					tempBoxPosition.setTo(box.globalCenter).subtract(position).rotateCoarse(tempBoxRotation).add(position).add(motion.x*SPEED_FACTOR, motion.y*SPEED_FACTOR, motion.z*SPEED_FACTOR);
+					tempBoxPosition.setTo(box.globalCenter).subtract(position).rotateFine(tempBoxRotation).add(position).add(motion.x*SPEED_FACTOR, motion.y*SPEED_FACTOR, motion.z*SPEED_FACTOR);
 					if(!box.updateCollidingBlocks(world, tempBoxPosition.subtract(box.globalCenter))){
 						break;
 					}

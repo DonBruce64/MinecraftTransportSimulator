@@ -274,57 +274,44 @@ public class Point3d{
         }
     }
 	
-	private static final double[] sinTable = new double[361];
-	private static final double[] cosTable = new double[361];
-	/**
-     * Rotates this point about the passed-in angles.  Rotation is done using a 360-degree
-     * static lookup table, so rotation is done to the nearest degree.  This is faster than
-     * {@link #rotateFine(Point3d)} as actual sin and cos calculations are not performed.
-     */
-	public Point3d rotateCoarse(Point3d angles){
-		//Init sin and cos tables, if they aren't ready.
-		if(cosTable[0] == 0){
-			for(int i=0; i<=360; ++i){
-				sinTable[i] = Math.sin(Math.toRadians(i));
-				cosTable[i] = Math.cos(Math.toRadians(i));
-			}
-		}
-		
-		//Clamp values to 0-360;
-		double xRot = (angles.x%360 + 360)%360;
-		double yRot = (angles.y%360 + 360)%360;
-		double zRot = (angles.z%360 + 360)%360;
-		
-		//Rotate based on tabled values.
-		double cosX = cosTable[(int) xRot];//A
-		double sinX = sinTable[(int) xRot];//B
-		double cosY = cosTable[(int) yRot];//C
-		double sinY = sinTable[(int) yRot];//D
-		double cosZ = cosTable[(int) zRot];//E
-		double sinZ = sinTable[(int) zRot];//F
-		set(	x*(cosY*cosZ-sinX*-sinY*sinZ) 	+ y*(-sinX*-sinY*cosZ-cosY*sinZ) 	+ z*(-cosX*-sinY),
-				x*(cosX*sinZ)           		+ y*(cosX*cosZ)            			+ z*(-sinX),
-				x*(-sinY*cosZ+sinX*cosY*sinZ) 	+ y*(sinX*cosY*cosZ+sinY*sinZ)  	+ z*(cosX*cosY)
-		);
-		return this;
-	}
-		
+	private double lastCalcX;
+	private double lastCalcY;
+	private double lastCalcZ;
+	private boolean calcedOnce;
+	private final double[][] rotationMatrixFine = new double[3][3];
 	/**
      * Rotates this point about the passed-in angles.  Rotation is done using actual sin
-     * and cos calls via a rotation matrix, so only use this when precision is required (say
-     * in rendering operations).  If only a rough approximation is required, use {@link #rotateCoarse(Point3d)}
+     * and cos calls via a rotation matrix.  This matrix is cached in this point until the point
+     * is changed, so repeated uses will be faster if you don't create new "angle" objects.
      */
 	public Point3d rotateFine(Point3d angles){
 		if(!angles.isZero()){
-			double cosX = Math.cos(Math.toRadians(angles.x));//A
-			double sinX = Math.sin(Math.toRadians(angles.x));//B
-			double cosY = Math.cos(Math.toRadians(angles.y));//C
-			double sinY = Math.sin(Math.toRadians(angles.y));//D
-			double cosZ = Math.cos(Math.toRadians(angles.z));//E
-			double sinZ = Math.sin(Math.toRadians(angles.z));//F
-			set(	x*(cosY*cosZ-sinX*-sinY*sinZ) 	+ y*(-sinX*-sinY*cosZ-cosY*sinZ) 	+ z*(-cosX*-sinY),
-					x*(cosX*sinZ)           		+ y*(cosX*cosZ)            			+ z*(-sinX),
-					x*(-sinY*cosZ+sinX*cosY*sinZ) 	+ y*(sinX*cosY*cosZ+sinY*sinZ)  	+ z*(cosX*cosY)
+			//Check if we need to create the matrix for the angles.
+			if(angles.lastCalcX != angles.x || angles.lastCalcY != angles.y || angles.lastCalcZ != angles.z || !calcedOnce){
+				double cosX = Math.cos(Math.toRadians(angles.x));//A
+				double sinX = Math.sin(Math.toRadians(angles.x));//B
+				double cosY = Math.cos(Math.toRadians(angles.y));//C
+				double sinY = Math.sin(Math.toRadians(angles.y));//D
+				double cosZ = Math.cos(Math.toRadians(angles.z));//E
+				double sinZ = Math.sin(Math.toRadians(angles.z));//F
+				rotationMatrixFine[0][0] = cosY*cosZ-sinX*-sinY*sinZ;
+				rotationMatrixFine[0][1] = -sinX*-sinY*cosZ-cosY*sinZ;
+				rotationMatrixFine[0][2] = -cosX*-sinY;
+				rotationMatrixFine[1][0] = cosX*sinZ;
+				rotationMatrixFine[1][1] = cosX*cosZ;
+				rotationMatrixFine[1][2] = -sinX;
+				rotationMatrixFine[2][0] = -sinY*cosZ+sinX*cosY*sinZ;
+				rotationMatrixFine[2][1] = sinX*cosY*cosZ+sinY*sinZ;
+				rotationMatrixFine[2][2] = cosX*cosY;
+				
+				angles.lastCalcX = angles.x;
+				angles.lastCalcY = angles.y;
+				angles.lastCalcZ = angles.z;
+				calcedOnce = true;
+			}
+			set(	x*rotationMatrixFine[0][0] + y*rotationMatrixFine[0][1] + z*rotationMatrixFine[0][2],
+					x*rotationMatrixFine[1][0] + y*rotationMatrixFine[1][1]	+ z*rotationMatrixFine[1][2],
+					x*rotationMatrixFine[2][0] + y*rotationMatrixFine[2][1] + z*rotationMatrixFine[2][2]
 			);
 		}
 		return this;

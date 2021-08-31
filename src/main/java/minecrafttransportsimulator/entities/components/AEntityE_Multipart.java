@@ -135,6 +135,8 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 	@Override
 	public boolean update(){
 		if(super.update()){
+			world.beginProfiling("EntityE_Level", true);
+			
 			//If we have any NBT parts, add them now.
 			if(!partsFromNBT.isEmpty()){
 				for(APart part : partsFromNBT){
@@ -144,6 +146,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 			}
 			
 			//Update part slot box positions.
+			world.beginProfiling("PartSlotPositions", true);
 			for(BoundingBox box : allPartSlotBoxes.keySet()){
 				JSONPartDefinition packVehicleDef = allPartSlotBoxes.get(box);
 				boolean updatedToSubPart = false;
@@ -170,6 +173,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 			//Boxes added on clients depend on what the player is holding.
 			//We add these before part boxes so the player can click them before clicking a part.
 			if(world.isClient()){
+				world.beginProfiling("PartSlotActives", false);
 				activePartSlotBoxes.clear();
 				WrapperPlayer player = InterfaceClient.getClientPlayer();
 				AItemBase heldItem = player.getHeldItem();
@@ -193,6 +197,8 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 				}
 			}
 			
+			world.endProfiling();
+			world.endProfiling();
 			return true;
 		}else{
 			return false;
@@ -313,6 +319,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 	public void updatePostMovement(){
 		//Update parts prior to doing our post-movements.
 		//This is required for trailers, as they may attached to parts.
+		world.beginProfiling("PartUpdates_" + parts.size(), true);
 		Iterator<APart> iterator = parts.iterator();
 		while(iterator.hasNext()){
 			APart part = iterator.next();
@@ -321,11 +328,14 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 				removePart(part, iterator);
 			}
 		}
+		world.endProfiling();
 		super.updatePostMovement();
 		
 		//Update all-box lists now that all parts are updated.
 		//If we don't do this, then the box size might get de-synced.
+		world.beginProfiling("BoxAlignment_" + allInteractionBoxes.size(), true);
 		recalculateBoxes();
+		world.endProfiling();
 	}
 	
 	/**

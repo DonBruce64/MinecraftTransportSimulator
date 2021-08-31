@@ -162,21 +162,21 @@ abstract class AEntityVehicleB_Rideable extends AEntityE_Multipart<JSONVehicle>{
 		APart partRiding = getPartAtLocation(riderLocation);
 		if(packPart.dismountPos != null){
 			if(partRiding != null){
-				dismountPosition = packPart.dismountPos.copy().add(partRiding.localOffset).subtract(partRiding.placementOffset).rotateCoarse(angles).add(position);
+				dismountPosition = packPart.dismountPos.copy().add(partRiding.localOffset).subtract(partRiding.placementOffset).rotateFine(angles).add(position);
 			}else{
-				dismountPosition = packPart.dismountPos.copy().rotateCoarse(angles).add(position);
+				dismountPosition = packPart.dismountPos.copy().rotateFine(angles).add(position);
 			}
 		}else{
 			if(partRiding != null){
 				Point3d partDelta = partRiding.localOffset.copy().subtract(partRiding.placementOffset);
 				if(riderLocation.x < 0){
 					partDelta.x = -partDelta.x;
-					dismountPosition = riderLocation.copy().add(-2D, 0D, 0D).add(partDelta).rotateCoarse(angles).add(position);
+					dismountPosition = riderLocation.copy().add(-2D, 0D, 0D).add(partDelta).rotateFine(angles).add(position);
 				}else{
-					dismountPosition = riderLocation.copy().add(2D, 0D, 0D).add(partDelta).rotateCoarse(angles).add(position);
+					dismountPosition = riderLocation.copy().add(2D, 0D, 0D).add(partDelta).rotateFine(angles).add(position);
 				}
 			}else{
-				dismountPosition = riderLocation.copy().add(riderLocation.x > 0 ? 2D : -2D, 0D, 0D).rotateCoarse(angles).add(position);
+				dismountPosition = riderLocation.copy().add(riderLocation.x > 0 ? 2D : -2D, 0D, 0D).rotateFine(angles).add(position);
 			}
 		}
 		rider.setPosition(dismountPosition);

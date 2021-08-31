@@ -122,6 +122,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	@Override
 	public boolean update(){
 		if(super.update()){
+			world.beginProfiling("VehicleF_Level", true);
 			if(definition.motorized.flapNotches != null && !definition.motorized.flapNotches.isEmpty()){
 				flapDesiredAngle = definition.motorized.flapNotches.get(flapNotchSelected);
 				//Adjust flaps to current setting.
@@ -134,6 +135,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 					flapCurrentAngle = flapDesiredAngle;
 				}
 			}
+			world.endProfiling();
 			return true;
 		}else{
 			return false;

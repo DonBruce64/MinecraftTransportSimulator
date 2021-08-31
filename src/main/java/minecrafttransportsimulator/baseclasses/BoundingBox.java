@@ -64,7 +64,6 @@ public class BoundingBox{
 	
 	/**
 	 *  Populates the collidingBlocks list with all currently-colliding blocks.
-	 *  Also populates the collisionDepth list with the collision depths of all collisions, not just blocks.
 	 *  Note that the passed-in offset is only applied for this check,  and is reverted after this call.
 	 *  If blocks collided with this box after this method, true is returned.
 	 */

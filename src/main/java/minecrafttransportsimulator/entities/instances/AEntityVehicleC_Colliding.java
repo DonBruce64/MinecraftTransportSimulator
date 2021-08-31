@@ -41,7 +41,10 @@ abstract class AEntityVehicleC_Colliding extends AEntityVehicleB_Rideable{
 	@Override
 	public boolean update(){
 		if(super.update()){
+			world.beginProfiling("VehicleC_Level", true);
+			
 			//Set vectors to current velocity and orientation.
+			world.beginProfiling("SetVectors", true);
 			headingVector.set(0D, 0D, 1D).rotateFine(angles);
 			verticalVector.set(0D, 1D, 0D).rotateFine(angles);
 			sideVector.setTo(verticalVector.crossProduct(headingVector));
@@ -49,11 +52,13 @@ abstract class AEntityVehicleC_Colliding extends AEntityVehicleB_Rideable{
 			axialVelocity = Math.abs(motion.dotProduct(headingVector));
 			
 			//Update mass.
+			world.beginProfiling("SetMass", false);
 			currentMass = getMass();
 			
 			//Auto-close any open doors that should be closed.
 			//Only do this once a second to prevent lag.
 			if(definition.doors != null && velocity > 0.5 && ticksExisted%20 == 0){
+				world.beginProfiling("CloseDoors", false);
 				Iterator<String> variableIterator = variablesOn.iterator();
 				while(variableIterator.hasNext()){
 					String openDoorName = variableIterator.next();
@@ -70,6 +75,8 @@ abstract class AEntityVehicleC_Colliding extends AEntityVehicleB_Rideable{
 			
 			//Set hardness hit this tick to 0 to reset collision force calculations.
 			hardnessHitThisTick = 0;
+			world.endProfiling();
+			world.endProfiling();
 			return true;
 		}else{
 			return false;

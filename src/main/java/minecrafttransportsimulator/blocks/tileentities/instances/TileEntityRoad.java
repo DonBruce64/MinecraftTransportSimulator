@@ -217,7 +217,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 					//We only want yaw for block placement.
 					testRotation.x = 0;
 					testRotation.z = 0;
-					testOffset.set(offset, 0, 0).rotateCoarse(testRotation).add(0, definition.road.collisionHeight/16F, 0);
+					testOffset.set(offset, 0, 0).rotateFine(testRotation).add(0, definition.road.collisionHeight/16F, 0);
 					dynamicCurve.offsetPointByPositionAt(testOffset, f);
 					Point3d testPoint = new Point3d((int) testOffset.x, (int) Math.floor(testOffset.y), (int) testOffset.z);
 					

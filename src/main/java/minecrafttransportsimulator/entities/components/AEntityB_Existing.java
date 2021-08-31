@@ -70,6 +70,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	@Override
 	public boolean update(){
 		if(super.update()){
+			world.beginProfiling("EntityB_Level", true);
 			if(world.isClient()){
 				updateSounds(0);
 			}
@@ -79,6 +80,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 			prevRotation.setTo(rotation);
 			airDensity = 1.225*Math.pow(2, -position.y/(500D*world.getMaxHeight()/256D));
 			velocity = motion.length();
+			world.endProfiling();
 			return true;
 		}else{
 			return false;

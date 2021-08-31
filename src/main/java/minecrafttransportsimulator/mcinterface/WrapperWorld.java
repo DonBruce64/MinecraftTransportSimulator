@@ -3,9 +3,11 @@ package minecrafttransportsimulator.mcinterface;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 import minecrafttransportsimulator.MasterLoader;
@@ -85,6 +87,8 @@ public class WrapperWorld{
 	private static final Map<World, WrapperWorld> worldWrappers = new HashMap<World, WrapperWorld>();
 	private final Map<WrapperPlayer, Integer> ticksSincePlayerJoin = new HashMap<WrapperPlayer, Integer>();
 	private final Map<WrapperPlayer, BuilderEntityRenderForwarder> activePlayerFollowers = new HashMap<WrapperPlayer, BuilderEntityRenderForwarder>();
+	private final List<AxisAlignedBB> collidingAABBs = new ArrayList<AxisAlignedBB>();
+	private final Set<BlockPos> knownAirBlocks = new HashSet<BlockPos>();
 	
 	public final World world;
 	public InterfaceWorldSavedData savedDataAccessor;
@@ -136,6 +140,29 @@ public class WrapperWorld{
 	 */
 	public long getMaxHeight(){
 		return world.getHeight();
+	}
+	
+	/**
+	 *  Starts profiling with the specified title.
+	 *  This should be done as the first thing when doing profiling of any system,
+	 *  and the last thing after all profiling is done.  Note that you may begin
+	 *  multiple pofiling operations one after the other.  These will stack and
+	 *  group in the profiler.  However, for each profiling operation you start
+	 *  you MUST end it!
+	 */
+	public void beginProfiling(String name, boolean subProfile){
+		if(subProfile){
+			world.profiler.startSection(name);
+		}else{
+			world.profiler.endStartSection(name);
+		}
+	}
+	
+	/**
+	 * Ends profiling for the current profile.
+	 */
+	public void endProfiling(){
+		world.profiler.endSection();
 	}
 	
 	/**
@@ -536,7 +563,7 @@ public class WrapperWorld{
 	public void updateBoundingBoxCollisions(BoundingBox box, Point3d collisionMotion, boolean ignoreIfGreater){
 		AxisAlignedBB mcBox = box.convert();
 		box.collidingBlockPositions.clear();
-		List<AxisAlignedBB> collidingAABBs = new ArrayList<AxisAlignedBB>(); 
+		collidingAABBs.clear();
 		for(int i = (int) Math.floor(mcBox.minX); i < Math.ceil(mcBox.maxX); ++i){
     		for(int j = (int) Math.floor(mcBox.minY); j < Math.ceil(mcBox.maxY); ++j){
     			for(int k = (int) Math.floor(mcBox.minZ); k < Math.ceil(mcBox.maxZ); ++k){
@@ -597,6 +624,43 @@ public class WrapperWorld{
 				}
 			}
 		}
+	}
+	
+	/**
+	 * Checks all passed-in bounding boxes for collisions with other blocks.  Returns true if they collided,
+	 * false if they did not.  This is a bulk method designed to handle multiple checks in a row.  As such,
+	 * it stores a listing of known air blocks.  If a block has been checked before and is air, it is ignored.
+	 * To reset this list, pass in clearCache.  Note that this method, unlike the more granular one for
+	 * collision depth, does not support liquid collisions.
+	 */
+	public boolean checkForCollisions(BoundingBox box, boolean clearCache){
+		if(clearCache){
+			knownAirBlocks.clear();
+		}
+		collidingAABBs.clear();
+		AxisAlignedBB mcBox = box.convert();
+		for(int i = (int) Math.floor(mcBox.minX); i < Math.ceil(mcBox.maxX); ++i){
+    		for(int j = (int) Math.floor(mcBox.minY); j < Math.ceil(mcBox.maxY); ++j){
+    			for(int k = (int) Math.floor(mcBox.minZ); k < Math.ceil(mcBox.maxZ); ++k){
+    				BlockPos pos = new BlockPos(i, j, k);
+    				if(!knownAirBlocks.contains(pos)){
+    					if(world.isBlockLoaded(pos)){
+    	    				IBlockState state = world.getBlockState(pos);
+    	    				if(state.getBlock().canCollideCheck(state, false) && state.getCollisionBoundingBox(world, pos) != null){
+    	    					int oldCollidingBlockCount = collidingAABBs.size();
+    	    					state.addCollisionBoxToList(world, pos, mcBox, collidingAABBs, null, false);
+    	    					if(collidingAABBs.size() > oldCollidingBlockCount){
+    	    						return true;
+    	    					}
+    	    				}else{
+    	    					knownAirBlocks.add(pos);
+    	    				}
+        				}
+    				}
+    			}
+    		}
+    	}
+		return false;
 	}
 	
 	/**
