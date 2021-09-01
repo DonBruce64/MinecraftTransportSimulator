@@ -287,31 +287,31 @@ public class Point3d{
 	public Point3d rotateFine(Point3d angles){
 		if(!angles.isZero()){
 			//Check if we need to create the matrix for the angles.
-			if(angles.lastCalcX != angles.x || angles.lastCalcY != angles.y || angles.lastCalcZ != angles.z || !calcedOnce){
+			if(angles.lastCalcX != angles.x || angles.lastCalcY != angles.y || angles.lastCalcZ != angles.z || !angles.calcedOnce){
 				double cosX = Math.cos(Math.toRadians(angles.x));//A
 				double sinX = Math.sin(Math.toRadians(angles.x));//B
 				double cosY = Math.cos(Math.toRadians(angles.y));//C
 				double sinY = Math.sin(Math.toRadians(angles.y));//D
 				double cosZ = Math.cos(Math.toRadians(angles.z));//E
 				double sinZ = Math.sin(Math.toRadians(angles.z));//F
-				rotationMatrixFine[0][0] = cosY*cosZ-sinX*-sinY*sinZ;
-				rotationMatrixFine[0][1] = -sinX*-sinY*cosZ-cosY*sinZ;
-				rotationMatrixFine[0][2] = -cosX*-sinY;
-				rotationMatrixFine[1][0] = cosX*sinZ;
-				rotationMatrixFine[1][1] = cosX*cosZ;
-				rotationMatrixFine[1][2] = -sinX;
-				rotationMatrixFine[2][0] = -sinY*cosZ+sinX*cosY*sinZ;
-				rotationMatrixFine[2][1] = sinX*cosY*cosZ+sinY*sinZ;
-				rotationMatrixFine[2][2] = cosX*cosY;
+				angles.rotationMatrixFine[0][0] = cosY*cosZ-sinX*-sinY*sinZ;
+				angles.rotationMatrixFine[0][1] = -sinX*-sinY*cosZ-cosY*sinZ;
+				angles.rotationMatrixFine[0][2] = -cosX*-sinY;
+				angles.rotationMatrixFine[1][0] = cosX*sinZ;
+				angles.rotationMatrixFine[1][1] = cosX*cosZ;
+				angles.rotationMatrixFine[1][2] = -sinX;
+				angles.rotationMatrixFine[2][0] = -sinY*cosZ+sinX*cosY*sinZ;
+				angles.rotationMatrixFine[2][1] = sinX*cosY*cosZ+sinY*sinZ;
+				angles.rotationMatrixFine[2][2] = cosX*cosY;
 				
 				angles.lastCalcX = angles.x;
 				angles.lastCalcY = angles.y;
 				angles.lastCalcZ = angles.z;
-				calcedOnce = true;
+				angles.calcedOnce = true;
 			}
-			set(	x*rotationMatrixFine[0][0] + y*rotationMatrixFine[0][1] + z*rotationMatrixFine[0][2],
-					x*rotationMatrixFine[1][0] + y*rotationMatrixFine[1][1]	+ z*rotationMatrixFine[1][2],
-					x*rotationMatrixFine[2][0] + y*rotationMatrixFine[2][1] + z*rotationMatrixFine[2][2]
+			set(	x*angles.rotationMatrixFine[0][0] + y*angles.rotationMatrixFine[0][1] + z*angles.rotationMatrixFine[0][2],
+					x*angles.rotationMatrixFine[1][0] + y*angles.rotationMatrixFine[1][1]	+ z*angles.rotationMatrixFine[1][2],
+					x*angles.rotationMatrixFine[2][0] + y*angles.rotationMatrixFine[2][1] + z*angles.rotationMatrixFine[2][2]
 			);
 		}
 		return this;
