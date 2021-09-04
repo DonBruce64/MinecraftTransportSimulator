@@ -447,6 +447,12 @@ public final class LegacyCompatSystem{
 			if(definition.engine.stallRPM == 0){
 				definition.engine.stallRPM = (int) (definition.engine.idleRPM*0.65);
 			}
+			if(definition.engine.engineWinddownRate == 0){
+				definition.engine.engineWinddownRate = 10;
+			}
+			if(definition.engine.engineWearFactor <= 0.25){
+				definition.engine.engineWearFactor = 1;
+			}
 			
 			//If we don't have matching up-shift and down-shift numbers, we are an engine that came before multiple reverse gears.
 			if(definition.engine.upShiftRPM != null){
