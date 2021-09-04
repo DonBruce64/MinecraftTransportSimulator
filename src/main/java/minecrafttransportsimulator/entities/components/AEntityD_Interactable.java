@@ -419,7 +419,7 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 						box.updateToEntity(this, collisionGroupLocalOffset);
 					}
 					entityCollisionBoxes.addAll(collisionBoxes);
-					if(!groupDef.isInterior && ConfigSystem.configObject.general.noclipVehicles.value){
+					if(!groupDef.isInterior && !ConfigSystem.configObject.general.noclipVehicles.value){
 						blockCollisionBoxes.addAll(collisionBoxes);
 					}
 				}
