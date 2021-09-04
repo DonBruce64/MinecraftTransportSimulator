@@ -478,7 +478,7 @@ public class PartEngine extends APart{
 							rpm -= Math.abs(engineTargetRPM - rpm)/definition.engine.revResistance;
 						}
 					}else if(!state.esOn && !state.hsOn){
-						rpm = Math.max(rpm - 10, 0);
+						rpm = Math.max(rpm - definition.engine.engineWinddownRate, 0); //engineWinddownRate tells us how quickly to slow down the engine, by default 10
 					}
 				}
 				
@@ -839,9 +839,9 @@ public class PartEngine extends APart{
 	
 	public double getTotalWearFactor(){
 		if(definition.engine.superchargerEfficiency > 1.0F){
-			return definition.engine.superchargerEfficiency*ConfigSystem.configObject.general.engineHoursFactor.value;
+			return definition.engine.engineWearFactor*definition.engine.superchargerEfficiency*ConfigSystem.configObject.general.engineHoursFactor.value;
 		}else{
-			return ConfigSystem.configObject.general.engineHoursFactor.value;
+			return definition.engine.engineWearFactor*ConfigSystem.configObject.general.engineHoursFactor.value;
 		}
 	}
 	

@@ -8,7 +8,7 @@ import minecrafttransportsimulator.packloading.JSONParser.JSONDefaults;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 
-@JSONDescription("Parts go on vehicles.  Simple, no?  There's not much to most part JSONs, and some parts, like seats, will have less than 10 lines to mess with.\nNote: while every part type has its own section, there is one cross-over: the “generic” section.  Being generic, it can be used on all parts to define their generic properties.  This may not apply on some parts, such as wheels, which define properties like height based on other parameters, but it will work on the majority of parts for more fine-tuning of things like interaction box size.")
+@JSONDescription("Parts go on vehicles.  Simple, no?  There's not much to most part JSONs, and some parts, like seats, will have less than 10 lines to mess with.\nNote: while every part type has its own section, there is one cross-over: the Â“genericÂ” section.  Being generic, it can be used on all parts to define their generic properties.  This may not apply on some parts, such as wheels, which define properties like height based on other parameters, but it will work on the majority of parts for more fine-tuning of things like interaction box size.")
 public class JSONPart extends AJSONPartProvider{
 	
 	@JSONRequired
@@ -59,7 +59,7 @@ public class JSONPart extends AJSONPartProvider{
     public static enum PartType{
     	@JSONDescription("This isn't so much a part as it is an add-on component to your main vehicle.  Generic parts don't do anything and can't be interacted with, but that's actually a GOOD thing as they won't try to move your vehicle or let players sit in random locations.\nWant a set of spoilers to add to your sports cars without making new models?  Generic parts.\nWant to make a freight vehicle like the GMC with different rear-ends?  Generic parts.\nWant to make different tops for your Jeep?  Generic parts.\nGeneric parts are particularly versatile when combined with sub-parts.  In this capacity they can be used to add truck beds with places to put crates for cargo slots, axles to allow for more wheels and mounts for guns that wouldn't normally be on the vehicle.\nIf you do plan on using the generic type, it is highly suggested that you give them a unique, yet common, type name.  For example, generic_bumpersticker, or generic_pickupbed.  This will not only ensure that other generic parts will go on your vehicle, but also lets other packs have the same generic parts for cross-pack compatibility.")
 		GENERIC,
-    	@JSONDescription("Engines are the most complex JSON in MTS.  While all engines use the same generic code under the hood, each application has specific tweaks that will need to be made.  For example, an aircraft engine that has propellers on it will need to have a propeller subPart to allow for a propeller to be placed on it, or an additionalPart on the vehicle, should the propeller be a vehicle option rather than an engine option (such as a car that has a boat propeller for water travel).  Because of this, the forces that come out of your engine depend on what it's put in and what's attached to it more than anything else.\nWhile engines have a “type” parameter, this is only used for classifying engines into distinct categories to prevent users from putting jet engines on semi trucks.")
+    	@JSONDescription("Engines are the most complex JSON in MTS.  While all engines use the same generic code under the hood, each application has specific tweaks that will need to be made.  For example, an aircraft engine that has propellers on it will need to have a propeller subPart to allow for a propeller to be placed on it, or an additionalPart on the vehicle, should the propeller be a vehicle option rather than an engine option (such as a car that has a boat propeller for water travel).  Because of this, the forces that come out of your engine depend on what it's put in and what's attached to it more than anything else.\nWhile engines have a Â“typeÂ” parameter, this is only used for classifying engines into distinct categories to prevent users from putting jet engines on semi trucks.")
 		ENGINE,
 		@JSONDescription("It's a device, that touches the ground.  Therefore, it's a ground device part.  Simple, no?  Ground devices come in all shapes and sizes.  From the pinnacle of modern motion, wheels, to simple devices like pontoons, ground devices are the bread and butter of movement in MTS.  Unless you're making a boat, you'll probably need a few of these.")
 		GROUND,
@@ -145,6 +145,12 @@ public class JSONPart extends AJSONPartProvider{
 		@JSONDescription("The RPM where this engine will stall.  Should be below the idleRPM to prevent the engine automatically shutting off on low throttle.")
     	public int stallRPM;
 		
+		@JSONDescription("The rate at which this engine's RPM winds down per tick after sputtering out or being turned off. 10 by default, and can be configured to make engines wind down quicker or slower.")
+    	public int engineWinddownRate;
+		
+		@JSONDescription("The rate at which this engine accrues hours. If you make it lower, it'll be more reliable. If you make it higher, it'll collect that wearout like the infinity stones.")
+    	public float engineWearFactor;
+
 		@JSONDescription("How many mb/t the engine uses, and how powerful the engine is. This value is calculated at maxRPM and scaled down based on the percentage of speed the engine is at, so an engine with a maxRPM of 4000 with a fuel consumption of 1.0 running at 2000RPM is actually running at a rate of 0.5.  This value is the key to determining the raw power output of your engine, as it's directly related to how much force the engine can output.  However, even the most powerful engines won't do much if they're geared improperly, and even weak engines with low consumption can reach high speeds if they can maintain high RPMs.")
     	public float fuelConsumption;
 		
@@ -428,7 +434,7 @@ public class JSONPart extends AJSONPartProvider{
     public static enum EffectorComponentType{
 		@JSONDescription("Checks for plants on the ground and applies bonemeal to them contained in crates.")
 		FERTILIZER,
-		@JSONDescription("Will harvest plants that pass through it, depositing items into vehicle crates, or on the ground if no crates are present, or their inventories are full.  Will also break “bush” blocks like tall grass, flowers, and saplings, depositing them on the ground.")
+		@JSONDescription("Will harvest plants that pass through it, depositing items into vehicle crates, or on the ground if no crates are present, or their inventories are full.  Will also break Â“bushÂ” blocks like tall grass, flowers, and saplings, depositing them on the ground.")
 		HARVESTER,
 		@JSONDescription("Will plant any plant-able items located in vehicle crate parts onto farmland. Does not work with cactus, reeds, or other non-farmland-based plants.")
 		PLANTER,
