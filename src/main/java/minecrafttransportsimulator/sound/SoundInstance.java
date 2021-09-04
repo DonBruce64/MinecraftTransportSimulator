@@ -2,6 +2,7 @@ package minecrafttransportsimulator.sound;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
+import minecrafttransportsimulator.jsondefs.JSONSound;
 
 /**Class that holds sound information.  One class is created for each sound that's playing
  * in the {@link InterfaceSound}.  This class holds data such as the current
@@ -14,9 +15,9 @@ import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 public class SoundInstance{
 	public final AEntityB_Existing entity;
 	public final String soundName;
-	public final Point3d position;
-	public final boolean looping;
+	public final JSONSound soundDef;
 	public final Radio radio;
+	public final Point3d position;
 	
 	//Runtime variables.
 	public int sourceIndex;
@@ -25,18 +26,26 @@ public class SoundInstance{
 	public boolean stopSound = false;
 	
 	public SoundInstance(AEntityB_Existing entity, String soundName){
-		this(entity, soundName, false, null);
+		this(entity, soundName, null, null);
 	}
 	
-	public SoundInstance(AEntityB_Existing entity, String soundName, boolean looping){
-		this(entity, soundName, looping, null);
+	public SoundInstance(AEntityB_Existing entity, JSONSound soundDef){
+		this(entity, soundDef.name, soundDef, null);
 	}
 
-	public SoundInstance(AEntityB_Existing entity, String soundName, boolean looping, Radio radio){
+	public SoundInstance(AEntityB_Existing entity, String soundName, JSONSound soundDef, Radio radio){
 		this.entity = entity;
 		this.soundName = soundName;
-		this.position = entity.position.copy();
-		this.looping = looping;
+		this.soundDef = soundDef;
 		this.radio = radio;
+		this.position = entity.position.copy();
+	}
+	
+	public void updatePosition(){
+		if(soundDef != null && soundDef.pos != null){
+			position.setTo(soundDef.pos).rotateFine(entity.angles).add(entity.position);
+		}else{
+			position.setTo(entity.position);
+		}
 	}
 }

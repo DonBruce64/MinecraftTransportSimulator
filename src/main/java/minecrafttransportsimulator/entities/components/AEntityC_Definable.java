@@ -743,7 +743,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 						}
 					}
 					if(!isSoundPlaying){
-						InterfaceSound.playQuickSound(new SoundInstance(this, soundDef.name, soundDef.looping));
+						InterfaceSound.playQuickSound(new SoundInstance(this, soundDef));
 					}
 				}else{
 					if(soundDef.looping){
@@ -881,13 +881,6 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 								sound.pitch = 1;
 							}else if(sound.pitch < 0){
 								sound.pitch = 0;
-							}
-							
-							//Adjust position.
-							if(soundDef.pos != null){
-								sound.position.setTo(soundDef.pos).rotateFine(angles).add(position);
-							}else{
-								sound.position.setTo(position);
 							}
 						}						
 					}
