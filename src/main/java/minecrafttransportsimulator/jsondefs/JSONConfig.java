@@ -192,6 +192,8 @@ public class JSONConfig{
 		public JSONConfigEntry<Boolean> autoTrnSignals = new JSONConfigEntry<Boolean>(true, "If true, turns signals will come on automatically when you start a turn, and will turn off when the turn completes.  If this is false, then they will only be able to be activated with the keybinds or via the panel.");
 		
 		public JSONConfigEntry<Boolean> north360 = new JSONConfigEntry<Boolean>(false, "If true, instruments will represent North as 360 degrees, instead of the Minecraft default of 180. Allows using the heading system that real-world pilots and militaries do.");
+		public JSONConfigEntry<Boolean> classicJystk = new JSONConfigEntry<Boolean>(false, "If true, the classic controller code will be used.  Note: THIS CODE MAY CRASH MOBILE DEVICES!  Also note that switching will probably mess up your keybinds.  Only do this if you are having issues with a joystick or controller not being recognized.  After changing this setting, reboot the game to make it take effect.");
+		
 		public JSONConfigEntry<Boolean> devMode = new JSONConfigEntry<Boolean>(false, "If enabled, MTS will allow access to the dev mode GUI while sitting in vehicles.  The GUI allows editing JSONs in-game without the need to restart.");
 
 		public JSONConfigEntry<Integer> controlSurfaceCooldown = new JSONConfigEntry<Integer>(4, "How long (in ticks) it takes before control surfaces try to return to their natural angle.  This is not used when using a joystick.");
