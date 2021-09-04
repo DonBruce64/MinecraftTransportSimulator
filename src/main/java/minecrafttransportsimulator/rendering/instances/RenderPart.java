@@ -7,6 +7,7 @@ import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.PartGun;
+import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.InterfaceRender;
 import minecrafttransportsimulator.rendering.components.ARenderEntity;
 
@@ -40,15 +41,17 @@ public final class RenderPart extends ARenderEntity<APart>{
 	
 	@Override
 	protected void renderBoundingBoxes(APart part, Point3d entityPositionDelta){
-		super.renderBoundingBoxes(part, entityPositionDelta);
-		//Draw the gun muzzle bounding boxes.
-		if(part instanceof PartGun){
-			InterfaceRender.setColorState(ColorRGB.BLUE);
-			Point3d origin = new Point3d(0, 0, part.definition.gun.length).rotateFine(part.localAngles).rotateFine(part.entityOn.angles).add(entityPositionDelta);
-			GL11.glTranslated(origin.x, origin.y, origin.z);
-			RenderBoundingBox.renderWireframe(new BoundingBox(origin, 0.25, 0.25, 0.25));
-			GL11.glTranslated(-origin.x, -origin.y, -origin.z);
-			InterfaceRender.setColorState(ColorRGB.WHITE);
+		if(!part.entityOn.areVariablesBlocking(part.placementDefinition, InterfaceClient.getClientPlayer())){
+			super.renderBoundingBoxes(part, entityPositionDelta);
+			//Draw the gun muzzle bounding boxes.
+			if(part instanceof PartGun){
+				InterfaceRender.setColorState(ColorRGB.BLUE);
+				Point3d origin = new Point3d(0, 0, part.definition.gun.length).rotateFine(part.localAngles).rotateFine(part.entityOn.angles).add(entityPositionDelta);
+				GL11.glTranslated(origin.x, origin.y, origin.z);
+				RenderBoundingBox.renderWireframe(new BoundingBox(origin, 0.25, 0.25, 0.25));
+				GL11.glTranslated(-origin.x, -origin.y, -origin.z);
+				InterfaceRender.setColorState(ColorRGB.WHITE);
+			}
 		}
 	}
 }

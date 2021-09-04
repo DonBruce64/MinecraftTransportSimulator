@@ -7,7 +7,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import com.google.common.collect.BiMap;
@@ -21,9 +20,9 @@ import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.AJSONInteractableEntity;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
+import minecrafttransportsimulator.jsondefs.JSONCollisionGroup;
 import minecrafttransportsimulator.jsondefs.JSONConnection;
 import minecrafttransportsimulator.jsondefs.JSONConnectionGroup;
-import minecrafttransportsimulator.jsondefs.JSONDoor;
 import minecrafttransportsimulator.jsondefs.JSONInstrumentDefinition;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
@@ -46,19 +45,22 @@ import minecrafttransportsimulator.systems.PackParserSystem;
  */
 public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteractableEntity> extends AEntityC_Definable<JSONDefinition>{
 	
-	/**List of bounding boxes that should be used for collision of other entities with this entity.
-	 * This includes {@link #blockCollisionBoxes}, but may include others.**/
-	public final List<BoundingBox> collisionBoxes = new ArrayList<BoundingBox>();
+	/**List of boxes generated from JSON.  These are stored here as objects since they may not be
+	 * added to their respective maps if they aren't active.**/
+	public final Map<JSONCollisionGroup, Set<BoundingBox>> definitionCollisionBoxes = new HashMap<JSONCollisionGroup, Set<BoundingBox>>();
+	private final Map<JSONCollisionGroup, List<DurationDelayClock>> collisionClocks = new HashMap<JSONCollisionGroup, List<DurationDelayClock>>();
 	
 	/**List of bounding boxes that should be used to check collision of this entity with blocks.**/
-	public final List<BoundingBox> blockCollisionBoxes = new ArrayList<BoundingBox>();
+	public final Set<BoundingBox> blockCollisionBoxes = new HashSet<BoundingBox>();
+	
+	/**List of bounding boxes that should be used for collision of other entities with this entity.
+	 * This includes {@link #blockCollisionBoxes}, but may include others.**/
+	public final Set<BoundingBox> entityCollisionBoxes = new HashSet<BoundingBox>();
 	
 	/**List of bounding boxes that should be used for interaction of other entities with this entity.
-	 * This includes all {@link #collisionBoxes} and {@link #doorBoxes} by default, but may include others.**/
-	public final List<BoundingBox> interactionBoxes = new ArrayList<BoundingBox>();
-	
-	/**Map of door boxes.  Key is the box, value is the JSON entry that it was created from.**/
-	public final Map<BoundingBox, JSONDoor> doorBoxes = new HashMap<BoundingBox, JSONDoor>();
+	 * This includes all {@link #entityCollisionBoxes}, but may include others, most likely being the
+	 * core {@link #boundingBox} for this entity.**/
+	public final Set<BoundingBox> interactionBoxes = new HashSet<BoundingBox>();
 	
 	/**Set of entities that this entity collided with this tick.  Any entity that is in this set 
 	 * should NOT do collision checks with this entity, or infinite loops will occur.
@@ -115,6 +117,10 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 	private TrailerConnection savedTowedByConnection;
 	private final Set<TrailerConnection> savedTowingConnections = new HashSet<TrailerConnection>();
 	
+	//Mutable variables.
+	private final Point3d collisionGroupLocalOffset = new Point3d();
+	private final Point3d collisionGroupLocalAngles = new Point3d();
+	
 	public AEntityD_Interactable(WrapperWorld world, WrapperNBT data){
 		super(world, data);
 		//Load saved rider positions.  We don't have riders here yet (as those get created later), 
@@ -123,29 +129,8 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 		this.locked = data.getBoolean("locked");
 		this.ownerUUID = data.getString("ownerUUID");
 		
-		//Create collision boxes.
-		if(definition.collision != null){
-			for(JSONCollisionBox boxDef : definition.collision){
-				BoundingBox newBox = new BoundingBox(boxDef.pos, boxDef.pos.copy(), boxDef.width/2D, boxDef.height/2D, boxDef.width/2D, boxDef.collidesWithLiquids, boxDef.isInterior, true, boxDef.armorThickness);
-				collisionBoxes.add(newBox);
-				if(!newBox.isInterior && !ConfigSystem.configObject.general.noclipVehicles.value){
-					blockCollisionBoxes.add(newBox);
-				}
-			}
-		}
-		
-		//Create door boxes.
-		if(definition.doors != null){
-			for(JSONDoor doorDef : definition.doors){
-				BoundingBox box = new BoundingBox(doorDef.closedPos, doorDef.closedPos.copy(), doorDef.width/2D, doorDef.height/2D, doorDef.width/2D, false, true, false, doorDef.armorThickness);
-				doorBoxes.put(box, doorDef);
-				collisionBoxes.add(box);
-			}
-		}
-		
-		//Add collision and door boxes to interaction list.
-		interactionBoxes.addAll(collisionBoxes);
-		interactionBoxes.addAll(doorBoxes.keySet());
+		//Add collision boxes to interaction list.
+		interactionBoxes.addAll(entityCollisionBoxes);
 		
 
 		//Load towing data.
@@ -179,8 +164,29 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 	}
 	
 	@Override
-	protected void initializeAnimations(){
-		super.initializeAnimations();
+	protected void initializeDefinition(){
+		super.initializeDefinition();
+		//Create collision boxes.
+		definitionCollisionBoxes.clear();
+		collisionClocks.clear();
+		if(definition.collisionGroups != null){
+			for(JSONCollisionGroup groupDef : definition.collisionGroups){
+				Set<BoundingBox> boxes = new HashSet<BoundingBox>();
+				for(JSONCollisionBox boxDef : groupDef.collisions){
+					boxes.add(new BoundingBox(boxDef));
+				}
+				definitionCollisionBoxes.put(groupDef, boxes);
+				if(groupDef.animations != null){
+					List<DurationDelayClock> animations = new ArrayList<DurationDelayClock>();
+					for(JSONAnimationDefinition animation : groupDef.animations){
+						animations.add(new DurationDelayClock(animation));
+					}
+					collisionClocks.put(groupDef, animations);
+				}
+			}
+		}
+				
+		//Create instrument animation clocks.
 		if(definition.instruments != null){
 			for(int i=0; i<definition.instruments.size(); ++i){
 				JSONInstrumentDefinition packInstrument = definition.instruments.get(i);
@@ -262,22 +268,8 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 				}
 			}
 			
-			//Update collision boxes.
 			world.beginProfiling("CollisionBoxUpdates", true);
-			for(BoundingBox box : collisionBoxes){
-				box.updateToEntity(this, null);
-			}
-			
-			//Update door boxes.
-			world.beginProfiling("DoorBoxUpdates", false);
-			for(Entry<BoundingBox, JSONDoor> doorEntry : doorBoxes.entrySet()){
-				if(variablesOn.contains(doorEntry.getValue().name)){
-					doorEntry.getKey().globalCenter.setTo(doorEntry.getValue().openPos).rotateFine(angles).add(position);
-				}else{
-					doorEntry.getKey().globalCenter.setTo(doorEntry.getValue().closedPos).rotateFine(angles).add(position);
-				}
-			}
-			
+			updateCollisionBoxes();
 			world.endProfiling();
 			world.endProfiling();
 			return true;
@@ -332,6 +324,111 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 	}
 	
 	/**
+   	 *  Updates the position of all collision boxes, and sets them in their appropriate maps based on their
+   	 *  properties, and animation state (if applicable). 
+   	 */
+    protected void updateCollisionBoxes(){
+    	blockCollisionBoxes.clear();
+    	entityCollisionBoxes.clear();
+    	interactionBoxes.clear();
+    	
+    	if(definition.collisionGroups != null){
+			for(JSONCollisionGroup groupDef : definition.collisionGroups){
+				boolean inhibitCollision = false;
+				collisionGroupLocalOffset.set(0D, 0D, 0D);
+				if(groupDef.animations != null){
+					boolean inhibitAnimations = false;
+					collisionGroupLocalAngles.set(0D, 0D, 0D);
+					if(ConfigSystem.configObject.clientControls.devMode.value && !collisionClocks.containsKey(groupDef)){
+						//This can only happen if we hotloaded the definition due to devMode.
+						//Flag us as needing a reset, and then bail to prevent further collision checks.
+						animationsInitialized = false;
+						return;
+					}
+					for(DurationDelayClock clock : collisionClocks.get(groupDef)){
+						switch(clock.animation.animationType){
+							case VISIBILITY :{
+								if(!inhibitAnimations){
+									double variableValue = getAnimatedVariableValue(clock, 0);
+									if(variableValue < clock.animation.clampMin || variableValue > clock.animation.clampMax){
+										inhibitCollision = true;
+									}
+								}
+								break;
+							}
+							case INHIBITOR :{
+								if(!inhibitAnimations){
+									double variableValue = getAnimatedVariableValue(clock, 0);
+									if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
+										inhibitAnimations = true;
+									}
+								}
+								break;
+							}
+							case ACTIVATOR :{
+								if(inhibitAnimations){
+									double variableValue = getAnimatedVariableValue(clock, 0);
+									if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
+										inhibitAnimations = false;
+									}
+								}
+								break;
+							}
+							case TRANSLATION :{
+								if(!inhibitAnimations){
+									//Found translation.  This gets applied in the translation axis direction directly.
+									double variableValue = getAnimatedVariableValue(clock, 1.0, 0);
+									Point3d appliedTranslation = clock.animation.axis.copy().multiply(variableValue);
+									collisionGroupLocalOffset.add(appliedTranslation.rotateFine(collisionGroupLocalAngles));
+								}
+								break;
+							}
+							case ROTATION :{
+								if(!inhibitAnimations){
+									//Found rotation.  Get angles that needs to be applied.
+									double variableValue = getAnimatedVariableValue(clock, 1.0, 0);
+									Point3d appliedRotation = clock.animation.axis.copy().multiply(variableValue);
+									
+									//Check if we need to apply a translation based on this rotation.
+									if(!clock.animation.centerPoint.isZero()){
+										//Use the center point as a vector we rotate to get the applied offset.
+										//We need to take into account the current offset here, as we might have rotated on a prior call.
+										collisionGroupLocalOffset.add(clock.animation.centerPoint.copy().multiply(-1D).rotateFine(appliedRotation).add(clock.animation.centerPoint).rotateFine(collisionGroupLocalAngles));
+									}
+									
+									//Apply rotation.  We need to do this after translation operations to ensure proper offsets.
+									collisionGroupLocalAngles.add(appliedRotation);
+								}
+								break;
+							}
+							case SCALING :{
+								//Do nothing.
+								break;
+							}
+						}
+						if(inhibitCollision){
+							//No need to process further.
+							break;
+						}
+					}
+				}
+				
+				if(!inhibitCollision){
+					Set<BoundingBox> collisionBoxes = definitionCollisionBoxes.get(groupDef);
+					for(BoundingBox box : collisionBoxes){
+						box.updateToEntity(this, collisionGroupLocalOffset);
+					}
+					entityCollisionBoxes.addAll(collisionBoxes);
+					if(!groupDef.isInterior && ConfigSystem.configObject.general.noclipVehicles.value){
+						blockCollisionBoxes.addAll(collisionBoxes);
+					}
+				}
+			}
+    	}
+    	interactionBoxes.addAll(entityCollisionBoxes);
+    }
+	
+	/**
 	 * Called to perform supplemental update logic on this entity.  This should be called after all movement on the
 	 * entity has been performed, and is used to do updates that require the new positional logic to be ready.
 	 * Calling this before the entity finishes moving will lead to things "lagging" behind the entity.
@@ -353,7 +450,7 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
    	 *  Returns a collection of BoundingBoxes that make up this entity's collision bounds.
    	 */
     public Collection<BoundingBox> getCollisionBoxes(){
-    	return collisionBoxes;
+    	return entityCollisionBoxes;
     }
     
     /**

@@ -507,8 +507,7 @@ public class JSONParser{
 				((AJSONMultiModelProvider) definitionToOverride).definitions = ((AJSONMultiModelProvider) loadedDefinition).definitions;
 				((AJSONMultiModelProvider) definitionToOverride).rendering = ((AJSONMultiModelProvider) loadedDefinition).rendering;
 				if(definitionToOverride instanceof AJSONInteractableEntity){
-					((AJSONInteractableEntity) definitionToOverride).collision = ((AJSONInteractableEntity) loadedDefinition).collision;
-					((AJSONInteractableEntity) definitionToOverride).doors = ((AJSONInteractableEntity) loadedDefinition).doors;
+					((AJSONInteractableEntity) definitionToOverride).collisionGroups = ((AJSONInteractableEntity) loadedDefinition).collisionGroups;
 					((AJSONInteractableEntity) definitionToOverride).connectionGroups = ((AJSONInteractableEntity) loadedDefinition).connectionGroups;
 					((AJSONInteractableEntity) definitionToOverride).instruments = ((AJSONInteractableEntity) loadedDefinition).instruments;
 					((AJSONInteractableEntity) definitionToOverride).effects = ((AJSONInteractableEntity) loadedDefinition).effects;

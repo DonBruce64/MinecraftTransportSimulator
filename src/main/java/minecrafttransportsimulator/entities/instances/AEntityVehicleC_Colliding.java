@@ -7,7 +7,6 @@ import java.util.List;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.jsondefs.JSONDoor;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
@@ -57,18 +56,12 @@ abstract class AEntityVehicleC_Colliding extends AEntityVehicleB_Rideable{
 			
 			//Auto-close any open doors that should be closed.
 			//Only do this once a second to prevent lag.
-			if(definition.doors != null && velocity > 0.5 && ticksExisted%20 == 0){
+			if(velocity > 0.5 && ticksExisted%20 == 0){
 				world.beginProfiling("CloseDoors", false);
 				Iterator<String> variableIterator = variablesOn.iterator();
 				while(variableIterator.hasNext()){
-					String openDoorName = variableIterator.next();
-					for(JSONDoor doorDef : definition.doors){
-						if(doorDef.name.equals(openDoorName)){
-							if(doorDef.closeOnMovement){
-								variableIterator.remove();
-							}
-							break;
-						}
+					if(variableIterator.next().startsWith("door")){
+						variableIterator.remove();
 					}
 				}
 			}

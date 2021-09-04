@@ -37,7 +37,7 @@ public class PartEffector extends APart{
 			//If we are active, do effector things.
 			if(isActive && !world.isClient()){
 				drops.clear();
-				for(BoundingBox box : collisionBoxes){
+				for(BoundingBox box : entityCollisionBoxes){
 					switch(definition.effector.type){
 						case FERTILIZER: {
 							//Search all inventories for fertilizer and try to use it.

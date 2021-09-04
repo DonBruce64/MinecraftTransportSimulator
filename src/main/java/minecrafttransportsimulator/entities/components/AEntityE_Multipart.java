@@ -19,7 +19,6 @@ import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.items.instances.ItemItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.AJSONPartProvider;
-import minecrafttransportsimulator.jsondefs.JSONDoor;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
@@ -67,15 +66,11 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 	 */
 	public final List<APart> partsFromNBT = new ArrayList<APart>();
 	
-	
-	/**List of collision boxes, with all part collision boxes included.**/
-	public final List<BoundingBox> allCollisionBoxes = new ArrayList<BoundingBox>();
-	
 	/**List of block collision boxes, with all part block collision boxes included.**/
 	public final List<BoundingBox> allBlockCollisionBoxes = new ArrayList<BoundingBox>();
 	
-	/**Map of door boxes, with all part doors included.**/
-	public final Map<BoundingBox, JSONDoor> allDoorBoxes = new HashMap<BoundingBox, JSONDoor>();
+	/**List of entity collision boxes, with all part collision boxes included.**/
+	public final List<BoundingBox> allEntityCollisionBoxes = new ArrayList<BoundingBox>();
 	
 	/**List of interaction boxes, plus all part boxes included.**/
 	public final List<BoundingBox> allInteractionBoxes = new ArrayList<BoundingBox>();
@@ -109,13 +104,12 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 		}
 		
 		//Create the initial boxes and slots.
-		recalculateBoxes();
 		recalculatePartSlots();
 	}
 	
 	@Override
-	protected void initializeAnimations(){
-    	super.initializeAnimations();
+	protected void initializeDefinition(){
+    	super.initializeDefinition();
     	//Reset any parts on us.
     	//Don't reset sub-parts though, as they don't use the JSONs on us for movement.
     	for(APart part : parts){
@@ -183,7 +177,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 						//Does the part held match this packPart?
 						if(heldPart.isPartValidForPackDef(partSlotBoxEntry.getValue(), subName, false)){
 							//Are there any doors blocking us from clicking this part?
-							if(!areDoorsBlocking(partSlotBoxEntry.getValue(), player)){
+							if(!areVariablesBlocking(partSlotBoxEntry.getValue(), player)){
 								//Part matches.  Add the box.  Set the box bounds to the generic box, or the
 								//special bounds of the generic part if we're holding one.
 								BoundingBox box = partSlotBoxEntry.getKey();
@@ -220,19 +214,8 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 		//Auto-close doors for the rider in the seat they are going in, if such doors exist.
 		if(super.addRider(rider, riderLocation)){
 			PartSeat seat = (PartSeat) getPartAtLocation(locationRiderMap.inverse().get(rider));
-			if(seat != null && seat.placementDefinition.linkedDoors != null){
-				for(String linkedDoor : seat.placementDefinition.linkedDoors){
-					if(variablesOn.contains(linkedDoor)){
-						for(JSONDoor doorDef : allDoorBoxes.values()){
-							if(doorDef.name.equals(linkedDoor)){
-								if(doorDef.activateOnSeated){
-									variablesOn.remove(linkedDoor);
-								}
-								break;
-							}
-						}
-					}
-				}
+			if(seat != null && seat.placementDefinition.linkedVariables != null){
+				variablesOn.removeAll(seat.placementDefinition.linkedVariables);
 			}
 			return true;
 		}else{
@@ -244,19 +227,8 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 	public void removeRider(WrapperEntity rider, Iterator<WrapperEntity> iterator){
 		//Auto-open doors for the rider in the seat they were in, if such doors exist.
 		PartSeat seat = (PartSeat) getPartAtLocation(locationRiderMap.inverse().get(rider));
-		if(seat != null && seat.placementDefinition.linkedDoors != null){
-			for(String linkedDoor : seat.placementDefinition.linkedDoors){
-				if(!variablesOn.contains(linkedDoor)){
-					for(JSONDoor doorDef : allDoorBoxes.values()){
-						if(doorDef.name.equals(linkedDoor)){
-							if(doorDef.activateOnSeated){
-								variablesOn.add(linkedDoor);
-							}
-							break;
-						}
-					}
-				}
-			}
+		if(seat != null && seat.placementDefinition.linkedVariables != null){
+			variablesOn.addAll(seat.placementDefinition.linkedVariables);
 		}
 		super.removeRider(rider, iterator);
 	}
@@ -302,7 +274,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 	
 	@Override
     public Collection<BoundingBox> getCollisionBoxes(){
-    	return allCollisionBoxes;
+    	return allEntityCollisionBoxes;
     }
 	
 	@Override
@@ -334,34 +306,23 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 		//Update all-box lists now that all parts are updated.
 		//If we don't do this, then the box size might get de-synced.
 		world.beginProfiling("BoxAlignment_" + allInteractionBoxes.size(), true);
-		recalculateBoxes();
+		sortBoxes();
 		world.endProfiling();
 	}
 	
 	/**
-	 * Returns true if any linked doors are blocking the player from
+	 * Returns true if any linked variables are blocking the player from
 	 * accessing the passed-in part slot.
 	 */
-	public boolean areDoorsBlocking(JSONPartDefinition partDef, WrapperPlayer player){
-		if(partDef.linkedDoors != null && !this.equals(player.getEntityRiding())){
-			//If the door exists and is not open, we are blocked.
-			boolean doorExists = false;
-			for(String doorName : partDef.linkedDoors){
-				if(variablesOn.contains(doorName)){
+	public boolean areVariablesBlocking(JSONPartDefinition partDef, WrapperPlayer player){
+		if(partDef.linkedVariables != null && !this.equals(player.getEntityRiding())){
+			for(String variableName : partDef.linkedVariables){
+				if(variablesOn.contains(variableName)){
 					//We have the door open, no need to check any further.
 					return false;
-				}else if(!doorExists){
-					for(JSONDoor doorDef : allDoorBoxes.values()){
-						if(partDef.linkedDoors.contains(doorDef.name)){
-							doorExists = true;
-							break;
-						}
-					}
 				}
 			}
-			
-			//Didn't find open door, if the door exists, return true as it's blocking.
-			return doorExists;
+			return true;
 		}else{
 			return false;
 		}
@@ -452,11 +413,14 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
     			//Need to know if we are a new part or not.
     			boolean newPart = partData == null || partData.getString("uniqueUUID").isEmpty();
     			if(newPart){
-					//Add any default instruments this new part may have.
+					//Add any default instruments and variables this new part may have.
     				partToAdd.addDefaultInstruments();
+    				if(partToAdd.definition.rendering != null && partToAdd.definition.rendering.initialVariables != null){
+    					partToAdd.variablesOn.addAll(partToAdd.definition.rendering.initialVariables);
+					}
 				}
     			
-    			//Now add the part as all instruments are on it.
+    			//Now add the part as all instruments and variables are on it.
     			addPart(partToAdd, true);
 				
 				//Add default parts.  We need to do this after we send a packet so our slots are valid.
@@ -752,28 +716,26 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 		allPartSlotBoxes.clear();
 		for(Entry<Point3d, JSONPartDefinition> packPartEntry : getAllPossiblePackParts().entrySet()){
 			if(getPartAtLocation(packPartEntry.getKey()) == null){
-				BoundingBox newSlotBox = new BoundingBox(packPartEntry.getKey(), packPartEntry.getKey().copy().rotateFine(angles).add(position), PART_SLOT_HITBOX_WIDTH/2D, PART_SLOT_HITBOX_HEIGHT/2D, PART_SLOT_HITBOX_WIDTH/2D, false, false, false, 0);
+				BoundingBox newSlotBox = new BoundingBox(packPartEntry.getKey(), packPartEntry.getKey().copy().rotateFine(angles).add(position), PART_SLOT_HITBOX_WIDTH/2D, PART_SLOT_HITBOX_HEIGHT/2D, PART_SLOT_HITBOX_WIDTH/2D, false);
 				allPartSlotBoxes.put(newSlotBox, packPartEntry.getValue());
 			}
 		}
 	}
 	
-	
 	/**
 	 * Call to re-create the lists of the collision and interaction boxes.
 	 * This should be run at construction, and every tick so we have up-to-date lists.
 	 */
-	protected void recalculateBoxes(){
+	private void sortBoxes(){
 		//Set active collision box, door box, and interaction box lists to current boxes.
-		allCollisionBoxes.clear();
-		allCollisionBoxes.addAll(collisionBoxes);
+		allEntityCollisionBoxes.clear();
+		allEntityCollisionBoxes.addAll(entityCollisionBoxes);
 		allBlockCollisionBoxes.clear();
 		allBlockCollisionBoxes.addAll(blockCollisionBoxes);
-		allDoorBoxes.clear();
-		allDoorBoxes.putAll(doorBoxes);
-		
 		allInteractionBoxes.clear();
 		allInteractionBoxes.addAll(interactionBoxes);
+		
+		//Only add active slots on clients, but all slots on servers.
 		if(world.isClient()){
 			allInteractionBoxes.addAll(activePartSlotBoxes.keySet());
 		}else{
@@ -782,14 +744,12 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 		
 		//Add all part boxes.
 		for(APart part : parts){
-			allCollisionBoxes.addAll(part.collisionBoxes);
+			allEntityCollisionBoxes.addAll(part.entityCollisionBoxes);
 			allBlockCollisionBoxes.addAll(part.blockCollisionBoxes);
-			allDoorBoxes.putAll(part.doorBoxes);
 			
 			//Part interaction boxes are updated by the part, so we don't need to update those.
 			//Rather, the part will update them on it's own update call.
 			//However, we do need to decide if we need to add those boxes to the interaction list.
-			//While we add all the boxes on the server, we only add some on the clients.
 			//This is dependent on what the current player entity is holding.
 			if(world.isClient()){
 				WrapperPlayer clientPlayer = InterfaceClient.getClientPlayer();
@@ -802,9 +762,8 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 					}
 				}
 				
-				//If the part is linked to doors, and none are open, don't add it.
-				//This prevents the player from interacting with things from outside the vehicle when the door is shut.
-				if(areDoorsBlocking(part.placementDefinition, clientPlayer)){
+				//If the part is linked to variables, and none are active, don't add it.
+				if(areVariablesBlocking(part.placementDefinition, clientPlayer)){
 					continue;
 				}
 				

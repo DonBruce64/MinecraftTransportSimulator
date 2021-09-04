@@ -9,7 +9,7 @@ import minecrafttransportsimulator.entities.instances.PartEngine;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.components.IItemEntityProvider;
 import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
-import minecrafttransportsimulator.jsondefs.JSONDoor;
+import minecrafttransportsimulator.jsondefs.JSONCollisionGroup;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -93,21 +93,13 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 					}
 				}
 				
-				//Open all doors.  This lets players know we can close them and put things in slots.
-				if(definition.doors != null){
-					for(JSONDoor door : definition.doors){
-						if(!door.closedByDefault){
-							vehicle.variablesOn.add(door.name);
-						}
-					}
+				//Set all initial variables.
+				if(vehicle.definition.rendering != null && vehicle.definition.rendering.initialVariables != null){
+					vehicle.variablesOn.addAll(vehicle.definition.rendering.initialVariables);
 				}
 				for(APart part : vehicle.parts){
-					if(part.definition.doors != null){
-						for(JSONDoor door : part.definition.doors){
-							if(!door.closedByDefault){
-								vehicle.variablesOn.add(door.name);
-							}
-						}
+					if(part.definition.rendering != null && part.definition.rendering.initialVariables != null){
+						part.variablesOn.addAll(part.definition.rendering.initialVariables);
 					}
 				}
 			}
@@ -115,8 +107,10 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 			//Get how far above the ground the vehicle needs to be, and move it to that position.
 			//First boost Y based on collision boxes.
 			double furthestDownPoint = 0;
-			for(JSONCollisionBox collisionBox : vehicle.definition.collision){
-				furthestDownPoint = Math.min(collisionBox.pos.y - collisionBox.height/2F, furthestDownPoint);
+			for(JSONCollisionGroup collisionGroup : vehicle.definition.collisionGroups){
+				for(JSONCollisionBox collisionBox : collisionGroup.collisions){
+					furthestDownPoint = Math.min(collisionBox.pos.y - collisionBox.height/2F, furthestDownPoint);
+				}
 			}
 			
 			//Next, boost based on parts.

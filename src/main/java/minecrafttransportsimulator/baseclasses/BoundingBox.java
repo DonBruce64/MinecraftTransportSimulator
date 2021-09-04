@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
+import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import net.minecraft.util.math.AxisAlignedBB;
 
@@ -35,15 +36,25 @@ public class BoundingBox{
 	public double heightRadius;
 	public double depthRadius;
 	public final boolean collidesWithLiquids;
-	public final boolean isInterior;
-	public final boolean isCollision;
-	public final float armorThickness;
+	public final JSONCollisionBox definition;
 	
+	/**Simple constructor.  Used for blocks, bounds checks, or other things that don't need local/global positional differences.**/
 	public BoundingBox(Point3d center, double widthRadius, double heightRadius, double depthRadius){
-		this(center, center, widthRadius, heightRadius, depthRadius, false, false, false, 0);
+		this(center, center, widthRadius, heightRadius, depthRadius, false, null);
 	}
 	
-	public BoundingBox(Point3d localCenter, Point3d globalCenter, double widthRadius, double heightRadius, double depthRadius, boolean collidesWithLiquids, boolean isInterior, boolean isCollision, float armorThickness){
+	/**Complex constructor.  Used for things that have local and global positions.  These can also collide with liquid blocks.**/
+	public BoundingBox(Point3d localCenter, Point3d globalCenter, double widthRadius, double heightRadius, double depthRadius, boolean collidesWithLiquids){
+		this(localCenter, globalCenter, widthRadius, heightRadius, depthRadius, false, null);
+	}
+	
+	/**JSON constructor.  Used for boxes that are created from JSON and need extended properties.**/
+	public BoundingBox(JSONCollisionBox definition){
+		this(definition.pos, definition.pos.copy(), definition.width/2D, definition.height/2D, definition.width/2D, definition.collidesWithLiquids, definition);
+	}
+	
+	/**Master constructor.  Used for main creation.**/
+	private BoundingBox(Point3d localCenter, Point3d globalCenter, double widthRadius, double heightRadius, double depthRadius, boolean collidesWithLiquids, JSONCollisionBox definition){
 		this.localCenter = localCenter;
 		this.globalCenter = globalCenter;
 		this.tempGlobalCenter = globalCenter.copy();
@@ -52,9 +63,7 @@ public class BoundingBox{
 		this.heightRadius = heightRadius;
 		this.depthRadius = depthRadius;
 		this.collidesWithLiquids = collidesWithLiquids;
-		this.isInterior = isInterior;
-		this.isCollision = isCollision;
-		this.armorThickness = armorThickness;
+		this.definition = definition;
 	}
 	
 	@Override
@@ -100,8 +109,8 @@ public class BoundingBox{
 			globalCenter.add(optionalOffset);
 		}
 		globalCenter.rotateFine(entity.angles).add(entity.position);
-		if(isCollision){
-			//Need to round box to prevent floating-point errors.
+		if(definition != null){
+			//Need to round box to prevent floating-point errors for player and entity collision.
 			globalCenter.x = ((int) (globalCenter.x/HITBOX_CLAMP))*HITBOX_CLAMP;
 			globalCenter.y = ((int) (globalCenter.y/HITBOX_CLAMP))*HITBOX_CLAMP;
 			globalCenter.z = ((int) (globalCenter.z/HITBOX_CLAMP))*HITBOX_CLAMP;
