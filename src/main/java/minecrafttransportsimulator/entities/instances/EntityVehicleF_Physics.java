@@ -227,7 +227,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 				if(isPropeller || jetPower > 0){
 					thrustTorque.add(partForce.y*-part.localOffset.z, partForce.z*part.localOffset.x, partForce.y*part.localOffset.x);
 				}
-				if(isRotor){
+				if(isRotor && !groundDeviceCollective.isAnythingOnGround() && partForce.length() > 1){
 					hasRotors = true;
 					rotorRotation.set((-elevatorAngle - angles.x*10)/MAX_ELEVATOR_ANGLE, -5D*rudderAngle/MAX_RUDDER_ANGLE, (aileronAngle - angles.z*10)/MAX_AILERON_ANGLE);
 				}else{
