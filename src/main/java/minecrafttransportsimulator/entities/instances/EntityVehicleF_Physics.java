@@ -229,7 +229,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 				}
 				if(isRotor && !groundDeviceCollective.isAnythingOnGround() && partForce.length() > 1){
 					hasRotors = true;
-					rotorRotation.set((-elevatorAngle - angles.x*10)/MAX_ELEVATOR_ANGLE, -5D*rudderAngle/MAX_RUDDER_ANGLE, (aileronAngle - angles.z*10)/MAX_AILERON_ANGLE);
+					rotorRotation.set((-(elevatorAngle + elevatorTrim) - angles.x*10)/MAX_ELEVATOR_ANGLE, -5D*rudderAngle/MAX_RUDDER_ANGLE, ((aileronAngle + aileronTrim) - angles.z*10)/MAX_AILERON_ANGLE);
 				}else{
 					rotorRotation.set(0, 0, 0);
 				}
@@ -452,7 +452,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 			if(autopilot){
 				//Change throttle to maintain altitude.
 				//Only do this once every 1/2 second to allow for thrust changes.
-				if(ticksExisted == 0){
+				if(ticksExisted%10 == 0){
 					if(motion.y < 0 && throttle < MAX_THROTTLE){
 						InterfacePacket.sendToAllClients(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.THROTTLE, ++throttle, Byte.MAX_VALUE));
 					}else if(motion.y > 0 && throttle < MAX_THROTTLE){
@@ -462,17 +462,19 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 				//Change pitch/roll based on movement.
 				double forwardsVelocity = motion.dotProduct(headingVector);
 				double sidewaysVelocity = motion.dotProduct(sideVector);
-				if(forwardsVelocity < 0 && elevatorTrim < MAX_ELEVATOR_TRIM){
+				double forwardsDelta = forwardsVelocity - prevMotion.dotProduct(headingVector);
+				double sidewaysDelta = sidewaysVelocity - prevMotion.dotProduct(sideVector);
+				if(forwardsDelta > 0 && forwardsVelocity > 0 && elevatorTrim < MAX_ELEVATOR_TRIM){
 					++elevatorTrim;
 					InterfacePacket.sendToAllClients(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_PITCH, true));
-				}else if(forwardsVelocity > 0 && elevatorTrim > -MAX_ELEVATOR_TRIM){
+				}else if(forwardsDelta < 0 && forwardsVelocity < 0 && elevatorTrim > -MAX_ELEVATOR_TRIM){
 					--elevatorTrim;
 					InterfacePacket.sendToAllClients(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_PITCH, false));
 				}
-				if(sidewaysVelocity < 0 && aileronTrim < MAX_AILERON_TRIM){
+				if(sidewaysVelocity > 0 && sidewaysDelta > 0 && aileronTrim < MAX_AILERON_TRIM){
 					++aileronTrim;
 					InterfacePacket.sendToAllClients(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_ROLL, true));
-				}else if(sidewaysVelocity > 0 && aileronTrim > -MAX_AILERON_TRIM){
+				}else if(sidewaysVelocity < 0 && sidewaysDelta < 0  && aileronTrim > -MAX_AILERON_TRIM){
 					--aileronTrim;
 					InterfacePacket.sendToAllClients(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_ROLL, false));
 				}
