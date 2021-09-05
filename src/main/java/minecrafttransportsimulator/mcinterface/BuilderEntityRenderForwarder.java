@@ -120,7 +120,10 @@ public class BuilderEntityRenderForwarder extends ABuilderEntityBase{
 
 	@Override
 	public void handleLoadedNBT(NBTTagCompound tag){
-		playerFollowing = world.getPlayerEntityByUUID(tag.getUniqueId("playerFollowing"));
+		if(world.isRemote){
+			//Don't load player on server.  Server will create this entity as-needed.
+			playerFollowing = world.getPlayerEntityByUUID(tag.getUniqueId("playerFollowing"));
+		}
 	}
     
 	@Override
