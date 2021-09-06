@@ -114,9 +114,9 @@ public class EntityBullet extends AEntityC_Definable<JSONBullet>{
 						Iterator<BoundingBox> hitBoxIterator = hitBoxes.iterator();
 						while(hitBoxIterator.hasNext()){
 							BoundingBox hitBox = hitBoxIterator.next();
-							if(hitBox.armorThickness > 0){
-								if(hitBox.armorThickness < definition.bullet.armorPenetration*velocity/initialVelocity - armorPenetrated){
-									armorPenetrated += hitBox.armorThickness;
+							if(hitBox.definition != null && hitBox.definition.armorThickness > 0){
+								if(hitBox.definition.armorThickness < definition.bullet.armorPenetration*velocity/initialVelocity - armorPenetrated){
+									armorPenetrated += hitBox.definition.armorThickness;
 									hitBoxIterator.remove();
 								}else{
 									armorBoxHit = hitBox;

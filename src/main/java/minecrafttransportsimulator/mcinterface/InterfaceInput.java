@@ -2,17 +2,19 @@ package minecrafttransportsimulator.mcinterface;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
-import org.lwjgl.input.Controller;
-import org.lwjgl.input.Controllers;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
 import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.guis.components.InterfaceGUI;
 import minecrafttransportsimulator.guis.instances.GUIConfig;
+import minecrafttransportsimulator.jsondefs.JSONConfig.ConfigJoystick;
+import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ControlSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
@@ -27,7 +29,9 @@ import net.minecraftforge.fml.relauncher.Side;
  * for the {@link ControlSystem}.  Note that {@link #initJoysticks()} runs
  * in a thread.  As such do NOT call any joystick methods except {@link #isJoystickSupportEnabled()}
  * until it returns true.  Once it does, joysicks may be used.  If it does not, it means joysick
- * support is not enabled.  
+ * support is not enabled.  Note that for component indexes, axis always come first, then buttons, but
+ * indexes are not re-used.  Therefore, the first button index will vary depending on how many axis
+ * are present on any given joystick.
  *
  * @author don_bruce
  */
@@ -43,13 +47,20 @@ public class InterfaceInput{
 	private static InhibitableMouseHelper customMouseHelper = new InhibitableMouseHelper();
 	
 	//Joystick variables.
+	private static boolean runningClassicMode = false;
 	private static boolean joystickLoadingAttempted = false;
 	private static boolean joystickEnabled = false;
 	private static boolean joystickBlocked = false;
 	private static boolean joystickInhibited = false;
-	private static final Map<String, Controller> joystickMap = new HashMap<String, Controller>();
-	private static final Set<Controller> rumblingControllers = new HashSet<Controller>();
 	private static final Map<String, Integer> joystickNameCounters = new HashMap<String, Integer>();
+	
+	//Normal mode joystick variables.
+	private static int buttonNumberOffset;
+	private static final Map<String, org.lwjgl.input.Controller> joystickMap = new HashMap<String, org.lwjgl.input.Controller>();
+	private static final Set<org.lwjgl.input.Controller> rumblingControllers = new HashSet<org.lwjgl.input.Controller>();
+	
+	//Classic mode joystick variables.
+	private static final Map<String, net.java.games.input.Controller> classicJoystickMap = new HashMap<String, net.java.games.input.Controller>();
 	
 	/**
 	 *  Called to set the master config key.  This is used by MC to allow us to use MC-controls to open
@@ -75,24 +86,62 @@ public class InterfaceInput{
 			@Override
 			public void run(){
 				try{
-					if(!Controllers.isCreated()){
-						Controllers.create();
-					}
-					for(int i=0; i<Controllers.getControllerCount(); ++i){
-						Controller joystick = Controllers.getController(i);
-						joystickNameCounters.clear();
-						if(joystick.getAxisCount() > 0 && joystick.getButtonCount() > 0 && joystick.getName() != null){
-							String joystickName = joystick.getName();
-							//Add an index on this joystick to be sure we don't override multi-component units.
-							if(!joystickNameCounters.containsKey(joystickName)){
-								joystickNameCounters.put(joystickName, 0);
+					joystickNameCounters.clear();
+					if(runningClassicMode){
+						classicJoystickMap.clear();
+						for(net.java.games.input.Controller joystick : net.java.games.input.ControllerEnvironment.getDefaultEnvironment().getControllers()){
+							joystickEnabled = true;
+							if(joystick.getType() != null && joystick.getName() != null && joystick.getComponents().length != 0){
+								String joystickName = joystick.getName();
+								//Add an index on this joystick to be sure we don't override multi-component units.
+								if(!joystickNameCounters.containsKey(joystickName)){
+									joystickNameCounters.put(joystickName, 0);
+								}
+								classicJoystickMap.put(joystickName + "_" + joystickNameCounters.get(joystickName), joystick);
+								joystickNameCounters.put(joystickName, joystickNameCounters.get(joystickName) + 1);
 							}
-							joystickMap.put(joystickName + "_" + joystickNameCounters.get(joystickName), joystick);
-							joystickNameCounters.put(joystickName, joystickNameCounters.get(joystickName) + 1);
 						}
-						joystickEnabled = true;
+					}else{
+						if(!org.lwjgl.input.Controllers.isCreated()){
+							org.lwjgl.input.Controllers.create();
+						}
+						joystickMap.clear();
+						buttonNumberOffset = 0;
+						for(int i=0; i<org.lwjgl.input.Controllers.getControllerCount(); ++i){
+							org.lwjgl.input.Controller joystick = org.lwjgl.input.Controllers.getController(i);
+							if(joystick.getAxisCount() > 0 && joystick.getButtonCount() > 0 && joystick.getName() != null){
+								String joystickName = joystick.getName();
+								//Add an index on this joystick to be sure we don't override multi-component units.
+								if(!joystickNameCounters.containsKey(joystickName)){
+									joystickNameCounters.put(joystickName, 0);
+								}
+								joystickMap.put(joystickName + "_" + joystickNameCounters.get(joystickName), joystick);
+								joystickNameCounters.put(joystickName, joystickNameCounters.get(joystickName) + 1);
+								buttonNumberOffset += joystick.getAxisCount();
+							}
+							joystickEnabled = true;
+						}
 					}
 					joystickBlocked = false;
+					
+					//Validate joysticks are valid for this setup by making sure indexes aren't out of bounds.
+					Iterator<Entry<String, ConfigJoystick>> iterator = ConfigSystem.configObject.controls.joystick.entrySet().iterator();
+					while(iterator.hasNext()){
+						ConfigJoystick config = iterator.next().getValue();
+						if(runningClassicMode){
+							if(classicJoystickMap.containsKey(config.joystickName)){
+								if(classicJoystickMap.get(config.joystickName).getComponents().length < config.buttonIndex){
+									iterator.remove();
+								}
+							}
+						}else{
+							if(joystickMap.containsKey(config.joystickName)){
+								if(joystickMap.get(config.joystickName).getButtonCount() + buttonNumberOffset < config.buttonIndex){
+									iterator.remove();
+								}
+							}
+						}
+					}
 				}catch(Exception e){}
 			}
 		};
@@ -144,67 +193,80 @@ public class InterfaceInput{
 	 *  this call will always return false, even if the passed-in joystick exists.
 	 */
 	public static boolean isJoystickPresent(String joystickName){
-		return !joystickInhibited && joystickMap.containsKey(joystickName);
+		return !joystickInhibited && runningClassicMode ? classicJoystickMap.containsKey(joystickName) : joystickMap.containsKey(joystickName);
 	}
 	
 	/**
 	 *  Returns a list of all joysticks currently present on the system.
 	 */
 	public static Set<String> getAllJoysticks(){
-		return joystickMap.keySet();
+		return runningClassicMode ? classicJoystickMap.keySet() : joystickMap.keySet();
 	}
 	
 	/**
-	 *  Returns the number of axis the passed-in joystick has.
+	 *  Returns the number of axis and buttons the passed-in joystick has.
+	 *  Axis will always come before buttons.
 	 */
-	public static int getJoystickAxisCount(String joystickName){
-		return joystickMap.get(joystickName).getAxisCount();
+	public static int getJoystickComponentCount(String joystickName){
+		return runningClassicMode ? classicJoystickMap.get(joystickName).getComponents().length : joystickMap.get(joystickName).getAxisCount() + joystickMap.get(joystickName).getButtonCount();
 	}
 	
 	/**
-	 *  Returns the number of buttons the passed-in joystick has.
+	 *  Returns the name of the passed-in component.
 	 */
-	public static int getJoystickButtonCount(String joystickName){
-		return joystickMap.get(joystickName).getButtonCount();
+	public static String getJoystickComponentName(String joystickName, int index){
+		return runningClassicMode ? classicJoystickMap.get(joystickName).getComponents()[index].getName() : (isJoystickComponentAxis(joystickName, index) ? joystickMap.get(joystickName).getAxisName(index) : joystickMap.get(joystickName).getButtonName(index - buttonNumberOffset));
 	}
 	
 	/**
-	 *  Returns the name of the passed-in axis.
+	 *  Returns true if the component at the passed-in index is an axis.
 	 */
-	public static String getJoystickAxisName(String joystickName, int axisIndex){
-		return joystickMap.get(joystickName).getAxisName(axisIndex);
-	}
-	
-	/**
-	 *  Returns the name of the passed-in axis.
-	 */
-	public static String getJoystickButtonName(String joystickName, int buttonIndex){
-		return joystickMap.get(joystickName).getButtonName(buttonIndex);
+	public static boolean isJoystickComponentAxis(String joystickName, int index){
+		return runningClassicMode ? classicJoystickMap.get(joystickName).getComponents()[index].isAnalog() : joystickMap.get(joystickName).getAxisCount() > index;
 	}
 	
 	/**
 	 *  Returns the current value of the joystick axis.
 	 */
-	public static float getJoystickAxisValue(String joystickName, int axisIndex){
+	public static float getJoystickAxisValue(String joystickName, int index){
 		//Check to make sure this control is operational before testing.  It could have been removed from a prior game.
-		if(joystickMap.containsKey(joystickName)){
-			joystickMap.get(joystickName).poll();
-			return joystickMap.get(joystickName).getAxisValue(axisIndex);
+		if(runningClassicMode){
+			if(classicJoystickMap.containsKey(joystickName)){
+				classicJoystickMap.get(joystickName).poll();
+				return classicJoystickMap.get(joystickName).getComponents()[index].getPollData();
+			}else{
+				return 0;
+			}
 		}else{
-			return 0;
+			if(joystickMap.containsKey(joystickName)){
+				joystickMap.get(joystickName).poll();
+				return joystickMap.get(joystickName).getAxisValue(index);
+			}else{
+				return 0;
+			}
 		}
 	}
 	
 	/**
-	 *  Returns the current button-state for the joystick axis.
+	 *  Returns the current button-state for the joystick axis.  Note that this is used
+	 *  for both analog axis, and fake-digital buttons like Xbox D-pads.
 	 */
-	public static boolean getJoystickButtonValue(String joystickName, int buttonIndex){
+	public static boolean getJoystickButtonValue(String joystickName, int index){
 		//Check to make sure this control is operational before testing.  It could have been removed from a prior game.
-		if(joystickMap.containsKey(joystickName)){
-			joystickMap.get(joystickName).poll();
-			return joystickMap.get(joystickName).isButtonPressed(buttonIndex);
+		if(runningClassicMode){
+			if(classicJoystickMap.containsKey(joystickName)){
+				classicJoystickMap.get(joystickName).poll();
+				return classicJoystickMap.get(joystickName).getComponents()[index].getPollData() > 0;
+			}else{
+				return false;
+			}
 		}else{
-			return false;
+			if(joystickMap.containsKey(joystickName)){
+				joystickMap.get(joystickName).poll();
+				return joystickMap.get(joystickName).isButtonPressed(index - buttonNumberOffset);
+			}else{
+				return false;
+			}	
 		}
 	}
 	
@@ -212,10 +274,12 @@ public class InterfaceInput{
 	 *  Sets rumble level.  Passed-in value should be between 0-1.
 	 */
 	public static void setJoystickRumble(String joystickName, float strength){
-		Controller joystick = joystickMap.get(joystickName);
-		if(rumblingControllers.contains(joystick) ^ strength > 0){
-			for(int i=0; i<joystick.getRumblerCount(); ++i){
-				joystick.setRumblerStrength(i, strength);
+		if(!runningClassicMode){
+			org.lwjgl.input.Controller joystick = joystickMap.get(joystickName);
+			if(rumblingControllers.contains(joystick) ^ strength > 0){
+				for(int i=0; i<joystick.getRumblerCount(); ++i){
+					joystick.setRumblerStrength(i, strength);
+				}
 			}
 		}
 	}
@@ -293,7 +357,13 @@ public class InterfaceInput{
      */
     @SubscribeEvent
     public static void on(InputEvent.KeyInputEvent event){
-    	//Init joysticks if we haven't already tried.
+    	//Check if we switched joystick modes.
+    	if(runningClassicMode ^ ConfigSystem.configObject.clientControls.classicJystk.value){
+    		runningClassicMode = ConfigSystem.configObject.clientControls.classicJystk.value;
+    		joystickLoadingAttempted = false;
+    	}
+    	
+    	//Init joysticks if we haven't already tried or if we switched loaders.
     	if(!joystickLoadingAttempted){
     		initJoysticks();
     		joystickLoadingAttempted = true;

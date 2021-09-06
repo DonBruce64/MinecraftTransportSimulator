@@ -1,6 +1,8 @@
 package minecrafttransportsimulator.packloading;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 
 import minecrafttransportsimulator.MasterLoader;
@@ -21,10 +23,13 @@ import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition.AnimationComponentType;
 import minecrafttransportsimulator.jsondefs.JSONBullet;
+import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
+import minecrafttransportsimulator.jsondefs.JSONCollisionGroup;
 import minecrafttransportsimulator.jsondefs.JSONConnection;
 import minecrafttransportsimulator.jsondefs.JSONConnectionGroup;
 import minecrafttransportsimulator.jsondefs.JSONCraftingBench;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
+import minecrafttransportsimulator.jsondefs.JSONDoor;
 import minecrafttransportsimulator.jsondefs.JSONInstrument;
 import minecrafttransportsimulator.jsondefs.JSONInstrumentDefinition;
 import minecrafttransportsimulator.jsondefs.JSONItem;
@@ -244,6 +249,7 @@ public final class LegacyCompatSystem{
 		}
 		
 		performVehicleConnectionLegacyCompats(definition);
+		performVehicleCollisionLegacyCompats(definition);
 		
 		//Do rendering compats.
 		if(definition.rendering != null){
@@ -295,7 +301,7 @@ public final class LegacyCompatSystem{
 					sirenSound.activeAnimations.add(sirenDef);
 					definition.rendering.sounds.add(sirenSound);
 					if(definition.rendering.customVariables == null){
-						definition.rendering.customVariables = new ArrayList<String>();
+						definition.rendering.customVariables = new HashSet<String>();
 					}
 					definition.rendering.customVariables.add("siren");
 					definition.motorized.sirenSound = null;
@@ -605,6 +611,7 @@ public final class LegacyCompatSystem{
 		}
 		
 		performVehicleConnectionLegacyCompats(definition);
+		performVehicleCollisionLegacyCompats(definition);
 		
 		//Do compats for engine and gun sounds.
 		if(definition.rendering == null || definition.rendering.sounds == null){
@@ -1350,6 +1357,10 @@ public final class LegacyCompatSystem{
 			partDef.linkedDoors.add(partDef.linkedDoor);
 			partDef.linkedDoor = null;
 		}
+		if(partDef.linkedDoors != null){
+			partDef.linkedVariables = partDef.linkedDoors;
+			partDef.linkedDoors = null;
+		}
 		if(partDef.exhaustPos != null){
 			partDef.particleObjects = new ArrayList<JSONParticle>();
 			for(int i=0; i<partDef.exhaustPos.length; i+=3){
@@ -1486,6 +1497,76 @@ public final class LegacyCompatSystem{
 				interactableDef.connectionGroups.add(hitchGroup);
 			}
 			interactableDef.connections = null;
+		}
+	}
+	
+	private static void performVehicleCollisionLegacyCompats(AJSONInteractableEntity interactableDef){
+		if(interactableDef.doors != null){
+			if(interactableDef.collisionGroups == null){
+				interactableDef.collisionGroups = new ArrayList<JSONCollisionGroup>();
+			}
+			for(JSONDoor door : interactableDef.doors){
+				//Check if door should auto-open when placed.
+				if(!door.closedByDefault){
+					//We can assume rendering exists.  Cause who the heck makes doors that don't animate?
+					if(interactableDef.rendering.initialVariables == null){
+						interactableDef.rendering.initialVariables = new HashSet<String>(); 
+					}
+					interactableDef.rendering.initialVariables.add(door.name);
+				}
+				//Add door to collision box listing for updates.
+				JSONCollisionGroup collisionGroup = new JSONCollisionGroup();
+				collisionGroup.collisions = new ArrayList<JSONCollisionBox>();
+				collisionGroup.isInterior = true;
+				JSONCollisionBox collision = new JSONCollisionBox();
+				collision.variableName = door.ignoresClicks ? null : door.name;
+				collision.pos = door.closedPos;
+				collision.width = door.width;
+				collision.height = door.height;
+				collision.armorThickness = door.armorThickness;
+				collisionGroup.collisions.add(collision);
+				
+				//Create animations for this door.
+				collisionGroup.animations = new ArrayList<JSONAnimationDefinition>();
+				JSONAnimationDefinition animation = new JSONAnimationDefinition();
+				animation.axis = door.openPos.subtract(door.closedPos);
+				animation.animationType = AnimationComponentType.TRANSLATION;
+				animation.variable = door.name;
+				collisionGroup.animations.add(animation);
+				
+				//Add group to list.
+				interactableDef.collisionGroups.add(collisionGroup);
+			}
+			interactableDef.doors = null;
+		}
+		
+		if(interactableDef.collision != null){
+			if(interactableDef.collisionGroups == null){
+				interactableDef.collisionGroups = new ArrayList<JSONCollisionGroup>();
+			}
+			List<JSONCollisionBox> interiorBoxes = new ArrayList<JSONCollisionBox>();
+			List<JSONCollisionBox> exteriorBoxes = new ArrayList<JSONCollisionBox>();
+			for(JSONCollisionBox boxDef : interactableDef.collision){
+				if(boxDef.isInterior){
+					interiorBoxes.add(boxDef);
+				}else{
+					exteriorBoxes.add(boxDef);
+				}
+			}
+			
+			if(!interiorBoxes.isEmpty()){
+				JSONCollisionGroup collisionGroup = new JSONCollisionGroup();
+				collisionGroup.collisions = interiorBoxes;
+				collisionGroup.isInterior = true;
+				interactableDef.collisionGroups.add(collisionGroup);
+			}
+			if(!exteriorBoxes.isEmpty()){
+				JSONCollisionGroup collisionGroup = new JSONCollisionGroup();
+				collisionGroup.collisions = exteriorBoxes;
+				interactableDef.collisionGroups.add(collisionGroup);
+			}
+			
+			interactableDef.collision = null;
 		}
 	}
     
@@ -1640,7 +1721,7 @@ public final class LegacyCompatSystem{
 					}else if(lowerCaseName.contains("emergencylight")){
 						activeAnimation.variable = "EMERLTS";
 						if(definition.rendering.customVariables == null){
-							definition.rendering.customVariables = new ArrayList<String>();
+							definition.rendering.customVariables = new HashSet<String>();
 						}
 						if(definition instanceof JSONVehicle)definition.rendering.customVariables.add("EMERLTS");
 					}else if(lowerCaseName.contains("stoplight") || lowerCaseName.contains("cautionlight") || lowerCaseName.contains("golight")){

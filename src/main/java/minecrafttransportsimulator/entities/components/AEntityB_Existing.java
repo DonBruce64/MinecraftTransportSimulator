@@ -48,7 +48,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 		this.prevAngles = angles.copy();
 		this.rotation = data.getPoint3d("rotation");
 		this.prevRotation = rotation.copy();
-		this.boundingBox = new BoundingBox(new Point3d(), position, 0.5, 0.5, 0.5, false, false, false, 0);
+		this.boundingBox = new BoundingBox(new Point3d(), position, 0.5, 0.5, 0.5, false);
 		this.radio = hasRadio() ? new Radio(this, data.getDataOrNew("radio")) : null;
 	}
 	
@@ -63,7 +63,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 		this.prevAngles = angles.copy();
 		this.rotation = new Point3d();
 		this.prevRotation = rotation.copy();
-		this.boundingBox = new BoundingBox(new Point3d(), position, 0.5, 0.5, 0.5, false, false, false, 0);
+		this.boundingBox = new BoundingBox(new Point3d(), position, 0.5, 0.5, 0.5, false);
 		this.radio = null;
 	}
 	

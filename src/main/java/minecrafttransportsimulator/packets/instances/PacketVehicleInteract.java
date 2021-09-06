@@ -11,11 +11,11 @@ import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.components.IItemVehicleInteractable;
-import minecrafttransportsimulator.jsondefs.JSONDoor;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntityInteract;
+import minecrafttransportsimulator.packets.components.InterfacePacket;
 import net.minecraft.item.ItemStack;
 
 /**Packet used to interact with vehicles.  Initially sent from clients to the server
@@ -116,22 +116,19 @@ public class PacketVehicleInteract extends APacketEntityInteract<EntityVehicleF_
 			}
 		}
 		
-		//Check if we clicked a door.
-		JSONDoor hitDoor = vehicle.allDoorBoxes.get(hitBox); 
-		if(hitDoor != null){
-			if(!hitDoor.ignoresClicks){
-				//Can't open locked vehicles.
-				if(vehicle.locked){
-					player.sendPacket(new PacketPlayerChatMessage(player, "interact.failure.vehiclelocked"));
+		//Check if we clicked a box with a variable attached we need to toggle.
+		if(hitBox.definition != null && hitBox.definition.variableName != null){
+			//Can't open locked vehicles.
+			if(vehicle.locked){
+				player.sendPacket(new PacketPlayerChatMessage(player, "interact.failure.vehiclelocked"));
+			}else{
+				//Open or close the clicked door.
+				if(vehicle.variablesOn.contains(hitBox.definition.variableName)){
+					vehicle.variablesOn.remove(hitBox.definition.variableName);
 				}else{
-					//Open or close the clicked door.
-					if(vehicle.variablesOn.contains(hitDoor.name)){
-						vehicle.variablesOn.remove(hitDoor.name);
-					}else{
-						vehicle.variablesOn.add(hitDoor.name);
-					}
-					return true;
+					vehicle.variablesOn.add(hitBox.definition.variableName);
 				}
+				InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(vehicle, hitBox.definition.variableName));
 			}
 			return false;
 		}

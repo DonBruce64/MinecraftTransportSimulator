@@ -245,17 +245,19 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 			AEntityD_Interactable<?> interactable = (AEntityD_Interactable<?>) entity;
 			//Draw collision boxes for the entity.
 			for(BoundingBox box : interactable.interactionBoxes){
-				if(interactable.doorBoxes.containsKey(box)){
-					//Green for doors.
-					InterfaceRender.setColorState(ColorRGB.GREEN);
-				}else if(interactable.blockCollisionBoxes.contains(box)){
-					//Red for block collisions.
-					InterfaceRender.setColorState(ColorRGB.RED);
-				}else if(interactable.collisionBoxes.contains(box)){
-					//Black for general collisions.
-					InterfaceRender.setColorState(ColorRGB.BLACK);
+				if(box.definition != null){
+					if(box.definition.variableName != null){
+						//Green for doors.
+						InterfaceRender.setColorState(ColorRGB.GREEN);
+					}else if(interactable.blockCollisionBoxes.contains(box)){
+						//Red for block collisions.
+						InterfaceRender.setColorState(ColorRGB.RED);
+					}else{
+						//Black for general collisions.
+						InterfaceRender.setColorState(ColorRGB.BLACK);
+					}
 				}else{
-					//None of the above.  Must be an interaction box.  Yellow.
+					//Not a defined collision box.  Must be an interaction box.  Yellow.
 					InterfaceRender.setColorState(ColorRGB.YELLOW);
 				}
 				

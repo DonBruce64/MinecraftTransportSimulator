@@ -105,7 +105,7 @@ public class PacketPartGunBulletHit extends APacketEntity<PartGun>{
 								}
 							}
 							if(hitBox == null){	
-								hitBox = new BoundingBox(localCenter, globalCenter, blastSize/100F, blastSize/100F, blastSize/100F, false, false, false, 0);
+								hitBox = new BoundingBox(localCenter, globalCenter, blastSize/100F, blastSize/100F, blastSize/100F, false);
 							}
 							//Create damage object and attack the entity.
 							WrapperEntity attacker = world.getEntity(controllerEntityID);

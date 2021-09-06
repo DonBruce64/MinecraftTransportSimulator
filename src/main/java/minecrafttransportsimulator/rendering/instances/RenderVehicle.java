@@ -113,7 +113,7 @@ public final class RenderVehicle extends ARenderEntityMultipart<EntityVehicleF_P
 			GL11.glRotated(-vehicle.angles.y, 0, 1, 0);
 			for(Entry<BoundingBox, JSONPartDefinition> partSlotEntry : vehicle.allPartSlotBoxes.entrySet()){
 				JSONPartDefinition placementDefinition = partSlotEntry.getValue();
-				if(!vehicle.areDoorsBlocking(placementDefinition, player) && (placementDefinition.validSubNames == null || placementDefinition.validSubNames.contains(vehicle.subName))){
+				if(!vehicle.areVariablesBlocking(placementDefinition, player) && (placementDefinition.validSubNames == null || placementDefinition.validSubNames.contains(vehicle.subName))){
 					InterfaceRender.setColorState(ColorRGB.BLUE, 0.5F);
 					BoundingBox currentBox = partSlotEntry.getKey();
 					GL11.glPushMatrix();

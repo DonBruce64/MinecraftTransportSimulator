@@ -246,7 +246,7 @@ public class EntityPlayerGun extends AEntityE_Multipart<JSONPlayerGun>{
 	}
 	
 	@Override
-	protected void recalculateBoxes(){
+	protected void updateCollisionBoxes(){
 		//Do nothing and don't add any collision.  This could block player actions.
 	}
 	

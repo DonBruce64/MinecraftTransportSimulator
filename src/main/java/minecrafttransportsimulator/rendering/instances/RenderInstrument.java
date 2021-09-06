@@ -38,7 +38,7 @@ public final class RenderInstrument{
      */
 	public static void drawInstrument(ItemInstrument instrument, int partNumber, AEntityD_Interactable<?> entity, boolean blendingEnabled, float partialTicks){
 		//First bind the texture file for this insturment's pack.
-		InterfaceRender.setTexture("/assets/" + instrument.definition.packID + "/textures/instruments.png");
+		InterfaceRender.bindTexture("/assets/" + instrument.definition.packID + "/textures/instruments.png");
 		
 		//Check if the lights are on.  If so, render the overlays.
 		boolean lightsOn = entity.renderTextLit();
@@ -70,7 +70,7 @@ public final class RenderInstrument{
 						InterfaceGUI.drawScaledText(text, component.textObject.fontName, (int) component.textObject.pos.x, (int) component.textObject.pos.y, component.textObject.color, TextPosition.values()[component.textObject.renderPosition], component.textObject.wrapWidth, component.textObject.scale, component.textObject.autoScale);
 					}
 					InterfaceRender.setColorState(ColorRGB.WHITE);
-					InterfaceRender.recallTexture();
+					InterfaceRender.bindTexture("/assets/" + instrument.definition.packID + "/textures/instruments.png");
 				}else{
 					//Init variables.
 					p1.set(-component.textureWidth/2D, -component.textureHeight/2D, 0);

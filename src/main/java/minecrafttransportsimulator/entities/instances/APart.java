@@ -78,7 +78,7 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 		this.localOffset = placementOffset.copy();
 		this.prevLocalOffset = localOffset.copy();
 		this.placementDefinition = placementDefinition;
-		this.boundingBox = new BoundingBox(placementOffset, position, getWidth()/2D, getHeight()/2D, getWidth()/2D, definition.ground != null ? definition.ground.canFloat : false, false, false, 0);
+		this.boundingBox = new BoundingBox(placementOffset, position, getWidth()/2D, getHeight()/2D, getWidth()/2D, definition.ground != null ? definition.ground.canFloat : false);
 		this.placementAngles = placementDefinition.rot != null ? placementDefinition.rot : new Point3d();
 		this.localAngles = placementAngles.copy();
 		
@@ -97,16 +97,6 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 			this.parentPart = null;
 		}
 		
-		//If we are a fake part, remove collisions, doors, and the like.
-		if(isFake()){
-			collisionBoxes.clear();
-			blockCollisionBoxes.clear();
-			doorBoxes.clear();
-			interactionBoxes.clear();
-		}else{
-			interactionBoxes.add(boundingBox);
-		}
-		
 		//Set initial position and rotation.
 		position.setTo(localOffset).rotateFine(entityOn.angles).add(entityOn.position);
 		angles.setTo(localAngles).add(entityOn.angles);
@@ -115,8 +105,8 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 	}
 	
 	@Override
-	protected void initializeAnimations(){
-		super.initializeAnimations();
+	protected void initializeDefinition(){
+		super.initializeDefinition();
 		movementClocks.clear();
 		if(definition.generic.movementAnimations != null){
 			for(JSONAnimationDefinition animation : definition.generic.movementAnimations){
@@ -236,6 +226,15 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 	}
 	
 	@Override
+	protected void updateCollisionBoxes(){
+		//Add collision if we aren't a fake part.
+		if(!isFake()){
+			super.updateCollisionBoxes();
+			interactionBoxes.add(boundingBox);
+		}
+	}
+	
+	@Override
 	public void attack(Damage damage){
 		//Check if we can be removed by this attack.
 		if(definition.generic.canBeRemovedByHand && !placementDefinition.isPermanent && damage.entityResponsible instanceof WrapperPlayer){
@@ -321,10 +320,8 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 					case TRANSLATION :{
 						if(!inhibitAnimations){
 							//Found translation.  This gets applied in the translation axis direction directly.
-							//This axis needs to be rotated by the rollingRotation to ensure it's in the correct spot.
-							double magnitude = clock.animation.axis.length();
-							double variableValue = getAnimatedVariableValue(clock, magnitude, 0);
-							Point3d appliedTranslation = clock.animation.axis.copy().normalize().multiply(variableValue);
+							double variableValue = getAnimatedVariableValue(clock, 1.0, 0);
+							Point3d appliedTranslation = clock.animation.axis.copy().multiply(variableValue);
 							localOffset.add(appliedTranslation.rotateFine(localAngles));
 						}
 						break;
@@ -332,14 +329,13 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 					case ROTATION :{
 						if(!inhibitAnimations){
 							//Found rotation.  Get angles that needs to be applied.
-							double magnitude = clock.animation.axis.length();
-							double variableValue = getAnimatedVariableValue(clock, magnitude, 0);
-							Point3d appliedRotation = clock.animation.axis.copy().normalize().multiply(variableValue);
+							double variableValue = getAnimatedVariableValue(clock, 1.0, 0);
+							Point3d appliedRotation = clock.animation.axis.copy().multiply(variableValue);
 							
 							//Check if we need to apply a translation based on this rotation.
 							if(!clock.animation.centerPoint.isZero()){
 								//Use the center point as a vector we rotate to get the applied offset.
-								//We need to take into account the rolling rotation here, as we might have rotated on a prior call.
+								//We need to take into account the current offset here, as we might have rotated on a prior call.
 								localOffset.add(clock.animation.centerPoint.copy().multiply(-1D).rotateFine(appliedRotation).add(clock.animation.centerPoint).rotateFine(localAngles));
 							}
 							

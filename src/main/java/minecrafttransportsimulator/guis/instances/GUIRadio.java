@@ -187,7 +187,7 @@ public class GUIRadio extends AGUIBase{
 		//Local-remote are toggles.
 		localButton.enabled = !radio.getSource().equals(RadioSources.LOCAL);
 		remoteButton.enabled = !radio.getSource().equals(RadioSources.INTERNET);
-		serverButton.enabled = false;//!radio.getSource().equals(RadioSources.SERVER);
+		serverButton.visible = false;//serverButton.enabled = !radio.getSource().equals(RadioSources.SERVER);
 		
 		//Equalizer button isn't available for internet streams.
 		equalizerButton.enabled = !radio.getSource().equals(RadioSources.INTERNET) && radio.currentStation != null && radio.currentStation.equalizer != null;

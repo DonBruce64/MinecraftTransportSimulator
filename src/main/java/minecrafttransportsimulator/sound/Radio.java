@@ -81,7 +81,7 @@ public class Radio extends AEntityB_Existing{
 	 * it has connected and is ready to play sound.
 	 */
 	public void start(){
-		currentSound = new SoundInstance(this, "Radio_" + lookupID, false, this);
+		currentSound = new SoundInstance(this, "Radio_" + lookupID, null, this);
 		currentSound.volume = volume/10F;
 	}
 	

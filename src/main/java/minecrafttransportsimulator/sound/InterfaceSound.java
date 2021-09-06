@@ -125,12 +125,13 @@ public class InterfaceSound{
 					AL10.alSourceStop(sound.sourceIndex);
 				}else{
 					//Update position and volume.
+					sound.updatePosition();
 					AL10.alSource3f(sound.sourceIndex, AL10.AL_POSITION, (float) sound.position.x, (float) sound.position.y, (float) sound.position.z);
 					AL10.alSourcef(sound.sourceIndex, AL10.AL_GAIN, sound.volume);
 					
 					//If the sound is looping, and the player isn't riding the source, calculate doppler pitch effect.
 					//Otherwise, set pitch as normal.
-					if(sound.looping && !sound.entity.equals(player.getEntityRiding())){
+					if(sound.soundDef != null && sound.soundDef.looping && !sound.entity.equals(player.getEntityRiding())){
 						Point3d playerVelocity = player.getVelocity();
 						playerVelocity.y = 0;
 						double initalDelta = player.getPosition().subtract(sound.entity.position).length();
@@ -213,7 +214,7 @@ public class InterfaceSound{
 				
 				//Set properties and bind data buffer to source.
 				AL10.alGetError();
-				AL10.alSourcei(sound.sourceIndex, AL10.AL_LOOPING, sound.looping ? AL10.AL_TRUE : AL10.AL_FALSE);
+				AL10.alSourcei(sound.sourceIndex, AL10.AL_LOOPING, sound.soundDef != null && sound.soundDef.looping ? AL10.AL_TRUE : AL10.AL_FALSE);
 				AL10.alSource3f(sound.sourceIndex, AL10.AL_POSITION, (float) sound.entity.position.x, (float) sound.entity.position.y, (float) sound.entity.position.z);
 	    	    AL10.alSourcei(sound.sourceIndex, AL10.AL_BUFFER, dataBufferPointer);
 	    	    

@@ -95,8 +95,8 @@ public class JSONPartDefinition{
     @JSONDescription("This parameter allows for additional parts to be placed when this part is present.  Each entry in this list is the same format as a regular part.  Common uses are duel-wheeled axles, and cab-over-engine vehicles.")
     public List<JSONPartDefinition> additionalParts;
     
-    @JSONDescription("A list of doors.  If this is set, then this part will not be interactable with unless one of the doors in the list is open.  Additionally, should the part not exist, it will not be able to be placed.  Useful for hoods covering engines, doors covering seats, and trunks covering luggage.")
-    public List<String> linkedDoors;
+    @JSONDescription("A list of variables.  If this is set, then this part will not be interactable with unless one of the variables in the list is true.  Additionally, should the part not exist, it will not be able to be placed.  Useful for hoods covering engines, doors covering seats, switches activating sub-parts, and trunks covering luggage.  If this part is a seat, and the player enters the seat, then all of these variables will be set to false.  Similarly, if the player exits this seat, all the variables will be set to true.  Useful for auto opening/closing of doors.")
+    public List<String> linkedVariables;
     
     @JSONDescription("If this part is a seat, this list of potion effects will be applied to the rider. This section works the same as the normal vehicle-based effects, but apply only to the rider of a specific seat, rather than the entire vehicle")
     public List<JSONPotionEffect> seatEffects;
@@ -108,6 +108,8 @@ public class JSONPartDefinition{
     public JSONPartDefinition additionalPart;
     @Deprecated
     public String linkedDoor;
+    @Deprecated
+    public List<String> linkedDoors;
     @Deprecated
     public String translationVariable;
     @Deprecated
