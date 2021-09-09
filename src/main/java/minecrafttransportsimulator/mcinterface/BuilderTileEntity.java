@@ -1,15 +1,18 @@
 package minecrafttransportsimulator.mcinterface;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.components.ABlockBaseTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
+import minecrafttransportsimulator.packets.components.InterfacePacket;
+import minecrafttransportsimulator.packets.instances.PacketEntityCSHandshakeClient;
+import minecrafttransportsimulator.packets.instances.PacketEntityCSHandshakeServer;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.network.NetworkManager;
-import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ITickable;
-import net.minecraft.world.World;
 
 /**Builder for the MC Tile Entity class   This class interfaces with all the MC-specific 
  * code, and is constructed on the server automatically by MC.  After construction, a tile entity
@@ -27,10 +30,24 @@ import net.minecraft.world.World;
  */
 public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extends TileEntity implements ITickable{
 	public TileEntityType tileEntity;
+	
+	/**This flag is true if we need to get server data for syncing.  Set on construction tick, but only used on clients.**/
+	private boolean needDataFromServer = true;
 	/**Data loaded on last NBT call.  Saved here to prevent loading of things until the update method.  This prevents
 	 * loading entity data when this entity isn't being ticked.  Some mods love to do this by making a lot of entities
-	 * to do their funky logic.  I'm looking at YOU The One Probe!**/
-	private NBTTagCompound lastLoadedNBT;
+	 * to do their funky logic.  I'm looking at YOU The One Probe!  This should be either set by NBT loaded from disk
+	 * on servers, or set by packet on clients.*/
+	public NBTTagCompound lastLoadedNBT;
+	/**Set to true when NBT is loaded on servers from disk, or when NBT arrives from clients on servers.  This is set on the update loop when data is
+	 * detected from server NBT loading, but for clients this is set when a data packet arrives.  This prevents loading client-based NBT before
+	 * the packet arrives, which is possible if a partial NBT load is performed by the core game or a mod.**/
+	public boolean loadFromSavedNBT;
+	/**Set to true when loaded NBT is parsed and loaded.  This is done to prevent re-parsing of NBT from triggering a second load command.**/
+	public boolean loadedFromSavedNBT;
+	/**Players requesting data for this builder.  This is populated by packets sent to the server.  Each tick players in this list are
+	 * sent data about this builder, and the list cleared.  Done this way to prevent the server from trying to handle the packet before
+	 * it has created the entity, as the entity is created on the update call, but the packet might get here due to construction.**/
+	public final List<WrapperPlayer> playersRequestingData = new ArrayList<WrapperPlayer>();
 	
 	public BuilderTileEntity(){
 		//Blank constructor for MC.
@@ -39,18 +56,47 @@ public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extend
 	@SuppressWarnings("unchecked")
 	@Override
 	public void update(){
-		if(tileEntity != null){
-			tileEntity.update();
-		}else if(lastLoadedNBT != null){
-			if(world != null && pos != null){
-				if(world.isBlockLoaded(pos)){
+		//World and pos might be null on first few scans.
+		if(world != null && pos != null){
+			if(world.isRemote){
+	    		//No data.  Wait for NBT to be loaded.
+	    		//As we are on a client we need to send a packet to the server to request NBT data.
+	    		///Although we could call this in the constructor, Minecraft changes the
+	    		//entity IDs after spawning and that fouls things up.
+	    		if(needDataFromServer){
+	    			InterfacePacket.sendToServer(new PacketEntityCSHandshakeClient(InterfaceClient.getClientPlayer(), this));
+	    			needDataFromServer = false;
+	    		}
+	    	}else{
+	    		//Send any packets to clients that requested them.
+	    		if(!playersRequestingData.isEmpty()){
+		    		for(WrapperPlayer player : playersRequestingData){
+		    			WrapperNBT data = new WrapperNBT();
+		    			writeToNBT(data.tag);
+		    			player.sendPacket(new PacketEntityCSHandshakeServer(this, data));
+		    		}
+		    		playersRequestingData.clear();
+	    		}
+	    	}
+			
+			if(tileEntity != null){
+				tileEntity.update();
+			}else if(!loadedFromSavedNBT){			
+				//If we are on the server, set the NBT flag.
+				if(lastLoadedNBT != null && !world.isRemote){
+					loadFromSavedNBT = true;
+				}
+				
+				//If we have NBT, and haven't loaded it, do so now.
+				//Hold off on loading until blocks load: this can take longer than 1 update if the server/client is laggy.
+				if(loadFromSavedNBT && world.isBlockLoaded(pos)){
 					try{
 						//Get the block that makes this TE and restore it from saved state.
 						WrapperWorld worldWrapper = WrapperWorld.getWrapperFor(world);
 						Point3d position = new Point3d(pos.getX(), pos.getY(), pos.getZ());
 						ABlockBaseTileEntity block = (ABlockBaseTileEntity) worldWrapper.getBlock(position);
 						tileEntity = (TileEntityType) block.createTileEntity(worldWrapper, position, null, new WrapperNBT(lastLoadedNBT));
-						lastLoadedNBT = null;
+						loadedFromSavedNBT = true;
 					}catch(Exception e){
 						InterfaceCore.logError("Failed to load tile entity on builder from saved NBT.  Did a pack change?");
 						InterfaceCore.logError(e.getMessage());
@@ -60,13 +106,6 @@ public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extend
 			}
 		}
 	}
-	
-	@Override
-	protected void setWorldCreate(World world){
-		//MC is stupid and doesn't actually do anything here.
-		//This means the world isn't set when we create this TE, leading to NPEs.
-        this.setWorld(world);
-    }
 	
 	@Override
 	public void invalidate(){
@@ -80,39 +119,11 @@ public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extend
 	@Override
 	public void onChunkUnload(){
 		super.onChunkUnload();
-		//Catch unloaded TEs from when the chunk goes away.
+		//Catch unloaded TEs from when the chunk goes away and kill them.
+		//MC forgets to do this normally.
 		if(tileEntity != null && tileEntity.isValid){
 			invalidate();
 		}
-	}
-	
-	@Override
-	public NBTTagCompound getUpdateTag(){
-		//Gets called when the server sends this TE over as NBT data.
-		//Get the full NBT tag, not just the position!
-        return this.writeToNBT(new NBTTagCompound());
-    }
-	
-	@Override
-    public SPacketUpdateTileEntity getUpdatePacket(){
-		if(tileEntity != null){
-			//Gets called when we do a blockstate update for this TE.
-			//Done during initial placedown so we need to get the full data for initial state. 
-			return new SPacketUpdateTileEntity(getPos(), -1, tileEntity.save(new WrapperNBT()).tag);
-		}else if(lastLoadedNBT != null){
-			return new SPacketUpdateTileEntity(getPos(), -1, lastLoadedNBT);
-		}else{
-			InterfaceCore.logError("Attempted to get Tile Entity data from a Tile Entity without any associated TE or data.  Removing!");
-			invalidate();
-			return super.getUpdatePacket();
-		}
-    }
-	
-	@Override
-	public void onDataPacket(NetworkManager net, SPacketUpdateTileEntity pkt){
-		//Called when the client gets a TE update packet.
-		//Save the NBT so we can load the TE in the next update call.
-		lastLoadedNBT = pkt.getNbtCompound();
 	}
 	
 	@Override
@@ -129,11 +140,13 @@ public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extend
 		if(tileEntity != null){
 			tileEntity.save(new WrapperNBT(tag));
 		}else if(lastLoadedNBT != null){
+			//Need to have this here as some mods will load us from NBT and then save us back
+			//without ticking.  This causes data loss if we don't merge the last loaded NBT tag.
+			//If we did tick, then the last loaded will be null and this doesn't apply.
 			tag = lastLoadedNBT;
-		}else{
-			InterfaceCore.logError("Attempted to save a Tile Entity without any associated TE or data.  Removing!");
-			invalidate();
 		}
+		//TODO remove this when we convert all TEs.  Required to block loading as Tickable classes next reload.
+		tag.setString("id", TileEntity.getKey(BuilderTileEntity.class).toString());
         return tag;
     }
 	

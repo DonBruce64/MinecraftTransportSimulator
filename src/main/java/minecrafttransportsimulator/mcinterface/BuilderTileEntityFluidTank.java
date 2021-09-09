@@ -30,6 +30,7 @@ public class BuilderTileEntityFluidTank<FluidTankTileEntity extends ATileEntityB
 	
 	@Override
 	public void update(){
+		super.update();
 		if(tileEntity != null){
 			tileEntity.update();
 		}

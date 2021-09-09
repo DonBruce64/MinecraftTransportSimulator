@@ -54,6 +54,9 @@ public class BuilderEntityRenderForwarder extends ABuilderEntityBase{
 			//Don't restore saved entities on the server.
 			//These get loaded, but might not tick if they're out of chunk range.
 			setDead();
+		}else if(!loadedFromSavedNBT && loadFromSavedNBT){
+			//Load player following from client NBT.
+			playerFollowing = world.getPlayerEntityByUUID(lastLoadedNBT.getUniqueId("playerFollowing"));
 		}
     	idleTickCounter = 0;
     }
@@ -115,14 +118,6 @@ public class BuilderEntityRenderForwarder extends ABuilderEntityBase{
 			return lastTickRendered[0] != lastTickRendered[2] || lastPartialTickRendered[0] != lastPartialTickRendered[2];
 		}else{
 			return true;
-		}
-	}
-
-	@Override
-	public void handleLoadedNBT(NBTTagCompound tag){
-		if(world.isRemote){
-			//Don't load player on server.  Server will create this entity as-needed.
-			playerFollowing = world.getPlayerEntityByUUID(tag.getUniqueId("playerFollowing"));
 		}
 	}
     

@@ -284,8 +284,6 @@ public class WrapperWorld{
 		builder.setPositionAndRotation(entity.position.x, entity.position.y, entity.position.z, (float) -entity.angles.y, (float) entity.angles.x);
 		builder.entity = entity;
 		world.spawnEntity(builder);
-		//Set this as we will already have loaded NBT data via spawning and don't need to load it from disk.
-		builder.loadedFromNBT = true;
     }
 	
 	/**
@@ -1041,8 +1039,6 @@ public class WrapperWorld{
 				   if(++totalTicksWaited == 60){
 					   //Spawn fowarder and gun.
 					   BuilderEntityRenderForwarder follower = new BuilderEntityRenderForwarder(player);
-					   //Set this as we will already have loaded NBT data via spawning and don't need to load it from disk.
-					   follower.loadedFromNBT = true;
 					   event.world.spawnEntity(follower);
 					   worldWrapper.activePlayerFollowers.put(playerWrapper, follower);
 					   

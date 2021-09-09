@@ -17,15 +17,19 @@ import net.minecraft.world.World;
  */
 public abstract class ABuilderEntityBase extends Entity{
 	
-	/**This flag is true if we need to get server data for syncing.  Set on construction tick on clients.**/
-	private boolean needDataFromServer;
-	/**This flag is true once we load from NBT.  Used to prevent duplicate-loading.  If this builder is spawned
-	 * manually, this should be set.**/
-	public boolean loadedFromNBT;
+	/**This flag is true if we need to get server data for syncing.  Set on construction tick, but only used on clients.**/
+	private boolean needDataFromServer = true;
 	/**Data loaded on last NBT call.  Saved here to prevent loading of things until the update method.  This prevents
 	 * loading entity data when this entity isn't being ticked.  Some mods love to do this by making a lot of entities
-	 * to do their funky logic.  I'm looking at YOU The One Probe!**/
-	private NBTTagCompound lastLoadedNBT;
+	 * to do their funky logic.  I'm looking at YOU The One Probe!  This should be either set by NBT loaded from disk
+	 * on servers, or set by packet on clients.*/
+	public NBTTagCompound lastLoadedNBT;
+	/**Set to true when NBT is loaded on servers from disk, or when NBT arrives from clients on servers.  This is set on the update loop when data is
+	 * detected from server NBT loading, but for clients this is set when a data packet arrives.  This prevents loading client-based NBT before
+	 * the packet arrives, which is possible if a partial NBT load is performed by the core game or a mod.**/
+	public boolean loadFromSavedNBT;
+	/**Set to true when loaded NBT is parsed and loaded.  This is done to prevent re-parsing of NBT from triggering a second load command.**/
+	public boolean loadedFromSavedNBT;
 	/**Players requesting data for this builder.  This is populated by packets sent to the server.  Each tick players in this list are
 	 * sent data about this builder, and the list cleared.  Done this way to prevent the server from trying to handle the packet before
 	 * it has created the entity, as the entity is created on the update call, but the packet might get here due to construction.**/
@@ -33,9 +37,6 @@ public abstract class ABuilderEntityBase extends Entity{
 	
 	public ABuilderEntityBase(World world){
 		super(world);
-		if(world.isRemote){
-			needDataFromServer = true;
-		}
 	}
     
 	@Override
@@ -63,19 +64,6 @@ public abstract class ABuilderEntityBase extends Entity{
     			needDataFromServer = false;
     		}
     	}else{
-    		//Builder ticked on the server.  If we don't have NBT, it's invalid.
-    		if(!loadedFromNBT){
-	    		if(lastLoadedNBT == null){
-	    			InterfaceCore.logError("Tried to tick a builder without first loading NBT on the server.  This is NOT allowed!  Removing builder.");
-	    			setDead();
-	    			return;
-	    		}else{
-	    			handleLoadedNBT(lastLoadedNBT);
-	    			loadedFromNBT = true;
-	    			lastLoadedNBT = null;
-	    		}
-    		}
-    		
     		//Send any packets to clients that requested them.
     		if(!playersRequestingData.isEmpty()){
 	    		for(WrapperPlayer player : playersRequestingData){
@@ -86,6 +74,11 @@ public abstract class ABuilderEntityBase extends Entity{
 	    		playersRequestingData.clear();
     		}
     	}
+    	
+    	//If we are on the server, set the NBT flag.
+		if(!loadedFromSavedNBT && lastLoadedNBT != null && !world.isRemote){
+			loadFromSavedNBT = true;
+		}
     }
 	
     @Override
@@ -95,32 +88,25 @@ public abstract class ABuilderEntityBase extends Entity{
     
     @Override
     public boolean shouldRenderInPass(int pass){
-        //Don't normally render entities.
+        //Don't render entities, this gets done by the overrider.
     	return false;
     }
-    
-    public abstract void handleLoadedNBT(NBTTagCompound tag);
 			
     @Override
 	public void readFromNBT(NBTTagCompound tag){
     	super.readFromNBT(tag);
-    	//If we are on a server, save the NBT for loading in the next update call.
-		//If we are on a client, we'll get this via packet.
-		if(!world.isRemote){
-			lastLoadedNBT = tag;
-		}
+    	//Save the NBT for loading in the next update call.
+    	lastLoadedNBT = tag;
 	}
     
 	@Override
 	public NBTTagCompound writeToNBT(NBTTagCompound tag){
 		super.writeToNBT(tag);
-		if(!world.isRemote){
-			//Need to have this here as some mods will load us from NBT and then save us back
-			//without ticking.  This causes data loss if we don't merge the last loaded NBT tag.
-			//If we did tick, then the last loaded will be null and this doesn't apply.
-			if(lastLoadedNBT != null){
-				tag.merge(lastLoadedNBT);
-			}
+		//Need to have this here as some mods will load us from NBT and then save us back
+		//without ticking.  This causes data loss if we don't merge the last loaded NBT tag.
+		//If we did tick, then the last loaded will be null and this doesn't apply.
+		if(lastLoadedNBT != null){
+			tag.merge(lastLoadedNBT);
 		}
 		return tag;
 	}
