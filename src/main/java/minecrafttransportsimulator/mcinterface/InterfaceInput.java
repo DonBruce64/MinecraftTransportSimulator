@@ -91,7 +91,7 @@ public class InterfaceInput{
 						classicJoystickMap.clear();
 						for(net.java.games.input.Controller joystick : net.java.games.input.ControllerEnvironment.getDefaultEnvironment().getControllers()){
 							joystickEnabled = true;
-							if(joystick.getType() != null && joystick.getName() != null && joystick.getComponents().length != 0){
+							if(joystick.getType() != null && !joystick.getType().equals(net.java.games.input.Controller.Type.MOUSE) && !joystick.getType().equals(net.java.games.input.Controller.Type.KEYBOARD) && joystick.getName() != null && joystick.getComponents().length != 0){
 								String joystickName = joystick.getName();
 								//Add an index on this joystick to be sure we don't override multi-component units.
 								if(!joystickNameCounters.containsKey(joystickName)){
