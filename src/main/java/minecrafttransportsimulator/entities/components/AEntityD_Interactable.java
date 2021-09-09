@@ -336,14 +336,13 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
     	if(definition.collisionGroups != null){
 			for(JSONCollisionGroup groupDef : definition.collisionGroups){
 				Set<BoundingBox> collisionBoxes = definitionCollisionBoxes.get(groupDef);
+				if(collisionBoxes == null){
+					//This can only happen if we hotloaded the definition due to devMode.
+					//Flag us as needing a reset, and then bail to prevent further collision checks.
+					animationsInitialized = false;
+					return;
+				}
 				if(groupDef.animations != null){
-					if(ConfigSystem.configObject.clientControls.devMode.value && !collisionClocks.containsKey(groupDef)){
-						//This can only happen if we hotloaded the definition due to devMode.
-						//Flag us as needing a reset, and then bail to prevent further collision checks.
-						animationsInitialized = false;
-						return;
-					}
-					
 					boolean inhibitAnimations = false;
 					boolean inhibitCollision = false;
 					//Reset working angles, but don't reset offset as it's not required.
