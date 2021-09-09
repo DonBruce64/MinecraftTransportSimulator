@@ -437,21 +437,29 @@ public final class LegacyCompatSystem{
 			//Check various engine parameters that shouldn't be 0 as they might not be set.
 			if(definition.engine.shiftSpeed == 0){
 				definition.engine.shiftSpeed = 20;
+			}else if(definition.engine.shiftSpeed == -1){
+				definition.engine.shiftSpeed = 0;
 			}
 			if(definition.engine.revResistance == 0){
 				definition.engine.revResistance = 10;
 			}
 			if(definition.engine.idleRPM == 0){
 				definition.engine.idleRPM = definition.engine.maxRPM < 15000 ? 500 : 2000;
+			}else if(definition.engine.idleRPM == -1){
+				definition.engine.idleRPM = 0;
 			}
 			if(definition.engine.maxSafeRPM == 0){
 				definition.engine.maxSafeRPM = definition.engine.maxRPM < 15000 ? definition.engine.maxRPM - (definition.engine.maxRPM - 2500)/2 : (int) (definition.engine.maxRPM/1.1);
 			}
 			if(definition.engine.startRPM == 0){
 				definition.engine.startRPM = (int) (definition.engine.idleRPM*1.2);
+			}else if(definition.engine.startRPM == -1){
+				definition.engine.startRPM = 0;
 			}
 			if(definition.engine.stallRPM == 0){
 				definition.engine.stallRPM = (int) (definition.engine.idleRPM*0.65);
+			}else if(definition.engine.stallRPM == -1){
+				definition.engine.stallRPM = 0;
 			}
 			if(definition.engine.engineWinddownRate == 0){
 				definition.engine.engineWinddownRate = 10;
