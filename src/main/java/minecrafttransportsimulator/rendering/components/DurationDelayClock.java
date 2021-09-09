@@ -173,6 +173,9 @@ public class DurationDelayClock{
 	private static double getEasingType(JSONAnimationDefinition.AnimationEasingType direction, double time) {
 		switch(direction) {
 			case LINEAR: return time;
+			case EASEINSINE: return 1 - Math.cos((time * Math.PI)/2);
+			case EASEOUTSINE: return Math.sin((time * Math.PI) / 2);
+			case EASEINOUTSINE: return (-1 * (Math.cos(time * Math.PI) - 1)) / 2;
 			case EASEINQUAD: return time * time;
 			case EASEOUTQUAD: return time * (2 - time);
 			case EASEINOUTQUAD: return time < 0.5 ? 2 * time * time : -1 + (4 - 2 * time) * time;
