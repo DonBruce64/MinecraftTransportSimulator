@@ -2,6 +2,7 @@ package minecrafttransportsimulator.packloading;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -9,6 +10,7 @@ import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
+import minecrafttransportsimulator.blocks.components.ABlockBase.BlockMaterial;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartEngine;
 import minecrafttransportsimulator.items.instances.ItemDecor.DecorComponentType;
@@ -417,6 +419,106 @@ public final class LegacyCompatSystem{
 			definition.subParts = null;
 		}
 		
+		//Check for old ground devices, crates, barrels, effectors, and customs.
+		switch(definition.generic.type){
+			case("wheel"):{
+				definition.generic.type = "ground_" + definition.generic.type;
+				definition.ground = definition.new JSONPartGroundDevice();
+				definition.ground.isWheel = true;
+				definition.ground.width = definition.wheel.diameter/2F;
+				definition.ground.height = definition.wheel.diameter;
+				definition.ground.lateralFriction = definition.wheel.lateralFriction;
+				definition.ground.motiveFriction = definition.wheel.motiveFriction;
+				definition.wheel = null;
+				break;
+			}case("skid"):{
+				definition.generic.type = "ground_" + definition.generic.type;
+				definition.ground = definition.new JSONPartGroundDevice();
+				definition.ground.width = definition.skid.width;
+				definition.ground.height = definition.skid.width;
+				definition.ground.lateralFriction = definition.skid.lateralFriction;
+				definition.skid = null;
+				break;
+			}case("pontoon"):{
+				definition.generic.type = "ground_" + definition.generic.type;
+				definition.ground = definition.new JSONPartGroundDevice();
+				definition.ground.canFloat = true;
+				definition.ground.width = definition.pontoon.width;
+				definition.ground.height = definition.pontoon.width;
+				definition.ground.lateralFriction = definition.pontoon.lateralFriction;
+				definition.ground.extraCollisionBoxOffset = definition.pontoon.extraCollisionBoxOffset;
+				definition.pontoon = null;
+				break;
+			}case("tread"):{
+				definition.generic.type = "ground_" + definition.generic.type;
+				definition.ground = definition.new JSONPartGroundDevice();
+				definition.ground.isTread = true;
+				definition.ground.width = definition.tread.width;
+				definition.ground.height = definition.tread.width;
+				definition.ground.lateralFriction = definition.tread.lateralFriction;
+				definition.ground.motiveFriction = definition.tread.motiveFriction;
+				definition.ground.extraCollisionBoxOffset = definition.tread.extraCollisionBoxOffset;
+				definition.ground.spacing = definition.tread.spacing;
+				definition.tread = null;
+				break;
+			}case("crate"):{
+				definition.generic.type = "interactable_crate";
+				definition.interactable = definition.new JSONPartInteractable();
+				definition.interactable.interactionType = InteractableComponentType.CRATE;
+				definition.interactable.inventoryUnits = 1;
+				definition.interactable.feedsVehicles = true;
+				break;
+			}case("barrel"):{
+				definition.generic.type = "interactable_barrel";
+				definition.interactable = definition.new JSONPartInteractable();
+				definition.interactable.interactionType = InteractableComponentType.BARREL;
+				definition.interactable.inventoryUnits = 1;
+				break;
+			}case("crafting_table"):{
+				definition.generic.type = "interactable_crafting_table";
+				definition.interactable = definition.new JSONPartInteractable();
+				definition.interactable.interactionType = InteractableComponentType.CRAFTING_TABLE;
+				break;
+			}case("furnace"):{
+				definition.generic.type = "interactable_furnace";
+				definition.interactable = definition.new JSONPartInteractable();
+				definition.interactable.interactionType = InteractableComponentType.FURNACE;
+				break;
+			}case("brewing_stand"):{
+				definition.generic.type = "interactable_brewing_stand";
+				definition.interactable = definition.new JSONPartInteractable();
+				definition.interactable.interactionType = InteractableComponentType.BREWING_STAND;
+				break;
+			}case("fertilizer"):{
+				definition.generic.type = "effector_fertilizer";
+				definition.effector = definition.new JSONPartEffector();
+				definition.effector.type = EffectorComponentType.FERTILIZER;
+				break;
+			}case("harvester"):{
+				definition.generic.type = "effector_harvester";
+				definition.effector = definition.new JSONPartEffector();
+				definition.effector.type = EffectorComponentType.HARVESTER;
+				break;
+			}case("planter"):{
+				definition.generic.type = "effector_planter";
+				definition.effector = definition.new JSONPartEffector();
+				definition.effector.type = EffectorComponentType.PLANTER;
+				break;
+			}case("plow"):{
+				definition.generic.type = "effector_plow";
+				definition.effector = definition.new JSONPartEffector();
+				definition.effector.type = EffectorComponentType.PLOW;
+				break;
+			}case("custom"):{
+				definition.generic.type = "generic";
+				definition.generic.height = definition.custom.height;
+				definition.generic.width = definition.custom.width;
+				definition.custom = null;
+				break;
+			}
+		}
+		
+		//Set engine new parameters.
 		if(definition.engine != null){
 			//If we are an engine_jet part, and our jetPowerFactor is 0, we are a legacy jet engine.
 			if(definition.generic.type.equals("engine_jet") && definition.engine.jetPowerFactor == 0){
@@ -479,132 +581,40 @@ public final class LegacyCompatSystem{
 					definition.engine.downShiftRPM.add(0, 0);
 				}
 			}
-		}else{
-			//Check for old ground devices, crates, barrels, effectors, and customs.
-			switch(definition.generic.type){
-				case("wheel"):{
-					definition.generic.type = "ground_" + definition.generic.type;
-					definition.ground = definition.new JSONPartGroundDevice();
-					definition.ground.isWheel = true;
-					definition.ground.width = definition.wheel.diameter/2F;
-					definition.ground.height = definition.wheel.diameter;
-					definition.ground.lateralFriction = definition.wheel.lateralFriction;
-					definition.ground.motiveFriction = definition.wheel.motiveFriction;
-					definition.wheel = null;
-					break;
-				}case("skid"):{
-					definition.generic.type = "ground_" + definition.generic.type;
-					definition.ground = definition.new JSONPartGroundDevice();
-					definition.ground.width = definition.skid.width;
-					definition.ground.height = definition.skid.width;
-					definition.ground.lateralFriction = definition.skid.lateralFriction;
-					definition.skid = null;
-					break;
-				}case("pontoon"):{
-					definition.generic.type = "ground_" + definition.generic.type;
-					definition.ground = definition.new JSONPartGroundDevice();
-					definition.ground.canFloat = true;
-					definition.ground.width = definition.pontoon.width;
-					definition.ground.height = definition.pontoon.width;
-					definition.ground.lateralFriction = definition.pontoon.lateralFriction;
-					definition.ground.extraCollisionBoxOffset = definition.pontoon.extraCollisionBoxOffset;
-					definition.pontoon = null;
-					break;
-				}case("tread"):{
-					definition.generic.type = "ground_" + definition.generic.type;
-					definition.ground = definition.new JSONPartGroundDevice();
-					definition.ground.isTread = true;
-					definition.ground.width = definition.tread.width;
-					definition.ground.height = definition.tread.width;
-					definition.ground.lateralFriction = definition.tread.lateralFriction;
-					definition.ground.motiveFriction = definition.tread.motiveFriction;
-					definition.ground.extraCollisionBoxOffset = definition.tread.extraCollisionBoxOffset;
-					definition.ground.spacing = definition.tread.spacing;
-					definition.tread = null;
-					break;
-				}case("crate"):{
-					definition.generic.type = "interactable_crate";
-					definition.interactable = definition.new JSONPartInteractable();
-					definition.interactable.interactionType = InteractableComponentType.CRATE;
-					definition.interactable.inventoryUnits = 1;
-					definition.interactable.feedsVehicles = true;
-					break;
-				}case("barrel"):{
-					definition.generic.type = "interactable_barrel";
-					definition.interactable = definition.new JSONPartInteractable();
-					definition.interactable.interactionType = InteractableComponentType.BARREL;
-					definition.interactable.inventoryUnits = 1;
-					break;
-				}case("crafting_table"):{
-					definition.generic.type = "interactable_crafting_table";
-					definition.interactable = definition.new JSONPartInteractable();
-					definition.interactable.interactionType = InteractableComponentType.CRAFTING_TABLE;
-					break;
-				}case("furnace"):{
-					definition.generic.type = "interactable_furnace";
-					definition.interactable = definition.new JSONPartInteractable();
-					definition.interactable.interactionType = InteractableComponentType.FURNACE;
-					break;
-				}case("brewing_stand"):{
-					definition.generic.type = "interactable_brewing_stand";
-					definition.interactable = definition.new JSONPartInteractable();
-					definition.interactable.interactionType = InteractableComponentType.BREWING_STAND;
-					break;
-				}case("fertilizer"):{
-					definition.generic.type = "effector_fertilizer";
-					definition.effector = definition.new JSONPartEffector();
-					definition.effector.type = EffectorComponentType.FERTILIZER;
-					break;
-				}case("harvester"):{
-					definition.generic.type = "effector_harvester";
-					definition.effector = definition.new JSONPartEffector();
-					definition.effector.type = EffectorComponentType.HARVESTER;
-					break;
-				}case("planter"):{
-					definition.generic.type = "effector_planter";
-					definition.effector = definition.new JSONPartEffector();
-					definition.effector.type = EffectorComponentType.PLANTER;
-					break;
-				}case("plow"):{
-					definition.generic.type = "effector_plow";
-					definition.effector = definition.new JSONPartEffector();
-					definition.effector.type = EffectorComponentType.PLOW;
-					break;
-				}case("custom"):{
-					definition.generic.type = "generic";
-					definition.generic.height = definition.custom.height;
-					definition.generic.width = definition.custom.width;
-					definition.custom = null;
-					break;
+		}
+			
+		//Do various ground device compats.
+		if(definition.ground != null){
+			//Set flat height if it's not set.
+			if(definition.ground.canGoFlat && definition.ground.flatHeight == 0){
+				definition.ground.flatHeight = definition.ground.height/2F;
+				definition.ground.canGoFlat = false;
+			}
+			//Set friction modifiers.
+			if(definition.ground.frictionModifiers == null){
+				definition.ground.frictionModifiers = new LinkedHashMap<BlockMaterial, Float>();
+				definition.ground.frictionModifiers.put(BlockMaterial.SNOW, -0.2F);
+				definition.ground.frictionModifiers.put(BlockMaterial.ICE, -0.2F);
+				if(!definition.ground.isTread){
+					definition.ground.frictionModifiers.put(BlockMaterial.DIRT_WET, -0.1F);
+					definition.ground.frictionModifiers.put(BlockMaterial.SAND_WET, -0.1F);
+					definition.ground.frictionModifiers.put(BlockMaterial.NORMAL_WET, -0.1F);
 				}
 			}
+		}
 			
-			//Do various ground device compats.
-			if(definition.ground != null){
-				//Set flat height if it's not set.
-				if(definition.ground.canGoFlat && definition.ground.flatHeight == 0){
-					definition.ground.flatHeight = definition.ground.height/2F;
-					definition.ground.canGoFlat = false;
-				}
-				//Set friction modifiers.
-				if(definition.ground.rainFrictionModifier == 0 && !definition.ground.isTread){
-					definition.ground.rainFrictionModifier = -0.1F;
-				}
+		//If the part is a seat, and doesn't have a seat sub-section, add one.
+		if(definition.generic.type.startsWith("seat") && definition.seat == null){
+			definition.seat = definition.new JSONPartSeat();
+		}
+		
+		//If the part is a gun, set yaw and pitch speed if not set.
+		if(definition.generic.type.startsWith("gun")){
+			if(definition.gun.yawSpeed == 0){
+				definition.gun.yawSpeed = 50/definition.gun.diameter + 1/definition.gun.length;
 			}
-			
-			//If the part is a seat, and doesn't have a seat sub-section, add one.
-			if(definition.generic.type.startsWith("seat") && definition.seat == null){
-				definition.seat = definition.new JSONPartSeat();
-			}
-			
-			//If the part is a gun, set yaw and pitch speed if not set.
-			if(definition.generic.type.startsWith("gun")){
-				if(definition.gun.yawSpeed == 0){
-					definition.gun.yawSpeed = 50/definition.gun.diameter + 1/definition.gun.length;
-				}
-				if(definition.gun.pitchSpeed == 0){
-					definition.gun.pitchSpeed = 50/definition.gun.diameter + 1/definition.gun.length;
-				}
+			if(definition.gun.pitchSpeed == 0){
+				definition.gun.pitchSpeed = 50/definition.gun.diameter + 1/definition.gun.length;
 			}
 		}
 		

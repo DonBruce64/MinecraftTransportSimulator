@@ -1,8 +1,10 @@
 package minecrafttransportsimulator.jsondefs;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.blocks.components.ABlockBase.BlockMaterial;
 import minecrafttransportsimulator.jsondefs.JSONConfig.ConfigFuel.FuelDefaults;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDefaults;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
@@ -252,14 +254,14 @@ public class JSONPart extends AJSONPartProvider{
 		@JSONDescription("How much friction this part has for sideways movement. Used during turning operations to determine how much the vehicle will skid sideways when turning at speed.")
         public float lateralFriction;
 		
-		@JSONDescription("How much friction to modify this part by on wet blocks.  The current rain strength multiplied by this value will be added to the friction of the ground device.  Defaults to -0.1 (except for treads), so 0.1 friction is lost during rain storms, and 0.2 is lost during thunderstorms.")
-        public float rainFrictionModifier;
-		
 		@JSONDescription("If set, this part will create an extra collision box offset in the +Z direction by this amount when placed on a vehicle.  This collision box will have all the same properties as this part (wheel, floating, friction, etc.).  Useful for longer parts like pontoons or helicopter landing skids.  Note that if this parameter is set in the vehicle JSON the vehicle value will override this value.  Since treads are normally vehicle-dependent in their size, it is recommended to NOT set this here for treads and use the vehicle parameter.")
         public float extraCollisionBoxOffset;
 		
 		@JSONDescription("The spacing between repeated tread links to be animated in the model.  Used only if isTread is true.")
         public float spacing;
+		
+		@JSONDescription("A mapping of friction modifiers.  These are used to determine the friction change when on specific surfaces.  Defaults to -0.1 (except for treads) on wet surfaces, and -0.2 on ice and snow for all ground devices.  Valid surfaces are: normal, normal_wet, dirt, dirt_wet, sand, sand_wet, snow, and ice.")
+        public LinkedHashMap<BlockMaterial, Float> frictionModifiers;
 		
     	@Deprecated
 		public boolean canGoFlat;
