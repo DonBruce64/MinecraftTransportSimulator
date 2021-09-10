@@ -33,6 +33,7 @@ public class ItemPartGroundDevice extends AItemPart{
 		tooltipLines.add(InterfaceCore.translate("info.item.ground_device.diameter") + definition.ground.height);
 		tooltipLines.add(InterfaceCore.translate("info.item.ground_device.motivefriction") + definition.ground.motiveFriction);
 		tooltipLines.add(InterfaceCore.translate("info.item.ground_device.lateralfriction") + definition.ground.lateralFriction);
+		tooltipLines.add(InterfaceCore.translate("info.item.ground_device.rainfriction") + definition.ground.rainFrictionModifier);
 		tooltipLines.add(InterfaceCore.translate(definition.ground.isWheel ? "info.item.ground_device.rotatesonshaft_true" : "info.item.ground_device.rotatesonshaft_false"));
 		tooltipLines.add(InterfaceCore.translate(definition.ground.canFloat ? "info.item.ground_device.canfloat_true" : "info.item.ground_device.canfloat_false"));
 	}

@@ -579,9 +579,17 @@ public final class LegacyCompatSystem{
 				}
 			}
 			
-			//If the part is a ground_ type, and canGoFlat, auto-set flat height.
-			if(definition.generic.type.startsWith("ground_") && definition.ground.canGoFlat && definition.ground.flatHeight == 0){
-				definition.ground.flatHeight = definition.ground.height/2F;
+			//Do various ground device compats.
+			if(definition.ground != null){
+				//Set flat height if it's not set.
+				if(definition.ground.canGoFlat && definition.ground.flatHeight == 0){
+					definition.ground.flatHeight = definition.ground.height/2F;
+					definition.ground.canGoFlat = false;
+				}
+				//Set friction modifiers.
+				if(definition.ground.rainFrictionModifier == 0 && !definition.ground.isTread){
+					definition.ground.rainFrictionModifier = -0.1F;
+				}
 			}
 			
 			//If the part is a seat, and doesn't have a seat sub-section, add one.

@@ -460,7 +460,7 @@ public class WrapperWorld{
 	
 	/**
 	 *  Returns the slipperiness of the block at the passed-in position.
-	 *  0.6 is default slipperiness for blocks.
+	 *  0.6 is default slipperiness for blocks. higher values are more slippery.
 	 */
 	public float getBlockSlipperiness(Point3d position){
 		BlockPos pos = new BlockPos(position.x, position.y, position.z);

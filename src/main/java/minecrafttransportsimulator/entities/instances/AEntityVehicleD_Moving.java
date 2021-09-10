@@ -349,7 +349,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		float skiddingFactor = 0;
 		//First check grounded ground devices.
 		for(PartGroundDevice groundDevice : groundDeviceCollective.groundedGroundDevices){
-			skiddingFactor += groundDevice.getLateralFriction() - groundDevice.getFrictionLoss();
+			skiddingFactor += Math.max(groundDevice.getLateralFriction() - groundDevice.getFrictionLoss(), 0);
 		}
 		
 		//Now check if any collision boxes are in liquid.  Needed for maritime vehicles.
