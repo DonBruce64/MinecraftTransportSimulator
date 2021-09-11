@@ -575,6 +575,10 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 	/**
 	 *  Called when the entity is attacked.
 	 *  This should ONLY be called on the server; clients will sync via packets.
+	 *  Always make sure to check if this entity is valid, as this function may be
+	 *  called multiple times in a single tick for multiple damage applications.  This
+	 *  means that this entity may be invalid due to the first damage when the second damage
+	 *  is applied.
 	 */
 	public void attack(Damage damage){}
 	
