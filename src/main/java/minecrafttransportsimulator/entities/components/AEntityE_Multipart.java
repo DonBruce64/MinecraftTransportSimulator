@@ -315,7 +315,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 	 * accessing the passed-in part slot.
 	 */
 	public boolean areVariablesBlocking(JSONPartDefinition partDef, WrapperPlayer player){
-		if(partDef.linkedVariables != null && !this.equals(player.getEntityRiding())){
+		if(partDef.linkedVariables != null){
 			for(String variableName : partDef.linkedVariables){
 				if(variablesOn.contains(variableName)){
 					//We have the door open, no need to check any further.
@@ -763,7 +763,9 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 				}
 				
 				//If the part is linked to variables, and none are active, don't add it.
-				if(areVariablesBlocking(part.placementDefinition, clientPlayer)){
+				//Exclude this if the part is a seat and we are riding this vehicle.
+				//This lets players change seats without opening doors.
+				if(!(locationRiderMap.inverse().containsKey(clientPlayer) && part instanceof PartSeat) && areVariablesBlocking(part.placementDefinition, clientPlayer)){
 					continue;
 				}
 				
