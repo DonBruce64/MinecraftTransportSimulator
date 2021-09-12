@@ -138,19 +138,9 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 					}
 				}
 				
-				//Check if we are a light-up texture on the solid pass and need to disable lighting this render.
-				//Also check if we are a beam on the translucent pass and need to disable lighting.
-				if(!blendingEnabled && lightDef != null && lightLevel > 0 && !lightDef.emissive && !lightDef.isBeam){
-					//Color rendering.
-					if(ConfigSystem.configObject.clientRendering.brightLights.value){
-						InterfaceRender.setLightingState(false);
-						InterfaceRender.renderVertices(cachedVertexIndex);
-						InterfaceRender.setLightingState(true);
-					}else{
-						InterfaceRender.renderVertices(cachedVertexIndex);
-					}
-				}else if(blendingEnabled && lightDef != null && lightLevel > 0 && lightDef.isBeam && entity.shouldRenderBeams()){
-					//Render model as beam. 
+				//Render us based on the current pass and our states.
+				if(blendingEnabled && lightDef != null && lightLevel > 0 && lightDef.isBeam && entity.shouldRenderBeams()){
+					//Model that's actually a beam, render it with beam lighting/blending. 
 					if(ConfigSystem.configObject.clientRendering.brightLights.value){
 						InterfaceRender.setLightingState(false);
 						if(ConfigSystem.configObject.clientRendering.blendedLights.value){
@@ -177,7 +167,14 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 							InterfaceRender.renderVertices(interiorWindowObject);
 						}
 					}else{
-						InterfaceRender.renderVertices(cachedVertexIndex);
+						//Need to disable lighting if we are a light-up texture.
+						if(ConfigSystem.configObject.clientRendering.brightLights.value && lightDef != null && lightLevel > 0 && !lightDef.emissive && !lightDef.isBeam){
+							InterfaceRender.setLightingState(false);
+							InterfaceRender.renderVertices(cachedVertexIndex);
+							InterfaceRender.setLightingState(true);
+						}else{
+							InterfaceRender.renderVertices(cachedVertexIndex);
+						}
 					}
 				}
 				
@@ -333,8 +330,8 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 			}
 		}
 		if(lightDef != null){
-			//If the light only has solid components, don't render on the blending pass.
-			if(blendingEnabled && !lightDef.emissive && !lightDef.isBeam && (lightDef.blendableComponents == null || lightDef.blendableComponents.isEmpty())){
+			//If the light only has solid components, and we aren't translucent, don't render on the blending pass.
+			if(blendingEnabled && !isTranslucent && !lightDef.emissive && !lightDef.isBeam && (lightDef.blendableComponents == null || lightDef.blendableComponents.isEmpty())){
 				return false;
 			}
 		}
