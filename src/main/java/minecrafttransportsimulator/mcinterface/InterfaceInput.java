@@ -244,15 +244,15 @@ public class InterfaceInput{
 			}
 		}else{
 			//Make sure we're not calling this on non-axis.
-			if(isJoystickComponentAxis(joystickName, index)){
-				if(joystickMap.containsKey(joystickName)){
+			if(joystickMap.containsKey(joystickName)){
+				if(isJoystickComponentAxis(joystickName, index)){
 					joystickMap.get(joystickName).poll();
 					return joystickMap.get(joystickName).getAxisValue(index);
 				}else{
-					return 0;
+					return getJoystickButtonValue(joystickName, index) ? 1 : 0;
 				}
 			}else{
-				return getJoystickButtonValue(joystickName, index) ? 1 : 0;
+				return 0;
 			}
 		}
 	}
