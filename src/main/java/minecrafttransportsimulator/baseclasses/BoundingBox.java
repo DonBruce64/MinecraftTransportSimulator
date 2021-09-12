@@ -45,7 +45,7 @@ public class BoundingBox{
 	
 	/**Complex constructor.  Used for things that have local and global positions.  These can also collide with liquid blocks.**/
 	public BoundingBox(Point3d localCenter, Point3d globalCenter, double widthRadius, double heightRadius, double depthRadius, boolean collidesWithLiquids){
-		this(localCenter, globalCenter, widthRadius, heightRadius, depthRadius, false, null);
+		this(localCenter, globalCenter, widthRadius, heightRadius, depthRadius, collidesWithLiquids, null);
 	}
 	
 	/**JSON constructor.  Used for boxes that are created from JSON and need extended properties.**/

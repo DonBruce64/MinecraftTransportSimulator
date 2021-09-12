@@ -87,6 +87,9 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			//Update our GDB members if any of our ground devices don't have the same total offset as placement.
 			//This is required to move the GDBs if the GDs move.
 			world.beginProfiling("GroundDevices", true);
+			if(ticksExisted == 1){
+				groundDeviceCollective.updateBounds();
+			}
 			for(APart part : parts){
 				if(part instanceof PartGroundDevice){
 					if(part.prevActive != part.isActive){
@@ -137,6 +140,17 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		super.removePart(part, iterator);
 		groundDeviceCollective.updateMembers();
 		groundDeviceCollective.updateBounds();
+	}
+	
+	@Override
+	protected void sortBoxes(){
+		super.sortBoxes();
+		if(ticksExisted == 1){
+			//Need to do initial GDB updates.
+			groundDeviceCollective.updateMembers();
+			groundDeviceCollective.updateBounds();
+			groundDeviceCollective.updateCollisions();
+		}
 	}
 	
 	@Override

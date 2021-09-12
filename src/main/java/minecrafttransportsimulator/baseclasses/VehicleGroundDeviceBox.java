@@ -45,11 +45,6 @@ public class VehicleGroundDeviceBox{
 		this.vehicle = vehicle;
 		this.isFront = isFront;
 		this.isLeft = isLeft;
-		
-		//Do an initial update once constructed.
-		updateMembers();
-		updateBounds();
-		updateCollisionStatuses(null);
 	}
 	
 	/**

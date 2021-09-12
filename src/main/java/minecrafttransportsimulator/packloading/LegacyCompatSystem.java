@@ -1575,6 +1575,7 @@ public final class LegacyCompatSystem{
 			for(JSONCollisionBox boxDef : interactableDef.collision){
 				if(boxDef.isInterior){
 					interiorBoxes.add(boxDef);
+					boxDef.isInterior = false;
 				}else{
 					exteriorBoxes.add(boxDef);
 				}

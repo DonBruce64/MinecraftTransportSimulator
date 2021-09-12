@@ -52,29 +52,25 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 			ItemRoadComponent componentItem = road.components.get(component);
 			
 			if(!cachedVertexMap.containsKey(component)){
-				int displayListIndex = GL11.glGenLists(1);
-				GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
 				switch(component){
 					case CORE: {
 						Map<String, float[][]> parsedModel = AModelParser.parseModel(componentItem.definition.getModelLocation(componentItem.subName));
-						GL11.glBegin(GL11.GL_TRIANGLES);
-						
 						//If we are a dynamic curve, cache the dynamic vertex paths.
 						//If we are static, just render the model as-is.
 						if(road.definition.road.isDynamic && road.dynamicCurve != null){
 							//Core components need to be transformed to wedges.
-							List<Float[]> transformedVertices = new ArrayList<Float[]>();
 							Point3d priorPosition = new Point3d();
 							Point3d priorRotation = new Point3d();
 							Point3d rotationDelta = new Point3d();
 							float priorIndex = 0;
-							
+							List<float[]> segmentVertices = new ArrayList<float[]>();
+							List<float[]> transformedVertices = new ArrayList<float[]>();
 							for(float currentIndex=1; currentIndex<=road.dynamicCurve.pathLength; ++currentIndex){
 								//Copy the master vertices to our transformed ones.
 								transformedVertices.clear();
 								for(float[][] vertexSet : parsedModel.values()){
 									for(float[] vertex : vertexSet){
-										transformedVertices.add(new Float[]{vertex[0], vertex[1], vertex[2], vertex[3], vertex[4], vertex[5], vertex[6], vertex[7]});
+										transformedVertices.add(new float[]{vertex[0], vertex[1], vertex[2], vertex[3], vertex[4], vertex[5], vertex[6], vertex[7]});
 									}
 								}
 								
@@ -102,7 +98,7 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 								//Depending on the vertex position in the model, transform it to match with the offset rotation.
 								//This depends on how far the vertex is from the origin of the model, and how big the delta is.
 								//For all points, their magnitude depends on how far away they are on the Z-axis.
-								for(Float[] vertex : transformedVertices){
+								for(float[] vertex : transformedVertices){
 									Point3d vertexOffsetPrior = new Point3d(vertex[0], vertex[1], 0);
 									vertexOffsetPrior.rotateFine(priorRotation).add(priorPosition);
 									Point3d vertexOffsetCurrent = new Point3d(vertex[0], vertex[1], vertex[2]);
@@ -111,10 +107,13 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 									Point3d segmentVector = vertexOffsetPrior.copy().subtract(vertexOffsetCurrent).multiply(Math.abs(vertex[2]));
 									Point3d renderedVertex = vertexOffsetCurrent.copy().add(segmentVector);
 									
-									GL11.glTexCoord2f(vertex[3], vertex[4]);
-									GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
-									GL11.glVertex3d(renderedVertex.x, renderedVertex.y, renderedVertex.z);
+									vertex[0] = (float) renderedVertex.x;
+									vertex[1] = (float) renderedVertex.y;
+									vertex[2] = (float) renderedVertex.z;
 								}
+								
+								//Add transformed vertices to the segment.
+								segmentVertices.addAll(transformedVertices);
 								
 								//Set the last index.
 								priorIndex = currentIndex;
@@ -124,19 +123,21 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 									currentIndex -= ((currentIndex + 1) - road.dynamicCurve.pathLength);
 								}
 							}
+							//Cache and compile the segments.
+							cachedVertexMap.put(component, InterfaceRender.cacheVertices(segmentVertices.toArray(new float[segmentVertices.size()][8])));
 						}else if(!road.definition.road.isDynamic){
 							for(float[][] vertexSet : parsedModel.values()){
 								for(float[] vertex : vertexSet){
-									GL11.glTexCoord2f(vertex[3], vertex[4]);
-									GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
 									//Need to offset by 0.5 to match the offset of the TE as we're block-aligned.
 									position.set(vertex[0] - 0.5, vertex[1], vertex[2] - 0.5);
 									position.rotateFine(road.rotation);
-									GL11.glVertex3d(position.x, position.y, position.z);
+									vertex[0] = (float) position.x;
+									vertex[1] = (float) position.y;
+									vertex[2] = (float) position.z;
 								}
 							}
+							cachedVertexMap.put(component, InterfaceRender.cacheVertices(parsedModel.values()));
 						}
-						GL11.glEnd();
 					}
 					case LEFT_BORDER:
 						break;
@@ -155,14 +156,12 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 					default:
 						break;
 				}
-				GL11.glEndList();
-				cachedVertexMap.put(component, displayListIndex);
 			}
 			
 			if(road.isActive()){
 				InterfaceRender.bindTexture(componentItem.definition.getTextureLocation(componentItem.subName));
 			}
-			GL11.glCallList(cachedVertexMap.get(component));
+			InterfaceRender.renderVertices(cachedVertexMap.get(component));
 		}
 		
 		//If we are inactive render the blocking blocks and the main block.
