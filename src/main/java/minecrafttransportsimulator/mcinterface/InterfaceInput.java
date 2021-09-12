@@ -129,14 +129,20 @@ public class InterfaceInput{
 						ConfigJoystick config = iterator.next().getValue();
 						if(runningClassicMode){
 							if(classicJoystickMap.containsKey(config.joystickName)){
-								if(classicJoystickMap.get(config.joystickName).getComponents().length < config.buttonIndex){
+								if(classicJoystickMap.get(config.joystickName).getComponents().length <= config.buttonIndex){
 									iterator.remove();
 								}
 							}
 						}else{
 							if(joystickMap.containsKey(config.joystickName)){
-								if(joystickMap.get(config.joystickName).getButtonCount() + buttonNumberOffset < config.buttonIndex){
-									iterator.remove();
+								if(config.axisMinTravel != 0 || config.axisMaxTravel != 0){
+									if(joystickMap.get(config.joystickName).getAxisCount() <= config.buttonIndex){
+										iterator.remove();
+									}
+								}else{
+									if(joystickMap.get(config.joystickName).getButtonCount() <= config.buttonIndex - buttonNumberOffset){
+										iterator.remove();
+									}
 								}
 							}
 						}
@@ -237,11 +243,16 @@ public class InterfaceInput{
 				return 0;
 			}
 		}else{
-			if(joystickMap.containsKey(joystickName)){
-				joystickMap.get(joystickName).poll();
-				return joystickMap.get(joystickName).getAxisValue(index);
+			//Make sure we're not calling this on non-axis.
+			if(isJoystickComponentAxis(joystickName, index)){
+				if(joystickMap.containsKey(joystickName)){
+					joystickMap.get(joystickName).poll();
+					return joystickMap.get(joystickName).getAxisValue(index);
+				}else{
+					return 0;
+				}
 			}else{
-				return 0;
+				return getJoystickButtonValue(joystickName, index) ? 1 : 0;
 			}
 		}
 	}

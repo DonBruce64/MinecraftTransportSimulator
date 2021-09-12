@@ -302,7 +302,7 @@ public class PartGun extends APart{
 				//This uses a total time of firing to account for partial tick firing rates on clients.
 				if(!world.isClient()){
 					if(state.isAtLeast(GunState.FIRING_CURRENTLY)){
-						int bulletsToRemove = definition.gun.isSemiAuto ? 1 : (int) (++ticksFiring/definition.gun.fireDelay - bulletsRemovedThisRequest);
+						int bulletsToRemove = definition.gun.isSemiAuto ? 1 : (int) ((++ticksFiring + definition.gun.fireDelay - millisecondCamOffset/50)/definition.gun.fireDelay - bulletsRemovedThisRequest);
 						if(bulletsToRemove > 0){
 							firedThisRequest = true;
 							bulletsLeft -= bulletsToRemove;
