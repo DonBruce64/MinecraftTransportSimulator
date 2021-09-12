@@ -2,6 +2,7 @@ package minecrafttransportsimulator.guis.components;
 
 import java.util.List;
 
+import minecrafttransportsimulator.mcinterface.InterfaceGUI;
 import net.minecraft.item.ItemStack;
 
 /**Custom item render class.  This class is designed to render a {@link ItemStack} 

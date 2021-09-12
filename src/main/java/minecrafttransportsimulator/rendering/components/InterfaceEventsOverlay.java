@@ -13,15 +13,16 @@ import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartInteractable;
 import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.guis.components.AGUIBase;
-import minecrafttransportsimulator.guis.components.AGUIBase.TextPosition;
-import minecrafttransportsimulator.guis.components.InterfaceGUI;
 import minecrafttransportsimulator.guis.instances.GUIHUD;
 import minecrafttransportsimulator.mcinterface.BuilderEntityExisting;
 import minecrafttransportsimulator.mcinterface.BuilderGUI;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
+import minecrafttransportsimulator.mcinterface.InterfaceGUI;
 import minecrafttransportsimulator.mcinterface.InterfaceRender;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.rendering.instances.RenderText;
+import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
 import minecrafttransportsimulator.systems.CameraSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.client.Minecraft;
@@ -104,7 +105,7 @@ public class InterfaceEventsOverlay{
 								EntityFluidTank tank = ((PartInteractable) part).tank;
 								if(tank != null){
 									String tankText = tank.getFluid().isEmpty() ? "EMPTY" : tank.getFluid().toUpperCase() + " : " + tank.getFluidLevel() + "/" + tank.getMaxLevel();
-									InterfaceGUI.drawBasicText(tankText, null, screenWidth/2 + 4, screenHeight/2, ColorRGB.WHITE, TextPosition.LEFT_ALIGNED, 0);
+									RenderText.draw2DText(tankText, null, screenWidth/2 + 4, screenHeight/2, ColorRGB.WHITE, TextAlignment.LEFT_ALIGNED, 1.0F, 0);
 								}
 							}
 						}
@@ -121,12 +122,12 @@ public class InterfaceEventsOverlay{
 						
 						//If we are in a seat controlling a gun, render a text line for it.
 						if(seat.canControlGuns && !InterfaceClient.isChatOpen()){
-							InterfaceGUI.drawBasicText("Active Gun:", null, screenWidth, 0, ColorRGB.WHITE, TextPosition.RIGHT_ALIGNED, 0);
+							RenderText.draw2DText("Active Gun:", null, screenWidth, 0, ColorRGB.WHITE, TextAlignment.RIGHT_ALIGNED, 1.0F, 0);
 							if(seat.activeGun != null){
 								String gunNumberText = seat.activeGun.definition.gun.fireSolo ? " [" + (seat.gunIndex + 1) + "]" : "";
-								InterfaceGUI.drawBasicText(seat.activeGun.getItemName() + gunNumberText, null, screenWidth, 8, ColorRGB.WHITE, TextPosition.RIGHT_ALIGNED, 0);
+								RenderText.draw2DText(seat.activeGun.getItemName() + gunNumberText, null, screenWidth, 8, ColorRGB.WHITE, TextAlignment.RIGHT_ALIGNED, 1.0F, 0);
 							}else{
-								InterfaceGUI.drawBasicText("None", null, screenWidth, 8, ColorRGB.WHITE, TextPosition.RIGHT_ALIGNED, 0);
+								RenderText.draw2DText("None", null, screenWidth, 8, ColorRGB.WHITE, TextAlignment.RIGHT_ALIGNED, 1.0F, 0);
 							}
 						}
 						

@@ -6,6 +6,7 @@ import java.util.List;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox.TextBoxControlKey;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
+import minecrafttransportsimulator.mcinterface.InterfaceGUI;
 import minecrafttransportsimulator.rendering.instances.RenderInstrument;
 
 /**Base GUI class.  This type is used in conjunction with {@link InterfaceGUI} to allow us to use
@@ -221,15 +222,6 @@ public abstract class AGUIBase{
 	 */
 	public static boolean inClockPeriod(int totalPeriod, int onPeriod){
 		return System.currentTimeMillis()*0.02D%totalPeriod <= onPeriod;
-	}
-	
-	/**
-	 *  List of enums that define how text is rendered.
-	 */
-	public static enum TextPosition{
-		CENTERED,
-		LEFT_ALIGNED,
-		RIGHT_ALIGNED;
 	}
 	
 	/**

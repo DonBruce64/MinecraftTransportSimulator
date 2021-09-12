@@ -24,8 +24,8 @@ public final class ModelParserOBJ extends AModelParser{
 	}
 	
 	@Override
-	protected Map<String, Float[][]> parseModelInternal(String modelLocation){
-		Map<String, Float[][]> objectMap = new HashMap<String, Float[][]>();
+	protected Map<String, float[][]> parseModelInternal(String modelLocation){
+		Map<String, float[][]> objectMap = new HashMap<String, float[][]>();
 		BufferedReader reader;
 		try{
 			reader = new BufferedReader(new InputStreamReader(ModelParserOBJ.class.getResourceAsStream(modelLocation)));
@@ -34,9 +34,9 @@ public final class ModelParserOBJ extends AModelParser{
 		}
 		
 		String objectName = null;
-		final List<Float[]> vertexList = new ArrayList<Float[]>();
-		final List<Float[]> normalList = new ArrayList<Float[]>();
-		final List<Float[]> textureList = new ArrayList<Float[]>();
+		final List<float[]> vertexList = new ArrayList<float[]>();
+		final List<float[]> normalList = new ArrayList<float[]>();
+		final List<float[]> textureList = new ArrayList<float[]>();
 		final List<String> faceList = new ArrayList<String>();
 		
 		try{
@@ -63,7 +63,7 @@ public final class ModelParserOBJ extends AModelParser{
 					}
 				}else if(line.startsWith("v ")){
 					try{
-						Float[] coords = new Float[3];
+						float[] coords = new float[3];
 						line = line.trim().substring(2, line.trim().length()).trim();
 						coords[0] = Float.valueOf(line.substring(0, line.indexOf(' ')));
 						coords[1] = Float.valueOf(line.substring(line.indexOf(' ') + 1, line.lastIndexOf(' ')));
@@ -74,11 +74,12 @@ public final class ModelParserOBJ extends AModelParser{
 					}
 				}else if(line.startsWith("vt ")){
 					try{
-						Float[] coords = new Float[2];
+						float[] coords = new float[2];
 						line = line.trim().substring(3, line.trim().length()).trim();
 						int space = line.indexOf(' ');
 						int vertexEnd = line.lastIndexOf(' ') == space ? line.length() : line.lastIndexOf(' ');
 						coords[0] = Float.valueOf(line.substring(0, space));
+						//Need to invert the V of the UV to change from texture origin being top-left to OpenGL origin being bottom-left.
 						coords[1] = 1 - Float.valueOf(line.substring(space + 1, vertexEnd));
 						textureList.add(coords);
 					}catch(Exception e){
@@ -86,7 +87,7 @@ public final class ModelParserOBJ extends AModelParser{
 					}
 				}else if(line.startsWith("vn ")){
 					try{
-						Float[] coords = new Float[3];
+						float[] coords = new float[3];
 						line = line.trim().substring(2, line.trim().length()).trim();
 						coords[0] = Float.valueOf(line.substring(0, line.indexOf(' ')));
 						coords[1] = Float.valueOf(line.substring(line.indexOf(' ') + 1, line.lastIndexOf(' ')));
@@ -114,7 +115,7 @@ public final class ModelParserOBJ extends AModelParser{
 		}
 	}
 	
-	private static void compileVertexArray(Map<String, Float[][]> objectMap, List<Float[]> vertexList, List<Float[]> normalList, List<Float[]> textureList, List<String> faceList, String modelLocation, String objectName){
+	private static void compileVertexArray(Map<String, float[][]> objectMap, List<float[]> vertexList, List<float[]> normalList, List<float[]> textureList, List<String> faceList, String modelLocation, String objectName){
 		if(objectName == null){
 			InterfaceCore.logError("No object name found in the entire OBJ model file.  Resorting to 'model' as default.  Are you using groups instead of objects by mistake?");
 			objectName = "model";
@@ -161,12 +162,12 @@ public final class ModelParserOBJ extends AModelParser{
 			}
 	
 			//Compile array.
-			Float[][] compiledArray = new Float[vertexDataSets.size()][8];
+			float[][] compiledArray = new float[vertexDataSets.size()][8];
 			for(int i=0; i<compiledArray.length; ++i){
 				Integer[] vertexData = vertexDataSets.get(i);
-				Float[] vertex = vertexList.get(vertexData[0]);
-				Float[] texture = textureList.get(vertexData[1]);
-				Float[] normal = normalList.get(vertexData[2]);
+				float[] vertex = vertexList.get(vertexData[0]);
+				float[] texture = textureList.get(vertexData[1]);
+				float[] normal = normalList.get(vertexData[2]);
 				compiledArray[i][0] = vertex[0];
 				compiledArray[i][1] = vertex[1];
 				compiledArray[i][2] = vertex[2];

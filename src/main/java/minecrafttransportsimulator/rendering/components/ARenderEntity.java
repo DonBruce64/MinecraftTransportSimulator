@@ -16,10 +16,12 @@ import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONInstrumentDefinition;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
+import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.InterfaceRender;
 import minecrafttransportsimulator.rendering.instances.RenderBoundingBox;
 import minecrafttransportsimulator.rendering.instances.RenderInstrument;
+import minecrafttransportsimulator.rendering.instances.RenderText;
 
 /**Base Entity rendering class.  
  *
@@ -81,12 +83,12 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 	        }
 	        
 	        boolean mirrored = isMirrored(entity);
-	        double scale = getScale(entity, partialTicks);
+	        float scale = (float) getScale(entity, partialTicks);
     		if(mirrored){
-    			GL11.glScaled(-scale, scale, scale);
+    			GL11.glScalef(-scale, scale, scale);
     			GL11.glCullFace(GL11.GL_FRONT);
     		}else if(scale != 1.0){
-    			GL11.glScaled(scale, scale, scale);
+    			GL11.glScalef(scale, scale, scale);
     		}
 			
 			//Render all modelObjects.
@@ -106,7 +108,11 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 			
 			//Render any static text.
 			if(!blendingEnabled){
-				InterfaceRender.renderTextMarkings(entity, null);
+				for(JSONText textDef : entity.text.keySet()){
+					if(textDef.attachedTo == null){
+						RenderText.draw3DText(entity.text.get(textDef), entity, textDef, scale, false);
+					}
+				}
 			}
 			
 			//End rotation render matrix and reset states.
@@ -206,30 +212,28 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 		if(entity instanceof AEntityD_Interactable){
 			AEntityD_Interactable<?> interactable = (AEntityD_Interactable<?>) entity;
 			if(interactable.definition.instruments != null){
-				GL11.glEnable(GL11.GL_NORMALIZE);
 				for(int i=0; i<interactable.definition.instruments.size(); ++i){
 					if(interactable.instruments.containsKey(i)){
 						JSONInstrumentDefinition packInstrument = interactable.definition.instruments.get(i);
 						
 						//Translate and rotate to standard position.
+						//Note that instruments with rotation of Y=0 face backwards, which is opposite of normal rendering.
+						//To compensate, we rotate them 180 here.
 						GL11.glPushMatrix();
 						GL11.glTranslated(packInstrument.pos.x, packInstrument.pos.y, packInstrument.pos.z);
 						GL11.glRotated(packInstrument.rot.x, 1, 0, 0);
-						GL11.glRotated(packInstrument.rot.y, 0, 1, 0);
+						GL11.glRotated(packInstrument.rot.y + 180, 0, 1, 0);
 						GL11.glRotated(packInstrument.rot.z, 0, 0, 1);
 						
 						//Do transforms if required and render if allowed.
 						if(RenderableModelObject.doPreRenderTransforms(entity, packInstrument.animations, blendingEnabled, partialTicks)){
-							//Need to scale by -1 to get the coordinate system to behave and align to the texture-based coordinate system.
-							GL11.glScalef(-packInstrument.scale/16F, -packInstrument.scale/16F, -packInstrument.scale/16F);
-							
-							//Render instrument.
-							RenderInstrument.drawInstrument(interactable.instruments.get(i), packInstrument.optionalPartNumber, interactable, blendingEnabled, partialTicks);
+							//Instruments render with 1 unit being 1 pixel, not 1 block, so scale by the set scale, but divided by 16.
+							float scale = packInstrument.scale/16F;
+							RenderInstrument.drawInstrument(interactable.instruments.get(i), packInstrument.optionalPartNumber, interactable, scale, blendingEnabled, partialTicks);
 						}
 						GL11.glPopMatrix();
 					}
 				}
-				GL11.glDisable(GL11.GL_NORMALIZE);
 			}
 		}
 	}

@@ -11,8 +11,6 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
-import minecrafttransportsimulator.guis.components.AGUIBase.TextPosition;
-import minecrafttransportsimulator.guis.components.InterfaceGUI;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemPart;
@@ -20,9 +18,11 @@ import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.items.instances.ItemItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
+import minecrafttransportsimulator.mcinterface.InterfaceGUI;
 import minecrafttransportsimulator.mcinterface.InterfaceRender;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.rendering.components.ARenderEntityMultipart;
+import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
 import minecrafttransportsimulator.sound.InterfaceSound;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -159,14 +159,14 @@ public final class RenderVehicle extends ARenderEntityMultipart<EntityVehicleF_P
 				
 				//Translate to the spot above where the item would render and render the standard text.
 				GL11.glTranslated(0, -1.75F, 0);
-				InterfaceGUI.drawScaledText("Types: " + packVehicleDef.types.toString(), null, 0, 0, ColorRGB.BLACK, TextPosition.CENTERED, 0, 1/64F, false);
+				RenderText.draw2DText("Types: " + packVehicleDef.types.toString(), null, 0, 0, ColorRGB.BLACK, TextAlignment.CENTERED, 1/64F, 0);
 				GL11.glTranslated(0, 0.15F, 0);
-				InterfaceGUI.drawScaledText("Min/Max: " + String.valueOf(packVehicleDef.minValue) + "/" + String.valueOf(packVehicleDef.maxValue), null, 0, 0, ColorRGB.BLACK, TextPosition.CENTERED, 0, 1/64F, false);
+				RenderText.draw2DText("Min/Max: " + String.valueOf(packVehicleDef.minValue) + "/" + String.valueOf(packVehicleDef.maxValue), null, 0, 0, ColorRGB.BLACK, TextAlignment.CENTERED, 1/64F, 0);
 				GL11.glTranslated(0, 0.15F, 0);
 				if(packVehicleDef.customTypes != null){
-					InterfaceGUI.drawScaledText("CustomTypes: " + packVehicleDef.customTypes.toString(), null, 0, 0, ColorRGB.BLACK, TextPosition.CENTERED, 0, 1/64F, false);
+					RenderText.draw2DText("CustomTypes: " + packVehicleDef.customTypes.toString(), null, 0, 0, ColorRGB.BLACK, TextAlignment.CENTERED, 1/64F, 0);
 				}else{
-					InterfaceGUI.drawScaledText("CustomTypes: None", null, 0, 0, ColorRGB.BLACK, TextPosition.CENTERED, 0, 1/64F, false);
+					RenderText.draw2DText("CustomTypes: None", null, 0, 0, ColorRGB.BLACK, TextAlignment.CENTERED, 1/64F, 0);
 				}
 				GL11.glTranslated(0, 0.25F, 0);
 				
@@ -182,7 +182,7 @@ public final class RenderVehicle extends ARenderEntityMultipart<EntityVehicleF_P
 					}
 					
 					//Render the part's name.
-					InterfaceGUI.drawScaledText(partToRender.getItemName(), null, 0, 0, ColorRGB.BLACK, TextPosition.CENTERED, 0, 1/64F, false);
+					RenderText.draw2DText(partToRender.getItemName(), null, 0, 0, ColorRGB.BLACK, TextAlignment.CENTERED, 1/64F, 0);
 					
 					//Do translations to get to the center of where the item will render and render it.
 					//Items also need to be offset by -150 units due to how MC does rendering.

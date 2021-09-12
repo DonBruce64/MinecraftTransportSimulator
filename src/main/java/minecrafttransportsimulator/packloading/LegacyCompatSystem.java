@@ -1699,7 +1699,7 @@ public final class LegacyCompatSystem{
 		}
 		
 		try{
-			Map<String, Float[][]> parsedModel = AModelParser.parseModel(definition.getModelLocation(definition.definitions.get(0).subName));
+			Map<String, float[][]> parsedModel = AModelParser.parseModel(definition.getModelLocation(definition.definitions.get(0).subName));
 			for(String objectName : parsedModel.keySet()){
 				if(objectName.contains("&")){
 					if(definition.rendering.lightObjects == null){
@@ -1843,7 +1843,7 @@ public final class LegacyCompatSystem{
 							lightDef.blendableComponents = new ArrayList<JSONLightBlendableComponent>();
 						}
 						
-						Float[][] masterVertices = parsedModel.get(objectName);
+						float[][] masterVertices = parsedModel.get(objectName);
 						for(int i=0; i<masterVertices.length/6; ++i){
 							double minX = 999;
 							double maxX = -999;
@@ -1852,7 +1852,7 @@ public final class LegacyCompatSystem{
 							double minZ = 999;
 							double maxZ = -999;
 							for(byte j=0; j<6; ++j){
-								Float[] masterVertex = masterVertices[i*6 + j];
+								float[] masterVertex = masterVertices[i*6 + j];
 								minX = Math.min(masterVertex[0], minX);
 								maxX = Math.max(masterVertex[0], maxX);
 								minY = Math.min(masterVertex[1], minY);
@@ -1900,7 +1900,7 @@ public final class LegacyCompatSystem{
 					double maxY = -999;
 					double minZ = 999;
 					double maxZ = -999;
-					for(Float[] point : parsedModel.get(objectName)){
+					for(float[] point : parsedModel.get(objectName)){
 						minY = Math.min(minY, point[1]);
 						maxY = Math.max(maxY, point[1]);
 						minZ = Math.min(minZ, point[2]);

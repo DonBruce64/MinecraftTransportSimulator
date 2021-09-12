@@ -2,13 +2,10 @@ package minecrafttransportsimulator.rendering.instances;
 
 import org.lwjgl.opengl.GL11;
 
-import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
 import minecrafttransportsimulator.entities.instances.APart;
-import minecrafttransportsimulator.guis.components.AGUIBase.TextPosition;
-import minecrafttransportsimulator.guis.components.InterfaceGUI;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONInstrument.Component;
@@ -23,11 +20,12 @@ import minecrafttransportsimulator.systems.ConfigSystem;
  * @author don_bruce
  */
 public final class RenderInstrument{
-	private static final Point3d p1 = new Point3d();
-	private static final Point3d p2 = new Point3d();
-	private static final Point3d p3 = new Point3d();
-	private static final Point3d p4 = new Point3d();
-	private static final Point3d r = new Point3d();
+	private static final Point3d bottomLeft = new Point3d();
+	private static final Point3d topLeft = new Point3d();
+	private static final Point3d topRight = new Point3d();
+	private static final Point3d bottomRight = new Point3d();
+	private static final Point3d rotation = new Point3d();
+	private static final float[][] points = new float[6][8];
 	
 	/**
      * Renders the passed-in instrument using the entity's current state.  Note that this method does NOT take any 
@@ -36,9 +34,9 @@ public final class RenderInstrument{
      * method.  Such transformations will, of course, differ between applications, so care should be taken to ensure
      * OpenGL states are not left out-of-whack after rendering is complete.
      */
-	public static void drawInstrument(ItemInstrument instrument, int partNumber, AEntityD_Interactable<?> entity, boolean blendingEnabled, float partialTicks){
+	public static void drawInstrument(ItemInstrument instrument, int partNumber, AEntityD_Interactable<?> entity, float scale, boolean blendingEnabled, float partialTicks){
 		//First bind the texture file for this insturment's pack.
-		InterfaceRender.bindTexture("/assets/" + instrument.definition.packID + "/textures/instruments.png");
+		InterfaceRender.setTexture("/assets/" + instrument.definition.packID + "/textures/instruments.png");
 		
 		//Check if the lights are on.  If so, render the overlays.
 		boolean lightsOn = entity.renderTextLit();
@@ -49,11 +47,10 @@ public final class RenderInstrument{
 			if(component.overlayTexture ? blendingEnabled : !blendingEnabled){
 				//If we have text, do a text render.  Otherwise, do a normal instrument render.
 				//Also translate slightly away from the instrument location to prevent clipping.
+				float componentScale = component.scale != 0 ? component.scale*scale : scale;
 				GL11.glPushMatrix();
-				GL11.glTranslatef(0.0F, 0.0F, i*0.1F);
-				if(component.scale != 0){
-					GL11.glScalef(component.scale, component.scale, component.scale);
-				}
+				GL11.glTranslatef(0.0F, 0.0F, i*0.0001F);
+				GL11.glScalef(componentScale, componentScale, componentScale);
 				if(component.textObject != null){
 					int variablePartNumber = AEntityC_Definable.getVariableNumber(component.textObject.fieldName);
 					final boolean addSuffix = variablePartNumber == -1 && ((component.textObject.fieldName.startsWith("engine_") || component.textObject.fieldName.startsWith("propeller_") || component.textObject.fieldName.startsWith("gun_") || component.textObject.fieldName.startsWith("seat_")));
@@ -61,22 +58,21 @@ public final class RenderInstrument{
 					if(Double.isNaN(textNumeric)){
 						textNumeric = 0;
 					}
+					
 					String text = String.format("%0" + component.textObject.maxLength + "d", (int) textNumeric);
 					if(component.lightUpTexture && lightsOn && ConfigSystem.configObject.clientRendering.brightLights.value){
 						InterfaceRender.setLightingState(false);
-						InterfaceGUI.drawScaledText(text, component.textObject.fontName, (int) component.textObject.pos.x, (int) component.textObject.pos.y, component.textObject.color, TextPosition.values()[component.textObject.renderPosition], component.textObject.wrapWidth, component.textObject.scale, component.textObject.autoScale);
+						RenderText.draw3DText(text, entity, component.textObject, componentScale, true);
 						InterfaceRender.setLightingState(true);
 					}else{
-						InterfaceGUI.drawScaledText(text, component.textObject.fontName, (int) component.textObject.pos.x, (int) component.textObject.pos.y, component.textObject.color, TextPosition.values()[component.textObject.renderPosition], component.textObject.wrapWidth, component.textObject.scale, component.textObject.autoScale);
+						RenderText.draw3DText(text, entity, component.textObject, componentScale, true);
 					}
-					InterfaceRender.setColorState(ColorRGB.WHITE);
-					InterfaceRender.bindTexture("/assets/" + instrument.definition.packID + "/textures/instruments.png");
 				}else{
 					//Init variables.
-					p1.set(-component.textureWidth/2D, -component.textureHeight/2D, 0);
-					p2.set(-component.textureWidth/2D, component.textureHeight/2D, 0);
-					p3.set(component.textureWidth/2D, component.textureHeight/2D, 0);
-					p4.set(component.textureWidth/2D, -component.textureHeight/2D, 0);
+					bottomLeft.set(-component.textureWidth/2D, -component.textureHeight/2D, 0);
+					topLeft.set(-component.textureWidth/2D, component.textureHeight/2D, 0);
+					topRight.set(component.textureWidth/2D, component.textureHeight/2D, 0);
+					bottomRight.set(component.textureWidth/2D, -component.textureHeight/2D, 0);
 					boolean skipRender = false;
 					boolean skipFurtherTransforms = false;
 					if(component.animations != null){
@@ -110,23 +106,23 @@ public final class RenderInstrument{
 									//Otherwise, we apply an OpenGL rotation operation.
 									if(component.rotateWindow){
 										//Add rotation offset to the points.
-										p1.add(animation.centerPoint);
-										p2.add(animation.centerPoint);
-										p3.add(animation.centerPoint);
-										p4.add(animation.centerPoint);
+										bottomLeft.add(animation.centerPoint);
+										topLeft.add(animation.centerPoint);
+										topRight.add(animation.centerPoint);
+										bottomRight.add(animation.centerPoint);
 										
 										//Rotate the points by the rotation.
-										r.set(0, 0, variableValue);
-										p1.rotateFine(r);
-										p2.rotateFine(r);
-										p3.rotateFine(r);
-										p4.rotateFine(r);
+										rotation.set(0, 0, variableValue);
+										bottomLeft.rotateFine(rotation);
+										topLeft.rotateFine(rotation);
+										topRight.rotateFine(rotation);
+										bottomRight.rotateFine(rotation);
 										
 										//Remove the rotation offsets.
-										p1.subtract(animation.centerPoint);
-										p2.subtract(animation.centerPoint);
-										p3.subtract(animation.centerPoint);
-										p4.subtract(animation.centerPoint);
+										bottomLeft.subtract(animation.centerPoint);
+										topLeft.subtract(animation.centerPoint);
+										topRight.subtract(animation.centerPoint);
+										bottomRight.subtract(animation.centerPoint);
 									}else{
 										GL11.glTranslated(component.xCenter + animation.centerPoint.x, component.yCenter + animation.centerPoint.y, 0.0F);
 										GL11.glRotated(variableValue, 0, 0, 1);
@@ -142,18 +138,18 @@ public final class RenderInstrument{
 									if(component.extendWindow){
 										//We need to add to the edge of the window in this case rather than move the entire window.
 										if(animation.axis.x < 0){
-											p1.x += xTranslation;
-											p2.x += xTranslation;
+											bottomLeft.x += xTranslation;
+											topLeft.x += xTranslation;
 										}else if(animation.axis.x > 0){
-											p3.x += xTranslation;
-											p4.x += xTranslation;
+											topRight.x += xTranslation;
+											bottomRight.x += xTranslation;
 										}
 										if(animation.axis.y < 0){
-											p1.y += yTranslation;
-											p4.y += yTranslation;
+											bottomLeft.y += yTranslation;
+											bottomRight.y += yTranslation;
 										}else if(animation.axis.y > 0){
-											p2.y += yTranslation;
-											p3.y += yTranslation;
+											topLeft.y += yTranslation;
+											topRight.y += yTranslation;
 										}
 									}else if(component.moveComponent){
 										//Translate the rather than adjust the window coords.
@@ -163,16 +159,16 @@ public final class RenderInstrument{
 										//We don't want to do an OpenGL translation here as that would move the texture's
 										//rendered position on the instrument rather than change what texture is rendered.
 										if(animation.axis.x != 0){
-											p1.x += xTranslation;
-											p2.x += xTranslation;
-											p3.x += xTranslation;
-											p4.x += xTranslation;
+											bottomLeft.x += xTranslation;
+											topLeft.x += xTranslation;
+											topRight.x += xTranslation;
+											bottomRight.x += xTranslation;
 										}
 										if(animation.axis.y != 0){
-											p1.y += yTranslation;
-											p2.y += yTranslation;
-											p3.y += yTranslation;
-											p4.y += yTranslation;
+											bottomLeft.y += yTranslation;
+											topLeft.y += yTranslation;
+											topRight.y += yTranslation;
+											bottomRight.y += yTranslation;
 										}
 									}
 									break;
@@ -221,27 +217,28 @@ public final class RenderInstrument{
 					if(!skipRender){
 						//Add the instrument UV-map offsets.
 						//These don't get added to the initial points to allow for rotation.
-						p1.add(component.textureXCenter, component.textureYCenter, 0);
-						p2.add(component.textureXCenter, component.textureYCenter, 0);
-						p3.add(component.textureXCenter, component.textureYCenter, 0);
-						p4.add(component.textureXCenter, component.textureYCenter, 0);
+						bottomLeft.add(component.textureXCenter, component.textureYCenter, 0);
+						topLeft.add(component.textureXCenter, component.textureYCenter, 0);
+						topRight.add(component.textureXCenter, component.textureYCenter, 0);
+						bottomRight.add(component.textureXCenter, component.textureYCenter, 0);
 						
 						//Divide the Points by 1024.  This converts the points from pixels to the 0-1 UV values.
-						p1.multiply(1D/1024D);
-						p2.multiply(1D/1024D);
-						p3.multiply(1D/1024D);
-						p4.multiply(1D/1024D);
+						bottomLeft.multiply(1D/1024D);
+						topLeft.multiply(1D/1024D);
+						topRight.multiply(1D/1024D);
+						bottomRight.multiply(1D/1024D);
 						
 						//Translate to the component.
 						GL11.glTranslatef(component.xCenter, component.yCenter, 0.0F);
 						
+						//Set points to the variables here and render them.
 						//If the shape is lit, disable lighting for blending.
 						if(component.lightUpTexture && lightsOn && ConfigSystem.configObject.clientRendering.brightLights.value){
 							InterfaceRender.setLightingState(false);
-							renderSquareUV(component.textureWidth, component.textureHeight);
+							renderSquareUV(component, componentScale);
 							InterfaceRender.setLightingState(true);
 						}else{
-							renderSquareUV(component.textureWidth, component.textureHeight);
+							renderSquareUV(component, componentScale);
 						}
 					}
 				}
@@ -253,24 +250,59 @@ public final class RenderInstrument{
 	}
 	
     /**
-     * Renders a textured quad from the current bound texture of a specific width and height.
-     * Used for rendering instrument textures off their texture sheets.
+     * Helper method for setting points for rendering.
      */
-	private static void renderSquareUV(float width, float height){
-		GL11.glBegin(GL11.GL_QUADS);
-		GL11.glTexCoord2d(p1.x, p1.y);
-		GL11.glNormal3f(0, 0, 1);
-		GL11.glVertex3f(-width/2, -height/2, 0);
-		GL11.glTexCoord2d(p2.x, p2.y);
-		GL11.glNormal3f(0, 0, 1);
-		GL11.glVertex3f(-width/2, height/2, 0);
-		GL11.glTexCoord2d(p3.x, p3.y);
-		GL11.glNormal3f(0, 0, 1);
-		GL11.glVertex3f(width/2, height/2, 0);
-		GL11.glTexCoord2d(p4.x, p4.y);
-		GL11.glNormal3f(0, 0, 1);
-		GL11.glVertex3f(width/2, -height/2, 0);
-		GL11.glEnd();
+	private static void renderSquareUV(Component component, float componentScale){
+		//Set X, Y, U, V, and normal Z.  All other values are 0.
+		//Also invert V, as we're going off of pixel-coords here.
+		for(int i=0; i<points.length; ++i){
+			float[] charVertex = points[i];
+			switch(i){
+				case(0):{//Bottom-right
+					charVertex[0] = component.textureWidth/2;
+					charVertex[1] = -component.textureHeight/2;
+					charVertex[3] = (float) bottomRight.x;
+					charVertex[4] = (float) topRight.y;
+					break;
+				}
+				case(1):{//Top-right
+					charVertex[0] = component.textureWidth/2;
+					charVertex[1] = component.textureHeight/2;
+					charVertex[3] = (float) topRight.x;
+					charVertex[4] = (float) bottomRight.y;
+					break;
+				}
+				case(2):{//Top-left
+					charVertex[0] = -component.textureWidth/2;
+					charVertex[1] = component.textureHeight/2;
+					charVertex[3] = (float) topLeft.x;
+					charVertex[4] = (float) bottomLeft.y;
+					break;
+				}
+				case(3):{//Bottom-right
+					charVertex[0] = component.textureWidth/2;
+					charVertex[1] = -component.textureHeight/2;
+					charVertex[3] = (float) bottomRight.x;
+					charVertex[4] = (float) topRight.y;
+					break;
+				}
+				case(4):{//Top-left
+					charVertex[0] = -component.textureWidth/2;
+					charVertex[1] = component.textureHeight/2;
+					charVertex[3] = (float) topLeft.x;
+					charVertex[4] = (float) bottomLeft.y;
+					break;
+				}
+				case(5):{//Bottom-left
+					charVertex[0] = -component.textureWidth/2;
+					charVertex[1] = -component.textureHeight/2;
+					charVertex[3] = (float) bottomLeft.x;
+					charVertex[4] = (float) topLeft.y;						
+					break;
+				}
+			}
+			charVertex[7] = componentScale;
+		}
+		InterfaceRender.renderVertices(points);
 	}
 }
-

@@ -3,8 +3,6 @@ package minecrafttransportsimulator.guis.instances;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.lwjgl.opengl.GL11;
-
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_Sign;
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
@@ -15,11 +13,12 @@ import minecrafttransportsimulator.guis.components.GUIComponent3DModel;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
-import minecrafttransportsimulator.guis.components.InterfaceGUI;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
+import minecrafttransportsimulator.mcinterface.InterfaceGUI;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketEntityTextChange;
+import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
 
 public class GUITextEditor extends AGUIBase{
 	//Buttons.
@@ -62,17 +61,8 @@ public class GUITextEditor extends AGUIBase{
 			//Add render-able labels for the sign object.
 			signTextLabels.clear();
 			for(byte i=0; i<textObjects.size(); ++i){
-				JSONText textObject = textObjects.get(i);
-				GUIComponentLabel label = new GUIComponentLabel(modelRender.x + (int) (textObject.pos.x*64F), modelRender.y - (int) (textObject.pos.y*64F), textObject.color, textLines.get(i), textObject.fontName, TextPosition.values()[textObject.renderPosition], textObject.wrapWidth, textObject.scale, textObject.autoScale){
-					@Override
-					public void renderText(){
-						GL11.glPushMatrix();
-						GL11.glTranslatef(x, y, 0);
-						GL11.glScalef(64F/16F, 64F/16F, 64F/16F);
-						InterfaceGUI.drawScaledText(text, fontName, 0, 0, color, renderMode, wrapWidth, scale, autoScale);
-						GL11.glPopMatrix();
-				    }
-				};
+				JSONText textDef = textObjects.get(i);
+				GUIComponentLabel label = new GUIComponentLabel(modelRender.x + (int) (textDef.pos.x*64F), modelRender.y - (int) (textDef.pos.y*64F), textDef.color, textLines.get(i), textDef.fontName, TextAlignment.values()[textDef.renderPosition], textDef.scale*64F/16F, textDef.wrapWidth);
 				addLabel(label);
 				signTextLabels.add(label);
 			}

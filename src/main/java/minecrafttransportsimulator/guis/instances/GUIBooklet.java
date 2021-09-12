@@ -7,12 +7,13 @@ import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
-import minecrafttransportsimulator.guis.components.InterfaceGUI;
 import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.jsondefs.JSONItem.JSONBooklet.BookletPage;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.InterfaceInput;
+import minecrafttransportsimulator.rendering.instances.RenderText;
+import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
 
 public class GUIBooklet extends AGUIBase{
 	//Buttons and text.
@@ -54,7 +55,7 @@ public class GUIBooklet extends AGUIBase{
 		//Title text labels.
 		List<GUIComponentLabel> titleLabels = new ArrayList<GUIComponentLabel>();
 		for(JSONText text : booklet.definition.booklet.titleText){
-			GUIComponentLabel titleLabel = new GUIComponentLabel(guiLeft + (int)text.pos.x, guiTop + (int)text.pos.y, text.color, text.defaultText, text.fontName, TextPosition.values()[text.renderPosition], text.wrapWidth, text.scale, false);
+			GUIComponentLabel titleLabel = new GUIComponentLabel(guiLeft + (int)text.pos.x, guiTop + (int)text.pos.y, text.color, text.defaultText, text.fontName, TextAlignment.values()[text.renderPosition], text.scale, text.wrapWidth);
 			titleLabels.add(titleLabel);
 			addLabel(titleLabel);
 		}
@@ -98,7 +99,7 @@ public class GUIBooklet extends AGUIBase{
 			List<GUIComponentLabel> pageLabels = new ArrayList<GUIComponentLabel>();
 			for(JSONText text : page.pageText){
 				try{
-					GUIComponentLabel pageLabel = new GUIComponentLabel(guiLeft + (int)text.pos.x, guiTop + (int)text.pos.y, text.color, text.defaultText, text.fontName, TextPosition.values()[text.renderPosition], text.wrapWidth, text.scale, false);
+					GUIComponentLabel pageLabel = new GUIComponentLabel(guiLeft + (int)text.pos.x, guiTop + (int)text.pos.y, text.color, text.defaultText, text.fontName, TextAlignment.values()[text.renderPosition], text.scale, text.wrapWidth);
 					pageLabels.add(pageLabel);
 					addLabel(pageLabel);
 				}catch(Exception e){
@@ -196,7 +197,7 @@ public class GUIBooklet extends AGUIBase{
 		public void renderText(){
 	    	if(visible){
 	    		//Override the color of the text here.
-	    		InterfaceGUI.drawBasicText(text, null, centeredText ? x + width/2 : x, y + (height-8)/2, booklet.definition.booklet.pages.get(contentsIndex).pageText.get(0).color, centeredText ? TextPosition.CENTERED : TextPosition.LEFT_ALIGNED, 0);
+	    		RenderText.draw2DText(text, null, centeredText ? x + width/2 : x, y + (height-8)/2, booklet.definition.booklet.pages.get(contentsIndex).pageText.get(0).color, centeredText ? TextAlignment.CENTERED : TextAlignment.LEFT_ALIGNED, 1.0F,  0);
 	    	}
 	    }
 	}

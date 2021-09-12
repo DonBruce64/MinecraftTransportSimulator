@@ -20,6 +20,7 @@ import minecrafttransportsimulator.jsondefs.JSONLight;
 import minecrafttransportsimulator.jsondefs.JSONLight.JSONLightBlendableComponent;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.InterfaceRender;
+import minecrafttransportsimulator.rendering.instances.RenderText;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**This class represents an object that can be rendered from a model.  This object is a set of
@@ -37,12 +38,12 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 	private final boolean isWindow;
 	private final boolean isOnlineTexture;
 	private final int cachedVertexIndex;
-	private final Float[][] exteriorWindowObject;
-	private final Float[][] interiorWindowObject;
-	private Float[][] colorObject;
-	private Float[][] coverObject;
-	private final Map<JSONLight, Float[][]> flareObjects = new HashMap<JSONLight, Float[][]>();
-	private final Map<JSONLight, Float[][]> beamObjects = new HashMap<JSONLight, Float[][]>();
+	private final float[][] exteriorWindowObject;
+	private final float[][] interiorWindowObject;
+	private float[][] colorObject;
+	private float[][] coverObject;
+	private final Map<JSONLight, float[][]> flareObjects = new HashMap<JSONLight, float[][]>();
+	private final Map<JSONLight, float[][]> beamObjects = new HashMap<JSONLight, float[][]>();
 	
 	/**Map of tread points, keyed by the model the tread is pathing about, then the spacing of the tread.
 	 * This can be shared for two different treads of the same spacing as they render the same.**/
@@ -53,7 +54,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 	private static final float BEAM_OFFSET = -0.15F;
 	private static final int BEAM_SEGMENTS = 40;
 	
-	public RenderableModelObject(String modelLocation, String objectName, List<RenderableModelObject<AnimationEntity>> allObjects, Float[][] vertices){
+	public RenderableModelObject(String modelLocation, String objectName, List<RenderableModelObject<AnimationEntity>> allObjects, float[][] vertices){
 		super();
 		this.modelLocation = modelLocation;
 		this.objectName = objectName;
@@ -70,7 +71,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 			this.exteriorWindowObject = vertices;
 			normalizeUVs(exteriorWindowObject);
 			
-			this.interiorWindowObject = new Float[exteriorWindowObject.length][8];
+			this.interiorWindowObject = new float[exteriorWindowObject.length][8];
 			for(int i=0, j=exteriorWindowObject.length-1; i<exteriorWindowObject.length; ++i, --j){
 				interiorWindowObject[j] = exteriorWindowObject[i];
 			}
@@ -190,8 +191,11 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 				
 				//Render text on this object.  Only do this on the solid pass.
 				if(!blendingEnabled){
-					if(InterfaceRender.renderTextMarkings(entity, objectName)){
-						InterfaceRender.recallTexture();
+					for(JSONText textDef : entity.text.keySet()){
+						if(objectName.equals(textDef.attachedTo)){
+							//TODO this is technically wrong, but are people ever going to scale parts with text on them?
+							RenderText.draw3DText(entity.text.get(textDef), entity, textDef, 1.0F, false);
+						}
 					}
 				}
 				
@@ -452,8 +456,8 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 			//First render all flares, then render all beams.
 			float blendableBrightness = Math.min((1 - entity.world.getLightBrightness(entity.position, false))*lightLevel, 1);
 			if(blendableBrightness > 0){
-				Float[][] flareObject = flareObjects.get(lightDef);
-				Float[][] beamObject = beamObjects.get(lightDef);
+				float[][] flareObject = flareObjects.get(lightDef);
+				float[][] beamObject = beamObjects.get(lightDef);
 				if(flareObject == null && beamObject == null){
 					List<JSONLightBlendableComponent> flareDefs = new ArrayList<JSONLightBlendableComponent>();
 					List<JSONLightBlendableComponent> beamDefs = new ArrayList<JSONLightBlendableComponent>();
@@ -540,9 +544,9 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 		}
 	}
 	
-	private static Float[][] generateColors(Float[][] parsedObject){
+	private static float[][] generateColors(float[][] parsedObject){
 		//Make a duplicate set of vertices with an offset for the color rendering.
-		Float[][] offsetObject = new Float[parsedObject.length][8];
+		float[][] offsetObject = new float[parsedObject.length][8];
 		for(int i=0; i<parsedObject.length; ++i){
 			offsetObject[i][0] = parsedObject[i][0] + parsedObject[i][5]*COLOR_OFFSET;
 			offsetObject[i][1] = parsedObject[i][1] + parsedObject[i][6]*COLOR_OFFSET;
@@ -555,9 +559,9 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 		return offsetObject;
 	}
 	
-	private static Float[][] generateCovers(Float[][] parsedObject){
+	private static float[][] generateCovers(float[][] parsedObject){
 		//Make a duplicate set of vertices with an offset for the cover rendering.
-		Float[][] offsetObject = new Float[parsedObject.length][8];
+		float[][] offsetObject = new float[parsedObject.length][8];
 		for(int i=0; i<parsedObject.length; ++i){
 			offsetObject[i][0] = parsedObject[i][0] + parsedObject[i][5]*COVER_OFFSET;
 			offsetObject[i][1] = parsedObject[i][1] + parsedObject[i][6]*COVER_OFFSET;
@@ -570,9 +574,9 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 		return offsetObject;
 	}
 	
-	private static Float[][] generateFlares(List<JSONLightBlendableComponent> flareDefs){
+	private static float[][] generateFlares(List<JSONLightBlendableComponent> flareDefs){
 		//6 vertices per flare due to triangle rendering.
-		Float[][] flareObject = new Float[flareDefs.size()*6][8];
+		float[][] flareObject = new float[flareDefs.size()*6][8];
 		for(int i=0; i<flareDefs.size(); ++i){
 			JSONLightBlendableComponent flareDef = flareDefs.get(i);
 			//Get the angle that is needed to rotate points to the normalized vector.
@@ -580,7 +584,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 			Point3d vertexOffset = new Point3d();
 			Point3d centerOffset = flareDef.axis.copy().multiply(FLARE_OFFSET).add(flareDef.pos);
 			for(int j=0; j<6; ++j){
-				Float[] newVertex = new Float[8];
+				float[] newVertex = new float[8];
 				//Get the current UV points.
 				switch(j){
 					case(0): newVertex[3] = 0.0F; newVertex[4] = 0.0F; break;
@@ -612,11 +616,11 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 		return flareObject;
 	}
 	
-	private static Float[][] generateBeams(List<JSONLightBlendableComponent> beamDefs){
+	private static float[][] generateBeams(List<JSONLightBlendableComponent> beamDefs){
 		//3 vertices per cone-face, each share the same center point.
 		//Number of cone faces is equal to the number of segments for beams.
 		//We render two beams.  One inner and one outer.
-		Float[][] beamObject = new Float[beamDefs.size()*2*BEAM_SEGMENTS*3][8];
+		float[][] beamObject = new float[beamDefs.size()*2*BEAM_SEGMENTS*3][8];
 		for(int i=0; i<beamDefs.size(); ++i){
 			JSONLightBlendableComponent beamDef = beamDefs.get(i);
 			//Get the angle that is needed to rotate points to the normalized vector.
@@ -626,7 +630,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 			//Go from negative to positive to render both beam-faces in the same loop.
 			for(int j=-BEAM_SEGMENTS; j<BEAM_SEGMENTS; ++j){
 				for(int k=0; k<3; ++k){
-					Float[] newVertex = new Float[8];
+					float[] newVertex = new float[8];
 					//Get the current UV points.
 					//Point 0 is always the center of the beam, 1 and 2 are the outer points.
 					switch(k%3){
@@ -864,7 +868,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 		return points;
 	}
 	
-	private static void normalizeUVs(Float[][] parsedObject){
+	private static void normalizeUVs(float[][] parsedObject){
 		for(int i=0; i<parsedObject.length; ++i){
 			if(parsedObject.length > 3 && i%6 >= 3){
 				//Second-half of a quad.

@@ -56,7 +56,7 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 				GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
 				switch(component){
 					case CORE: {
-						Map<String, Float[][]> parsedModel = AModelParser.parseModel(componentItem.definition.getModelLocation(componentItem.subName));
+						Map<String, float[][]> parsedModel = AModelParser.parseModel(componentItem.definition.getModelLocation(componentItem.subName));
 						GL11.glBegin(GL11.GL_TRIANGLES);
 						
 						//If we are a dynamic curve, cache the dynamic vertex paths.
@@ -72,8 +72,8 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 							for(float currentIndex=1; currentIndex<=road.dynamicCurve.pathLength; ++currentIndex){
 								//Copy the master vertices to our transformed ones.
 								transformedVertices.clear();
-								for(Float[][] vertexSet : parsedModel.values()){
-									for(Float[] vertex : vertexSet){
+								for(float[][] vertexSet : parsedModel.values()){
+									for(float[] vertex : vertexSet){
 										transformedVertices.add(new Float[]{vertex[0], vertex[1], vertex[2], vertex[3], vertex[4], vertex[5], vertex[6], vertex[7]});
 									}
 								}
@@ -125,8 +125,8 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 								}
 							}
 						}else if(!road.definition.road.isDynamic){
-							for(Float[][] vertexSet : parsedModel.values()){
-								for(Float[] vertex : vertexSet){
+							for(float[][] vertexSet : parsedModel.values()){
+								for(float[] vertex : vertexSet){
 									GL11.glTexCoord2f(vertex[3], vertex[4]);
 									GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
 									//Need to offset by 0.5 to match the offset of the TE as we're block-aligned.

@@ -1,7 +1,8 @@
 package minecrafttransportsimulator.guis.components;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.guis.components.AGUIBase.TextPosition;
+import minecrafttransportsimulator.rendering.instances.RenderText;
+import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
 
 /**Custom label class.  Allows for batch rendering of text, and easier rendering of labels using
  * state variables rather than actual text boxes.  Also allows for linking with either a
@@ -15,10 +16,9 @@ public class GUIComponentLabel{
 	public final int y;
 	public final ColorRGB color;
 	public final String fontName;
-	public final TextPosition renderMode;
+	public final TextAlignment alignment;
 	public final int wrapWidth;
 	public final float scale;
-	public final boolean autoScale;
 	
 	public boolean visible = true;
 	public String text;
@@ -26,17 +26,16 @@ public class GUIComponentLabel{
 	private GUIComponentTextBox box;
 
 	public GUIComponentLabel(int x, int y, ColorRGB color, String text){
-		this(x, y, color, text, null, TextPosition.LEFT_ALIGNED, 0, 1.0F, false);
+		this(x, y, color, text, null, TextAlignment.LEFT_ALIGNED, 1.0F, 0);
 	}
 	
-	public GUIComponentLabel(int x, int y, ColorRGB color, String text, String fontName, TextPosition renderMode, int wrapWidth, float scale, boolean autoScale){
+	public GUIComponentLabel(int x, int y, ColorRGB color, String text, String fontName, TextAlignment alignment, float scale, int wrapWidth){
 		this.x = x;
 		this.y = y;
 		this.color = color;
 		this.text = text;
 		this.fontName = fontName;
-		this.renderMode = renderMode;
-		this.autoScale = autoScale;
+		this.alignment = alignment;
 		this.scale = scale;
 		this.wrapWidth = wrapWidth;
 	}
@@ -67,7 +66,7 @@ public class GUIComponentLabel{
 	 */
     public void renderText(){
 		if(button == null ? (box == null ? visible : box.visible) : button.visible){
-			InterfaceGUI.drawScaledText(text, fontName, x, y, color, renderMode, wrapWidth, scale, autoScale);
+			RenderText.draw2DText(text, fontName, x, y, color, alignment, scale, wrapWidth);
 		}
     }
 }

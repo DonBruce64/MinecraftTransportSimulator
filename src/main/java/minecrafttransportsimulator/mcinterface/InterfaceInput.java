@@ -11,7 +11,6 @@ import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
 import minecrafttransportsimulator.MasterLoader;
-import minecrafttransportsimulator.guis.components.InterfaceGUI;
 import minecrafttransportsimulator.guis.instances.GUIConfig;
 import minecrafttransportsimulator.jsondefs.JSONConfig.ConfigJoystick;
 import minecrafttransportsimulator.systems.ConfigSystem;

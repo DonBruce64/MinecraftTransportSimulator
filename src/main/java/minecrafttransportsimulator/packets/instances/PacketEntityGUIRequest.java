@@ -8,7 +8,6 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySigna
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
-import minecrafttransportsimulator.guis.components.InterfaceGUI;
 import minecrafttransportsimulator.guis.instances.GUIFuelPump;
 import minecrafttransportsimulator.guis.instances.GUIInstruments;
 import minecrafttransportsimulator.guis.instances.GUIInventoryContainer;
@@ -18,6 +17,7 @@ import minecrafttransportsimulator.guis.instances.GUIPartBench;
 import minecrafttransportsimulator.guis.instances.GUIRadio;
 import minecrafttransportsimulator.guis.instances.GUISignalController;
 import minecrafttransportsimulator.guis.instances.GUITextEditor;
+import minecrafttransportsimulator.mcinterface.InterfaceGUI;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntityInteract;

@@ -1,7 +1,9 @@
 package minecrafttransportsimulator.guis.components;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.guis.components.AGUIBase.TextPosition;
+import minecrafttransportsimulator.mcinterface.InterfaceGUI;
+import minecrafttransportsimulator.rendering.instances.RenderText;
+import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
 
 /**Custom text box class.  This class is designed to remove the need to check for clicking of
  * text boxes and to manually set their text, as well as the odd getter/setter methods
@@ -175,12 +177,12 @@ public class GUIComponentTextBox{
     		//Otherwise, render it at the top aligned.
     		if(enabled){
     			if(focused && AGUIBase.inClockPeriod(20, 10)){
-    				InterfaceGUI.drawBasicText(flashText, null, x + 4, y + (height >= 20 ? 5 : 1 + height/10), fontColor, TextPosition.LEFT_ALIGNED, width);
+    				RenderText.draw2DText(flashText, null, x + 4, y + (height >= 20 ? 5 : 1 + height/10), fontColor, TextAlignment.LEFT_ALIGNED, 1.0F, width);
     			}else{
-    				InterfaceGUI.drawBasicText(text, null, x + 4, y + (height >= 20 ? 5 : 1 + height/10), fontColor, TextPosition.LEFT_ALIGNED, width);
+    				RenderText.draw2DText(text, null, x + 4, y + (height >= 20 ? 5 : 1 + height/10), fontColor, TextAlignment.LEFT_ALIGNED, 1.0F, width);
     			}
     		}else{
-    			InterfaceGUI.drawBasicText(text, null, x + 4, y + (height >= 20 ? 5 : 1 + height/10), ColorRGB.GRAY, TextPosition.LEFT_ALIGNED, width);
+    			RenderText.draw2DText(text, null, x + 4, y + (height >= 20 ? 5 : 1 + height/10), ColorRGB.GRAY, TextAlignment.LEFT_ALIGNED, 1.0F, width);
     		}
     	}
     }
