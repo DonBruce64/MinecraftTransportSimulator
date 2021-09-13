@@ -21,6 +21,7 @@ import minecrafttransportsimulator.mcinterface.InterfaceGUI;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntityInteract;
+import minecrafttransportsimulator.sound.Radio;
 
 /**Packet sent to entities to request a GUI be opened on them.  The GUI to be sent is an enum
  * and is used to open the proper GUI.  This packet is sent from servers the specific clients
@@ -58,7 +59,7 @@ public class PacketEntityGUIRequest extends APacketEntityInteract<AEntityB_Exist
 			case PACK_EXPORTER: InterfaceGUI.openGUI(new GUIPackExporter((EntityVehicleF_Physics) entity));	break;
 			case PAINT_GUN: InterfaceGUI.openGUI(new GUIPaintGun((AEntityC_Definable<?>) entity, player));	break;
 			case PART_BENCH: InterfaceGUI.openGUI(new GUIPartBench(((TileEntityDecor) entity).definition.decor.crafting)); break;
-			case RADIO: InterfaceGUI.openGUI(new GUIRadio(entity.radio)); break;
+			case RADIO: InterfaceGUI.openGUI(new GUIRadio((Radio) entity)); break;
 			case SIGNAL_CONTROLLER: InterfaceGUI.openGUI(new GUISignalController((TileEntitySignalController) entity)); break;
 			case TEXT_EDITOR: InterfaceGUI.openGUI(new GUITextEditor((AEntityC_Definable<?>) entity)); break;
 		}
