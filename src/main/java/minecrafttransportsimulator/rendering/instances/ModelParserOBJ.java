@@ -117,7 +117,7 @@ public final class ModelParserOBJ extends AModelParser{
 	
 	private static void compileVertexArray(Map<String, float[][]> objectMap, List<float[]> vertexList, List<float[]> normalList, List<float[]> textureList, List<String> faceList, String modelLocation, String objectName){
 		if(objectName == null){
-			InterfaceCore.logError("No object name found in the entire OBJ model file.  Resorting to 'model' as default.  Are you using groups instead of objects by mistake?");
+			InterfaceCore.logError("No object name found in the entire OBJ model file of " + modelLocation + ".  Resorting to 'model' as default.  Are you using groups instead of objects by mistake?");
 			objectName = "model";
 		}
 		
