@@ -12,6 +12,7 @@ import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.items.components.AItemPack;
+import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent.PoleComponentType;
 import minecrafttransportsimulator.items.instances.ItemVehicle;
@@ -414,7 +415,7 @@ public class GUIPartBench extends AGUIBase{
 		materials = PackMaterialComponent.parseFromJSON(currentItem, true, true, false);
 		
 		//Enable render based on what component we have.
-		if(currentItem instanceof AItemSubTyped){
+		if(currentItem instanceof AItemSubTyped && (!(currentItem instanceof AItemPart) || !((AItemPart) currentItem).definition.generic.useVehicleTexture)){
 			modelRender.modelLocation = ((AItemSubTyped<?>) currentItem).definition.getModelLocation(((AItemSubTyped<?>) currentItem).subName);
 			modelRender.textureLocation = ((AItemSubTyped<?>) currentItem).definition.getTextureLocation(((AItemSubTyped<?>) currentItem).subName);
 			itemRender.stack = null;
