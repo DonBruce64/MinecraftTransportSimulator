@@ -100,7 +100,7 @@ public final class RenderInstrument{
 							
 							switch(animation.animationType){
 								case ROTATION :{
-									double variableValue = entity.getAnimatedVariableValue(animationClock, animation.axis.z, partialTicks);
+									double variableValue = -entity.getAnimatedVariableValue(animationClock, animation.axis.z, partialTicks);
 									//Depending on what variables are set we do different rendering operations.
 									//If we are rotating the window, but not the texture we should offset the texture points to that rotated point.
 									//Otherwise, we apply an OpenGL rotation operation.
