@@ -282,6 +282,7 @@ public class WrapperWorld{
 	 */
 	public void spawnEntity(AEntityB_Existing entity){
 		BuilderEntityExisting builder = new BuilderEntityExisting(entity.world.world);
+		builder.loadedFromSavedNBT = true;
 		builder.setPositionAndRotation(entity.position.x, entity.position.y, entity.position.z, (float) -entity.angles.y, (float) entity.angles.x);
 		builder.entity = entity;
 		world.spawnEntity(builder);
@@ -1059,6 +1060,7 @@ public class WrapperWorld{
 				   if(++totalTicksWaited == 60){
 					   //Spawn fowarder and gun.
 					   BuilderEntityRenderForwarder follower = new BuilderEntityRenderForwarder(player);
+					   follower.loadedFromSavedNBT = true;
 					   event.world.spawnEntity(follower);
 					   worldWrapper.activePlayerFollowers.put(playerWrapper, follower);
 					   

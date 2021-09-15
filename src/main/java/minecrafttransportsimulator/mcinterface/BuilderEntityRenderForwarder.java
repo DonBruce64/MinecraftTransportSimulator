@@ -57,6 +57,8 @@ public class BuilderEntityRenderForwarder extends ABuilderEntityBase{
 		}else if(!loadedFromSavedNBT && loadFromSavedNBT){
 			//Load player following from client NBT.
 			playerFollowing = world.getPlayerEntityByUUID(lastLoadedNBT.getUniqueId("playerFollowing"));
+			loadedFromSavedNBT = true;
+			lastLoadedNBT = null;
 		}
     	idleTickCounter = 0;
     }

@@ -58,6 +58,34 @@ public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extend
 	public void update(){
 		//World and pos might be null on first few scans.
 		if(world != null && pos != null){
+			if(tileEntity != null){
+				tileEntity.update();
+			}else if(!loadedFromSavedNBT){			
+				//If we are on the server, set the NBT flag.
+				if(lastLoadedNBT != null && !world.isRemote){
+					loadFromSavedNBT = true;
+				}
+				
+				//If we have NBT, and haven't loaded it, do so now.
+				//Hold off on loading until blocks load: this can take longer than 1 update if the server/client is laggy.
+				if(loadFromSavedNBT && world.isBlockLoaded(pos)){
+					try{
+						//Get the block that makes this TE and restore it from saved state.
+						WrapperWorld worldWrapper = WrapperWorld.getWrapperFor(world);
+						Point3d position = new Point3d(pos.getX(), pos.getY(), pos.getZ());
+						ABlockBaseTileEntity block = (ABlockBaseTileEntity) worldWrapper.getBlock(position);
+						tileEntity = (TileEntityType) block.createTileEntity(worldWrapper, position, null, new WrapperNBT(lastLoadedNBT));
+						loadedFromSavedNBT = true;
+						lastLoadedNBT = null;
+					}catch(Exception e){
+						InterfaceCore.logError("Failed to load tile entity on builder from saved NBT.  Did a pack change?");
+						InterfaceCore.logError(e.getMessage());
+						invalidate();
+					}
+				}
+			}
+			
+			//Now that we have done update/NBT stuff, check for syncing.
 			if(world.isRemote){
 	    		//No data.  Wait for NBT to be loaded.
 	    		//As we are on a client we need to send a packet to the server to request NBT data.
@@ -78,32 +106,6 @@ public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extend
 		    		playersRequestingData.clear();
 	    		}
 	    	}
-			
-			if(tileEntity != null){
-				tileEntity.update();
-			}else if(!loadedFromSavedNBT){			
-				//If we are on the server, set the NBT flag.
-				if(lastLoadedNBT != null && !world.isRemote){
-					loadFromSavedNBT = true;
-				}
-				
-				//If we have NBT, and haven't loaded it, do so now.
-				//Hold off on loading until blocks load: this can take longer than 1 update if the server/client is laggy.
-				if(loadFromSavedNBT && world.isBlockLoaded(pos)){
-					try{
-						//Get the block that makes this TE and restore it from saved state.
-						WrapperWorld worldWrapper = WrapperWorld.getWrapperFor(world);
-						Point3d position = new Point3d(pos.getX(), pos.getY(), pos.getZ());
-						ABlockBaseTileEntity block = (ABlockBaseTileEntity) worldWrapper.getBlock(position);
-						tileEntity = (TileEntityType) block.createTileEntity(worldWrapper, position, null, new WrapperNBT(lastLoadedNBT));
-						loadedFromSavedNBT = true;
-					}catch(Exception e){
-						InterfaceCore.logError("Failed to load tile entity on builder from saved NBT.  Did a pack change?");
-						InterfaceCore.logError(e.getMessage());
-						invalidate();
-					}
-				}
-			}
 		}
 	}
 	

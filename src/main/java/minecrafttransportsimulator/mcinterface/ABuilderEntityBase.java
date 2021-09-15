@@ -28,7 +28,8 @@ public abstract class ABuilderEntityBase extends Entity{
 	 * detected from server NBT loading, but for clients this is set when a data packet arrives.  This prevents loading client-based NBT before
 	 * the packet arrives, which is possible if a partial NBT load is performed by the core game or a mod.**/
 	public boolean loadFromSavedNBT;
-	/**Set to true when loaded NBT is parsed and loaded.  This is done to prevent re-parsing of NBT from triggering a second load command.**/
+	/**Set to true when loaded NBT is parsed and loaded.  This is done to prevent re-parsing of NBT from triggering a second load command.
+	 * Note that if this entity is being spawned manually rather than loaded from disk, this should be set prior to ticking.**/
 	public boolean loadedFromSavedNBT;
 	/**Players requesting data for this builder.  This is populated by packets sent to the server.  Each tick players in this list are
 	 * sent data about this builder, and the list cleared.  Done this way to prevent the server from trying to handle the packet before
@@ -57,13 +58,14 @@ public abstract class ABuilderEntityBase extends Entity{
     	if(world.isRemote){
     		//No data.  Wait for NBT to be loaded.
     		//As we are on a client we need to send a packet to the server to request NBT data.
-    		///Although we could call this in the constructor, Minecraft changes the
-    		//entity IDs after spawning and that fouls things up.
+    		///Although we could call this in the constructor, some mods will create random
+    		//entities on the client.  By waiting for an update, we will know we're valid.
+    		//I'm looking at YOU: The One Probe!
     		if(needDataFromServer){
     			InterfacePacket.sendToServer(new PacketEntityCSHandshakeClient(InterfaceClient.getClientPlayer(), this));
     			needDataFromServer = false;
     		}
-    	}else{
+    	}else if(loadedFromSavedNBT){
     		//Send any packets to clients that requested them.
     		if(!playersRequestingData.isEmpty()){
 	    		for(WrapperPlayer player : playersRequestingData){

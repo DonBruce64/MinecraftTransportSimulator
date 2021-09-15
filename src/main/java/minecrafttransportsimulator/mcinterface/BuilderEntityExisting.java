@@ -187,6 +187,8 @@ public class BuilderEntityExisting extends ABuilderEntityBase{
 				WrapperWorld worldWrapper = WrapperWorld.getWrapperFor(world);
 				try{
 					entity = entityMap.get(lastLoadedNBT.getString("entityid")).createEntity(worldWrapper, new WrapperNBT(lastLoadedNBT));
+					loadedFromSavedNBT = true;
+					lastLoadedNBT = null;
 				}catch(Exception e){
 					InterfaceCore.logError("Failed to load entity on builder from saved NBT.  Did a pack change?");
 					InterfaceCore.logError(e.getMessage());
@@ -199,14 +201,12 @@ public class BuilderEntityExisting extends ABuilderEntityBase{
 	@Override
 	public void setDead(){
 		super.setDead();
-		if(isDead){
-			//Stop chunkloading of this entity.
-			InterfaceChunkloader.removeEntityTicket(this);
-			
-			//Notify internal entity of it being invalid.
-			if(entity != null){
-				entity.remove();
-			}
+		//Stop chunkloading of this entity.
+		InterfaceChunkloader.removeEntityTicket(this);
+		
+		//Notify internal entity of it being invalid.
+		if(entity != null){
+			entity.remove();
 		}
 	}
 	
