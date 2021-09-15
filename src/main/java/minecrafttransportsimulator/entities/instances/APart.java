@@ -336,8 +336,6 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 							if(!clock.animation.centerPoint.isZero()){
 								//Use the center point as a vector we rotate to get the applied offset.
 								//We need to take into account the current offset here, as we might have rotated on a prior call.
-
-								if(clock.animation.variable.equals("turn_indicator") && variableValue != 0 && placementOffset.x > 0 && placementOffset.z > 0 && world.isClient())System.out.println(appliedRotation);
 								localOffset.add(clock.animation.centerPoint.copy().multiply(-1D).rotateFine(appliedRotation).add(clock.animation.centerPoint).rotateFine(localAngles));
 							}
 							

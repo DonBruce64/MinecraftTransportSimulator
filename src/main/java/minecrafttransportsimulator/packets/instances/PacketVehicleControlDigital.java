@@ -38,14 +38,6 @@ public class PacketVehicleControlDigital extends APacketEntity<EntityVehicleF_Ph
 	@Override
 	protected boolean handle(WrapperWorld world, EntityVehicleF_Physics vehicle){
 		switch(controlType){
-			case P_BRAKE : {
-				vehicle.parkingBrakeOn = controlState;
-				break;
-			}
-			case HORN : {
-				vehicle.hornOn = controlState;
-				break;
-			}
 			case SHIFT_UP : {
 				for(PartEngine engine : vehicle.engines.values()){
 					if(engine.shiftUp(controlState)){
@@ -84,7 +76,6 @@ public class PacketVehicleControlDigital extends APacketEntity<EntityVehicleF_Ph
 				}
 				break;
 			}
-			case GEAR : vehicle.gearUpCommand = controlState; break;
 			case AUTOPILOT : {
 				if(controlState){
 					vehicle.autopilot = true;
@@ -117,13 +108,10 @@ public class PacketVehicleControlDigital extends APacketEntity<EntityVehicleF_Ph
 	}
 	
 	public enum Controls{
-		P_BRAKE,
-		HORN,
 		SHIFT_UP,
 		SHIFT_DN,
 		SHIFT_NEUTRAL,
 		REVERSE,
-		GEAR,
 		AUTOPILOT,
 		FLAPS,
 		TRIM_ROLL,

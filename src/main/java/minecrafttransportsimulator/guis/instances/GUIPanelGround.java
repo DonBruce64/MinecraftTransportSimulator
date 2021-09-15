@@ -79,19 +79,19 @@ public class GUIPanelGround extends AGUIPanel{
 				public void onClicked(boolean leftSide){
 					if(leftSide){
 						if(selectorState == 2){
-							InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, "headlight"));
+							InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.HEADLIGHT_VARIABLE));
 						}else if(selectorState == 1){
-							InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, "running_light"));
+							InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.RUNNINGLIGHT_VARIABLE));
 						}
 					}else{
 						if(selectorState == 0){
 							if(vehicle.definition.motorized.hasRunningLights){
-								InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, "running_light"));
+								InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.RUNNINGLIGHT_VARIABLE));
 							}else{
-								InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, "headlight"));
+								InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.HEADLIGHT_VARIABLE));
 							}
 						}else if(selectorState == 1){
-							InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, "headlight"));
+							InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.HEADLIGHT_VARIABLE));
 						}
 					}
 				}
@@ -108,9 +108,9 @@ public class GUIPanelGround extends AGUIPanel{
 				@Override
 				public void onClicked(boolean leftSide){
 					if(leftSide){
-						InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, "left_turn_signal"));
+						InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.LEFTTURNLIGHT_VARIABLE));
 					}else{
-						InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, "right_turn_signal"));
+						InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.RIGHTTURNLIGHT_VARIABLE));
 					}
 				}
 				
@@ -293,7 +293,7 @@ public class GUIPanelGround extends AGUIPanel{
 			gearSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, InterfaceCore.translate("gui.panel.gear"), vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, GEAR_TEXTURE_WIDTH_OFFSET, GEAR_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
 				public void onClicked(boolean leftSide){
-					InterfacePacket.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.GEAR, !vehicle.gearUpCommand));
+					InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.GEAR_VARIABLE));
 				}
 				
 				@Override
@@ -338,19 +338,19 @@ public class GUIPanelGround extends AGUIPanel{
 	public void setStates(){
 		//Set the state of the light selector.
 		if(lightSelector != null){
-			lightSelector.selectorState = vehicle.variablesOn.contains("headlight") ? 2 : (vehicle.variablesOn.contains("running_light") ? 1 : 0);
+			lightSelector.selectorState = vehicle.variablesOn.contains(EntityVehicleF_Physics.HEADLIGHT_VARIABLE) ? 2 : (vehicle.variablesOn.contains(EntityVehicleF_Physics.RUNNINGLIGHT_VARIABLE) ? 1 : 0);
 		}
 		
 		//Set the state of the turn signal selector.
 		if(turnSignalSelector != null){
 			boolean halfSecondClock = inClockPeriod(20, 10);
-			if(vehicle.variablesOn.contains("left_turn_signal") && halfSecondClock){
-				if(vehicle.variablesOn.contains("right_turn_signal")){
+			if(vehicle.variablesOn.contains(EntityVehicleF_Physics.LEFTTURNLIGHT_VARIABLE) && halfSecondClock){
+				if(vehicle.variablesOn.contains(EntityVehicleF_Physics.RIGHTTURNLIGHT_VARIABLE)){
 					turnSignalSelector.selectorState = 3;
 				}else{
 					turnSignalSelector.selectorState = 1;
 				}
-			}else if(vehicle.variablesOn.contains("right_turn_signal") && halfSecondClock){
+			}else if(vehicle.variablesOn.contains(EntityVehicleF_Physics.RIGHTTURNLIGHT_VARIABLE) && halfSecondClock){
 				turnSignalSelector.selectorState = 2;
 			}else{
 				turnSignalSelector.selectorState = 0;
@@ -392,7 +392,7 @@ public class GUIPanelGround extends AGUIPanel{
 		
 		//If we have gear, set the selector state.
 		if(gearSelector != null){
-			if(vehicle.gearUpCommand){
+			if(vehicle.variablesOn.contains(EntityVehicleF_Physics.GEAR_VARIABLE)){
 				gearSelector.selectorState = vehicle.gearMovementTime == vehicle.definition.motorized.gearSequenceDuration ? 2 : 3;
 			}else{
 				gearSelector.selectorState = vehicle.gearMovementTime == 0 ? 0 : 1;

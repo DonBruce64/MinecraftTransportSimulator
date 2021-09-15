@@ -19,10 +19,10 @@ import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
+import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine.Signal;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
-import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.NavBeaconSystem;
 
@@ -37,11 +37,18 @@ import minecrafttransportsimulator.systems.NavBeaconSystem;
  * @author don_bruce
  */
 abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
+	//Static variables used in logic that are kept in the global map.
+	public static final String RUNNINGLIGHT_VARIABLE = "running_light";
+	public static final String HEADLIGHT_VARIABLE = "headlight";
+	public static final String NAVIGATIONLIGHT_VARIABLE = "navigation_light";
+	public static final String STROBELIGHT_VARIABLE = "strobe_light";
+	public static final String TAXILIGHT_VARIABLE = "taxi_light";
+	public static final String LANDINGLIGHT_VARIABLE = "landing_light";
+	public static final String HORN_VARIABLE = "horn";
+	public static final String GEAR_VARIABLE = "gear_setpoint";
 	
 	//External state control.
-	public boolean hornOn;
 	public boolean reverseThrust;
-	public boolean gearUpCommand;
 	public boolean beingFueled;
 	public boolean enginesOn;
 	public boolean enginesRunning;
@@ -68,9 +75,7 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 		super(world, data);
 		
 		//Load simple variables.
-		this.hornOn = data.getBoolean("hornOn");
 		this.reverseThrust = data.getBoolean("reverseThrust");
-		this.gearUpCommand = data.getBoolean("gearUpCommand");
 		this.throttle = (byte) data.getInteger("throttle");
 		this.electricPower = data.getDouble("electricPower");
 		this.selectedBeaconName = data.getString("selectedBeaconName");
@@ -147,10 +152,14 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 			}
 			
 			//Adjust gear variables.
-			if(gearUpCommand && gearMovementTime < definition.motorized.gearSequenceDuration){
-				++gearMovementTime;
-			}else if(!gearUpCommand && gearMovementTime > 0){
-				--gearMovementTime;
+			if(variablesOn.contains(EntityVehicleF_Physics.GEAR_VARIABLE)){
+				if(gearMovementTime < definition.motorized.gearSequenceDuration){
+					++gearMovementTime;
+				}
+			}else{
+				if(gearMovementTime > 0){
+					--gearMovementTime;
+				}
 			}
 			
 			//Check that missiles are still valid.
@@ -182,7 +191,9 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 					for(PartEngine engine : engines.values()){
 						InterfacePacket.sendToServer(new PacketPartEngine(engine, Signal.AS_ON));
 					}
-					InterfacePacket.sendToServer(new PacketVehicleControlDigital((EntityVehicleF_Physics) this, PacketVehicleControlDigital.Controls.P_BRAKE, false));
+					if(parkingBrakeOn){
+						InterfacePacket.sendToServer(new PacketEntityVariableToggle(this, PARKINGBRAKE_VARIABLE));
+					}
 				}
 			}
 			return true;
@@ -214,7 +225,9 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 							InterfacePacket.sendToServer(new PacketPartEngine(engine, Signal.MAGNETO_OFF));
 						}
 						InterfacePacket.sendToServer(new PacketVehicleControlAnalog((EntityVehicleF_Physics) this, PacketVehicleControlAnalog.Controls.BRAKE, (short) 0, Byte.MAX_VALUE));
-						InterfacePacket.sendToServer(new PacketVehicleControlDigital((EntityVehicleF_Physics) this, PacketVehicleControlDigital.Controls.P_BRAKE, true));
+						if(!parkingBrakeOn){
+							InterfacePacket.sendToServer(new PacketEntityVariableToggle(this, PARKINGBRAKE_VARIABLE));
+						}
 					}
 				}
 			}
@@ -303,21 +316,19 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 	
 	@Override
 	public boolean renderTextLit(){
-		if(definition.motorized.hasRunningLights && variablesOn.contains("running_light")) return electricPower > 3;
-		if(definition.motorized.hasHeadlights && variablesOn.contains("headlight")) return electricPower > 3;
-		if(definition.motorized.hasNavLights && variablesOn.contains("navigation_light")) return electricPower > 3;
-		if(definition.motorized.hasStrobeLights && variablesOn.contains("strobe_light")) return electricPower > 3;
-		if(definition.motorized.hasTaxiLights && variablesOn.contains("taxi_light")) return electricPower > 3;
-		if(definition.motorized.hasLandingLights && variablesOn.contains("landing_light")) return electricPower > 3;
+		if(definition.motorized.hasRunningLights && variablesOn.contains(RUNNINGLIGHT_VARIABLE)) return electricPower > 3;
+		if(definition.motorized.hasHeadlights && variablesOn.contains(HEADLIGHT_VARIABLE)) return electricPower > 3;
+		if(definition.motorized.hasNavLights && variablesOn.contains(NAVIGATIONLIGHT_VARIABLE)) return electricPower > 3;
+		if(definition.motorized.hasStrobeLights && variablesOn.contains(STROBELIGHT_VARIABLE)) return electricPower > 3;
+		if(definition.motorized.hasTaxiLights && variablesOn.contains(TAXILIGHT_VARIABLE)) return electricPower > 3;
+		if(definition.motorized.hasLandingLights && variablesOn.contains(LANDINGLIGHT_VARIABLE)) return electricPower > 3;
 		return false;
 	}
 	
 	@Override
 	public WrapperNBT save(WrapperNBT data){
 		super.save(data);
-		data.setBoolean("hornOn", hornOn);
 		data.setBoolean("reverseThrust", reverseThrust);
-		data.setBoolean("gearUpCommand", gearUpCommand);
 		data.setInteger("throttle", throttle);
 		data.setDouble("electricPower", electricPower);
 		data.setString("selectedBeaconName", selectedBeaconName);
