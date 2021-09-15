@@ -320,8 +320,8 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 					case TRANSLATION :{
 						if(!inhibitAnimations){
 							//Found translation.  This gets applied in the translation axis direction directly.
-							double variableValue = getAnimatedVariableValue(clock, 1.0, 0);
-							Point3d appliedTranslation = clock.animation.axis.copy().multiply(variableValue);
+							double variableValue = getAnimatedVariableValue(clock, clock.animationAxisMagnitude, 0);
+							Point3d appliedTranslation = clock.animationAxisNormalized.copy().multiply(variableValue);
 							localOffset.add(appliedTranslation.rotateFine(localAngles));
 						}
 						break;
@@ -329,13 +329,15 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 					case ROTATION :{
 						if(!inhibitAnimations){
 							//Found rotation.  Get angles that needs to be applied.
-							double variableValue = getAnimatedVariableValue(clock, 1.0, 0);
-							Point3d appliedRotation = clock.animation.axis.copy().multiply(variableValue);
+							double variableValue = getAnimatedVariableValue(clock, clock.animationAxisMagnitude, 0);
+							Point3d appliedRotation = clock.animationAxisNormalized.copy().multiply(variableValue);
 							
 							//Check if we need to apply a translation based on this rotation.
 							if(!clock.animation.centerPoint.isZero()){
 								//Use the center point as a vector we rotate to get the applied offset.
 								//We need to take into account the current offset here, as we might have rotated on a prior call.
+
+								if(clock.animation.variable.equals("turn_indicator") && variableValue != 0 && placementOffset.x > 0 && placementOffset.z > 0 && world.isClient())System.out.println(appliedRotation);
 								localOffset.add(clock.animation.centerPoint.copy().multiply(-1D).rotateFine(appliedRotation).add(clock.animation.centerPoint).rotateFine(localAngles));
 							}
 							
@@ -348,7 +350,7 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 						if(!inhibitAnimations){
 							//Found scaling.  This gets applied during rendering, so we don't directly use the value here.
 							//Instead, we save it and use it later.
-							scale *= getAnimatedVariableValue(clock, clock.animation.axis.length(), 0);
+							scale *= getAnimatedVariableValue(clock, clock.animationAxisMagnitude, 0);
 							//Update bounding box, as scale changes width/height.
 							boundingBox.widthRadius = getWidth()/2D;
 							boundingBox.heightRadius = getHeight()/2D;

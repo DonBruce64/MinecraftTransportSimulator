@@ -383,8 +383,8 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 							case TRANSLATION :{
 								if(!inhibitAnimations){
 									//Found translation.  This gets applied in the translation axis direction directly.
-									double variableValue = getAnimatedVariableValue(clock, 1.0, 0);
-									collisionGroupAnimationResult.setTo(clock.animation.axis).multiply(variableValue).rotateFine(collisionGroupWorkingAngles);
+									double variableValue = getAnimatedVariableValue(clock, clock.animationAxisMagnitude, 0);
+									collisionGroupAnimationResult.setTo(clock.animationAxisNormalized).multiply(variableValue).rotateFine(collisionGroupWorkingAngles);
 									for(BoundingBox box : collisionBoxes){
 										box.globalCenter.add(collisionGroupAnimationResult);
 									}
@@ -395,8 +395,8 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 								if(!inhibitAnimations){
 									//Found rotation.  Get angles that needs to be applied.
 									//We need to apply this to every box differently due to offsets.
-									double variableValue = getAnimatedVariableValue(clock, 1.0, 0);
-									collisionGroupAnimationResult.setTo(clock.animation.axis).multiply(variableValue);
+									double variableValue = getAnimatedVariableValue(clock, clock.animationAxisMagnitude, 0);
+									collisionGroupAnimationResult.setTo(clock.animationAxisNormalized).multiply(variableValue);
 									
 									for(BoundingBox box : collisionBoxes){
 										//Use the center point as a vector we rotate to get the applied offset.

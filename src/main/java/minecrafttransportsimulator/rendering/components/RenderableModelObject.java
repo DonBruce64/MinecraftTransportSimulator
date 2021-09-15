@@ -224,11 +224,11 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 				//If the animation is a cumulative offset, we need to add the prior value to our variable. 
 				priorOffset = animation.addPriorOffset ? variableValue : 0;
 				variableValue = 0;
-				
+				DurationDelayClock clock = entity.animationClocks.get(animation);
 				switch(animation.animationType){
 					case VISIBILITY :{
 						if(!inhibitAnimations){
-							variableValue = entity.getAnimatedVariableValue(entity.animationClocks.get(animation), partialTicks);
+							variableValue = entity.getAnimatedVariableValue(clock, partialTicks);
 							if(variableValue < animation.clampMin || variableValue > animation.clampMax){
 								return false;
 							}
@@ -237,7 +237,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 					}
 					case INHIBITOR :{
 						if(!inhibitAnimations){
-							variableValue =  entity.getAnimatedVariableValue(entity.animationClocks.get(animation), partialTicks);
+							variableValue =  entity.getAnimatedVariableValue(clock, partialTicks);
 							if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
 								inhibitAnimations = true;
 							}
@@ -246,7 +246,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 					}
 					case ACTIVATOR :{
 						if(inhibitAnimations){
-							variableValue = entity.getAnimatedVariableValue(entity.animationClocks.get(animation), partialTicks);
+							variableValue = entity.getAnimatedVariableValue(clock, partialTicks);
 							if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
 								inhibitAnimations = false;
 							}
@@ -255,29 +255,27 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 					}
 					case TRANSLATION :{
 						if(!inhibitAnimations){
-							double magnitude = animation.axis.length();
-							variableValue = entity.getAnimatedVariableValue(entity.animationClocks.get(animation), magnitude, priorOffset, partialTicks);
+							variableValue = entity.getAnimatedVariableValue(clock, clock.animationAxisMagnitude, priorOffset, partialTicks);
 							//Do the actual translation, if we aren't 0.
 							if(animation.addPriorOffset){
-								GL11.glTranslated((variableValue - priorOffset)*animation.axis.x/magnitude, (variableValue - priorOffset)*animation.axis.y/magnitude, (variableValue - priorOffset)*animation.axis.z/magnitude);
+								GL11.glTranslated((variableValue - priorOffset)*animation.axis.x/clock.animationAxisMagnitude, (variableValue - priorOffset)*animation.axis.y/clock.animationAxisMagnitude, (variableValue - priorOffset)*animation.axis.z/clock.animationAxisMagnitude);
 							}else if(variableValue != 0){
-								GL11.glTranslated(variableValue*animation.axis.x/magnitude, variableValue*animation.axis.y/magnitude, variableValue*animation.axis.z/magnitude);
+								GL11.glTranslated(variableValue*animation.axis.x/clock.animationAxisMagnitude, variableValue*animation.axis.y/clock.animationAxisMagnitude, variableValue*animation.axis.z/clock.animationAxisMagnitude);
 							}
 						}
 						break;
 					}
 					case ROTATION :{
 						if(!inhibitAnimations){
-							double magnitude = animation.axis.length();
-							variableValue = entity.getAnimatedVariableValue(entity.animationClocks.get(animation), magnitude, priorOffset, partialTicks);
+							variableValue = entity.getAnimatedVariableValue(clock, clock.animationAxisMagnitude, priorOffset, partialTicks);
 							//Do rotation.
 							if(animation.addPriorOffset){
 								GL11.glTranslated(animation.centerPoint.x, animation.centerPoint.y, animation.centerPoint.z);
-								GL11.glRotated((variableValue - priorOffset), animation.axis.x/magnitude, animation.axis.y/magnitude, animation.axis.z/magnitude);
+								GL11.glRotated((variableValue - priorOffset), animation.axis.x/clock.animationAxisMagnitude, animation.axis.y/clock.animationAxisMagnitude, animation.axis.z/clock.animationAxisMagnitude);
 								GL11.glTranslated(-animation.centerPoint.x, -animation.centerPoint.y, -animation.centerPoint.z);
 							}else if(variableValue != 0){
 								GL11.glTranslated(animation.centerPoint.x, animation.centerPoint.y, animation.centerPoint.z);
-								GL11.glRotated(variableValue, animation.axis.x/magnitude, animation.axis.y/magnitude, animation.axis.z/magnitude);
+								GL11.glRotated(variableValue, animation.axis.x/clock.animationAxisMagnitude, animation.axis.y/clock.animationAxisMagnitude, animation.axis.z/clock.animationAxisMagnitude);
 								GL11.glTranslated(-animation.centerPoint.x, -animation.centerPoint.y, -animation.centerPoint.z);
 							}
 						}
@@ -285,11 +283,10 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 					}
 					case SCALING :{
 						if(!inhibitAnimations){
-							double magnitude = animation.axis.length();
-							variableValue = entity.getAnimatedVariableValue(entity.animationClocks.get(animation), magnitude, priorOffset, partialTicks);
+							variableValue = entity.getAnimatedVariableValue(clock, clock.animationAxisMagnitude, priorOffset, partialTicks);
 							//Do the actual scaling.
 							GL11.glTranslated(animation.centerPoint.x, animation.centerPoint.y, animation.centerPoint.z);
-							GL11.glScaled(animation.axis.x == 0 ? 1.0 : variableValue*animation.axis.x/magnitude, animation.axis.y == 0 ? 1.0 : variableValue*animation.axis.y/magnitude, animation.axis.z == 0 ? 1.0 : variableValue*animation.axis.z/magnitude);
+							GL11.glScaled(animation.axis.x == 0 ? 1.0 : variableValue*animation.axis.x/clock.animationAxisMagnitude, animation.axis.y == 0 ? 1.0 : variableValue*animation.axis.y/clock.animationAxisMagnitude, animation.axis.z == 0 ? 1.0 : variableValue*animation.axis.z/clock.animationAxisMagnitude);
 							GL11.glTranslated(-animation.centerPoint.x, -animation.centerPoint.y, -animation.centerPoint.z);
 						}
 						break;
