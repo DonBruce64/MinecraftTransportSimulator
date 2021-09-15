@@ -44,7 +44,7 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 	 */
 	public final void render(RenderedEntity entity, boolean blendingEnabled, float partialTicks){
 		//If we need to render, do so now.
-		if(!disableMainRendering(entity, partialTicks)){
+		if(!disableRendering(entity, partialTicks)){
 			//Get the render offset.
 			//This is the interpolated movement, plus the prior position.
 			Point3d entityPositionDelta = entity.prevPosition.getInterpolatedPoint(entity.position, partialTicks);
@@ -74,14 +74,15 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 	        GL11.glRotated(entityRotation.y, 0, 1, 0);
 	        GL11.glRotated(entityRotation.x, 1, 0, 0);
 	        GL11.glRotated(entityRotation.z, 0, 0, 1);
-			
-	        //Render the main model.
+	        
+	        //Set texture.
 	        InterfaceRender.setTexture(getTexture(entity));
 	        String modelLocation = entity.definition.getModelLocation(entity.subName);
 	        if(!objectLists.containsKey(modelLocation)){
 	        	objectLists.put(modelLocation, AModelParser.generateRenderables(modelLocation));
 	        }
 	        
+	        //Mirror model, if required.
 	        boolean mirrored = isMirrored(entity);
 	        float scale = (float) getScale(entity, partialTicks);
     		if(mirrored){
@@ -91,13 +92,15 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
     			GL11.glScalef(scale, scale, scale);
     		}
 			
-			//Render all modelObjects.
-			for(RenderableModelObject<RenderedEntity> modelObject : objectLists.get(modelLocation)){
-				JSONAnimatedObject animation = entity.animatedObjectDefinitions.get(modelObject.objectName);
-				if(animation == null || animation.applyAfter == null){
-					modelObject.render(entity, blendingEnabled, partialTicks);
+	        //Render the main model if we can.
+	        if(!disableModelRendering(entity, partialTicks)){
+				for(RenderableModelObject<RenderedEntity> modelObject : objectLists.get(modelLocation)){
+					JSONAnimatedObject animation = entity.animatedObjectDefinitions.get(modelObject.objectName);
+					if(animation == null || animation.applyAfter == null){
+						modelObject.render(entity, blendingEnabled, partialTicks);
+					}
 				}
-			}
+	        }
 			
 			//Render any additional model bits before we render text.
 			renderAdditionalModels(entity, blendingEnabled, partialTicks);
@@ -157,14 +160,21 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 	}
 	
 	/**
-	 *  If the main model needs to be skipped in rendering for any reason, return true here.
-	 *  This should be done in place of just leaving the {@link #renderModel(AEntityC_Definable, float)}
-	 *  method blank, as that method will do OpenGL setups which have a performance cost.  Note
-	 *  that this will NOT disable supplemental model rendering via {@link #renderSupplementalModels(AEntityC_Definable, float)}.
+	 *  If rendering needs to be skipped in rendering for any reason, return true here.
+	 *  Note that this will NOT disable supplemental model rendering via {@link #renderSupplementalModels(AEntityC_Definable, float)}.
 	 */
-	public boolean disableMainRendering(RenderedEntity entity, float partialTicks){
+	public boolean disableRendering(RenderedEntity entity, float partialTicks){
 		//Don't render on the first tick, as we might have not created some variables yet.
 		return entity.ticksExisted == 0;
+	}
+	
+	/**
+	 *  If the main model needs to be skipped in rendering for any reason, return true here.
+	 *  This is different than disabling rendering, as this only blocks the main model,
+	 *  and not the setup, components, or the other various things.
+	 */
+	public boolean disableModelRendering(RenderedEntity entity, float partialTicks){
+		return false;
 	}
 	
 	/**

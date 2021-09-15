@@ -6,7 +6,7 @@ import minecrafttransportsimulator.rendering.components.ARenderEntityMultipart;
 public class RenderPlayerGun extends ARenderEntityMultipart<EntityPlayerGun>{
 	
 	@Override
-	public boolean disableMainRendering(EntityPlayerGun entity, float partialTicks){
+	public boolean disableRendering(EntityPlayerGun entity, float partialTicks){
 		return true;
 	}
 }

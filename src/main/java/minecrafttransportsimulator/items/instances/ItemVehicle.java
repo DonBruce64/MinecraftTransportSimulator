@@ -125,6 +125,7 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 			//Apply the boost, and check collisions.
 			//If the core collisions are colliding, set the vehicle as dead and abort.
 			//We need to update the boxes first, however, as they haven't been updated yet.
+			//FIXME this won't work, instead, make it wait 2 ticks for checks and then go.  Will require placingPlayer in the constructor.  Exceuse to comsolidate some of this into constructor.
 			vehicle.position.y += -furthestDownPoint;
 			for(BoundingBox coreBox : vehicle.allBlockCollisionBoxes){
 				coreBox.updateToEntity(vehicle, null);

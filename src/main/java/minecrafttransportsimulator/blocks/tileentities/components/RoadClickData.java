@@ -5,6 +5,7 @@ import java.util.List;
 import minecrafttransportsimulator.baseclasses.BezierCurve;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
+import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad.RoadComponent;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent.JSONLaneSector;
 
 /**Helper class for containing data of what was clicked on this road.
@@ -27,7 +28,7 @@ public class RoadClickData{
 		this.clickedStart = clickedStart;
 		
 		//If we clicked a sector, line us up with it.  If we didn't click a sector, line us up with the dynamic-laned curve.
-		if(roadClicked.definition.road.isDynamic){
+		if(roadClicked.definition.road.type.equals(RoadComponent.CORE_DYNAMIC)){
 			//Get the position and rotation for this curve.  Note that curve rotation is flipped 180 on the end of curves.
 			//So if we are calculating curve endpoints, the angles will be flipped 180 to account for this.
 			if(clickedStart){

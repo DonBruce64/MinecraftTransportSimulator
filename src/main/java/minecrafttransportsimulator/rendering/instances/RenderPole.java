@@ -8,7 +8,7 @@ import minecrafttransportsimulator.rendering.components.ARenderTileEntityBase;
 public class RenderPole extends ARenderTileEntityBase<TileEntityPole>{
 	
 	@Override
-	public boolean disableMainRendering(TileEntityPole pole, float partialTicks){
+	public boolean disableRendering(TileEntityPole pole, float partialTicks){
 		return true;
 	}
 	
