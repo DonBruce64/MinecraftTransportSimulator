@@ -175,7 +175,7 @@ public class GUIInstruments extends AGUIBase{
 		});
 		
 		//Create the info label.
-		addLabel(infoLabel = new GUIComponentLabel(guiLeft + getWidth()/2, guiTop - 20, ColorRGB.WHITE, "", null, TextAlignment.CENTERED, 1.0F, 150));
+		addLabel(infoLabel = new GUIComponentLabel(guiLeft + getWidth()/2, guiTop - 20, ColorRGB.WHITE, "", TextAlignment.CENTERED, 1.0F, 150));
 		
 		//Get all entities with instruments and adds them to the list. definitions, and add them to a map-list.
 		//These come from the vehicle and all parts.

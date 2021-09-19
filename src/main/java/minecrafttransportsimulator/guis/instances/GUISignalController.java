@@ -306,12 +306,12 @@ public class GUISignalController extends AGUIBase{
 				
 				List<GUIComponentLabel> currentList = axis.blockBased ? upperPropertyLabels : lowerPropertyLabels;
 				if(currentList.isEmpty()){
-					currentList.add(new GUIComponentLabel(guiLeft + 10, topOffset + 10, ColorRGB.WHITE, "# Left Lanes:", null, TextAlignment.LEFT_ALIGNED, 0.75F, 0));
-					currentList.add(new GUIComponentLabel(guiLeft + 10, topOffset + 20, ColorRGB.WHITE, "# Center Lanes:", null, TextAlignment.LEFT_ALIGNED, 0.75F, 0));
-					currentList.add(new GUIComponentLabel(guiLeft + 10, topOffset + 30, ColorRGB.WHITE, "# Right Lanes:", null, TextAlignment.LEFT_ALIGNED, 0.75F, 0));
-					currentList.add(new GUIComponentLabel(guiLeft + 10, topOffset + 40, ColorRGB.WHITE, "Road Width:", null, TextAlignment.LEFT_ALIGNED, 0.75F, 0));
-					currentList.add(new GUIComponentLabel(guiLeft + 10, topOffset + 50, ColorRGB.WHITE, "Dist Center->Road:", null, TextAlignment.LEFT_ALIGNED, 0.75F, 0));
-					currentList.add(new GUIComponentLabel(guiLeft + 10, topOffset + 60, ColorRGB.WHITE, "Dist Road->Median:", null, TextAlignment.LEFT_ALIGNED, 0.75F, 0));
+					currentList.add(new GUIComponentLabel(guiLeft + 10, topOffset + 10, ColorRGB.WHITE, "# Left Lanes:", TextAlignment.LEFT_ALIGNED, 0.75F));
+					currentList.add(new GUIComponentLabel(guiLeft + 10, topOffset + 20, ColorRGB.WHITE, "# Center Lanes:", TextAlignment.LEFT_ALIGNED, 0.75F));
+					currentList.add(new GUIComponentLabel(guiLeft + 10, topOffset + 30, ColorRGB.WHITE, "# Right Lanes:", TextAlignment.LEFT_ALIGNED, 0.75F));
+					currentList.add(new GUIComponentLabel(guiLeft + 10, topOffset + 40, ColorRGB.WHITE, "Road Width:", TextAlignment.LEFT_ALIGNED, 0.75F));
+					currentList.add(new GUIComponentLabel(guiLeft + 10, topOffset + 50, ColorRGB.WHITE, "Dist Center->Road:", TextAlignment.LEFT_ALIGNED, 0.75F));
+					currentList.add(new GUIComponentLabel(guiLeft + 10, topOffset + 60, ColorRGB.WHITE, "Dist Road->Median:", TextAlignment.LEFT_ALIGNED, 0.75F));
 					for(GUIComponentLabel label : currentList){
 						addLabel(label);
 					}
@@ -431,7 +431,7 @@ public class GUISignalController extends AGUIBase{
 		private GUIComponentIntersectionProperties(int guiLeft, int guiTop, int leftOffset, int topOffset, Axis axis){
 			this.axis = axis;
 			IntersectionProperties properties = controller.intersectionProperties.get(axis);
-			addLabel(axisLabel = new GUIComponentLabel(leftOffset, topOffset, ColorRGB.WHITE, axis.name(), null, TextAlignment.LEFT_ALIGNED, axis.blockBased ? 1.0F : 0.65F, 0));
+			addLabel(axisLabel = new GUIComponentLabel(leftOffset, topOffset, ColorRGB.WHITE, axis.name(), TextAlignment.LEFT_ALIGNED, axis.blockBased ? 1.0F : 0.65F));
 			addTextBox(leftLaneText = new GUIComponentNumericTextBox(leftOffset, topOffset + 10, String.valueOf(properties.leftLaneCount)){
 				@Override
 				public void setVariable(){

@@ -126,7 +126,7 @@ public class GUIConfig extends AGUIBase{
 		//Vehicle selection buttons and text.
 		//We only have two types.  Car and aircraft.
 		vehicleSelectionButtons.clear();		
-		addLabel(vehicleSelectionFaultLabel = new GUIComponentLabel(guiLeft+10, guiTop+90, ColorRGB.BLACK, InterfaceInput.isJoystickSupportBlocked() ? InterfaceCore.translate("gui.config.joystick.disabled") : InterfaceCore.translate("gui.config.joystick.error"), null, TextAlignment.LEFT_ALIGNED, 1.0F, 240));
+		addLabel(vehicleSelectionFaultLabel = new GUIComponentLabel(guiLeft+10, guiTop+90, ColorRGB.BLACK, InterfaceInput.isJoystickSupportBlocked() ? InterfaceCore.translate("gui.config.joystick.disabled") : InterfaceCore.translate("gui.config.joystick.error"), TextAlignment.LEFT_ALIGNED, 1.0F, 240));
 		for(String vehicleType : vehicleTypes){
 			GUIComponentButton buttonKeyboard = new GUIComponentButton(guiLeft + 68, guiTop + 30 + 20*(vehicleSelectionButtons.size()/(InterfaceInput.isJoystickSupportEnabled() ? 2 : 1)), 120, InterfaceCore.translate("gui.config.controls." + vehicleType + ".keyboard")){
 				@Override

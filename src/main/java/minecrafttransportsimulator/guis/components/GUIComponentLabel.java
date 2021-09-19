@@ -26,10 +26,18 @@ public class GUIComponentLabel{
 	private GUIComponentTextBox box;
 
 	public GUIComponentLabel(int x, int y, ColorRGB color, String text){
-		this(x, y, color, text, null, TextAlignment.LEFT_ALIGNED, 1.0F, 0);
+		this(x, y, color, text, TextAlignment.LEFT_ALIGNED, 1.0F, 0, null);
 	}
 	
-	public GUIComponentLabel(int x, int y, ColorRGB color, String text, String fontName, TextAlignment alignment, float scale, int wrapWidth){
+	public GUIComponentLabel(int x, int y, ColorRGB color, String text, TextAlignment alignment, float scale){
+		this(x, y, color, text, alignment, scale, 0, null);
+	}
+	
+	public GUIComponentLabel(int x, int y, ColorRGB color, String text, TextAlignment alignment, float scale, int wrapWidth){
+		this(x, y, color, text, alignment, scale, wrapWidth, null);
+	}
+	
+	public GUIComponentLabel(int x, int y, ColorRGB color, String text, TextAlignment alignment, float scale, int wrapWidth, String fontName){
 		this.x = x;
 		this.y = y;
 		this.color = color;

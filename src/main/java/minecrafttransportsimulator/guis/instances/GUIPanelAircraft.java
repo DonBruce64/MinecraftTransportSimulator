@@ -377,7 +377,7 @@ public class GUIPanelAircraft extends AGUIPanel{
 			addTextBox(beaconBox);
 			
 			//Add beacon text box label.
-			GUIComponentLabel beaconLabel = new GUIComponentLabel(beaconBox.x + beaconBox.width/2, beaconBox.y + beaconBox.height + 1, vehicle.definition.motorized.panelTextColor != null ? vehicle.definition.motorized.panelTextColor : ColorRGB.WHITE, InterfaceCore.translate("gui.panel.beacon"), null, TextAlignment.CENTERED, 0.75F, 0);
+			GUIComponentLabel beaconLabel = new GUIComponentLabel(beaconBox.x + beaconBox.width/2, beaconBox.y + beaconBox.height + 1, vehicle.definition.motorized.panelTextColor != null ? vehicle.definition.motorized.panelTextColor : ColorRGB.WHITE, InterfaceCore.translate("gui.panel.beacon"), TextAlignment.CENTERED, 0.75F);
 			beaconLabel.setBox(beaconBox);
 			labels.add(beaconLabel);
 		}

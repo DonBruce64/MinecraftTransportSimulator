@@ -106,6 +106,20 @@ public class InterfaceRender{
 	}
 	
 	/**
+	 *  Like {@link #renderVertices(float[][])}, but in this takes
+	 *  a list of vertex float arrays rather than a single one.
+	 */
+	public static void renderVertices(Collection<float[]> vertices){
+		GL11.glBegin(GL11.GL_TRIANGLES);
+		for(float[] vertex : vertices){
+			GL11.glTexCoord2f(vertex[3], vertex[4]);
+			GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
+			GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
+		}
+		GL11.glEnd();
+	}
+	
+	/**
 	 *  Deletes the cached vertices with the specified index.
 	 */
 	public static void deleteVertices(int index){

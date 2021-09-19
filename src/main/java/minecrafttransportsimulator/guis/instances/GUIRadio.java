@@ -68,7 +68,7 @@ public class GUIRadio extends AGUIBase{
 				teachMode = false;
 			}
 		});
-		addLabel(new GUIComponentLabel(offButton.x + offButton.width/2, offButton.y - 10, ColorRGB.BLACK, "SOURCE", null, TextAlignment.CENTERED, 1.0F, 0).setButton(offButton));
+		addLabel(new GUIComponentLabel(offButton.x + offButton.width/2, offButton.y - 10, ColorRGB.BLACK, "SOURCE", TextAlignment.CENTERED, 1.0F).setButton(offButton));
 		addButton(localButton = new GUIComponentButton(offButton.x, offButton.y + offButton.height, offButton.width, "PC", offButton.height, true){
 			@Override
 			public void onClicked(){				
@@ -129,7 +129,7 @@ public class GUIRadio extends AGUIBase{
 		addButton(volDnButton = new GUIComponentButton(volUpButton.x, volUpButton.y + volUpButton.height, volUpButton.width, "DN"){@Override public void onClicked(){InterfacePacket.sendToServer(new PacketRadioStateChange(radio, radio.volume - 1));}});
 		addTextBox(volumeDisplay = new GUIComponentTextBox(guiLeft + 180, volUpButton.y, 25, "", 40, ColorRGB.WHITE, ColorRGB.BLACK, 32));
 		addButton(equalizerButton = new GUIComponentButton(volumeDisplay.x, volumeDisplay.y + volumeDisplay.height, volumeDisplay.width + volDnButton.width, "EQ", volUpButton.height, true){@Override public void onClicked(){equalizerMode = true;}});
-		addLabel(new GUIComponentLabel(volumeDisplay.x + volumeDisplay.width, volumeDisplay.y - 10, ColorRGB.BLACK, "VOLUME", null, TextAlignment.CENTERED, 1.0F, 0).setButton(volUpButton));
+		addLabel(new GUIComponentLabel(volumeDisplay.x + volumeDisplay.width, volumeDisplay.y - 10, ColorRGB.BLACK, "VOLUME", TextAlignment.CENTERED, 1.0F).setButton(volUpButton));
 		
 		//Preset buttons.
 		presetButtons.clear();

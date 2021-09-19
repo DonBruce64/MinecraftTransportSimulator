@@ -55,7 +55,7 @@ public class GUIBooklet extends AGUIBase{
 		//Title text labels.
 		List<GUIComponentLabel> titleLabels = new ArrayList<GUIComponentLabel>();
 		for(JSONText text : booklet.definition.booklet.titleText){
-			GUIComponentLabel titleLabel = new GUIComponentLabel(guiLeft + (int)text.pos.x, guiTop + (int)text.pos.y, text.color, text.defaultText, text.fontName, TextAlignment.values()[text.renderPosition], text.scale, text.wrapWidth);
+			GUIComponentLabel titleLabel = new GUIComponentLabel(guiLeft + (int)text.pos.x, guiTop + (int)text.pos.y, text.color, text.defaultText, TextAlignment.values()[text.renderPosition], text.scale, text.wrapWidth, text.fontName);
 			titleLabels.add(titleLabel);
 			addLabel(titleLabel);
 		}
@@ -99,7 +99,7 @@ public class GUIBooklet extends AGUIBase{
 			List<GUIComponentLabel> pageLabels = new ArrayList<GUIComponentLabel>();
 			for(JSONText text : page.pageText){
 				try{
-					GUIComponentLabel pageLabel = new GUIComponentLabel(guiLeft + (int)text.pos.x, guiTop + (int)text.pos.y, text.color, text.defaultText, text.fontName, TextAlignment.values()[text.renderPosition], text.scale, text.wrapWidth);
+					GUIComponentLabel pageLabel = new GUIComponentLabel(guiLeft + (int)text.pos.x, guiTop + (int)text.pos.y, text.color, text.defaultText, TextAlignment.values()[text.renderPosition], text.scale, text.wrapWidth, text.fontName);
 					pageLabels.add(pageLabel);
 					addLabel(pageLabel);
 				}catch(Exception e){
