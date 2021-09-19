@@ -26,7 +26,7 @@ public class RenderableTreadRoller<AnimationEntity extends AEntityC_Definable<?>
 	public double endZ;
 	public double endAngle;
 	
-	public RenderableTreadRoller(String modelLocation, String objectName, List<RenderableModelObject<AnimationEntity>> allObjects, Float[][] vertices){
+	public RenderableTreadRoller(String modelLocation, String objectName, List<RenderableModelObject<AnimationEntity>> allObjects, float[][] vertices){
 		super(modelLocation, objectName, allObjects, vertices);
 		this.isLeft = objectName.toLowerCase().startsWith("l");
 		this.rollerNumber = Integer.valueOf(objectName.substring(objectName.lastIndexOf('_') + 1));
@@ -36,7 +36,7 @@ public class RenderableTreadRoller<AnimationEntity extends AEntityC_Definable<?>
 		double maxY = -999;
 		double minZ = 999;
 		double maxZ = -999;
-		for(Float[] point : vertices){
+		for(float[] point : vertices){
 			minY = Math.min(minY, point[1]);
 			maxY = Math.max(maxY, point[1]);
 			minZ = Math.min(minZ, point[2]);

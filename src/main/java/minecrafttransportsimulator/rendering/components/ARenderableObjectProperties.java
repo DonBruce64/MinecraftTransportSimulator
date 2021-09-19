@@ -24,10 +24,10 @@ public abstract class ARenderableObjectProperties{
 	
 	public final String texture;
 	public final ColorRGB color;
-	public final Float[][] vertices;
+	public final float[][] vertices;
 	public final int cachedVertexIndex;
 	
-	public ARenderableObjectProperties(String texture, ColorRGB color, Float[][] vertices, boolean cacheVertices){
+	public ARenderableObjectProperties(String texture, ColorRGB color, float[][] vertices, boolean cacheVertices){
 		this.texture = texture;
 		this.color = color;
 		if(cacheVertices){

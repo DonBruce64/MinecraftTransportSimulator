@@ -95,4 +95,19 @@ public abstract class ABlockBase{
 			return Axis.NONE;
 		}
 	}
+	
+	/**
+	 *  Enums for block material properties.  Not used by any of our blocks,
+	 *  but instead are materials that blocks in the world may be made of.
+	 */
+	public static enum BlockMaterial{
+		NORMAL,
+		NORMAL_WET,
+		DIRT,
+		DIRT_WET,
+		SAND,
+		SAND_WET,
+		SNOW,
+		ICE;
+	}
 }

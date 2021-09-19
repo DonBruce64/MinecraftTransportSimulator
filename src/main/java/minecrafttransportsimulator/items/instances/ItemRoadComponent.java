@@ -13,6 +13,7 @@ import minecrafttransportsimulator.blocks.instances.BlockRoad;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadClickData;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLane;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
+import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad.RoadComponent;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.components.IItemBlock;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
@@ -34,7 +35,7 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 	
 	@Override
 	public void addTooltipLines(List<String> tooltipLines, WrapperNBT data){
-		if(definition.road.type.equals("core")){
+		if(definition.road.type.equals(RoadComponent.CORE_STATIC) || definition.road.type.equals(RoadComponent.CORE_DYNAMIC)){
 			for(byte i=1; i<=5; ++i){
 				tooltipLines.add(InterfaceCore.translate("info.item.roadcomponent.line" + String.valueOf(i)));
 			}
@@ -60,7 +61,7 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 			//This could be either a block or a road itself.
 			//If we click a road, we need to figure out what lane number we will connect to.
 			//If we are a static road, just try to place us down as-is.
-			if(definition.road.isDynamic){
+			if(definition.road.type.equals(RoadComponent.CORE_DYNAMIC)){
 				//If we don't have a click position or are sneaking, set the starting position.
 				if(player.isSneaking() || !lastPositionClicked.containsKey(player)){
 					lastRotationClicked.put(player, (double) Math.round(player.getYaw()/15)*15);
@@ -79,7 +80,7 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 						//Check validity of our connection
 						RoadClickData clickedRoadData = clickedRoad.getClickData(position.copy().subtract(clickedRoad.position), false);
 						JSONRoadGeneric roadDefinition = clickedRoadData.roadClicked.definition.road;
-						if((roadDefinition.isDynamic ? roadDefinition.laneOffsets.length : clickedRoadData.sectorClicked.lanes.size()) != definition.road.laneOffsets.length){
+						if((roadDefinition.type.equals(RoadComponent.CORE_DYNAMIC) ? roadDefinition.laneOffsets.length : clickedRoadData.sectorClicked.lanes.size()) != definition.road.laneOffsets.length){
 							player.sendPacket(new PacketPlayerChatMessage(player, "interact.roadcomponent.lanemismatchend"));
 							return true;
 						}else if(clickedRoadData.lanesOccupied){
@@ -118,7 +119,7 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 						if(startingRoadData != null){
 							//Check the road we clicked, if it exists, and make sure we aren't doing a bad connection.
 							JSONRoadGeneric roadDefinition = startingRoadData.roadClicked.definition.road;
-							if((roadDefinition.isDynamic ? roadDefinition.laneOffsets.length : startingRoadData.sectorClicked.lanes.size()) != definition.road.laneOffsets.length){
+							if((roadDefinition.type.equals(RoadComponent.CORE_DYNAMIC) ? roadDefinition.laneOffsets.length : startingRoadData.sectorClicked.lanes.size()) != definition.road.laneOffsets.length){
 								player.sendPacket(new PacketPlayerChatMessage(player, "interact.roadcomponent.lanemismatch"));
 								return true;
 							}else if(startingRoadData.lanesOccupied){
@@ -215,7 +216,7 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 					}
 					return true;
 				}
-			}else{
+			}else if(definition.road.type.equals(RoadComponent.CORE_STATIC)){
 				//Get placement position for the segment.
 				Point3d blockPlacementPoint = position.copy().add(0, 1, 0);
 				

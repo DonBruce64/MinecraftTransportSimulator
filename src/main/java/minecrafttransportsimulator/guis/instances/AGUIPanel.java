@@ -13,6 +13,7 @@ import minecrafttransportsimulator.entities.instances.PartPropeller;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentInstrument;
 import minecrafttransportsimulator.jsondefs.JSONConnectionGroup;
+import minecrafttransportsimulator.mcinterface.InterfaceGUI;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine.Signal;
@@ -31,7 +32,7 @@ public abstract class AGUIPanel extends AGUIBase{
 	protected static final int SELECTOR_TEXTURE_SIZE = 20;
 	protected static final byte ENGINE_SINGLE_SELECTOR_INDEX = -1;
 	
-	public final EntityVehicleF_Physics vehicle;
+	protected final EntityVehicleF_Physics vehicle;
 	protected final boolean haveReverseThrustOption;
 	protected final List<SwitchEntry> trailerSwitchDefs = new ArrayList<SwitchEntry>();
 	protected int xOffset;
@@ -92,6 +93,20 @@ public abstract class AGUIPanel extends AGUIBase{
 					}
 				}
 			}
+		}
+	}
+	
+	public void handleConnectionChange(AEntityD_Interactable<?> hitchEntity, AEntityD_Interactable<?> hookupEntity){
+		boolean recreatePanel = false;
+		for(SwitchEntry entry : trailerSwitchDefs){
+			if(entry.entityOn.equals(hitchEntity) || entry.entityOn.equals(hookupEntity)){
+				recreatePanel = true;
+				break;
+			}
+		}
+		if(recreatePanel){
+			InterfaceGUI.closeGUI();
+			InterfaceGUI.openGUI(new GUIPanelGround(vehicle));
 		}
 	}
 	

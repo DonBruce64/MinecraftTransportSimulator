@@ -16,6 +16,7 @@ import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
+import minecrafttransportsimulator.blocks.components.ABlockBase.BlockMaterial;
 import minecrafttransportsimulator.blocks.components.ABlockBaseTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
@@ -281,11 +282,10 @@ public class WrapperWorld{
 	 */
 	public void spawnEntity(AEntityB_Existing entity){
 		BuilderEntityExisting builder = new BuilderEntityExisting(entity.world.world);
+		builder.loadedFromSavedNBT = true;
 		builder.setPositionAndRotation(entity.position.x, entity.position.y, entity.position.z, (float) -entity.angles.y, (float) entity.angles.x);
 		builder.entity = entity;
 		world.spawnEntity(builder);
-		//Set this as we will already have loaded NBT data via spawning and don't need to load it from disk.
-		builder.loadedFromNBT = true;
     }
 	
 	/**
@@ -462,12 +462,31 @@ public class WrapperWorld{
 	
 	/**
 	 *  Returns the slipperiness of the block at the passed-in position.
-	 *  0.6 is default slipperiness for blocks.
+	 *  0.6 is default slipperiness for blocks. higher values are more slippery.
 	 */
 	public float getBlockSlipperiness(Point3d position){
 		BlockPos pos = new BlockPos(position.x, position.y, position.z);
 		IBlockState state = world.getBlockState(pos);
 		return state.getBlock().getSlipperiness(state, world, pos, null);
+	}
+	
+	/**
+	 *  Returns the material of the block.
+	 */
+	public BlockMaterial getBlockMaterial(Point3d position){
+		BlockPos pos = new BlockPos(position.x, position.y, position.z);
+		Material material = world.getBlockState(pos).getMaterial();
+		if(material.equals(Material.GROUND) || material.equals(Material.GRASS)){
+			return world.isRainingAt(pos.up()) ? BlockMaterial.DIRT_WET : BlockMaterial.DIRT;
+		}else if(material.equals(Material.SAND)){
+			return world.isRainingAt(pos.up()) ? BlockMaterial.SAND_WET : BlockMaterial.SAND;
+		}else if(material.equals(Material.SNOW) || material.equals(Material.CRAFTED_SNOW)){
+			return BlockMaterial.SNOW;
+		}else if(material.equals(Material.ICE) || material.equals(Material.PACKED_ICE)){
+			return BlockMaterial.ICE;
+		}else{
+			return world.isRainingAt(pos.up()) ? BlockMaterial.NORMAL_WET : BlockMaterial.NORMAL;
+		}
 	}
 	
 	/**
@@ -1041,8 +1060,7 @@ public class WrapperWorld{
 				   if(++totalTicksWaited == 60){
 					   //Spawn fowarder and gun.
 					   BuilderEntityRenderForwarder follower = new BuilderEntityRenderForwarder(player);
-					   //Set this as we will already have loaded NBT data via spawning and don't need to load it from disk.
-					   follower.loadedFromNBT = true;
+					   follower.loadedFromSavedNBT = true;
 					   event.world.spawnEntity(follower);
 					   worldWrapper.activePlayerFollowers.put(playerWrapper, follower);
 					   

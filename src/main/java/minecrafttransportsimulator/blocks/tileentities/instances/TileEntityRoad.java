@@ -24,6 +24,7 @@ import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityRoadCollisionUpdate;
+import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.rendering.instances.RenderRoad;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.item.ItemStack;
@@ -60,22 +61,29 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	
 	public TileEntityRoad(WrapperWorld world, Point3d position, WrapperPlayer placingPlayer, WrapperNBT data){
 		super(world, position, placingPlayer, data);
+		//Normally blocks are placed facing us.  For roads though, we want us to have the angles of the players. Facing.
+		if(placingPlayer != null){
+			int clampAngle = getRotationIncrement();
+			//Need to set the angles so the TE is facing the player, not the direction the player was facing.
+			angles.y = Math.round((placingPlayer.getHeadYaw())/clampAngle)*clampAngle%360;
+		}
+		
 		//Set the bounding box.
-		this.boundingBox = new BoundingBox(new Point3d(0, (definition.road.collisionHeight - 16)/16D/2D, 0), 0.5D, definition.road.collisionHeight/16D/2D, 0.5D);
+		this.boundingBox = new BoundingBox(position.copy().add(0, (definition.road.collisionHeight - 16)/16D/2D, 0), 0.5D, definition.road.collisionHeight/16D/2D, 0.5D);
 		
 		//Get the active state.
 		this.isActive = data.getBoolean("isActive");
 		
 		//Load components back in.  Our core component will always be our definition.
 		for(RoadComponent componentType : RoadComponent.values()){
-			String packID = data.getString("packID" + componentType.ordinal());
+			String packID = data.getString("packID" + componentType.name());
 			if(!packID.isEmpty()){
-				String systemName = data.getString("systemName" + componentType.ordinal());
+				String systemName = data.getString("systemName" + componentType.name());
 				ItemRoadComponent newComponent = PackParserSystem.getItem(packID, systemName);
 				components.put(componentType, newComponent);
 			}
 		}
-		components.put(RoadComponent.CORE, (ItemRoadComponent) getItem());
+		components.put(definition.road.type, (ItemRoadComponent) getItem());
 		
 		//Load curve and lane data.  We may not have this yet if we're in the process of creating a new road.
 		this.lanes = new ArrayList<RoadLane>();
@@ -162,7 +170,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	public RoadClickData getClickData(Point3d blockOffsetClicked, boolean curveStart){
 		boolean clickedStart = blockOffsetClicked.isZero() || collisionBlockOffsets.indexOf(blockOffsetClicked) < collisionBlockOffsets.size()/2;
 		JSONLaneSector closestSector = null;
-		if(!definition.road.isDynamic){
+		if(!definition.road.type.equals(RoadComponent.CORE_DYNAMIC)){
 			double closestSectorDistance = Double.MAX_VALUE;
 			for(RoadLane lane : lanes){
 				//Only check start points.  End points are for other sectors.
@@ -182,7 +190,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	 *  lanes for the first time.
 	 */
 	public void generateLanes(WrapperNBT data){
-		if(definition.road.isDynamic){
+		if(definition.road.type.equals(RoadComponent.CORE_DYNAMIC)){
 			for(int i=0; i<definition.road.laneOffsets.length; ++i){
 				lanes.add(new RoadLane(this, 0, lanes.size(), data != null ? data.getData("lane" + lanes.size()) : null));
 			}
@@ -205,14 +213,14 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 		collisionBlockOffsets.clear();
 		collidingBlockOffsets.clear();
 		Map<Point3d, Integer> collisionHeightMap = new HashMap<Point3d, Integer>();
-		if(definition.road.isDynamic){
+		if(definition.road.type.equals(RoadComponent.CORE_DYNAMIC)){
 			//Get all the points that make up our collision points for our dynamic curve.
 			//If we find any colliding points, note them.
 			Point3d testOffset = new Point3d();
 			Point3d testRotation = new Point3d();
 			float segmentDelta = (float) (definition.road.borderOffset/(Math.floor(definition.road.borderOffset) + 1));
 			for(float f=0; f<dynamicCurve.pathLength; f+=0.1){
-				for(float offset=0; offset < definition.road.borderOffset; offset += segmentDelta){
+				for(float offset=0; offset <= definition.road.borderOffset; offset += segmentDelta){
 					dynamicCurve.setPointToRotationAt(testRotation, f);
 					//We only want yaw for block placement.
 					testRotation.x = 0;
@@ -243,9 +251,11 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 		}else{
 			//Do static block additions for static component.
 			for(JSONRoadCollisionArea collisionArea : definition.road.collisionAreas){
-				for(double x=collisionArea.firstCorner.x; x<=collisionArea.secondCorner.x; x += 0.5){
-					for(double z=collisionArea.firstCorner.z; z<=collisionArea.secondCorner.z; z += 0.5){
+				for(double x=collisionArea.firstCorner.x; x<=collisionArea.secondCorner.x-1; x += 0.5){
+					for(double z=collisionArea.firstCorner.z; z<=collisionArea.secondCorner.z-1; z += 0.5){
 						Point3d testPoint = new Point3d(x, 0, z).rotateFine(angles);
+						testPoint.x = (int) testPoint.x;
+						testPoint.z = (int) testPoint.z;
 						
 						if(!testPoint.isZero() && !collisionBlockOffsets.contains(testPoint) && !collidingBlockOffsets.contains(testPoint)){
 							//Offset the point to the global cordinate space, get the block, and offset back.
@@ -308,8 +318,8 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 				
 		//Save all components.
 		for(Entry<RoadComponent, ItemRoadComponent> connectedObjectEntry : components.entrySet()){
-			data.setString("packID" + connectedObjectEntry.getKey().ordinal(), connectedObjectEntry.getValue().definition.packID);
-			data.setString("systemName" + connectedObjectEntry.getKey().ordinal(), connectedObjectEntry.getValue().definition.systemName);
+			data.setString("packID" + connectedObjectEntry.getKey().name(), connectedObjectEntry.getValue().definition.packID);
+			data.setString("systemName" + connectedObjectEntry.getKey().name(), connectedObjectEntry.getValue().definition.systemName);
 		}
 		
 		//Save curve data.
@@ -335,13 +345,9 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	 *  Enums for part-specific stuff.
 	 */
 	public static enum RoadComponent{
-		CORE,
-		LEFT_MARKING,
-		RIGHT_MARKING,
-		CENTER_MARKING,
-		LEFT_BORDER,
-		RIGHT_BORDER,
-		UNDERLAYMENT,
-		SUPPORT;
+		@JSONDescription("The core component.  This must be placed down before any other road components.  This is a static component with defined lanes and collision.")
+		CORE_STATIC,
+		@JSONDescription("The core component.  This must be placed down before any other road components.  This is a dynamic component with flexible collision and lane paths, but defined lane counts and offsets.")
+		CORE_DYNAMIC;
 	}
 }

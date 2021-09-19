@@ -11,7 +11,6 @@ import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
 import minecrafttransportsimulator.MasterLoader;
-import minecrafttransportsimulator.guis.components.InterfaceGUI;
 import minecrafttransportsimulator.guis.instances.GUIConfig;
 import minecrafttransportsimulator.jsondefs.JSONConfig.ConfigJoystick;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -91,7 +90,7 @@ public class InterfaceInput{
 						classicJoystickMap.clear();
 						for(net.java.games.input.Controller joystick : net.java.games.input.ControllerEnvironment.getDefaultEnvironment().getControllers()){
 							joystickEnabled = true;
-							if(joystick.getType() != null && joystick.getName() != null && joystick.getComponents().length != 0){
+							if(joystick.getType() != null && !joystick.getType().equals(net.java.games.input.Controller.Type.MOUSE) && !joystick.getType().equals(net.java.games.input.Controller.Type.KEYBOARD) && joystick.getName() != null && joystick.getComponents().length != 0){
 								String joystickName = joystick.getName();
 								//Add an index on this joystick to be sure we don't override multi-component units.
 								if(!joystickNameCounters.containsKey(joystickName)){
@@ -130,14 +129,20 @@ public class InterfaceInput{
 						ConfigJoystick config = iterator.next().getValue();
 						if(runningClassicMode){
 							if(classicJoystickMap.containsKey(config.joystickName)){
-								if(classicJoystickMap.get(config.joystickName).getComponents().length < config.buttonIndex){
+								if(classicJoystickMap.get(config.joystickName).getComponents().length <= config.buttonIndex){
 									iterator.remove();
 								}
 							}
 						}else{
 							if(joystickMap.containsKey(config.joystickName)){
-								if(joystickMap.get(config.joystickName).getButtonCount() + buttonNumberOffset < config.buttonIndex){
-									iterator.remove();
+								if(config.axisMinTravel != 0 || config.axisMaxTravel != 0){
+									if(joystickMap.get(config.joystickName).getAxisCount() <= config.buttonIndex){
+										iterator.remove();
+									}
+								}else{
+									if(joystickMap.get(config.joystickName).getButtonCount() <= config.buttonIndex - buttonNumberOffset){
+										iterator.remove();
+									}
 								}
 							}
 						}
@@ -238,9 +243,14 @@ public class InterfaceInput{
 				return 0;
 			}
 		}else{
+			//Make sure we're not calling this on non-axis.
 			if(joystickMap.containsKey(joystickName)){
-				joystickMap.get(joystickName).poll();
-				return joystickMap.get(joystickName).getAxisValue(index);
+				if(isJoystickComponentAxis(joystickName, index)){
+					joystickMap.get(joystickName).poll();
+					return joystickMap.get(joystickName).getAxisValue(index);
+				}else{
+					return getJoystickButtonValue(joystickName, index) ? 1 : 0;
+				}
 			}else{
 				return 0;
 			}

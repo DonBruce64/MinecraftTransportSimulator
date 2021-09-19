@@ -35,7 +35,6 @@ import minecrafttransportsimulator.packets.instances.PacketPartEngine.Signal;
 import minecrafttransportsimulator.packets.instances.PacketPartInteractable;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
-import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.item.ItemStack;
@@ -340,8 +339,10 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 						EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) entity;
 						vehicle.throttle = 0;
 						InterfacePacket.sendToAllClients(new PacketVehicleControlAnalog(vehicle, PacketVehicleControlAnalog.Controls.THROTTLE, (short) 0, (byte) 0));
-						vehicle.parkingBrakeOn = true;
-						InterfacePacket.sendToAllClients(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.P_BRAKE, true));
+						if(!vehicle.parkingBrakeOn){
+							vehicle.variablesOn.add(EntityVehicleF_Physics.PARKINGBRAKE_VARIABLE);
+							InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.PARKINGBRAKE_VARIABLE));
+						}
 						for(PartEngine engine : vehicle.engines.values()){
 							engine.setMagnetoStatus(false);
 							InterfacePacket.sendToAllClients(new PacketPartEngine(engine, Signal.MAGNETO_OFF));

@@ -40,8 +40,9 @@ public class GUIComponentInstrument{
     public void renderInstrument(boolean blendingEnabled, float partialTicks){
     	GL11.glPushMatrix();
 		GL11.glTranslated(x, y, 0);
-		GL11.glScalef(packInstrument.hudScale, packInstrument.hudScale, packInstrument.hudScale);
-		RenderInstrument.drawInstrument(instrument, packInstrument.optionalPartNumber, entity, blendingEnabled, partialTicks);
+		//Need to scale y by -1 due to inverse coordinates.
+		GL11.glScalef(1.0F, -1.0F, 1.0F);
+		RenderInstrument.drawInstrument(instrument, packInstrument.optionalPartNumber, entity, packInstrument.hudScale, blendingEnabled, partialTicks);
 		GL11.glPopMatrix();
     }
 }

@@ -18,10 +18,11 @@ import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
-import minecrafttransportsimulator.guis.components.InterfaceGUI;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
+import minecrafttransportsimulator.mcinterface.InterfaceGUI;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketTileEntitySignalControllerChange;
+import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
 
 public class GUISignalController extends AGUIBase{
 	
@@ -305,12 +306,12 @@ public class GUISignalController extends AGUIBase{
 				
 				List<GUIComponentLabel> currentList = axis.blockBased ? upperPropertyLabels : lowerPropertyLabels;
 				if(currentList.isEmpty()){
-					currentList.add(new GUIComponentLabel(guiLeft + 10, topOffset + 10, ColorRGB.WHITE, "# Left Lanes:", null, TextPosition.LEFT_ALIGNED, 0, 0.75F, false));
-					currentList.add(new GUIComponentLabel(guiLeft + 10, topOffset + 20, ColorRGB.WHITE, "# Center Lanes:", null, TextPosition.LEFT_ALIGNED, 0, 0.75F, false));
-					currentList.add(new GUIComponentLabel(guiLeft + 10, topOffset + 30, ColorRGB.WHITE, "# Right Lanes:", null, TextPosition.LEFT_ALIGNED, 0, 0.75F, false));
-					currentList.add(new GUIComponentLabel(guiLeft + 10, topOffset + 40, ColorRGB.WHITE, "Road Width:", null, TextPosition.LEFT_ALIGNED, 0, 0.75F, false));
-					currentList.add(new GUIComponentLabel(guiLeft + 10, topOffset + 50, ColorRGB.WHITE, "Dist Center->Road:", null, TextPosition.LEFT_ALIGNED, 0, 0.75F, false));
-					currentList.add(new GUIComponentLabel(guiLeft + 10, topOffset + 60, ColorRGB.WHITE, "Dist Road->Median:", null, TextPosition.LEFT_ALIGNED, 0, 0.75F, false));
+					currentList.add(new GUIComponentLabel(guiLeft + 10, topOffset + 10, ColorRGB.WHITE, "# Left Lanes:", TextAlignment.LEFT_ALIGNED, 0.75F));
+					currentList.add(new GUIComponentLabel(guiLeft + 10, topOffset + 20, ColorRGB.WHITE, "# Center Lanes:", TextAlignment.LEFT_ALIGNED, 0.75F));
+					currentList.add(new GUIComponentLabel(guiLeft + 10, topOffset + 30, ColorRGB.WHITE, "# Right Lanes:", TextAlignment.LEFT_ALIGNED, 0.75F));
+					currentList.add(new GUIComponentLabel(guiLeft + 10, topOffset + 40, ColorRGB.WHITE, "Road Width:", TextAlignment.LEFT_ALIGNED, 0.75F));
+					currentList.add(new GUIComponentLabel(guiLeft + 10, topOffset + 50, ColorRGB.WHITE, "Dist Center->Road:", TextAlignment.LEFT_ALIGNED, 0.75F));
+					currentList.add(new GUIComponentLabel(guiLeft + 10, topOffset + 60, ColorRGB.WHITE, "Dist Road->Median:", TextAlignment.LEFT_ALIGNED, 0.75F));
 					for(GUIComponentLabel label : currentList){
 						addLabel(label);
 					}
@@ -430,7 +431,7 @@ public class GUISignalController extends AGUIBase{
 		private GUIComponentIntersectionProperties(int guiLeft, int guiTop, int leftOffset, int topOffset, Axis axis){
 			this.axis = axis;
 			IntersectionProperties properties = controller.intersectionProperties.get(axis);
-			addLabel(axisLabel = new GUIComponentLabel(leftOffset, topOffset, ColorRGB.WHITE, axis.name(), null, TextPosition.LEFT_ALIGNED, 0, axis.blockBased ? 1.0F : 0.65F, false));
+			addLabel(axisLabel = new GUIComponentLabel(leftOffset, topOffset, ColorRGB.WHITE, axis.name(), TextAlignment.LEFT_ALIGNED, axis.blockBased ? 1.0F : 0.65F));
 			addTextBox(leftLaneText = new GUIComponentNumericTextBox(leftOffset, topOffset + 10, String.valueOf(properties.leftLaneCount)){
 				@Override
 				public void setVariable(){

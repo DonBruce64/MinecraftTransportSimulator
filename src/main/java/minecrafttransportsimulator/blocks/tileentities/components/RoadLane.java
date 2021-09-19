@@ -119,10 +119,10 @@ public class RoadLane{
 			Point3d offsetPoint;
 			Point3d ownCurvePoint;
 			if(checkingStart){
-				offsetPoint = new Point3d(0, 0, -1).rotateY(curve.startAngle).add(curve.startPos).add(road.position);
+				offsetPoint = new Point3d(0, 0, j).rotateY(curve.startAngle).add(curve.startPos).add(road.position);
 				ownCurvePoint = curve.startPos.copy().add(road.position);	
 			}else{
-				offsetPoint = new Point3d(0, 0, -1).rotateY(curve.endAngle).add(curve.endPos).add(road.position);
+				offsetPoint = new Point3d(0, 0, j).rotateY(curve.endAngle).add(curve.endPos).add(road.position);
 				ownCurvePoint = curve.endPos.copy().add(road.position);
 			}
 			

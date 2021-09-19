@@ -65,7 +65,7 @@ public final class PartInteractable extends APart{
 	public void attack(Damage damage){
 		super.attack(damage);
 		if(isValid){
-			if(!damage.isWater){
+			if(!damage.isWater && damage.amount > 25){
 				double explosivePower = getExplosiveContribution();
 				if(explosivePower > 0 && isValid){
 					//Set invalid so this explosion doesn't let us attack ourselves again.

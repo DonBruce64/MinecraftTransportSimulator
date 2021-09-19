@@ -181,20 +181,32 @@ public class BuilderEntityExisting extends ABuilderEntityBase{
 	    		entity.world.endProfiling();
     			entity.world.endProfiling();
     		}
+    	}else{
+    		//If we have NBT, and haven't loaded it, do so now.
+    		if(!loadedFromSavedNBT && loadFromSavedNBT){
+				WrapperWorld worldWrapper = WrapperWorld.getWrapperFor(world);
+				try{
+					entity = entityMap.get(lastLoadedNBT.getString("entityid")).createEntity(worldWrapper, new WrapperNBT(lastLoadedNBT));
+					loadedFromSavedNBT = true;
+					lastLoadedNBT = null;
+				}catch(Exception e){
+					InterfaceCore.logError("Failed to load entity on builder from saved NBT.  Did a pack change?");
+					InterfaceCore.logError(e.getMessage());
+					setDead();
+				}
+			}
     	}
     }
     
 	@Override
 	public void setDead(){
 		super.setDead();
-		if(isDead){
-			//Stop chunkloading of this entity.
-			InterfaceChunkloader.removeEntityTicket(this);
-			
-			//Notify internal entity of it being invalid.
-			if(entity != null){
-				entity.remove();
-			}
+		//Stop chunkloading of this entity.
+		InterfaceChunkloader.removeEntityTicket(this);
+		
+		//Notify internal entity of it being invalid.
+		if(entity != null){
+			entity.remove();
 		}
 	}
 	
@@ -325,20 +337,6 @@ public class BuilderEntityExisting extends ABuilderEntityBase{
 		//Return true here to allow player to interact with this entity while riding.
         return true;
     }
-    
-    @Override
-	public void handleLoadedNBT(NBTTagCompound tag){
-    	if(entity == null && tag.hasKey("entityid")){
-			WrapperWorld worldWrapper = WrapperWorld.getWrapperFor(world);
-			try{
-				entity = entityMap.get(tag.getString("entityid")).createEntity(worldWrapper, new WrapperNBT(tag));
-			}catch(Exception e){
-				InterfaceCore.logError("Failed to load entity on builder from saved NBT.  Did a pack change?");
-				InterfaceCore.logError(e.getMessage());
-				setDead();
-			}
-    	}
-	}
     
 	@Override
 	public NBTTagCompound writeToNBT(NBTTagCompound tag){

@@ -55,7 +55,7 @@ public class GUIComponent3DModel{
     	if(visible){
 			if(modelLocation != null){
 				if(!modelParsedVertexLists.containsKey(modelLocation)){
-					Map<String, Float[][]> parsedModel = AModelParser.parseModel(modelLocation);
+					Map<String, float[][]> parsedModel = AModelParser.parseModel(modelLocation);
 					//Remove any windows and "commented" objects from the model.  We don't want to render those.
 					parsedModel.keySet().removeIf(objectName -> objectName.toLowerCase().contains("window") || objectName.startsWith("#"));
 					
@@ -66,8 +66,8 @@ public class GUIComponent3DModel{
 					float maxY = -999;
 					float minZ = 999;
 					float maxZ = -999;
-					for(Entry<String, Float[][]> entry : parsedModel.entrySet()){
-						for(Float[] vertex : entry.getValue()){
+					for(Entry<String, float[][]> entry : parsedModel.entrySet()){
+						for(float[] vertex : entry.getValue()){
 							minX = Math.min(minX, vertex[0]);
 							maxX = Math.max(maxX, vertex[0]);
 							minY = Math.min(minY, vertex[1]);

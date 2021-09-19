@@ -6,7 +6,6 @@ import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartEngine;
 import minecrafttransportsimulator.entities.instances.PartGun;
 import minecrafttransportsimulator.entities.instances.PartSeat;
-import minecrafttransportsimulator.guis.components.InterfaceGUI;
 import minecrafttransportsimulator.guis.instances.GUIPanelAircraft;
 import minecrafttransportsimulator.guis.instances.GUIPanelGround;
 import minecrafttransportsimulator.guis.instances.GUIRadio;
@@ -14,6 +13,7 @@ import minecrafttransportsimulator.jsondefs.JSONConfig.ConfigJoystick;
 import minecrafttransportsimulator.jsondefs.JSONConfig.ConfigKeyboard;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
+import minecrafttransportsimulator.mcinterface.InterfaceGUI;
 import minecrafttransportsimulator.mcinterface.InterfaceInput;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
@@ -125,12 +125,8 @@ public final class ControlSystem{
 		//If the analog brake is set, do brake state based on that rather than the keyboard.
 		boolean isParkingBrakePressed = InterfaceInput.isJoystickPresent(brakeJoystick.config.joystickName) ? pBrake.isPressed() : brakeMod.isPressed() || pBrake.isPressed();
 		byte brakeValue = InterfaceInput.isJoystickPresent(brakeJoystick.config.joystickName) ? (byte) brakeJoystick.getAxisState((short) 0) : (brakeMod.mainControl.isPressed() || brakeButton.isPressed() ? EntityVehicleF_Physics.MAX_BRAKE : 0);
-		if(isParkingBrakePressed){
-			if(!vehicle.parkingBrakeOn){
-				InterfacePacket.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.P_BRAKE, true));
-			}
-		}else if(brakeValue > 0 && vehicle.parkingBrakeOn){
-			InterfacePacket.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.P_BRAKE, false));
+		if(isParkingBrakePressed ? !vehicle.parkingBrakeOn :  (brakeValue > 0 && vehicle.parkingBrakeOn)){
+			InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.PARKINGBRAKE_VARIABLE));
 		}
 		InterfacePacket.sendToServer(new PacketVehicleControlAnalog(vehicle, PacketVehicleControlAnalog.Controls.BRAKE, brakeValue, Byte.MAX_VALUE));
 	}
@@ -442,22 +438,22 @@ public final class ControlSystem{
 		}
 		
 		//Check if horn button is pressed.
-		if(ControlsKeyboard.CAR_HORN.isPressed() && !powered.hornOn){
-			InterfacePacket.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.HORN, true));
-		}else if(!ControlsKeyboard.CAR_HORN.isPressed() && powered.hornOn){
-			InterfacePacket.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.HORN, false));
+		if(ControlsKeyboard.CAR_HORN.isPressed() && !powered.variablesOn.contains(EntityVehicleF_Physics.HORN_VARIABLE)){
+			InterfacePacket.sendToServer(new PacketEntityVariableToggle(powered, EntityVehicleF_Physics.HORN_VARIABLE));
+		}else if(!ControlsKeyboard.CAR_HORN.isPressed() && powered.variablesOn.contains(EntityVehicleF_Physics.HORN_VARIABLE)){
+			InterfacePacket.sendToServer(new PacketEntityVariableToggle(powered, EntityVehicleF_Physics.HORN_VARIABLE));
 		}
 		
 		//Check for lights.
 		if(ControlsKeyboard.CAR_LIGHTS.isPressed()){
-			InterfacePacket.sendToServer(new PacketEntityVariableToggle(powered, "running_light"));
-			InterfacePacket.sendToServer(new PacketEntityVariableToggle(powered, "headlight"));
+			InterfacePacket.sendToServer(new PacketEntityVariableToggle(powered, EntityVehicleF_Physics.RUNNINGLIGHT_VARIABLE));
+			InterfacePacket.sendToServer(new PacketEntityVariableToggle(powered, EntityVehicleF_Physics.HEADLIGHT_VARIABLE));
 		}
 		if(ControlsKeyboard.CAR_TURNSIGNAL_L.isPressed()){
-			InterfacePacket.sendToServer(new PacketEntityVariableToggle(powered, "left_turn_signal"));
+			InterfacePacket.sendToServer(new PacketEntityVariableToggle(powered, EntityVehicleF_Physics.LEFTTURNLIGHT_VARIABLE));
 		}
 		if(ControlsKeyboard.CAR_TURNSIGNAL_R.isPressed()){
-			InterfacePacket.sendToServer(new PacketEntityVariableToggle(powered, "right_turn_signal"));
+			InterfacePacket.sendToServer(new PacketEntityVariableToggle(powered, EntityVehicleF_Physics.RIGHTTURNLIGHT_VARIABLE));
 		}
 
 		//Change turn signal status depending on turning status.
@@ -468,20 +464,20 @@ public final class ControlSystem{
 			if(!powered.turningLeft && powered.rudderAngle < -200){
 				powered.turningLeft = true;
 				powered.turningCooldown = 40;
-				InterfacePacket.sendToServer(new PacketEntityVariableToggle(powered, "left_turn_signal"));
+				InterfacePacket.sendToServer(new PacketEntityVariableToggle(powered, EntityVehicleF_Physics.LEFTTURNLIGHT_VARIABLE));
 			}
 			if(!powered.turningRight && powered.rudderAngle > 200){
 				powered.turningRight = true;
 				powered.turningCooldown = 40;
-				InterfacePacket.sendToServer(new PacketEntityVariableToggle(powered, "right_turn_signal"));
+				InterfacePacket.sendToServer(new PacketEntityVariableToggle(powered, EntityVehicleF_Physics.RIGHTTURNLIGHT_VARIABLE));
 			}
 			if(powered.turningLeft && (powered.rudderAngle > 0 || powered.turningCooldown == 0)){
 				powered.turningLeft = false;
-				InterfacePacket.sendToServer(new PacketEntityVariableToggle(powered, "left_turn_signal"));
+				InterfacePacket.sendToServer(new PacketEntityVariableToggle(powered, EntityVehicleF_Physics.LEFTTURNLIGHT_VARIABLE));
 			}
 			if(powered.turningRight && (powered.rudderAngle < 0 || powered.turningCooldown == 0)){
 				powered.turningRight = false;
-				InterfacePacket.sendToServer(new PacketEntityVariableToggle(powered, "right_turn_signal"));
+				InterfacePacket.sendToServer(new PacketEntityVariableToggle(powered, EntityVehicleF_Physics.RIGHTTURNLIGHT_VARIABLE));
 			}
 			if(powered.velocity != 0 && powered.turningCooldown > 0 && powered.rudderAngle == 0){
 				--powered.turningCooldown;

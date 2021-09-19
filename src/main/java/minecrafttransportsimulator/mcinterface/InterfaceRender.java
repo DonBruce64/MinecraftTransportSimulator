@@ -8,7 +8,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
@@ -19,12 +18,8 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
 import minecrafttransportsimulator.entities.instances.EntityParticle;
-import minecrafttransportsimulator.guis.components.AGUIBase.TextPosition;
-import minecrafttransportsimulator.guis.components.InterfaceGUI;
-import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.rendering.components.AModelParser;
 import minecrafttransportsimulator.rendering.components.GIFParser;
 import minecrafttransportsimulator.rendering.components.GIFParser.ParsedGIF;
@@ -55,11 +50,11 @@ public class InterfaceRender{
 	 *  which will render the cached vertices from this function.  Note that the vertex format
 	 *  is expected to be the same returned b {@link AModelParser#parseModel(String)}
 	 */
-	public static int cacheVertices(Float[][] vertices){
+	public static int cacheVertices(float[][] vertices){
 		int displayListIndex = GL11.glGenLists(1);
 		GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
 		GL11.glBegin(GL11.GL_TRIANGLES);
-		for(Float[] vertex : vertices){
+		for(float[] vertex : vertices){
 			GL11.glTexCoord2f(vertex[3], vertex[4]);
 			GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
 			GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
@@ -70,16 +65,16 @@ public class InterfaceRender{
 	}
 	
 	/**
-	 *  Like {@link #cacheVertices(Float[][])}, but in this takes
+	 *  Like {@link #cacheVertices(float[][])}, but in this takes
 	 *  a list of vertex float arrays rather than a single one.
 	 *  Used for caching whole models rather than individual objects.
 	 */
-	public static int cacheVertices(Collection<Float[][]> vertices){
+	public static int cacheVertices(Collection<float[][]> vertices){
 		int displayListIndex = GL11.glGenLists(1);
 		GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
 		GL11.glBegin(GL11.GL_TRIANGLES);
-		for(Float[][] vertexGroup : vertices){
-			for(Float[] vertex : vertexGroup){
+		for(float[][] vertexGroup : vertices){
+			for(float[] vertex : vertexGroup){
 				GL11.glTexCoord2f(vertex[3], vertex[4]);
 				GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
 				GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
@@ -91,7 +86,7 @@ public class InterfaceRender{
 	}
 	
 	/**
-	 *  Renders a set of vertices previously cached with {@link #cacheVertices(Float[][])}
+	 *  Renders a set of vertices previously cached with {@link #cacheVertices(float[][])}
 	 */
 	public static void renderVertices(int index){
 		GL11.glCallList(index);
@@ -100,9 +95,23 @@ public class InterfaceRender{
 	/**
 	 *  Renders a set of raw vertices without any caching.
 	 */
-	public static void renderVertices(Float[][] vertices){
+	public static void renderVertices(float[][] vertices){
 		GL11.glBegin(GL11.GL_TRIANGLES);
-		for(Float[] vertex : vertices){
+		for(float[] vertex : vertices){
+			GL11.glTexCoord2f(vertex[3], vertex[4]);
+			GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
+			GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
+		}
+		GL11.glEnd();
+	}
+	
+	/**
+	 *  Like {@link #renderVertices(float[][])}, but in this takes
+	 *  a list of vertex float arrays rather than a single one.
+	 */
+	public static void renderVertices(Collection<float[]> vertices){
+		GL11.glBegin(GL11.GL_TRIANGLES);
+		for(float[] vertex : vertices){
 			GL11.glTexCoord2f(vertex[3], vertex[4]);
 			GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
 			GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
@@ -397,73 +406,6 @@ public class InterfaceRender{
 	public static void spawnParticle(EntityParticle particle){
 		if(Minecraft.getMinecraft().effectRenderer != null){
 			Minecraft.getMinecraft().effectRenderer.addEffect(new BuilderParticle(particle));
-		}
-	}
-	
-	/**
-	 *  Renders all the text markings on the passed-in entity.
-	 *  This should only be done in the main pass, as we don't do any alpha blending in this routine.
-	 *  Return true if we rendered anything.  This lets any rendering systems reset their bound texture if required.
-	 */
-	public static boolean renderTextMarkings(AEntityC_Definable<?> entity, String objectRendering){
-		boolean systemLightingEnabled = true;
-		boolean internalLightingEnabled = true;
-		for(Entry<JSONText, String> textLine : entity.text.entrySet()){
-			JSONText textDefinition = textLine.getKey();
-			String text = textLine.getValue();
-			
-			//Render if our attached object and the object we are rendering on match.
-			if(textDefinition.attachedTo == null ? objectRendering == null : textDefinition.attachedTo.equals(objectRendering)){
-				//Disable system lighting if we haven't already.
-				//System lighting doesn't work well with text.
-				if(systemLightingEnabled){
-					setSystemLightingState(false);
-					systemLightingEnabled = false;
-				}
-				
-				//If we have light-up text, disable lightmap.
-				if(textDefinition.lightsUp && entity.renderTextLit()){
-					if(internalLightingEnabled){
-						internalLightingEnabled = false;
-						setInternalLightingState(internalLightingEnabled);
-					}
-				}else if(!internalLightingEnabled){
-					internalLightingEnabled = true;
-					setInternalLightingState(internalLightingEnabled);
-				}
-				
-				GL11.glPushMatrix();
-				//Translate to the position to render.
-				GL11.glTranslated(textDefinition.pos.x, textDefinition.pos.y, textDefinition.pos.z);
-				//First rotate 180 along the X-axis to get us rendering right-side up.
-				GL11.glRotatef(180F, 1, 0, 0);
-				//Next, apply rotations.  Y is inverted due to the inverted X axis.
-				if(!textDefinition.rot.isZero()){
-					GL11.glRotated(-textDefinition.rot.y, 0, 1, 0);
-					GL11.glRotated(textDefinition.rot.x, 1, 0, 0);
-					GL11.glRotated(textDefinition.rot.z, 0, 0, 1);
-				}
-				//Scale by 1/16.  This converts us from block units to pixel units, which is what the GUIs use.
-				GL11.glScalef(1F/16F, 1F/16F, 1F/16F);
-				//Finally, render the text.
-				ColorRGB inheritedColor = entity.getSecondaryTextColor();
-				ColorRGB color = textDefinition.colorInherited && inheritedColor != null ? inheritedColor : textDefinition.color;
-				InterfaceGUI.drawScaledText(text, textDefinition.fontName, 0, 0, color, TextPosition.values()[textDefinition.renderPosition], textDefinition.wrapWidth, textDefinition.scale, textDefinition.autoScale);
-				GL11.glPopMatrix();
-			}
-		}
-		
-		//Reset lighting.
-		if(!internalLightingEnabled){
-			setInternalLightingState(true);
-		}
-		if(!systemLightingEnabled){
-			setSystemLightingState(true);
-			//Set color back to white, the font renderer sets this to not-white.
-			setColorState(ColorRGB.WHITE);
-			return true;
-		}else{
-			return false;
 		}
 	}
 }

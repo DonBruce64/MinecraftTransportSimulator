@@ -30,10 +30,15 @@ import minecrafttransportsimulator.systems.ConfigSystem;
  * @author don_bruce
  */
 abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
-
+	//Static variables used in logic that are kept in the global map.
+	public static final String LEFTTURNLIGHT_VARIABLE = "left_turn_signal";
+	public static final String RIGHTTURNLIGHT_VARIABLE = "right_turn_signal";
+	public static final String PARKINGBRAKE_VARIABLE = "p_brake";
+	
 	//External state control.
 	public static final byte MAX_BRAKE = 100;
 	public byte brake;
+	/**Read-only, set every update cycle by the value in variablesOn **/
 	public boolean parkingBrakeOn;
 	
 	//Internal states.
@@ -69,7 +74,6 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	
 	public AEntityVehicleD_Moving(WrapperWorld world, WrapperNBT data){
 		super(world, data);
-		this.parkingBrakeOn = data.getBoolean("parkingBrakeOn");
 		this.brake = (byte) data.getInteger("brake");
 		
 		this.serverDeltaM = data.getPoint3d("serverDeltaM");
@@ -84,9 +88,15 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		if(super.update()){
 			world.beginProfiling("VehicleD_Level", true);
 			
+			//Update parking brake status.  This is used in a lot of locations, so we don't want to query the set every time.
+			parkingBrakeOn = variablesOn.contains(PARKINGBRAKE_VARIABLE);
+			
 			//Update our GDB members if any of our ground devices don't have the same total offset as placement.
 			//This is required to move the GDBs if the GDs move.
 			world.beginProfiling("GroundDevices", true);
+			if(ticksExisted == 1){
+				groundDeviceCollective.updateBounds();
+			}
 			for(APart part : parts){
 				if(part instanceof PartGroundDevice){
 					if(part.prevActive != part.isActive){
@@ -137,6 +147,17 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		super.removePart(part, iterator);
 		groundDeviceCollective.updateMembers();
 		groundDeviceCollective.updateBounds();
+	}
+	
+	@Override
+	protected void sortBoxes(){
+		super.sortBoxes();
+		if(ticksExisted == 1){
+			//Need to do initial GDB updates.
+			groundDeviceCollective.updateMembers();
+			groundDeviceCollective.updateBounds();
+			groundDeviceCollective.updateCollisions();
+		}
 	}
 	
 	@Override
@@ -349,7 +370,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		float skiddingFactor = 0;
 		//First check grounded ground devices.
 		for(PartGroundDevice groundDevice : groundDeviceCollective.groundedGroundDevices){
-			skiddingFactor += groundDevice.getLateralFriction() - groundDevice.getFrictionLoss();
+			skiddingFactor += Math.max(groundDevice.getLateralFriction() - groundDevice.getFrictionLoss(), 0);
 		}
 		
 		//Now check if any collision boxes are in liquid.  Needed for maritime vehicles.
@@ -483,9 +504,9 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			//Check for the potential to change the requested segment.
 			//We can only do this if both our followers are on the same segment.
 			LaneSelectionRequest requestedSegment;
-			if(!(variablesOn.contains("left_turn_signal") ^ variablesOn.contains("right_turn_signal"))){
+			if(!(variablesOn.contains(LEFTTURNLIGHT_VARIABLE) ^ variablesOn.contains(RIGHTTURNLIGHT_VARIABLE))){
 				requestedSegment = LaneSelectionRequest.NONE;
-			}else if(variablesOn.contains("left_turn_signal")){
+			}else if(variablesOn.contains(LEFTTURNLIGHT_VARIABLE)){
 				requestedSegment = goingInReverse ? LaneSelectionRequest.RIGHT : LaneSelectionRequest.LEFT;
 			}else{
 				requestedSegment = goingInReverse ? LaneSelectionRequest.LEFT : LaneSelectionRequest.RIGHT;
@@ -888,7 +909,6 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	@Override
 	public WrapperNBT save(WrapperNBT data){
 		super.save(data);
-		data.setBoolean("parkingBrakeOn", parkingBrakeOn);
 		data.setInteger("brake", brake);
 		
 		data.setPoint3d("serverDeltaM", serverDeltaM);

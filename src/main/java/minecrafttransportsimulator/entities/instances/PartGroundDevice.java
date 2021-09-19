@@ -219,7 +219,12 @@ public class PartGroundDevice extends APart{
 	public float getFrictionLoss(){
 		Point3d groundPosition = position.copy().add(0, -1, 0);
 		if(!world.isAir(groundPosition)){
-			return 0.6F - world.getBlockSlipperiness(groundPosition) + world.getRainStrength(groundPosition)*0.1F;
+			Float modifier = definition.ground.frictionModifiers.get(world.getBlockMaterial(groundPosition));
+			if(modifier == null){
+				return world.getBlockSlipperiness(groundPosition) - 0.6F;
+			}else{
+				return world.getBlockSlipperiness(groundPosition) - 0.6F - modifier;
+			}
 		}else{
 			return 0;
 		}

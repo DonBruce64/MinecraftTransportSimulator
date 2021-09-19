@@ -17,16 +17,17 @@ import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentInstrument;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
-import minecrafttransportsimulator.guis.components.InterfaceGUI;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.JSONInstrumentDefinition;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
+import minecrafttransportsimulator.mcinterface.InterfaceGUI;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketEntityInstrumentChange;
 import minecrafttransportsimulator.rendering.instances.RenderInstrument;
+import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**A GUI that is used to put instruments into vehicles.  This GUI is essentially an overlay
@@ -174,7 +175,7 @@ public class GUIInstruments extends AGUIBase{
 		});
 		
 		//Create the info label.
-		addLabel(infoLabel = new GUIComponentLabel(guiLeft + getWidth()/2, guiTop - 20, ColorRGB.WHITE, "", null, TextPosition.CENTERED, 150, 1.0F, false));
+		addLabel(infoLabel = new GUIComponentLabel(guiLeft + getWidth()/2, guiTop - 20, ColorRGB.WHITE, "", TextAlignment.CENTERED, 1.0F, 150));
 		
 		//Get all entities with instruments and adds them to the list. definitions, and add them to a map-list.
 		//These come from the vehicle and all parts.
@@ -248,8 +249,9 @@ public class GUIInstruments extends AGUIBase{
 							if(entity.instruments.containsKey(instrumentPackIndex)){
 								GL11.glPushMatrix();
 								GL11.glTranslated(x, y, 0);
-								GL11.glScalef(packInstrument.hudScale, packInstrument.hudScale, packInstrument.hudScale);
-								RenderInstrument.drawInstrument(entity.instruments.get(instrumentPackIndex), packInstrument.optionalPartNumber, entity, blendingEnabled, partialTicks);
+								//Need to scale y by -1 due to inverse coordinates.
+								GL11.glScalef(1.0F, -1.0F, 1.0F);
+								RenderInstrument.drawInstrument(entity.instruments.get(instrumentPackIndex), packInstrument.optionalPartNumber, entity, packInstrument.hudScale, blendingEnabled, partialTicks);
 								GL11.glPopMatrix();
 							}
 						}

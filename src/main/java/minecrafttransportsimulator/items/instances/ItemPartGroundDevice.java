@@ -1,7 +1,9 @@
 package minecrafttransportsimulator.items.instances;
 
 import java.util.List;
+import java.util.Map.Entry;
 
+import minecrafttransportsimulator.blocks.components.ABlockBase.BlockMaterial;
 import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.PartGroundDevice;
@@ -33,6 +35,22 @@ public class ItemPartGroundDevice extends AItemPart{
 		tooltipLines.add(InterfaceCore.translate("info.item.ground_device.diameter") + definition.ground.height);
 		tooltipLines.add(InterfaceCore.translate("info.item.ground_device.motivefriction") + definition.ground.motiveFriction);
 		tooltipLines.add(InterfaceCore.translate("info.item.ground_device.lateralfriction") + definition.ground.lateralFriction);
+		String modifierString = null;
+		int modifierCount = 0;
+		for(Entry<BlockMaterial, Float> modifier : definition.ground.frictionModifiers.entrySet()){
+			if(modifierString == null){
+				modifierString = "\n";
+			}else{
+				if(++modifierCount == 2){
+					modifierCount = 0;
+					modifierString += "\n";
+				}else{
+					modifierString += ", ";
+				}
+			}
+			modifierString += modifier.getKey().name().toLowerCase() + ": " + modifier.getValue();
+		}
+		tooltipLines.add(InterfaceCore.translate("info.item.ground_device.frictionmodifiers") + modifierString);
 		tooltipLines.add(InterfaceCore.translate(definition.ground.isWheel ? "info.item.ground_device.rotatesonshaft_true" : "info.item.ground_device.rotatesonshaft_false"));
 		tooltipLines.add(InterfaceCore.translate(definition.ground.canFloat ? "info.item.ground_device.canfloat_true" : "info.item.ground_device.canfloat_false"));
 	}

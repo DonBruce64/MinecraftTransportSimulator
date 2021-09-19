@@ -25,6 +25,7 @@ import minecrafttransportsimulator.packets.instances.PacketPartEngine;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine.Signal;
 import minecrafttransportsimulator.packets.instances.PacketVehicleBeaconChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
+import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
 
 /**A GUI/control system hybrid, this takes the place of the HUD when called up.
  * Used for controlling engines, lights, trim, and other things.
@@ -87,52 +88,52 @@ public class GUIPanelAircraft extends AGUIPanel{
 			GUIComponentSelector lightSwitch = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + lightSelectors.size()*(GAP_BETWEEN_SELECTORS + SELECTOR_SIZE), SELECTOR_SIZE, SELECTOR_SIZE, "NAV", vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, NAVIGATION_TEXTURE_WIDTH_OFFSET, NAVIGATION_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
 				public void onClicked(boolean leftSide){
-					InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, "navigation_light"));
+					InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.NAVIGATIONLIGHT_VARIABLE));
 				}
 				
 				@Override
 				public void onReleased(){}
 			};
-			lightSelectors.put("navigation_light", lightSwitch);
+			lightSelectors.put(EntityVehicleF_Physics.NAVIGATIONLIGHT_VARIABLE, lightSwitch);
 			addSelector(lightSwitch);
 		}
 		if(vehicle.definition.motorized.hasStrobeLights){
 			GUIComponentSelector lightSwitch = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + lightSelectors.size()*(GAP_BETWEEN_SELECTORS + SELECTOR_SIZE), SELECTOR_SIZE, SELECTOR_SIZE, "STROBE", vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, STROBE_TEXTURE_WIDTH_OFFSET, STROBE_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
 				public void onClicked(boolean leftSide){
-					InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, "strobe_light"));
+					InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.STROBELIGHT_VARIABLE));
 				}
 				
 				@Override
 				public void onReleased(){}
 			};
-			lightSelectors.put("strobe_light", lightSwitch);
+			lightSelectors.put(EntityVehicleF_Physics.STROBELIGHT_VARIABLE, lightSwitch);
 			addSelector(lightSwitch);
 		}
 		if(vehicle.definition.motorized.hasTaxiLights){
 			GUIComponentSelector lightSwitch = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + lightSelectors.size()*(GAP_BETWEEN_SELECTORS + SELECTOR_SIZE), SELECTOR_SIZE, SELECTOR_SIZE, "TAXI", vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, TAXI_TEXTURE_WIDTH_OFFSET, TAXI_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
 				public void onClicked(boolean leftSide){
-					InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, "taxi_light"));
+					InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.TAXILIGHT_VARIABLE));
 				}
 				
 				@Override
 				public void onReleased(){}
 			};
-			lightSelectors.put("taxi_light", lightSwitch);
+			lightSelectors.put(EntityVehicleF_Physics.TAXILIGHT_VARIABLE, lightSwitch);
 			addSelector(lightSwitch);
 		}
 		if(vehicle.definition.motorized.hasLandingLights){
 			GUIComponentSelector lightSwitch = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + lightSelectors.size()*(GAP_BETWEEN_SELECTORS + SELECTOR_SIZE), SELECTOR_SIZE, SELECTOR_SIZE, "LAND", vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, LANDING_TEXTURE_WIDTH_OFFSET, LANDING_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
 				public void onClicked(boolean leftSide){
-					InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, "landing_light"));
+					InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.LANDINGLIGHT_VARIABLE));
 				}
 				
 				@Override
 				public void onReleased(){}
 			};
-			lightSelectors.put("landing_light", lightSwitch);
+			lightSelectors.put(EntityVehicleF_Physics.LANDINGLIGHT_VARIABLE, lightSwitch);
 			addSelector(lightSwitch);
 		}
 	}
@@ -376,7 +377,7 @@ public class GUIPanelAircraft extends AGUIPanel{
 			addTextBox(beaconBox);
 			
 			//Add beacon text box label.
-			GUIComponentLabel beaconLabel = new GUIComponentLabel(beaconBox.x + beaconBox.width/2, beaconBox.y + beaconBox.height + 1, vehicle.definition.motorized.panelTextColor != null ? vehicle.definition.motorized.panelTextColor : ColorRGB.WHITE, InterfaceCore.translate("gui.panel.beacon"), null, TextPosition.CENTERED, 0, 0.75F, false);
+			GUIComponentLabel beaconLabel = new GUIComponentLabel(beaconBox.x + beaconBox.width/2, beaconBox.y + beaconBox.height + 1, vehicle.definition.motorized.panelTextColor != null ? vehicle.definition.motorized.panelTextColor : ColorRGB.WHITE, InterfaceCore.translate("gui.panel.beacon"), TextAlignment.CENTERED, 0.75F);
 			beaconLabel.setBox(beaconBox);
 			labels.add(beaconLabel);
 		}
@@ -386,7 +387,7 @@ public class GUIPanelAircraft extends AGUIPanel{
 			gearSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, InterfaceCore.translate("gui.panel.gear"), vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, GEAR_TEXTURE_WIDTH_OFFSET, GEAR_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
 				public void onClicked(boolean leftSide){
-					InterfacePacket.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.GEAR, !vehicle.gearUpCommand));
+					InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.GEAR_VARIABLE));
 				}
 				
 				@Override
@@ -409,7 +410,7 @@ public class GUIPanelAircraft extends AGUIPanel{
 			gearSelector = new GUIComponentSelector(guiLeft + xOffset + SELECTOR_SIZE/2, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, InterfaceCore.translate("gui.panel.gear"), vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, GEAR_TEXTURE_WIDTH_OFFSET, GEAR_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 				@Override
 				public void onClicked(boolean leftSide){
-					InterfacePacket.sendToServer(new PacketVehicleControlDigital(vehicle, PacketVehicleControlDigital.Controls.GEAR, !vehicle.gearUpCommand));
+					InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.GEAR_VARIABLE));
 				}
 				
 				@Override
@@ -505,7 +506,7 @@ public class GUIPanelAircraft extends AGUIPanel{
 		
 		//If we have gear, set the selector state.
 		if(gearSelector != null){
-			if(vehicle.gearUpCommand){
+			if(vehicle.variablesOn.contains(EntityVehicleF_Physics.GEAR_VARIABLE)){
 				gearSelector.selectorState = vehicle.gearMovementTime == vehicle.definition.motorized.gearSequenceDuration ? 2 : 3;
 			}else{
 				gearSelector.selectorState = vehicle.gearMovementTime == 0 ? 0 : 1;

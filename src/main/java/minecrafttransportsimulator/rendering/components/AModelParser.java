@@ -54,13 +54,13 @@ public abstract class AModelParser{
 	 *  <li>The nZ-coordinate of the normal for that vertex, in the z-dimension.
 	 *  </ul>
 	 */
-	protected abstract Map<String, Float[][]> parseModelInternal(String modelLocation);
+	protected abstract Map<String, float[][]> parseModelInternal(String modelLocation);
 	
 	/**
 	 *  Attempts to obtain the parser for the passed-in modelLocation.  After this, the model
 	 *  is parsed and returned.  If no parser is found, an exception is thrown.
 	 */
-	public static Map<String, Float[][]> parseModel(String modelLocation){
+	public static Map<String, float[][]> parseModel(String modelLocation){
 		AModelParser parser = parsers.get(modelLocation.substring(modelLocation.lastIndexOf(".") + 1));
 		if(parser != null){
 			return parser.parseModelInternal(modelLocation);
@@ -78,7 +78,7 @@ public abstract class AModelParser{
 	 *  will still be generated as applicable.
 	 */
 	public static <AnimationEntity extends AEntityC_Definable<?>> List<RenderableModelObject<AnimationEntity>> generateRenderables(String modelLocation){
-		Map<String, Float[][]> parsedModelObjects = parseModel(modelLocation);
+		Map<String, float[][]> parsedModelObjects = parseModel(modelLocation);
 		List<RenderableModelObject<AnimationEntity>> modelObjects = new ArrayList<RenderableModelObject<AnimationEntity>>();
 		for(String parsedObjectName : parsedModelObjects.keySet()){
 			//If we are a tread roller, make a roller rather than a standard object.

@@ -20,6 +20,7 @@ import minecrafttransportsimulator.jsondefs.JSONLight;
 import minecrafttransportsimulator.jsondefs.JSONLight.JSONLightBlendableComponent;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.InterfaceRender;
+import minecrafttransportsimulator.rendering.instances.RenderText;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**This class represents an object that can be rendered from a model.  This object is a set of
@@ -37,12 +38,12 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 	private final boolean isWindow;
 	private final boolean isOnlineTexture;
 	private final int cachedVertexIndex;
-	private final Float[][] exteriorWindowObject;
-	private final Float[][] interiorWindowObject;
-	private Float[][] colorObject;
-	private Float[][] coverObject;
-	private final Map<JSONLight, Float[][]> flareObjects = new HashMap<JSONLight, Float[][]>();
-	private final Map<JSONLight, Float[][]> beamObjects = new HashMap<JSONLight, Float[][]>();
+	private final float[][] exteriorWindowObject;
+	private final float[][] interiorWindowObject;
+	private float[][] colorObject;
+	private float[][] coverObject;
+	private final Map<JSONLight, float[][]> flareObjects = new HashMap<JSONLight, float[][]>();
+	private final Map<JSONLight, float[][]> beamObjects = new HashMap<JSONLight, float[][]>();
 	
 	/**Map of tread points, keyed by the model the tread is pathing about, then the spacing of the tread.
 	 * This can be shared for two different treads of the same spacing as they render the same.**/
@@ -53,7 +54,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 	private static final float BEAM_OFFSET = -0.15F;
 	private static final int BEAM_SEGMENTS = 40;
 	
-	public RenderableModelObject(String modelLocation, String objectName, List<RenderableModelObject<AnimationEntity>> allObjects, Float[][] vertices){
+	public RenderableModelObject(String modelLocation, String objectName, List<RenderableModelObject<AnimationEntity>> allObjects, float[][] vertices){
 		super();
 		this.modelLocation = modelLocation;
 		this.objectName = objectName;
@@ -70,7 +71,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 			this.exteriorWindowObject = vertices;
 			normalizeUVs(exteriorWindowObject);
 			
-			this.interiorWindowObject = new Float[exteriorWindowObject.length][8];
+			this.interiorWindowObject = new float[exteriorWindowObject.length][8];
 			for(int i=0, j=exteriorWindowObject.length-1; i<exteriorWindowObject.length; ++i, --j){
 				interiorWindowObject[j] = exteriorWindowObject[i];
 			}
@@ -137,19 +138,9 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 					}
 				}
 				
-				//Check if we are a light-up texture on the solid pass and need to disable lighting this render.
-				//Also check if we are a beam on the translucent pass and need to disable lighting.
-				if(!blendingEnabled && lightDef != null && lightLevel > 0 && !lightDef.emissive && !lightDef.isBeam){
-					//Color rendering.
-					if(ConfigSystem.configObject.clientRendering.brightLights.value){
-						InterfaceRender.setLightingState(false);
-						InterfaceRender.renderVertices(cachedVertexIndex);
-						InterfaceRender.setLightingState(true);
-					}else{
-						InterfaceRender.renderVertices(cachedVertexIndex);
-					}
-				}else if(blendingEnabled && lightDef != null && lightLevel > 0 && lightDef.isBeam && entity.shouldRenderBeams()){
-					//Render model as beam. 
+				//Render us based on the current pass and our states.
+				if(blendingEnabled && lightDef != null && lightLevel > 0 && lightDef.isBeam && entity.shouldRenderBeams()){
+					//Model that's actually a beam, render it with beam lighting/blending. 
 					if(ConfigSystem.configObject.clientRendering.brightLights.value){
 						InterfaceRender.setLightingState(false);
 						if(ConfigSystem.configObject.clientRendering.blendedLights.value){
@@ -176,7 +167,14 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 							InterfaceRender.renderVertices(interiorWindowObject);
 						}
 					}else{
-						InterfaceRender.renderVertices(cachedVertexIndex);
+						//Need to disable lighting if we are a light-up texture.
+						if(ConfigSystem.configObject.clientRendering.brightLights.value && lightDef != null && lightLevel > 0 && !lightDef.emissive && !lightDef.isBeam){
+							InterfaceRender.setLightingState(false);
+							InterfaceRender.renderVertices(cachedVertexIndex);
+							InterfaceRender.setLightingState(true);
+						}else{
+							InterfaceRender.renderVertices(cachedVertexIndex);
+						}
 					}
 				}
 				
@@ -190,8 +188,11 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 				
 				//Render text on this object.  Only do this on the solid pass.
 				if(!blendingEnabled){
-					if(InterfaceRender.renderTextMarkings(entity, objectName)){
-						InterfaceRender.recallTexture();
+					for(JSONText textDef : entity.text.keySet()){
+						if(objectName.equals(textDef.attachedTo)){
+							//TODO this is technically wrong, but are people ever going to scale parts with text on them?
+							RenderText.draw3DText(entity.text.get(textDef), entity, textDef, 1.0F, false);
+						}
 					}
 				}
 				
@@ -223,11 +224,11 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 				//If the animation is a cumulative offset, we need to add the prior value to our variable. 
 				priorOffset = animation.addPriorOffset ? variableValue : 0;
 				variableValue = 0;
-				
+				DurationDelayClock clock = entity.animationClocks.get(animation);
 				switch(animation.animationType){
 					case VISIBILITY :{
 						if(!inhibitAnimations){
-							variableValue = entity.getAnimatedVariableValue(entity.animationClocks.get(animation), partialTicks);
+							variableValue = entity.getAnimatedVariableValue(clock, partialTicks);
 							if(variableValue < animation.clampMin || variableValue > animation.clampMax){
 								return false;
 							}
@@ -236,7 +237,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 					}
 					case INHIBITOR :{
 						if(!inhibitAnimations){
-							variableValue =  entity.getAnimatedVariableValue(entity.animationClocks.get(animation), partialTicks);
+							variableValue =  entity.getAnimatedVariableValue(clock, partialTicks);
 							if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
 								inhibitAnimations = true;
 							}
@@ -245,7 +246,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 					}
 					case ACTIVATOR :{
 						if(inhibitAnimations){
-							variableValue = entity.getAnimatedVariableValue(entity.animationClocks.get(animation), partialTicks);
+							variableValue = entity.getAnimatedVariableValue(clock, partialTicks);
 							if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
 								inhibitAnimations = false;
 							}
@@ -254,29 +255,27 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 					}
 					case TRANSLATION :{
 						if(!inhibitAnimations){
-							double magnitude = animation.axis.length();
-							variableValue = entity.getAnimatedVariableValue(entity.animationClocks.get(animation), magnitude, priorOffset, partialTicks);
+							variableValue = entity.getAnimatedVariableValue(clock, clock.animationAxisMagnitude, priorOffset, partialTicks);
 							//Do the actual translation, if we aren't 0.
 							if(animation.addPriorOffset){
-								GL11.glTranslated((variableValue - priorOffset)*animation.axis.x/magnitude, (variableValue - priorOffset)*animation.axis.y/magnitude, (variableValue - priorOffset)*animation.axis.z/magnitude);
+								GL11.glTranslated((variableValue - priorOffset)*animation.axis.x/clock.animationAxisMagnitude, (variableValue - priorOffset)*animation.axis.y/clock.animationAxisMagnitude, (variableValue - priorOffset)*animation.axis.z/clock.animationAxisMagnitude);
 							}else if(variableValue != 0){
-								GL11.glTranslated(variableValue*animation.axis.x/magnitude, variableValue*animation.axis.y/magnitude, variableValue*animation.axis.z/magnitude);
+								GL11.glTranslated(variableValue*animation.axis.x/clock.animationAxisMagnitude, variableValue*animation.axis.y/clock.animationAxisMagnitude, variableValue*animation.axis.z/clock.animationAxisMagnitude);
 							}
 						}
 						break;
 					}
 					case ROTATION :{
 						if(!inhibitAnimations){
-							double magnitude = animation.axis.length();
-							variableValue = entity.getAnimatedVariableValue(entity.animationClocks.get(animation), magnitude, priorOffset, partialTicks);
+							variableValue = entity.getAnimatedVariableValue(clock, clock.animationAxisMagnitude, priorOffset, partialTicks);
 							//Do rotation.
 							if(animation.addPriorOffset){
 								GL11.glTranslated(animation.centerPoint.x, animation.centerPoint.y, animation.centerPoint.z);
-								GL11.glRotated((variableValue - priorOffset), animation.axis.x/magnitude, animation.axis.y/magnitude, animation.axis.z/magnitude);
+								GL11.glRotated((variableValue - priorOffset), animation.axis.x/clock.animationAxisMagnitude, animation.axis.y/clock.animationAxisMagnitude, animation.axis.z/clock.animationAxisMagnitude);
 								GL11.glTranslated(-animation.centerPoint.x, -animation.centerPoint.y, -animation.centerPoint.z);
 							}else if(variableValue != 0){
 								GL11.glTranslated(animation.centerPoint.x, animation.centerPoint.y, animation.centerPoint.z);
-								GL11.glRotated(variableValue, animation.axis.x/magnitude, animation.axis.y/magnitude, animation.axis.z/magnitude);
+								GL11.glRotated(variableValue, animation.axis.x/clock.animationAxisMagnitude, animation.axis.y/clock.animationAxisMagnitude, animation.axis.z/clock.animationAxisMagnitude);
 								GL11.glTranslated(-animation.centerPoint.x, -animation.centerPoint.y, -animation.centerPoint.z);
 							}
 						}
@@ -284,11 +283,10 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 					}
 					case SCALING :{
 						if(!inhibitAnimations){
-							double magnitude = animation.axis.length();
-							variableValue = entity.getAnimatedVariableValue(entity.animationClocks.get(animation), magnitude, priorOffset, partialTicks);
+							variableValue = entity.getAnimatedVariableValue(clock, clock.animationAxisMagnitude, priorOffset, partialTicks);
 							//Do the actual scaling.
 							GL11.glTranslated(animation.centerPoint.x, animation.centerPoint.y, animation.centerPoint.z);
-							GL11.glScaled(animation.axis.x == 0 ? 1.0 : variableValue*animation.axis.x/magnitude, animation.axis.y == 0 ? 1.0 : variableValue*animation.axis.y/magnitude, animation.axis.z == 0 ? 1.0 : variableValue*animation.axis.z/magnitude);
+							GL11.glScaled(animation.axis.x == 0 ? 1.0 : variableValue*animation.axis.x/clock.animationAxisMagnitude, animation.axis.y == 0 ? 1.0 : variableValue*animation.axis.y/clock.animationAxisMagnitude, animation.axis.z == 0 ? 1.0 : variableValue*animation.axis.z/clock.animationAxisMagnitude);
 							GL11.glTranslated(-animation.centerPoint.x, -animation.centerPoint.y, -animation.centerPoint.z);
 						}
 						break;
@@ -329,8 +327,8 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 			}
 		}
 		if(lightDef != null){
-			//If the light only has solid components, don't render on the blending pass.
-			if(blendingEnabled && !lightDef.emissive && !lightDef.isBeam && (lightDef.blendableComponents == null || lightDef.blendableComponents.isEmpty())){
+			//If the light only has solid components, and we aren't translucent, don't render on the blending pass.
+			if(blendingEnabled && !isTranslucent && !lightDef.emissive && !lightDef.isBeam && (lightDef.blendableComponents == null || lightDef.blendableComponents.isEmpty())){
 				return false;
 			}
 		}
@@ -452,8 +450,8 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 			//First render all flares, then render all beams.
 			float blendableBrightness = Math.min((1 - entity.world.getLightBrightness(entity.position, false))*lightLevel, 1);
 			if(blendableBrightness > 0){
-				Float[][] flareObject = flareObjects.get(lightDef);
-				Float[][] beamObject = beamObjects.get(lightDef);
+				float[][] flareObject = flareObjects.get(lightDef);
+				float[][] beamObject = beamObjects.get(lightDef);
 				if(flareObject == null && beamObject == null){
 					List<JSONLightBlendableComponent> flareDefs = new ArrayList<JSONLightBlendableComponent>();
 					List<JSONLightBlendableComponent> beamDefs = new ArrayList<JSONLightBlendableComponent>();
@@ -540,9 +538,9 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 		}
 	}
 	
-	private static Float[][] generateColors(Float[][] parsedObject){
+	private static float[][] generateColors(float[][] parsedObject){
 		//Make a duplicate set of vertices with an offset for the color rendering.
-		Float[][] offsetObject = new Float[parsedObject.length][8];
+		float[][] offsetObject = new float[parsedObject.length][8];
 		for(int i=0; i<parsedObject.length; ++i){
 			offsetObject[i][0] = parsedObject[i][0] + parsedObject[i][5]*COLOR_OFFSET;
 			offsetObject[i][1] = parsedObject[i][1] + parsedObject[i][6]*COLOR_OFFSET;
@@ -555,9 +553,9 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 		return offsetObject;
 	}
 	
-	private static Float[][] generateCovers(Float[][] parsedObject){
+	private static float[][] generateCovers(float[][] parsedObject){
 		//Make a duplicate set of vertices with an offset for the cover rendering.
-		Float[][] offsetObject = new Float[parsedObject.length][8];
+		float[][] offsetObject = new float[parsedObject.length][8];
 		for(int i=0; i<parsedObject.length; ++i){
 			offsetObject[i][0] = parsedObject[i][0] + parsedObject[i][5]*COVER_OFFSET;
 			offsetObject[i][1] = parsedObject[i][1] + parsedObject[i][6]*COVER_OFFSET;
@@ -570,9 +568,9 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 		return offsetObject;
 	}
 	
-	private static Float[][] generateFlares(List<JSONLightBlendableComponent> flareDefs){
+	private static float[][] generateFlares(List<JSONLightBlendableComponent> flareDefs){
 		//6 vertices per flare due to triangle rendering.
-		Float[][] flareObject = new Float[flareDefs.size()*6][8];
+		float[][] flareObject = new float[flareDefs.size()*6][8];
 		for(int i=0; i<flareDefs.size(); ++i){
 			JSONLightBlendableComponent flareDef = flareDefs.get(i);
 			//Get the angle that is needed to rotate points to the normalized vector.
@@ -580,7 +578,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 			Point3d vertexOffset = new Point3d();
 			Point3d centerOffset = flareDef.axis.copy().multiply(FLARE_OFFSET).add(flareDef.pos);
 			for(int j=0; j<6; ++j){
-				Float[] newVertex = new Float[8];
+				float[] newVertex = new float[8];
 				//Get the current UV points.
 				switch(j){
 					case(0): newVertex[3] = 0.0F; newVertex[4] = 0.0F; break;
@@ -612,11 +610,11 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 		return flareObject;
 	}
 	
-	private static Float[][] generateBeams(List<JSONLightBlendableComponent> beamDefs){
+	private static float[][] generateBeams(List<JSONLightBlendableComponent> beamDefs){
 		//3 vertices per cone-face, each share the same center point.
 		//Number of cone faces is equal to the number of segments for beams.
 		//We render two beams.  One inner and one outer.
-		Float[][] beamObject = new Float[beamDefs.size()*2*BEAM_SEGMENTS*3][8];
+		float[][] beamObject = new float[beamDefs.size()*2*BEAM_SEGMENTS*3][8];
 		for(int i=0; i<beamDefs.size(); ++i){
 			JSONLightBlendableComponent beamDef = beamDefs.get(i);
 			//Get the angle that is needed to rotate points to the normalized vector.
@@ -626,7 +624,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 			//Go from negative to positive to render both beam-faces in the same loop.
 			for(int j=-BEAM_SEGMENTS; j<BEAM_SEGMENTS; ++j){
 				for(int k=0; k<3; ++k){
-					Float[] newVertex = new Float[8];
+					float[] newVertex = new float[8];
 					//Get the current UV points.
 					//Point 0 is always the center of the beam, 1 and 2 are the outer points.
 					switch(k%3){
@@ -864,7 +862,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 		return points;
 	}
 	
-	private static void normalizeUVs(Float[][] parsedObject){
+	private static void normalizeUVs(float[][] parsedObject){
 		for(int i=0; i<parsedObject.length; ++i){
 			if(parsedObject.length > 3 && i%6 >= 3){
 				//Second-half of a quad.

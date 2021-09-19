@@ -245,6 +245,14 @@ public class PartGun extends APart{
 						}else{
 							state = state.demote(GunState.CONTROLLED);
 						}
+					}else{
+						//Player-controlled gun.
+						//If we are on a client, check for a target for this gun if we have a lock-on missile.
+						//Only do this once every 1/2 second.
+						if(world.isClient() && loadedBullet != null && loadedBullet.definition.bullet.turnFactor > 0){
+							//Try to find the entity the controller is looking at.
+							entityTarget = world.getEntityLookingAt(controller, 750);
+						}
 					}
 				
 					//Get the actual angle this gun is as.  This needs to remove all part-based animations we applied to this gun.
@@ -261,13 +269,6 @@ public class PartGun extends APart{
 						double targetPitch = controller.getPitch() - (entityPitchContribution + entityRollContribution);
 						handleMovement(targetYaw, targetPitch);
 					}
-				}
-				
-				//If we are on a client, check for a target for this gun if we have a lock-on missile.
-				//Only do this once every 1/2 second.
-				if(world.isClient() && loadedBullet != null && loadedBullet.definition.bullet.turnFactor > 0){
-					//Try to find the entity the controller is looking at.
-					entityTarget = world.getEntityLookingAt(controller, 750);
 				}
 				
 				//Set final gun active state and variables.
@@ -301,7 +302,7 @@ public class PartGun extends APart{
 				//This uses a total time of firing to account for partial tick firing rates on clients.
 				if(!world.isClient()){
 					if(state.isAtLeast(GunState.FIRING_CURRENTLY)){
-						int bulletsToRemove = definition.gun.isSemiAuto ? 1 : (int) (++ticksFiring/definition.gun.fireDelay - bulletsRemovedThisRequest);
+						int bulletsToRemove = definition.gun.isSemiAuto ? 1 : (int) ((++ticksFiring + definition.gun.fireDelay - millisecondCamOffset/50)/definition.gun.fireDelay - bulletsRemovedThisRequest);
 						if(bulletsToRemove > 0){
 							firedThisRequest = true;
 							bulletsLeft -= bulletsToRemove;

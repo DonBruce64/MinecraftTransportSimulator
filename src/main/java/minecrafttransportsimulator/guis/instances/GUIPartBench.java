@@ -12,6 +12,7 @@ import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.items.components.AItemPack;
+import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent.PoleComponentType;
 import minecrafttransportsimulator.items.instances.ItemVehicle;
@@ -29,6 +30,7 @@ import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketPlayerCraftItem;
 import minecrafttransportsimulator.packloading.PackMaterialComponent;
+import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.item.ItemStack;
 
@@ -125,7 +127,7 @@ public class GUIPartBench extends AGUIBase{
 			}
 		});
 		int centerBetweenButtons = prevPackButton.x + prevPackButton.width + (nextPackButton.x - (prevPackButton.x + prevPackButton.width))/2;
-		addLabel(packName = new GUIComponentLabel(centerBetweenButtons, guiTop + 16, ColorRGB.WHITE, "", null, TextPosition.CENTERED, 0, 1.0F, false));
+		addLabel(packName = new GUIComponentLabel(centerBetweenButtons, guiTop + 16, ColorRGB.WHITE, "", TextAlignment.CENTERED, 1.0F));
 		
 		
 		//Create part navigation section.
@@ -143,9 +145,9 @@ public class GUIPartBench extends AGUIBase{
 				updateNames();
 			}
 		});
-		addLabel(partName = new GUIComponentLabel(packName.x, packName.y + prevPackButton.height, ColorRGB.WHITE, "", null, TextPosition.CENTERED, 0, 0.75F, false));
-		addLabel(partInfo = new GUIComponentLabel(guiLeft + 17, guiTop + 58, ColorRGB.WHITE, "", null, TextPosition.LEFT_ALIGNED, (int) (150/0.75F), 0.75F, false));
-		addLabel(vehicleInfo = new GUIComponentLabel(guiLeft + 17, guiTop + 58, ColorRGB.WHITE, "", null, TextPosition.LEFT_ALIGNED, 150, 1.0F, false));
+		addLabel(partName = new GUIComponentLabel(packName.x, packName.y + prevPackButton.height, ColorRGB.WHITE, "", TextAlignment.CENTERED, 0.75F));
+		addLabel(partInfo = new GUIComponentLabel(guiLeft + 17, guiTop + 58, ColorRGB.WHITE, "", TextAlignment.LEFT_ALIGNED, 0.75F, 150));
+		addLabel(vehicleInfo = new GUIComponentLabel(guiLeft + 17, guiTop + 58, ColorRGB.WHITE, "", TextAlignment.LEFT_ALIGNED, 1.0F, 150));
 		
 		
 		//Create color navigation section.
@@ -163,7 +165,7 @@ public class GUIPartBench extends AGUIBase{
 				updateNames();
 			}
 		});
-		addLabel(new GUIComponentLabel(prevColorButton.x + prevColorButton.width + (nextColorButton.x - (prevColorButton.x + prevColorButton.width))/2, guiTop + 136, ColorRGB.WHITE, InterfaceCore.translate("gui.vehicle_bench.color"), null, TextPosition.CENTERED, 0, 1.0F, false).setButton(nextColorButton));
+		addLabel(new GUIComponentLabel(prevColorButton.x + prevColorButton.width + (nextColorButton.x - (prevColorButton.x + prevColorButton.width))/2, guiTop + 136, ColorRGB.WHITE, InterfaceCore.translate("gui.vehicle_bench.color"), TextAlignment.CENTERED, 1.0F).setButton(nextColorButton));
 		
 		
 		//Create the crafting item slots.  14 18X18 slots (7X2) need to be made here.
@@ -413,7 +415,7 @@ public class GUIPartBench extends AGUIBase{
 		materials = PackMaterialComponent.parseFromJSON(currentItem, true, true, false);
 		
 		//Enable render based on what component we have.
-		if(currentItem instanceof AItemSubTyped){
+		if(currentItem instanceof AItemSubTyped && (!(currentItem instanceof AItemPart) || !((AItemPart) currentItem).definition.generic.useVehicleTexture)){
 			modelRender.modelLocation = ((AItemSubTyped<?>) currentItem).definition.getModelLocation(((AItemSubTyped<?>) currentItem).subName);
 			modelRender.textureLocation = ((AItemSubTyped<?>) currentItem).definition.getTextureLocation(((AItemSubTyped<?>) currentItem).subName);
 			itemRender.stack = null;

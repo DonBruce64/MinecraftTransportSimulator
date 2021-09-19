@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.rendering.components;
 
+import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition.AnimationComponentType;
@@ -23,6 +24,8 @@ public class DurationDelayClock{
 	private static final double d1 = 2.75;
 	
 	public final JSONAnimationDefinition animation;
+	public final double animationAxisMagnitude;
+	public final Point3d animationAxisNormalized;
 	public final boolean isUseful;
 	public boolean movedThisUpdate;
 	private Long timeCommandedForwards = 0L;
@@ -36,6 +39,8 @@ public class DurationDelayClock{
 	
 	public DurationDelayClock(JSONAnimationDefinition animation){
 		this.animation = animation;
+		this.animationAxisMagnitude = animation.axis != null ? animation.axis.length() : 1.0;
+		this.animationAxisNormalized = animation.axis != null ? animation.axis.copy().normalize() : null;
 		this.shouldDoFactoring = animation.duration != 0 || animation.forwardsDelay != 0 || animation.reverseDelay != 0;
 		this.isUseful = shouldDoFactoring || animation.animationType.equals(AnimationComponentType.VISIBILITY)  || animation.animationType.equals(AnimationComponentType.INHIBITOR)  || animation.animationType.equals(AnimationComponentType.ACTIVATOR) || animation.forwardsStartSound != null || animation.forwardsEndSound != null || animation.reverseStartSound != null || animation.reverseEndSound != null;
 	}
@@ -173,6 +178,9 @@ public class DurationDelayClock{
 	private static double getEasingType(JSONAnimationDefinition.AnimationEasingType direction, double time) {
 		switch(direction) {
 			case LINEAR: return time;
+			case EASEINSINE: return 1 - Math.cos((time * Math.PI)/2);
+			case EASEOUTSINE: return Math.sin((time * Math.PI) / 2);
+			case EASEINOUTSINE: return (-1 * (Math.cos(time * Math.PI) - 1)) / 2;
 			case EASEINQUAD: return time * time;
 			case EASEOUTQUAD: return time * (2 - time);
 			case EASEINOUTQUAD: return time < 0.5 ? 2 * time * time : -1 + (4 - 2 * time) * time;

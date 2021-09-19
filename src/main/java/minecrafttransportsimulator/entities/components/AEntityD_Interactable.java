@@ -118,8 +118,9 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 	private final Set<TrailerConnection> savedTowingConnections = new HashSet<TrailerConnection>();
 	
 	//Mutable variables.
-	private final Point3d collisionGroupLocalOffset = new Point3d();
-	private final Point3d collisionGroupLocalAngles = new Point3d();
+	private final Point3d collisionGroupAnimationResult = new Point3d();
+	private final Point3d collisionGroupWorkingAngles = new Point3d();
+	private final Point3d collisionGroupWorkingAngleOffset = new Point3d();
 	
 	public AEntityD_Interactable(WrapperWorld world, WrapperNBT data){
 		super(world, data);
@@ -334,16 +335,21 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
     	
     	if(definition.collisionGroups != null){
 			for(JSONCollisionGroup groupDef : definition.collisionGroups){
-				boolean inhibitCollision = false;
-				collisionGroupLocalOffset.set(0D, 0D, 0D);
+				Set<BoundingBox> collisionBoxes = definitionCollisionBoxes.get(groupDef);
+				if(collisionBoxes == null){
+					//This can only happen if we hotloaded the definition due to devMode.
+					//Flag us as needing a reset, and then bail to prevent further collision checks.
+					animationsInitialized = false;
+					return;
+				}
 				if(groupDef.animations != null){
 					boolean inhibitAnimations = false;
-					collisionGroupLocalAngles.set(0D, 0D, 0D);
-					if(ConfigSystem.configObject.clientControls.devMode.value && !collisionClocks.containsKey(groupDef)){
-						//This can only happen if we hotloaded the definition due to devMode.
-						//Flag us as needing a reset, and then bail to prevent further collision checks.
-						animationsInitialized = false;
-						return;
+					boolean inhibitCollision = false;
+					//Reset working angles, but don't reset offset as it's not required.
+					collisionGroupWorkingAngles.set(0, 0, 0);
+					//Set box global center to local center.  This is used as a temp storage to do proper animation math.
+					for(BoundingBox box : collisionBoxes){
+						box.globalCenter.setTo(box.localCenter);
 					}
 					for(DurationDelayClock clock : collisionClocks.get(groupDef)){
 						switch(clock.animation.animationType){
@@ -377,27 +383,30 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 							case TRANSLATION :{
 								if(!inhibitAnimations){
 									//Found translation.  This gets applied in the translation axis direction directly.
-									double variableValue = getAnimatedVariableValue(clock, 1.0, 0);
-									Point3d appliedTranslation = clock.animation.axis.copy().multiply(variableValue);
-									collisionGroupLocalOffset.add(appliedTranslation.rotateFine(collisionGroupLocalAngles));
+									double variableValue = getAnimatedVariableValue(clock, clock.animationAxisMagnitude, 0);
+									collisionGroupAnimationResult.setTo(clock.animationAxisNormalized).multiply(variableValue).rotateFine(collisionGroupWorkingAngles);
+									for(BoundingBox box : collisionBoxes){
+										box.globalCenter.add(collisionGroupAnimationResult);
+									}
 								}
 								break;
 							}
 							case ROTATION :{
 								if(!inhibitAnimations){
 									//Found rotation.  Get angles that needs to be applied.
-									double variableValue = getAnimatedVariableValue(clock, 1.0, 0);
-									Point3d appliedRotation = clock.animation.axis.copy().multiply(variableValue);
+									//We need to apply this to every box differently due to offsets.
+									double variableValue = getAnimatedVariableValue(clock, clock.animationAxisMagnitude, 0);
+									collisionGroupAnimationResult.setTo(clock.animationAxisNormalized).multiply(variableValue);
 									
-									//Check if we need to apply a translation based on this rotation.
-									if(!clock.animation.centerPoint.isZero()){
+									for(BoundingBox box : collisionBoxes){
 										//Use the center point as a vector we rotate to get the applied offset.
 										//We need to take into account the current offset here, as we might have rotated on a prior call.
-										collisionGroupLocalOffset.add(clock.animation.centerPoint.copy().multiply(-1D).rotateFine(appliedRotation).add(clock.animation.centerPoint).rotateFine(collisionGroupLocalAngles));
+										collisionGroupWorkingAngleOffset.setTo(box.globalCenter).subtract(box.localCenter);
+										box.globalCenter.subtract(clock.animation.centerPoint).subtract(collisionGroupWorkingAngleOffset).rotateFine(collisionGroupAnimationResult).add(clock.animation.centerPoint).add(collisionGroupWorkingAngleOffset);
 									}
 									
 									//Apply rotation.  We need to do this after translation operations to ensure proper offsets.
-									collisionGroupLocalAngles.add(appliedRotation);
+									collisionGroupWorkingAngles.add(collisionGroupAnimationResult);
 								}
 								break;
 							}
@@ -411,17 +420,26 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 							break;
 						}
 					}
-				}
-				
-				if(!inhibitCollision){
-					Set<BoundingBox> collisionBoxes = definitionCollisionBoxes.get(groupDef);
+					
+					//Update collisions using temp offset.
+					//Need to move it to temp variable to not get overwritten.
+					if(!inhibitCollision){
+						for(BoundingBox box : collisionBoxes){
+							collisionGroupAnimationResult.setTo(box.globalCenter).subtract(box.localCenter);
+							box.updateToEntity(this, collisionGroupAnimationResult);
+						}
+					}else{
+						//Don't let these boxes get added to the list.
+						continue;
+					}
+				}else{
 					for(BoundingBox box : collisionBoxes){
-						box.updateToEntity(this, collisionGroupLocalOffset);
+						box.updateToEntity(this, null);
 					}
-					entityCollisionBoxes.addAll(collisionBoxes);
-					if(!groupDef.isInterior && !ConfigSystem.configObject.general.noclipVehicles.value){
-						blockCollisionBoxes.addAll(collisionBoxes);
-					}
+				}
+				entityCollisionBoxes.addAll(collisionBoxes);
+				if(!groupDef.isInterior && !ConfigSystem.configObject.general.noclipVehicles.value){
+					blockCollisionBoxes.addAll(collisionBoxes);
 				}
 			}
     	}
@@ -557,6 +575,10 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 	/**
 	 *  Called when the entity is attacked.
 	 *  This should ONLY be called on the server; clients will sync via packets.
+	 *  Always make sure to check if this entity is valid, as this function may be
+	 *  called multiple times in a single tick for multiple damage applications.  This
+	 *  means that this entity may be invalid due to the first damage when the second damage
+	 *  is applied.
 	 */
 	public void attack(Damage damage){}
 	

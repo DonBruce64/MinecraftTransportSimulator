@@ -19,7 +19,7 @@ public final class RenderPart extends ARenderEntity<APart>{
 	}
 	
 	@Override
-	public boolean disableMainRendering(APart part, float partialTicks){
+	public boolean disableRendering(APart part, float partialTicks){
 		return part.isFake() || part.isDisabled;
 	}
 	
