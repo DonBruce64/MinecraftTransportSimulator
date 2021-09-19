@@ -157,9 +157,11 @@ public abstract class AEntityA_Base{
 	 * and lingering references do not exist.  After removal, the entity will no longer be returned by {@link #getEntity(WrapperWorld, int)}
 	 */
 	public void remove(){
-		isValid = false;
-		if(shouldSync()){
-			entityMaps.get(world).remove(lookupID);
+		if(isValid){
+			isValid = false;
+			if(shouldSync()){
+				entityMaps.get(world).remove(lookupID);
+			}
 		}
 	}
 
