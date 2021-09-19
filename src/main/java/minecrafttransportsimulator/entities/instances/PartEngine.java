@@ -44,6 +44,7 @@ public class PartEngine extends APart{
 	private boolean autoStarterEngaged;
 	private int starterLevel;
 	private int shiftCooldown;
+	private int backfireCooldown;
 	private float currentGearRatio;
 	private double lowestWheelVelocity;
 	private double desiredWheelVelocity;
@@ -296,8 +297,8 @@ public class PartEngine extends APart{
 						}
 						
 						//If the engine has high hours, give a chance for a backfire.
-						if(hours > 100 && !world.isClient()){
-							if(Math.random() < hours/1000*(definition.engine.maxSafeRPM/(rpm+definition.engine.maxSafeRPM/2))){
+						if(hours > 250 && !world.isClient()){
+							if(Math.random() < (hours/2)/(250+(10000-hours))*(definition.engine.maxSafeRPM/(rpm+definition.engine.maxSafeRPM/1.5))){
 								backfireEngine();
 								InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.BACKFIRE));
 							}
@@ -393,7 +394,7 @@ public class PartEngine extends APart{
 					lowestWheelVelocity = 999F;
 					desiredWheelVelocity = -999F;
 					wheelFriction = 0;
-					engineTargetRPM = !state.esOn ? vehicleOn.throttle/100F*(definition.engine.maxRPM - definition.engine.idleRPM)/(1 + hours/500) + definition.engine.idleRPM : definition.engine.startRPM;
+					engineTargetRPM = !state.esOn ? vehicleOn.throttle/100F*(definition.engine.maxRPM - definition.engine.idleRPM)/(1 + hours/1250) + definition.engine.idleRPM : definition.engine.startRPM;
 					
 					//Update wheel friction and velocity.
 					for(PartGroundDevice wheel : vehicleOn.groundDeviceCollective.drivenWheels){
@@ -412,8 +413,11 @@ public class PartEngine extends APart{
 						if(wheelFriction > 0){
 							double desiredRPM = lowestWheelVelocity*1200F*currentGearRatio*vehicleOn.definition.motorized.axleRatio;
 							rpm += (desiredRPM - rpm)/definition.engine.revResistance;
-							if(rpm < definition.engine.stallRPM && state.running){
+							if(rpm < definition.engine.idleRPM && state.running && backfireCooldown <= 0){//Checks if we're backfiring and sets lugging rpm to stall rpm, otherwise sets lug rpm to idle
+								rpm = definition.engine.idleRPM;
+							}else if(rpm < definition.engine.stallRPM && state.running){
 								rpm = definition.engine.stallRPM;
+								backfireCooldown -= 1;
 							}
 						}else{
 							//No wheel force.  Adjust wheels to engine speed.
@@ -452,7 +456,7 @@ public class PartEngine extends APart{
 							
 							if(state.running){
 								propellerFeedback += propellerForcePenalty*50;
-								engineTargetRPM = vehicleOn.throttle/100F*(definition.engine.maxRPM - definition.engine.idleRPM)/(1 + hours/500) + definition.engine.idleRPM;
+								engineTargetRPM = vehicleOn.throttle/100F*(definition.engine.maxRPM - definition.engine.idleRPM)/(1 + hours/1250) + definition.engine.idleRPM;
 								double engineRPMDifference = engineTargetRPM - rpm;
 								
 								//propellerFeedback can't make an engine stall, but hours can.
@@ -472,7 +476,7 @@ public class PartEngine extends APart{
 				//Or, if we are not on, just slowly spin the engine down.
 				if((wheelFriction == 0 && !havePropeller) || currentGearRatio == 0){
 					if(state.running){
-						engineTargetRPM = vehicleOn.throttle/100F*(definition.engine.maxRPM - definition.engine.idleRPM)/(1 + hours/500) + definition.engine.idleRPM;
+						engineTargetRPM = vehicleOn.throttle/100F*(definition.engine.maxRPM - definition.engine.idleRPM)/(1 + hours/1250) + definition.engine.idleRPM;
 						rpm += (engineTargetRPM - rpm)/(definition.engine.revResistance*3);
 						if(rpm > definition.engine.maxSafeRPM && definition.engine.jetPowerFactor == 0){
 							rpm -= Math.abs(engineTargetRPM - rpm)/definition.engine.revResistance;
@@ -717,9 +721,10 @@ public class PartEngine extends APart{
 	}
 	
 	public void backfireEngine(){
-		//Decrease RPM and send off packet to have clients do the same.
+		//Decrease RPM and send off packet to have clients do the same. Also tells lug rpm to lug harder.
 		backfired = true;
 		rpm -= definition.engine.maxRPM < 15000 ? 100 : 500;
+		backfireCooldown = 4;
 	}
 	
 	public void badShiftEngine(){
