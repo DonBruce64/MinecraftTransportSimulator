@@ -2,10 +2,10 @@ package minecrafttransportsimulator.mcinterface;
 
 import javax.annotation.Nullable;
 
-import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityFluidTankProvider;
-import minecrafttransportsimulator.jsondefs.AJSONItem;
+import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityFluidLoader;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.fluids.FluidEvent;
@@ -22,7 +22,7 @@ import net.minecraftforge.fluids.capability.IFluidTankProperties;
  *
  * @author don_bruce
  */
-public class BuilderTileEntityFluidTank<FluidTankTileEntity extends ATileEntityBase<? extends AJSONItem> & ITileEntityFluidTankProvider> extends BuilderTileEntity<FluidTankTileEntity> implements IFluidTank, IFluidHandler{
+public class BuilderTileEntityFluidTank<FluidTankTileEntity extends ATileEntityBase<?> & ITileEntityFluidTankProvider> extends BuilderTileEntity<FluidTankTileEntity> implements IFluidTank, IFluidHandler{
 	
 	public BuilderTileEntityFluidTank(){
 		super();
@@ -33,6 +33,21 @@ public class BuilderTileEntityFluidTank<FluidTankTileEntity extends ATileEntityB
 		super.update();
 		if(tileEntity != null){
 			tileEntity.update();
+			if(tileEntity instanceof TileEntityFluidLoader && ((TileEntityFluidLoader) tileEntity).isUnloader){
+				int currentFluidAmount = getFluidAmount();
+				if(currentFluidAmount > 0){
+					//Pump out fluid to handler below, if we have one.
+					TileEntity teBelow = world.getTileEntity(getPos().down());
+					if(teBelow != null && teBelow.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, EnumFacing.UP)){
+						IFluidHandler fluidHandler = teBelow.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, EnumFacing.UP);
+						int amountDrained = fluidHandler.fill(getFluid(), true);
+						if(amountDrained > 0 && currentFluidAmount == getFluidAmount()){
+							//Need to drain from our tank as the system didn't do this.
+							drain(amountDrained, true);
+						}
+					}
+				}
+			}
 		}
 	}
 
@@ -93,8 +108,8 @@ public class BuilderTileEntityFluidTank<FluidTankTileEntity extends ATileEntityB
 	
     @Override
     public boolean hasCapability(Capability<?> capability, @Nullable EnumFacing facing){
-    	if(facing != null && tileEntity != null && tileEntity.canConnectOnAxis(Axis.valueOf(facing.name()))){
-    		return capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY || super.hasCapability(capability, facing);
+    	if(capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY && EnumFacing.DOWN.equals(facing)){
+    		return true;
     	}else{
     		return super.hasCapability(capability, facing);
     	}
@@ -103,11 +118,10 @@ public class BuilderTileEntityFluidTank<FluidTankTileEntity extends ATileEntityB
     @SuppressWarnings("unchecked")
     @Override
     public <T> T getCapability(Capability<T> capability, EnumFacing facing){
-    	if(facing != null && tileEntity != null && tileEntity.canConnectOnAxis(Axis.valueOf(facing.name()))){
-    		if(capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY){
-    			return (T) this;
-    		}
-	    }
-    	return super.getCapability(capability, facing);
+    	if(capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY && EnumFacing.DOWN.equals(facing)){
+    		return (T) this;
+    	}else{
+    		return super.getCapability(capability, facing);
+    	}
     }
 }

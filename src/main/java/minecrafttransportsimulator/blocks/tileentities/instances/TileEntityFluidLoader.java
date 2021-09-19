@@ -1,13 +1,13 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityFluidTankProvider;
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityFluidTank;
 import minecrafttransportsimulator.entities.instances.PartInteractable;
+import minecrafttransportsimulator.items.instances.ItemDecor.DecorComponentType;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
@@ -16,15 +16,13 @@ import minecrafttransportsimulator.packets.instances.PacketTileEntityFluidLoader
 
 public class TileEntityFluidLoader extends TileEntityDecor implements ITileEntityFluidTankProvider{
 	public PartInteractable connectedPart;
-	public boolean unloadMode;
-	public boolean loading;
-	public boolean unloading;
     private EntityFluidTank tank;
+    public final boolean isUnloader;
 
     public TileEntityFluidLoader(WrapperWorld world, Point3d position, WrapperPlayer placingPlayer, WrapperNBT data){
 		super(world, position, placingPlayer, data);
     	this.tank = new EntityFluidTank(world, data.getDataOrNew("tank"), definition.decor.fuelCapacity);
-    	this.unloadMode = data.getBoolean("unloadMode");
+    	this.isUnloader = definition.decor.type.equals(DecorComponentType.FLUID_UNLOADER);
     }
 	
     @Override
@@ -44,15 +42,10 @@ public class TileEntityFluidLoader extends TileEntityDecor implements ITileEntit
 						updateNearestPart();
 					}
 				}
-				
-				//Check load/unload state.
-				if(ticksExisted%20 == 0){
-					unloadMode = world.getRedstonePower(position) > 0;
-				}
 	
 				//If we have a connected part, try to load or unload from it depending on our state.
 				if(connectedPart != null){
-					if(unloadMode){
+					if(isUnloader){
 						String fluidToUnload = connectedPart.tank.getFluid();
 						double amountToUnload = connectedPart.tank.drain(fluidToUnload, definition.decor.pumpRate, false);
 						if(amountToUnload > 0){
@@ -83,7 +76,7 @@ public class TileEntityFluidLoader extends TileEntityDecor implements ITileEntit
 		//Don't bother searching if we can't fill or drain.
 		PartInteractable nearestPart = null;
 		double nearestDistance = 999;
-		if((tank.getFluidLevel() > 0 && !unloadMode) || (tank.getFluidLevel() < tank.getMaxLevel() && unloadMode)){
+		if((tank.getFluidLevel() > 0 && !isUnloader) || (tank.getFluidLevel() < tank.getMaxLevel() && isUnloader)){
 			for(AEntityA_Base entity : AEntityA_Base.getEntities(world)){
 				if(entity instanceof AEntityE_Multipart){
 					AEntityE_Multipart<?> multipart = (AEntityE_Multipart<?>) entity;
@@ -93,7 +86,7 @@ public class TileEntityFluidLoader extends TileEntityDecor implements ITileEntit
 								if(part instanceof PartInteractable){
 									EntityFluidTank partTank = ((PartInteractable) part).tank;
 									if(partTank != null){
-										if(unloadMode){
+										if(isUnloader){
 											if(partTank.drain(tank.getFluid(), 1, false) > 0){
 												if(part.position.distanceTo(position) < nearestDistance){
 													nearestPart = (PartInteractable) part;
@@ -129,15 +122,9 @@ public class TileEntityFluidLoader extends TileEntityDecor implements ITileEntit
 	}
 	
 	@Override
-	public boolean canConnectOnAxis(Axis axis){
-		return !axis.equals(Axis.UP);
-	}
-	
-	@Override
 	public WrapperNBT save(WrapperNBT data){
 		super.save(data);
 		data.setData("tank", tank.save(new WrapperNBT()));
-		data.setBoolean("unloadMode", unloadMode);
 		return data;
 	}
 }

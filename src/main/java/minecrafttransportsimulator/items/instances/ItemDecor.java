@@ -42,8 +42,10 @@ public class ItemDecor extends AItemSubTyped<JSONDecor> implements IItemBlock{
 		SIGNAL_CONTROLLER,
 		@JSONDescription("Will make the decor have fuel pump functionality.  Text rendering may be added by adding textObjects in the rendering section.  These are hard-coded to render the loader's internal fluid name, level, and amount dispensed, in that order.  Adding more textObject entries starts this cycle over.")
 		FUEL_PUMP,
-		@JSONDescription("Will make the decor have fluid loader functionality.  Text cannot be rendered on loaders like on fuel pumps.")
+		@JSONDescription("Will make the decor have fluid loader functionality.")
 		FLUID_LOADER,
+		@JSONDescription("Will make the decor have fluid unloader functionality.")
+		FLUID_UNLOADER,
 		@JSONDescription("Will make the decor have radio functionality.  Exact same system as vehicles.  It even syncs up with them!")
 		RADIO;
 		
@@ -58,6 +60,7 @@ public class ItemDecor extends AItemSubTyped<JSONDecor> implements IItemBlock{
 					case SIGNAL_CONTROLLER : return BlockSignalController.class;
 					case FUEL_PUMP : return BlockFuelPump.class;
 					case FLUID_LOADER : return BlockFluidLoader.class;
+					case FLUID_UNLOADER : return BlockFluidLoader.class;
 					case RADIO : return BlockRadio.class;
 					case GENERIC : return BlockDecor.class;
 				}

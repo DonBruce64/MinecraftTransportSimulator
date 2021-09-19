@@ -1229,7 +1229,7 @@ public final class LegacyCompatSystem{
 		}
 		
 		//If we are a decor with a type of fuel pump or fluid loader, then set defaults for invalid/missing values.
-		if(definition.decor.type.equals(DecorComponentType.FUEL_PUMP) || definition.decor.type.equals(DecorComponentType.FLUID_LOADER)){
+		if(definition.decor.type.equals(DecorComponentType.FUEL_PUMP) || definition.decor.type.equals(DecorComponentType.FLUID_LOADER) || definition.decor.type.equals(DecorComponentType.FLUID_UNLOADER)){
 			if (definition.decor.fuelCapacity == 0) {
 				definition.decor.fuelCapacity = 15000;
 			}
