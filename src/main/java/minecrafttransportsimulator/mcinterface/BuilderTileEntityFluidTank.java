@@ -68,7 +68,7 @@ public class BuilderTileEntityFluidTank<FluidTankTileEntity extends ATileEntityB
 
 	@Override
 	public int getCapacity(){
-		return (int) (tileEntity != null ? tileEntity.getTank().getFluidLevel() : 0);
+		return tileEntity != null ? tileEntity.getTank().getMaxLevel() : 0;
 	}
 
 	@Override

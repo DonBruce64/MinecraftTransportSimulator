@@ -323,6 +323,7 @@ public class RenderText{
 				currentVertexIndex = 0;
 				int currentOffset = 0;
 				int currentLineOffset = 0;
+				int indexAtLastNewline = 0;
 				ColorRGB currentColor = color;
 				FontRenderState currentState = STATES[0];
 				for(int i=0; i<text.length(); ++i){
@@ -350,26 +351,36 @@ public class RenderText{
 						//Go down one line.
 						currentOffset = 0;
 						currentLineOffset -= DEFAULT_PIXELS_PER_CHAR + CHAR_SPACING;
+						indexAtLastNewline = i;
 					}else if(wrapWidth != 0 && currentOffset > wrapWidth){
 						//Go backwards in text to find last space and split based on that.
 						//After this we will re-do the parsing of the prior chars on the next line.
-						for(int j=i; j>0; --j){
-							char priorChar = text.charAt(j);
-							if(priorChar == ' '){
-								i = j;
-								currentOffset = 0;
-								currentLineOffset -= DEFAULT_PIXELS_PER_CHAR + CHAR_SPACING;
-								break;
-							}else{
-								//Need to remove vertices in list so they don't get rendered.
-								FontRenderBlock priorRenderBlock = getBlockFor(priorChar, currentColor, currentState);
-								int vertMin = priorRenderBlock.vertices.size() - priorRenderBlock.state.vertexStep;
-								int vertMax = priorRenderBlock.vertices.size() - 1;
-								for(int k=vertMax; k>=vertMin; --k){
-									priorRenderBlock.vertices.remove(k);
+						//Don't do this if we don't have a space in this line though.  This is the case for URLs
+						//and other long segments of text.
+						if(text.substring(indexAtLastNewline+1, i).indexOf(' ') != -1){
+							for(int j=i; j>0; --j){
+								char priorChar = text.charAt(j);
+								if(priorChar == ' '){
+									i = j;
+									currentOffset = 0;
+									currentLineOffset -= DEFAULT_PIXELS_PER_CHAR + CHAR_SPACING;
+									indexAtLastNewline = i;
+									break;
+								}else{
+									//Need to remove vertices in list so they don't get rendered.
+									FontRenderBlock priorRenderBlock = getBlockFor(priorChar, currentColor, currentState);
+									int vertMin = priorRenderBlock.vertices.size() - priorRenderBlock.state.vertexStep;
+									int vertMax = priorRenderBlock.vertices.size() - 1;
+									for(int k=vertMax; k>=vertMin; --k){
+										priorRenderBlock.vertices.remove(k);
+									}
+									currentVertexIndex -= priorRenderBlock.state.vertexStep;
 								}
-								currentVertexIndex -= priorRenderBlock.state.vertexStep;
-							}
+							}	
+						}else{
+							currentOffset = 0;
+							currentLineOffset -= DEFAULT_PIXELS_PER_CHAR + CHAR_SPACING;
+							indexAtLastNewline = i;
 						}
 					}else{
 						//Actual char to render.
