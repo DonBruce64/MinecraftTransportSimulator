@@ -39,7 +39,7 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 public class MasterLoader{
 	public static final String MODID = "mts";
 	public static final String MODNAME = "Minecraft Transport Simulator";
-	public static final String MODVER = "20.2.0-BETA16";
+	public static final String MODVER = "20.2.0-BETA17";
 	
 	public static Logger logger;
 	public static String resourceDomain;

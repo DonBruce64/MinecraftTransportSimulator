@@ -362,7 +362,7 @@ public class RenderText{
 							case (UNDERLINE_CHAR) : currentState = STATES[currentState.index | FontRenderState.UNDERLINE_BIT_INDEX]; break;
 							case (STRIKETHROUGH_CHAR) : currentState = STATES[currentState.index | FontRenderState.STRIKETHROUGH_BIT_INDEX]; break;
 							case (RANDOM_CHAR) : currentState = STATES[currentState.index | FontRenderState.RANDOM_BIT_INDEX]; break;
-							case (RESET_CHAR) : currentState = STATES[0]; break;
+							case (RESET_CHAR) : currentState = STATES[0]; currentColor = color; break;
 							default: currentColor = COLORS[Integer.decode("0x"+formattingChar)]; break;
 						}
 						//Go back though the loop again to the next char.
@@ -404,7 +404,12 @@ public class RenderText{
 						//If we are strikethough, we add a strikethough overlay.
 						//If we are random, we randomize the char we have (0/9, A/Z).
 						FontRenderBlock currentRenderBlock = getBlockFor(textChar, currentColor, currentState);
+						if(currentState.random){
+							textChar = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".charAt((int) (Math.random()*36));
+							currentRenderBlock = getBlockFor(textChar, currentColor, currentState);
+						}
 						float charWidth = charWidths[textChar];
+						int startingVertex = currentVertexIndex;
 						for(int j=0; j<currentRenderBlock.state.vertexStep; ++j){
 							//Get the next free vertex and set its properties.
 							float[] charVertex = VERTICES[currentVertexIndex++];
@@ -418,6 +423,9 @@ public class RenderText{
 								}
 								case(1):{//Top-right
 									charVertex[0] = alignmentOffset + currentOffset + charWidth;
+									if(currentRenderBlock.state.italic){
+										charVertex[0] += 1;
+									}
 									charVertex[1] = currentLineOffset;
 									charVertex[3] = offsetsMaxU[textChar];
 									charVertex[4] = offsetsMaxV[textChar];
@@ -425,6 +433,9 @@ public class RenderText{
 								}
 								case(2):{//Top-left
 									charVertex[0] = alignmentOffset + currentOffset;
+									if(currentRenderBlock.state.italic){
+										charVertex[0] += 1;
+									}
 									charVertex[1] = currentLineOffset;
 									charVertex[3] = offsetsMinU[textChar];
 									charVertex[4] = offsetsMaxV[textChar];
@@ -439,6 +450,9 @@ public class RenderText{
 								}
 								case(4):{//Top-left
 									charVertex[0] = alignmentOffset + currentOffset;
+									if(currentRenderBlock.state.italic){
+										charVertex[0] += 1;
+									}
 									charVertex[1] = currentLineOffset;
 									charVertex[3] = offsetsMinU[textChar];
 									charVertex[4] = offsetsMaxV[textChar];
@@ -452,55 +466,64 @@ public class RenderText{
 									break;
 								}
 								default: {
-									//Custom vertex, either underline or strikethough.
-									float[] masterVertex = VERTICES[currentVertexIndex - j/6];
-									charVertex[0] = masterVertex[0];
-									charVertex[1] = masterVertex[1];
-									charVertex[2] = masterVertex[2];
-									char boxChar = '\u2588';
-									float boxMinV;
-									float boxMaxV;
-									if(currentState.underline){
-										boxMinV = offsetsMinV[boxChar];
-										boxMaxV = offsetsMinV[boxChar] + 1F/CHARS_PER_ROWCOL;
-									}else if(currentState.strikethrough){
-										boxMinV = offsetsMinV[boxChar] + 7F/CHARS_PER_ROWCOL;
-										boxMaxV = offsetsMinV[boxChar] + 8F/CHARS_PER_ROWCOL;
+									//Custom vertex, either bold, underline or strikethough.
+									float[] masterVertex = VERTICES[startingVertex + j - 6];
+									if(currentState.bold && j < 12){
+										charVertex[0] = masterVertex[0] + 0.3F;
+										charVertex[1] = masterVertex[1] + 0.3F;
+										charVertex[2] = masterVertex[2];
+										charVertex[3] = masterVertex[3];
+										charVertex[4] = masterVertex[4];
 									}else{
-										//FIXME need to add bold.
-										continue;
-									}
-									switch(j%6){
-										case(0):{//Bottom-right
-											charVertex[3] = offsetsMaxU[boxChar];
-											charVertex[4] = boxMinV;
-											break;
+										//Set position to master and set custom char.
+										charVertex[0] = masterVertex[0];
+										charVertex[1] = masterVertex[1] + CHAR_SPACING;
+										charVertex[2] = masterVertex[2];
+										char customChar = currentState.underline ? '_' : '-';
+										
+										//May need to change render blocks here.
+										if(j%6 == 0){
+											currentRenderBlock = getBlockFor(customChar, currentColor, currentState);
 										}
-										case(1):{//Top-right
-											charVertex[3] = offsetsMaxU[boxChar];
-											charVertex[4] = boxMaxV;
-											break;
-										}
-										case(2):{//Top-left
-											charVertex[3] = offsetsMinU[boxChar];
-											charVertex[4] = boxMaxV;
-											break;
-										}
-										case(3):{//Bottom-right
-											charVertex[3] = offsetsMaxU[boxChar];
-											charVertex[4] = boxMinV;
-											break;
-										}
-										case(4):{//Top-left
-											charVertex[3] = offsetsMinU[boxChar];
-											charVertex[4] = boxMaxV;
-											break;
-										}
-										case(5):{//Bottom-left
-											charVertex[3] = offsetsMinU[boxChar];
-											charVertex[4] = boxMinV;						
-											break;
-										}
+										
+										switch(j%6){
+											case(0):{//Bottom-right
+												charVertex[0] += CHAR_SPACING;
+												charVertex[3] = offsetsMaxU[customChar];
+												charVertex[4] = offsetsMinV[customChar];
+												break;
+											}
+											case(1):{//Top-right
+												charVertex[0] += CHAR_SPACING;
+												charVertex[3] = offsetsMaxU[customChar];
+												charVertex[4] = offsetsMaxV[customChar];
+												break;
+											}
+											case(2):{//Top-left
+												charVertex[0] -= CHAR_SPACING;
+												charVertex[3] = offsetsMinU[customChar];
+												charVertex[4] = offsetsMaxV[customChar];
+												break;
+											}
+											case(3):{//Bottom-right
+												charVertex[0] += CHAR_SPACING;
+												charVertex[3] = offsetsMaxU[customChar];
+												charVertex[4] = offsetsMinV[customChar];
+												break;
+											}
+											case(4):{//Top-left
+												charVertex[0] -= CHAR_SPACING;
+												charVertex[3] = offsetsMinU[customChar];
+												charVertex[4] = offsetsMaxV[customChar];
+												break;
+											}
+											case(5):{//Bottom-left
+												charVertex[0] -= CHAR_SPACING;
+												charVertex[3] = offsetsMinU[customChar];
+												charVertex[4] = offsetsMinV[customChar];						
+												break;
+											}
+										}	
 									}
 								}
 							}
@@ -511,7 +534,6 @@ public class RenderText{
 								
 								//Rotate vertices if required.
 								if(doRotation){
-									//FIXME can this go into OpenGL rotation now that our normalz aren't backwrads?
 									rotatedVertex.set(charVertex[0], charVertex[1], charVertex[2]).rotateFine(rotation);
 									charVertex[0] = (float) rotatedVertex.x;
 									charVertex[1] = (float) rotatedVertex.y;
