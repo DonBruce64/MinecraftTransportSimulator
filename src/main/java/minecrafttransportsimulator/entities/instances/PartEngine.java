@@ -44,7 +44,7 @@ public class PartEngine extends APart{
 	private boolean autoStarterEngaged;
 	private int starterLevel;
 	private int shiftCooldown;
-	private float backfireCooldown;
+	private int backfireCooldown;
 	private float currentGearRatio;
 	private double lowestWheelVelocity;
 	private double desiredWheelVelocity;
@@ -298,7 +298,7 @@ public class PartEngine extends APart{
 						
 						//If the engine has high hours, give a chance for a backfire.
 						if(hours > 250 && !world.isClient()){
-							if(Math.random() < (hours/2)/(10250-hours)*(definition.engine.maxSafeRPM/(rpm+definition.engine.maxSafeRPM/1.5))){
+							if(Math.random() < (hours/2)/(250+(10000-hours))*(definition.engine.maxSafeRPM/(rpm+definition.engine.maxSafeRPM/1.5))){
 								backfireEngine();
 								InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.BACKFIRE));
 							}
@@ -417,7 +417,7 @@ public class PartEngine extends APart{
 								rpm = definition.engine.idleRPM;
 							}else if(rpm < definition.engine.stallRPM && state.running){
 								rpm = definition.engine.stallRPM;
-								backfireCooldown -= 0.25;
+								backfireCooldown -= 1;
 							}
 						}else{
 							//No wheel force.  Adjust wheels to engine speed.
@@ -724,7 +724,7 @@ public class PartEngine extends APart{
 		//Decrease RPM and send off packet to have clients do the same. Also tells lug rpm to lug harder.
 		backfired = true;
 		rpm -= definition.engine.maxRPM < 15000 ? 100 : 500;
-		backfireCooldown = 1;
+		backfireCooldown = 4;
 	}
 	
 	public void badShiftEngine(){
