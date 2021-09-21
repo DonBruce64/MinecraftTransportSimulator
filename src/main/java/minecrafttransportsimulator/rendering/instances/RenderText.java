@@ -567,6 +567,10 @@ public class RenderText{
 		
 		private FontRenderBlock getBlockFor(char textChar, ColorRGB color, FontRenderState state){
 			//First get the font block;
+			//MNake sure we didn't get passed a bad char from some unicode junk text.
+			if(textChar/CHARS_PER_TEXTURE_SHEET >= fontLocations.length){
+				textChar = 0;
+			}
 			String font = fontLocations[textChar/CHARS_PER_TEXTURE_SHEET];
 			Map<ColorRGB, Map<FontRenderState, FontRenderBlock>> map1 = createdRenderBlocks.get(font);
 			if(map1 == null){
