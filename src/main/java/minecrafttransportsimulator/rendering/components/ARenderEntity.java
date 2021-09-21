@@ -250,9 +250,9 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 	
 	/**
 	 *  Renders the bounding boxes for the entity collision.
-	 *  At this point, the rotation done for the rendering 
+	 *  At this point, the translation and rotation done for the rendering 
 	 *  will be un-done, as boxes need to be rendered according to their world state.
-	 *  Translation, however, will still be in effect as that allows for relative rendering.
+	 *  The passed-in delta is the delta between the player and the entity.
 	 */
 	protected void renderBoundingBoxes(RenderedEntity entity, Point3d entityPositionDelta){
 		if(entity instanceof AEntityD_Interactable){

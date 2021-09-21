@@ -7,6 +7,7 @@ import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.PartGun;
+import minecrafttransportsimulator.jsondefs.JSONPart.JSONPartGun.JSONMuzzle;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.InterfaceRender;
 import minecrafttransportsimulator.rendering.components.ARenderEntity;
@@ -45,11 +46,17 @@ public final class RenderPart extends ARenderEntity<APart>{
 			super.renderBoundingBoxes(part, entityPositionDelta);
 			//Draw the gun muzzle bounding boxes.
 			if(part instanceof PartGun){
+				PartGun gun = (PartGun) part;
+				Point3d bulletPosition = new Point3d();
+				Point3d bulletVelocity = new Point3d();
 				InterfaceRender.setColorState(ColorRGB.BLUE);
-				Point3d origin = new Point3d(0, 0, part.definition.gun.length).rotateFine(part.localAngles).rotateFine(part.entityOn.angles).add(entityPositionDelta);
-				GL11.glTranslated(origin.x, origin.y, origin.z);
-				RenderBoundingBox.renderWireframe(new BoundingBox(origin, 0.25, 0.25, 0.25));
-				GL11.glTranslated(-origin.x, -origin.y, -origin.z);
+				for(JSONMuzzle muzzle : gun.definition.gun.muzzleGroups.get(gun.currentMuzzleGroupIndex).muzzles){
+					gun.setBulletSpawn(bulletPosition, bulletVelocity, muzzle);
+					bulletPosition.subtract(gun.position).add(entityPositionDelta);
+					GL11.glTranslated(bulletPosition.x, bulletPosition.y, bulletPosition.z);
+					RenderBoundingBox.renderWireframe(new BoundingBox(bulletPosition, 0.25, 0.25, 0.25));
+					GL11.glTranslated(-bulletPosition.x, -bulletPosition.y, -bulletPosition.z);
+				}
 				InterfaceRender.setColorState(ColorRGB.WHITE);
 			}
 		}

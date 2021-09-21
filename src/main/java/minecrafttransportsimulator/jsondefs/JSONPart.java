@@ -306,10 +306,7 @@ public class JSONPart extends AJSONPartProvider{
 		@JSONDescription("If set, the gun will only be able to be fired once per button press.")
     	public boolean isSemiAuto;
 		
-		@JSONDescription("Normally, guns will physically move themselves when the player looks to the right or left.  If you want this to be a virtual movement, say for a casement-mounted Stug gun, then set this to true.  This will make the yaw applied only internally and won't modify the gun's actual position.")
-    	public boolean yawIsInternal;
-		
-		@JSONDescription("The same as above, just for pitch.  You'll likely want this on all turret-mounted guns to prevent the entire turret from moving.")
+		@JSONDescription("Normally, guns should physically move themselves when the player looks up and down.  If you want this to be a virtual movement, say for a turret, then set this to true.  This will make the pitch applied only internally.  If this is set, do NOT physically move the gun with an animation.")
     	public boolean pitchIsInternal;
 		
 		@JSONDescription("If true, this makes it so that only one of this type of gun can be selected and fired at a time. This is useful for missiles and bombs that have different types of ammunition, as you can load different guns with different types of ammunition, and switch between the individual guns. If not used or set to false, cycling through weapons will select all weapons of the same type.")
@@ -354,9 +351,6 @@ public class JSONPart extends AJSONPartProvider{
 		@JSONDescription("The diameter of this gun.  This defines what ammo diameter may be used with it, and is what corresponds to the min-max parameters in the vehicle JSON.  It is also used to calculate rotation speed.  Units are in mm.")
     	public float diameter;
 		
-		@JSONDescription("The length of the barrel of this gun.  Longer barrels will result in slower-turning guns (unless their travel speed is specified).  Units are in meters.")
-    	public float length;
-		
 		@JSONDescription("The minimum case length of bullets that can go into this gun.  Useful for preventing extra-long bullets from going into a gun that normally fires short ones.  Units are in mm.")
     	public float minCaseLength;
 		
@@ -382,6 +376,33 @@ public class JSONPart extends AJSONPartProvider{
         @JSONRequired(dependentField="handHeld", dependentValues={"true"})
     	@JSONDescription("Like the normal offset, but this applies when the player starts sneaking/aiming.")
 		public Point3d handHeldAimedOffset;
+        
+        @JSONRequired
+        @JSONDescription("A list of muzzle groups.  When firing this gun, the list is cycled though, and each group of muzzles takes turns firing.  If there are multiple muzzles in the group, they are all fired.  This allows for guns with muzzles that fire in sequence, or all at once.")
+		public List<JSONMuzzleGroup> muzzleGroups;
+        
+        public class JSONMuzzleGroup{
+        	@JSONRequired
+        	@JSONDescription("A listing of muzzles that are in this group.  They will all be fired when this group is active.")
+        	public List<JSONMuzzle> muzzles;
+        }
+        
+        public class JSONMuzzle{
+        	@JSONRequired
+        	@JSONDescription("The position of this muzzle.  This is where the bullet will be spawned on firing.")
+        	public Point3d pos;
+        	
+        	@JSONRequired
+        	@JSONDescription("The rotation of this muzzle.  Allows for slight toe-in on barrels.")
+        	public Point3d rot;
+        	
+        	@JSONRequired
+        	@JSONDescription("This is the point this muzzle will rotate about when the gun's pitch is applied.  Only uused on pitchIsInternal guns, as external pitch guns move the whole gun, not the muzzle.")
+        	public Point3d center;
+        }
+        
+        @Deprecated
+        public float length;
     }
     
     public class JSONPartInteractable{

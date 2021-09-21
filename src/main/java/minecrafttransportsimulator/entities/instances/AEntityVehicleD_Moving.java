@@ -726,6 +726,8 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		//Now add actual position and angles.
 		position.add(motionApplied);
 		angles.add(rotationApplied);
+		orientation.axis.set(0, 0, 1).rotateFine(angles);
+		orientation.updateQuaternion(false);
 		
 		//Before we end this tick we need to remove any motions added for ground devices.  These motions are required 
 		//only for the updating of the vehicle position due to rotation operations and should not be considered forces.
