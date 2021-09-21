@@ -223,11 +223,7 @@ public class RenderText{
 						//Get char and set defaults.
 						char charChecking = (char) (i*CHARS_PER_TEXTURE_SHEET + charRow*CHARS_PER_ROWCOL + charCol);
 						if(charChecking == ' '){
-							//Need to map this to 1px away from the edge to avoid rendering the border, space is 1/2 char width.
-							offsetsMinU[charChecking] = 1F/pixelsPerSide;
-							offsetsMaxU[charChecking] = 1F/pixelsPerSide;
-							offsetsMaxV[charChecking] = 1F/pixelsPerSide;
-							offsetsMinV[charChecking] = 1F/pixelsPerSide;
+							//Space isn't rendered, but is half-width.
 							charWidths[charChecking] = DEFAULT_PIXELS_PER_CHAR/2;
 						}else{
 							offsetsMinU[charChecking] = charCol/(float)CHARS_PER_ROWCOL;
@@ -382,6 +378,9 @@ public class RenderText{
 							currentLineOffset -= DEFAULT_PIXELS_PER_CHAR + CHAR_SPACING;
 							indexAtLastNewline = i;
 						}
+					}else if(textChar == ' '){
+						//Just increment the offset, spaces don't render.
+						currentOffset += charWidths[textChar] + CHAR_SPACING;
 					}else{
 						//Actual char to render.
 						//Do normal char addition to the map of chars to draw.
