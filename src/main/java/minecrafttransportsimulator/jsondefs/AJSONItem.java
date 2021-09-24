@@ -49,6 +49,9 @@ public abstract class AJSONItem{
     	@JSONDescription("A list of materials that are required to create this component.  The format for this list is [GiveString:Metadata:Qty], where GiveString is the name of the item that's found in the /give command, Metadata is the metadata of the item, and Qty is the quantity needed.  Should a component have no materials in this list, and no extraMaterials if it uses definitions, it will not be available for crafting in any benches.  If you wish to use OreDict, simply replace the GiveString with the OreDict name, and omit the Metadata parameter.")
     	public List<String> materials;
     	
+    	@JSONDescription("An optional oreDict name for this item.  This will make the item be part of the specified oreDict.  Note that you may use custom oreDict names if you want multiple items to be the same ingredient.")
+    	public String oreDict;
+    	
     	//Moved from multiple locations.
     	//Vehicle was deprecated for vehicle type.
     	//Part was for part type, and went to generic.
