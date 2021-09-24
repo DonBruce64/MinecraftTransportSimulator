@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.Orientation3d;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
@@ -25,10 +26,15 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	public final Point3d prevPosition;
 	public final Point3d motion;
 	public final Point3d prevMotion;
+	
 	public final Point3d angles;
 	public final Point3d prevAngles;
 	public final Point3d rotation;
 	public final Point3d prevRotation;
+	
+	public final Orientation3d orientation;
+	public final Orientation3d prevOrientation;
+	
 	public BoundingBox boundingBox;
 	public double airDensity;
 	public double velocity;
@@ -48,6 +54,8 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 		this.prevAngles = angles.copy();
 		this.rotation = data.getPoint3d("rotation");
 		this.prevRotation = rotation.copy();
+		this.orientation = data.getOrientation3d("orientation");
+		this.prevOrientation = orientation.copy();
 		this.boundingBox = new BoundingBox(new Point3d(), position, 0.5, 0.5, 0.5, false);
 		this.radio = hasRadio() ? new Radio(this, data.getDataOrNew("radio")) : null;
 	}
@@ -63,6 +71,8 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 		this.prevAngles = angles.copy();
 		this.rotation = new Point3d();
 		this.prevRotation = rotation.copy();
+		this.orientation = new Orientation3d();
+		this.prevOrientation = orientation.copy();
 		this.boundingBox = new BoundingBox(new Point3d(), position, 0.5, 0.5, 0.5, false);
 		this.radio = null;
 	}
@@ -78,6 +88,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 			prevMotion.setTo(motion);
 			prevAngles.setTo(angles);
 			prevRotation.setTo(rotation);
+			prevOrientation.setTo(orientation);
 			airDensity = 1.225*Math.pow(2, -position.y/(500D*world.getMaxHeight()/256D));
 			velocity = motion.length();
 			world.endProfiling();

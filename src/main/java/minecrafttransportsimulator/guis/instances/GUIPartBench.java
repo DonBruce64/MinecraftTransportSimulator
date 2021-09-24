@@ -146,8 +146,8 @@ public class GUIPartBench extends AGUIBase{
 			}
 		});
 		addLabel(partName = new GUIComponentLabel(packName.x, packName.y + prevPackButton.height, ColorRGB.WHITE, "", TextAlignment.CENTERED, 0.75F));
-		addLabel(partInfo = new GUIComponentLabel(guiLeft + 17, guiTop + 58, ColorRGB.WHITE, "", TextAlignment.LEFT_ALIGNED, 0.75F, 150));
-		addLabel(vehicleInfo = new GUIComponentLabel(guiLeft + 17, guiTop + 58, ColorRGB.WHITE, "", TextAlignment.LEFT_ALIGNED, 1.0F, 150));
+		addLabel(partInfo = new GUIComponentLabel(guiLeft + 17, guiTop + 60, ColorRGB.WHITE, "", TextAlignment.LEFT_ALIGNED, 0.75F, 150));
+		addLabel(vehicleInfo = new GUIComponentLabel(guiLeft + 17, guiTop + 60, ColorRGB.WHITE, "", TextAlignment.LEFT_ALIGNED, 1.0F, 150));
 		
 		
 		//Create color navigation section.

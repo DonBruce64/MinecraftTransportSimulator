@@ -97,7 +97,7 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 			this.parentPart = null;
 		}
 		
-		//Set initial position and rotation.
+		//Set initial position and rotation. TODO do we need to do this?
 		position.setTo(localOffset).rotateFine(entityOn.angles).add(entityOn.position);
 		angles.setTo(localAngles).add(entityOn.angles);
 		angles.setTo(placementAngles);
@@ -216,6 +216,9 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 			//Set position and rotation to our net offset pos on the entity.
 			position.setTo(localOffset).rotateFine(entityOn.angles).add(entityOn.position);
 			angles.setTo(localAngles).add(entityOn.angles);
+			orientation.axis.set(0, 0, 1).rotateFine(localAngles);
+			orientation.updateQuaternion(false);
+			orientation.rotateByOrientation(entityOn.orientation);
 			
 			//Update post-movement things.
 			updatePostMovement();

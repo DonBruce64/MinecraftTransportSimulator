@@ -5,6 +5,7 @@ import org.lwjgl.opengl.GL11;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityFluidLoader;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
 import minecrafttransportsimulator.entities.instances.APart;
@@ -16,6 +17,7 @@ import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIHUD;
 import minecrafttransportsimulator.mcinterface.BuilderEntityExisting;
 import minecrafttransportsimulator.mcinterface.BuilderGUI;
+import minecrafttransportsimulator.mcinterface.BuilderTileEntityFluidTank;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.InterfaceGUI;
 import minecrafttransportsimulator.mcinterface.InterfaceRender;
@@ -26,6 +28,7 @@ import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
 import minecrafttransportsimulator.systems.CameraSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.client.Minecraft;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
@@ -68,15 +71,6 @@ public class InterfaceEventsOverlay{
     	//Do overlay rendering before the chat window is rendered.
     	//This rendered them over the main hotbar, but doesn't block the chat window.
     	if(event.getType().equals(RenderGameOverlayEvent.ElementType.CHAT)){
-    		//First set up variables to see what we are hitting.
-    		RayTraceResult lastHit = Minecraft.getMinecraft().objectMouseOver;
-    		AEntityB_Existing mousedOverEntity = null;
-    		Point3d mousedOverPoint = null;
-			if(lastHit != null && lastHit.entityHit instanceof BuilderEntityExisting){
-				mousedOverEntity = ((BuilderEntityExisting) lastHit.entityHit).entity;
-				mousedOverPoint = new Point3d(lastHit.hitVec.x, lastHit.hitVec.y, lastHit.hitVec.z);
-			}
-			
 			//Set up variables.
 			WrapperPlayer player = InterfaceClient.getClientPlayer();
 	    	AEntityD_Interactable<?> ridingEntity = player.getEntityRiding();
@@ -93,16 +87,39 @@ public class InterfaceEventsOverlay{
 				return;
 			}
 	    	
-	    	//If we are in first-person see if we are mousing over a vehicle tank.
+	    	//If we are in first-person see if we are mousing over a tank.
 	    	//If so, render that tank's info as floating text a-la-IE.
 	    	if(InterfaceClient.inFirstPerson()){
-				if(mousedOverEntity instanceof EntityVehicleF_Physics){
-					EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) mousedOverEntity;
-					for(BoundingBox box : vehicle.allInteractionBoxes){
-						if(box.isPointInside(mousedOverPoint)){
-							APart part = vehicle.getPartWithBox(box);
-							if(part instanceof PartInteractable){
-								EntityFluidTank tank = ((PartInteractable) part).tank;
+	    		//See what we are hitting.
+	    		RayTraceResult lastHit = Minecraft.getMinecraft().objectMouseOver;
+				if(lastHit != null){
+					Point3d mousedOverPoint = new Point3d(lastHit.hitVec.x, lastHit.hitVec.y, lastHit.hitVec.z);
+					if(lastHit.entityHit != null){
+						if(lastHit.entityHit instanceof BuilderEntityExisting){
+							AEntityB_Existing mousedOverEntity = ((BuilderEntityExisting) lastHit.entityHit).entity;
+							if(mousedOverEntity instanceof EntityVehicleF_Physics){
+								EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) mousedOverEntity;
+								for(BoundingBox box : vehicle.allInteractionBoxes){
+									if(box.isPointInside(mousedOverPoint)){
+										APart part = vehicle.getPartWithBox(box);
+										if(part instanceof PartInteractable){
+											EntityFluidTank tank = ((PartInteractable) part).tank;
+											if(tank != null){
+												String tankText = tank.getFluid().isEmpty() ? "EMPTY" : tank.getFluid().toUpperCase() + " : " + tank.getFluidLevel() + "/" + tank.getMaxLevel();
+												RenderText.draw2DText(tankText, null, screenWidth/2 + 4, screenHeight/2, ColorRGB.WHITE, TextAlignment.LEFT_ALIGNED, 1.0F, 0);
+											}
+										}
+									}
+								}
+							}
+							
+						}
+					}else{
+						TileEntity mcTile = player.getWorld().world.getTileEntity(lastHit.getBlockPos());
+						if(mcTile instanceof BuilderTileEntityFluidTank){
+							BuilderTileEntityFluidTank<?> builder = (BuilderTileEntityFluidTank<?>) mcTile; 
+							if(builder.tileEntity != null && builder.tileEntity instanceof TileEntityFluidLoader){
+								EntityFluidTank tank = builder.tileEntity.getTank();
 								if(tank != null){
 									String tankText = tank.getFluid().isEmpty() ? "EMPTY" : tank.getFluid().toUpperCase() + " : " + tank.getFluidLevel() + "/" + tank.getMaxLevel();
 									RenderText.draw2DText(tankText, null, screenWidth/2 + 4, screenHeight/2, ColorRGB.WHITE, TextAlignment.LEFT_ALIGNED, 1.0F, 0);

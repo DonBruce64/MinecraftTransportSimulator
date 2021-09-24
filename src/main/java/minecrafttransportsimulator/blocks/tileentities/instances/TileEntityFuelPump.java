@@ -5,7 +5,6 @@ import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityFluidTankProvider;
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.instances.APart;
@@ -252,11 +251,6 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityFl
 	@Override
 	public EntityFluidTank getTank(){
 		return tank;
-	}
-	
-	@Override
-	public boolean canConnectOnAxis(Axis axis){
-		return axis.equals(Axis.DOWN);
 	}
 	
 	@Override

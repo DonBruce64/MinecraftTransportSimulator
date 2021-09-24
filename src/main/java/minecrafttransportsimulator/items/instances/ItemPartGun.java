@@ -34,7 +34,6 @@ public class ItemPartGun extends AItemPart implements IItemEntityProvider<Entity
 	public void addTooltipLines(List<String> tooltipLines, WrapperNBT data){
 		super.addTooltipLines(tooltipLines, data);
 		tooltipLines.add(InterfaceCore.translate("info.item.gun.diameter") + definition.gun.diameter);
-		tooltipLines.add(InterfaceCore.translate("info.item.gun.length") + definition.gun.length);
 		tooltipLines.add(InterfaceCore.translate("info.item.gun.caseRange") + definition.gun.minCaseLength + "-" + definition.gun.maxCaseLength);
 		tooltipLines.add(InterfaceCore.translate("info.item.gun.fireDelay") + definition.gun.fireDelay);
 		tooltipLines.add(InterfaceCore.translate("info.item.gun.muzzleVelocity") + definition.gun.muzzleVelocity);

@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.blocks.tileentities.components;
 
-import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.entities.instances.EntityFluidTank;
 
 /**Interface that allows an object to contain a fluid tank.
@@ -15,9 +14,4 @@ public interface ITileEntityFluidTankProvider{
 	 *  Gets the tank for this interface.
 	 */
 	public EntityFluidTank getTank();
-	
-	/**
-	 *  Returns true if pipes can connect to the tank on the passed-in axis.
-	 */
-	public boolean canConnectOnAxis(Axis axis);
 }

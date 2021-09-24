@@ -49,6 +49,7 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraftforge.oredict.OreDictionary;
 
 /**Builder for MC items.  Constructing a new item with this builder This will automatically
  * construct the item and will add it to the appropriate maps for automatic registration.
@@ -229,7 +230,7 @@ public class BuilderItem extends Item{
 	public static void registerItems(RegistryEvent.Register<Item> event){
 		//Register all items in our wrapper map.
 		for(Entry<AItemBase, BuilderItem> entry : itemMap.entrySet()){
-			AItemBase item = entry.getKey();
+			AItemPack<?> item = (AItemPack<?>) entry.getKey();
 			BuilderItem mcItem = entry.getValue();
 			
 			//First check if the creative tab is set/created.
@@ -241,10 +242,11 @@ public class BuilderItem extends Item{
 			BuilderCreativeTab.createdTabs.get(tabID).addItem(item);
 			
 			//Register the item.
-			if(item instanceof AItemPack){
-				if(PackParserSystem.getPackConfiguration(((AItemPack<?>) item).definition.packID) != null){
-					event.getRegistry().register(mcItem.setRegistryName(item.getRegistrationName()).setTranslationKey(item.getRegistrationName()));
-				}
+			event.getRegistry().register(mcItem.setRegistryName(item.getRegistrationName()).setTranslationKey(item.getRegistrationName()));
+			
+			//If the item is for OreDict, add it.
+			if(item.definition.general.oreDict != null){
+				OreDictionary.registerOre(item.definition.general.oreDict, mcItem);
 			}
 		}
 	}

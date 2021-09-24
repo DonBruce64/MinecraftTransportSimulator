@@ -42,6 +42,8 @@ import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPart.EffectorComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPart.JSONPartEngine.EngineSound;
+import minecrafttransportsimulator.jsondefs.JSONPart.JSONPartGun.JSONMuzzle;
+import minecrafttransportsimulator.jsondefs.JSONPart.JSONPartGun.JSONMuzzleGroup;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition.ExhaustObject;
 import minecrafttransportsimulator.jsondefs.JSONParticle;
@@ -609,13 +611,26 @@ public final class LegacyCompatSystem{
 		}
 		
 		//If the part is a gun, set yaw and pitch speed if not set.
-		if(definition.generic.type.startsWith("gun")){
+		//Also set muzzle position.
+		if(definition.gun != null){
 			if(definition.gun.yawSpeed == 0){
 				definition.gun.yawSpeed = 50/definition.gun.diameter + 1/definition.gun.length;
 			}
 			if(definition.gun.pitchSpeed == 0){
 				definition.gun.pitchSpeed = 50/definition.gun.diameter + 1/definition.gun.length;
 			}
+			if(definition.gun.muzzleGroups == null){
+				definition.gun.muzzleGroups = new ArrayList<JSONMuzzleGroup>();
+				JSONMuzzleGroup muzzleGroup = definition.gun.new JSONMuzzleGroup();
+				muzzleGroup.muzzles = new ArrayList<JSONMuzzle>();
+				JSONMuzzle muzzle = definition.gun.new JSONMuzzle();
+				muzzle.pos = new Point3d(0, 0, definition.gun.length);
+				muzzle.rot = new Point3d();
+				muzzle.center = new Point3d();
+				muzzleGroup.muzzles.add(muzzle);
+				definition.gun.muzzleGroups.add(muzzleGroup);
+			}
+			definition.gun.length = 0;
 		}
 		
 		if(definition.parts != null){
@@ -1229,7 +1244,7 @@ public final class LegacyCompatSystem{
 		}
 		
 		//If we are a decor with a type of fuel pump or fluid loader, then set defaults for invalid/missing values.
-		if(definition.decor.type.equals(DecorComponentType.FUEL_PUMP) || definition.decor.type.equals(DecorComponentType.FLUID_LOADER)){
+		if(definition.decor.type.equals(DecorComponentType.FUEL_PUMP) || definition.decor.type.equals(DecorComponentType.FLUID_LOADER) || definition.decor.type.equals(DecorComponentType.FLUID_UNLOADER)){
 			if (definition.decor.fuelCapacity == 0) {
 				definition.decor.fuelCapacity = 15000;
 			}

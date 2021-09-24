@@ -119,6 +119,18 @@ public class Point3d{
 	}
 	
 	/**
+	 * Inverts the sign on this point.  This should be used instead of multiplying
+	 * by -1 as it's quicker and more accurate.
+	 * Returns the called object for nested operations.
+	 */
+	public Point3d invert(){
+		this.x = -x;
+		this.y = -y;
+		this.z = -z;
+		return this;
+	}
+	
+	/**
 	 * Returns the distance between this point and the passed-in point.
 	 */
 	public double distanceTo(Point3d point){

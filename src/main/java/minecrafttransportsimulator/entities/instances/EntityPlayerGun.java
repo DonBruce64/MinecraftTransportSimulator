@@ -218,7 +218,10 @@ public class EntityPlayerGun extends AEntityE_Multipart<JSONPlayerGun>{
 					}
 				}
 			}else{
+				//Player is either null or not valid.  Remove us.
+				//Don't update post movement, as the gun will crash on update.
 				remove();
+				return false;
 			}
 			
 			//Update the gun now, if we have one.
