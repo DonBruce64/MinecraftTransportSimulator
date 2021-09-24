@@ -588,12 +588,12 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 		double value;
 		if(clock.animation.variable.startsWith("!")){
 			value = getRawVariableValue(clock.animation.variable.substring(1), partialTicks);
-			value = value == 0 ? 1 : 0;
+			value = (value == 0 || Double.isNaN(value)) ? 1 : 0;
 		}else{
 			value = getRawVariableValue(clock.animation.variable, partialTicks);
-		}
-		if(Double.isNaN(value)){
-			value = 0;
+			if(Double.isNaN(value)){
+				value = 0;
+			}
 		}
 		if(!clock.isUseful){
 			return clampAndScale(value, clock.animation, scale, offset);
