@@ -25,6 +25,9 @@ public class JSONPartDefinition{
 	@JSONDescription("This parameter is optional.  If included and set to true, the seat at this location will be marked as a controller seat.  This allows the player in this seat to control the vehicle.  You may have multiple controller seats per vehicle (such as a pilot and co-pilot seat for a plane), but inputs from the controllers are all handled equally, so just because you are in the “first” seat does not mean you get full control.")
     public boolean isController;
 	
+	@JSONDescription("This parameter is optional.  If included and set to true, and this is on a gun part, and the part in this slot is also a gun, then when the part-slot gun is active, it will be allowed to control the main gun.  This allows for switching to SMGs placed on turrets while still moving the turret, but not firing from it.")
+    public boolean isCoAxial;
+	
 	@JSONDescription("This parameter is optional.  If included and set to true, any part in this position will not be able to be removed.  Useful in conjunction with a defaultPart.")
     public boolean isPermanent;
 	
