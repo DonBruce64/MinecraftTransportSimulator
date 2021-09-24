@@ -571,6 +571,12 @@ public final class LegacyCompatSystem{
 			if(definition.engine.engineWearFactor <= 0.25){
 				definition.engine.engineWearFactor = 1;
 			}
+			if(definition.engine.coolingCoefficient == 0){
+				definition.engine.coolingCoefficient = 1;
+			}
+			if(definition.engine.heatingCoefficient == 0){
+				definition.engine.heatingCoefficient = 1;
+			}
 			
 			//If we don't have matching up-shift and down-shift numbers, we are an engine that came before multiple reverse gears.
 			if(definition.engine.upShiftRPM != null){
