@@ -206,7 +206,10 @@ public class PartGun extends APart{
 				//Set final gun active state and variables.
 				boolean ableToFire = windupTimeCurrent == definition.gun.windupTime && bulletsLeft > 0 && (!definition.gun.isSemiAuto || !firedThisRequest);
 				if(ableToFire && state.isAtLeast(GunState.FIRING_REQUESTED)){
-					if(!state.isAtLeast(GunState.FIRING_CURRENTLY)){
+					//Set firing to true if we aren't firing, and we've waited long enough since the last firing command.
+					//If we don't wait, we can bypass the cooldown by toggling the trigger.
+					long timeSinceFiring = System.currentTimeMillis() - lastTimeFired;
+					if(!state.isAtLeast(GunState.FIRING_CURRENTLY) && timeSinceFiring >= millisecondFiringDelay){
 						List<APart> allGuns = entityOn.partsByItem.get(gunItem);
 						//Check if we have a primary gun.  If so, we may need to adjust cams to resume the firing sequence.
 						int sequenceIndex = allGuns.indexOf(this);
