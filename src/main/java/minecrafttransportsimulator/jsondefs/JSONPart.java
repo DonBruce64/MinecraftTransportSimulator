@@ -150,6 +150,12 @@ public class JSONPart extends AJSONPartProvider{
 		@JSONDescription("The rate at which this engine's RPM winds down per tick after sputtering out or being turned off. 10 by default, and can be configured to make engines wind down quicker or slower.")
     	public int engineWinddownRate;
 		
+		@JSONDescription("The rate at which this engine heats up, which gets lobbed into the math with fuel consumption, velocity... etc")
+    	public float heatingCoefficient;
+    	
+		@JSONDescription("The rate at which this engine cools down, which gets lobbed into the math with fuel consumption, velocity... etc")
+    	public float coolingCoefficient;
+    	
 		@JSONDescription("The rate at which this engine accrues hours. If you make it lower, it'll be more reliable. If you make it higher, it'll collect that wearout like the infinity stones.")
     	public float engineWearFactor;
 
