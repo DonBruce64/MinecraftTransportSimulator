@@ -2,9 +2,11 @@ package minecrafttransportsimulator.entities.instances;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
@@ -25,7 +27,8 @@ public class PartEffector extends APart{
 	private final Point3d flooredCenter = new Point3d();
 	private final Map<BoundingBox, Point3d> boxLastPositionsFloored = new HashMap<BoundingBox, Point3d>();
 	private final Map<BoundingBox, Integer> boxTimeSpentAtPosition = new HashMap<BoundingBox, Integer>();
-	
+	private final Set<Point3d> blockFlooredPositionsBrokeThisTick = new HashSet<Point3d>()
+;	
 	public PartEffector(AEntityE_Multipart<?> entityOn, JSONPartDefinition placementDefinition, WrapperNBT data, APart parentPart){
 		super(entityOn, placementDefinition, data, parentPart);
 		this.blocksBroken = data.getInteger("blocksBroken");
@@ -37,6 +40,7 @@ public class PartEffector extends APart{
 			//If we are active, do effector things.
 			if(isActive && !world.isClient()){
 				drops.clear();
+				blockFlooredPositionsBrokeThisTick.clear();
 				for(BoundingBox box : entityCollisionBoxes){
 					switch(definition.effector.type){
 						case FERTILIZER: {
@@ -104,12 +108,13 @@ public class PartEffector extends APart{
 									}
 									
 									flooredCenter.set(Math.floor(box.globalCenter.x), Math.floor(box.globalCenter.y), Math.floor(box.globalCenter.z));
-									if(boxLastPositionsFloored.get(box).equals(flooredCenter)){
+									if(boxLastPositionsFloored.get(box).equals(flooredCenter) && !blockFlooredPositionsBrokeThisTick.contains(flooredCenter)){
 										int timeSpentBreaking = boxTimeSpentAtPosition.get(box);
 										if(timeSpentBreaking >= definition.effector.drillSpeed*blockHardness/definition.effector.drillHardness){
 											drops.addAll(world.getBlockDrops(flooredCenter));
 											world.destroyBlock(flooredCenter, false);
 											boxTimeSpentAtPosition.put(box, 0);
+											blockFlooredPositionsBrokeThisTick.add(flooredCenter.copy());
 											if(++blocksBroken == definition.effector.drillDurability){
 												this.isValid = false;
 											}else{
