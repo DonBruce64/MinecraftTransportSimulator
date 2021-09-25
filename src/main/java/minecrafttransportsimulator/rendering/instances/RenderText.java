@@ -354,7 +354,7 @@ public class RenderText{
 						//Don't do this if we don't have a space in this line though.  This is the case for URLs
 						//and other long segments of text.
 						if(text.substring(indexAtLastNewline+1, i).indexOf(' ') != -1){
-							for(int j=i; j>0; --j){
+							for(int j=i-1; j>0; --j){
 								char priorChar = text.charAt(j);
 								if(priorChar == ' '){
 									i = j;
@@ -364,13 +364,17 @@ public class RenderText{
 									break;
 								}else{
 									//Need to remove vertices in list so they don't get rendered.
+									//However, only do this if we have vertices.
+									//We could end up needing to word wrap before a formatting char.
 									FontRenderBlock priorRenderBlock = getBlockFor(priorChar, currentColor, currentState);
-									int vertMin = priorRenderBlock.vertices.size() - priorRenderBlock.state.vertexStep;
-									int vertMax = priorRenderBlock.vertices.size() - 1;
-									for(int k=vertMax; k>=vertMin; --k){
-										priorRenderBlock.vertices.remove(k);
+									if(!priorRenderBlock.vertices.isEmpty()){
+										int vertMin = priorRenderBlock.vertices.size() - priorRenderBlock.state.vertexStep;
+										int vertMax = priorRenderBlock.vertices.size() - 1;
+										for(int k=vertMax; k>=vertMin; --k){
+											priorRenderBlock.vertices.remove(k);
+										}
+										currentVertexIndex -= priorRenderBlock.state.vertexStep;
 									}
-									currentVertexIndex -= priorRenderBlock.state.vertexStep;
 								}
 							}	
 						}else{
