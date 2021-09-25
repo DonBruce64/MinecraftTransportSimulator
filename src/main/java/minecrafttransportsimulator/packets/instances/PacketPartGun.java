@@ -19,14 +19,16 @@ import minecrafttransportsimulator.systems.PackParserSystem;
 public class PacketPartGun extends APacketEntity<PartGun>{
 	private final boolean controlPulse;
 	private final boolean triggerState;
+	private final boolean aimState;
 	private final String bulletPackID;
 	private final String bulletSystemName;
 	private final String bulletSubName;
 	
-	public PacketPartGun(PartGun gun, boolean triggerState){
+	public PacketPartGun(PartGun gun, boolean triggerState, boolean aimState){
 		super(gun);
 		this.controlPulse = true;
 		this.triggerState = triggerState;
+		this.aimState = aimState;
 		this.bulletPackID = null;
 		this.bulletSystemName = null;
 		this.bulletSubName = null;
@@ -36,6 +38,7 @@ public class PacketPartGun extends APacketEntity<PartGun>{
 		super(gun);
 		this.controlPulse = false;
 		this.triggerState = false;
+		this.aimState = false;
 		this.bulletPackID = bullet.definition.packID;
 		this.bulletSystemName = bullet.definition.systemName;
 		this.bulletSubName = bullet.subName;
@@ -44,6 +47,7 @@ public class PacketPartGun extends APacketEntity<PartGun>{
 	public PacketPartGun(ByteBuf buf){
 		super(buf);
 		this.controlPulse = buf.readBoolean();
+		this.aimState = buf.readBoolean();
 		if(controlPulse){
 			this.triggerState = buf.readBoolean();
 			this.bulletPackID = null;
@@ -61,6 +65,7 @@ public class PacketPartGun extends APacketEntity<PartGun>{
 	public void writeToBuffer(ByteBuf buf){
 		super.writeToBuffer(buf);
 		buf.writeBoolean(controlPulse);
+		buf.writeBoolean(aimState);
 		if(controlPulse){
 			buf.writeBoolean(triggerState);
 		}else{
@@ -78,6 +83,7 @@ public class PacketPartGun extends APacketEntity<PartGun>{
 			}else{
 				gun.state = gun.state.demote(GunState.CONTROLLED);
 			}
+			gun.isHandHeldGunAimed = aimState;
 			return true;
 		}else{
 			return gun.tryToReload(PackParserSystem.getItem(bulletPackID, bulletSystemName, bulletSubName));

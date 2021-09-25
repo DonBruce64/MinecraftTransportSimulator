@@ -355,6 +355,13 @@ public class InterfaceInput{
 	}
 	
 	/**
+	 *  Returns true if the left mouse-button is down.
+	 */
+	public static boolean isLeftMouseButtonDown(){
+		return Minecraft.getMinecraft().gameSettings.keyBindAttack.isKeyDown();
+	}
+	
+	/**
 	 *  Returns true if the right mouse-button is down.
 	 */
 	public static boolean isRightMouseButtonDown(){

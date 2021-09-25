@@ -63,6 +63,7 @@ public class PartGun extends APart{
 	public GunState state;
 	public boolean firedThisRequest;
 	public boolean firedThisCheck;
+	public boolean isHandHeldGunAimed;
 	public int ticksFiring;
 	public int reloadTimeRemaining;
 	public int windupTimeCurrent;

@@ -74,7 +74,7 @@ public class CameraSystem{
     		//Force custom cameras for some states.
     		//If we are sneaking and holding a gun, enable custom cameras.
     		if(playerGunEntity != null && playerGunEntity.activeGun != null && sittingSeat == null){
-    			enableCustomCameras = player.isSneaking();
+    			enableCustomCameras = playerGunEntity.activeGun.isHandHeldGunAimed;
     			customCameraIndex = 0;
     		}
     		
