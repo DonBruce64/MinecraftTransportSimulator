@@ -177,7 +177,7 @@ public class EntityPlayerGun extends AEntityE_Multipart<JSONPlayerGun>{
 					//Set our position relative to the the player's hand.
 					//Center point is at the player's arm, with offset being where the offset is.
 					Point3d heldVector;
-					if(player.isSneaking()){
+					if(activeGun.isHandHeldGunAimed){
 						heldVector = activeGun.definition.gun.handHeldAimedOffset;
 					}else{
 						heldVector = activeGun.definition.gun.handHeldNormalOffset;

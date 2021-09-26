@@ -63,6 +63,7 @@ public class PartGun extends APart{
 	public GunState state;
 	public boolean firedThisRequest;
 	public boolean firedThisCheck;
+	public boolean isHandHeldGunAimed;
 	public int ticksFiring;
 	public int reloadTimeRemaining;
 	public int windupTimeCurrent;
@@ -220,10 +221,15 @@ public class PartGun extends APart{
 								sequenceIndex += allGuns.size();
 							}
 						}
+
 						state = state.promote(GunState.FIRING_CURRENTLY);
-						
 						millisecondCamOffset = definition.gun.fireSolo ? 0 : millisecondFiringDelay*sequenceIndex/allGuns.size();
-						lastTimeFired = System.currentTimeMillis() + millisecondCamOffset - millisecondFiringDelay;
+						lastTimeFired = System.currentTimeMillis() + millisecondCamOffset;
+						//For clients, we offset the time fired back one cycle, so we can spawn the first bullet.
+						//This will be set current in the particle spawning logic.
+						if(world.isClient()){
+							lastTimeFired -= millisecondFiringDelay;
+						}
 					}
 				}else if(!ableToFire){
 					state = state.demote(GunState.FIRING_REQUESTED);

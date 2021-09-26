@@ -60,7 +60,7 @@ public final class ControlSystem{
 	public static void controlPlayerGun(EntityPlayerGun entity){
 		//Don't send state changes unless we're holding a gun.
 		if(entity.activeGun != null){
-			InterfacePacket.sendToServer(new PacketPartGun(entity.activeGun, InterfaceInput.isRightMouseButtonDown() && !entity.player.isSpectator()));
+			InterfacePacket.sendToServer(new PacketPartGun(entity.activeGun, InterfaceInput.isLeftMouseButtonDown() && !entity.player.isSpectator(), InterfaceInput.isRightMouseButtonDown()));
 		}
 	}
 	
@@ -137,7 +137,7 @@ public final class ControlSystem{
 			if(part instanceof PartGun){
 				PartGun gun = (PartGun) part;
 				if(InterfaceClient.getClientPlayer().equals(gun.getController())){
-					InterfacePacket.sendToServer(new PacketPartGun(gun, gunTrigger.isPressed()));
+					InterfacePacket.sendToServer(new PacketPartGun(gun, gunTrigger.isPressed(), false));
 				}
 			}else if(part instanceof PartSeat){
 				if(gunSwitchPressedThisScan){
