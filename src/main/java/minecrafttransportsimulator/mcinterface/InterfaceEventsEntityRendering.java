@@ -106,7 +106,7 @@ public class InterfaceEventsEntityRendering{
 	    	//We also hide the right arm so it doesn't render, then render it manually at the end with our angles.
 	    	EntityPlayerGun gunEntity = EntityPlayerGun.playerClientGuns.get(player.getUniqueID().toString());
 	    	if(gunEntity != null && gunEntity.activeGun != null){
-	    		if(player.isSneaking()){
+	    		if(gunEntity.activeGun.isHandHeldGunAimed){
 	    			disableBothArms(playerModel, player, true);
 	    		}else{
 	    			disableRightArm(playerModel, player, true);
@@ -249,7 +249,7 @@ public class InterfaceEventsEntityRendering{
 	    	if(gunEntity != null && gunEntity.activeGun != null){	    		
 	    		//Get arm rotations.
 	    		Point3d heldVector;
-				if(player.isSneaking()){
+				if(gunEntity.activeGun.isHandHeldGunAimed){
 					heldVector = gunEntity.activeGun.definition.gun.handHeldAimedOffset;
 				}else{
 					heldVector = gunEntity.activeGun.definition.gun.handHeldNormalOffset;
@@ -260,7 +260,7 @@ public class InterfaceEventsEntityRendering{
 	    		
 	    		//Set rotation points on the model.
 	    		rightArmAngles = new Point3d(armPitchOffset, armYawOffset, 0);
-	    		leftArmAngles = player.isSneaking() ? new Point3d(armPitchOffset, -armYawOffset, 0) : null;
+	    		leftArmAngles = gunEntity.activeGun.isHandHeldGunAimed ? new Point3d(armPitchOffset, -armYawOffset, 0) : null;
 	    	}else if(renderCurrentRiderControlling){
 	    		if(ridingEntity instanceof EntityVehicleF_Physics){
     				double turningAngle = ((EntityVehicleF_Physics) ridingEntity).rudderAngle/10D/2D;
