@@ -32,7 +32,7 @@ public final class RenderPart extends ARenderEntity<APart>{
 	@Override
 	public void adjustPositionRotation(APart part, float partialTicks, Point3d entityPosition, Point3d entityRotation){
 		//Rotate the part according to its rendering rotation if we need to do so.
-		entityRotation.add(part.getRenderingRotation(partialTicks, false));
+		entityRotation.add(part.getRenderingRotation(partialTicks));
 	}
 	
 	@Override

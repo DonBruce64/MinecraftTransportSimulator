@@ -158,7 +158,7 @@ public class PartPropeller extends APart{
 	}
 
 	@Override
-	public Point3d getRenderingRotation(float partialTicks, boolean animationValue){
+	public Point3d getRenderingRotation(float partialTicks){
 		return new Point3d(0, 0, (angularPosition + angularVelocity*partialTicks)*360D);
 	}
 	

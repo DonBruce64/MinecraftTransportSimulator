@@ -87,10 +87,13 @@ public class InterfaceInput{
 				try{
 					joystickNameCounters.clear();
 					if(runningClassicMode){
+						InterfaceCore.logError("Using old controllers");
 						classicJoystickMap.clear();
 						for(net.java.games.input.Controller joystick : net.java.games.input.ControllerEnvironment.getDefaultEnvironment().getControllers()){
+							InterfaceCore.logError("Checking controller " + joystick.getName());
 							joystickEnabled = true;
 							if(joystick.getType() != null && !joystick.getType().equals(net.java.games.input.Controller.Type.MOUSE) && !joystick.getType().equals(net.java.games.input.Controller.Type.KEYBOARD) && joystick.getName() != null && joystick.getComponents().length != 0){
+								InterfaceCore.logError("Controller is valid.");
 								String joystickName = joystick.getName();
 								//Add an index on this joystick to be sure we don't override multi-component units.
 								if(!joystickNameCounters.containsKey(joystickName)){
@@ -103,12 +106,15 @@ public class InterfaceInput{
 					}else{
 						if(!org.lwjgl.input.Controllers.isCreated()){
 							org.lwjgl.input.Controllers.create();
+							InterfaceCore.logError("Creating new controllers");
 						}
 						joystickMap.clear();
 						buttonNumberOffset = 0;
 						for(int i=0; i<org.lwjgl.input.Controllers.getControllerCount(); ++i){
+							InterfaceCore.logError("Checking controller " + i);
 							org.lwjgl.input.Controller joystick = org.lwjgl.input.Controllers.getController(i);
 							if(joystick.getAxisCount() > 0 && joystick.getButtonCount() > 0 && joystick.getName() != null){
+								InterfaceCore.logError("Controller is valid.");
 								String joystickName = joystick.getName();
 								//Add an index on this joystick to be sure we don't override multi-component units.
 								if(!joystickNameCounters.containsKey(joystickName)){
@@ -147,7 +153,13 @@ public class InterfaceInput{
 							}
 						}
 					}
-				}catch(Exception e){}
+				}catch(Exception e){
+					e.printStackTrace();
+					InterfaceCore.logError(e.getMessage());
+					for(StackTraceElement s : e.getStackTrace()){
+						InterfaceCore.logError(s.toString());
+					}
+				}
 			}
 		};
 		joystickThread.start();

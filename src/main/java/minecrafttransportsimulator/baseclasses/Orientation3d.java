@@ -61,7 +61,7 @@ public class Orientation3d{
 	}*/
 	
 	/**
-	 * Updates the Quaternion.  This should be done any time {@link #axis}, {@link #rotation}, or quaternion parameters XYZW changes.
+	 * Updates the Quaternion.  This should be done any time {@link #axis}&{@link #rotation}, or quaternion parameters XYZW changes.
 	 * If the boolean parameter is set, then the quanternion values will be used to calculate the axis.
 	 * If it is false, then they will be calculated from the axis.
 	 */
@@ -85,7 +85,7 @@ public class Orientation3d{
 		
 		double theta = Math.asin(axis.y);
 		double phi = Math.atan2(axis.x, axis.z);
-		//Positive acos for theta maybe?  Other code shows this.
+		//TODO Positive acos for theta maybe?  Other code shows this.
 		rotationX = -Math.toDegrees(theta);
 		rotationY =  Math.toDegrees(phi);
 		
@@ -143,6 +143,7 @@ public class Orientation3d{
 	
 	/**
 	 * Multiplies this orientation by the passed-in orientation, storing the result in this orientation.
+	 * Updates this orientation as part of this operation, so don't call {@link #updateQuaternion(boolean)}.
 	 * Returns this orientation for nested operations.
 	 */
 	public Orientation3d rotateByOrientation(Orientation3d multiplyBy){
