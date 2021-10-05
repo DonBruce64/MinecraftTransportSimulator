@@ -195,7 +195,7 @@ public class PartEngine extends APart{
 				
 				//Add cooling for ambient temp.
 				ambientTemp = (25*world.getTemperature(position) + 5)*ConfigSystem.configObject.general.engineBiomeTempFactor.value;
-				coolingFactor = 0.001 - ((definition.engine.superchargerEfficiency/1000F)*((rpm/2000F)*definition.engine.heatingCoefficient)) + (vehicleOn.velocity/1000F)*definition.engine.coolingCoefficient;
+				coolingFactor = 0.001*definition.engine.coolingCoefficient - (definition.engine.superchargerEfficiency/1000F)*(rpm/2000F) + (vehicleOn.velocity/1000F)*definition.engine.coolingCoefficient;
 				temp -= (temp - ambientTemp)*coolingFactor;
 				
 				//Check to see if electric or hand starter can keep running.
@@ -274,7 +274,7 @@ public class PartEngine extends APart{
 						}
 						
 						//Add temp based on engine speed.
-						temp += Math.max(0, (7*rpm/definition.engine.maxRPM - temp/(COLD_TEMP*2))/20)*ConfigSystem.configObject.general.engineSpeedTempFactor.value;
+						temp += Math.max(0, (7*rpm/definition.engine.maxRPM - temp/(COLD_TEMP*2))/20)*definition.engine.heatingCoefficient*ConfigSystem.configObject.general.engineSpeedTempFactor.value;
 						
 						//Adjust oil pressure based on RPM and leak status.
 						//If this is a 0-idle RPM engine, assume it's electric and doesn't have oil.
