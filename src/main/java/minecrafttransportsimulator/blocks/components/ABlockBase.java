@@ -86,7 +86,7 @@ public abstract class ABlockBase{
 			if(rotation < 0){
 				rotation += 360;
 			}
-			int degRotation = checkDiagonals ? (int) (Math.round(rotation/45)*45) : (int) (Math.round(rotation/90)*90);
+			int degRotation = (checkDiagonals ? (int) (Math.round(rotation/45)*45) : (int) (Math.round(rotation/90)*90))%360;
 			for(Axis axis : values()){
 				if(axis.xzPlanar && axis.yRotation == degRotation){
 					return axis;

@@ -146,9 +146,6 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 			//Normal sounds are handled on the main tick loop.
 			entity.updateSounds(partialTicks);
 		}
-		
-		//Render supplementals.
-		renderSupplementalModels(entity, blendingEnabled, partialTicks);
 	}
 	
 	/**
@@ -160,8 +157,7 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 	}
 	
 	/**
-	 *  If rendering needs to be skipped in rendering for any reason, return true here.
-	 *  Note that this will NOT disable supplemental model rendering via {@link #renderSupplementalModels(AEntityC_Definable, float)}.
+	 *  If rendering needs to be skipped in rendering for any reason, return true here..
 	 */
 	public boolean disableRendering(RenderedEntity entity, float partialTicks){
 		//Don't render on the first tick, as we might have not created some variables yet.
@@ -205,12 +201,6 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 	 *  been reset.  At this point, the texture will still be bound, which allows for additional rendering if so desired.
 	 */
 	public void renderAdditionalModels(RenderedEntity entity, boolean blendingEnabled, float partialTicks){}
-	
-	/**
-	 *  Called to render supplemental models on this entity.  Used mainly for entities that have other entities
-	 *  on them that need to render with the main entity.
-	 */
-	protected void renderSupplementalModels(RenderedEntity entity, boolean blendingEnabled, float partialTicks){}
 	
 	/**
 	 *  Renders all instruments on the entity.  Uses the instrument's render code.
