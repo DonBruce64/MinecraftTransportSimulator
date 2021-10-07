@@ -301,7 +301,7 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 						foundConnection = towedByConnection;
 					}
 				}
-				if(foundConnection != null && !towingConnections.isEmpty()){
+				if(foundConnection == null && !towingConnections.isEmpty()){
 					for(TrailerConnection towingConnection : towingConnections){
 						if(towingConnection.hookupGroupIndex == groupIndex && towingConnection.hookupConnectionIndex == connectionIndex){
 							foundConnection = towingConnection;
