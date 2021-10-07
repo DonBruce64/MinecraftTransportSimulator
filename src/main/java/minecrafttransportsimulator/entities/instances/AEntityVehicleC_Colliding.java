@@ -94,7 +94,10 @@ abstract class AEntityVehicleC_Colliding extends AEntityVehicleB_Rideable{
 				if(!world.isBlockLiquid(blockPosition) && blockHardness <= velocity*currentMass/250F && blockHardness >= 0){
 					if(ConfigSystem.configObject.general.blockBreakage.value){
 						hardnessHitThisBox += blockHardness;
-						hardnessHitThisTick += blockHardness;
+						if(!yAxis){
+							//Only add hardness if we hit in XZ movement.  Don't want to blow up from falling fast, just break tons of dirt.
+							hardnessHitThisTick += blockHardness;
+						}
 						motion.multiply(Math.max(1.0F - blockHardness*0.5F/((1000F + currentMass)/1000F), 0.0F));
 						if(!world.isClient()){
 							if(ticksExisted > 500){
