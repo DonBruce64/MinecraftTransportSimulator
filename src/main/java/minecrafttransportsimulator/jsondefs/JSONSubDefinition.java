@@ -14,8 +14,8 @@ public class JSONSubDefinition{
 	@JSONDescription("This parameter is optional, and is only used for vehicles and parts.  If set, when the vehicle's color is changed with the paint gun the new color's definition is checked for a secondTone.  If one is found, all parts will be checked.  If any part has definition with a subName matching the vehicle's secondTone, then the part will be swapped for the one with the appropriate definition.")
 	public String secondTone;
 	
-	@JSONDescription("This parameter is optional.  If set, any textObjects marked as colorInherited will use this color rather than their own.  Useful when you have multiple textures for your model that would cause issues with a single text color.")
-	public ColorRGB secondColor;
+	@JSONDescription("This parameter is optional.  If set, any textObjects marked as colorInherited will use one of the colors in this list rather than their own.  The exact color to be used is specified by the textObject.  Useful when you have multiple textures for your model that would cause issues with a single text color.")
+	public List<ColorRGB> secondaryTextColors;
 	
 	@JSONDescription("This parameter is optional.  If set, then the model with this name will be used for this definition rather than the default one.  This model must be in the same folder as all other models for this component, but it may be in sub-folders if desired.")
 	public String modelName;
@@ -32,4 +32,7 @@ public class JSONSubDefinition{
 	@JSONRequired
 	@JSONDescription("These materials are simply extra ones that are needed to craft the variant specified.  This is where you can put dyes for color variants to differentiate them from one another.  These are also what will show up in the paint gun GUI.  Format is the same as the materials entry defined in the general section. ")
 	public List<String> extraMaterials;
+	
+	@Deprecated
+	public ColorRGB secondColor;
 }

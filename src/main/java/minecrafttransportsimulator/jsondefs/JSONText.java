@@ -36,8 +36,8 @@ public class JSONText{
     @JSONDescription("A hexadecimal color code.  This tells MTS what color this text should be.")
 	public ColorRGB color;
 	
-	@JSONDescription("If true, then this text will get its color from the definition section's secondColor parameter, if one exists.")
-	public boolean colorInherited;
+	@JSONDescription("If set, then this text will get its color from the definition section's secondColor parameter, if one exists for the specified index.")
+	public int inheritedColorIndex;
 	
 	@JSONDescription("If this is set, the rendered text will automatically wrap once it hits this many pixels in width.  Note that scaled text will still wrap based on the non-scaled pixel width, so adjust your wrapWidth accordingly if you're scaling text.")
     public int wrapWidth;
@@ -53,4 +53,7 @@ public class JSONText{
     
     @JSONDescription("If true, this text will be auto-scaled to fit inside the wrapWidth rather than actually wrapping to another line.  Has no affect unless you specify a wrapWidth!")
 	public boolean autoScale;
+    
+	@Deprecated
+	public boolean colorInherited;
 }

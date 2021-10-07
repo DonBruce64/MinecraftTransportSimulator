@@ -344,6 +344,41 @@ public class JSONParser{
 		}
 	};
 	
+	private static final TypeAdapter<List<ColorRGB>> colorListAdapter = new TypeAdapter<List<ColorRGB>>(){	
+		@Override
+		public List<ColorRGB> read(JsonReader reader) throws IOException{
+			if(reader.peek() == JsonToken.NULL){
+				reader.nextNull();
+				return null;
+			}else{
+				List<ColorRGB> value = new ArrayList<ColorRGB>();
+				reader.beginArray();
+				while(reader.hasNext()){
+					value.add(colorAdapter.read(reader));
+				}
+				reader.endArray();
+				return value;
+			}
+		}
+		
+		@Override
+		public void write(JsonWriter writer, List<ColorRGB> value) throws IOException{
+			if(value == null){
+				writer.nullValue();
+			}else{
+				//Setting the indent to nothing prevents GSON from applying newlines to lists.
+				//We need to set the indent to the value afterwards though to keep pretty printing.
+				writer.beginArray();
+				writer.setIndent("");
+				for(ColorRGB item : value){
+					colorAdapter.write(writer, item);
+				}
+				writer.endArray();
+				writer.setIndent("  ");
+			}
+		}
+	};
+	
 	private static final TypeAdapterFactory lowercaseEnumFactory = new TypeAdapterFactory(){
 		@Override
 		public <EnumType> TypeAdapter<EnumType> create(Gson gson, TypeToken<EnumType> type){
@@ -399,6 +434,7 @@ public class JSONParser{
 				.registerTypeAdapter(new TypeToken<List<Float>>(){}.getType(), floatListAdapter)
 				.registerTypeAdapter(new TypeToken<List<String>>(){}.getType(), stringListAdapter)
 				.registerTypeAdapter(new TypeToken<Set<String>>(){}.getType(), stringSetAdapter)
+				.registerTypeAdapter(new TypeToken<List<ColorRGB>>(){}.getType(), colorListAdapter)
 				.registerTypeAdapterFactory(lowercaseEnumFactory)
 				.create();
 	}

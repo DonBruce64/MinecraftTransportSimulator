@@ -64,8 +64,7 @@ public class RenderText{
 			}
 			
 			//Get the actual color we will need to render with based on JSON.
-			ColorRGB inheritedColor = entity.getSecondaryTextColor();
-			ColorRGB color = definition.colorInherited && inheritedColor != null ? inheritedColor : definition.color;
+			ColorRGB color = entity.getTextColor(definition.inheritedColorIndex, definition.color);
 			
 			//Reduce scale by 1/16 if we're not using pixel coords.  Entity JSON assumes 1 unit is 1 block, not 1px.
 			float scale = pixelCoords ? definition.scale : definition.scale/16F;

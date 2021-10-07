@@ -324,17 +324,24 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
     }
     
     /**
-   	 *  Returns this entity's secondary text color.  If this color is set, and text is told 
-   	 *  to render from this provider, and that text is told to use this color, then it will.
-   	 *  Otherwise, the text will use its default color.
+   	 *  Returns the color for the text on this entity.  This takes into account the passed-in index.
+   	 *  If a color exists at the index, it is returned.  If not, then the passed-in color is returned.
    	 */
-    public ColorRGB getSecondaryTextColor(){
-    	for(JSONSubDefinition subDefinition : definition.definitions){
-			if(subDefinition.subName.equals(subName)){
-				return subDefinition.secondColor;
+    public ColorRGB getTextColor(int index, ColorRGB defaultColor){
+    	if(index != 0){
+	    	for(JSONSubDefinition subDefinition : definition.definitions){
+				if(subDefinition.subName.equals(subName)){
+					if(subDefinition.secondaryTextColors != null && subDefinition.secondaryTextColors.size() >= index){
+						return subDefinition.secondaryTextColors.get(index-1);
+					}else{
+						return defaultColor;
+					}
+				}
 			}
-		}
-		throw new IllegalArgumentException("Tried to get the definition for an object of subName:" + subName + ".  But that isn't a valid subName for the object:" + definition.packID + ":" + definition.systemName + ".  Report this to the pack author as this is a missing JSON component!");
+	    	throw new IllegalArgumentException("Tried to get the definition for an object of subName:" + subName + ".  But that isn't a valid subName for the object:" + definition.packID + ":" + definition.systemName + ".  Report this to the pack author as this is a missing JSON component!");
+    	}else{
+    		return defaultColor;
+    	}
     }
     
     /**
