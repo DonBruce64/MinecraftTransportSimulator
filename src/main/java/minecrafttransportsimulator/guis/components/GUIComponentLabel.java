@@ -19,6 +19,7 @@ public class GUIComponentLabel{
 	public final TextAlignment alignment;
 	public final int wrapWidth;
 	public final float scale;
+	public final boolean autoScale;
 	
 	public boolean visible = true;
 	public String text;
@@ -26,18 +27,18 @@ public class GUIComponentLabel{
 	private GUIComponentTextBox box;
 
 	public GUIComponentLabel(int x, int y, ColorRGB color, String text){
-		this(x, y, color, text, TextAlignment.LEFT_ALIGNED, 1.0F, 0, null);
+		this(x, y, color, text, TextAlignment.LEFT_ALIGNED, 1.0F, 0, null, false);
 	}
 	
 	public GUIComponentLabel(int x, int y, ColorRGB color, String text, TextAlignment alignment, float scale){
-		this(x, y, color, text, alignment, scale, 0, null);
+		this(x, y, color, text, alignment, scale, 0, null, false);
 	}
 	
 	public GUIComponentLabel(int x, int y, ColorRGB color, String text, TextAlignment alignment, float scale, int wrapWidth){
-		this(x, y, color, text, alignment, scale, wrapWidth, null);
+		this(x, y, color, text, alignment, scale, wrapWidth, null, false);
 	}
 	
-	public GUIComponentLabel(int x, int y, ColorRGB color, String text, TextAlignment alignment, float scale, int wrapWidth, String fontName){
+	public GUIComponentLabel(int x, int y, ColorRGB color, String text, TextAlignment alignment, float scale, int wrapWidth, String fontName, boolean autoScale){
 		this.x = x;
 		this.y = y;
 		this.color = color;
@@ -46,6 +47,7 @@ public class GUIComponentLabel{
 		this.alignment = alignment;
 		this.scale = scale;
 		this.wrapWidth = wrapWidth;
+		this.autoScale = autoScale;
 	}
 	
 	/**
@@ -74,7 +76,7 @@ public class GUIComponentLabel{
 	 */
     public void renderText(){
 		if(button == null ? (box == null ? visible : box.visible) : button.visible){
-			RenderText.draw2DText(text, fontName, x, y, color, alignment, scale, wrapWidth);
+			RenderText.draw2DText(text, fontName, x, y, color, alignment, scale, autoScale, wrapWidth);
 		}
     }
 }

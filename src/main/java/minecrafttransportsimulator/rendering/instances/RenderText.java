@@ -35,10 +35,12 @@ public class RenderText{
 	 *  that the top-left of the string like normal.  The same goes for right-justify.  If wrapWidth is anything else but 0, 
 	 *  then the wordWrap method will be called to render multi-line text.
 	 */
-	public static void draw2DText(String text, String customFontName, int x, int y, ColorRGB color, TextAlignment alignment, float scale, int wrapWidth){
-		mutablePosition.set(x, y, 0);
-		//Need to invert 2D GUI text, as it's Y coord origin is top-left VS UV-mapped bottom-left.
-		getFontData(customFontName).renderText(text, mutablePosition, FLIPPED_TEXT_FOR_GUIS, alignment, scale, wrapWidth, 1.0F, true, color);
+	public static void draw2DText(String text, String customFontName, int x, int y, ColorRGB color, TextAlignment alignment, float scale, boolean autoScale, int wrapWidth){
+		if(!text.isEmpty()){
+			mutablePosition.set(x, y, 0);
+			//Need to invert 2D GUI text, as it's Y coord origin is top-left VS UV-mapped bottom-left.
+			getFontData(customFontName).renderText(text, mutablePosition, FLIPPED_TEXT_FOR_GUIS, alignment, scale, autoScale, wrapWidth, 1.0F, true, color);
+		}
 	}
 	
 	/**
@@ -53,48 +55,33 @@ public class RenderText{
 	 *  This allows for proper normal calculations to prevent needing to re-normalize the text.
 	 */
 	public static void draw3DText(String text, AEntityC_Definable<?> entity, JSONText definition, float preScaledFactor, boolean pixelCoords){
-		FontData fontData = getFontData(definition.fontName);
-		
-		//If we have light-up text, disable lightmap.
-		if(definition.lightsUp && entity.renderTextLit()){
-			InterfaceRender.setInternalLightingState(false);
-		}
-		
-		//Get the actual color we will need to render with based on JSON.
-		ColorRGB inheritedColor = entity.getSecondaryTextColor();
-		ColorRGB color = definition.colorInherited && inheritedColor != null ? inheritedColor : definition.color;
-		
-		//Check for auto-scaling.
-		//Also reduce scale by 1/16 if we're not using pixel coords.  Entity JSON assumes 1 unit is 1 block, not 1px.
-		float scale = pixelCoords ? definition.scale : definition.scale/16F;
-		int wrapWidth = definition.wrapWidth;
-		if(definition.autoScale){
-			//Get the string width.  This is in text-pixels.
-			//We scale this to the actual pixel-width by multiplying it by the incoming scale.
-			float stringWidth = scale*fontData.getStringWidth(text);
+		if(!text.isEmpty()){
+			FontData fontData = getFontData(definition.fontName);
 			
-			//If the string width in pixels is greater than the wrap width, adjust scale.
-			//We also need to cancel wrapping if our scaled value is within bounds.
-			float scaleFactor = stringWidth > 0 ? wrapWidth/stringWidth : 1.0F;
-			if(stringWidth/scale > wrapWidth){
-				if(stringWidth > wrapWidth){
-					scale *= scaleFactor;
-				}
-				wrapWidth = 0;
+			//If we have light-up text, disable lightmap.
+			if(definition.lightsUp && entity.renderTextLit()){
+				InterfaceRender.setInternalLightingState(false);
 			}
-		}
-		
-		//Render the text.
-		mutablePosition.setTo(definition.pos);
-		if(pixelCoords){
-			//GUI coordinates use top-left as origin rather than bottom-left.
-			mutablePosition.y = -mutablePosition.y;
-		}
-		fontData.renderText(text, mutablePosition, definition.rot, TextAlignment.values()[definition.renderPosition], scale, wrapWidth, preScaledFactor, pixelCoords, color);
-		
-		//Set light back to normal.
-		if(definition.lightsUp && entity.renderTextLit()){
-			InterfaceRender.setInternalLightingState(true);
+			
+			//Get the actual color we will need to render with based on JSON.
+			ColorRGB inheritedColor = entity.getSecondaryTextColor();
+			ColorRGB color = definition.colorInherited && inheritedColor != null ? inheritedColor : definition.color;
+			
+			//Reduce scale by 1/16 if we're not using pixel coords.  Entity JSON assumes 1 unit is 1 block, not 1px.
+			float scale = pixelCoords ? definition.scale : definition.scale/16F;
+			
+			//Render the text.
+			mutablePosition.setTo(definition.pos);
+			if(pixelCoords){
+				//GUI coordinates use top-left as origin rather than bottom-left.
+				mutablePosition.y = -mutablePosition.y;
+			}
+			fontData.renderText(text, mutablePosition, definition.rot, TextAlignment.values()[definition.renderPosition], scale, definition.autoScale, definition.wrapWidth, preScaledFactor, pixelCoords, color);
+			
+			//Set light back to normal.
+			if(definition.lightsUp && entity.renderTextLit()){
+				InterfaceRender.setInternalLightingState(true);
+			}
 		}
 	}
 	
@@ -160,7 +147,7 @@ public class RenderText{
 		private static final FontRenderState[] STATES = FontRenderState.generateDefaults();
 		private static final float[][] VERTICES = new float[1000*6][8];
 		
-		
+		private final boolean isDefault;
 		/*Texture locations for the font files.**/
 		private final String[] fontLocations = new String[Character.MAX_VALUE/CHARS_PER_TEXTURE_SHEET];
 		/**Char width, in actual game texture pixels (not font texture pixels).  May be fractions of a pixel if the font is up-scaled.**/
@@ -192,9 +179,11 @@ public class RenderText{
 		
 		
 		private FontData(String fontName){
+			this.isDefault = fontName == null;
+			
 			//Get font locations.
 			String fontBaseLocation;
-			if(fontName == null){
+			if(isDefault){
 				fontBaseLocation = "/assets/minecraft/textures/font/unicode_page_";
 			}else{
 				fontBaseLocation = "/assets/" + fontName.substring(0, fontName.indexOf(":")) + "/textures/fonts/" + fontName.substring(fontName.indexOf(":") + 1) + "/unicode_page_";
@@ -217,7 +206,7 @@ public class RenderText{
 				//have found the end of the char and that's its width.
 				//Order is all chars in row 1, then row 2, etc.
 				int pixelsPerSide = bufferedImage.getHeight();
-				byte pixelsPerRowCol = (byte) (pixelsPerSide/CHARS_PER_ROWCOL);
+				int pixelsPerRowCol = pixelsPerSide/CHARS_PER_ROWCOL;
 				for(int charRow=0; charRow<CHARS_PER_ROWCOL; ++charRow){
 					for(int charCol=0; charCol<CHARS_PER_ROWCOL; ++charCol){
 						//Get char and set defaults.
@@ -247,6 +236,9 @@ public class RenderText{
 										offsetsMaxU[charChecking] = pixelCol/(float)pixelsPerRowCol/CHARS_PER_ROWCOL;
 										charWidths[charChecking] = (pixelCol-charCol*pixelsPerRowCol)*DEFAULT_PIXELS_PER_CHAR/(float)pixelsPerRowCol;
 										foundPixelThisCol = true;
+										if(charChecking == 'D'){
+											System.out.println("ER");
+										}
 										break;
 									}
 								}
@@ -268,305 +260,324 @@ public class RenderText{
 			return width;
 		}
 		
-		public void renderText(String text, Point3d position, Point3d rotation, TextAlignment alignment, float scale, int wrapWidth, float preScaledFactor, boolean pixelCoords, ColorRGB color){
-			if(!text.isEmpty()){
-				//Multiply scale by (7/8)/(10/16) = 1.4.
-				//This is because normally the font height is 7px of the 8 total.
-				//But unicode uses 10px of the 16.  This makes it slightly smaller if we don't do this.
-				//Because we did this, and fonts are centered top-left, we need to offset it 0.4 as well.
-				//If we don't, then the font will be too low for the line it is on.  Unicode fonts have 2px on the
-				//bottom whereas ASCII has 1, so they are bottom-aligned in the texture, but top-aligned in the render.
+		public void renderText(String text, Point3d position, Point3d rotation, TextAlignment alignment, float scale, boolean autoScale, int wrapWidth, float preScaledFactor, boolean pixelCoords, ColorRGB color){
+			//Check for auto-scaling.
+			if(autoScale && wrapWidth > 0){
+				//Get the string width.  This is in text-pixels.
+				//We scale this to the actual pixel-width by multiplying it by the incoming scale.
+				//If the string width in pixels is greater than the wrap width, adjust scale.
+				//We also need to cancel wrapping if our scaled value is within bounds.
+				float stringWidth = scale*getStringWidth(text);
+				if(!pixelCoords){
+					stringWidth *= 16;
+				}
+				if(stringWidth > wrapWidth){
+					if(stringWidth > wrapWidth){
+						scale *= wrapWidth/stringWidth;
+					}
+				}
+				//Don't use wrap width if we already adjusted scale for it.
+				wrapWidth = 0;
+			}
+			
+			//If we are the default font, multiply scale by (7/8)/(10/16) = 1.4.
+			//This is because normally the font height is 7px of the 8 total.
+			//But unicode uses 10px of the 16.  This makes it slightly smaller if we don't do this.
+			//Because we did this, and fonts are centered top-left, we need to offset it 0.4 as well.
+			//If we don't, then the font will be too low for the line it is on.  Unicode fonts have 2px on the
+			//bottom whereas ASCII has 1, so they are bottom-aligned in the texture, but top-aligned in the render.
+			if(isDefault){
 				position.y += DEFAULT_PIXELS_PER_CHAR*scale*(pixelCoords ? -0.4 : 0.4);
 				scale *= 1.4;
+			}
+			
+			//Pre-calculate rotation of normals, as these won't change.
+			boolean doRotation = !rotation.isZero();
+			float[] normals = new float[]{0.0F, 0.0F, scale*preScaledFactor};
+			if(doRotation){
+				Point3d rotatedNormals = new Point3d(normals[0], normals[1], normals[2]).rotateFine(rotation);
+				normals[0] = (float) rotatedNormals.x;
+				normals[1] = (float) rotatedNormals.y;
+				normals[2] = (float) rotatedNormals.z;
+			}
+			
+			//Check if we need to adjust our offset for our alignment.
+			//While this will be slightly off due to formatting and non-printable chars in the string,
+			//it is better than trying to pre-strip them and then parse the text after.
+			//Besides, who is going to do word-wrapping on fancy text?
+			float alignmentOffset = 0;
+			if(alignment.equals(TextAlignment.CENTERED)){
+				alignmentOffset = (wrapWidth == 0 ? -getStringWidth(text) - text.length()*CHAR_SPACING : -wrapWidth)/2F;
+			}else if(alignment.equals(TextAlignment.RIGHT_ALIGNED)){
+				alignmentOffset = (-getStringWidth(text) - text.length()*CHAR_SPACING);
+			}
+			
+			//Divide the wrap width by the scale.
+			//This is required to ensure it's kept to pixel measurements.
+			if(wrapWidth != 0){
+				wrapWidth /= scale;
+			}
+			
+			//Clear out UVs from blocks rendered prior, and then clear out the active block list.
+			for(FontRenderBlock block : activeRenderBlocks){
+				block.vertices.clear();
+			}
+			activeRenderBlocks.clear();
+			
+			
+			//Loop through all the chars and get their UV points and add them to the object.
+			//If we get past our wrapWidth, or we find a newline, we need to wrap the text.
+			//Note that offsets are in in-game texture pixels, not font-texture pixels.
+			currentVertexIndex = 0;
+			int currentOffset = 0;
+			int currentLineOffset = 0;
+			int indexAtLastNewline = 0;
+			ColorRGB currentColor = color;
+			FontRenderState currentState = STATES[0];
+			for(int i=0; i<text.length(); ++i){
+				char textChar = text.charAt(i);
 				
-				//Divide the wrap width by the scale.
-				//This is required to ensure it's kept to pixel measurements.
-				if(wrapWidth != 0){
-					wrapWidth /= scale;
-				}
-				
-				//Pre-calculate rotation of normals, as these won't change.
-				boolean doRotation = !rotation.isZero();
-				float[] normals = new float[]{0.0F, 0.0F, scale*preScaledFactor};
-				if(doRotation){
-					Point3d rotatedNormals = new Point3d(normals[0], normals[1], normals[2]).rotateFine(rotation);
-					normals[0] = (float) rotatedNormals.x;
-					normals[1] = (float) rotatedNormals.y;
-					normals[2] = (float) rotatedNormals.z;
-				}
-				
-				//Check if we need to adjust our offset for our alignment.
-				//While this will be slightly off due to formatting and non-printable chars in the string,
-				//it is better than trying to pre-strip them and then parse the text after.
-				//Besides, who is going to do word-wrapping on fancy text?
-				float alignmentOffset = 0;
-				if(alignment.equals(TextAlignment.CENTERED)){
-					alignmentOffset = (wrapWidth == 0 ? -getStringWidth(text) - text.length()*CHAR_SPACING : -wrapWidth)/2F;
-				}else if(alignment.equals(TextAlignment.RIGHT_ALIGNED)){
-					alignmentOffset = (-getStringWidth(text) - text.length()*CHAR_SPACING);
-				}
-				
-				//Clear out UVs from blocks rendered prior, and then clear out the active block list.
-				for(FontRenderBlock block : activeRenderBlocks){
-					block.vertices.clear();
-				}
-				activeRenderBlocks.clear();
-				
-				
-				//Loop through all the chars and get their UV points and add them to the object.
-				//If we get past our wrapWidth, or we find a newline, we need to wrap the text.
-				//Note that offsets are in in-game texture pixels, not font-texture pixels.
-				currentVertexIndex = 0;
-				int currentOffset = 0;
-				int currentLineOffset = 0;
-				int indexAtLastNewline = 0;
-				ColorRGB currentColor = color;
-				FontRenderState currentState = STATES[0];
-				for(int i=0; i<text.length(); ++i){
-					char textChar = text.charAt(i);
-					
-					//Check if we are a formatting code before doing any other parsing.
-					if(textChar == FORMATTING_CHAR){
-						//Get the format code and apply operation.
-						char formattingChar = text.charAt(++i);
-						switch(formattingChar){
-							case (BOLD_CHAR) : currentState = STATES[currentState.index | FontRenderState.BOLD_BIT_INDEX]; break;
-							case (ITALIC_CHAR) : currentState = STATES[currentState.index | FontRenderState.ITALIC_BIT_INDEX]; break;
-							case (UNDERLINE_CHAR) : currentState = STATES[currentState.index | FontRenderState.UNDERLINE_BIT_INDEX]; break;
-							case (STRIKETHROUGH_CHAR) : currentState = STATES[currentState.index | FontRenderState.STRIKETHROUGH_BIT_INDEX]; break;
-							case (RANDOM_CHAR) : currentState = STATES[currentState.index | FontRenderState.RANDOM_BIT_INDEX]; break;
-							case (RESET_CHAR) : currentState = STATES[0]; currentColor = color; break;
-							default: currentColor = COLORS[Integer.decode("0x"+formattingChar)]; break;
-						}
-						//Go back though the loop again to the next char.
-						continue;
+				//Check if we are a formatting code before doing any other parsing.
+				if(textChar == FORMATTING_CHAR){
+					//Get the format code and apply operation.
+					char formattingChar = text.charAt(++i);
+					switch(formattingChar){
+						case (BOLD_CHAR) : currentState = STATES[currentState.index | FontRenderState.BOLD_BIT_INDEX]; break;
+						case (ITALIC_CHAR) : currentState = STATES[currentState.index | FontRenderState.ITALIC_BIT_INDEX]; break;
+						case (UNDERLINE_CHAR) : currentState = STATES[currentState.index | FontRenderState.UNDERLINE_BIT_INDEX]; break;
+						case (STRIKETHROUGH_CHAR) : currentState = STATES[currentState.index | FontRenderState.STRIKETHROUGH_BIT_INDEX]; break;
+						case (RANDOM_CHAR) : currentState = STATES[currentState.index | FontRenderState.RANDOM_BIT_INDEX]; break;
+						case (RESET_CHAR) : currentState = STATES[0]; currentColor = color; break;
+						default: currentColor = COLORS[Integer.decode("0x"+formattingChar)]; break;
 					}
-					
-					//Not a formatting char, do normal rendering.
-					if(textChar == '\n'){
-						//Go down one line.
+					//Go back though the loop again to the next char.
+					continue;
+				}
+				
+				//Not a formatting char, do normal rendering.
+				if(textChar == '\n'){
+					//Go down one line.
+					currentOffset = 0;
+					currentLineOffset -= DEFAULT_PIXELS_PER_CHAR + CHAR_SPACING;
+					indexAtLastNewline = i;
+				}else if(wrapWidth != 0 && currentOffset > wrapWidth){
+					//Go backwards in text to find last space and split based on that.
+					//After this we will re-do the parsing of the prior chars on the next line.
+					//Don't do this if we don't have a space in this line though.  This is the case for URLs
+					//and other long segments of text.
+					if(text.substring(indexAtLastNewline+1, i).indexOf(' ') != -1){
+						for(int j=i-1; j>0; --j){
+							char priorChar = text.charAt(j);
+							if(priorChar == ' '){
+								i = j;
+								currentOffset = 0;
+								currentLineOffset -= DEFAULT_PIXELS_PER_CHAR + CHAR_SPACING;
+								indexAtLastNewline = i;
+								break;
+							}else{
+								//Need to remove vertices in list so they don't get rendered.
+								//However, only do this if we have vertices.
+								//We could end up needing to word wrap before a formatting char.
+								FontRenderBlock priorRenderBlock = getBlockFor(priorChar, currentColor, currentState);
+								if(!priorRenderBlock.vertices.isEmpty()){
+									int vertMin = priorRenderBlock.vertices.size() - priorRenderBlock.state.vertexStep;
+									int vertMax = priorRenderBlock.vertices.size() - 1;
+									for(int k=vertMax; k>=vertMin; --k){
+										priorRenderBlock.vertices.remove(k);
+									}
+									currentVertexIndex -= priorRenderBlock.state.vertexStep;
+								}
+							}
+						}	
+					}else{
 						currentOffset = 0;
 						currentLineOffset -= DEFAULT_PIXELS_PER_CHAR + CHAR_SPACING;
 						indexAtLastNewline = i;
-					}else if(wrapWidth != 0 && currentOffset > wrapWidth){
-						//Go backwards in text to find last space and split based on that.
-						//After this we will re-do the parsing of the prior chars on the next line.
-						//Don't do this if we don't have a space in this line though.  This is the case for URLs
-						//and other long segments of text.
-						if(text.substring(indexAtLastNewline+1, i).indexOf(' ') != -1){
-							for(int j=i-1; j>0; --j){
-								char priorChar = text.charAt(j);
-								if(priorChar == ' '){
-									i = j;
-									currentOffset = 0;
-									currentLineOffset -= DEFAULT_PIXELS_PER_CHAR + CHAR_SPACING;
-									indexAtLastNewline = i;
-									break;
+					}
+				}else if(textChar == ' '){
+					//Just increment the offset, spaces don't render.
+					currentOffset += charWidths[textChar] + CHAR_SPACING;
+				}else{
+					//Actual char to render.
+					//Do normal char addition to the map of chars to draw.
+					//If we are bold, we will double-render slightly offset.
+					//If we are underline, add an underline overlay.
+					//If we are italic, we slightly skew the UV map by 1px.
+					//If we are strikethough, we add a strikethough overlay.
+					//If we are random, we randomize the char we have (0/9, A/Z).
+					FontRenderBlock currentRenderBlock = getBlockFor(textChar, currentColor, currentState);
+					if(currentState.random){
+						textChar = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".charAt((int) (Math.random()*36));
+						currentRenderBlock = getBlockFor(textChar, currentColor, currentState);
+					}
+					float charWidth = charWidths[textChar];
+					int startingVertex = currentVertexIndex;
+					for(int j=0; j<currentRenderBlock.state.vertexStep; ++j){
+						//Get the next free vertex and set its properties.
+						float[] charVertex = VERTICES[currentVertexIndex++];
+						switch(j){
+							case(0):{//Bottom-right
+								charVertex[0] = alignmentOffset + currentOffset + charWidth;
+								charVertex[1] = currentLineOffset - DEFAULT_PIXELS_PER_CHAR;
+								charVertex[3] = offsetsMaxU[textChar];
+								charVertex[4] = offsetsMinV[textChar];
+								break;
+							}
+							case(1):{//Top-right
+								charVertex[0] = alignmentOffset + currentOffset + charWidth;
+								if(currentRenderBlock.state.italic){
+									charVertex[0] += 1;
+								}
+								charVertex[1] = currentLineOffset;
+								charVertex[3] = offsetsMaxU[textChar];
+								charVertex[4] = offsetsMaxV[textChar];
+								break;
+							}
+							case(2):{//Top-left
+								charVertex[0] = alignmentOffset + currentOffset;
+								if(currentRenderBlock.state.italic){
+									charVertex[0] += 1;
+								}
+								charVertex[1] = currentLineOffset;
+								charVertex[3] = offsetsMinU[textChar];
+								charVertex[4] = offsetsMaxV[textChar];
+								break;
+							}
+							case(3):{//Bottom-right
+								charVertex[0] = alignmentOffset + currentOffset + charWidth;
+								charVertex[1] = currentLineOffset - DEFAULT_PIXELS_PER_CHAR;
+								charVertex[3] = offsetsMaxU[textChar];
+								charVertex[4] = offsetsMinV[textChar];
+								break;
+							}
+							case(4):{//Top-left
+								charVertex[0] = alignmentOffset + currentOffset;
+								if(currentRenderBlock.state.italic){
+									charVertex[0] += 1;
+								}
+								charVertex[1] = currentLineOffset;
+								charVertex[3] = offsetsMinU[textChar];
+								charVertex[4] = offsetsMaxV[textChar];
+								break;
+							}
+							case(5):{//Bottom-left
+								charVertex[0] = alignmentOffset + currentOffset;
+								charVertex[1] = currentLineOffset - DEFAULT_PIXELS_PER_CHAR;
+								charVertex[3] = offsetsMinU[textChar];
+								charVertex[4] = offsetsMinV[textChar];						
+								break;
+							}
+							default: {
+								//Custom vertex, either bold, underline or strikethough.
+								float[] masterVertex = VERTICES[startingVertex + j - 6];
+								if(currentState.bold && j < 12){
+									charVertex[0] = masterVertex[0] + 0.3F;
+									charVertex[1] = masterVertex[1] + 0.3F;
+									charVertex[2] = masterVertex[2];
+									charVertex[3] = masterVertex[3];
+									charVertex[4] = masterVertex[4];
 								}else{
-									//Need to remove vertices in list so they don't get rendered.
-									//However, only do this if we have vertices.
-									//We could end up needing to word wrap before a formatting char.
-									FontRenderBlock priorRenderBlock = getBlockFor(priorChar, currentColor, currentState);
-									if(!priorRenderBlock.vertices.isEmpty()){
-										int vertMin = priorRenderBlock.vertices.size() - priorRenderBlock.state.vertexStep;
-										int vertMax = priorRenderBlock.vertices.size() - 1;
-										for(int k=vertMax; k>=vertMin; --k){
-											priorRenderBlock.vertices.remove(k);
+									//Set position to master and set custom char.
+									charVertex[0] = masterVertex[0];
+									charVertex[1] = masterVertex[1] + CHAR_SPACING;
+									charVertex[2] = masterVertex[2];
+									char customChar = currentState.underline ? '_' : '-';
+									
+									//May need to change render blocks here.
+									if(j%6 == 0){
+										currentRenderBlock = getBlockFor(customChar, currentColor, currentState);
+									}
+									
+									switch(j%6){
+										case(0):{//Bottom-right
+											charVertex[0] += CHAR_SPACING;
+											charVertex[3] = offsetsMaxU[customChar];
+											charVertex[4] = offsetsMinV[customChar];
+											break;
 										}
-										currentVertexIndex -= priorRenderBlock.state.vertexStep;
-									}
-								}
-							}	
-						}else{
-							currentOffset = 0;
-							currentLineOffset -= DEFAULT_PIXELS_PER_CHAR + CHAR_SPACING;
-							indexAtLastNewline = i;
-						}
-					}else if(textChar == ' '){
-						//Just increment the offset, spaces don't render.
-						currentOffset += charWidths[textChar] + CHAR_SPACING;
-					}else{
-						//Actual char to render.
-						//Do normal char addition to the map of chars to draw.
-						//If we are bold, we will double-render slightly offset.
-						//If we are underline, add an underline overlay.
-						//If we are italic, we slightly skew the UV map by 1px.
-						//If we are strikethough, we add a strikethough overlay.
-						//If we are random, we randomize the char we have (0/9, A/Z).
-						FontRenderBlock currentRenderBlock = getBlockFor(textChar, currentColor, currentState);
-						if(currentState.random){
-							textChar = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".charAt((int) (Math.random()*36));
-							currentRenderBlock = getBlockFor(textChar, currentColor, currentState);
-						}
-						float charWidth = charWidths[textChar];
-						int startingVertex = currentVertexIndex;
-						for(int j=0; j<currentRenderBlock.state.vertexStep; ++j){
-							//Get the next free vertex and set its properties.
-							float[] charVertex = VERTICES[currentVertexIndex++];
-							switch(j){
-								case(0):{//Bottom-right
-									charVertex[0] = alignmentOffset + currentOffset + charWidth;
-									charVertex[1] = currentLineOffset - DEFAULT_PIXELS_PER_CHAR;
-									charVertex[3] = offsetsMaxU[textChar];
-									charVertex[4] = offsetsMinV[textChar];
-									break;
-								}
-								case(1):{//Top-right
-									charVertex[0] = alignmentOffset + currentOffset + charWidth;
-									if(currentRenderBlock.state.italic){
-										charVertex[0] += 1;
-									}
-									charVertex[1] = currentLineOffset;
-									charVertex[3] = offsetsMaxU[textChar];
-									charVertex[4] = offsetsMaxV[textChar];
-									break;
-								}
-								case(2):{//Top-left
-									charVertex[0] = alignmentOffset + currentOffset;
-									if(currentRenderBlock.state.italic){
-										charVertex[0] += 1;
-									}
-									charVertex[1] = currentLineOffset;
-									charVertex[3] = offsetsMinU[textChar];
-									charVertex[4] = offsetsMaxV[textChar];
-									break;
-								}
-								case(3):{//Bottom-right
-									charVertex[0] = alignmentOffset + currentOffset + charWidth;
-									charVertex[1] = currentLineOffset - DEFAULT_PIXELS_PER_CHAR;
-									charVertex[3] = offsetsMaxU[textChar];
-									charVertex[4] = offsetsMinV[textChar];
-									break;
-								}
-								case(4):{//Top-left
-									charVertex[0] = alignmentOffset + currentOffset;
-									if(currentRenderBlock.state.italic){
-										charVertex[0] += 1;
-									}
-									charVertex[1] = currentLineOffset;
-									charVertex[3] = offsetsMinU[textChar];
-									charVertex[4] = offsetsMaxV[textChar];
-									break;
-								}
-								case(5):{//Bottom-left
-									charVertex[0] = alignmentOffset + currentOffset;
-									charVertex[1] = currentLineOffset - DEFAULT_PIXELS_PER_CHAR;
-									charVertex[3] = offsetsMinU[textChar];
-									charVertex[4] = offsetsMinV[textChar];						
-									break;
-								}
-								default: {
-									//Custom vertex, either bold, underline or strikethough.
-									float[] masterVertex = VERTICES[startingVertex + j - 6];
-									if(currentState.bold && j < 12){
-										charVertex[0] = masterVertex[0] + 0.3F;
-										charVertex[1] = masterVertex[1] + 0.3F;
-										charVertex[2] = masterVertex[2];
-										charVertex[3] = masterVertex[3];
-										charVertex[4] = masterVertex[4];
-									}else{
-										//Set position to master and set custom char.
-										charVertex[0] = masterVertex[0];
-										charVertex[1] = masterVertex[1] + CHAR_SPACING;
-										charVertex[2] = masterVertex[2];
-										char customChar = currentState.underline ? '_' : '-';
-										
-										//May need to change render blocks here.
-										if(j%6 == 0){
-											currentRenderBlock = getBlockFor(customChar, currentColor, currentState);
+										case(1):{//Top-right
+											charVertex[0] += CHAR_SPACING;
+											charVertex[3] = offsetsMaxU[customChar];
+											charVertex[4] = offsetsMaxV[customChar];
+											break;
 										}
-										
-										switch(j%6){
-											case(0):{//Bottom-right
-												charVertex[0] += CHAR_SPACING;
-												charVertex[3] = offsetsMaxU[customChar];
-												charVertex[4] = offsetsMinV[customChar];
-												break;
-											}
-											case(1):{//Top-right
-												charVertex[0] += CHAR_SPACING;
-												charVertex[3] = offsetsMaxU[customChar];
-												charVertex[4] = offsetsMaxV[customChar];
-												break;
-											}
-											case(2):{//Top-left
-												charVertex[0] -= CHAR_SPACING;
-												charVertex[3] = offsetsMinU[customChar];
-												charVertex[4] = offsetsMaxV[customChar];
-												break;
-											}
-											case(3):{//Bottom-right
-												charVertex[0] += CHAR_SPACING;
-												charVertex[3] = offsetsMaxU[customChar];
-												charVertex[4] = offsetsMinV[customChar];
-												break;
-											}
-											case(4):{//Top-left
-												charVertex[0] -= CHAR_SPACING;
-												charVertex[3] = offsetsMinU[customChar];
-												charVertex[4] = offsetsMaxV[customChar];
-												break;
-											}
-											case(5):{//Bottom-left
-												charVertex[0] -= CHAR_SPACING;
-												charVertex[3] = offsetsMinU[customChar];
-												charVertex[4] = offsetsMinV[customChar];						
-												break;
-											}
-										}	
-									}
+										case(2):{//Top-left
+											charVertex[0] -= CHAR_SPACING;
+											charVertex[3] = offsetsMinU[customChar];
+											charVertex[4] = offsetsMaxV[customChar];
+											break;
+										}
+										case(3):{//Bottom-right
+											charVertex[0] += CHAR_SPACING;
+											charVertex[3] = offsetsMaxU[customChar];
+											charVertex[4] = offsetsMinV[customChar];
+											break;
+										}
+										case(4):{//Top-left
+											charVertex[0] -= CHAR_SPACING;
+											charVertex[3] = offsetsMinU[customChar];
+											charVertex[4] = offsetsMaxV[customChar];
+											break;
+										}
+										case(5):{//Bottom-left
+											charVertex[0] -= CHAR_SPACING;
+											charVertex[3] = offsetsMinU[customChar];
+											charVertex[4] = offsetsMinV[customChar];						
+											break;
+										}
+									}	
 								}
 							}
-							
-							if(j < 6){
-								//Z is always 0 initially.  We rotate it to match the actual rotation.
-								charVertex[2] = 0.0F;
-								
-								//Rotate vertices if required.
-								if(doRotation){
-									rotatedVertex.set(charVertex[0], charVertex[1], charVertex[2]).rotateFine(rotation);
-									charVertex[0] = (float) rotatedVertex.x;
-									charVertex[1] = (float) rotatedVertex.y;
-									charVertex[2] = (float) rotatedVertex.z;
-								}
-							}
-							
-							//Set normals.  These will already have been rotated.
-							charVertex[5] = normals[0];
-							charVertex[6] = normals[1];
-							charVertex[7] = normals[2];
-							
-							//Add char vertex to render block.
-							currentRenderBlock.vertices.add(charVertex);
 						}
 						
-						//Increment offset to next char position and set char points and add rener block to active list.
-						currentOffset += charWidth + CHAR_SPACING;
-						activeRenderBlocks.add(currentRenderBlock);
+						if(j < 6){
+							//Z is always 0 initially.  We rotate it to match the actual rotation.
+							charVertex[2] = 0.0F;
+							
+							//Rotate vertices if required.
+							if(doRotation){
+								rotatedVertex.set(charVertex[0], charVertex[1], charVertex[2]).rotateFine(rotation);
+								charVertex[0] = (float) rotatedVertex.x;
+								charVertex[1] = (float) rotatedVertex.y;
+								charVertex[2] = (float) rotatedVertex.z;
+							}
+						}
+						
+						//Set normals.  These will already have been rotated.
+						charVertex[5] = normals[0];
+						charVertex[6] = normals[1];
+						charVertex[7] = normals[2];
+						
+						//Add char vertex to render block.
+						currentRenderBlock.vertices.add(charVertex);
 					}
+					
+					//Increment offset to next char position and set char points and add rener block to active list.
+					currentOffset += charWidth + CHAR_SPACING;
+					activeRenderBlocks.add(currentRenderBlock);
 				}
-				
-				//All points obtained, render.  Lighting is done by the calling method and will be set there, color is set here.
-				String boundTexture = null;
-				ColorRGB boundColor = null;
-				GL11.glPushMatrix();
-				GL11.glTranslated(position.x, position.y, position.z);
-				GL11.glScalef(scale, scale, scale);
-				for(FontRenderBlock block : activeRenderBlocks){
-					if(!block.texture.equals(boundTexture)){
-						InterfaceRender.bindTexture(block.texture);
-						boundTexture = block.texture;
-					}
-					if(!block.color.equals(boundColor)){
-						InterfaceRender.setColorState(block.color);
-						boundColor = block.color;
-					}
-					InterfaceRender.renderVertices(block.vertices);
-				}
-				GL11.glPopMatrix();
-				InterfaceRender.recallTexture();
-				InterfaceRender.setColorState(ColorRGB.WHITE);
 			}
+			
+			//All points obtained, render.  Lighting is done by the calling method and will be set there, color is set here.
+			String boundTexture = null;
+			ColorRGB boundColor = null;
+			GL11.glPushMatrix();
+			GL11.glTranslated(position.x, position.y, position.z);
+			GL11.glScalef(scale, scale, scale);
+			for(FontRenderBlock block : activeRenderBlocks){
+				if(!block.texture.equals(boundTexture)){
+					InterfaceRender.bindTexture(block.texture);
+					boundTexture = block.texture;
+				}
+				if(!block.color.equals(boundColor)){
+					InterfaceRender.setColorState(block.color);
+					boundColor = block.color;
+				}
+				InterfaceRender.renderVertices(block.vertices);
+			}
+			GL11.glPopMatrix();
+			InterfaceRender.recallTexture();
+			InterfaceRender.setColorState(ColorRGB.WHITE);
 		}
 		
 		private FontRenderBlock getBlockFor(char textChar, ColorRGB color, FontRenderState state){

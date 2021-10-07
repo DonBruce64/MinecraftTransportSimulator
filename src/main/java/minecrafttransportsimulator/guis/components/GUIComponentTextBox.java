@@ -177,12 +177,12 @@ public class GUIComponentTextBox{
     		//Otherwise, render it at the top aligned.
     		if(enabled){
     			if(focused && AGUIBase.inClockPeriod(20, 10)){
-    				RenderText.draw2DText(flashText, null, x + 4, y + (height >= 20 ? 5 : 1 + height/10), fontColor, TextAlignment.LEFT_ALIGNED, 1.0F, width);
+    				RenderText.draw2DText(flashText, null, x + 4, y + (height >= 20 ? 5 : 1 + height/10), fontColor, TextAlignment.LEFT_ALIGNED, 1.0F, false, width);
     			}else{
-    				RenderText.draw2DText(text, null, x + 4, y + (height >= 20 ? 5 : 1 + height/10), fontColor, TextAlignment.LEFT_ALIGNED, 1.0F, width);
+    				RenderText.draw2DText(text, null, x + 4, y + (height >= 20 ? 5 : 1 + height/10), fontColor, TextAlignment.LEFT_ALIGNED, 1.0F, false, width);
     			}
     		}else{
-    			RenderText.draw2DText(text, null, x + 4, y + (height >= 20 ? 5 : 1 + height/10), ColorRGB.GRAY, TextAlignment.LEFT_ALIGNED, 1.0F, width);
+    			RenderText.draw2DText(text, null, x + 4, y + (height >= 20 ? 5 : 1 + height/10), ColorRGB.GRAY, TextAlignment.LEFT_ALIGNED, 1.0F, false, width);
     		}
     	}
     }

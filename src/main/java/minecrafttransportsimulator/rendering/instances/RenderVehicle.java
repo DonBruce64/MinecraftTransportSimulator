@@ -159,14 +159,14 @@ public final class RenderVehicle extends ARenderEntityMultipart<EntityVehicleF_P
 				
 				//Translate to the spot above where the item would render and render the standard text.
 				GL11.glTranslated(0, -1.75F, 0);
-				RenderText.draw2DText("Types: " + packVehicleDef.types.toString(), null, 0, 0, ColorRGB.BLACK, TextAlignment.CENTERED, 1/64F, 0);
+				RenderText.draw2DText("Types: " + packVehicleDef.types.toString(), null, 0, 0, ColorRGB.BLACK, TextAlignment.CENTERED, 1/64F, false, 0);
 				GL11.glTranslated(0, 0.15F, 0);
-				RenderText.draw2DText("Min/Max: " + String.valueOf(packVehicleDef.minValue) + "/" + String.valueOf(packVehicleDef.maxValue), null, 0, 0, ColorRGB.BLACK, TextAlignment.CENTERED, 1/64F, 0);
+				RenderText.draw2DText("Min/Max: " + String.valueOf(packVehicleDef.minValue) + "/" + String.valueOf(packVehicleDef.maxValue), null, 0, 0, ColorRGB.BLACK, TextAlignment.CENTERED, 1/64F, false, 0);
 				GL11.glTranslated(0, 0.15F, 0);
 				if(packVehicleDef.customTypes != null){
-					RenderText.draw2DText("CustomTypes: " + packVehicleDef.customTypes.toString(), null, 0, 0, ColorRGB.BLACK, TextAlignment.CENTERED, 1/64F, 0);
+					RenderText.draw2DText("CustomTypes: " + packVehicleDef.customTypes.toString(), null, 0, 0, ColorRGB.BLACK, TextAlignment.CENTERED, 1/64F, false, 0);
 				}else{
-					RenderText.draw2DText("CustomTypes: None", null, 0, 0, ColorRGB.BLACK, TextAlignment.CENTERED, 1/64F, 0);
+					RenderText.draw2DText("CustomTypes: None", null, 0, 0, ColorRGB.BLACK, TextAlignment.CENTERED, 1/64F, false, 0);
 				}
 				GL11.glTranslated(0, 0.25F, 0);
 				
@@ -182,7 +182,7 @@ public final class RenderVehicle extends ARenderEntityMultipart<EntityVehicleF_P
 					}
 					
 					//Render the part's name.
-					RenderText.draw2DText(partToRender.getItemName(), null, 0, 0, ColorRGB.BLACK, TextAlignment.CENTERED, 1/64F, 0);
+					RenderText.draw2DText(partToRender.getItemName(), null, 0, 0, ColorRGB.BLACK, TextAlignment.CENTERED, 1/64F, false, 0);
 					
 					//Do translations to get to the center of where the item will render and render it.
 					//Items also need to be offset by -150 units due to how MC does rendering.

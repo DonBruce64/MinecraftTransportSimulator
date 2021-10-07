@@ -98,7 +98,7 @@ public abstract class GUIComponentSelector{
 	 */
     public void renderText(boolean lightsOn){
     	if(visible){
-    		RenderText.draw2DText(text, null, x + width/2, y + height + 1, lightsOn ? litColor : regularColor, TextAlignment.CENTERED, 0.75F, 0);
+    		RenderText.draw2DText(text, null, x + width/2, y + height + 1, lightsOn ? litColor : regularColor, TextAlignment.CENTERED, 0.75F, false, 0);
     	}
     }
 }

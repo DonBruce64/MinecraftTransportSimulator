@@ -62,7 +62,7 @@ public class GUITextEditor extends AGUIBase{
 			signTextLabels.clear();
 			for(byte i=0; i<textObjects.size(); ++i){
 				JSONText textDef = textObjects.get(i);
-				GUIComponentLabel label = new GUIComponentLabel(modelRender.x + (int) (textDef.pos.x*64F), modelRender.y - (int) (textDef.pos.y*64F), textDef.color, textLines.get(i), TextAlignment.values()[textDef.renderPosition], textDef.scale*64F/16F, textDef.wrapWidth, textDef.fontName);
+				GUIComponentLabel label = new GUIComponentLabel(modelRender.x + (int) (textDef.pos.x*64F), modelRender.y - (int) (textDef.pos.y*64F), textDef.color, textLines.get(i), TextAlignment.values()[textDef.renderPosition], textDef.scale*64F/16F, textDef.wrapWidth*64/16, textDef.fontName, textDef.autoScale);
 				addLabel(label);
 				signTextLabels.add(label);
 			}

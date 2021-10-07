@@ -106,7 +106,7 @@ public class InterfaceEventsOverlay{
 											EntityFluidTank tank = ((PartInteractable) part).tank;
 											if(tank != null){
 												String tankText = tank.getFluid().isEmpty() ? "EMPTY" : tank.getFluid().toUpperCase() + " : " + tank.getFluidLevel() + "/" + tank.getMaxLevel();
-												RenderText.draw2DText(tankText, null, screenWidth/2 + 4, screenHeight/2, ColorRGB.WHITE, TextAlignment.LEFT_ALIGNED, 1.0F, 0);
+												RenderText.draw2DText(tankText, null, screenWidth/2 + 4, screenHeight/2, ColorRGB.WHITE, TextAlignment.LEFT_ALIGNED, 1.0F, false, 0);
 											}
 										}
 									}
@@ -122,7 +122,7 @@ public class InterfaceEventsOverlay{
 								EntityFluidTank tank = builder.tileEntity.getTank();
 								if(tank != null){
 									String tankText = tank.getFluid().isEmpty() ? "EMPTY" : tank.getFluid().toUpperCase() + " : " + tank.getFluidLevel() + "/" + tank.getMaxLevel();
-									RenderText.draw2DText(tankText, null, screenWidth/2 + 4, screenHeight/2, ColorRGB.WHITE, TextAlignment.LEFT_ALIGNED, 1.0F, 0);
+									RenderText.draw2DText(tankText, null, screenWidth/2 + 4, screenHeight/2, ColorRGB.WHITE, TextAlignment.LEFT_ALIGNED, 1.0F, false, 0);
 								}
 							}
 						}
@@ -139,12 +139,12 @@ public class InterfaceEventsOverlay{
 						
 						//If we are in a seat controlling a gun, render a text line for it.
 						if(seat.canControlGuns && !InterfaceClient.isChatOpen()){
-							RenderText.draw2DText("Active Gun:", null, screenWidth, 0, ColorRGB.WHITE, TextAlignment.RIGHT_ALIGNED, 1.0F, 0);
+							RenderText.draw2DText("Active Gun:", null, screenWidth, 0, ColorRGB.WHITE, TextAlignment.RIGHT_ALIGNED, 1.0F, false, 0);
 							if(seat.activeGun != null){
 								String gunNumberText = seat.activeGun.definition.gun.fireSolo ? " [" + (seat.gunIndex + 1) + "]" : "";
-								RenderText.draw2DText(seat.activeGun.getItemName() + gunNumberText, null, screenWidth, 8, ColorRGB.WHITE, TextAlignment.RIGHT_ALIGNED, 1.0F, 0);
+								RenderText.draw2DText(seat.activeGun.getItemName() + gunNumberText, null, screenWidth, 8, ColorRGB.WHITE, TextAlignment.RIGHT_ALIGNED, 1.0F, false, 0);
 							}else{
-								RenderText.draw2DText("None", null, screenWidth, 8, ColorRGB.WHITE, TextAlignment.RIGHT_ALIGNED, 1.0F, 0);
+								RenderText.draw2DText("None", null, screenWidth, 8, ColorRGB.WHITE, TextAlignment.RIGHT_ALIGNED, 1.0F, false, 0);
 							}
 						}
 						

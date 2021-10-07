@@ -55,7 +55,7 @@ public class GUIBooklet extends AGUIBase{
 		//Title text labels.
 		List<GUIComponentLabel> titleLabels = new ArrayList<GUIComponentLabel>();
 		for(JSONText text : booklet.definition.booklet.titleText){
-			GUIComponentLabel titleLabel = new GUIComponentLabel(guiLeft + (int)text.pos.x, guiTop + (int)text.pos.y, text.color, text.defaultText, TextAlignment.values()[text.renderPosition], text.scale, text.wrapWidth, text.fontName);
+			GUIComponentLabel titleLabel = new GUIComponentLabel(guiLeft + (int)text.pos.x, guiTop + (int)text.pos.y, text.color, text.defaultText, TextAlignment.values()[text.renderPosition], text.scale, text.wrapWidth, text.fontName, text.autoScale);
 			titleLabels.add(titleLabel);
 			addLabel(titleLabel);
 		}
@@ -99,7 +99,7 @@ public class GUIBooklet extends AGUIBase{
 			List<GUIComponentLabel> pageLabels = new ArrayList<GUIComponentLabel>();
 			for(JSONText text : page.pageText){
 				try{
-					GUIComponentLabel pageLabel = new GUIComponentLabel(guiLeft + (int)text.pos.x, guiTop + (int)text.pos.y, text.color, text.defaultText, TextAlignment.values()[text.renderPosition], text.scale, text.wrapWidth, text.fontName);
+					GUIComponentLabel pageLabel = new GUIComponentLabel(guiLeft + (int)text.pos.x, guiTop + (int)text.pos.y, text.color, text.defaultText, TextAlignment.values()[text.renderPosition], text.scale, text.wrapWidth, text.fontName, text.autoScale);
 					pageLabels.add(pageLabel);
 					addLabel(pageLabel);
 				}catch(Exception e){
@@ -197,7 +197,7 @@ public class GUIBooklet extends AGUIBase{
 		public void renderText(){
 	    	if(visible){
 	    		//Override the color of the text here.
-	    		RenderText.draw2DText(text, null, centeredText ? x + width/2 : x, y + (height-8)/2, booklet.definition.booklet.pages.get(contentsIndex).pageText.get(0).color, centeredText ? TextAlignment.CENTERED : TextAlignment.LEFT_ALIGNED, 1.0F,  0);
+	    		RenderText.draw2DText(text, null, centeredText ? x + width/2 : x, y + (height-8)/2, booklet.definition.booklet.pages.get(contentsIndex).pageText.get(0).color, centeredText ? TextAlignment.CENTERED : TextAlignment.LEFT_ALIGNED, 1.0F,  false, 0);
 	    	}
 	    }
 	}
