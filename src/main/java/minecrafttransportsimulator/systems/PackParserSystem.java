@@ -64,7 +64,7 @@ public final class PackParserSystem{
 	private static final List<AItemPartCreator> partCreators = new ArrayList<AItemPartCreator>();
 
 	/**All registered skin definitions are stored in this list as they are added.  These have to be added after all packs are loaded.**/
-	private static final Map<String, Map<String, JSONSkin>> skinMap = new HashMap<String, Map<String, JSONSkin>>();
+	private static final Map<String, Map<String, List<JSONSkin>>> skinMap = new HashMap<String, Map<String, List<JSONSkin>>>();
 	
 	/**List of pack faults.  This is for packs that didn't get loaded due to missing dependencies.**/
 	public static final Map<String, List<String>> faultMap = new HashMap<String, List<String>>();
@@ -408,9 +408,12 @@ public final class PackParserSystem{
 				if(itemDef instanceof JSONSkin){
 					JSONSkin skinDef = (JSONSkin) itemDef;
 					if(!skinMap.containsKey(skinDef.skin.packID)){
-						skinMap.put(skinDef.skin.packID, new HashMap<String, JSONSkin>());
+						skinMap.put(skinDef.skin.packID, new HashMap<String, List<JSONSkin>>());
 					}
-					skinMap.get(skinDef.skin.packID).put(skinDef.skin.systemName, skinDef);
+					if(!skinMap.get(skinDef.skin.packID).containsKey(skinDef.skin.systemName)){
+						skinMap.get(skinDef.skin.packID).put(skinDef.skin.systemName, new ArrayList<JSONSkin>());
+					}
+					skinMap.get(skinDef.skin.packID).get(skinDef.skin.systemName).add(skinDef);
 				}else{
 					parseAllDefinitions((AJSONMultiModelProvider) itemDef, ((AJSONMultiModelProvider) itemDef).definitions, itemDef.packID);
 				}
@@ -454,12 +457,13 @@ public final class PackParserSystem{
     					if(packItem.definition.systemName.equals(systemName)){
     						//Parse and create all of the new definitions.
     						AJSONMultiModelProvider oldDefinition = (AJSONMultiModelProvider) packItem.definition;
-    						List<JSONSubDefinition> newDefinitions = skinMap.get(packID).get(systemName).definitions;
-    						parseAllDefinitions(oldDefinition, newDefinitions, skinMap.get(packID).get(systemName).packID);
-    						
-        					//Add the new definitions to the existing definitions of the existing item.
-        					//This ensures the skins appear in the same tab as the existing item.
-    						oldDefinition.definitions.addAll(newDefinitions);
+    						for(JSONSkin skinDef : skinMap.get(packID).get(systemName)){
+        						parseAllDefinitions(oldDefinition, skinDef.definitions, skinDef.packID);
+        						
+            					//Add the skin  definitions to the existing definitions of the existing item.
+            					//This ensures the skins appear in the same tab as the existing item.
+        						oldDefinition.definitions.addAll(skinDef.definitions);
+    						}
         					break;
     					}
     				}
