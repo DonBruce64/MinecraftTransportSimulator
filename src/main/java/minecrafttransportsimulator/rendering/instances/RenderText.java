@@ -145,6 +145,7 @@ public class RenderText{
 		};
 		private static final FontRenderState[] STATES = FontRenderState.generateDefaults();
 		private static final float[][] VERTICES = new float[1000*6][8];
+		private static final Point3d DEFAULT_ADJ = new Point3d();
 		
 		private final boolean isDefault;
 		/*Texture locations for the font files.**/
@@ -279,17 +280,6 @@ public class RenderText{
 				wrapWidth = 0;
 			}
 			
-			//If we are the default font, multiply scale by (7/8)/(10/16) = 1.4.
-			//This is because normally the font height is 7px of the 8 total.
-			//But unicode uses 10px of the 16.  This makes it slightly smaller if we don't do this.
-			//Because we did this, and fonts are centered top-left, we need to offset it 0.4 as well.
-			//If we don't, then the font will be too low for the line it is on.  Unicode fonts have 2px on the
-			//bottom whereas ASCII has 1, so they are bottom-aligned in the texture, but top-aligned in the render.
-			if(isDefault){
-				position.y += DEFAULT_PIXELS_PER_CHAR*scale*(pixelCoords ? -0.4 : 0.4);
-				scale *= 1.4;
-			}
-			
 			//Pre-calculate rotation of normals, as these won't change.
 			boolean doRotation = !rotation.isZero();
 			float[] normals = new float[]{0.0F, 0.0F, scale*preScaledFactor};
@@ -298,6 +288,21 @@ public class RenderText{
 				normals[0] = (float) rotatedNormals.x;
 				normals[1] = (float) rotatedNormals.y;
 				normals[2] = (float) rotatedNormals.z;
+			}
+			
+			//If we are the default font, multiply scale by (7/8)/(10/16) = 1.4.
+			//This is because normally the font height is 7px of the 8 total.
+			//But unicode uses 10px of the 16.  This makes it slightly smaller if we don't do this.
+			//Because we did this, and fonts are centered top-left, we need to offset it 0.4 as well.
+			//If we don't, then the font will be too low for the line it is on.  Unicode fonts have 2px on the
+			//bottom whereas ASCII has 1, so they are bottom-aligned in the texture, but top-aligned in the render.
+			if(isDefault){
+				DEFAULT_ADJ.set(0, DEFAULT_PIXELS_PER_CHAR*scale*(pixelCoords ? -0.4 : 0.4), 0);
+				if(doRotation){
+					DEFAULT_ADJ.rotateFine(rotation);
+				}
+				position.add(DEFAULT_ADJ);
+				scale *= 1.4;
 			}
 			
 			//Check if we need to adjust our offset for our alignment.
