@@ -26,6 +26,7 @@ import minecrafttransportsimulator.packets.instances.PacketPartEngine.Signal;
 import minecrafttransportsimulator.packets.instances.PacketVehicleBeaconChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
+import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**A GUI/control system hybrid, this takes the place of the HUD when called up.
  * Used for controlling engines, lights, trim, and other things.
@@ -364,7 +365,7 @@ public class GUIPanelAircraft extends AGUIPanel{
 			++variableNumber;
 		}
 		
-		if(vehicle.definition.motorized.hasRadioNav){
+		if(vehicle.definition.motorized.hasRadioNav || ConfigSystem.configObject.general.allPlanesWithNav.value){
 			//Add beacon text box.  This is stacked below the custom selectors.
 			beaconBox = new GUIComponentTextBox(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 2*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE*2, vehicle.selectedBeaconName, SELECTOR_SIZE, vehicle.selectedBeacon != null ? ColorRGB.GREEN : ColorRGB.RED, ColorRGB.BLACK, 5){
 				@Override
