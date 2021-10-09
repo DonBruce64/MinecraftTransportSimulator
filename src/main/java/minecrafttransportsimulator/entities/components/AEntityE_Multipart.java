@@ -20,6 +20,7 @@ import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.items.instances.ItemItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.AJSONPartProvider;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
+import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
@@ -682,6 +683,9 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 							throw e;
 						}
 						
+						//Set the default tone for the part, if it requests one and we can provide one.
+						updatePartTone(addedPart);
+						
 						//Check if we have an additional parts.
 						//If so, we need to check that for default parts.
 						if(partDef.additionalParts != null){
@@ -703,6 +707,30 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 				}
 			}catch(IndexOutOfBoundsException e){
 				throw new IllegalArgumentException("Could not parse defaultPart definition: " + partDef.defaultPart + ".  Format should be \"packId:partName\"");
+			}
+		}
+	}
+	
+	/**
+	 * Updates the tone of the passed-in part to its appropriate type.
+	 * If the part can't match the tone of this vehicle, then it is not modified.
+	 */
+	public void updatePartTone(APart part){
+		if(part.placementDefinition.toneIndex != 0){
+			List<String> partTones = null;
+			for(JSONSubDefinition subDefinition : definition.definitions){
+				if(subDefinition.subName.equals(subName)){
+					partTones = subDefinition.partTones;
+				}
+			}
+			if(partTones != null && partTones.size() >= part.placementDefinition.toneIndex){
+				String partTone = partTones.get(part.placementDefinition.toneIndex - 1);
+				for(JSONSubDefinition subDefinition : part.definition.definitions){
+					if(subDefinition.subName.equals(partTone)){
+						part.subName = partTone;
+						return;
+					}
+				}
 			}
 		}
 	}

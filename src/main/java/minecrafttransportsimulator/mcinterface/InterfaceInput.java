@@ -84,6 +84,7 @@ public class InterfaceInput{
 		Thread joystickThread = new Thread(){
 			@Override
 			public void run(){
+				InterfaceCore.logError("STARTING CONTROLLER THREAD!");
 				try{
 					joystickNameCounters.clear();
 					if(runningClassicMode){

@@ -42,6 +42,9 @@ public class JSONPartDefinition{
 	
 	@JSONDescription("This parameter is optional.  If included and set to true, then when a custom camera is available for use, then this custom camera will ALWAYS be used in first-person mode.  This is designed for seats where first-person mode is not desired, such as tanks or gunner pods.  Does not affect third-person mode.")
     public boolean forceCameras;
+	
+	@JSONDescription("This parameter is optional.  If set, then whenever the paint gun is used on the vehicle this part is on, this part will attempt to match the tone specified by the index.  If the specified tone does not exist, the part will not change.  Default parts will automatically attempt to match tones, but hand-placed parts will not change unless painted.")
+    public int toneIndex;
     
     @JSONDescription("The minimum value that this slot will accept.  Parts with values lower than this will be invalid and show up as red holograms.  This differs depending on the part, with engines using fuelConsumption as their value, ground_devices using their diameter, and propellers using their diameter as well.  This allows you an easy way to make sure people don't add oversized engines to your little econo-box or put monster tires on the family sedan.  See the details for each part for what parameter is used for min/max calculations.")
     public float minValue;

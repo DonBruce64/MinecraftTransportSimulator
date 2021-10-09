@@ -5,7 +5,6 @@ import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
-import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.mcinterface.WrapperInventory;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
@@ -51,21 +50,8 @@ public class PacketEntityColorChange extends APacketEntityInteract<AEntityC_Defi
 			
 			//If we have parts, and have a second tone, change parts to match if possible.
 			if(entity instanceof AEntityE_Multipart){
-				String secondTone = null;
-				for(JSONSubDefinition subDefinition : entity.definition.definitions){
-					if(subDefinition.subName.equals(entity.subName)){
-						secondTone = subDefinition.secondTone;
-					}
-				}
-				if(secondTone != null){
-					for(APart part : ((AEntityE_Multipart<?>) entity).parts){
-						for(JSONSubDefinition subDefinition : part.definition.definitions){
-							if(subDefinition.subName.equals(secondTone)){
-								part.subName = secondTone;
-								break;
-							}
-						}
-					}
+				for(APart part : ((AEntityE_Multipart<?>) entity).parts){
+					((AEntityE_Multipart<?>) entity).updatePartTone(part);
 				}
 			}
 			return true;

@@ -53,7 +53,4 @@ public class JSONText{
     
     @JSONDescription("If true, this text will be auto-scaled to fit inside the wrapWidth rather than actually wrapping to another line.  Has no affect unless you specify a wrapWidth!")
 	public boolean autoScale;
-    
-	@Deprecated
-	public boolean colorInherited;
 }

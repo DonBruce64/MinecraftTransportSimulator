@@ -39,7 +39,7 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 public class MasterLoader{
 	public static final String MODID = "mts";
 	public static final String MODNAME = "Minecraft Transport Simulator";
-	public static final String MODVER = "20.3.0-BETA5";
+	public static final String MODVER = "20.3.0-BETA6";
 	
 	public static Logger logger;
 	public static String resourceDomain;
@@ -71,6 +71,7 @@ public class MasterLoader{
 		//Set logger and add log items from pre-boot operations.
 		logger = event.getModLog();
 		InterfaceCore.flushLogQueue();
+		InterfaceCore.logError("Welcome to MTS VERSION:" + MODVER);
 		
 		//Set main mod directory and parse packs.
 		gameDirectory = event.getModConfigurationDirectory().getParent();
