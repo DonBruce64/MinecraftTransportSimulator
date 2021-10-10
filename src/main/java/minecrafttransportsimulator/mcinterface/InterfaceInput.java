@@ -111,6 +111,7 @@ public class InterfaceInput{
 						}
 						joystickMap.clear();
 						buttonNumberOffset = 0;
+						InterfaceCore.logError("Found controllers " + org.lwjgl.input.Controllers.getControllerCount());
 						for(int i=0; i<org.lwjgl.input.Controllers.getControllerCount(); ++i){
 							InterfaceCore.logError("Checking controller " + i);
 							org.lwjgl.input.Controller joystick = org.lwjgl.input.Controllers.getController(i);

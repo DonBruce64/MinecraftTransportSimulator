@@ -297,7 +297,7 @@ public class RenderText{
 			//If we don't, then the font will be too low for the line it is on.  Unicode fonts have 2px on the
 			//bottom whereas ASCII has 1, so they are bottom-aligned in the texture, but top-aligned in the render.
 			if(isDefault){
-				DEFAULT_ADJ.set(0, DEFAULT_PIXELS_PER_CHAR*scale*(pixelCoords ? -0.4 : 0.4), 0);
+				DEFAULT_ADJ.set(0, DEFAULT_PIXELS_PER_CHAR*scale*0.4, 0);
 				if(doRotation){
 					DEFAULT_ADJ.rotateFine(rotation);
 				}
