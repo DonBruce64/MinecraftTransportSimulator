@@ -485,10 +485,14 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			frontFollower = null;
 			rearFollower = null;
 		}else if((frontFollower == null || rearFollower == null) && ticksExisted%20 == 0){
-			rearFollower = getFollower();
-			if(rearFollower != null){
-				double pointDelta = groundDeviceCollective.getContactPoint(false).distanceTo(groundDeviceCollective.getContactPoint(true));
-				frontFollower = new RoadFollowingState(rearFollower.lane, rearFollower.curve, rearFollower.goingForwards, rearFollower.currentSegment).updateCurvePoints((float) pointDelta, LaneSelectionRequest.NONE);
+			Point3d frontContact = groundDeviceCollective.getContactPoint(true);
+			Point3d rearContact = groundDeviceCollective.getContactPoint(false);
+			if(frontContact != null && rearContact != null){
+				rearFollower = getFollower();
+				if(rearFollower != null){
+					double pointDelta = rearContact.distanceTo(frontContact);
+					frontFollower = new RoadFollowingState(rearFollower.lane, rearFollower.curve, rearFollower.goingForwards, rearFollower.currentSegment).updateCurvePoints((float) pointDelta, LaneSelectionRequest.NONE);
+				}
 			}
 		}
 		
