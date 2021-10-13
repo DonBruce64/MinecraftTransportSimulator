@@ -184,6 +184,11 @@ public abstract class AGUIPanel extends AGUIBase{
 	}
 	
 	@Override
+	public boolean renderTranslucent(){
+		return true;
+	}
+	
+	@Override
 	public String getTexture(){
 		return vehicle.definition.motorized.panelTexture != null ? vehicle.definition.motorized.panelTexture : "mts:textures/guis/panel.png";
 	}

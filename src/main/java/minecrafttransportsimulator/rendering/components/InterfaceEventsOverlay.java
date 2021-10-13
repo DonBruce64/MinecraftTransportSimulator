@@ -14,6 +14,7 @@ import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartInteractable;
 import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.guis.components.AGUIBase;
+import minecrafttransportsimulator.guis.instances.AGUIPanel;
 import minecrafttransportsimulator.guis.instances.GUIHUD;
 import minecrafttransportsimulator.mcinterface.BuilderEntityExisting;
 import minecrafttransportsimulator.mcinterface.BuilderGUI;
@@ -159,28 +160,31 @@ public class InterfaceEventsOverlay{
 							}
 							
 							//Render the HUD now.  This is based on settings in the config.
-							//Translate far enough to not render behind the items.
-							//Also translate down if we are a half-HUD.
-							GL11.glPushMatrix();
-			        		GL11.glTranslated(0, 0, 250);
-			        		if(currentGUI instanceof GUIHUD && (InterfaceClient.inFirstPerson() ? !ConfigSystem.configObject.clientRendering.fullHUD_1P.value : !ConfigSystem.configObject.clientRendering.fullHUD_3P.value)){
-			        			GL11.glTranslated(0, currentGUI.getHeight()/2D, 0);
-			        		}
-			        		
-			        		//Enable alpha testing.  This can be disabled by mods doing bad state management during their event calls.
-			        		//We don't want to enable blending though, as that's on-demand.
-			        		//Just in case it is enabled, however, disable it.
-			        		//This ensures the blending state is as it will be for the main rendering pass of -1.
-			        		InterfaceRender.setBlend(false);
-			        		GL11.glEnable(GL11.GL_ALPHA_TEST);
-			        		
-			        		//Draw the GUI.
-			        		currentBuilder.drawScreen(0, 0, event.getPartialTicks());
-			        		
-			        		//Pop the matrix, and set blending and lighting back to normal.
-			        		GL11.glPopMatrix();
-			        		InterfaceRender.setBlend(true);
-			        		InterfaceRender.setInternalLightingState(false);
+							//Don't render the HUD if the panel is up though.
+							if(!(InterfaceGUI.getActiveGUI() instanceof AGUIPanel)){
+								//Translate far enough to not render behind the items.
+								//Also translate down if we are a half-HUD.
+								GL11.glPushMatrix();
+				        		GL11.glTranslated(0, 0, 250);
+				        		if(currentGUI instanceof GUIHUD && (InterfaceClient.inFirstPerson() ? !ConfigSystem.configObject.clientRendering.fullHUD_1P.value : !ConfigSystem.configObject.clientRendering.fullHUD_3P.value)){
+				        			GL11.glTranslated(0, currentGUI.getHeight()/2D, 0);
+				        		}
+				        		
+				        		//Enable alpha testing.  This can be disabled by mods doing bad state management during their event calls.
+				        		//We don't want to enable blending though, as that's on-demand.
+				        		//Just in case it is enabled, however, disable it.
+				        		//This ensures the blending state is as it will be for the main rendering pass of -1.
+				        		InterfaceRender.setBlend(false);
+				        		GL11.glEnable(GL11.GL_ALPHA_TEST);
+				        		
+				        		//Draw the GUI.
+				        		currentBuilder.drawScreen(0, 0, event.getPartialTicks());
+				        		
+				        		//Pop the matrix, and set blending and lighting back to normal.
+				        		GL11.glPopMatrix();
+				        		InterfaceRender.setBlend(true);
+				        		InterfaceRender.setInternalLightingState(false);
+							}
 			        		
 			        		//Return to prevent resetting the GUI.
 			        		return;

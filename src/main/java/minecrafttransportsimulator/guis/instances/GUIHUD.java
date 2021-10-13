@@ -76,6 +76,11 @@ public class GUIHUD extends AGUIBase{
 	}
 	
 	@Override
+	public boolean renderTranslucent(){
+		return true;
+	}
+	
+	@Override
 	public String getTexture(){
 		return vehicle.definition.motorized.hudTexture != null ? vehicle.definition.motorized.hudTexture : "mts:textures/guis/hud.png";
 	}

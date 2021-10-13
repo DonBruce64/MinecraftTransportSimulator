@@ -117,6 +117,14 @@ public abstract class AGUIBase{
 	}
 	
 	/**
+	 *  If true, the GUI texture will be rendered translucent.  This affects everything from this texture,
+	 *  including buttons and switches!  Does not affect text-rendering as that's its own system.
+	 */
+	public boolean renderTranslucent(){
+		return false;
+	}
+	
+	/**
 	 *  Returns the width of this GUI's texture.  Used for rendering.
 	 */
 	public final int getTextureWidth(){

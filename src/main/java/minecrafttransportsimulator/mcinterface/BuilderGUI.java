@@ -89,6 +89,10 @@ public class BuilderGUI extends GuiScreen{
 		}
 		
 		//Bind the standard texture and render the background.
+		//If we are translucent, enable blending.
+		if(gui.renderTranslucent()){
+			InterfaceRender.setBlend(true);
+		}
 		InterfaceRender.bindTexture(gui.getTexture());
 		if(gui.renderBackground()){
 			InterfaceGUI.renderSheetTexture(guiLeft, guiTop, gui.getWidth(), gui.getHeight(), 0, 0, gui.getWidth(), gui.getHeight(), gui.getTextureWidth(), gui.getTextureHeight());
@@ -100,6 +104,10 @@ public class BuilderGUI extends GuiScreen{
 		}
 		for(GUIComponentSelector selector : gui.selectors){
 			selector.renderSelector(mouseX, mouseY);
+		}
+		//Disable translucency if we had it enabled.
+		if(gui.renderTranslucent()){
+			InterfaceRender.setBlend(false);
 		}
 		
 		//If we are light-sensitive, and this GUI is said to be lit up, disable the lightmap.
