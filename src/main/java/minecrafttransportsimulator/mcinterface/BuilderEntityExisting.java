@@ -329,7 +329,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase{
     @Override
 	public boolean canBeCollidedWith(){
 		//This gets overridden to allow players to interact with this entity.
-		return true;
+		return collisionBoxes != null && !collisionBoxes.boxes.isEmpty();
 	}
 	
 	@Override
