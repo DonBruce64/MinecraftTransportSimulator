@@ -236,9 +236,6 @@ public class RenderText{
 										offsetsMaxU[charChecking] = pixelCol/(float)pixelsPerRowCol/CHARS_PER_ROWCOL;
 										charWidths[charChecking] = (pixelCol-charCol*pixelsPerRowCol)*DEFAULT_PIXELS_PER_CHAR/(float)pixelsPerRowCol;
 										foundPixelThisCol = true;
-										if(charChecking == 'D'){
-											System.out.println("ER");
-										}
 										break;
 									}
 								}

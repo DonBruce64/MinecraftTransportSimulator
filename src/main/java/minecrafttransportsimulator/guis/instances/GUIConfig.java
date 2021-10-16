@@ -125,10 +125,10 @@ public class GUIConfig extends AGUIBase{
 		
 		//Vehicle selection buttons and text.
 		//We only have two types.  Car and aircraft.
-		vehicleSelectionButtons.clear();		
-		addLabel(vehicleSelectionFaultLabel = new GUIComponentLabel(guiLeft+10, guiTop+90, ColorRGB.BLACK, InterfaceInput.isJoystickSupportBlocked() ? InterfaceCore.translate("gui.config.joystick.disabled") : InterfaceCore.translate("gui.config.joystick.error"), TextAlignment.LEFT_ALIGNED, 1.0F, 240));
+		vehicleSelectionButtons.clear();
+		addLabel(vehicleSelectionFaultLabel = new GUIComponentLabel(guiLeft+10, guiTop+90, ColorRGB.BLACK, "", TextAlignment.LEFT_ALIGNED, 0.8F, 240));
 		for(String vehicleType : vehicleTypes){
-			GUIComponentButton buttonKeyboard = new GUIComponentButton(guiLeft + 68, guiTop + 30 + 20*(vehicleSelectionButtons.size()/(InterfaceInput.isJoystickSupportEnabled() ? 2 : 1)), 120, InterfaceCore.translate("gui.config.controls." + vehicleType + ".keyboard")){
+			GUIComponentButton buttonKeyboard = new GUIComponentButton(guiLeft + 68, guiTop + 30 + 20*vehicleSelectionButtons.size(), 120, InterfaceCore.translate("gui.config.controls." + vehicleType + ".keyboard")){
 				@Override
 				public void onClicked(){
 					String lookupString = vehicleSelectionButtons.get(this);
@@ -142,8 +142,11 @@ public class GUIConfig extends AGUIBase{
 			if(vehicleSelectionButtons.size() == 1){
 				addLabel(new GUIComponentLabel(guiLeft+20, guiTop+10, ColorRGB.BLACK, InterfaceCore.translate("gui.config.controls.title")).setButton(buttonKeyboard));
 			}
-			
-			GUIComponentButton buttonJoystick = new GUIComponentButton(guiLeft + 68, guiTop + 90 + 20*(vehicleSelectionButtons.size()/2), 120, InterfaceCore.translate("gui.config.controls." + vehicleType + ".joystick")){
+		}
+		
+		//Now add joystick buttons.
+		for(String vehicleType : vehicleTypes){
+			GUIComponentButton buttonJoystick = new GUIComponentButton(guiLeft + 68, guiTop + 70 + 20*vehicleSelectionButtons.size(), 120, InterfaceCore.translate("gui.config.controls." + vehicleType + ".joystick")){
 				@Override
 				public void onClicked(){
 					String lookupString = vehicleSelectionButtons.get(this);
@@ -371,8 +374,11 @@ public class GUIConfig extends AGUIBase{
 		
 		//If we are configuring controls, and haven't selected a vehicle, render the vehicle selection components.
 		vehicleSelectionFaultLabel.visible = !InterfaceInput.isJoystickSupportEnabled() && configuringControls && !configuringKeyboard;
+		if(vehicleSelectionFaultLabel.visible){
+			vehicleSelectionFaultLabel.text = InterfaceInput.isJoystickSupportBlocked() ? InterfaceCore.translate("gui.config.joystick.disabled") : InterfaceCore.translate("gui.config.joystick.error");
+		}
 		for(GUIComponentButton button : vehicleSelectionButtons.keySet()){
-			button.visible = InterfaceInput.isJoystickSupportEnabled() && configuringControls && vehicleConfiguring.isEmpty();
+			button.visible = configuringControls && vehicleConfiguring.isEmpty() && (!vehicleSelectionButtons.get(button).endsWith(".joystick") || InterfaceInput.isJoystickSupportEnabled());
 		}
 		
 		
