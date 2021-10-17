@@ -87,18 +87,13 @@ public class InterfaceInput{
 			Thread joystickThread = new Thread(){
 				@Override
 				public void run(){
-					InterfaceCore.logError("STARTING CONTROLLER THREAD!");
 					try{
 						joystickNameCounters.clear();
 						if(runningClassicMode){
-							InterfaceCore.logError("Using old controllers");
 							classicJoystickMap.clear();
-							InterfaceCore.logError("Found controllers " + net.java.games.input.ControllerEnvironment.getDefaultEnvironment().getControllers().length);
 							for(net.java.games.input.Controller joystick : net.java.games.input.ControllerEnvironment.getDefaultEnvironment().getControllers()){
-								InterfaceCore.logError("Checking controller " + joystick.getName());
 								joystickEnabled = true;
 								if(joystick.getType() != null && !joystick.getType().equals(net.java.games.input.Controller.Type.MOUSE) && !joystick.getType().equals(net.java.games.input.Controller.Type.KEYBOARD) && joystick.getName() != null && joystick.getComponents().length != 0){
-									InterfaceCore.logError("Controller is valid.");
 									String joystickName = joystick.getName();
 									//Add an index on this joystick to be sure we don't override multi-component units.
 									if(!joystickNameCounters.containsKey(joystickName)){
@@ -109,20 +104,15 @@ public class InterfaceInput{
 								}
 							}
 						}else{
-							InterfaceCore.logError("Using new controllers");
 							if(!org.lwjgl.input.Controllers.isCreated()){
 								org.lwjgl.input.Controllers.create();
-								InterfaceCore.logError("Creating new controllers");
 							}
 							joystickMap.clear();
 							buttonNumberOffset = 0;
-							InterfaceCore.logError("Found controllers " + org.lwjgl.input.Controllers.getControllerCount());
 							for(int i=0; i<org.lwjgl.input.Controllers.getControllerCount(); ++i){
 								joystickEnabled = true;
-								InterfaceCore.logError("Checking controller " + i);
 								org.lwjgl.input.Controller joystick = org.lwjgl.input.Controllers.getController(i);
 								if(joystick.getAxisCount() > 0 && joystick.getButtonCount() > 0 && joystick.getName() != null){
-									InterfaceCore.logError("Controller is valid.");
 									String joystickName = joystick.getName();
 									//Add an index on this joystick to be sure we don't override multi-component units.
 									if(!joystickNameCounters.containsKey(joystickName)){
@@ -136,7 +126,6 @@ public class InterfaceInput{
 						}
 						joystickBlocked = false;
 						
-						InterfaceCore.logError("New map has " + joystickMap.size() + " and old map has " + classicJoystickMap.size());
 						
 						//Validate joysticks are valid for this setup by making sure indexes aren't out of bounds.
 						Iterator<Entry<String, ConfigJoystick>> iterator = ConfigSystem.configObject.controls.joystick.entrySet().iterator();
@@ -162,14 +151,12 @@ public class InterfaceInput{
 								}
 							}
 						}
-						InterfaceCore.logError("CONTROLLER THREAD COMPLETE!");
 					}catch(Exception e){
 						e.printStackTrace();
 						InterfaceCore.logError(e.getMessage());
 						for(StackTraceElement s : e.getStackTrace()){
 							InterfaceCore.logError(s.toString());
 						}
-						InterfaceCore.logError("CONTROLLER THREAD ERRORED!");
 					}
 					runningJoystickThread = false;
 				}
@@ -262,7 +249,6 @@ public class InterfaceInput{
 		//Check to make sure this control is operational before testing.  It could have been removed from a prior game.
 		if(runningClassicMode){
 			if(classicJoystickMap.containsKey(joystickName)){
-				InterfaceCore.logError("Found classic joystick axis " + joystickName + " in map of size " + classicJoystickMap.size());
 				classicJoystickMap.get(joystickName).poll();
 				return classicJoystickMap.get(joystickName).getComponents()[index].getPollData();
 			}else{
@@ -271,7 +257,6 @@ public class InterfaceInput{
 		}else{
 			//Make sure we're not calling this on non-axis.
 			if(joystickMap.containsKey(joystickName)){
-				InterfaceCore.logError("Found normal joystick axis " + joystickName + " in map of size " + joystickMap.size());
 				if(isJoystickComponentAxis(joystickName, index)){
 					joystickMap.get(joystickName).poll();
 					return joystickMap.get(joystickName).getAxisValue(index);
@@ -293,7 +278,6 @@ public class InterfaceInput{
 		if(runningClassicMode){
 			if(classicJoystickMap.containsKey(joystickName)){
 				classicJoystickMap.get(joystickName).poll();
-				InterfaceCore.logError("Found classic joystick button " + joystickName + " in map of size " + classicJoystickMap.size());
 				return classicJoystickMap.get(joystickName).getComponents()[index].getPollData() > 0;
 			}else{
 				return false;
@@ -301,7 +285,6 @@ public class InterfaceInput{
 		}else{
 			if(joystickMap.containsKey(joystickName)){
 				joystickMap.get(joystickName).poll();
-				InterfaceCore.logError("Found normal joystick button " + joystickName + " in map of size " + joystickMap.size());
 				return joystickMap.get(joystickName).isButtonPressed(index - buttonNumberOffset);
 			}else{
 				return false;
