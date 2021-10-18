@@ -83,7 +83,7 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityFl
 			//Only do this on clients, as servers don't render any text.
 			if(world.isClient() && definition.rendering != null && definition.rendering.textObjects != null){
 				text.clear();
-				String fluidName = tank.getFluidLevel() > 0 ? InterfaceCore.getFluidName(tank.getFluid()).toUpperCase() : "";
+				String fluidName = tank.getFluidLevel() > 0 ? InterfaceCore.getFluidName(tank.getFluid()) : "";
 				String fluidLevel = InterfaceCore.translate("tile.fuelpump.level") + String.format("%04.1f", tank.getFluidLevel()/1000F) + "b";
 				String fluidDispensed = InterfaceCore.translate("tile.fuelpump.dispensed") + String.format("%04.1f", tank.getAmountDispensed()/1000F) + "b";
 				for(int i=0; i<definition.rendering.textObjects.size(); ++i){
