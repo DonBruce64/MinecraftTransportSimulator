@@ -254,29 +254,10 @@ public class RenderText{
 			for(char textChar : text.toCharArray()){
 				width += charWidths[textChar];
 			}
-			return width;
+			return width + text.length()*CHAR_SPACING;
 		}
 		
 		public void renderText(String text, Point3d position, Point3d rotation, TextAlignment alignment, float scale, boolean autoScale, int wrapWidth, float preScaledFactor, boolean pixelCoords, ColorRGB color){
-			//Check for auto-scaling.
-			if(autoScale && wrapWidth > 0){
-				//Get the string width.  This is in text-pixels.
-				//We scale this to the actual pixel-width by multiplying it by the incoming scale.
-				//If the string width in pixels is greater than the wrap width, adjust scale.
-				//We also need to cancel wrapping if our scaled value is within bounds.
-				float stringWidth = scale*getStringWidth(text);
-				if(!pixelCoords){
-					stringWidth *= 16;
-				}
-				if(stringWidth > wrapWidth){
-					if(stringWidth > wrapWidth){
-						scale *= wrapWidth/stringWidth;
-					}
-				}
-				//Don't use wrap width if we already adjusted scale for it.
-				wrapWidth = 0;
-			}
-			
 			//Pre-calculate rotation of normals, as these won't change.
 			boolean doRotation = !rotation.isZero();
 			float[] normals = new float[]{0.0F, 0.0F, scale*preScaledFactor};
@@ -302,13 +283,30 @@ public class RenderText{
 				scale *= 1.4;
 			}
 			
+			//Check for auto-scaling.
+			if(autoScale && wrapWidth > 0){
+				//Get the string width.  This is in text-pixels.
+				//We scale this to the actual pixel-width by multiplying it by the incoming scale.
+				//If the string width in pixels is greater than the wrap width, adjust scale.
+				//We also need to cancel wrapping if our scaled value is within bounds.
+				float stringWidth = scale*getStringWidth(text);
+				if(!pixelCoords){
+					stringWidth *= 16;
+				}
+				if(stringWidth > wrapWidth){
+					scale *= wrapWidth/stringWidth;
+				}
+				//Don't use wrap width if we already adjusted scale for it.
+				wrapWidth = 0;
+			}
+			
 			//Check if we need to adjust our offset for our alignment.
 			//While this will be slightly off due to formatting and non-printable chars in the string,
 			//it is better than trying to pre-strip them and then parse the text after.
 			//Besides, who is going to do word-wrapping on fancy text?
 			float alignmentOffset = 0;
 			if(alignment.equals(TextAlignment.CENTERED)){
-				alignmentOffset = (wrapWidth == 0 ? -getStringWidth(text) - text.length()*CHAR_SPACING : -wrapWidth)/2F;
+				alignmentOffset = (wrapWidth == 0 ? -getStringWidth(text) : -wrapWidth)/2F;
 			}else if(alignment.equals(TextAlignment.RIGHT_ALIGNED)){
 				alignmentOffset = (-getStringWidth(text) - text.length()*CHAR_SPACING);
 			}
