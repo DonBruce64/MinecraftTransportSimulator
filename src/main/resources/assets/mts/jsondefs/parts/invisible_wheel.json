@@ -1,0 +1,22 @@
+{
+    "general": {
+        "name" : "Invisible Wheel (DO NOT USE!)",
+        "type" : "ground_wheel",
+				"materials" : []
+    },
+		"ground": {
+			"isWheel": true,
+			"width": 0.5,
+			"height": 1.0,
+			"motiveFriction": 0.75,
+			"lateralFriction": 0.75
+		},
+    "definitions": [
+        {
+            "subName": "",
+            "extraMaterials": [],
+						"modelName": "invisible",
+						"textureName": "invisible"
+        }
+    ]
+}

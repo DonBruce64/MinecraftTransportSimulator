@@ -1,0 +1,15 @@
+{
+    "general": {
+        "name" : "Invisible Seat (DO NOT USE!)",
+        "type" : "seat",
+				"materials" : []
+    },
+    "definitions": [
+        {
+            "subName": "",
+            "extraMaterials": [],
+						"modelName": "invisible",
+						"textureName": "invisible"
+        }
+    ]
+}

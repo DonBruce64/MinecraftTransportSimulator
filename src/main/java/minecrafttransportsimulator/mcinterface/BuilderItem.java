@@ -10,10 +10,12 @@ import javax.annotation.Nullable;
 
 import com.google.common.collect.Multimap;
 
+import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
+import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.components.IItemFood;
 import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.items.instances.ItemPartGun;
@@ -234,12 +236,15 @@ public class BuilderItem extends Item{
 			BuilderItem mcItem = entry.getValue();
 			
 			//First check if the creative tab is set/created.
-			String tabID = item.getCreativeTabID();
-			if(!BuilderCreativeTab.createdTabs.containsKey(tabID)){
-				JSONPack packConfiguration = PackParserSystem.getPackConfiguration(tabID);
-				BuilderCreativeTab.createdTabs.put(tabID, new BuilderCreativeTab(packConfiguration.packName, packConfiguration.packItem != null ? PackParserSystem.getItem(packConfiguration.packID,  packConfiguration.packItem) : null)); 
+			//The only except is for core mod parts, these are internal.
+			if(!item.definition.packID.equals(MasterLoader.MODID) || !(item instanceof AItemPart)){
+				String tabID = item.getCreativeTabID();
+				if(!BuilderCreativeTab.createdTabs.containsKey(tabID)){
+					JSONPack packConfiguration = PackParserSystem.getPackConfiguration(tabID);
+					BuilderCreativeTab.createdTabs.put(tabID, new BuilderCreativeTab(packConfiguration.packName, packConfiguration.packItem != null ? PackParserSystem.getItem(packConfiguration.packID,  packConfiguration.packItem) : null)); 
+				}
+				BuilderCreativeTab.createdTabs.get(tabID).addItem(item);
 			}
-			BuilderCreativeTab.createdTabs.get(tabID).addItem(item);
 			
 			//Register the item.
 			event.getRegistry().register(mcItem.setRegistryName(item.getRegistrationName()).setTranslationKey(item.getRegistrationName()));
