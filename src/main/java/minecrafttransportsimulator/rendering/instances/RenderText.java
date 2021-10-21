@@ -1,10 +1,9 @@
 package minecrafttransportsimulator.rendering.instances;
 
 import java.awt.image.BufferedImage;
-import java.util.ArrayList;
+import java.nio.FloatBuffer;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -114,12 +113,14 @@ public class RenderText{
 	 */
 	private static class FontData{
 		private static final char FORMATTING_CHAR = 167;//'§';
-		private static final char BOLD_CHAR = 'l';
-		private static final char ITALIC_CHAR = 'o';
-		private static final char UNDERLINE_CHAR = 'm';
-		private static final char STRIKETHROUGH_CHAR = 'n';
-		private static final char RANDOM_CHAR = 'k';
-		private static final char RESET_CHAR = 'r';
+		private static final char BOLD_FORMATTING_CHAR = 'l';
+		private static final char ITALIC_FORMATTING_CHAR = 'o';
+		private static final char UNDERLINE_FORMATTING_CHAR = 'n';
+		private static final char STRIKETHROUGH_FORMATTING_CHAR = 'm';
+		private static final char RANDOM_FORMATTING_CHAR = 'k';
+		private static final char RESET_FORMATTING_CHAR = 'r';
+		private static final char UNDERLINE_CHAR = '_';
+		private static final char STRIKETHROUGH_CHAR = '-';
 		
 		private static final byte CHARS_PER_ROWCOL = 16;
 		private static final int CHARS_PER_TEXTURE_SHEET = CHARS_PER_ROWCOL*CHARS_PER_ROWCOL;
@@ -144,7 +145,7 @@ public class RenderText{
 			new ColorRGB(255, 255, 255)
 		};
 		private static final FontRenderState[] STATES = FontRenderState.generateDefaults();
-		private static final float[][] VERTICES = new float[1000*6][8];
+		private static final int MAX_VERTCIES_PER_RENDER = 1000*6;
 		private static final Point3d DEFAULT_ADJ = new Point3d();
 		
 		private final boolean isDefault;
@@ -165,15 +166,20 @@ public class RenderText{
 		/**Font render blocks.  These are created initially for use in render calls.  Referencing is as follows:
 		 * The first array element is the texture sheet being used.
 		 * The second array element is the color.
-		 * The third array element is a packed integer of the font state.
 		 * This ensures that there will always be one element for any permutation of states.**/
-		private static final Map<String, Map<ColorRGB, Map<FontRenderState, FontRenderBlock>>> createdRenderBlocks = new HashMap<String, Map<ColorRGB, Map<FontRenderState, FontRenderBlock>>>();
+		private static final Map<String, Map<ColorRGB, FontRenderBlock>> createdRenderBlocks = new HashMap<String, Map<ColorRGB, FontRenderBlock>>();
 		/**Active font render blocks.  These are a list of the currently-used {@link #fontRenderBlocks}.
 		 * Items are added to this list during string parsing.  At the end, it will be populated and
 		 * should be looped over for drawing.*/
 		private final Set<FontRenderBlock> activeRenderBlocks = new LinkedHashSet<FontRenderBlock>();
-		/**Current index for pooled set of vertices in {@link #VERTICES}.  Used to track which vertices are being used.*/
-		private int currentVertexIndex;
+		/**Mutable helper for doing vertex-building operations.**/
+		private final float[] charVertex = new float[3];
+		/**Mutable helper for doing vertex-building operations for font effects like bold and underline.**/
+		private final float[] supplementalVertex = new float[3];
+		/**Mutable helper for doing uv-building operations.**/
+		private final float[] charUV = new float[2];
+		/**Mutable helper for doing uv-building operations for font effects like bold and underline.**/
+		private final float[] supplementalUV = new float[2];
 		/**Mutable helper for rotating vertices.**/
 		private final Point3d rotatedVertex = new Point3d();
 		
@@ -268,6 +274,28 @@ public class RenderText{
 				normals[2] = (float) rotatedNormals.z;
 			}
 			
+			//Check the string for a random font code char.  If we have one, we need to substitute chars.
+			//Do this prior to rendering operations as this will affect string length and blocks.
+			if(text.indexOf(FORMATTING_CHAR + RANDOM_FORMATTING_CHAR) != -1){
+				char[] textArray = text.toCharArray();
+				boolean randomActive = false;
+				for(int i=0; i<textArray.length; ++i){
+					
+					//Check if we are a formatting code before doing any other parsing.
+					if(textArray[i] == FORMATTING_CHAR){
+						char formattingChar = textArray[++i];
+						if(formattingChar == RANDOM_FORMATTING_CHAR){
+							randomActive = true;
+						}else if(formattingChar == RESET_FORMATTING_CHAR){
+							randomActive = false;
+						}
+					}else if(randomActive){
+						textArray[i] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".charAt((int) (Math.random()*36));
+					}
+				}
+				text = String.valueOf(textArray);
+			}
+			
 			//If we are the default font, multiply scale by (7/8)/(10/16) = 1.4.
 			//This is because normally the font height is 7px of the 8 total.
 			//But unicode uses 10px of the 16.  This makes it slightly smaller if we don't do this.
@@ -317,17 +345,6 @@ public class RenderText{
 				wrapWidth /= scale;
 			}
 			
-			//Clear out UVs from blocks rendered prior, and then clear out the active block list.
-			for(FontRenderBlock block : activeRenderBlocks){
-				block.vertices.clear();
-			}
-			activeRenderBlocks.clear();
-			
-			
-			//Loop through all the chars and get their UV points and add them to the object.
-			//If we get past our wrapWidth, or we find a newline, we need to wrap the text.
-			//Note that offsets are in in-game texture pixels, not font-texture pixels.
-			currentVertexIndex = 0;
 			int currentOffset = 0;
 			int currentLineOffset = 0;
 			int indexAtLastNewline = 0;
@@ -341,12 +358,11 @@ public class RenderText{
 					//Get the format code and apply operation.
 					char formattingChar = text.charAt(++i);
 					switch(formattingChar){
-						case (BOLD_CHAR) : currentState = STATES[currentState.index | FontRenderState.BOLD_BIT_INDEX]; break;
-						case (ITALIC_CHAR) : currentState = STATES[currentState.index | FontRenderState.ITALIC_BIT_INDEX]; break;
-						case (UNDERLINE_CHAR) : currentState = STATES[currentState.index | FontRenderState.UNDERLINE_BIT_INDEX]; break;
-						case (STRIKETHROUGH_CHAR) : currentState = STATES[currentState.index | FontRenderState.STRIKETHROUGH_BIT_INDEX]; break;
-						case (RANDOM_CHAR) : currentState = STATES[currentState.index | FontRenderState.RANDOM_BIT_INDEX]; break;
-						case (RESET_CHAR) : currentState = STATES[0]; currentColor = color; break;
+						case (BOLD_FORMATTING_CHAR) : currentState = STATES[currentState.index | FontRenderState.BOLD_BIT_INDEX]; break;
+						case (ITALIC_FORMATTING_CHAR) : currentState = STATES[currentState.index | FontRenderState.ITALIC_BIT_INDEX]; break;
+						case (UNDERLINE_FORMATTING_CHAR) : currentState = STATES[currentState.index | FontRenderState.UNDERLINE_BIT_INDEX]; break;
+						case (STRIKETHROUGH_FORMATTING_CHAR) : currentState = STATES[currentState.index | FontRenderState.STRIKETHROUGH_BIT_INDEX]; break;
+						case (RESET_FORMATTING_CHAR) : currentState = STATES[0]; currentColor = color; break;
 						default: currentColor = COLORS[Integer.decode("0x"+formattingChar)]; break;
 					}
 					//Go back though the loop again to the next char.
@@ -374,17 +390,28 @@ public class RenderText{
 								indexAtLastNewline = i;
 								break;
 							}else{
-								//Need to remove vertices in list so they don't get rendered.
+								//Need to remove vertices in buffer so they don't get rendered.
 								//However, only do this if we have vertices.
 								//We could end up needing to word wrap before a formatting char.
-								FontRenderBlock priorRenderBlock = getBlockFor(priorChar, currentColor, currentState);
-								if(!priorRenderBlock.vertices.isEmpty()){
-									int vertMin = priorRenderBlock.vertices.size() - priorRenderBlock.state.vertexStep;
-									int vertMax = priorRenderBlock.vertices.size() - 1;
-									for(int k=vertMax; k>=vertMin; --k){
-										priorRenderBlock.vertices.remove(k);
-									}
-									currentVertexIndex -= priorRenderBlock.state.vertexStep;
+								FontRenderBlock priorRenderBlock = getBlockFor(priorChar, currentColor);
+								if(priorRenderBlock.vertices.position() != 0){
+									priorRenderBlock.vertices.position(priorRenderBlock.vertices.position() - 6*8);
+								}
+								
+								//If we had supplemental state rendering, remove from those blocks too.
+								if(currentState.bold){
+									//Bold, remove another char as we double-rendered.
+									priorRenderBlock.vertices.position(priorRenderBlock.vertices.position() - 6*8);
+								}
+								if(currentState.underline){
+									//Remove 1 char from the underline block.
+									FontRenderBlock underlineRenderBlock = getBlockFor(UNDERLINE_CHAR, currentColor);
+									underlineRenderBlock.vertices.position(underlineRenderBlock.vertices.position() - 6*8);
+								}
+								if(currentState.strikethrough){
+									//Remove 1 char from the strikethough block.
+									FontRenderBlock strikethroughRenderBlock = getBlockFor(STRIKETHROUGH_CHAR, currentColor);
+									strikethroughRenderBlock.vertices.position(strikethroughRenderBlock.vertices.position() - 6*8);
 								}
 							}
 						}	
@@ -403,132 +430,146 @@ public class RenderText{
 					//If we are underline, add an underline overlay.
 					//If we are italic, we slightly skew the UV map by 1px.
 					//If we are strikethough, we add a strikethough overlay.
-					//If we are random, we randomize the char we have (0/9, A/Z).
-					FontRenderBlock currentRenderBlock = getBlockFor(textChar, currentColor, currentState);
-					if(currentState.random){
-						textChar = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".charAt((int) (Math.random()*36));
-						currentRenderBlock = getBlockFor(textChar, currentColor, currentState);
-					}
+					FontRenderBlock currentRenderBlock = getBlockFor(textChar, currentColor);
 					float charWidth = charWidths[textChar];
-					int startingVertex = currentVertexIndex;
-					for(int j=0; j<currentRenderBlock.state.vertexStep; ++j){
-						//Get the next free vertex and set its properties.
-						float[] charVertex = VERTICES[currentVertexIndex++];
+					int charSteps = 6;
+					if(currentState.bold)charSteps += 6;
+					if(currentState.underline)charSteps += 6;
+					if(currentState.strikethrough)charSteps += 6;
+					for(int j=0; j<charSteps; ++j){
+						//Set vertex properties.
 						switch(j){
 							case(0):{//Bottom-right
 								charVertex[0] = alignmentOffset + currentOffset + charWidth;
 								charVertex[1] = currentLineOffset - DEFAULT_PIXELS_PER_CHAR;
-								charVertex[3] = offsetsMaxU[textChar];
-								charVertex[4] = offsetsMinV[textChar];
+								charUV[0] = offsetsMaxU[textChar];
+								charUV[1] = offsetsMinV[textChar];
 								break;
 							}
 							case(1):{//Top-right
 								charVertex[0] = alignmentOffset + currentOffset + charWidth;
-								if(currentRenderBlock.state.italic){
+								if(currentState.italic){
 									charVertex[0] += 1;
 								}
 								charVertex[1] = currentLineOffset;
-								charVertex[3] = offsetsMaxU[textChar];
-								charVertex[4] = offsetsMaxV[textChar];
+								charUV[0] = offsetsMaxU[textChar];
+								charUV[1] = offsetsMaxV[textChar];
 								break;
 							}
 							case(2):{//Top-left
 								charVertex[0] = alignmentOffset + currentOffset;
-								if(currentRenderBlock.state.italic){
+								if(currentState.italic){
 									charVertex[0] += 1;
 								}
 								charVertex[1] = currentLineOffset;
-								charVertex[3] = offsetsMinU[textChar];
-								charVertex[4] = offsetsMaxV[textChar];
+								charUV[0] = offsetsMinU[textChar];
+								charUV[1] = offsetsMaxV[textChar];
 								break;
 							}
 							case(3):{//Bottom-right
 								charVertex[0] = alignmentOffset + currentOffset + charWidth;
 								charVertex[1] = currentLineOffset - DEFAULT_PIXELS_PER_CHAR;
-								charVertex[3] = offsetsMaxU[textChar];
-								charVertex[4] = offsetsMinV[textChar];
+								charUV[0] = offsetsMaxU[textChar];
+								charUV[1] = offsetsMinV[textChar];
 								break;
 							}
 							case(4):{//Top-left
 								charVertex[0] = alignmentOffset + currentOffset;
-								if(currentRenderBlock.state.italic){
+								if(currentState.italic){
 									charVertex[0] += 1;
 								}
 								charVertex[1] = currentLineOffset;
-								charVertex[3] = offsetsMinU[textChar];
-								charVertex[4] = offsetsMaxV[textChar];
+								charUV[0] = offsetsMinU[textChar];
+								charUV[1] = offsetsMaxV[textChar];
 								break;
 							}
 							case(5):{//Bottom-left
 								charVertex[0] = alignmentOffset + currentOffset;
 								charVertex[1] = currentLineOffset - DEFAULT_PIXELS_PER_CHAR;
-								charVertex[3] = offsetsMinU[textChar];
-								charVertex[4] = offsetsMinV[textChar];						
+								charUV[0] = offsetsMinU[textChar];
+								charUV[1] = offsetsMinV[textChar];						
 								break;
 							}
 							default: {
 								//Custom vertex, either bold, underline or strikethough.
-								float[] masterVertex = VERTICES[startingVertex + j - 6];
+								//Bold is done in indexes 6-11, underline 12-17, strikethrough 18-23.
+								//Note that if one of the three isn't active, the others will move "up" in the order.
+								//This is like how lists work.
+								
+								//Get the current char vertex we are mimicking.  This requires checking the buffer.
+								//Skip the first three indexes as they are normal data we don't care about.
+								int currentIndex = currentRenderBlock.vertices.position();
+								currentRenderBlock.vertices.position(currentIndex - (6-j%6 + j-6)*8 + 3);
+								currentRenderBlock.vertices.get(supplementalUV);
+								currentRenderBlock.vertices.get(supplementalVertex);
+								currentRenderBlock.vertices.position(currentIndex);
+								
 								if(currentState.bold && j < 12){
-									charVertex[0] = masterVertex[0] + 0.3F;
-									charVertex[1] = masterVertex[1] + 0.3F;
-									charVertex[2] = masterVertex[2];
-									charVertex[3] = masterVertex[3];
-									charVertex[4] = masterVertex[4];
+									//Just render a second char slightly offset.
+									supplementalVertex[0] += 0.3F;
+									supplementalVertex[1] += 0.3F;
+									currentRenderBlock.vertices.put(normals).put(supplementalUV).put(supplementalVertex);
 								}else{
-									//Set position to master and set custom char.
-									charVertex[0] = masterVertex[0];
-									charVertex[1] = masterVertex[1] + CHAR_SPACING;
-									charVertex[2] = masterVertex[2];
-									char customChar = currentState.underline ? '_' : '-';
-									
-									//May need to change render blocks here.
-									if(j%6 == 0){
-										currentRenderBlock = getBlockFor(customChar, currentColor, currentState);
+									char customChar;
+									if(currentState.underline && j<18){
+										customChar = UNDERLINE_CHAR;
+									}else if(currentState.strikethrough){
+										customChar = STRIKETHROUGH_CHAR;
+									}else{
+										//We'll never get here (I hope?) , but it makes the complier happy.
+										continue;
 									}
 									
+									//Set position to master and set custom char.
+									supplementalVertex[1] += CHAR_SPACING;
 									switch(j%6){
 										case(0):{//Bottom-right
-											charVertex[0] += CHAR_SPACING;
-											charVertex[3] = offsetsMaxU[customChar];
-											charVertex[4] = offsetsMinV[customChar];
+											supplementalVertex[0] += CHAR_SPACING;
+											supplementalUV[0] = offsetsMaxU[customChar];
+											supplementalUV[1] = offsetsMinV[customChar];
 											break;
 										}
 										case(1):{//Top-right
-											charVertex[0] += CHAR_SPACING;
-											charVertex[3] = offsetsMaxU[customChar];
-											charVertex[4] = offsetsMaxV[customChar];
+											supplementalVertex[0] += CHAR_SPACING;
+											supplementalUV[0] = offsetsMaxU[customChar];
+											supplementalUV[1] = offsetsMaxV[customChar];
 											break;
 										}
 										case(2):{//Top-left
-											charVertex[0] -= CHAR_SPACING;
-											charVertex[3] = offsetsMinU[customChar];
-											charVertex[4] = offsetsMaxV[customChar];
+											supplementalVertex[0] -= CHAR_SPACING;
+											supplementalUV[0] = offsetsMinU[customChar];
+											supplementalUV[1] = offsetsMaxV[customChar];
 											break;
 										}
 										case(3):{//Bottom-right
-											charVertex[0] += CHAR_SPACING;
-											charVertex[3] = offsetsMaxU[customChar];
-											charVertex[4] = offsetsMinV[customChar];
+											supplementalVertex[0] += CHAR_SPACING;
+											supplementalUV[0] = offsetsMaxU[customChar];
+											supplementalUV[1] = offsetsMinV[customChar];
 											break;
 										}
 										case(4):{//Top-left
-											charVertex[0] -= CHAR_SPACING;
-											charVertex[3] = offsetsMinU[customChar];
-											charVertex[4] = offsetsMaxV[customChar];
+											supplementalVertex[0] -= CHAR_SPACING;
+											supplementalUV[0] = offsetsMinU[customChar];
+											supplementalUV[1] = offsetsMaxV[customChar];
 											break;
 										}
 										case(5):{//Bottom-left
-											charVertex[0] -= CHAR_SPACING;
-											charVertex[3] = offsetsMinU[customChar];
-											charVertex[4] = offsetsMinV[customChar];						
+											supplementalVertex[0] -= CHAR_SPACING;
+											supplementalUV[0] = offsetsMinU[customChar];
+											supplementalUV[1] = offsetsMinV[customChar];						
 											break;
 										}
-									}	
+									}
+
+									//Add supplemental vertex to render block, and add to active list if required.
+									FontRenderBlock customRenderBlock = getBlockFor(customChar, currentColor); 
+									customRenderBlock.vertices.put(normals).put(supplementalUV).put(supplementalVertex);
+									activeRenderBlocks.add(customRenderBlock);
 								}
 							}
 						}
 						
+						//Only do these calcs for the first 6 vertices for the main char.
 						if(j < 6){
 							//Z is always 0 initially.  We rotate it to match the actual rotation.
 							charVertex[2] = 0.0F;
@@ -540,18 +581,13 @@ public class RenderText{
 								charVertex[1] = (float) rotatedVertex.y;
 								charVertex[2] = (float) rotatedVertex.z;
 							}
+							
+							//Add char vertex to render block.
+							currentRenderBlock.vertices.put(normals).put(charUV).put(charVertex);
 						}
-						
-						//Set normals.  These will already have been rotated.
-						charVertex[5] = normals[0];
-						charVertex[6] = normals[1];
-						charVertex[7] = normals[2];
-						
-						//Add char vertex to render block.
-						currentRenderBlock.vertices.add(charVertex);
 					}
 					
-					//Increment offset to next char position and set char points and add rener block to active list.
+					//Increment offset to next char position and set char points and add render block to active list.
 					currentOffset += charWidth + CHAR_SPACING;
 					activeRenderBlocks.add(currentRenderBlock);
 				}
@@ -572,36 +608,37 @@ public class RenderText{
 					InterfaceRender.setColorState(block.color);
 					boundColor = block.color;
 				}
+				//Flip block to current vertex amount prior to rendering so position/limit are correct.
+				block.vertices.flip();
 				InterfaceRender.renderVertices(block.vertices);
+				
+				//Clear block arrays to prep for next rendering.
+				block.vertices.clear();
 			}
+			//Clear out the active block list to prep for next pass, then pop state.
+			activeRenderBlocks.clear();
 			GL11.glPopMatrix();
 			InterfaceRender.recallTexture();
 			InterfaceRender.setColorState(ColorRGB.WHITE);
 		}
 		
-		private FontRenderBlock getBlockFor(char textChar, ColorRGB color, FontRenderState state){
+		private FontRenderBlock getBlockFor(char textChar, ColorRGB color){
 			//First get the font block;
 			//MNake sure we didn't get passed a bad char from some unicode junk text.
 			if(textChar/CHARS_PER_TEXTURE_SHEET >= fontLocations.length){
 				textChar = 0;
 			}
 			String font = fontLocations[textChar/CHARS_PER_TEXTURE_SHEET];
-			Map<ColorRGB, Map<FontRenderState, FontRenderBlock>> map1 = createdRenderBlocks.get(font);
+			Map<ColorRGB, FontRenderBlock> map1 = createdRenderBlocks.get(font);
 			if(map1 == null){
-				map1 = new HashMap<ColorRGB, Map<FontRenderState, FontRenderBlock>>();
+				map1 = new HashMap<ColorRGB, FontRenderBlock>();
 				createdRenderBlocks.put(font, map1);
 			}
 			
-			Map<FontRenderState, FontRenderBlock> map2 = map1.get(color);
-			if(map2 == null){
-				map2 = new HashMap<FontRenderState, FontRenderBlock>();
-				map1.put(color, map2);
-			}
-			
-			FontRenderBlock block = map2.get(state);
+			FontRenderBlock block = map1.get(color);
 			if(block == null){
-				block = new FontRenderBlock(font, color, state);
-				map2.put(state, block);
+				block = new FontRenderBlock(font, color);
+				map1.put(color, block);
 			}
 			return block;
 		}
@@ -609,13 +646,11 @@ public class RenderText{
 		private class FontRenderBlock{
 			private final String texture;
 			private final ColorRGB color;
-			private final FontRenderState state;
-			private final List<float[]> vertices = new ArrayList<float[]>();
+			private final FloatBuffer vertices = FloatBuffer.allocate(MAX_VERTCIES_PER_RENDER*8);
 			
-			private FontRenderBlock(String texture, ColorRGB color, FontRenderState state){
+			private FontRenderBlock(String texture, ColorRGB color){
 				this.texture = texture;
 				this.color = color;
-				this.state = state;
 			}
 		}
 		
@@ -624,15 +659,12 @@ public class RenderText{
 			private static final int ITALIC_BIT_INDEX = 2;
 			private static final int UNDERLINE_BIT_INDEX = 4;
 			private static final int STRIKETHROUGH_BIT_INDEX = 8;
-			private static final int RANDOM_BIT_INDEX = 16;
 					
 			private final int index;
 			private final boolean bold;
 			private final boolean italic;
 			private final boolean underline;
 			private final boolean strikethrough;
-			private final boolean random;
-			private final int vertexStep;
 			
 			private FontRenderState(int index){
 				this.index = index;
@@ -640,18 +672,10 @@ public class RenderText{
 				this.italic = (index & ITALIC_BIT_INDEX) == ITALIC_BIT_INDEX;
 				this.underline = (index & UNDERLINE_BIT_INDEX) == UNDERLINE_BIT_INDEX;
 				this.strikethrough = (index & STRIKETHROUGH_BIT_INDEX) == STRIKETHROUGH_BIT_INDEX;
-				this.random = (index & RANDOM_BIT_INDEX) == RANDOM_BIT_INDEX;
-				
-				//6 vertices per char, more if we have conditions.
-				int charsToDraw = 1;
-				if(bold) ++charsToDraw;
-				if(underline) ++charsToDraw;
-				if(strikethrough) ++charsToDraw;
-				this.vertexStep = 6*charsToDraw;
 			}
 			
 			public static FontRenderState[] generateDefaults(){
-				FontRenderState[] states = new FontRenderState[(int) Math.pow(2, 5)];
+				FontRenderState[] states = new FontRenderState[(int) Math.pow(2, 4)];
 				for(int i=0; i<states.length; ++i){
 					states[i] = new FontRenderState(i);
 				}

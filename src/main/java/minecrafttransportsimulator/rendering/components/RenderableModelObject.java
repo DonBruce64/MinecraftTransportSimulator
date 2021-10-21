@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.rendering.components;
 
+import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -38,12 +39,12 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 	private final boolean isWindow;
 	private final boolean isOnlineTexture;
 	private final int cachedVertexIndex;
-	private final float[][] exteriorWindowObject;
-	private final float[][] interiorWindowObject;
-	private float[][] colorObject;
-	private float[][] coverObject;
-	private final Map<JSONLight, float[][]> flareObjects = new HashMap<JSONLight, float[][]>();
-	private final Map<JSONLight, float[][]> beamObjects = new HashMap<JSONLight, float[][]>();
+	private final FloatBuffer exteriorWindowObject;
+	private final FloatBuffer interiorWindowObject;
+	private FloatBuffer colorObject;
+	private FloatBuffer coverObject;
+	private final Map<JSONLight, FloatBuffer> flareObjects = new HashMap<JSONLight, FloatBuffer>();
+	private final Map<JSONLight, FloatBuffer> beamObjects = new HashMap<JSONLight, FloatBuffer>();
 	
 	/**Map of tread points, keyed by the model the tread is pathing about, then the spacing of the tread.
 	 * This can be shared for two different treads of the same spacing as they render the same.**/
@@ -54,7 +55,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 	private static final float BEAM_OFFSET = -0.15F;
 	private static final int BEAM_SEGMENTS = 40;
 	
-	public RenderableModelObject(String modelLocation, String objectName, List<RenderableModelObject<AnimationEntity>> allObjects, float[][] vertices){
+	public RenderableModelObject(String modelLocation, String objectName, List<RenderableModelObject<AnimationEntity>> allObjects, FloatBuffer vertices){
 		super();
 		this.modelLocation = modelLocation;
 		this.objectName = objectName;
@@ -71,10 +72,11 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 			this.exteriorWindowObject = vertices;
 			normalizeUVs(exteriorWindowObject);
 			
-			this.interiorWindowObject = new float[exteriorWindowObject.length][8];
-			for(int i=0, j=exteriorWindowObject.length-1; i<exteriorWindowObject.length; ++i, --j){
-				interiorWindowObject[j] = exteriorWindowObject[i];
+			this.interiorWindowObject = FloatBuffer.allocate(exteriorWindowObject.capacity());
+			for(int i=exteriorWindowObject.capacity(); i<=0; --i){
+				interiorWindowObject.put(exteriorWindowObject.get(i));
 			}
+			interiorWindowObject.flip();
 		}else{
 			this.cachedVertexIndex = InterfaceRender.cacheVertices(vertices);
 			this.exteriorWindowObject = null;
@@ -450,8 +452,8 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 			//First render all flares, then render all beams.
 			float blendableBrightness = Math.min((1 - entity.world.getLightBrightness(entity.position, false))*lightLevel, 1);
 			if(blendableBrightness > 0){
-				float[][] flareObject = flareObjects.get(lightDef);
-				float[][] beamObject = beamObjects.get(lightDef);
+				FloatBuffer flareObject = flareObjects.get(lightDef);
+				FloatBuffer beamObject = beamObjects.get(lightDef);
 				if(flareObject == null && beamObject == null){
 					List<JSONLightBlendableComponent> flareDefs = new ArrayList<JSONLightBlendableComponent>();
 					List<JSONLightBlendableComponent> beamDefs = new ArrayList<JSONLightBlendableComponent>();
@@ -538,39 +540,41 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 		}
 	}
 	
-	private static float[][] generateColors(float[][] parsedObject){
+	private static FloatBuffer generateColors(FloatBuffer parsedObject){
 		//Make a duplicate set of vertices with an offset for the color rendering.
-		float[][] offsetObject = new float[parsedObject.length][8];
-		for(int i=0; i<parsedObject.length; ++i){
-			offsetObject[i][0] = parsedObject[i][0] + parsedObject[i][5]*COLOR_OFFSET;
-			offsetObject[i][1] = parsedObject[i][1] + parsedObject[i][6]*COLOR_OFFSET;
-			offsetObject[i][2] = parsedObject[i][2] + parsedObject[i][7]*COLOR_OFFSET;
-			offsetObject[i][5] = parsedObject[i][5];
-			offsetObject[i][6] = parsedObject[i][6];
-			offsetObject[i][7] = parsedObject[i][7];
+		FloatBuffer offsetObject = FloatBuffer.allocate(parsedObject.capacity());
+		float[] vertexData = new float[8];
+		while(parsedObject.hasRemaining()){
+			parsedObject.get(vertexData);
+			offsetObject.put(vertexData, 0, 5);
+			offsetObject.put(vertexData[5] + vertexData[0]*COLOR_OFFSET);
+			offsetObject.put(vertexData[6] + vertexData[1]*COLOR_OFFSET);
+			offsetObject.put(vertexData[7] + vertexData[2]*COLOR_OFFSET);
 		}
 		normalizeUVs(offsetObject);
+		offsetObject.flip();
 		return offsetObject;
 	}
 	
-	private static float[][] generateCovers(float[][] parsedObject){
+	private static FloatBuffer generateCovers(FloatBuffer parsedObject){
 		//Make a duplicate set of vertices with an offset for the cover rendering.
-		float[][] offsetObject = new float[parsedObject.length][8];
-		for(int i=0; i<parsedObject.length; ++i){
-			offsetObject[i][0] = parsedObject[i][0] + parsedObject[i][5]*COVER_OFFSET;
-			offsetObject[i][1] = parsedObject[i][1] + parsedObject[i][6]*COVER_OFFSET;
-			offsetObject[i][2] = parsedObject[i][2] + parsedObject[i][7]*COVER_OFFSET;
-			offsetObject[i][5] = parsedObject[i][5];
-			offsetObject[i][6] = parsedObject[i][6];
-			offsetObject[i][7] = parsedObject[i][7];
+		FloatBuffer offsetObject = FloatBuffer.allocate(parsedObject.capacity());
+		float[] vertexData = new float[8];
+		while(parsedObject.hasRemaining()){
+			parsedObject.get(vertexData);
+			offsetObject.put(vertexData, 0, 5);
+			offsetObject.put(vertexData[5] + vertexData[0]*COVER_OFFSET);
+			offsetObject.put(vertexData[6] + vertexData[1]*COVER_OFFSET);
+			offsetObject.put(vertexData[7] + vertexData[2]*COVER_OFFSET);
 		}
 		normalizeUVs(offsetObject);
+		offsetObject.flip();
 		return offsetObject;
 	}
 	
-	private static float[][] generateFlares(List<JSONLightBlendableComponent> flareDefs){
+	private static FloatBuffer generateFlares(List<JSONLightBlendableComponent> flareDefs){
 		//6 vertices per flare due to triangle rendering.
-		float[][] flareObject = new float[flareDefs.size()*6][8];
+		FloatBuffer flareObject = FloatBuffer.allocate(flareDefs.size()*6*8);
 		for(int i=0; i<flareDefs.size(); ++i){
 			JSONLightBlendableComponent flareDef = flareDefs.get(i);
 			//Get the angle that is needed to rotate points to the normalized vector.
@@ -594,27 +598,28 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 				vertexOffset.y = newVertex[4] == 0.0 ? flareDef.flareHeight/2D : -flareDef.flareHeight/2D;
 				vertexOffset.z = 0;
 				vertexOffset.rotateFine(rotation).add(centerOffset);
-				newVertex[0] = (float) vertexOffset.x;
-				newVertex[1] = (float) vertexOffset.y;
-				newVertex[2] = (float) vertexOffset.z;
+				newVertex[5] = (float) vertexOffset.x;
+				newVertex[6] = (float) vertexOffset.y;
+				newVertex[7] = (float) vertexOffset.z;
 				
 				//Set normals to the normal axis in the JSON.
-				newVertex[5] = (float) flareDef.axis.x;
-				newVertex[6] = (float) flareDef.axis.y;
-				newVertex[7] = (float) flareDef.axis.z;
+				newVertex[0] = (float) flareDef.axis.x;
+				newVertex[1] = (float) flareDef.axis.y;
+				newVertex[2] = (float) flareDef.axis.z;
 				
-				//Set the actual vertex.
-				flareObject[i*6 + j] = newVertex;
+				//Add the actual vertex.
+				flareObject.put(newVertex);
 			}
 		}
+		flareObject.flip();
 		return flareObject;
 	}
 	
-	private static float[][] generateBeams(List<JSONLightBlendableComponent> beamDefs){
+	private static FloatBuffer generateBeams(List<JSONLightBlendableComponent> beamDefs){
 		//3 vertices per cone-face, each share the same center point.
 		//Number of cone faces is equal to the number of segments for beams.
 		//We render two beams.  One inner and one outer.
-		float[][] beamObject = new float[beamDefs.size()*2*BEAM_SEGMENTS*3][8];
+		FloatBuffer beamObject = FloatBuffer.allocate(beamDefs.size()*2*BEAM_SEGMENTS*3*8);
 		for(int i=0; i<beamDefs.size(); ++i){
 			JSONLightBlendableComponent beamDef = beamDefs.get(i);
 			//Get the angle that is needed to rotate points to the normalized vector.
@@ -648,20 +653,21 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 						vertexOffset.z = beamDef.beamLength;
 					}
 					vertexOffset.rotateFine(rotation).add(centerOffset);
-					newVertex[0] = (float) vertexOffset.x;
-					newVertex[1] = (float) vertexOffset.y;
-					newVertex[2] = (float) vertexOffset.z;
+					newVertex[5] = (float) vertexOffset.x;
+					newVertex[6] = (float) vertexOffset.y;
+					newVertex[7] = (float) vertexOffset.z;
 					
 					//Don't care about normals for beam rendering as it's a blending face, so we just set them to 0.
-					newVertex[5] = 0F;
-					newVertex[6] = 0F;
-					newVertex[7] = 0F;
+					newVertex[0] = 0F;
+					newVertex[1] = 0F;
+					newVertex[2] = 0F;
 					
-					//Set the actual vertex.
-					beamObject[i*2*BEAM_SEGMENTS*3 + (j + BEAM_SEGMENTS)*3 + k] = newVertex;
+					//Add the actual vertex.
+					beamObject.put(newVertex);
 				}
 			}
 		}
+		beamObject.flip();
 		return beamObject;
 	}
 	
@@ -862,25 +868,27 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 		return points;
 	}
 	
-	private static void normalizeUVs(float[][] parsedObject){
-		for(int i=0; i<parsedObject.length; ++i){
-			if(parsedObject.length > 3 && i%6 >= 3){
+	
+	private static void normalizeUVs(FloatBuffer parsedObject){
+		int verticesInObject = parsedObject.capacity()/8;
+		for(int i=0; i<verticesInObject; ++i){
+			if(verticesInObject > 3 && i%6 >= 3){
 				//Second-half of a quad.
 				switch(i%6){
-					case(3): parsedObject[i][3] = 0.0F; parsedObject[i][4] = 0.0F; break;
-					case(4): parsedObject[i][3] = 1.0F; parsedObject[i][4] = 1.0F; break;
-					case(5): parsedObject[i][3] = 1.0F; parsedObject[i][4] = 0.0F; break;
+					case(3): parsedObject.put(i*8+3, 0.0F); parsedObject.put(i*8+4, 0.0F); break;
+					case(4): parsedObject.put(i*8+3, 1.0F); parsedObject.put(i*8+4, 1.0F); break;
+					case(5): parsedObject.put(i*8+3, 1.0F); parsedObject.put(i*8+4, 0.0F); break;
 				}
 			}else{
 				//Normal tri or first half of quad using tri mapping.
 				switch(i%6){
-					case(0): parsedObject[i][3] = 0.0F; parsedObject[i][4] = 0.0F; break;
-					case(1): parsedObject[i][3] = 0.0F; parsedObject[i][4] = 1.0F; break;
-					case(2): parsedObject[i][3] = 1.0F; parsedObject[i][4] = 1.0F; break;
+					case(0): parsedObject.put(i*8+3, 0.0F); parsedObject.put(i*8+4, 0.0F); break;
+					case(1): parsedObject.put(i*8+3, 0.0F); parsedObject.put(i*8+4, 1.0F); break;
+					case(2): parsedObject.put(i*8+3, 1.0F); parsedObject.put(i*8+4, 1.0F); break;
 					
-					case(3): parsedObject[i][3] = 1.0F; parsedObject[i][4] = 1.0F; break;
-					case(4): parsedObject[i][3] = 1.0F; parsedObject[i][4] = 0.0F; break;
-					case(5): parsedObject[i][3] = 0.0F; parsedObject[i][4] = 0.0F; break;
+					case(3): parsedObject.put(i*8+3, 1.0F); parsedObject.put(i*8+4, 1.0F); break;
+					case(4): parsedObject.put(i*8+3, 1.0F); parsedObject.put(i*8+4, 0.0F); break;
+					case(5): parsedObject.put(i*8+3, 0.0F); parsedObject.put(i*8+4, 0.0F); break;
 				}
 			}
 		}

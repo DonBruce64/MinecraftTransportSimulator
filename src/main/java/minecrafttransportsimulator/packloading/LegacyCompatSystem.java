@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.packloading;
 
+import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -1721,185 +1722,193 @@ public final class LegacyCompatSystem{
 		}
 		
 		try{
-			Map<String, float[][]> parsedModel = AModelParser.parseModel(definition.getModelLocation(definition.definitions.get(0).subName));
-			for(String objectName : parsedModel.keySet()){
-				if(objectName.contains("&")){
-					if(definition.rendering.lightObjects == null){
-						definition.rendering.lightObjects = new ArrayList<JSONLight>();
-					}
-					JSONLight lightDef = new JSONLight();
-					lightDef.objectName = objectName;
-					lightDef.brightnessAnimations = new ArrayList<JSONAnimationDefinition>();
-					lightDef.color = new ColorRGB(objectName.substring(objectName.indexOf('_') + 1, objectName.indexOf('_') + 7));
-					lightDef.brightnessAnimations = new ArrayList<JSONAnimationDefinition>();
-					
-					//Add standard animation variable for light name.
-					String lowerCaseName = objectName.toLowerCase();
-					JSONAnimationDefinition activeAnimation = new JSONAnimationDefinition();
-					if(lowerCaseName.contains("brakelight")){
-						activeAnimation.variable = "brake";
-					}else if(lowerCaseName.contains("backuplight")){
-						activeAnimation.variable = "engine_reversed_1";
-					}else if(lowerCaseName.contains("daytimelight")){
-						activeAnimation.variable = "engines_on";
-					}else if(lowerCaseName.contains("navigationlight")){
-						activeAnimation.variable = "navigation_light";
-						if(definition instanceof JSONVehicle)((JSONVehicle) definition).motorized.hasNavLights = true;
-					}else if(lowerCaseName.contains("strobelight")){
-						activeAnimation.variable = "strobe_light";
-						if(definition instanceof JSONVehicle)((JSONVehicle) definition).motorized.hasStrobeLights = true;
-					}else if(lowerCaseName.contains("taxilight")){
-						activeAnimation.variable = "taxi_light";
-						if(definition instanceof JSONVehicle)((JSONVehicle) definition).motorized.hasTaxiLights = true;
-					}else if(lowerCaseName.contains("landinglight")){
-						activeAnimation.variable = "landing_light";
-						if(definition instanceof JSONVehicle)((JSONVehicle) definition).motorized.hasLandingLights = true;
-					}else if(lowerCaseName.contains("runninglight")){
-						activeAnimation.variable = "running_light";
-						if(definition instanceof JSONVehicle)((JSONVehicle) definition).motorized.hasRunningLights = true;
-					}else if(lowerCaseName.contains("headlight")){
-						activeAnimation.variable = "headlight";
-						if(definition instanceof JSONVehicle)((JSONVehicle) definition).motorized.hasHeadlights = true;
-					}else if(lowerCaseName.contains("leftturnlight")){
-						activeAnimation.variable = "left_turn_signal";
-						if(definition instanceof JSONVehicle)((JSONVehicle) definition).motorized.hasTurnSignals = true;
-					}else if(lowerCaseName.contains("rightturnlight")){
-						activeAnimation.variable = "right_turn_signal";
-						if(definition instanceof JSONVehicle)((JSONVehicle) definition).motorized.hasTurnSignals = true;
-					}else if(lowerCaseName.contains("emergencylight")){
-						activeAnimation.variable = "EMERLTS";
-						if(definition.rendering.customVariables == null){
-							definition.rendering.customVariables = new HashSet<String>();
-						}
-						if(definition instanceof JSONVehicle)definition.rendering.customVariables.add("EMERLTS");
-					}else if(lowerCaseName.contains("stoplight") || lowerCaseName.contains("cautionlight") || lowerCaseName.contains("golight")){
-						//Traffic signal detected.  Get light name for variable.
-						String[] lightNames = lowerCaseName.split("light");
-						lightNames[0] = lightNames[0].replace("&", "");
-						activeAnimation.variable = lightNames[0] + "_" + "light";
-						if(lightNames.length > 2){
-							activeAnimation.variable += "_" + lightNames[2];
+			Map<String, FloatBuffer> parsedModel = AModelParser.parseModel(definition.getModelLocation(definition.definitions.get(0).subName));
+			
+			//If we don't have lights, check for them.
+			if(definition.rendering.lightObjects == null){
+				definition.rendering.lightObjects = new ArrayList<JSONLight>();
+				for(String objectName : parsedModel.keySet()){
+					if(objectName.contains("&")){
+						JSONLight lightDef = new JSONLight();
+						lightDef.objectName = objectName;
+						lightDef.brightnessAnimations = new ArrayList<JSONAnimationDefinition>();
+						lightDef.color = new ColorRGB(objectName.substring(objectName.indexOf('_') + 1, objectName.indexOf('_') + 7));
+						lightDef.brightnessAnimations = new ArrayList<JSONAnimationDefinition>();
+						
+						//Add standard animation variable for light name.
+						String lowerCaseName = objectName.toLowerCase();
+						JSONAnimationDefinition activeAnimation = new JSONAnimationDefinition();
+						if(lowerCaseName.contains("brakelight")){
+							activeAnimation.variable = "brake";
+						}else if(lowerCaseName.contains("backuplight")){
+							activeAnimation.variable = "engine_reversed_1";
+						}else if(lowerCaseName.contains("daytimelight")){
+							activeAnimation.variable = "engines_on";
+						}else if(lowerCaseName.contains("navigationlight")){
+							activeAnimation.variable = "navigation_light";
+							if(definition instanceof JSONVehicle)((JSONVehicle) definition).motorized.hasNavLights = true;
+						}else if(lowerCaseName.contains("strobelight")){
+							activeAnimation.variable = "strobe_light";
+							if(definition instanceof JSONVehicle)((JSONVehicle) definition).motorized.hasStrobeLights = true;
+						}else if(lowerCaseName.contains("taxilight")){
+							activeAnimation.variable = "taxi_light";
+							if(definition instanceof JSONVehicle)((JSONVehicle) definition).motorized.hasTaxiLights = true;
+						}else if(lowerCaseName.contains("landinglight")){
+							activeAnimation.variable = "landing_light";
+							if(definition instanceof JSONVehicle)((JSONVehicle) definition).motorized.hasLandingLights = true;
+						}else if(lowerCaseName.contains("runninglight")){
+							activeAnimation.variable = "running_light";
+							if(definition instanceof JSONVehicle)((JSONVehicle) definition).motorized.hasRunningLights = true;
+						}else if(lowerCaseName.contains("headlight")){
+							activeAnimation.variable = "headlight";
+							if(definition instanceof JSONVehicle)((JSONVehicle) definition).motorized.hasHeadlights = true;
+						}else if(lowerCaseName.contains("leftturnlight")){
+							activeAnimation.variable = "left_turn_signal";
+							if(definition instanceof JSONVehicle)((JSONVehicle) definition).motorized.hasTurnSignals = true;
+						}else if(lowerCaseName.contains("rightturnlight")){
+							activeAnimation.variable = "right_turn_signal";
+							if(definition instanceof JSONVehicle)((JSONVehicle) definition).motorized.hasTurnSignals = true;
+						}else if(lowerCaseName.contains("emergencylight")){
+							activeAnimation.variable = "EMERLTS";
+							if(definition.rendering.customVariables == null){
+								definition.rendering.customVariables = new HashSet<String>();
+							}
+							if(definition instanceof JSONVehicle)definition.rendering.customVariables.add("EMERLTS");
+						}else if(lowerCaseName.contains("stoplight") || lowerCaseName.contains("cautionlight") || lowerCaseName.contains("golight")){
+							//Traffic signal detected.  Get light name for variable.
+							String[] lightNames = lowerCaseName.split("light");
+							lightNames[0] = lightNames[0].replace("&", "");
+							activeAnimation.variable = lightNames[0] + "_" + "light";
+							if(lightNames.length > 2){
+								activeAnimation.variable += "_" + lightNames[2];
+							}
+							
+							//If the light is a stop light, create a cycle for it for un-linked states.
+							if(lightNames[0].equals("stop")){
+								JSONAnimationDefinition cycleInhibitor = new JSONAnimationDefinition();
+								cycleInhibitor.animationType = AnimationComponentType.INHIBITOR;
+								cycleInhibitor.variable = "linked";
+								cycleInhibitor.clampMin = 1.0F;
+								cycleInhibitor.clampMax = 1.0F;
+								lightDef.brightnessAnimations.add(cycleInhibitor);
+								
+								JSONAnimationDefinition cycleAnimation = new JSONAnimationDefinition();
+								cycleAnimation.animationType = AnimationComponentType.VISIBILITY;
+								cycleAnimation.variable = "0_10_10_cycle";
+								cycleAnimation.clampMin = 1.0F;
+								cycleAnimation.clampMax = 1.0F;
+								lightDef.brightnessAnimations.add(cycleAnimation);
+								
+								JSONAnimationDefinition lightActivator = new JSONAnimationDefinition();
+								lightActivator.animationType = AnimationComponentType.ACTIVATOR;
+								lightActivator.variable = "linked";
+								lightActivator.clampMin = 1.0F;
+								lightActivator.clampMax = 1.0F;
+								lightDef.brightnessAnimations.add(lightActivator);
+								
+								JSONAnimationDefinition lightInhibitor = new JSONAnimationDefinition();
+								lightInhibitor.animationType = AnimationComponentType.INHIBITOR;
+								lightInhibitor.variable = "linked";
+								lightInhibitor.clampMin = 0.0F;
+								lightInhibitor.clampMax = 0.0F;
+								lightDef.brightnessAnimations.add(lightInhibitor);
+							}
 						}
 						
-						//If the light is a stop light, create a cycle for it for un-linked states.
-						if(lightNames[0].equals("stop")){
-							JSONAnimationDefinition cycleInhibitor = new JSONAnimationDefinition();
-							cycleInhibitor.animationType = AnimationComponentType.INHIBITOR;
-							cycleInhibitor.variable = "linked";
-							cycleInhibitor.clampMin = 1.0F;
-							cycleInhibitor.clampMax = 1.0F;
-							lightDef.brightnessAnimations.add(cycleInhibitor);
-							
+						if(activeAnimation.variable != null){
+							activeAnimation.animationType = AnimationComponentType.VISIBILITY;
+							activeAnimation.clampMin = activeAnimation.variable.equals("brake") ? 0.01F : 1.0F;
+							activeAnimation.clampMax = 1.0F;
+							lightDef.brightnessAnimations.add(activeAnimation);
+						}
+						
+						//Set light to be electric.
+						lightDef.isElectric = true;
+						
+						//Get flashing cycle rate and convert to cycle variable if required.
+						//Look at flash bits from right to left until we hit one that's not on.  Count how many ticks are on and use that for cycle.
+						int flashBits = Integer.decode("0x" + objectName.substring(objectName.indexOf('_', objectName.indexOf('_') + 7) + 1, objectName.lastIndexOf('_')));
+						int ticksTillOn = 0;
+						int ticksOn = 0;
+						boolean foundOn = false;
+						for(byte i=0; i<20; ++i){
+							if(((flashBits >> i) & 1) == 1){
+								//We are on, increment on counter and set on.
+								if(!foundOn){
+									foundOn = true;
+									ticksTillOn = i;
+								}
+								++ticksOn;	
+							}else{
+								//If we were previously on, we are at the end of the cycle.
+								if(foundOn){
+									break;
+								}
+							}
+						}
+						if((ticksOn - ticksTillOn) != 20){
 							JSONAnimationDefinition cycleAnimation = new JSONAnimationDefinition();
 							cycleAnimation.animationType = AnimationComponentType.VISIBILITY;
-							cycleAnimation.variable = "0_10_10_cycle";
+							cycleAnimation.variable = ticksTillOn + "_" + ticksOn + "_" + (20-ticksOn-ticksTillOn) + "_cycle";
 							cycleAnimation.clampMin = 1.0F;
 							cycleAnimation.clampMax = 1.0F;
 							lightDef.brightnessAnimations.add(cycleAnimation);
-							
-							JSONAnimationDefinition lightActivator = new JSONAnimationDefinition();
-							lightActivator.animationType = AnimationComponentType.ACTIVATOR;
-							lightActivator.variable = "linked";
-							lightActivator.clampMin = 1.0F;
-							lightActivator.clampMax = 1.0F;
-							lightDef.brightnessAnimations.add(lightActivator);
-							
-							JSONAnimationDefinition lightInhibitor = new JSONAnimationDefinition();
-							lightInhibitor.animationType = AnimationComponentType.INHIBITOR;
-							lightInhibitor.variable = "linked";
-							lightInhibitor.clampMin = 0.0F;
-							lightInhibitor.clampMax = 0.0F;
-							lightDef.brightnessAnimations.add(lightInhibitor);
-						}
-					}
-					
-					if(activeAnimation.variable != null){
-						activeAnimation.animationType = AnimationComponentType.VISIBILITY;
-						activeAnimation.clampMin = activeAnimation.variable.equals("brake") ? 0.01F : 1.0F;
-						activeAnimation.clampMax = 1.0F;
-						lightDef.brightnessAnimations.add(activeAnimation);
-					}
-					
-					//Set light to be electric.
-					lightDef.isElectric = true;
-					
-					//Get flashing cycle rate and convert to cycle variable if required.
-					//Look at flash bits from right to left until we hit one that's not on.  Count how many ticks are on and use that for cycle.
-					int flashBits = Integer.decode("0x" + objectName.substring(objectName.indexOf('_', objectName.indexOf('_') + 7) + 1, objectName.lastIndexOf('_')));
-					int ticksTillOn = 0;
-					int ticksOn = 0;
-					boolean foundOn = false;
-					for(byte i=0; i<20; ++i){
-						if(((flashBits >> i) & 1) == 1){
-							//We are on, increment on counter and set on.
-							if(!foundOn){
-								foundOn = true;
-								ticksTillOn = i;
-							}
-							++ticksOn;	
-						}else{
-							//If we were previously on, we are at the end of the cycle.
-							if(foundOn){
-								break;
-							}
-						}
-					}
-					if((ticksOn - ticksTillOn) != 20){
-						JSONAnimationDefinition cycleAnimation = new JSONAnimationDefinition();
-						cycleAnimation.animationType = AnimationComponentType.VISIBILITY;
-						cycleAnimation.variable = ticksTillOn + "_" + ticksOn + "_" + (20-ticksOn-ticksTillOn) + "_cycle";
-						cycleAnimation.clampMin = 1.0F;
-						cycleAnimation.clampMax = 1.0F;
-						lightDef.brightnessAnimations.add(cycleAnimation);
-					}
-					
-					
-					String lightProperties = objectName.substring(objectName.lastIndexOf('_') + 1);
-					boolean renderFlare = Integer.valueOf(lightProperties.substring(0, 1)) > 0;
-					lightDef.emissive = Integer.valueOf(lightProperties.substring(1, 2)) > 0;
-					lightDef.covered = Integer.valueOf(lightProperties.substring(2, 3)) > 0;
-					boolean renderBeam = lightProperties.length() == 4 ? Integer.valueOf(lightProperties.substring(3)) > 0 : (lowerCaseName.contains("headlight") || lowerCaseName.contains("landinglight") || lowerCaseName.contains("taxilight") || lowerCaseName.contains("streetlight"));
-					
-					if(renderFlare || renderBeam){
-						if(lightDef.blendableComponents == null){
-							lightDef.blendableComponents = new ArrayList<JSONLightBlendableComponent>();
 						}
 						
-						float[][] masterVertices = parsedModel.get(objectName);
-						for(int i=0; i<masterVertices.length/6; ++i){
-							double minX = 999;
-							double maxX = -999;
-							double minY = 999;
-							double maxY = -999;
-							double minZ = 999;
-							double maxZ = -999;
-							for(byte j=0; j<6; ++j){
-								float[] masterVertex = masterVertices[i*6 + j];
-								minX = Math.min(masterVertex[0], minX);
-								maxX = Math.max(masterVertex[0], maxX);
-								minY = Math.min(masterVertex[1], minY);
-								maxY = Math.max(masterVertex[1], maxY);
-								minZ = Math.min(masterVertex[2], minZ);
-								maxZ = Math.max(masterVertex[2], maxZ);
+						
+						String lightProperties = objectName.substring(objectName.lastIndexOf('_') + 1);
+						boolean renderFlare = Integer.valueOf(lightProperties.substring(0, 1)) > 0;
+						lightDef.emissive = Integer.valueOf(lightProperties.substring(1, 2)) > 0;
+						lightDef.covered = Integer.valueOf(lightProperties.substring(2, 3)) > 0;
+						boolean renderBeam = lightProperties.length() == 4 ? Integer.valueOf(lightProperties.substring(3)) > 0 : (lowerCaseName.contains("headlight") || lowerCaseName.contains("landinglight") || lowerCaseName.contains("taxilight") || lowerCaseName.contains("streetlight"));
+						
+						if(renderFlare || renderBeam){
+							if(lightDef.blendableComponents == null){
+								lightDef.blendableComponents = new ArrayList<JSONLightBlendableComponent>();
 							}
-							JSONLightBlendableComponent blendable = lightDef.new JSONLightBlendableComponent();
-							if(renderFlare){
-								blendable.flareHeight = (float) (3*Math.max(Math.max((maxX - minX), (maxY - minY)), (maxZ - minZ)));
-								blendable.flareWidth = blendable.flareHeight;
-							}
-							if(renderBeam){
-								blendable.beamDiameter = (float) Math.max(Math.max(maxX - minX, maxZ - minZ), maxY - minY)*64F;
-								blendable.beamLength = blendable.beamDiameter*3;
-							}
-							blendable.pos = new Point3d(minX + (maxX - minX)/2D, minY + (maxY - minY)/2D, minZ + (maxZ - minZ)/2D);;
-							blendable.axis = new Point3d(masterVertices[i*6][5], masterVertices[i*6][6], masterVertices[i*6][7]);
 							
-							lightDef.blendableComponents.add(blendable);
+							FloatBuffer masterVertices = parsedModel.get(objectName);
+							float[] masterVertex = new float[8];
+							for(int i=0; i<masterVertices.capacity(); i+=8*6){
+								float minX = 999;
+								float maxX = -999;
+								float minY = 999;
+								float maxY = -999;
+								float minZ = 999;
+								float maxZ = -999;
+								for(byte j=0; j<8*6; j+=8){
+									masterVertices.get(masterVertex);
+									minX = Math.min(masterVertex[5], minX);
+									maxX = Math.max(masterVertex[5], maxX);
+									minY = Math.min(masterVertex[6], minY);
+									maxY = Math.max(masterVertex[6], maxY);
+									minZ = Math.min(masterVertex[7], minZ);
+									maxZ = Math.max(masterVertex[7], maxZ);
+								}
+								JSONLightBlendableComponent blendable = lightDef.new JSONLightBlendableComponent();
+								if(renderFlare){
+									blendable.flareHeight = 3*Math.max(Math.max((maxX - minX), (maxY - minY)), (maxZ - minZ));
+									blendable.flareWidth = blendable.flareHeight;
+								}
+								if(renderBeam){
+									blendable.beamDiameter = Math.max(Math.max(maxX - minX, maxZ - minZ), maxY - minY)*64F;
+									blendable.beamLength = blendable.beamDiameter*3;
+								}
+								blendable.pos = new Point3d(minX + (maxX - minX)/2D, minY + (maxY - minY)/2D, minZ + (maxZ - minZ)/2D);;
+								blendable.axis = new Point3d(masterVertex[0], masterVertex[1], masterVertex[2]);
+								
+								lightDef.blendableComponents.add(blendable);
+							}
 						}
+						
+						definition.rendering.lightObjects.add(lightDef);
 					}
-					
-					definition.rendering.lightObjects.add(lightDef);
-				}else if(objectName.toLowerCase().contains(AModelParser.ROLLER_OBJECT_NAME)){
+				}
+			}
+			
+			//Now check for tread rollers.
+			for(String objectName : parsedModel.keySet()){
+				if(objectName.toLowerCase().contains(AModelParser.ROLLER_OBJECT_NAME)){
 					//Get roller general properties.
 					boolean isLeft = objectName.toLowerCase().startsWith("l");
 					int partIndex = 1;
@@ -1918,15 +1927,18 @@ public final class LegacyCompatSystem{
 					animation.variable = "ground_rotation_" + partIndex;
 					
 					//Get the points that define this roller.
-					double minY = 999;
-					double maxY = -999;
-					double minZ = 999;
-					double maxZ = -999;
-					for(float[] point : parsedModel.get(objectName)){
-						minY = Math.min(minY, point[1]);
-						maxY = Math.max(maxY, point[1]);
-						minZ = Math.min(minZ, point[2]);
-						maxZ = Math.max(maxZ, point[2]);
+					float minY = 999;
+					float maxY = -999;
+					float minZ = 999;
+					float maxZ = -999;
+					FloatBuffer vertices = parsedModel.get(objectName);
+					for(int i=0; i<vertices.capacity(); i+=8){
+						float y = vertices.get(i+6);
+						float z = vertices.get(i+7);
+						minY = Math.min(minY, y);
+						maxY = Math.max(maxY, y);
+						minZ = Math.min(minZ, z);
+						maxZ = Math.max(maxZ, z);
 					}
 					double radius = (maxZ - minZ)/2D;
 					

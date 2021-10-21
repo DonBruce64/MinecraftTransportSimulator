@@ -3,6 +3,7 @@ package minecrafttransportsimulator.rendering.instances;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -24,8 +25,8 @@ public final class ModelParserOBJ extends AModelParser{
 	}
 	
 	@Override
-	protected Map<String, float[][]> parseModelInternal(String modelLocation){
-		Map<String, float[][]> objectMap = new HashMap<String, float[][]>();
+	protected Map<String, FloatBuffer> parseModelInternal(String modelLocation){
+		Map<String, FloatBuffer> objectMap = new HashMap<String, FloatBuffer>();
 		BufferedReader reader;
 		try{
 			reader = new BufferedReader(new InputStreamReader(ModelParserOBJ.class.getResourceAsStream(modelLocation)));
@@ -115,7 +116,7 @@ public final class ModelParserOBJ extends AModelParser{
 		}
 	}
 	
-	private static void compileVertexArray(Map<String, float[][]> objectMap, List<float[]> vertexList, List<float[]> normalList, List<float[]> textureList, List<String> faceList, String modelLocation, String objectName){
+	private static void compileVertexArray(Map<String, FloatBuffer> objectMap, List<float[]> vertexList, List<float[]> normalList, List<float[]> textureList, List<String> faceList, String modelLocation, String objectName){
 		if(objectName == null){
 			InterfaceCore.logError("No object name found in the entire OBJ model file of " + modelLocation + ".  Resorting to 'model' as default.  Are you using groups instead of objects by mistake?");
 			objectName = "model";
@@ -161,23 +162,16 @@ public final class ModelParserOBJ extends AModelParser{
 				vertexDataSets.addAll(faceVertexData);
 			}
 	
-			//Compile array.
-			float[][] compiledArray = new float[vertexDataSets.size()][8];
-			for(int i=0; i<compiledArray.length; ++i){
+			//Compile buffer.
+			FloatBuffer compiledBuffer = FloatBuffer.allocate(vertexDataSets.size()*8);
+			for(int i=0; i<vertexDataSets.size(); ++i){
 				Integer[] vertexData = vertexDataSets.get(i);
-				float[] vertex = vertexList.get(vertexData[0]);
-				float[] texture = textureList.get(vertexData[1]);
-				float[] normal = normalList.get(vertexData[2]);
-				compiledArray[i][0] = vertex[0];
-				compiledArray[i][1] = vertex[1];
-				compiledArray[i][2] = vertex[2];
-				compiledArray[i][3] = texture[0];
-				compiledArray[i][4] = texture[1];
-				compiledArray[i][5] = normal[0];
-				compiledArray[i][6] = normal[1];
-				compiledArray[i][7] = normal[2];
+				compiledBuffer.put(normalList.get(vertexData[2]));
+				compiledBuffer.put(textureList.get(vertexData[1]));
+				compiledBuffer.put(vertexList.get(vertexData[0]));
 			}
-			objectMap.put(objectName, compiledArray);
+			compiledBuffer.flip();
+			objectMap.put(objectName, compiledBuffer);
 		}catch(Exception e){
 			InterfaceCore.logError("Could not compile points of: " + modelLocation + ":" + objectName + ".  This is likely due to missing UV mapping on some or all faces.");
 		}

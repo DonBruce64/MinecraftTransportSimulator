@@ -3,8 +3,8 @@ package minecrafttransportsimulator.mcinterface;
 import java.awt.image.BufferedImage;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.FloatBuffer;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,45 +43,18 @@ public class InterfaceRender{
 	private static float lastLightmapY;
 	
 	/**
-	 *  Caches the vertices in some form for quick rendering.  This form is version-dependent,
-	 *  but no matter which version is used, the returned value is assured to be unique for each
-	 *  call to this function.  This should be used in tandem with {@link #renderVertices(int)},
-	 *  which will render the cached vertices from this function.  Note that the vertex format
-	 *  is expected to be the same returned b {@link AModelParser#parseModel(String)}
+	 *  Renders a set of raw vertices without any caching.
 	 */
-	public static int cacheVertices(float[][] vertices){
-		int displayListIndex = GL11.glGenLists(1);
-		GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
+	public static void renderVertices(FloatBuffer vertices){
 		GL11.glBegin(GL11.GL_TRIANGLES);
-		for(float[] vertex : vertices){
-			GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
-			GL11.glTexCoord2f(vertex[3], vertex[4]);
-			GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
+		while(vertices.hasRemaining()){
+			GL11.glNormal3f(vertices.get(), vertices.get(), vertices.get());
+			GL11.glTexCoord2f(vertices.get(), vertices.get());
+			GL11.glVertex3f(vertices.get(), vertices.get(), vertices.get());
 		}
 		GL11.glEnd();
-		GL11.glEndList();
-		return displayListIndex;
-	}
-	
-	/**
-	 *  Like {@link #cacheVertices(float[][])}, but in this takes
-	 *  a list of vertex float arrays rather than a single one.
-	 *  Used for caching whole models rather than individual objects.
-	 */
-	public static int cacheVertices(Collection<float[][]> vertices){
-		int displayListIndex = GL11.glGenLists(1);
-		GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
-		GL11.glBegin(GL11.GL_TRIANGLES);
-		for(float[][] vertexGroup : vertices){
-			for(float[] vertex : vertexGroup){
-				GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
-				GL11.glTexCoord2f(vertex[3], vertex[4]);
-				GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
-			}
-		}
-		GL11.glEnd();
-		GL11.glEndList();
-		return displayListIndex;
+		//Rewind buffer for next read.
+		vertices.rewind();
 	}
 	
 	/**
@@ -92,30 +65,18 @@ public class InterfaceRender{
 	}
 	
 	/**
-	 *  Renders a set of raw vertices without any caching.
+	 *  Caches the vertices in some form for quick rendering.  This form is version-dependent,
+	 *  but no matter which version is used, the returned value is assured to be unique for each
+	 *  call to this function.  This should be used in tandem with {@link #renderVertices(int)},
+	 *  which will render the cached vertices from this function.  Note that the vertex format
+	 *  is expected to be the same returned b {@link AModelParser#parseModel(String)}
 	 */
-	public static void renderVertices(float[][] vertices){
-		GL11.glBegin(GL11.GL_TRIANGLES);
-		for(float[] vertex : vertices){
-			GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
-			GL11.glTexCoord2f(vertex[3], vertex[4]);
-			GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
-		}
-		GL11.glEnd();
-	}
-	
-	/**
-	 *  Like {@link #renderVertices(float[][])}, but in this takes
-	 *  a list of vertex float arrays rather than a single one.
-	 */
-	public static void renderVertices(Collection<float[]> vertices){
-		GL11.glBegin(GL11.GL_TRIANGLES);
-		for(float[] vertex : vertices){
-			GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
-			GL11.glTexCoord2f(vertex[3], vertex[4]);
-			GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
-		}
-		GL11.glEnd();
+	public static int cacheVertices(FloatBuffer vertices){
+		int displayListIndex = GL11.glGenLists(1);
+		GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
+		renderVertices(vertices);
+		GL11.glEndList();
+		return displayListIndex;
 	}
 	
 	/**

@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.rendering.components;
 
+import java.nio.FloatBuffer;
+
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.mcinterface.InterfaceRender;
@@ -25,10 +27,10 @@ public abstract class ARenderableObjectProperties{
 	public final String texture;
 	public final ColorRGB color;
 	public float alpha;
-	public final float[][] vertices;
+	public final FloatBuffer vertices;
 	public final int cachedVertexIndex;
 	
-	public ARenderableObjectProperties(String texture, ColorRGB color, float alpha, float[][] vertices, boolean cacheVertices){
+	public ARenderableObjectProperties(String texture, ColorRGB color, float alpha, FloatBuffer vertices, boolean cacheVertices){
 		this.texture = texture;
 		this.color = color;
 		this.alpha = alpha;

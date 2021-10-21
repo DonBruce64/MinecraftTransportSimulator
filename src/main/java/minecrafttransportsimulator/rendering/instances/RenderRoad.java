@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.rendering.instances;
 
+import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -54,40 +55,49 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 				if(!cachedVertexMap.containsKey(component)){
 					switch(component){
 						case CORE_STATIC: {
-							Map<String, float[][]> parsedModel = AModelParser.parseModel(componentItem.definition.getModelLocation(componentItem.subName));
-							for(float[][] vertexSet : parsedModel.values()){
-								for(float[] vertex : vertexSet){
-									//Need to offset by 0.5 to match the offset of the TE as we're block-aligned.
-									position.set(vertex[0] - 0.5, vertex[1], vertex[2] - 0.5);
+							Map<String, FloatBuffer> parsedModel = AModelParser.parseModel(componentItem.definition.getModelLocation(componentItem.subName));
+							int totalVertices = 0;
+							for(FloatBuffer vertices : parsedModel.values()){
+								totalVertices += vertices.capacity();
+								for(int i=0; i<vertices.capacity(); i+=8){
+									position.set(vertices.get(i+5) - 0.5, vertices.get(i+6), vertices.get(i+7) - 0.5);
 									position.rotateFine(road.angles);
-									vertex[0] = (float) position.x;
-									vertex[1] = (float) position.y;
-									vertex[2] = (float) position.z;
+									vertices.put(i+5, (float) position.x);
+									vertices.put(i+6, (float) position.y);
+									vertices.put(i+7, (float) position.z);
 								}
 							}
-							cachedVertexMap.put(component, InterfaceRender.cacheVertices(parsedModel.values()));
+							
+							//Cache the model now that we know how big it is.
+							FloatBuffer totalModel = FloatBuffer.allocate(totalVertices);
+							for(FloatBuffer vertices : parsedModel.values()){
+								totalModel.put(vertices);
+							}
+							totalModel.flip();
+							cachedVertexMap.put(component, InterfaceRender.cacheVertices(totalModel));
 							break;
 						}
 						case CORE_DYNAMIC: {
 							//Make sure our curve isn't null, we might have not yet created it.
 							if(road.dynamicCurve != null){
-								Map<String, float[][]> parsedModel = AModelParser.parseModel(componentItem.definition.getModelLocation(componentItem.subName));
+								//Get model and convert to a single buffer of vertices.
+								Map<String, FloatBuffer> parsedModel = AModelParser.parseModel(componentItem.definition.getModelLocation(componentItem.subName));
+								int totalVertices = 0;
+								for(FloatBuffer vertices : parsedModel.values()){
+									totalVertices += vertices.capacity();
+								}
+								FloatBuffer parsedVertices = FloatBuffer.allocate(totalVertices);
+								for(FloatBuffer vertices : parsedModel.values()){
+									parsedVertices.put(vertices);
+								}
+								parsedVertices.flip();
 								
 								//Core components need to be transformed to wedges.
 								Point3d priorPosition = new Point3d();
 								Point3d priorRotation = new Point3d();
 								float priorIndex = 0;
 								List<float[]> segmentVertices = new ArrayList<float[]>();
-								List<float[]> transformedVertices = new ArrayList<float[]>();
 								for(float currentIndex=1; currentIndex<=road.dynamicCurve.pathLength; ++currentIndex){
-									//Copy the master vertices to our transformed ones.
-									transformedVertices.clear();
-									for(float[][] vertexSet : parsedModel.values()){
-										for(float[] vertex : vertexSet){
-											transformedVertices.add(new float[]{vertex[0], vertex[1], vertex[2], vertex[3], vertex[4], vertex[5], vertex[6], vertex[7]});
-										}
-									}
-									
 									//Get current and prior curve position and rotation.
 									//From this, we know how much to stretch the model to that point's rendering area.
 									road.dynamicCurve.setPointToPositionAt(priorPosition, priorIndex);
@@ -111,22 +121,33 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 									//Depending on the vertex position in the model, transform it to match with the offset rotation.
 									//This depends on how far the vertex is from the origin of the model, and how big the delta is.
 									//For all points, their magnitude depends on how far away they are on the Z-axis.
-									for(float[] vertex : transformedVertices){
-										Point3d vertexOffsetPrior = new Point3d(vertex[0], vertex[1], 0);
+									for(int i=0; i<parsedVertices.capacity(); i+=8){
+										float[] convertedVertexData = new float[8]; 
+										
+										//Add the normals and UVs first.  These won't change.
+										parsedVertices.get(convertedVertexData, 0, 5);
+										
+										//Now convert the XYZ points.
+										float x = parsedVertices.get();
+										float y = parsedVertices.get();
+										float z = parsedVertices.get();
+										Point3d vertexOffsetPrior = new Point3d(x, y, 0);
 										vertexOffsetPrior.rotateFine(priorRotation).add(priorPosition);
-										Point3d vertexOffsetCurrent = new Point3d(vertex[0], vertex[1], vertex[2]);
+										Point3d vertexOffsetCurrent = new Point3d(x, y, z);
 										vertexOffsetCurrent.rotateFine(rotation).add(position);
 										
-										Point3d segmentVector = vertexOffsetPrior.subtract(vertexOffsetCurrent).multiply(Math.abs(vertex[2]));
+										Point3d segmentVector = vertexOffsetPrior.subtract(vertexOffsetCurrent).multiply(Math.abs(z));
 										Point3d renderedVertex = vertexOffsetCurrent.add(segmentVector);
 										
-										vertex[0] = (float) renderedVertex.x;
-										vertex[1] = (float) renderedVertex.y;
-										vertex[2] = (float) renderedVertex.z;
+										convertedVertexData[5] = (float) renderedVertex.x;
+										convertedVertexData[6] = (float) renderedVertex.y;
+										convertedVertexData[7] = (float) renderedVertex.z;
+										
+										//Add transformed vertices to the segment.
+										segmentVertices.add(convertedVertexData);
 									}
-									
-									//Add transformed vertices to the segment.
-									segmentVertices.addAll(transformedVertices);
+									//Rewind for next segment.
+									parsedVertices.rewind();
 									
 									//Set the last index.
 									priorIndex = currentIndex;
@@ -136,8 +157,14 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 										currentIndex -= ((currentIndex + 1) - road.dynamicCurve.pathLength);
 									}
 								}
+								
 								//Cache and compile the segments.
-								cachedVertexMap.put(component, InterfaceRender.cacheVertices(segmentVertices.toArray(new float[segmentVertices.size()][8])));
+								FloatBuffer convertedVertices = FloatBuffer.allocate(segmentVertices.size()*8);
+								for(float[] segmentVertex : segmentVertices){
+									convertedVertices.put(segmentVertex);
+								}
+								convertedVertices.flip();
+								cachedVertexMap.put(component, InterfaceRender.cacheVertices(convertedVertices));
 							}
 							break;
 						}

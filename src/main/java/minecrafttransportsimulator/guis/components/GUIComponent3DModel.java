@@ -1,8 +1,8 @@
 package minecrafttransportsimulator.guis.components;
 
+import java.nio.FloatBuffer;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.lwjgl.opengl.GL11;
 
@@ -55,32 +55,43 @@ public class GUIComponent3DModel{
     	if(visible){
 			if(modelLocation != null){
 				if(!modelParsedVertexLists.containsKey(modelLocation)){
-					Map<String, float[][]> parsedModel = AModelParser.parseModel(modelLocation);
+					Map<String, FloatBuffer> parsedModel = AModelParser.parseModel(modelLocation);
 					//Remove any windows and "commented" objects from the model.  We don't want to render those.
 					parsedModel.keySet().removeIf(objectName -> objectName.toLowerCase().contains("window") || objectName.startsWith("#"));
 					
 					//Get the min/max vertex values for the model so we know how much to scale it.
+					//Also get how many vertices are in the model total for the final buffer.
 					float minX = 999;
 					float maxX = -999;
 					float minY = 999;
 					float maxY = -999;
 					float minZ = 999;
 					float maxZ = -999;
-					for(Entry<String, float[][]> entry : parsedModel.entrySet()){
-						for(float[] vertex : entry.getValue()){
-							minX = Math.min(minX, vertex[0]);
-							maxX = Math.max(maxX, vertex[0]);
-							minY = Math.min(minY, vertex[1]);
-							maxY = Math.max(maxY, vertex[1]);
-							minZ = Math.min(minZ, vertex[2]);
-							maxZ = Math.max(maxZ, vertex[2]);
+					int totalVertices = 0;
+					for(FloatBuffer vertices : parsedModel.values()){
+						totalVertices += vertices.capacity();
+						for(int i=0; i<vertices.capacity(); i+=8){
+							float xCoord = vertices.get(i+5);
+							float yCoord = vertices.get(i+6);
+							float zCoord = vertices.get(i+7);
+							minX = Math.min(minX, xCoord);
+							maxX = Math.max(maxX, xCoord);
+							minY = Math.min(minY, yCoord);
+							maxY = Math.max(maxY, yCoord);
+							minZ = Math.min(minZ, zCoord);
+							maxZ = Math.max(maxZ, zCoord);
 						}
 					}
 					float globalMax = Math.max(Math.max(maxX - minX, maxY - minY), maxZ - minZ);
 					modelScalingFactors.put(modelLocation, globalMax > 1.5 ? 1.5F/globalMax : 1.0F);
 					
 					//Cache the model now that we know how big it is.
-					modelParsedVertexLists.put(modelLocation, InterfaceRender.cacheVertices(parsedModel.values()));
+					FloatBuffer totalModel = FloatBuffer.allocate(totalVertices);
+					for(FloatBuffer vertices : parsedModel.values()){
+						totalModel.put(vertices);
+					}
+					totalModel.flip();
+					modelParsedVertexLists.put(modelLocation, InterfaceRender.cacheVertices(totalModel));
 				}
 				GL11.glPushMatrix();
 				//Translate to position and rotate to isometric view if required.

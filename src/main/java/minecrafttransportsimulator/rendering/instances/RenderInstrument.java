@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.rendering.instances;
 
+import java.nio.FloatBuffer;
+
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
@@ -26,6 +28,7 @@ public final class RenderInstrument{
 	private static final Point3d bottomRight = new Point3d();
 	private static final Point3d rotation = new Point3d();
 	private static final float[][] points = new float[6][8];
+	private static final FloatBuffer renderBuffer = FloatBuffer.allocate(6*8);
 	
 	/**
      * Renders the passed-in instrument using the entity's current state.  Note that this method does NOT take any 
@@ -255,54 +258,57 @@ public final class RenderInstrument{
 	private static void renderSquareUV(Component component, float componentScale){
 		//Set X, Y, U, V, and normal Z.  All other values are 0.
 		//Also invert V, as we're going off of pixel-coords here.
+		renderBuffer.clear();
 		for(int i=0; i<points.length; ++i){
 			float[] charVertex = points[i];
 			switch(i){
 				case(0):{//Bottom-right
-					charVertex[0] = component.textureWidth/2;
-					charVertex[1] = -component.textureHeight/2;
+					charVertex[5] = component.textureWidth/2;
+					charVertex[6] = -component.textureHeight/2;
 					charVertex[3] = (float) bottomRight.x;
 					charVertex[4] = (float) topRight.y;
 					break;
 				}
 				case(1):{//Top-right
-					charVertex[0] = component.textureWidth/2;
-					charVertex[1] = component.textureHeight/2;
+					charVertex[5] = component.textureWidth/2;
+					charVertex[6] = component.textureHeight/2;
 					charVertex[3] = (float) topRight.x;
 					charVertex[4] = (float) bottomRight.y;
 					break;
 				}
 				case(2):{//Top-left
-					charVertex[0] = -component.textureWidth/2;
-					charVertex[1] = component.textureHeight/2;
+					charVertex[5] = -component.textureWidth/2;
+					charVertex[6] = component.textureHeight/2;
 					charVertex[3] = (float) topLeft.x;
 					charVertex[4] = (float) bottomLeft.y;
 					break;
 				}
 				case(3):{//Bottom-right
-					charVertex[0] = component.textureWidth/2;
-					charVertex[1] = -component.textureHeight/2;
+					charVertex[5] = component.textureWidth/2;
+					charVertex[6] = -component.textureHeight/2;
 					charVertex[3] = (float) bottomRight.x;
 					charVertex[4] = (float) topRight.y;
 					break;
 				}
 				case(4):{//Top-left
-					charVertex[0] = -component.textureWidth/2;
-					charVertex[1] = component.textureHeight/2;
+					charVertex[5] = -component.textureWidth/2;
+					charVertex[6] = component.textureHeight/2;
 					charVertex[3] = (float) topLeft.x;
 					charVertex[4] = (float) bottomLeft.y;
 					break;
 				}
 				case(5):{//Bottom-left
-					charVertex[0] = -component.textureWidth/2;
-					charVertex[1] = -component.textureHeight/2;
+					charVertex[5] = -component.textureWidth/2;
+					charVertex[6] = -component.textureHeight/2;
 					charVertex[3] = (float) bottomLeft.x;
 					charVertex[4] = (float) topLeft.y;						
 					break;
 				}
 			}
-			charVertex[7] = componentScale;
+			charVertex[2] = componentScale;
+			renderBuffer.put(charVertex);
 		}
-		InterfaceRender.renderVertices(points);
+		renderBuffer.flip();
+		InterfaceRender.renderVertices(renderBuffer);
 	}
 }
