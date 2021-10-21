@@ -284,7 +284,9 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 				
 				//Set states back to normal.
 				GL11.glEnd();
-				InterfaceRender.resetStates();
+				InterfaceRender.setTextureState(true);
+				InterfaceRender.setSystemLightingState(true);
+				GL11.glLineWidth(1);
 			}
 		}
 	}

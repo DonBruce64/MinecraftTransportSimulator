@@ -16,7 +16,6 @@ import org.lwjgl.openal.AL10;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
-import minecrafttransportsimulator.mcinterface.InterfaceRender;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
@@ -69,9 +68,9 @@ public class InterfaceSound{
 					AL10.alSourcePause(sound.sourceIndex);
 				}
 				isSystemPaused = true;
-			}else if(InterfaceRender.areShadersActive()){
+			}else{
 				for(SoundInstance sound : playingSounds){
-					//Stop playing sounds when paused with shaders as they can get corrupted.
+					//Stop playing sounds when paused as they can get corrupted.
 					if(sound.radio != null){
 						sound.radio.stop();
 					}else{

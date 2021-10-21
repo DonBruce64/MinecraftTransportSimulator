@@ -123,7 +123,6 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 				GL11.glCullFace(GL11.GL_BACK);
 			}
 			GL11.glPopMatrix();
-			InterfaceRender.resetStates();
 			
 			//Render bounding boxes for parts and collision points.
 			if(!blendingEnabled && InterfaceRender.shouldRenderBoundingBoxes()){

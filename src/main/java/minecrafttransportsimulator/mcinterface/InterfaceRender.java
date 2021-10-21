@@ -13,7 +13,6 @@ import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.stream.ImageInputStream;
 
-import org.lwjgl.opengl.ARBShaderObjects;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
@@ -55,8 +54,8 @@ public class InterfaceRender{
 		GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
 		GL11.glBegin(GL11.GL_TRIANGLES);
 		for(float[] vertex : vertices){
-			GL11.glTexCoord2f(vertex[3], vertex[4]);
 			GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
+			GL11.glTexCoord2f(vertex[3], vertex[4]);
 			GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
 		}
 		GL11.glEnd();
@@ -75,8 +74,8 @@ public class InterfaceRender{
 		GL11.glBegin(GL11.GL_TRIANGLES);
 		for(float[][] vertexGroup : vertices){
 			for(float[] vertex : vertexGroup){
-				GL11.glTexCoord2f(vertex[3], vertex[4]);
 				GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
+				GL11.glTexCoord2f(vertex[3], vertex[4]);
 				GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
 			}
 		}
@@ -98,8 +97,8 @@ public class InterfaceRender{
 	public static void renderVertices(float[][] vertices){
 		GL11.glBegin(GL11.GL_TRIANGLES);
 		for(float[] vertex : vertices){
-			GL11.glTexCoord2f(vertex[3], vertex[4]);
 			GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
+			GL11.glTexCoord2f(vertex[3], vertex[4]);
 			GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
 		}
 		GL11.glEnd();
@@ -112,8 +111,8 @@ public class InterfaceRender{
 	public static void renderVertices(Collection<float[]> vertices){
 		GL11.glBegin(GL11.GL_TRIANGLES);
 		for(float[] vertex : vertices){
-			GL11.glTexCoord2f(vertex[3], vertex[4]);
 			GL11.glNormal3f(vertex[5], vertex[6], vertex[7]);
+			GL11.glTexCoord2f(vertex[3], vertex[4]);
 			GL11.glVertex3f(vertex[0], vertex[1], vertex[2]);
 		}
 		GL11.glEnd();
@@ -252,13 +251,6 @@ public class InterfaceRender{
 	}
 	
 	/**
-	 *  Returns true if shaders are active.
-	 */
-	public static boolean areShadersActive(){
-        return ARBShaderObjects.glGetHandleARB(ARBShaderObjects.GL_PROGRAM_OBJECT_ARB) != 0;
-    }
-	
-	/**
 	 *  Helper method to completely disable or enable lighting.
 	 *  This disables both the system lighting and internal lighting.
 	 */
@@ -289,21 +281,13 @@ public class InterfaceRender{
 	 *  lighting calculations for shadowing will still be applied to the model.
 	 */
 	public static void setInternalLightingState(boolean enabled){
-		if(areShadersActive()){
-			if(enabled){
-				OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lastLightmapX, lastLightmapY);
-			}else{
-				lastLightmapX = OpenGlHelper.lastBrightnessX;
-				lastLightmapY = OpenGlHelper.lastBrightnessY;
-				int lightVar = (15 << 20) | (15 << 4);
-				OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lightVar%65536, lightVar/65536);
-			}
+		if(enabled){
+			OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lastLightmapX, lastLightmapY);
 		}else{
-			if(enabled){
-				Minecraft.getMinecraft().entityRenderer.enableLightmap();
-			}else{
-				Minecraft.getMinecraft().entityRenderer.disableLightmap();
-			}
+			lastLightmapX = OpenGlHelper.lastBrightnessX;
+			lastLightmapY = OpenGlHelper.lastBrightnessY;
+			int lightVar = (15 << 20) | (15 << 4);
+			OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lightVar%65536, lightVar/65536);
 		}
 	}
 	
@@ -369,16 +353,6 @@ public class InterfaceRender{
 		}else{
 			GlStateManager.disableTexture2D();
 		}
-	}
-	
-	/**
-	 *  Resets all the rendering states.
-	 *  Useful after doing a rendering routine where states may not be correct.
-	 */
-	//TODO move away from this.  It's a hack for bad code!
-	public static void resetStates(){
-		setColorState(ColorRGB.WHITE, 1.0F);
-		setLightingState(true);
 	}
 	
 	/**
