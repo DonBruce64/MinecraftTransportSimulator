@@ -1,11 +1,9 @@
 package minecrafttransportsimulator.packloading;
 
-import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
@@ -58,6 +56,7 @@ import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.rendering.components.AModelParser;
+import minecrafttransportsimulator.rendering.components.RenderableObject;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**
@@ -1722,21 +1721,21 @@ public final class LegacyCompatSystem{
 		}
 		
 		try{
-			Map<String, FloatBuffer> parsedModel = AModelParser.parseModel(definition.getModelLocation(definition.definitions.get(0).subName));
+			List<RenderableObject> parsedModel = AModelParser.parseModel(definition.getModelLocation(definition.definitions.get(0).subName));
 			
 			//If we don't have lights, check for them.
 			if(definition.rendering.lightObjects == null){
 				definition.rendering.lightObjects = new ArrayList<JSONLight>();
-				for(String objectName : parsedModel.keySet()){
-					if(objectName.contains("&")){
+				for(RenderableObject object : parsedModel){
+					if(object.name.contains("&")){
 						JSONLight lightDef = new JSONLight();
-						lightDef.objectName = objectName;
+						lightDef.objectName = object.name;
 						lightDef.brightnessAnimations = new ArrayList<JSONAnimationDefinition>();
-						lightDef.color = new ColorRGB(objectName.substring(objectName.indexOf('_') + 1, objectName.indexOf('_') + 7));
+						lightDef.color = new ColorRGB(object.name.substring(object.name.indexOf('_') + 1, object.name.indexOf('_') + 7));
 						lightDef.brightnessAnimations = new ArrayList<JSONAnimationDefinition>();
 						
 						//Add standard animation variable for light name.
-						String lowerCaseName = objectName.toLowerCase();
+						String lowerCaseName = object.name.toLowerCase();
 						JSONAnimationDefinition activeAnimation = new JSONAnimationDefinition();
 						if(lowerCaseName.contains("brakelight")){
 							activeAnimation.variable = "brake";
@@ -1827,7 +1826,7 @@ public final class LegacyCompatSystem{
 						
 						//Get flashing cycle rate and convert to cycle variable if required.
 						//Look at flash bits from right to left until we hit one that's not on.  Count how many ticks are on and use that for cycle.
-						int flashBits = Integer.decode("0x" + objectName.substring(objectName.indexOf('_', objectName.indexOf('_') + 7) + 1, objectName.lastIndexOf('_')));
+						int flashBits = Integer.decode("0x" + object.name.substring(object.name.indexOf('_', object.name.indexOf('_') + 7) + 1, object.name.lastIndexOf('_')));
 						int ticksTillOn = 0;
 						int ticksOn = 0;
 						boolean foundOn = false;
@@ -1856,7 +1855,7 @@ public final class LegacyCompatSystem{
 						}
 						
 						
-						String lightProperties = objectName.substring(objectName.lastIndexOf('_') + 1);
+						String lightProperties = object.name.substring(object.name.lastIndexOf('_') + 1);
 						boolean renderFlare = Integer.valueOf(lightProperties.substring(0, 1)) > 0;
 						lightDef.emissive = Integer.valueOf(lightProperties.substring(1, 2)) > 0;
 						lightDef.covered = Integer.valueOf(lightProperties.substring(2, 3)) > 0;
@@ -1867,9 +1866,8 @@ public final class LegacyCompatSystem{
 								lightDef.blendableComponents = new ArrayList<JSONLightBlendableComponent>();
 							}
 							
-							FloatBuffer masterVertices = parsedModel.get(objectName);
 							float[] masterVertex = new float[8];
-							for(int i=0; i<masterVertices.capacity(); i+=8*6){
+							for(int i=0; i<object.vertices.capacity(); i+=8*6){
 								float minX = 999;
 								float maxX = -999;
 								float minY = 999;
@@ -1877,7 +1875,7 @@ public final class LegacyCompatSystem{
 								float minZ = 999;
 								float maxZ = -999;
 								for(byte j=0; j<8*6; j+=8){
-									masterVertices.get(masterVertex);
+									object.vertices.get(masterVertex);
 									minX = Math.min(masterVertex[5], minX);
 									maxX = Math.max(masterVertex[5], maxX);
 									minY = Math.min(masterVertex[6], minY);
@@ -1907,10 +1905,10 @@ public final class LegacyCompatSystem{
 			}
 			
 			//Now check for tread rollers.
-			for(String objectName : parsedModel.keySet()){
-				if(objectName.toLowerCase().contains(AModelParser.ROLLER_OBJECT_NAME)){
+			for(RenderableObject object : parsedModel){
+				if(object.name.toLowerCase().contains(AModelParser.ROLLER_OBJECT_NAME)){
 					//Get roller general properties.
-					boolean isLeft = objectName.toLowerCase().startsWith("l");
+					boolean isLeft = object.name.toLowerCase().startsWith("l");
 					int partIndex = 1;
 					for(JSONPartDefinition partDef : ((AJSONPartProvider) definition).parts){
 						if(partDef.types.contains("ground_tread")){
@@ -1931,10 +1929,9 @@ public final class LegacyCompatSystem{
 					float maxY = -999;
 					float minZ = 999;
 					float maxZ = -999;
-					FloatBuffer vertices = parsedModel.get(objectName);
-					for(int i=0; i<vertices.capacity(); i+=8){
-						float y = vertices.get(i+6);
-						float z = vertices.get(i+7);
+					for(int i=0; i<object.vertices.capacity(); i+=8){
+						float y = object.vertices.get(i+6);
+						float z = object.vertices.get(i+7);
 						minY = Math.min(minY, y);
 						maxY = Math.max(maxY, y);
 						minZ = Math.min(minZ, z);
@@ -1959,7 +1956,7 @@ public final class LegacyCompatSystem{
 						definition.rendering.animatedObjects = new ArrayList<JSONAnimatedObject>();
 					}
 					JSONAnimatedObject animatedObject = new JSONAnimatedObject();
-					animatedObject.objectName = objectName;
+					animatedObject.objectName = object.name;
 					animatedObject.animations = new ArrayList<JSONAnimationDefinition>();
 					animatedObject.animations.add(animation);
 					definition.rendering.animatedObjects.add(animatedObject);

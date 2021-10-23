@@ -2,12 +2,15 @@ package minecrafttransportsimulator.guis.components;
 
 import java.nio.FloatBuffer;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.lwjgl.opengl.GL11;
 
+import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.mcinterface.InterfaceRender;
 import minecrafttransportsimulator.rendering.components.AModelParser;
+import minecrafttransportsimulator.rendering.components.RenderableObject;
 
 /**Custom #D model render class.  This allows for rendering a parsed model into a GUI.
  * Mainly used to render vehicles, though can be used for other models if desired.
@@ -23,7 +26,7 @@ import minecrafttransportsimulator.rendering.components.AModelParser;
  */
 public class GUIComponent3DModel{
 	/**Parsed vertex indexes.  Keyed by model name.*/
-	private static final Map<String, Integer> modelParsedVertexLists = new HashMap<String, Integer>();
+	private static final Map<String, RenderableObject> modelParsedObjects = new HashMap<String, RenderableObject>();
 	private static final Map<String, Float> modelScalingFactors = new HashMap<String, Float>();
 	
 	public final float scaleFactor;
@@ -54,10 +57,10 @@ public class GUIComponent3DModel{
     public void renderModel(){
     	if(visible){
 			if(modelLocation != null){
-				if(!modelParsedVertexLists.containsKey(modelLocation)){
-					Map<String, FloatBuffer> parsedModel = AModelParser.parseModel(modelLocation);
+				if(!modelParsedObjects.containsKey(modelLocation)){
+					List<RenderableObject> parsedObjects = AModelParser.parseModel(modelLocation);
 					//Remove any windows and "commented" objects from the model.  We don't want to render those.
-					parsedModel.keySet().removeIf(objectName -> objectName.toLowerCase().contains("window") || objectName.startsWith("#"));
+					parsedObjects.removeIf(object -> object.name.toLowerCase().contains("window") || object.name.startsWith("#"));
 					
 					//Get the min/max vertex values for the model so we know how much to scale it.
 					//Also get how many vertices are in the model total for the final buffer.
@@ -68,12 +71,12 @@ public class GUIComponent3DModel{
 					float minZ = 999;
 					float maxZ = -999;
 					int totalVertices = 0;
-					for(FloatBuffer vertices : parsedModel.values()){
-						totalVertices += vertices.capacity();
-						for(int i=0; i<vertices.capacity(); i+=8){
-							float xCoord = vertices.get(i+5);
-							float yCoord = vertices.get(i+6);
-							float zCoord = vertices.get(i+7);
+					for(RenderableObject parsedObject : parsedObjects){
+						totalVertices += parsedObject.vertices.capacity();
+						for(int i=0; i<parsedObject.vertices.capacity(); i+=8){
+							float xCoord = parsedObject.vertices.get(i+5);
+							float yCoord = parsedObject.vertices.get(i+6);
+							float zCoord = parsedObject.vertices.get(i+7);
 							minX = Math.min(minX, xCoord);
 							maxX = Math.max(maxX, xCoord);
 							minY = Math.min(minY, yCoord);
@@ -87,11 +90,12 @@ public class GUIComponent3DModel{
 					
 					//Cache the model now that we know how big it is.
 					FloatBuffer totalModel = FloatBuffer.allocate(totalVertices);
-					for(FloatBuffer vertices : parsedModel.values()){
-						totalModel.put(vertices);
+					for(RenderableObject parsedObject : parsedObjects){
+						totalModel.put(parsedObject.vertices);
 					}
 					totalModel.flip();
-					modelParsedVertexLists.put(modelLocation, InterfaceRender.cacheVertices(totalModel));
+					RenderableObject combinedObject = new RenderableObject("model", textureLocation, ColorRGB.WHITE, totalModel, true);
+					modelParsedObjects.put(modelLocation, combinedObject);
 				}
 				GL11.glPushMatrix();
 				//Translate to position and rotate to isometric view if required.
@@ -112,7 +116,9 @@ public class GUIComponent3DModel{
 					scale = modelScalingFactors.get(modelLocation);
 				}
 				GL11.glScalef(scale*scaleFactor, scale*scaleFactor, -scale*scaleFactor);
-				InterfaceRender.renderVertices(modelParsedVertexLists.get(modelLocation));
+				RenderableObject object = modelParsedObjects.get(modelLocation);
+				object.texture = textureLocation;
+				object.render();
 				GL11.glPopMatrix();
 			}
 		}
@@ -122,7 +128,7 @@ public class GUIComponent3DModel{
 	 *  Clear the caches.  Call this when closing the GUI this component is a part of to free up RAM.
 	 */
     public static void clearModelCaches(){
-    	modelParsedVertexLists.values().forEach(vertexID -> InterfaceRender.deleteVertices(vertexID));
-    	modelParsedVertexLists.clear();
+    	modelParsedObjects.values().forEach(modelParsedObject -> InterfaceRender.deleteVertices(modelParsedObject.cachedVertexIndex));
+    	modelParsedObjects.clear();
     }
 }

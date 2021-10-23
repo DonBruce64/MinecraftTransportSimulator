@@ -19,9 +19,9 @@ import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
 import minecrafttransportsimulator.entities.instances.EntityParticle;
-import minecrafttransportsimulator.rendering.components.AModelParser;
 import minecrafttransportsimulator.rendering.components.GIFParser;
 import minecrafttransportsimulator.rendering.components.GIFParser.ParsedGIF;
+import minecrafttransportsimulator.rendering.components.RenderableObject;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
@@ -37,8 +37,6 @@ import net.minecraft.util.math.BlockPos;
 public class InterfaceRender{
 	private static final Map<String, Integer> textures = new HashMap<String, Integer>();
 	private static final Map<String, ParsedGIF> animatedGIFs = new HashMap<String, ParsedGIF>();
-	private static String pushedTextureLocation;
-	private static boolean boundSinceLastPush;
 	private static float lastLightmapX;
 	private static float lastLightmapY;
 	
@@ -58,7 +56,7 @@ public class InterfaceRender{
 	}
 	
 	/**
-	 *  Renders a set of vertices previously cached with {@link #cacheVertices(float[][])}
+	 *  Renders a set of vertices previously cached with {@link #cacheVertices(FloatBuffer)}
 	 */
 	public static void renderVertices(int index){
 		GL11.glCallList(index);
@@ -69,7 +67,7 @@ public class InterfaceRender{
 	 *  but no matter which version is used, the returned value is assured to be unique for each
 	 *  call to this function.  This should be used in tandem with {@link #renderVertices(int)},
 	 *  which will render the cached vertices from this function.  Note that the vertex format
-	 *  is expected to be the same returned b {@link AModelParser#parseModel(String)}
+	 *  is expected to be the same as what is in {@link RenderableObject}
 	 */
 	public static int cacheVertices(FloatBuffer vertices){
 		int displayListIndex = GL11.glGenLists(1);
@@ -99,40 +97,45 @@ public class InterfaceRender{
 	 *  the string values that are passed-in.
 	 */
 	public static void bindTexture(String textureLocation){
-		//If the texture has a colon, it's a short-hand form that needs to be converted.
-		if(textureLocation.indexOf(":") != -1){
-			textureLocation = "/assets/" + textureLocation.replace(":", "/");
-		}
-		//Bind texture if we have it.
-		if(!textures.containsKey(textureLocation)){
-			//Don't have this texture created yet.  Do so now.
-			//Parse the texture, get the OpenGL integer that represents this texture, and save it.
-			//FAR less jank than using MC's resource system.
-			try{
-				BufferedImage bufferedimage = TextureUtil.readBufferedImage(InterfaceRender.class.getResourceAsStream(textureLocation));
-				int glTexturePointer = TextureUtil.glGenTextures();
-		        TextureUtil.uploadTextureImageAllocate(glTexturePointer, bufferedimage, false, false);
-		        textures.put(textureLocation, glTexturePointer);
-			}catch(Exception e){
-				InterfaceCore.logError("Could not find texture: " + textureLocation + " Reverting to fallback texture.");
-				textures.put(textureLocation, TextureUtil.MISSING_TEXTURE.getGlTextureId());
+		//Special case for GIFs.
+		if(animatedGIFs.containsKey(textureLocation)){
+			ParsedGIF parsedGIF = animatedGIFs.get(textureLocation);
+			GlStateManager.bindTexture(parsedGIF.getCurrentTextureIndex());
+		}else{
+			//Parse texture if we don't have it yet.
+			if(!textures.containsKey(textureLocation)){
+				//If the texture has a colon, it's a short-hand form that needs to be converted.
+				String formattedLocation = textureLocation;
+				if(textureLocation.indexOf(":") != -1){
+					formattedLocation = "/assets/" + textureLocation.replace(":", "/");
+				}
+				
+				//Parse the texture, get the OpenGL integer that represents this texture, and save it.
+				//FAR less jank than using MC's resource system.
+				try{
+					BufferedImage bufferedimage = TextureUtil.readBufferedImage(InterfaceRender.class.getResourceAsStream(formattedLocation));
+					int glTexturePointer = TextureUtil.glGenTextures();
+			        TextureUtil.uploadTextureImageAllocate(glTexturePointer, bufferedimage, false, false);
+			        textures.put(textureLocation, glTexturePointer);
+				}catch(Exception e){
+					InterfaceCore.logError("Could not find texture: " + formattedLocation + " Reverting to fallback texture.");
+					textures.put(textureLocation, TextureUtil.MISSING_TEXTURE.getGlTextureId());
+				}
 			}
+			GlStateManager.bindTexture(textures.get(textureLocation));
 		}
-		GlStateManager.bindTexture(textures.get(textureLocation));
-		boundSinceLastPush = true;
 	}
 	
 	/**
-	 *  Binds the passed-in texture to be rendered.  The texture is downloaded from the
+	 *  Downloads the passed-in texture to be parsed and bound.  The texture is downloaded from the
 	 *  URL and then added to the texture rendering system.  The integer of the The instance 
-	 *  of the texture is  cached in this class once created for later use, so feel free to not 
-	 *  cache the string URL that is passed-in.  If the texture binding was successful, null is
-	 *  returned.  Otherwise, an error message is returned.
+	 *  of the texture is cached in this class once created for later use, so feel free to not 
+	 *  cache the string URL that is passed-in.  If the texture downloading was successful, null is
+	 *  returned.  Otherwise, an error message is returned.  Bind the downloaded texture by calling
+	 *  {@link #bindTexture(String)} with the passed-in URL.
 	 */
-	public static String bindURLTexture(String textureURL){
-		//Bind texture if we have it.
+	public static String downloadURLTexture(String textureURL){
 		if(!textures.containsKey(textureURL) && !animatedGIFs.containsKey(textureURL)){
-			//Don't have this texture created yet.  Do so now.
 			//Parse the texture, get the OpenGL integer that represents this texture, and save it.
 			//FAR less jank than using MC's resource system.
 			try{
@@ -180,35 +183,7 @@ public class InterfaceRender{
 				return "Could not open URL for processing.  Error was: " + e.getMessage();
 			}
 		}
-		if(textures.containsKey(textureURL)){
-			GlStateManager.bindTexture(textures.get(textureURL));
-		}else{
-			ParsedGIF parsedGIF = animatedGIFs.get(textureURL);
-			GlStateManager.bindTexture(parsedGIF.getCurrentTextureIndex());
-		}
-		boundSinceLastPush = true;
 		return null;
-	}
-	
-	/**
-	 *  Like bindTexture, but this method also sets the texture for binding recall later via recallTexture.
-	 *  This allows for us to recall specific textures anywhere in the code.  Useful when we don't know what
-	 *  we will render between this call and another call, but we do know that we want this texture to be
-	 *  re-bound if any other textures were bound.
-	 */
-	public static void setTexture(String textureLocation){
-		pushedTextureLocation = textureLocation;
-		bindTexture(textureLocation);
-		boundSinceLastPush = false;
-	}
-	
-	/**
-	 *  Re-binds the last saved texture.  If this texture is already bound, then no re-binding occurs.
-	 */
-	public static void recallTexture(){
-		if(pushedTextureLocation != null && boundSinceLastPush){
-			GlStateManager.bindTexture(textures.get(pushedTextureLocation));
-		}
 	}
 	
 	/**

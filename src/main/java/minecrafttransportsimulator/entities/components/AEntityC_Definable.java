@@ -313,6 +313,15 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 		throw new IllegalArgumentException("Was asked to auto-generate a definition on an entity with one not defined.  This is NOT allowed.  The entity must be missing its item.  Perhaps a pack was removed with this entity still in the world?");
 	}
 	
+	/**
+	 *  Returns the texture that should be bound to this entity for the passed-in object from the model.
+	 *  This may change between render passes, but only ONE texture may be used for any given object render
+	 *  operation!  By default this returns the JSON-defined texture, though the model parser may override this.
+	 */
+	public String getTexture(){
+		return definition.getTextureLocation(subName);
+	}
+	
     /**
    	 *  Returns true if this entity is lit up, and text should be rendered lit.
    	 *  Note that what text is lit is dependent on the text's definition, so just

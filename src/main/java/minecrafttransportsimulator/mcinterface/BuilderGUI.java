@@ -126,11 +126,7 @@ public class BuilderGUI extends GuiScreen{
 		}
 		
 		//Now render any OBJModels we may have.
-		//CHeck to make sure the texture exists before binding.
 		for(GUIComponent3DModel objModel : gui.objModels){
-			if(objModel.textureLocation != null){
-				InterfaceRender.bindTexture(objModel.textureLocation);
-			}
 			objModel.renderModel();
 		}
 		

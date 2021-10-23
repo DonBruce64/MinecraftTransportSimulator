@@ -487,6 +487,11 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 	}
 	
 	@Override
+	public String getTexture(){
+		return definition.generic.useVehicleTexture ? entityOn.getTexture() : super.getTexture();
+	}
+	
+	@Override
 	public boolean renderTextLit(){
 		return entityOn.renderTextLit();
 	}

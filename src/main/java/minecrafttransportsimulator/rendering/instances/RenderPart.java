@@ -13,11 +13,6 @@ import minecrafttransportsimulator.mcinterface.InterfaceRender;
 import minecrafttransportsimulator.rendering.components.ARenderEntity;
 
 public final class RenderPart extends ARenderEntity<APart>{
-		
-	@Override
-	public String getTexture(APart part){
-		return part.definition.generic.useVehicleTexture ? part.entityOn.definition.getTextureLocation(part.entityOn.subName) : super.getTexture(part);
-	}
 	
 	@Override
 	public boolean disableRendering(APart part, float partialTicks){

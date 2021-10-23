@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.rendering.components;
 
-import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -40,27 +39,14 @@ public abstract class AModelParser{
 	protected abstract String getModelSuffix();
 	
 	/**
-	 *  Parses the model at the passed-in location. The return value is a map, with the String
-	 *  key being the name of an object on the model, and the value being a FloatBuffer with the
-	 *  parsed data.  This contains all vertices with their data in-order as follows:
-	 *  <ul>
-	 *  <li>The nX-coordinate of the normal for the vertex, in the x-dimension.
-	 *  <li>The nY-coordinate of the normal for the vertex, in the y-dimension.
-	 *  <li>The nZ-coordinate of the normal for the vertex, in the z-dimension.
- 	 *  <li>The u-coordinate of the UV-mapping for the vertex.
-	 *  <li>The v-coordinate of the UV-mapping for the vertex.
-	 *  <li>The x-coordinate of a vertex on the model.
-	 *  <li>The y-coordinate of a vertex on the model.
-	 *  <li>The z-coordinate of a vertex on the model.
-	 *  </ul>
+	 *  Parses the model at the passed-in location. The return value is a list of objects parsed.
 	 */
-	protected abstract Map<String, FloatBuffer> parseModelInternal(String modelLocation);
-	
+	protected abstract List<RenderableObject> parseModelInternal(String modelLocation);
 	/**
 	 *  Attempts to obtain the parser for the passed-in modelLocation.  After this, the model
 	 *  is parsed and returned.  If no parser is found, an exception is thrown.
 	 */
-	public static Map<String, FloatBuffer> parseModel(String modelLocation){
+	public static List<RenderableObject> parseModel(String modelLocation){
 		AModelParser parser = parsers.get(modelLocation.substring(modelLocation.lastIndexOf(".") + 1));
 		if(parser != null){
 			return parser.parseModelInternal(modelLocation);
@@ -77,15 +63,16 @@ public abstract class AModelParser{
 	 *  The passed-in definition may be null to prevent checking against JSON, though non-JSON model objects
 	 *  will still be generated as applicable.
 	 */
-	public static <AnimationEntity extends AEntityC_Definable<?>> List<RenderableModelObject<AnimationEntity>> generateRenderables(String modelLocation){
-		Map<String, FloatBuffer> parsedModelObjects = parseModel(modelLocation);
+	public static <AnimationEntity extends AEntityC_Definable<?>> List<RenderableModelObject<AnimationEntity>> generateRenderables(AEntityC_Definable<?> entity){
+		String modelLocation = entity.definition.getModelLocation(entity.subName);
+		List<RenderableObject> parsedModelObjects = parseModel(modelLocation);
 		List<RenderableModelObject<AnimationEntity>> modelObjects = new ArrayList<RenderableModelObject<AnimationEntity>>();
-		for(String parsedObjectName : parsedModelObjects.keySet()){
+		for(RenderableObject parsedObject : parsedModelObjects){
 			//If we are a tread roller, make a roller rather than a standard object.
-			if(parsedObjectName.toLowerCase().contains(ROLLER_OBJECT_NAME)){
-				modelObjects.add(new RenderableTreadRoller<AnimationEntity>(modelLocation, parsedObjectName, modelObjects, parsedModelObjects.get(parsedObjectName)));
+			if(parsedObject.name.toLowerCase().contains(ROLLER_OBJECT_NAME)){
+				modelObjects.add(new RenderableTreadRoller<AnimationEntity>(modelLocation, parsedObject, modelObjects));
 			}else{
-				modelObjects.add(new RenderableModelObject<AnimationEntity>(modelLocation, parsedObjectName, modelObjects, parsedModelObjects.get(parsedObjectName)));
+				modelObjects.add(new RenderableModelObject<AnimationEntity>(modelLocation, parsedObject, modelObjects));
 			}
 		}
 		return modelObjects;

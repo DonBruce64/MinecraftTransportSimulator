@@ -32,19 +32,16 @@ import minecrafttransportsimulator.systems.ConfigSystem;
  * @author don_bruce
  */
 public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>>{
-	public final String modelLocation;
-	public final String objectName;
+	protected final String modelLocation;
+	protected final RenderableObject object;
 	private final List<RenderableModelObject<AnimationEntity>> allObjects;
-	private final boolean isTranslucent;
 	private final boolean isWindow;
 	private final boolean isOnlineTexture;
-	private final int cachedVertexIndex;
-	private final FloatBuffer exteriorWindowObject;
-	private final FloatBuffer interiorWindowObject;
-	private FloatBuffer colorObject;
-	private FloatBuffer coverObject;
-	private final Map<JSONLight, FloatBuffer> flareObjects = new HashMap<JSONLight, FloatBuffer>();
-	private final Map<JSONLight, FloatBuffer> beamObjects = new HashMap<JSONLight, FloatBuffer>();
+	private final RenderableObject interiorWindowObject;
+	private RenderableObject colorObject;
+	private RenderableObject coverObject;
+	private final Map<JSONLight, RenderableObject> flareObjects = new HashMap<JSONLight, RenderableObject>();
+	private final Map<JSONLight, RenderableObject> beamObjects = new HashMap<JSONLight, RenderableObject>();
 	
 	/**Map of tread points, keyed by the model the tread is pathing about, then the spacing of the tread.
 	 * This can be shared for two different treads of the same spacing as they render the same.**/
@@ -55,39 +52,33 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 	private static final float BEAM_OFFSET = -0.15F;
 	private static final int BEAM_SEGMENTS = 40;
 	
-	public RenderableModelObject(String modelLocation, String objectName, List<RenderableModelObject<AnimationEntity>> allObjects, FloatBuffer vertices){
+	public RenderableModelObject(String modelLocation, RenderableObject object, List<RenderableModelObject<AnimationEntity>> allObjects){
 		super();
 		this.modelLocation = modelLocation;
-		this.objectName = objectName;
 		this.allObjects = allObjects;
-		this.isTranslucent = objectName.toLowerCase().contains(AModelParser.TRANSLUCENT_OBJECT_NAME);
-		this.isWindow = objectName.toLowerCase().contains(AModelParser.WINDOW_OBJECT_NAME);
-		this.isOnlineTexture = objectName.toLowerCase().startsWith(AModelParser.ONLINE_TEXTURE_OBJECT_NAME) || objectName.toLowerCase().endsWith(AModelParser.ONLINE_TEXTURE_OBJECT_NAME);
+		this.isWindow = object.name.toLowerCase().contains(AModelParser.WINDOW_OBJECT_NAME);
+		this.isOnlineTexture = object.name.toLowerCase().startsWith(AModelParser.ONLINE_TEXTURE_OBJECT_NAME) || object.name.toLowerCase().endsWith(AModelParser.ONLINE_TEXTURE_OBJECT_NAME);
 		
-		//Cache the displayList if we aren't a window.  If we are, just do raw rendering.
-		//If we are a window, adjust our UV mapping points to map to a single texture.
-		//Set these adjusted points, and then invert them for the interior component.
+		//If we are a window, split the model into two parts.  The first will be the exterior which will
+		//be our normal model, the second will be a new, inverted, interior model.
 		if(isWindow){
-			this.cachedVertexIndex = -1;
-			this.exteriorWindowObject = vertices;
-			normalizeUVs(exteriorWindowObject);
-			
-			this.interiorWindowObject = FloatBuffer.allocate(exteriorWindowObject.capacity());
-			for(int i=exteriorWindowObject.capacity(); i<=0; --i){
-				interiorWindowObject.put(exteriorWindowObject.get(i));
+			this.object = new RenderableObject(object.name, "mts:textures/rendering/glass.png", object.color, object.vertices, false);
+			this.object.normalizeUVs();
+			this.interiorWindowObject = new RenderableObject(object.name + "_interior", "mts:textures/rendering/glass.png", object.color, FloatBuffer.allocate(object.vertices.capacity()), false);
+			for(int i=object.vertices.capacity(); i<=0; --i){
+				interiorWindowObject.vertices.put(object.vertices.get(i));
 			}
-			interiorWindowObject.flip();
+			interiorWindowObject.vertices.flip();
 		}else{
-			this.cachedVertexIndex = InterfaceRender.cacheVertices(vertices);
-			this.exteriorWindowObject = null;
+			this.object = object;
 			this.interiorWindowObject = null;
 		}
 		
 		//If we are a light object, create color and cover points.
 		//We may not use these, but it saves on processing later as we don't need to re-parse the model.
-		if(objectName.startsWith("&")){
-			colorObject = generateColors(vertices);
-			coverObject = generateCovers(vertices);
+		if(object.name.startsWith("&")){
+			colorObject = generateColors(object);
+			coverObject = generateCovers(object);
 		}
 	}
 	
@@ -96,28 +87,31 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 	 *  renders any objects that depend on this object's transforms after rendering.
 	 */
 	public void render(AnimationEntity entity, boolean blendingEnabled, float partialTicks){
-		JSONLight lightDef = entity.lightObjectDefinitions.get(objectName);
+		JSONLight lightDef = entity.lightObjectDefinitions.get(object.name);
 		float lightLevel = lightDef != null ? entity.lightBrightnessValues.get(lightDef) : 0;
 		if(shouldRender(entity, lightDef, blendingEnabled)){
 			//Do pre-render checks based on the object we are rendering.
 			//This may block rendering if there are false visibility transforms.
 			GL11.glPushMatrix();
-			JSONAnimatedObject definition = entity.animatedObjectDefinitions.get(objectName);
+			JSONAnimatedObject definition = entity.animatedObjectDefinitions.get(object.name);
 			if(doPreRenderTransforms(entity, definition != null ? definition.animations : null, blendingEnabled, partialTicks)){
-				//If we are a window or online texture, bind that one rather than our own.
-				if(isWindow){
-					InterfaceRender.bindTexture("mts:textures/rendering/glass.png");
-				}else if(isOnlineTexture){
+				//Set our standard texture.
+				object.texture = entity.getTexture();
+				
+				//If we are a online texture, bind that one rather than our own.
+				if(isOnlineTexture){
 					//Get the texture from the text objects of the entity.
 					//If we don't have anything set, we just use the existing texture.
 					for(Entry<JSONText, String> textEntry : entity.text.entrySet()){
 						JSONText textDef = textEntry.getKey();
-						if(textDef.fieldName.equals(objectName)){
+						if(textDef.fieldName.equals(object.name)){
 							String textValue = entity.text.get(textDef);
 							if(!textValue.isEmpty() && !textValue.contains(" ")){
-								String errorString = InterfaceRender.bindURLTexture(textValue);
+								String errorString = InterfaceRender.downloadURLTexture(textValue);
 								if(errorString != null){
 									textEntry.setValue(errorString);
+								}else{
+									object.texture = textValue;
 								}
 							}
 							break;
@@ -140,68 +134,51 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 					}
 				}
 				
-				//Render us based on the current pass and our states.
-				if(blendingEnabled && lightDef != null && lightLevel > 0 && lightDef.isBeam && entity.shouldRenderBeams()){
-					//Model that's actually a beam, render it with beam lighting/blending. 
-					if(ConfigSystem.configObject.clientRendering.brightLights.value){
-						InterfaceRender.setLightingState(false);
-						if(ConfigSystem.configObject.clientRendering.blendedLights.value){
-							InterfaceRender.setBlendBright(true);
-							InterfaceRender.renderVertices(cachedVertexIndex);
-							InterfaceRender.setBlendBright(false);
-						}else{
-							InterfaceRender.renderVertices(cachedVertexIndex);
-						}
-						InterfaceRender.setLightingState(true);
-					}else{
-						InterfaceRender.renderVertices(cachedVertexIndex);
+				if(entity instanceof PartGroundDevice && ((PartGroundDevice) entity).definition.ground.isTread && !((PartGroundDevice) entity).placementDefinition.isSpare){
+					//Active tread.  Do tread-path rendering instead of normal model.
+					if(!blendingEnabled){
+						doTreadRendering((PartGroundDevice) entity, partialTicks);
 					}
-				}else if(!blendingEnabled && entity instanceof PartGroundDevice && ((PartGroundDevice) entity).definition.ground.isTread && !((PartGroundDevice) entity).placementDefinition.isSpare){
-					//Active tread.  Do tread-path rendering.					
-					doTreadRendering((PartGroundDevice) entity, partialTicks);
-				}else if(!(blendingEnabled ^ isTranslucent)){
-					//Either solid texture on solid pass, or translucent texture on blended pass.
-					//If we are a window, render inner and outer manually.
-					//Otherwise, render cached vertices.
-					if(isWindow){
-						InterfaceRender.renderVertices(exteriorWindowObject);
-						if(ConfigSystem.configObject.clientRendering.innerWindows.value){
-							InterfaceRender.renderVertices(interiorWindowObject);
-						}
-					}else{
+				}else{
+					//Set object states and render.
+					if(blendingEnabled && lightDef != null && lightLevel > 0 && lightDef.isBeam && entity.shouldRenderBeams()){
+						//Model that's actually a beam, render it with beam lighting/blending. 
+						object.disableLighting = ConfigSystem.configObject.clientRendering.brightLights.value;
+						object.disableLightmap = ConfigSystem.configObject.clientRendering.brightLights.value;
+						object.enableBrightBlending = ConfigSystem.configObject.clientRendering.blendedLights.value;
+						object.alpha = Math.min((1 - entity.world.getLightBrightness(entity.position, false))*lightLevel, 1);
+						object.render();
+					}else if(!(blendingEnabled ^ object.isTranslucent)){
+						//Either solid texture on solid pass, or translucent texture on blended pass.
 						//Need to disable lighting if we are a light-up texture.
-						if(ConfigSystem.configObject.clientRendering.brightLights.value && lightDef != null && lightLevel > 0 && !lightDef.emissive && !lightDef.isBeam){
-							InterfaceRender.setLightingState(false);
-							InterfaceRender.renderVertices(cachedVertexIndex);
-							InterfaceRender.setLightingState(true);
-						}else{
-							InterfaceRender.renderVertices(cachedVertexIndex);
+						object.disableLighting = ConfigSystem.configObject.clientRendering.brightLights.value && lightDef != null && lightLevel > 0 && !lightDef.emissive && !lightDef.isBeam;
+						object.disableLightmap = object.disableLighting;
+						object.render();
+						if(interiorWindowObject != null && ConfigSystem.configObject.clientRendering.innerWindows.value){
+							interiorWindowObject.render();
 						}
 					}
-				}
-				
-				//Check if we are a light that's not a beam, do light-specific rendering.
-				if(lightDef != null && !lightDef.isBeam){
-					doLightRendering(entity, lightDef, lightLevel, entity.lightColorValues.get(lightDef), blendingEnabled);
-				}
-				
-				//Pop the texture back to the one we last bound in case we changed it.
-				InterfaceRender.recallTexture();
-				
-				//Render text on this object.  Only do this on the solid pass.
-				if(!blendingEnabled){
-					for(JSONText textDef : entity.text.keySet()){
-						if(objectName.equals(textDef.attachedTo)){
-							//TODO this is technically wrong, but are people ever going to scale parts with text on them?
-							RenderText.draw3DText(entity.text.get(textDef), entity, textDef, 1.0F, false);
+					
+					//Check if we are a light that's not a beam.  If so, do light-specific rendering.
+					if(lightDef != null && !lightDef.isBeam){
+						doLightRendering(entity, lightDef, lightLevel, entity.lightColorValues.get(lightDef), blendingEnabled);
+					}
+					
+					//Render text on this object.  Only do this on the solid pass.
+					if(!blendingEnabled){
+						for(JSONText textDef : entity.text.keySet()){
+							if(object.name.equals(textDef.attachedTo)){
+								//TODO this is technically wrong, but are people ever going to scale parts with text on them?
+								RenderText.draw3DText(entity.text.get(textDef), entity, textDef, 1.0F, false);
+							}
 						}
 					}
 				}
 				
 				//Render any objects that depend on us before we pop our state.
 				for(RenderableModelObject<AnimationEntity> modelObject : allObjects){
-					JSONAnimatedObject animation = entity.animatedObjectDefinitions.get(modelObject.objectName);
-					if(animation != null && objectName.equals(animation.applyAfter)){
+					JSONAnimatedObject animation = entity.animatedObjectDefinitions.get(modelObject.object.name);
+					if(animation != null && object.name.equals(animation.applyAfter)){
 						modelObject.render(entity, blendingEnabled, partialTicks);
 					}
 				}
@@ -304,14 +281,14 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 	 *  as it allows for the freeing of OpenGL resources.
 	 */
 	public void destroy(){
-		InterfaceRender.deleteVertices(cachedVertexIndex);
+		InterfaceRender.deleteVertices(object.cachedVertexIndex);
 		treadPoints.remove(modelLocation);
-		flareObjects.remove(objectName);
-		beamObjects.remove(objectName);
+		flareObjects.remove(object.name);
+		beamObjects.remove(object.name);
 	}
 	
 	private boolean shouldRender(AnimationEntity entity, JSONLight lightDef, boolean blendingEnabled){
-		if(isTranslucent && !blendingEnabled){
+		if(object.isTranslucent && !blendingEnabled){
 			return false;
 		}
 		if(isWindow && !ConfigSystem.configObject.clientRendering.renderWindows.value){
@@ -320,7 +297,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 		if(isOnlineTexture){
 			//Make sure the entity has a texture for us.
 			for(JSONText textDef : entity.text.keySet()){
-				if(textDef.fieldName.equals(objectName)){
+				if(textDef.fieldName.equals(object.name)){
 					if(entity.text.get(textDef).isEmpty()){
 						return false;
 					}
@@ -330,7 +307,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 		}
 		if(lightDef != null){
 			//If the light only has solid components, and we aren't translucent, don't render on the blending pass.
-			if(blendingEnabled && !isTranslucent && !lightDef.emissive && !lightDef.isBeam && (lightDef.blendableComponents == null || lightDef.blendableComponents.isEmpty())){
+			if(blendingEnabled && !object.isTranslucent && !lightDef.emissive && !lightDef.isBeam && (lightDef.blendableComponents == null || lightDef.blendableComponents.isEmpty())){
 				return false;
 			}
 		}
@@ -412,7 +389,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 				GL11.glPushMatrix();
 				GL11.glTranslated(0, yDelta*treadMovementPercentage, zDelta*treadMovementPercentage);
 				GL11.glRotated(point[2] + angleDelta*treadMovementPercentage, 1, 0, 0);
-				InterfaceRender.renderVertices(cachedVertexIndex);
+				object.render();
 				GL11.glPopMatrix();
 				GL11.glTranslated(0, yDelta, zDelta);
 			}else{
@@ -421,30 +398,29 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 				//Once there, render the tread.  Then translate the remainder of the way to prepare
 				//to render the next tread.
 				GL11.glTranslated(0, yDelta*treadMovementPercentage, zDelta*treadMovementPercentage);
-				InterfaceRender.renderVertices(cachedVertexIndex);
+				object.render();
 				GL11.glTranslated(0, yDelta*(1 - treadMovementPercentage), zDelta*(1 - treadMovementPercentage));
 			}
 		}
 	}
 		
 	private void doLightRendering(AnimationEntity entity, JSONLight lightDef, float lightLevel, ColorRGB color, boolean blendingEnabled){
-		boolean lightingDisabled = false;
-		boolean brightBlendEnabled = false;
-		boolean colorChanged = false;
 		if(blendingEnabled && lightLevel > 0 && lightDef.emissive){
 			//Light color detected on blended render pass.
 			if(colorObject == null){
-				colorObject = generateColors(AModelParser.parseModel(modelLocation).get(objectName));
+				for(RenderableObject testObject : AModelParser.parseModel(modelLocation)){
+					if(object.name.equals(testObject.name)){
+						colorObject = generateColors(testObject);
+						break;
+					}
+				}
 			}
 			
-			InterfaceRender.bindTexture("mts:textures/rendering/light.png");
-			if(ConfigSystem.configObject.clientRendering.brightLights.value){
-				InterfaceRender.setLightingState(false);
-				lightingDisabled = true;
-			}
-			InterfaceRender.setColorState(color, lightLevel);
-			colorChanged = true;
-			InterfaceRender.renderVertices(colorObject);
+			colorObject.disableLighting = ConfigSystem.configObject.clientRendering.brightLights.value;
+			colorObject.disableLightmap = ConfigSystem.configObject.clientRendering.brightLights.value;
+			colorObject.color.setTo(color);
+			colorObject.alpha = lightLevel;
+			colorObject.render();
 			
 		}
 		if(blendingEnabled && lightLevel > 0 && lightDef.blendableComponents != null && !lightDef.blendableComponents.isEmpty()){
@@ -452,8 +428,8 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 			//First render all flares, then render all beams.
 			float blendableBrightness = Math.min((1 - entity.world.getLightBrightness(entity.position, false))*lightLevel, 1);
 			if(blendableBrightness > 0){
-				FloatBuffer flareObject = flareObjects.get(lightDef);
-				FloatBuffer beamObject = beamObjects.get(lightDef);
+				RenderableObject flareObject = flareObjects.get(lightDef);
+				RenderableObject beamObject = beamObjects.get(lightDef);
 				if(flareObject == null && beamObject == null){
 					List<JSONLightBlendableComponent> flareDefs = new ArrayList<JSONLightBlendableComponent>();
 					List<JSONLightBlendableComponent> beamDefs = new ArrayList<JSONLightBlendableComponent>();
@@ -476,105 +452,76 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 				
 				//Render all flares.
 				if(flareObject != null){
-					InterfaceRender.bindTexture("mts:textures/rendering/lensflare.png");
-					if(ConfigSystem.configObject.clientRendering.brightLights.value){
-						InterfaceRender.setLightingState(false);
-						lightingDisabled = true;
-					}
-					InterfaceRender.setColorState(color, blendableBrightness);
-					colorChanged = true;
-					InterfaceRender.renderVertices(flareObject);
-					
+					flareObject.disableLighting = ConfigSystem.configObject.clientRendering.brightLights.value;
+					flareObject.disableLightmap = ConfigSystem.configObject.clientRendering.brightLights.value;
+					flareObject.color.setTo(color);
+					flareObject.alpha = blendableBrightness;
+					flareObject.render();
 				}
 				
 				//Render all beams.
 				if(beamObject != null && entity.shouldRenderBeams()){
-					InterfaceRender.bindTexture("mts:textures/rendering/lightbeam.png");
-					//Don't set lighting if flares already did so.
-					if(!lightingDisabled && ConfigSystem.configObject.clientRendering.brightLights.value){
-						InterfaceRender.setLightingState(false);
-						lightingDisabled = true;
-					}
-					if(ConfigSystem.configObject.clientRendering.blendedLights.value){
-						InterfaceRender.setBlendBright(true);
-						brightBlendEnabled = true;
-					}else if(brightBlendEnabled){
-						//Bright blend was turned on for flares, turn off for beams.
-						InterfaceRender.setBlendBright(false);
-						brightBlendEnabled = false;
-					}
-					if(flareObject == null){
-						InterfaceRender.setColorState(color, blendableBrightness);
-						colorChanged = true;
-					}
-					InterfaceRender.renderVertices(beamObject);
+					beamObject.disableLighting = ConfigSystem.configObject.clientRendering.brightLights.value;
+					beamObject.disableLightmap = ConfigSystem.configObject.clientRendering.brightLights.value;
+					beamObject.enableBrightBlending = ConfigSystem.configObject.clientRendering.blendedLights.value;
+					beamObject.color.setTo(color);
+					beamObject.alpha = blendableBrightness;
+					beamObject.render();
 				}
 			}
 		}
 		if(!blendingEnabled && lightDef.covered){
 			//Light cover detected on solid render pass.
 			if(coverObject == null){
-				coverObject = generateCovers(AModelParser.parseModel(modelLocation).get(objectName));
-			}
-			
-			InterfaceRender.bindTexture("minecraft:textures/blocks/glass.png");
-			if(lightLevel > 0){
-				if(ConfigSystem.configObject.clientRendering.brightLights.value){
-					InterfaceRender.setLightingState(false);
-					lightingDisabled = true;
+				for(RenderableObject testObject : AModelParser.parseModel(modelLocation)){
+					if(object.name.equals(testObject.name)){
+						coverObject = generateCovers(testObject);
+						break;
+					}
 				}
 			}
-			InterfaceRender.renderVertices(coverObject);
 			
-		}
-		
-		//Set lighting and color back to normal if it was changed.
-		if(lightingDisabled){
-			InterfaceRender.setLightingState(true);
-		}
-		if(brightBlendEnabled){
-			InterfaceRender.setBlendBright(false);
-		}
-		if(colorChanged){
-			InterfaceRender.setColorState(ColorRGB.WHITE, 1.0F);
+			coverObject.disableLighting = ConfigSystem.configObject.clientRendering.brightLights.value && lightLevel > 0;
+			coverObject.disableLightmap = ConfigSystem.configObject.clientRendering.brightLights.value && lightLevel > 0;
+			coverObject.render();
 		}
 	}
 	
-	private static FloatBuffer generateColors(FloatBuffer parsedObject){
+	private static RenderableObject generateColors(RenderableObject parsedObject){
 		//Make a duplicate set of vertices with an offset for the color rendering.
-		FloatBuffer offsetObject = FloatBuffer.allocate(parsedObject.capacity());
+		RenderableObject offsetObject = new RenderableObject("color", "mts:textures/rendering/light.png", new ColorRGB(), FloatBuffer.allocate(parsedObject.vertices.capacity()), false);
 		float[] vertexData = new float[8];
-		while(parsedObject.hasRemaining()){
-			parsedObject.get(vertexData);
-			offsetObject.put(vertexData, 0, 5);
-			offsetObject.put(vertexData[5] + vertexData[0]*COLOR_OFFSET);
-			offsetObject.put(vertexData[6] + vertexData[1]*COLOR_OFFSET);
-			offsetObject.put(vertexData[7] + vertexData[2]*COLOR_OFFSET);
+		while(parsedObject.vertices.hasRemaining()){
+			parsedObject.vertices.get(vertexData);
+			offsetObject.vertices.put(vertexData, 0, 5);
+			offsetObject.vertices.put(vertexData[5] + vertexData[0]*COLOR_OFFSET);
+			offsetObject.vertices.put(vertexData[6] + vertexData[1]*COLOR_OFFSET);
+			offsetObject.vertices.put(vertexData[7] + vertexData[2]*COLOR_OFFSET);
 		}
-		normalizeUVs(offsetObject);
-		offsetObject.flip();
+		offsetObject.normalizeUVs();
+		offsetObject.vertices.flip();
 		return offsetObject;
 	}
 	
-	private static FloatBuffer generateCovers(FloatBuffer parsedObject){
+	private static RenderableObject generateCovers(RenderableObject parsedObject){
 		//Make a duplicate set of vertices with an offset for the cover rendering.
-		FloatBuffer offsetObject = FloatBuffer.allocate(parsedObject.capacity());
+		RenderableObject offsetObject = new RenderableObject("cover", "mts:textures/rendering/glass.png", parsedObject.color, FloatBuffer.allocate(parsedObject.vertices.capacity()), false);
 		float[] vertexData = new float[8];
-		while(parsedObject.hasRemaining()){
-			parsedObject.get(vertexData);
-			offsetObject.put(vertexData, 0, 5);
-			offsetObject.put(vertexData[5] + vertexData[0]*COVER_OFFSET);
-			offsetObject.put(vertexData[6] + vertexData[1]*COVER_OFFSET);
-			offsetObject.put(vertexData[7] + vertexData[2]*COVER_OFFSET);
+		while(parsedObject.vertices.hasRemaining()){
+			parsedObject.vertices.get(vertexData);
+			offsetObject.vertices.put(vertexData, 0, 5);
+			offsetObject.vertices.put(vertexData[5] + vertexData[0]*COVER_OFFSET);
+			offsetObject.vertices.put(vertexData[6] + vertexData[1]*COVER_OFFSET);
+			offsetObject.vertices.put(vertexData[7] + vertexData[2]*COVER_OFFSET);
 		}
-		normalizeUVs(offsetObject);
-		offsetObject.flip();
+		offsetObject.normalizeUVs();
+		offsetObject.vertices.flip();
 		return offsetObject;
 	}
 	
-	private static FloatBuffer generateFlares(List<JSONLightBlendableComponent> flareDefs){
+	private static RenderableObject generateFlares(List<JSONLightBlendableComponent> flareDefs){
 		//6 vertices per flare due to triangle rendering.
-		FloatBuffer flareObject = FloatBuffer.allocate(flareDefs.size()*6*8);
+		RenderableObject flareObject = new RenderableObject("flares", "mts:textures/rendering/lensflare.png", new ColorRGB(), FloatBuffer.allocate(flareDefs.size()*6*8), false);
 		for(int i=0; i<flareDefs.size(); ++i){
 			JSONLightBlendableComponent flareDef = flareDefs.get(i);
 			//Get the angle that is needed to rotate points to the normalized vector.
@@ -608,18 +555,18 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 				newVertex[2] = (float) flareDef.axis.z;
 				
 				//Add the actual vertex.
-				flareObject.put(newVertex);
+				flareObject.vertices.put(newVertex);
 			}
 		}
-		flareObject.flip();
+		flareObject.vertices.flip();
 		return flareObject;
 	}
 	
-	private static FloatBuffer generateBeams(List<JSONLightBlendableComponent> beamDefs){
+	private static RenderableObject generateBeams(List<JSONLightBlendableComponent> beamDefs){
 		//3 vertices per cone-face, each share the same center point.
 		//Number of cone faces is equal to the number of segments for beams.
 		//We render two beams.  One inner and one outer.
-		FloatBuffer beamObject = FloatBuffer.allocate(beamDefs.size()*2*BEAM_SEGMENTS*3*8);
+		RenderableObject beamObject = new RenderableObject("beams", "mts:textures/rendering/lightbeam.png", new ColorRGB(), FloatBuffer.allocate(beamDefs.size()*2*BEAM_SEGMENTS*3*8), false);
 		for(int i=0; i<beamDefs.size(); ++i){
 			JSONLightBlendableComponent beamDef = beamDefs.get(i);
 			//Get the angle that is needed to rotate points to the normalized vector.
@@ -663,11 +610,11 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 					newVertex[2] = 0F;
 					
 					//Add the actual vertex.
-					beamObject.put(newVertex);
+					beamObject.vertices.put(newVertex);
 				}
 			}
 		}
-		beamObject.flip();
+		beamObject.vertices.flip();
 		return beamObject;
 	}
 	
@@ -866,31 +813,5 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 			}
 		}
 		return points;
-	}
-	
-	
-	private static void normalizeUVs(FloatBuffer parsedObject){
-		int verticesInObject = parsedObject.capacity()/8;
-		for(int i=0; i<verticesInObject; ++i){
-			if(verticesInObject > 3 && i%6 >= 3){
-				//Second-half of a quad.
-				switch(i%6){
-					case(3): parsedObject.put(i*8+3, 0.0F); parsedObject.put(i*8+4, 0.0F); break;
-					case(4): parsedObject.put(i*8+3, 1.0F); parsedObject.put(i*8+4, 1.0F); break;
-					case(5): parsedObject.put(i*8+3, 1.0F); parsedObject.put(i*8+4, 0.0F); break;
-				}
-			}else{
-				//Normal tri or first half of quad using tri mapping.
-				switch(i%6){
-					case(0): parsedObject.put(i*8+3, 0.0F); parsedObject.put(i*8+4, 0.0F); break;
-					case(1): parsedObject.put(i*8+3, 0.0F); parsedObject.put(i*8+4, 1.0F); break;
-					case(2): parsedObject.put(i*8+3, 1.0F); parsedObject.put(i*8+4, 1.0F); break;
-					
-					case(3): parsedObject.put(i*8+3, 1.0F); parsedObject.put(i*8+4, 1.0F); break;
-					case(4): parsedObject.put(i*8+3, 1.0F); parsedObject.put(i*8+4, 0.0F); break;
-					case(5): parsedObject.put(i*8+3, 0.0F); parsedObject.put(i*8+4, 0.0F); break;
-				}
-			}
-		}
 	}
 }

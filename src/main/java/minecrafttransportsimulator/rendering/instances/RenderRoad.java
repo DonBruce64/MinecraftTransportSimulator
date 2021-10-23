@@ -20,6 +20,7 @@ import minecrafttransportsimulator.items.instances.ItemRoadComponent;
 import minecrafttransportsimulator.mcinterface.InterfaceRender;
 import minecrafttransportsimulator.rendering.components.AModelParser;
 import minecrafttransportsimulator.rendering.components.ARenderTileEntityBase;
+import minecrafttransportsimulator.rendering.components.RenderableObject;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
@@ -55,23 +56,23 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 				if(!cachedVertexMap.containsKey(component)){
 					switch(component){
 						case CORE_STATIC: {
-							Map<String, FloatBuffer> parsedModel = AModelParser.parseModel(componentItem.definition.getModelLocation(componentItem.subName));
+							List<RenderableObject> parsedModel = AModelParser.parseModel(componentItem.definition.getModelLocation(componentItem.subName));
 							int totalVertices = 0;
-							for(FloatBuffer vertices : parsedModel.values()){
-								totalVertices += vertices.capacity();
-								for(int i=0; i<vertices.capacity(); i+=8){
-									position.set(vertices.get(i+5) - 0.5, vertices.get(i+6), vertices.get(i+7) - 0.5);
+							for(RenderableObject object : parsedModel){
+								totalVertices += object.vertices.capacity();
+								for(int i=0; i<object.vertices.capacity(); i+=8){
+									position.set(object.vertices.get(i+5) - 0.5, object.vertices.get(i+6), object.vertices.get(i+7) - 0.5);
 									position.rotateFine(road.angles);
-									vertices.put(i+5, (float) position.x);
-									vertices.put(i+6, (float) position.y);
-									vertices.put(i+7, (float) position.z);
+									object.vertices.put(i+5, (float) position.x);
+									object.vertices.put(i+6, (float) position.y);
+									object.vertices.put(i+7, (float) position.z);
 								}
 							}
 							
 							//Cache the model now that we know how big it is.
 							FloatBuffer totalModel = FloatBuffer.allocate(totalVertices);
-							for(FloatBuffer vertices : parsedModel.values()){
-								totalModel.put(vertices);
+							for(RenderableObject object : parsedModel){
+								totalModel.put(object.vertices);
 							}
 							totalModel.flip();
 							cachedVertexMap.put(component, InterfaceRender.cacheVertices(totalModel));
@@ -81,14 +82,14 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 							//Make sure our curve isn't null, we might have not yet created it.
 							if(road.dynamicCurve != null){
 								//Get model and convert to a single buffer of vertices.
-								Map<String, FloatBuffer> parsedModel = AModelParser.parseModel(componentItem.definition.getModelLocation(componentItem.subName));
+								List<RenderableObject> parsedModel = AModelParser.parseModel(componentItem.definition.getModelLocation(componentItem.subName));
 								int totalVertices = 0;
-								for(FloatBuffer vertices : parsedModel.values()){
-									totalVertices += vertices.capacity();
+								for(RenderableObject object : parsedModel){
+									totalVertices += object.vertices.capacity();
 								}
 								FloatBuffer parsedVertices = FloatBuffer.allocate(totalVertices);
-								for(FloatBuffer vertices : parsedModel.values()){
-									parsedVertices.put(vertices);
+								for(RenderableObject object : parsedModel){
+									parsedVertices.put(object.vertices);
 								}
 								parsedVertices.flip();
 								

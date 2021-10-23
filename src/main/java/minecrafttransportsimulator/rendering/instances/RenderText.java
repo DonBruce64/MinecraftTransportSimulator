@@ -618,8 +618,6 @@ public class RenderText{
 			//Clear out the active block list to prep for next pass, then pop state.
 			activeRenderBlocks.clear();
 			GL11.glPopMatrix();
-			InterfaceRender.recallTexture();
-			InterfaceRender.setColorState(ColorRGB.WHITE);
 		}
 		
 		private FontRenderBlock getBlockFor(char textChar, ColorRGB color){

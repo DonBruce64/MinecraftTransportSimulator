@@ -5,12 +5,12 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
+import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.rendering.components.AModelParser;
+import minecrafttransportsimulator.rendering.components.RenderableObject;
 
 /**Class responsible for parsing OBJ models into arrays that can be fed to the GPU.
  * Much more versatile than the Forge system.
@@ -25,8 +25,8 @@ public final class ModelParserOBJ extends AModelParser{
 	}
 	
 	@Override
-	protected Map<String, FloatBuffer> parseModelInternal(String modelLocation){
-		Map<String, FloatBuffer> objectMap = new HashMap<String, FloatBuffer>();
+	protected List<RenderableObject> parseModelInternal(String modelLocation){
+		List<RenderableObject> objectList = new ArrayList<RenderableObject>();
 		BufferedReader reader;
 		try{
 			reader = new BufferedReader(new InputStreamReader(ModelParserOBJ.class.getResourceAsStream(modelLocation)));
@@ -53,7 +53,7 @@ public final class ModelParserOBJ extends AModelParser{
 						if(faceList.isEmpty()){
 							InterfaceCore.logError("Object " + objectName + " found with no faces defined at line: " + lineNumber + " in: " + modelLocation);
 						}else{
-							compileVertexArray(objectMap, vertexList, normalList, textureList, faceList, modelLocation, objectName);
+							compileVertexArray(objectList, vertexList, normalList, textureList, faceList, modelLocation, objectName);
 							objectName = null;
 						}
 					}
@@ -107,16 +107,16 @@ public final class ModelParserOBJ extends AModelParser{
 			}
 			
 			//End of file.  Save the last part in process and close the file.
-			compileVertexArray(objectMap, vertexList, normalList, textureList, faceList, modelLocation, objectName);
+			compileVertexArray(objectList, vertexList, normalList, textureList, faceList, modelLocation, objectName);
 			reader.close();
-			return objectMap;
+			return objectList;
 			
 		}catch(IOException e){
 			throw new IllegalStateException("Could not finish parsing: " + modelLocation + " due to IOException error.  Did the file change state during parsing?");
 		}
 	}
 	
-	private static void compileVertexArray(Map<String, FloatBuffer> objectMap, List<float[]> vertexList, List<float[]> normalList, List<float[]> textureList, List<String> faceList, String modelLocation, String objectName){
+	private static void compileVertexArray(List<RenderableObject> objectList, List<float[]> vertexList, List<float[]> normalList, List<float[]> textureList, List<String> faceList, String modelLocation, String objectName){
 		if(objectName == null){
 			InterfaceCore.logError("No object name found in the entire OBJ model file of " + modelLocation + ".  Resorting to 'model' as default.  Are you using groups instead of objects by mistake?");
 			objectName = "model";
@@ -171,7 +171,7 @@ public final class ModelParserOBJ extends AModelParser{
 				compiledBuffer.put(vertexList.get(vertexData[0]));
 			}
 			compiledBuffer.flip();
-			objectMap.put(objectName, compiledBuffer);
+			objectList.add(new RenderableObject(objectName, null, ColorRGB.WHITE, compiledBuffer, true));
 		}catch(Exception e){
 			InterfaceCore.logError("Could not compile points of: " + modelLocation + ":" + objectName + ".  This is likely due to missing UV mapping on some or all faces.");
 		}

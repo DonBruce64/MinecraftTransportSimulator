@@ -38,9 +38,6 @@ public final class RenderInstrument{
      * OpenGL states are not left out-of-whack after rendering is complete.
      */
 	public static void drawInstrument(ItemInstrument instrument, int partNumber, AEntityD_Interactable<?> entity, float scale, boolean blendingEnabled, float partialTicks){
-		//First bind the texture file for this insturment's pack.
-		InterfaceRender.setTexture("/assets/" + instrument.definition.packID + "/textures/instruments.png");
-		
 		//Check if the lights are on.  If so, render the overlays.
 		boolean lightsOn = entity.renderTextLit();
 		
@@ -71,6 +68,9 @@ public final class RenderInstrument{
 						RenderText.draw3DText(text, entity, component.textObject, componentScale, true);
 					}
 				}else{
+					//Bind texture.  This might already be bound, but maybe not if we rendered a font.
+					InterfaceRender.bindTexture("/assets/" + instrument.definition.packID + "/textures/instruments.png");
+					
 					//Init variables.
 					bottomLeft.set(-component.textureWidth/2D, -component.textureHeight/2D, 0);
 					topLeft.set(-component.textureWidth/2D, component.textureHeight/2D, 0);

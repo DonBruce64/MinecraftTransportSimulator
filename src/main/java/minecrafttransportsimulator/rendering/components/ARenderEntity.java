@@ -75,13 +75,6 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 	        GL11.glRotated(entityRotation.x, 1, 0, 0);
 	        GL11.glRotated(entityRotation.z, 0, 0, 1);
 	        
-	        //Set texture.
-	        InterfaceRender.setTexture(getTexture(entity));
-	        String modelLocation = entity.definition.getModelLocation(entity.subName);
-	        if(!objectLists.containsKey(modelLocation)){
-	        	objectLists.put(modelLocation, AModelParser.generateRenderables(modelLocation));
-	        }
-	        
 	        //Mirror model, if required.
 	        boolean mirrored = isMirrored(entity);
 	        float scale = (float) getScale(entity, partialTicks);
@@ -94,8 +87,13 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 			
 	        //Render the main model if we can.
 	        if(!disableModelRendering(entity, partialTicks)){
+	        	String modelLocation = entity.definition.getModelLocation(entity.subName);
+		        if(!objectLists.containsKey(modelLocation)){
+		        	objectLists.put(modelLocation, AModelParser.generateRenderables(entity));
+		        }
+		        
 				for(RenderableModelObject<RenderedEntity> modelObject : objectLists.get(modelLocation)){
-					JSONAnimatedObject animation = entity.animatedObjectDefinitions.get(modelObject.objectName);
+					JSONAnimatedObject animation = entity.animatedObjectDefinitions.get(modelObject.object.name);
 					if(animation == null || animation.applyAfter == null){
 						modelObject.render(entity, blendingEnabled, partialTicks);
 					}
@@ -145,14 +143,6 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 			//Normal sounds are handled on the main tick loop.
 			entity.updateSounds(partialTicks);
 		}
-	}
-	
-	/**
-	 *  Returns the texture that should be bound to this entity.  This may change between render passes, but only ONE texture
-	 *  may be used for any given entity render operation!  By default this returns the JSON-defined texture.
-	 */
-	public String getTexture(RenderedEntity entity){
-		return entity.definition.getTextureLocation(entity.subName);
 	}
 	
 	/**

@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.rendering.components;
 
-import java.nio.FloatBuffer;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
@@ -27,19 +26,19 @@ public class RenderableTreadRoller<AnimationEntity extends AEntityC_Definable<?>
 	public double endZ;
 	public double endAngle;
 	
-	public RenderableTreadRoller(String modelLocation, String objectName, List<RenderableModelObject<AnimationEntity>> allObjects, FloatBuffer vertices){
-		super(modelLocation, objectName, allObjects, vertices);
-		this.isLeft = objectName.toLowerCase().startsWith("l");
-		this.rollerNumber = Integer.valueOf(objectName.substring(objectName.lastIndexOf('_') + 1));
+	public RenderableTreadRoller(String modelLocation, RenderableObject object, List<RenderableModelObject<AnimationEntity>> allObjects){
+		super(modelLocation, object, allObjects);
+		this.isLeft = object.name.toLowerCase().startsWith("l");
+		this.rollerNumber = Integer.valueOf(object.name.substring(object.name.lastIndexOf('_') + 1));
 		
 		//Calculate the center and radius from the model.
 		float minY = 999;
 		float maxY = -999;
 		float minZ = 999;
 		float maxZ = -999;
-		for(int i=0; i<vertices.capacity(); i+=8){
-			float y = vertices.get(i+6);
-			float z = vertices.get(i+7);
+		for(int i=0; i<object.vertices.capacity(); i+=8){
+			float y = object.vertices.get(i+6);
+			float z = object.vertices.get(i+7);
 			minY = Math.min(minY, y);
 			maxY = Math.max(maxY, y);
 			minZ = Math.min(minZ, z);
