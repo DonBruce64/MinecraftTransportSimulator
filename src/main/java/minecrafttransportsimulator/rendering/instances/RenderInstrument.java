@@ -4,6 +4,7 @@ import java.nio.FloatBuffer;
 
 import org.lwjgl.opengl.GL11;
 
+import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
@@ -11,8 +12,8 @@ import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONInstrument.Component;
-import minecrafttransportsimulator.mcinterface.InterfaceRender;
 import minecrafttransportsimulator.rendering.components.DurationDelayClock;
+import minecrafttransportsimulator.rendering.components.RenderableObject;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**Main render class for instruments.  This class contains a main method that takes an instance of {@link ItemInstrument},
@@ -28,7 +29,7 @@ public final class RenderInstrument{
 	private static final Point3d bottomRight = new Point3d();
 	private static final Point3d rotation = new Point3d();
 	private static final float[][] points = new float[6][8];
-	private static final FloatBuffer renderBuffer = FloatBuffer.allocate(6*8);
+	private static final RenderableObject renderObject = new RenderableObject("instrument", null, new ColorRGB(), FloatBuffer.allocate(6*8), false);
 	
 	/**
      * Renders the passed-in instrument using the entity's current state.  Note that this method does NOT take any 
@@ -38,10 +39,12 @@ public final class RenderInstrument{
      * OpenGL states are not left out-of-whack after rendering is complete.
      */
 	public static void drawInstrument(ItemInstrument instrument, int partNumber, AEntityD_Interactable<?> entity, float scale, boolean blendingEnabled, float partialTicks){
-		//Check if the lights are on.  If so, render the overlays.
+		//Check if the lights are on.  If so, render the overlays and the text lit if requested.
 		boolean lightsOn = entity.renderTextLit();
 		
 		//Finally, render the instrument based on the JSON instrument.definitions.
+		//We cache up all the draw calls for this blend pass, and then render them all at once.
+		//This is more efficient than rendering each one individually.
 		for(byte i=0; i<instrument.definition.components.size(); ++i){
 			Component component = instrument.definition.components.get(i);
 			if(component.overlayTexture ? blendingEnabled : !blendingEnabled){
@@ -60,18 +63,10 @@ public final class RenderInstrument{
 					}
 					
 					String text = String.format("%0" + component.textObject.maxLength + "d", (int) textNumeric);
-					if(component.lightUpTexture && lightsOn && ConfigSystem.configObject.clientRendering.brightLights.value){
-						InterfaceRender.setLightingState(false);
-						RenderText.draw3DText(text, entity, component.textObject, componentScale, true);
-						InterfaceRender.setLightingState(true);
-					}else{
-						RenderText.draw3DText(text, entity, component.textObject, componentScale, true);
-					}
+					RenderText.draw3DText(text, entity, component.textObject, componentScale, true);
 				}else{
-					//Bind texture.  This might already be bound, but maybe not if we rendered a font.
-					InterfaceRender.bindTexture("/assets/" + instrument.definition.packID + "/textures/instruments.png");
-					
 					//Init variables.
+					renderObject.texture = "/assets/" + instrument.definition.packID + "/textures/instruments.png";
 					bottomLeft.set(-component.textureWidth/2D, -component.textureHeight/2D, 0);
 					topLeft.set(-component.textureWidth/2D, component.textureHeight/2D, 0);
 					topRight.set(component.textureWidth/2D, component.textureHeight/2D, 0);
@@ -236,13 +231,8 @@ public final class RenderInstrument{
 						
 						//Set points to the variables here and render them.
 						//If the shape is lit, disable lighting for blending.
-						if(component.lightUpTexture && lightsOn && ConfigSystem.configObject.clientRendering.brightLights.value){
-							InterfaceRender.setLightingState(false);
-							renderSquareUV(component, componentScale);
-							InterfaceRender.setLightingState(true);
-						}else{
-							renderSquareUV(component, componentScale);
-						}
+						renderObject.disableLighting = component.lightUpTexture && lightsOn && ConfigSystem.configObject.clientRendering.brightLights.value;
+						renderSquareUV(component, componentScale);
 					}
 				}
 				
@@ -258,7 +248,6 @@ public final class RenderInstrument{
 	private static void renderSquareUV(Component component, float componentScale){
 		//Set X, Y, U, V, and normal Z.  All other values are 0.
 		//Also invert V, as we're going off of pixel-coords here.
-		renderBuffer.clear();
 		for(int i=0; i<points.length; ++i){
 			float[] charVertex = points[i];
 			switch(i){
@@ -306,9 +295,9 @@ public final class RenderInstrument{
 				}
 			}
 			charVertex[2] = componentScale;
-			renderBuffer.put(charVertex);
+			renderObject.vertices.put(charVertex);
 		}
-		renderBuffer.flip();
-		InterfaceRender.renderVertices(renderBuffer);
+		renderObject.vertices.flip();
+		renderObject.render();
 	}
 }

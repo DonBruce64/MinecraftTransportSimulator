@@ -7,12 +7,12 @@ import minecrafttransportsimulator.mcinterface.InterfaceRender;
 
 /**Class designed to represent a renderable object.  Said object has at minimum some
  * geometry, though this can be a cached set of vertices or a hard-coded saved set.
- * It will also have a texture, though this texture may be a single solid white sheet
+ * It may also have a texture, though this texture may be a single solid white sheet
  * for shader-compatible solid rendering.  In this case, the color will be specified,
  * and should be used to change the color prior to rendering.  Various other properties
  * exist for lighting/blending.  In all cases, similar renderable objects should be
  * grouped together and batch-rendered for efficiency.  The primary grouping should be
- * texture, as this prevents re-binds.  Secondary will be color.  Lighting will usually
+ * texture, as this prevents re-binds.  Secondary should be color.  Lighting will usually
  * dictate when the object can render rather than in what order (solid vs translucent pass).
  * To assist with this, the equals() method checks texture and color and, if they are identical,
  * returns true.  This allows for said objects to be used as map-keys for easier grouping.
@@ -29,7 +29,18 @@ import minecrafttransportsimulator.mcinterface.InterfaceRender;
  *  <li>The y-coordinate of a vertex on the model.
  *  <li>The z-coordinate of a vertex on the model.
  *  </ul>
- * 
+ *  
+ *  Note that this object can render lines as well as tris.  For lines, {@link #lineWidth} should
+ *  be set to a non-zero number.  If this is the case, then the buffer will be interpreted as line
+ *  data and line rendering will occur.   the data format is as follows:
+ * <ul>
+ *  <li>The x-coordinate of the first point on the line.
+ *  <li>The y-coordinate of the first point on the line.
+ *  <li>The z-coordinate of the first point on the line.
+ *  <li>The x-coordinate of the second point on the line.
+ *  <li>The y-coordinate of the second point on the line.
+ *  <li>The z-coordinate of the second point on the line.
+ *  </ul>
  *
  * @author don_bruce
  */
@@ -41,12 +52,12 @@ public class RenderableObject{
 	public FloatBuffer vertices;
 	public final boolean cacheVertices;
 	
-	public final boolean isTranslucent;
+	public boolean isTranslucent;
 	public int cachedVertexIndex = -1;
 	public BlendState blend = BlendState.SOLID;
 	public float alpha = 1.0F;
+	public float lineWidth = 0.0F;
 	public boolean disableLighting;
-	public boolean disableLightmap;
 	public boolean enableBrightBlending;
 	
 	public RenderableObject(String name, String texture, ColorRGB color, FloatBuffer vertices, boolean cacheVertices){
@@ -74,42 +85,7 @@ public class RenderableObject{
 	 * after model parsing is ideal, so it's not destroyed until render.
 	 */
 	public void render(){
-		if(disableLighting){
-			InterfaceRender.setSystemLightingState(false);
-		}
-		if(disableLightmap){
-			InterfaceRender.setInternalLightingState(false);
-		}
-		if(enableBrightBlending){
-			InterfaceRender.setBlendBright(true);
-		}
-		if(texture != null){
-			InterfaceRender.bindTexture(texture);
-		}else{
-			InterfaceRender.setTextureState(false);
-		}
-		InterfaceRender.setColorState(color, alpha);
-		if(cacheVertices){
-			if(cachedVertexIndex == -1){
-				cachedVertexIndex = InterfaceRender.cacheVertices(vertices);
-				vertices = null;
-			}
-			InterfaceRender.renderVertices(cachedVertexIndex);
-		}else{
-			InterfaceRender.renderVertices(vertices);
-		}
-		if(disableLighting){
-			InterfaceRender.setSystemLightingState(true);
-		}
-		if(disableLightmap){
-			InterfaceRender.setInternalLightingState(true);
-		}
-		if(enableBrightBlending){
-			InterfaceRender.setBlendBright(false);
-		}
-		if(texture == null){
-			InterfaceRender.setTextureState(true);
-		}
+		InterfaceRender.renderVertices(this);
 	}
 	
 	/**Normalizes the UVs in this object.  This is done to re-map them to the 0->1 texture space
@@ -138,6 +114,12 @@ public class RenderableObject{
 				}
 			}
 		}
+	}
+	
+	/**Destroys this object, resetting all references in it for use in other areas.*/
+	public void destroy(){
+		vertices = null;
+		InterfaceRender.deleteVertices(this);
 	}
 	
 	public enum BlendState{

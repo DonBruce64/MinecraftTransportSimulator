@@ -84,8 +84,8 @@ public class BuilderGUI extends GuiScreen{
 		
 		//If we are light-sensitive, enable lighting.
 		if(!gui.getGUILightMode().equals(GUILightingMode.NONE)){
+			InterfaceRender.setInternalLightingState(true);
 			InterfaceRender.setLightingToPosition(gui.getGUILightSource().position);
-			InterfaceRender.setSystemLightingState(false);
 		}
 		
 		//Bind the standard texture and render the background.

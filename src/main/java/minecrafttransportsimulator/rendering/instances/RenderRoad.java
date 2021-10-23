@@ -2,9 +2,7 @@ package minecrafttransportsimulator.rendering.instances;
 
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.lwjgl.opengl.GL11;
 
@@ -24,36 +22,16 @@ import minecrafttransportsimulator.rendering.components.RenderableObject;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
-	private static final Map<TileEntityRoad, Map<RoadComponent, Integer>> roadCachedVertexMap = new HashMap<TileEntityRoad, Map<RoadComponent, Integer>>();
 	
 	@Override
 	public void renderAdditionalModels(TileEntityRoad road, boolean blendingEnabled, float partialTicks){
-		if(!blendingEnabled){
+		if(road.isActive() ^ blendingEnabled){
 			//Render road components.
-			//First set helper variables.
-			Point3d position = new Point3d();
-			Point3d rotation = new Point3d();
-			
-			//If we haven't rendered the road yet, do so now.
-			//We cache it in a DisplayList, as there are a LOT of transforms done each component.
-			if(!roadCachedVertexMap.containsKey(road)){
-				roadCachedVertexMap.put(road, new HashMap<RoadComponent, Integer>());
-			}
-			
-			//If the road is inactive, we render everything as a hologram.
-			if(!road.isActive()){
-				if(blendingEnabled){
-					InterfaceRender.setTextureState(false);
-					InterfaceRender.setColorState(ColorRGB.GREEN, 0.5F);
-				}else{
-					return;
-				}
-			}
-			
-			Map<RoadComponent, Integer> cachedVertexMap = roadCachedVertexMap.get(road);
 			for(RoadComponent component : road.components.keySet()){
-				ItemRoadComponent componentItem = road.components.get(component);
-				if(!cachedVertexMap.containsKey(component)){
+				if(!road.renderableObjects.containsKey(component)){
+					Point3d position = new Point3d();
+					Point3d rotation = new Point3d();
+					ItemRoadComponent componentItem = road.components.get(component);
 					switch(component){
 						case CORE_STATIC: {
 							List<RenderableObject> parsedModel = AModelParser.parseModel(componentItem.definition.getModelLocation(componentItem.subName));
@@ -75,7 +53,7 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 								totalModel.put(object.vertices);
 							}
 							totalModel.flip();
-							cachedVertexMap.put(component, InterfaceRender.cacheVertices(totalModel));
+							road.renderableObjects.put(component, new RenderableObject(component.name(), componentItem.definition.getTextureLocation(componentItem.subName), new ColorRGB(), totalModel, true));
 							break;
 						}
 						case CORE_DYNAMIC: {
@@ -165,7 +143,7 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 									convertedVertices.put(segmentVertex);
 								}
 								convertedVertices.flip();
-								cachedVertexMap.put(component, InterfaceRender.cacheVertices(convertedVertices));
+								road.renderableObjects.put(component, new RenderableObject(component.name(), componentItem.definition.getTextureLocation(componentItem.subName), new ColorRGB(), convertedVertices, true));
 							}
 							break;
 						}
@@ -173,11 +151,17 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 							break;
 					}
 				}
-				
+				RenderableObject object = road.renderableObjects.get(component);
 				if(road.isActive()){
-					InterfaceRender.bindTexture(componentItem.definition.getTextureLocation(componentItem.subName));
+					object.color.setTo(ColorRGB.WHITE);
+					object.alpha = 1.0F;
+					object.isTranslucent = false;
+				}else{
+					object.color.setTo(ColorRGB.GREEN);
+					object.alpha = 0.5F;
+					object.isTranslucent = true;
 				}
-				InterfaceRender.renderVertices(cachedVertexMap.get(component));
+				object.render();
 			}
 			
 			//If we are inactive render the blocking blocks and the main block.
@@ -196,125 +180,197 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 				GL11.glTranslated(mainBlockBox.localCenter.x, mainBlockBox.localCenter.y, mainBlockBox.localCenter.z);
 				RenderBoundingBox.renderSolid(mainBlockBox);
 				GL11.glPopMatrix();
+			}else{
+				//If we are in devMode and have hitboxes shown, render road bounds and colliding boxes.
+				if(ConfigSystem.configObject.clientControls.devMode.value && InterfaceRender.shouldRenderBoundingBoxes()){
+					if(road.devObjects.isEmpty()){
+						generateDevElements(road);
+					}
+					for(RenderableObject object : road.devObjects){
+						object.render();
+					}
+				}
 			}
+		}
+	}
+	
+	private static void generateDevElements(TileEntityRoad road){
+		//Create the information hashes.
+		Point3d position = new Point3d();
+		Point3d rotation = new Point3d();
+		RenderableObject curveObject;
+		if(road.dynamicCurve != null){
+			//Render actual curve.
+			curveObject = new RenderableObject("curve", null, ColorRGB.GREEN, FloatBuffer.allocate((int) (road.dynamicCurve.pathLength*10)*6), false);
+			curveObject.lineWidth = 2.0F;
+			curveObject.disableLighting = true;
+			for(float f=0; curveObject.vertices.hasRemaining(); f+=0.1){
+				road.dynamicCurve.setPointToPositionAt(position, f);
+				
+				curveObject.vertices.put((float) position.x);
+				curveObject.vertices.put((float) position.y);
+				curveObject.vertices.put((float) position.z);
+				curveObject.vertices.put((float) position.x);
+				curveObject.vertices.put((float) position.y + 1.0F);
+				curveObject.vertices.put((float) position.z);
+			}
+			curveObject.vertices.flip();
+			road.devObjects.add(curveObject);
 			
-			//If we are in devMode and have hitboxes shown, render road bounds and colliding boxes.
-			if(ConfigSystem.configObject.clientControls.devMode.value && InterfaceRender.shouldRenderBoundingBoxes()){
-				//Render the information hashes.
-				//First set states.
-				InterfaceRender.setTextureState(false);
-				InterfaceRender.setSystemLightingState(false);
-				GL11.glLineWidth(2);
-				GL11.glBegin(GL11.GL_LINES);
+			//Render the outer border bounds.
+			curveObject = new RenderableObject("curve", null, ColorRGB.CYAN, FloatBuffer.allocate((int) (road.dynamicCurve.pathLength*10)*6), false);
+			curveObject.lineWidth = 2.0F;
+			curveObject.disableLighting = true;
+			for(float f=0; curveObject.vertices.hasRemaining(); f+=0.1){
+				road.dynamicCurve.setPointToRotationAt(rotation, f);
+				position.set(road.definition.road.borderOffset, 0, 0).rotateFine(rotation);
+				road.dynamicCurve.offsetPointByPositionAt(position, f);
 				
-				//Render the curves.
-				//First render the actual curve if we are a dynamic road.
-				if(road.dynamicCurve != null){
-					//Render actual curve.
-					InterfaceRender.setColorState(ColorRGB.GREEN);
-					for(float f=0; f<road.dynamicCurve.pathLength; f+=0.1){
-						road.dynamicCurve.setPointToPositionAt(position, f);
-						GL11.glVertex3d(position.x, position.y, position.z);
-						GL11.glVertex3d(position.x, position.y + 1.0, position.z);
-					}
+				curveObject.vertices.put((float) position.x);
+				curveObject.vertices.put((float) position.y);
+				curveObject.vertices.put((float) position.z);
+				curveObject.vertices.put((float) position.x);
+				curveObject.vertices.put((float) position.y + 1.0F);
+				curveObject.vertices.put((float) position.z);
+			}
+			curveObject.vertices.flip();
+			road.devObjects.add(curveObject);
+		}
+		
+		//Now render the lane curve segments.
+		for(RoadLane lane : road.lanes){
+			for(BezierCurve laneCurve : lane.curves){
+				//Render the curve bearing indicator
+				curveObject = new RenderableObject("curve", null, ColorRGB.RED, FloatBuffer.allocate(4*3), false);
+				curveObject.lineWidth = 2.0F;
+				curveObject.disableLighting = true;
+				for(float f=0; curveObject.vertices.hasRemaining(); f+=0.1){
+					laneCurve.setPointToPositionAt(position, f);
 					
-					//Render the outer border bounds.
-					InterfaceRender.setColorState(ColorRGB.CYAN);
-					for(float f=0; f<road.dynamicCurve.pathLength; f+=0.1){
-						road.dynamicCurve.setPointToRotationAt(rotation, f);
-						position.set(road.definition.road.borderOffset, 0, 0).rotateFine(rotation);
-						road.dynamicCurve.offsetPointByPositionAt(position, f);
-						
-						GL11.glVertex3d(position.x, position.y, position.z);
-						GL11.glVertex3d(position.x, position.y + 1.0, position.z);
-					}
+					curveObject.vertices.put((float) laneCurve.startPos.x);
+					curveObject.vertices.put((float) laneCurve.startPos.y);
+					curveObject.vertices.put((float) laneCurve.startPos.z);
+					curveObject.vertices.put((float) laneCurve.startPos.x);
+					curveObject.vertices.put((float) laneCurve.startPos.y + 3);
+					curveObject.vertices.put((float) laneCurve.startPos.z);
+					curveObject.vertices.put((float) laneCurve.startPos.x);
+					curveObject.vertices.put((float) laneCurve.startPos.y + 3);
+					curveObject.vertices.put((float) laneCurve.startPos.z);
+					
+					Point3d bearingPos = laneCurve.endPos.copy().subtract(laneCurve.startPos).normalize().add(laneCurve.startPos);
+					curveObject.vertices.put((float) bearingPos.x);
+					curveObject.vertices.put((float) bearingPos.y + 3);
+					curveObject.vertices.put((float) bearingPos.z);
 				}
+				curveObject.vertices.flip();
+				road.devObjects.add(curveObject);
 				
-				//Now render the lane curve segments.
-				for(RoadLane lane : road.lanes){
-					for(BezierCurve laneCurve : lane.curves){
-						//Render the curve bearing indicator
-						InterfaceRender.setColorState(ColorRGB.RED);
-						GL11.glVertex3d(laneCurve.startPos.x, laneCurve.startPos.y, laneCurve.startPos.z);
-						GL11.glVertex3d(laneCurve.startPos.x, laneCurve.startPos.y + 3, laneCurve.startPos.z);
-						GL11.glVertex3d(laneCurve.startPos.x, laneCurve.startPos.y + 3, laneCurve.startPos.z);
-						Point3d bearingPos = laneCurve.endPos.copy().subtract(laneCurve.startPos).normalize().add(laneCurve.startPos);
-						GL11.glVertex3d(bearingPos.x, bearingPos.y + 3, bearingPos.z);
-						
-						//Render all the points on the curve.
-						InterfaceRender.setColorState(ColorRGB.YELLOW);
-						laneCurve.setPointToPositionAt(position, 0);
-						for(float f=0; f<laneCurve.pathLength; f+=0.1){
-							laneCurve.setPointToPositionAt(position, f);
-							GL11.glVertex3d(position.x, position.y, position.z);
-							GL11.glVertex3d(position.x, position.y + 1.0, position.z);
+				//Render all the points on the curve.
+				curveObject = new RenderableObject("curve", null, ColorRGB.YELLOW, FloatBuffer.allocate((int) (laneCurve.pathLength*10)*6), false);
+				curveObject.lineWidth = 2.0F;
+				curveObject.disableLighting = true;
+				for(float f=0; curveObject.vertices.hasRemaining(); f+=0.1){
+					laneCurve.setPointToPositionAt(position, f);
+					
+					curveObject.vertices.put((float) position.x);
+					curveObject.vertices.put((float) position.y);
+					curveObject.vertices.put((float) position.z);
+					curveObject.vertices.put((float) position.x);
+					curveObject.vertices.put((float) position.y + 1.0F);
+					curveObject.vertices.put((float) position.z);
+				}
+				curveObject.vertices.flip();
+				road.devObjects.add(curveObject);
+			}
+		}
+		
+		//Render the lane connections.
+		for(RoadLane lane : road.lanes){
+			for(List<RoadLaneConnection> curvePriorConnections : lane.priorConnections){
+				BezierCurve currentCurve = lane.curves.get(lane.priorConnections.indexOf(curvePriorConnections));
+				for(RoadLaneConnection priorConnection : curvePriorConnections){
+					TileEntityRoad otherRoad = road.world.getTileEntity(priorConnection.tileLocation);
+					if(otherRoad != null){
+						RoadLane otherLane = otherRoad.lanes.get(priorConnection.laneNumber);
+						if(otherLane != null){
+							curveObject = new RenderableObject("curve", null, ColorRGB.PINK, FloatBuffer.allocate(6*3), false);
+							curveObject.lineWidth = 2.0F;
+							curveObject.disableLighting = true;
+							
+							//First render our own offset point.
+							currentCurve.setPointToPositionAt(position, 0.5F);
+							curveObject.vertices.put((float) position.x);
+							curveObject.vertices.put((float) position.y + 3);
+							curveObject.vertices.put((float) position.z);
+							curveObject.vertices.put((float) position.x);
+							curveObject.vertices.put((float) position.y + 0.5F);
+							curveObject.vertices.put((float) position.z);
+							curveObject.vertices.put((float) position.x);
+							curveObject.vertices.put((float) position.y + 0.5F);
+							curveObject.vertices.put((float) position.z);
+							
+							//Now render the connection point.
+							BezierCurve otherCurve = otherLane.curves.get(priorConnection.curveNumber);
+							otherCurve.setPointToPositionAt(position, priorConnection.connectedToStart ? 0.5F : otherCurve.pathLength - 0.5F);
+							position.add(otherLane.road.position).subtract(road.position);
+							curveObject.vertices.put((float) position.x);
+							curveObject.vertices.put((float) position.y + 0.5F);
+							curveObject.vertices.put((float) position.z);
+							curveObject.vertices.put((float) position.x);
+							curveObject.vertices.put((float) position.y + 0.5F);
+							curveObject.vertices.put((float) position.z);
+							curveObject.vertices.put((float) position.x);
+							curveObject.vertices.put((float) position.y + 2.0F);
+							curveObject.vertices.put((float) position.z);
+							curveObject.vertices.flip();
+							road.devObjects.add(curveObject);
 						}
 					}
 				}
-				
-				//Render the lane connections.
-				InterfaceRender.setColorState(ColorRGB.PINK);
-				for(RoadLane lane : road.lanes){
-					for(List<RoadLaneConnection> curvePriorConnections : lane.priorConnections){
-						BezierCurve currentCurve = lane.curves.get(lane.priorConnections.indexOf(curvePriorConnections));
-						for(RoadLaneConnection priorConnection : curvePriorConnections){
-							TileEntityRoad otherRoad = road.world.getTileEntity(priorConnection.tileLocation);
-							if(otherRoad != null){
-								RoadLane otherLane = otherRoad.lanes.get(priorConnection.laneNumber);
-								if(otherLane != null){
-									BezierCurve otherCurve = otherLane.curves.get(priorConnection.curveNumber);
-									
-									//First render our own offset point.
-									currentCurve.setPointToPositionAt(position, 0.5F);
-									GL11.glVertex3d(position.x, position.y + 3.0, position.z);
-									GL11.glVertex3d(position.x, position.y + 0.5, position.z);
-									GL11.glVertex3d(position.x, position.y + 0.5, position.z);
-									
-									//Now render the connection point.
-									otherCurve.setPointToPositionAt(position, priorConnection.connectedToStart ? 0.5F : otherCurve.pathLength - 0.5F);
-									position.add(otherLane.road.position).subtract(road.position);
-									GL11.glVertex3d(position.x, position.y + 0.5, position.z);
-									GL11.glVertex3d(position.x, position.y + 0.5, position.z);
-									GL11.glVertex3d(position.x, position.y + 2.0, position.z);
-								}
-							}
+			}
+		}
+		for(RoadLane lane : road.lanes){
+			for(List<RoadLaneConnection> curveNextConnections : lane.nextConnections){
+				BezierCurve currentCurve = lane.curves.get(lane.nextConnections.indexOf(curveNextConnections));
+				for(RoadLaneConnection nextConnection : curveNextConnections){
+					TileEntityRoad otherRoad = road.world.getTileEntity(nextConnection.tileLocation);
+					if(otherRoad != null){
+						RoadLane otherLane = otherRoad.lanes.get(nextConnection.laneNumber);
+						if(otherLane != null){
+							curveObject = new RenderableObject("curve", null, ColorRGB.ORANGE, FloatBuffer.allocate(6*3), false);
+							curveObject.lineWidth = 2.0F;
+							curveObject.disableLighting = true;
+							
+							//First render our own offset point.
+							currentCurve.setPointToPositionAt(position, currentCurve.pathLength - 0.5F);
+							curveObject.vertices.put((float) position.x);
+							curveObject.vertices.put((float) position.y + 3);
+							curveObject.vertices.put((float) position.z);
+							curveObject.vertices.put((float) position.x);
+							curveObject.vertices.put((float) position.y + 0.5F);
+							curveObject.vertices.put((float) position.z);
+							curveObject.vertices.put((float) position.x);
+							curveObject.vertices.put((float) position.y + 0.5F);
+							curveObject.vertices.put((float) position.z);
+							
+							//Now render the connection point.
+							BezierCurve otherCurve = otherLane.curves.get(nextConnection.curveNumber);
+							otherCurve.setPointToPositionAt(position, nextConnection.connectedToStart ? 0.5F : otherCurve.pathLength - 0.5F);
+							position.add(otherLane.road.position).subtract(road.position);
+							curveObject.vertices.put((float) position.x);
+							curveObject.vertices.put((float) position.y + 0.5F);
+							curveObject.vertices.put((float) position.z);
+							curveObject.vertices.put((float) position.x);
+							curveObject.vertices.put((float) position.y + 0.5F);
+							curveObject.vertices.put((float) position.z);
+							curveObject.vertices.put((float) position.x);
+							curveObject.vertices.put((float) position.y + 2.0F);
+							curveObject.vertices.put((float) position.z);
+							curveObject.vertices.flip();
+							road.devObjects.add(curveObject);
 						}
 					}
 				}
-				InterfaceRender.setColorState(ColorRGB.ORANGE);
-				for(RoadLane lane : road.lanes){
-					for(List<RoadLaneConnection> curveNextConnections : lane.nextConnections){
-						BezierCurve currentCurve = lane.curves.get(lane.nextConnections.indexOf(curveNextConnections));
-						for(RoadLaneConnection nextConnection : curveNextConnections){
-							TileEntityRoad otherRoad = road.world.getTileEntity(nextConnection.tileLocation);
-							if(otherRoad != null){
-								RoadLane otherLane = otherRoad.lanes.get(nextConnection.laneNumber);
-								if(otherLane != null){
-									BezierCurve otherCurve = otherLane.curves.get(nextConnection.curveNumber);
-									
-									//First render our own offset point.
-									currentCurve.setPointToPositionAt(position, currentCurve.pathLength - 0.5F);
-									GL11.glVertex3d(position.x, position.y + 3.0, position.z);
-									GL11.glVertex3d(position.x, position.y + 0.5, position.z);
-									GL11.glVertex3d(position.x, position.y + 0.5, position.z);
-									
-									//Now render the connection point.
-									otherCurve.setPointToPositionAt(position, nextConnection.connectedToStart ? 0.5F : otherCurve.pathLength - 0.5F);
-									position.add(otherLane.road.position).subtract(road.position);
-									GL11.glVertex3d(position.x, position.y + 0.5, position.z);
-									GL11.glVertex3d(position.x, position.y + 0.5, position.z);
-									GL11.glVertex3d(position.x, position.y + 2.0, position.z);
-								}
-							}
-						}
-					}
-				}
-				
-				//Set states back to normal.
-				GL11.glEnd();
-				InterfaceRender.setTextureState(true);
-				InterfaceRender.setSystemLightingState(true);
-				GL11.glLineWidth(1);
 			}
 		}
 	}
@@ -327,6 +383,7 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 	@Override
 	public void adjustPositionRotation(TileEntityRoad road, float partialTicks, Point3d entityPosition, Point3d entityRotation){
 		super.adjustPositionRotation(road, partialTicks, entityPosition, entityRotation);
+		//Set angles to 0 as we do rendering based on the curve properties, which already have angles. 
 		entityRotation.set(0, 0, 0);
 	}
 	

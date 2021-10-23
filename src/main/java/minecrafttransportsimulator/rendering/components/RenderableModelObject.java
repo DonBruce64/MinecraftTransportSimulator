@@ -95,8 +95,10 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 			GL11.glPushMatrix();
 			JSONAnimatedObject definition = entity.animatedObjectDefinitions.get(object.name);
 			if(doPreRenderTransforms(entity, definition != null ? definition.animations : null, blendingEnabled, partialTicks)){
-				//Set our standard texture.
-				object.texture = entity.getTexture();
+				//Set our standard texture, provided we're not a window.
+				if(!isWindow){
+					object.texture = entity.getTexture();
+				}
 				
 				//If we are a online texture, bind that one rather than our own.
 				if(isOnlineTexture){
@@ -144,15 +146,13 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 					if(blendingEnabled && lightDef != null && lightLevel > 0 && lightDef.isBeam && entity.shouldRenderBeams()){
 						//Model that's actually a beam, render it with beam lighting/blending. 
 						object.disableLighting = ConfigSystem.configObject.clientRendering.brightLights.value;
-						object.disableLightmap = ConfigSystem.configObject.clientRendering.brightLights.value;
 						object.enableBrightBlending = ConfigSystem.configObject.clientRendering.blendedLights.value;
 						object.alpha = Math.min((1 - entity.world.getLightBrightness(entity.position, false))*lightLevel, 1);
 						object.render();
 					}else if(!(blendingEnabled ^ object.isTranslucent)){
 						//Either solid texture on solid pass, or translucent texture on blended pass.
-						//Need to disable lighting if we are a light-up texture.
+						//Need to disable light-mapping from daylight if we are a light-up texture.
 						object.disableLighting = ConfigSystem.configObject.clientRendering.brightLights.value && lightDef != null && lightLevel > 0 && !lightDef.emissive && !lightDef.isBeam;
-						object.disableLightmap = object.disableLighting;
 						object.render();
 						if(interiorWindowObject != null && ConfigSystem.configObject.clientRendering.innerWindows.value){
 							interiorWindowObject.render();
@@ -281,7 +281,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 	 *  as it allows for the freeing of OpenGL resources.
 	 */
 	public void destroy(){
-		InterfaceRender.deleteVertices(object.cachedVertexIndex);
+		object.destroy();
 		treadPoints.remove(modelLocation);
 		flareObjects.remove(object.name);
 		beamObjects.remove(object.name);
@@ -417,7 +417,6 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 			}
 			
 			colorObject.disableLighting = ConfigSystem.configObject.clientRendering.brightLights.value;
-			colorObject.disableLightmap = ConfigSystem.configObject.clientRendering.brightLights.value;
 			colorObject.color.setTo(color);
 			colorObject.alpha = lightLevel;
 			colorObject.render();
@@ -453,7 +452,6 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 				//Render all flares.
 				if(flareObject != null){
 					flareObject.disableLighting = ConfigSystem.configObject.clientRendering.brightLights.value;
-					flareObject.disableLightmap = ConfigSystem.configObject.clientRendering.brightLights.value;
 					flareObject.color.setTo(color);
 					flareObject.alpha = blendableBrightness;
 					flareObject.render();
@@ -462,7 +460,6 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 				//Render all beams.
 				if(beamObject != null && entity.shouldRenderBeams()){
 					beamObject.disableLighting = ConfigSystem.configObject.clientRendering.brightLights.value;
-					beamObject.disableLightmap = ConfigSystem.configObject.clientRendering.brightLights.value;
 					beamObject.enableBrightBlending = ConfigSystem.configObject.clientRendering.blendedLights.value;
 					beamObject.color.setTo(color);
 					beamObject.alpha = blendableBrightness;
@@ -482,7 +479,6 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 			}
 			
 			coverObject.disableLighting = ConfigSystem.configObject.clientRendering.brightLights.value && lightLevel > 0;
-			coverObject.disableLightmap = ConfigSystem.configObject.clientRendering.brightLights.value && lightLevel > 0;
 			coverObject.render();
 		}
 	}
@@ -498,6 +494,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 			offsetObject.vertices.put(vertexData[6] + vertexData[1]*COLOR_OFFSET);
 			offsetObject.vertices.put(vertexData[7] + vertexData[2]*COLOR_OFFSET);
 		}
+		parsedObject.vertices.rewind();
 		offsetObject.normalizeUVs();
 		offsetObject.vertices.flip();
 		return offsetObject;
@@ -514,6 +511,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 			offsetObject.vertices.put(vertexData[6] + vertexData[1]*COVER_OFFSET);
 			offsetObject.vertices.put(vertexData[7] + vertexData[2]*COVER_OFFSET);
 		}
+		parsedObject.vertices.rewind();
 		offsetObject.normalizeUVs();
 		offsetObject.vertices.flip();
 		return offsetObject;

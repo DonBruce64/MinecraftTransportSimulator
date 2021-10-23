@@ -15,7 +15,7 @@ import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.jsondefs.JSONText;
-import minecrafttransportsimulator.mcinterface.InterfaceRender;
+import minecrafttransportsimulator.rendering.components.RenderableObject;
 
 /**Main render class for text.  This class contains a few methods for rendering text.  These mainly pertain to rendering
  * text strings given a specified set of formatting and position/rotation.
@@ -38,12 +38,12 @@ public class RenderText{
 		if(!text.isEmpty()){
 			mutablePosition.set(x, y, 0);
 			//Need to invert 2D GUI text, as it's Y coord origin is top-left VS UV-mapped bottom-left.
-			getFontData(customFontName).renderText(text, mutablePosition, FLIPPED_TEXT_FOR_GUIS, alignment, scale, autoScale, wrapWidth, 1.0F, true, color);
+			getFontData(customFontName).renderText(text, mutablePosition, FLIPPED_TEXT_FOR_GUIS, alignment, scale, autoScale, wrapWidth, 1.0F, true, color, false);
 		}
 	}
 	
 	/**
-	 *  Similar to {@link #drawBasicText(String, int, int, ColorRGB, TextAlignment, int)}, except this method
+	 *  Similar to the 2D text drawing method, except this method
 	 *  will render the text according to the passed-in text JSON in 3D space at the point specified.
 	 *  Essentially, this is JSON-defined rendering rather than manual entry of points.
 	 *  Note that this method expects transforms to be applied such that the coordinate space is local
@@ -55,12 +55,8 @@ public class RenderText{
 	 */
 	public static void draw3DText(String text, AEntityC_Definable<?> entity, JSONText definition, float preScaledFactor, boolean pixelCoords){
 		if(!text.isEmpty()){
+			//Get font data for requested font.
 			FontData fontData = getFontData(definition.fontName);
-			
-			//If we have light-up text, disable lightmap.
-			if(definition.lightsUp && entity.renderTextLit()){
-				InterfaceRender.setInternalLightingState(false);
-			}
 			
 			//Get the actual color we will need to render with based on JSON.
 			ColorRGB color = entity.getTextColor(definition.inheritedColorIndex, definition.color);
@@ -74,12 +70,7 @@ public class RenderText{
 				//GUI coordinates use top-left as origin rather than bottom-left.
 				mutablePosition.y = -mutablePosition.y;
 			}
-			fontData.renderText(text, mutablePosition, definition.rot, TextAlignment.values()[definition.renderPosition], scale, definition.autoScale, definition.wrapWidth, preScaledFactor, pixelCoords, color);
-			
-			//Set light back to normal.
-			if(definition.lightsUp && entity.renderTextLit()){
-				InterfaceRender.setInternalLightingState(true);
-			}
+			fontData.renderText(text, mutablePosition, definition.rot, TextAlignment.values()[definition.renderPosition], scale, definition.autoScale, definition.wrapWidth, preScaledFactor, pixelCoords, color, definition.lightsUp && entity.renderTextLit());
 		}
 	}
 	
@@ -163,15 +154,14 @@ public class RenderText{
 		private final float[] offsetsMaxV = new float[Character.MAX_VALUE];
 		
 		
-		/**Font render blocks.  These are created initially for use in render calls.  Referencing is as follows:
+		/**Font render objects.  These are created initially for use in render calls.  Referencing is as follows:
 		 * The first array element is the texture sheet being used.
 		 * The second array element is the color.
 		 * This ensures that there will always be one element for any permutation of states.**/
-		private static final Map<String, Map<ColorRGB, FontRenderBlock>> createdRenderBlocks = new HashMap<String, Map<ColorRGB, FontRenderBlock>>();
-		/**Active font render blocks.  These are a list of the currently-used {@link #fontRenderBlocks}.
-		 * Items are added to this list during string parsing.  At the end, it will be populated and
-		 * should be looped over for drawing.*/
-		private final Set<FontRenderBlock> activeRenderBlocks = new LinkedHashSet<FontRenderBlock>();
+		private static final Map<String, Map<ColorRGB, RenderableObject>> createdRenderObjects = new HashMap<String, Map<ColorRGB, RenderableObject>>();
+		/**Active font render objects.  Items are added to this list during string parsing.  
+		 * At the end, it will be populated and should be looped over for drawing.*/
+		private final Set<RenderableObject> activeRenderObjects = new LinkedHashSet<RenderableObject>();
 		/**Mutable helper for doing vertex-building operations.**/
 		private final float[] charVertex = new float[3];
 		/**Mutable helper for doing vertex-building operations for font effects like bold and underline.**/
@@ -263,7 +253,7 @@ public class RenderText{
 			return width + text.length()*CHAR_SPACING;
 		}
 		
-		public void renderText(String text, Point3d position, Point3d rotation, TextAlignment alignment, float scale, boolean autoScale, int wrapWidth, float preScaledFactor, boolean pixelCoords, ColorRGB color){
+		public void renderText(String text, Point3d position, Point3d rotation, TextAlignment alignment, float scale, boolean autoScale, int wrapWidth, float preScaledFactor, boolean pixelCoords, ColorRGB color, boolean renderLit){
 			//Pre-calculate rotation of normals, as these won't change.
 			boolean doRotation = !rotation.isZero();
 			float[] normals = new float[]{0.0F, 0.0F, scale*preScaledFactor};
@@ -393,25 +383,25 @@ public class RenderText{
 								//Need to remove vertices in buffer so they don't get rendered.
 								//However, only do this if we have vertices.
 								//We could end up needing to word wrap before a formatting char.
-								FontRenderBlock priorRenderBlock = getBlockFor(priorChar, currentColor);
-								if(priorRenderBlock.vertices.position() != 0){
-									priorRenderBlock.vertices.position(priorRenderBlock.vertices.position() - 6*8);
+								RenderableObject priorRenderObject = getObjectFor(priorChar, currentColor);
+								if(priorRenderObject.vertices.position() != 0){
+									priorRenderObject.vertices.position(priorRenderObject.vertices.position() - 6*8);
 								}
 								
 								//If we had supplemental state rendering, remove from those blocks too.
 								if(currentState.bold){
 									//Bold, remove another char as we double-rendered.
-									priorRenderBlock.vertices.position(priorRenderBlock.vertices.position() - 6*8);
+									priorRenderObject.vertices.position(priorRenderObject.vertices.position() - 6*8);
 								}
 								if(currentState.underline){
-									//Remove 1 char from the underline block.
-									FontRenderBlock underlineRenderBlock = getBlockFor(UNDERLINE_CHAR, currentColor);
-									underlineRenderBlock.vertices.position(underlineRenderBlock.vertices.position() - 6*8);
+									//Remove 1 char from the underline object.
+									RenderableObject underlineRenderObject = getObjectFor(UNDERLINE_CHAR, currentColor);
+									underlineRenderObject.vertices.position(underlineRenderObject.vertices.position() - 6*8);
 								}
 								if(currentState.strikethrough){
-									//Remove 1 char from the strikethough block.
-									FontRenderBlock strikethroughRenderBlock = getBlockFor(STRIKETHROUGH_CHAR, currentColor);
-									strikethroughRenderBlock.vertices.position(strikethroughRenderBlock.vertices.position() - 6*8);
+									//Remove 1 char from the strikethough object.
+									RenderableObject strikethroughRenderObject = getObjectFor(STRIKETHROUGH_CHAR, currentColor);
+									strikethroughRenderObject.vertices.position(strikethroughRenderObject.vertices.position() - 6*8);
 								}
 							}
 						}	
@@ -430,7 +420,7 @@ public class RenderText{
 					//If we are underline, add an underline overlay.
 					//If we are italic, we slightly skew the UV map by 1px.
 					//If we are strikethough, we add a strikethough overlay.
-					FontRenderBlock currentRenderBlock = getBlockFor(textChar, currentColor);
+					RenderableObject currentRenderObject = getObjectFor(textChar, currentColor);
 					float charWidth = charWidths[textChar];
 					int charSteps = 6;
 					if(currentState.bold)charSteps += 6;
@@ -498,17 +488,17 @@ public class RenderText{
 								
 								//Get the current char vertex we are mimicking.  This requires checking the buffer.
 								//Skip the first three indexes as they are normal data we don't care about.
-								int currentIndex = currentRenderBlock.vertices.position();
-								currentRenderBlock.vertices.position(currentIndex - (6-j%6 + j-6)*8 + 3);
-								currentRenderBlock.vertices.get(supplementalUV);
-								currentRenderBlock.vertices.get(supplementalVertex);
-								currentRenderBlock.vertices.position(currentIndex);
+								int currentIndex = currentRenderObject.vertices.position();
+								currentRenderObject.vertices.position(currentIndex - (6-j%6 + j-6)*8 + 3);
+								currentRenderObject.vertices.get(supplementalUV);
+								currentRenderObject.vertices.get(supplementalVertex);
+								currentRenderObject.vertices.position(currentIndex);
 								
 								if(currentState.bold && j < 12){
 									//Just render a second char slightly offset.
 									supplementalVertex[0] += 0.3F;
 									supplementalVertex[1] += 0.3F;
-									currentRenderBlock.vertices.put(normals).put(supplementalUV).put(supplementalVertex);
+									currentRenderObject.vertices.put(normals).put(supplementalUV).put(supplementalVertex);
 								}else{
 									char customChar;
 									if(currentState.underline && j<18){
@@ -561,10 +551,10 @@ public class RenderText{
 										}
 									}
 
-									//Add supplemental vertex to render block, and add to active list if required.
-									FontRenderBlock customRenderBlock = getBlockFor(customChar, currentColor); 
-									customRenderBlock.vertices.put(normals).put(supplementalUV).put(supplementalVertex);
-									activeRenderBlocks.add(customRenderBlock);
+									//Add supplemental vertex to render object, and add to active list if required.
+									RenderableObject customRenderObject = getObjectFor(customChar, currentColor); 
+									customRenderObject.vertices.put(normals).put(supplementalUV).put(supplementalVertex);
+									activeRenderObjects.add(customRenderObject);
 								}
 							}
 						}
@@ -583,73 +573,50 @@ public class RenderText{
 							}
 							
 							//Add char vertex to render block.
-							currentRenderBlock.vertices.put(normals).put(charUV).put(charVertex);
+							currentRenderObject.vertices.put(normals).put(charUV).put(charVertex);
 						}
 					}
 					
 					//Increment offset to next char position and set char points and add render block to active list.
 					currentOffset += charWidth + CHAR_SPACING;
-					activeRenderBlocks.add(currentRenderBlock);
+					activeRenderObjects.add(currentRenderObject);
 				}
 			}
 			
-			//All points obtained, render.  Lighting is done by the calling method and will be set there, color is set here.
-			String boundTexture = null;
-			ColorRGB boundColor = null;
+			//All points obtained, render.
 			GL11.glPushMatrix();
 			GL11.glTranslated(position.x, position.y, position.z);
 			GL11.glScalef(scale, scale, scale);
-			for(FontRenderBlock block : activeRenderBlocks){
-				if(!block.texture.equals(boundTexture)){
-					InterfaceRender.bindTexture(block.texture);
-					boundTexture = block.texture;
-				}
-				if(!block.color.equals(boundColor)){
-					InterfaceRender.setColorState(block.color);
-					boundColor = block.color;
-				}
-				//Flip block to current vertex amount prior to rendering so position/limit are correct.
-				block.vertices.flip();
-				InterfaceRender.renderVertices(block.vertices);
-				
-				//Clear block arrays to prep for next rendering.
-				block.vertices.clear();
+			for(RenderableObject object : activeRenderObjects){
+				object.disableLighting = renderLit;
+				object.vertices.flip();
+				object.render();
+				object.vertices.clear();
 			}
-			//Clear out the active block list to prep for next pass, then pop state.
-			activeRenderBlocks.clear();
+			//Clear out the active object list to prep for next pass, then pop state.
+			activeRenderObjects.clear();
 			GL11.glPopMatrix();
 		}
 		
-		private FontRenderBlock getBlockFor(char textChar, ColorRGB color){
+		private RenderableObject getObjectFor(char textChar, ColorRGB color){
 			//First get the font block;
 			//MNake sure we didn't get passed a bad char from some unicode junk text.
 			if(textChar/CHARS_PER_TEXTURE_SHEET >= fontLocations.length){
 				textChar = 0;
 			}
 			String font = fontLocations[textChar/CHARS_PER_TEXTURE_SHEET];
-			Map<ColorRGB, FontRenderBlock> map1 = createdRenderBlocks.get(font);
+			Map<ColorRGB, RenderableObject> map1 = createdRenderObjects.get(font);
 			if(map1 == null){
-				map1 = new HashMap<ColorRGB, FontRenderBlock>();
-				createdRenderBlocks.put(font, map1);
+				map1 = new HashMap<ColorRGB, RenderableObject>();
+				createdRenderObjects.put(font, map1);
 			}
 			
-			FontRenderBlock block = map1.get(color);
-			if(block == null){
-				block = new FontRenderBlock(font, color);
-				map1.put(color, block);
+			RenderableObject object = map1.get(color);
+			if(object == null){
+				object = new RenderableObject("font_block", font, color, FloatBuffer.allocate(MAX_VERTCIES_PER_RENDER*8), false);
+				map1.put(color, object);
 			}
-			return block;
-		}
-		
-		private class FontRenderBlock{
-			private final String texture;
-			private final ColorRGB color;
-			private final FloatBuffer vertices = FloatBuffer.allocate(MAX_VERTCIES_PER_RENDER*8);
-			
-			private FontRenderBlock(String texture, ColorRGB color){
-				this.texture = texture;
-				this.color = color;
-			}
+			return object;
 		}
 		
 		private static class FontRenderState{

@@ -183,7 +183,7 @@ public class InterfaceEventsOverlay{
 				        		//Pop the matrix, and set blending and lighting back to normal.
 				        		GL11.glPopMatrix();
 				        		InterfaceRender.setBlend(true);
-				        		InterfaceRender.setInternalLightingState(false);
+				        		InterfaceRender.setLightingState(false);
 							}
 			        		
 			        		//Return to prevent resetting the GUI.

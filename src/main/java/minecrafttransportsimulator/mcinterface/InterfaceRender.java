@@ -41,9 +41,59 @@ public class InterfaceRender{
 	private static float lastLightmapY;
 	
 	/**
+	 *  Renders the vertices stored in the passed-in {@link RenderableObject}.
+	 *  If the vertices should be cached per {@link RenderableObject#cacheVertices},
+	 *  then they are done so and a pointer-index is stored into {@link RenderableObject#cachedVertexIndex}.
+	 *  {@link RenderableObject#vertices} is then set to null to free memory.
+	 *  If the object is ever deleted, then {@link #deleteVertices(RenderableObject)}
+	 *  should be called to free up the respective GPU memory.
+	 */
+	public static void renderVertices(RenderableObject object){
+		if(object.disableLighting){
+			setLightingState(false);
+		}
+		if(object.enableBrightBlending){
+			setBlendBright(true);
+		}
+		if(object.texture != null){
+			bindTexture(object.texture);
+		}else{
+			setTextureState(false);
+		}
+		setColorState(object.color, object.alpha);
+		if(object.cacheVertices){
+			if(object.cachedVertexIndex == -1){
+				object.cachedVertexIndex = cacheVertices(object.vertices);
+				object.vertices = null;
+			}
+			renderVertices(object.cachedVertexIndex);
+		}else if(object.lineWidth != 0){
+			renderLines(object.vertices, object.lineWidth);
+		}else{
+			renderVertices(object.vertices);
+		}
+		if(object.disableLighting){
+			setLightingState(true);
+		}
+		if(object.enableBrightBlending){
+			setBlendBright(false);
+		}
+		if(object.texture == null){
+			setTextureState(true);
+		}
+	}
+	
+	/**
+	 *  Deletes the cached vertices associated with the specified {@link RenderableObject}.
+	 */
+	public static void deleteVertices(RenderableObject object){
+		GL11.glDeleteLists(object.cachedVertexIndex, 1);
+	}
+	
+	/**
 	 *  Renders a set of raw vertices without any caching.
 	 */
-	public static void renderVertices(FloatBuffer vertices){
+	private static void renderVertices(FloatBuffer vertices){
 		GL11.glBegin(GL11.GL_TRIANGLES);
 		while(vertices.hasRemaining()){
 			GL11.glNormal3f(vertices.get(), vertices.get(), vertices.get());
@@ -58,8 +108,23 @@ public class InterfaceRender{
 	/**
 	 *  Renders a set of vertices previously cached with {@link #cacheVertices(FloatBuffer)}
 	 */
-	public static void renderVertices(int index){
+	private static void renderVertices(int index){
 		GL11.glCallList(index);
+	}
+	
+	/**
+	 *  Renders a set of raw lines without any caching.
+	 */
+	private static void renderLines(FloatBuffer vertices, float width){
+		GL11.glLineWidth(width);
+		GL11.glBegin(GL11.GL_LINES);
+		while(vertices.hasRemaining()){
+			GL11.glVertex3f(vertices.get(), vertices.get(), vertices.get());
+		}
+		GL11.glEnd();
+		//Rewind buffer for next read.
+		vertices.rewind();
+		GL11.glLineWidth(1);
 	}
 	
 	/**
@@ -69,26 +134,12 @@ public class InterfaceRender{
 	 *  which will render the cached vertices from this function.  Note that the vertex format
 	 *  is expected to be the same as what is in {@link RenderableObject}
 	 */
-	public static int cacheVertices(FloatBuffer vertices){
+	private static int cacheVertices(FloatBuffer vertices){
 		int displayListIndex = GL11.glGenLists(1);
 		GL11.glNewList(displayListIndex, GL11.GL_COMPILE);
 		renderVertices(vertices);
 		GL11.glEndList();
 		return displayListIndex;
-	}
-	
-	/**
-	 *  Deletes the cached vertices with the specified index.
-	 */
-	public static void deleteVertices(int index){
-		GL11.glDeleteLists(index, 1);
-	}
-	
-	/**
-	 *  Returns true if bounding boxes should be rendered.
-	 */
-	public static boolean shouldRenderBoundingBoxes(){
-		return Minecraft.getMinecraft().getRenderManager().isDebugBoundingBox();
 	}
 	
 	/**
@@ -253,7 +304,7 @@ public class InterfaceRender{
 	 *  Sets the blend state to bright.  This does special blending
 	 *  when blending is enabled.
 	 */
-	public static void setBlendBright(boolean enabled){
+	private static void setBlendBright(boolean enabled){
 		if(enabled){
 			GlStateManager.disableAlpha();
 			GlStateManager.blendFunc(GL11.GL_DST_COLOR, GL11.GL_SRC_ALPHA);
@@ -289,6 +340,13 @@ public class InterfaceRender{
 		}else{
 			GlStateManager.disableTexture2D();
 		}
+	}
+	
+	/**
+	 *  Returns true if bounding boxes should be rendered.
+	 */
+	public static boolean shouldRenderBoundingBoxes(){
+		return Minecraft.getMinecraft().getRenderManager().isDebugBoundingBox();
 	}
 	
 	/**

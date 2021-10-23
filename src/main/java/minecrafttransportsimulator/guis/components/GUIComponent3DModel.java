@@ -8,7 +8,6 @@ import java.util.Map;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.mcinterface.InterfaceRender;
 import minecrafttransportsimulator.rendering.components.AModelParser;
 import minecrafttransportsimulator.rendering.components.RenderableObject;
 
@@ -128,7 +127,7 @@ public class GUIComponent3DModel{
 	 *  Clear the caches.  Call this when closing the GUI this component is a part of to free up RAM.
 	 */
     public static void clearModelCaches(){
-    	modelParsedObjects.values().forEach(modelParsedObject -> InterfaceRender.deleteVertices(modelParsedObject.cachedVertexIndex));
+    	modelParsedObjects.values().forEach(modelParsedObject -> modelParsedObject.destroy());
     	modelParsedObjects.clear();
     }
 }

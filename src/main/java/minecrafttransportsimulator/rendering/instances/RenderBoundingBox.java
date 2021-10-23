@@ -16,34 +16,57 @@ public final class RenderBoundingBox{
      * Renders the passed-in box as solid.
      */
 	public static void renderSolid(BoundingBox box){
-		GL11.glBegin(GL11.GL_QUADS);
+		GL11.glBegin(GL11.GL_TRIANGLES);
 		GL11.glVertex3d(+box.widthRadius, +box.heightRadius, +box.depthRadius);
 		GL11.glVertex3d(-box.widthRadius, +box.heightRadius, +box.depthRadius);
+		GL11.glVertex3d(-box.widthRadius, -box.heightRadius, +box.depthRadius);
+		
+		GL11.glVertex3d(+box.widthRadius, +box.heightRadius, +box.depthRadius);
 		GL11.glVertex3d(-box.widthRadius, -box.heightRadius, +box.depthRadius);
 		GL11.glVertex3d(+box.widthRadius, -box.heightRadius, +box.depthRadius);
 		
+		
 		GL11.glVertex3d(+box.widthRadius, +box.heightRadius, -box.depthRadius);
 		GL11.glVertex3d(+box.widthRadius, +box.heightRadius, +box.depthRadius);
 		GL11.glVertex3d(+box.widthRadius, -box.heightRadius, +box.depthRadius);
+		
+		GL11.glVertex3d(+box.widthRadius, +box.heightRadius, -box.depthRadius);
+		GL11.glVertex3d(+box.widthRadius, -box.heightRadius, +box.depthRadius);
 		GL11.glVertex3d(+box.widthRadius, -box.heightRadius, -box.depthRadius);
+		
 		
 		GL11.glVertex3d(+box.widthRadius, -box.heightRadius, -box.depthRadius);
 		GL11.glVertex3d(-box.widthRadius, -box.heightRadius, -box.depthRadius);
 		GL11.glVertex3d(-box.widthRadius, +box.heightRadius, -box.depthRadius);
+		
+		GL11.glVertex3d(+box.widthRadius, -box.heightRadius, -box.depthRadius);
+		GL11.glVertex3d(-box.widthRadius, +box.heightRadius, -box.depthRadius);
 		GL11.glVertex3d(+box.widthRadius, +box.heightRadius, -box.depthRadius);
+		
 		
 		GL11.glVertex3d(-box.widthRadius, -box.heightRadius, -box.depthRadius);
 		GL11.glVertex3d(-box.widthRadius, -box.heightRadius, +box.depthRadius);
 		GL11.glVertex3d(-box.widthRadius, +box.heightRadius, +box.depthRadius);
+		
+		GL11.glVertex3d(-box.widthRadius, -box.heightRadius, -box.depthRadius);
+		GL11.glVertex3d(-box.widthRadius, +box.heightRadius, +box.depthRadius);
 		GL11.glVertex3d(-box.widthRadius, +box.heightRadius, -box.depthRadius);
+		
 		
 		GL11.glVertex3d(+box.widthRadius, +box.heightRadius, +box.depthRadius);
 		GL11.glVertex3d(+box.widthRadius, +box.heightRadius, -box.depthRadius);
 		GL11.glVertex3d(-box.widthRadius, +box.heightRadius, -box.depthRadius);
+		
+		GL11.glVertex3d(+box.widthRadius, +box.heightRadius, +box.depthRadius);
+		GL11.glVertex3d(-box.widthRadius, +box.heightRadius, -box.depthRadius);
 		GL11.glVertex3d(-box.widthRadius, +box.heightRadius, +box.depthRadius);
+		
 		
 		GL11.glVertex3d(-box.widthRadius, -box.heightRadius, +box.depthRadius);
 		GL11.glVertex3d(-box.widthRadius, -box.heightRadius, -box.depthRadius);
+		GL11.glVertex3d(+box.widthRadius, -box.heightRadius, -box.depthRadius);
+		
+		GL11.glVertex3d(-box.widthRadius, -box.heightRadius, +box.depthRadius);
 		GL11.glVertex3d(+box.widthRadius, -box.heightRadius, -box.depthRadius);
 		GL11.glVertex3d(+box.widthRadius, -box.heightRadius, +box.depthRadius);
 		GL11.glEnd();

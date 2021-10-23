@@ -25,6 +25,7 @@ import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityRoadCollisionUpdate;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
+import minecrafttransportsimulator.rendering.components.RenderableObject;
 import minecrafttransportsimulator.rendering.instances.RenderRoad;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.item.ItemStack;
@@ -53,6 +54,8 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	//Dynamic variables based on states.
 	private boolean isActive;
 	public final Map<RoadComponent, ItemRoadComponent> components = new HashMap<RoadComponent, ItemRoadComponent>();
+	public final Map<RoadComponent, RenderableObject> renderableObjects = new HashMap<RoadComponent, RenderableObject>();
+	public final List<RenderableObject> devObjects = new ArrayList<RenderableObject>();
 	public final List<Point3d> collisionBlockOffsets;
 	public final List<Point3d> collidingBlockOffsets;
 	
@@ -129,6 +132,17 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 			if(components.containsKey(componentType)){
 				drops.add(components.get(componentType).getNewStack());
 			}
+		}
+	}
+	
+	@Override
+	public void remove(){
+		super.remove();
+		for(RenderableObject object : renderableObjects.values()){
+			object.destroy();
+		}
+		for(RenderableObject object : devObjects){
+			object.destroy();
 		}
 	}
 	

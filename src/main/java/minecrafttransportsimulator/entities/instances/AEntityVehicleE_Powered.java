@@ -316,12 +316,12 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 	
 	@Override
 	public boolean renderTextLit(){
-		if(definition.motorized.hasRunningLights && variablesOn.contains(RUNNINGLIGHT_VARIABLE)) return electricPower > 3;
-		if(definition.motorized.hasHeadlights && variablesOn.contains(HEADLIGHT_VARIABLE)) return electricPower > 3;
-		if(definition.motorized.hasNavLights && variablesOn.contains(NAVIGATIONLIGHT_VARIABLE)) return electricPower > 3;
-		if(definition.motorized.hasStrobeLights && variablesOn.contains(STROBELIGHT_VARIABLE)) return electricPower > 3;
-		if(definition.motorized.hasTaxiLights && variablesOn.contains(TAXILIGHT_VARIABLE)) return electricPower > 3;
-		if(definition.motorized.hasLandingLights && variablesOn.contains(LANDINGLIGHT_VARIABLE)) return electricPower > 3;
+		if(definition.motorized.hasRunningLights && variablesOn.contains(RUNNINGLIGHT_VARIABLE)) return electricPower > 3 && super.renderTextLit();
+		if(definition.motorized.hasHeadlights && variablesOn.contains(HEADLIGHT_VARIABLE)) return electricPower > 3 && super.renderTextLit();
+		if(definition.motorized.hasNavLights && variablesOn.contains(NAVIGATIONLIGHT_VARIABLE)) return electricPower > 3 && super.renderTextLit();
+		if(definition.motorized.hasStrobeLights && variablesOn.contains(STROBELIGHT_VARIABLE)) return electricPower > 3 && super.renderTextLit();
+		if(definition.motorized.hasTaxiLights && variablesOn.contains(TAXILIGHT_VARIABLE)) return electricPower > 3 && super.renderTextLit();
+		if(definition.motorized.hasLandingLights && variablesOn.contains(LANDINGLIGHT_VARIABLE)) return electricPower > 3 && super.renderTextLit();
 		return false;
 	}
 	

@@ -35,6 +35,7 @@ import minecrafttransportsimulator.rendering.components.DurationDelayClock;
 import minecrafttransportsimulator.sound.InterfaceSound;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.CameraSystem;
+import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.item.ItemStack;
 
@@ -329,7 +330,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
    	 *  author doesn't want it to be.
    	 */
     public boolean renderTextLit(){
-    	return true;
+    	return ConfigSystem.configObject.clientRendering.brightLights.value;
     }
     
     /**
