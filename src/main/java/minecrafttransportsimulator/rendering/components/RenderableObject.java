@@ -2,6 +2,7 @@ package minecrafttransportsimulator.rendering.components;
 
 import java.nio.FloatBuffer;
 
+import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.mcinterface.InterfaceRender;
 
@@ -60,6 +61,60 @@ public class RenderableObject{
 	public boolean disableLighting;
 	public boolean enableBrightBlending;
 	
+	private static final int[][] FACE_POINT_INDEXES = new int[][]{
+		//X-axis.
+		new int[]{0, 1, 3, 2},
+		new int[]{5, 4, 6, 7},
+		
+		//Y-axis.
+		new int[]{6, 2, 3, 7},
+		new int[]{5, 1, 0, 4},
+		
+		//Z-axis.
+		new int[]{4, 0, 2, 6},
+		new int[]{1, 5, 7, 3}
+	};
+	private static final float[][] FACE_NORMALS = new float[][]{
+		//X-axis.
+		new float[]{-1.0F, 0.0F, 0.0F},
+		new float[]{1.0F, 0.0F, 0.0F},
+		
+		//Y-axis.
+		new float[]{0.0F, 1.0F, 0.0F},
+		new float[]{0.0F, -1.0F, 0.0F},
+		
+		//Z-axis.
+		new float[]{0.0F, 0.0F, -1.0F},
+		new float[]{0.0F, 0.0F, 1.0F}
+	};
+	private static final int[][] WIREFRAME_POINT_INDEXES = new int[][]{
+		//Bottom.
+		new int[]{0, 1},
+		new int[]{4, 5},
+		new int[]{0, 4},
+		new int[]{1, 5},
+		
+		//Top.
+		new int[]{2, 3},
+		new int[]{6, 7},
+		new int[]{2, 6},
+		new int[]{3, 7},
+		
+		//Sides.
+		new int[]{0, 2},
+		new int[]{1, 3},
+		new int[]{4, 6},
+		new int[]{5, 7}
+	};
+	
+	private static final int BUFFERS_PER_LINE = 6;
+	private static final int BUFFERS_PER_VERTEX = 8;
+	private static final int BUFFERS_PER_FACE = BUFFERS_PER_VERTEX*3;
+	//2 faces per side for tris, and 6 total sides.
+	private static final int BUFFERS_PER_HOLGRAPHIC_BOX = 2*6*BUFFERS_PER_FACE;
+	//12 lines per box.
+	private static final int BUFFERS_PER_WIREFRAME_BOX = 12*BUFFERS_PER_LINE;
+	
 	public RenderableObject(String name, String texture, ColorRGB color, FloatBuffer vertices, boolean cacheVertices){
 		this.name = name;
 		this.texture = texture;
@@ -67,6 +122,28 @@ public class RenderableObject{
 		this.cacheVertices = cacheVertices;
 		this.isTranslucent = name.toLowerCase().contains(AModelParser.TRANSLUCENT_OBJECT_NAME);
 		this.vertices = vertices;
+	}
+	
+	/*Shortened constructor used for lines.  Automatically sets line width and lighting.**/
+	public RenderableObject(ColorRGB color, int numberLines){
+		this("", null, color, FloatBuffer.allocate(numberLines*BUFFERS_PER_LINE), false);
+		lineWidth = 2.0F;
+		disableLighting = true;
+	}
+	
+	/*Shortened constructor used for bounding boxes.  Automatically sets lighting and translucency depending on if the box
+	 * is holgraphic or wireframe as defined by the final boolean.**/
+	public RenderableObject(BoundingBox box, ColorRGB color, boolean holgraphic){
+		this("", holgraphic ? "mts:textures/rendering/holobox.png" : null, color, FloatBuffer.allocate(holgraphic ? BUFFERS_PER_HOLGRAPHIC_BOX : BUFFERS_PER_WIREFRAME_BOX), false);
+		if(holgraphic){
+			isTranslucent = true;
+			alpha = 0.5F;
+			setHolographicBoundingBox(box);
+		}else{
+			lineWidth = 2.0F;
+			setWireframeBoundingBox(box);
+		}
+		disableLighting = true;
 	}
 	
 	@Override
@@ -86,6 +163,60 @@ public class RenderableObject{
 	 */
 	public void render(){
 		InterfaceRender.renderVertices(this);
+	}
+	
+	/**Adds a line to the {@link #vertices} of this object.
+	 */
+	public void addLine(float x1, float y1, float z1, float x2, float y2, float z2){
+		vertices.put(x1);
+		vertices.put(y1);
+		vertices.put(z1);
+		vertices.put(x2);
+		vertices.put(y2);
+		vertices.put(z2);
+	}
+	
+	/**sets the holographic {@link BoundingBox} box to the {@link #vertices} of this object.
+	 * The box added will be centered at 0,0,0.
+	 */
+	public void setHolographicBoundingBox(BoundingBox box){
+		float[][] points = box.getEdgePoints();
+		for(int i=0; i<6; ++i){
+			for(int j=0; j<6; ++j){
+				//Add normals and UVs.  UVs get normalized later.
+				vertices.put(FACE_NORMALS[i]);
+				vertices.put(0.0F);
+				vertices.put(0.0F);
+				
+				//If we are index 3, use point 0.
+				//If we are index 4, use point 2.
+				//If we are index 5, use point 3.
+				switch(j){
+					case(3): vertices.put(points[FACE_POINT_INDEXES[i][0]]); break;
+					case(4): vertices.put(points[FACE_POINT_INDEXES[i][2]]); break;
+					case(5): vertices.put(points[FACE_POINT_INDEXES[i][3]]); break;
+					default: vertices.put(points[FACE_POINT_INDEXES[i][j]]); break;
+				}
+			}
+		}
+		
+		//Normalize UVs to align with texture.
+		normalizeUVs();
+		
+		//Flip for rendering.
+		vertices.flip();
+	}
+	
+	/**Sets the wireframe {@link BoundingBox} box to the {@link #vertices} of this object.
+	 * The box added will be centered at 0,0,0, and will extend to the bound of the BoundingBox.
+	 */
+	public void setWireframeBoundingBox(BoundingBox box){
+		float[][] points = box.getEdgePoints();
+		for(int[] indexes : WIREFRAME_POINT_INDEXES){
+			vertices.put(points[indexes[0]]);
+			vertices.put(points[indexes[1]]);
+		}
+		vertices.flip();
 	}
 	
 	/**Normalizes the UVs in this object.  This is done to re-map them to the 0->1 texture space
@@ -116,7 +247,9 @@ public class RenderableObject{
 		}
 	}
 	
-	/**Destroys this object, resetting all references in it for use in other areas.*/
+	/**Destroys this object, resetting all references in it for use in other areas.
+	 * Note that this is not required if {@link #cacheVertices} is false as no external
+	 * references will be kept in that mode.*/
 	public void destroy(){
 		vertices = null;
 		InterfaceRender.deleteVertices(this);

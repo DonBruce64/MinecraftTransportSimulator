@@ -38,7 +38,7 @@ public class RenderText{
 		if(!text.isEmpty()){
 			mutablePosition.set(x, y, 0);
 			//Need to invert 2D GUI text, as it's Y coord origin is top-left VS UV-mapped bottom-left.
-			getFontData(customFontName).renderText(text, mutablePosition, FLIPPED_TEXT_FOR_GUIS, alignment, scale, autoScale, wrapWidth, 1.0F, true, color, false);
+			getFontData(customFontName).renderText(text, mutablePosition, FLIPPED_TEXT_FOR_GUIS, alignment, scale, autoScale, wrapWidth, 1.0F, true, color, true);
 		}
 	}
 	

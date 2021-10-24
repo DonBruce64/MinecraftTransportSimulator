@@ -19,9 +19,9 @@ import minecrafttransportsimulator.items.instances.ItemItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.InterfaceGUI;
-import minecrafttransportsimulator.mcinterface.InterfaceRender;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.rendering.components.ARenderEntityMultipart;
+import minecrafttransportsimulator.rendering.components.ARenderEntity;
+import minecrafttransportsimulator.rendering.components.RenderableObject;
 import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
 import minecrafttransportsimulator.sound.InterfaceSound;
 import minecrafttransportsimulator.sound.SoundInstance;
@@ -35,16 +35,12 @@ import minecrafttransportsimulator.systems.PackParserSystem;
  *
  * @author don_bruce
  */
-public final class RenderVehicle extends ARenderEntityMultipart<EntityVehicleF_Physics>{	
+public final class RenderVehicle extends ARenderEntity<EntityVehicleF_Physics>{	
 	
 	@Override
 	public void renderAdditionalModels(EntityVehicleF_Physics vehicle, boolean blendingEnabled, float partialTicks){
 		//Render holograms for missing parts.
 		if(blendingEnabled){
-			//Disable lighting and texture rendering.
-			InterfaceRender.setLightingState(false);
-			InterfaceRender.setTextureState(false);
-			
 			//If we are holding a part, render the valid slots.
 			//If we are holding a scanner, render all slots, but only render the looked-at one with items above it.
 			WrapperPlayer player = InterfaceClient.getClientPlayer();
@@ -65,18 +61,18 @@ public final class RenderVehicle extends ARenderEntityMultipart<EntityVehicleF_P
 							
 					if(isHoldingPart){
 						BoundingBox partBox = partSlotEntry.getKey();
+						RenderableObject renderable = vehicle.allPartSlotRenderables.get(partBox);
 						GL11.glPushMatrix();
 						GL11.glRotated(-vehicle.angles.z, 0, 0, 1);
 						GL11.glRotated(-vehicle.angles.x, 1, 0, 0);
 						GL11.glRotated(-vehicle.angles.y, 0, 1, 0);
 						GL11.glTranslated(partBox.globalCenter.x - vehicle.position.x, partBox.globalCenter.y - vehicle.position.y, partBox.globalCenter.z - vehicle.position.z);
-						if(isPartValid){
-							InterfaceRender.setColorState(ColorRGB.GREEN, 0.5F);
-							RenderBoundingBox.renderSolid(partBox);
-						}else{
-							InterfaceRender.setColorState(ColorRGB.RED, 0.5F);
-							RenderBoundingBox.renderSolid(partBox);
-						}
+						
+						//Need to re-add vertices in case the part box size changed from the held item.
+						//Also need to change the color to match held state.
+						renderable.setHolographicBoundingBox(partBox);
+						renderable.color.setTo(isPartValid ? ColorRGB.GREEN : ColorRGB.RED);
+						renderable.render();
 						GL11.glPopMatrix();
 					}
 				}
@@ -91,11 +87,16 @@ public final class RenderVehicle extends ARenderEntityMultipart<EntityVehicleF_P
 				for(Entry<BoundingBox, JSONPartDefinition> partSlotEntry : vehicle.allPartSlotBoxes.entrySet()){
 					JSONPartDefinition placementDefinition = partSlotEntry.getValue();
 					if(!vehicle.areVariablesBlocking(placementDefinition, player) && (placementDefinition.validSubNames == null || placementDefinition.validSubNames.contains(vehicle.subName))){
-						InterfaceRender.setColorState(ColorRGB.BLUE, 0.5F);
 						BoundingBox currentBox = partSlotEntry.getKey();
+						RenderableObject renderable = vehicle.allPartSlotRenderables.get(currentBox);
 						GL11.glPushMatrix();
 						GL11.glTranslated(currentBox.globalCenter.x - vehicle.position.x, currentBox.globalCenter.y - vehicle.position.y, currentBox.globalCenter.z - vehicle.position.z);
-						RenderBoundingBox.renderSolid(currentBox);
+						
+						//Need to re-add vertices in case the part box size changed from the held item.
+						//Also need to change the color to blue, as it might not be blue if we did part checks before.
+						renderable.setHolographicBoundingBox(currentBox);
+						renderable.color.setTo(ColorRGB.BLUE);
+						renderable.render();
 						GL11.glPopMatrix();
 						if(currentBox.getIntersectionPoint(playerEyes, playerLookVector) != null){
 							if(highlightedBox == null || (currentBox.globalCenter.distanceTo(playerEyes) < highlightedBox.globalCenter.distanceTo(playerEyes))){
@@ -109,9 +110,6 @@ public final class RenderVehicle extends ARenderEntityMultipart<EntityVehicleF_P
 				if(highlightedBox != null){
 					//Get the definition for this box.
 					JSONPartDefinition packVehicleDef = vehicle.allPartSlotBoxes.get(highlightedBox);
-					
-					//Re-enable 2D texture before rendering item and text.
-					InterfaceRender.setTextureState(true);
 					
 					//Get all parts that go to this boxes position.
 					List<AItemPart> validParts = new ArrayList<AItemPart>();
@@ -136,14 +134,14 @@ public final class RenderVehicle extends ARenderEntityMultipart<EntityVehicleF_P
 					
 					//Translate to the spot above where the item would render and render the standard text.
 					GL11.glTranslated(0, -1.75F, 0);
-					RenderText.draw2DText("Types: " + packVehicleDef.types.toString(), null, 0, 0, ColorRGB.BLACK, TextAlignment.CENTERED, 1/64F, false, 0);
+					RenderText.draw2DText("Types: " + packVehicleDef.types.toString(), null, 0, 0, ColorRGB.WHITE, TextAlignment.CENTERED, 1/64F, false, 0);
 					GL11.glTranslated(0, 0.15F, 0);
-					RenderText.draw2DText("Min/Max: " + String.valueOf(packVehicleDef.minValue) + "/" + String.valueOf(packVehicleDef.maxValue), null, 0, 0, ColorRGB.BLACK, TextAlignment.CENTERED, 1/64F, false, 0);
+					RenderText.draw2DText("Min/Max: " + String.valueOf(packVehicleDef.minValue) + "/" + String.valueOf(packVehicleDef.maxValue), null, 0, 0, ColorRGB.WHITE, TextAlignment.CENTERED, 1/64F, false, 0);
 					GL11.glTranslated(0, 0.15F, 0);
 					if(packVehicleDef.customTypes != null){
-						RenderText.draw2DText("CustomTypes: " + packVehicleDef.customTypes.toString(), null, 0, 0, ColorRGB.BLACK, TextAlignment.CENTERED, 1/64F, false, 0);
+						RenderText.draw2DText("CustomTypes: " + packVehicleDef.customTypes.toString(), null, 0, 0, ColorRGB.WHITE, TextAlignment.CENTERED, 1/64F, false, 0);
 					}else{
-						RenderText.draw2DText("CustomTypes: None", null, 0, 0, ColorRGB.BLACK, TextAlignment.CENTERED, 1/64F, false, 0);
+						RenderText.draw2DText("CustomTypes: None", null, 0, 0, ColorRGB.WHITE, TextAlignment.CENTERED, 1/64F, false, 0);
 					}
 					GL11.glTranslated(0, 0.25F, 0);
 					
@@ -170,10 +168,6 @@ public final class RenderVehicle extends ARenderEntityMultipart<EntityVehicleF_P
 					GL11.glPopMatrix();
 				}
 			}
-			
-			//Re-enable lighting and texture rendering.
-			InterfaceRender.setLightingState(true);
-			InterfaceRender.setTextureState(true);
 		}
 	}
 	
@@ -181,13 +175,16 @@ public final class RenderVehicle extends ARenderEntityMultipart<EntityVehicleF_P
 	protected void renderBoundingBoxes(EntityVehicleF_Physics vehicle, Point3d entityPositionDelta){
 		super.renderBoundingBoxes(vehicle, entityPositionDelta);
 		//Draw the ground bounding boxes.
-		InterfaceRender.setColorState(ColorRGB.BLUE);
 		for(BoundingBox box : vehicle.groundDeviceCollective.getGroundBounds()){
 			Point3d boxCenterDelta = box.globalCenter.copy().subtract(vehicle.position).add(entityPositionDelta);
 			GL11.glTranslated(boxCenterDelta.x, boxCenterDelta.y, boxCenterDelta.z);
-			RenderBoundingBox.renderWireframe(box);
+			
+			//Need to re-add vertices in case the wheels changed since creation of the bounding box.
+			//Also need to change the color to blue.
+			box.renderable.color.setTo(ColorRGB.BLUE);
+			box.renderable.setWireframeBoundingBox(box);
+			box.renderable.render();
 			GL11.glTranslated(-boxCenterDelta.x, -boxCenterDelta.y, -boxCenterDelta.z);
 		}
-		InterfaceRender.setColorState(ColorRGB.WHITE);
 	}
 }

@@ -253,7 +253,7 @@ public class InterfaceRender{
 	 *  This can be used to prevent OpenGL from doing shadowing on things
 	 *  that it gets wrong, such as text. 
 	 */
-	public static void setSystemLightingState(boolean enabled){
+	private static void setSystemLightingState(boolean enabled){
 		if(enabled){
 			GlStateManager.enableLighting();
 		}else{
@@ -319,22 +319,15 @@ public class InterfaceRender{
 	 *  In particular, this is needed if colors are changed during MC internal draw calls,
 	 *  such as rendering a string, changing the color, and then rendering another string.
 	 */
-	public static void setColorState(ColorRGB color, float alpha){
+	private static void setColorState(ColorRGB color, float alpha){
 		GlStateManager.color(color.red, color.green, color.blue, alpha);
-	}
-	
-	/**
-	 *  Like {@link #setColorState(ColorRGB, float)}, but assumes no alpha (alpha is 1.0).
-	 */
-	public static void setColorState(ColorRGB color){
-		setColorState(color, 1.0F);
 	}
 	
 	/**
 	 *  Enables or disables textures.  If textures are disabled, rendering will be
 	 *  solid-color shapes.
 	 */
-	public static void setTextureState(boolean enabled){
+	private static void setTextureState(boolean enabled){
 		if(enabled){
 			GlStateManager.enableTexture2D();
 		}else{

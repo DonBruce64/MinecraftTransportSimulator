@@ -6,6 +6,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
 import minecrafttransportsimulator.items.components.AItemBase;
@@ -21,6 +23,7 @@ import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketPartGun;
+import minecrafttransportsimulator.rendering.components.RenderableObject;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -75,6 +78,7 @@ public class PartGun extends APart{
 	private long lastTimeFired;
 	private final Set<EntityBullet> activeBullets = new HashSet<EntityBullet>();
 	public final List<Integer> bulletsHitOnServer = new ArrayList<Integer>();
+	public final RenderableObject muzzleWireframe = new RenderableObject(new BoundingBox(new Point3d(), 0.25, 0.25, 0.25), ColorRGB.BLUE, false);
 		
 	public PartGun(AEntityE_Multipart<?> entityOn, JSONPartDefinition placementDefinition, WrapperNBT data, APart parentPart){
 		super(entityOn, placementDefinition, data, parentPart);

@@ -54,8 +54,9 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	//Dynamic variables based on states.
 	private boolean isActive;
 	public final Map<RoadComponent, ItemRoadComponent> components = new HashMap<RoadComponent, ItemRoadComponent>();
-	public final Map<RoadComponent, RenderableObject> renderableObjects = new HashMap<RoadComponent, RenderableObject>();
-	public final List<RenderableObject> devObjects = new ArrayList<RenderableObject>();
+	public final Map<RoadComponent, RenderableObject> componentRenderables = new HashMap<RoadComponent, RenderableObject>();
+	public final List<RenderableObject> devRenderables = new ArrayList<RenderableObject>();
+	public final Map<Point3d, RenderableObject> blockingRenderables = new HashMap<Point3d, RenderableObject>();
 	public final List<Point3d> collisionBlockOffsets;
 	public final List<Point3d> collidingBlockOffsets;
 	
@@ -138,10 +139,10 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	@Override
 	public void remove(){
 		super.remove();
-		for(RenderableObject object : renderableObjects.values()){
+		for(RenderableObject object : componentRenderables.values()){
 			object.destroy();
 		}
-		for(RenderableObject object : devObjects){
+		for(RenderableObject object : devRenderables){
 			object.destroy();
 		}
 	}

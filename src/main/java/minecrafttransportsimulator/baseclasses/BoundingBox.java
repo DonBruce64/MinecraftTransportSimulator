@@ -5,7 +5,10 @@ import java.util.List;
 
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
+import minecrafttransportsimulator.jsondefs.JSONCollisionGroup;
+import minecrafttransportsimulator.mcinterface.InterfaceRender;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.rendering.components.RenderableObject;
 import net.minecraft.util.math.AxisAlignedBB;
 
 /**Basic bounding box.  This class is mutable and allows for quick setting of values
@@ -30,6 +33,7 @@ public class BoundingBox{
 	public final Point3d globalCenter;
 	public final Point3d currentCollisionDepth;
 	public final List<Point3d> collidingBlockPositions = new ArrayList<Point3d>();
+	public final RenderableObject renderable;
 	private final Point3d tempGlobalCenter;
 	
 	public double widthRadius;
@@ -40,21 +44,21 @@ public class BoundingBox{
 	
 	/**Simple constructor.  Used for blocks, bounds checks, or other things that don't need local/global positional differences.**/
 	public BoundingBox(Point3d center, double widthRadius, double heightRadius, double depthRadius){
-		this(center, center, widthRadius, heightRadius, depthRadius, false, null);
+		this(center, center, widthRadius, heightRadius, depthRadius, false, null, null);
 	}
 	
 	/**Complex constructor.  Used for things that have local and global positions.  These can also collide with liquid blocks.**/
 	public BoundingBox(Point3d localCenter, Point3d globalCenter, double widthRadius, double heightRadius, double depthRadius, boolean collidesWithLiquids){
-		this(localCenter, globalCenter, widthRadius, heightRadius, depthRadius, collidesWithLiquids, null);
+		this(localCenter, globalCenter, widthRadius, heightRadius, depthRadius, collidesWithLiquids, null, null);
 	}
 	
 	/**JSON constructor.  Used for boxes that are created from JSON and need extended properties.**/
-	public BoundingBox(JSONCollisionBox definition){
-		this(definition.pos, definition.pos.copy(), definition.width/2D, definition.height/2D, definition.width/2D, definition.collidesWithLiquids, definition);
+	public BoundingBox(JSONCollisionBox definition, JSONCollisionGroup groupDef){
+		this(definition.pos, definition.pos.copy(), definition.width/2D, definition.height/2D, definition.width/2D, definition.collidesWithLiquids, definition, groupDef);
 	}
 	
 	/**Master constructor.  Used for main creation.**/
-	private BoundingBox(Point3d localCenter, Point3d globalCenter, double widthRadius, double heightRadius, double depthRadius, boolean collidesWithLiquids, JSONCollisionBox definition){
+	private BoundingBox(Point3d localCenter, Point3d globalCenter, double widthRadius, double heightRadius, double depthRadius, boolean collidesWithLiquids, JSONCollisionBox definition, JSONCollisionGroup groupDef){
 		this.localCenter = localCenter;
 		this.globalCenter = globalCenter;
 		this.tempGlobalCenter = globalCenter.copy();
@@ -64,6 +68,24 @@ public class BoundingBox{
 		this.depthRadius = depthRadius;
 		this.collidesWithLiquids = collidesWithLiquids;
 		this.definition = definition;
+		
+		final ColorRGB boxColor;
+		if(definition != null){
+			if(definition.variableName != null){
+				//Green for boxes that activate variables..
+				boxColor = ColorRGB.GREEN;
+			}else if(groupDef != null && !groupDef.isInterior){
+				//Red for block collisions.
+				boxColor = ColorRGB.RED;
+			}else{
+				//Black for general collisions.
+				boxColor = ColorRGB.BLACK;
+			}
+		}else{
+			//Not a defined collision box.  Must be an interaction box.  Yellow.
+			boxColor = ColorRGB.YELLOW;
+		}
+		this.renderable = new RenderableObject(this, new ColorRGB(boxColor.rgbInt), false);
 	}
 	
 	@Override
@@ -115,6 +137,32 @@ public class BoundingBox{
 			globalCenter.y = ((int) (globalCenter.y/HITBOX_CLAMP))*HITBOX_CLAMP;
 			globalCenter.z = ((int) (globalCenter.z/HITBOX_CLAMP))*HITBOX_CLAMP;
 		}
+		//If we are on the client, and are rendering bounding boxes, update the position.
+		if(entity.world.isClient() && InterfaceRender.shouldRenderBoundingBoxes()){
+			renderable.setWireframeBoundingBox(this);
+		}
+	}
+	
+	/**
+	 *  Returns the edge points for this box.
+	 *  Order is the 4 -x points, then the 4 +x.
+	 *  Y is -y for two, +y for two.
+	 *  Z alternates each point.
+	 */
+	public float[][] getEdgePoints(){
+		float[][] points = new float[8][];
+		for(int i=0; i<2; ++i){
+			for(int j=0; j<2; ++j){
+				for(int k=0; k<2; ++k){
+					points[i*4 + j*2 + k] = new float[]{
+						(float) (i == 0 ? -widthRadius : +widthRadius),
+						(float) (j == 0 ? -heightRadius : +heightRadius),
+						(float) (k == 0 ? -depthRadius : +depthRadius)
+					};
+				}
+			}	
+		}
+		return points;
 	}
 	
 	/**

@@ -174,7 +174,7 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 			for(JSONCollisionGroup groupDef : definition.collisionGroups){
 				Set<BoundingBox> boxes = new HashSet<BoundingBox>();
 				for(JSONCollisionBox boxDef : groupDef.collisions){
-					boxes.add(new BoundingBox(boxDef));
+					boxes.add(new BoundingBox(boxDef, groupDef));
 				}
 				definitionCollisionBoxes.put(groupDef, boxes);
 				if(groupDef.animations != null){

@@ -5,10 +5,8 @@ import java.util.Set;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController;
-import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController.SignalDirection;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController.SignalGroup;
 import minecrafttransportsimulator.mcinterface.InterfaceRender;
 import minecrafttransportsimulator.rendering.components.ARenderTileEntityBase;
@@ -21,40 +19,21 @@ public class RenderDecor extends ARenderTileEntityBase<TileEntityDecor>{
 		if(blendingEnabled && decor instanceof TileEntitySignalController){
 			TileEntitySignalController controller = (TileEntitySignalController) decor;
 			if(controller.unsavedClientChangesPreset || InterfaceRender.shouldRenderBoundingBoxes()){
-				//Disable lighting and texture rendering.
-				InterfaceRender.setLightingState(false);
-				InterfaceRender.setTextureState(false);
-				
 				for(Set<SignalGroup> signalGroupSet : controller.signalGroups.values()){
 		        	for(SignalGroup signalGroup : signalGroupSet){ 
 						if(signalGroup.signalLineWidth != 0 && controller.intersectionProperties.get(signalGroup.axis).isActive){
-							
 							BoundingBox box = new BoundingBox(signalGroup.signalLineCenter.copy().add(0, 0, 8).rotateY(signalGroup.axis.yRotation).add(controller.intersectionCenterPoint).subtract(controller.position), signalGroup.signalLineWidth/2D, 2, 8);
+							signalGroup.renderable.setHolographicBoundingBox(box);
+							
 							GL11.glPushMatrix();
 							GL11.glRotated(-controller.angles.y, 0, 1, 0);
 							GL11.glTranslated(box.globalCenter.x, box.globalCenter.y, box.globalCenter.z);
 							GL11.glRotated(signalGroup.axis.yRotation, 0, 1, 0);
-							
-							
-							if(signalGroup.direction.equals(SignalDirection.LEFT)){
-								InterfaceRender.setColorState(ColorRGB.BLUE, 0.5F);
-								RenderBoundingBox.renderSolid(box);
-							}else if(signalGroup.direction.equals(SignalDirection.RIGHT)){
-								InterfaceRender.setColorState(ColorRGB.YELLOW, 0.5F);
-								RenderBoundingBox.renderSolid(box);
-							}else if(signalGroup.direction.equals(SignalDirection.CENTER)){
-								InterfaceRender.setColorState(ColorRGB.GREEN, 0.5F);
-								RenderBoundingBox.renderSolid(box);
-							}
+							signalGroup.renderable.render();
 							GL11.glPopMatrix();
 						}
 		        	}
 				}
-				
-				//Re-enable lighting and texture rendering, and set color back to white.
-				InterfaceRender.setColorState(ColorRGB.WHITE);
-				InterfaceRender.setLightingState(true);
-				InterfaceRender.setTextureState(true);
 			}
 		}
 	}

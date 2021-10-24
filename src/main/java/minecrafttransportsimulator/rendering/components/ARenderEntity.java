@@ -8,7 +8,6 @@ import java.util.Map;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
@@ -19,7 +18,6 @@ import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.InterfaceRender;
-import minecrafttransportsimulator.rendering.instances.RenderBoundingBox;
 import minecrafttransportsimulator.rendering.instances.RenderInstrument;
 import minecrafttransportsimulator.rendering.instances.RenderText;
 
@@ -124,14 +122,7 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 			
 			//Render bounding boxes for parts and collision points.
 			if(!blendingEnabled && InterfaceRender.shouldRenderBoundingBoxes()){
-				//Set states for box render.
-				InterfaceRender.setLightingState(false);
-				InterfaceRender.setTextureState(false);
-				GL11.glLineWidth(3.0F);
 				renderBoundingBoxes(entity, entityPositionDelta);
-				GL11.glLineWidth(1.0F);
-				InterfaceRender.setTextureState(true);
-				InterfaceRender.setLightingState(true);
 			}
 			
 			//Spawn particles, if we aren't paused and this is the main render pass.
@@ -187,7 +178,7 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 	
 	/**
 	 *  Called after the main model objects have been rendered on this entity, but before the states for setting up the render have
-	 *  been reset.  At this point, the texture will still be bound, which allows for additional rendering if so desired.
+	 *  been reset.  This allows for models to be rendered with the same relative position and rotation.
 	 */
 	public void renderAdditionalModels(RenderedEntity entity, boolean blendingEnabled, float partialTicks){}
 	
@@ -238,28 +229,11 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 			AEntityD_Interactable<?> interactable = (AEntityD_Interactable<?>) entity;
 			//Draw collision boxes for the entity.
 			for(BoundingBox box : interactable.interactionBoxes){
-				if(box.definition != null){
-					if(box.definition.variableName != null){
-						//Green for doors.
-						InterfaceRender.setColorState(ColorRGB.GREEN);
-					}else if(interactable.blockCollisionBoxes.contains(box)){
-						//Red for block collisions.
-						InterfaceRender.setColorState(ColorRGB.RED);
-					}else{
-						//Black for general collisions.
-						InterfaceRender.setColorState(ColorRGB.BLACK);
-					}
-				}else{
-					//Not a defined collision box.  Must be an interaction box.  Yellow.
-					InterfaceRender.setColorState(ColorRGB.YELLOW);
-				}
-				
 				Point3d boxCenterDelta = box.globalCenter.copy().subtract(entity.position).add(entityPositionDelta);
 				GL11.glTranslated(boxCenterDelta.x, boxCenterDelta.y, boxCenterDelta.z);
-				RenderBoundingBox.renderWireframe(box);
+				box.renderable.render();
 				GL11.glTranslated(-boxCenterDelta.x, -boxCenterDelta.y, -boxCenterDelta.z);
 			}
-			InterfaceRender.setColorState(ColorRGB.WHITE);
 		}
 	}
 	
