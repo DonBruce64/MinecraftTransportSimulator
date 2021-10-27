@@ -14,6 +14,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.lwjgl.opengl.GL11;
+
 import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.items.components.AItemPack;
@@ -80,12 +82,17 @@ public class InterfaceEventsModelLoader{
 					if(Minecraft.getMinecraft().player.equals(builder.playerFollowing) && builder.shouldRenderEntity(partialTicks)){
 						LinkedHashSet<AEntityC_Definable<?>> allEntities = AEntityC_Definable.getRenderableEntities(WrapperWorld.getWrapperFor(builder.world));
 						if(allEntities != null){
+					        //Use smooth shading for model rendering.
+							GL11.glShadeModel(GL11.GL_SMOOTH);
+							
 							//Need to put all entities into a collection in case we spawn them as particles during this rendering operation.
 							entities.clear();
 							entities.addAll(allEntities);
 							for(AEntityC_Definable<?> entity : entities){
 								entity.getRenderer().render(entity, MinecraftForgeClient.getRenderPass() == 1, partialTicks);
 							}
+							
+							GL11.glShadeModel(GL11.GL_FLAT);
 						}
 					}
 				}

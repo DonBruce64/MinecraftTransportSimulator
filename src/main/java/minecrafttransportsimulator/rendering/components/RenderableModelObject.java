@@ -93,8 +93,12 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 			//Do pre-render checks based on the object we are rendering.
 			//This may block rendering if there are false visibility transforms.
 			GL11.glPushMatrix();
+			object.scale = entity.scale;
 			JSONAnimatedObject definition = entity.animatedObjectDefinitions.get(object.name);
 			if(doPreRenderTransforms(entity, definition != null ? definition.animations : null, blendingEnabled, partialTicks)){
+				//Set mirrored statues.
+				object.isMirrored = entity.mirrored;
+				
 				//Set our standard texture, provided we're not a window.
 				if(!isWindow){
 					object.texture = entity.getTexture();
@@ -155,6 +159,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 						object.disableLighting = ConfigSystem.configObject.clientRendering.brightLights.value && lightDef != null && lightLevel > 0 && !lightDef.emissive && !lightDef.isBeam;
 						object.render();
 						if(interiorWindowObject != null && ConfigSystem.configObject.clientRendering.innerWindows.value){
+							interiorWindowObject.scale = object.scale;
 							interiorWindowObject.render();
 						}
 					}
@@ -168,8 +173,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 					if(!blendingEnabled){
 						for(JSONText textDef : entity.text.keySet()){
 							if(object.name.equals(textDef.attachedTo)){
-								//TODO this is technically wrong, but are people ever going to scale parts with text on them?
-								RenderText.draw3DText(entity.text.get(textDef), entity, textDef, 1.0F, false);
+								RenderText.draw3DText(entity.text.get(textDef), entity, textDef, entity.scale, false);
 							}
 						}
 					}

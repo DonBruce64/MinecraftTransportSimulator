@@ -17,19 +17,9 @@ public final class RenderPart extends ARenderEntity<APart>{
 	}
 	
 	@Override
-	public boolean isMirrored(APart part){
-		return ((part.placementOffset.x < 0 && !part.placementDefinition.inverseMirroring) || (part.placementOffset.x >= 0 && part.placementDefinition.inverseMirroring)) && !part.disableMirroring;
-	}
-	
-	@Override
 	public void adjustPositionRotation(APart part, float partialTicks, Point3d entityPosition, Point3d entityRotation){
 		//Rotate the part according to its rendering rotation if we need to do so.
 		entityRotation.add(part.getRenderingRotation(partialTicks));
-	}
-	
-	@Override
-	public double getScale(APart part, float partialTicks){
-		return part.prevScale + (part.scale - part.prevScale)*partialTicks;
 	}
 	
 	@Override

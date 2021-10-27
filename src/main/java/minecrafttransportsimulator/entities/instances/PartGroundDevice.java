@@ -174,12 +174,12 @@ public class PartGroundDevice extends APart{
 	
 	@Override
 	public float getWidth(){
-		return (float) (definition.ground.width*scale);
+		return definition.ground.width*scale;
 	}
 	
 	@Override
 	public float getHeight(){
-		return (float) ((isFlat ? definition.ground.flatHeight : definition.ground.height)*scale);
+		return (isFlat ? definition.ground.flatHeight : definition.ground.height)*scale;
 	}
 	
 	@Override

@@ -62,9 +62,6 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 	        //Update internal lighting states.
 	        entity.updateLightBrightness(partialTicks);
 	        
-	        //Use smooth shading for main model rendering.
-			GL11.glShadeModel(GL11.GL_SMOOTH);
-	        
 	        //Push the matrix on the stack and translate and rotate to the enitty's position.
 			adjustPositionRotation(entity, partialTicks, entityPositionDelta, entityRotation);
 			GL11.glPushMatrix();
@@ -72,16 +69,6 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 	        GL11.glRotated(entityRotation.y, 0, 1, 0);
 	        GL11.glRotated(entityRotation.x, 1, 0, 0);
 	        GL11.glRotated(entityRotation.z, 0, 0, 1);
-	        
-	        //Mirror model, if required.
-	        boolean mirrored = isMirrored(entity);
-	        float scale = (float) getScale(entity, partialTicks);
-    		if(mirrored){
-    			GL11.glScalef(-scale, scale, scale);
-    			GL11.glCullFace(GL11.GL_FRONT);
-    		}else if(scale != 1.0){
-    			GL11.glScalef(scale, scale, scale);
-    		}
 			
 	        //Render the main model if we can.
 	        if(!disableModelRendering(entity, partialTicks)){
@@ -101,23 +88,19 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 			//Render any additional model bits before we render text.
 			renderAdditionalModels(entity, blendingEnabled, partialTicks);
 			
-			//Render all instruments.  These use flat shading.
-			GL11.glShadeModel(GL11.GL_FLAT);
+			//Render all instruments.
 			renderInstruments(entity, blendingEnabled, partialTicks);
 			
 			//Render any static text.
 			if(!blendingEnabled){
 				for(JSONText textDef : entity.text.keySet()){
 					if(textDef.attachedTo == null){
-						RenderText.draw3DText(entity.text.get(textDef), entity, textDef, scale, false);
+						RenderText.draw3DText(entity.text.get(textDef), entity, textDef, entity.scale, false);
 					}
 				}
 			}
 			
-			//End rotation render matrix and reset states.
-			if(mirrored){
-				GL11.glCullFace(GL11.GL_BACK);
-			}
+			//End rotation render matrix.
 			GL11.glPopMatrix();
 			
 			//Render bounding boxes for parts and collision points.
@@ -154,27 +137,11 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 	}
 	
 	/**
-	 *  If the model should be mirrored, return true.  Mirroring will only affect
-	 *  the model itself, and will not affect any offset transformations applied in
-	 *   {@link #adjustPositionRotation(AEntityC_Definable, float, Point3d, Point3d)}
-	 */
-	public boolean isMirrored(RenderedEntity entity){
-		return false;
-	}
-	
-	/**
 	 *  Called to do supplemental modifications to the position and rotation of the entity prior to rendering.
 	 *  The passed-in position and rotation are where the code thinks the entity is: where you want to render
 	 *  it may not be at this position/rotation.  Hence the ability to modify these parameters.
 	 */
 	public void adjustPositionRotation(RenderedEntity entity, float partialTicks, Point3d entityPosition, Point3d entityRotation){}
-	
-	/**
-	 *  Returns the scale to render this model at.  Is normally 1.0, but may be scaled if desired.
-	 */
-	public double getScale(RenderedEntity entity, float partialTicks){
-		return 1.0;
-	}
 	
 	/**
 	 *  Called after the main model objects have been rendered on this entity, but before the states for setting up the render have
@@ -208,8 +175,7 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 						//Do transforms if required and render if allowed.
 						if(RenderableModelObject.doPreRenderTransforms(entity, packInstrument.animations, blendingEnabled, partialTicks)){
 							//Instruments render with 1 unit being 1 pixel, not 1 block, so scale by the set scale, but divided by 16.
-							float scale = packInstrument.scale/16F;
-							RenderInstrument.drawInstrument(interactable.instruments.get(i), packInstrument.optionalPartNumber, interactable, scale, blendingEnabled, partialTicks);
+							RenderInstrument.drawInstrument(interactable.instruments.get(i), packInstrument.optionalPartNumber, interactable, packInstrument.scale/16F, blendingEnabled, partialTicks);
 						}
 						GL11.glPopMatrix();
 					}

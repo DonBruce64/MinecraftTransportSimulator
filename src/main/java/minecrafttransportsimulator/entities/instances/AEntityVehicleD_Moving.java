@@ -104,7 +104,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 						groundDeviceCollective.updateBounds();
 						break;
 					}
-					if(!part.localOffset.equals(part.prevLocalOffset) || part.scale != part.prevScale){
+					if(!part.localOffset.equals(part.prevLocalOffset)){
 						groundDeviceCollective.updateBounds();
 						break;
 					}

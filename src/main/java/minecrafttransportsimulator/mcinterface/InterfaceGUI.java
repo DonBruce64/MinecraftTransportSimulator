@@ -83,18 +83,6 @@ public class InterfaceGUI{
 	}
 	
 	/**
-	 *  Returns the formatting code for the passed-in color.
-	 */
-	public static String getFormattingCode(String color){
-		for(TextFormatting format : TextFormatting.values()){
-			if(format.name().toLowerCase().equals(color)){
-				return format.toString();
-			}
-		}
-		return "";
-	}
-	
-	/**
 	 *  Draws the specified portion of the currently-bound texture.  Texture size needs to be
 	 *  passed-in here to allow this method to translate pixels into relative texture coords.  
 	 *  Draw starts at the  bottom-left point and goes counter-clockwise to the top-left point.

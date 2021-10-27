@@ -54,10 +54,12 @@ public class RenderableObject{
 	public final boolean cacheVertices;
 	
 	public boolean isTranslucent;
+	public boolean isMirrored;
 	public int cachedVertexIndex = -1;
 	public BlendState blend = BlendState.SOLID;
 	public float alpha = 1.0F;
 	public float lineWidth = 0.0F;
+	public float scale = 1.0F;
 	public boolean disableLighting;
 	public boolean enableBrightBlending;
 	

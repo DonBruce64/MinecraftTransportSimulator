@@ -114,8 +114,9 @@ public class GUIComponent3DModel{
 				if(!staticScaling){
 					scale = modelScalingFactors.get(modelLocation);
 				}
-				GL11.glScalef(scale*scaleFactor, scale*scaleFactor, -scale*scaleFactor);
+				GL11.glScalef(1.0F, 1.0F, -1.0F);
 				RenderableObject object = modelParsedObjects.get(modelLocation);
+				object.scale = scale*scaleFactor;
 				object.texture = textureLocation;
 				object.render();
 				GL11.glPopMatrix();

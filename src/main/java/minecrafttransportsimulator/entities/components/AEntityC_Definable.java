@@ -59,6 +59,12 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	/**Variable for saving animation initialized state.  Is set true on the first tick, but may be set false afterwards to re-initialize animations.*/
 	public boolean animationsInitialized;
 	
+	/**The scale of this entity.  Is not used to move bounding boxes.  More for rendering, but does some physics.*/
+	public float scale = 1.0F;
+	
+	/**The mirrored state of this entity.  Only used for rendering to flip the model across the x-axis.*/
+	public boolean mirrored;
+	
 	/**Map containing text lines for saved text provided by this entity.**/
 	public final LinkedHashMap<JSONText, String> text = new LinkedHashMap<JSONText, String>();
 	
@@ -601,7 +607,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	 *  this functionality is not required.  Note that the animation offset is applied AFTER the scaling performed by
 	 *  the scale parameter as only the variable value should be scaled, not the offset..
 	 */
-	public final double getAnimatedVariableValue(DurationDelayClock clock, double scale, double offset, float partialTicks){
+	public final double getAnimatedVariableValue(DurationDelayClock clock, double scaleFactor, double offset, float partialTicks){
 		double value;
 		if(clock.animation.variable.startsWith("!")){
 			value = getRawVariableValue(clock.animation.variable.substring(1), partialTicks);
@@ -613,9 +619,9 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 			}
 		}
 		if(!clock.isUseful){
-			return clampAndScale(value, clock.animation, scale, offset);
+			return clampAndScale(value, clock.animation, scaleFactor, offset);
 		}else{
-			return clampAndScale(clock.getFactoredState(this, value, partialTicks), clock.animation, scale, offset);
+			return clampAndScale(clock.getFactoredState(this, value, partialTicks), clock.animation, scaleFactor, offset);
 		}
 	}
 	
@@ -623,8 +629,8 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	 *  Short-hand version of {@link #getAnimatedVariableValue(DurationDelayClock, double, double, float)}
 	 *  with an offset of 0.0.
 	 */
-	public final double getAnimatedVariableValue(DurationDelayClock clock, double scale, float partialTicks){
-		return getAnimatedVariableValue(clock, scale, 0.0, partialTicks);
+	public final double getAnimatedVariableValue(DurationDelayClock clock, double scaleFactor, float partialTicks){
+		return getAnimatedVariableValue(clock, scaleFactor, 0.0, partialTicks);
 	}
 	
 	/**
@@ -639,9 +645,9 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	 *  Helper method to clamp and scale the passed-in variable value based on the passed-in animation, 
 	 *  returning it in the proper form.
 	 */
-	private static double clampAndScale(double value, JSONAnimationDefinition animation, double scale, double offset){
+	private static double clampAndScale(double value, JSONAnimationDefinition animation, double scaleFactor, double offset){
 		if(animation.axis != null){
-			value = (animation.absolute ? Math.abs(value) : value)*scale + animation.offset + offset;
+			value = (animation.absolute ? Math.abs(value) : value)*scaleFactor + animation.offset + offset;
 			if(animation.clampMin != 0 && value < animation.clampMin){
 				value = animation.clampMin;
 			}else if(animation.clampMax != 0 && value > animation.clampMax){
@@ -649,7 +655,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 			}
 			return value;
 		}else{
-			return (animation.absolute ? Math.abs(value) : value)*scale + animation.offset;
+			return (animation.absolute ? Math.abs(value) : value)*scaleFactor + animation.offset;
 		}
 	}
 	

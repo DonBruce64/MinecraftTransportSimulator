@@ -301,6 +301,10 @@ public class RenderText{
 				scale *= 1.4;
 			}
 			
+			//Multiply position by the prevScaledFactor.  This moves the position
+			//to the appropriate one for the scale the entire text segment is renderd at.
+			position.multiply(preScaledFactor);
+			
 			//Check for auto-scaling.
 			if(autoScale && wrapWidth > 0){
 				//Get the string width.  This is in text-pixels.
@@ -586,9 +590,9 @@ public class RenderText{
 			//All points obtained, render.
 			GL11.glPushMatrix();
 			GL11.glTranslated(position.x, position.y, position.z);
-			GL11.glScalef(scale, scale, scale);
 			for(RenderableObject object : activeRenderObjects){
 				object.disableLighting = renderLit;
+				object.scale = scale*preScaledFactor;
 				object.vertices.flip();
 				object.render();
 				object.vertices.clear();

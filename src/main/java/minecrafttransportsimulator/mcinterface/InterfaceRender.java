@@ -61,6 +61,14 @@ public class InterfaceRender{
 			setTextureState(false);
 		}
 		setColorState(object.color, object.alpha);
+		
+		GL11.glPushMatrix();
+		if(object.isMirrored){
+			GL11.glScalef(-object.scale, object.scale, object.scale);
+			GL11.glCullFace(GL11.GL_FRONT);
+		}else{
+			GL11.glScalef(object.scale, object.scale, object.scale);
+		}
 		if(object.cacheVertices){
 			if(object.cachedVertexIndex == -1){
 				object.cachedVertexIndex = cacheVertices(object.vertices);
@@ -72,6 +80,12 @@ public class InterfaceRender{
 		}else{
 			renderVertices(object.vertices);
 		}
+		if(object.isMirrored){
+			GL11.glCullFace(GL11.GL_BACK);
+		}
+		GL11.glPopMatrix();
+		
+		
 		if(object.disableLighting){
 			setLightingState(true);
 		}

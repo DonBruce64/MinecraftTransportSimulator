@@ -64,8 +64,6 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 	public boolean isDisabled;
 	public boolean isActive = true;
 	public boolean prevActive = true;
-	public double prevScale = 1.0;
-	public double scale = 1.0;
 	public final Point3d localOffset;
 	public final Point3d prevLocalOffset;
 	public final Point3d localAngles;
@@ -103,6 +101,9 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 		angles.setTo(localAngles).add(entityOn.angles);
 		angles.setTo(placementAngles);
 		prevAngles.setTo(angles);
+		
+		//Set mirrored state.
+		this.mirrored = ((placementOffset.x < 0 && !placementDefinition.inverseMirroring) || (placementOffset.x >= 0 && placementDefinition.inverseMirroring)) && !disableMirroring;
 	}
 	
 	@Override
@@ -315,8 +316,7 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 	private boolean updateLocals(){
 		boolean inhibitAnimations = false;
 		boolean disablePart = false;
-		prevScale = scale;
-		scale = placementDefinition.isSubPart && parentPart != null ? parentPart.scale : 1.0;
+		scale = placementDefinition.isSubPart && parentPart != null ? parentPart.scale : 1.0F;
 		localOffset.set(0D, 0D, 0D);
 		localAngles.set(0D, 0D, 0D);
 		if(!movementClocks.isEmpty()){

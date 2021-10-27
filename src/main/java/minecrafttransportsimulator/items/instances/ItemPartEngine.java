@@ -10,7 +10,6 @@ import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
-import minecrafttransportsimulator.mcinterface.InterfaceGUI;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
@@ -34,7 +33,7 @@ public class ItemPartEngine extends AItemPart{
 	public void addTooltipLines(List<String> tooltipLines, WrapperNBT data){
 		super.addTooltipLines(tooltipLines, data);
 		if(data.getBoolean("isCreative")){
-			tooltipLines.add(InterfaceGUI.getFormattingCode("dark_purple") + InterfaceCore.translate("info.item.engine.creative"));
+			tooltipLines.add(InterfaceCore.translate("info.item.engine.creative"));
 		}
 		tooltipLines.add(InterfaceCore.translate("info.item.engine.maxrpm") + definition.engine.maxRPM);
 		tooltipLines.add(InterfaceCore.translate("info.item.engine.maxsaferpm") + definition.engine.maxSafeRPM);
@@ -75,13 +74,13 @@ public class ItemPartEngine extends AItemPart{
 		}
 		
 		if(data.getBoolean("oilLeak")){
-			tooltipLines.add(InterfaceGUI.getFormattingCode("red") + InterfaceCore.translate("info.item.engine.oilleak"));
+			tooltipLines.add(InterfaceCore.translate("info.item.engine.oilleak"));
 		}
 		if(data.getBoolean("fuelLeak")){
-			tooltipLines.add(InterfaceGUI.getFormattingCode("red") + InterfaceCore.translate("info.item.engine.fuelleak"));
+			tooltipLines.add(InterfaceCore.translate("info.item.engine.fuelleak"));
 		}
 		if(data.getBoolean("brokenStarter")){
-			tooltipLines.add(InterfaceGUI.getFormattingCode("red") + InterfaceCore.translate("info.item.engine.brokenstarter"));
+			tooltipLines.add(InterfaceCore.translate("info.item.engine.brokenstarter"));
 		}
 	}
 	

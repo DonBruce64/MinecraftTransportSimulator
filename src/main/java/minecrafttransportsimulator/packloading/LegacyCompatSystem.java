@@ -1111,6 +1111,9 @@ public final class LegacyCompatSystem{
 				component.translationClampMax = 0;
 				component.translationAbsoluteValue = false;
 			}
+			if(component.scale == 0.0){
+				component.scale = 1.0F;
+			}
 		}
 	}
 	

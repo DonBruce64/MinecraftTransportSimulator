@@ -34,13 +34,16 @@ public final class RenderInstrument{
 	/**
      * Renders the passed-in instrument using the entity's current state.  Note that this method does NOT take any 
      * entity JSON parameters into account as it does not know which instrument is being rendered.  This means that 
-     * any transformations that need to be applied for translation or scaling should be applied prior to calling this
-     * method.  Such transformations will, of course, differ between applications, so care should be taken to ensure
-     * OpenGL states are not left out-of-whack after rendering is complete.
+     * any transformations that need to be applied for translation should be applied prior to calling this method.
+     * Also note that the parameters in the JSON here are in png-texture space, so y is inverted.  Hence the various
+     * negations in translation transforms.
      */
 	public static void drawInstrument(ItemInstrument instrument, int partNumber, AEntityD_Interactable<?> entity, float scale, boolean blendingEnabled, float partialTicks){
 		//Check if the lights are on.  If so, render the overlays and the text lit if requested.
 		boolean lightsOn = entity.renderTextLit();
+		
+		//Get scale of the instrument, before component scaling.
+		float globalScale = entity.scale*scale;
 		
 		//Finally, render the instrument based on the JSON instrument.definitions.
 		//We cache up all the draw calls for this blend pass, and then render them all at once.
@@ -50,10 +53,8 @@ public final class RenderInstrument{
 			if(component.overlayTexture ? blendingEnabled : !blendingEnabled){
 				//If we have text, do a text render.  Otherwise, do a normal instrument render.
 				//Also translate slightly away from the instrument location to prevent clipping.
-				float componentScale = component.scale != 0 ? component.scale*scale : scale;
 				GL11.glPushMatrix();
 				GL11.glTranslatef(0.0F, 0.0F, i*0.0001F);
-				GL11.glScalef(componentScale, componentScale, componentScale);
 				if(component.textObject != null){
 					int variablePartNumber = AEntityC_Definable.getVariableNumber(component.textObject.fieldName);
 					final boolean addSuffix = variablePartNumber == -1 && ((component.textObject.fieldName.startsWith("engine_") || component.textObject.fieldName.startsWith("propeller_") || component.textObject.fieldName.startsWith("gun_") || component.textObject.fieldName.startsWith("seat_")));
@@ -63,10 +64,11 @@ public final class RenderInstrument{
 					}
 					
 					String text = String.format("%0" + component.textObject.maxLength + "d", (int) textNumeric);
-					RenderText.draw3DText(text, entity, component.textObject, componentScale, true);
+					RenderText.draw3DText(text, entity, component.textObject, globalScale*component.scale, true);
 				}else{
 					//Init variables.
 					renderObject.texture = "/assets/" + instrument.definition.packID + "/textures/instruments.png";
+					renderObject.scale = globalScale*component.scale;
 					bottomLeft.set(-component.textureWidth/2D, -component.textureHeight/2D, 0);
 					topLeft.set(-component.textureWidth/2D, component.textureHeight/2D, 0);
 					topRight.set(component.textureWidth/2D, component.textureHeight/2D, 0);
@@ -122,9 +124,9 @@ public final class RenderInstrument{
 										topRight.subtract(animation.centerPoint);
 										bottomRight.subtract(animation.centerPoint);
 									}else{
-										GL11.glTranslated(component.xCenter + animation.centerPoint.x, component.yCenter + animation.centerPoint.y, 0.0F);
+										GL11.glTranslated((component.xCenter + animation.centerPoint.x)*globalScale, -(component.yCenter + animation.centerPoint.y)*globalScale, 0.0F);
 										GL11.glRotated(variableValue, 0, 0, 1);
-										GL11.glTranslated(-component.xCenter - animation.centerPoint.x, -component.yCenter - animation.centerPoint.y, 0.0F);
+										GL11.glTranslated(-(component.xCenter + animation.centerPoint.x)*globalScale, (component.yCenter + animation.centerPoint.y)*globalScale, 0.0F);
 									}
 									break;
 								}
@@ -151,7 +153,7 @@ public final class RenderInstrument{
 										}
 									}else if(component.moveComponent){
 										//Translate the rather than adjust the window coords.
-										GL11.glTranslated(xTranslation, yTranslation, 0);
+										GL11.glTranslated(xTranslation*globalScale, yTranslation*globalScale, 0);
 									}else{
 										//Offset the window coords to the appropriate section of the texture sheet.
 										//We don't want to do an OpenGL translation here as that would move the texture's
@@ -227,12 +229,12 @@ public final class RenderInstrument{
 						bottomRight.multiply(1D/1024D);
 						
 						//Translate to the component.
-						GL11.glTranslatef(component.xCenter, component.yCenter, 0.0F);
+						GL11.glTranslatef(component.xCenter*globalScale, -component.yCenter*globalScale, 0.0F);
 						
 						//Set points to the variables here and render them.
 						//If the shape is lit, disable lighting for blending.
 						renderObject.disableLighting = component.lightUpTexture && lightsOn && ConfigSystem.configObject.clientRendering.brightLights.value;
-						renderSquareUV(component, componentScale);
+						renderSquareUV(component, globalScale*component.scale);
 					}
 				}
 				
