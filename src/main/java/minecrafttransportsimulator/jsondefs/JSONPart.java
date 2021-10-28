@@ -118,9 +118,6 @@ public class JSONPart extends AJSONPartProvider{
 		@JSONDescription("If true, the automatic starter will be distabled for this engine.  Instead, it must be started by hand.  Note that while normally this requires hitting the propeller, but in this case the engine itself may be hit too.  This is for outboard motors and the like.")
     	public boolean disableAutomaticStarter;
 		
-		@JSONDescription("Should the engine attempt to protect itself from over-revving by temporarily cutting fuel. May require tweaks to starting/stopping sounds.")
-    	public boolean hasRevLimiter;
-		
     	public boolean isSteamPowered;
 		
 		@JSONDescription("This is how much 'oomph' the starter outputs on a single firing.  When the starter key is held the engine RPM will be increased by this amount every 4 ticks, or every 0.2 seconds.  Note that for engines with high loads, such as those with larger propellers, its quite possible to make a starter power that literally can't start the engine.")
@@ -147,9 +144,12 @@ public class JSONPart extends AJSONPartProvider{
 		@JSONDescription("The RPM where this engine will start, after starting the engine will try to maintain the speed set by the idleRPM and maxRPM.  May be lower than the idleRPM, as the engine will stall based on the stallRPM, not this value.")
     	public int startRPM;
     	
-		@JSONDescription("The RPM at which the engine's rev limiter kicks in. If left out, MTS will auto-calculate this value for you.")
+		@JSONDescription("The RPM at which the engine's rev limiter kicks in. If left out, MTS will auto-calculate this value for you. If set to -1, revlimiting will be disabled for this engine.")
     	public int revlimitRPM;
 		
+		@JSONDescription("How hard the rev limiter bounces in neutral.")
+    	public int revlimitBounce;
+    	
 		@JSONDescription("The RPM where this engine will stall.  Should be below the idleRPM to prevent the engine automatically shutting off on low throttle.")
     	public int stallRPM;
 		
