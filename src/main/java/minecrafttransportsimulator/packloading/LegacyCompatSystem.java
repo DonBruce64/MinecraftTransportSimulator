@@ -557,6 +557,11 @@ public final class LegacyCompatSystem{
 			}
 			if(definition.engine.revlimitRPM == 0){
 				definition.engine.revlimitRPM = (int) (definition.engine.maxSafeRPM*0.95);
+			}else if(definition.engine.revlimitRPM == 0 && definition.engine.jetPowerFactor != 0){
+				definition.engine.revlimitRPM = -1;
+			}
+			if(definition.engine.revlimitBounce == 0){
+				definition.engine.revlimitBounce = 8;
 			}
 			if(definition.engine.startRPM == 0){
 				definition.engine.startRPM = (int) (definition.engine.idleRPM*1.2);
