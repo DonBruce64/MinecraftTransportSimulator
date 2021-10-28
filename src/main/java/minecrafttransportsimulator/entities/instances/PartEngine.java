@@ -315,13 +315,11 @@ public class PartEngine extends APart{
 							}else if(rpm < definition.engine.stallRPM){
 								stallEngine(Signal.TOO_SLOW);
 								InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.TOO_SLOW));
-							}else if(rpm > definition.engine.revlimitRPM && definition.engine.hasRevLimiter){
-								stallEngine(Signal.FUEL_OUT);
-								InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.FUEL_OUT));
-							}else if(isActive == false){
+							}else if(!isActive){
 								stallEngine(Signal.FUEL_OUT);
 								InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.FUEL_OUT));
 							}
+							
 						}
 					}
 					
@@ -484,8 +482,8 @@ public class PartEngine extends APart{
 					if(state.running){
 						engineTargetRPM = vehicleOn.throttle/100F*(definition.engine.maxRPM - definition.engine.idleRPM)/(1 + hours/1250) + definition.engine.idleRPM;
 						rpm += (engineTargetRPM - rpm)/(definition.engine.revResistance*3);
-						if(rpm > definition.engine.revlimitRPM && definition.engine.hasRevLimiter){
-							rpm -= Math.abs(engineTargetRPM - rpm)/definition.engine.revResistance;
+						if(rpm > definition.engine.revlimitRPM && definition.engine.revlimitRPM != -1){
+							rpm -= Math.abs(engineTargetRPM - rpm)/definition.engine.revlimitBounce;
 						}
 					}else if(!state.esOn && !state.hsOn){
 						rpm = Math.max(rpm - definition.engine.engineWinddownRate, 0); //engineWinddownRate tells us how quickly to slow down the engine, by default 10
@@ -871,8 +869,8 @@ public class PartEngine extends APart{
 			double wheelForce = 0;
 			//If running, use the friction of the wheels to determine the new speed.
 			if(state.running || state.esOn){
-				if(rpm > definition.engine.revlimitRPM || !isActive){
-					wheelForce = (engineTargetRPM - rpm)/definition.engine.maxRPM*currentGearRatio*vehicleOn.definition.motorized.axleRatio*(-1)*0.6F*30F;
+				if(rpm > definition.engine.revlimitRPM){
+					wheelForce = (engineTargetRPM - rpm)/definition.engine.maxRPM*currentGearRatio*vehicleOn.definition.motorized.axleRatio*(definition.engine.revlimitBounce*-1)*0.6F*30F;
 				}else{
 					wheelForce = (engineTargetRPM - rpm)/definition.engine.maxRPM*currentGearRatio*vehicleOn.definition.motorized.axleRatio*(definition.engine.fuelConsumption + (definition.engine.superchargerFuelConsumption*definition.engine.superchargerEfficiency))*0.6F*30F;
 				}
