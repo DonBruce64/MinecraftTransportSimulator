@@ -482,10 +482,14 @@ public class PartEngine extends APart{
 					if(state.running){
 						engineTargetRPM = vehicleOn.throttle/100F*(definition.engine.maxRPM - definition.engine.idleRPM)/(1 + hours/1250) + definition.engine.idleRPM;
 						rpm += (engineTargetRPM - rpm)/(definition.engine.revResistance*3);
-						if(rpm > definition.engine.revlimitRPM && definition.engine.revlimitRPM != -1){
-							rpm -= Math.abs(engineTargetRPM - rpm)/definition.engine.revlimitBounce;
+						if(definition.engine.revlimitRPM == -1){
+							if(rpm > definition.engine.maxSafeRPM){
+								rpm -= Math.abs(engineTargetRPM - rpm)/60;
+							}
 						}else{
-							rpm -= Math.abs(engineTargetRPM - rpm)/definition.engine.revResistance;
+							if(rpm > definition.engine.revlimitRPM){
+								rpm -= Math.abs(engineTargetRPM - rpm)/definition.engine.revlimitBounce;
+							}
 						}
 					}else if(!state.esOn && !state.hsOn){
 						rpm = Math.max(rpm - definition.engine.engineWinddownRate, 0); //engineWinddownRate tells us how quickly to slow down the engine, by default 10
