@@ -876,7 +876,7 @@ public class PartEngine extends APart{
 			//If running, use the friction of the wheels to determine the new speed.
 			if(state.running || state.esOn){
 				if(rpm > definition.engine.revlimitRPM && definition.engine.revlimitRPM != -1){
-					wheelForce = (engineTargetRPM - rpm)/definition.engine.maxRPM*currentGearRatio*vehicleOn.definition.motorized.axleRatio*(definition.engine.revlimitBounce*-1)*0.6F*30F;
+					wheelForce = (engineTargetRPM - rpm)/definition.engine.maxRPM*currentGearRatio*vehicleOn.definition.motorized.axleRatio*0.01*0.6F*30F;
 				}else{
 					wheelForce = (engineTargetRPM - rpm)/definition.engine.maxRPM*currentGearRatio*vehicleOn.definition.motorized.axleRatio*(definition.engine.fuelConsumption + (definition.engine.superchargerFuelConsumption*definition.engine.superchargerEfficiency))*0.6F*30F;
 				}
