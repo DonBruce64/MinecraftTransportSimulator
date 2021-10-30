@@ -556,7 +556,7 @@ public final class LegacyCompatSystem{
 				definition.engine.maxSafeRPM = definition.engine.maxRPM < 15000 ? definition.engine.maxRPM - (definition.engine.maxRPM - 2500)/2 : (int) (definition.engine.maxRPM/1.1);
 			}
 			if(definition.engine.revlimitRPM == 0){
-				if(definition.engine.jetPowerFactor != 0){
+				if(definition.engine.jetPowerFactor != 0 || definition.engine.gearRatios.size() == 3){
 					definition.engine.revlimitRPM = -1;
 				}else{
 					definition.engine.revlimitRPM = (int) (definition.engine.maxSafeRPM*0.95);
