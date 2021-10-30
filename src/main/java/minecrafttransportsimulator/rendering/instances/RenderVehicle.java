@@ -62,18 +62,22 @@ public final class RenderVehicle extends ARenderEntity<EntityVehicleF_Physics>{
 					if(isHoldingPart){
 						BoundingBox partBox = partSlotEntry.getKey();
 						RenderableObject renderable = vehicle.allPartSlotRenderables.get(partBox);
-						GL11.glPushMatrix();
-						GL11.glRotated(-vehicle.angles.z, 0, 0, 1);
-						GL11.glRotated(-vehicle.angles.x, 1, 0, 0);
-						GL11.glRotated(-vehicle.angles.y, 0, 1, 0);
-						GL11.glTranslated(partBox.globalCenter.x - vehicle.position.x, partBox.globalCenter.y - vehicle.position.y, partBox.globalCenter.z - vehicle.position.z);
 						
-						//Need to re-add vertices in case the part box size changed from the held item.
-						//Also need to change the color to match held state.
-						renderable.setHolographicBoundingBox(partBox);
-						renderable.color.setTo(isPartValid ? ColorRGB.GREEN : ColorRGB.RED);
-						renderable.render();
-						GL11.glPopMatrix();
+						//Renderable may be null if we don't have this slot anymore.
+						if(renderable != null){
+							GL11.glPushMatrix();
+							GL11.glRotated(-vehicle.angles.z, 0, 0, 1);
+							GL11.glRotated(-vehicle.angles.x, 1, 0, 0);
+							GL11.glRotated(-vehicle.angles.y, 0, 1, 0);
+							GL11.glTranslated(partBox.globalCenter.x - vehicle.position.x, partBox.globalCenter.y - vehicle.position.y, partBox.globalCenter.z - vehicle.position.z);
+							
+							//Need to re-add vertices in case the part box size changed from the held item.
+							//Also need to change the color to match held state.
+							renderable.setHolographicBoundingBox(partBox);
+							renderable.color.setTo(isPartValid ? ColorRGB.GREEN : ColorRGB.RED);
+							renderable.render();
+							GL11.glPopMatrix();
+						}
 					}
 				}
 			}else if(heldItem instanceof ItemItem && ((ItemItem) heldItem).definition.item.type.equals(ItemComponentType.SCANNER)){
