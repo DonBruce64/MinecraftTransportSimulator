@@ -328,7 +328,7 @@ public class PartEngine extends APart{
 						if(shiftCooldown == 0){
 							if(currentGear > 0 ? currentGear < forwardsGears : -currentGear < reverseGears){
 								//Can shift up, try to do so.
-								if(rpm > (definition.engine.upShiftRPM != null ? definition.engine.upShiftRPM.get(currentGear + reverseGears) : (definition.engine.maxSafeRPM*0.95))*0.5F*(1.0F + vehicleOn.throttle/100F)){
+								if(rpm > (definition.engine.upShiftRPM != null ? definition.engine.upShiftRPM.get(currentGear + reverseGears) : (definition.engine.maxSafeRPM*0.9))*0.5F*(1.0F + vehicleOn.throttle/100F)){
 									if(currentGear > 0){
 										if(shiftUp(true)){
 											shiftCooldown = definition.engine.shiftSpeed;
@@ -344,7 +344,7 @@ public class PartEngine extends APart{
 							}
 							if(currentGear > 1 || currentGear < -1){
 								//Can shift down, try to do so.
-								if(rpm < (definition.engine.downShiftRPM != null ? definition.engine.downShiftRPM.get(currentGear + reverseGears)*0.5*(1.0F + vehicleOn.throttle/100F) : (definition.engine.maxSafeRPM*0.95)*0.25*(1.0F + vehicleOn.throttle/100F))){
+								if(rpm < (definition.engine.downShiftRPM != null ? definition.engine.downShiftRPM.get(currentGear + reverseGears)*0.5*(1.0F + vehicleOn.throttle/100F) : (definition.engine.maxSafeRPM*0.9)*0.25*(1.0F + vehicleOn.throttle/100F))){
 									if(currentGear > 0){
 										if(shiftDown(true)){
 											shiftCooldown = definition.engine.shiftSpeed;
@@ -876,7 +876,7 @@ public class PartEngine extends APart{
 			//If running, use the friction of the wheels to determine the new speed.
 			if(state.running || state.esOn){
 				if(rpm > definition.engine.revlimitRPM && definition.engine.revlimitRPM != -1){
-					wheelForce = -rpm/definition.engine.maxRPM*Math.signum(currentGear)*75;
+					wheelForce = -rpm/definition.engine.maxRPM*Math.signum(currentGear)*60;
 				}else{
 					wheelForce = (engineTargetRPM - rpm)/definition.engine.maxRPM*currentGearRatio*vehicleOn.definition.motorized.axleRatio*(definition.engine.fuelConsumption + (definition.engine.superchargerFuelConsumption*definition.engine.superchargerEfficiency))*0.6F*30F;
 				}
