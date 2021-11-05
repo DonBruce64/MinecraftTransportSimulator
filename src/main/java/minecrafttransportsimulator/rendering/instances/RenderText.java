@@ -254,6 +254,11 @@ public class RenderText{
 		}
 		
 		public void renderText(String text, Point3d position, Point3d rotation, TextAlignment alignment, float scale, boolean autoScale, int wrapWidth, float preScaledFactor, boolean pixelCoords, ColorRGB color, boolean renderLit){
+			//Cull text to total chars.
+			//This is all we can render in one pass.
+			if(text.length() > MAX_VERTCIES_PER_RENDER/6){
+				text = text.substring(0, MAX_VERTCIES_PER_RENDER/6);
+			}
 			//Pre-calculate rotation of normals, as these won't change.
 			boolean doRotation = !rotation.isZero();
 			float[] normals = new float[]{0.0F, 0.0F, scale*preScaledFactor};
