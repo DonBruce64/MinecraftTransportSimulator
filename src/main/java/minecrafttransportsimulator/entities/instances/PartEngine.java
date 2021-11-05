@@ -315,7 +315,11 @@ public class PartEngine extends APart{
 							}else if(rpm < definition.engine.stallRPM){
 								stallEngine(Signal.TOO_SLOW);
 								InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.TOO_SLOW));
+							}else if(!isActive){
+								stallEngine(Signal.FUEL_OUT);
+								InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.FUEL_OUT));
 							}
+							
 						}
 					}
 					
@@ -324,7 +328,7 @@ public class PartEngine extends APart{
 						if(shiftCooldown == 0){
 							if(currentGear > 0 ? currentGear < forwardsGears : -currentGear < reverseGears){
 								//Can shift up, try to do so.
-								if(rpm > (definition.engine.upShiftRPM != null ? definition.engine.upShiftRPM.get(currentGear + reverseGears) : definition.engine.maxSafeRPM)*0.5F*(1.0F + vehicleOn.throttle/100F)){
+								if(rpm > (definition.engine.upShiftRPM != null ? definition.engine.upShiftRPM.get(currentGear + reverseGears) : (definition.engine.maxSafeRPM*0.9))*0.5F*(1.0F + vehicleOn.throttle/100F)){
 									if(currentGear > 0){
 										if(shiftUp(true)){
 											shiftCooldown = definition.engine.shiftSpeed;
@@ -340,7 +344,7 @@ public class PartEngine extends APart{
 							}
 							if(currentGear > 1 || currentGear < -1){
 								//Can shift down, try to do so.
-								if(rpm < (definition.engine.downShiftRPM != null ? definition.engine.downShiftRPM.get(currentGear + reverseGears)*0.5*(1.0F + vehicleOn.throttle/100F) : definition.engine.maxSafeRPM*0.25*(1.0F + vehicleOn.throttle/100F))){
+								if(rpm < (definition.engine.downShiftRPM != null ? definition.engine.downShiftRPM.get(currentGear + reverseGears)*0.5*(1.0F + vehicleOn.throttle/100F) : (definition.engine.maxSafeRPM*0.9)*0.25*(1.0F + vehicleOn.throttle/100F))){
 									if(currentGear > 0){
 										if(shiftDown(true)){
 											shiftCooldown = definition.engine.shiftSpeed;
@@ -478,8 +482,14 @@ public class PartEngine extends APart{
 					if(state.running){
 						engineTargetRPM = vehicleOn.throttle/100F*(definition.engine.maxRPM - definition.engine.idleRPM)/(1 + hours/1250) + definition.engine.idleRPM;
 						rpm += (engineTargetRPM - rpm)/(definition.engine.revResistance*3);
-						if(rpm > definition.engine.maxSafeRPM && definition.engine.jetPowerFactor == 0){
-							rpm -= Math.abs(engineTargetRPM - rpm)/definition.engine.revResistance;
+						if(definition.engine.revlimitRPM == -1){
+							if(rpm > definition.engine.maxSafeRPM){
+								rpm -= Math.abs(engineTargetRPM - rpm)/60;
+							}
+						}else{
+							if(rpm > definition.engine.revlimitRPM){
+								rpm -= Math.abs(engineTargetRPM - rpm)/definition.engine.revlimitBounce;
+							}
 						}
 					}else if(!state.esOn && !state.hsOn){
 						rpm = Math.max(rpm - definition.engine.engineWinddownRate, 0); //engineWinddownRate tells us how quickly to slow down the engine, by default 10
@@ -839,7 +849,7 @@ public class PartEngine extends APart{
 	
 	//--------------------START OF ENGINE PROPERTY METHODS--------------------
 	public float getTotalFuelConsumption(){
-		return definition.engine.fuelConsumption + definition.engine.superchargerFuelConsumption;
+			return definition.engine.fuelConsumption + definition.engine.superchargerFuelConsumption;
 	}
 	
 	public double getTotalWearFactor(){
@@ -865,7 +875,11 @@ public class PartEngine extends APart{
 			double wheelForce = 0;
 			//If running, use the friction of the wheels to determine the new speed.
 			if(state.running || state.esOn){
-				wheelForce = (engineTargetRPM - rpm)/definition.engine.maxRPM*currentGearRatio*vehicleOn.definition.motorized.axleRatio*(definition.engine.fuelConsumption + (definition.engine.superchargerFuelConsumption*definition.engine.superchargerEfficiency))*0.6F*30F;
+				if(rpm > definition.engine.revlimitRPM && definition.engine.revlimitRPM != -1){
+					wheelForce = -rpm/definition.engine.maxRPM*Math.signum(currentGear)*60;
+				}else{
+					wheelForce = (engineTargetRPM - rpm)/definition.engine.maxRPM*currentGearRatio*vehicleOn.definition.motorized.axleRatio*(definition.engine.fuelConsumption + (definition.engine.superchargerFuelConsumption*definition.engine.superchargerEfficiency))*0.6F*30F;
+				}
 				if(wheelForce != 0){
 					//Check to see if the wheels need to spin out.
 					//If they do, we'll need to provide less force.

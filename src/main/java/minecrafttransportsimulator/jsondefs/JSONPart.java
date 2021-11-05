@@ -143,7 +143,13 @@ public class JSONPart extends AJSONPartProvider{
 		
 		@JSONDescription("The RPM where this engine will start, after starting the engine will try to maintain the speed set by the idleRPM and maxRPM.  May be lower than the idleRPM, as the engine will stall based on the stallRPM, not this value.")
     	public int startRPM;
+    	
+		@JSONDescription("The RPM at which the engine's rev limiter kicks in. If left out, MTS will auto-calculate this value for you. If set to -1, revlimiting will be disabled for this engine.")
+    	public int revlimitRPM;
 		
+		@JSONDescription("How hard the rev limiter bounces in neutral.")
+    	public int revlimitBounce;
+    	
 		@JSONDescription("The RPM where this engine will stall.  Should be below the idleRPM to prevent the engine automatically shutting off on low throttle.")
     	public int stallRPM;
 		
