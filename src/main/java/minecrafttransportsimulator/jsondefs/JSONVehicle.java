@@ -96,9 +96,12 @@ public class JSONVehicle extends AJSONPartProvider{
 	@JSONDescription("How much turning force is loss when slipping. Intended for high downForce values, (0.55+) or more realistic vehicle handling when combined with the overSteer variable")
     	public float underSteer;
     	
-    	@JSONDescription("This variable is specifically inded for use with overSteer, otherwise no visible effect on driving will be made. Controls how much overSteer force is created when accelerating and decelerating. by default, positive values cause overSteer when accelerating and reverse overSteer when braking. the slower your vehicle accelerates, the higher of a value you'll need. the same is true for braking, so you may want to spend a bit of time tweaking this. RWD basic example: downForce 0.7, oversteer 6, underSteer 3, weightTransfer 10 FWD basic example: downForce 0.7, oversteer 6, underSteer 3, weightTransfer -10 A terrible idea: downForce 0.2, oversteer -2, underSteer -3, weightTransfer 1")
-    	public float weightTransfer;
+    	@JSONDescription("This variable is specifically inded for use with overSteer, otherwise no visible effect on driving will be made. Controls how much overSteer force is created when accelerating. the slower your vehicle accelerates, the higher of a value you'll need. the same is true for braking, so you may want to spend a bit of time tweaking this")
+    	public float overSteerAccel;
     	
+	@JSONDescription("overSteerAccel, but for braking. See description for overSteerAccel")
+    	public float overSteerDecel;
+	
     	@JSONDescription("The gear ratio present for the axle of this vehicle.  This is a constant, vehicle-specific ratio that will be multiplied with the gear ratio of the currently-selected gear of the engine to determine the rotation of the wheels.  A good many cars have a 3.55 ratio, but other of course are possible.  All depends on how much power you expect your engine to have, and how fast you want your car to go.  Note that this parameter is required if you want your engine to drive wheels and you have isFrontWheelDrive or isRearWheelDrive set.")
     	public float axleRatio;
     	
