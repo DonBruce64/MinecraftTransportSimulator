@@ -247,8 +247,16 @@ public class RenderText{
 		
 		public float getStringWidth(String text){
 			float width = 0;
+			boolean skipNext = false;
 			for(char textChar : text.toCharArray()){
-				width += charWidths[textChar];
+				//Skip formatting chars and their next char.
+				if(textChar == FORMATTING_CHAR){
+					skipNext = true;
+				}else if(skipNext){
+					skipNext = false;
+				}else{
+					width += charWidths[textChar];
+				}
 			}
 			return width + text.length()*CHAR_SPACING;
 		}
