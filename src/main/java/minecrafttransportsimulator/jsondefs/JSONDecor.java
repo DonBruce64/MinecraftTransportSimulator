@@ -28,6 +28,9 @@ public class JSONDecor extends AJSONMultiModelProvider{
 		@JSONDescription("How deep a decor is.  1 is a full block depth.  Numbers over 1 will result in unpredictable operations, so don't use them.")
     	public float depth;
 		
+		@JSONDescription("How much light this decor gives off.  A value from 0-1, with 1 being full possible light.")
+    	public float lightLevel;
+		
 		@JSONDescription("A optional crafting definition for this decor.  If this is included, the decor will open a GUI for crafting pack components when clicked.")
 		public JSONCraftingBench crafting;
 		

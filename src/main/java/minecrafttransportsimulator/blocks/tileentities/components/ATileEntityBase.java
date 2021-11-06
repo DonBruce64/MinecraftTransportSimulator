@@ -23,6 +23,8 @@ import minecrafttransportsimulator.systems.ConfigSystem;
  */
 public abstract class ATileEntityBase<JSONDefinition extends AJSONMultiModelProvider> extends AEntityC_Definable<JSONDefinition>{
 	
+	private float lastLightLevel;
+	
 	public ATileEntityBase(WrapperWorld world, Point3d position, WrapperPlayer placingPlayer, WrapperNBT data){
 		super(world, data);
 		this.position.setTo(position);
@@ -30,6 +32,19 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONMultiModelProv
 			int clampAngle = getRotationIncrement();
 			//Need to set the angles so the TE is facing the player, not the direction the player was facing.
 			angles.y = Math.round((placingPlayer.getHeadYaw()+180)/clampAngle)*clampAngle%360;
+		}
+	}
+	
+	@Override
+	public boolean update(){
+		if(super.update()){
+			if(lastLightLevel != getLightProvided()){
+				lastLightLevel = getLightProvided();
+				world.updateLightBrightness(position);
+			}
+			return true;
+		}else{
+			return false;
 		}
 	}
 	

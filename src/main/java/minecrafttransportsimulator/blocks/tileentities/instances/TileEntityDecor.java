@@ -90,6 +90,11 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor>{
 	}
 	
 	@Override
+	public float getLightProvided(){
+    	return definition.decor.lightLevel;
+	}
+	
+	@Override
 	@SuppressWarnings("unchecked")
 	public RenderDecor getRenderer(){
 		if(renderer == null){

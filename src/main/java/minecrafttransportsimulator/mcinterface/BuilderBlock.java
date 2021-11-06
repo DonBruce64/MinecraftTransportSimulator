@@ -275,6 +275,19 @@ public class BuilderBlock extends Block{
     	//Don't render this block.  We manually render via the TE.
         return EnumBlockRenderType.INVISIBLE;
     }
+    
+    @Override
+    public int getLightValue(IBlockState state, IBlockAccess world, BlockPos pos){
+    	if(block instanceof ABlockBaseTileEntity){
+    		TileEntity tile = world.getTileEntity(pos);
+    		if(tile instanceof BuilderTileEntity){
+    			if(((BuilderTileEntity<?>) tile).tileEntity != null){
+    				return (int) (((BuilderTileEntity<?>) tile).tileEntity.getLightProvided()*15);
+    			}
+    		}
+		}
+		return super.getLightValue(state, world, pos);
+    }
   	
   	/**
 	 * Registers all blocks in the core mod, as well as any decors in packs.

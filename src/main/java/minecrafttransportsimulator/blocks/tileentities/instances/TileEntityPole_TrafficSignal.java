@@ -22,25 +22,18 @@ public class TileEntityPole_TrafficSignal extends ATileEntityPole_Component{
 		if(super.update() && linkedController != null){
 			variablesOn.clear();
 			if(linkedController.isValid && linkedController.controlledSignals.contains(this)){
-				variablesOn.clear();
 				for(SignalGroup group : linkedController.signalGroups.get(axis)){
 					if(group.currentLight.lowercaseName != null){
 						variablesOn.add(group.currentLight.lowercaseName);
 					}
 				}
 			}else{
-				variablesOn.clear();
 				linkedController = null;
 			}
 			return true;
 		}else{
 			return false;
 		}
-	}
-
-	@Override
-	public float getLightProvided(){
-		return !variablesOn.isEmpty() ? 12F/15F : 0.0F;
 	}
 	
 	@Override

@@ -37,9 +37,8 @@ import net.minecraft.item.ItemStack;
 public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 	public final Map<Axis, ATileEntityPole_Component> components = new HashMap<Axis, ATileEntityPole_Component>();
 	
-	private static RenderPole renderer;
-	
 	private float maxTotalLightLevel;
+	private static RenderPole renderer;
 	
 	public TileEntityPole(WrapperWorld world, Point3d position, WrapperPlayer placingPlayer, WrapperNBT data){
 		super(world, position, placingPlayer, data);
@@ -246,12 +245,9 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 		}
 		
 		//Update lighting state.
-		float calculatedLevel = 0;
+		maxTotalLightLevel = 0;
 		for(ATileEntityPole_Component component : components.values()){
-			calculatedLevel = Math.max(calculatedLevel, component.getLightProvided());
-		}
-		if(maxTotalLightLevel != calculatedLevel){
-			world.updateLightBrightness(position);
+			maxTotalLightLevel = Math.max(maxTotalLightLevel, component.getLightProvided());
 		}
 	}
 	
