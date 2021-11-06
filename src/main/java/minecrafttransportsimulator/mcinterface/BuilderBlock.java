@@ -229,7 +229,11 @@ public class BuilderBlock extends Block{
 				return ((BlockCollision) block).blockBounds.convertWithOffset(0.5D, 0.5D, 0.5D);
 			}
     	}
-    	return FULL_BLOCK_AABB;
+    	if(globalCoords){
+    		return FULL_BLOCK_AABB.offset(pos);
+    	}else{
+    		return FULL_BLOCK_AABB;
+    	}
     }
 
     @Override
