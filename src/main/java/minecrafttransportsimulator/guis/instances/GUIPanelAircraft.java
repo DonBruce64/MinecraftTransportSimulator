@@ -21,8 +21,6 @@ import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketEntityTrailerConnection;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
-import minecrafttransportsimulator.packets.instances.PacketPartEngine;
-import minecrafttransportsimulator.packets.instances.PacketPartEngine.Signal;
 import minecrafttransportsimulator.packets.instances.PacketVehicleBeaconChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
@@ -148,13 +146,8 @@ public class GUIPanelAircraft extends AGUIPanel{
 				GUIComponentSelector magnetoSwitch = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS, SELECTOR_SIZE, SELECTOR_SIZE, InterfaceCore.translate("gui.panel.magneto"), vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, ENGINEMAG_TEXTURE_WIDTH_OFFSET, ENGINEMAG_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 					@Override
 					public void onClicked(boolean leftSide){
-						Signal sentSignal = null;
 						for(PartEngine engine : vehicle.engines.values()){
-							sentSignal = engine.state.magnetoOn ? Signal.MAGNETO_OFF : Signal.MAGNETO_ON;
-							break;
-						}
-						for(PartEngine engine : vehicle.engines.values()){
-							InterfacePacket.sendToServer(new PacketPartEngine(engine, sentSignal));
+							InterfacePacket.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.MAGNETO_VARIABLE));
 						}
 					}
 					
@@ -167,23 +160,19 @@ public class GUIPanelAircraft extends AGUIPanel{
 				GUIComponentSelector starterSwitch = new GUIComponentSelector(magnetoSwitch.x + SELECTOR_SIZE, magnetoSwitch.y, SELECTOR_SIZE, SELECTOR_SIZE, InterfaceCore.translate("gui.panel.start"), vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, ENGINESTART_TEXTURE_WIDTH_OFFSET, ENGINESTART_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 					@Override
 					public void onClicked(boolean leftSide){
-						Signal sentSignal = null;
 						for(PartEngine engine : vehicle.engines.values()){
-							if(!engine.state.magnetoOn){
-								return;
+							if(engine.magnetoOn && !engine.electricStarterEngaged){
+								InterfacePacket.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.ELECTRIC_STARTER_VARIABLE));
 							}
-							sentSignal = engine.state.esOn ? Signal.ES_OFF : Signal.ES_ON;
-							break;
-						}
-						for(PartEngine engine : vehicle.engines.values()){
-							InterfacePacket.sendToServer(new PacketPartEngine(engine, sentSignal));
 						}
 					}
 					
 					@Override
 					public void onReleased(){
 						for(PartEngine engine : vehicle.engines.values()){
-							InterfacePacket.sendToServer(new PacketPartEngine(engine, Signal.ES_OFF));
+							if(engine.magnetoOn && engine.electricStarterEngaged){
+								InterfacePacket.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.ELECTRIC_STARTER_VARIABLE));
+							}
 						}
 					}
 				};
@@ -201,7 +190,7 @@ public class GUIPanelAircraft extends AGUIPanel{
 				GUIComponentSelector magnetoSwitch = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + (SELECTOR_SIZE + GAP_BETWEEN_SELECTORS)*(engineNumber%4), SELECTOR_SIZE, SELECTOR_SIZE, InterfaceCore.translate("gui.panel.magneto"), vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, ENGINEMAG_TEXTURE_WIDTH_OFFSET, ENGINEMAG_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 					@Override
 					public void onClicked(boolean leftSide){
-						InterfacePacket.sendToServer(new PacketPartEngine(vehicle.engines.get(engineNumber), vehicle.engines.get(engineNumber).state.magnetoOn ? Signal.MAGNETO_OFF : Signal.MAGNETO_ON));
+						InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle.engines.get(engineNumber), PartEngine.MAGNETO_VARIABLE));
 					}
 					
 					@Override
@@ -213,14 +202,18 @@ public class GUIPanelAircraft extends AGUIPanel{
 				GUIComponentSelector starterSwitch = new GUIComponentSelector(magnetoSwitch.x + SELECTOR_SIZE, magnetoSwitch.y, SELECTOR_SIZE, SELECTOR_SIZE, InterfaceCore.translate("gui.panel.start"), vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, ENGINESTART_TEXTURE_WIDTH_OFFSET, ENGINESTART_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 					@Override
 					public void onClicked(boolean leftSide){
-						if(vehicle.engines.get(engineNumber).state.magnetoOn){
-							InterfacePacket.sendToServer(new PacketPartEngine(vehicle.engines.get(engineNumber), vehicle.engines.get(engineNumber).state.esOn ? Signal.ES_OFF : Signal.ES_ON));
+						PartEngine engine = vehicle.engines.get(engineNumber);
+						if(engine.magnetoOn && !engine.electricStarterEngaged){
+							InterfacePacket.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.ELECTRIC_STARTER_VARIABLE));
 						}
 					}
 					
 					@Override
 					public void onReleased(){
-						InterfacePacket.sendToServer(new PacketPartEngine(vehicle.engines.get(engineNumber), Signal.ES_OFF));
+						PartEngine engine = vehicle.engines.get(engineNumber);
+						if(engine.magnetoOn && engine.electricStarterEngaged){
+							InterfacePacket.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.ELECTRIC_STARTER_VARIABLE));
+						}
 					}
 				};
 				starterSelectors.put(engineNumber, starterSwitch);
@@ -444,13 +437,13 @@ public class GUIPanelAircraft extends AGUIPanel{
 		if(vehicle.definition.motorized.hasSingleEngineControl){
 			magnetoSelectors.get((byte)-1).visible = !vehicle.engines.isEmpty();
 			for(PartEngine engine : vehicle.engines.values()){
-				magnetoSelectors.get((byte)-1).selectorState = engine.state.magnetoOn ? 1 : 0;
+				magnetoSelectors.get((byte)-1).selectorState = engine.magnetoOn ? 1 : 0;
 				break;
 			}
 		}else{
 			for(Entry<Byte, GUIComponentSelector> magnetoEntry : magnetoSelectors.entrySet()){
 				if(vehicle.engines.containsKey(magnetoEntry.getKey())){
-					magnetoEntry.getValue().selectorState = vehicle.engines.get(magnetoEntry.getKey()).state.magnetoOn ? 1 : 0;
+					magnetoEntry.getValue().selectorState = vehicle.engines.get(magnetoEntry.getKey()).magnetoOn ? 1 : 0;
 				}
 			}
 		}
@@ -458,7 +451,7 @@ public class GUIPanelAircraft extends AGUIPanel{
 		//Set the states of the starter selectors.
 		if(vehicle.definition.motorized.hasSingleEngineControl){
 			for(PartEngine engine : vehicle.engines.values()){
-				starterSelectors.get(ENGINE_SINGLE_SELECTOR_INDEX).selectorState = engine.state.magnetoOn ? (engine.state.esOn ? 2 : 1) : 0;
+				starterSelectors.get(ENGINE_SINGLE_SELECTOR_INDEX).selectorState = engine.magnetoOn ? (engine.electricStarterEngaged ? 2 : 1) : 0;
 				starterSelectors.get(ENGINE_SINGLE_SELECTOR_INDEX).visible = !engine.definition.engine.disableAutomaticStarter;
 				break;
 			}
@@ -466,7 +459,7 @@ public class GUIPanelAircraft extends AGUIPanel{
 			for(Entry<Byte, GUIComponentSelector> starterEntry : starterSelectors.entrySet()){
 				if(vehicle.engines.containsKey(starterEntry.getKey())){
 					PartEngine engine = vehicle.engines.get(starterEntry.getKey());
-					starterEntry.getValue().selectorState = engine.state.magnetoOn ? (engine.state.esOn ? 2 : 1) : 0;
+					starterEntry.getValue().selectorState = engine.magnetoOn ? (engine.electricStarterEngaged ? 2 : 1) : 0;
 					starterEntry.getValue().visible = !engine.definition.engine.disableAutomaticStarter;
 				}
 			}

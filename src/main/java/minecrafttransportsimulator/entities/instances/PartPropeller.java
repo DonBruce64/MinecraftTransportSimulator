@@ -164,7 +164,7 @@ public class PartPropeller extends APart{
 	
 	public Point3d getForceOutput(){
 		propellerForce.set(0D, 0D, 0D);
-		if(connectedEngine != null && connectedEngine.state.running){
+		if(connectedEngine != null && connectedEngine.running){
 			//Get the current linear velocity of the propeller, based on our axial velocity.
 			//This is is meters per second.
 			Point3d propellerThrustAxis = new Point3d(0D, 0D, 1D).rotateFine(localAngles.copy().add(entityOn.angles));

@@ -316,6 +316,36 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 		world.endProfiling();
 	}
 	
+	@Override
+	public double getRawVariableValue(String variable, float partialTicks){
+		//If we have a variable with a suffix, we need to get that part first and pass
+		//it into this method rather than trying to run through the code now.
+		int partNumber = getVariableNumber(variable);
+		if(partNumber != -1){
+			return getSpecificPartAnimation(this, variable, partNumber, partialTicks);
+		}else{
+			return super.getRawVariableValue(variable, partialTicks);
+		}
+	}
+	
+	@Override
+	public void toggleVariable(String variable){
+		int partNumber = getVariableNumber(variable);
+		if(partNumber != -1){
+			APart foundPart = getSpecificPart(this, variable, partNumber);
+			if(foundPart != null){
+				variable = variable.substring(0, variable.lastIndexOf("_"));
+				if(foundPart.variablesOn.contains(variable)){
+					foundPart.variablesOn.remove(variable);
+				}else{
+					foundPart.variablesOn.add(variable);
+				}
+			}
+		}else{
+			super.toggleVariable(variable);
+		}
+	}
+	
 	/**
 	 * Returns true if any linked variables are blocking the player from
 	 * accessing the passed-in part slot.
@@ -838,10 +868,10 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 	}
 	
 	/**
-	 * Helper method to return the value of an animation for a specific part, as
-	 * determined by the index of that part.
+	 * Helper method to return the part at the specific index for the passed-in variable.
+	 * Returns null if the part doesn't exist.
 	 */
-	public static double getSpecificPartAnimation(AEntityC_Definable<? extends AJSONPartProvider> entityAnimating, String variable, int partNumber, float partialTicks){
+	public static APart getSpecificPart(AEntityC_Definable<? extends AJSONPartProvider> entityAnimating, String variable, int partNumber){
 		//Iterate through our parts to find the index of the pack def for the part we want.
 		String partType = variable.substring(0, variable.indexOf("_"));
 		JSONPartDefinition foundDef = null;
@@ -879,26 +909,33 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 			
 			//If we found our part, try to get it.
 			if(foundDef != null){
-				//Get the part at this location.  If it's of the same type as what we need, use it for animation.
-				//If it's not, or it doesn't exist, return 0 as it hasn't been placed yet.
-				APart foundPart;
+				//Get the part at this location.  If it's of the same type as what we need, return it.
+				//If it's not, or it doesn't exist, return null as it hasn't been placed yet.
 				if(entityAnimating instanceof APart){
 					APart part = (APart) entityAnimating;
-					foundPart = part.entityOn.getPartAtLocation(part.getPackForSubPart(foundDef).pos);
+					return part.entityOn.getPartAtLocation(part.getPackForSubPart(foundDef).pos);
 				}else{
 					AEntityE_Multipart<?> provider = (AEntityE_Multipart<?>) entityAnimating;
-					foundPart = provider.getPartAtLocation(foundDef.pos);
-				}
-				if(foundPart != null){
-					return foundPart.getRawVariableValue(variable.substring(0, variable.lastIndexOf("_")), partialTicks);
-				}else{
-					return 0;
+					return provider.getPartAtLocation(foundDef.pos);
 				}
 			}
 		}
 		
-		//No valid sub-part definitions found.  This is an error, but not one we should crash for.  Return 0.
-		return 0;
+		//No valid sub-part definitions found.  This is an error, but not one we should crash for.  Return null.
+		return null;
+	}
+	
+	/**
+	 * Helper method to return the value of an animation for a specific part, as
+	 * determined by the index of that part.
+	 */
+	public static double getSpecificPartAnimation(AEntityC_Definable<? extends AJSONPartProvider> entityAnimating, String variable, int partNumber, float partialTicks){
+		APart foundPart = getSpecificPart(entityAnimating, variable, partNumber);
+		if(foundPart != null){
+			return foundPart.getRawVariableValue(variable.substring(0, variable.lastIndexOf("_")), partialTicks);
+		}else{
+			return 0;
+		}
 	}
 		
 	

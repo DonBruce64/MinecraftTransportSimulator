@@ -9,6 +9,7 @@ import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
+import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine.Signal;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -22,6 +23,10 @@ public class PartEngine extends APart{
 	public boolean brokenStarter;
 	public boolean backfired;
 	public boolean badShift;
+	public boolean running;
+	public boolean magnetoOn;
+	public boolean electricStarterEngaged;
+	public boolean handStarterEngaged;
 	public byte forwardsGears;
 	public byte reverseGears;
 	public byte currentGear;
@@ -33,7 +38,6 @@ public class PartEngine extends APart{
 	public double temp = 20;
 	public double pressure;
 	public float propellerGearboxRatio;
-	public EngineStates state = EngineStates.ENGINE_OFF;
 	
 	//Runtime calculated values.
 	public double fuelFlow;
@@ -61,6 +65,9 @@ public class PartEngine extends APart{
 	private final Point3d engineForce = new Point3d();
 	
 	//Constants and static variables.
+	public static final String MAGNETO_VARIABLE = "engine_magneto";
+	public static final String ELECTRIC_STARTER_VARIABLE = "engine_starter";
+	public static final String HAND_STARTER_VARIABLE = "engine_starter_hand";
 	public static final float COLD_TEMP = 30F;
 	public static final float OVERHEAT_TEMP_1 = 115.556F;
 	public static final float OVERHEAT_TEMP_2 = 121.111F;
@@ -80,7 +87,6 @@ public class PartEngine extends APart{
 		this.rpm = data.getDouble("rpm");
 		this.temp = data.getDouble("temp");
 		this.pressure = data.getDouble("pressure");
-		this.state = EngineStates.values()[data.getInteger("state")];
 		for(float gear : definition.engine.gearRatios){
 			if(gear < 0){
 				++reverseGears;
@@ -105,9 +111,9 @@ public class PartEngine extends APart{
 					//Check if this is a hand-start command.
 					if(damage.entityResponsible instanceof WrapperPlayer && ((WrapperPlayer) damage.entityResponsible).getHeldStack().isEmpty()){
 						if(!entityOn.equals(damage.entityResponsible.getEntityRiding())){
-							if(!state.magnetoOn){
-								setMagnetoStatus(true);
-								InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.MAGNETO_ON));
+							if(!magnetoOn){
+								variablesOn.add(MAGNETO_VARIABLE);
+								InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(this, MAGNETO_VARIABLE));
 							}
 							handStartEngine();
 							InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.HS_ON));
@@ -146,6 +152,15 @@ public class PartEngine extends APart{
 			//Reset states.
 			backfired = false;
 			badShift = false;
+			magnetoOn = variablesOn.contains(MAGNETO_VARIABLE);
+			electricStarterEngaged = variablesOn.contains(ELECTRIC_STARTER_VARIABLE);
+			handStarterEngaged = variablesOn.contains(HAND_STARTER_VARIABLE);
+			
+			//If the engine is running, but the magneto is off, turn the engine off.
+			if(running && !magnetoOn){
+				running = false;
+				internalFuel = 100;
+			}
 			
 			//Set fuel flow to 0 for the start of this cycle.
 			fuelFlow = 0;
@@ -199,13 +214,13 @@ public class PartEngine extends APart{
 				temp -= (temp - ambientTemp)*coolingFactor;
 				
 				//Check to see if electric or hand starter can keep running.
-				if(state.esOn){
+				if(electricStarterEngaged){
 					if(starterLevel == 0){
 						if(vehicleOn.electricPower > 1){
 							starterLevel += 4;
 						}else{
-							setElectricStarterStatus(false);
-							InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.ES_OFF));
+							variablesOn.remove(ELECTRIC_STARTER_VARIABLE);
+							InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(this, ELECTRIC_STARTER_VARIABLE));
 						}
 					}
 					if(starterLevel > 0){
@@ -217,19 +232,18 @@ public class PartEngine extends APart{
 						}
 					}
 					if(autoStarterEngaged){
-						if(state.running){
-							setElectricStarterStatus(false);
-							InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.ES_OFF));
+						if(running){
+							variablesOn.remove(ELECTRIC_STARTER_VARIABLE);
+							InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(this, ELECTRIC_STARTER_VARIABLE));
 						}
 					}
-				}else if(state.hsOn){
+				}else if(handStarterEngaged){
 					if(starterLevel == 0){
-						if(state.running){
-							state = EngineStates.RUNNING;
-						}else{
-							state = state.magnetoOn ? EngineStates.MAGNETO_ON_STARTERS_OFF : EngineStates.ENGINE_OFF;
-						}
+						variablesOn.remove(HAND_STARTER_VARIABLE);
 					}
+				}else{
+					starterLevel = 0;
+					autoStarterEngaged = false;
 				}
 				
 				//If the starter is running, adjust RPM.
@@ -248,7 +262,7 @@ public class PartEngine extends APart{
 				}
 				
 				//Do running logic.
-				if(state.running){
+				if(running){
 					//Provide electric power to the vehicle we're in.
 					vehicleOn.electricUsage -= 0.05*rpm/definition.engine.maxRPM;
 					
@@ -382,7 +396,7 @@ public class PartEngine extends APart{
 					//have the ability to engage a starter.
 					if(rpm >= definition.engine.startRPM && !world.isClient()){
 						if(isCreative || vehicleOn.fuelTank.getFluidLevel() > 0){
-							if(!isInLiquid() && state.magnetoOn){
+							if(!isInLiquid() && magnetoOn){
 								startEngine();
 								InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.START));
 							}
@@ -398,7 +412,7 @@ public class PartEngine extends APart{
 					lowestWheelVelocity = 999F;
 					desiredWheelVelocity = -999F;
 					wheelFriction = 0;
-					engineTargetRPM = !state.esOn ? vehicleOn.throttle/100F*(definition.engine.maxRPM - definition.engine.idleRPM)/(1 + hours/1250) + definition.engine.idleRPM : definition.engine.startRPM;
+					engineTargetRPM = !electricStarterEngaged ? vehicleOn.throttle/100F*(definition.engine.maxRPM - definition.engine.idleRPM)/(1 + hours/1250) + definition.engine.idleRPM : definition.engine.startRPM;
 					
 					//Update wheel friction and velocity.
 					for(PartGroundDevice wheel : vehicleOn.groundDeviceCollective.drivenWheels){
@@ -417,9 +431,9 @@ public class PartEngine extends APart{
 						if(wheelFriction > 0){
 							double desiredRPM = lowestWheelVelocity*1200F*currentGearRatio*vehicleOn.definition.motorized.axleRatio;
 							rpm += (desiredRPM - rpm)/definition.engine.revResistance;
-							if(rpm < definition.engine.idleRPM && state.running && backfireCooldown <= 0){//Checks if we're backfiring and sets lugging rpm to stall rpm, otherwise sets lug rpm to idle
+							if(rpm < definition.engine.idleRPM && running && backfireCooldown <= 0){//Checks if we're backfiring and sets lugging rpm to stall rpm, otherwise sets lug rpm to idle
 								rpm = definition.engine.idleRPM;
-							}else if(rpm < definition.engine.stallRPM && state.running){
+							}else if(rpm < definition.engine.stallRPM && running){
 								rpm = definition.engine.stallRPM;
 								backfireCooldown -= 1;
 							}
@@ -458,7 +472,7 @@ public class PartEngine extends APart{
 								propellerFeedback *= -1;
 							}
 							
-							if(state.running){
+							if(running){
 								propellerFeedback += propellerForcePenalty*50;
 								engineTargetRPM = vehicleOn.throttle/100F*(definition.engine.maxRPM - definition.engine.idleRPM)/(1 + hours/1250) + definition.engine.idleRPM;
 								double engineRPMDifference = engineTargetRPM - rpm;
@@ -469,7 +483,7 @@ public class PartEngine extends APart{
 								}else{
 									rpm += engineRPMDifference/definition.engine.revResistance - propellerFeedback;
 								}
-							}else if(!state.esOn && !state.hsOn){
+							}else if(!electricStarterEngaged && !handStarterEngaged){
 								rpm -= propellerFeedback*Math.abs(propellerGearboxRatio);
 							}
 						}
@@ -479,7 +493,7 @@ public class PartEngine extends APart{
 				//If wheel friction is 0, and we don't have a propeller, or we're in neutral, adjust RPM to throttle position.
 				//Or, if we are not on, just slowly spin the engine down.
 				if((wheelFriction == 0 && !havePropeller) || currentGearRatio == 0){
-					if(state.running){
+					if(running){
 						engineTargetRPM = vehicleOn.throttle/100F*(definition.engine.maxRPM - definition.engine.idleRPM)/(1 + hours/1250) + definition.engine.idleRPM;
 						rpm += (engineTargetRPM - rpm)/(definition.engine.revResistance*3);
 						if(definition.engine.revlimitRPM == -1){
@@ -491,7 +505,7 @@ public class PartEngine extends APart{
 								rpm -= Math.abs(engineTargetRPM - rpm)/definition.engine.revlimitBounce;
 							}
 						}
-					}else if(!state.esOn && !state.hsOn){
+					}else if(!electricStarterEngaged && !handStarterEngaged){
 						rpm = Math.max(rpm - definition.engine.engineWinddownRate, 0); //engineWinddownRate tells us how quickly to slow down the engine, by default 10
 					}
 				}
@@ -551,8 +565,8 @@ public class PartEngine extends APart{
 	@Override
 	public void remove(){
 		super.remove();
-		//Set state to off and tell wheels to stop skipping calcs from being controlled by the engine.
-		state = EngineStates.ENGINE_OFF;
+		//Turn off and tell wheels to stop skipping calcs from being controlled by the engine.
+		running = false;
 		if(vehicleOn != null){
 			for(PartGroundDevice wheel : vehicleOn.groundDeviceCollective.drivenWheels){
 				wheel.skipAngularCalcs = false;
@@ -586,10 +600,8 @@ public class PartEngine extends APart{
 			case("engine_clutch_downshift"): return downshiftCountdown > 0 ? 1 : 0;
 			case("engine_badshift"): return badShift ? 1 : 0;
 			case("engine_reversed"): return currentGear < 0 ? 1 : 0;
-			case("engine_magneto"): return state.magnetoOn ? 1 : 0;
-			case("engine_starter"): return state.esOn || state.hsOn ? 1 : 0;
-			case("engine_running"): return state.running ? 1 : 0;
-			case("engine_powered"): return state.running || internalFuel > 0 ? 1 : 0;
+			case("engine_running"): return running ? 1 : 0;
+			case("engine_powered"): return running || internalFuel > 0 ? 1 : 0;
 			case("engine_backfired"): return backfired ? 1 : 0;
 			case("engine_jumper_cable"): return linkedEngine != null ? 1 : 0;
 			case("engine_hours"): return hours;
@@ -597,7 +609,7 @@ public class PartEngine extends APart{
 			case("engine_fuelleak"): return fuelLeak ? 1 : 0;
 		}
 		if(variable.startsWith("engine_piston_")){
-			if(state.running){
+			if(running){
 				String pistonVariable = variable.substring("engine_piston_".length());
 				int pistonNumber = Integer.parseInt(pistonVariable.substring(0, pistonVariable.indexOf("_")));
 				pistonVariable.substring(pistonVariable.indexOf("_"));
@@ -626,79 +638,18 @@ public class PartEngine extends APart{
 	
 	
 	//--------------------START OF ENGINE STATE CHANGE METHODS--------------------
-	
-	public void setMagnetoStatus(boolean on){
-		if(on){
-			if(state.equals(EngineStates.MAGNETO_OFF_ES_ON)){
-				state = EngineStates.MAGNETO_ON_ES_ON;
-			}else if(state.equals(EngineStates.MAGNETO_OFF_HS_ON)){
-				state = EngineStates.MAGNETO_ON_HS_ON;
-			}else if(state.equals(EngineStates.ENGINE_OFF)){
-				state = EngineStates.MAGNETO_ON_STARTERS_OFF;
-			}
-		}else{
-			if(state.equals(EngineStates.MAGNETO_ON_ES_ON)){
-				state = EngineStates.MAGNETO_OFF_ES_ON;
-			}else if(state.equals(EngineStates.MAGNETO_ON_HS_ON)){
-				state = EngineStates.MAGNETO_OFF_HS_ON;
-			}else if(state.equals(EngineStates.MAGNETO_ON_STARTERS_OFF)){
-				state = EngineStates.ENGINE_OFF;
-			}else if(state.equals(EngineStates.RUNNING)){
-				state = EngineStates.ENGINE_OFF;
-				internalFuel = 100;
-			}
-		}
-	}
-	
-	public void setElectricStarterStatus(boolean engaged){
-		if(!brokenStarter){
-			if(engaged){
-				if(state.equals(EngineStates.ENGINE_OFF)){
-					state = EngineStates.MAGNETO_OFF_ES_ON;
-				}else if(state.equals(EngineStates.MAGNETO_ON_STARTERS_OFF)){
-					state = EngineStates.MAGNETO_ON_ES_ON;
-				}else if(state.equals(EngineStates.RUNNING)){
-					state =  EngineStates.RUNNING_ES_ON;
-				}
-			}else{
-				starterLevel = 0;
-				autoStarterEngaged = false;
-				if(state.equals(EngineStates.MAGNETO_OFF_ES_ON)){
-					state = EngineStates.ENGINE_OFF;
-				}else if(state.equals(EngineStates.MAGNETO_ON_ES_ON)){
-					state = EngineStates.MAGNETO_ON_STARTERS_OFF;
-				}else if(state.equals(EngineStates.RUNNING_ES_ON)){
-					state = EngineStates.RUNNING;
-				}
-			}
-		}
-	}
-	
 	public void startEngine(){
-		if(state.equals(EngineStates.MAGNETO_ON_STARTERS_OFF)){
-			state = EngineStates.RUNNING;
-		}else if(state.equals(EngineStates.MAGNETO_ON_ES_ON)){
-			state = EngineStates.RUNNING_ES_ON;
-		}else if(state.equals(EngineStates.MAGNETO_ON_HS_ON)){
-			state = EngineStates.RUNNING;
-		}
+		running = true;
 		
 		//If we are not a steam engine, set oil pressure.
+		//Not setting this means we will start at 0 and damage the engine.
 		if(!definition.engine.isSteamPowered){
 			pressure = 60;
 		}
 	}
 	
 	public void handStartEngine(){
-		if(state.equals(EngineStates.ENGINE_OFF)){
-			state = EngineStates.MAGNETO_OFF_HS_ON;
-		}else if(state.equals(EngineStates.MAGNETO_ON_STARTERS_OFF)){
-			state = EngineStates.MAGNETO_ON_HS_ON;
-		}else if(state.equals(EngineStates.RUNNING)){
-			state = EngineStates.RUNNING_HS_ON;
-		}else{
-			return;
-		}
+		variablesOn.add(HAND_STARTER_VARIABLE);
 		
 		//Add a small amount to the starter level from the player's hand.
 		starterLevel += 4;
@@ -706,21 +657,15 @@ public class PartEngine extends APart{
 	
 	public void autoStartEngine(){
 		//Only engage auto-starter if we aren't running and we have the right fuel.
-		if(!state.running && (isCreative || vehicleOn.fuelTank.getFluidLevel() > 0)){
+		if(!running && (isCreative || vehicleOn.fuelTank.getFluidLevel() > 0)){
 			autoStarterEngaged = true;
-			setMagnetoStatus(true);
-			setElectricStarterStatus(true);
+			variablesOn.add(MAGNETO_VARIABLE);
+			variablesOn.add(ELECTRIC_STARTER_VARIABLE);
 		}
 	}
 	
 	public void stallEngine(Signal signal){
-		if(state.equals(EngineStates.RUNNING)){
-			state = EngineStates.MAGNETO_ON_STARTERS_OFF;
-		}else if(state.equals(EngineStates.RUNNING_ES_ON)){
-			state = EngineStates.MAGNETO_ON_ES_ON;
-		}else if(state.equals(EngineStates.RUNNING_HS_ON)){
-			state = EngineStates.MAGNETO_ON_HS_ON;
-		}
+		running = false;
 		
 		//If we stalled due to not drowning, set internal fuel to play wind-down sounds.
 		if(world.isClient()){
@@ -874,7 +819,7 @@ public class PartEngine extends APart{
 		if(definition.engine.jetPowerFactor == 0 && wheelFriction != 0){
 			double wheelForce = 0;
 			//If running, use the friction of the wheels to determine the new speed.
-			if(state.running || state.esOn){
+			if(running || electricStarterEngaged){
 				if(rpm > definition.engine.revlimitRPM && definition.engine.revlimitRPM != -1){
 					wheelForce = -rpm/definition.engine.maxRPM*Math.signum(currentGear)*60;
 				}else{
@@ -931,7 +876,7 @@ public class PartEngine extends APart{
 		
 		//If we provide jet power, add it now.  This may be done with any parts or wheels on the ground.
 		//Propellers max out at about 25 force, so use that to determine this force.
-		if(definition.engine.jetPowerFactor > 0 && state.running){
+		if(definition.engine.jetPowerFactor > 0 && running){
 			//First we need the air density (sea level 1.225) so we know how much air we are moving.
 			//We then multiply that by the RPM and the fuel consumption to get the raw power produced
 			//by the core of the engine.  This is speed-independent as the core will ALWAYS accelerate air.
@@ -967,31 +912,6 @@ public class PartEngine extends APart{
 		data.setDouble("rpm", rpm);
 		data.setDouble("temp", temp);
 		data.setDouble("pressure", pressure);
-		data.setInteger("state", (byte) state.ordinal());
 		return data;
-	}
-	
-	public enum EngineStates{
-		ENGINE_OFF(false, false, false, false),
-		MAGNETO_ON_STARTERS_OFF(true, false, false, false),
-		MAGNETO_OFF_ES_ON(false, true, false, false),
-		MAGNETO_OFF_HS_ON(false, false, true, false),
-		MAGNETO_ON_ES_ON(true, true, false, false),
-		MAGNETO_ON_HS_ON(true, false, true, false),
-		RUNNING(true, false, false, true),
-		RUNNING_ES_ON(true, true, false, true),
-		RUNNING_HS_ON(true, false, true, true);
-		
-		public final boolean magnetoOn;
-		public final boolean esOn;
-		public final boolean hsOn;
-		public final boolean running;
-		
-		private EngineStates(boolean magnetoOn, boolean esOn, boolean hsOn, boolean running){
-			this.magnetoOn = magnetoOn;
-			this.esOn = esOn;
-			this.hsOn = hsOn;
-			this.running = running;
-		}
 	}
 }

@@ -126,9 +126,9 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 				enginesOn = false;
 				enginesRunning = false;
 				for(PartEngine engine : engines.values()){
-					if(engine.state.magnetoOn){
+					if(engine.magnetoOn){
 						enginesOn = true;
-						if(engine.state.running){
+						if(engine.running){
 							enginesRunning = true;
 							break;
 						}
@@ -222,7 +222,10 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 					}
 					if(!otherController){
 						for(PartEngine engine : engines.values()){
-							InterfacePacket.sendToServer(new PacketPartEngine(engine, Signal.MAGNETO_OFF));
+							if(engine.magnetoOn){
+								engine.variablesOn.remove(PartEngine.MAGNETO_VARIABLE);
+								InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(engine, PartEngine.MAGNETO_VARIABLE));
+							}
 						}
 						InterfacePacket.sendToServer(new PacketVehicleControlAnalog((EntityVehicleF_Physics) this, PacketVehicleControlAnalog.Controls.BRAKE, (short) 0, Byte.MAX_VALUE));
 						if(!parkingBrakeOn){

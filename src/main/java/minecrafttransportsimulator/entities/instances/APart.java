@@ -189,8 +189,6 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 			prevMotion.setTo(entityOn.prevMotion);
 			motion.setTo(entityOn.motion);
 			prevLocalOffset.setTo(localOffset);
-			variablesOn.clear();
-			variablesOn.addAll(entityOn.variablesOn);
 			isDisabled = updateLocals();
 			//If we have a parent part, we need to change our offsets to be relative to it.
 			if(parentPart != null && placementDefinition.isSubPart){

@@ -100,10 +100,6 @@ public class PacketPartEngine extends APacketEntity<PartEngine>{
 	@Override
 	public boolean handle(WrapperWorld world, PartEngine engine){
 		switch(packetType){
-			case MAGNETO_OFF: engine.setMagnetoStatus(false); break;
-			case MAGNETO_ON: engine.setMagnetoStatus(true); break;
-			case ES_OFF: engine.setElectricStarterStatus(false); break;
-			case ES_ON: engine.setElectricStarterStatus(true); break;
 			case HS_ON: engine.handStartEngine(); break;
 			case AS_ON: engine.autoStartEngine(); break;
 			case BACKFIRE: engine.backfireEngine(); break;
@@ -145,10 +141,6 @@ public class PacketPartEngine extends APacketEntity<PartEngine>{
 	}
 	
 	public enum Signal{
-		MAGNETO_OFF,
-		MAGNETO_ON,
-		ES_OFF,
-		ES_ON,
 		HS_ON,
 		AS_ON,
 		BACKFIRE,

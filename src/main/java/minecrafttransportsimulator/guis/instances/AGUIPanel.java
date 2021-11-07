@@ -15,8 +15,7 @@ import minecrafttransportsimulator.guis.components.GUIComponentInstrument;
 import minecrafttransportsimulator.jsondefs.JSONConnectionGroup;
 import minecrafttransportsimulator.mcinterface.InterfaceGUI;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
-import minecrafttransportsimulator.packets.instances.PacketPartEngine;
-import minecrafttransportsimulator.packets.instances.PacketPartEngine.Signal;
+import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 
 /**A GUI/control system hybrid, this takes the place of the HUD when called up.
  * This class is abstract and contains the base code for rendering things common to
@@ -197,7 +196,9 @@ public abstract class AGUIPanel extends AGUIBase{
 	public void onClosed(){
 		//Turn starters off.  This prevents stuck engine starters.
 		for(PartEngine engine : vehicle.engines.values()){
-			InterfacePacket.sendToServer(new PacketPartEngine(engine, Signal.ES_OFF));
+			if(engine.electricStarterEngaged){
+				InterfacePacket.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.ELECTRIC_STARTER_VARIABLE));
+			}
 		}
 	}
 	

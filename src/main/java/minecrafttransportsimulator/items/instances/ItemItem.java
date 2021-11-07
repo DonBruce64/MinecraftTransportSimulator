@@ -31,7 +31,6 @@ import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketGUIRequest;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine;
-import minecrafttransportsimulator.packets.instances.PacketPartEngine.Signal;
 import minecrafttransportsimulator.packets.instances.PacketPartInteractable;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
@@ -342,8 +341,10 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 							InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.PARKINGBRAKE_VARIABLE));
 						}
 						for(PartEngine engine : vehicle.engines.values()){
-							engine.setMagnetoStatus(false);
-							InterfacePacket.sendToAllClients(new PacketPartEngine(engine, Signal.MAGNETO_OFF));
+							if(engine.magnetoOn){
+								engine.variablesOn.remove(PartEngine.MAGNETO_VARIABLE);
+								InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(engine, PartEngine.MAGNETO_VARIABLE));
+							}
 						}
 						for(String variable : vehicle.variablesOn){
 							InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(vehicle, variable));

@@ -672,6 +672,17 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 			return -1;
 		}
 	}
+	
+	/**
+	 *  Helper method to toggle a variable for this entity.
+	 */
+	public void toggleVariable(String variable){
+		if(variablesOn.contains(variable)){
+			variablesOn.remove(variable);
+		}else{
+			variablesOn.add(variable);
+		}
+	}
     
     /**
 	 *  Gets the renderer for this entity.  No actual rendering should be done in this method, 

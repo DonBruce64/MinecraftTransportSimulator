@@ -122,12 +122,8 @@ public class PacketVehicleInteract extends APacketEntityInteract<EntityVehicleF_
 			if(vehicle.locked){
 				player.sendPacket(new PacketPlayerChatMessage(player, "interact.failure.vehiclelocked"));
 			}else{
-				//Open or close the clicked door.
-				if(vehicle.variablesOn.contains(hitBox.definition.variableName)){
-					vehicle.variablesOn.remove(hitBox.definition.variableName);
-				}else{
-					vehicle.variablesOn.add(hitBox.definition.variableName);
-				}
+				//Toggle variable.
+				vehicle.toggleVariable(hitBox.definition.variableName);
 				InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(vehicle, hitBox.definition.variableName));
 			}
 			return false;

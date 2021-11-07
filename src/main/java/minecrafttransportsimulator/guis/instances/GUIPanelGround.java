@@ -21,8 +21,6 @@ import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketEntityTrailerConnection;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
-import minecrafttransportsimulator.packets.instances.PacketPartEngine;
-import minecrafttransportsimulator.packets.instances.PacketPartEngine.Signal;
 import minecrafttransportsimulator.packets.instances.PacketVehicleBeaconChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
@@ -149,18 +147,14 @@ public class GUIPanelGround extends AGUIPanel{
 					@Override
 					public void onClicked(boolean leftSide){
 						for(Byte engineNumber : vehicle.engines.keySet()){
-							if(selectorState == 0 && !leftSide){
-								InterfacePacket.sendToServer(new PacketPartEngine(vehicle.engines.get(engineNumber), Signal.MAGNETO_ON));
-							}else if(selectorState == 1 && !leftSide){
-								InterfacePacket.sendToServer(new PacketPartEngine(vehicle.engines.get(engineNumber), Signal.ES_ON));
-							}else if(selectorState == 1 && leftSide){
-								InterfacePacket.sendToServer(new PacketPartEngine(vehicle.engines.get(engineNumber), Signal.MAGNETO_OFF));
-							}else if(selectorState == 2 && leftSide){
-								if(vehicle.engines.get(engineNumber).definition.engine.disableAutomaticStarter){
-									InterfacePacket.sendToServer(new PacketPartEngine(vehicle.engines.get(engineNumber), Signal.MAGNETO_OFF));
-								}else{
-									InterfacePacket.sendToServer(new PacketPartEngine(vehicle.engines.get(engineNumber), Signal.ES_OFF));
+							if(selectorState == 1 && !leftSide){
+								//Clicked and held right side.  Engage electric starter if possible.
+								if(!vehicle.engines.get(engineNumber).definition.engine.disableAutomaticStarter){
+									InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle.engines.get(engineNumber), PartEngine.ELECTRIC_STARTER_VARIABLE));
 								}
+							}else{
+								//Clicked left side, or right side on state 1. change magneto.
+								InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle.engines.get(engineNumber), PartEngine.MAGNETO_VARIABLE));
 							}
 						}
 					}
@@ -169,7 +163,10 @@ public class GUIPanelGround extends AGUIPanel{
 					public void onReleased(){
 						if(selectorState == 2){
 							for(Byte engineNumber : vehicle.engines.keySet()){
-								InterfacePacket.sendToServer(new PacketPartEngine(vehicle.engines.get(engineNumber), Signal.ES_OFF));
+								//Released during sate 2.  Disengage electric starter if possible.
+								if(!vehicle.engines.get(engineNumber).definition.engine.disableAutomaticStarter){
+									InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle.engines.get(engineNumber), PartEngine.ELECTRIC_STARTER_VARIABLE));
+								}
 							}
 						}
 					}
@@ -187,25 +184,24 @@ public class GUIPanelGround extends AGUIPanel{
 				GUIComponentSelector engineSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + (SELECTOR_SIZE + GAP_BETWEEN_SELECTORS)*(engineNumber%4), SELECTOR_SIZE, SELECTOR_SIZE, InterfaceCore.translate("gui.panel.engine"), vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE, ENGINE_TEXTURE_WIDTH_OFFSET, ENGINE_TEXTURE_HEIGHT_OFFSET, getTextureWidth(), getTextureHeight()){
 					@Override
 					public void onClicked(boolean leftSide){
-						if(selectorState == 0 && !leftSide){
-							InterfacePacket.sendToServer(new PacketPartEngine(vehicle.engines.get(engineNumber), Signal.MAGNETO_ON));
-						}else if(selectorState == 1 && !leftSide){
-							InterfacePacket.sendToServer(new PacketPartEngine(vehicle.engines.get(engineNumber), Signal.ES_ON));
-						}else if(selectorState == 1 && leftSide){
-							InterfacePacket.sendToServer(new PacketPartEngine(vehicle.engines.get(engineNumber), Signal.MAGNETO_OFF));
-						}else if(selectorState == 2 && leftSide){
-							if(vehicle.engines.get(engineNumber).definition.engine.disableAutomaticStarter){
-								InterfacePacket.sendToServer(new PacketPartEngine(vehicle.engines.get(engineNumber), Signal.MAGNETO_OFF));
-							}else{
-								InterfacePacket.sendToServer(new PacketPartEngine(vehicle.engines.get(engineNumber), Signal.ES_OFF));
+						if(selectorState == 1 && !leftSide){
+							//Clicked and held right side.  Engage electric starter if possible.
+							if(!vehicle.engines.get(engineNumber).definition.engine.disableAutomaticStarter){
+								InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle.engines.get(engineNumber), PartEngine.ELECTRIC_STARTER_VARIABLE));
 							}
+						}else{
+							//Clicked left side, or right side on state 1. change magneto.
+							InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle.engines.get(engineNumber), PartEngine.MAGNETO_VARIABLE));
 						}
 					}
 					
 					@Override
 					public void onReleased(){
 						if(selectorState == 2){
-							InterfacePacket.sendToServer(new PacketPartEngine(vehicle.engines.get(engineNumber), Signal.ES_OFF));
+							//Released during sate 2.  Disengage electric starter if possible.
+							if(!vehicle.engines.get(engineNumber).definition.engine.disableAutomaticStarter){
+								InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle.engines.get(engineNumber), PartEngine.ELECTRIC_STARTER_VARIABLE));
+							}
 						}
 					}
 				};
@@ -362,9 +358,9 @@ public class GUIPanelGround extends AGUIPanel{
 		if(vehicle.definition.motorized.hasSingleEngineControl){
 			for(PartEngine engine : vehicle.engines.values()){
 				if(engine.definition.engine.disableAutomaticStarter){
-					engineSelectors.get(ENGINE_SINGLE_SELECTOR_INDEX).selectorState = engine.state.magnetoOn ? 2 : 0;
+					engineSelectors.get(ENGINE_SINGLE_SELECTOR_INDEX).selectorState = engine.magnetoOn ? 2 : 0;
 				}else{
-					engineSelectors.get(ENGINE_SINGLE_SELECTOR_INDEX).selectorState = engine.state.magnetoOn ? (engine.state.esOn ? 2 : 1) : 0;
+					engineSelectors.get(ENGINE_SINGLE_SELECTOR_INDEX).selectorState = engine.magnetoOn ? (engine.electricStarterEngaged ? 2 : 1) : 0;
 				}
 				break;
 			}
@@ -373,9 +369,9 @@ public class GUIPanelGround extends AGUIPanel{
 				if(vehicle.engines.containsKey(engineEntry.getKey())){
 					PartEngine engine = vehicle.engines.get(engineEntry.getKey());
 					if(engine.definition.engine.disableAutomaticStarter){
-						engineEntry.getValue().selectorState = engine.state.magnetoOn ? 2 : 0;
+						engineEntry.getValue().selectorState = engine.magnetoOn ? 2 : 0;
 					}else{
-						engineEntry.getValue().selectorState = engine.state.magnetoOn ? (engine.state.esOn ? 2 : 1) : 0;
+						engineEntry.getValue().selectorState = engine.magnetoOn ? (engine.electricStarterEngaged ? 2 : 1) : 0;
 					}
 				}
 			}

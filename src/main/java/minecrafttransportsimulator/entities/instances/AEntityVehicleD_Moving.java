@@ -436,7 +436,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 									}
 								}
 							}else if(part instanceof PartEngine){
-								if(((PartEngine) part).currentGear == 0 && ((PartEngine) part).state.running){
+								if(((PartEngine) part).currentGear == 0 && ((PartEngine) part).running){
 									foundNeutralEngine = true;
 								}
 							}
