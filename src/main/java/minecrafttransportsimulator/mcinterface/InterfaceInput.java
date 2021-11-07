@@ -124,8 +124,6 @@ public class InterfaceInput{
 								}
 							}
 						}
-						joystickBlocked = false;
-						
 						
 						//Validate joysticks are valid for this setup by making sure indexes aren't out of bounds.
 						Iterator<Entry<String, ConfigJoystick>> iterator = ConfigSystem.configObject.controls.joystick.entrySet().iterator();
@@ -151,6 +149,8 @@ public class InterfaceInput{
 								}
 							}
 						}
+
+						joystickBlocked = false;
 					}catch(Exception e){
 						e.printStackTrace();
 						InterfaceCore.logError(e.getMessage());
