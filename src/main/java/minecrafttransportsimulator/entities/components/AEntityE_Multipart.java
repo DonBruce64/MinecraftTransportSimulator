@@ -353,10 +353,20 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 	public boolean areVariablesBlocking(JSONPartDefinition partDef, WrapperPlayer player){
 		if(partDef.linkedVariables != null){
 			for(String variableName : partDef.linkedVariables){
-				if(variablesOn.contains(variableName)){
-					//We have the door open, no need to check any further.
-					return false;
+				if(variableName.startsWith("!")){
+					double value = getRawVariableValue(variableName.substring(1), 0);
+					if(value == 0 || Double.isNaN(value)){
+						//We have the variable, no need to check any further.
+						return false;
+					}
+				}else{
+					double value = getRawVariableValue(variableName, 0);
+					if(value > 0 && !Double.isNaN(value)){
+						//We have the variable, no need to check any further.
+						return false;
+					}
 				}
+				
 			}
 			return true;
 		}else{

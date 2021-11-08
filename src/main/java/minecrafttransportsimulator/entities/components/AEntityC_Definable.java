@@ -556,7 +556,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
     }
 	
 	/**
-	 *  Returns the raw value for the passed-in variable.  If the variable is not present, NaM
+	 *  Returns the raw value for the passed-in variable.  If the variable is not present, NaN
 	 *  should be returned (calling functions need to account for this!).
 	 *  This should be extended on all sub-classes for them to provide their own variables.
 	 *  For all cases of this, the sub-classed variables should be checked first.  If none are
