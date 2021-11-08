@@ -41,6 +41,7 @@ import minecrafttransportsimulator.jsondefs.JSONInstrument;
 import minecrafttransportsimulator.jsondefs.JSONItem;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
+import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.rendering.components.ARenderEntity;
@@ -506,6 +507,14 @@ public class JSONParser{
 					JSONParser.validateFields(loadedDecorDefinition, "/", 1);
 					decorDefinition.decor = loadedDecorDefinition.decor;
 					loadedDefinition = loadedDecorDefinition;
+					break;
+				}
+				case ROAD : {
+					JSONRoadComponent roadDefinition = (JSONRoadComponent) definitionToOverride;
+					JSONRoadComponent loadedRoadDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONRoadComponent.class, roadDefinition.packID, roadDefinition.systemName);
+					JSONParser.validateFields(loadedRoadDefinition, "/", 1);
+					roadDefinition.road = loadedRoadDefinition.road;
+					loadedDefinition = loadedRoadDefinition;
 					break;
 				}
 				case POLE : {
