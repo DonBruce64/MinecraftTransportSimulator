@@ -26,6 +26,10 @@ public class JSONRoadComponent extends AJSONMultiModelProvider{
     	public float borderOffset;
     	
     	@JSONRequired(dependentField="type", dependentValues={"CORE_DYNAMIC"})
+    	@JSONDescription("How long each segment in this road is.  This allows for variable-length repeating model segments.")
+    	public float segmentLength;
+    	
+    	@JSONRequired
     	@JSONDescription("How high collision should be for this dynamic core component, in pixels.  Normally a low value.")
     	public int collisionHeight;
     	

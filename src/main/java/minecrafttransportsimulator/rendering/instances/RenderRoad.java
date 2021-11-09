@@ -77,7 +77,7 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 								Point3d priorRotation = new Point3d();
 								float priorIndex = 0;
 								List<float[]> segmentVertices = new ArrayList<float[]>();
-								for(float currentIndex=1; currentIndex<=road.dynamicCurve.pathLength; ++currentIndex){
+								for(float currentIndex=1; currentIndex<=road.dynamicCurve.pathLength; currentIndex += road.definition.road.segmentLength){
 									//Get current and prior curve position and rotation.
 									//From this, we know how much to stretch the model to that point's rendering area.
 									road.dynamicCurve.setPointToPositionAt(priorPosition, priorIndex);
@@ -93,7 +93,7 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 									Point3d testPoint2 = new Point3d(road.definition.road.borderOffset, 0, 0).rotateFine(rotation).add(position);
 									if(currentIndex != road.dynamicCurve.pathLength && ((position.x - priorPosition.x)*(testPoint2.x - testPoint1.x) < 0 || (position.z - priorPosition.z)*(testPoint2.z - testPoint1.z) < 0)){
 										if(currentIndex + 3 > road.dynamicCurve.pathLength){
-											currentIndex = road.dynamicCurve.pathLength - 1;
+											currentIndex = road.dynamicCurve.pathLength - road.definition.road.segmentLength;
 										}
 										continue;
 									}
@@ -133,8 +133,8 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 									priorIndex = currentIndex;
 									
 									//If we are at the last index, do special logic to get the very end point.
-									if(currentIndex != road.dynamicCurve.pathLength && currentIndex + 1 > road.dynamicCurve.pathLength){
-										currentIndex -= ((currentIndex + 1) - road.dynamicCurve.pathLength);
+									if(currentIndex != road.dynamicCurve.pathLength && currentIndex + road.definition.road.segmentLength > road.dynamicCurve.pathLength){
+										currentIndex -= ((currentIndex + road.definition.road.segmentLength) - road.dynamicCurve.pathLength);
 									}
 								}
 								
