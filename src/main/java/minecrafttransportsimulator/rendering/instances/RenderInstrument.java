@@ -100,75 +100,79 @@ public final class RenderInstrument{
 							
 							switch(animation.animationType){
 								case ROTATION :{
-									double variableValue = -entity.getAnimatedVariableValue(animationClock, animation.axis.z, partialTicks);
-									//Depending on what variables are set we do different rendering operations.
-									//If we are rotating the window, but not the texture we should offset the texture points to that rotated point.
-									//Otherwise, we apply an OpenGL rotation operation.
-									if(component.rotateWindow){
-										//Add rotation offset to the points.
-										bottomLeft.add(animation.centerPoint);
-										topLeft.add(animation.centerPoint);
-										topRight.add(animation.centerPoint);
-										bottomRight.add(animation.centerPoint);
-										
-										//Rotate the points by the rotation.
-										rotation.set(0, 0, variableValue);
-										bottomLeft.rotateFine(rotation);
-										topLeft.rotateFine(rotation);
-										topRight.rotateFine(rotation);
-										bottomRight.rotateFine(rotation);
-										
-										//Remove the rotation offsets.
-										bottomLeft.subtract(animation.centerPoint);
-										topLeft.subtract(animation.centerPoint);
-										topRight.subtract(animation.centerPoint);
-										bottomRight.subtract(animation.centerPoint);
-									}else{
-										GL11.glTranslated((component.xCenter + animation.centerPoint.x)*globalScale, -(component.yCenter + animation.centerPoint.y)*globalScale, 0.0F);
-										GL11.glRotated(variableValue, 0, 0, 1);
-										GL11.glTranslated(-(component.xCenter + animation.centerPoint.x)*globalScale, (component.yCenter + animation.centerPoint.y)*globalScale, 0.0F);
+									if(!skipFurtherTransforms){
+										double variableValue = -entity.getAnimatedVariableValue(animationClock, animation.axis.z, partialTicks);
+										//Depending on what variables are set we do different rendering operations.
+										//If we are rotating the window, but not the texture we should offset the texture points to that rotated point.
+										//Otherwise, we apply an OpenGL rotation operation.
+										if(component.rotateWindow){
+											//Add rotation offset to the points.
+											bottomLeft.add(animation.centerPoint);
+											topLeft.add(animation.centerPoint);
+											topRight.add(animation.centerPoint);
+											bottomRight.add(animation.centerPoint);
+											
+											//Rotate the points by the rotation.
+											rotation.set(0, 0, variableValue);
+											bottomLeft.rotateFine(rotation);
+											topLeft.rotateFine(rotation);
+											topRight.rotateFine(rotation);
+											bottomRight.rotateFine(rotation);
+											
+											//Remove the rotation offsets.
+											bottomLeft.subtract(animation.centerPoint);
+											topLeft.subtract(animation.centerPoint);
+											topRight.subtract(animation.centerPoint);
+											bottomRight.subtract(animation.centerPoint);
+										}else{
+											GL11.glTranslated((component.xCenter + animation.centerPoint.x)*globalScale, -(component.yCenter + animation.centerPoint.y)*globalScale, 0.0F);
+											GL11.glRotated(variableValue, 0, 0, 1);
+											GL11.glTranslated(-(component.xCenter + animation.centerPoint.x)*globalScale, (component.yCenter + animation.centerPoint.y)*globalScale, 0.0F);
+										}
 									}
 									break;
 								}
 								case TRANSLATION :{
-									//Offset the coords based on the translated amount.
-									//Adjust the window to either move or scale depending on settings.
-									double xTranslation = entity.getAnimatedVariableValue(animationClock, animation.axis.x, partialTicks);
-									double yTranslation = entity.getAnimatedVariableValue(animationClock, animation.axis.y, partialTicks);
-									if(component.extendWindow){
-										//We need to add to the edge of the window in this case rather than move the entire window.
-										if(animation.axis.x < 0){
-											bottomLeft.x += xTranslation;
-											topLeft.x += xTranslation;
-										}else if(animation.axis.x > 0){
-											topRight.x += xTranslation;
-											bottomRight.x += xTranslation;
-										}
-										if(animation.axis.y < 0){
-											bottomLeft.y += yTranslation;
-											bottomRight.y += yTranslation;
-										}else if(animation.axis.y > 0){
-											topLeft.y += yTranslation;
-											topRight.y += yTranslation;
-										}
-									}else if(component.moveComponent){
-										//Translate the rather than adjust the window coords.
-										GL11.glTranslated(xTranslation*globalScale, yTranslation*globalScale, 0);
-									}else{
-										//Offset the window coords to the appropriate section of the texture sheet.
-										//We don't want to do an OpenGL translation here as that would move the texture's
-										//rendered position on the instrument rather than change what texture is rendered.
-										if(animation.axis.x != 0){
-											bottomLeft.x += xTranslation;
-											topLeft.x += xTranslation;
-											topRight.x += xTranslation;
-											bottomRight.x += xTranslation;
-										}
-										if(animation.axis.y != 0){
-											bottomLeft.y += yTranslation;
-											topLeft.y += yTranslation;
-											topRight.y += yTranslation;
-											bottomRight.y += yTranslation;
+									if(!skipFurtherTransforms){
+										//Offset the coords based on the translated amount.
+										//Adjust the window to either move or scale depending on settings.
+										double xTranslation = entity.getAnimatedVariableValue(animationClock, animation.axis.x, partialTicks);
+										double yTranslation = entity.getAnimatedVariableValue(animationClock, animation.axis.y, partialTicks);
+										if(component.extendWindow){
+											//We need to add to the edge of the window in this case rather than move the entire window.
+											if(animation.axis.x < 0){
+												bottomLeft.x += xTranslation;
+												topLeft.x += xTranslation;
+											}else if(animation.axis.x > 0){
+												topRight.x += xTranslation;
+												bottomRight.x += xTranslation;
+											}
+											if(animation.axis.y < 0){
+												bottomLeft.y += yTranslation;
+												bottomRight.y += yTranslation;
+											}else if(animation.axis.y > 0){
+												topLeft.y += yTranslation;
+												topRight.y += yTranslation;
+											}
+										}else if(component.moveComponent){
+											//Translate the rather than adjust the window coords.
+											GL11.glTranslated(xTranslation*globalScale, yTranslation*globalScale, 0);
+										}else{
+											//Offset the window coords to the appropriate section of the texture sheet.
+											//We don't want to do an OpenGL translation here as that would move the texture's
+											//rendered position on the instrument rather than change what texture is rendered.
+											if(animation.axis.x != 0){
+												bottomLeft.x += xTranslation;
+												topLeft.x += xTranslation;
+												topRight.x += xTranslation;
+												bottomRight.x += xTranslation;
+											}
+											if(animation.axis.y != 0){
+												bottomLeft.y += yTranslation;
+												topLeft.y += yTranslation;
+												topRight.y += yTranslation;
+												bottomRight.y += yTranslation;
+											}
 										}
 									}
 									break;
@@ -178,9 +182,11 @@ public final class RenderInstrument{
 									break;
 								}
 								case VISIBILITY:{
-									//Skip rendering this component if this is false.
-									double variableValue = entity.getAnimatedVariableValue(animationClock, partialTicks);
-									skipRender = variableValue < animation.clampMin || variableValue > animation.clampMax;
+									if(!skipFurtherTransforms){
+										//Skip rendering this component if this is false.
+										double variableValue = entity.getAnimatedVariableValue(animationClock, partialTicks);
+										skipRender = variableValue < animation.clampMin || variableValue > animation.clampMax;
+									}
 									break;
 								}
 								case INHIBITOR:{
@@ -195,7 +201,7 @@ public final class RenderInstrument{
 									//Prevent skipping  further operations if this is true.
 									if(skipFurtherTransforms){
 										double variableValue = entity.getAnimatedVariableValue(animationClock, partialTicks);
-										skipFurtherTransforms = variableValue >= animation.clampMin && variableValue <= animation.clampMax;
+										skipFurtherTransforms = !(variableValue >= animation.clampMin && variableValue <= animation.clampMax);
 									}
 									break;
 								}

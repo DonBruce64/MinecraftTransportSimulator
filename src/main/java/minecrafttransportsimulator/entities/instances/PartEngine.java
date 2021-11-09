@@ -159,7 +159,7 @@ public class PartEngine extends APart{
 			//If the engine is running, but the magneto is off, turn the engine off.
 			if(running && !magnetoOn){
 				running = false;
-				internalFuel = 100;
+				internalFuel = 200;
 			}
 			
 			//Set fuel flow to 0 for the start of this cycle.
@@ -386,7 +386,7 @@ public class PartEngine extends APart{
 					//Internal fuel is used for engine sound wind down.  NOT used for power.
 					if(internalFuel > 0){
 						--internalFuel;
-						if(rpm < definition.engine.idleRPM){
+						if(rpm < 500){
 							internalFuel = 0;
 						}
 					}
@@ -484,7 +484,12 @@ public class PartEngine extends APart{
 									rpm += engineRPMDifference/definition.engine.revResistance - propellerFeedback;
 								}
 							}else if(!electricStarterEngaged && !handStarterEngaged){
-								rpm -= propellerFeedback*Math.abs(propellerGearboxRatio);
+								rpm -= (1 + propellerFeedback)*Math.abs(propellerGearboxRatio);
+								
+								//Don't let the engine RPM go negative.  This results in physics errors.
+								if(rpm < 0){
+									rpm = 0;
+								}
 							}
 						}
 					}
@@ -540,6 +545,14 @@ public class PartEngine extends APart{
 				//If we are linked to wheels on the ground follow the wheel rotation, not our own.
 				prevEngineRotation = engineRotation;
 				engineRotation += 360D*rpm/1200D;
+				if(engineRotation > 360){
+					engineRotation -= 360;
+					prevEngineRotation -= 360;
+				}else if(engineRotation < -360){
+					engineRotation += 360;
+					prevEngineRotation += 360;
+				}
+				
 				prevDriveshaftRotation = driveshaftRotation;
 				double driveshaftDesiredSpeed = -999;
 				for(PartGroundDevice wheel : vehicleOn.groundDeviceCollective.drivenWheels){
@@ -548,7 +561,14 @@ public class PartEngine extends APart{
 				if(driveshaftDesiredSpeed != -999){
 					driveshaftRotation += 360D*driveshaftDesiredSpeed*EntityVehicleF_Physics.SPEED_FACTOR;
 				}else{
-					driveshaftRotation += 360D*rpm/1200D*currentGearRatio;
+					driveshaftRotation += 360D*rpm/1200D/currentGearRatio;
+				}
+				if(driveshaftRotation > 360){
+					driveshaftRotation -= 360;
+					prevDriveshaftRotation -= 360;
+				}else if(driveshaftRotation < -360){
+					driveshaftRotation += 360;
+					prevDriveshaftRotation += 360;
 				}
 			}
 			return true;
