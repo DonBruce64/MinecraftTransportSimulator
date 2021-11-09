@@ -46,6 +46,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	public boolean slipping;
 	public boolean skidSteerActive;
 	public double groundVelocity;
+	public double weightTransfer = 0;
 	
 	//Road-following data.
 	protected RoadFollowingState frontFollower;
