@@ -545,12 +545,12 @@ public class PartEngine extends APart{
 				//If we are linked to wheels on the ground follow the wheel rotation, not our own.
 				prevEngineRotation = engineRotation;
 				engineRotation += 360D*rpm/1200D;
-				if(engineRotation > 360){
-					engineRotation -= 360;
-					prevEngineRotation -= 360;
-				}else if(engineRotation < -360){
-					engineRotation += 360;
-					prevEngineRotation += 360;
+				if(engineRotation > 3600000){
+					engineRotation -= 3600000;
+					prevEngineRotation -= 3600000;
+				}else if(engineRotation < -3600000){
+					engineRotation += 3600000;
+					prevEngineRotation += 3600000;
 				}
 				
 				prevDriveshaftRotation = driveshaftRotation;
@@ -563,12 +563,12 @@ public class PartEngine extends APart{
 				}else{
 					driveshaftRotation += 360D*rpm/1200D/currentGearRatio;
 				}
-				if(driveshaftRotation > 360){
-					driveshaftRotation -= 360;
-					prevDriveshaftRotation -= 360;
-				}else if(driveshaftRotation < -360){
-					driveshaftRotation += 360;
-					prevDriveshaftRotation += 360;
+				if(driveshaftRotation > 3600000){
+					driveshaftRotation -= 3600000;
+					prevDriveshaftRotation -= 3600000;
+				}else if(driveshaftRotation < -3600000){
+					driveshaftRotation += 3600000;
+					prevDriveshaftRotation += 3600000;
 				}
 			}
 			return true;

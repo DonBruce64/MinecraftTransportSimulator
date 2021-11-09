@@ -97,6 +97,13 @@ public class PartPropeller extends APart{
 				angularVelocity = 0;
 			}
 			angularPosition += angularVelocity;
+			if(angularPosition > 3600000){
+				angularPosition -= 3600000;
+				angularPosition -= 3600000;
+			}else if(angularPosition < -3600000){
+				angularPosition += 3600000;
+				angularPosition += 3600000;
+			}
 			
 			//Damage propeller or entities if required.
 			if(!world.isClient()){
