@@ -289,14 +289,19 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			}
 			if (this.towedByConnection == null){
 				double overSteerForce = Math.max(velocity / 4, 1);
-				double weightTransfer = 0
 				if (definition.motorized.overSteerAccel != 0 && definition.motorized.overSteerDecel != 0){
-				    weightTransfer =  Math.min(definition.motorized.overSteerAccel *(motion.dotProduct(motion) - prevMotion.dotProduct(prevMotion)), 0) + Math.max(-definition.motorized.overSteerDecel *(motion.dotProduct(motion) - prevMotion.dotProduct(prevMotion)), 0)  * definition.motorized.overSteer;
-					}else{
-					    weightTransfer = definition.motorized.overSteer;
+					double targetWeightTransfer =  (motion.dotProduct(motion) - prevMotion.dotProduct(prevMotion)) * definition.motorized.overSteer;
+					weightTransfer += targetWeightTransfer*definition.motorized.overSteer;
+					if (weightTransfer > definition.motorized.overSteerAccel){
+			    			weightTransfer = definition.motorized.overSteerAccel;
+					}else if(weightTransfer < -definition.motorized.overSteerDecel){
+						weightTransfer = -definition.motorized.overSteerDecel;
 					}
-				rotation.y = rotation.y + crossProduct.y * weightTransfer + (Math.abs(crossProduct.y) * -definition.motorized.underSteer * turningForce) * overSteerForce;
-			    }	
+				}else{
+					weightTransfer = definition.motorized.overSteer;
+				}
+				rotation.y += crossProduct.y * weightTransfer + (Math.abs(crossProduct.y) * -definition.motorized.underSteer * turningForce) * overSteerForce;
+			}
 			
 			//If we are offset, adjust our angle.
 			if(Math.abs(vectorDelta) > 0.001){
