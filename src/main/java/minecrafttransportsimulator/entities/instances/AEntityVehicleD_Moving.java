@@ -294,8 +294,8 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 					weightTransfer += (motion.dotProduct(motion) - prevMotion.dotProduct(prevMotion)) * definition.motorized.overSteer;
 					if (weightTransfer > definition.motorized.overSteerAccel){
 			    			weightTransfer = definition.motorized.overSteerAccel;
-			    		}else if(weightTransfer < -definition.motorized.overSteerDecel){
-			    			weightTransfer = -definition.motorized.overSteerDecel;
+			    		}else if(weightTransfer < definition.motorized.overSteerDecel){
+			    			weightTransfer = definition.motorized.overSteerDecel;
 			    		}
 				}else{
 					weightTransfer = definition.motorized.overSteer;
