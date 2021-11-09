@@ -200,7 +200,7 @@ public class InterfaceEventsEntityRendering{
 	                }
 	                GL11.glTranslated(0, -player.getEyeHeight()*playerHeightScale, 0);
 	                
-	                GL11.glTranslated(-playerDistanceX, -playerDistanceY, -playerDistanceZ);
+	                GL11.glTranslated(-playerDistanceX*playerWidthScale, -playerDistanceY*playerHeightScale, -playerDistanceZ*playerWidthScale);
 	                GL11.glScalef(playerWidthScale, playerHeightScale, playerWidthScale);
 	            }else{
 	            	GL11.glTranslated(0, player.getEyeHeight(), 0);
