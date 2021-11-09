@@ -223,8 +223,7 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 					if(!otherController){
 						for(PartEngine engine : engines.values()){
 							if(engine.magnetoOn){
-								engine.variablesOn.remove(PartEngine.MAGNETO_VARIABLE);
-								InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(engine, PartEngine.MAGNETO_VARIABLE));
+								InterfacePacket.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.MAGNETO_VARIABLE));
 							}
 						}
 						InterfacePacket.sendToServer(new PacketVehicleControlAnalog((EntityVehicleF_Physics) this, PacketVehicleControlAnalog.Controls.BRAKE, (short) 0, Byte.MAX_VALUE));
