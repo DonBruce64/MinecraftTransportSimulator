@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.entities.instances;
 
+import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
@@ -19,6 +20,7 @@ public class PartPropeller extends APart{
 	
 	private final PartEngine connectedEngine;
 	private final Point3d propellerForce = new Point3d();
+	private final BoundingBox damageBounds;
 	
 	public static final int MIN_DYNAMIC_PITCH = 45;
 	
@@ -27,12 +29,13 @@ public class PartPropeller extends APart{
 		this.damageAmount = data.getDouble("damageAmount");
 		this.currentPitch = definition.propeller.pitch;
 		this.connectedEngine = (PartEngine) parentPart;
+		
+		//Rotors need different collision box bounds as they are pointed upwards.
+		double propellerRadius = definition.propeller.diameter*0.0254D/2D;
 		if(definition.propeller.isRotor){
-			//Rotors need different collision box bounds as they are pointed upwards.
-			boundingBox.widthRadius = getWidth()/2D;
-			boundingBox.heightRadius = 0.25D;
-			boundingBox.depthRadius = getWidth()/2D;
-			
+			this.damageBounds = new BoundingBox(position, propellerRadius, 0.25D, propellerRadius);
+		}else{
+			this.damageBounds = new BoundingBox(position, propellerRadius, propellerRadius, propellerRadius);
 		}
 	}
 	
@@ -102,7 +105,7 @@ public class PartPropeller extends APart{
 					boundingBox.widthRadius += 0.2;
 					boundingBox.heightRadius += 0.2;
 					boundingBox.depthRadius += 0.2;
-					Damage propellerDamage = new Damage("propellor", ConfigSystem.configObject.damage.propellerDamageFactor.value*connectedEngine.rpm*connectedEngine.propellerGearboxRatio/500F, boundingBox, this, vehicleOn != null ? vehicleOn.getController() : null);
+					Damage propellerDamage = new Damage("propellor", ConfigSystem.configObject.damage.propellerDamageFactor.value*connectedEngine.rpm*connectedEngine.propellerGearboxRatio/500F, damageBounds, this, vehicleOn != null ? vehicleOn.getController() : null);
 					world.attackEntities(propellerDamage, null);
 					boundingBox.widthRadius -= 0.2;
 					boundingBox.heightRadius -= 0.2;
@@ -146,16 +149,6 @@ public class PartPropeller extends APart{
 		}
 		
 		return super.getRawVariableValue(variable, partialTicks);
-	}
-	
-	@Override
-	public float getWidth(){
-		return definition.propeller.diameter*0.0254F;
-	}
-
-	@Override
-	public float getHeight(){
-		return definition.propeller.diameter*0.0254F;
 	}
 
 	@Override
