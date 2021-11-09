@@ -225,6 +225,9 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 							if(engine.magnetoOn){
 								InterfacePacket.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.MAGNETO_VARIABLE));
 							}
+							if(engine.electricStarterEngaged){
+								InterfacePacket.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.ELECTRIC_STARTER_VARIABLE));
+							}
 						}
 						InterfacePacket.sendToServer(new PacketVehicleControlAnalog((EntityVehicleF_Physics) this, PacketVehicleControlAnalog.Controls.BRAKE, (short) 0, Byte.MAX_VALUE));
 						if(!parkingBrakeOn){
