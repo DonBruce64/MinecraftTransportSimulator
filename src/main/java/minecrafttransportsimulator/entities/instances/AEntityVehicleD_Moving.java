@@ -292,11 +292,11 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 				double overSteerForce = Math.max(velocity / 4, 1);
 				if (definition.motorized.overSteerAccel != 0){
 					weightTransfer += ((motion.dotProduct(motion) - prevMotion.dotProduct(prevMotion)) * weightTransfer) * definition.motorized.overSteer;
-					if (weightTransfer > definition.motorized.overSteerAccel){
+					if (Math.abs(weightTransfer) > Math.abs(definition.motorized.overSteerAccel) && Math.abs(weightTransfer) > Math.abs(definition.motorized.overSteerDecel)){
 			    			weightTransfer = definition.motorized.overSteerAccel;
-			    		}else if(weightTransfer < definition.motorized.overSteerDecel){
-			    			weightTransfer = definition.motorized.overSteerDecel;
-			    		}
+					}else if(Math.abs(weightTransfer) < Math.abs(definition.motorized.overSteerDecel) && weightTransfer < Math.abs(definition.motorized.overSteerAccel)){
+						weightTransfer = definition.motorized.overSteerDecel;
+					}
 				}else{
 					weightTransfer = definition.motorized.overSteer;
 				}
