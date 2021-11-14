@@ -90,16 +90,16 @@ public class JSONVehicle extends AJSONPartProvider{
     	@JSONDescription("The amount of steering force output for cars. The value functions between 0 and 1, with 1 being full steering force at any speed and 0 being normal MTS steering force.")
         public float downForce;
 	
-    	@JSONDescription("Controls the amount of spinning force a vehicle has while skidding. Can be set to negative for understeer. In most applications, it is ideal to use this in combination with downForce. anything under 8 or 9 should be good, except for specific cases.")
+    	@JSONDescription("A value dictating the oversteer force of a vehicle when skidding.")
     	public float overSteer;
     	
-	@JSONDescription("How much turning force is loss when slipping. Intended for high downForce values, (0.55+) or more realistic vehicle handling when combined with the overSteer set of variables")
+	@JSONDescription("A value dictating the understeer force of a vehicle when skidding.")
     	public float underSteer;
     	
-    	@JSONDescription("This variable is specifically intended for use with overSteer, otherwise no visible effect on driving will be made. When in use, overSteerAccel/Decel act as overSteer clamps, and overSteer says how quickly to move between the clamps. A value of 2 should work fine.")
+    	@JSONDescription("Used similarly to overSteer to control the exact rate of skidding during extreme acceleration.")
     	public float overSteerAccel;
     	
-	@JSONDescription("overSteerAccel, but for deceleration. See description for overSteerAccel.")
+	@JSONDescription("Used similarly to underSteer to control the exact rate of skidding during extreme deceleration.")
     	public float overSteerDecel;
 	
     	@JSONDescription("The gear ratio present for the axle of this vehicle.  This is a constant, vehicle-specific ratio that will be multiplied with the gear ratio of the currently-selected gear of the engine to determine the rotation of the wheels.  A good many cars have a 3.55 ratio, but other of course are possible.  All depends on how much power you expect your engine to have, and how fast you want your car to go.  Note that this parameter is required if you want your engine to drive wheels and you have isFrontWheelDrive or isRearWheelDrive set.")
