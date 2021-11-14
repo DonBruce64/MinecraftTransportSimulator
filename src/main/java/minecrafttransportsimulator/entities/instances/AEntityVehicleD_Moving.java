@@ -46,6 +46,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	public boolean slipping;
 	public boolean skidSteerActive;
 	public double groundVelocity;
+	public double weightTransfer = 0;
 	
 	//Road-following data.
 	protected RoadFollowingState frontFollower;
@@ -288,13 +289,19 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 				}
 			}
 			if (this.towedByConnection == null){
-				double overSteerForce = velocity / 4;
-				//used to reduce overSteer force at low speeds to reduce jank
-				if (overSteerForce >= 1){
-					overSteerForce = 1;
+				double overSteerForce = Math.max(velocity / 4, 1);
+				if (definition.motorized.overSteerAccel != 0){
+					weightTransfer += ((motion.dotProduct(motion) - prevMotion.dotProduct(prevMotion)) * weightTransfer) * definition.motorized.overSteer;
+					if (Math.abs(weightTransfer) > Math.abs(definition.motorized.overSteerAccel) && Math.abs(weightTransfer) > Math.abs(definition.motorized.overSteerDecel)){
+			    			weightTransfer = definition.motorized.overSteerAccel;
+					}else if(Math.abs(weightTransfer) < Math.abs(definition.motorized.overSteerDecel) && weightTransfer < Math.abs(definition.motorized.overSteerAccel)){
+						weightTransfer = definition.motorized.overSteerDecel;
+					}
+				}else{
+					weightTransfer = definition.motorized.overSteer;
 				}
-				rotation.y = rotation.y + (crossProduct.y * definition.motorized.overSteer) * overSteerForce;
-			}
+				rotation.y += crossProduct.y * weightTransfer + (Math.abs(crossProduct.y) * -definition.motorized.underSteer * turningForce) * overSteerForce;
+			}	
 			
 			//If we are offset, adjust our angle.
 			if(Math.abs(vectorDelta) > 0.001){
