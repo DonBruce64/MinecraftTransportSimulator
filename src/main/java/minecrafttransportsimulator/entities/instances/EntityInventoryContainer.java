@@ -134,9 +134,9 @@ public class EntityInventoryContainer extends AEntityA_Base{
 	 */
 	public int removeItems(int index, int qty, boolean doRemove){
 		ItemStack stack = inventory.get(index);
-		int qtyToRemove = stack.getCount() > qty ? stack.getCount() - qty : stack.getCount();
+		int stackFinalQty = stack.getCount() > qty ? stack.getCount() - qty : 0;
 		if(doRemove){
-			stack.setCount(qtyToRemove);
+			stack.setCount(stackFinalQty);
 			if(!world.isClient()){
 				InterfacePacket.sendToAllClients(new PacketInventoryContainerChange(this, index, stack));
 			}
