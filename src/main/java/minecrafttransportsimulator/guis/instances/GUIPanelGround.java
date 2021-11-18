@@ -356,13 +356,15 @@ public class GUIPanelGround extends AGUIPanel{
 		
 		//Set the state of the engine selectors.
 		if(vehicle.definition.motorized.hasSingleEngineControl){
-			for(PartEngine engine : vehicle.engines.values()){
-				if(engine.definition.engine.disableAutomaticStarter){
-					engineSelectors.get(ENGINE_SINGLE_SELECTOR_INDEX).selectorState = engine.magnetoOn ? 2 : 0;
-				}else{
-					engineSelectors.get(ENGINE_SINGLE_SELECTOR_INDEX).selectorState = engine.magnetoOn ? (engine.electricStarterEngaged ? 2 : 1) : 0;
+			if(!vehicle.engines.isEmpty()){
+				for(PartEngine engine : vehicle.engines.values()){
+					if(engine.definition.engine.disableAutomaticStarter){
+						engineSelectors.get(ENGINE_SINGLE_SELECTOR_INDEX).selectorState = engine.magnetoOn ? 2 : 0;
+					}else{
+						engineSelectors.get(ENGINE_SINGLE_SELECTOR_INDEX).selectorState = engine.magnetoOn ? (engine.electricStarterEngaged ? 2 : 1) : 0;
+					}
+					break;
 				}
-				break;
 			}
 		}else{
 			for(Entry<Byte, GUIComponentSelector> engineEntry : engineSelectors.entrySet()){

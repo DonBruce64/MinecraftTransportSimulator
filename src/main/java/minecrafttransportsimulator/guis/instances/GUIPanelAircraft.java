@@ -435,10 +435,11 @@ public class GUIPanelAircraft extends AGUIPanel{
 		
 		//Set the states of the magneto selectors.
 		if(vehicle.definition.motorized.hasSingleEngineControl){
-			magnetoSelectors.get((byte)-1).visible = !vehicle.engines.isEmpty();
-			for(PartEngine engine : vehicle.engines.values()){
-				magnetoSelectors.get((byte)-1).selectorState = engine.magnetoOn ? 1 : 0;
-				break;
+			if(!vehicle.engines.isEmpty()){
+				for(PartEngine engine : vehicle.engines.values()){
+					magnetoSelectors.get((byte)-1).selectorState = engine.magnetoOn ? 1 : 0;
+					break;
+				}
 			}
 		}else{
 			for(Entry<Byte, GUIComponentSelector> magnetoEntry : magnetoSelectors.entrySet()){
