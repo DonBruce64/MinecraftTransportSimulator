@@ -310,13 +310,10 @@ public class RenderText{
 				if(doRotation){
 					DEFAULT_ADJ.rotateFine(rotation);
 				}
-				position.add(DEFAULT_ADJ);
 				scale *= 1.4;
+			}else{
+				DEFAULT_ADJ.set(0, 0, 0);
 			}
-			
-			//Multiply position by the prevScaledFactor.  This moves the position
-			//to the appropriate one for the scale the entire text segment is renderd at.
-			position.multiply(preScaledFactor);
 			
 			//Check for auto-scaling.
 			if(autoScale && wrapWidth > 0){
@@ -329,11 +326,22 @@ public class RenderText{
 					stringWidth *= 16;
 				}
 				if(stringWidth > wrapWidth){
-					scale *= wrapWidth/stringWidth;
+					double scaleFactor = wrapWidth/stringWidth;
+					if(pixelCoords){
+						DEFAULT_ADJ.add(0, -DEFAULT_PIXELS_PER_CHAR*(scale*scaleFactor - scale)/2D, 0);
+					}else{
+						DEFAULT_ADJ.add(0, DEFAULT_PIXELS_PER_CHAR*(scale*scaleFactor - scale)/2D, 0);
+					}
+					scale *= scaleFactor;
 				}
 				//Don't use wrap width if we already adjusted scale for it.
 				wrapWidth = 0;
 			}
+			
+			//Add the adjustment and multiply position by prev scale.
+			//This moves the position to the appropriate one for the scale the entire text segment is rendered at.
+			position.add(DEFAULT_ADJ);
+			position.multiply(preScaledFactor);
 			
 			//Check if we need to adjust our offset for our alignment.
 			//While this will be slightly off due to formatting and non-printable chars in the string,
