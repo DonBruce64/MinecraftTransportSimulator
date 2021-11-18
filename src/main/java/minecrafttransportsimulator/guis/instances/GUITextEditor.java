@@ -46,7 +46,7 @@ public class GUITextEditor extends AGUIBase{
 		textInputBoxes.clear();
 		if(entity instanceof TileEntityPole_Sign){
 			//Add the render to render the sign.
-			GUIComponent3DModel modelRender = new GUIComponent3DModel(guiLeft + getWidth()/2, guiTop + 160, 64.0F, false, false, false);
+			GUIComponent3DModel modelRender = new GUIComponent3DModel(guiLeft + 3*getWidth()/4, guiTop + 160, 64.0F, false, false, false);
 			addOBJModel(modelRender);
 			modelRender.modelLocation = entity.definition.getModelLocation(entity.subName);
 			modelRender.textureLocation = entity.definition.getTextureLocation(entity.subName);
