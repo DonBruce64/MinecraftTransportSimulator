@@ -24,8 +24,11 @@ public class PartEngine extends APart{
 	public boolean backfired;
 	public boolean badShift;
 	public boolean running;
+	@DerivedValue
 	public boolean magnetoOn;
+	@DerivedValue
 	public boolean electricStarterEngaged;
+	@DerivedValue
 	public boolean handStarterEngaged;
 	public byte forwardsGears;
 	public byte reverseGears;
@@ -82,6 +85,7 @@ public class PartEngine extends APart{
 		this.oilLeak = data.getBoolean("oilLeak");
 		this.fuelLeak = data.getBoolean("fuelLeak");
 		this.brokenStarter = data.getBoolean("brokenStarter");
+		this.running = data.getBoolean("running");
 		this.currentGear = (byte) data.getInteger("currentGear");
 		this.hours = data.getDouble("hours");
 		this.rpm = data.getDouble("rpm");
@@ -342,7 +346,7 @@ public class PartEngine extends APart{
 						if(shiftCooldown == 0){
 							if(currentGear > 0 ? currentGear < forwardsGears : -currentGear < reverseGears){
 								//Can shift up, try to do so.
-								if(rpm > (definition.engine.upShiftRPM != null ? definition.engine.upShiftRPM.get(currentGear + reverseGears) : (definition.engine.maxSafeRPM*0.9))*0.5F*(1.0F + vehicleOn.throttle/100F)){
+								if(rpm > (definition.engine.upShiftRPM != null ? definition.engine.upShiftRPM.get(currentGear + reverseGears) : (definition.engine.maxSafeRPM*0.9))*0.5F*(1.0F + vehicleOn.throttle)){
 									if(currentGear > 0){
 										if(shiftUp(true)){
 											shiftCooldown = definition.engine.shiftSpeed;
@@ -358,7 +362,7 @@ public class PartEngine extends APart{
 							}
 							if(currentGear > 1 || currentGear < -1){
 								//Can shift down, try to do so.
-								if(rpm < (definition.engine.downShiftRPM != null ? definition.engine.downShiftRPM.get(currentGear + reverseGears)*0.5*(1.0F + vehicleOn.throttle/100F) : (definition.engine.maxSafeRPM*0.9)*0.25*(1.0F + vehicleOn.throttle/100F))){
+								if(rpm < (definition.engine.downShiftRPM != null ? definition.engine.downShiftRPM.get(currentGear + reverseGears)*0.5*(1.0F + vehicleOn.throttle) : (definition.engine.maxSafeRPM*0.9)*0.25*(1.0F + vehicleOn.throttle))){
 									if(currentGear > 0){
 										if(shiftDown(true)){
 											shiftCooldown = definition.engine.shiftSpeed;
@@ -412,7 +416,7 @@ public class PartEngine extends APart{
 					lowestWheelVelocity = 999F;
 					desiredWheelVelocity = -999F;
 					wheelFriction = 0;
-					engineTargetRPM = !electricStarterEngaged ? vehicleOn.throttle/100F*(definition.engine.maxRPM - definition.engine.idleRPM)/(1 + hours/1250) + definition.engine.idleRPM : definition.engine.startRPM;
+					engineTargetRPM = !electricStarterEngaged ? vehicleOn.throttle*(definition.engine.maxRPM - definition.engine.idleRPM)/(1 + hours/1250) + definition.engine.idleRPM : definition.engine.startRPM;
 					
 					//Update wheel friction and velocity.
 					for(PartGroundDevice wheel : vehicleOn.groundDeviceCollective.drivenWheels){
@@ -474,7 +478,7 @@ public class PartEngine extends APart{
 							
 							if(running){
 								propellerFeedback += propellerForcePenalty*50;
-								engineTargetRPM = vehicleOn.throttle/100F*(definition.engine.maxRPM - definition.engine.idleRPM)/(1 + hours/1250) + definition.engine.idleRPM;
+								engineTargetRPM = vehicleOn.throttle*(definition.engine.maxRPM - definition.engine.idleRPM)/(1 + hours/1250) + definition.engine.idleRPM;
 								double engineRPMDifference = engineTargetRPM - rpm;
 								
 								//propellerFeedback can't make an engine stall, but hours can.
@@ -499,7 +503,7 @@ public class PartEngine extends APart{
 				//Or, if we are not on, just slowly spin the engine down.
 				if((wheelFriction == 0 && !havePropeller) || currentGearRatio == 0){
 					if(running){
-						engineTargetRPM = vehicleOn.throttle/100F*(definition.engine.maxRPM - definition.engine.idleRPM)/(1 + hours/1250) + definition.engine.idleRPM;
+						engineTargetRPM = vehicleOn.throttle*(definition.engine.maxRPM - definition.engine.idleRPM)/(1 + hours/1250) + definition.engine.idleRPM;
 						rpm += (engineTargetRPM - rpm)/(definition.engine.revResistance*3);
 						if(definition.engine.revlimitRPM == -1){
 							if(rpm > definition.engine.maxSafeRPM){
@@ -927,6 +931,7 @@ public class PartEngine extends APart{
 		data.setBoolean("oilLeak", oilLeak);
 		data.setBoolean("fuelLeak", fuelLeak);
 		data.setBoolean("brokenStarter", brokenStarter);
+		data.setBoolean("running", running);
 		data.setInteger("currentGear", currentGear);
 		data.setDouble("hours", hours);
 		data.setDouble("rpm", rpm);

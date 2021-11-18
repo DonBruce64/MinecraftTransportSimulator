@@ -33,13 +33,15 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	//Static variables used in logic that are kept in the global map.
 	public static final String LEFTTURNLIGHT_VARIABLE = "left_turn_signal";
 	public static final String RIGHTTURNLIGHT_VARIABLE = "right_turn_signal";
+	public static final String BRAKE_VARIABLE = "brake";
 	public static final String PARKINGBRAKE_VARIABLE = "p_brake";
 	
 	//External state control.
-	public static final byte MAX_BRAKE = 100;
-	public byte brake;
-	/**Read-only, set every update cycle by the value in variablesOn **/
+	@DerivedValue
+	public double brake;
+	@DerivedValue
 	public boolean parkingBrakeOn;
+	public static final double MAX_BRAKE = 1D;
 	
 	//Internal states.
 	public boolean goingInReverse;
@@ -75,8 +77,6 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	
 	public AEntityVehicleD_Moving(WrapperWorld world, WrapperNBT data){
 		super(world, data);
-		this.brake = (byte) data.getInteger("brake");
-		
 		this.serverDeltaM = data.getPoint3d("serverDeltaM");
 		this.serverDeltaR = data.getPoint3d("serverDeltaR");
 		this.clientDeltaM = serverDeltaM.copy();
@@ -89,7 +89,8 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		if(super.update()){
 			world.beginProfiling("VehicleD_Level", true);
 			
-			//Update parking brake status.  This is used in a lot of locations, so we don't want to query the set every time.
+			//Update brake status.  This is used in a lot of locations, so we don't want to query the set every time.
+			brake = getVariable(BRAKE_VARIABLE);
 			parkingBrakeOn = variablesOn.contains(PARKINGBRAKE_VARIABLE);
 			
 			//Update our GDB members if any of our ground devices don't have the same total offset as placement.
@@ -183,8 +184,10 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	@Override
 	public void connectAsTrailer(TrailerConnection connection){
 		super.connectAsTrailer(connection);
-		parkingBrakeOn = false;
-		brake = 0;
+		if(parkingBrakeOn){
+			toggleVariable(PARKINGBRAKE_VARIABLE);
+		}
+		setVariable(BRAKE_VARIABLE, 0);
 	}
 	
 	@Override
@@ -335,7 +338,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	 * Depends on number of grounded core collision sections and braking ground devices.
 	 */
 	private float getBrakingForce(){
-		float brakingPower = parkingBrakeOn ? 1.0F : brake/(float)MAX_BRAKE;
+		double brakingPower = parkingBrakeOn ? MAX_BRAKE : brake;
 		float brakingFactor = 0;
 		//First get the ground device braking contributions.
 		//This is both grounded ground devices, and liquid collision boxes that are set as such.
@@ -922,8 +925,6 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	@Override
 	public WrapperNBT save(WrapperNBT data){
 		super.save(data);
-		data.setInteger("brake", brake);
-		
 		data.setPoint3d("serverDeltaM", serverDeltaM);
 		data.setPoint3d("serverDeltaR", serverDeltaR);
 		return data;

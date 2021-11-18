@@ -44,14 +44,6 @@ public class PacketVehicleControlAnalog extends APacketEntity<EntityVehicleF_Phy
 	@Override
 	protected boolean handle(WrapperWorld world, EntityVehicleF_Physics vehicle){
 		switch(controlType){
-			case THROTTLE : {
-				vehicle.throttle = (byte) clampAngle(0, EntityVehicleF_Physics.MAX_THROTTLE, cooldown == Byte.MAX_VALUE ? value : vehicle.throttle + value);
-				break;
-			}
-			case BRAKE : {
-				vehicle.brake = (byte) clampAngle(0, EntityVehicleF_Physics.MAX_BRAKE, cooldown == Byte.MAX_VALUE ? value : vehicle.brake + value);
-				break;
-			}
 			case AILERON : {
 				vehicle.aileronAngle = (short) clampAngle(-EntityVehicleF_Physics.MAX_AILERON_ANGLE, EntityVehicleF_Physics.MAX_AILERON_ANGLE, cooldown == Byte.MAX_VALUE ? value : vehicle.aileronAngle + value);
 				vehicle.aileronCooldown = cooldown; 
@@ -72,8 +64,6 @@ public class PacketVehicleControlAnalog extends APacketEntity<EntityVehicleF_Phy
 	}
 	
 	public enum Controls{
-		THROTTLE,
-		BRAKE,
 		AILERON,
 		ELEVATOR,
 		RUDDER;

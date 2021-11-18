@@ -67,7 +67,7 @@ public class PartPropeller extends APart{
 			//If we are a dynamic-pitch propeller or rotor, adjust ourselves to the speed of the engine.
 			if(vehicleOn != null){
 				if(definition.propeller.isRotor){
-					double throttlePitchSetting = connectedEngine.running ? (vehicleOn.throttle/100D*1.35 - 0.35)*definition.propeller.pitch : 0;
+					double throttlePitchSetting = connectedEngine.running ? (vehicleOn.throttle*1.35 - 0.35)*definition.propeller.pitch : 0;
 					if(throttlePitchSetting < currentPitch){
 						--currentPitch;
 					}else if(throttlePitchSetting > currentPitch){

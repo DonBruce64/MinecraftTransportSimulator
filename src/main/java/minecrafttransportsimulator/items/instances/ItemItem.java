@@ -28,12 +28,12 @@ import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
+import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketGUIRequest;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine;
 import minecrafttransportsimulator.packets.instances.PacketPartInteractable;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
-import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.item.ItemStack;
@@ -334,8 +334,8 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 				for(AEntityA_Base entity : AEntityA_Base.getEntities(world)){
 					if(entity instanceof EntityVehicleF_Physics){
 						EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) entity;
-						vehicle.throttle = 0;
-						InterfacePacket.sendToAllClients(new PacketVehicleControlAnalog(vehicle, PacketVehicleControlAnalog.Controls.THROTTLE, (short) 0, (byte) 0));
+						vehicle.setVariable(EntityVehicleF_Physics.THROTTLE_VARIABLE, 0);
+						InterfacePacket.sendToAllClients(new PacketEntityVariableSet(vehicle, EntityVehicleF_Physics.THROTTLE_VARIABLE, 0));
 						if(!vehicle.parkingBrakeOn){
 							vehicle.variablesOn.add(EntityVehicleF_Physics.PARKINGBRAKE_VARIABLE);
 							InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.PARKINGBRAKE_VARIABLE));

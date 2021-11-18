@@ -19,10 +19,10 @@ import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
+import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine.Signal;
-import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.NavBeaconSystem;
 
@@ -46,14 +46,16 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 	public static final String LANDINGLIGHT_VARIABLE = "landing_light";
 	public static final String HORN_VARIABLE = "horn";
 	public static final String GEAR_VARIABLE = "gear_setpoint";
+	public static final String THROTTLE_VARIABLE = "throttle";
 	
 	//External state control.
 	public boolean reverseThrust;
 	public boolean beingFueled;
 	public boolean enginesOn;
 	public boolean enginesRunning;
-	public static final byte MAX_THROTTLE = 100;
-	public byte throttle;
+	@DerivedValue
+	public double throttle;
+	public static final double MAX_THROTTLE = 1.0D;
 	
 	
 	//Internal states.
@@ -76,7 +78,6 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 		
 		//Load simple variables.
 		this.reverseThrust = data.getBoolean("reverseThrust");
-		this.throttle = (byte) data.getInteger("throttle");
 		this.electricPower = data.getDouble("electricPower");
 		this.selectedBeaconName = data.getString("selectedBeaconName");
 		this.selectedBeacon = NavBeaconSystem.getBeacon(world, selectedBeaconName);
@@ -87,6 +88,9 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 	public boolean update(){
 		if(super.update()){
 			world.beginProfiling("VehicleE_Level", true);
+			//Get throttle state.
+			throttle = getVariable(THROTTLE_VARIABLE);
+			
 			//If we have space for fuel, and we have tanks with it, transfer it.
 			if(!world.isClient() && fuelTank.getFluidLevel() < definition.motorized.fuelCapacity - 100){
 				for(APart part : parts){
@@ -115,11 +119,17 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 				//If we are being towed set the brake state to the same as the towing vehicle.
 				//If we aren't being towed, set the parking brake.
 				if(towedByConnection != null){
-					parkingBrakeOn = false;
-					brake = ((AEntityVehicleE_Powered) towedByConnection.hitchBaseEntity).brake;
+					if(parkingBrakeOn){
+						toggleVariable(PARKINGBRAKE_VARIABLE);
+					}
+					setVariable(BRAKE_VARIABLE, ((AEntityVehicleE_Powered) towedByConnection.hitchBaseEntity).brake);
 				}else{
-					parkingBrakeOn = true;
-					brake = 0;
+					if(!parkingBrakeOn){
+						toggleVariable(PARKINGBRAKE_VARIABLE);
+					}
+					if(brake != 0){
+						setVariable(BRAKE_VARIABLE, 0);
+					}
 				}
 			}else{
 				//Set engine state mapping variables.
@@ -229,7 +239,7 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 								InterfacePacket.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.ELECTRIC_STARTER_VARIABLE));
 							}
 						}
-						InterfacePacket.sendToServer(new PacketVehicleControlAnalog((EntityVehicleF_Physics) this, PacketVehicleControlAnalog.Controls.BRAKE, (short) 0, Byte.MAX_VALUE));
+						InterfacePacket.sendToServer(new PacketEntityVariableSet(this, BRAKE_VARIABLE, 0));
 						if(!parkingBrakeOn){
 							InterfacePacket.sendToServer(new PacketEntityVariableToggle(this, PARKINGBRAKE_VARIABLE));
 						}
@@ -334,7 +344,6 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 	public WrapperNBT save(WrapperNBT data){
 		super.save(data);
 		data.setBoolean("reverseThrust", reverseThrust);
-		data.setInteger("throttle", throttle);
 		data.setDouble("electricPower", electricPower);
 		data.setString("selectedBeaconName", selectedBeaconName);
 		data.setData("fuelTank", fuelTank.save(new WrapperNBT()));

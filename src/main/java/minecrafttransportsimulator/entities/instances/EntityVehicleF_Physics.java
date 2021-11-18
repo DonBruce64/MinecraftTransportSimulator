@@ -9,6 +9,7 @@ import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
+import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.rendering.instances.RenderVehicle;
@@ -436,13 +437,15 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 		if(!definition.motorized.isAircraft && autopilot){
 			if(velocity < speedSetting){
 				if(throttle < MAX_THROTTLE){
-					InterfacePacket.sendToAllClients(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.THROTTLE, (short) 1, (byte) 0));
-					++throttle;
+					throttle += MAX_THROTTLE/100D;
+					setVariable(THROTTLE_VARIABLE, throttle);
+					InterfacePacket.sendToAllClients(new PacketEntityVariableSet(this, THROTTLE_VARIABLE, throttle));
 				}
 			}else if(velocity > speedSetting){
 				if(throttle > 0){
-					InterfacePacket.sendToAllClients(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.THROTTLE, (short) -1, (byte) 0));
-					--throttle;
+					throttle -= MAX_THROTTLE/100D;
+					setVariable(THROTTLE_VARIABLE, throttle);
+					InterfacePacket.sendToAllClients(new PacketEntityVariableSet(this, THROTTLE_VARIABLE, throttle));
 				}
 			}
 		}
@@ -454,9 +457,13 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 				//Only do this once every 1/2 second to allow for thrust changes.
 				if(ticksExisted%10 == 0){
 					if(motion.y < 0 && throttle < MAX_THROTTLE){
-						InterfacePacket.sendToAllClients(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.THROTTLE, ++throttle, Byte.MAX_VALUE));
+						throttle += MAX_THROTTLE/100D;
+						setVariable(THROTTLE_VARIABLE, throttle);
+						InterfacePacket.sendToAllClients(new PacketEntityVariableSet(this, THROTTLE_VARIABLE, throttle));
 					}else if(motion.y > 0 && throttle < MAX_THROTTLE){
-						InterfacePacket.sendToAllClients(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.THROTTLE, --throttle, Byte.MAX_VALUE));
+						throttle -= MAX_THROTTLE/100D;
+						setVariable(THROTTLE_VARIABLE, throttle);
+						InterfacePacket.sendToAllClients(new PacketEntityVariableSet(this, THROTTLE_VARIABLE, throttle));
 					}
 				}
 				//Change pitch/roll based on movement.
@@ -598,8 +605,6 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 			case("acceleration"): return motion.length() - prevMotion.length();
 
 			//Vehicle state cases.
-			case("throttle"): return throttle/(double)EntityVehicleF_Physics.MAX_THROTTLE;
-			case("brake"): return brake/(double)EntityVehicleF_Physics.MAX_BRAKE;
 			case("fuel"): return fuelTank.getFluidLevel()/fuelTank.getMaxLevel();
 			case("electric_power"): return electricPower;
 			case("electric_usage"): return electricFlow*20D;

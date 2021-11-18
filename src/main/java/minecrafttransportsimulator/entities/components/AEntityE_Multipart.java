@@ -346,6 +346,19 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 		}
 	}
 	
+	@Override
+	public void setVariable(String variable, double value){
+		int partNumber = getVariableNumber(variable);
+		if(partNumber != -1){
+			APart foundPart = getSpecificPart(this, variable, partNumber);
+			if(foundPart != null){
+				foundPart.setVariable(variable.substring(0, variable.lastIndexOf("_")), value);
+			}
+		}else{
+			super.setVariable(variable, value);
+		}
+	}
+	
 	/**
 	 * Returns true if any linked variables are blocking the player from
 	 * accessing the passed-in part slot.

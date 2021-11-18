@@ -17,6 +17,8 @@ import minecrafttransportsimulator.mcinterface.InterfaceGUI;
 import minecrafttransportsimulator.mcinterface.InterfaceInput;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
+import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
+import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketPartGun;
 import minecrafttransportsimulator.packets.instances.PacketPartSeat;
@@ -124,11 +126,11 @@ public final class ControlSystem{
 	private static void controlBrake(EntityVehicleF_Physics vehicle, ControlsKeyboardDynamic brakeMod, ControlsJoystick brakeJoystick, ControlsJoystick brakeButton, ControlsJoystick pBrake){
 		//If the analog brake is set, do brake state based on that rather than the keyboard.
 		boolean isParkingBrakePressed = InterfaceInput.isJoystickPresent(brakeJoystick.config.joystickName) ? pBrake.isPressed() : brakeMod.isPressed() || pBrake.isPressed();
-		byte brakeValue = InterfaceInput.isJoystickPresent(brakeJoystick.config.joystickName) ? (byte) brakeJoystick.getAxisState((short) 0) : (brakeMod.mainControl.isPressed() || brakeButton.isPressed() ? EntityVehicleF_Physics.MAX_BRAKE : 0);
+		double brakeValue = InterfaceInput.isJoystickPresent(brakeJoystick.config.joystickName) ? brakeJoystick.getAxisState(true) : (brakeMod.mainControl.isPressed() || brakeButton.isPressed() ? EntityVehicleF_Physics.MAX_BRAKE : 0);
 		if(isParkingBrakePressed ? !vehicle.parkingBrakeOn :  (brakeValue > 0 && vehicle.parkingBrakeOn)){
 			InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.PARKINGBRAKE_VARIABLE));
 		}
-		InterfacePacket.sendToServer(new PacketVehicleControlAnalog(vehicle, PacketVehicleControlAnalog.Controls.BRAKE, brakeValue, Byte.MAX_VALUE));
+		InterfacePacket.sendToServer(new PacketEntityVariableSet(vehicle, EntityVehicleF_Physics.BRAKE_VARIABLE, brakeValue));
 	}
 	
 	private static void controlGun(EntityVehicleF_Physics vehicle, ControlsKeyboard gunTrigger, ControlsKeyboard gunSwitch){
@@ -195,13 +197,13 @@ public final class ControlSystem{
 		
 		//Increment or decrement throttle.
 		if(InterfaceInput.isJoystickPresent(ControlsJoystick.AIRCRAFT_THROTTLE.config.joystickName)){
-			InterfacePacket.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.THROTTLE, ControlsJoystick.AIRCRAFT_THROTTLE.getAxisState((short) 0), Byte.MAX_VALUE));
+			InterfacePacket.sendToServer(new PacketEntityVariableSet(aircraft, EntityVehicleF_Physics.THROTTLE_VARIABLE, ControlsJoystick.AIRCRAFT_THROTTLE.getAxisState(true)*EntityVehicleF_Physics.MAX_THROTTLE));
 		}else{
 			if(ControlsKeyboard.AIRCRAFT_THROTTLE_U.isPressed()){
-				InterfacePacket.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.THROTTLE, (short) 1, (byte) 0));
+				InterfacePacket.sendToServer(new PacketEntityVariableIncrement(aircraft, EntityVehicleF_Physics.THROTTLE_VARIABLE, EntityVehicleF_Physics.MAX_THROTTLE/100D, 0, EntityVehicleF_Physics.MAX_THROTTLE));
 			}
 			if(ControlsKeyboard.AIRCRAFT_THROTTLE_D.isPressed()){
-				InterfacePacket.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.THROTTLE, (short) -1, (byte) 0));
+				InterfacePacket.sendToServer(new PacketEntityVariableIncrement(aircraft, EntityVehicleF_Physics.THROTTLE_VARIABLE, -EntityVehicleF_Physics.MAX_THROTTLE/100D, 0, EntityVehicleF_Physics.MAX_THROTTLE));
 			}
 		}		
 		
@@ -217,7 +219,7 @@ public final class ControlSystem{
 		
 		//Check yaw.
 		if(InterfaceInput.isJoystickPresent(ControlsJoystick.AIRCRAFT_YAW.config.joystickName)){
-			InterfacePacket.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.RUDDER, ControlsJoystick.AIRCRAFT_YAW.getAxisState(EntityVehicleF_Physics.MAX_RUDDER_ANGLE), Byte.MAX_VALUE));
+			InterfacePacket.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.RUDDER, (short) (ControlsJoystick.AIRCRAFT_YAW.getAxisState(false)*EntityVehicleF_Physics.MAX_RUDDER_ANGLE), Byte.MAX_VALUE));
 		}else{
 			if(ControlsKeyboard.AIRCRAFT_YAW_R.isPressed()){
 				InterfacePacket.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.RUDDER, (short) (ConfigSystem.configObject.clientControls.steeringIncrement.value.shortValue()*(aircraft.rudderAngle < 0 ? 2 : 1)), ConfigSystem.configObject.clientControls.controlSurfaceCooldown.value.byteValue()));
@@ -244,7 +246,7 @@ public final class ControlSystem{
 		}else{
 			//Check pitch.
 			if(InterfaceInput.isJoystickPresent(ControlsJoystick.AIRCRAFT_PITCH.config.joystickName)){
-				InterfacePacket.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.ELEVATOR, ControlsJoystick.AIRCRAFT_PITCH.getAxisState(EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE), Byte.MAX_VALUE));
+				InterfacePacket.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.ELEVATOR, (short) (ControlsJoystick.AIRCRAFT_PITCH.getAxisState(false)*EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE), Byte.MAX_VALUE));
 			}else{
 				if(ControlsKeyboard.AIRCRAFT_PITCH_U.isPressed()){
 					InterfacePacket.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.ELEVATOR, (short) (ConfigSystem.configObject.clientControls.flightIncrement.value.shortValue()*(aircraft.elevatorAngle < 0 ? 2 : 1)), ConfigSystem.configObject.clientControls.controlSurfaceCooldown.value.byteValue()));
@@ -262,7 +264,7 @@ public final class ControlSystem{
 			
 			//Check roll.
 			if(InterfaceInput.isJoystickPresent(ControlsJoystick.AIRCRAFT_ROLL.config.joystickName)){
-				InterfacePacket.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.AILERON, ControlsJoystick.AIRCRAFT_ROLL.getAxisState(EntityVehicleF_Physics.MAX_AILERON_ANGLE), Byte.MAX_VALUE));
+				InterfacePacket.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.AILERON, (short) (ControlsJoystick.AIRCRAFT_ROLL.getAxisState(false)*EntityVehicleF_Physics.MAX_AILERON_ANGLE), Byte.MAX_VALUE));
 			}else{
 				if(ControlsKeyboard.AIRCRAFT_ROLL_R.isPressed()){
 					InterfacePacket.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.AILERON, (short) (ConfigSystem.configObject.clientControls.flightIncrement.value.shortValue()*(aircraft.aileronAngle < 0 ? 2 : 1)), ConfigSystem.configObject.clientControls.controlSurfaceCooldown.value.byteValue()));
@@ -305,16 +307,16 @@ public final class ControlSystem{
 			controlBrake(powered, ControlsKeyboardDynamic.CAR_PARK, ControlsJoystick.CAR_BRAKE, ControlsJoystick.CAR_BRAKE_DIGITAL, ControlsJoystick.CAR_PARK);
 			if(InterfaceInput.isJoystickPresent(ControlsJoystick.CAR_GAS.config.joystickName)){
 				//Send throttle over if throttle if cruise control is off, or if throttle is less than the axis level.
-				short throttleLevel = ControlsJoystick.CAR_GAS.getAxisState((short) 0);
+				double throttleLevel = ControlsJoystick.CAR_GAS.getAxisState(true)*EntityVehicleF_Physics.MAX_THROTTLE;
 				if(!powered.autopilot || powered.throttle < throttleLevel){
-					InterfacePacket.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, ControlsJoystick.CAR_GAS.getAxisState((short) 0), Byte.MAX_VALUE));
+					InterfacePacket.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, throttleLevel));
 				}
 			}else{
 				if(ControlsKeyboard.CAR_GAS.isPressed()){
-					InterfacePacket.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, (short) 1, (byte) 0));
+					InterfacePacket.sendToServer(new PacketEntityVariableIncrement(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, EntityVehicleF_Physics.MAX_THROTTLE/100D, 0, EntityVehicleF_Physics.MAX_THROTTLE));
 				}
 				if(ControlsKeyboard.CAR_BRAKE.isPressed() || ControlsJoystick.CAR_BRAKE_DIGITAL.isPressed()){
-					InterfacePacket.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, (short) -1, (byte) 0));
+					InterfacePacket.sendToServer(new PacketEntityVariableIncrement(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, -EntityVehicleF_Physics.MAX_THROTTLE/100D, 0, EntityVehicleF_Physics.MAX_THROTTLE));
 				}
 			}
 		}else{
@@ -327,21 +329,21 @@ public final class ControlSystem{
 					}
 					
 					//Get the brake value.
-					short brakeValue = 0;
+					double brakeValue = 0;
 					if(InterfaceInput.isJoystickPresent(ControlsJoystick.CAR_BRAKE.config.joystickName)){
-						brakeValue = ControlsJoystick.CAR_BRAKE.getAxisState((short) 0);
+						brakeValue = ControlsJoystick.CAR_BRAKE.getAxisState(true);
 					}else if(ControlsKeyboard.CAR_BRAKE.isPressed() || ControlsJoystick.CAR_BRAKE_DIGITAL.isPressed()){
 						 brakeValue = EntityVehicleF_Physics.MAX_BRAKE;
 					}
 					
 					//Get the throttle value.
-					short throttleValue = 0;
+					double throttleValue = 0;
 					if(InterfaceInput.isJoystickPresent(ControlsJoystick.CAR_GAS.config.joystickName)){
-						throttleValue = ControlsJoystick.CAR_GAS.getAxisState((short) 0);
+						throttleValue = ControlsJoystick.CAR_GAS.getAxisState(true)*EntityVehicleF_Physics.MAX_THROTTLE;
 					}else if(ControlsKeyboardDynamic.CAR_SLOW.isPressed()){
-						throttleValue = ConfigSystem.configObject.clientControls.halfThrottle.value ? EntityVehicleF_Physics.MAX_THROTTLE : EntityVehicleF_Physics.MAX_THROTTLE/2; 
+						throttleValue = ConfigSystem.configObject.clientControls.halfThrottle.value ? EntityVehicleF_Physics.MAX_THROTTLE : EntityVehicleF_Physics.MAX_THROTTLE/2D; 
 					}else if(ControlsKeyboard.CAR_GAS.isPressed()){
-						throttleValue = ConfigSystem.configObject.clientControls.halfThrottle.value ? EntityVehicleF_Physics.MAX_THROTTLE/2 : EntityVehicleF_Physics.MAX_THROTTLE;
+						throttleValue = ConfigSystem.configObject.clientControls.halfThrottle.value ? EntityVehicleF_Physics.MAX_THROTTLE/2D : EntityVehicleF_Physics.MAX_THROTTLE;
 					}
 					
 					//If we don't have velocity, and we have the appropriate control, shift.
@@ -355,13 +357,13 @@ public final class ControlSystem{
 					//Otherwise send normal values if we are in neutral or forwards,
 					//and invert controls if we are in a reverse gear.
 					if(throttleValue == 0 && brakeValue == 0 && powered.axialVelocity < PartEngine.MAX_SHIFT_SPEED){
-						InterfacePacket.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.BRAKE, EntityVehicleF_Physics.MAX_BRAKE, Byte.MAX_VALUE));
+						InterfacePacket.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.BRAKE_VARIABLE, EntityVehicleF_Physics.MAX_BRAKE));
 					}else if(currentGear >= 0){
-						InterfacePacket.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.BRAKE, brakeValue, Byte.MAX_VALUE));
-						InterfacePacket.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, throttleValue, Byte.MAX_VALUE));
+						InterfacePacket.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.BRAKE_VARIABLE, brakeValue));
+						InterfacePacket.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, throttleValue));
 					}else{
-						InterfacePacket.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.BRAKE, throttleValue, Byte.MAX_VALUE));
-						InterfacePacket.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, brakeValue, Byte.MAX_VALUE));
+						InterfacePacket.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.BRAKE_VARIABLE, throttleValue));
+						InterfacePacket.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, brakeValue));
 					}
 				}
 			}else{
@@ -369,27 +371,27 @@ public final class ControlSystem{
 				controlBrake(powered, ControlsKeyboardDynamic.CAR_PARK, ControlsJoystick.CAR_BRAKE, ControlsJoystick.CAR_BRAKE_DIGITAL, ControlsJoystick.CAR_PARK);
 				if(InterfaceInput.isJoystickPresent(ControlsJoystick.CAR_GAS.config.joystickName)){
 					//Send throttle over if throttle if cruise control is off, or if throttle is less than the axis level.
-					short throttleLevel = ControlsJoystick.CAR_GAS.getAxisState((short) 0);
+					double throttleLevel = ControlsJoystick.CAR_GAS.getAxisState(true);
 					if(!powered.autopilot || powered.throttle < throttleLevel){
-						InterfacePacket.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, ControlsJoystick.CAR_GAS.getAxisState((short) 0), Byte.MAX_VALUE));
+						InterfacePacket.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, throttleLevel));
 					}
 				}else{
 					if(ControlsKeyboardDynamic.CAR_SLOW.isPressed()){
 						if(!ConfigSystem.configObject.clientControls.halfThrottle.value){
-							InterfacePacket.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, (short) (EntityVehicleF_Physics.MAX_THROTTLE/2), Byte.MAX_VALUE));
+							InterfacePacket.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, EntityVehicleF_Physics.MAX_THROTTLE/2D));
 						}else{
-							InterfacePacket.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, EntityVehicleF_Physics.MAX_THROTTLE, Byte.MAX_VALUE));
+							InterfacePacket.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, EntityVehicleF_Physics.MAX_THROTTLE));
 						}
 					}else if(ControlsKeyboard.CAR_GAS.isPressed()){
 						if(!ConfigSystem.configObject.clientControls.halfThrottle.value){
-							InterfacePacket.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, EntityVehicleF_Physics.MAX_THROTTLE, Byte.MAX_VALUE));
+							InterfacePacket.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, EntityVehicleF_Physics.MAX_THROTTLE));
 						}else{
-							InterfacePacket.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, (short) (EntityVehicleF_Physics.MAX_THROTTLE/2), Byte.MAX_VALUE));
+							InterfacePacket.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, EntityVehicleF_Physics.MAX_THROTTLE/2D));
 						}
 					}else{
-						//Don't send gas off packet if we have cruise on.
+						//Send gas off packet if we don't have cruise on..
 						if(!powered.autopilot){
-							InterfacePacket.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.THROTTLE, (short) 0, Byte.MAX_VALUE));
+							InterfacePacket.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, 0D));
 						}
 					}
 				}
@@ -404,7 +406,7 @@ public final class ControlSystem{
 			}
 		}else{
 			if(InterfaceInput.isJoystickPresent(ControlsJoystick.CAR_TURN.config.joystickName)){
-				InterfacePacket.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.RUDDER, ControlsJoystick.CAR_TURN.getAxisState(EntityVehicleF_Physics.MAX_RUDDER_ANGLE), Byte.MAX_VALUE));
+				InterfacePacket.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.RUDDER, (short) (ControlsJoystick.CAR_TURN.getAxisState(false)*EntityVehicleF_Physics.MAX_RUDDER_ANGLE), Byte.MAX_VALUE));
 				if(powered.locationRiderMap.containsValue(clientPlayer)){
 					if(powered.slipping){
 						InterfaceInput.setJoystickRumble(ControlsJoystick.CAR_TURN.config.joystickName, (float) Math.max(powered.velocity, 1));
@@ -682,28 +684,23 @@ public final class ControlSystem{
 		}
 		
 		//Return type is short to allow for easier packet transmission.
-		private short getAxisState(short pollBounds){
-			float pollValue = getMultistateValue();
-			if(Math.abs(pollValue) > ConfigSystem.configObject.clientControls.joystickDeadZone.value || pollBounds == 0){
+		private double getAxisState(boolean ignoreDeadzone){
+			double pollValue = getMultistateValue();
+			if(ignoreDeadzone || Math.abs(pollValue) > ConfigSystem.configObject.clientControls.joystickDeadZone.value){
 				//Clamp the poll value to the defined axis bounds set during config to prevent over and under-runs.
-				pollValue = (float) Math.max(config.axisMinTravel, pollValue);
-				pollValue = (float) Math.min(config.axisMaxTravel, pollValue);
+				pollValue = Math.max(config.axisMinTravel, pollValue);
+				pollValue = Math.min(config.axisMaxTravel, pollValue);
 				
-				//If we don't need to normalize the axis, return it as-is.  Otherwise do a normalization from 0-1.
-				if(pollBounds != 0){
-					return (short) (config.invertedAxis ? (-pollBounds*pollValue) : (pollBounds*pollValue));
-				}else{
-					//Divide the poll value plus the min bounds by the span to get it in the range of 0-1.
-					pollValue = (float) ((pollValue - config.axisMinTravel)/(config.axisMaxTravel - config.axisMinTravel));
-					
-					//If axis is inverted, invert poll.
-					if(config.invertedAxis){
-						pollValue = 1 - pollValue;
-					}
-					
-					//Now return this value in a range from 0-100.
-					return (short) (pollValue*100);
+				//Divide the poll value plus the min bounds by the span to get it in the range of 0-1.
+				pollValue = (pollValue - config.axisMinTravel)/(config.axisMaxTravel - config.axisMinTravel);
+				
+				//If axis is inverted, invert poll.
+				if(config.invertedAxis){
+					pollValue = 1 - pollValue;
 				}
+				
+				//Now return the value.
+				return pollValue;
 			}else{
 				return 0;
 			}

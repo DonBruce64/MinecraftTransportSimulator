@@ -1,5 +1,9 @@
 package minecrafttransportsimulator.entities.components;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -71,6 +75,9 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	/**Set of variables that are "on" for this entity.  Used for animations.**/
 	public final Set<String> variablesOn = new HashSet<String>();
 	
+	/**Map of variables.  These are generic and can be interfaced with in the JSON.  Some names are hard-coded to specific variables.  Used for animations/physics.**/
+	private final Map<String, Double> variables = new HashMap<String, Double>();
+	
 	private final List<JSONSound> allSoundDefs = new ArrayList<JSONSound>();
 	private final Map<JSONSound, List<DurationDelayClock>> soundActiveClocks = new HashMap<JSONSound, List<DurationDelayClock>>();
 	private final Map<JSONSound, List<DurationDelayClock>> soundVolumeClocks = new HashMap<JSONSound, List<DurationDelayClock>>();
@@ -110,6 +117,9 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 		
 		//Load variables.
 		this.variablesOn.addAll(data.getStrings("variablesOn"));
+		for(String variableName : data.getStrings("variables")){
+			variables.put(variableName, data.getDouble(variableName));
+		}
 		
 		if(definition.rendering != null && definition.rendering.constants != null){
 			variablesOn.addAll(definition.rendering.constants);
@@ -596,6 +606,10 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 		if(variablesOn.contains(variable)){
 			return 1;
 		}
+		Double variableValue = variables.get(variable);
+		if(variableValue != null){
+			return variableValue;
+		}
 		
 		//Didn't find a variable.  Return NaN.
 		return Double.NaN;
@@ -681,6 +695,27 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 			variablesOn.remove(variable);
 		}else{
 			variablesOn.add(variable);
+		}
+	}
+	
+	/**
+	 *  Helper method to set a variable for this entity.
+	 */
+	public void setVariable(String variable, double value){
+		variables.put(variable, value);
+	}
+	
+	/**
+	 *  Helper method to set get a variable for this entity.
+	 *  Does null checks to ensure we return a non-null entry in the variable map.
+	 */
+	public double getVariable(String variable){
+		Double value = variables.get(variable);
+		if(value == null){
+			variables.put(variable, 0D);
+			return 0D;
+		}else{
+			return value;
 		}
 	}
     
@@ -936,6 +971,22 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 			data.setString("textLine" + lineNumber++, textLine);
 		}
 		data.setStrings("variablesOn", variablesOn);
+		data.setStrings("variables", variables.keySet());
+		for(String variableName : variables.keySet()){
+			data.setDouble(variableName, variables.get(variableName));
+		}
 		return data;
 	}
+	
+	/**
+	 * Indicates that this field is a derived value from
+	 * one of the variables in {@link AEntityC_Definable#variables},
+	 * or one of the states in {@link AEntityC_Definable#variablesOn},
+	 * Variables that are derived are parsed from the map every update.
+	 * To modify them you will need to update their values in the respective
+	 * variable set.
+	 */
+	@Retention(RetentionPolicy.SOURCE)
+    @Target({ElementType.FIELD})
+	protected static @interface DerivedValue{}
 }
