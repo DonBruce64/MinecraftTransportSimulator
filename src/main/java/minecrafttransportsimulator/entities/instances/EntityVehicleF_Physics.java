@@ -9,9 +9,7 @@ import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
-import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
-import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
-import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
+import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
 import minecrafttransportsimulator.rendering.instances.RenderVehicle;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
@@ -24,28 +22,37 @@ import minecrafttransportsimulator.systems.ConfigSystem;
  */
 public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	//Aileron.
-	public static final short MAX_AILERON_ANGLE = 250;
-	public static final short MAX_AILERON_TRIM = 100;
-	public static final short AILERON_DAMPEN_RATE = 6;
-	public short aileronAngle;
-	public short aileronTrim;
-	public byte aileronCooldown;
+	@DerivedValue
+	public double aileronAngle;
+	@DerivedValue
+	public double aileronTrim;
+	public static final double MAX_AILERON_ANGLE = 25;
+	public static final double MAX_AILERON_TRIM = 10;
+	public static final double AILERON_DAMPEN_RATE = 0.6;
+	public static final String AILERON_VARIABLE = "aileron";
+	public static final String AILERON_TRIM_VARIABLE = "trim_aileron";
 	
 	//Elevator.
-	public static final short MAX_ELEVATOR_ANGLE = 250;
-	public static final short MAX_ELEVATOR_TRIM = 100;
-	public static final short ELEVATOR_DAMPEN_RATE = 6;
-	public short elevatorAngle;
-	public short elevatorTrim;
-	public byte elevatorCooldown;
+	@DerivedValue
+	public double elevatorAngle;
+	@DerivedValue
+	public double elevatorTrim;
+	public static final double MAX_ELEVATOR_ANGLE = 25;
+	public static final double MAX_ELEVATOR_TRIM = 10;
+	public static final double ELEVATOR_DAMPEN_RATE = 0.6;
+	public static final String ELEVATOR_VARIABLE = "elevator";
+	public static final String ELEVATOR_TRIM_VARIABLE = "trim_elevator";
 	
 	//Rudder.
-	public static final short MAX_RUDDER_ANGLE = 450;
-	public static final short MAX_RUDDER_TRIM = 100;
-	public static final short RUDDER_DAMPEN_RATE = 20;
-	public short rudderAngle;
-	public short rudderTrim;
-	public byte rudderCooldown;
+	@DerivedValue
+	public double rudderAngle;
+	@DerivedValue
+	public double rudderTrim;
+	public static final double MAX_RUDDER_ANGLE = 45;
+	public static final double MAX_RUDDER_TRIM = 10;
+	public static final double RUDDER_DAMPEN_RATE = 2.0;
+	public static final String RUDDER_VARIABLE = "rudder";
+	public static final String RUDDER_TRIM_VARIABLE = "trim_rudder";
 	
 	//Flaps.
 	public static final short MAX_FLAP_ANGLE_REFERENCE = 350;
@@ -106,14 +113,8 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	public EntityVehicleF_Physics(WrapperWorld world, WrapperNBT data){
 		super(world, data);
 		
-		this.aileronAngle = (short) data.getInteger("aileronAngle");
-		this.elevatorAngle = (short) data.getInteger("elevatorAngle");
-		this.rudderAngle = (short) data.getInteger("rudderAngle");
 		this.flapNotchSelected = data.getInteger("flapNotchSelected");
 		this.flapCurrentAngle = data.getDouble("flapCurrentAngle");
-		this.aileronTrim = (short) data.getInteger("aileronTrim");
-		this.elevatorTrim = (short) data.getInteger("elevatorTrim");
-		this.rudderTrim = (short) data.getInteger("rudderTrim");
 		
 		this.autopilot = data.getBoolean("autopilot");
 		this.altitudeSetting = data.getDouble("altitudeSetting");
@@ -124,9 +125,17 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	public boolean update(){
 		if(super.update()){
 			world.beginProfiling("VehicleF_Level", true);
+			//Parse out variables.
+			aileronAngle = getVariable(AILERON_VARIABLE);
+			aileronTrim = getVariable(AILERON_TRIM_VARIABLE);
+			elevatorAngle = getVariable(ELEVATOR_VARIABLE);
+			elevatorTrim = getVariable(ELEVATOR_TRIM_VARIABLE);
+			rudderAngle = getVariable(RUDDER_VARIABLE);
+			rudderTrim = getVariable(RUDDER_TRIM_VARIABLE);
+			
+			//Adjust flaps to current setting.
 			if(definition.motorized.flapNotches != null && !definition.motorized.flapNotches.isEmpty()){
 				flapDesiredAngle = definition.motorized.flapNotches.get(flapNotchSelected);
-				//Adjust flaps to current setting.
 				if(flapCurrentAngle < flapDesiredAngle){
 					flapCurrentAngle += definition.motorized.flapSpeed;
 				}else if(flapCurrentAngle > flapDesiredAngle){
@@ -174,21 +183,23 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	}
 	
 	@Override
-	protected float getSteeringAngle(){
+	protected double getSteeringAngle(){
 		return -rudderAngle/(float)MAX_RUDDER_ANGLE;
 	}
 	
 	@Override
 	protected void addToSteeringAngle(float degrees){
-		short delta = (short) (-degrees*10);
-		if(rudderAngle + delta > MAX_RUDDER_ANGLE){
-			delta = (short) (MAX_RUDDER_ANGLE - rudderAngle);
-		}else if(rudderAngle + delta < -MAX_RUDDER_ANGLE){
-			delta = (short) (-MAX_RUDDER_ANGLE - rudderAngle);
+		//Invert the degrees, as rudder is inverted from normal steering.
+		double delta = 0;
+		if(rudderAngle - degrees > MAX_RUDDER_ANGLE){
+			delta = MAX_RUDDER_ANGLE - rudderAngle;
+		}else if(rudderAngle - degrees < -MAX_RUDDER_ANGLE){
+			delta = -MAX_RUDDER_ANGLE - rudderAngle;
+		}else{
+			delta = -degrees;
 		}
-		rudderAngle += delta;
-		rudderCooldown = 20;
-		InterfacePacket.sendToAllClients(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.RUDDER, delta, rudderCooldown));
+		setVariable(RUDDER_VARIABLE, rudderAngle + delta);
+		InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, RUDDER_VARIABLE, delta));
 	}
 	
 	@Override
@@ -230,7 +241,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 				}
 				if(isRotor && !groundDeviceCollective.isAnythingOnGround() && partForce.length() > 1){
 					hasRotors = true;
-					rotorRotation.set((-(elevatorAngle + elevatorTrim) - angles.x*10)/MAX_ELEVATOR_ANGLE, -5D*rudderAngle/MAX_RUDDER_ANGLE, ((aileronAngle + aileronTrim) - angles.z*10)/MAX_AILERON_ANGLE);
+					rotorRotation.set((-(elevatorAngle + elevatorTrim) - angles.x)/MAX_ELEVATOR_ANGLE, -5D*rudderAngle/MAX_RUDDER_ANGLE, ((aileronAngle + aileronTrim) - angles.z)/MAX_AILERON_ANGLE);
 				}else{
 					rotorRotation.set(0, 0, 0);
 				}
@@ -253,7 +264,6 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 				//which key is pressed, they both activate the rudder for turning.
 				if((aileronAngle < 0 && aileronAngle < rudderAngle) || (aileronAngle > 0 && aileronAngle > rudderAngle)){
 					rudderAngle = aileronAngle;
-					rudderCooldown = aileronCooldown;
 				}
 				
 				//If we have the brake pressed at a slow speed, stop the blimp.
@@ -269,9 +279,9 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 			//Get the lift coefficients and states for control surfaces.
 			double yawAngleDelta = Math.toDegrees(Math.asin(sideVector.dotProduct(normalizedVelocityVector)));
 			wingLiftCoeff = getLiftCoeff(trackAngle, 2 + flapCurrentAngle/MAX_FLAP_ANGLE_REFERENCE);
-			aileronLiftCoeff = getLiftCoeff((aileronAngle + aileronTrim)/10F, 2);
-			elevatorLiftCoeff = getLiftCoeff(-2.5 + trackAngle - (elevatorAngle + elevatorTrim)/10F, 2);
-			rudderLiftCoeff = getLiftCoeff((rudderAngle + rudderTrim)/10F - yawAngleDelta, 2);
+			aileronLiftCoeff = getLiftCoeff((aileronAngle + aileronTrim), 2);
+			elevatorLiftCoeff = getLiftCoeff(-2.5 + trackAngle - (elevatorAngle + elevatorTrim), 2);
+			rudderLiftCoeff = getLiftCoeff((rudderAngle + rudderTrim) - yawAngleDelta, 2);
 			currentWingArea = definition.motorized.wingArea + definition.motorized.wingArea*0.15D*flapCurrentAngle/MAX_FLAP_ANGLE_REFERENCE;
 			
 			//Get the drag coefficient and force.
@@ -303,9 +313,9 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 				//This prevents blimps from ascending into space.
 				//Also take into account motionY, as we should provide less force if we are already going in the same direction.
 				if(elevatorAngle < 0){
-					ballastForce = airDensity*definition.motorized.ballastVolume*-elevatorAngle/100D;
+					ballastForce = airDensity*definition.motorized.ballastVolume*-elevatorAngle/10D;
 				}else if(elevatorAngle > 0){
-					ballastForce = 1.225*definition.motorized.ballastVolume*-elevatorAngle/100D;
+					ballastForce = 1.225*definition.motorized.ballastVolume*-elevatorAngle/10D;
 				}else{
 					ballastForce = 1.225*definition.motorized.ballastVolume*10D*-motion.y;
 				}
@@ -433,19 +443,19 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	}
 	
 	@Override
-	protected void dampenControlSurfaces(){
+	protected void adjustControlSurfaces(){
 		if(!definition.motorized.isAircraft && autopilot){
 			if(velocity < speedSetting){
 				if(throttle < MAX_THROTTLE){
 					throttle += MAX_THROTTLE/100D;
 					setVariable(THROTTLE_VARIABLE, throttle);
-					InterfacePacket.sendToAllClients(new PacketEntityVariableSet(this, THROTTLE_VARIABLE, throttle));
+					InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, THROTTLE_VARIABLE, MAX_THROTTLE/100D));
 				}
 			}else if(velocity > speedSetting){
 				if(throttle > 0){
 					throttle -= MAX_THROTTLE/100D;
 					setVariable(THROTTLE_VARIABLE, throttle);
-					InterfacePacket.sendToAllClients(new PacketEntityVariableSet(this, THROTTLE_VARIABLE, throttle));
+					InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, THROTTLE_VARIABLE, -MAX_THROTTLE/100D));
 				}
 			}
 		}
@@ -459,11 +469,11 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 					if(motion.y < 0 && throttle < MAX_THROTTLE){
 						throttle += MAX_THROTTLE/100D;
 						setVariable(THROTTLE_VARIABLE, throttle);
-						InterfacePacket.sendToAllClients(new PacketEntityVariableSet(this, THROTTLE_VARIABLE, throttle));
+						InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, THROTTLE_VARIABLE, MAX_THROTTLE/100D));
 					}else if(motion.y > 0 && throttle < MAX_THROTTLE){
 						throttle -= MAX_THROTTLE/100D;
 						setVariable(THROTTLE_VARIABLE, throttle);
-						InterfacePacket.sendToAllClients(new PacketEntityVariableSet(this, THROTTLE_VARIABLE, throttle));
+						InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, THROTTLE_VARIABLE, -MAX_THROTTLE/100D));
 					}
 				}
 				//Change pitch/roll based on movement.
@@ -472,96 +482,101 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 				double forwardsDelta = forwardsVelocity - prevMotion.dotProduct(headingVector);
 				double sidewaysDelta = sidewaysVelocity - prevMotion.dotProduct(sideVector);
 				if(forwardsDelta > 0 && forwardsVelocity > 0 && elevatorTrim < MAX_ELEVATOR_TRIM){
-					++elevatorTrim;
-					InterfacePacket.sendToAllClients(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_PITCH, true));
+					setVariable(ELEVATOR_TRIM_VARIABLE, elevatorTrim + 1);
+					InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_TRIM_VARIABLE, 1));
 				}else if(forwardsDelta < 0 && forwardsVelocity < 0 && elevatorTrim > -MAX_ELEVATOR_TRIM){
-					--elevatorTrim;
-					InterfacePacket.sendToAllClients(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_PITCH, false));
+					setVariable(ELEVATOR_TRIM_VARIABLE, elevatorTrim - 1);
+					InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_TRIM_VARIABLE, -1));
 				}
 				if(sidewaysVelocity > 0 && sidewaysDelta > 0 && aileronTrim < MAX_AILERON_TRIM){
-					++aileronTrim;
-					InterfacePacket.sendToAllClients(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_ROLL, true));
+					setVariable(AILERON_TRIM_VARIABLE, aileronTrim + 1);
+					InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_TRIM_VARIABLE, 1));
 				}else if(sidewaysVelocity < 0 && sidewaysDelta < 0  && aileronTrim > -MAX_AILERON_TRIM){
-					--aileronTrim;
-					InterfacePacket.sendToAllClients(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_ROLL, false));
+					setVariable(AILERON_TRIM_VARIABLE, aileronTrim - 1);
+					InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_TRIM_VARIABLE, -1));
 				}
 			}else{
 				//Reset trim to prevent directional surges.
 				if(elevatorTrim < 0){
-					++elevatorTrim;
-					InterfacePacket.sendToAllClients(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_PITCH, true));
+					setVariable(ELEVATOR_TRIM_VARIABLE, elevatorTrim + 1);
+					InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_TRIM_VARIABLE, 1));
 				}else if(elevatorTrim > 0){
-					--elevatorTrim;
-					InterfacePacket.sendToAllClients(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_PITCH, false));
+					setVariable(ELEVATOR_TRIM_VARIABLE, elevatorTrim - 1);
+					InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_TRIM_VARIABLE, -1));
 				}
 				if(aileronTrim < 0){
-					++aileronTrim;
-					InterfacePacket.sendToAllClients(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_ROLL, true));
+					setVariable(AILERON_TRIM_VARIABLE, aileronTrim + 1);
+					InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_TRIM_VARIABLE, 1));
 				}else if(aileronTrim > 0){
-					--aileronTrim;
-					InterfacePacket.sendToAllClients(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_ROLL, false));
+					setVariable(AILERON_TRIM_VARIABLE, aileronTrim - 1);
+					InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_TRIM_VARIABLE, -1));
 				}
 			}
 		}else if(definition.motorized.isAircraft && autopilot){
 			//Normal aircraft.  Do autopilot operations if required.
 			//If we are not flying at a steady elevation, angle the elevator to compensate
 			if(-motion.y*100 > elevatorTrim + 1 && elevatorTrim < MAX_ELEVATOR_TRIM){
-				++elevatorTrim;
-				InterfacePacket.sendToAllClients(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_PITCH, true));
+				setVariable(ELEVATOR_TRIM_VARIABLE, elevatorTrim + 1);
+				InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_TRIM_VARIABLE, 1));
 			}else if(-motion.y*100 < elevatorTrim - 1 && elevatorTrim > -MAX_ELEVATOR_TRIM){
-				--elevatorTrim;
-				InterfacePacket.sendToAllClients(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_PITCH, false));
+				setVariable(ELEVATOR_TRIM_VARIABLE, elevatorTrim - 1);
+				InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_TRIM_VARIABLE, -1));
 			}
 			//Keep the roll angle at 0.
 			if(-angles.z > aileronTrim + 1 && aileronTrim < MAX_AILERON_TRIM){
-				++aileronTrim;
-				InterfacePacket.sendToAllClients(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_ROLL, true));
+				setVariable(AILERON_TRIM_VARIABLE, aileronTrim + 1);
+				InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_TRIM_VARIABLE, 1));
 			}else if(-angles.z < aileronTrim - 1 && aileronTrim > -MAX_AILERON_TRIM){
-				--aileronTrim;
-				InterfacePacket.sendToAllClients(new PacketVehicleControlDigital(this, PacketVehicleControlDigital.Controls.TRIM_ROLL, false));
+				setVariable(AILERON_TRIM_VARIABLE, aileronTrim - 1);
+				InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_TRIM_VARIABLE, -1));
 			}
 		}
 		
-		if(aileronCooldown==0){
-			if(aileronAngle != 0){
-				if(aileronAngle < AILERON_DAMPEN_RATE && aileronAngle > -AILERON_DAMPEN_RATE){
-					InterfacePacket.sendToAllClients(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.AILERON, (short) -aileronAngle, (byte) 0));
-					aileronAngle = 0;
-				}else{
-					InterfacePacket.sendToAllClients(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.AILERON, aileronAngle < 0 ? AILERON_DAMPEN_RATE : -AILERON_DAMPEN_RATE, (byte) 0));
-					aileronAngle += aileronAngle < 0 ? AILERON_DAMPEN_RATE : -AILERON_DAMPEN_RATE;
+		//If we don't have a controller, reset contol states to 0.
+		boolean haveController = false;
+		for(Point3d partPos : locationRiderMap.keySet()){
+			APart part = getPartAtLocation(partPos);
+			if(part instanceof PartSeat){
+				if(part.placementDefinition.isController){
+					haveController = true;
+					break;
 				}
 			}
-		}else{
-			--aileronCooldown;
 		}
 		
-		if(elevatorCooldown==0){
-			if(elevatorAngle != 0){
-				if(elevatorAngle < ELEVATOR_DAMPEN_RATE && elevatorAngle > -ELEVATOR_DAMPEN_RATE){
-					InterfacePacket.sendToAllClients(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.ELEVATOR, (short) -elevatorAngle, (byte) 0));
-					elevatorAngle = 0;
-				}else{
-					InterfacePacket.sendToAllClients(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.ELEVATOR, elevatorAngle < 0 ? ELEVATOR_DAMPEN_RATE : -ELEVATOR_DAMPEN_RATE, (byte) 0));
-					elevatorAngle += elevatorAngle < 0 ? ELEVATOR_DAMPEN_RATE : -ELEVATOR_DAMPEN_RATE;
-				}
+		if(!haveController){
+			if(aileronAngle > AILERON_DAMPEN_RATE){
+				setVariable(AILERON_VARIABLE, aileronAngle - AILERON_DAMPEN_RATE);
+				InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_VARIABLE, -AILERON_DAMPEN_RATE));
+			}else if(aileronAngle < -AILERON_DAMPEN_RATE){
+				setVariable(AILERON_VARIABLE, aileronAngle + AILERON_DAMPEN_RATE);
+				InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_VARIABLE, AILERON_DAMPEN_RATE));
+			}else if(aileronAngle != 0){
+				setVariable(AILERON_VARIABLE, 0);
+				InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_VARIABLE, -aileronAngle));
 			}
-		}else{
-			--elevatorCooldown;
-		}
-		
-		if(rudderCooldown==0){
-			if(rudderAngle != 0){
-				if(rudderAngle < RUDDER_DAMPEN_RATE && rudderAngle > -RUDDER_DAMPEN_RATE){
-					InterfacePacket.sendToAllClients(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.RUDDER, (short) -rudderAngle, (byte) 0));
-					rudderAngle = 0;
-				}else{
-					InterfacePacket.sendToAllClients(new PacketVehicleControlAnalog(this, PacketVehicleControlAnalog.Controls.RUDDER, rudderAngle < 0 ? RUDDER_DAMPEN_RATE : -RUDDER_DAMPEN_RATE, (byte) 0));
-					rudderAngle += rudderAngle < 0 ? RUDDER_DAMPEN_RATE : -RUDDER_DAMPEN_RATE;
-				}
+			
+			if(elevatorAngle > ELEVATOR_DAMPEN_RATE){
+				setVariable(ELEVATOR_VARIABLE, elevatorAngle - ELEVATOR_DAMPEN_RATE);
+				InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_VARIABLE, -ELEVATOR_DAMPEN_RATE));
+			}else if(elevatorAngle < -ELEVATOR_DAMPEN_RATE){
+				setVariable(ELEVATOR_VARIABLE, elevatorAngle + ELEVATOR_DAMPEN_RATE);
+				InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_VARIABLE, ELEVATOR_DAMPEN_RATE));
+			}else if(elevatorAngle != 0){
+				setVariable(ELEVATOR_VARIABLE, 0);
+				InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_VARIABLE, -elevatorAngle));
 			}
-		}else{
-			--rudderCooldown;
+			
+			if(rudderAngle > RUDDER_DAMPEN_RATE){
+				setVariable(RUDDER_VARIABLE, rudderAngle - RUDDER_DAMPEN_RATE);
+				InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, RUDDER_VARIABLE, -RUDDER_DAMPEN_RATE));
+			}else if(rudderAngle < -RUDDER_DAMPEN_RATE){
+				setVariable(RUDDER_VARIABLE, rudderAngle + RUDDER_DAMPEN_RATE);
+				InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, RUDDER_VARIABLE, RUDDER_DAMPEN_RATE));
+			}else if(rudderAngle != 0){
+				setVariable(RUDDER_VARIABLE, 0);
+				InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, RUDDER_VARIABLE, -rudderAngle));
+			}
 		}
 	}
 	
@@ -617,15 +632,9 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 			case("fueling"): return beingFueled ? 1 : 0;
 			
 			//State cases generally used on aircraft.
-			case("aileron"): return aileronAngle/10D;
-			case("elevator"): return elevatorAngle/10D;
-			case("rudder"): return rudderAngle/10D;
 			case("flaps_setpoint"): return flapDesiredAngle;
 			case("flaps_actual"): return flapCurrentAngle;
 			case("flaps_moving"): return flapCurrentAngle != flapDesiredAngle ? 1 : 0;
-			case("trim_aileron"): return aileronTrim/10D;
-			case("trim_elevator"): return elevatorTrim/10D;
-			case("trim_rudder"): return rudderTrim/10D;
 			case("vertical_speed"): return motion.y*EntityVehicleF_Physics.SPEED_FACTOR*20;
 			case("lift_reserve"): return -trackAngle;
 			case("turn_coordinator"): return ((angles.z - prevAngles.z)/10 + angles.y - prevAngles.y)/0.15D*25;
@@ -682,14 +691,8 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	@Override
 	public WrapperNBT save(WrapperNBT data){
 		super.save(data);
-		data.setInteger("aileronAngle", aileronAngle);
-		data.setInteger("elevatorAngle", elevatorAngle);
-		data.setInteger("rudderAngle", rudderAngle);
 		data.setInteger("flapNotchSelected", flapNotchSelected);
 		data.setDouble("flapCurrentAngle", flapCurrentAngle);
-		data.setInteger("aileronTrim", aileronTrim);
-		data.setInteger("elevatorTrim", elevatorTrim);
-		data.setInteger("rudderTrim", rudderTrim);
 
 		data.setBoolean("autopilot", autopilot);
 		data.setDouble("altitudeSetting", altitudeSetting);

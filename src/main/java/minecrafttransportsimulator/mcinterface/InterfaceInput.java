@@ -41,8 +41,6 @@ public class InterfaceInput{
 	
 	//Mouse variables.
 	private static boolean enableMouse = false;
-	private static int mousePosX = 0;
-	private static int mousePosY = 0;
 	private static InhibitableMouseHelper customMouseHelper = new InhibitableMouseHelper();
 	
 	//Joystick variables.
@@ -328,33 +326,13 @@ public class InterfaceInput{
 	}
 	
 	/**
-	 *  Returns the current mouse deltas as a long comprised of two ints.  The
-	 *  first half being the X-coord, and the second half being the Y-coord.  Note
-	 *  that this method can only get the delta the mouse has moved, not the absolute
-	 *  change, so unless you call this every tick you will get bad data!
+	 *  Returns the latest mouse deltas as a long comprised of two ints.  The
+	 *  first half being the X-coord, and the second half being the Y-coord.  
+	 *  Note that this method can only get the delta the mouse has moved, not the absolute
+	 *  change, so unless you call this every tick you will miss mouse movement!
 	 */
-	public static long getTrackedMouseInfo(){
-		//Don't want to track mouse if we have a high delta.
-		//This usually means we paused the game, which will cause pain if we apply
-		//the movement after un-pausing.
-		if(Math.abs(customMouseHelper.deltaXForced) < 100){
-			mousePosX = Math.max(Math.min(mousePosX + customMouseHelper.deltaXForced, 250), -250);
-		}
-		if(Math.abs(customMouseHelper.deltaYForced) < 100){
-			mousePosY = Math.max(Math.min(mousePosY + customMouseHelper.deltaYForced, 250), -250);
-		}
-		//Take a unit off of the mouse value to make it more snappy.
-		if(mousePosX > 0){
-			--mousePosX;
-		}else if(mousePosX < 0){
-			++mousePosX;
-		}
-		if(mousePosY > 0){
-			--mousePosY;
-		}else if(mousePosY < 0){
-			++mousePosY;
-		}
-		return (((long) 2*mousePosX) << Integer.SIZE) | (2*mousePosY & 0xffffffffL);
+	public static long getMouseDelta(){
+		return (((long) customMouseHelper.deltaXForced) << Integer.SIZE) | (customMouseHelper.deltaYForced & 0xffffffffL);
 	}
 	
 	/**
@@ -415,10 +393,17 @@ public class InterfaceInput{
 		@Override
 		public void mouseXYChange(){
 			//If the mouse is disabled, capture the deltas and prevent MC from seeing them.
+			//Don't capture high deltas, as this is likely due to the game pausing.
 			super.mouseXYChange();
 			if(!enableMouse){
 				deltaXForced = deltaX;
+				if(deltaXForced > 100){
+					deltaXForced = 0;
+				}
 				deltaYForced = deltaY;
+				if(deltaYForced > 100){
+					deltaYForced = 0;
+				}
 				deltaX = 0;
 				deltaY = 0;
 			}

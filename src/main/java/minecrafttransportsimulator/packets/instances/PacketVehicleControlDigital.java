@@ -100,9 +100,6 @@ public class PacketVehicleControlDigital extends APacketEntity<EntityVehicleF_Ph
 				}
 				return false;
 			}
-			case TRIM_ROLL : vehicle.aileronTrim = (short) clampAngle(-EntityVehicleF_Physics.MAX_AILERON_TRIM, EntityVehicleF_Physics.MAX_AILERON_TRIM, vehicle.aileronTrim + (controlState ? 1 : -1)); break;
-			case TRIM_PITCH : vehicle.elevatorTrim = (short) clampAngle(-EntityVehicleF_Physics.MAX_ELEVATOR_TRIM, EntityVehicleF_Physics.MAX_ELEVATOR_TRIM, vehicle.elevatorTrim + (controlState ? 1 : -1)); break;
-			case TRIM_YAW : vehicle.rudderTrim = (short) clampAngle(-EntityVehicleF_Physics.MAX_RUDDER_TRIM, EntityVehicleF_Physics.MAX_RUDDER_TRIM, vehicle.rudderTrim + (controlState ? 1 : -1)); break;
 		}
 		return true;
 	}
@@ -113,9 +110,6 @@ public class PacketVehicleControlDigital extends APacketEntity<EntityVehicleF_Ph
 		SHIFT_NEUTRAL,
 		REVERSE,
 		AUTOPILOT,
-		FLAPS,
-		TRIM_ROLL,
-		TRIM_PITCH,
-		TRIM_YAW;
+		FLAPS;
 	}
 }

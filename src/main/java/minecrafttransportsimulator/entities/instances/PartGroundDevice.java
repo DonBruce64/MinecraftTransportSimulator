@@ -235,9 +235,9 @@ public class PartGroundDevice extends APart{
 		if(vehicleOn != null && (definition.ground.isWheel || definition.ground.isTread)){
 			if(vehicleOn.skidSteerActive){
 				if(placementOffset.x > 0){
-					return getLongPartOffset() == 0 ? vehicleOn.rudderAngle/2000D/(getHeight()*Math.PI) : vehicleOn.rudderAngle/2000D;
+					return getLongPartOffset() == 0 ? vehicleOn.rudderAngle/200D/(getHeight()*Math.PI) : vehicleOn.rudderAngle/200D;
 				}else if(placementOffset.x < 0){
-					return getLongPartOffset() == 0 ? -vehicleOn.rudderAngle/2000D/(getHeight()*Math.PI) : -vehicleOn.rudderAngle/2000D;
+					return getLongPartOffset() == 0 ? -vehicleOn.rudderAngle/200D/(getHeight()*Math.PI) : -vehicleOn.rudderAngle/200D;
 				}else{
 					return 0;
 				}

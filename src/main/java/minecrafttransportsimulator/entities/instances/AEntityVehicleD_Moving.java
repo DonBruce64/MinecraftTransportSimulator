@@ -122,7 +122,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 				world.beginProfiling("TotalMovement", false);
 				moveVehicle();
 				if(!world.isClient()){
-					dampenControlSurfaces();
+					adjustControlSurfaces();
 				}
 			}
 			
@@ -394,7 +394,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	 * A 0 value indicates no yaw change.
 	 */
 	private double getTurningForce(){
-		float steeringAngle = getSteeringAngle()*45;
+		double steeringAngle = getSteeringAngle()*45;
 		skidSteerActive = false;
 		if(steeringAngle != 0){
 			double turningDistance = 0;
@@ -899,7 +899,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	 * Method block for getting the steering angle of this vehicle.
 	 * This returns the normalized steering angle, from -1.0 to 1.0;
 	 */
-	protected abstract float getSteeringAngle();
+	protected abstract double getSteeringAngle();
 	
 	/**
 	 * Adds to the steering angle.  Passed-in value is the number
@@ -919,7 +919,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	 * Method block for dampening control surfaces.
 	 * Used to move control surfaces back to neutral position.
 	 */
-	protected abstract void dampenControlSurfaces();
+	protected abstract void adjustControlSurfaces();
 	
     
 	@Override

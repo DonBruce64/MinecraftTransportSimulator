@@ -263,7 +263,7 @@ public class InterfaceEventsEntityRendering{
 	    		leftArmAngles = gunEntity.activeGun.isHandHeldGunAimed ? new Point3d(armPitchOffset, -armYawOffset, 0) : null;
 	    	}else if(renderCurrentRiderControlling){
 	    		if(ridingEntity instanceof EntityVehicleF_Physics){
-    				double turningAngle = ((EntityVehicleF_Physics) ridingEntity).rudderAngle/10D/2D;
+    				double turningAngle = ((EntityVehicleF_Physics) ridingEntity).rudderAngle/2D;
     				rightArmAngles = new Point3d(Math.toRadians(-75 + turningAngle), Math.toRadians(-10), 0);
     				leftArmAngles = new Point3d(Math.toRadians(-75 - turningAngle), Math.toRadians(10), 0);
     	        }

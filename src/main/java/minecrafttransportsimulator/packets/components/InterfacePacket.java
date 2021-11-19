@@ -46,7 +46,6 @@ import minecrafttransportsimulator.packets.instances.PacketTileEntityRoadCollisi
 import minecrafttransportsimulator.packets.instances.PacketTileEntityRoadConnectionUpdate;
 import minecrafttransportsimulator.packets.instances.PacketTileEntitySignalControllerChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleBeaconChange;
-import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 import minecrafttransportsimulator.packets.instances.PacketVehicleInteract;
 import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement;
@@ -140,7 +139,6 @@ public class InterfacePacket{
 		
 		//Vehicle packets.
 		registerPacket(packetIndex++, PacketVehicleBeaconChange.class);
-		registerPacket(packetIndex++, PacketVehicleControlAnalog.class);
 		registerPacket(packetIndex++, PacketVehicleControlDigital.class);
 		registerPacket(packetIndex++, PacketVehicleInteract.class);
 		registerPacket(packetIndex++, PacketVehicleServerMovement.class);

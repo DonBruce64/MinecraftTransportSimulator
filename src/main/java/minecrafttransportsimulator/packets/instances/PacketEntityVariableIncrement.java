@@ -26,6 +26,10 @@ public class PacketEntityVariableIncrement extends APacketEntity<AEntityC_Defina
 		this.maxValue = maxValue;
 	}
 	
+	public PacketEntityVariableIncrement(AEntityC_Definable<?> entity, String variableName, double variableValue){
+		this(entity, variableName, variableValue, -Double.MAX_VALUE, Double.MAX_VALUE);
+	}
+	
 	public PacketEntityVariableIncrement(ByteBuf buf){
 		super(buf);
 		this.variableName = readStringFromBuffer(buf);

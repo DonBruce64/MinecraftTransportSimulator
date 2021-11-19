@@ -316,7 +316,6 @@ public class VehicleGroundDeviceCollection{
 				APart hookupPart = (APart) vehicle.towedByConnection.hookupEntity;
 				hookupPoint = hookupPoint.rotateFine(hookupPart.localAngles).add(hookupPart.localOffset);
 			}
-			//System.out.println(activeHookup);
 			if(hookupPoint.z > 0){
 				if(!rearLeftGDB.isGrounded && !rearRightGDB.isGrounded){
 					side1Delta = -Math.hypot(rearLeftGDB.contactPoint.y, rearLeftGDB.contactPoint.z);

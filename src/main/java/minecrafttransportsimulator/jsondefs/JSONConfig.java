@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemPartEngine;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -197,9 +198,9 @@ public class JSONConfig{
 		
 		public JSONConfigEntry<Boolean> devMode = new JSONConfigEntry<Boolean>(false, "If enabled, MTS will allow access to the dev mode GUI while sitting in vehicles.  The GUI allows editing JSONs in-game without the need to restart.");
 
-		public JSONConfigEntry<Integer> controlSurfaceCooldown = new JSONConfigEntry<Integer>(4, "How long (in ticks) it takes before control surfaces try to return to their natural angle.  This is not used when using a joystick.");
-		public JSONConfigEntry<Integer> steeringIncrement = new JSONConfigEntry<Integer>(20, "How many units (1/10 of a degree) to turn the wheels on vehicles for every tick the button is held down.  This is not used when using a joystick.");
-		public JSONConfigEntry<Integer> flightIncrement = new JSONConfigEntry<Integer>(6, "How many units (1/10 of a degree) to move the elevators and ailerons on aircraft for every tick the button is held down.  This is not used when using a joystick.");
+		public JSONConfigEntry<Double> steeringControlRate = new JSONConfigEntry<Double>(EntityVehicleF_Physics.RUDDER_DAMPEN_RATE, "How many degrees to turn the wheels on vehicles for every tick the button is held down.  This is not used when using a joystick.");
+		public JSONConfigEntry<Double> flightControlRate = new JSONConfigEntry<Double>(EntityVehicleF_Physics.AILERON_DAMPEN_RATE, "How many degrees to move the elevators and ailerons on aircraft for every tick the button is held down.  This is not used when using a joystick.");
+		public JSONConfigEntry<Double> mouseYokeRate = new JSONConfigEntry<Double>(0.1D, "How many degrees to move control surfaces for every 1 mouse unit change.  Used for mouse yoke controls.");
 		public JSONConfigEntry<Double> joystickDeadZone = new JSONConfigEntry<Double>(0.03D, "Dead zone for joystick axis.  This is NOT joystick specific.");
 	}
 	

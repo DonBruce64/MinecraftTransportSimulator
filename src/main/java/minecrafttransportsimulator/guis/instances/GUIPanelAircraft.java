@@ -20,6 +20,7 @@ import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketEntityTrailerConnection;
+import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketVehicleBeaconChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
@@ -71,8 +72,9 @@ public class GUIPanelAircraft extends AGUIPanel{
 	private GUIComponentTextBox beaconBox;
 	
 	private GUIComponentSelector selectedTrimSelector;
-	private PacketVehicleControlDigital.Controls selectedTrimType = null;
-	private boolean selectedTrimDirection;
+	private String selectedTrimVariable = null;
+	private double selectedTrimBounds = 0;
+	private double selectedTrimIncrement = 0;
 	private boolean appliedTrimThisRender;
 	
 	public GUIPanelAircraft(EntityVehicleF_Physics aircraft){
@@ -232,14 +234,14 @@ public class GUIPanelAircraft extends AGUIPanel{
 			@Override
 			public void onClicked(boolean leftSide){
 				selectedTrimSelector = this;
-				selectedTrimType = PacketVehicleControlDigital.Controls.TRIM_ROLL;
-				selectedTrimDirection = !leftSide;
+				selectedTrimVariable = EntityVehicleF_Physics.AILERON_TRIM_VARIABLE;
+				selectedTrimBounds = EntityVehicleF_Physics.MAX_AILERON_TRIM;
+				selectedTrimIncrement = !leftSide ? 0.1 : -0.1;
 			}
 			
 			@Override
 			public void onReleased(){
-				selectedTrimSelector = null;
-				selectedTrimType = null;
+				selectedTrimVariable = null;
 			}
 		};
 		addSelector(aileronTrimSelector);
@@ -248,14 +250,14 @@ public class GUIPanelAircraft extends AGUIPanel{
 			@Override
 			public void onClicked(boolean leftSide){
 				selectedTrimSelector = this;
-				selectedTrimType = PacketVehicleControlDigital.Controls.TRIM_PITCH;
-				selectedTrimDirection = leftSide;
+				selectedTrimVariable = EntityVehicleF_Physics.ELEVATOR_TRIM_VARIABLE;
+				selectedTrimBounds = EntityVehicleF_Physics.MAX_ELEVATOR_TRIM;
+				selectedTrimIncrement = leftSide ? 0.1 : -0.1;
 			}
 			
 			@Override
 			public void onReleased(){
-				selectedTrimSelector = null;
-				selectedTrimType = null;
+				selectedTrimVariable = null;
 			}
 		};
 		addSelector(elevatorTrimSelector);
@@ -264,14 +266,15 @@ public class GUIPanelAircraft extends AGUIPanel{
 			@Override
 			public void onClicked(boolean leftSide){
 				selectedTrimSelector = this;
-				selectedTrimType = PacketVehicleControlDigital.Controls.TRIM_YAW;
-				selectedTrimDirection = !leftSide;
+
+				selectedTrimVariable = EntityVehicleF_Physics.RUDDER_TRIM_VARIABLE;
+				selectedTrimBounds = EntityVehicleF_Physics.MAX_RUDDER_TRIM;
+				selectedTrimIncrement = !leftSide ? 0.1 : -0.1;
 			}
 			
 			@Override
 			public void onReleased(){
-				selectedTrimSelector = null;
-				selectedTrimType = null;
+				selectedTrimVariable = null;
 			}
 		};
 		addSelector(rudderTrimSelector);
@@ -466,12 +469,15 @@ public class GUIPanelAircraft extends AGUIPanel{
 			}
 		}
 				
-		//For every tick we have one of the trim selectors pressed, do the corresponding trim action.
-		if(selectedTrimSelector != null){
+		//For every 3 ticks we have one of the trim selectors pressed, do the corresponding trim action.
+		if(selectedTrimVariable != null){
 			if(inClockPeriod(3, 1)){
 				if(!appliedTrimThisRender){
-					selectedTrimSelector.selectorState = selectedTrimSelector.selectorState == 0 ? 1 : 0; 
-					InterfacePacket.sendToServer(new PacketVehicleControlDigital(vehicle, selectedTrimType, selectedTrimDirection));
+					double currentTrim = vehicle.getVariable(selectedTrimVariable);
+					if(currentTrim+selectedTrimIncrement > -selectedTrimBounds && currentTrim+selectedTrimIncrement < selectedTrimBounds){
+						selectedTrimSelector.selectorState = selectedTrimSelector.selectorState == 0 ? 1 : 0; 
+						InterfacePacket.sendToServer(new PacketEntityVariableIncrement(vehicle, selectedTrimVariable, selectedTrimIncrement, -selectedTrimBounds, selectedTrimBounds));
+					}
 					appliedTrimThisRender = true;
 				}
 			}else{

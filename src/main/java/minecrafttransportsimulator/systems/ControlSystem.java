@@ -22,7 +22,6 @@ import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketPartGun;
 import minecrafttransportsimulator.packets.instances.PacketPartSeat;
-import minecrafttransportsimulator.packets.instances.PacketVehicleControlAnalog;
 import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 
 /**Class that handles all control operations.
@@ -168,6 +167,32 @@ public final class ControlSystem{
 		}
 	}
 	
+	private static void controlControlSurface(EntityVehicleF_Physics vehicle, ControlsJoystick axis, ControlsKeyboard increment, ControlsKeyboard decrement, double rate, double bounds, String variable, double currentValue){
+		if(InterfaceInput.isJoystickPresent(axis.config.joystickName)){
+			InterfacePacket.sendToServer(new PacketEntityVariableSet(vehicle, variable, axis.getAxisState(false)*bounds));
+		}else{
+			if(increment.isPressed()){
+				InterfacePacket.sendToServer(new PacketEntityVariableIncrement(vehicle, variable, rate*(currentValue < 0 ? 2 : 1), -bounds, bounds));
+			}else if(decrement.isPressed()){
+				InterfacePacket.sendToServer(new PacketEntityVariableIncrement(vehicle, variable, -rate*(currentValue > 0 ? 2 : 1), -bounds, bounds));
+			}else if(currentValue > rate){
+				InterfacePacket.sendToServer(new PacketEntityVariableIncrement(vehicle, variable, -rate, -bounds, bounds));
+			}else if(currentValue < -rate){
+				InterfacePacket.sendToServer(new PacketEntityVariableIncrement(vehicle, variable, rate, -bounds, bounds));
+			}else if(currentValue != 0){
+				InterfacePacket.sendToServer(new PacketEntityVariableSet(vehicle, variable, 0));
+			}
+		}
+	}
+	
+	private static void controlControlTrim(EntityVehicleF_Physics vehicle, ControlsJoystick increment, ControlsJoystick decrement, double bounds, String variable){
+		if(increment.isPressed()){
+			InterfacePacket.sendToServer(new PacketEntityVariableIncrement(vehicle, variable, 1, -bounds, bounds));
+		}else if(decrement.isPressed()){
+			InterfacePacket.sendToServer(new PacketEntityVariableIncrement(vehicle, variable, -1, -bounds, bounds));
+		}
+	}
+	
 	private static void controlAircraft(EntityVehicleF_Physics aircraft, boolean isPlayerController){
 		controlCamera(ControlsKeyboard.AIRCRAFT_CAMLOCK, ControlsKeyboard.AIRCRAFT_ZOOM_I, ControlsKeyboard.AIRCRAFT_ZOOM_O, ControlsJoystick.AIRCRAFT_CHANGEVIEW);
 		rotateCamera(ControlsJoystick.AIRCRAFT_LOOK_R, ControlsJoystick.AIRCRAFT_LOOK_L, ControlsJoystick.AIRCRAFT_LOOK_U, ControlsJoystick.AIRCRAFT_LOOK_D, ControlsJoystick.AIRCRAFT_LOOK_A);
@@ -218,67 +243,27 @@ public final class ControlSystem{
 		}
 		
 		//Check yaw.
-		if(InterfaceInput.isJoystickPresent(ControlsJoystick.AIRCRAFT_YAW.config.joystickName)){
-			InterfacePacket.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.RUDDER, (short) (ControlsJoystick.AIRCRAFT_YAW.getAxisState(false)*EntityVehicleF_Physics.MAX_RUDDER_ANGLE), Byte.MAX_VALUE));
-		}else{
-			if(ControlsKeyboard.AIRCRAFT_YAW_R.isPressed()){
-				InterfacePacket.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.RUDDER, (short) (ConfigSystem.configObject.clientControls.steeringIncrement.value.shortValue()*(aircraft.rudderAngle < 0 ? 2 : 1)), ConfigSystem.configObject.clientControls.controlSurfaceCooldown.value.byteValue()));
-			}
-			if(ControlsKeyboard.AIRCRAFT_YAW_L.isPressed()){
-				InterfacePacket.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.RUDDER, (short) (-ConfigSystem.configObject.clientControls.steeringIncrement.value.shortValue()*(aircraft.rudderAngle > 0 ? 2 : 1)), ConfigSystem.configObject.clientControls.controlSurfaceCooldown.value.byteValue()));
-			}
-		}
-		if(ControlsJoystick.AIRCRAFT_TRIM_YAW_R.isPressed()){
-			InterfacePacket.sendToServer(new PacketVehicleControlDigital(aircraft, PacketVehicleControlDigital.Controls.TRIM_YAW, true));
-		}
-		if(ControlsJoystick.AIRCRAFT_TRIM_YAW_L.isPressed()){
-			InterfacePacket.sendToServer(new PacketVehicleControlDigital(aircraft, PacketVehicleControlDigital.Controls.TRIM_YAW, false));
-		}
+		controlControlSurface(aircraft, ControlsJoystick.AIRCRAFT_YAW, ControlsKeyboard.AIRCRAFT_YAW_R, ControlsKeyboard.AIRCRAFT_YAW_L, ConfigSystem.configObject.clientControls.steeringControlRate.value, EntityVehicleF_Physics.MAX_RUDDER_ANGLE, EntityVehicleF_Physics.RUDDER_VARIABLE, aircraft.rudderAngle);
+		controlControlTrim(aircraft, ControlsJoystick.AIRCRAFT_TRIM_YAW_R, ControlsJoystick.AIRCRAFT_TRIM_YAW_L, EntityVehicleF_Physics.MAX_RUDDER_TRIM, EntityVehicleF_Physics.RUDDER_TRIM_VARIABLE);
 		
 		//Check is mouse yoke is enabled.  If so do controls by mouse rather than buttons.
 		if(ConfigSystem.configObject.clientControls.mouseYoke.value){
 			if(EntityVehicleF_Physics.lockCameraToMovement && InterfaceGUI.getActiveGUI() == null){
-				long mousePosition = InterfaceInput.getTrackedMouseInfo();
-				InterfacePacket.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.AILERON, (short) (mousePosition >> Integer.SIZE), Byte.MAX_VALUE));
-				InterfacePacket.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.ELEVATOR, (short) ((int) -mousePosition), Byte.MAX_VALUE));
+				long mouseDelta = InterfaceInput.getMouseDelta();
+				double deltaAileron = ConfigSystem.configObject.clientControls.flightControlRate.value*((short) (mouseDelta >> Integer.SIZE));
+				double deltaElevator = ConfigSystem.configObject.clientControls.flightControlRate.value*((short) ((int) -mouseDelta));
+				InterfacePacket.sendToServer(new PacketEntityVariableIncrement(aircraft, EntityVehicleF_Physics.AILERON_VARIABLE, deltaAileron, -EntityVehicleF_Physics.MAX_AILERON_ANGLE, EntityVehicleF_Physics.MAX_AILERON_ANGLE));
+				InterfacePacket.sendToServer(new PacketEntityVariableIncrement(aircraft, EntityVehicleF_Physics.ELEVATOR_VARIABLE, deltaElevator, -EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE, EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE));
 				
 			}
 		}else{
 			//Check pitch.
-			if(InterfaceInput.isJoystickPresent(ControlsJoystick.AIRCRAFT_PITCH.config.joystickName)){
-				InterfacePacket.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.ELEVATOR, (short) (ControlsJoystick.AIRCRAFT_PITCH.getAxisState(false)*EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE), Byte.MAX_VALUE));
-			}else{
-				if(ControlsKeyboard.AIRCRAFT_PITCH_U.isPressed()){
-					InterfacePacket.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.ELEVATOR, (short) (ConfigSystem.configObject.clientControls.flightIncrement.value.shortValue()*(aircraft.elevatorAngle < 0 ? 2 : 1)), ConfigSystem.configObject.clientControls.controlSurfaceCooldown.value.byteValue()));
-				}
-				if(ControlsKeyboard.AIRCRAFT_PITCH_D.isPressed()){
-					InterfacePacket.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.ELEVATOR, (short) (-ConfigSystem.configObject.clientControls.flightIncrement.value.shortValue()*(aircraft.elevatorAngle > 0 ? 2 : 1)), ConfigSystem.configObject.clientControls.controlSurfaceCooldown.value.byteValue()));
-				}
-			}
-			if(ControlsJoystick.AIRCRAFT_TRIM_PITCH_U.isPressed()){
-				InterfacePacket.sendToServer(new PacketVehicleControlDigital(aircraft, PacketVehicleControlDigital.Controls.TRIM_PITCH, true));
-			}
-			if(ControlsJoystick.AIRCRAFT_TRIM_PITCH_D.isPressed()){
-				InterfacePacket.sendToServer(new PacketVehicleControlDigital(aircraft, PacketVehicleControlDigital.Controls.TRIM_PITCH, false));
-			}
+			controlControlSurface(aircraft, ControlsJoystick.AIRCRAFT_PITCH, ControlsKeyboard.AIRCRAFT_PITCH_U, ControlsKeyboard.AIRCRAFT_PITCH_D, ConfigSystem.configObject.clientControls.flightControlRate.value, EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE, EntityVehicleF_Physics.ELEVATOR_VARIABLE, aircraft.elevatorAngle);
+			controlControlTrim(aircraft, ControlsJoystick.AIRCRAFT_TRIM_PITCH_U, ControlsJoystick.AIRCRAFT_TRIM_PITCH_D, EntityVehicleF_Physics.MAX_ELEVATOR_TRIM, EntityVehicleF_Physics.ELEVATOR_TRIM_VARIABLE);
 			
 			//Check roll.
-			if(InterfaceInput.isJoystickPresent(ControlsJoystick.AIRCRAFT_ROLL.config.joystickName)){
-				InterfacePacket.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.AILERON, (short) (ControlsJoystick.AIRCRAFT_ROLL.getAxisState(false)*EntityVehicleF_Physics.MAX_AILERON_ANGLE), Byte.MAX_VALUE));
-			}else{
-				if(ControlsKeyboard.AIRCRAFT_ROLL_R.isPressed()){
-					InterfacePacket.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.AILERON, (short) (ConfigSystem.configObject.clientControls.flightIncrement.value.shortValue()*(aircraft.aileronAngle < 0 ? 2 : 1)), ConfigSystem.configObject.clientControls.controlSurfaceCooldown.value.byteValue()));
-				}
-				if(ControlsKeyboard.AIRCRAFT_ROLL_L.isPressed()){
-					InterfacePacket.sendToServer(new PacketVehicleControlAnalog(aircraft, PacketVehicleControlAnalog.Controls.AILERON, (short) (-ConfigSystem.configObject.clientControls.flightIncrement.value.shortValue()*(aircraft.aileronAngle > 0 ? 2 : 1)), ConfigSystem.configObject.clientControls.controlSurfaceCooldown.value.byteValue()));
-				}
-			}
-			if(ControlsJoystick.AIRCRAFT_TRIM_ROLL_R.isPressed()){
-				InterfacePacket.sendToServer(new PacketVehicleControlDigital(aircraft, PacketVehicleControlDigital.Controls.TRIM_ROLL, true));
-			}
-			if(ControlsJoystick.AIRCRAFT_TRIM_ROLL_L.isPressed()){
-				InterfacePacket.sendToServer(new PacketVehicleControlDigital(aircraft, PacketVehicleControlDigital.Controls.TRIM_ROLL, false));
-			}
+			controlControlSurface(aircraft, ControlsJoystick.AIRCRAFT_ROLL, ControlsKeyboard.AIRCRAFT_ROLL_R, ControlsKeyboard.AIRCRAFT_ROLL_L, ConfigSystem.configObject.clientControls.flightControlRate.value, EntityVehicleF_Physics.MAX_AILERON_ANGLE, EntityVehicleF_Physics.AILERON_VARIABLE, aircraft.aileronAngle);
+			controlControlTrim(aircraft, ControlsJoystick.AIRCRAFT_TRIM_ROLL_R, ControlsJoystick.AIRCRAFT_TRIM_ROLL_L, EntityVehicleF_Physics.MAX_AILERON_TRIM, EntityVehicleF_Physics.AILERON_TRIM_VARIABLE);
 		}
 	}
 	
@@ -401,28 +386,19 @@ public final class ControlSystem{
 		//Check steering.  If mouse yoke is enabled, we do controls by mouse rather than buttons.
 		if(ConfigSystem.configObject.clientControls.mouseYoke.value){
 			if(EntityVehicleF_Physics.lockCameraToMovement && InterfaceGUI.getActiveGUI() == null){
-				long mousePosition = InterfaceInput.getTrackedMouseInfo();
-				InterfacePacket.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.RUDDER, (short) (mousePosition >> Integer.SIZE), Byte.MAX_VALUE));
+				long mouseDelta = InterfaceInput.getMouseDelta();
+				double deltaRudder = ConfigSystem.configObject.clientControls.flightControlRate.value*((short) (mouseDelta >> Integer.SIZE));
+				InterfacePacket.sendToServer(new PacketEntityVariableIncrement(powered, EntityVehicleF_Physics.RUDDER_VARIABLE, deltaRudder, -EntityVehicleF_Physics.MAX_RUDDER_ANGLE, EntityVehicleF_Physics.MAX_RUDDER_ANGLE));
 			}
 		}else{
+			controlControlSurface(powered, ControlsJoystick.CAR_TURN, ControlsKeyboard.CAR_TURN_R, ControlsKeyboard.CAR_TURN_L, ConfigSystem.configObject.clientControls.steeringControlRate.value, EntityVehicleF_Physics.MAX_RUDDER_ANGLE, EntityVehicleF_Physics.RUDDER_VARIABLE, powered.rudderAngle);
+			
+			//If we have a joysick, set rumble state.
 			if(InterfaceInput.isJoystickPresent(ControlsJoystick.CAR_TURN.config.joystickName)){
-				InterfacePacket.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.RUDDER, (short) (ControlsJoystick.CAR_TURN.getAxisState(false)*EntityVehicleF_Physics.MAX_RUDDER_ANGLE), Byte.MAX_VALUE));
-				if(powered.locationRiderMap.containsValue(clientPlayer)){
-					if(powered.slipping){
-						InterfaceInput.setJoystickRumble(ControlsJoystick.CAR_TURN.config.joystickName, (float) Math.max(powered.velocity, 1));
-					}else{
-						InterfaceInput.setJoystickRumble(ControlsJoystick.CAR_TURN.config.joystickName, 0);
-					}
-				}
-			}else{
-				//Depending on what we are pressing, send out packets.
-				//If we are turning in the opposite direction of our current angle, send out a packet with twice the value.
-				boolean turningRight = ControlsKeyboard.CAR_TURN_R.isPressed();
-				boolean turningLeft = ControlsKeyboard.CAR_TURN_L.isPressed();
-				if(turningRight && !turningLeft){
-					InterfacePacket.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.RUDDER, (short) (ConfigSystem.configObject.clientControls.steeringIncrement.value.shortValue()*(powered.rudderAngle < 0 ? 2 : 1)), ConfigSystem.configObject.clientControls.controlSurfaceCooldown.value.byteValue()));
-				}else if(turningLeft && !turningRight){
-					InterfacePacket.sendToServer(new PacketVehicleControlAnalog(powered, PacketVehicleControlAnalog.Controls.RUDDER, (short) (-ConfigSystem.configObject.clientControls.steeringIncrement.value.shortValue()*(powered.rudderAngle > 0 ? 2 : 1)), ConfigSystem.configObject.clientControls.controlSurfaceCooldown.value.byteValue()));
+				if(powered.slipping){
+					InterfaceInput.setJoystickRumble(ControlsJoystick.CAR_TURN.config.joystickName, (float) Math.max(powered.velocity, 1));
+				}else{
+					InterfaceInput.setJoystickRumble(ControlsJoystick.CAR_TURN.config.joystickName, 0);
 				}
 			}
 		}
@@ -463,12 +439,12 @@ public final class ControlSystem{
 		//pressed direction for 2 seconds, or if we turn in the other direction.
 		//This only happens if the signals are set to automatic.  For manual signals, we let the player control them.
 		if(ConfigSystem.configObject.clientControls.autoTrnSignals.value){
-			if(!powered.turningLeft && powered.rudderAngle < -200){
+			if(!powered.turningLeft && powered.rudderAngle < -20){
 				powered.turningLeft = true;
 				powered.turningCooldown = 40;
 				InterfacePacket.sendToServer(new PacketEntityVariableToggle(powered, EntityVehicleF_Physics.LEFTTURNLIGHT_VARIABLE));
 			}
-			if(!powered.turningRight && powered.rudderAngle > 200){
+			if(!powered.turningRight && powered.rudderAngle > 20){
 				powered.turningRight = true;
 				powered.turningCooldown = 40;
 				InterfacePacket.sendToServer(new PacketEntityVariableToggle(powered, EntityVehicleF_Physics.RIGHTTURNLIGHT_VARIABLE));
