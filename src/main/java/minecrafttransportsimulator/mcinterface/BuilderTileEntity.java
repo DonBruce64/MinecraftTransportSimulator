@@ -6,7 +6,6 @@ import java.util.List;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.components.ABlockBaseTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
-import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketEntityCSHandshakeClient;
 import minecrafttransportsimulator.packets.instances.PacketEntityCSHandshakeServer;
@@ -147,20 +146,6 @@ public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extend
 			//If we did tick, then the last loaded will be null and this doesn't apply.
 			tag = lastLoadedNBT;
 		}
-		//TODO remove this when we convert all TEs.  Required to block loading as Tickable classes next reload.
-		tag.setString("id", TileEntity.getKey(BuilderTileEntity.class).toString());
         return tag;
     }
-	
-	/**Tickable builder for {@link BuilderTileEntity}.
-    *
-    * @author don_bruce
-    */
-	//TODO remove this when all TEs are converted in V21.
-	public static class Tickable<TickableTileEntity extends ATileEntityBase<? extends AJSONItem>> extends BuilderTileEntity<TickableTileEntity>{
-	    
-		public Tickable(){
-			super();
-		}
-	}
 }

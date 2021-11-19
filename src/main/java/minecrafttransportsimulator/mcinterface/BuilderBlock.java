@@ -306,7 +306,6 @@ public class BuilderBlock extends Block{
 		
 		//Register the TEs.
 		GameRegistry.registerTileEntity(BuilderTileEntity.class, new ResourceLocation(MasterLoader.MODID, BuilderTileEntity.class.getSimpleName()));
-		GameRegistry.registerTileEntity(BuilderTileEntity.Tickable.class, new ResourceLocation(MasterLoader.MODID, BuilderTileEntity.class.getSimpleName() + BuilderTileEntity.Tickable.class.getSimpleName()));
 		GameRegistry.registerTileEntity(BuilderTileEntityFluidTank.class, new ResourceLocation(MasterLoader.MODID, BuilderTileEntityFluidTank.class.getSimpleName()));
 		
 		//Register the IItemBlock blocks.  We cheat here and
