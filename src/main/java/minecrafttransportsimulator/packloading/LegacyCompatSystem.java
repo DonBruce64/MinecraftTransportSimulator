@@ -1629,6 +1629,16 @@ public final class LegacyCompatSystem{
 			
 			interactableDef.collision = null;
 		}
+		
+		if(interactableDef.collisionGroups !=null){
+			for(JSONCollisionGroup group : interactableDef.collisionGroups){
+				for(JSONCollisionBox box : group.collisions){
+					if(box.variableName != null && box.variableType == null){
+						box.variableType = JSONCollisionBox.VariableType.TOGGLE;
+					}
+				}
+			}
+		}
 	}
     
     private static void performAnimationLegacyCompats(JSONRendering rendering){

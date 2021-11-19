@@ -5,6 +5,7 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
+import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.entities.components.AEntityD_Interactable.PlayerOwnerState;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
@@ -116,15 +117,29 @@ public class PacketVehicleInteract extends APacketEntityInteract<EntityVehicleF_
 			}
 		}
 		
-		//Check if we clicked a box with a variable attached we need to toggle.
+		//Check if we clicked a box with a variable attached.
 		if(hitBox.definition != null && hitBox.definition.variableName != null){
-			//Can't open locked vehicles.
+			//Can't touch locked vehicles.
 			if(vehicle.locked){
 				player.sendPacket(new PacketPlayerChatMessage(player, "interact.failure.vehiclelocked"));
 			}else{
-				//Toggle variable.
-				vehicle.toggleVariable(hitBox.definition.variableName);
-				InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(vehicle, hitBox.definition.variableName));
+				AEntityC_Definable<?> entity = part != null ? part : vehicle;
+				switch(hitBox.definition.variableType){
+					case INCREMENT:
+						entity.setVariable(hitBox.definition.variableName, entity.getVariable(hitBox.definition.variableName) + hitBox.definition.variableValue);
+						InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(entity, hitBox.definition.variableName, hitBox.definition.variableValue));
+						break;
+					case SET:
+						entity.setVariable(hitBox.definition.variableName, hitBox.definition.variableValue);
+						InterfacePacket.sendToAllClients(new PacketEntityVariableSet(entity, hitBox.definition.variableName, hitBox.definition.variableValue));
+						break;
+					case TOGGLE:{
+						entity.toggleVariable(hitBox.definition.variableName);
+						InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(entity, hitBox.definition.variableName));	
+						break;
+					}
+				}
+				
 			}
 			return false;
 		}

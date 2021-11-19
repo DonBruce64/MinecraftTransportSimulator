@@ -21,8 +21,24 @@ public class JSONCollisionBox{
 	@JSONDescription("How much armor this collision box has.  Values greater than 0 will make this box use armor code to block bullets from passing through it.  Leaving this value out will make all bullets pass through it (no armor).")
     public float armorThickness;
 	
-	@JSONDescription("If set, clicking this collision box will toggle the state of this variable.  Useful for doors, though can be used for any toggle-able variable, not just custom doors.")
+	@JSONDescription("If set, clicking this collision box will do variable operations.  The exact operation depends on the variableType and variableValue.  Useful for doors, though can be used for any toggle-able variable, not just custom doors.")
     public String variableName;
+	
+	@JSONRequired(dependentField="variableName")
+	@JSONDescription("The type of variable this box represents, and how to act when clicked.")
+    public VariableType variableType;
+	
+	@JSONDescription("The value to set the variable to for SET types, or the amount to increment by for INCREMENT types.")
+    public double variableValue;
+	
+	public static enum VariableType{
+		@JSONDescription("Clicking this box will toggle the variable from 0 to 1.")
+		TOGGLE,
+		@JSONDescription("Clicking this box will set the variable to the defined value.")
+		SET,
+		@JSONDescription("Clicking this box will increment the variable by the defined value.")
+		INCREMENT;
+	}
 	
 	@Deprecated
 	public boolean isInterior;
