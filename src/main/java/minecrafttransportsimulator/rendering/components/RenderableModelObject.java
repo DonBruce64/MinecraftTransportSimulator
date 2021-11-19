@@ -65,10 +65,15 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 			this.object = new RenderableObject(object.name, "mts:textures/rendering/glass.png", object.color, object.vertices, false);
 			this.object.normalizeUVs();
 			this.interiorWindowObject = new RenderableObject(object.name + "_interior", "mts:textures/rendering/glass.png", object.color, FloatBuffer.allocate(object.vertices.capacity()), false);
-			for(int i=object.vertices.capacity(); i<=0; --i){
-				interiorWindowObject.vertices.put(object.vertices.get(i));
+			float[] vertexSet = new float[8];
+			for(int i=object.vertices.capacity()-8; i>=0; i-=8){
+				object.vertices.get(vertexSet);
+				interiorWindowObject.vertices.position(i);
+				interiorWindowObject.vertices.put(vertexSet);
 			}
-			interiorWindowObject.vertices.flip();
+			object.vertices.rewind();
+			interiorWindowObject.vertices.position(0);
+			interiorWindowObject.vertices.limit(object.vertices.limit());
 		}else{
 			this.object = object;
 			this.interiorWindowObject = null;
