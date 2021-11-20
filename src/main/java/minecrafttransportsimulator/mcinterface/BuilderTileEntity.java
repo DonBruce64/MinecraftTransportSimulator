@@ -79,7 +79,7 @@ public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extend
 					}catch(Exception e){
 						InterfaceCore.logError("Failed to load tile entity on builder from saved NBT.  Did a pack change?");
 						InterfaceCore.logError(e.getMessage());
-						invalidate();
+						world.setBlockToAir(pos);
 					}
 				}
 			}

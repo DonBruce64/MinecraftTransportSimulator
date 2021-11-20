@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
 
+import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.BezierCurve;
@@ -75,9 +76,23 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 								//Core components need to be transformed to wedges.
 								Point3d priorPosition = new Point3d();
 								Point3d priorRotation = new Point3d();
+								float indexDelta = (float) (road.dynamicCurve.pathLength/Math.floor(road.dynamicCurve.pathLength/road.definition.road.segmentLength));
+								boolean finalSegment = false;
 								float priorIndex = 0;
+								float currentIndex = 0;
+								System.out.format("%f %f %f %d\n", road.dynamicCurve.pathLength, road.definition.road.segmentLength, indexDelta, (int) Math.floor(road.dynamicCurve.pathLength/road.definition.road.segmentLength));
 								List<float[]> segmentVertices = new ArrayList<float[]>();
-								for(float currentIndex=1; currentIndex<=road.dynamicCurve.pathLength; currentIndex += road.definition.road.segmentLength){
+								while(!finalSegment){
+									//If we are at the last index, do special logic to get the very end point.
+									//We check here in case FPEs have accumulated and we won't end on the exact end segment.
+									//Otherwise, increment normally.
+									if(currentIndex != road.dynamicCurve.pathLength && currentIndex + indexDelta*1.25 > road.dynamicCurve.pathLength){
+										currentIndex = road.dynamicCurve.pathLength;
+										finalSegment = true;
+									}else{
+										currentIndex += indexDelta;
+									}
+									
 									//Get current and prior curve position and rotation.
 									//From this, we know how much to stretch the model to that point's rendering area.
 									road.dynamicCurve.setPointToPositionAt(priorPosition, priorIndex);
@@ -92,8 +107,8 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 									Point3d testPoint1 = new Point3d(road.definition.road.borderOffset, 0, 0).rotateFine(priorRotation).add(priorPosition);
 									Point3d testPoint2 = new Point3d(road.definition.road.borderOffset, 0, 0).rotateFine(rotation).add(position);
 									if(currentIndex != road.dynamicCurve.pathLength && ((position.x - priorPosition.x)*(testPoint2.x - testPoint1.x) < 0 || (position.z - priorPosition.z)*(testPoint2.z - testPoint1.z) < 0)){
-										if(currentIndex + 3 > road.dynamicCurve.pathLength){
-											currentIndex = road.dynamicCurve.pathLength - road.definition.road.segmentLength;
+										if(currentIndex + 3*indexDelta > road.dynamicCurve.pathLength){
+											currentIndex = road.dynamicCurve.pathLength - indexDelta;
 										}
 										continue;
 									}
@@ -111,13 +126,13 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 										float x = parsedVertices.get();
 										float y = parsedVertices.get();
 										float z = parsedVertices.get();
-										Point3d vertexOffsetPrior = new Point3d(x, y, 0);
-										vertexOffsetPrior.rotateFine(priorRotation).add(priorPosition);
-										Point3d vertexOffsetCurrent = new Point3d(x, y, z);
-										vertexOffsetCurrent.rotateFine(rotation).add(position);
+										Point3d vertexOffsetPriorLine = new Point3d(x, y, 0);
+										vertexOffsetPriorLine.rotateFine(priorRotation).add(priorPosition);
+										Point3d vertexOffsetCurrentLine = new Point3d(x, y, 0);
+										vertexOffsetCurrentLine.rotateFine(rotation).add(position);
 										
-										Point3d segmentVector = vertexOffsetPrior.subtract(vertexOffsetCurrent).multiply(Math.abs(z));
-										Point3d renderedVertex = vertexOffsetCurrent.add(segmentVector);
+										Point3d segmentVector = vertexOffsetCurrentLine.copy().subtract(vertexOffsetPriorLine).multiply(Math.abs(z)/road.definition.road.segmentLength);
+										Point3d renderedVertex = vertexOffsetPriorLine.add(segmentVector);
 										
 										convertedVertexData[5] = (float) renderedVertex.x;
 										convertedVertexData[6] = (float) renderedVertex.y;
@@ -131,11 +146,6 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 									
 									//Set the last index.
 									priorIndex = currentIndex;
-									
-									//If we are at the last index, do special logic to get the very end point.
-									if(currentIndex != road.dynamicCurve.pathLength && currentIndex + road.definition.road.segmentLength > road.dynamicCurve.pathLength){
-										currentIndex -= ((currentIndex + road.definition.road.segmentLength) - road.dynamicCurve.pathLength);
-									}
 								}
 								
 								//Cache and compile the segments.
