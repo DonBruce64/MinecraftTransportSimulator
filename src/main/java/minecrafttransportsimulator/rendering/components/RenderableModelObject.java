@@ -293,8 +293,6 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 	public void destroy(){
 		object.destroy();
 		treadPoints.remove(modelLocation);
-		flareObjects.remove(object.name);
-		beamObjects.remove(object.name);
 	}
 	
 	private boolean shouldRender(AnimationEntity entity, JSONLight lightDef, boolean blendingEnabled){

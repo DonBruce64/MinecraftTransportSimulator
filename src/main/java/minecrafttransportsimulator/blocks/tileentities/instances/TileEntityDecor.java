@@ -58,7 +58,7 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor>{
 	@Override
 	public boolean interact(WrapperPlayer player){
     	AItemBase heldItem = player.getHeldItem();
-		if(heldItem instanceof ItemItem && ((ItemItem) heldItem).definition.item.equals(ItemComponentType.PAINT_GUN)){
+		if(heldItem instanceof ItemItem && ((ItemItem) heldItem).definition.item.type.equals(ItemComponentType.PAINT_GUN)){
 			//Don't do decor actions if we are holding a paint gun.
 			return false;
 		}else if(definition.decor.crafting != null){
