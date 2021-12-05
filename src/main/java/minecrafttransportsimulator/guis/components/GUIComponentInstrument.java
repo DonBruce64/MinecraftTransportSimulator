@@ -21,6 +21,7 @@ public class GUIComponentInstrument{
 	public final ItemInstrument instrument;
 	public final AEntityD_Interactable<?> entity;
 	
+	public boolean visible = true;
 	    	
 	public GUIComponentInstrument(int guiLeft, int guiTop, int instrumentPackIndex, AEntityD_Interactable<?> entity){
 		this.packInstrument = entity.definition.instruments.get(instrumentPackIndex);
@@ -38,11 +39,13 @@ public class GUIComponentInstrument{
 	 *  that function.
 	 */
     public void renderInstrument(boolean blendingEnabled, float partialTicks){
-    	GL11.glPushMatrix();
-		GL11.glTranslated(x, y, 0);
-		//Need to scale y by -1 due to inverse coordinates.
-		GL11.glScalef(1.0F, -1.0F, 1.0F);
-		RenderInstrument.drawInstrument(instrument, packInstrument.optionalPartNumber, entity, packInstrument.hudScale, blendingEnabled, partialTicks);
-		GL11.glPopMatrix();
+    	if(visible){
+	    	GL11.glPushMatrix();
+			GL11.glTranslated(x, y, 0);
+			//Need to scale y by -1 due to inverse coordinates.
+			GL11.glScalef(1.0F, -1.0F, 1.0F);
+			RenderInstrument.drawInstrument(instrument, packInstrument.optionalPartNumber, entity, packInstrument.hudScale, blendingEnabled, partialTicks);
+			GL11.glPopMatrix();
+    	}
     }
 }

@@ -12,7 +12,6 @@ import minecrafttransportsimulator.jsondefs.JSONItem.JSONBooklet.BookletPage;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.InterfaceInput;
-import minecrafttransportsimulator.rendering.instances.RenderText;
 import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
 
 public class GUIBooklet extends AGUIBase{
@@ -21,7 +20,7 @@ public class GUIBooklet extends AGUIBase{
 	private GUIComponentButton rightButton;
 	private GUIComponentButton contentsButton;
 	private List<List<GUIComponentLabel>> pageTextLabels = new ArrayList<List<GUIComponentLabel>>();
-	private List<ContentsButton> contentsButtons = new ArrayList<ContentsButton>();
+	private List<GUIComponentButton> contentsButtons = new ArrayList<GUIComponentButton>();
 	
 	//Item properties.
 	private final ItemItem booklet;
@@ -39,13 +38,13 @@ public class GUIBooklet extends AGUIBase{
 		//Page navigation buttons.
 		//We auto-calculate the texture size from here based on the GUI size.
 		//This is needed to tell the buttons what texture size they are using.
-		addButton(leftButton = new GUIComponentButton(guiLeft + 20, guiTop + 150, 20, "", 20, true, 20, 20, 0, 196, getTextureWidth(), getTextureHeight()){
+		addButton(leftButton = new GUIComponentButton(guiLeft + 20, guiTop + 150, 20, 20, 0, 196, 20, 20){
 			@Override
 			public void onClicked(){
 				--booklet.pageNumber;
 			}
 		});
-		addButton(rightButton = new GUIComponentButton(guiLeft + booklet.definition.booklet.textureWidth - 40, guiTop + 150, 20, "", 20, true, 20, 20, 20, 196, getTextureWidth(), getTextureHeight()){
+		addButton(rightButton = new GUIComponentButton(guiLeft + booklet.definition.booklet.textureWidth - 40, guiTop + 150, 20, 20, 20, 196, 20, 20){
 			@Override
 			public void onClicked(){
 				++booklet.pageNumber;
@@ -75,10 +74,10 @@ public class GUIBooklet extends AGUIBase{
 			int leftSideOffset = guiLeft + 20;
 			int rightSideOffset = guiLeft + booklet.definition.booklet.textureWidth/2 + 20;
 			for(int i=0; i<booklet.definition.booklet.pages.size(); ++i){
-				ContentsButton contentsHyperlink = new ContentsButton(i < 10 ? leftSideOffset : rightSideOffset, guiTop + 45 + 10*(i%10), i){
+				GUIComponentButton contentsHyperlink = new GUIComponentButton(i < 10 ? leftSideOffset : rightSideOffset, guiTop + 45 + 10*(i%10), 110, 10, (i + 1) + ": " + booklet.definition.booklet.pages.get(i).title, false, booklet.definition.booklet.pages.get(i).pageText.get(0).color, 0, 0, 0, 0){
 					@Override
 					public void onClicked(){
-						booklet.pageNumber = contentsIndex + 2;
+						booklet.pageNumber = contentsButtons.indexOf(this) + 2;
 					}
 				};
 				contentsButtons.add(contentsHyperlink);
@@ -86,7 +85,7 @@ public class GUIBooklet extends AGUIBase{
 			}
 			
 			//Button on other pages to go back to TOC.
-			addButton(contentsButton = new GUIComponentButton(leftButton.x + leftButton.width, guiTop + 150, 20, "", 20, true, 20, 20, 40, 196, getTextureWidth(), getTextureHeight()){
+			addButton(contentsButton = new GUIComponentButton(leftButton.x + leftButton.width, guiTop + 150, 20, 20, 40, 196, 20, 20){
 				@Override
 				public void onClicked(){
 					booklet.pageNumber = 1;
@@ -172,33 +171,5 @@ public class GUIBooklet extends AGUIBase{
 		}else{
 			return booklet.definition.booklet.pages.get(booklet.pageNumber - 1).pageTexture;
 		}
-	}
-	
-	
-	/**Custom implementation of the button class that doesn't use textures for the button rendering.
-	 * This is needed for the click-able TOC page.
-	 *
-	 * @author don_bruce
-	 */
-	private abstract class ContentsButton extends GUIComponentButton{
-		protected final int contentsIndex;
-
-		public ContentsButton(int x, int y, int contentsIndex){
-			super(x, y, 110, (contentsIndex + 1) + ": " + booklet.definition.booklet.pages.get(contentsIndex).title, 10, false);
-			this.contentsIndex = contentsIndex;
-		}
-
-		@Override
-		public void renderButton(int mouseX, int mouseY){
-			//Don't render the texture.
-		}
-		
-		@Override
-		public void renderText(){
-	    	if(visible){
-	    		//Override the color of the text here.
-	    		RenderText.draw2DText(text, null, centeredText ? x + width/2 : x, y + (height-8)/2, booklet.definition.booklet.pages.get(contentsIndex).pageText.get(0).color, centeredText ? TextAlignment.CENTERED : TextAlignment.LEFT_ALIGNED, 1.0F,  false, 0);
-	    	}
-	    }
 	}
 }

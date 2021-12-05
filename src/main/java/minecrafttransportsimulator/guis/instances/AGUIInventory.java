@@ -38,7 +38,7 @@ public abstract class AGUIInventory extends AGUIBase{
 		//Rendering will occur if the player has an item in that slot.
 		playerSlotButtons.clear();
 		playerSlotIcons.clear();
-		int yOffset = 197;
+		int yOffset = getPlayerInventoryOffset();
 		for(byte i=0; i<36; ++i){				
 			GUIComponentButton itemButton = new GUIComponentButton(guiLeft + 7 + GUIComponentButton.ITEM_BUTTON_SIZE*(i%9), guiTop + yOffset){
 				@Override
@@ -78,6 +78,10 @@ public abstract class AGUIInventory extends AGUIBase{
 	}
 	
 	protected abstract void handlePlayerItemClick(int slotClicked);
+	
+	protected int getPlayerInventoryOffset(){
+		return 197;
+	}
 	
 	@Override
 	public int getWidth(){

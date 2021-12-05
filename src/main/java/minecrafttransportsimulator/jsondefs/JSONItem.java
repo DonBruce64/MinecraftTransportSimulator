@@ -2,7 +2,6 @@ package minecrafttransportsimulator.jsondefs;
 
 import java.util.List;
 
-import minecrafttransportsimulator.items.instances.ItemItem.ItemComponentType;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 
@@ -84,4 +83,33 @@ public class JSONItem extends AJSONItem{
     	@JSONDescription("How long, in ticks, between each strike of this weapon.")
     	public double attackCooldown;
     }
+    
+    public static enum ItemComponentType{
+		@JSONDescription("Creates an item with no functionality.")
+		NONE,
+		@JSONDescription("Creates a booklet, which is a book-like item.")
+		BOOKLET,
+		@JSONDescription("Creates an item that can be eaten.")
+		FOOD,
+		@JSONDescription("Creates an item that can be used as a weapon.")
+		WEAPON,
+		@JSONDescription("Creates an item that works as a part scanner.")
+		SCANNER,
+		@JSONDescription("Creates an item that works as a wrench.")
+		WRENCH,
+		@JSONDescription("Creates an item that works as a paint gun.")
+		PAINT_GUN,
+		@JSONDescription("Creates an item that works as a key.")
+		KEY,
+		@JSONDescription("Creates an item that works as a ticket.")
+		TICKET,
+		@JSONDescription("Creates an item that works as a fuel hose.")
+		FUEL_HOSE,
+		@JSONDescription("Creates an item that works as jumper cables.")
+		JUMPER_CABLES,
+		@JSONDescription("Creates an item that works as a jumper pack.")
+		JUMPER_PACK,
+		@JSONDescription("Creates an item that works as a Y2K button.")
+		Y2K_BUTTON;
+	}
 }

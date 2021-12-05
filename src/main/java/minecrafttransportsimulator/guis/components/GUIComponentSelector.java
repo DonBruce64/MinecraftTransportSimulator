@@ -11,7 +11,7 @@ import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
  * state buttons.  It is assumed the selector will have a custom texture area as it will need
  * to be offset for every click, so the long-form constructor is the only one available here.  Note that
  * the text passed-in will be rendered below the selector rather than at the center like buttons.
- * Additional labels may be desired should more descriptions be needed.
+ * Additional labels may be used should more descriptions be needed.
  *
  * @author don_bruce
  */

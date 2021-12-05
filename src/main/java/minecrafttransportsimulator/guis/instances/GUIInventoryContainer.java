@@ -2,8 +2,8 @@ package minecrafttransportsimulator.guis.instances;
 
 import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
+import minecrafttransportsimulator.guis.components.GUIComponentCutout;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
-import minecrafttransportsimulator.mcinterface.InterfaceGUI;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketPlayerItemTransfer;
 import net.minecraft.item.ItemStack;
@@ -20,6 +20,7 @@ public class GUIInventoryContainer extends AGUIInventory{
 	//GUIs components created at opening.
 	private GUIComponentButton priorRowButton;
 	private GUIComponentButton nextRowButton;
+	private GUIComponentCutout sliderCutout;
 	private final int maxRowIncrements;
 	
 	private final EntityInventoryContainer inventory;
@@ -37,45 +38,27 @@ public class GUIInventoryContainer extends AGUIInventory{
 	public void setupComponents(int guiLeft, int guiTop){
 		super.setupComponents(guiLeft, guiTop);
 		
-		//Create the slider.  This is a button, but doesn't do anything.
+		//Make a slider if we need to show extra rows.
 		if(maxRowIncrements > 0){
 			//Create the prior and next row buttons.
-			addButton(priorRowButton = new GUIComponentButton(guiLeft + 174, guiTop + 11, 12, "", 7, true, 12, 7, 220, 0, getTextureWidth(), getTextureHeight()){
+			addButton(priorRowButton = new GUIComponentButton(guiLeft + 174, guiTop + 11, 12, 7, 220, 0, 12, 7){
 				@Override
 				public void onClicked(){
 					--rowOffset;
 				}
 			});
-			addButton(nextRowButton = new GUIComponentButton(guiLeft + 174, guiTop + 112, 12, "", 7, true, 12, 7, 232, 0, getTextureWidth(), getTextureHeight()){
+			addButton(nextRowButton = new GUIComponentButton(guiLeft + 174, guiTop + 112, 12, 7, 232, 0, 12, 7){
 				@Override
 				public void onClicked(){
 					++rowOffset;
 				}
 			});
-		
-			GUIComponentButton sliderButton;
-			addButton(sliderButton = new GUIComponentButton(guiLeft + 174, guiTop + 21, 12, "", 15, true, 12, 15, 244, 0, getTextureWidth(), getTextureHeight()){
-				@Override
-				public void onClicked(){}
-				
-				@Override
-				public void renderButton(int mouseX, int mouseY){
-					//Don't render the normal button way. The slider isn't a button.
-					//First render the slider box.
-					int sliderBoxWidth = 14;
-					int sliderBoxHeight = 90;
-					InterfaceGUI.renderSheetTexture(guiLeft + 173, guiTop + 20, sliderBoxWidth, sliderBoxHeight, 242, 45, 242 + sliderBoxWidth, 45 + sliderBoxHeight, getTextureWidth(), getTextureHeight());
-					
-					//Now render the slider itself.
-					//Slider goes down 73 pixels to bottom.
-					int yOffset = 73*rowOffset/maxRowIncrements;
-					int textureUStart = buttonSectionHeightOffset + 1*buttonSectionHeight;
-					
-					//Render slider.
-					InterfaceGUI.renderSheetTexture(x, y + yOffset, width, height, buttonSectionWidthOffset, textureUStart, buttonSectionWidthOffset + width, textureUStart + buttonSectionHeight, getTextureWidth(), getTextureHeight());
-			    }
-			});
-			sliderButton.enabled = false;
+			
+			//Add the slider box.  This is static and always rendered.
+			addCutout(new GUIComponentCutout(guiLeft + 173, guiTop + 20, 14, 90, 242, 45));
+			
+			//Now add the slider.
+			addCutout(sliderCutout = new GUIComponentCutout(guiLeft + 174, guiTop + 21, 12, 15, 244, 15));
 		}
 		
 		//Create all inventory slots.  This is variable based on the size of the inventory, and can result in multiple pages.
@@ -102,10 +85,11 @@ public class GUIInventoryContainer extends AGUIInventory{
 	@Override
 	public void setStates(){
 		super.setStates();
-		//Set next and prior row button states, if we have scrolling.
+		//Set slider, next, and prior row button states, if we have scrolling.
 		if(maxRowIncrements > 0){
 			priorRowButton.enabled = rowOffset > 0;
 			nextRowButton.enabled = rowOffset < maxRowIncrements;
+			sliderCutout.offsetY = 73*rowOffset/maxRowIncrements;
 		}
 		
 		//Set other item icons to other inventory.

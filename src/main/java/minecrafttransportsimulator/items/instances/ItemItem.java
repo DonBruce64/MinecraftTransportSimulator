@@ -21,6 +21,7 @@ import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.components.IItemFood;
 import minecrafttransportsimulator.items.components.IItemVehicleInteractable;
 import minecrafttransportsimulator.jsondefs.JSONItem;
+import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -34,7 +35,6 @@ import minecrafttransportsimulator.packets.instances.PacketGUIRequest;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine;
 import minecrafttransportsimulator.packets.instances.PacketPartInteractable;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
-import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.item.ItemStack;
 
@@ -379,34 +379,5 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 	@Override
 	public List<JSONPotionEffect> getEffects(){
 		return definition.food.effects;
-	}
-	
-	public static enum ItemComponentType{
-		@JSONDescription("Creates an item with no functionality.")
-		NONE,
-		@JSONDescription("Creates a booklet, which is a book-like item.")
-		BOOKLET,
-		@JSONDescription("Creates an item that can be eaten.")
-		FOOD,
-		@JSONDescription("Creates an item that can be used as a weapon.")
-		WEAPON,
-		@JSONDescription("Creates an item that works as a part scanner.")
-		SCANNER,
-		@JSONDescription("Creates an item that works as a wrench.")
-		WRENCH,
-		@JSONDescription("Creates an item that works as a paint gun.")
-		PAINT_GUN,
-		@JSONDescription("Creates an item that works as a key.")
-		KEY,
-		@JSONDescription("Creates an item that works as a ticket.")
-		TICKET,
-		@JSONDescription("Creates an item that works as a fuel hose.")
-		FUEL_HOSE,
-		@JSONDescription("Creates an item that works as jumper cables.")
-		JUMPER_CABLES,
-		@JSONDescription("Creates an item that works as a jumper pack.")
-		JUMPER_PACK,
-		@JSONDescription("Creates an item that works as a Y2K button.")
-		Y2K_BUTTON;
 	}
 }

@@ -6,6 +6,9 @@ import java.util.List;
 import java.util.Map;
 
 import minecrafttransportsimulator.MasterLoader;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.crafting.FurnaceRecipes;
+import net.minecraft.tileentity.TileEntityFurnace;
 import net.minecraft.util.text.translation.I18n;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
@@ -49,6 +52,22 @@ public class InterfaceCore{
 	 */
 	public static String getFluidName(String fluidID){
 		return FluidRegistry.getFluid(fluidID) != null ? new FluidStack(FluidRegistry.getFluid(fluidID), 1).getLocalizedName() : "INVALID";
+	}
+	
+	/**
+	 *  Returns the fuel amount (in ticks) for the item in the passed-in stack.
+	 *  Only returns the value for one item in the stack, not all items.
+	 */
+	public static int getFuelValue(ItemStack stack){
+		return TileEntityFurnace.getItemBurnTime(stack);
+	}
+	
+	/**
+	 *  Returns the item that the passed-in item can be smelted to make, or an empty stack
+	 *  if the passed-in item cannot be smelted.
+	 */
+	public static ItemStack getSmeltedItem(ItemStack stack){
+		return FurnaceRecipes.instance().getSmeltingResult(stack);
 	}
 	
 	/**

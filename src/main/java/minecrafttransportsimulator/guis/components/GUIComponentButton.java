@@ -16,60 +16,50 @@ import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
  *
  * @author don_bruce
  */
-public abstract class GUIComponentButton{
-	private static final int DEFAULT_TEXTURE_WIDTH = 256;
-	private static final int DEFAULT_TEXTURE_HEIGHT = 256;
+public abstract class GUIComponentButton extends GUIComponentCutout{
 	private static final int DEFAULT_BUTTON_SECTION_WIDTH = 200;
 	private static final int DEFAULT_BUTTON_SECTION_HEIGHT = 20;
 	private static final int DEFAULT_BUTTON_SECTION_WIDTH_OFFSET = 0;
 	private static final int DEFAULT_BUTTON_SECTION_HEIGHT_OFFSET = 196;
 	public static final int ITEM_BUTTON_SIZE = 18;
 	
-	public final int x;
-	public final int y;
-	public final int width;
-	public final int height;
 	public final boolean centeredText;
-	public final int buttonSectionWidth;
-	public final int buttonSectionHeight;
-	public final int buttonSectionWidthOffset;
-	public final int buttonSectionHeightOffset;
-	public final int textureWidth;
-	public final int textureHeight;
 	
-	public boolean visible = true;
 	public boolean enabled = true;
 	public String text;
+	public final ColorRGB textColor;
 	
-	/**A Simple button with a set height of 20**/
-	public GUIComponentButton(int x, int y, int width, String text){
-		this(x, y, width, text, 20, true);
+	/**A Simple button with a rendered string in grey and center-aligned.**/
+	public GUIComponentButton(int x, int y, int width, int height, String text){
+		this(x, y, width, height, text, true, ColorRGB.DARK_GRAY, true);
 	}
 	
-	/**A button made to render with item slots.  Renders the set item size, and does not render with a texture.**/
+	/**A button made to render with item slots.  Renders the set item size, and renders the item slot texture off the "Inventory" gui.**/
 	public GUIComponentButton(int x, int y){
-		this(x, y, ITEM_BUTTON_SIZE, "", ITEM_BUTTON_SIZE, true, ITEM_BUTTON_SIZE, ITEM_BUTTON_SIZE, 194, 0, DEFAULT_TEXTURE_WIDTH, DEFAULT_TEXTURE_HEIGHT);
+		this(x, y, ITEM_BUTTON_SIZE, ITEM_BUTTON_SIZE, 194, 0, ITEM_BUTTON_SIZE, ITEM_BUTTON_SIZE);
 	}
 	
-	/**A complex button with a custom height and text alignment.**/
-	public GUIComponentButton(int x, int y, int width, String text, int height, boolean centeredText){
-		this(x, y, width, text, height, centeredText, DEFAULT_BUTTON_SECTION_WIDTH, DEFAULT_BUTTON_SECTION_HEIGHT, DEFAULT_BUTTON_SECTION_WIDTH_OFFSET, DEFAULT_BUTTON_SECTION_HEIGHT_OFFSET, DEFAULT_TEXTURE_WIDTH, DEFAULT_TEXTURE_HEIGHT);
+	/**A button without texture or text.  Useful when you want a button for something that needs to render as another component.**/
+	public GUIComponentButton(int x, int y, int width, int height){
+		this(x, y, width, height, "", true, ColorRGB.DARK_GRAY, 0, 0, 0, 0);
 	}
 	
-	/**A fully-customizable button with custom texture alignment.**/
-	public GUIComponentButton(int x, int y, int width, String text, int height, boolean centeredText, int buttonSectionWidth, int buttonSectionHeight, int buttonSectionWidthOffset, int buttonSectionHeightOffset, int textureWidth, int textureHeight){
-		this.x = x;
-		this.y = y;
-		this.width = width;
-		this.height = height;
+	/**A button made to render with custom button textures.  Does not render font, but does provide additional parameters for the size of the button.**/
+	public GUIComponentButton(int x, int y, int width, int height, int textureXOffset, int textureYOffset, int textureSectionWidth, int textureSectionHeight){
+		this(x, y, width, height, "", true, ColorRGB.DARK_GRAY, textureXOffset, textureYOffset, textureSectionWidth, textureSectionHeight);
+	}
+	
+	/**A complex button with custom height, text alignment, and text color.*/
+	public GUIComponentButton(int x, int y, int width, int height, String text, boolean centeredText, ColorRGB textColor, boolean renderBackground){
+		this(x, y, width, height, text, centeredText, textColor, DEFAULT_BUTTON_SECTION_WIDTH_OFFSET, DEFAULT_BUTTON_SECTION_HEIGHT_OFFSET, renderBackground ? DEFAULT_BUTTON_SECTION_WIDTH : 0, renderBackground ? DEFAULT_BUTTON_SECTION_HEIGHT : 0);
+	}
+	
+	/**A fully-customizable button with custom texture alignment and font color.  Note that making the width or the height of the texture section 0 will result in no texture being rendered.**/
+	public GUIComponentButton(int x, int y, int width, int height, String text, boolean centeredText, ColorRGB textColor, int textureXOffset, int textureYOffset, int textureSectionWidth, int textureSectionHeight){
+		super(x, y, width, height, textureXOffset, textureYOffset, textureSectionWidth, textureSectionHeight);
 		this.text = text;
 		this.centeredText = centeredText;
-		this.buttonSectionWidth = buttonSectionWidth;
-		this.buttonSectionHeight = buttonSectionHeight;
-		this.buttonSectionWidthOffset = buttonSectionWidthOffset;
-		this.buttonSectionHeightOffset = buttonSectionHeightOffset;
-		this.textureWidth = textureWidth;
-		this.textureHeight = textureHeight;
+		this.textColor = textColor;
 	}
 	
 	/**
@@ -102,20 +92,22 @@ public abstract class GUIComponentButton{
 	 *  note that the text is NOT rendered here; that is done in its own method as rendering text would 
 	 *  require a texture switch in this method.
 	 */
-    public void renderButton(int mouseX, int mouseY){
-    	if(visible){
+	@Override
+    public void renderTexture(int mouseX, int mouseY, int textureWidth, int textureHeight){
+    	if(visible && textureSectionWidth != 0 && textureSectionHeight != 0){
 			int textureUStart;
     		if(enabled){
 				if(mouseX >= x && mouseY >= y && mouseX < x + width && mouseY < y + height){
-					textureUStart = buttonSectionHeightOffset + 2*buttonSectionHeight;//Highlighted
+					textureUStart = textureYOffset + 2*textureSectionHeight;//Highlighted
 				}else{
-					textureUStart = buttonSectionHeightOffset + 1*buttonSectionHeight;//Normal
+					textureUStart = textureYOffset + 1*textureSectionHeight;//Normal
 				}
 			}else{
-				textureUStart = buttonSectionHeightOffset;//Disabled
+				textureUStart = textureYOffset;//Disabled
 			}
-    		InterfaceGUI.renderSheetTexture(x, y, width/2, height, buttonSectionWidthOffset, textureUStart, buttonSectionWidthOffset + width/2, textureUStart + buttonSectionHeight, textureWidth, textureHeight);
-    		InterfaceGUI.renderSheetTexture(x + width/2, y, width/2, height, buttonSectionWidthOffset + buttonSectionWidth - width/2, textureUStart, buttonSectionWidthOffset + buttonSectionWidth, textureUStart + buttonSectionHeight, textureWidth, textureHeight);
+    		//Render the left and right sides of the texture, but cut the middle so they don't squash pixels.
+    		InterfaceGUI.renderSheetTexture(x, y, width/2, height, textureXOffset, textureUStart, textureXOffset + width/2, textureUStart + textureSectionHeight, textureWidth, textureHeight);
+    		InterfaceGUI.renderSheetTexture(x + width/2, y, width/2, height, textureXOffset + textureSectionWidth - width/2, textureUStart, textureXOffset + textureSectionWidth, textureUStart + textureSectionHeight, textureWidth, textureHeight);
 		}
     }
     
@@ -125,8 +117,8 @@ public abstract class GUIComponentButton{
 	 *  rendering with respect to OpenGL states.
 	 */
     public void renderText(){
-    	if(visible){
-    		RenderText.draw2DText(text, null, centeredText ? x + width/2 : x, y + (height-8)/2, ColorRGB.DARK_GRAY, centeredText ? TextAlignment.CENTERED : TextAlignment.LEFT_ALIGNED, 1.0F, false, 0);
+    	if(visible && !text.isEmpty()){
+    		RenderText.draw2DText(text, null, centeredText ? x + width/2 : x, y + (height-8)/2, textColor, centeredText ? TextAlignment.CENTERED : TextAlignment.LEFT_ALIGNED, 1.0F, false, 0);
     	}
     }
     

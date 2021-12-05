@@ -110,7 +110,7 @@ public class GUIPartBench extends AGUIBase{
 	@Override
 	public void setupComponents(int guiLeft, int guiTop){	
 		//Create pack navigation section.
-		addButton(prevPackButton = new GUIComponentButton(guiLeft + 17, guiTop + 11, 20, "<", 20, true, 20, 20, 0, 196, getTextureWidth(), getTextureHeight()){
+		addButton(prevPackButton = new GUIComponentButton(guiLeft + 17, guiTop + 11, 20, 20, "<", true, ColorRGB.DARK_GRAY, 0, 196, 20, 20){
 			@Override
 			public void onClicked(){
 				currentPack = prevPack;
@@ -118,7 +118,7 @@ public class GUIPartBench extends AGUIBase{
 				updateNames();
 			}
 		});
-		addButton(nextPackButton = new GUIComponentButton(guiLeft + 243, guiTop + 11, 20, ">", 20, true, 20, 20, 0, 196, getTextureWidth(), getTextureHeight()){
+		addButton(nextPackButton = new GUIComponentButton(guiLeft + 243, guiTop + 11, 20, 20, ">", true, ColorRGB.DARK_GRAY, 0, 196, 20, 20){
 			@Override
 			public void onClicked(){
 				currentPack = nextPack;
@@ -131,14 +131,14 @@ public class GUIPartBench extends AGUIBase{
 		
 		
 		//Create part navigation section.
-		addButton(prevPartButton = new GUIComponentButton(prevPackButton.x, prevPackButton.y + prevPackButton.height, 20, "<", 20, true, 20, 20, 0, 196, getTextureWidth(), getTextureHeight()){
+		addButton(prevPartButton = new GUIComponentButton(prevPackButton.x, prevPackButton.y + prevPackButton.height, 20, 20, "<", true, ColorRGB.DARK_GRAY, 0, 196, 20, 20){
 			@Override
 			public void onClicked(){
 				currentItem = prevItem;
 				updateNames();
 			}
 		});
-		addButton(nextPartButton = new GUIComponentButton(nextPackButton.x, nextPackButton.y + nextPackButton.height, 20, ">", 20, true, 20, 20, 0, 196, getTextureWidth(), getTextureHeight()){
+		addButton(nextPartButton = new GUIComponentButton(nextPackButton.x, nextPackButton.y + nextPackButton.height, 20, 20, ">", true, ColorRGB.DARK_GRAY, 0, 196, 20, 20){
 			@Override
 			public void onClicked(){
 				currentItem = nextItem;
@@ -151,14 +151,14 @@ public class GUIPartBench extends AGUIBase{
 		
 		
 		//Create color navigation section.
-		addButton(prevColorButton = new GUIComponentButton(guiLeft + 175, guiTop + 131, 20, "<", 15, true, 20, 20, 0, 196, getTextureWidth(), getTextureHeight()){
+		addButton(prevColorButton = new GUIComponentButton(guiLeft + 175, guiTop + 131, 20, 15, "<", true, ColorRGB.DARK_GRAY, 0, 196, 20, 20){
 			@Override
 			public void onClicked(){
 				currentItem = prevSubItem;
 				updateNames();
 			}
 		});
-		addButton(nextColorButton = new GUIComponentButton(guiLeft + 245, guiTop + 131, 20, ">", 15, true, 20, 20, 0, 196, getTextureWidth(), getTextureHeight()){
+		addButton(nextColorButton = new GUIComponentButton(guiLeft + 245, guiTop + 131, 20, 15, ">", true, ColorRGB.DARK_GRAY, 0, 196, 20, 20){
 			@Override
 			public void onClicked(){
 				currentItem = nextSubItem;
@@ -184,7 +184,7 @@ public class GUIPartBench extends AGUIBase{
 		
 		
 		//Create the info switching button.
-		addButton(switchInfoButton = new GUIComponentButton(guiLeft + 147, guiTop + 159, 20, "?", 20, true, 20, 20, 0, 196, getTextureWidth(), getTextureHeight()){
+		addButton(switchInfoButton = new GUIComponentButton(guiLeft + 147, guiTop + 159, 20, 20, "?", true, ColorRGB.DARK_GRAY, 0, 196, 20, 20){
 			@Override
 			public void onClicked(){
 				displayVehicleInfo = !displayVehicleInfo;
@@ -193,7 +193,7 @@ public class GUIPartBench extends AGUIBase{
 				
 		
 		//Create the confirm button.
-		addButton(confirmButton = new GUIComponentButton(guiLeft + 211, guiTop + 156, 20, "", 20, true, 20, 20, 20, 196, getTextureWidth(), getTextureHeight()){
+		addButton(confirmButton = new GUIComponentButton(guiLeft + 211, guiTop + 156, 20, 20, 20, 196, 20, 20){
 			@Override
 			public void onClicked(){
 				InterfacePacket.sendToServer(new PacketPlayerCraftItem(player, currentItem));

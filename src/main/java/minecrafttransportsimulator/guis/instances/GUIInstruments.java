@@ -14,6 +14,7 @@ import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
+import minecrafttransportsimulator.guis.components.GUIComponentCutout;
 import minecrafttransportsimulator.guis.components.GUIComponentInstrument;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
@@ -48,23 +49,22 @@ public class GUIInstruments extends AGUIBase{
 	private final TreeMap<String, List<ItemInstrument>> playerInstruments = new TreeMap<String, List<ItemInstrument>>();
 	
 	//Runtime variables.
-	private TexturelessButton prevPackButton;
-	private TexturelessButton nextPackButton;
-	private TexturelessButton clearButton;
+	private GUIComponentButton prevPackButton;
+	private GUIComponentButton nextPackButton;
+	private GUIComponentButton clearButton;
 	private String currentPack;
 	private GUIComponentLabel packName;
 	
 	private boolean hudSelected = true;
-	private TexturelessButton hudButton;
-	private TexturelessButton panelButton;
+	private GUIComponentButton hudButton;
+	private GUIComponentButton panelButton;
 	private GUIComponentLabel infoLabel;
 	private AEntityD_Interactable<?> selectedEntity;
 	private JSONInstrumentDefinition selectedInstrumentDefinition;
 	
-	private final List<TexturelessButton> instrumentSlots = new ArrayList<TexturelessButton>();
+	private final List<GUIComponentButton> instrumentSlots = new ArrayList<GUIComponentButton>();
 	private final List<GUIComponentItem> instrumentSlotIcons = new ArrayList<GUIComponentItem>();
-	private final Map<AEntityD_Interactable<?>, List<TexturelessButton>> entityInstrumentSlots = new HashMap<AEntityD_Interactable<?>, List<TexturelessButton>>();
-	private final Map<AEntityD_Interactable<?>, List<GUIComponentInstrument>> entityInstruments = new HashMap<AEntityD_Interactable<?>, List<GUIComponentInstrument>>();
+	private final Map<AEntityD_Interactable<?>, List<InstrumentSlotBlock>> entityInstrumentBlocks = new HashMap<AEntityD_Interactable<?>, List<InstrumentSlotBlock>>();
 	
 	public GUIInstruments(EntityVehicleF_Physics vehicle){
 		this.vehicle = vehicle;
@@ -93,13 +93,13 @@ public class GUIInstruments extends AGUIBase{
 	@Override
 	public void setupComponents(int guiLeft, int guiTop){	
 		//Create the prior and next pack buttons.
-		addButton(prevPackButton = new TexturelessButton(guiLeft, guiTop - 74, 20, "<"){
+		addButton(prevPackButton = new GUIComponentButton(guiLeft, guiTop - 74, 20, 20, "<", true, ColorRGB.WHITE, false){
 			@Override
 			public void onClicked(){
 				currentPack = playerInstruments.lowerKey(currentPack);
 			}
 		});
-		addButton(nextPackButton = new TexturelessButton(guiLeft, guiTop - 52, 20, ">"){
+		addButton(nextPackButton = new GUIComponentButton(guiLeft, guiTop - 52, 20, 20, ">", true, ColorRGB.WHITE, false){
 			@Override
 			public void onClicked(){
 				currentPack = playerInstruments.higherKey(currentPack);
@@ -113,18 +113,12 @@ public class GUIInstruments extends AGUIBase{
 		final int instrumentButtonSize = 22;
 		if(currentPack != null){
 			for(byte i=0; i<30; ++i){				
-				TexturelessButton instrumentButton = new TexturelessButton(guiLeft + 23 + instrumentButtonSize*(i/2), guiTop - 75 + instrumentButtonSize*(i%2), instrumentButtonSize, "", instrumentButtonSize, false){
+				GUIComponentButton instrumentButton = new GUIComponentButton(guiLeft + 23 + instrumentButtonSize*(i/2), guiTop - 75 + instrumentButtonSize*(i%2)){
 					@Override
 					public void onClicked(){
 						InterfacePacket.sendToServer(new PacketEntityInstrumentChange(selectedEntity, player, selectedEntity.definition.instruments.indexOf(selectedInstrumentDefinition), playerInstruments.get(currentPack).get(instrumentSlots.indexOf(this))));
 						selectedEntity = null;
 						selectedInstrumentDefinition = null;
-					}
-					
-					@Override
-					public void renderButton(int mouseX, int mouseY){
-						super.renderButton(mouseX, mouseY);
-						//Don't render anything.  This is done by the icon object.
 					}
 				};
 				addButton(instrumentButton);
@@ -141,7 +135,7 @@ public class GUIInstruments extends AGUIBase{
 		addLabel(packName = new GUIComponentLabel(guiLeft + 40, guiTop - 85, ColorRGB.WHITE, ""));
 
 		//Create the clear button.
-		addButton(clearButton = new TexturelessButton(guiLeft + getWidth() - 2*instrumentButtonSize, guiTop - 75, 2*instrumentButtonSize, InterfaceCore.translate("gui.instruments.clear"), 2*instrumentButtonSize, true){
+		addButton(clearButton = new GUIComponentButton(guiLeft + getWidth() - 2*instrumentButtonSize, guiTop - 75, 2*instrumentButtonSize, 2*instrumentButtonSize, InterfaceCore.translate("gui.instruments.clear"), true, ColorRGB.WHITE, false){
 			@Override
 			public void onClicked(){
 				InterfacePacket.sendToServer(new PacketEntityInstrumentChange(selectedEntity, player, selectedEntity.definition.instruments.indexOf(selectedInstrumentDefinition), null));
@@ -151,7 +145,7 @@ public class GUIInstruments extends AGUIBase{
 		});
 		
 		//Create the HUD selection button.
-		addButton(hudButton = new TexturelessButton(guiLeft, guiTop - 20, 100, InterfaceCore.translate("gui.instruments.main")){
+		addButton(hudButton = new GUIComponentButton(guiLeft, guiTop - 20, 100, 20, InterfaceCore.translate("gui.instruments.main"), true, ColorRGB.WHITE, false){
 			@Override
 			public void onClicked(){
 				hudSelected = true;
@@ -163,7 +157,7 @@ public class GUIInstruments extends AGUIBase{
 		});
 		
 		//Create the panel selection button.
-		addButton(panelButton = new TexturelessButton(guiLeft + getWidth() - 100, guiTop - 20, 100, InterfaceCore.translate("gui.instruments.control")){
+		addButton(panelButton = new GUIComponentButton(guiLeft + getWidth() - 100, guiTop - 20, 100, 20, InterfaceCore.translate("gui.instruments.control"), true, ColorRGB.WHITE, false){
 			@Override
 			public void onClicked(){
 				hudSelected = false;
@@ -175,7 +169,7 @@ public class GUIInstruments extends AGUIBase{
 		});
 		
 		//Create the info label.
-		addLabel(infoLabel = new GUIComponentLabel(guiLeft + getWidth()/2, guiTop - 20, ColorRGB.WHITE, "", TextAlignment.CENTERED, 1.0F, 150));
+		addLabel(infoLabel = new GUIComponentLabel(guiLeft + getWidth()/2, guiTop - 20, ColorRGB.WHITE, "", TextAlignment.CENTERED, 1.0F, 180));
 		
 		//Get all entities with instruments and adds them to the list. definitions, and add them to a map-list.
 		//These come from the vehicle and all parts.
@@ -191,19 +185,17 @@ public class GUIInstruments extends AGUIBase{
 		
 		//Create the slots.
 		//We need one for every instrument, present or not, as we can click on any instrument.
-		entityInstrumentSlots.clear();
+		
+		
+		//Create the vehicle instruments.
+		//We need one for every instrument present on every entity on the vehicle..
+		//However, we create one for every possible instrument and render depending if it exists or not.
+		//This allows us to render instruments as they are added or removed.
+		entityInstrumentBlocks.clear();
 		for(AEntityD_Interactable<?> entity : entitiesWithInstruments){
-			List<TexturelessButton> entityInstrumentButtons = new ArrayList<TexturelessButton>();
 			for(JSONInstrumentDefinition packInstrument : entity.definition.instruments){
-				int instrumentRadius = (int) (64F*packInstrument.hudScale);
 				if(hudSelected ^ packInstrument.placeOnPanel){
-					TexturelessButton instrumentSlotButton = new TexturelessButton(guiLeft + packInstrument.hudX - instrumentRadius, guiTop + packInstrument.hudY - instrumentRadius, 2*instrumentRadius, "", 2*instrumentRadius, false){
-						@Override
-						public void onClicked(){
-							selectedEntity = entity;
-							selectedInstrumentDefinition = packInstrument;
-						}
-						
+					InstrumentSlotBlock block = new InstrumentSlotBlock(guiLeft, guiTop, entity, packInstrument);					
 						@Override
 						public void renderButton(int mouseX, int mouseY){
 							//Don't render the button texture.  Instead, render a blank square if the instrument doesn't exist.
@@ -231,37 +223,6 @@ public class GUIInstruments extends AGUIBase{
 			}
 			entityInstrumentSlots.put(entity, entityInstrumentButtons);
 		}
-		
-		//Create the vehicle instruments.
-		//We need one for every instrument present on every entity on the vehicle..
-		//However, we create one for every possible instrument and render depending if it exists or not.
-		//This allows us to render instruments as they are added or removed.
-		entityInstruments.clear();
-		for(AEntityD_Interactable<?> entity : entitiesWithInstruments){
-			List<GUIComponentInstrument> entityInstrumentIcons = new ArrayList<GUIComponentInstrument>();
-			for(int i=0; i<entity.definition.instruments.size(); ++i){
-				JSONInstrumentDefinition packInstrument = entity.definition.instruments.get(i);
-				if(hudSelected ^ packInstrument.placeOnPanel){
-					GUIComponentInstrument vehicleInstrument = new GUIComponentInstrument(guiLeft, guiTop, i, entity){
-						@Override
-						public void renderInstrument(boolean blendingEnabled, float partialTicks){
-							//Only render this instrument if it exits in the entity.
-							if(entity.instruments.containsKey(instrumentPackIndex)){
-								GL11.glPushMatrix();
-								GL11.glTranslated(x, y, 0);
-								//Need to scale y by -1 due to inverse coordinates.
-								GL11.glScalef(1.0F, -1.0F, 1.0F);
-								RenderInstrument.drawInstrument(entity.instruments.get(instrumentPackIndex), packInstrument.optionalPartNumber, entity, packInstrument.hudScale, blendingEnabled, partialTicks);
-								GL11.glPopMatrix();
-							}
-						}
-					};
-					addInstrument(vehicleInstrument);
-					entityInstrumentIcons.add(vehicleInstrument);
-				}
-			}
-			entityInstruments.put(entity, entityInstrumentIcons);
-		}
 	}
 
 	@Override
@@ -285,6 +246,21 @@ public class GUIInstruments extends AGUIBase{
 			}
 			packName.text = PackParserSystem.getPackConfiguration(currentPack).packName;
 		}
+		
+		//Set entity instrument states.
+		for(AEntityD_Interactable<?> entity : entityInstrumentBlocks.keySet()){
+			for(InstrumentSlotBlock block : entityInstrumentBlocks.get(entity)){
+				block.instrument.visible = entity.instruments.containsKey(block.instrument.instrumentPackIndex);
+				if(block.instrument.visible){
+					block.instrument.instrument = entity.instruments.get(block.instrument.instrumentPackIndex);
+				}
+				block.blank.visible = !entity.instruments.containsKey(block.instrument.instrumentPackIndex);
+				block.selectorOverlay.visible = entity.equals(selectedEntity) && packInstrument.equals(selectedInstrumentDefinition)){
+					int selectedInstrumentRadius = (int) (64F*packInstrument.hudScale);
+					if(inClockPeriod(40, 20)){
+			}
+		}
+			
 		
 		//Set buttons depending on which vehicle section is selected.
 		hudButton.enabled = !hudSelected;
@@ -320,47 +296,24 @@ public class GUIInstruments extends AGUIBase{
 		return hudSelected ? hudGUI.getHeight() : panelGUI.getHeight();
 	}
 	
-	@Override
-	public boolean renderFlushBottom(){
-		return true;
-	}
-	
-	@Override
-	public String getTexture(){
-		return hudSelected ? hudGUI.getTexture() : panelGUI.getTexture();
-	}
-	
-	/**Custom implementation of the button class that doesn't use textures for the button rendering.
-	 * This is needed for this GUI as we bind the panel texture instead, which would make the buttons
-	 * render wrongly.
-	 *
-	 * @author don_bruce
-	 */
-	private abstract class TexturelessButton extends GUIComponentButton{
-
-		public TexturelessButton(int x, int y, int width, String text){
-			super(x, y, width, text);
-		}
+	private class InstrumentSlotBlock{
+		private final GUIComponentInstrument instrument;
+		private final GUIComponentButton button;
+		private final GUIComponentCutout selectorOverlay;
+		private final GUIComponentCutout blank;
 		
-		public TexturelessButton(int x, int y, int width, String text, int height, boolean centeredText){
-			super(x, y, width, text, height, centeredText);
-		}
-
-		@Override
-		public void renderButton(int mouseX, int mouseY){
-			//Don't render the texture as it would be bound wrong.
-			//Instead, render just a plain background depending on state.
-			if(visible){
-				if(enabled){
-					if(mouseX >= x && mouseY >= y && mouseX < x + width && mouseY < y + height){
-						InterfaceGUI.renderRectangle(this.x, this.y, this.width, this.height, ColorRGB.LIGHT_GRAY);
-					}else{
-						InterfaceGUI.renderRectangle(this.x, this.y, this.width, this.height, ColorRGB.GRAY);
-					}
-				}else{
-					InterfaceGUI.renderRectangle(this.x, this.y, this.width, this.height, ColorRGB.BLACK);
+		private InstrumentSlotBlock(int guiLeft, int guiTop, AEntityD_Interactable<?> entity, JSONInstrumentDefinition packInstrument){
+			int instrumentRadius = (int) (64F*packInstrument.hudScale);
+			this.instrument = new GUIComponentInstrument(guiLeft, guiTop, entity.definition.instruments.indexOf(packInstrument), entity);
+			this.button = new GUIComponentButton(guiLeft + packInstrument.hudX - instrumentRadius, guiTop + packInstrument.hudY - instrumentRadius, 2*instrumentRadius, 2*instrumentRadius){
+				@Override
+				public void onClicked(){
+					selectedEntity = entity;
+					selectedInstrumentDefinition = packInstrument;
 				}
-			}
+			};
+			this.selectorOverlay = new GUIComponentCutout(guiLeft + packInstrument.hudX - instrumentRadius, guiTop + packInstrument.hudY - instrumentRadius, 2*instrumentRadius, 2*instrumentRadius, 448, 64, 2*instrumentRadius, 2*instrumentRadius);
+			this.blank = new GUIComponentCutout(guiLeft + packInstrument.hudX - instrumentRadius, guiTop + packInstrument.hudY - instrumentRadius, 2*instrumentRadius, 2*instrumentRadius, 448, 0, 2*instrumentRadius, 2*instrumentRadius);
 		}
 	}
 }

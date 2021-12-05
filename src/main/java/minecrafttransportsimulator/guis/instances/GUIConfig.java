@@ -89,7 +89,7 @@ public class GUIConfig extends AGUIBase{
 	@Override
 	public void setupComponents(int guiLeft, int guiTop){
 		//Global header buttons.
-		addButton(renderConfigScreenButton = new GUIComponentButton(guiLeft + 0, guiTop - 20, 85, InterfaceCore.translate("gui.config.header.config.rendering")){
+		addButton(renderConfigScreenButton = new GUIComponentButton(guiLeft + 0, guiTop - 20, 85, 20, InterfaceCore.translate("gui.config.header.config.rendering")){
 			@Override
 			public void onClicked(){
 				configuringControls = false;
@@ -101,7 +101,7 @@ public class GUIConfig extends AGUIBase{
 				calibrating = false;
 			}
 		});
-		addButton(controlConfigScreenButton = new GUIComponentButton(guiLeft + 85, guiTop - 20, 85, InterfaceCore.translate("gui.config.header.config.controls")){
+		addButton(controlConfigScreenButton = new GUIComponentButton(guiLeft + 85, guiTop - 20, 85, 20, InterfaceCore.translate("gui.config.header.config.controls")){
 			@Override
 			public void onClicked(){
 				configuringControls = false;
@@ -113,7 +113,7 @@ public class GUIConfig extends AGUIBase{
 				calibrating = false;
 			}
 		});
-		addButton(controlScreenButton = new GUIComponentButton(guiLeft + 171, guiTop - 20, 85, InterfaceCore.translate("gui.config.header.controls")){@Override
+		addButton(controlScreenButton = new GUIComponentButton(guiLeft + 171, guiTop - 20, 85, 20, InterfaceCore.translate("gui.config.header.controls")){@Override
 		public void onClicked(){configuringControls = true;}});
 		
 		
@@ -128,7 +128,7 @@ public class GUIConfig extends AGUIBase{
 		vehicleSelectionButtons.clear();
 		addLabel(vehicleSelectionFaultLabel = new GUIComponentLabel(guiLeft+10, guiTop+90, ColorRGB.BLACK, "", TextAlignment.LEFT_ALIGNED, 0.8F, 240));
 		for(String vehicleType : vehicleTypes){
-			GUIComponentButton buttonKeyboard = new GUIComponentButton(guiLeft + 68, guiTop + 30 + 20*vehicleSelectionButtons.size(), 120, InterfaceCore.translate("gui.config.controls." + vehicleType + ".keyboard")){
+			GUIComponentButton buttonKeyboard = new GUIComponentButton(guiLeft + 68, guiTop + 30 + 20*vehicleSelectionButtons.size(), 120, 20, InterfaceCore.translate("gui.config.controls." + vehicleType + ".keyboard")){
 				@Override
 				public void onClicked(){
 					String lookupString = vehicleSelectionButtons.get(this);
@@ -146,7 +146,7 @@ public class GUIConfig extends AGUIBase{
 		
 		//Now add joystick buttons.
 		for(String vehicleType : vehicleTypes){
-			GUIComponentButton buttonJoystick = new GUIComponentButton(guiLeft + 68, guiTop + 70 + 20*vehicleSelectionButtons.size(), 120, InterfaceCore.translate("gui.config.controls." + vehicleType + ".joystick")){
+			GUIComponentButton buttonJoystick = new GUIComponentButton(guiLeft + 68, guiTop + 70 + 20*vehicleSelectionButtons.size(), 120, 20, InterfaceCore.translate("gui.config.controls." + vehicleType + ".joystick")){
 				@Override
 				public void onClicked(){
 					String lookupString = vehicleSelectionButtons.get(this);
@@ -208,7 +208,7 @@ public class GUIConfig extends AGUIBase{
 			}
 			keyboardLabels.put(vehicleType, dynamicLabels);
 		}
-		addButton(finishKeyboardBindingsButton = new GUIComponentButton(guiLeft + 180, guiTop + 150, 50, InterfaceCore.translate("gui.config.controls.confirm")){@Override
+		addButton(finishKeyboardBindingsButton = new GUIComponentButton(guiLeft + 180, guiTop + 150, 50, 20, InterfaceCore.translate("gui.config.controls.confirm")){@Override
 		public void onClicked(){vehicleConfiguring = "";}});
 		
 		
@@ -216,7 +216,7 @@ public class GUIConfig extends AGUIBase{
 		//Joystick selection buttons and text.
 		joystickSelectionButtons.clear();
 		for(String joystick : InterfaceInput.getAllJoysticks()){
-			GUIComponentButton button = new GUIComponentButton(guiLeft + 10, guiTop + 40 + 20*joystickSelectionButtons.size(), 235, String.format(" %-30.28s", joystick), 20, false){@Override
+			GUIComponentButton button = new GUIComponentButton(guiLeft + 10, guiTop + 40 + 20*joystickSelectionButtons.size(), 235, 20, String.format(" %-30.28s", joystick), false){@Override
 			public void onClicked(){
 				selectedJoystick = joystickSelectionButtons.get(this);
 				selectedJoystickComponentCount = InterfaceInput.getJoystickComponentCount(selectedJoystick);
@@ -240,13 +240,13 @@ public class GUIConfig extends AGUIBase{
 			joystickComponentSelectionButtons.add(button);
 			addButton(button);
 		}
-		addButton(componentListUpButton = new GUIComponentButton(guiLeft + 225, guiTop + 45, 20, "/\\"){@Override
+		addButton(componentListUpButton = new GUIComponentButton(guiLeft + 225, guiTop + 45, 20, 20, "/\\"){@Override
 		public void onClicked(){scrollSpot -= 9;}});
-		addButton(componentListDownButton = new GUIComponentButton(guiLeft + 225, guiTop + 155, 20, "\\/"){@Override
+		addButton(componentListDownButton = new GUIComponentButton(guiLeft + 225, guiTop + 155, 20, 20, "\\/"){@Override
 		public void onClicked(){scrollSpot += 9;}});
-		addButton(deadzone_lessButton = new GUIComponentButton(guiLeft + 100, guiTop + 10, 20, "<"){@Override
+		addButton(deadzone_lessButton = new GUIComponentButton(guiLeft + 100, guiTop + 10, 20, 20, "<"){@Override
 		public void onClicked(){ConfigSystem.configObject.clientControls.joystickDeadZone.value = ((ConfigSystem.configObject.clientControls.joystickDeadZone.value*100 - 1)/100F);}});
-		addButton(deadzone_moreButton = new GUIComponentButton(guiLeft + 220, guiTop + 10, 20, ">"){@Override
+		addButton(deadzone_moreButton = new GUIComponentButton(guiLeft + 220, guiTop + 10, 20, 20, ">"){@Override
 		public void onClicked(){ConfigSystem.configObject.clientControls.joystickDeadZone.value = ((ConfigSystem.configObject.clientControls.joystickDeadZone.value*100 + 1)/100F);}});
 		addTextBox(deadzone_text = new GUIComponentTextBox(guiLeft + 120, guiTop + 10, 100, ""));
 		
@@ -260,9 +260,9 @@ public class GUIConfig extends AGUIBase{
 		
 		//Joystick assignment buttons and text.
 		//Global buttons and labels for digital and analog.
-		addButton(cancelAssignmentButton = new GUIComponentButton(guiLeft + 125, guiTop + 160, 100, InterfaceCore.translate("gui.config.joystick.cancel")){@Override
+		addButton(cancelAssignmentButton = new GUIComponentButton(guiLeft + 125, guiTop + 160, 100, 20, InterfaceCore.translate("gui.config.joystick.cancel")){@Override
 		public void onClicked(){joystickComponentId = -1; calibrating = false;}});
-		addButton(clearAssignmentButton = new GUIComponentButton(guiLeft + 25, guiTop + 160, 100, InterfaceCore.translate("gui.config.joystick.clear")){
+		addButton(clearAssignmentButton = new GUIComponentButton(guiLeft + 25, guiTop + 160, 100, 20, InterfaceCore.translate("gui.config.joystick.clear")){
 			@Override
 			public void onClicked(){
 				for(ControlsJoystick joystickControl : ControlsJoystick.values()){
@@ -291,7 +291,7 @@ public class GUIConfig extends AGUIBase{
 			for(ControlsJoystick joystickControl : ControlsJoystick.values()){
 				if(joystickControl.systemName.startsWith(vehicleType)){
 					if(!joystickControl.isAxis){
-						GUIComponentButton button = new GUIComponentButton(guiLeft + 8 + leftOffsetDigital, guiTop + 20 + topOffsetDigital, 80, joystickControl.translatedName, 15, true){
+						GUIComponentButton button = new GUIComponentButton(guiLeft + 8 + leftOffsetDigital, guiTop + 20 + topOffsetDigital, 80, 15, joystickControl.translatedName){
 							@Override
 							public void onClicked(){
 								digitalAssignButtons.get(vehicleConfiguring).get(this).setControl(selectedJoystick, joystickComponentId);
@@ -302,7 +302,7 @@ public class GUIConfig extends AGUIBase{
 						addButton(button);
 						topOffsetDigital += button.height;
 					}else{
-						GUIComponentButton button = new GUIComponentButton(guiLeft + 85, guiTop + 40 + topOffsetAnalog, 80, joystickControl.translatedName, 20, true){
+						GUIComponentButton button = new GUIComponentButton(guiLeft + 85, guiTop + 40 + topOffsetAnalog, 80, 20, joystickControl.translatedName){
 							@Override
 							public void onClicked(){
 								controlCalibrating = analogAssignButtons.get(vehicleConfiguring).get(this);
@@ -328,7 +328,7 @@ public class GUIConfig extends AGUIBase{
 		
 		
 		//Analog calibration components.
-		addButton(confirmBoundsButton = new GUIComponentButton(guiLeft + 25, guiTop + 160, 100, InterfaceCore.translate("gui.config.joystick.confirm")){
+		addButton(confirmBoundsButton = new GUIComponentButton(guiLeft + 25, guiTop + 160, 100, 20, InterfaceCore.translate("gui.config.joystick.confirm")){
 			@Override
 			public void onClicked(){
 				boolean isInverted = invertAxisButton.text.contains(InterfaceCore.translate("gui.config.joystick.invert"));
@@ -337,7 +337,7 @@ public class GUIConfig extends AGUIBase{
 				calibrating = false;
 			}
 		});
-		addButton(invertAxisButton = new GUIComponentButton(guiLeft + 50, guiTop + 120, 150, InterfaceCore.translate("gui.config.joystick.axismode") + InterfaceCore.translate("gui.config.joystick.normal")){
+		addButton(invertAxisButton = new GUIComponentButton(guiLeft + 50, guiTop + 120, 150, 20, InterfaceCore.translate("gui.config.joystick.axismode") + InterfaceCore.translate("gui.config.joystick.normal")){
 			@Override
 			public void onClicked(){
 				if(text.contains(InterfaceCore.translate("gui.config.joystick.invert"))){
@@ -497,7 +497,7 @@ public class GUIConfig extends AGUIBase{
 				try{
 					JSONConfigEntry<?> configEntry = (JSONConfigEntry<?>) field.get(configObject);
 					if(configEntry.value.getClass().equals(Boolean.class)){
-						GUIComponentButton button = new GUIComponentButton(guiLeft + 85 + 120*(configButtons.size()%2), guiTop + 20 + 16*(configButtons.size()/2), 40, String.valueOf(configEntry.value), 16, true){
+						GUIComponentButton button = new GUIComponentButton(guiLeft + 85 + 120*(configButtons.size()%2), guiTop + 20 + 16*(configButtons.size()/2), 40, 16, String.valueOf(configEntry.value)){
 							@Override
 							public void onClicked(){
 								configButtons.get(this).value = !Boolean.valueOf(text);
@@ -534,7 +534,7 @@ public class GUIConfig extends AGUIBase{
 	private class JoystickControlButton extends GUIComponentButton{
 
 		public JoystickControlButton(int x, int y){
-			super(x, y, 215, "", 15, false);
+			super(x, y, 215, 15, "", false);
 		}
 
 		@Override

@@ -68,7 +68,7 @@ public class GUISignalController extends AGUIBase{
 		int rowSpacing = 2;
 		
 		//Main scan button.
-		addButton(scanButton = new GUIComponentButton(leftTextOffset, topOffset, 220, InterfaceCore.translate("gui.trafficsignalcontroller.scan"), 15, true){
+		addButton(scanButton = new GUIComponentButton(leftTextOffset, topOffset, 220, 15, InterfaceCore.translate("gui.trafficsignalcontroller.scan")){
 			@Override
 			public void onClicked(){
 				controller.componentLocations.clear();
@@ -162,7 +162,7 @@ public class GUISignalController extends AGUIBase{
 		
 		
 		//RHD/LHD switch.
-		addButton(driveSideButton = new GUIComponentButton(leftTextOffset, topOffset, 115, controller.isRightHandDrive ? "Right-Hand Drive" : "Left-Hand Drive", 15, true){
+		addButton(driveSideButton = new GUIComponentButton(leftTextOffset, topOffset, 115, 15, controller.isRightHandDrive ? "Right-Hand Drive" : "Left-Hand Drive"){
 			@Override
 			public void onClicked(){
 				controller.isRightHandDrive = !controller.isRightHandDrive;
@@ -173,7 +173,7 @@ public class GUISignalController extends AGUIBase{
 		});
 		
 		//Timed mode direction.
-		addButton(cycleButton = new GUIComponentButton(middleObjectOffset, topOffset, 100, controller.timedMode ? "Time Delay" : "Vehicle Trigger", 15, true){
+		addButton(cycleButton = new GUIComponentButton(middleObjectOffset, topOffset, 100, 15, controller.timedMode ? "Time Delay" : "Vehicle Trigger"){
 			@Override
 			public void onClicked(){
 				controller.timedMode = !controller.timedMode;
@@ -189,7 +189,7 @@ public class GUISignalController extends AGUIBase{
 		
 		
 		//Primary direction.
-		addButton(directionButton = new GUIComponentButton(leftTextOffset, topOffset, 115, "Main Axis: " + controller.mainDirectionAxis.name(), 15, true){
+		addButton(directionButton = new GUIComponentButton(leftTextOffset, topOffset, 115, 15, "Main Axis: " + controller.mainDirectionAxis.name()){
 			@Override
 			public void onClicked(){
 				switch(controller.mainDirectionAxis){
@@ -264,7 +264,7 @@ public class GUISignalController extends AGUIBase{
 		
 		
 		//Change screen button.
-		addButton(new GUIComponentButton(leftTextOffset, topOffset, 100, onLaneScreen ? "SIGNAL SETTINGS" : "LANE SETTINGS"){
+		addButton(new GUIComponentButton(leftTextOffset, topOffset, 100, 20, onLaneScreen ? "SIGNAL SETTINGS" : "LANE SETTINGS"){
 			@Override
 			public void onClicked(){
 				onLaneScreen = !onLaneScreen;
@@ -273,7 +273,7 @@ public class GUISignalController extends AGUIBase{
 		});
 		
 		//Confirm button.
-		addButton(new GUIComponentButton(guiLeft + getWidth() - 100, topOffset, 80, "CONFIRM"){
+		addButton(new GUIComponentButton(guiLeft + getWidth() - 100, topOffset, 80, 20, "CONFIRM"){
 			@Override
 			public void onClicked(){
 				InterfacePacket.sendToServer(new PacketTileEntitySignalControllerChange(controller));

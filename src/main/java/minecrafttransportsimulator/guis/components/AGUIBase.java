@@ -21,6 +21,7 @@ public abstract class AGUIBase{
 	private static final int STANDARD_GUI_HEIGHT = 192;
 	private static final String STANDARD_TEXTURE_NAME = "mts:textures/guis/standard.png";
 	
+	public final List<GUIComponentCutout> cutouts = new ArrayList<GUIComponentCutout>();
 	public final List<GUIComponentLabel> labels = new ArrayList<GUIComponentLabel>();
 	public final List<GUIComponentButton> buttons = new ArrayList<GUIComponentButton>();
 	public final List<GUIComponentSelector> selectors = new ArrayList<GUIComponentSelector>();
@@ -148,6 +149,14 @@ public abstract class AGUIBase{
 	}
 	
 	/**
+	 *  Adds an {@link GUIComponentCutout} to this GUIs component set.  These are rendered
+	 *  automatically given their current state.  Said state should be set in {@link #setStates()}.
+	 */
+	public void addCutout(GUIComponentCutout cutout){
+		cutouts.add(cutout);
+	}
+	
+	/**
 	 *  Adds an {@link GUIComponentLabel} to this GUIs component set.  These are rendered
 	 *  automatically given their current state.  Said state should be set in {@link #setStates()}.
 	 */
@@ -214,6 +223,7 @@ public abstract class AGUIBase{
 	 *  Convenience method to clear out all component lists.
 	 */
 	public void clearComponents(){
+		cutouts.clear();
 		labels.clear();
 		buttons.clear();
 		selectors.clear();

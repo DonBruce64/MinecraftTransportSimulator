@@ -62,14 +62,14 @@ public class GUIPaintGun extends AGUIBase{
 	@Override
 	public void setupComponents(int guiLeft, int guiTop){	
 		//Create color navigation section.
-		addButton(prevColorButton = new GUIComponentButton(guiLeft + 38, guiTop + 135, 20, "<", 20, true, 20, 20, 0, 196, getTextureWidth(), getTextureHeight()){
+		addButton(prevColorButton = new GUIComponentButton(guiLeft + 38, guiTop + 135, 20, 20, "<", true, ColorRGB.DARK_GRAY, 0, 196, 20, 20){
 			@Override
 			public void onClicked(){
 				currentItem = prevSubItem;
 				updateNames();
 			}
 		});
-		addButton(nextColorButton = new GUIComponentButton(guiLeft + 160, guiTop + 135, 20, ">", 20, true, 20, 20, 0, 196, getTextureWidth(), getTextureHeight()){
+		addButton(nextColorButton = new GUIComponentButton(guiLeft + 160, guiTop + 135, 20, 20, ">", true, ColorRGB.DARK_GRAY, 0, 196, 20, 20){
 			@Override
 			public void onClicked(){
 				currentItem = nextSubItem;
@@ -91,7 +91,7 @@ public class GUIPaintGun extends AGUIBase{
 		addOBJModel(modelRender = new GUIComponent3DModel(guiLeft + 109, guiTop + 57, 32.0F, true, true, false));
 		
 		//Create the confirm button.
-		addButton(confirmButton = new GUIComponentButton(guiLeft + 99, guiTop + 167, 20, "", 20, true, 20, 20, 20, 196, getTextureWidth(), getTextureHeight()){
+		addButton(confirmButton = new GUIComponentButton(guiLeft + 99, guiTop + 167, 20, 20, 20, 196, 20, 20){
 			@Override
 			public void onClicked(){
 				InterfacePacket.sendToServer(new PacketEntityColorChange(entity, player, currentItem));

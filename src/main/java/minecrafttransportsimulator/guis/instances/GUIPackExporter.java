@@ -52,7 +52,7 @@ public class GUIPackExporter extends AGUIBase{
 	@Override 
 	public void setupComponents(int guiLeft, int guiTop){
 		int buttonWidth = getWidth()/4;
-		addButton(packExportButton = new GUIComponentButton(guiLeft , guiTop + 0, buttonWidth, "EXPORT PACKS", 20, true){
+		addButton(packExportButton = new GUIComponentButton(guiLeft , guiTop + 0, buttonWidth, 20, "EXPORT PACKS"){
 			@Override
 			public void onClicked(){
 				File jsonDir = new File(MasterLoader.gameDirectory, "mts_dev");
@@ -110,7 +110,7 @@ public class GUIPackExporter extends AGUIBase{
 				}
 			}
 		});
-		addButton(packImportButton = new GUIComponentButton(guiLeft + buttonWidth, guiTop + 0, buttonWidth, "IMPORT PACKS", 20, true){
+		addButton(packImportButton = new GUIComponentButton(guiLeft + buttonWidth, guiTop + 0, buttonWidth, 20, "IMPORT PACKS"){
 			@Override
 			public void onClicked(){
 				File jsonDir = new File(MasterLoader.gameDirectory, "mts_dev");
@@ -154,7 +154,7 @@ public class GUIPackExporter extends AGUIBase{
 			}
 		});
 		//Add control buttons.
-		addButton(modelRenderButton = new GUIComponentButton(guiLeft + 2*buttonWidth, guiTop + 0, buttonWidth, "MODEL RENDER", 20, true){
+		addButton(modelRenderButton = new GUIComponentButton(guiLeft + 2*buttonWidth, guiTop + 0, buttonWidth, 20, "MODEL RENDER"){
 			@Override
 			public void onClicked(){
 				modelRenderButton.visible = false;
@@ -170,14 +170,14 @@ public class GUIPackExporter extends AGUIBase{
 				}
 			}
 		});
-		addButton(new GUIComponentButton(guiLeft + 3*buttonWidth, guiTop + 0, buttonWidth, "PACK EDITOR", 20, true){
+		addButton(new GUIComponentButton(guiLeft + 3*buttonWidth, guiTop + 0, buttonWidth, 20, "PACK EDITOR"){
 			@Override
 			public void onClicked(){
 				new GUIPackEditor();
 			}
 		});
 		
-		addButton(backButton = new GUIComponentButton(guiLeft + 20, guiTop + 140, 60, "BACK", 20, true){
+		addButton(backButton = new GUIComponentButton(guiLeft + 20, guiTop + 140, 60, 20, "BACK"){
 			@Override
 			public void onClicked(){
 				modelRenderButton.visible = true;
@@ -193,7 +193,7 @@ public class GUIPackExporter extends AGUIBase{
 				}
 			}
 		});
-		addButton(confirmButton = new GUIComponentButton(guiLeft + 100, guiTop + 140, 60, "CONFIRM", 20, true){
+		addButton(confirmButton = new GUIComponentButton(guiLeft + 100, guiTop + 140, 60, 20, "CONFIRM"){
 			@Override
 			public void onClicked(){
 				try{

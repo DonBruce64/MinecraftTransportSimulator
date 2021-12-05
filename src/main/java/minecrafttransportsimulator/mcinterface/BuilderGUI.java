@@ -7,11 +7,12 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.AGUIBase.GUILightingMode;
+import minecrafttransportsimulator.guis.components.GUIComponent3DModel;
+import minecrafttransportsimulator.guis.components.GUIComponentCutout;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentInstrument;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
-import minecrafttransportsimulator.guis.components.GUIComponent3DModel;
 import minecrafttransportsimulator.guis.components.GUIComponentSelector;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox.TextBoxControlKey;
@@ -88,6 +89,10 @@ public class BuilderGUI extends GuiScreen{
 			InterfaceRender.setLightingToPosition(gui.getGUILightSource().position);
 		}
 		
+		//Get the current texture width and height.  This is needed for future render calls.
+		final int textureWidth = gui.getTextureWidth();
+		final int textureHeight = gui.getTextureHeight();
+		
 		//Bind the standard texture and render the background.
 		//If we are translucent, enable blending.
 		if(gui.renderTranslucent()){
@@ -95,12 +100,15 @@ public class BuilderGUI extends GuiScreen{
 		}
 		InterfaceRender.bindTexture(gui.getTexture());
 		if(gui.renderBackground()){
-			InterfaceGUI.renderSheetTexture(guiLeft, guiTop, gui.getWidth(), gui.getHeight(), 0, 0, gui.getWidth(), gui.getHeight(), gui.getTextureWidth(), gui.getTextureHeight());
+			InterfaceGUI.renderSheetTexture(guiLeft, guiTop, gui.getWidth(), gui.getHeight(), 0, 0, gui.getWidth(), gui.getHeight(), textureWidth, textureHeight);
 		}
 		
-		//Render buttons and selectors.  These choose if they render or not depending on visibility.
+		//Render cutout, buttons, and selectors.  These choose if they render or not depending on visibility.
+		for(GUIComponentCutout cutout : gui.cutouts){
+			cutout.renderTexture(mouseX, mouseY, textureWidth, textureHeight);
+		}
 		for(GUIComponentButton button : gui.buttons){
-			button.renderButton(mouseX, mouseY);
+			button.renderTexture(mouseX, mouseY, textureWidth, textureHeight);
 		}
 		for(GUIComponentSelector selector : gui.selectors){
 			selector.renderSelector(mouseX, mouseY);
@@ -116,9 +124,12 @@ public class BuilderGUI extends GuiScreen{
 		if(gui.getGUILightMode().equals(GUILightingMode.LIT)){
 			InterfaceRender.setLightingState(false);
 			InterfaceRender.bindTexture(gui.getTexture().replace(".png", "_lit.png"));
-			InterfaceGUI.renderSheetTexture(guiLeft, guiTop, gui.getWidth(), gui.getHeight(), 0, 0, gui.getWidth(), gui.getHeight(), gui.getTextureWidth(), gui.getTextureHeight());
+			InterfaceGUI.renderSheetTexture(guiLeft, guiTop, gui.getWidth(), gui.getHeight(), 0, 0, gui.getWidth(), gui.getHeight(), textureWidth, textureHeight);
+			for(GUIComponentCutout cutout : gui.cutouts){
+				cutout.renderTexture(mouseX, mouseY, textureWidth, textureHeight);
+			}
 			for(GUIComponentButton button : gui.buttons){
-				button.renderButton(mouseX, mouseY);
+				button.renderTexture(mouseX, mouseY, textureWidth, textureHeight);
 			}
 			for(GUIComponentSelector selector : gui.selectors){
 				selector.renderSelector(mouseX, mouseY);

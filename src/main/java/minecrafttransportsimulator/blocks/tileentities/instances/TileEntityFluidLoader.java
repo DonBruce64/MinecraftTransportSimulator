@@ -7,7 +7,7 @@ import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityFluidTank;
 import minecrafttransportsimulator.entities.instances.PartInteractable;
-import minecrafttransportsimulator.items.instances.ItemDecor.DecorComponentType;
+import minecrafttransportsimulator.jsondefs.JSONDecor.DecorComponentType;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
