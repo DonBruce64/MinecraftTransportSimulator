@@ -11,9 +11,7 @@ import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
  *
  * @author don_bruce
  */
-public class GUIComponentLabel{
-	public final int x;
-	public final int y;
+public class GUIComponentLabel extends AGUIComponent{
 	public final ColorRGB color;
 	public final String fontName;
 	public final TextAlignment alignment;
@@ -21,8 +19,6 @@ public class GUIComponentLabel{
 	public final float scale;
 	public final boolean autoScale;
 	
-	public boolean visible = true;
-	public String text;
 	private GUIComponentButton button;
 	private GUIComponentTextBox box;
 
@@ -39,8 +35,7 @@ public class GUIComponentLabel{
 	}
 	
 	public GUIComponentLabel(int x, int y, ColorRGB color, String text, TextAlignment alignment, float scale, int wrapWidth, String fontName, boolean autoScale){
-		this.x = x;
-		this.y = y;
+		super(x, y);
 		this.color = color;
 		this.text = text;
 		this.fontName = fontName;
@@ -69,13 +64,15 @@ public class GUIComponentLabel{
 		this.box = box;
 		return this;
 	}
-    
-    /**
-	 *  Renders the text that makes up this component.
-	 *  Uses the button or box visibility if those components are set.
-	 */
-    public void renderText(){
-		if(button == null ? (box == null ? visible : box.visible) : button.visible){
+
+	@Override
+	public void render(int mouseX, int mouseY, int textureWidth, int textureHeight, boolean blendingEnabled, float partialTicks){
+		//Don't render anything for the label background.
+	}
+	
+    @Override
+	public void renderText(boolean renderTextLit){
+		if(button == null ? (box == null || box.visible) : button.visible){
 			RenderText.draw2DText(text, fontName, x, y, color, alignment, scale, autoScale, wrapWidth);
 		}
     }

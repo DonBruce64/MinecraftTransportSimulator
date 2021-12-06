@@ -23,7 +23,7 @@ import minecrafttransportsimulator.rendering.components.RenderableObject;
  *
  * @author don_bruce
  */
-public class GUIComponent3DModel{
+public class GUIComponent3DModel extends AGUIComponent{
 	/**Parsed vertex indexes.  Keyed by model name.*/
 	private static final Map<String, RenderableObject> modelParsedObjects = new HashMap<String, RenderableObject>();
 	private static final Map<String, Float> modelScalingFactors = new HashMap<String, Float>();
@@ -32,18 +32,13 @@ public class GUIComponent3DModel{
 	public final boolean isometric;
 	public final boolean staticScaling;
 	
-	public int x;
-	public int y;
 	public boolean spin;
 	public float scale;
 	public String modelLocation;
 	public String textureLocation;
-	
-	public boolean visible = true;
 	    	
 	public GUIComponent3DModel(int x, int y, float scaleFactor, boolean isometric, boolean spin, boolean staticScaling){
-		this.x = x;
-		this.y = y;
+		super(x, y);
 		this.scaleFactor = scaleFactor;
 		this.isometric = isometric;
 		this.spin = spin;
@@ -53,74 +48,73 @@ public class GUIComponent3DModel{
 	/**
 	 *  Renders the model that this component defines.
 	 */
-    public void renderModel(){
-    	if(visible){
-			if(modelLocation != null){
-				if(!modelParsedObjects.containsKey(modelLocation)){
-					List<RenderableObject> parsedObjects = AModelParser.parseModel(modelLocation);
-					//Remove any windows and "commented" objects from the model.  We don't want to render those.
-					parsedObjects.removeIf(object -> object.name.toLowerCase().contains("window") || object.name.startsWith("#"));
-					
-					//Get the min/max vertex values for the model so we know how much to scale it.
-					//Also get how many vertices are in the model total for the final buffer.
-					float minX = 999;
-					float maxX = -999;
-					float minY = 999;
-					float maxY = -999;
-					float minZ = 999;
-					float maxZ = -999;
-					int totalVertices = 0;
-					for(RenderableObject parsedObject : parsedObjects){
-						totalVertices += parsedObject.vertices.capacity();
-						for(int i=0; i<parsedObject.vertices.capacity(); i+=8){
-							float xCoord = parsedObject.vertices.get(i+5);
-							float yCoord = parsedObject.vertices.get(i+6);
-							float zCoord = parsedObject.vertices.get(i+7);
-							minX = Math.min(minX, xCoord);
-							maxX = Math.max(maxX, xCoord);
-							minY = Math.min(minY, yCoord);
-							maxY = Math.max(maxY, yCoord);
-							minZ = Math.min(minZ, zCoord);
-							maxZ = Math.max(maxZ, zCoord);
-						}
-					}
-					float globalMax = Math.max(Math.max(maxX - minX, maxY - minY), maxZ - minZ);
-					modelScalingFactors.put(modelLocation, globalMax > 1.5 ? 1.5F/globalMax : 1.0F);
-					
-					//Cache the model now that we know how big it is.
-					FloatBuffer totalModel = FloatBuffer.allocate(totalVertices);
-					for(RenderableObject parsedObject : parsedObjects){
-						totalModel.put(parsedObject.vertices);
-					}
-					totalModel.flip();
-					RenderableObject combinedObject = new RenderableObject("model", textureLocation, ColorRGB.WHITE, totalModel, true);
-					modelParsedObjects.put(modelLocation, combinedObject);
-				}
-				GL11.glPushMatrix();
-				//Translate to position and rotate to isometric view if required.
-				GL11.glTranslatef(x, y, 100);
-				GL11.glRotatef(180, 1, 0, 0);
-				if(isometric){
-					GL11.glRotatef(45, 0, 1, 0);
-					GL11.glRotatef(-35.264F, 1, 0, 1);
-				}
+    @Override
+	public void render(int mouseX, int mouseY, int textureWidth, int textureHeight, boolean blendingEnabled, float partialTicks){
+		if(modelLocation != null){
+			if(!modelParsedObjects.containsKey(modelLocation)){
+				List<RenderableObject> parsedObjects = AModelParser.parseModel(modelLocation);
+				//Remove any windows and "commented" objects from the model.  We don't want to render those.
+				parsedObjects.removeIf(object -> object.name.toLowerCase().contains("window") || object.name.startsWith("#"));
 				
-				//If set to rotate, do so now based on time.
-				if(spin){
-					GL11.glRotatef((36*System.currentTimeMillis()/1000)%360, 0, 1, 0);
+				//Get the min/max vertex values for the model so we know how much to scale it.
+				//Also get how many vertices are in the model total for the final buffer.
+				float minX = 999;
+				float maxX = -999;
+				float minY = 999;
+				float maxY = -999;
+				float minZ = 999;
+				float maxZ = -999;
+				int totalVertices = 0;
+				for(RenderableObject parsedObject : parsedObjects){
+					totalVertices += parsedObject.vertices.capacity();
+					for(int i=0; i<parsedObject.vertices.capacity(); i+=8){
+						float xCoord = parsedObject.vertices.get(i+5);
+						float yCoord = parsedObject.vertices.get(i+6);
+						float zCoord = parsedObject.vertices.get(i+7);
+						minX = Math.min(minX, xCoord);
+						maxX = Math.max(maxX, xCoord);
+						minY = Math.min(minY, yCoord);
+						maxY = Math.max(maxY, yCoord);
+						minZ = Math.min(minZ, zCoord);
+						maxZ = Math.max(maxZ, zCoord);
+					}
 				}
-
-				//Scale based on our scaling factor and render.
-				if(!staticScaling){
-					scale = modelScalingFactors.get(modelLocation);
+				float globalMax = Math.max(Math.max(maxX - minX, maxY - minY), maxZ - minZ);
+				modelScalingFactors.put(modelLocation, globalMax > 1.5 ? 1.5F/globalMax : 1.0F);
+				
+				//Cache the model now that we know how big it is.
+				FloatBuffer totalModel = FloatBuffer.allocate(totalVertices);
+				for(RenderableObject parsedObject : parsedObjects){
+					totalModel.put(parsedObject.vertices);
 				}
-				GL11.glScalef(1.0F, 1.0F, -1.0F);
-				RenderableObject object = modelParsedObjects.get(modelLocation);
-				object.scale = scale*scaleFactor;
-				object.texture = textureLocation;
-				object.render();
-				GL11.glPopMatrix();
+				totalModel.flip();
+				RenderableObject combinedObject = new RenderableObject("model", textureLocation, ColorRGB.WHITE, totalModel, true);
+				modelParsedObjects.put(modelLocation, combinedObject);
 			}
+			GL11.glPushMatrix();
+			//Translate to position and rotate to isometric view if required.
+			GL11.glTranslatef(x, y, 100);
+			GL11.glRotatef(180, 1, 0, 0);
+			if(isometric){
+				GL11.glRotatef(45, 0, 1, 0);
+				GL11.glRotatef(-35.264F, 1, 0, 1);
+			}
+			
+			//If set to rotate, do so now based on time.
+			if(spin){
+				GL11.glRotatef((36*System.currentTimeMillis()/1000)%360, 0, 1, 0);
+			}
+
+			//Scale based on our scaling factor and render.
+			if(!staticScaling){
+				scale = modelScalingFactors.get(modelLocation);
+			}
+			GL11.glScalef(1.0F, 1.0F, -1.0F);
+			RenderableObject object = modelParsedObjects.get(modelLocation);
+			object.scale = scale*scaleFactor;
+			object.texture = textureLocation;
+			object.render();
+			GL11.glPopMatrix();
 		}
     }
     

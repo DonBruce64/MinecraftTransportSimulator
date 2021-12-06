@@ -5,11 +5,9 @@ import java.util.List;
 
 import org.lwjgl.opengl.GL11;
 
-import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponent3DModel;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.RenderItem;
 import net.minecraft.client.renderer.Tessellator;
@@ -98,15 +96,6 @@ public class InterfaceGUI{
         bufferbuilder.pos(x + width, 	y, 			0.0D).tex(U * widthPixelPercent, 	v * heightPixelPercent).endVertex();
         bufferbuilder.pos(x, 			y, 			0.0D).tex(u * widthPixelPercent, 	v * heightPixelPercent).endVertex();
         tessellator.draw();
-	}
-	
-	/**
-	 *  Draws a colored rectangle at the specified point.  This does NOT change the currently-bound
-	 *  texture, nor does it modify any OpelGL states, so it may safely be called during rendering operations.
-	 */
-	public static void renderRectangle(int x, int y, int width, int height, ColorRGB color){
-		//Need to pack in a 255 alpha value or rectangles are invisible.
-		GuiScreen.drawRect(x, y, x + width, y + height, color.rgbInt | -16777216);
 	}
 	
 	/**

@@ -52,9 +52,9 @@ public class GUIPackExporter extends AGUIBase{
 	@Override 
 	public void setupComponents(int guiLeft, int guiTop){
 		int buttonWidth = getWidth()/4;
-		addButton(packExportButton = new GUIComponentButton(guiLeft , guiTop + 0, buttonWidth, 20, "EXPORT PACKS"){
+		addComponent(packExportButton = new GUIComponentButton(guiLeft , guiTop + 0, buttonWidth, 20, "EXPORT PACKS"){
 			@Override
-			public void onClicked(){
+			public void onClicked(boolean leftSide){
 				File jsonDir = new File(MasterLoader.gameDirectory, "mts_dev");
 				if(!jsonDir.exists()){
 					if(!jsonDir.mkdir()){
@@ -110,9 +110,9 @@ public class GUIPackExporter extends AGUIBase{
 				}
 			}
 		});
-		addButton(packImportButton = new GUIComponentButton(guiLeft + buttonWidth, guiTop + 0, buttonWidth, 20, "IMPORT PACKS"){
+		addComponent(packImportButton = new GUIComponentButton(guiLeft + buttonWidth, guiTop + 0, buttonWidth, 20, "IMPORT PACKS"){
 			@Override
-			public void onClicked(){
+			public void onClicked(boolean leftSide){
 				File jsonDir = new File(MasterLoader.gameDirectory, "mts_dev");
 				if(jsonDir.exists()){
 					debug.setText("Import dir is: " + jsonDir.getAbsolutePath());
@@ -154,9 +154,9 @@ public class GUIPackExporter extends AGUIBase{
 			}
 		});
 		//Add control buttons.
-		addButton(modelRenderButton = new GUIComponentButton(guiLeft + 2*buttonWidth, guiTop + 0, buttonWidth, 20, "MODEL RENDER"){
+		addComponent(modelRenderButton = new GUIComponentButton(guiLeft + 2*buttonWidth, guiTop + 0, buttonWidth, 20, "MODEL RENDER"){
 			@Override
-			public void onClicked(){
+			public void onClicked(boolean leftSide){
 				modelRenderButton.visible = false;
 				packExportButton.visible = false;
 				packImportButton.visible = false;
@@ -170,16 +170,16 @@ public class GUIPackExporter extends AGUIBase{
 				}
 			}
 		});
-		addButton(new GUIComponentButton(guiLeft + 3*buttonWidth, guiTop + 0, buttonWidth, 20, "PACK EDITOR"){
+		addComponent(new GUIComponentButton(guiLeft + 3*buttonWidth, guiTop + 0, buttonWidth, 20, "PACK EDITOR"){
 			@Override
-			public void onClicked(){
+			public void onClicked(boolean leftSide){
 				new GUIPackEditor();
 			}
 		});
 		
-		addButton(backButton = new GUIComponentButton(guiLeft + 20, guiTop + 140, 60, 20, "BACK"){
+		addComponent(backButton = new GUIComponentButton(guiLeft + 20, guiTop + 140, 60, 20, "BACK"){
 			@Override
-			public void onClicked(){
+			public void onClicked(boolean leftSide){
 				modelRenderButton.visible = true;
 				packExportButton.visible = true;
 				packImportButton.visible = true;
@@ -193,22 +193,22 @@ public class GUIPackExporter extends AGUIBase{
 				}
 			}
 		});
-		addButton(confirmButton = new GUIComponentButton(guiLeft + 100, guiTop + 140, 60, 20, "CONFIRM"){
+		addComponent(confirmButton = new GUIComponentButton(guiLeft + 100, guiTop + 140, 60, 20, "CONFIRM"){
 			@Override
-			public void onClicked(){
+			public void onClicked(boolean leftSide){
 				try{
 					int dataEntryBoxIndex = 0;
 					componentItemModel.modelLocation = String.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
 					componentItemModel.textureLocation = String.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
-					componentItemModel.x = Integer.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
-					componentItemModel.y = Integer.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
+					componentItemModel.offsetX = Integer.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
+					componentItemModel.offsetY = Integer.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
 					componentItemModel.scale = Float.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
 				}catch(Exception e){}
 			}
 		});
 		
 		//Create debug output box.
-		addTextBox(debug = new GUIComponentTextBox(guiLeft, guiTop + 20, getWidth(), "", getHeight() - 20, ColorRGB.WHITE, ColorRGB.BLACK, 1200));
+		addComponent(debug = new GUIComponentTextBox(guiLeft, guiTop + 20, getWidth(), getHeight() - 20, "", ColorRGB.WHITE, 1200));
 		
 		//Create data entry boxes and labels.
 		dataEntryBoxes.clear();
@@ -216,19 +216,21 @@ public class GUIPackExporter extends AGUIBase{
 		int currentRow = 15;
 		for(byte i=0; i<5; ++i){
 			int height = i < 2 ? 40 : 10;
-			GUIComponentTextBox dataEntryBox = new GUIComponentTextBox(guiLeft + 100, guiTop + currentRow, 140, "", height, ColorRGB.WHITE, ColorRGB.BLACK, 100);
+			GUIComponentTextBox dataEntryBox = new GUIComponentTextBox(guiLeft + 100, guiTop + currentRow, 140, height, "", ColorRGB.WHITE, 100);
 			GUIComponentLabel dataEntryLabel = new GUIComponentLabel(guiLeft + 15, dataEntryBox.y, ColorRGB.WHITE, "").setBox(dataEntryBox);
 			dataEntryBoxes.add(dataEntryBox);
 			dataEntryLabels.add(dataEntryLabel);
-			addTextBox(dataEntryBox);
-			addLabel(dataEntryLabel);
+			addComponent(dataEntryBox);
+			addComponent(dataEntryLabel);
 			currentRow += height + 1;
 		}
 		
 		//Add item icon model component.
-		componentItemModel = new GUIComponent3DModel(guiLeft + 208, guiTop + 205, 1.0F, true, false, true);
+		componentItemModel = new GUIComponent3DModel(guiLeft, guiTop, 1.0F, true, false, true);
+		componentItemModel.offsetX = 208;
+		componentItemModel.offsetY = 205;
 		componentItemModel.scale = 6.0F;
-		addOBJModel(componentItemModel);
+		addComponent(componentItemModel);
 		
 		//Set label text and default entries.
 		int labelBoxIndex = 0;
@@ -237,21 +239,21 @@ public class GUIPackExporter extends AGUIBase{
 		dataEntryLabels.get(labelBoxIndex).text = "Texture:";
 		dataEntryBoxes.get(labelBoxIndex++).setText(vehicleClicked.definition.getTextureLocation(vehicleClicked.subName));
 		dataEntryLabels.get(labelBoxIndex).text = "X-Pos (px):";
-		dataEntryBoxes.get(labelBoxIndex++).setText(String.valueOf(componentItemModel.x));
+		dataEntryBoxes.get(labelBoxIndex++).setText(String.valueOf(componentItemModel.offsetX));
 		dataEntryLabels.get(labelBoxIndex).text = "Y-Pos (px):";
-		dataEntryBoxes.get(labelBoxIndex++).setText(String.valueOf(componentItemModel.y));
+		dataEntryBoxes.get(labelBoxIndex++).setText(String.valueOf(componentItemModel.offsetY));
 		dataEntryLabels.get(labelBoxIndex).text = "Scale (1blk=1px):";
 		dataEntryBoxes.get(labelBoxIndex++).setText(String.valueOf(componentItemModel.scale));
 		
 		//Click back button to set initial states.
-		backButton.onClicked();
+		backButton.onClicked(false);
 	}
 
 	@Override
 	public void setStates(){
 		try{
-			componentItemModel.x = Integer.valueOf(dataEntryBoxes.get(2).getText());
-			componentItemModel.y = Integer.valueOf(dataEntryBoxes.get(3).getText());
+			componentItemModel.offsetX = Integer.valueOf(dataEntryBoxes.get(2).getText());
+			componentItemModel.offsetY = Integer.valueOf(dataEntryBoxes.get(3).getText());
 			componentItemModel.scale = Float.valueOf(dataEntryBoxes.get(4).getText());
 		}catch(Exception e){
 			

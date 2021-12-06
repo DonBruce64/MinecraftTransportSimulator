@@ -4,10 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
-import minecrafttransportsimulator.guis.components.GUIComponentTextBox.TextBoxControlKey;
-import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.mcinterface.InterfaceGUI;
-import minecrafttransportsimulator.rendering.instances.RenderInstrument;
 
 /**Base GUI class.  This type is used in conjunction with {@link InterfaceGUI} to allow us to use
  * completely custom GUI code that is not associated with MC's standard GUI code.  Allows us to only
@@ -20,15 +17,17 @@ public abstract class AGUIBase{
 	private static final int STANDARD_GUI_WIDTH = 256;
 	private static final int STANDARD_GUI_HEIGHT = 192;
 	private static final String STANDARD_TEXTURE_NAME = "mts:textures/guis/standard.png";
+	protected static final int STANDARD_COLOR_WIDTH = 20;
+	protected static final int STANDARD_COLOR_HEIGHT = 20;
+	protected static final int STANDARD_COLOR_WIDTH_OFFSET = 216;
+	protected static final int STANDARD_RED_HEIGHT_OFFSET = 196;
+	protected static final int STANDARD_YELLOW_HEIGHT_OFFSET = 216;
+	protected static final int STANDARD_BLACK_HEIGHT_OFFSET = 236;
+
 	
-	public final List<GUIComponentCutout> cutouts = new ArrayList<GUIComponentCutout>();
-	public final List<GUIComponentLabel> labels = new ArrayList<GUIComponentLabel>();
-	public final List<GUIComponentButton> buttons = new ArrayList<GUIComponentButton>();
-	public final List<GUIComponentSelector> selectors = new ArrayList<GUIComponentSelector>();
-	public final List<GUIComponentTextBox> textBoxes = new ArrayList<GUIComponentTextBox>();
+	public final List<AGUIComponent> generalComponents = new ArrayList<AGUIComponent>();
 	public final List<GUIComponentItem> items = new ArrayList<GUIComponentItem>();
 	public final List<GUIComponentInstrument> instruments = new ArrayList<GUIComponentInstrument>();
-	public final List<GUIComponent3DModel> objModels = new ArrayList<GUIComponent3DModel>();
 	
 	//--------------------START OF NEW CUSTOM METHODS FOR MAKING GUIS--------------------	
 	/**
@@ -149,88 +148,26 @@ public abstract class AGUIBase{
 	}
 	
 	/**
-	 *  Adds an {@link GUIComponentCutout} to this GUIs component set.  These are rendered
+	 *  Adds an {@link AGUIComponent} to this GUIs component set.  These are rendered
 	 *  automatically given their current state.  Said state should be set in {@link #setStates()}.
 	 */
-	public void addCutout(GUIComponentCutout cutout){
-		cutouts.add(cutout);
-	}
-	
-	/**
-	 *  Adds an {@link GUIComponentLabel} to this GUIs component set.  These are rendered
-	 *  automatically given their current state.  Said state should be set in {@link #setStates()}.
-	 */
-	public void addLabel(GUIComponentLabel label){
-		labels.add(label);
-	}
-	
-	/**
-	 *  Adds an {@link GUIComponentButton} to this GUIs component set.  When a mouse click is
-	 *  sensed, this GUI will attempt to click all buttons in this set via {@link GUIComponentButton#canClick(int, int)}.
-	 *  If any of those buttons say they were clicked, their {@link GUIComponentButton#onClicked()} method 
-	 *  is fired to allow the button to handle clicking actions.
-	 */
-	public void addButton(GUIComponentButton button){
-		buttons.add(button);
-	}
-	
-	/**
-	 *  Adds an {@link GUIComponentSelector} to this GUIs component set.  When a mouse click is
-	 *  sensed, this GUI will attempt to click all selectors in this set via {@link GUIComponentSelector#canClick(int, int)}.
-	 *  If any of those selectors say they were clicked, their {@link GUIComponentButton#onClicked(boolean)} method 
-	 *  is fired to allow the button to handle clicking actions.
-	 */
-	public void addSelector(GUIComponentSelector selector){
-		selectors.add(selector);
-	}
-	
-	/**
-	 *  Adds an {@link GUIComponentTextBox} to this GUIs component set.  When a mouse click is
-	 *  sensed, this GUI will attempt to focus all text boxes.  When a key is typed, any focused
-	 *  text boxes will get that input set to them via {@link GUIComponentTextBox#handleKeyTyped(char, TextBoxControlKey)}.
-	 */
-	public void addTextBox(GUIComponentTextBox textBox){
-		textBoxes.add(textBox);
-	}
-	
-	/**
-	 *  Adds an {@link GUIComponentItem} to this GUIs component set.  These are rendered
-	 *  automatically given their current state.  Said state should be set in {@link #setStates()}.
-	 */
-	public void addItem(GUIComponentItem item){
-		items.add(item);
-	}
-	
-	/**
-	 *  Adds an {@link GUIComponentInstrument} to this GUIs component set.  These are rendered
-	 *  depending on the vehicle's state, and are really just a pass-through to {@link RenderInstrument#drawInstrument(EntityVehicleE_Powered, ItemInstrument, byte)}.
-	 */
-	public void addInstrument(GUIComponentInstrument instrument){
-		instruments.add(instrument);
-	}
-	
-	/**
-	 *  Adds an {@link GUIComponent3DModel} to this GUIs component set.  These are rendered
-	 *  based on their internal variables, which may be set after creation to allow for switching
-	 *  without re-creating the object.  Note that while they cause a texture re-bind, they don't
-	 *  do any other odd state changes so can be rendered any time the main texture is done with.
-	 */
-	public void addOBJModel(GUIComponent3DModel objModel){
-		objModels.add(objModel);
+	public void addComponent(AGUIComponent component){
+		if(component instanceof GUIComponentInstrument){
+			instruments.add((GUIComponentInstrument) component);
+		}else if(component instanceof GUIComponentItem){
+			items.add((GUIComponentItem) component);
+		}else{
+			generalComponents.add(component);
+		}
 	}
 	
 	/**
 	 *  Convenience method to clear out all component lists.
 	 */
 	public void clearComponents(){
-		cutouts.clear();
-		labels.clear();
-		buttons.clear();
-		selectors.clear();
-		textBoxes.clear();
+		generalComponents.clear();
 		items.clear();
 		instruments.clear();
-		objModels.clear();
 	}
 	
 	/**

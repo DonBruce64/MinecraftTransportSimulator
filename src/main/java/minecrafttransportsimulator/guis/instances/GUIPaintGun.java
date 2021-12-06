@@ -62,38 +62,38 @@ public class GUIPaintGun extends AGUIBase{
 	@Override
 	public void setupComponents(int guiLeft, int guiTop){	
 		//Create color navigation section.
-		addButton(prevColorButton = new GUIComponentButton(guiLeft + 38, guiTop + 135, 20, 20, "<", true, ColorRGB.DARK_GRAY, 0, 196, 20, 20){
+		addComponent(prevColorButton = new GUIComponentButton(guiLeft + 38, guiTop + 135, 20, 20, 40, 196, 20, 20){
 			@Override
-			public void onClicked(){
+			public void onClicked(boolean leftSide){
 				currentItem = prevSubItem;
 				updateNames();
 			}
 		});
-		addButton(nextColorButton = new GUIComponentButton(guiLeft + 160, guiTop + 135, 20, 20, ">", true, ColorRGB.DARK_GRAY, 0, 196, 20, 20){
+		addComponent(nextColorButton = new GUIComponentButton(guiLeft + 160, guiTop + 135, 20, 20, 60, 196, 20, 20){
 			@Override
-			public void onClicked(){
+			public void onClicked(boolean leftSide){
 				currentItem = nextSubItem;
 				updateNames();
 			}
 		});
-		addLabel(partName = new GUIComponentLabel(guiLeft + 60, guiTop + 120, ColorRGB.WHITE, "", TextAlignment.LEFT_ALIGNED, 1.0F, 98));
+		addComponent(partName = new GUIComponentLabel(guiLeft + 60, guiTop + 120, ColorRGB.WHITE, "", TextAlignment.LEFT_ALIGNED, 1.0F, 98));
 		
 		//Create the crafting item slots.  8 18X18 slots (8X2) need to be made here.
 		craftingItemIcons.clear();
 		final int craftingIconSize = 18;
 		for(byte i=0; i<4*2; ++i){				
 			GUIComponentItem craftingItem = new GUIComponentItem(guiLeft + 225 + craftingIconSize*(i/4), guiTop + 26 + craftingIconSize*(i%4), craftingIconSize/16F, null);
-			addItem(craftingItem);
+			addComponent(craftingItem);
 			craftingItemIcons.add(craftingItem);
 		}
 		
 		//Create the OBJ render.
-		addOBJModel(modelRender = new GUIComponent3DModel(guiLeft + 109, guiTop + 57, 32.0F, true, true, false));
+		addComponent(modelRender = new GUIComponent3DModel(guiLeft + 109, guiTop + 57, 32.0F, true, true, false));
 		
 		//Create the confirm button.
-		addButton(confirmButton = new GUIComponentButton(guiLeft + 99, guiTop + 167, 20, 20, 20, 196, 20, 20){
+		addComponent(confirmButton = new GUIComponentButton(guiLeft + 99, guiTop + 167, 20, 20, 20, 196, 20, 20){
 			@Override
-			public void onClicked(){
+			public void onClicked(boolean leftSide){
 				InterfacePacket.sendToServer(new PacketEntityColorChange(entity, player, currentItem));
 				InterfaceGUI.closeGUI();
 			}

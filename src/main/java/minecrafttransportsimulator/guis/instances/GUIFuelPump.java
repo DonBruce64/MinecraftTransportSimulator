@@ -41,7 +41,7 @@ public class GUIFuelPump extends AGUIInventory{
 			ItemStack stack = pump.fuelItems.getStack(i);
 			GUIComponentButton itemButton = new GUIComponentButton(guiLeft + xOffset, guiTop + 12 + 22*(i%5)){
 				@Override
-				public void onClicked(){
+				public void onClicked(boolean leftSide){
 					if(configuring){
 						//Remove stack from slot as we don't want this item available.
 						ItemStack changedStack = pump.fuelItems.getStack(interactableSlotButtons.indexOf(this));
@@ -54,12 +54,12 @@ public class GUIFuelPump extends AGUIInventory{
 				}
 			};
 			itemButton.visible = !stack.isEmpty() || configuring;
-			addButton(itemButton);
+			addComponent(itemButton);
 			interactableSlotButtons.add(itemButton);
 			
 			//Item icons are normally rendered as 16x16 textures, so scale them to fit over the buttons.
 			GUIComponentItem itemIcon = new GUIComponentItem(itemButton.x, itemButton.y, GUIComponentButton.ITEM_BUTTON_SIZE/16F, stack);
-			addItem(itemIcon);
+			addComponent(itemIcon);
 			interactableSlotIcons.add(itemIcon);
 			
 			GUIComponentTextBox fuelAmount = new GUIComponentTextBox(itemButton.x + itemButton.width + 4, itemButton.y, 50, String.valueOf(pump.fuelAmounts.get(i))){
@@ -77,7 +77,7 @@ public class GUIFuelPump extends AGUIInventory{
 			};
 			fuelAmount.visible = !stack.isEmpty() || configuring;
 			fuelAmount.enabled = configuring;
-			addTextBox(fuelAmount);
+			addComponent(fuelAmount);
 			interactableSlotBoxes.add(fuelAmount);
 			
 			if(i == 4){

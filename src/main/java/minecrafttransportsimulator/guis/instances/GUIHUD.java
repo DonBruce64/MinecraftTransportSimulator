@@ -29,14 +29,14 @@ public class GUIHUD extends AGUIBase{
 		//Add instruments.  These go wherever they are specified in the JSON.
 		for(Integer instrumentNumber : vehicle.instruments.keySet()){
 			if(!vehicle.definition.instruments.get(instrumentNumber).placeOnPanel){
-				addInstrument(new GUIComponentInstrument(guiLeft, guiTop, instrumentNumber, vehicle));
+				addComponent(new GUIComponentInstrument(guiLeft, guiTop, instrumentNumber, vehicle));
 			}
 		}
 		//Now add part instruments.
 		for(APart part : vehicle.parts){
 			for(Integer instrumentNumber : part.instruments.keySet()){
 				if(!part.definition.instruments.get(instrumentNumber).placeOnPanel){
-					addInstrument(new GUIComponentInstrument(guiLeft, guiTop, instrumentNumber, part));
+					addComponent(new GUIComponentInstrument(guiLeft, guiTop, instrumentNumber, part));
 				}
 			}
 		}

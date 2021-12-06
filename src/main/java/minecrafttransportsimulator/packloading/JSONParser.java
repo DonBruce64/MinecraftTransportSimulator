@@ -36,6 +36,7 @@ import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 import minecrafttransportsimulator.jsondefs.AJSONPartProvider;
 import minecrafttransportsimulator.jsondefs.JSONBullet;
+import minecrafttransportsimulator.jsondefs.JSONConfig;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONInstrument;
 import minecrafttransportsimulator.jsondefs.JSONItem;
@@ -420,9 +421,9 @@ public class JSONParser{
 	};
 	
 	//This needs to go down here AFTER we create the type adapters.
-	private static final Gson packParser = getParserWithAdapters();
+	private static final Gson packParser = getPackParserWithAdapters();
 	
-	private static Gson getParserWithAdapters(){
+	private static Gson getPackParserWithAdapters(){
 		return new GsonBuilder()
 				.setPrettyPrinting()
 				.disableHtmlEscaping()
@@ -440,18 +441,40 @@ public class JSONParser{
 				.create();
 	}
 	
+	//This needs to go down here AFTER we create the type adapters.
+	private static final Gson configParser = getConfigParserWithAdapters();
+	
+	private static Gson getConfigParserWithAdapters(){
+		return new GsonBuilder()
+				.setPrettyPrinting()
+				.disableHtmlEscaping()
+				.registerTypeAdapter(new TypeToken<List<Integer>>(){}.getType(), intListAdapter)
+				.registerTypeAdapter(new TypeToken<List<Float>>(){}.getType(), floatListAdapter)
+				.registerTypeAdapter(new TypeToken<List<String>>(){}.getType(), stringListAdapter)
+				.registerTypeAdapter(new TypeToken<Set<String>>(){}.getType(), stringSetAdapter)
+				.create();
+	}
+	
 	/**
 	 *  Parses the passed in stream to the passed-in JSON type.
 	 */
 	public static <JSONClass extends Object> JSONClass parseStream(InputStreamReader jsonReader, Class<JSONClass> retClass, String packID, String systemName){
-		return packParser.fromJson(jsonReader, retClass);
+		if(retClass.equals(JSONConfig.class)){
+			return configParser.fromJson(jsonReader, retClass);
+		}else{
+			return packParser.fromJson(jsonReader, retClass);
+		}
 	}
 	
 	/**
 	 *  Exports the passed-JSON to the passed-in stream.
 	 */
 	public static void exportStream(Object jsonObject, OutputStreamWriter jsonWriter){
-		packParser.toJson(jsonObject, jsonObject.getClass(), jsonWriter);
+		if(jsonObject.getClass().equals(JSONConfig.class)){
+			configParser.toJson(jsonObject, jsonObject.getClass(), jsonWriter);
+		}else{
+			packParser.toJson(jsonObject, jsonObject.getClass(), jsonWriter);
+		}
 	}
 	
 	/**

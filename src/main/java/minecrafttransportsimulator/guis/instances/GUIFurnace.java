@@ -32,30 +32,30 @@ public class GUIFurnace extends AGUIInventory{
 		//The third is for fuel, which isn't present if we don't have that type of furnace.
 		GUIComponentButton smeltingItemButton = new GUIComponentButton(guiLeft + 52, guiTop + 21){
 			@Override
-			public void onClicked(){
+			public void onClicked(boolean leftSide){
 				InterfacePacket.sendToServer(new PacketPlayerItemTransfer(furnace, player, interactableSlotButtons.indexOf(this), -1));
 			}
 		};
-		addButton(smeltingItemButton);
+		addComponent(smeltingItemButton);
 		interactableSlotButtons.add(smeltingItemButton);
 		
 		GUIComponentButton smeltedItemButton = new GUIComponentButton(guiLeft + 110, guiTop + 21){
 			@Override
-			public void onClicked(){
+			public void onClicked(boolean leftSide){
 				InterfacePacket.sendToServer(new PacketPlayerItemTransfer(furnace, player, interactableSlotButtons.indexOf(this), -1));
 			}
 		};
-		addButton(smeltedItemButton);
+		addComponent(smeltedItemButton);
 		interactableSlotButtons.add(smeltedItemButton);
 		
 		if(furnace.type.equals(FurnaceComponentType.STANDARD)){
 			GUIComponentButton fuelItemButton = new GUIComponentButton(guiLeft + 80, guiTop + 54){
 				@Override
-				public void onClicked(){
+				public void onClicked(boolean leftSide){
 					InterfacePacket.sendToServer(new PacketPlayerItemTransfer(furnace, player, interactableSlotButtons.indexOf(this), -1));
 				}
 			};
-			addButton(fuelItemButton);
+			addComponent(fuelItemButton);
 			interactableSlotButtons.add(fuelItemButton);
 		}
 		
@@ -66,7 +66,7 @@ public class GUIFurnace extends AGUIInventory{
 			case FUEL: backplaneOffset = 49; break;
 			case ELECTRIC: backplaneOffset = 67; break;
 		}
-		addCutout(new GUIComponentCutout(61, 53, 54, 18, 176, backplaneOffset));
+		addComponent(new GUIComponentCutout(61, 53, 54, 18, 176, backplaneOffset));
 	}
 
 	@Override

@@ -6,7 +6,6 @@ import java.io.FileWriter;
 import java.util.List;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
@@ -14,6 +13,7 @@ import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.JSONConfig;
 import minecrafttransportsimulator.jsondefs.JSONCraftingOverrides;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
+import minecrafttransportsimulator.packloading.JSONParser;
 
 
 /**Class that handles all configuration settings. This file is responsible for saving and loading
@@ -43,7 +43,7 @@ public final class ConfigSystem{
 		//Otherwise, make a new one.
 		if(configFile.exists()){
 			try{
-				configObject = new Gson().fromJson(new FileReader(configFile), JSONConfig.class);
+				configObject = JSONParser.parseStream(new FileReader(configFile), JSONConfig.class, null, null);
 			}catch(Exception e){
 				InterfaceCore.logError("ConfigSystem failed to parse config file JSON.  Reverting to defauts.");
 				InterfaceCore.logError(e.getMessage());
@@ -73,7 +73,7 @@ public final class ConfigSystem{
 			//Make the default override file and save it.
 			try{
 				FileWriter writer = new FileWriter(craftingFile);
-				new GsonBuilder().setPrettyPrinting().create().toJson(new JSONCraftingOverrides(), JSONCraftingOverrides.class, writer);
+				JSONParser.exportStream(new JSONCraftingOverrides(), writer);
 				writer.flush();
 				writer.close();
 			}catch(Exception e){
@@ -114,7 +114,7 @@ public final class ConfigSystem{
 	public static void saveToDisk(){
 		try{
 			FileWriter writer = new FileWriter(configFile);
-			new GsonBuilder().setPrettyPrinting().create().toJson(configObject, JSONConfig.class, writer);
+			JSONParser.exportStream(configObject, writer);
 			writer.flush();
 			writer.close();
 		}catch(Exception e){

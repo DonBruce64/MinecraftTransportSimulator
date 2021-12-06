@@ -42,16 +42,16 @@ public abstract class AGUIInventory extends AGUIBase{
 		for(byte i=0; i<36; ++i){				
 			GUIComponentButton itemButton = new GUIComponentButton(guiLeft + 7 + GUIComponentButton.ITEM_BUTTON_SIZE*(i%9), guiTop + yOffset){
 				@Override
-				public void onClicked(){
+				public void onClicked(boolean leftSide){
 					handlePlayerItemClick(playerSlotButtons.indexOf(this));
 				}
 			};
-			addButton(itemButton);
+			addComponent(itemButton);
 			playerSlotButtons.add(itemButton);
 			
 			//Item icons are normally rendered as 16x16 textures, so scale them to fit over the buttons.
 			GUIComponentItem itemIcon = new GUIComponentItem(itemButton.x, itemButton.y, GUIComponentButton.ITEM_BUTTON_SIZE/16F, null);
-			addItem(itemIcon);
+			addComponent(itemIcon);
 			playerSlotIcons.add(itemIcon);
 			
 			//Move offset to next row if required.

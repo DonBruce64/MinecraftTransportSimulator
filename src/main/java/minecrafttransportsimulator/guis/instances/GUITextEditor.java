@@ -47,7 +47,7 @@ public class GUITextEditor extends AGUIBase{
 		if(entity instanceof TileEntityPole_Sign){
 			//Add the render to render the sign.
 			GUIComponent3DModel modelRender = new GUIComponent3DModel(guiLeft + 3*getWidth()/4, guiTop + 160, 64.0F, false, false, false);
-			addOBJModel(modelRender);
+			addComponent(modelRender);
 			modelRender.modelLocation = entity.definition.getModelLocation(entity.subName);
 			modelRender.textureLocation = entity.definition.getTextureLocation(entity.subName);
 			
@@ -63,7 +63,7 @@ public class GUITextEditor extends AGUIBase{
 			for(byte i=0; i<textObjects.size(); ++i){
 				JSONText textDef = textObjects.get(i);
 				GUIComponentLabel label = new GUIComponentLabel(modelRender.x + (int) (textDef.pos.x*64F), modelRender.y - (int) (textDef.pos.y*64F), textDef.color, textLines.get(i), TextAlignment.values()[textDef.renderPosition], textDef.scale*64F/16F, textDef.wrapWidth*64/16, textDef.fontName, textDef.autoScale);
-				addLabel(label);
+				addComponent(label);
 				signTextLabels.add(label);
 			}
 		}else{
@@ -90,10 +90,10 @@ public class GUITextEditor extends AGUIBase{
 			if(!textInputFieldNames.contains(textObject.fieldName)){
 				//No text box present for the field name.  Create a new one.
 				GUIComponentLabel label = new GUIComponentLabel(guiLeft + 20, guiTop + 30 + currentOffset, ColorRGB.BLACK, textObject.fieldName);
-				addLabel(label);
+				addComponent(label);
 				int textRowsRequired = 1 + 5*textObject.maxLength/boxWidth;
-				GUIComponentTextBox box = new GUIComponentTextBox(guiLeft + 20, label.y + 10, boxWidth, textLines.get(textObjects.indexOf(textObject)), 12*textRowsRequired, ColorRGB.WHITE, ColorRGB.BLACK, textObject.maxLength);
-				addTextBox(box);
+				GUIComponentTextBox box = new GUIComponentTextBox(guiLeft + 20, label.y + 10, boxWidth, 12*textRowsRequired, textLines.get(textObjects.indexOf(textObject)), ColorRGB.WHITE, textObject.maxLength);
+				addComponent(box);
 				textInputBoxes.add(box);
 				currentOffset += box.height + 12;
 				textInputFieldNames.add(textObject.fieldName);
@@ -101,9 +101,9 @@ public class GUITextEditor extends AGUIBase{
 		}
 		
 		//Add the confirm button.
-		addButton(confirmButton = new GUIComponentButton(guiLeft + 150, guiTop + 15, 80, 20, InterfaceCore.translate("gui.trafficsignalcontroller.confirm")){
+		addComponent(confirmButton = new GUIComponentButton(guiLeft + 150, guiTop + 15, 80, 20, InterfaceCore.translate("gui.trafficsignalcontroller.confirm")){
 			@Override
-			public void onClicked(){
+			public void onClicked(boolean leftSide){
 				List<String> packetTextLines = new ArrayList<String>();
 				for(JSONText textObject : textObjects){
 					packetTextLines.add(textInputBoxes.get(textInputFieldNames.indexOf(textObject.fieldName)).getText());

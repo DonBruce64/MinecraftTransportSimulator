@@ -7,13 +7,11 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.AGUIBase.GUILightingMode;
+import minecrafttransportsimulator.guis.components.AGUIComponent;
 import minecrafttransportsimulator.guis.components.GUIComponent3DModel;
-import minecrafttransportsimulator.guis.components.GUIComponentCutout;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentInstrument;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
-import minecrafttransportsimulator.guis.components.GUIComponentLabel;
-import minecrafttransportsimulator.guis.components.GUIComponentSelector;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox.TextBoxControlKey;
 import net.minecraft.client.audio.PositionedSoundRecord;
@@ -29,7 +27,7 @@ import net.minecraft.init.SoundEvents;
 public class BuilderGUI extends GuiScreen{
 	private int guiLeft;
 	private int guiTop;
-	private GUIComponentSelector lastSelectorClicked;
+	private GUIComponentButton lastButtonClicked;
 	
 	/**Current gui we are built around.**/
 	public final AGUIBase gui;
@@ -103,15 +101,11 @@ public class BuilderGUI extends GuiScreen{
 			InterfaceGUI.renderSheetTexture(guiLeft, guiTop, gui.getWidth(), gui.getHeight(), 0, 0, gui.getWidth(), gui.getHeight(), textureWidth, textureHeight);
 		}
 		
-		//Render cutout, buttons, and selectors.  These choose if they render or not depending on visibility.
-		for(GUIComponentCutout cutout : gui.cutouts){
-			cutout.renderTexture(mouseX, mouseY, textureWidth, textureHeight);
-		}
-		for(GUIComponentButton button : gui.buttons){
-			button.renderTexture(mouseX, mouseY, textureWidth, textureHeight);
-		}
-		for(GUIComponentSelector selector : gui.selectors){
-			selector.renderSelector(mouseX, mouseY);
+		//Render textured components.  These choose if they render or not depending on visibility.
+		for(AGUIComponent component : gui.generalComponents){
+			if(component.visible && !(component instanceof GUIComponent3DModel)){
+				component.render(mouseX, mouseY, textureWidth, textureHeight, false, partialTicks);
+			}
 		}
 		//Disable translucency if we had it enabled.
 		if(gui.renderTranslucent()){
@@ -124,55 +118,46 @@ public class BuilderGUI extends GuiScreen{
 		if(gui.getGUILightMode().equals(GUILightingMode.LIT)){
 			InterfaceRender.setLightingState(false);
 			InterfaceRender.bindTexture(gui.getTexture().replace(".png", "_lit.png"));
-			InterfaceGUI.renderSheetTexture(guiLeft, guiTop, gui.getWidth(), gui.getHeight(), 0, 0, gui.getWidth(), gui.getHeight(), textureWidth, textureHeight);
-			for(GUIComponentCutout cutout : gui.cutouts){
-				cutout.renderTexture(mouseX, mouseY, textureWidth, textureHeight);
+			if(gui.renderBackground()){
+				InterfaceGUI.renderSheetTexture(guiLeft, guiTop, gui.getWidth(), gui.getHeight(), 0, 0, gui.getWidth(), gui.getHeight(), textureWidth, textureHeight);
 			}
-			for(GUIComponentButton button : gui.buttons){
-				button.renderTexture(mouseX, mouseY, textureWidth, textureHeight);
+			for(AGUIComponent component : gui.generalComponents){
+				if(component.visible && !(component instanceof GUIComponent3DModel)){
+					component.render(mouseX, mouseY, textureWidth, textureHeight, true, partialTicks);
+				}
 			}
-			for(GUIComponentSelector selector : gui.selectors){
-				selector.renderSelector(mouseX, mouseY);
-			}
-		}
-		
-		//Now render any OBJModels we may have.
-		for(GUIComponent3DModel objModel : gui.objModels){
-			objModel.renderModel();
 		}
 		
 		//Now that all main rendering is done, render text.
 		//This includes labels, button text, and text boxes.
-		//We disable the depth test here, as we want the text to render above anything else.
-		//This prevents the need for z-scaling.
-		GL11.glDisable(GL11.GL_DEPTH_TEST);
-		for(GUIComponentLabel label : gui.labels){
-			label.renderText();
+		boolean isTextLit = gui.getGUILightMode().equals(GUILightingMode.LIT);
+		for(AGUIComponent component : gui.generalComponents){
+			if(component.visible && component.text != null && !component.text.isEmpty()){
+				component.renderText(isTextLit);
+			}
 		}
-		for(GUIComponentButton button : gui.buttons){
-			button.renderText();
-		}
-		for(GUIComponentSelector selector : gui.selectors){
-			selector.renderText(gui.getGUILightMode().equals(GUILightingMode.LIT));
-		}
-		for(GUIComponentTextBox textBox : gui.textBoxes){
-        	textBox.renderBox();
-        }
-		GL11.glEnable(GL11.GL_DEPTH_TEST);
 		
 		//Re-enable lighting for instrument rendering,
 		//then render the instruments.  These use their own texture,
 		//so the text texture will be overridden at this point.
 		InterfaceRender.setLightingState(true);
 		for(GUIComponentInstrument instrument : gui.instruments){
-			instrument.renderInstrument(false, partialTicks);
+			instrument.render(mouseX, mouseY, textureWidth, textureHeight, false, partialTicks);
 		}
 		//Now render blended parts of the instrument.
 		InterfaceRender.setBlend(true);
 		for(GUIComponentInstrument instrument : gui.instruments){
-			instrument.renderInstrument(true, partialTicks);
+			instrument.render(mouseX, mouseY, textureWidth, textureHeight, true, partialTicks);
 		}
 		InterfaceRender.setBlend(false);
+		
+		//Render 3D models now, as they don't have the same texture.
+		for(AGUIComponent component : gui.generalComponents){
+			if(component.visible && component instanceof GUIComponent3DModel){
+				component.render(mouseX, mouseY, textureWidth, textureHeight, false, partialTicks);
+			}
+		}
+		
 		
 		//Now render items.
 		//These will cause a texture re-bind, so they need to go after the components.
@@ -180,16 +165,15 @@ public class BuilderGUI extends GuiScreen{
 		RenderHelper.enableGUIStandardItemLighting();
 		mc.entityRenderer.disableLightmap();
 		for(GUIComponentItem item : gui.items){
-			item.renderItem();
+			item.render(mouseX, mouseY, textureWidth, textureHeight, false, partialTicks);
 		}
 		
 		//Render any tooltips.  These are the final thing to render as they need to render over everything else.
-		for(GUIComponentButton button : gui.buttons){
-			button.renderTooltip(gui, mouseX, mouseY);
+		for(AGUIComponent component : gui.generalComponents){
+			if(component.visible){
+				component.renderTooltip(gui, mouseX, mouseY);
+			}
 		}
-		for(GUIComponentItem item : gui.items){
-			item.renderTooltip(gui, mouseX, mouseY);
-		}		
 	}
 	
 	/**
@@ -200,23 +184,21 @@ public class BuilderGUI extends GuiScreen{
 	 */
 	@Override
 	protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException{
-        for(GUIComponentButton button : gui.buttons){
-        	if(button.canClick(mouseX, mouseY)){
-    			mc.getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(SoundEvents.UI_BUTTON_CLICK, 1.0F));
-    			button.onClicked();
-    			return;
+        for(AGUIComponent component : gui.generalComponents){
+        	if(component instanceof GUIComponentButton){
+        		GUIComponentButton button = (GUIComponentButton) component;
+	        	if(button.canClick(mouseX, mouseY)){
+	    			mc.getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+	    			button.onClicked(mouseX <= button.x + button.width/2);
+	    			lastButtonClicked = button;
+	    			return;
+	        	}
         	}
         }
-        for(GUIComponentSelector selector : gui.selectors){
-        	if(selector.canClick(mouseX, mouseY)){
-    			mc.getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(SoundEvents.UI_BUTTON_CLICK, 1.0F));
-    			selector.onClicked(mouseX <= selector.x + selector.width/2);
-    			lastSelectorClicked = selector;
-    			return;
+        for(AGUIComponent component: gui.generalComponents){
+        	if(component instanceof GUIComponentTextBox){
+        		((GUIComponentTextBox) component).updateFocus(mouseX, mouseY);
         	}
-        }
-        for(GUIComponentTextBox textBox : gui.textBoxes){
-        	textBox.updateFocus(mouseX, mouseY);
         }
     }
 	
@@ -228,9 +210,9 @@ public class BuilderGUI extends GuiScreen{
 	 */
 	@Override
 	protected void mouseReleased(int mouseX, int mouseY, int actionType){
-	    if(lastSelectorClicked != null){
-	    	lastSelectorClicked.onReleased();
-	    	lastSelectorClicked = null;
+	    if(lastButtonClicked != null){
+	    	lastButtonClicked.onReleased();
+	    	lastButtonClicked = null;
 	    }
 	}
 	
@@ -241,22 +223,25 @@ public class BuilderGUI extends GuiScreen{
 	@Override
 	protected void keyTyped(char key, int keyCode) throws IOException{
 		super.keyTyped(key, keyCode);
-		for(GUIComponentTextBox textBox : gui.textBoxes){
-			if(textBox.focused){
-				//If we did a paste from the clipboard, we need to replace everything in the box.
-				//Otherwise, just send the char for further processing.
-				if(isKeyComboCtrlV(keyCode)){
-					textBox.setText(getClipboardString());
-				}else{
-					switch(keyCode){
-						case Keyboard.KEY_BACK: textBox.handleKeyTyped(key, keyCode, TextBoxControlKey.BACKSPACE); continue;
-						case Keyboard.KEY_DELETE: textBox.handleKeyTyped(key, keyCode, TextBoxControlKey.DELETE); continue;
-						case Keyboard.KEY_LEFT: textBox.handleKeyTyped(key, keyCode, TextBoxControlKey.LEFT); continue;
-						case Keyboard.KEY_RIGHT: textBox.handleKeyTyped(key, keyCode, TextBoxControlKey.RIGHT); continue;
-						default: textBox.handleKeyTyped(key, keyCode, null); continue;
+		 for(AGUIComponent component: gui.generalComponents){
+	        if(component instanceof GUIComponentTextBox){
+	        	GUIComponentTextBox textBox = (GUIComponentTextBox) component;
+				if(textBox.focused){
+					//If we did a paste from the clipboard, we need to replace everything in the box.
+					//Otherwise, just send the char for further processing.
+					if(isKeyComboCtrlV(keyCode)){
+						textBox.setText(getClipboardString());
+					}else{
+						switch(keyCode){
+							case Keyboard.KEY_BACK: textBox.handleKeyTyped(key, keyCode, TextBoxControlKey.BACKSPACE); continue;
+							case Keyboard.KEY_DELETE: textBox.handleKeyTyped(key, keyCode, TextBoxControlKey.DELETE); continue;
+							case Keyboard.KEY_LEFT: textBox.handleKeyTyped(key, keyCode, TextBoxControlKey.LEFT); continue;
+							case Keyboard.KEY_RIGHT: textBox.handleKeyTyped(key, keyCode, TextBoxControlKey.RIGHT); continue;
+							default: textBox.handleKeyTyped(key, keyCode, null); continue;
+						}
 					}
 				}
-			}
+	        }
         }
 	}
 	

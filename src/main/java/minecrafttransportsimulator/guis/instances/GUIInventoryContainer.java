@@ -41,24 +41,24 @@ public class GUIInventoryContainer extends AGUIInventory{
 		//Make a slider if we need to show extra rows.
 		if(maxRowIncrements > 0){
 			//Create the prior and next row buttons.
-			addButton(priorRowButton = new GUIComponentButton(guiLeft + 174, guiTop + 11, 12, 7, 220, 0, 12, 7){
+			addComponent(priorRowButton = new GUIComponentButton(guiLeft + 174, guiTop + 11, 12, 7, 220, 0, 12, 7){
 				@Override
-				public void onClicked(){
+				public void onClicked(boolean leftSide){
 					--rowOffset;
 				}
 			});
-			addButton(nextRowButton = new GUIComponentButton(guiLeft + 174, guiTop + 112, 12, 7, 232, 0, 12, 7){
+			addComponent(nextRowButton = new GUIComponentButton(guiLeft + 174, guiTop + 112, 12, 7, 232, 0, 12, 7){
 				@Override
-				public void onClicked(){
+				public void onClicked(boolean leftSide){
 					++rowOffset;
 				}
 			});
 			
 			//Add the slider box.  This is static and always rendered.
-			addCutout(new GUIComponentCutout(guiLeft + 173, guiTop + 20, 14, 90, 242, 45));
+			addComponent(new GUIComponentCutout(guiLeft + 173, guiTop + 20, 14, 90, 242, 45));
 			
 			//Now add the slider.
-			addCutout(sliderCutout = new GUIComponentCutout(guiLeft + 174, guiTop + 21, 12, 15, 244, 15));
+			addComponent(sliderCutout = new GUIComponentCutout(guiLeft + 174, guiTop + 21, 12, 15, 244, 15));
 		}
 		
 		//Create all inventory slots.  This is variable based on the size of the inventory, and can result in multiple pages.
@@ -68,16 +68,16 @@ public class GUIInventoryContainer extends AGUIInventory{
 		for(byte i=0; i<slotsToMake; ++i){				
 			GUIComponentButton itemButton = new GUIComponentButton(guiLeft + 8 + GUIComponentButton.ITEM_BUTTON_SIZE*(i%9), guiTop + 12 + inventoryRowOffset + GUIComponentButton.ITEM_BUTTON_SIZE*(i/9)){
 				@Override
-				public void onClicked(){
+				public void onClicked(boolean leftSide){
 					InterfacePacket.sendToServer(new PacketPlayerItemTransfer(inventory, player, interactableSlotButtons.indexOf(this), -1));
 				}
 			};
-			addButton(itemButton);
+			addComponent(itemButton);
 			interactableSlotButtons.add(itemButton);
 			
 			//Item icons are normally rendered as 16x16 textures, so scale them to fit over the buttons.
 			GUIComponentItem itemIcon = new GUIComponentItem(itemButton.x, itemButton.y, GUIComponentButton.ITEM_BUTTON_SIZE/16F, null);
-			addItem(itemIcon);
+			addComponent(itemIcon);
 			interactableSlotIcons.add(itemIcon);
 		}
 	}

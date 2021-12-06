@@ -1,7 +1,6 @@
 package minecrafttransportsimulator.guis.components;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.mcinterface.InterfaceGUI;
 import minecrafttransportsimulator.rendering.instances.RenderText;
 import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
 
@@ -10,39 +9,33 @@ import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
  * that MC's text boxes have that aren't in other components.  Provides a more streamlined
  * object this way.  This text box also allows for word-wrapping of text.  Something
  * sorely needed in the base text box rendering routines...
+ * Note that the box's background is defined as a section on the currently-bound GUi texture, so keep this in mind.
  *
  * @author don_bruce
  */
-public class GUIComponentTextBox{	
+public class GUIComponentTextBox extends GUIComponentCutout{	
 	private static final String VALID_SPECIAL_CHARS = "/*!@#$%^&*()\"{}_[]|\\?/<>,.- ";
+	private static final int DEFAULT_BACKGROUND_SECTION_WIDTH = 40;
+	private static final int DEFAULT_BACKGROUND_SECTION_HEIGHT = 20;
+	private static final int DEFAULT_BACKGROUND_SECTION_WIDTH_OFFSET = 216;
+	private static final int DEFAULT_BACKGROUND_SECTION_HEIGHT_OFFSET = 236;
 	
-	public final int x;
-	public final int y;
-	public final int width;
-	public final int height;
 	public ColorRGB fontColor;
-	public final ColorRGB backgroundColor;
 	
-	public boolean visible = true;
 	public boolean enabled = true;
 	public boolean focused = false;
 	
 	private int position;
 	private int maxTextLength;
-	private String text;
 	private String flashText;
 	    	
 	public GUIComponentTextBox(int x, int y, int width, String text){
-		this(x, y, width, text, 20, ColorRGB.WHITE, ColorRGB.BLACK, 32);
+		this(x, y, width, 20, text, ColorRGB.WHITE, 32);
 	}
 	
-	public GUIComponentTextBox(int x, int y, int width, String text, int height, ColorRGB fontColor, ColorRGB backgroundColor, int maxTextLength){
-		this.x = x;
-		this.y = y;
-		this.width = width;
-		this.height = height;
+	public GUIComponentTextBox(int x, int y, int width, int height, String text, ColorRGB fontColor, int maxTextLength){
+		super(x, y, width, height, DEFAULT_BACKGROUND_SECTION_WIDTH_OFFSET, DEFAULT_BACKGROUND_SECTION_HEIGHT_OFFSET, DEFAULT_BACKGROUND_SECTION_WIDTH, DEFAULT_BACKGROUND_SECTION_HEIGHT);
 		this.fontColor = fontColor;
-		this.backgroundColor = backgroundColor;
 		this.maxTextLength = maxTextLength;
 		setText(text);
 	}
@@ -160,31 +153,20 @@ public class GUIComponentTextBox{
 	 *  only valid text changes are processed.  By default this method does nothing.
 	 */
 	public void handleTextChange(){}
-	
-	/**
-	 *  Renders the box's background and text.  The background will always be a solid color
-	 *  independent of the currently-bound texture, while the text will cause the font texture
-	 *  to be the currently-bound texture at the end of the render.  Because of this, it is
-	 *  recommended to render all text boxes with {@link GUIComponentLabel}s and other font-based
-	 *  GUI components so textures don't need to be switched out.
-	 */
-    public void renderBox(){
-    	if(visible){
-    		if(backgroundColor != null){
-    			InterfaceGUI.renderRectangle(x, y, width, height, backgroundColor);
-    		}
-    		//If this box is less than 20px high, center the text.
-    		//Otherwise, render it at the top aligned.
-    		if(enabled){
-    			if(focused && AGUIBase.inClockPeriod(20, 10)){
-    				RenderText.draw2DText(flashText, null, x + 4, y + (height >= 20 ? 5 : 1 + height/10), fontColor, TextAlignment.LEFT_ALIGNED, 1.0F, false, width);
-    			}else{
-    				RenderText.draw2DText(text, null, x + 4, y + (height >= 20 ? 5 : 1 + height/10), fontColor, TextAlignment.LEFT_ALIGNED, 1.0F, false, width);
-    			}
-    		}else{
-    			RenderText.draw2DText(text, null, x + 4, y + (height >= 20 ? 5 : 1 + height/10), ColorRGB.GRAY, TextAlignment.LEFT_ALIGNED, 1.0F, false, width);
-    		}
-    	}
+    
+    @Override
+	public void renderText(boolean renderTextLit){
+    	//If this box is less than 20px high, center the text.
+		//Otherwise, render it at the top aligned.
+		if(enabled){
+			if(focused && AGUIBase.inClockPeriod(20, 10)){
+				RenderText.draw2DText(flashText, null, x + 4, y + (height >= 20 ? 5 : 1 + height/10), fontColor, TextAlignment.LEFT_ALIGNED, 1.0F, false, width);
+			}else{
+				RenderText.draw2DText(text, null, x + 4, y + (height >= 20 ? 5 : 1 + height/10), fontColor, TextAlignment.LEFT_ALIGNED, 1.0F, false, width);
+			}
+		}else{
+			RenderText.draw2DText(text, null, x + 4, y + (height >= 20 ? 5 : 1 + height/10), ColorRGB.GRAY, TextAlignment.LEFT_ALIGNED, 1.0F, false, width);
+		}
     }
     
 	/**

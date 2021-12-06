@@ -16,26 +16,19 @@ import net.minecraft.item.ItemStack;
  *
  * @author don_bruce
  */
-public class GUIComponentItem{		
-	public final int x;
-	public final int y;
+public class GUIComponentItem extends AGUIComponent{		
 	public final float scale;
 	public ItemStack stack;
 	public List<ItemStack> stacks;
 		    	
 	public GUIComponentItem(int x, int y, float scale, ItemStack stack){
-		this.x = x;
-		this.y = y;
+		super(x, y);
 		this.scale = scale;
 		this.stack = stack;
 	}
 
-	
-	/**
-	 *  Renders the item by calling the appropriate method in the bas GUI.
-	 *  This is done to keep all nasty MC-specific methods out of this component.
-	 */
-    public void renderItem(){
+    @Override
+	public void render(int mouseX, int mouseY, int textureWidth, int textureHeight, boolean blendingEnabled, float partialTicks){
     	if(stack != null){
     		InterfaceGUI.drawItem(stack, x, y, scale);
     	}else if(stacks != null && !stacks.isEmpty()){
@@ -43,12 +36,8 @@ public class GUIComponentItem{
     	}
     }
     
-	/**
-	 *  Renders the tooltip for this item.  This needs to be done after the main item
-	 *  render as otherwise it will render behind other items.  This method needs an
-	 *  instance of {@link AGUIBase} to ensure the tooltip doesn't render off the screen.
-	 */
-    public void renderTooltip(AGUIBase gui, int mouseX, int mouseY){
+    @Override
+	public void renderTooltip(AGUIBase gui, int mouseX, int mouseY){
     	ItemStack stackToRender = null;
     	if(stack != null){
     		stackToRender = stack;

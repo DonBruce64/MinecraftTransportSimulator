@@ -13,35 +13,27 @@ import minecrafttransportsimulator.rendering.instances.RenderInstrument;
  *
  * @author don_bruce
  */
-public class GUIComponentInstrument{
-	public final int x;
-	public final int y;
+public class GUIComponentInstrument extends AGUIComponent{
 	public final int instrumentPackIndex;
 	public final JSONInstrumentDefinition packInstrument;
-	public final ItemInstrument instrument;
+	public ItemInstrument instrument;
 	public final AEntityD_Interactable<?> entity;
-	
-	public boolean visible = true;
 	    	
 	public GUIComponentInstrument(int guiLeft, int guiTop, int instrumentPackIndex, AEntityD_Interactable<?> entity){
+		super(guiLeft, guiTop);
 		this.packInstrument = entity.definition.instruments.get(instrumentPackIndex);
 		this.instrument = entity.instruments.get(instrumentPackIndex);
-		this.x = guiLeft + packInstrument.hudX;
-		this.y = guiTop + packInstrument.hudY;
+		this.offsetX = packInstrument.hudX;
+		this.offsetY = packInstrument.hudY;
 		this.instrumentPackIndex = instrumentPackIndex;
 		this.entity = entity;
 	}
 
-	
-	/**
-	 *  Renders the instrument.  Instruments use the code in {@link RenderInstrument}, so this call
-	 *  is really just a forwarding call that applies a few GUI-specific transforms prior to calling
-	 *  that function.
-	 */
-    public void renderInstrument(boolean blendingEnabled, float partialTicks){
+    @Override
+	public void render(int mouseX, int mouseY, int textureWidth, int textureHeight, boolean blendingEnabled, float partialTicks){
     	if(visible){
 	    	GL11.glPushMatrix();
-			GL11.glTranslated(x, y, 0);
+			GL11.glTranslated(x + offsetX, y + offsetY, 0);
 			//Need to scale y by -1 due to inverse coordinates.
 			GL11.glScalef(1.0F, -1.0F, 1.0F);
 			RenderInstrument.drawInstrument(instrument, packInstrument.optionalPartNumber, entity, packInstrument.hudScale, blendingEnabled, partialTicks);

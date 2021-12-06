@@ -55,11 +55,7 @@ public class InterfaceRender{
 		if(object.enableBrightBlending){
 			setBlendBright(true);
 		}
-		if(object.texture != null){
-			bindTexture(object.texture);
-		}else{
-			setTextureState(false);
-		}
+		bindTexture(object.texture);
 		setColorState(object.color, object.alpha);
 		
 		GL11.glPushMatrix();
@@ -91,9 +87,6 @@ public class InterfaceRender{
 		}
 		if(object.enableBrightBlending){
 			setBlendBright(false);
-		}
-		if(object.texture == null){
-			setTextureState(true);
 		}
 	}
 	
@@ -333,20 +326,8 @@ public class InterfaceRender{
 	 *  In particular, this is needed if colors are changed during MC internal draw calls,
 	 *  such as rendering a string, changing the color, and then rendering another string.
 	 */
-	private static void setColorState(ColorRGB color, float alpha){
+	public static void setColorState(ColorRGB color, float alpha){
 		GlStateManager.color(color.red, color.green, color.blue, alpha);
-	}
-	
-	/**
-	 *  Enables or disables textures.  If textures are disabled, rendering will be
-	 *  solid-color shapes.
-	 */
-	private static void setTextureState(boolean enabled){
-		if(enabled){
-			GlStateManager.enableTexture2D();
-		}else{
-			GlStateManager.disableTexture2D();
-		}
 	}
 	
 	/**

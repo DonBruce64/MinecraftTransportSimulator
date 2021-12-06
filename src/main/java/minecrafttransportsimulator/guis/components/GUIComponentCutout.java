@@ -8,13 +8,9 @@ import minecrafttransportsimulator.mcinterface.InterfaceGUI;
  *
  * @author don_bruce
  */
-public class GUIComponentCutout{
+public class GUIComponentCutout extends AGUIComponent{
 	
 	//Rendering variables.
-	public final int x;
-	public int offsetX;
-	public final int y;
-	public int offsetY;
 	public final int width;
 	public final int height;
 	
@@ -24,9 +20,6 @@ public class GUIComponentCutout{
 	protected final int textureSectionWidth;
 	protected final int textureSectionHeight;
 	
-	//State variables.
-	public boolean visible = true;
-	
 	/**Standard constructor for a 1:1 rendering.**/
 	public GUIComponentCutout(int x, int y, int width, int height, int textureXOffset, int textureYOffset){
 		this(x, y, width, height, textureXOffset, textureYOffset, width, height);
@@ -34,8 +27,7 @@ public class GUIComponentCutout{
 	
 	/**Expanded constructor for 1:x rendering.  This allows the rendered texture component to be a different size than the texture.**/
 	public GUIComponentCutout(int x, int y, int width, int height, int textureXOffset, int textureYOffset, int textureSectionWidth, int textureSectionHeight){
-		this.x = x;
-		this.y = y;
+		super(x, y);
 		this.width = width;
 		this.height = height;
 		this.textureXOffset = textureXOffset;
@@ -44,12 +36,8 @@ public class GUIComponentCutout{
 		this.textureSectionHeight = textureSectionHeight;
 	}
 	
-	/**
-	 *  Renders the texture portion of the cutout.
-	 */
-    public void renderTexture(int mouseX, int mouseY, int textureWidth, int textureHeight){
-    	if(visible){
-    		InterfaceGUI.renderSheetTexture(x + offsetX, y + offsetY, width, height, textureXOffset, textureYOffset, textureXOffset + textureSectionWidth, textureYOffset + textureSectionHeight, textureWidth, textureHeight);
-		}
+	@Override
+    public void render(int mouseX, int mouseY, int textureWidth, int textureHeight, boolean blendingEnabled, float partialTicks){
+    	InterfaceGUI.renderSheetTexture(x + offsetX, y + offsetY, width, height, textureXOffset, textureYOffset, textureXOffset + textureSectionWidth, textureYOffset + textureSectionHeight, textureWidth, textureHeight);
     }
 }

@@ -196,7 +196,7 @@ gui.instruments.main=Main Instruments
 gui.instruments.control=Control Panel
 gui.instruments.clear=CLEAR
 gui.instruments.idle=Select an instrument.
-gui.instruments.decide=Click an instrument to add, or CLEAR to remove.
+gui.instruments.decide=Click an instrument to add.
 
 gui.config.header.config.rendering=RENDERING
 gui.config.header.config.controls=CONFIG

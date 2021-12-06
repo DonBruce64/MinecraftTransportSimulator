@@ -63,7 +63,8 @@ public class GUIPartBench extends AGUIBase{
 	
 	private GUIComponentLabel partInfo;
 	private GUIComponentLabel vehicleInfo;
-	private GUIComponentButton switchInfoButton;
+	private GUIComponentButton vehicleInfoButton;
+	private GUIComponentButton vehicleDescriptionButton;
 	private GUIComponentButton confirmButton;
 	
 	//Crafting components.
@@ -110,62 +111,62 @@ public class GUIPartBench extends AGUIBase{
 	@Override
 	public void setupComponents(int guiLeft, int guiTop){	
 		//Create pack navigation section.
-		addButton(prevPackButton = new GUIComponentButton(guiLeft + 17, guiTop + 11, 20, 20, "<", true, ColorRGB.DARK_GRAY, 0, 196, 20, 20){
+		addComponent(prevPackButton = new GUIComponentButton(guiLeft + 17, guiTop + 11, 20, 20, 40, 196, 20, 20){
 			@Override
-			public void onClicked(){
+			public void onClicked(boolean leftSide){
 				currentPack = prevPack;
 				currentItem = null;
 				updateNames();
 			}
 		});
-		addButton(nextPackButton = new GUIComponentButton(guiLeft + 243, guiTop + 11, 20, 20, ">", true, ColorRGB.DARK_GRAY, 0, 196, 20, 20){
+		addComponent(nextPackButton = new GUIComponentButton(guiLeft + 243, guiTop + 11, 20, 20, 60, 196, 20, 20){
 			@Override
-			public void onClicked(){
+			public void onClicked(boolean leftSide){
 				currentPack = nextPack;
 				currentItem = null;
 				updateNames();
 			}
 		});
 		int centerBetweenButtons = prevPackButton.x + prevPackButton.width + (nextPackButton.x - (prevPackButton.x + prevPackButton.width))/2;
-		addLabel(packName = new GUIComponentLabel(centerBetweenButtons, guiTop + 16, ColorRGB.WHITE, "", TextAlignment.CENTERED, 1.0F));
+		addComponent(packName = new GUIComponentLabel(centerBetweenButtons, guiTop + 16, ColorRGB.WHITE, "", TextAlignment.CENTERED, 1.0F));
 		
 		
 		//Create part navigation section.
-		addButton(prevPartButton = new GUIComponentButton(prevPackButton.x, prevPackButton.y + prevPackButton.height, 20, 20, "<", true, ColorRGB.DARK_GRAY, 0, 196, 20, 20){
+		addComponent(prevPartButton = new GUIComponentButton(prevPackButton.x, prevPackButton.y + prevPackButton.height, 20, 20, 40, 196, 20, 20){
 			@Override
-			public void onClicked(){
+			public void onClicked(boolean leftSide){
 				currentItem = prevItem;
 				updateNames();
 			}
 		});
-		addButton(nextPartButton = new GUIComponentButton(nextPackButton.x, nextPackButton.y + nextPackButton.height, 20, 20, ">", true, ColorRGB.DARK_GRAY, 0, 196, 20, 20){
+		addComponent(nextPartButton = new GUIComponentButton(nextPackButton.x, nextPackButton.y + nextPackButton.height, 20, 20, 60, 196, 20, 20){
 			@Override
-			public void onClicked(){
+			public void onClicked(boolean leftSide){
 				currentItem = nextItem;
 				updateNames();
 			}
 		});
-		addLabel(partName = new GUIComponentLabel(packName.x, packName.y + prevPackButton.height, ColorRGB.WHITE, "", TextAlignment.CENTERED, 0.75F));
-		addLabel(partInfo = new GUIComponentLabel(guiLeft + 17, guiTop + 60, ColorRGB.WHITE, "", TextAlignment.LEFT_ALIGNED, 0.75F, 150));
-		addLabel(vehicleInfo = new GUIComponentLabel(guiLeft + 17, guiTop + 60, ColorRGB.WHITE, "", TextAlignment.LEFT_ALIGNED, 1.0F, 150));
+		addComponent(partName = new GUIComponentLabel(packName.x, packName.y + prevPackButton.height, ColorRGB.WHITE, "", TextAlignment.CENTERED, 0.75F));
+		addComponent(partInfo = new GUIComponentLabel(guiLeft + 17, guiTop + 60, ColorRGB.WHITE, "", TextAlignment.LEFT_ALIGNED, 0.75F, 150));
+		addComponent(vehicleInfo = new GUIComponentLabel(guiLeft + 17, guiTop + 60, ColorRGB.WHITE, "", TextAlignment.LEFT_ALIGNED, 1.0F, 150));
 		
 		
 		//Create color navigation section.
-		addButton(prevColorButton = new GUIComponentButton(guiLeft + 175, guiTop + 131, 20, 15, "<", true, ColorRGB.DARK_GRAY, 0, 196, 20, 20){
+		addComponent(prevColorButton = new GUIComponentButton(guiLeft + 175, guiTop + 131, 20, 15, 40, 196, 20, 20){
 			@Override
-			public void onClicked(){
+			public void onClicked(boolean leftSide){
 				currentItem = prevSubItem;
 				updateNames();
 			}
 		});
-		addButton(nextColorButton = new GUIComponentButton(guiLeft + 245, guiTop + 131, 20, 15, ">", true, ColorRGB.DARK_GRAY, 0, 196, 20, 20){
+		addComponent(nextColorButton = new GUIComponentButton(guiLeft + 245, guiTop + 131, 20, 15, 60, 196, 20, 20){
 			@Override
-			public void onClicked(){
+			public void onClicked(boolean leftSide){
 				currentItem = nextSubItem;
 				updateNames();
 			}
 		});
-		addLabel(new GUIComponentLabel(prevColorButton.x + prevColorButton.width + (nextColorButton.x - (prevColorButton.x + prevColorButton.width))/2, guiTop + 136, ColorRGB.WHITE, InterfaceCore.translate("gui.vehicle_bench.color"), TextAlignment.CENTERED, 1.0F).setButton(nextColorButton));
+		addComponent(new GUIComponentLabel(prevColorButton.x + prevColorButton.width + (nextColorButton.x - (prevColorButton.x + prevColorButton.width))/2, guiTop + 136, ColorRGB.WHITE, InterfaceCore.translate("gui.vehicle_bench.color"), TextAlignment.CENTERED, 1.0F).setButton(nextColorButton));
 		
 		
 		//Create the crafting item slots.  14 18X18 slots (7X2) need to be made here.
@@ -173,29 +174,35 @@ public class GUIPartBench extends AGUIBase{
 		final int craftingIconSize = 18;
 		for(byte i=0; i<7*2; ++i){				
 			GUIComponentItem craftingItem = new GUIComponentItem(guiLeft + 276 + craftingIconSize*(i/7), guiTop + 20 + craftingIconSize*(i%7), craftingIconSize/16F, null);
-			addItem(craftingItem);
+			addComponent(craftingItem);
 			craftingItemIcons.add(craftingItem);
 		}
 		
 		
 		//Create both the item and OBJ renders.  We choose which to display later.
-		addItem(itemRender = new GUIComponentItem(guiLeft + 175, guiTop + 56, 5.625F, null));
-		addOBJModel(modelRender = new GUIComponent3DModel(guiLeft + 220, guiTop + 101, 32.0F, true, true, false));
+		addComponent(itemRender = new GUIComponentItem(guiLeft + 175, guiTop + 56, 5.625F, null));
+		addComponent(modelRender = new GUIComponent3DModel(guiLeft + 220, guiTop + 101, 32.0F, true, true, false));
 		
 		
 		//Create the info switching button.
-		addButton(switchInfoButton = new GUIComponentButton(guiLeft + 147, guiTop + 159, 20, 20, "?", true, ColorRGB.DARK_GRAY, 0, 196, 20, 20){
+		addComponent(vehicleInfoButton = new GUIComponentButton(guiLeft + 147, guiTop + 159, 20, 20, 100, 196, 20, 20){
 			@Override
-			public void onClicked(){
-				displayVehicleInfo = !displayVehicleInfo;
+			public void onClicked(boolean leftSide){
+				displayVehicleInfo = true;
+			}
+		});
+		addComponent(vehicleDescriptionButton = new GUIComponentButton(guiLeft + 147, guiTop + 159, 20, 20, 80, 196, 20, 20){
+			@Override
+			public void onClicked(boolean leftSide){
+				displayVehicleInfo = false;
 			}
 		});
 				
 		
 		//Create the confirm button.
-		addButton(confirmButton = new GUIComponentButton(guiLeft + 211, guiTop + 156, 20, 20, 20, 196, 20, 20){
+		addComponent(confirmButton = new GUIComponentButton(guiLeft + 211, guiTop + 156, 20, 20, 20, 196, 20, 20){
 			@Override
-			public void onClicked(){
+			public void onClicked(boolean leftSide){
 				InterfacePacket.sendToServer(new PacketPlayerCraftItem(player, currentItem));
 			}
 		});
@@ -216,7 +223,8 @@ public class GUIPartBench extends AGUIBase{
 		nextColorButton.visible = currentItem instanceof AItemSubTyped;
 		nextColorButton.enabled = nextSubItem != null;
 		
-		switchInfoButton.visible = currentItem instanceof ItemVehicle;
+		vehicleInfoButton.visible = currentItem instanceof ItemVehicle && !displayVehicleInfo;
+		vehicleDescriptionButton.visible = currentItem instanceof ItemVehicle && displayVehicleInfo;
 		partInfo.visible = !displayVehicleInfo;
 		vehicleInfo.visible = displayVehicleInfo;
 		
@@ -249,9 +257,9 @@ public class GUIPartBench extends AGUIBase{
 		//Check the mouse to see if it updated and we need to change items.
 		int wheelMovement = InterfaceInput.getTrackedMouseWheel();
 		if(wheelMovement < 0 && nextPartButton.enabled){
-			nextPartButton.onClicked();
+			nextPartButton.onClicked(false);
 		}else if(wheelMovement > 0 && prevPartButton.enabled){
-			prevPartButton.onClicked();
+			prevPartButton.onClicked(false);
 		}
 	}
 	

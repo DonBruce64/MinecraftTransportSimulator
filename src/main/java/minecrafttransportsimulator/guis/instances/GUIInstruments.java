@@ -6,8 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.lwjgl.opengl.GL11;
-
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
 import minecrafttransportsimulator.entities.instances.APart;
@@ -23,11 +21,9 @@ import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.JSONInstrumentDefinition;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
-import minecrafttransportsimulator.mcinterface.InterfaceGUI;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketEntityInstrumentChange;
-import minecrafttransportsimulator.rendering.instances.RenderInstrument;
 import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
@@ -93,15 +89,15 @@ public class GUIInstruments extends AGUIBase{
 	@Override
 	public void setupComponents(int guiLeft, int guiTop){	
 		//Create the prior and next pack buttons.
-		addButton(prevPackButton = new GUIComponentButton(guiLeft, guiTop - 74, 20, 20, "<", true, ColorRGB.WHITE, false){
+		addComponent(prevPackButton = new GUIComponentButton(guiLeft, guiTop - 74, 20, 20, "<", true, ColorRGB.WHITE){
 			@Override
-			public void onClicked(){
+			public void onClicked(boolean leftSide){
 				currentPack = playerInstruments.lowerKey(currentPack);
 			}
 		});
-		addButton(nextPackButton = new GUIComponentButton(guiLeft, guiTop - 52, 20, 20, ">", true, ColorRGB.WHITE, false){
+		addComponent(nextPackButton = new GUIComponentButton(guiLeft, guiTop - 52, 20, 20, ">", true, ColorRGB.WHITE){
 			@Override
-			public void onClicked(){
+			public void onClicked(boolean leftSide){
 				currentPack = playerInstruments.higherKey(currentPack);
 			}
 		});
@@ -113,31 +109,31 @@ public class GUIInstruments extends AGUIBase{
 		final int instrumentButtonSize = 22;
 		if(currentPack != null){
 			for(byte i=0; i<30; ++i){				
-				GUIComponentButton instrumentButton = new GUIComponentButton(guiLeft + 23 + instrumentButtonSize*(i/2), guiTop - 75 + instrumentButtonSize*(i%2)){
+				GUIComponentButton instrumentButton = new GUIComponentButton(guiLeft + 23 + instrumentButtonSize*(i/2), guiTop - 75 + instrumentButtonSize*(i%2), instrumentButtonSize, instrumentButtonSize){
 					@Override
-					public void onClicked(){
+					public void onClicked(boolean leftSide){
 						InterfacePacket.sendToServer(new PacketEntityInstrumentChange(selectedEntity, player, selectedEntity.definition.instruments.indexOf(selectedInstrumentDefinition), playerInstruments.get(currentPack).get(instrumentSlots.indexOf(this))));
 						selectedEntity = null;
 						selectedInstrumentDefinition = null;
 					}
 				};
-				addButton(instrumentButton);
+				addComponent(instrumentButton);
 				instrumentSlots.add(instrumentButton);
 				
 				//Item icons are normally rendered as 16x16 textures, so scale them to fit over the buttons.
 				GUIComponentItem instrumentItem = new GUIComponentItem(instrumentButton.x, instrumentButton.y, instrumentButtonSize/16F, null);
-				addItem(instrumentItem);
+				addComponent(instrumentItem);
 				instrumentSlotIcons.add(instrumentItem);
 			}
 		}
 		
 		//Create the pack name label.
-		addLabel(packName = new GUIComponentLabel(guiLeft + 40, guiTop - 85, ColorRGB.WHITE, ""));
+		addComponent(packName = new GUIComponentLabel(guiLeft + 40, guiTop - 85, ColorRGB.WHITE, ""));
 
 		//Create the clear button.
-		addButton(clearButton = new GUIComponentButton(guiLeft + getWidth() - 2*instrumentButtonSize, guiTop - 75, 2*instrumentButtonSize, 2*instrumentButtonSize, InterfaceCore.translate("gui.instruments.clear"), true, ColorRGB.WHITE, false){
+		addComponent(clearButton = new GUIComponentButton(guiLeft + getWidth() - 2*instrumentButtonSize, guiTop - 75, 2*instrumentButtonSize, 2*instrumentButtonSize, InterfaceCore.translate("gui.instruments.clear"), true, ColorRGB.WHITE){
 			@Override
-			public void onClicked(){
+			public void onClicked(boolean leftSide){
 				InterfacePacket.sendToServer(new PacketEntityInstrumentChange(selectedEntity, player, selectedEntity.definition.instruments.indexOf(selectedInstrumentDefinition), null));
 				selectedEntity = null;
 				selectedInstrumentDefinition = null;
@@ -145,9 +141,9 @@ public class GUIInstruments extends AGUIBase{
 		});
 		
 		//Create the HUD selection button.
-		addButton(hudButton = new GUIComponentButton(guiLeft, guiTop - 20, 100, 20, InterfaceCore.translate("gui.instruments.main"), true, ColorRGB.WHITE, false){
+		addComponent(hudButton = new GUIComponentButton(guiLeft, guiTop - 20, 100, 20, InterfaceCore.translate("gui.instruments.main"), true, ColorRGB.WHITE){
 			@Override
-			public void onClicked(){
+			public void onClicked(boolean leftSide){
 				hudSelected = true;
 				selectedEntity = null;
 				selectedInstrumentDefinition = null;
@@ -157,9 +153,9 @@ public class GUIInstruments extends AGUIBase{
 		});
 		
 		//Create the panel selection button.
-		addButton(panelButton = new GUIComponentButton(guiLeft + getWidth() - 100, guiTop - 20, 100, 20, InterfaceCore.translate("gui.instruments.control"), true, ColorRGB.WHITE, false){
+		addComponent(panelButton = new GUIComponentButton(guiLeft + getWidth() - 100, guiTop - 20, 100, 20, InterfaceCore.translate("gui.instruments.control"), true, ColorRGB.WHITE){
 			@Override
-			public void onClicked(){
+			public void onClicked(boolean leftSide){
 				hudSelected = false;
 				selectedEntity = null;
 				selectedInstrumentDefinition = null;
@@ -169,7 +165,7 @@ public class GUIInstruments extends AGUIBase{
 		});
 		
 		//Create the info label.
-		addLabel(infoLabel = new GUIComponentLabel(guiLeft + getWidth()/2, guiTop - 20, ColorRGB.WHITE, "", TextAlignment.CENTERED, 1.0F, 180));
+		addComponent(infoLabel = new GUIComponentLabel(guiLeft + getWidth()/2, guiTop - 20, ColorRGB.WHITE, "", TextAlignment.CENTERED, 1.0F));
 		
 		//Get all entities with instruments and adds them to the list. definitions, and add them to a map-list.
 		//These come from the vehicle and all parts.
@@ -185,43 +181,16 @@ public class GUIInstruments extends AGUIBase{
 		
 		//Create the slots.
 		//We need one for every instrument, present or not, as we can click on any instrument.
-		
-		
-		//Create the vehicle instruments.
-		//We need one for every instrument present on every entity on the vehicle..
-		//However, we create one for every possible instrument and render depending if it exists or not.
 		//This allows us to render instruments as they are added or removed.
 		entityInstrumentBlocks.clear();
 		for(AEntityD_Interactable<?> entity : entitiesWithInstruments){
+			List<InstrumentSlotBlock> instrumentBlocks = new ArrayList<InstrumentSlotBlock>();
 			for(JSONInstrumentDefinition packInstrument : entity.definition.instruments){
 				if(hudSelected ^ packInstrument.placeOnPanel){
-					InstrumentSlotBlock block = new InstrumentSlotBlock(guiLeft, guiTop, entity, packInstrument);					
-						@Override
-						public void renderButton(int mouseX, int mouseY){
-							//Don't render the button texture.  Instead, render a blank square if the instrument doesn't exist.
-							//Otherwise, don't render anything at all as the instrument will be here instead.
-							if(!entity.instruments.containsKey(entity.definition.instruments.indexOf(packInstrument))){
-								super.renderButton(mouseX, mouseY);
-							}
-							
-							//If the currently-selected vehicle instrument is this instrument, render an overlay.
-							//This happens even if there's an instrument rendered as we need to highlight it.
-							if(entity.equals(selectedEntity) && packInstrument.equals(selectedInstrumentDefinition)){
-								int selectedInstrumentRadius = (int) (64F*packInstrument.hudScale);
-								if(inClockPeriod(40, 20)){
-									GL11.glPushMatrix();
-									GL11.glTranslatef(0, 0, 1.0F);
-									InterfaceGUI.renderRectangle(this.x, this.y, 2*selectedInstrumentRadius, 2*selectedInstrumentRadius, ColorRGB.WHITE);
-									GL11.glPopMatrix();
-								}
-							}
-					    }
-					};
-					addButton(instrumentSlotButton);
-					entityInstrumentButtons.add(instrumentSlotButton);
+					instrumentBlocks.add(new InstrumentSlotBlock(guiLeft, guiTop, entity, packInstrument));
 				}
 			}
-			entityInstrumentSlots.put(entity, entityInstrumentButtons);
+			entityInstrumentBlocks.put(entity, instrumentBlocks);
 		}
 	}
 
@@ -250,14 +219,13 @@ public class GUIInstruments extends AGUIBase{
 		//Set entity instrument states.
 		for(AEntityD_Interactable<?> entity : entityInstrumentBlocks.keySet()){
 			for(InstrumentSlotBlock block : entityInstrumentBlocks.get(entity)){
-				block.instrument.visible = entity.instruments.containsKey(block.instrument.instrumentPackIndex);
+				block.selectorOverlay.visible = entity.equals(selectedEntity) && block.definition.equals(selectedInstrumentDefinition) && inClockPeriod(40, 20);
+				block.instrument.visible = !block.selectorOverlay.visible && entity.instruments.containsKey(block.instrument.instrumentPackIndex);
 				if(block.instrument.visible){
 					block.instrument.instrument = entity.instruments.get(block.instrument.instrumentPackIndex);
 				}
-				block.blank.visible = !entity.instruments.containsKey(block.instrument.instrumentPackIndex);
-				block.selectorOverlay.visible = entity.equals(selectedEntity) && packInstrument.equals(selectedInstrumentDefinition)){
-					int selectedInstrumentRadius = (int) (64F*packInstrument.hudScale);
-					if(inClockPeriod(40, 20)){
+				block.blank.visible = !block.selectorOverlay.visible && !block.instrument.visible;
+				
 			}
 		}
 			
@@ -296,24 +264,42 @@ public class GUIInstruments extends AGUIBase{
 		return hudSelected ? hudGUI.getHeight() : panelGUI.getHeight();
 	}
 	
+	@Override
+	public boolean renderFlushBottom(){
+		return hudSelected ? hudGUI.renderFlushBottom() : panelGUI.renderFlushBottom();
+	}
+	
+	@Override
+	public boolean renderTranslucent(){
+		return hudSelected ? hudGUI.renderTranslucent() : panelGUI.renderTranslucent();
+	}
+	
+	@Override
+	public String getTexture(){
+		return hudSelected ? hudGUI.getTexture() : panelGUI.getTexture();
+	}
+	
 	private class InstrumentSlotBlock{
+		private final JSONInstrumentDefinition definition;
 		private final GUIComponentInstrument instrument;
+		@SuppressWarnings("unused")//We use this, the complier is just too dumb to realize it.
 		private final GUIComponentButton button;
-		private final GUIComponentCutout selectorOverlay;
 		private final GUIComponentCutout blank;
+		private final GUIComponentCutout selectorOverlay;
 		
-		private InstrumentSlotBlock(int guiLeft, int guiTop, AEntityD_Interactable<?> entity, JSONInstrumentDefinition packInstrument){
-			int instrumentRadius = (int) (64F*packInstrument.hudScale);
-			this.instrument = new GUIComponentInstrument(guiLeft, guiTop, entity.definition.instruments.indexOf(packInstrument), entity);
-			this.button = new GUIComponentButton(guiLeft + packInstrument.hudX - instrumentRadius, guiTop + packInstrument.hudY - instrumentRadius, 2*instrumentRadius, 2*instrumentRadius){
+		private InstrumentSlotBlock(int guiLeft, int guiTop, AEntityD_Interactable<?> entity, JSONInstrumentDefinition definition){
+			this.definition = definition;
+			int instrumentRadius = (int) (64F*definition.hudScale);
+			addComponent(this.instrument = new GUIComponentInstrument(guiLeft, guiTop, entity.definition.instruments.indexOf(definition), entity));
+			addComponent(this.button = new GUIComponentButton(guiLeft + definition.hudX - instrumentRadius, guiTop + definition.hudY - instrumentRadius, 2*instrumentRadius, 2*instrumentRadius){
 				@Override
-				public void onClicked(){
+				public void onClicked(boolean leftSide){
 					selectedEntity = entity;
-					selectedInstrumentDefinition = packInstrument;
+					selectedInstrumentDefinition = definition;
 				}
-			};
-			this.selectorOverlay = new GUIComponentCutout(guiLeft + packInstrument.hudX - instrumentRadius, guiTop + packInstrument.hudY - instrumentRadius, 2*instrumentRadius, 2*instrumentRadius, 448, 64, 2*instrumentRadius, 2*instrumentRadius);
-			this.blank = new GUIComponentCutout(guiLeft + packInstrument.hudX - instrumentRadius, guiTop + packInstrument.hudY - instrumentRadius, 2*instrumentRadius, 2*instrumentRadius, 448, 0, 2*instrumentRadius, 2*instrumentRadius);
+			});
+			addComponent(this.blank = new GUIComponentCutout(guiLeft + definition.hudX - instrumentRadius, guiTop + definition.hudY - instrumentRadius, 2*instrumentRadius, 2*instrumentRadius, 448, 0, 2*instrumentRadius, 2*instrumentRadius));
+			addComponent(this.selectorOverlay = new GUIComponentCutout(guiLeft + definition.hudX - instrumentRadius, guiTop + definition.hudY - instrumentRadius, 2*instrumentRadius, 2*instrumentRadius, 448, 64, 2*instrumentRadius, 2*instrumentRadius));
 		}
 	}
 }
