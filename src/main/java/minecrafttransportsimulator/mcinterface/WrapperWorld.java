@@ -216,11 +216,15 @@ public class WrapperWorld{
 	
 	/**
 	 *  Returns a list of entities within the specified bounds.
+	 *  Only for wrapped entities: normal entities should be checked via
+	 *  their own methods.
 	 */
 	public List<WrapperEntity> getEntitiesWithin(BoundingBox box){
 		List<WrapperEntity> entities = new ArrayList<WrapperEntity>();
 		for(Entity entity : world.getEntitiesWithinAABB(Entity.class, box.convert())){
-			entities.add(WrapperEntity.getWrapperFor(entity));
+			if(!(entity instanceof ABuilderEntityBase)){
+				entities.add(WrapperEntity.getWrapperFor(entity));
+			}
 		}
 		return entities;
 	}

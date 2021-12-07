@@ -879,15 +879,13 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 			allInteractionBoxes.addAll(part.interactionBoxes);
 		}
 		
-		//Update master bounding box.
-		boundingBox.widthRadius = 0;
-		boundingBox.heightRadius = 0;
-		for(BoundingBox box : allInteractionBoxes){
-			boundingBox.widthRadius = (float) Math.max(boundingBox.widthRadius, Math.abs(box.globalCenter.x - position.x + box.widthRadius));
-			boundingBox.heightRadius = (float) Math.max(boundingBox.heightRadius, Math.abs(box.globalCenter.y - position.y + box.heightRadius));
-			boundingBox.widthRadius = (float) Math.max(boundingBox.widthRadius, Math.abs(box.globalCenter.z - position.z + box.depthRadius));
-		}
-		boundingBox.depthRadius = boundingBox.widthRadius;
+		//Update encompassing bounding box to reflect all bounding boxes of all parts.
+		for(APart part : parts){
+    		encompassingBox.widthRadius = (float) Math.max(encompassingBox.widthRadius, Math.abs(part.encompassingBox.globalCenter.x - position.x + part.encompassingBox.widthRadius));
+    		encompassingBox.heightRadius = (float) Math.max(encompassingBox.heightRadius, Math.abs(part.encompassingBox.globalCenter.y - position.y + part.encompassingBox.heightRadius));
+    		encompassingBox.depthRadius = (float) Math.max(encompassingBox.depthRadius, Math.abs(part.encompassingBox.globalCenter.z - position.z + part.encompassingBox.depthRadius));
+    	}
+		encompassingBox.updateToEntity(this, null);
 	}
 	
 	/**

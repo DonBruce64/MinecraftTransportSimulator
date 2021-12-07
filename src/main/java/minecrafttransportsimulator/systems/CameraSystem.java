@@ -217,7 +217,7 @@ public class CameraSystem{
 				}
 			}else if(sittingSeat != null){
             	//Get yaw delta between entity and player from-180 to 180.
-            	double playerYawDelta = (360 + (multipart.angles.y - player.getHeadYaw())%360)%360;
+            	double playerYawDelta = (360 + (multipart.angles.y - player.getYaw())%360)%360;
             	if(playerYawDelta > 180){
             		playerYawDelta-=360;
             	}

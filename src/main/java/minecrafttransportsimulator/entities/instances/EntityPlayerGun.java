@@ -51,7 +51,7 @@ public class EntityPlayerGun extends AEntityE_Multipart<JSONPlayerGun>{
 			this.player = playerSpawning;
 			position.setTo(player.getPosition());
 			prevPosition.setTo(position);
-			angles.set(player.getPitch(), player.getHeadYaw(), 0);
+			angles.set(player.getPitch(), player.getYaw(), 0);
 			prevAngles.setTo(angles);
 		}else{
 			//Saved entity.  Either on the server or client.
@@ -182,7 +182,7 @@ public class EntityPlayerGun extends AEntityE_Multipart<JSONPlayerGun>{
 					}else{
 						heldVector = activeGun.definition.gun.handHeldNormalOffset;
 					}
-					angles.set(player.getPitch(), player.getHeadYaw(), 0);
+					angles.set(player.getPitch(), player.getYaw(), 0);
 					
 					//Arm center is 0.3125 blocks away in X, 1.375 blocks up in Y.
 					//Sneaking lowers arm by 0.2 blocks.

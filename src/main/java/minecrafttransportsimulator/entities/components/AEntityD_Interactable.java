@@ -62,6 +62,10 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 	 * core {@link #boundingBox} for this entity.**/
 	public final Set<BoundingBox> interactionBoxes = new HashSet<BoundingBox>();
 	
+	/**Box that encompasses all boxes on this entity.  This can be used as a pre-check for collision operations
+	 * to check a single large box rather than multiple small ones to save processing power.**/
+	public final BoundingBox encompassingBox = new BoundingBox(new Point3d(), new Point3d(), 0, 0, 0, false);
+	
 	/**Set of entities that this entity collided with this tick.  Any entity that is in this set 
 	 * should NOT do collision checks with this entity, or infinite loops will occur.
 	 * This set should be cleared after all collisions have been checked.**/
@@ -444,6 +448,17 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 			}
     	}
     	interactionBoxes.addAll(entityCollisionBoxes);
+    	
+    	//Now get the encompassing box.
+    	encompassingBox.widthRadius = 0;
+    	encompassingBox.heightRadius = 0;
+    	encompassingBox.depthRadius = 0;
+    	for(BoundingBox box : interactionBoxes){
+    		encompassingBox.widthRadius = (float) Math.max(encompassingBox.widthRadius, Math.abs(box.globalCenter.x - position.x + box.widthRadius));
+    		encompassingBox.heightRadius = (float) Math.max(encompassingBox.heightRadius, Math.abs(box.globalCenter.y - position.y + box.heightRadius));
+    		encompassingBox.depthRadius = (float) Math.max(encompassingBox.depthRadius, Math.abs(box.globalCenter.z - position.z + box.depthRadius));
+    	}
+    	encompassingBox.updateToEntity(this, null);
     }
 	
 	/**
@@ -461,6 +476,50 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 				connection.hookupBaseEntity.overrideTowingChecks = false;
 			}
 			world.endProfiling();
+		}
+		
+		//Move all entities that are touching this entity.
+		if(!entityCollisionBoxes.isEmpty()){
+			world.beginProfiling("MoveAlongEntities", false);
+			encompassingBox.heightRadius += 1.0;
+			List<WrapperEntity> nearbyEntities = world.getEntitiesWithin(encompassingBox);
+			encompassingBox.heightRadius -= 1.0;
+    		for(WrapperEntity entity : nearbyEntities){
+    			//Only move Vanilla entities not riding things.  We don't want to move other things as we handle our inter-entity movement in each class.
+    			if(entity.getBaseEntity() == null && entity.getEntityRiding() == null && (entity instanceof WrapperPlayer ? !((WrapperPlayer) entity).isSpectator() : true)){
+    				//Check each box individually.  Need to do this to know which delta to apply.
+    				BoundingBox entityBounds = entity.getBounds();
+    				entityBounds.heightRadius += 0.25;
+    				for(BoundingBox box : entityCollisionBoxes){
+        				if(entityBounds.intersects(box)){
+							//If the entity is within 0.5 units of the top of the box, we can move them.
+							//If not, they are just colliding and not on top of the entity and we should leave them be.
+							double entityBottomDelta = box.globalCenter.y + box.heightRadius - (entityBounds.globalCenter.y - entityBounds.heightRadius + 0.25F);
+							if(entityBottomDelta >= -0.5 && entityBottomDelta <= 0.5){
+								//Only move the entity if it's going slow or in the delta.  Don't move if it's going fast as they might have jumped.
+								Point3d entityVelocity = entity.getVelocity();
+								if(entityVelocity.y < 0 || entityVelocity.y < entityBottomDelta){
+									//Get how much the entity moved the collision box the entity collided with so we know how much to move the entity.
+									//This lets entities "move along" with entities when touching a collision box.
+									Point3d entityPosition = entity.getPosition();
+									Point3d linearMovement = position.copy().subtract(prevPosition);
+									Point3d angularMovement = angles.copy().subtract(prevAngles);
+									Point3d entityDeltaOffset = entityPosition.copy().subtract(prevPosition);
+									Point3d vehicleBoxMovement = entityDeltaOffset.copy().rotateFine(angularMovement).subtract(entityDeltaOffset).add(linearMovement);
+									
+									//Apply motions to move entity.
+									entityPosition.add(vehicleBoxMovement).add(0, entityBottomDelta, 0);
+									entity.setPosition(entityPosition);
+									entity.setYaw(entity.getYaw() + angularMovement.y);
+									entity.setBodyYaw(entity.getBodyYaw() + angularMovement.y);
+									break;
+								}
+							}
+        				}
+    				}
+    			}
+    		}
+    		world.endProfiling();
 		}
 	}
 	

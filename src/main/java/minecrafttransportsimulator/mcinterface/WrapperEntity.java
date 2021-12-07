@@ -182,6 +182,10 @@ public class WrapperEntity{
 	 */
 	public void setPosition(Point3d position){
 		entity.setPosition(position.x, position.y, position.z);
+		//Set entity as on ground to allow them to jump if they are on a collision box.
+		//Also set fallDistance to 0 to prevent damage.
+		entity.onGround = true;
+		entity.fallDistance = 0;
 	}
 	
 	/**
@@ -223,14 +227,14 @@ public class WrapperEntity{
 	}
 	
 	/**
-	 *  Returns the entity's head yaw (y-axis rotation).
+	 *  Returns the entity's body yaw (y-axis rotation).
 	 *  NOTE: the return value from this function is inverted
 	 *  from the normal MC standard to have it follow the RHR
 	 *  for rotations.  This is OpenGL convention, and MC doesn't
 	 *  follow it, which is why rendering is such a PITA with yaw.
 	 */
-	public float getHeadYaw(){
-		return -entity.getRotationYawHead();
+	public float getBodyYaw(){
+		return entity instanceof EntityLivingBase ? -((EntityLivingBase) entity).renderYawOffset : 0;
 	}
 	
 	/**
@@ -258,14 +262,16 @@ public class WrapperEntity{
 	}
 	
 	/**
-	 *  Sets the entity's head yaw to the passed-in yaw.
+	 *  Sets the entity's bod yyaw to the passed-in yaw.
 	 *  NOTE: the yaw value from this function is inverted
 	 *  from the normal MC standard to have it follow the RHR
 	 *  for rotations.  This is OpenGL convention, and MC doesn't
 	 *  follow it, which is why rendering is such a PITA with yaw.
 	 */
-	public void setHeadYaw(double yaw){
-		entity.setRotationYawHead((float)-yaw);
+	public void setBodyYaw(double yaw){
+		if(entity instanceof EntityLivingBase){
+			((EntityLivingBase) entity).setRenderYawOffset((float) -yaw);
+		}
 	}
 	
 	/**
@@ -276,65 +282,18 @@ public class WrapperEntity{
 	}
 	
 	/**
-	 * Updates the depths of collision to this entity, if this entity has collision.  Does not otherwise modify the
-	 *  collision depths.  If collision was done and found, then true is returned.  If no collision occurred, false is returned.
-	 * This is done as it allows for re-use of the variables by the calling object to avoid excess object creation.
-	 * Note that if the offset value passed-in for an axis is 0, then no collision checks will be performed on that axis.
-	 * This prevents excess calculations when trying to do movement calculations for a single axis.  If ignoreIfGreater
-	 * is set, then the system will not set the collisionDepth of corresponding axis if the motion is less than the
-	 * collisionMotion axis.  If this value is not set, the function simply looks for a non-zero value to make the
-	 * collisionDepth be set for that axis.
+	 *  Gets the entity's bounding box.
+	 *  The returned velocity may by modified without affecting the entity's actual bounds.
+	 *  However, the object itself may be re-used on the next call, so do not keep reference to it.
 	 */
-	public boolean updateBoundingBoxCollisions(BoundingBox box, Point3d collisionMotion, boolean ignoreIfGreater){
-		boolean didCollision = false;
-		AxisAlignedBB colBox = entity.getCollisionBoundingBox();
-		if(colBox != null){
-			AxisAlignedBB mcBox = box.convert();
-			if(colBox.intersects(mcBox)){
-				double boxCollisionDepth;
-				if(collisionMotion.x > 0){
-					boxCollisionDepth = mcBox.maxX - colBox.minX;
-					if(!ignoreIfGreater || collisionMotion.x - boxCollisionDepth > 0){
-						box.currentCollisionDepth.x = Math.max(box.currentCollisionDepth.x, boxCollisionDepth);
-						didCollision = true;
-					}
-				}else if(collisionMotion.x < 0){
-					boxCollisionDepth = colBox.maxX - mcBox.minX;
-					if(!ignoreIfGreater || collisionMotion.x + boxCollisionDepth < 0){
-						box.currentCollisionDepth.x = Math.max(box.currentCollisionDepth.x, boxCollisionDepth);
-						didCollision = true;
-					}
-				}
-				if(collisionMotion.y > 0){
-					boxCollisionDepth = mcBox.maxY - colBox.minY;
-					if(!ignoreIfGreater || collisionMotion.y - boxCollisionDepth > 0){
-						box.currentCollisionDepth.y = Math.max(box.currentCollisionDepth.y, boxCollisionDepth);
-						didCollision = true;
-					}
-				}else if(collisionMotion.y < 0){
-					boxCollisionDepth = colBox.maxY - mcBox.minY;
-					if(!ignoreIfGreater || collisionMotion.y + boxCollisionDepth < 0){
-						box.currentCollisionDepth.y = Math.max(box.currentCollisionDepth.y, boxCollisionDepth);
-						didCollision = true;
-					}
-				}
-				if(collisionMotion.z > 0){
-					boxCollisionDepth = mcBox.maxZ - colBox.minZ;
-					if(!ignoreIfGreater || collisionMotion.z - boxCollisionDepth > 0){
-						box.currentCollisionDepth.z = Math.max(box.currentCollisionDepth.z, boxCollisionDepth);
-						didCollision = true;
-					}
-				}else if(collisionMotion.z < 0){
-					boxCollisionDepth = colBox.maxZ - mcBox.minZ;
-					if(!ignoreIfGreater || collisionMotion.z + boxCollisionDepth < 0){
-						box.currentCollisionDepth.z = Math.max(box.currentCollisionDepth.z, boxCollisionDepth);
-						didCollision = true;
-					}
-				}
-			}
-		}
-		return didCollision;
+	public BoundingBox getBounds(){
+		mutableBounds.widthRadius = entity.width/2F;
+		mutableBounds.heightRadius = entity.height/2F;
+		mutableBounds.depthRadius = entity.width/2F;
+		mutableBounds.globalCenter.set(entity.posX, entity.posY + mutableBounds.heightRadius, entity.posZ);
+		return mutableBounds;
 	}
+	private final BoundingBox mutableBounds = new BoundingBox(new Point3d(), 0, 0, 0);
 	
 	/**
 	 *  Returns the entity's NBT data.

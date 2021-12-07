@@ -82,7 +82,7 @@ public final class RenderVehicle extends ARenderEntity<EntityVehicleF_Physics>{
 				}
 			}else if(heldItem instanceof ItemItem && ((ItemItem) heldItem).definition.item.type.equals(ItemComponentType.SCANNER)){
 				Point3d playerEyes = player.getPosition().add(0, player.getEyeHeight(), 0);
-				Point3d playerLookVector = playerEyes.copy().add(new Point3d(0, 0, 10).rotateFine(new Point3d(player.getPitch(), player.getHeadYaw(), 0)));
+				Point3d playerLookVector = playerEyes.copy().add(new Point3d(0, 0, 10).rotateFine(new Point3d(player.getPitch(), player.getYaw(), 0)));
 				BoundingBox highlightedBox = null;
 				GL11.glPushMatrix();
 				GL11.glRotated(-vehicle.angles.z, 0, 0, 1);
@@ -131,7 +131,7 @@ public final class RenderVehicle extends ARenderEntity<EntityVehicleF_Physics>{
 					//We also rotate to face the player.
 					GL11.glPushMatrix();
 					GL11.glTranslated(highlightedBox.localCenter.x, highlightedBox.localCenter.y + highlightedBox.heightRadius, highlightedBox.localCenter.z);
-					GL11.glRotated(player.getHeadYaw() - vehicle.angles.y, 0, 1, 0);
+					GL11.glRotated(player.getYaw() - vehicle.angles.y, 0, 1, 0);
 					
 					//Rotate by 180 on the z-axis.  This changes the X and Y coords from GUI to world coords. 
 					GL11.glRotated(180, 0, 0, 1);

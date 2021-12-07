@@ -55,7 +55,11 @@ public class InterfaceRender{
 		if(object.enableBrightBlending){
 			setBlendBright(true);
 		}
-		bindTexture(object.texture);
+		if(object.texture != null){
+			bindTexture(object.texture);
+		}else{
+			GL11.glDisable(GL11.GL_TEXTURE_2D);
+		}
 		setColorState(object.color, object.alpha);
 		
 		GL11.glPushMatrix();
@@ -81,7 +85,9 @@ public class InterfaceRender{
 		}
 		GL11.glPopMatrix();
 		
-		
+		if(object.texture == null){
+			GL11.glEnable(GL11.GL_TEXTURE_2D);
+		}
 		if(object.disableLighting){
 			setLightingState(true);
 		}

@@ -19,17 +19,19 @@ import net.minecraft.util.math.Vec3d;
  * @author don_bruce
  */
 public class WrapperAABBCollective extends AxisAlignedBB{
+	public final BoundingBox encompassingBox;
 	public final Collection<BoundingBox> boxes;
 	public BoundingBox lastBoxRayTraced;
 	
-	public WrapperAABBCollective(BuilderEntityExisting entity, Collection<BoundingBox> boxes){
-		super(	entity.posX - entity.width/2D,
-				entity.posY - entity.height/2D,
-				entity.posZ - entity.width/2D,
-				entity.posX + entity.width/2D,
-				entity.posY + entity.height/2D,
-				entity.posZ + entity.width/2D
+	public WrapperAABBCollective(BoundingBox encompassingBox, Collection<BoundingBox> boxes){
+		super(	encompassingBox.globalCenter.x - encompassingBox.widthRadius,
+				encompassingBox.globalCenter.y - encompassingBox.heightRadius,
+				encompassingBox.globalCenter.z - encompassingBox.depthRadius,
+				encompassingBox.globalCenter.x + encompassingBox.widthRadius,
+				encompassingBox.globalCenter.y + encompassingBox.heightRadius,
+				encompassingBox.globalCenter.z + encompassingBox.depthRadius
 			);
+		this.encompassingBox = encompassingBox;
 		this.boxes = boxes;
 	}
 	
@@ -106,16 +108,19 @@ public class WrapperAABBCollective extends AxisAlignedBB{
 	
 	@Override
     public boolean intersects(double otherMinX, double otherMinY, double otherMinZ, double otherMaxX, double otherMaxY, double otherMaxZ){
-		for(BoundingBox testBox : boxes){
-				if(
-					otherMaxX > testBox.globalCenter.x - testBox.widthRadius && 
-					otherMinX < testBox.globalCenter.x + testBox.widthRadius && 
-					otherMaxY > testBox.globalCenter.y - testBox.heightRadius && 
-					otherMinY < testBox.globalCenter.y + testBox.heightRadius &&
-					otherMaxZ > testBox.globalCenter.z - testBox.depthRadius &&
-					otherMinZ < testBox.globalCenter.z + testBox.depthRadius)
-				{
-				return true;
+		//CHeck super first, as that's the encompassing box.
+		if(super.intersects(otherMinX, otherMinY, otherMinZ, otherMaxX, otherMaxY, otherMaxZ)){
+			for(BoundingBox testBox : boxes){
+					if(
+						otherMaxX > testBox.globalCenter.x - testBox.widthRadius && 
+						otherMinX < testBox.globalCenter.x + testBox.widthRadius && 
+						otherMaxY > testBox.globalCenter.y - testBox.heightRadius && 
+						otherMinY < testBox.globalCenter.y + testBox.heightRadius &&
+						otherMaxZ > testBox.globalCenter.z - testBox.depthRadius &&
+						otherMinZ < testBox.globalCenter.z + testBox.depthRadius)
+					{
+					return true;
+				}
 			}
 		}
 		return false;

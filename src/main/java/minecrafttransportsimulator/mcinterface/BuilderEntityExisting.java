@@ -22,8 +22,6 @@ import minecrafttransportsimulator.packets.instances.PacketVehicleInteract;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.MoverType;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.ItemStack;
@@ -112,16 +110,14 @@ public class BuilderEntityExisting extends ABuilderEntityBase{
 	        		//on that first tick that would cause bad maths.
 	        		//We also do this only every second, as it prevents excess checks.
 	    			entity.world.beginProfiling("CollisionOverhead", false);
-	    			interactionBoxes = new WrapperAABBCollective(this, interactable.getInteractionBoxes());
-	        		collisionBoxes = new WrapperAABBCollective(this, interactable.getCollisionBoxes());
+	    			interactionBoxes = new WrapperAABBCollective(interactable.encompassingBox, interactable.getInteractionBoxes());
+	        		collisionBoxes = new WrapperAABBCollective(interactable.encompassingBox, interactable.getCollisionBoxes());
 	        		if(interactable.ticksExisted > 1 && interactable.ticksExisted%20 == 0){
-	        			if(entity.boundingBox != null){
-	        				setSize((float) entity.boundingBox.widthRadius*2F, (float) entity.boundingBox.heightRadius*2F);
-	        				//Make sure the collision bounds for MC are big enough to collide with this entity.
-		    				if(World.MAX_ENTITY_RADIUS < entity.boundingBox.widthRadius || World.MAX_ENTITY_RADIUS < entity.boundingBox.heightRadius){
-		    					World.MAX_ENTITY_RADIUS = Math.max(entity.boundingBox.widthRadius, entity.boundingBox.heightRadius);
-		    				}
-	        			}
+        				setSize((float) Math.max(interactable.encompassingBox.widthRadius*2F, interactable.encompassingBox.depthRadius*2F), (float) interactable.encompassingBox.heightRadius*2F);
+        				//Make sure the collision bounds for MC are big enough to collide with this entity.
+	    				if(World.MAX_ENTITY_RADIUS < interactable.encompassingBox.widthRadius || World.MAX_ENTITY_RADIUS < interactable.encompassingBox.heightRadius || World.MAX_ENTITY_RADIUS < interactable.encompassingBox.depthRadius){
+	    					World.MAX_ENTITY_RADIUS = Math.max(Math.max(interactable.encompassingBox.widthRadius, interactable.encompassingBox.depthRadius), interactable.encompassingBox.heightRadius);
+	    				}
 	        		}
 	        		
 	        		//Check that riders are still present prior to updating them.
@@ -136,46 +132,6 @@ public class BuilderEntityExisting extends ABuilderEntityBase{
 	    	    				interactable.removeRider(rider, riderIterator);
 	    	    			}
 	    	    		}
-	        		}
-	        		
-	        		//Move all entities that are touching this entity.
-	        		if(!collisionBoxes.boxes.isEmpty()){
-	        			entity.world.beginProfiling("MoveAlongOverhead", false);
-		        		for(Entity mcEntity : world.loadedEntityList){
-		        			//Don't try and move builders, entities riding others, or spectator players.  That's excess collision checks.
-		        			if(!(mcEntity instanceof ABuilderEntityBase) && mcEntity.getRidingEntity() == null && (mcEntity instanceof EntityPlayer ? !((EntityPlayer) mcEntity).isSpectator() : true)){
-		        				//Check each box individually.  Need to do this to know which delta to apply.
-		        				for(BoundingBox box : collisionBoxes.boxes){
-			        				if(mcEntity.getEntityBoundingBox().intersects(box.convert().expand(0, 0.25, 0))){
-			        					AxisAlignedBB entityBox = mcEntity.getEntityBoundingBox();
-										//If the entity is within 0.5 units of the top of the box, we can move them.
-										//If not, they are just colliding and not on top of the entity and we should leave them be.
-										double entityBottomDelta = box.globalCenter.y + box.heightRadius - entityBox.minY;
-										if(entityBottomDelta >= -0.5 && entityBottomDelta <= 0.5 && (mcEntity.motionY < 0 || mcEntity.motionY < entityBottomDelta)){
-											//Get how much the entity moved the collision box the entity collided with so we know how much to move the entity.
-											//This lets entities "move along" with entities when touching a collision box.
-											Point3d linearMovement = entity.position.copy().subtract(entity.prevPosition);
-											Point3d angularMovement = entity.angles.copy().subtract(entity.prevAngles);
-											Point3d entityDeltaOffset = new Point3d(mcEntity.posX - entity.prevPosition.x, mcEntity.posY - entity.prevPosition.y, mcEntity.posZ - entity.prevPosition.z);
-											Point3d vehicleBoxMovement = entityDeltaOffset.copy().rotateFine(angularMovement).subtract(entityDeltaOffset).add(linearMovement);
-											
-											//Apply motions to move entity, and add them to the moved entity list.
-											mcEntity.move(MoverType.SELF, vehicleBoxMovement.x, vehicleBoxMovement.y + entityBottomDelta, vehicleBoxMovement.z);
-											mcEntity.rotationYaw += -angularMovement.y;
-											if(mcEntity instanceof EntityLivingBase){
-												((EntityLivingBase) mcEntity).renderYawOffset += -angularMovement.y; 
-											}
-											
-											//Set entity as on ground to allow them to jump on the collision box.
-											//Also set fallDistance to 0 to prevent damage.
-											mcEntity.onGround = true;
-											mcEntity.fallDistance = 0;
-											break;
-										}
-			        				}
-		        				}
-		        			}
-		        		}
 	        		}
 	    		}
 	    		entity.world.endProfiling();

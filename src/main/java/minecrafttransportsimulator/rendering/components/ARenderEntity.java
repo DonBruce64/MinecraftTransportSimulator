@@ -193,6 +193,11 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 	protected void renderBoundingBoxes(RenderedEntity entity, Point3d entityPositionDelta){
 		if(entity instanceof AEntityD_Interactable){
 			AEntityD_Interactable<?> interactable = (AEntityD_Interactable<?>) entity;
+			//Draw encompassing box for the entity.
+			GL11.glTranslated(entityPositionDelta.x, entityPositionDelta.y, entityPositionDelta.z);
+			interactable.encompassingBox.renderable.render();
+			GL11.glTranslated(-entityPositionDelta.x, -entityPositionDelta.y, -entityPositionDelta.z);
+			
 			//Draw collision boxes for the entity.
 			for(BoundingBox box : interactable.interactionBoxes){
 				Point3d boxCenterDelta = box.globalCenter.copy().subtract(entity.position).add(entityPositionDelta);

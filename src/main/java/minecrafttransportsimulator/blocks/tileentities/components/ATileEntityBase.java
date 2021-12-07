@@ -31,7 +31,7 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONMultiModelProv
 		if(placingPlayer != null){
 			int clampAngle = getRotationIncrement();
 			//Need to set the angles so the TE is facing the player, not the direction the player was facing.
-			angles.y = Math.round((placingPlayer.getHeadYaw()+180)/clampAngle)*clampAngle%360;
+			angles.y = Math.round((placingPlayer.getYaw()+180)/clampAngle)*clampAngle%360;
 		}
 	}
 	

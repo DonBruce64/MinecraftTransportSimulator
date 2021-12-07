@@ -418,7 +418,6 @@ public class PartGun extends APart{
 				double ticksToTarget = entityTarget.getPosition().distanceTo(position)/definition.gun.muzzleVelocity/20D/10D;
 				targetAngles = entityTarget.getPosition().add(0D, entityTarget.getEyeHeight()/2D, 0D).add(entityTarget.getVelocity().multiply(ticksToTarget)).subtract(position).getAngles(true);
 				controller.setYaw(targetAngles.y);
-				controller.setHeadYaw(targetAngles.y);
 				controller.setPitch(targetAngles.x);
 				state = state.promote(GunState.FIRING_REQUESTED);
 			}else{
