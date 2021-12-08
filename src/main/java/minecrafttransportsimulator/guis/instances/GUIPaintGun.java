@@ -78,11 +78,10 @@ public class GUIPaintGun extends AGUIBase{
 		});
 		addComponent(partName = new GUIComponentLabel(guiLeft + 60, guiTop + 120, ColorRGB.WHITE, "", TextAlignment.LEFT_ALIGNED, 1.0F, 98));
 		
-		//Create the crafting item slots.  8 18X18 slots (8X2) need to be made here.
+		//Create the crafting item slots.  8 16X16 slots (8X2) need to be made here.
 		craftingItemIcons.clear();
-		final int craftingIconSize = 18;
 		for(byte i=0; i<4*2; ++i){				
-			GUIComponentItem craftingItem = new GUIComponentItem(guiLeft + 225 + craftingIconSize*(i/4), guiTop + 26 + craftingIconSize*(i%4), craftingIconSize/16F, null);
+			GUIComponentItem craftingItem = new GUIComponentItem(guiLeft + 225 + GUIComponentButton.ITEM_BUTTON_SIZE*(i/4), guiTop + 26 + GUIComponentButton.ITEM_BUTTON_SIZE*(i%4), 1.0F);
 			addComponent(craftingItem);
 			craftingItemIcons.add(craftingItem);
 		}

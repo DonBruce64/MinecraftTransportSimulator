@@ -39,6 +39,7 @@ import minecrafttransportsimulator.jsondefs.JSONLight;
 import minecrafttransportsimulator.jsondefs.JSONLight.JSONLightBlendableComponent;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPart.EffectorComponentType;
+import minecrafttransportsimulator.jsondefs.JSONPart.FurnaceComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPart.JSONPartEngine.EngineSound;
 import minecrafttransportsimulator.jsondefs.JSONPart.JSONPartGun.JSONMuzzle;
@@ -647,6 +648,15 @@ public final class LegacyCompatSystem{
 				definition.gun.muzzleGroups.add(muzzleGroup);
 			}
 			definition.gun.length = 0;
+		}
+		
+		//Convert old furnaces.
+		if(definition.interactable != null && definition.interactable.interactionType.equals(InteractableComponentType.FURNACE)){
+			if(definition.interactable.furnaceType == null){
+				definition.interactable.furnaceType = FurnaceComponentType.STANDARD;
+				definition.interactable.furnaceRate = 1.0F;
+				definition.interactable.furnaceEfficiency = 1.0F;
+			}
 		}
 		
 		if(definition.parts != null){

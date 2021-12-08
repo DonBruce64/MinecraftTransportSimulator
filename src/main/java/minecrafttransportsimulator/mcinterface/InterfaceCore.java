@@ -24,6 +24,7 @@ import net.minecraftforge.fml.common.Loader;
 @SuppressWarnings("deprecation")
 public class InterfaceCore{
 	private static final List<String> queuedLogs = new ArrayList<String>();
+	private static final TileEntityFurnace VANILLA_FAKE_FURNACE = new TileEntityFurnace();
 	
 	/**
 	 *  Returns the game version for this current instance.
@@ -71,6 +72,15 @@ public class InterfaceCore{
 	}
 	
 	/**
+	 *  Returns the time it takes to smelt the passed-in item.  Note that due to Vanilla MC jank,
+	 *  this value MAY be non-zero even if {@link #getSmeltedItem(ItemStack)} returns nothing.  As such,
+	 *  that method should be checked before this one.
+	 */
+	public static int getSmeltingTime(ItemStack stack){
+		return VANILLA_FAKE_FURNACE.getCookTime(stack);
+	}
+	
+	/**
 	 *  Returns all fluids currently in the game.
 	 */
 	public static Map<String, String> getAllFluids(){
@@ -110,19 +120,4 @@ public class InterfaceCore{
     		logError(log);
     	}
     }
-	
-	/**
-	 *  Returns a fake TileEntity created to allow for such a TileEntity to be used on
-	 *  entities.  TE returned is based on the name passed-in.  Currently, "chest",
-	 *  "furnace", and "brewing_stand" should be supported.  The idea is that such
-	 *  fake TEs can be used on moving entities anywhere in the world without the
-	 *  game crashing or the GUI closing out.
-	 */
-	public static WrapperTileEntity getFakeTileEntity(String type, WrapperWorld world, WrapperNBT data, int inventoryUnits){
-		switch(type){
-			case("furnace") : return new WrapperTileEntity.WrapperEntityFurnace(world, data);
-			case("brewing_stand") : return new WrapperTileEntity.WrapperEntityBrewingStand(world, data);
-			default : return null;
-		}
-	}
 }

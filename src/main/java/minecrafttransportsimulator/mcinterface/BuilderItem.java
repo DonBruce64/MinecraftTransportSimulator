@@ -15,7 +15,6 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
-import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.components.IItemFood;
 import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.items.instances.ItemPartGun;
@@ -236,8 +235,8 @@ public class BuilderItem extends Item{
 			BuilderItem mcItem = entry.getValue();
 			
 			//First check if the creative tab is set/created.
-			//The only except is for core mod parts, these are internal.
-			if(!item.definition.packID.equals(MasterLoader.MODID) || !(item instanceof AItemPart)){
+			//The only except is for "invisible" parts of the core mod, these are internal.
+			if(!item.definition.packID.equals(MasterLoader.MODID) || !item.definition.systemName.contains("invisible")){
 				String tabID = item.getCreativeTabID();
 				if(!BuilderCreativeTab.createdTabs.containsKey(tabID)){
 					JSONPack packConfiguration = PackParserSystem.getPackConfiguration(tabID);

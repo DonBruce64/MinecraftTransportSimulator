@@ -8,11 +8,12 @@ import net.minecraft.item.ItemStack;
 /**Custom item render class.  This class is designed to render a {@link ItemStack} 
  * or list of stacks into the GUI.  This allows us to use a simple string 
  * name for the render rather than a bunch of MC calls.
- * Note that the item parameters are not final.  This allows for switching items in GUIs.
+ * Note that this component does not get a stack assigned during construction: you must
+ * assign it manually either by setting {@link #stack} for a single stack rendering operation,
+ * or {@link #stacks} for a cyclclic rendering operation.  This allows for switching items in GUIs.
  * This is especially useful in crafting GUIs, where you want a static set of item components
- * that switch their states depending on other selections.  Also note that there is a single
- * stack and a list of stacks.  If the list is used, the items will cycle through.  This is
- * useful for crafting GUIs, where multiple items may be used for a single component.
+ * that switch their states depending on other selections.  The scale is based on the assumption that
+ * a single item is 16x16px.
  *
  * @author don_bruce
  */
@@ -20,11 +21,16 @@ public class GUIComponentItem extends AGUIComponent{
 	public final float scale;
 	public ItemStack stack;
 	public List<ItemStack> stacks;
-		    	
-	public GUIComponentItem(int x, int y, float scale, ItemStack stack){
+	
+	/**Default item constructor.**/
+	public GUIComponentItem(int x, int y, float scale){
 		super(x, y);
 		this.scale = scale;
-		this.stack = stack;
+	}
+	
+	/**Constructor for an item linked with a button.  Button is assumed to be 18x18px so item will be offset 1px to center.**/
+	public GUIComponentItem(GUIComponentButton linkedButton){
+		this(linkedButton.x + 1, linkedButton.y + 1, 1.0F);
 	}
 
     @Override

@@ -70,6 +70,14 @@ public class EntityInventoryContainer extends AEntityA_Base{
 	}
 	
 	/**
+	 *  Returns true if this stack can be added to the specified slot.  Normally true for all stacks,
+	 *  but can be used to limit what goes where.
+	 */
+	public boolean isStackValid(ItemStack stackToCheck, int index){
+		return true;
+	}
+	
+	/**
 	 *  Returns the stack in the specified slot.  This may be used to view the items in this inventory.
 	 *  Modifications should not happen directly to the items.  Instead, use:
 	 *  {@link #addStack(ItemStack, boolean)} or {@link #removeStack(ItemStack, int, boolean)}.
@@ -97,34 +105,71 @@ public class EntityInventoryContainer extends AEntityA_Base{
 	public int addStack(ItemStack stackToAdd, boolean doAdd){
 		int amountAdded = 0;
 		for(int i=0; i<inventory.size(); ++i){
-			ItemStack stack = inventory.get(i);
-			if(stack.isEmpty()){
-				if(doAdd){
-					inventory.set(i, stackToAdd.copy());
-					stack = inventory.get(i);
-					stack.setCount(stackToAdd.getCount() - amountAdded);
-					if(!world.isClient()){
-						InterfacePacket.sendToAllClients(new PacketInventoryContainerChange(this, i, stack));
-					}
-				}
-				return stackToAdd.getCount();
-			}else if(stackToAdd.isItemEqual(stack) && (stackToAdd.hasTagCompound() ? stackToAdd.getTagCompound().equals(stack.getTagCompound()) : !stack.hasTagCompound())){
-				int amountToAdd = Math.min(stack.getMaxStackSize() - stack.getCount(), stackToAdd.getCount() - amountAdded);
-				if(amountToAdd > 0){
+			if(isStackValid(stackToAdd, i)){
+				ItemStack stack = inventory.get(i);
+				if(stack.isEmpty()){
 					if(doAdd){
-						amountAdded += amountToAdd;
-						stack.grow(amountToAdd);
+						inventory.set(i, stackToAdd.copy());
+						stack = inventory.get(i);
+						stack.setCount(stackToAdd.getCount() - amountAdded);
 						if(!world.isClient()){
 							InterfacePacket.sendToAllClients(new PacketInventoryContainerChange(this, i, stack));
 						}
 					}
-				}
-				if(amountAdded == stackToAdd.getCount()){
-					return amountAdded;
+					return stackToAdd.getCount();
+				}else if(stackToAdd.isItemEqual(stack) && (stackToAdd.hasTagCompound() ? stackToAdd.getTagCompound().equals(stack.getTagCompound()) : !stack.hasTagCompound())){
+					int amountToAdd = Math.min(stack.getMaxStackSize() - stack.getCount(), stackToAdd.getCount() - amountAdded);
+					if(amountToAdd > 0){
+						if(doAdd){
+							amountAdded += amountToAdd;
+							stack.grow(amountToAdd);
+							if(!world.isClient()){
+								InterfacePacket.sendToAllClients(new PacketInventoryContainerChange(this, i, stack));
+							}
+						}
+					}
+					if(amountAdded == stackToAdd.getCount()){
+						return amountAdded;
+					}
 				}
 			}
 		}
 		return amountAdded;
+	}
+	
+	/**
+	 *  Adds 1 item to the stack in the passed-in slot.  Returns true if the stack was incremented.
+	 */
+	public boolean incrementStack(int index){
+		ItemStack existingStack = getStack(index);
+		if(existingStack.getCount() < existingStack.getMaxStackSize()){
+			existingStack.setCount(existingStack.getCount() + 1);
+			inventory.set(index, existingStack);
+			if(!world.isClient()){
+				InterfacePacket.sendToAllClients(new PacketInventoryContainerChange(this, index, existingStack));
+			}
+			return true;
+		}else{
+			return false;
+		}
+	}
+	
+	/**
+	 *  Removes 1 item from the stack in the passed-in slot.  Returns true if the removal is possible, false
+	 *  if not (because the stack was empty.
+	 */
+	public boolean decrementStack(int index){
+		ItemStack existingStack = getStack(index);
+		if(!existingStack.isEmpty()){
+			existingStack.setCount(existingStack.getCount() - 1);
+			inventory.set(index, existingStack);
+			if(!world.isClient()){
+				InterfacePacket.sendToAllClients(new PacketInventoryContainerChange(this, index, existingStack));
+			}
+			return true;
+		}else{
+			return false;
+		}
 	}
 	
 	/**

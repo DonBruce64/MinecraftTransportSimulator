@@ -66,7 +66,7 @@ public class GUIInventoryContainer extends AGUIInventory{
 		int slotsToMake = Math.min(inventory.getSize(), MAX_ITEMS_PER_SCREEN);
 		int inventoryRowOffset = (MAX_ITEMS_PER_SCREEN - slotsToMake)*GUIComponentButton.ITEM_BUTTON_SIZE/9/2;
 		for(byte i=0; i<slotsToMake; ++i){				
-			GUIComponentButton itemButton = new GUIComponentButton(guiLeft + 8 + GUIComponentButton.ITEM_BUTTON_SIZE*(i%9), guiTop + 12 + inventoryRowOffset + GUIComponentButton.ITEM_BUTTON_SIZE*(i/9)){
+			GUIComponentButton itemButton = new GUIComponentButton(guiLeft + 8 + GUIComponentButton.ITEM_BUTTON_SIZE*(i%9), guiTop + 12 + inventoryRowOffset + GUIComponentButton.ITEM_BUTTON_SIZE*(i/9), true){
 				@Override
 				public void onClicked(boolean leftSide){
 					InterfacePacket.sendToServer(new PacketPlayerItemTransfer(inventory, player, interactableSlotButtons.indexOf(this), -1));
@@ -75,8 +75,7 @@ public class GUIInventoryContainer extends AGUIInventory{
 			addComponent(itemButton);
 			interactableSlotButtons.add(itemButton);
 			
-			//Item icons are normally rendered as 16x16 textures, so scale them to fit over the buttons.
-			GUIComponentItem itemIcon = new GUIComponentItem(itemButton.x, itemButton.y, GUIComponentButton.ITEM_BUTTON_SIZE/16F, null);
+			GUIComponentItem itemIcon = new GUIComponentItem(itemButton);
 			addComponent(itemIcon);
 			interactableSlotIcons.add(itemIcon);
 		}

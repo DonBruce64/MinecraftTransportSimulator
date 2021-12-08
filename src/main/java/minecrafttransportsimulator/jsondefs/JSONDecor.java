@@ -71,13 +71,4 @@ public class JSONDecor extends AJSONMultiModelProvider{
 		@JSONDescription("Will make the decor have radio functionality.  Exact same system as vehicles.  It even syncs up with them!")
 		RADIO;
 	}
-	
-	public static enum FurnaceComponentType{
-		@JSONDescription("Standard furnace with Vanilla burnable fuel.")
-		STANDARD,
-		@JSONDescription("Runs off fuel liquid stored in barrels on the vehicle.")
-		FUEL,
-		@JSONDescription("Runs off electric power.  Only valid for vehicles.")
-		ELECTRIC;
-	}
 }

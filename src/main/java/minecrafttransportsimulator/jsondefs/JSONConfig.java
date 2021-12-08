@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import minecrafttransportsimulator.entities.instances.EntityFurnace;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemPartEngine;
@@ -148,6 +149,13 @@ public class JSONConfig{
 						fuels.put(engine.definition.engine.fuelType, fluids);
 					}
 				}
+				
+				//Also add furnace fuel.
+				if(!fuels.containsKey(EntityFurnace.FURNACE_FUEL_NAME)){
+					Map<String, Double> fluids = new HashMap<String, Double>();
+					fluids.put("lava", 1.0);
+					fuels.put(EntityFurnace.FURNACE_FUEL_NAME, fluids);
+				}
 			}
 			return fuels;
 		}
@@ -216,6 +224,7 @@ public class JSONConfig{
 		
 		public JSONConfigEntry(ConfigType defaultValue, String comment){
 			this.value = defaultValue;
+			//FIXME this isn't working.
 			this.comment = comment;
 		}
 	}

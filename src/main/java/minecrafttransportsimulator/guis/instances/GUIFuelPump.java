@@ -39,7 +39,7 @@ public class GUIFuelPump extends AGUIInventory{
 		int xOffset = 8;
 		for(int i=0; i<pump.fuelItems.getSize(); ++i){
 			ItemStack stack = pump.fuelItems.getStack(i);
-			GUIComponentButton itemButton = new GUIComponentButton(guiLeft + xOffset, guiTop + 12 + 22*(i%5)){
+			GUIComponentButton itemButton = new GUIComponentButton(guiLeft + xOffset, guiTop + 12 + 22*(i%5), true){
 				@Override
 				public void onClicked(boolean leftSide){
 					if(configuring){
@@ -57,8 +57,8 @@ public class GUIFuelPump extends AGUIInventory{
 			addComponent(itemButton);
 			interactableSlotButtons.add(itemButton);
 			
-			//Item icons are normally rendered as 16x16 textures, so scale them to fit over the buttons.
-			GUIComponentItem itemIcon = new GUIComponentItem(itemButton.x, itemButton.y, GUIComponentButton.ITEM_BUTTON_SIZE/16F, stack);
+			GUIComponentItem itemIcon = new GUIComponentItem(itemButton);
+			itemIcon.stack = stack;
 			addComponent(itemIcon);
 			interactableSlotIcons.add(itemIcon);
 			

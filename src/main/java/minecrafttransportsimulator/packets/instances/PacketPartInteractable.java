@@ -6,6 +6,7 @@ import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartInteractable;
+import minecrafttransportsimulator.guis.instances.GUIFurnace;
 import minecrafttransportsimulator.guis.instances.GUIInventoryContainer;
 import minecrafttransportsimulator.guis.instances.GUIPartBench;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
@@ -74,6 +75,8 @@ public class PacketPartInteractable extends APacketEntityInteract<PartInteractab
 				InterfaceGUI.openGUI(new GUIPartBench(interactable.definition.interactable.crafting));
 			}else if(interactable.definition.interactable.interactionType.equals(InteractableComponentType.CRATE)){
 				InterfaceGUI.openGUI(new GUIInventoryContainer(interactable.inventory, interactable.definition.interactable.inventoryTexture));
+			}else if(interactable.definition.interactable.interactionType.equals(InteractableComponentType.FURNACE)){
+				InterfaceGUI.openGUI(new GUIFurnace(interactable.furnace, interactable.definition.interactable.inventoryTexture));
 			}
 		}
 		return true;

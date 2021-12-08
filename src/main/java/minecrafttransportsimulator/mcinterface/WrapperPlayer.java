@@ -14,7 +14,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.ContainerWorkbench;
-import net.minecraft.inventory.IInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -175,18 +174,6 @@ public class WrapperPlayer extends WrapperEntity{
 	            };
 	        }
 		});
-	}
-	
-	/**
-	 *  Opens the GUI for the passed-in TE, or fails to open any GUI if the TE doesn't have one.
-	 *  Actual validity of the GUI being open is left to the TE implementation.
-	 *  Note: This method is for any TE that has inventory.  This includes, but is not limited to,
-	 *  chests, furnaces, and brewing stands.
-	 */
-	public void openTileEntityGUI(WrapperTileEntity tile){
-		if(tile.tile instanceof IInventory){
-			player.displayGUIChest((IInventory) tile.tile);
-		}
 	}
 	
 	/**

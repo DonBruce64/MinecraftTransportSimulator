@@ -769,14 +769,6 @@ public class WrapperWorld{
     	}
     	return false;
     }
-    
-	 /**
-	 *  Gets the wrapper TE at the specified position.
-	 */
-	public WrapperTileEntity getWrapperTileEntity(Point3d position){
-		TileEntity tile = world.getTileEntity(new BlockPos(position.x, position.y, position.z));
-		return tile != null ? new WrapperTileEntity(tile) : null;
-	}
 	
 	/**
 	 *  Returns the tile entity at the passed-in position, or null if it doesn't exist in the world.

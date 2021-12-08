@@ -169,18 +169,17 @@ public class GUIPartBench extends AGUIBase{
 		addComponent(new GUIComponentLabel(prevColorButton.x + prevColorButton.width + (nextColorButton.x - (prevColorButton.x + prevColorButton.width))/2, guiTop + 136, ColorRGB.WHITE, InterfaceCore.translate("gui.vehicle_bench.color"), TextAlignment.CENTERED, 1.0F).setButton(nextColorButton));
 		
 		
-		//Create the crafting item slots.  14 18X18 slots (7X2) need to be made here.
+		//Create the crafting item slots.  14 16X16 slots (7X2) need to be made here.
 		craftingItemIcons.clear();
-		final int craftingIconSize = 18;
 		for(byte i=0; i<7*2; ++i){				
-			GUIComponentItem craftingItem = new GUIComponentItem(guiLeft + 276 + craftingIconSize*(i/7), guiTop + 20 + craftingIconSize*(i%7), craftingIconSize/16F, null);
+			GUIComponentItem craftingItem = new GUIComponentItem(guiLeft + 276 + GUIComponentButton.ITEM_BUTTON_SIZE*(i/7), guiTop + 20 + GUIComponentButton.ITEM_BUTTON_SIZE*(i%7), 1.0F);
 			addComponent(craftingItem);
 			craftingItemIcons.add(craftingItem);
 		}
 		
 		
 		//Create both the item and OBJ renders.  We choose which to display later.
-		addComponent(itemRender = new GUIComponentItem(guiLeft + 175, guiTop + 56, 5.625F, null));
+		addComponent(itemRender = new GUIComponentItem(guiLeft + 175, guiTop + 56, 5.625F));
 		addComponent(modelRender = new GUIComponent3DModel(guiLeft + 220, guiTop + 101, 32.0F, true, true, false));
 		
 		

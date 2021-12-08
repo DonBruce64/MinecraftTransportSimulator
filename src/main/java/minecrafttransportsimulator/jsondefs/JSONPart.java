@@ -421,6 +421,16 @@ public class JSONPart extends AJSONPartProvider{
     	@JSONRequired
 		@JSONDescription("What this interactable does when interacted with.")
     	public InteractableComponentType interactionType;
+    	
+    	@JSONRequired(dependentField="interactionType", dependentValues={"FURNACE"})
+    	@JSONDescription("What type of furnace this is.  Only required if this is a furnace component.")
+    	public FurnaceComponentType furnaceType;
+    	
+    	@JSONDescription("The processing rate of this furnace.  This will make the furnace process items faster.  This does NOT affect the fuel used, so a 2x multiplier here will make the furnace process and use fuel twice as fast.")
+    	public float furnaceRate;
+    	
+    	@JSONDescription("The efficiency of the furnace.  A value of 1.0 will make it use the standard rate of fuel for processing.  Lower values will use less fuel, higher values more fuel.  For FUEL furnaces, a value of 1.0 makes for 20 ticks of burn time for 1mb.  For ELECTRIC furnaces, a value of 1.0 gives 500 ticks burn time for 1 electric unit.")
+    	public float furnaceEfficiency;
 		
 		@JSONDescription("If set, this part's inventory can be used by the vehicle and its parts.  This does not affect loader/unloader operations.")
     	public boolean feedsVehicles;
@@ -445,7 +455,7 @@ public class JSONPart extends AJSONPartProvider{
 		BARREL,
 		@JSONDescription("Works as a standard crafting table when clicked.")
 		CRAFTING_TABLE,
-		@JSONDescription("Works as a standard furnace when clicked.  Required standard fuel for furnace operations; does not use vehicle fuel for smelting operations.")
+		@JSONDescription("Works as a furnace when clicked.  Will take fuel internally, or externally depending on the furnace type.")
 		FURNACE,
 		@JSONDescription("Works as a standard brewing stand when clicked.")
 		BREWING_STAND,
@@ -453,6 +463,15 @@ public class JSONPart extends AJSONPartProvider{
 		JERRYCAN,
 		@JSONDescription("Works as a MTS crafting bench when clicked.  This requires supplemental parameters.")
 		CRAFTING_BENCH;
+	}
+    
+	public static enum FurnaceComponentType{
+		@JSONDescription("Standard furnace with Vanilla burnable fuel.  Will pull from crates if those feed vehicles.")
+		STANDARD,
+		@JSONDescription("Runs off fuel liquid stored in barrels on the vehicle.")
+		FUEL,
+		@JSONDescription("Runs off electric power.  Only valid for vehicles.")
+		ELECTRIC;
 	}
     
     public class JSONPartEffector{

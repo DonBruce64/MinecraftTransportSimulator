@@ -174,6 +174,11 @@ public class BuilderGUI extends GuiScreen{
 				component.renderTooltip(gui, mouseX, mouseY);
 			}
 		}
+		for(GUIComponentItem item : gui.items){
+			if(item.visible){
+				item.renderTooltip(gui, mouseX, mouseY);
+			}
+		}
 	}
 	
 	/**

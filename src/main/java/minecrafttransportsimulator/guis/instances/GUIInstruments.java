@@ -120,8 +120,7 @@ public class GUIInstruments extends AGUIBase{
 				addComponent(instrumentButton);
 				instrumentSlots.add(instrumentButton);
 				
-				//Item icons are normally rendered as 16x16 textures, so scale them to fit over the buttons.
-				GUIComponentItem instrumentItem = new GUIComponentItem(instrumentButton.x, instrumentButton.y, instrumentButtonSize/16F, null);
+				GUIComponentItem instrumentItem = new GUIComponentItem(instrumentButton);
 				addComponent(instrumentItem);
 				instrumentSlotIcons.add(instrumentItem);
 			}

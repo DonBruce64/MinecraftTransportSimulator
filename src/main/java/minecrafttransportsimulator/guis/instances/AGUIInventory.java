@@ -39,8 +39,8 @@ public abstract class AGUIInventory extends AGUIBase{
 		playerSlotButtons.clear();
 		playerSlotIcons.clear();
 		int yOffset = getPlayerInventoryOffset();
-		for(byte i=0; i<36; ++i){				
-			GUIComponentButton itemButton = new GUIComponentButton(guiLeft + 7 + GUIComponentButton.ITEM_BUTTON_SIZE*(i%9), guiTop + yOffset){
+		for(byte i=0; i<36; ++i){
+			GUIComponentButton itemButton = new GUIComponentButton(guiLeft + 7 + GUIComponentButton.ITEM_BUTTON_SIZE*(i%9), guiTop + yOffset, false){
 				@Override
 				public void onClicked(boolean leftSide){
 					handlePlayerItemClick(playerSlotButtons.indexOf(this));
@@ -49,14 +49,13 @@ public abstract class AGUIInventory extends AGUIBase{
 			addComponent(itemButton);
 			playerSlotButtons.add(itemButton);
 			
-			//Item icons are normally rendered as 16x16 textures, so scale them to fit over the buttons.
-			GUIComponentItem itemIcon = new GUIComponentItem(itemButton.x, itemButton.y, GUIComponentButton.ITEM_BUTTON_SIZE/16F, null);
+			GUIComponentItem itemIcon = new GUIComponentItem(itemButton);
 			addComponent(itemIcon);
 			playerSlotIcons.add(itemIcon);
 			
 			//Move offset to next row if required.
 			if(i == 8){
-				yOffset = 139;
+				yOffset -= (3*GUIComponentButton.ITEM_BUTTON_SIZE + 4);
 			}else if(i == 17 || i == 26){
 				yOffset += GUIComponentButton.ITEM_BUTTON_SIZE;
 			}

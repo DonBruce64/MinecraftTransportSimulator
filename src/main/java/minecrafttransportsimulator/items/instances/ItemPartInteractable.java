@@ -6,6 +6,7 @@ import minecrafttransportsimulator.entities.components.AEntityD_Interactable.Pla
 import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityFluidTank;
+import minecrafttransportsimulator.entities.instances.EntityFurnace;
 import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartInteractable;
@@ -18,8 +19,11 @@ import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.packets.components.InterfacePacket;
+import minecrafttransportsimulator.packets.instances.PacketFurnaceFuelAdd;
 import minecrafttransportsimulator.packets.instances.PacketItemInteractable;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
+import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.item.ItemStack;
 
 public class ItemPartInteractable extends AItemPart implements IItemVehicleInteractable{
@@ -77,6 +81,7 @@ public class ItemPartInteractable extends AItemPart implements IItemVehicleInter
 					String jerrrycanFluid = data.getString("jerrycanFluid");
 					
 					//If we clicked a tank on the vehicle, attempt to pull from it rather than fill the vehicle.
+					//Unless this is a liquid furnace, in which case we fill that instead.
 					if(part instanceof PartInteractable){
 						EntityFluidTank tank = ((PartInteractable) part).tank;
 						if(tank != null){
@@ -87,6 +92,25 @@ public class ItemPartInteractable extends AItemPart implements IItemVehicleInter
 									tank.drain(tank.getFluid(), 1000, true);
 								}
 							}
+						}
+						
+						EntityFurnace furnace = ((PartInteractable) part).furnace;
+						if(furnace != null && !jerrrycanFluid.isEmpty()){
+							 if(ConfigSystem.configObject.fuel.fuels.get(EntityFurnace.FURNACE_FUEL_NAME).containsKey(jerrrycanFluid)){
+								 //Packet assumes we add at 0, need to "fool" it.
+								 int addedFuel = (int) (ConfigSystem.configObject.fuel.fuels.get(EntityFurnace.FURNACE_FUEL_NAME).get(jerrrycanFluid)*1000*20*furnace.definition.furnaceEfficiency);
+								 int priorFuel = furnace.ticksLeftOfFuel; 
+								 furnace.ticksLeftOfFuel = addedFuel;
+								 InterfacePacket.sendToAllClients(new PacketFurnaceFuelAdd(furnace));
+								 furnace.ticksLeftOfFuel += priorFuel;
+								 furnace.ticksAddedOfFuel = furnace.ticksLeftOfFuel;
+								 
+								 data.setString("jerrycanFluid", "");
+								 stack.setTagCompound(data.tag);
+								 player.sendPacket(new PacketPlayerChatMessage(player, "interact.jerrycan.success"));
+							 }else{
+								 player.sendPacket(new PacketPlayerChatMessage(player, "interact.jerrycan.wrongtype"));
+							 }
 						}
 					}else if(!jerrrycanFluid.isEmpty()){
 						if(vehicle.fuelTank.getFluid().isEmpty() || vehicle.fuelTank.getFluid().equals(jerrrycanFluid)){

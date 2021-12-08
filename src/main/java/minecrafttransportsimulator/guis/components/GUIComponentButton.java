@@ -33,9 +33,9 @@ public abstract class GUIComponentButton extends GUIComponentCutout{
 		this(x, y, width, height, text, true, ColorRGB.DARK_GRAY, DEFAULT_BUTTON_SECTION_WIDTH_OFFSET, DEFAULT_BUTTON_SECTION_HEIGHT_OFFSET, DEFAULT_BUTTON_SECTION_WIDTH , DEFAULT_BUTTON_SECTION_HEIGHT);
 	}
 	
-	/**A button made to render with item slots.  Renders the set item size, and renders the item slot texture off the "Inventory" gui.**/
-	public GUIComponentButton(int x, int y){
-		this(x, y, ITEM_BUTTON_SIZE, ITEM_BUTTON_SIZE, 194, 0, ITEM_BUTTON_SIZE, ITEM_BUTTON_SIZE);
+	/**A button made to render with item slots.  Renders the set item size, and renders the item slot texture off the "Inventory" gui if the final parameter is true.**/
+	public GUIComponentButton(int x, int y, boolean renderBackground){
+		this(x, y, ITEM_BUTTON_SIZE, ITEM_BUTTON_SIZE, renderBackground ? 194 : 0, 0, renderBackground ? ITEM_BUTTON_SIZE : 0, renderBackground ? ITEM_BUTTON_SIZE : 0);
 	}
 	
 	/**A button without texture or text.  Useful when you want a button for something that needs to render as another component.**/
