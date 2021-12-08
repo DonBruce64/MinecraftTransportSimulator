@@ -881,9 +881,11 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 		
 		//Update encompassing bounding box to reflect all bounding boxes of all parts.
 		for(APart part : parts){
-    		encompassingBox.widthRadius = (float) Math.max(encompassingBox.widthRadius, Math.abs(part.encompassingBox.globalCenter.x - position.x + part.encompassingBox.widthRadius));
-    		encompassingBox.heightRadius = (float) Math.max(encompassingBox.heightRadius, Math.abs(part.encompassingBox.globalCenter.y - position.y + part.encompassingBox.heightRadius));
-    		encompassingBox.depthRadius = (float) Math.max(encompassingBox.depthRadius, Math.abs(part.encompassingBox.globalCenter.z - position.z + part.encompassingBox.depthRadius));
+			if(!part.isFake()){
+	    		encompassingBox.widthRadius = (float) Math.max(encompassingBox.widthRadius, Math.abs(part.encompassingBox.globalCenter.x - position.x + part.encompassingBox.widthRadius));
+	    		encompassingBox.heightRadius = (float) Math.max(encompassingBox.heightRadius, Math.abs(part.encompassingBox.globalCenter.y - position.y + part.encompassingBox.heightRadius));
+	    		encompassingBox.depthRadius = (float) Math.max(encompassingBox.depthRadius, Math.abs(part.encompassingBox.globalCenter.z - position.z + part.encompassingBox.depthRadius));
+			}
     	}
 		encompassingBox.updateToEntity(this, null);
 	}

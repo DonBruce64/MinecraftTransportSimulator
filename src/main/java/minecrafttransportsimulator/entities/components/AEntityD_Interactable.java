@@ -480,7 +480,7 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 		
 		//Move all entities that are touching this entity.
 		if(!entityCollisionBoxes.isEmpty()){
-			world.beginProfiling("MoveAlongEntities", false);
+			world.beginProfiling("MoveAlongEntities", true);
 			encompassingBox.heightRadius += 1.0;
 			List<WrapperEntity> nearbyEntities = world.getEntitiesWithin(encompassingBox);
 			encompassingBox.heightRadius -= 1.0;
