@@ -266,8 +266,9 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 		}else{
 			//Do static block additions for static component.
 			for(JSONRoadCollisionArea collisionArea : definition.road.collisionAreas){
-				for(double x=collisionArea.firstCorner.x; x<=collisionArea.secondCorner.x-1; x += 0.5){
-					for(double z=collisionArea.firstCorner.z; z<=collisionArea.secondCorner.z-1; z += 0.5){
+				System.out.println(collisionArea.firstCorner);
+				for(double x=collisionArea.firstCorner.x; x<=collisionArea.secondCorner.x-0.5; x += 0.5){
+					for(double z=collisionArea.firstCorner.z; z<=collisionArea.secondCorner.z-0.5; z += 0.5){
 						Point3d testPoint = new Point3d(x, 0, z).rotateFine(angles);
 						testPoint.x = (int) testPoint.x;
 						testPoint.z = (int) testPoint.z;

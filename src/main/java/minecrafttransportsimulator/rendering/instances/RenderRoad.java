@@ -11,6 +11,8 @@ import minecrafttransportsimulator.baseclasses.BezierCurve;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.blocks.components.ABlockBase;
+import minecrafttransportsimulator.blocks.instances.BlockCollision;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLane;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLaneConnection;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
@@ -23,7 +25,7 @@ import minecrafttransportsimulator.rendering.components.RenderableObject;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
-	
+		
 	@Override
 	public void renderAdditionalModels(TileEntityRoad road, boolean blendingEnabled, float partialTicks){
 		if(road.isActive() ^ blendingEnabled){
@@ -201,6 +203,23 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 				}
 			}
 		}
+	}
+	
+	@Override
+	protected void renderBoundingBoxes(TileEntityRoad road, Point3d entityPositionDelta){
+		super.renderBoundingBoxes(road, entityPositionDelta);
+		//Render all collision boxes too.
+		GL11.glTranslated(entityPositionDelta.x, entityPositionDelta.y, entityPositionDelta.z);
+		for(Point3d blockOffset : road.collisionBlockOffsets){
+			ABlockBase block = road.world.getBlock(road.position.copy().add(blockOffset));
+			if(block instanceof BlockCollision){
+				BoundingBox blockBounds = ((BlockCollision) block).blockBounds;
+				GL11.glTranslated(blockOffset.x, blockOffset.y + blockBounds.heightRadius, blockOffset.z);
+				blockBounds.renderable.render();
+				GL11.glTranslated(-blockOffset.x, -blockOffset.y - blockBounds.heightRadius, -blockOffset.z);
+			}
+		}
+		GL11.glTranslated(-entityPositionDelta.x, -entityPositionDelta.y, -entityPositionDelta.z);
 	}
 	
 	private static void generateDevElements(TileEntityRoad road){
