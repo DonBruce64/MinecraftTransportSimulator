@@ -1900,14 +1900,14 @@ public final class LegacyCompatSystem{
 							}
 							
 							float[] masterVertex = new float[8];
-							for(int i=0; i<object.vertices.capacity(); i+=8*6){
+							for(int i=0; i<object.vertices.capacity(); i+=8*3){
 								float minX = 999;
 								float maxX = -999;
 								float minY = 999;
 								float maxY = -999;
 								float minZ = 999;
 								float maxZ = -999;
-								for(byte j=0; j<8*6; j+=8){
+								for(byte j=0; j<8*3; j+=8){
 									object.vertices.get(masterVertex);
 									minX = Math.min(masterVertex[5], minX);
 									maxX = Math.max(masterVertex[5], maxX);
@@ -1940,59 +1940,72 @@ public final class LegacyCompatSystem{
 			//Now check for tread rollers.
 			for(RenderableObject object : parsedModel){
 				if(object.name.toLowerCase().contains(AModelParser.ROLLER_OBJECT_NAME)){
-					//Get roller general properties.
-					boolean isLeft = object.name.toLowerCase().startsWith("l");
-					int partIndex = 1;
-					for(JSONPartDefinition partDef : ((AJSONPartProvider) definition).parts){
-						if(partDef.types.contains("ground_tread")){
-							if(!(partDef.pos.x >= 0 ^ isLeft)){
+					//Check if an animation with this name exists already.
+					boolean animationPresent = false;
+					if(definition.rendering != null && definition.rendering.animatedObjects != null){
+						for(JSONAnimatedObject animatedObject : definition.rendering.animatedObjects){
+							if(object.name.equals(animatedObject.objectName)){
+								animationPresent = true;
 								break;
 							}
-							++partIndex;
 						}
 					}
 					
-					//Create new animation.
-					JSONAnimationDefinition animation = new JSONAnimationDefinition();
-					animation.animationType = AnimationComponentType.ROTATION;
-					animation.variable = "ground_rotation_" + partIndex;
-					
-					//Get the points that define this roller.
-					float minY = 999;
-					float maxY = -999;
-					float minZ = 999;
-					float maxZ = -999;
-					for(int i=0; i<object.vertices.capacity(); i+=8){
-						float y = object.vertices.get(i+6);
-						float z = object.vertices.get(i+7);
-						minY = Math.min(minY, y);
-						maxY = Math.max(maxY, y);
-						minZ = Math.min(minZ, z);
-						maxZ = Math.max(maxZ, z);
+					if(!animationPresent){
+						//Get roller general properties.
+						boolean isLeft = object.name.toLowerCase().startsWith("l");
+						int partIndex = 1;
+						for(JSONPartDefinition partDef : ((AJSONPartProvider) definition).parts){
+							if(partDef.types.contains("ground_tread")){
+								if(!(partDef.pos.x >= 0 ^ isLeft)){
+									break;
+								}
+								++partIndex;
+							}
+						}
+						
+						//Create new animation.
+						JSONAnimationDefinition animation = new JSONAnimationDefinition();
+						animation.animationType = AnimationComponentType.ROTATION;
+						animation.variable = "ground_rotation_" + partIndex;
+						
+						//Get the points that define this roller.
+						float minY = 999;
+						float maxY = -999;
+						float minZ = 999;
+						float maxZ = -999;
+						for(int i=0; i<object.vertices.capacity(); i+=8){
+							float y = object.vertices.get(i+6);
+							float z = object.vertices.get(i+7);
+							minY = Math.min(minY, y);
+							maxY = Math.max(maxY, y);
+							minZ = Math.min(minZ, z);
+							maxZ = Math.max(maxZ, z);
+						}
+						double radius = (maxZ - minZ)/2D;
+						
+						//Set roller center and axis.
+						//360 degrees is 1 block, so if we have a roller of circumference of 1,
+						//then we want a axis of 1 so it will have a linear movement of 1 every 360 degrees.
+						//Knowing this, we can calculate the linear velocity for this roller, as a roller with
+						//half the circumference needs double the factor, and vice-versa.  Basically, we get
+						//the ratio of the two circumferences of the "standard" roller and our roller.
+						animation.centerPoint = new Point3d(0, minY + (maxY - minY)/2D, minZ + (maxZ - minZ)/2D);
+						animation.axis = new Point3d((1.0D/Math.PI)/(radius*2D), 0, 0);
+						
+						//Create animated object and save.
+						if(definition.rendering == null){
+							definition.rendering = new JSONRendering();
+						}
+						if(definition.rendering.animatedObjects == null){
+							definition.rendering.animatedObjects = new ArrayList<JSONAnimatedObject>();
+						}
+						JSONAnimatedObject animatedObject = new JSONAnimatedObject();
+						animatedObject.objectName = object.name;
+						animatedObject.animations = new ArrayList<JSONAnimationDefinition>();
+						animatedObject.animations.add(animation);
+						definition.rendering.animatedObjects.add(animatedObject);
 					}
-					double radius = (maxZ - minZ)/2D;
-					
-					//Set roller center and axis.
-					//360 degrees is 1 block, so if we have a roller of circumference of 1,
-					//then we want a axis of 1 so it will have a linear movement of 1 every 360 degrees.
-					//Knowing this, we can calculate the linear velocity for this roller, as a roller with
-					//half the circumference needs double the factor, and vice-versa.  Basically, we get
-					//the ratio of the two circumferences of the "standard" roller and our roller.
-					animation.centerPoint = new Point3d(0, minY + (maxY - minY)/2D, minZ + (maxZ - minZ)/2D);
-					animation.axis = new Point3d((1.0D/Math.PI)/(radius*2D), 0, 0);
-					
-					//Create animated object and save.
-					if(definition.rendering == null){
-						definition.rendering = new JSONRendering();
-					}
-					if(definition.rendering.animatedObjects == null){
-						definition.rendering.animatedObjects = new ArrayList<JSONAnimatedObject>();
-					}
-					JSONAnimatedObject animatedObject = new JSONAnimatedObject();
-					animatedObject.objectName = object.name;
-					animatedObject.animations = new ArrayList<JSONAnimationDefinition>();
-					animatedObject.animations.add(animation);
-					definition.rendering.animatedObjects.add(animatedObject);
 				}
 			}
     	}catch(Exception e){
