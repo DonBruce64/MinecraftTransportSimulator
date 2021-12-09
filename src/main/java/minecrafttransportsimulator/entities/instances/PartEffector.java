@@ -152,6 +152,7 @@ public class PartEffector extends APart{
 						for(ItemStack stack : drops){
 							world.spawnItemStack(stack, position);
 						}
+						drops.clear();
 					}
 				}
 			}
