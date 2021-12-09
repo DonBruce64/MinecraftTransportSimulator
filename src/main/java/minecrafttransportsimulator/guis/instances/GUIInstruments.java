@@ -70,17 +70,19 @@ public class GUIInstruments extends AGUIBase{
 		
 		//Add all packs that have instruments in them.
 		//This depends on if the player has the instruments, or if they are in creative.
-		for(AItemPack<?> packItem : PackParserSystem.getAllPackItems()){
-			if(packItem instanceof ItemInstrument){
-				if(player.isCreative() || player.getInventory().hasItem(packItem)){
-					//Add the instrument to the list of instruments the player has.
-					if(!playerInstruments.containsKey(packItem.definition.packID)){
-						playerInstruments.put(packItem.definition.packID, new ArrayList<ItemInstrument>());
-						if(currentPack == null){
-							currentPack = packItem.definition.packID;
+		for(String packID : PackParserSystem.getAllPackIDs()){
+			for(AItemPack<?> packItem : PackParserSystem.getAllItemsForPack(packID, true)){
+				if(packItem instanceof ItemInstrument){
+					if(player.isCreative() || player.getInventory().hasItem(packItem)){
+						//Add the instrument to the list of instruments the player has.
+						if(!playerInstruments.containsKey(packID)){
+							playerInstruments.put(packID, new ArrayList<ItemInstrument>());
+							if(currentPack == null){
+								currentPack = packID;
+							}
 						}
+						playerInstruments.get(packID).add((ItemInstrument) packItem);
 					}
-					playerInstruments.get(packItem.definition.packID).add((ItemInstrument) packItem);
 				}
 			}
 		}
@@ -106,10 +108,9 @@ public class GUIInstruments extends AGUIBase{
 		//That depends if there are that many instruments present for the currentPack.
 		instrumentSlots.clear();
 		instrumentSlotIcons.clear();
-		final int instrumentButtonSize = 22;
 		if(currentPack != null){
-			for(byte i=0; i<30; ++i){				
-				GUIComponentButton instrumentButton = new GUIComponentButton(guiLeft + 23 + instrumentButtonSize*(i/2), guiTop - 75 + instrumentButtonSize*(i%2), instrumentButtonSize, instrumentButtonSize){
+			for(byte i=0; i<36; ++i){				
+				GUIComponentButton instrumentButton = new GUIComponentButton(guiLeft + 23 + GUIComponentButton.ITEM_BUTTON_SIZE*(i/2), guiTop - 75 + GUIComponentButton.ITEM_BUTTON_SIZE*(i%2), false){
 					@Override
 					public void onClicked(boolean leftSide){
 						InterfacePacket.sendToServer(new PacketEntityInstrumentChange(selectedEntity, player, selectedEntity.definition.instruments.indexOf(selectedInstrumentDefinition), playerInstruments.get(currentPack).get(instrumentSlots.indexOf(this))));
@@ -129,8 +130,8 @@ public class GUIInstruments extends AGUIBase{
 		//Create the pack name label.
 		addComponent(packName = new GUIComponentLabel(guiLeft + 40, guiTop - 85, ColorRGB.WHITE, ""));
 
-		//Create the clear button.
-		addComponent(clearButton = new GUIComponentButton(guiLeft + getWidth() - 2*instrumentButtonSize, guiTop - 75, 2*instrumentButtonSize, 2*instrumentButtonSize, InterfaceCore.translate("gui.instruments.clear"), true, ColorRGB.WHITE){
+		//Create the clear button and background.
+		addComponent(clearButton = new GUIComponentButton(guiLeft + getWidth() - 2*GUIComponentButton.ITEM_BUTTON_SIZE, guiTop - 75, 2*GUIComponentButton.ITEM_BUTTON_SIZE, 2*GUIComponentButton.ITEM_BUTTON_SIZE, InterfaceCore.translate("gui.instruments.clear"), true, ColorRGB.WHITE){
 			@Override
 			public void onClicked(boolean leftSide){
 				InterfacePacket.sendToServer(new PacketEntityInstrumentChange(selectedEntity, player, selectedEntity.definition.instruments.indexOf(selectedInstrumentDefinition), null));
@@ -138,6 +139,7 @@ public class GUIInstruments extends AGUIBase{
 				selectedInstrumentDefinition = null;
 			}
 		});
+		addComponent(new GUIComponentCutout(clearButton.x, clearButton.y, clearButton.width, clearButton.height, 448, 0, 64, 64));
 		
 		//Create the HUD selection button.
 		addComponent(hudButton = new GUIComponentButton(guiLeft, guiTop - 20, 100, 20, InterfaceCore.translate("gui.instruments.main"), true, ColorRGB.WHITE){
@@ -196,8 +198,8 @@ public class GUIInstruments extends AGUIBase{
 	@Override
 	public void setStates(){
 		//Set pack prior and pack next buttons depending if we have such packs.
-		prevPackButton.enabled = playerInstruments.lowerKey(currentPack) != null;
-		nextPackButton.enabled = playerInstruments.higherKey(currentPack) != null;
+		prevPackButton.visible = playerInstruments.lowerKey(currentPack) != null;
+		nextPackButton.visible = playerInstruments.higherKey(currentPack) != null;
 		
 		//Set instrument icon and button states depending on which instruments the player has.
 		if(currentPack != null){
@@ -224,7 +226,6 @@ public class GUIInstruments extends AGUIBase{
 					block.instrument.instrument = entity.instruments.get(block.instrument.instrumentPackIndex);
 				}
 				block.blank.visible = !block.selectorOverlay.visible && !block.instrument.visible;
-				
 			}
 		}
 			
@@ -297,8 +298,8 @@ public class GUIInstruments extends AGUIBase{
 					selectedInstrumentDefinition = definition;
 				}
 			});
-			addComponent(this.blank = new GUIComponentCutout(guiLeft + definition.hudX - instrumentRadius, guiTop + definition.hudY - instrumentRadius, 2*instrumentRadius, 2*instrumentRadius, 448, 0, 2*instrumentRadius, 2*instrumentRadius));
-			addComponent(this.selectorOverlay = new GUIComponentCutout(guiLeft + definition.hudX - instrumentRadius, guiTop + definition.hudY - instrumentRadius, 2*instrumentRadius, 2*instrumentRadius, 448, 64, 2*instrumentRadius, 2*instrumentRadius));
+			addComponent(this.blank = new GUIComponentCutout(guiLeft + definition.hudX - instrumentRadius, guiTop + definition.hudY - instrumentRadius, 2*instrumentRadius, 2*instrumentRadius, 448, 0, 64, 64));
+			addComponent(this.selectorOverlay = new GUIComponentCutout(guiLeft + definition.hudX - instrumentRadius, guiTop + definition.hudY - instrumentRadius, 2*instrumentRadius, 2*instrumentRadius, 448, 64, 64, 64));
 		}
 	}
 }

@@ -224,7 +224,6 @@ public class JSONConfig{
 		
 		public JSONConfigEntry(ConfigType defaultValue, String comment){
 			this.value = defaultValue;
-			//FIXME this isn't working.
 			this.comment = comment;
 		}
 	}

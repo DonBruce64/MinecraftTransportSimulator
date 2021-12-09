@@ -35,6 +35,7 @@ public class GUIPackExporter extends AGUIBase{
 	private GUIComponentButton modelRenderButton;
 	private GUIComponentButton packExportButton;
 	private GUIComponentButton packImportButton;
+	private GUIComponentButton packEditorButton;
 	private GUIComponentTextBox debug;
 	
 	//Model render screen components.
@@ -51,8 +52,9 @@ public class GUIPackExporter extends AGUIBase{
 	
 	@Override 
 	public void setupComponents(int guiLeft, int guiTop){
-		int buttonWidth = getWidth()/4;
-		addComponent(packExportButton = new GUIComponentButton(guiLeft , guiTop + 0, buttonWidth, 20, "EXPORT PACKS"){
+		int buttonWidth = 350/4;
+		int buttonOffset = -(350 - getWidth())/2;
+		addComponent(packExportButton = new GUIComponentButton(guiLeft + buttonOffset, guiTop + 0, buttonWidth, 20, "EXPORT PACKS"){
 			@Override
 			public void onClicked(boolean leftSide){
 				File jsonDir = new File(MasterLoader.gameDirectory, "mts_dev");
@@ -110,7 +112,7 @@ public class GUIPackExporter extends AGUIBase{
 				}
 			}
 		});
-		addComponent(packImportButton = new GUIComponentButton(guiLeft + buttonWidth, guiTop + 0, buttonWidth, 20, "IMPORT PACKS"){
+		addComponent(packImportButton = new GUIComponentButton(guiLeft + buttonWidth + buttonOffset, guiTop + 0, buttonWidth, 20, "IMPORT PACKS"){
 			@Override
 			public void onClicked(boolean leftSide){
 				File jsonDir = new File(MasterLoader.gameDirectory, "mts_dev");
@@ -154,12 +156,13 @@ public class GUIPackExporter extends AGUIBase{
 			}
 		});
 		//Add control buttons.
-		addComponent(modelRenderButton = new GUIComponentButton(guiLeft + 2*buttonWidth, guiTop + 0, buttonWidth, 20, "MODEL RENDER"){
+		addComponent(modelRenderButton = new GUIComponentButton(guiLeft + 2*buttonWidth + buttonOffset, guiTop + 0, buttonWidth, 20, "MODEL RENDER"){
 			@Override
 			public void onClicked(boolean leftSide){
 				modelRenderButton.visible = false;
 				packExportButton.visible = false;
 				packImportButton.visible = false;
+				packEditorButton.visible = false;
 				debug.visible = false;
 				
 				componentItemModel.visible = true;
@@ -170,7 +173,7 @@ public class GUIPackExporter extends AGUIBase{
 				}
 			}
 		});
-		addComponent(new GUIComponentButton(guiLeft + 3*buttonWidth, guiTop + 0, buttonWidth, 20, "PACK EDITOR"){
+		addComponent(this.packEditorButton = new GUIComponentButton(guiLeft + 3*buttonWidth + buttonOffset, guiTop + 0, buttonWidth, 20, "PACK EDITOR"){
 			@Override
 			public void onClicked(boolean leftSide){
 				new GUIPackEditor();
@@ -183,6 +186,7 @@ public class GUIPackExporter extends AGUIBase{
 				modelRenderButton.visible = true;
 				packExportButton.visible = true;
 				packImportButton.visible = true;
+				packEditorButton.visible = true;
 				debug.visible = true;
 				
 				componentItemModel.visible = false;
@@ -208,7 +212,7 @@ public class GUIPackExporter extends AGUIBase{
 		});
 		
 		//Create debug output box.
-		addComponent(debug = new GUIComponentTextBox(guiLeft, guiTop + 20, getWidth(), getHeight() - 20, "", ColorRGB.WHITE, 1200));
+		addComponent(debug = new GUIComponentTextBox(guiLeft + buttonOffset, guiTop + 20, 350, getHeight() - 20, "", ColorRGB.WHITE, 1200));
 		
 		//Create data entry boxes and labels.
 		dataEntryBoxes.clear();
@@ -267,6 +271,6 @@ public class GUIPackExporter extends AGUIBase{
 	
 	@Override
 	public int getWidth(){
-		return componentItemModel != null && componentItemModel.visible ? super.getWidth() : 350;
+		return super.getWidth();
 	}
 }

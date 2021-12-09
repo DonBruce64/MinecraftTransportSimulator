@@ -34,7 +34,11 @@ public class GUIComponentTextBox extends GUIComponentCutout{
 	}
 	
 	public GUIComponentTextBox(int x, int y, int width, int height, String text, ColorRGB fontColor, int maxTextLength){
-		super(x, y, width, height, DEFAULT_BACKGROUND_SECTION_WIDTH_OFFSET, DEFAULT_BACKGROUND_SECTION_HEIGHT_OFFSET, DEFAULT_BACKGROUND_SECTION_WIDTH, DEFAULT_BACKGROUND_SECTION_HEIGHT);
+		this(x, y, width, height, text, fontColor, maxTextLength, DEFAULT_BACKGROUND_SECTION_WIDTH_OFFSET, DEFAULT_BACKGROUND_SECTION_HEIGHT_OFFSET, DEFAULT_BACKGROUND_SECTION_WIDTH, DEFAULT_BACKGROUND_SECTION_HEIGHT);
+	}
+	
+	public GUIComponentTextBox(int x, int y, int width, int height, String text, ColorRGB fontColor, int maxTextLength, int textureXOffset, int textureYOffset, int textureSectionWidth, int textureSectionHeight){
+		super(x, y, width, height, textureXOffset, textureYOffset, textureSectionWidth, textureSectionHeight);
 		this.fontColor = fontColor;
 		this.maxTextLength = maxTextLength;
 		setText(text);

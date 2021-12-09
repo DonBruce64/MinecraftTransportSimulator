@@ -24,7 +24,6 @@ public abstract class AGUIComponent{
 	/**
 	 *  Renders the main portion of the component.
 	 *  Note that this method is not called if {@link #visible} is false.
-	 * @param blendingEnabled TODO
 	 */
     public abstract void render(int mouseX, int mouseY, int textureWidth, int textureHeight, boolean blendingEnabled, float partialTicks);
     
