@@ -154,7 +154,7 @@ public final class PartInteractable extends APart{
 					//Try to find a matching burnable item from the entity.
 					for(APart part : entityOn.parts){
 						if(part instanceof PartInteractable){
-							if(part.definition.interactable.feedsVehicles && part.definition.interactable.interactionType.equals(InteractableComponentType.CRATE)){
+							if(part.isActive && part.definition.interactable.feedsVehicles && part.definition.interactable.interactionType.equals(InteractableComponentType.CRATE)){
 								PartInteractable crate = (PartInteractable) part;
 								for(int i=0; i<crate.inventory.getSize(); ++i){
 									ItemStack stack = crate.inventory.getStack(i);
@@ -176,7 +176,7 @@ public final class PartInteractable extends APart{
 				//Try to find a barrel with fuel in it.
 				for(APart part : entityOn.parts){
 					if(part instanceof PartInteractable){
-						if(part.definition.interactable.feedsVehicles && part.definition.interactable.interactionType.equals(InteractableComponentType.BARREL)){
+						if(part.isActive && part.definition.interactable.feedsVehicles && part.definition.interactable.interactionType.equals(InteractableComponentType.BARREL)){
 							PartInteractable barrel = (PartInteractable) part;
 							if(barrel.tank.getFluidLevel() > 0 && ConfigSystem.configObject.fuel.fuels.get(EntityFurnace.FURNACE_FUEL_NAME).containsKey(barrel.tank.getFluid())){
 								furnace.ticksAddedOfFuel = (int) (ConfigSystem.configObject.fuel.fuels.get(EntityFurnace.FURNACE_FUEL_NAME).get(barrel.tank.getFluid())*20*furnace.definition.furnaceEfficiency);

@@ -46,7 +46,7 @@ public class PartEffector extends APart{
 						case FERTILIZER: {
 							//Search all inventories for fertilizer and try to use it.
 							for(APart part : entityOn.parts){
-								if(part instanceof PartInteractable && part.definition.interactable.interactionType.equals(InteractableComponentType.CRATE) && part.definition.interactable.feedsVehicles){
+								if(part instanceof PartInteractable && part.definition.interactable.interactionType.equals(InteractableComponentType.CRATE) && part.isActive && part.definition.interactable.feedsVehicles){
 									EntityInventoryContainer inventory = ((PartInteractable) part).inventory;
 									for(int i=0; i<inventory.getSize(); ++i){
 										ItemStack stack = inventory.getStack(i);
@@ -67,7 +67,7 @@ public class PartEffector extends APart{
 						case PLANTER: {
 							//Search all inventories for seeds and try to plant them.
 							for(APart part : entityOn.parts){
-								if(part instanceof PartInteractable && part.definition.interactable.interactionType.equals(InteractableComponentType.CRATE) && part.definition.interactable.feedsVehicles){
+								if(part instanceof PartInteractable && part.definition.interactable.interactionType.equals(InteractableComponentType.CRATE) && part.isActive && part.definition.interactable.feedsVehicles){
 									EntityInventoryContainer inventory = ((PartInteractable) part).inventory;
 									for(int i=0; i<inventory.getSize(); ++i){
 										ItemStack stack = inventory.getStack(i);
@@ -139,7 +139,7 @@ public class PartEffector extends APart{
 						while(iterator.hasNext()){
 							ItemStack dropStack = iterator.next();
 							for(APart part : entityOn.parts){
-								if(part instanceof PartInteractable && part.definition.interactable.interactionType.equals(InteractableComponentType.CRATE)){
+								if(part instanceof PartInteractable && part.isActive && part.definition.interactable.interactionType.equals(InteractableComponentType.CRATE)){
 									if(((PartInteractable) part).inventory.addStack(dropStack, true) == dropStack.getCount()){
 										iterator.remove();
 										break;

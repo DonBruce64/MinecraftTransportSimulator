@@ -292,7 +292,7 @@ public class PartGun extends APart{
 						if(definition.gun.autoReload){
 							//Iterate through all the inventory slots in crates to try to find matching ammo.
 							for(APart part : entityOn.parts){
-								if(part instanceof PartInteractable && part.definition.interactable.interactionType.equals(InteractableComponentType.CRATE) && part.definition.interactable.feedsVehicles){
+								if(part instanceof PartInteractable && part.definition.interactable.interactionType.equals(InteractableComponentType.CRATE) && part.isActive && part.definition.interactable.feedsVehicles){
 									EntityInventoryContainer inventory = ((PartInteractable) part).inventory;
 									for(int i=0; i<inventory.getSize(); ++i){
 										ItemStack stack = inventory.getStack(i);
