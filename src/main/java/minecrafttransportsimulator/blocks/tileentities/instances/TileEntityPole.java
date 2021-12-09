@@ -109,7 +109,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 					//Player clicked a sign with text.  Open the GUI to edit it.
 					player.sendPacket(new PacketEntityGUIRequest(clickedComponent, player, EntityGUIType.TEXT_EDITOR));
 					return true;
-				}else if(heldItem instanceof ItemPoleComponent && !((ItemPoleComponent) heldItem).definition.pole.type.equals(PoleComponentType.CORE)){
+				}else if(heldItem instanceof ItemPoleComponent && !((ItemPoleComponent) heldItem).definition.pole.type.equals(PoleComponentType.CORE) && !pole.components.containsKey(axis)){
 					//Player is holding component that could be added.  Try and do so.
 					ItemPoleComponent componentItem = (ItemPoleComponent) heldItem;
 					ATileEntityPole_Component newComponent = PoleComponentType.createComponent(pole, axis, componentItem.validateData(new WrapperNBT(heldStack)));
