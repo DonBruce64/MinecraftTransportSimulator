@@ -393,26 +393,6 @@ public class JSONPart extends AJSONPartProvider{
         @JSONDescription("A list of muzzle groups.  When firing this gun, the list is cycled though, and each group of muzzles takes turns firing.  If there are multiple muzzles in the group, they are all fired.  This allows for guns with muzzles that fire in sequence, or all at once.")
 		public List<JSONMuzzleGroup> muzzleGroups;
         
-        public class JSONMuzzleGroup{
-        	@JSONRequired
-        	@JSONDescription("A listing of muzzles that are in this group.  They will all be fired when this group is active.")
-        	public List<JSONMuzzle> muzzles;
-        }
-        
-        public class JSONMuzzle{
-        	@JSONRequired
-        	@JSONDescription("The position of this muzzle.  This is where the bullet will be spawned on firing.")
-        	public Point3d pos;
-        	
-        	@JSONRequired
-        	@JSONDescription("The rotation of this muzzle.  Allows for slight toe-in on barrels.")
-        	public Point3d rot;
-        	
-        	@JSONRequired
-        	@JSONDescription("This is the point this muzzle will rotate about when the gun's pitch is applied.  Only uused on pitchIsInternal guns, as external pitch guns move the whole gun, not the muzzle.")
-        	public Point3d center;
-        }
-        
         @Deprecated
         public float length;
     }

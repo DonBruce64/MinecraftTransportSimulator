@@ -13,10 +13,8 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -311,41 +309,6 @@ public class JSONParser{
 		}
 	};
 	
-	private static final TypeAdapter<Set<String>> stringSetAdapter = new TypeAdapter<Set<String>>(){	
-		@Override
-		public Set<String> read(JsonReader reader) throws IOException{
-			if(reader.peek() == JsonToken.NULL){
-				reader.nextNull();
-				return null;
-			}else{
-				Set<String> value = new HashSet<String>();
-				reader.beginArray();
-				while(reader.hasNext()){
-					value.add(reader.nextString());
-				}
-				reader.endArray();
-				return value;
-			}
-		}
-		
-		@Override
-		public void write(JsonWriter writer, Set<String> value) throws IOException{
-			if(value == null){
-				writer.nullValue();
-			}else{
-				//Setting the indent to nothing prevents GSON from applying newlines to lists.
-				//We need to set the indent to the value afterwards though to keep pretty printing.
-				writer.beginArray();
-				writer.setIndent("");
-				for(String item : value){
-					writer.value(item);
-				}
-				writer.endArray();
-				writer.setIndent("  ");
-			}
-		}
-	};
-	
 	private static final TypeAdapter<List<ColorRGB>> colorListAdapter = new TypeAdapter<List<ColorRGB>>(){	
 		@Override
 		public List<ColorRGB> read(JsonReader reader) throws IOException{
@@ -435,7 +398,6 @@ public class JSONParser{
 				.registerTypeAdapter(new TypeToken<List<Integer>>(){}.getType(), intListAdapter)
 				.registerTypeAdapter(new TypeToken<List<Float>>(){}.getType(), floatListAdapter)
 				.registerTypeAdapter(new TypeToken<List<String>>(){}.getType(), stringListAdapter)
-				.registerTypeAdapter(new TypeToken<Set<String>>(){}.getType(), stringSetAdapter)
 				.registerTypeAdapter(new TypeToken<List<ColorRGB>>(){}.getType(), colorListAdapter)
 				.registerTypeAdapterFactory(lowercaseEnumFactory)
 				.create();
@@ -451,7 +413,6 @@ public class JSONParser{
 				.registerTypeAdapter(new TypeToken<List<Integer>>(){}.getType(), intListAdapter)
 				.registerTypeAdapter(new TypeToken<List<Float>>(){}.getType(), floatListAdapter)
 				.registerTypeAdapter(new TypeToken<List<String>>(){}.getType(), stringListAdapter)
-				.registerTypeAdapter(new TypeToken<Set<String>>(){}.getType(), stringSetAdapter)
 				.create();
 	}
 	

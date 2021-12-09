@@ -5,7 +5,7 @@ import org.lwjgl.opengl.GL11;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.PartGun;
-import minecrafttransportsimulator.jsondefs.JSONPart.JSONPartGun.JSONMuzzle;
+import minecrafttransportsimulator.jsondefs.JSONMuzzle;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.rendering.components.ARenderEntity;
 

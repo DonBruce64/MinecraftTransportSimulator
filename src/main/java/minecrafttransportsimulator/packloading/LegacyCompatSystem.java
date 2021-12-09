@@ -1,7 +1,6 @@
 package minecrafttransportsimulator.packloading;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 
@@ -37,13 +36,13 @@ import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONItem.JSONBooklet.BookletPage;
 import minecrafttransportsimulator.jsondefs.JSONLight;
 import minecrafttransportsimulator.jsondefs.JSONLight.JSONLightBlendableComponent;
+import minecrafttransportsimulator.jsondefs.JSONMuzzle;
+import minecrafttransportsimulator.jsondefs.JSONMuzzleGroup;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPart.EffectorComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPart.FurnaceComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPart.JSONPartEngine.EngineSound;
-import minecrafttransportsimulator.jsondefs.JSONPart.JSONPartGun.JSONMuzzle;
-import minecrafttransportsimulator.jsondefs.JSONPart.JSONPartGun.JSONMuzzleGroup;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition.ExhaustObject;
 import minecrafttransportsimulator.jsondefs.JSONParticle;
@@ -306,7 +305,7 @@ public final class LegacyCompatSystem{
 					sirenSound.activeAnimations.add(sirenDef);
 					definition.rendering.sounds.add(sirenSound);
 					if(definition.rendering.customVariables == null){
-						definition.rendering.customVariables = new HashSet<String>();
+						definition.rendering.customVariables = new ArrayList<String>();
 					}
 					definition.rendering.customVariables.add("siren");
 					definition.motorized.sirenSound = null;
@@ -638,9 +637,9 @@ public final class LegacyCompatSystem{
 			}
 			if(definition.gun.muzzleGroups == null){
 				definition.gun.muzzleGroups = new ArrayList<JSONMuzzleGroup>();
-				JSONMuzzleGroup muzzleGroup = definition.gun.new JSONMuzzleGroup();
+				JSONMuzzleGroup muzzleGroup = new JSONMuzzleGroup();
 				muzzleGroup.muzzles = new ArrayList<JSONMuzzle>();
-				JSONMuzzle muzzle = definition.gun.new JSONMuzzle();
+				JSONMuzzle muzzle = new JSONMuzzle();
 				muzzle.pos = new Point3d(0, 0, definition.gun.length);
 				muzzle.rot = new Point3d();
 				muzzle.center = new Point3d();
@@ -1580,7 +1579,7 @@ public final class LegacyCompatSystem{
 				if(!door.closedByDefault){
 					//We can assume rendering exists.  Cause who the heck makes doors that don't animate?
 					if(interactableDef.rendering.initialVariables == null){
-						interactableDef.rendering.initialVariables = new HashSet<String>(); 
+						interactableDef.rendering.initialVariables = new ArrayList<String>(); 
 					}
 					interactableDef.rendering.initialVariables.add(door.name);
 				}
@@ -1803,7 +1802,7 @@ public final class LegacyCompatSystem{
 						}else if(lowerCaseName.contains("emergencylight")){
 							activeAnimation.variable = "EMERLTS";
 							if(definition.rendering.customVariables == null){
-								definition.rendering.customVariables = new HashSet<String>();
+								definition.rendering.customVariables = new ArrayList<String>();
 							}
 							if(definition instanceof JSONVehicle)definition.rendering.customVariables.add("EMERLTS");
 						}else if(lowerCaseName.contains("stoplight") || lowerCaseName.contains("cautionlight") || lowerCaseName.contains("golight")){
