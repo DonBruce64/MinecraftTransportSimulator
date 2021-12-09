@@ -81,7 +81,10 @@ public class PacketPartChange extends APacketEntity<AEntityE_Multipart<?>>{
 	@Override
 	public boolean handle(WrapperWorld world, AEntityE_Multipart<?> entity){
 		if(partItem == null){
-			entity.removePart(entity.getPartAtLocation(partOffset), null);
+			APart part = entity.getPartAtLocation(partOffset);
+			if(part != null){
+				entity.removePart(part, null);
+			}
 		}else{
 			JSONPartDefinition packVehicleDef = entity.getPackDefForLocation(partOffset);
 			entity.addPart(partItem.createPart(entity, packVehicleDef, partData, entity.getPartAtLocation(parentPartOffset)), false);

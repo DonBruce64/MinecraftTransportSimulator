@@ -538,7 +538,11 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 						removePart(part.childParts.get(0), null);
 					}
 				}else{
-					throw new IllegalStateException("Attempted to remove a part with child parts from an entity during an update loop.  This is NOT allowed!");
+					//Flag all child parts for removal rather than remove them.
+					//We're iterating here, so don't want to remove them right away.
+					for(APart childPart : part.childParts){
+						childPart.isValid = false;
+					}
 				}
 			}
 			
