@@ -34,6 +34,9 @@ import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.InterfaceRender;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
+import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
+import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.rendering.components.ARenderEntity;
 import minecrafttransportsimulator.rendering.components.DurationDelayClock;
 import minecrafttransportsimulator.sound.InterfaceSound;
@@ -984,7 +987,10 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	 * or one of the states in {@link AEntityC_Definable#variablesOn},
 	 * Variables that are derived are parsed from the map every update.
 	 * To modify them you will need to update their values in the respective
-	 * variable set.
+	 * variable set via 
+	 * {@link PacketEntityVariableToggle},
+	 * {@link PacketEntityVariableSet},
+	 * {@link PacketEntityVariableIncrement} 
 	 */
 	@Retention(RetentionPolicy.SOURCE)
     @Target({ElementType.FIELD})

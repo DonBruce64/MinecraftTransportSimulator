@@ -47,8 +47,10 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 	public static final String HORN_VARIABLE = "horn";
 	public static final String GEAR_VARIABLE = "gear_setpoint";
 	public static final String THROTTLE_VARIABLE = "throttle";
+	public static final String REVERSE_THRUST_VARIABLE = "reverser";
 	
 	//External state control.
+	@DerivedValue
 	public boolean reverseThrust;
 	public boolean beingFueled;
 	public boolean enginesOn;
@@ -77,7 +79,6 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 		super(world, data);
 		
 		//Load simple variables.
-		this.reverseThrust = data.getBoolean("reverseThrust");
 		this.electricPower = data.getDouble("electricPower");
 		this.selectedBeaconName = data.getString("selectedBeaconName");
 		this.selectedBeacon = NavBeaconSystem.getBeacon(world, selectedBeaconName);
@@ -88,8 +89,9 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 	public boolean update(){
 		if(super.update()){
 			world.beginProfiling("VehicleE_Level", true);
-			//Get throttle state.
+			//Get throttle and reverse state.
 			throttle = getVariable(THROTTLE_VARIABLE);
+			reverseThrust = variablesOn.contains(REVERSE_THRUST_VARIABLE);
 			
 			//If we have space for fuel, and we have tanks with it, transfer it.
 			if(!world.isClient() && fuelTank.getFluidLevel() < definition.motorized.fuelCapacity - 100){
@@ -343,7 +345,6 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 	@Override
 	public WrapperNBT save(WrapperNBT data){
 		super.save(data);
-		data.setBoolean("reverseThrust", reverseThrust);
 		data.setDouble("electricPower", electricPower);
 		data.setString("selectedBeaconName", selectedBeaconName);
 		data.setData("fuelTank", fuelTank.save(new WrapperNBT()));

@@ -56,17 +56,18 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	
 	//Flaps.
 	public static final short MAX_FLAP_ANGLE_REFERENCE = 350;
-	public int flapNotchSelected;
+	@DerivedValue
 	public double flapDesiredAngle;
 	public double flapCurrentAngle;
+	public static final String FLAPS_VARIABLE = "flaps_setpoint";
 	
 	//External state control.
 	public boolean turningLeft;
 	public boolean turningRight;
-	public boolean autopilot;
 	public byte turningCooldown;
-	public double speedSetting;
-	public double altitudeSetting;
+	@DerivedValue
+	public double autopilotSetting;
+	public static final String AUTOPILOT_VARIABLE = "autopilot";
 	
 	//Internal states.
 	public boolean hasRotors;
@@ -112,13 +113,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 
 	public EntityVehicleF_Physics(WrapperWorld world, WrapperNBT data){
 		super(world, data);
-		
-		this.flapNotchSelected = data.getInteger("flapNotchSelected");
 		this.flapCurrentAngle = data.getDouble("flapCurrentAngle");
-		
-		this.autopilot = data.getBoolean("autopilot");
-		this.altitudeSetting = data.getDouble("altitudeSetting");
-		this.speedSetting = data.getDouble("speedSetting");
 	}
 	
 	@Override
@@ -132,10 +127,11 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 			elevatorTrim = getVariable(ELEVATOR_TRIM_VARIABLE);
 			rudderAngle = getVariable(RUDDER_VARIABLE);
 			rudderTrim = getVariable(RUDDER_TRIM_VARIABLE);
+			autopilotSetting = getVariable(AUTOPILOT_VARIABLE);
+			flapDesiredAngle = getVariable(FLAPS_VARIABLE);
 			
 			//Adjust flaps to current setting.
 			if(definition.motorized.flapNotches != null && !definition.motorized.flapNotches.isEmpty()){
-				flapDesiredAngle = definition.motorized.flapNotches.get(flapNotchSelected);
 				if(flapCurrentAngle < flapDesiredAngle){
 					flapCurrentAngle += definition.motorized.flapSpeed;
 				}else if(flapCurrentAngle > flapDesiredAngle){
@@ -444,14 +440,15 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	
 	@Override
 	protected void adjustControlSurfaces(){
-		if(!definition.motorized.isAircraft && autopilot){
-			if(velocity < speedSetting){
+		if(!definition.motorized.isAircraft && autopilotSetting != 0){
+			//Car, do cruise control.
+			if(velocity < autopilotSetting){
 				if(throttle < MAX_THROTTLE){
 					throttle += MAX_THROTTLE/100D;
 					setVariable(THROTTLE_VARIABLE, throttle);
 					InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, THROTTLE_VARIABLE, MAX_THROTTLE/100D));
 				}
-			}else if(velocity > speedSetting){
+			}else if(velocity > autopilotSetting){
 				if(throttle > 0){
 					throttle -= MAX_THROTTLE/100D;
 					setVariable(THROTTLE_VARIABLE, throttle);
@@ -462,7 +459,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 		
 		if(hasRotors){
 			//Helicopter.  Do auto-hover code if required.
-			if(autopilot){
+			if(autopilotSetting != 0){
 				//Change throttle to maintain altitude.
 				//Only do this once every 1/2 second to allow for thrust changes.
 				if(ticksExisted%10 == 0){
@@ -512,7 +509,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 					InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_TRIM_VARIABLE, -1));
 				}
 			}
-		}else if(definition.motorized.isAircraft && autopilot){
+		}else if(definition.motorized.isAircraft && autopilotSetting != 0){
 			//Normal aircraft.  Do autopilot operations if required.
 			//If we are not flying at a steady elevation, angle the elevator to compensate
 			if(-motion.y*100 > elevatorTrim + 1 && elevatorTrim < MAX_ELEVATOR_TRIM){
@@ -626,13 +623,11 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 			case("engines_on"): return enginesOn ? 1 : 0;
 			case("engines_running"): return enginesRunning ? 1 : 0;
 			case("reverser"): return reverseThrust ? 1 : 0;
-			case("autopilot"): return autopilot ? 1 : 0;
 			case("locked"): return locked ? 1 : 0;
 			case("door"): return parkingBrakeOn && velocity < 0.25 ? 1 : 0;
 			case("fueling"): return beingFueled ? 1 : 0;
 			
 			//State cases generally used on aircraft.
-			case("flaps_setpoint"): return flapDesiredAngle;
 			case("flaps_actual"): return flapCurrentAngle;
 			case("flaps_moving"): return flapCurrentAngle != flapDesiredAngle ? 1 : 0;
 			case("vertical_speed"): return motion.y*EntityVehicleF_Physics.SPEED_FACTOR*20;
@@ -691,12 +686,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	@Override
 	public WrapperNBT save(WrapperNBT data){
 		super.save(data);
-		data.setInteger("flapNotchSelected", flapNotchSelected);
 		data.setDouble("flapCurrentAngle", flapCurrentAngle);
-
-		data.setBoolean("autopilot", autopilot);
-		data.setDouble("altitudeSetting", altitudeSetting);
-		data.setDouble("speedSetting", speedSetting);
 		return data;
 	}
 }

@@ -65,12 +65,16 @@ public class PartEngine extends APart{
 	private double prevEngineRotation;
 	private double driveshaftRotation;
 	private double prevDriveshaftRotation;
+	private PartPropeller attachedPropeller;
 	private final Point3d engineForce = new Point3d();
 	
 	//Constants and static variables.
 	public static final String MAGNETO_VARIABLE = "engine_magneto";
 	public static final String ELECTRIC_STARTER_VARIABLE = "engine_starter";
 	public static final String HAND_STARTER_VARIABLE = "engine_starter_hand";
+	public static final String UP_SHIFT_VARIABLE = "engine_shift_up";
+	public static final String DOWN_SHIFT_VARIABLE = "engine_shift_down";
+	public static final String NEUTRAL_SHIFT_VARIABLE = "engine_shift_neutral";
 	public static final float COLD_TEMP = 30F;
 	public static final float OVERHEAT_TEMP_1 = 115.556F;
 	public static final float OVERHEAT_TEMP_2 = 121.111F;
@@ -265,6 +269,27 @@ public class PartEngine extends APart{
 					hours += (rpm - definition.engine.maxSafeRPM)/definition.engine.maxSafeRPM*getTotalWearFactor();
 				}
 				
+				//Check for any shifting requests.
+				if(variablesOn.contains(UP_SHIFT_VARIABLE)){
+					shiftUp(false);
+					variablesOn.remove(UP_SHIFT_VARIABLE);
+				}else if(variablesOn.contains(DOWN_SHIFT_VARIABLE)){
+					shiftDown(false);
+					variablesOn.remove(DOWN_SHIFT_VARIABLE);
+				}else if(variablesOn.contains(NEUTRAL_SHIFT_VARIABLE)){
+					shiftNeutral();
+					variablesOn.remove(NEUTRAL_SHIFT_VARIABLE);
+				}
+				
+				//Check for reversing if we are on a blimp with reversed thrust.
+				if(vehicleOn != null && vehicleOn.definition.motorized.isBlimp && attachedPropeller != null){
+					if(vehicleOn.reverseThrust && currentGear > 0){
+						currentGear = -1;
+					}else if(!vehicleOn.reverseThrust && currentGear < 0){
+						currentGear = 1;
+					}
+				}
+				
 				//Do running logic.
 				if(running){
 					//Provide electric power to the vehicle we're in.
@@ -349,13 +374,11 @@ public class PartEngine extends APart{
 								if(rpm > (definition.engine.upShiftRPM != null ? definition.engine.upShiftRPM.get(currentGear + reverseGears) : (definition.engine.maxSafeRPM*0.9))*0.5F*(1.0F + vehicleOn.throttle)){
 									if(currentGear > 0){
 										if(shiftUp(true)){
-											shiftCooldown = definition.engine.shiftSpeed;
-											InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.SHIFT_UP_AUTO));
+											InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(this, UP_SHIFT_VARIABLE));
 										}
 									}else{
 										if(shiftDown(true)){
-											shiftCooldown = definition.engine.shiftSpeed;
-											InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.SHIFT_DN_AUTO));
+											InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(this, DOWN_SHIFT_VARIABLE));
 										}
 									}
 								}
@@ -365,13 +388,11 @@ public class PartEngine extends APart{
 								if(rpm < (definition.engine.downShiftRPM != null ? definition.engine.downShiftRPM.get(currentGear + reverseGears)*0.5*(1.0F + vehicleOn.throttle) : (definition.engine.maxSafeRPM*0.9)*0.25*(1.0F + vehicleOn.throttle))){
 									if(currentGear > 0){
 										if(shiftDown(true)){
-											shiftCooldown = definition.engine.shiftSpeed;
-											InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.SHIFT_DN_AUTO));
+											InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(this, DOWN_SHIFT_VARIABLE));
 										}
 									}else{
 										if(shiftUp(true)){
-											shiftCooldown = definition.engine.shiftSpeed;
-											InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.SHIFT_UP_AUTO));
+											InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(this, UP_SHIFT_VARIABLE));
 										}
 									}
 								}
@@ -457,22 +478,21 @@ public class PartEngine extends APart{
 				}
 				
 				//Update propeller variables.
-				boolean havePropeller = false;
+				attachedPropeller = null;
 				for(APart part : childParts){
 					if(part instanceof PartPropeller){
-						PartPropeller propeller = (PartPropeller) part;
-						havePropeller = true;
-						Point3d propellerThrustAxis = new Point3d(0D, 0D, 1D).rotateFine(propeller.localAngles.copy().add(vehicleOn.angles));
+						attachedPropeller = (PartPropeller) part;
+						Point3d propellerThrustAxis = new Point3d(0D, 0D, 1D).rotateFine(attachedPropeller.localAngles.copy().add(vehicleOn.angles));
 						propellerAxialVelocity = vehicleOn.motion.dotProduct(propellerThrustAxis);
 						propellerGearboxRatio = Math.signum(currentGearRatio)*(definition.engine.propellerRatio != 0 ? definition.engine.propellerRatio : Math.abs(currentGearRatio));
 						
 						//If wheel friction is 0, and we aren't in neutral, get RPM contributions for that.
 						if(wheelFriction == 0 && currentGearRatio != 0){
-							isPropellerInLiquid = propeller.isInLiquid();
-							double propellerForcePenalty = Math.max(0, (propeller.definition.propeller.diameter - 75)/(50*(definition.engine.fuelConsumption + (definition.engine.superchargerFuelConsumption*definition.engine.superchargerEfficiency)) - 15));
-							double propellerDesiredSpeed = 0.0254*propeller.currentPitch*rpm/propellerGearboxRatio/60D/20D;
+							isPropellerInLiquid = attachedPropeller.isInLiquid();
+							double propellerForcePenalty = Math.max(0, (attachedPropeller.definition.propeller.diameter - 75)/(50*(definition.engine.fuelConsumption + (definition.engine.superchargerFuelConsumption*definition.engine.superchargerEfficiency)) - 15));
+							double propellerDesiredSpeed = 0.0254*attachedPropeller.currentPitch*rpm/propellerGearboxRatio/60D/20D;
 							double propellerFeedback = (propellerDesiredSpeed - propellerAxialVelocity)*(isPropellerInLiquid ? 130 : 40);
-							if(currentGear < 0 || propeller.currentPitch < 0){
+							if(currentGear < 0 || attachedPropeller.currentPitch < 0){
 								propellerFeedback *= -1;
 							}
 							
@@ -501,7 +521,7 @@ public class PartEngine extends APart{
 				
 				//If wheel friction is 0, and we don't have a propeller, or we're in neutral, adjust RPM to throttle position.
 				//Or, if we are not on, just slowly spin the engine down.
-				if((wheelFriction == 0 && !havePropeller) || currentGearRatio == 0){
+				if((wheelFriction == 0 && attachedPropeller == null) || currentGearRatio == 0){
 					if(running){
 						engineTargetRPM = vehicleOn.throttle*(definition.engine.maxRPM - definition.engine.idleRPM)/(1 + hours/1250) + definition.engine.idleRPM;
 						rpm += (engineTargetRPM - rpm)/(definition.engine.revResistance*3);
@@ -754,64 +774,76 @@ public class PartEngine extends APart{
 		}
 	}
 	
-	public boolean shiftUp(boolean autoShift){
+	private boolean shiftUp(boolean autoTransRequest){
 		byte nextGear = 0;
 		boolean doShift = false;
-		if(definition.engine.jetPowerFactor == 0){
+		if(definition.engine.jetPowerFactor == 0 ){
 			//Check to make sure we can shift.
-			if(currentGear == 0){//Neutral to 1st.
+			if(currentGear == 0){
+				//Neutral to 1st.
 				nextGear = 1;
 				doShift = vehicleOn.axialVelocity < MAX_SHIFT_SPEED || wheelFriction == 0 || !vehicleOn.goingInReverse;
 			}else if(currentGear < forwardsGears){//Gear to next gear.
-				if(definition.engine.isAutomatic && !autoShift && currentGear < 0){
-					//Automatic engine with shift-up pressed while in reverse.  Shift to neutral.
-					nextGear = 0;
-					doShift = true;
-				}else if(!definition.engine.isAutomatic || autoShift){
-					//Automatic shift command, or manual shift command on manual engine.  Shift to next gear.
-					nextGear = (byte) (currentGear + 1);
-					doShift = true;
-				}
+				//Automatic shift command, or manual shift command on manual engine.  Shift to next gear.
+				nextGear = (byte) (currentGear + 1);
+				doShift = true;
+			}else if(currentGear == forwardsGears){
+				//Already at highest gear.
+				return false;
 			}
 				
-			if(doShift || world.isClient()){
+			if(doShift){
 				currentGear = nextGear;
+				shiftCooldown = definition.engine.shiftSpeed;
 				upshiftCountdown = definition.engine.clutchTime;
-			}else if(!world.isClient() && !autoShift && currentGear <= 0){
+			}else if(!world.isClient()){
 				InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.BAD_SHIFT));
 			}
 		}
 		return doShift;
 	}
 	
-	public boolean shiftDown(boolean autoShift){
+	private boolean shiftDown(boolean autoTransRequest){
 		byte nextGear = 0;
 		boolean doShift = false;
 		if(definition.engine.jetPowerFactor == 0){
 			//Check to make sure we can shift.
-			if(currentGear == 0){//Neutral to 1st reverse.
+			if(currentGear == 0){
+				//Neutral to 1st reverse.
 				nextGear = -1;
 				doShift = vehicleOn.axialVelocity < MAX_SHIFT_SPEED || wheelFriction == 0 || vehicleOn.goingInReverse;
 			}else if(currentGear > 0 || -currentGear < reverseGears){//Gear to next gear.
-				if(definition.engine.isAutomatic && !autoShift && currentGear > 0){
-					//Automatic engine with shift-down pressed while in forwards.  Shift to neutral.
-					nextGear = 0;
-					doShift = true;
-				}else if(!definition.engine.isAutomatic || autoShift){
-					//Automatic shift command, or manual shift command on manual engine.  Shift to next gear.
-					nextGear = (byte) (currentGear - 1);
-					doShift = true;
-				}
+				//Automatic shift command, or manual shift command on manual engine.  Shift to next gear.
+				nextGear = (byte) (currentGear - 1);
+				doShift = true;
+			}else if(-currentGear == reverseGears){
+				//Already at lowest gear.
+				return false;
 			}
 				
-			if(doShift || world.isClient()){
+			if(doShift){
 				currentGear = nextGear;
+				shiftCooldown = definition.engine.shiftSpeed;
 				downshiftCountdown = definition.engine.clutchTime;
-			}else if(!world.isClient() && !autoShift && currentGear >= 0){
+			}else if(!world.isClient()){
 				InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.BAD_SHIFT));
 			}
 		}
 		return doShift;
+	}
+	
+	private void shiftNeutral(){
+		if(definition.engine.jetPowerFactor == 0){
+			if(currentGear != 0){//Any gear to neutral.
+				if(currentGear > 0){
+					downshiftCountdown = definition.engine.clutchTime;
+				}else{
+					upshiftCountdown = definition.engine.clutchTime;
+				}
+				shiftCooldown = definition.engine.shiftSpeed;
+				currentGear = 0;
+			}
+		}
 	}
 	
 	

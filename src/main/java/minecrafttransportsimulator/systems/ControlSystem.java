@@ -22,7 +22,6 @@ import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketPartGun;
 import minecrafttransportsimulator.packets.instances.PacketPartSeat;
-import minecrafttransportsimulator.packets.instances.PacketVehicleControlDigital;
 
 /**Class that handles all control operations.
  * 
@@ -217,7 +216,7 @@ public final class ControlSystem{
 		
 		//Check for thrust reverse button.
 		if(ControlsJoystick.AIRCRAFT_REVERSE.isPressed()){
-			InterfacePacket.sendToServer(new PacketVehicleControlDigital(aircraft, PacketVehicleControlDigital.Controls.REVERSE, !aircraft.reverseThrust));
+			InterfacePacket.sendToServer(new PacketEntityVariableToggle(aircraft, EntityVehicleF_Physics.REVERSE_THRUST_VARIABLE));
 		}
 		
 		//Increment or decrement throttle.
@@ -234,11 +233,11 @@ public final class ControlSystem{
 		
 		//Check flaps.
 		if(aircraft.definition.motorized.flapNotches != null && !aircraft.definition.motorized.flapNotches.isEmpty()){
-			if(ControlsKeyboard.AIRCRAFT_FLAPS_U.isPressed()){
-				InterfacePacket.sendToServer(new PacketVehicleControlDigital(aircraft, PacketVehicleControlDigital.Controls.FLAPS, false));
-			}
-			if(ControlsKeyboard.AIRCRAFT_FLAPS_D.isPressed()){
-				InterfacePacket.sendToServer(new PacketVehicleControlDigital(aircraft, PacketVehicleControlDigital.Controls.FLAPS, true));
+			int currentFlapSetting = aircraft.definition.motorized.flapNotches.indexOf((float)aircraft.flapDesiredAngle);
+			if(ControlsKeyboard.AIRCRAFT_FLAPS_U.isPressed() && currentFlapSetting + 1 < aircraft.definition.motorized.flapNotches.size()){
+				InterfacePacket.sendToServer(new PacketEntityVariableSet(aircraft, EntityVehicleF_Physics.FLAPS_VARIABLE, aircraft.definition.motorized.flapNotches.get(currentFlapSetting + 1)));
+			}else if(ControlsKeyboard.AIRCRAFT_FLAPS_D.isPressed() && currentFlapSetting > 0){
+				InterfacePacket.sendToServer(new PacketEntityVariableSet(aircraft, EntityVehicleF_Physics.FLAPS_VARIABLE, aircraft.definition.motorized.flapNotches.get(currentFlapSetting - 1)));
 			}
 		}
 		
@@ -293,7 +292,7 @@ public final class ControlSystem{
 			if(InterfaceInput.isJoystickPresent(ControlsJoystick.CAR_GAS.config.joystickName)){
 				//Send throttle over if throttle if cruise control is off, or if throttle is less than the axis level.
 				double throttleLevel = ControlsJoystick.CAR_GAS.getAxisState(true)*EntityVehicleF_Physics.MAX_THROTTLE;
-				if(!powered.autopilot || powered.throttle < throttleLevel){
+				if(powered.autopilotSetting == 0 || powered.throttle < throttleLevel){
 					InterfacePacket.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, throttleLevel));
 				}
 			}else{
@@ -333,9 +332,25 @@ public final class ControlSystem{
 					
 					//If we don't have velocity, and we have the appropriate control, shift.
 					if(brakeValue > EntityVehicleF_Physics.MAX_BRAKE/4F && currentGear >= 0 && powered.axialVelocity < 0.01F){
-						InterfacePacket.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.SHIFT_DN, false));
+						if(currentGear > 0){
+							for(PartEngine engine : powered.engines.values()){
+								InterfacePacket.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE));
+							}
+						}else{
+							for(PartEngine engine : powered.engines.values()){
+								InterfacePacket.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.DOWN_SHIFT_VARIABLE));
+							}
+						}
 					}else if(throttleValue > EntityVehicleF_Physics.MAX_THROTTLE/4F && currentGear <= 0 && powered.axialVelocity < 0.01F){
-						InterfacePacket.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.SHIFT_UP, false));
+						if(currentGear < 0){
+							for(PartEngine engine : powered.engines.values()){
+								InterfacePacket.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE));
+							}
+						}else{
+							for(PartEngine engine : powered.engines.values()){
+								InterfacePacket.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.UP_SHIFT_VARIABLE));
+							}
+						}
 					}
 					
 					//If we are going slow, and don't have gas or brake, automatically set the brake.
@@ -357,7 +372,7 @@ public final class ControlSystem{
 				if(InterfaceInput.isJoystickPresent(ControlsJoystick.CAR_GAS.config.joystickName)){
 					//Send throttle over if throttle if cruise control is off, or if throttle is less than the axis level.
 					double throttleLevel = ControlsJoystick.CAR_GAS.getAxisState(true);
-					if(!powered.autopilot || powered.throttle < throttleLevel){
+					if(powered.autopilotSetting == 0 || powered.throttle < throttleLevel){
 						InterfacePacket.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, throttleLevel));
 					}
 				}else{
@@ -374,8 +389,8 @@ public final class ControlSystem{
 							InterfacePacket.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, EntityVehicleF_Physics.MAX_THROTTLE/2D));
 						}
 					}else{
-						//Send gas off packet if we don't have cruise on..
-						if(!powered.autopilot){
+						//Send gas off packet if we don't have cruise on.
+						if(powered.autopilotSetting == 0){
 							InterfacePacket.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, 0D));
 						}
 					}
@@ -405,13 +420,19 @@ public final class ControlSystem{
 		
 		//Check if we are shifting.
 		if(ControlsKeyboardDynamic.CAR_SHIFT_NU.isPressed() || ControlsKeyboardDynamic.CAR_SHIFT_ND.isPressed()){
-			InterfacePacket.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.SHIFT_NEUTRAL, false));
+			for(PartEngine engine : powered.engines.values()){
+				InterfacePacket.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE));
+			}
 		}else{
 			if(ControlsKeyboard.CAR_SHIFT_U.isPressed()){
-				InterfacePacket.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.SHIFT_UP, false));
+				for(PartEngine engine : powered.engines.values()){
+					InterfacePacket.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.UP_SHIFT_VARIABLE));
+				}
 			}
 			if(ControlsKeyboard.CAR_SHIFT_D.isPressed()){
-				InterfacePacket.sendToServer(new PacketVehicleControlDigital(powered, PacketVehicleControlDigital.Controls.SHIFT_DN, false));
+				for(PartEngine engine : powered.engines.values()){
+					InterfacePacket.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.DOWN_SHIFT_VARIABLE));
+				}
 			}
 		}
 		
