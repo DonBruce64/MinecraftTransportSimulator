@@ -3,7 +3,10 @@ package minecrafttransportsimulator.systems;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.google.gson.Gson;
 
@@ -66,14 +69,32 @@ public final class ConfigSystem{
 		}
 	}
 	
-	/**Called to do crafting overrides.  Must be called afer all packs are loaded.
+	/**Called to do crafting overrides.  Must be called after all packs are loaded.
 	 */
 	public static void initCraftingOverrides(){
 		if(configObject.general.dumpCraftingConfig.value){
 			//Make the default override file and save it.
 			try{
 				FileWriter writer = new FileWriter(craftingFile);
-				JSONParser.exportStream(new JSONCraftingOverrides(), writer);
+				JSONCraftingOverrides craftingOverridesObject = new JSONCraftingOverrides();
+				craftingOverridesObject.overrides = new LinkedHashMap<String, Map<String, List<String>>>();
+				for(AItemPack<?> packItem : PackParserSystem.getAllPackItems()){
+					if(!craftingOverridesObject.overrides.containsKey(packItem.definition.packID)){
+						craftingOverridesObject.overrides.put(packItem.definition.packID, new LinkedHashMap<String, List<String>>());
+					}
+					if(packItem instanceof AItemSubTyped){
+						List<String> materials = new ArrayList<String>();
+						materials.addAll(packItem.definition.general.materials);
+						materials.addAll(((AItemSubTyped<?>) packItem).getExtraMaterials());
+						craftingOverridesObject.overrides.get(packItem.definition.packID).put(packItem.definition.systemName + ((AItemSubTyped<?>) packItem).subName, materials);
+					}else{
+						craftingOverridesObject.overrides.get(packItem.definition.packID).put(packItem.definition.systemName, packItem.definition.general.materials);
+					}
+					if(packItem.definition.general.repairMaterials != null){
+						craftingOverridesObject.overrides.get(packItem.definition.packID).put(packItem.definition.systemName + "_repair", packItem.definition.general.repairMaterials);
+					}
+				}
+				JSONParser.exportStream(craftingOverridesObject, writer);
 				writer.flush();
 				writer.close();
 			}catch(Exception e){
@@ -92,9 +113,7 @@ public final class ConfigSystem{
 							item.definition.general.materials.clear();
 						}else if(item != null){
 							item.definition.general.materials = craftingOverridesObject.overrides.get(craftingOverridePackID).get(craftingOverrideSystemName);
-						}
-						if(item != null){
-							
+							item.definition.general.repairMaterials = craftingOverridesObject.overrides.get(craftingOverridePackID).get(craftingOverrideSystemName + "_repair");
 						}
 					}
 				}

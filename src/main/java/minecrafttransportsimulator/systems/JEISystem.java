@@ -38,7 +38,10 @@ public class JEISystem implements IModPlugin{
 					List<IRecipeWrapper> benchRecipes = new ArrayList<IRecipeWrapper>();
 					for(AItemPack<?> packItemToTest : PackParserSystem.getAllPackItems()){
 						if(packItemToTest.isBenchValid(benchItem.definition.decor.crafting)){
-							benchRecipes.add(new PackRecipeWrapper(packItemToTest));
+							benchRecipes.add(new PackRecipeWrapper(packItemToTest, false));
+							if(packItemToTest.definition.general.repairMaterials != null){
+								benchRecipes.add(new PackRecipeWrapper(packItemToTest, true));
+							}
 						}
 					}
 					
@@ -62,15 +65,17 @@ public class JEISystem implements IModPlugin{
 	
 	private static class PackRecipeWrapper implements IRecipeWrapper{
 		private final AItemPack<?> packItem;
+		private final boolean forRepair;
 		
-		private PackRecipeWrapper(AItemPack<?> packItem){
+		private PackRecipeWrapper(AItemPack<?> packItem, boolean forRepair){
 			this.packItem = packItem;
+			this.forRepair = forRepair;
 		}
 		
 		@Override
 		public void getIngredients(IIngredients ingredients){
 			List<List<ItemStack>> inputs = new ArrayList<List<ItemStack>>();
-			for(PackMaterialComponent component : PackMaterialComponent.parseFromJSON(packItem, true, true, false)){
+			for(PackMaterialComponent component : PackMaterialComponent.parseFromJSON(packItem, true, true, false, forRepair)){
 				inputs.add(component.possibleItems);
 			}
 			ingredients.setInputLists(VanillaTypes.ITEM, inputs);

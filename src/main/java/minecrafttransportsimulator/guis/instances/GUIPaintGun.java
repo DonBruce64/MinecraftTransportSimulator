@@ -109,7 +109,7 @@ public class GUIPaintGun extends AGUIBase{
 		nextColorButton.enabled = nextSubItem != null;
 		
 		//Set confirm button based on if player has materials.
-		confirmButton.enabled = currentItem != null && (player.isCreative() || player.getInventory().hasMaterials(currentItem, false, true));
+		confirmButton.enabled = currentItem != null && (player.isCreative() || player.getInventory().hasMaterials(currentItem, false, true, false));
 	}
 	
 	@Override
@@ -165,7 +165,7 @@ public class GUIPaintGun extends AGUIBase{
 		partName.text = currentItem.getItemName();
 		
 		//Parse crafting items and set icon items.
-		List<PackMaterialComponent> materials = PackMaterialComponent.parseFromJSON(currentItem, false, true, false);
+		List<PackMaterialComponent> materials = PackMaterialComponent.parseFromJSON(currentItem, false, true, false, false);
 		for(byte i=0; i<craftingItemIcons.size(); ++i){
 			if(i < materials.size()){
 				craftingItemIcons.get(i).stacks = materials.get(i).possibleItems;

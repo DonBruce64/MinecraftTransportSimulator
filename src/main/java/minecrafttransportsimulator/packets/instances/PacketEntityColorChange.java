@@ -41,10 +41,10 @@ public class PacketEntityColorChange extends APacketEntityInteract<AEntityC_Defi
 	@Override
 	public boolean handle(WrapperWorld world, AEntityC_Definable<?> entity, WrapperPlayer player){
 		WrapperInventory inventory = player.getInventory();
-		if(player.isCreative() || inventory.hasMaterials(newItem, false, true)){
+		if(player.isCreative() || inventory.hasMaterials(newItem, false, true, false)){
 			//Remove livery materials (if required) and set new subName.
 			if(!player.isCreative()){
-				inventory.removeMaterials(newItem, false, true);
+				inventory.removeMaterials(newItem, false, true, false);
 			}
 			entity.subName = newItem.subName;
 			

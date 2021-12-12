@@ -65,11 +65,14 @@ public class GUIPartBench extends AGUIBase{
 	private GUIComponentLabel vehicleInfo;
 	private GUIComponentButton vehicleInfoButton;
 	private GUIComponentButton vehicleDescriptionButton;
+	private GUIComponentButton repairCraftingButton;
+	private GUIComponentButton normalCraftingButton;
 	private GUIComponentButton confirmButton;
 	
 	//Crafting components.
 	private final List<GUIComponentItem> craftingItemIcons = new ArrayList<GUIComponentItem>();
-	private List<PackMaterialComponent> materials;
+	private List<PackMaterialComponent> normalMaterials;
+	private List<PackMaterialComponent> repairMaterials;
 	
 	//Renders for the item.
 	private GUIComponentItem itemRender;
@@ -79,6 +82,7 @@ public class GUIPartBench extends AGUIBase{
 	private String prevPack;
 	private String currentPack;
 	private String nextPack;
+	private boolean viewingRepair;
 	
 	private AItemPack<? extends AJSONItem> prevItem;
 	private AItemPack<? extends AJSONItem> currentItem;
@@ -196,13 +200,28 @@ public class GUIPartBench extends AGUIBase{
 				displayVehicleInfo = false;
 			}
 		});
+		
+		
+		//Create the crafting switching button.
+		addComponent(repairCraftingButton = new GUIComponentButton(guiLeft + 127, guiTop + 159, 20, 20, 120, 196, 20, 20){
+			@Override
+			public void onClicked(boolean leftSide){
+				viewingRepair = true;
+			}
+		});
+		addComponent(normalCraftingButton = new GUIComponentButton(guiLeft + 127, guiTop + 159, 20, 20, 140, 196, 20, 20){
+			@Override
+			public void onClicked(boolean leftSide){
+				viewingRepair = false;
+			}
+		});
 				
 		
 		//Create the confirm button.
 		addComponent(confirmButton = new GUIComponentButton(guiLeft + 211, guiTop + 156, 20, 20, 20, 196, 20, 20){
 			@Override
 			public void onClicked(boolean leftSide){
-				InterfacePacket.sendToServer(new PacketPlayerCraftItem(player, currentItem));
+				InterfacePacket.sendToServer(new PacketPlayerCraftItem(player, currentItem, viewingRepair));
 			}
 		});
 		
@@ -224,12 +243,15 @@ public class GUIPartBench extends AGUIBase{
 		
 		vehicleInfoButton.visible = currentItem instanceof ItemVehicle && !displayVehicleInfo;
 		vehicleDescriptionButton.visible = currentItem instanceof ItemVehicle && displayVehicleInfo;
+		repairCraftingButton.visible = !viewingRepair && currentItem != null && currentItem.definition.general.repairMaterials != null;
+		normalCraftingButton.visible = viewingRepair;
 		partInfo.visible = !displayVehicleInfo;
 		vehicleInfo.visible = displayVehicleInfo;
 		
 		//Set materials.
 		//Get the offset index based on the clock-time and the number of materials.
 		if(currentItem != null){
+			List<PackMaterialComponent> materials = viewingRepair ? repairMaterials : normalMaterials;
 			int materialOffset = 1 + (materials.size() - 1)/craftingItemIcons.size();
 			materialOffset = (int) (System.currentTimeMillis()%(materialOffset*5000)/5000);
 			materialOffset *= craftingItemIcons.size();
@@ -251,7 +273,7 @@ public class GUIPartBench extends AGUIBase{
 		}
 		
 		//Set confirm button based on if player has materials.
-		confirmButton.enabled = currentItem != null && (player.isCreative() || player.getInventory().hasMaterials(currentItem, true, true));
+		confirmButton.enabled = currentItem != null && (player.isCreative() || player.getInventory().hasMaterials(currentItem, true, true, false) || (!repairMaterials.isEmpty() && player.getInventory().hasMaterials(currentItem, true, true, true)));
 		
 		//Check the mouse to see if it updated and we need to change items.
 		int wheelMovement = InterfaceInput.getTrackedMouseWheel();
@@ -419,7 +441,8 @@ public class GUIPartBench extends AGUIBase{
 		}
 		
 		//Parse crafting items and set icon items.
-		materials = PackMaterialComponent.parseFromJSON(currentItem, true, true, false);
+		normalMaterials = PackMaterialComponent.parseFromJSON(currentItem, true, true, false, false);
+		repairMaterials = PackMaterialComponent.parseFromJSON(currentItem, true, true, false, true); 
 		
 		//Enable render based on what component we have.
 		if(currentItem instanceof AItemSubTyped && (!(currentItem instanceof AItemPart) || !((AItemPart) currentItem).definition.generic.useVehicleTexture)){

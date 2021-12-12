@@ -3,6 +3,7 @@ package minecrafttransportsimulator.packloading;
 import java.util.ArrayList;
 import java.util.List;
 
+import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
@@ -62,23 +63,33 @@ public class PackMaterialComponent{
 	 *  multiple items to be used.  If this component is not for crafting checks, set forCraftingCheck to false.
 	 *  This prevents the returned stacks from having the wildcard value in their metadata and not being actual items.
 	 */
-	public static List<PackMaterialComponent> parseFromJSON(AItemPack<?> item, boolean includeMain, boolean includeSub, boolean forCraftingCheck){
+	public static List<PackMaterialComponent> parseFromJSON(AItemPack<?> item, boolean includeMain, boolean includeSub, boolean forCraftingCheck, boolean forRepair){
 		List<PackMaterialComponent> components = new ArrayList<PackMaterialComponent>();
 		String currentSubName = "";
 		try{
-			//Get main materials.
-			if(includeMain){
-		    	for(String itemText : item.definition.general.materials){
-		    		components.add(new PackMaterialComponent(itemText));
+			if(forRepair){
+				if(item.definition.general.repairMaterials != null){
+					//Get repair materials. Make sure to add actual item into the list too.
+					components.add(new PackMaterialComponent(MasterLoader.MODID + ":" + item.getRegistrationName() + ":0:1"));
+					for(String itemText : item.definition.general.repairMaterials){
+			    		components.add(new PackMaterialComponent(itemText));
+					}
 				}
-			}
-	    	
-	    	//Get subType materials, if required.
-	    	if(includeSub && item instanceof AItemSubTyped){
-		    	for(String itemText : ((AItemSubTyped<?>) item).getExtraMaterials()){
-		    		components.add(new PackMaterialComponent(itemText));
+			}else{
+				//Get main materials.
+				if(includeMain){
+			    	for(String itemText : item.definition.general.materials){
+			    		components.add(new PackMaterialComponent(itemText));
+					}
+				}
+		    	
+		    	//Get subType materials, if required.
+		    	if(includeSub && item instanceof AItemSubTyped){
+			    	for(String itemText : ((AItemSubTyped<?>) item).getExtraMaterials()){
+			    		components.add(new PackMaterialComponent(itemText));
+			    	}
 		    	}
-	    	}
+			}
 	    	
 	    	//Return all materials.
 	    	return components;

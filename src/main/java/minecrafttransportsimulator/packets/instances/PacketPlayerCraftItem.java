@@ -18,15 +18,18 @@ import minecrafttransportsimulator.systems.PackParserSystem;
  */
 public class PacketPlayerCraftItem extends APacketPlayer{
 	private final AItemPack<?> itemToCraft;
+	private final boolean forRepair;
 	
-	public PacketPlayerCraftItem(WrapperPlayer player, AItemPack<?> itemToCraft){
+	public PacketPlayerCraftItem(WrapperPlayer player, AItemPack<?> itemToCraft, boolean forRepair){
 		super(player);
 		this.itemToCraft = itemToCraft;
+		this.forRepair = forRepair;
 	}
 	
 	public PacketPlayerCraftItem(ByteBuf buf){
 		super(buf);
 		this.itemToCraft = PackParserSystem.getItem(readStringFromBuffer(buf), readStringFromBuffer(buf));
+		this.forRepair = buf.readBoolean();
 	}
 	
 	@Override
@@ -38,14 +41,15 @@ public class PacketPlayerCraftItem extends APacketPlayer{
 		}else{
 			writeStringToBuffer(itemToCraft.definition.systemName, buf);
 		}
+		buf.writeBoolean(forRepair);
 	}
 	
 	@Override
 	public void handle(WrapperWorld world, WrapperPlayer player){
 		WrapperInventory inventory = player.getInventory();
-		if(player.isCreative() || inventory.hasMaterials(itemToCraft, true, true)){
+		if(player.isCreative() || inventory.hasMaterials(itemToCraft, true, true, forRepair)){
 			if(!player.isCreative()){
-				inventory.removeMaterials(itemToCraft, true, true);
+				inventory.removeMaterials(itemToCraft, true, true, forRepair);
 			}
 			inventory.addItem(itemToCraft, null);
 		}

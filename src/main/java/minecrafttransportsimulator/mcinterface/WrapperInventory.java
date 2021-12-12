@@ -182,8 +182,8 @@ public class WrapperInventory{
 	/**
 	 *  Returns true if this inventory has all the materials to make the pack-based item.
 	 */
-	public boolean hasMaterials(AItemPack<?> item, boolean includeMain, boolean includeSub){
-		for(PackMaterialComponent material : PackMaterialComponent.parseFromJSON(item, includeMain, includeSub, true)){
+	public boolean hasMaterials(AItemPack<?> item, boolean includeMain, boolean includeSub, boolean forRepair){
+		for(PackMaterialComponent material : PackMaterialComponent.parseFromJSON(item, includeMain, includeSub, true, forRepair)){
 			int requiredMaterialCount = material.qty;
 			for(ItemStack stack : material.possibleItems){
 				for(int i=0; i<getSize(); ++i){
@@ -206,8 +206,8 @@ public class WrapperInventory{
 	 *  the the inventory actually has the required materials.  Failure to do so will
 	 *  result in the this method removing the incorrect number of materials.
 	 */
-	public void removeMaterials(AItemPack<?> item, boolean includeMain, boolean includeSub){
-		for(PackMaterialComponent material : PackMaterialComponent.parseFromJSON(item, includeMain, includeSub, true)){
+	public void removeMaterials(AItemPack<?> item, boolean includeMain, boolean includeSub, boolean forRepair){
+		for(PackMaterialComponent material : PackMaterialComponent.parseFromJSON(item, includeMain, includeSub, true, forRepair)){
 			for(ItemStack stack : material.possibleItems){
 				removeStack(stack, material.qty);
 			}
