@@ -48,9 +48,9 @@ public abstract class GUIComponentButton extends GUIComponentCutout{
 		this(x, y, width, height, "", true, ColorRGB.DARK_GRAY, textureXOffset, textureYOffset, textureSectionWidth, textureSectionHeight);
 	}
 	
-	/**A complex button with custom height, text alignment, and text color.  Does not render the background texture.*/
-	public GUIComponentButton(int x, int y, int width, int height, String text, boolean centeredText, ColorRGB textColor){
-		this(x, y, width, height, text, centeredText, textColor, DEFAULT_BUTTON_SECTION_WIDTH_OFFSET, DEFAULT_BUTTON_SECTION_HEIGHT_OFFSET, 0, 0);
+	/**A complex button with custom height, text alignment, and text color.*/
+	public GUIComponentButton(int x, int y, int width, int height, String text, boolean centeredText, ColorRGB textColor, boolean renderBackground){
+		this(x, y, width, height, text, centeredText, textColor, DEFAULT_BUTTON_SECTION_WIDTH_OFFSET, DEFAULT_BUTTON_SECTION_HEIGHT_OFFSET, renderBackground ? DEFAULT_BUTTON_SECTION_WIDTH : 0, renderBackground ? DEFAULT_BUTTON_SECTION_HEIGHT : 0);
 	}
 	
 	/**A fully-customizable button with custom texture alignment and font color.  Note that making the width or the height of the texture section 0 will result in no texture being rendered.**/

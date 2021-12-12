@@ -91,13 +91,13 @@ public class GUIInstruments extends AGUIBase{
 	@Override
 	public void setupComponents(int guiLeft, int guiTop){	
 		//Create the prior and next pack buttons.
-		addComponent(prevPackButton = new GUIComponentButton(guiLeft, guiTop - 74, 20, 20, "<", true, ColorRGB.WHITE){
+		addComponent(prevPackButton = new GUIComponentButton(guiLeft, guiTop - 74, 20, 20, "<", true, ColorRGB.WHITE, false){
 			@Override
 			public void onClicked(boolean leftSide){
 				currentPack = playerInstruments.lowerKey(currentPack);
 			}
 		});
-		addComponent(nextPackButton = new GUIComponentButton(guiLeft, guiTop - 52, 20, 20, ">", true, ColorRGB.WHITE){
+		addComponent(nextPackButton = new GUIComponentButton(guiLeft, guiTop - 52, 20, 20, ">", true, ColorRGB.WHITE, false){
 			@Override
 			public void onClicked(boolean leftSide){
 				currentPack = playerInstruments.higherKey(currentPack);
@@ -131,7 +131,7 @@ public class GUIInstruments extends AGUIBase{
 		addComponent(packName = new GUIComponentLabel(guiLeft + 40, guiTop - 85, ColorRGB.WHITE, ""));
 
 		//Create the clear button and background.
-		addComponent(clearButton = new GUIComponentButton(guiLeft + getWidth() - 2*GUIComponentButton.ITEM_BUTTON_SIZE, guiTop - 75, 2*GUIComponentButton.ITEM_BUTTON_SIZE, 2*GUIComponentButton.ITEM_BUTTON_SIZE, InterfaceCore.translate("gui.instruments.clear"), true, ColorRGB.WHITE){
+		addComponent(clearButton = new GUIComponentButton(guiLeft + getWidth() - 2*GUIComponentButton.ITEM_BUTTON_SIZE, guiTop - 75, 2*GUIComponentButton.ITEM_BUTTON_SIZE, 2*GUIComponentButton.ITEM_BUTTON_SIZE, InterfaceCore.translate("gui.instruments.clear"), true, ColorRGB.WHITE, false){
 			@Override
 			public void onClicked(boolean leftSide){
 				InterfacePacket.sendToServer(new PacketEntityInstrumentChange(selectedEntity, player, selectedEntity.definition.instruments.indexOf(selectedInstrumentDefinition), null));
@@ -142,7 +142,7 @@ public class GUIInstruments extends AGUIBase{
 		addComponent(new GUIComponentCutout(clearButton.x, clearButton.y, clearButton.width, clearButton.height, 448, 0, 64, 64));
 		
 		//Create the HUD selection button.
-		addComponent(hudButton = new GUIComponentButton(guiLeft, guiTop - 20, 100, 20, InterfaceCore.translate("gui.instruments.main"), true, ColorRGB.WHITE){
+		addComponent(hudButton = new GUIComponentButton(guiLeft, guiTop - 20, 100, 20, InterfaceCore.translate("gui.instruments.main"), true, ColorRGB.WHITE, false){
 			@Override
 			public void onClicked(boolean leftSide){
 				hudSelected = true;
@@ -154,7 +154,7 @@ public class GUIInstruments extends AGUIBase{
 		});
 		
 		//Create the panel selection button.
-		addComponent(panelButton = new GUIComponentButton(guiLeft + getWidth() - 100, guiTop - 20, 100, 20, InterfaceCore.translate("gui.instruments.control"), true, ColorRGB.WHITE){
+		addComponent(panelButton = new GUIComponentButton(guiLeft + getWidth() - 100, guiTop - 20, 100, 20, InterfaceCore.translate("gui.instruments.control"), true, ColorRGB.WHITE, false){
 			@Override
 			public void onClicked(boolean leftSide){
 				hudSelected = false;

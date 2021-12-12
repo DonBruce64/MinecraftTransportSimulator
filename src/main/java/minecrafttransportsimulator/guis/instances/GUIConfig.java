@@ -533,7 +533,7 @@ public class GUIConfig extends AGUIBase{
 	 */
 	private class JoystickControlButton extends GUIComponentButton{
 		public JoystickControlButton(int x, int y){
-			super(x, y, 215, 15, "");
+			super(x, y, 215, 15, "", false, ColorRGB.DARK_GRAY, true);
 		}
 
 		@Override
@@ -553,7 +553,7 @@ public class GUIConfig extends AGUIBase{
 			int buttonIndex = joystickComponentSelectionButtons.indexOf(this);
 			int controlIndex = buttonIndex + scrollSpot;
 			float pollData = InterfaceInput.getJoystickAxisValue(selectedJoystick, controlIndex);
-			int displayOffset = 150;
+			int displayOffset = 100;
 			int displayWidth = 20;
 			if(InterfaceInput.isJoystickComponentAxis(selectedJoystick, controlIndex)){
 				InterfaceGUI.renderSheetTexture(x + displayOffset, y + 2, 40, height - 4, STANDARD_COLOR_WIDTH_OFFSET, STANDARD_BLACK_HEIGHT_OFFSET, STANDARD_COLOR_WIDTH_OFFSET + STANDARD_COLOR_WIDTH, STANDARD_BLACK_HEIGHT_OFFSET + STANDARD_COLOR_HEIGHT, textureWidth, textureHeight);

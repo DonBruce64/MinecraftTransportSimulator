@@ -168,7 +168,12 @@ public final class ControlSystem{
 	
 	private static void controlControlSurface(EntityVehicleF_Physics vehicle, ControlsJoystick axis, ControlsKeyboard increment, ControlsKeyboard decrement, double rate, double bounds, String variable, double currentValue){
 		if(InterfaceInput.isJoystickPresent(axis.config.joystickName)){
-			InterfacePacket.sendToServer(new PacketEntityVariableSet(vehicle, variable, axis.getAxisState(false)*bounds));
+			double axisValue = axis.getAxisState(false);
+			if(Double.isNaN(axisValue)){
+				InterfacePacket.sendToServer(new PacketEntityVariableSet(vehicle, variable, 0));
+			}else{
+				InterfacePacket.sendToServer(new PacketEntityVariableSet(vehicle, variable, bounds*(-1 + 2*axisValue)));
+			}
 		}else{
 			if(increment.isPressed()){
 				InterfacePacket.sendToServer(new PacketEntityVariableIncrement(vehicle, variable, rate*(currentValue < 0 ? 2 : 1), -bounds, bounds));
@@ -680,7 +685,6 @@ public final class ControlSystem{
 			return InterfaceInput.getJoystickAxisValue(config.joystickName, config.buttonIndex);
 		}
 		
-		//Return type is short to allow for easier packet transmission.
 		private double getAxisState(boolean ignoreDeadzone){
 			double pollValue = getMultistateValue();
 			if(ignoreDeadzone || Math.abs(pollValue) > ConfigSystem.configObject.clientControls.joystickDeadZone.value){
@@ -699,7 +703,7 @@ public final class ControlSystem{
 				//Now return the value.
 				return pollValue;
 			}else{
-				return 0;
+				return Double.NaN;
 			}
 		}
 		
