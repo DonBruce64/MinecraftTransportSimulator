@@ -68,6 +68,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	@DerivedValue
 	public double autopilotSetting;
 	public static final String AUTOPILOT_VARIABLE = "autopilot";
+	public static final String AUTOLEVEL_VARIABLE = "auto_level";
 	
 	//Internal states.
 	public boolean hasRotors;
@@ -237,7 +238,29 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 				}
 				if(isRotor && !groundDeviceCollective.isAnythingOnGround() && partForce.length() > 1){
 					hasRotors = true;
-					rotorRotation.set((-(elevatorAngle + elevatorTrim) - angles.x)/MAX_ELEVATOR_ANGLE, -5D*rudderAngle/MAX_RUDDER_ANGLE, ((aileronAngle + aileronTrim) - angles.z)/MAX_AILERON_ANGLE);
+					if(getVariable(AUTOLEVEL_VARIABLE) != 0){
+						rotorRotation.set((-(elevatorAngle + elevatorTrim) - angles.x)/MAX_ELEVATOR_ANGLE, -5D*rudderAngle/MAX_RUDDER_ANGLE, ((aileronAngle + aileronTrim) - angles.z)/MAX_AILERON_ANGLE);
+					}else{
+						if(autopilotSetting == 0){
+							rotorRotation.add(-5D*elevatorAngle/MAX_ELEVATOR_ANGLE, -5D*rudderAngle/MAX_RUDDER_ANGLE, 5D*aileronAngle/MAX_AILERON_ANGLE);
+						}else{
+							if(angles.x < -1){
+								rotorRotation.x = 1;
+							}else if(angles.x > 1){
+								rotorRotation.x = -1;
+							}else{
+								rotorRotation.x = -angles.x;
+							}
+							if(angles.z < -1){
+								rotorRotation.z = 1;
+							}else if(angles.z > 1){
+								rotorRotation.z = -1;
+							}else{
+								rotorRotation.z = -angles.z;
+							}
+							rotorRotation.y = -5D*rudderAngle/MAX_RUDDER_ANGLE;
+						}
+					}
 				}else{
 					rotorRotation.set(0, 0, 0);
 				}

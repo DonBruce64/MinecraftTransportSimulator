@@ -269,6 +269,12 @@ public final class ControlSystem{
 			controlControlSurface(aircraft, ControlsJoystick.AIRCRAFT_ROLL, ControlsKeyboard.AIRCRAFT_ROLL_R, ControlsKeyboard.AIRCRAFT_ROLL_L, ConfigSystem.configObject.clientControls.flightControlRate.value, EntityVehicleF_Physics.MAX_AILERON_ANGLE, EntityVehicleF_Physics.AILERON_VARIABLE, aircraft.aileronAngle);
 			controlControlTrim(aircraft, ControlsJoystick.AIRCRAFT_TRIM_ROLL_R, ControlsJoystick.AIRCRAFT_TRIM_ROLL_L, EntityVehicleF_Physics.MAX_AILERON_TRIM, EntityVehicleF_Physics.AILERON_TRIM_VARIABLE);
 		}
+		
+		//Check to see if we request a different auto-level state.
+		boolean aircraftIsAutolevel = aircraft.getVariable(EntityVehicleF_Physics.AUTOLEVEL_VARIABLE) != 0;
+		if(ConfigSystem.configObject.clientControls.heliAutoLevel.value ^ aircraftIsAutolevel){
+			InterfacePacket.sendToServer(new PacketEntityVariableSet(aircraft, EntityVehicleF_Physics.AUTOLEVEL_VARIABLE, ConfigSystem.configObject.clientControls.heliAutoLevel.value ? 1 : 0));
+		}
 	}
 	
 	private static void controlGroundVehicle(EntityVehicleF_Physics powered, boolean isPlayerController){

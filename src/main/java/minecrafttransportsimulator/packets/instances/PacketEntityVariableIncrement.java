@@ -14,26 +14,26 @@ import minecrafttransportsimulator.packets.components.APacketEntity;
  */
 public class PacketEntityVariableIncrement extends APacketEntity<AEntityC_Definable<?>>{
 	private final String variableName;
-	private final double variableValue;
+	private final double incrementValue;
 	private final double minValue;
 	private final double maxValue;
 	
-	public PacketEntityVariableIncrement(AEntityC_Definable<?> entity, String variableName, double variableValue, double minValue, double maxValue){
+	public PacketEntityVariableIncrement(AEntityC_Definable<?> entity, String variableName, double incrementValue, double minValue, double maxValue){
 		super(entity);
 		this.variableName = variableName;
-		this.variableValue = variableValue;
+		this.incrementValue = incrementValue;
 		this.minValue = minValue;
 		this.maxValue = maxValue;
 	}
 	
-	public PacketEntityVariableIncrement(AEntityC_Definable<?> entity, String variableName, double variableValue){
-		this(entity, variableName, variableValue, -Double.MAX_VALUE, Double.MAX_VALUE);
+	public PacketEntityVariableIncrement(AEntityC_Definable<?> entity, String variableName, double incrementValue){
+		this(entity, variableName, incrementValue, -Double.MAX_VALUE, Double.MAX_VALUE);
 	}
 	
 	public PacketEntityVariableIncrement(ByteBuf buf){
 		super(buf);
 		this.variableName = readStringFromBuffer(buf);
-		this.variableValue = buf.readDouble();
+		this.incrementValue = buf.readDouble();
 		this.minValue = buf.readDouble();
 		this.maxValue = buf.readDouble();
 	}
@@ -42,14 +42,14 @@ public class PacketEntityVariableIncrement extends APacketEntity<AEntityC_Defina
 	public void writeToBuffer(ByteBuf buf){
 		super.writeToBuffer(buf);
 		writeStringToBuffer(variableName, buf);
-		buf.writeDouble(variableValue);
+		buf.writeDouble(incrementValue);
 		buf.writeDouble(minValue);
 		buf.writeDouble(maxValue);
 	}
 	
 	@Override
 	public boolean handle(WrapperWorld world, AEntityC_Definable<?> entity){
-		double newValue = entity.getVariable(variableName) + variableValue;
+		double newValue = entity.getVariable(variableName) + incrementValue;
 		if(newValue >= minValue & newValue <= maxValue){
 			entity.setVariable(variableName, newValue);
 			return true;
