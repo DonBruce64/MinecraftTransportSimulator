@@ -32,6 +32,7 @@ import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityTrailerChange;
+import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.rendering.components.DurationDelayClock;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -120,6 +121,7 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 	protected final Set<TrailerConnection> towingConnections = new HashSet<TrailerConnection>();
 	private TrailerConnection savedTowedByConnection;
 	private final Set<TrailerConnection> savedTowingConnections = new HashSet<TrailerConnection>();
+	public static final String TRAILER_CONNECTION_REQUEST_VARIABLE = "connection_requested";
 	
 	//Mutable variables.
 	private final Point3d collisionGroupAnimationResult = new Point3d();
@@ -271,6 +273,16 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 						InterfaceCore.logError("Could not connect trailer(s) to the entity towing them.  Did the JSON or pack change?");
 					}
 				}
+			}
+			
+			//If we have a connection request, handle it now.
+			int connectionRequestIndex = (int) getVariable(TRAILER_CONNECTION_REQUEST_VARIABLE);
+			if(connectionRequestIndex != 0){
+				if(!world.isClient()){
+					//Don't handle requests on the client.  These get packets.
+					handleConnectionRequest(connectionRequestIndex - 1);
+				}
+				setVariable(TRAILER_CONNECTION_REQUEST_VARIABLE, 0);
 			}
 			
 			world.beginProfiling("CollisionBoxUpdates", true);
@@ -727,6 +739,118 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 		}else{
 			return EntityConnectionResult.NO_TRAILER_NEARBY;
 		}
+	}
+	
+	/**
+	 * Method block for handling a trailer connection requsdt. a trailer to this entity.
+	 */
+	private void handleConnectionRequest(int connectionGroupIndex){
+		JSONConnectionGroup requestedGroup = definition.connectionGroups.get(connectionGroupIndex);
+		boolean requestIsToBecomeTrailer = requestedGroup.hookup;
+		boolean connect;
+		String packetMessage = null;
+		
+		//Check if this is a connect or disconnect request.
+		if(requestIsToBecomeTrailer){
+			//Can connect as a trailer if we're not being towed already.
+			connect = towedByConnection == null;
+		}else{
+			//Can connect trailer if this connection group isn't being used.
+			boolean foundConnection = false;
+			for(TrailerConnection connection : getTowingConnections()){
+				if(connection.hitchGroupIndex == connectionGroupIndex){
+					foundConnection = true;
+				}
+			}
+			connect = !foundConnection;
+		}
+		
+		if(connect){
+			boolean matchingConnection = false;
+			boolean trailerInRange = false;
+			if(requestIsToBecomeTrailer){
+				for(AEntityA_Base testEntity : AEntityA_Base.getEntities(world)){
+					if(testEntity instanceof AEntityD_Interactable && shouldConnect((AEntityD_Interactable<?>) testEntity, this)){
+						switch(((AEntityD_Interactable<?>) testEntity).checkIfTrailerCanConnect(this, -1, connectionGroupIndex)){
+							case TRAILER_CONNECTED : packetMessage = "interact.trailer.connect"; break;
+							case TRAILER_TOO_FAR : matchingConnection = true; break;
+							case TRAILER_WRONG_HITCH : trailerInRange = true; break;
+							case NO_TRAILER_NEARBY : break;
+						}
+					}
+					if(packetMessage != null){
+						break;
+					}
+				}
+			}else{
+				for(AEntityA_Base testEntity : AEntityA_Base.getEntities(world)){
+					if(testEntity instanceof AEntityD_Interactable  && shouldConnect(this, (AEntityD_Interactable<?>) testEntity)){
+						switch(this.checkIfTrailerCanConnect((AEntityD_Interactable<?>) testEntity, connectionGroupIndex, -1)){
+							case TRAILER_CONNECTED : packetMessage = "interact.trailer.connect"; break;
+							case TRAILER_TOO_FAR : matchingConnection = true; break;
+							case TRAILER_WRONG_HITCH : trailerInRange = true; break;
+							case NO_TRAILER_NEARBY : break;
+						}
+					}
+					if(packetMessage != null){
+						break;
+					}
+				}
+			}
+			
+			//Get message based on what we found.
+			if(packetMessage == null){
+				if(!matchingConnection && !trailerInRange){
+					packetMessage = "interact.trailer.notfound";
+				}else if(matchingConnection && !trailerInRange){
+					packetMessage = "interact.trailer.toofar";
+				}else if(!matchingConnection && trailerInRange){
+					packetMessage = "interact.trailer.wronghitch";
+				}else{
+					packetMessage = "interact.trailer.wrongplacement";
+				}
+			}
+		}else{
+			if(requestIsToBecomeTrailer){
+				towedByConnection.hitchEntity.disconnectTrailer(towedByConnection);
+				packetMessage = "interact.trailer.disconnect";
+			}else{
+				for(TrailerConnection connection : getTowingConnections()){
+					if(connection.hitchGroupIndex == connectionGroupIndex){
+						disconnectTrailer(connection);
+						packetMessage = "interact.trailer.disconnect";
+						break;
+					}
+				}
+			}
+		}
+		if(packetMessage != null){
+			for(WrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, 16, 16, 16))){
+				if(entity instanceof WrapperPlayer){
+					((WrapperPlayer) entity).sendPacket(new PacketPlayerChatMessage((WrapperPlayer) entity, packetMessage));
+				}
+			}
+		}
+	}
+	
+	private static boolean shouldConnect(AEntityD_Interactable<?> hitchEntity, AEntityD_Interactable<?> hookupEntity){
+		if(hookupEntity.towedByConnection != null){
+			return false; //Entity is already hooked up.
+		}else if(hookupEntity.equals(hitchEntity)){
+			return false; //Entity is the same.
+		}else if(hookupEntity instanceof AEntityE_Multipart && ((AEntityE_Multipart<?>) hookupEntity).parts.contains(hitchEntity)){
+			return false; //Hitch is a part on hookup.
+		}else if(hitchEntity instanceof AEntityE_Multipart && ((AEntityE_Multipart<?>) hitchEntity).parts.contains(hookupEntity)){
+			return false; //Hookup is a part on hitch.
+		}else{
+			//Check to make sure the hookupEntity isn't towing the hitchEntity.
+			for(TrailerConnection connection : hookupEntity.getTowingConnections()){
+				if(connection.hookupEntity.equals(hitchEntity) || connection.hookupBaseEntity.equals(hitchEntity)){
+					return false;
+				}
+			}
+			return true;
+		} 
 	}
 	
 	/**

@@ -17,7 +17,6 @@ import minecrafttransportsimulator.packets.instances.PacketEntityInstrumentChang
 import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityTextChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityTrailerChange;
-import minecrafttransportsimulator.packets.instances.PacketEntityTrailerConnection;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
@@ -94,7 +93,6 @@ public class InterfacePacket{
 		registerPacket(packetIndex++, PacketEntityRiderChange.class);
 		registerPacket(packetIndex++, PacketEntityTextChange.class);
 		registerPacket(packetIndex++, PacketEntityTrailerChange.class);
-		registerPacket(packetIndex++, PacketEntityTrailerConnection.class);
 		registerPacket(packetIndex++, PacketEntityVariableIncrement.class);
 		registerPacket(packetIndex++, PacketEntityVariableSet.class);
 		registerPacket(packetIndex++, PacketEntityVariableToggle.class);

@@ -381,7 +381,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 				}
 				
 			}
-			return true;
+			return false;
 		}else{
 			return false;
 		}
