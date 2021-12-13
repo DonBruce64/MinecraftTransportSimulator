@@ -63,7 +63,7 @@ public class PartGroundDevice extends APart{
 	public void attack(Damage damage){
 		super.attack(damage);
 		if(isValid){
-			if(!damage.isWater && (damage.isExplosion || Math.random() < 0.5)){
+			if(!damage.isWater && (damage.isExplosion || Math.random() < 0.5 || damageAmount > definition.general.health)){
 				setFlatState(true);
 			}
 		}

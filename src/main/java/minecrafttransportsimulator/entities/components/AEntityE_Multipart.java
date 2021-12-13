@@ -241,14 +241,14 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 	
 	@Override
 	public void attack(Damage damage){
-		//This is called if we attack the entity with something, rather than click it with an item.
-		//This attack can come from a player with a hand-held item, or a projectile such as an arrow.
-		//If the bounding box attacked corresponds to a part, forward the attack to that part for calculation.
-		//Need to make sure we are valid, however, as our death explosions can get us into infinite loops.
 		if(isValid){
+			//If the bounding box attacked corresponds to a part, forward the attack to that part for calculation.
+			//Otherwise, we allow ourselves to be attacked.
 			APart part = getPartWithBox(damage.box);
 			if(part != null){
 				part.attack(damage);
+			}else{
+				super.attack(damage);
 			}
 		}
 	}

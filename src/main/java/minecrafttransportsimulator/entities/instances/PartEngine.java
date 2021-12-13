@@ -361,6 +361,9 @@ public class PartEngine extends APart{
 							}else if(!isActive){
 								stallEngine(Signal.FUEL_OUT);
 								InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.FUEL_OUT));
+							}else if(vehicleOn.damageAmount == definition.general.health){
+								stallEngine(Signal.DEAD_VEHICLE);
+								InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.DEAD_VEHICLE));
 							}
 							
 						}
@@ -419,7 +422,7 @@ public class PartEngine extends APart{
 					//Start engine if the RPM is high enough to cause it to start by itself.
 					//Used for drowned engines that come out of the water, or engines that don't
 					//have the ability to engage a starter.
-					if(rpm >= definition.engine.startRPM && !world.isClient()){
+					if(rpm >= definition.engine.startRPM && !world.isClient() && vehicleOn.damageAmount < definition.general.health){
 						if(isCreative || vehicleOn.fuelTank.getFluidLevel() > 0){
 							if(!isInLiquid() && magnetoOn){
 								startEngine();

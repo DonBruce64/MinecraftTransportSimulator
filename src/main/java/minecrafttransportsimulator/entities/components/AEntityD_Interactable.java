@@ -32,6 +32,7 @@ import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityTrailerChange;
+import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.rendering.components.DurationDelayClock;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -110,6 +111,13 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 	 **/
 	public String ownerUUID;
 	
+	/**The amount of damage on this entity.  This value is not necessarily used on all entities, but is put here
+	 * as damage is something that a good number of entities will have and that the base entity should track.
+	 **/
+	@DerivedValue
+	public double damageAmount;
+	public static final String DAMAGE_VARIABLE = "damage";
+	
 	/**Internal flag to prevent this entity from updating until the entity that is towing it has.  If we don't
 	 * do this, then there may be a 1-tick de-sync between towing and towed entities if the towed entity gets
 	 * updated before the one towing it.
@@ -135,6 +143,7 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 		this.savedRiderLocations.addAll(data.getPoint3ds("savedRiderLocations"));
 		this.locked = data.getBoolean("locked");
 		this.ownerUUID = data.getString("ownerUUID");
+		this.damageAmount = data.getDouble("damageAmount");
 		
 		//Add collision boxes to interaction list.
 		interactionBoxes.addAll(entityCollisionBoxes);
@@ -227,6 +236,9 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 		//We want to do the towing checks first, as we don't want to call super if we are blocked by being towed.
 		if((towedByConnection == null || overrideTowingChecks) && super.update()){
 			world.beginProfiling("EntityD_Level", true);
+			
+			//Update damage value
+			damageAmount = getVariable(DAMAGE_VARIABLE);
 			
 			//See if we need to link connections.
 			//We need to wait on this in case the entity didn't load at the same time.
@@ -334,6 +346,8 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 					}
 				}
 			}
+		}else if(variable.equals("damage")){
+			return damageAmount;
 		}
 		
 		//Not a towing variable, check others.
@@ -651,7 +665,20 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 	 *  means that this entity may be invalid due to the first damage when the second damage
 	 *  is applied.
 	 */
-	public void attack(Damage damage){}
+	public void attack(Damage damage){
+		if(!damage.isWater){ 
+			damageAmount += damage.amount;
+			//FIXME this goes away when we make fake guns go away.
+			if(definition.general != null && damageAmount > definition.general.health){
+				double amountActuallyNeeded = damage.amount - (damageAmount - definition.general.health);
+				damageAmount = definition.general.health;
+				InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, DAMAGE_VARIABLE, amountActuallyNeeded));
+			}else{
+				InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, DAMAGE_VARIABLE, damage.amount));
+			}
+			setVariable(DAMAGE_VARIABLE, damageAmount);
+		}
+	}
 	
 	/**
 	 * Helper method to add all default instruments to this entity.  These instruments
@@ -941,6 +968,7 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 		data.setPoint3ds("savedRiderLocations", locationRiderMap.keySet());
 		data.setBoolean("locked", locked);
 		data.setString("ownerUUID", ownerUUID);
+		data.setDouble("damageAmount", damageAmount);
 		
 		//Save towing data.
 		if(towedByConnection != null){

@@ -253,6 +253,9 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 					entityOn.removePart(this, null);
 				}
 			}
+		}else{
+			//Not a removable part, or is an actual attack.
+			super.attack(damage);
 		}
 	}
 	

@@ -57,17 +57,19 @@ public final class PartInteractable extends APart{
 	public void attack(Damage damage){
 		super.attack(damage);
 		if(isValid){
-			if(!damage.isWater && damage.amount > 25){
-				double explosivePower = getExplosiveContribution();
-				if(explosivePower > 0 && isValid){
-					//Set invalid so this explosion doesn't let us attack ourselves again.
-					isValid = false;
-					world.spawnExplosion(position, explosivePower, true);
-					if(vehicleOn != null){
-						vehicleOn.destroy(boundingBox);
-					}
-				}
+			if(!damage.isWater && (damage.amount > 25 || damageAmount > definition.general.health)){
+				destroy(damage.box);
 			}
+		}
+	}
+	
+	@Override
+	public void destroy(BoundingBox box){
+		super.destroy(box);
+		double explosivePower = getExplosiveContribution();
+		if(explosivePower > 0 && isValid){
+			world.spawnExplosion(position, explosivePower, true);
+			entityOn.destroy(boundingBox);
 		}
 	}
 	

@@ -107,6 +107,7 @@ public class PacketPartEngine extends APacketEntity<PartEngine>{
 			case START: engine.startEngine(); break;
 			case FUEL_OUT: engine.stallEngine(packetType); break;
 			case TOO_SLOW: engine.stallEngine(packetType); break;
+			case DEAD_VEHICLE: engine.stallEngine(packetType); break;
 			case DROWN: engine.stallEngine(packetType); break;
 			case DAMAGE: {
 				engine.hours += hours;
@@ -143,6 +144,7 @@ public class PacketPartEngine extends APacketEntity<PartEngine>{
 		BAD_SHIFT,
 		START,
 		FUEL_OUT,
+		DEAD_VEHICLE,
 		TOO_SLOW,
 		DROWN,
 		DAMAGE,

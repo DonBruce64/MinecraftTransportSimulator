@@ -393,6 +393,18 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 				elevatorTorque += 100;
 			}
 			
+			//If we are damaged, don't apply control surface and ballast forces.
+			if(damageAmount == definition.general.health){
+				wingForce = 0;
+				elevatorForce = 0;
+				aileronForce = 0;
+				rudderForce = 0;
+				elevatorTorque = 0;
+				aileronTorque = 0;
+				rudderTorque = 0;
+				ballastForce = 0;
+			}
+			
 			//Add all forces to the main force matrix and apply them.
 			totalAxialForce.set(0D, wingForce - elevatorForce, 0D).add(thrustForce).rotateFine(angles);
 			totalMotiveForce.set(-dragForce, -dragForce, -dragForce).multiply(normalizedVelocityVector);

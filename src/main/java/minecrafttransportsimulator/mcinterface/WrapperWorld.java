@@ -74,6 +74,7 @@ import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 
 /**Wrapper to a world instance.  This contains many common methods that 
  * MC has seen fit to change over multiple versions (such as lighting) and as such
@@ -1026,7 +1027,7 @@ public class WrapperWorld{
     */
    @SubscribeEvent
    public static void on(TickEvent.WorldTickEvent event){
-	   if(!event.world.isRemote){
+	   if(event.phase.equals(Phase.END) && !event.world.isRemote){
 		   for(EntityPlayer player : event.world.playerEntities){
 			   WrapperWorld worldWrapper = getWrapperFor(event.world);
 			   //Need to use wrapper here as the player equality tests don't work if there are two players with the same ID.

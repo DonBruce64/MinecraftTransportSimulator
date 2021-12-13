@@ -138,11 +138,13 @@ public class EntityBullet extends AEntityC_Definable<JSONBullet>{
 						}else{
 							for(BoundingBox hitBox : hitBoxes){
 								if(baseEntity instanceof AEntityE_Multipart && ((AEntityE_Multipart<?>) baseEntity).getPartWithBox(hitBox) != null){
-									InterfacePacket.sendToServer(new PacketPartGunBulletHit(gun, this, hitBox, entity));
 									lastHit = HitType.PART;
-									remove();
-									return false;
+								}else{
+									lastHit = HitType.ENTITY;
 								}
+								InterfacePacket.sendToServer(new PacketPartGunBulletHit(gun, this, hitBox, entity));
+								remove();
+								return false;
 							}
 						}
 					}else{

@@ -15,7 +15,6 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 public class PartPropeller extends APart{	
 	public double angularPosition;
 	public double angularVelocity;
-	public double damageAmount;
 	public int currentPitch;
 	
 	private final PartEngine connectedEngine;
@@ -26,7 +25,6 @@ public class PartPropeller extends APart{
 	
 	public PartPropeller(AEntityE_Multipart<?> entityOn, JSONPartDefinition placementDefinition, WrapperNBT data, APart parentPart){
 		super(entityOn, placementDefinition, data, parentPart);
-		this.damageAmount = data.getDouble("damageAmount");
 		this.currentPitch = definition.propeller.pitch;
 		this.connectedEngine = (PartEngine) parentPart;
 		
@@ -126,12 +124,12 @@ public class PartPropeller extends APart{
 					
 					//If the propeller is over-speeding, damage it enough to break it.
 					if(20*angularVelocity*Math.PI*definition.propeller.diameter*0.0254 > 340.29){
-						damageAmount += definition.propeller.startingHealth;
+						damageAmount += definition.general.health;
 					}
 				}
 				
 				//If we are too damaged, remove ourselves.
-				if(damageAmount > definition.propeller.startingHealth && !world.isClient()){
+				if(damageAmount > definition.general.health && !world.isClient()){
 					if(ConfigSystem.configObject.damage.explosions.value){
 						world.spawnExplosion(position, 1F, true);
 					}else{
@@ -207,12 +205,5 @@ public class PartPropeller extends APart{
 			}
 		}
 		return propellerForce;
-	}
-	
-	@Override
-	public WrapperNBT save(WrapperNBT data){
-		super.save(data);
-		data.setDouble("damageAmount", damageAmount);
-		return data;
 	}
 }

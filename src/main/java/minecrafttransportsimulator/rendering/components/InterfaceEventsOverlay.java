@@ -140,17 +140,19 @@ public class InterfaceEventsOverlay{
 						
 						//If we are in a seat controlling a gun, render a text line for it.
 						if(seat.canControlGuns && !InterfaceClient.isChatOpen()){
-							RenderText.draw2DText("Active Gun:", null, screenWidth, 0, ColorRGB.WHITE, TextAlignment.RIGHT_ALIGNED, 1.0F, false, 0);
+							RenderText.draw2DText("Active Gun:", null, screenWidth, 8, ColorRGB.WHITE, TextAlignment.RIGHT_ALIGNED, 1.0F, false, 0);
 							if(seat.activeGun != null){
 								String gunNumberText = seat.activeGun.definition.gun.fireSolo ? " [" + (seat.gunIndex + 1) + "]" : "";
 								RenderText.draw2DText(seat.activeGun.getItemName() + gunNumberText, null, screenWidth, 8, ColorRGB.WHITE, TextAlignment.RIGHT_ALIGNED, 1.0F, false, 0);
 							}else{
-								RenderText.draw2DText("None", null, screenWidth, 8, ColorRGB.WHITE, TextAlignment.RIGHT_ALIGNED, 1.0F, false, 0);
+								RenderText.draw2DText("None", null, screenWidth, 16, ColorRGB.WHITE, TextAlignment.RIGHT_ALIGNED, 1.0F, false, 0);
 							}
 						}
 						
 						//If the seat is a controller, render the HUD if it's set.
 						if(seat.placementDefinition.isController && (InterfaceClient.inFirstPerson() ? ConfigSystem.configObject.clientRendering.renderHUD_1P.value : ConfigSystem.configObject.clientRendering.renderHUD_3P.value)){
+							RenderText.draw2DText(String.format("Health:%3.1f%%", 100*(ridingEntity.definition.general.health - ridingEntity.damageAmount)/ridingEntity.definition.general.health), null, screenWidth, 0, ColorRGB.WHITE, TextAlignment.RIGHT_ALIGNED, 1.0F, false, 0);
+							
 							//Create a new GUI for the HUD if we don't have one or if we changed from first-person to third-person.
 							if(currentGUI == null || (inFirstPersonLastRender ^ InterfaceClient.inFirstPerson())){
 								currentGUI = new GUIHUD((EntityVehicleF_Physics) ridingEntity);

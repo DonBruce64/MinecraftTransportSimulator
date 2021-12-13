@@ -293,7 +293,7 @@ public class JSONPart extends AJSONPartProvider{
 		@JSONDescription("The diameter of this propeller, in inches.  Higher-diameter propellers provide more thrust at the same RPM as lower-diameter units.  However, the higher the diameter the more force they take to turn and the more powerful an engine will need to be to drive them (some low-power engines may not even be able to start with large propellers on them).  Additionally, the higher the diameter the lower the maximum RPM the propeller can turn.  Should the propeller exceed this speed it will break off and the engine it was attached to will suddenly not have a load and will rev up rapidly.")
     	public int diameter;
 		
-		@JSONDescription("How much health this propeller has when first created.  This value is decreased every time the propeller is damaged by something (arrows, swords, Anti-Aircraft Flak, etc.).  It is also lowered every time the propeller is hitting the ground while turning.  Once this value reaches 0, the propeller will break off.")
+		@Deprecated
     	public int startingHealth;
     }
     

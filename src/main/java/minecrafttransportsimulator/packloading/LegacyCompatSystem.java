@@ -136,6 +136,11 @@ public final class LegacyCompatSystem{
 			definition.general.type = null;
 		}
 		
+		//Set default health.
+		if(definition.general.health == 0){
+			definition.general.health = 100;
+		}
+		
 		if(definition.plane != null){
 			definition.general.isAircraft = true;
 			definition.motorized.hasFlaps = definition.plane.hasFlaps;
@@ -517,6 +522,16 @@ public final class LegacyCompatSystem{
 				definition.generic.width = definition.custom.width;
 				definition.custom = null;
 				break;
+			}
+		}
+		
+		//Set default health.
+		if(definition.general.health == 0){
+			if(definition.propeller != null){
+				definition.general.health = definition.propeller.startingHealth;
+				definition.propeller.startingHealth = 0;
+			}else{
+				definition.general.health = 100;
 			}
 		}
 		

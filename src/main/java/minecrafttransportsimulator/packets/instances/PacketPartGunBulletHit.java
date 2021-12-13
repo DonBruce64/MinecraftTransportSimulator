@@ -85,72 +85,72 @@ public class PacketPartGunBulletHit extends APacketEntity<PartGun>{
 			//If the bullet hasn't been marked as hit yet, do hit logic.
 			if(!gun.bulletsHitOnServer.contains(bulletNumber)){
 				gun.bulletsHitOnServer.add(bulletNumber);
-				//If we are an explosive bullet, blow up at our current position.
-				//Otherwise do attack logic.
-				if(bulletItem.definition.bullet.types.contains(BulletType.EXPLOSIVE)){
-					world.spawnExplosion(globalCenter, blastSize, bulletItem.definition.bullet.types.contains(BulletType.INCENDIARY));
-				}else{
-					//If we hit an entity, apply damage to them.
-					if(hitEntityID != null){
-						WrapperEntity entityHit = world.getEntity(hitEntityID);
-						if(entityHit != null){
-							BoundingBox hitBox = null;
-							if(entityHit.getBaseEntity() instanceof AEntityE_Multipart){
-								//Need to get the part box hit for reference.
-								for(BoundingBox box : ((AEntityE_Multipart<?>) entityHit.getBaseEntity()).allInteractionBoxes){
-									if(box.localCenter.equals(localCenter)){
-										hitBox = box;
-										break;
-									}
+				//If we hit an entity, apply damage to them.
+				if(hitEntityID != null){
+					WrapperEntity entityHit = world.getEntity(hitEntityID);
+					if(entityHit != null){
+						BoundingBox hitBox = null;
+						if(entityHit.getBaseEntity() instanceof AEntityE_Multipart){
+							//Need to get the part box hit for reference.
+							for(BoundingBox box : ((AEntityE_Multipart<?>) entityHit.getBaseEntity()).allInteractionBoxes){
+								if(box.localCenter.equals(localCenter)){
+									hitBox = box;
+									break;
 								}
 							}
-							if(hitBox == null){	
-								hitBox = new BoundingBox(localCenter, globalCenter, blastSize/100F, blastSize/100F, blastSize/100F, false);
-							}
-							//Create damage object and attack the entity.
-							WrapperEntity attacker = world.getEntity(controllerEntityID);
-							double damageAmount = bulletVelocity*bulletItem.definition.bullet.diameter/5D*ConfigSystem.configObject.damage.bulletDamageFactor.value;
-							Damage damage = new Damage("bullet", damageAmount, hitBox, gun, attacker).ignoreCooldown().setEffects(bulletItem.definition.bullet.effects);
-							if(bulletItem.definition.bullet.types.contains(BulletType.WATER)){
-								damage.isWater = true;
-							}
-							if(bulletItem.definition.bullet.types.contains(BulletType.INCENDIARY)){
-								damage.isFire = true;
-							}
-							if(bulletItem.definition.bullet.types.contains(BulletType.ARMOR_PIERCING)){
-								damage.ignoreArmor = true;
-							}
-							entityHit.attack(damage);
 						}
-					}else{
-						//We didn't hit an entity, so check to see if we hit a block.
-						//If the bullet is big, and the block is soft, then break the block.
-						//If we are an incendiary bullet, set the block on fire.
-						//If we are a water bullet, and we hit fire, put it out. 
-						//Otherwise, send this packet back to the client to spawn SFX as we didn't do any state changes.
-						//In this case, we need to simply spawn a few block particles to alert the player of a hit.
-						Point3d hitPosition = globalCenter.copy();
+						if(hitBox == null){	
+							hitBox = new BoundingBox(localCenter, globalCenter, blastSize/100F, blastSize/100F, blastSize/100F, false);
+						}
+						//Create damage object and attack the entity.
+						WrapperEntity attacker = world.getEntity(controllerEntityID);
+						double damageAmount = bulletVelocity*bulletItem.definition.bullet.diameter/5D*ConfigSystem.configObject.damage.bulletDamageFactor.value;
+						Damage damage = new Damage("bullet", damageAmount, hitBox, gun, attacker).ignoreCooldown().setEffects(bulletItem.definition.bullet.effects);
 						if(bulletItem.definition.bullet.types.contains(BulletType.WATER)){
-							world.extinguish(hitPosition);
-						}else{
-							//This block may be null in the case of air bursts or proximity fuses
-							//If we can break the block we hit, do so now.
-							float hardnessHit = world.getBlockHardness(hitPosition);
-							if(ConfigSystem.configObject.general.blockBreakage.value && !world.isAir(hitPosition) && hardnessHit > 0 && hardnessHit <= (Math.random()*0.3F + 0.3F*bulletItem.definition.bullet.diameter/20F)){
-								world.destroyBlock(hitPosition, true);
-							}else if(bulletItem.definition.bullet.types.contains(BulletType.INCENDIARY)){
-								//Couldn't break block, but we might be able to set it on fire.
-								hitPosition.add(0, 1, 0);
-								if(world.isAir(hitPosition)){
-									world.setToFire(hitPosition);
-								}
-							}else{
-								//Couldn't break the block or set it on fire.  Have clients do sounds.
-								InterfacePacket.sendToAllClients(this);
+							damage.isWater = true;
+						}
+						if(bulletItem.definition.bullet.types.contains(BulletType.INCENDIARY)){
+							damage.isFire = true;
+						}
+						if(bulletItem.definition.bullet.types.contains(BulletType.ARMOR_PIERCING)){
+							damage.ignoreArmor = true;
+						}
+						entityHit.attack(damage);
+					}
+				}else{
+					//We didn't hit an entity, so check to see if we hit a block.
+					//If the bullet is big, and the block is soft, then break the block.
+					//If we are an incendiary bullet, set the block on fire.
+					//If we are a water bullet, and we hit fire, put it out. 
+					//Otherwise, send this packet back to the client to spawn SFX as we didn't do any state changes.
+					//In this case, we need to simply spawn a few block particles to alert the player of a hit.
+					Point3d hitPosition = globalCenter.copy();
+					if(bulletItem.definition.bullet.types.contains(BulletType.WATER)){
+						world.extinguish(hitPosition);
+					}else{
+						//This block may be null in the case of air bursts or proximity fuses
+						//If we can break the block we hit, do so now.
+						float hardnessHit = world.getBlockHardness(hitPosition);
+						if(ConfigSystem.configObject.general.blockBreakage.value && !world.isAir(hitPosition) && hardnessHit > 0 && hardnessHit <= (Math.random()*0.3F + 0.3F*bulletItem.definition.bullet.diameter/20F)){
+							world.destroyBlock(hitPosition, true);
+						}else if(bulletItem.definition.bullet.types.contains(BulletType.INCENDIARY)){
+							//Couldn't break block, but we might be able to set it on fire.
+							hitPosition.add(0, 1, 0);
+							if(world.isAir(hitPosition)){
+								world.setToFire(hitPosition);
 							}
+						}else{
+							//Couldn't break the block or set it on fire.  Have clients do sounds.
+							InterfacePacket.sendToAllClients(this);
 						}
 					}
 				}
+			}
+				
+			//If we are an explosive bullet, blow up at our current position.
+			//Otherwise do attack logic.
+			if(bulletItem.definition.bullet.types.contains(BulletType.EXPLOSIVE)){
+				world.spawnExplosion(globalCenter, blastSize, bulletItem.definition.bullet.types.contains(BulletType.INCENDIARY));
 			}
 		}else{
 			//We only get a packet back if we hit a block and didn't break it.
