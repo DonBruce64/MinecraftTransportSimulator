@@ -147,7 +147,6 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 		
 		//Add collision boxes to interaction list.
 		interactionBoxes.addAll(entityCollisionBoxes);
-		
 
 		//Load towing data.
 		WrapperNBT towData = data.getData("towedByConnection");
@@ -372,104 +371,106 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 					animationsInitialized = false;
 					return;
 				}
-				if(groupDef.animations != null){
-					boolean inhibitAnimations = false;
-					boolean inhibitCollision = false;
-					//Reset working angles, but don't reset offset as it's not required.
-					collisionGroupWorkingAngles.set(0, 0, 0);
-					//Set box global center to local center.  This is used as a temp storage to do proper animation math.
-					for(BoundingBox box : collisionBoxes){
-						box.globalCenter.setTo(box.localCenter);
-					}
-					for(DurationDelayClock clock : collisionClocks.get(groupDef)){
-						switch(clock.animation.animationType){
-							case VISIBILITY :{
-								if(!inhibitAnimations){
-									double variableValue = getAnimatedVariableValue(clock, 0);
-									if(variableValue < clock.animation.clampMin || variableValue > clock.animation.clampMax){
-										inhibitCollision = true;
-									}
-								}
-								break;
-							}
-							case INHIBITOR :{
-								if(!inhibitAnimations){
-									double variableValue = getAnimatedVariableValue(clock, 0);
-									if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
-										inhibitAnimations = true;
-									}
-								}
-								break;
-							}
-							case ACTIVATOR :{
-								if(inhibitAnimations){
-									double variableValue = getAnimatedVariableValue(clock, 0);
-									if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
-										inhibitAnimations = false;
-									}
-								}
-								break;
-							}
-							case TRANSLATION :{
-								if(!inhibitAnimations){
-									//Found translation.  This gets applied in the translation axis direction directly.
-									double variableValue = getAnimatedVariableValue(clock, clock.animationAxisMagnitude, 0);
-									collisionGroupAnimationResult.setTo(clock.animationAxisNormalized).multiply(variableValue).rotateFine(collisionGroupWorkingAngles);
-									for(BoundingBox box : collisionBoxes){
-										box.globalCenter.add(collisionGroupAnimationResult);
-									}
-								}
-								break;
-							}
-							case ROTATION :{
-								if(!inhibitAnimations){
-									//Found rotation.  Get angles that needs to be applied.
-									//We need to apply this to every box differently due to offsets.
-									double variableValue = getAnimatedVariableValue(clock, clock.animationAxisMagnitude, 0);
-									collisionGroupAnimationResult.setTo(clock.animationAxisNormalized).multiply(variableValue);
-									
-									for(BoundingBox box : collisionBoxes){
-										//Use the center point as a vector we rotate to get the applied offset.
-										//We need to take into account the current offset here, as we might have rotated on a prior call.
-										collisionGroupWorkingAngleOffset.setTo(box.globalCenter).subtract(box.localCenter);
-										box.globalCenter.subtract(clock.animation.centerPoint).subtract(collisionGroupWorkingAngleOffset).rotateFine(collisionGroupAnimationResult).add(clock.animation.centerPoint).add(collisionGroupWorkingAngleOffset);
-									}
-									
-									//Apply rotation.  We need to do this after translation operations to ensure proper offsets.
-									collisionGroupWorkingAngles.add(collisionGroupAnimationResult);
-								}
-								break;
-							}
-							case SCALING :{
-								//Do nothing.
-								break;
-							}
-						}
-						if(inhibitCollision){
-							//No need to process further.
-							break;
-						}
-					}
-					
-					//Update collisions using temp offset.
-					//Need to move it to temp variable to not get overwritten.
-					if(!inhibitCollision){
+				if(groupDef.health == 0 || getVariable("collision_" + (definition.collisionGroups.indexOf(groupDef) + 1) + "_damage") < groupDef.health){
+					if(groupDef.animations != null){
+						boolean inhibitAnimations = false;
+						boolean inhibitCollision = false;
+						//Reset working angles, but don't reset offset as it's not required.
+						collisionGroupWorkingAngles.set(0, 0, 0);
+						//Set box global center to local center.  This is used as a temp storage to do proper animation math.
 						for(BoundingBox box : collisionBoxes){
-							collisionGroupAnimationResult.setTo(box.globalCenter).subtract(box.localCenter);
-							box.updateToEntity(this, collisionGroupAnimationResult);
+							box.globalCenter.setTo(box.localCenter);
+						}
+						for(DurationDelayClock clock : collisionClocks.get(groupDef)){
+							switch(clock.animation.animationType){
+								case VISIBILITY :{
+									if(!inhibitAnimations){
+										double variableValue = getAnimatedVariableValue(clock, 0);
+										if(variableValue < clock.animation.clampMin || variableValue > clock.animation.clampMax){
+											inhibitCollision = true;
+										}
+									}
+									break;
+								}
+								case INHIBITOR :{
+									if(!inhibitAnimations){
+										double variableValue = getAnimatedVariableValue(clock, 0);
+										if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
+											inhibitAnimations = true;
+										}
+									}
+									break;
+								}
+								case ACTIVATOR :{
+									if(inhibitAnimations){
+										double variableValue = getAnimatedVariableValue(clock, 0);
+										if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
+											inhibitAnimations = false;
+										}
+									}
+									break;
+								}
+								case TRANSLATION :{
+									if(!inhibitAnimations){
+										//Found translation.  This gets applied in the translation axis direction directly.
+										double variableValue = getAnimatedVariableValue(clock, clock.animationAxisMagnitude, 0);
+										collisionGroupAnimationResult.setTo(clock.animationAxisNormalized).multiply(variableValue).rotateFine(collisionGroupWorkingAngles);
+										for(BoundingBox box : collisionBoxes){
+											box.globalCenter.add(collisionGroupAnimationResult);
+										}
+									}
+									break;
+								}
+								case ROTATION :{
+									if(!inhibitAnimations){
+										//Found rotation.  Get angles that needs to be applied.
+										//We need to apply this to every box differently due to offsets.
+										double variableValue = getAnimatedVariableValue(clock, clock.animationAxisMagnitude, 0);
+										collisionGroupAnimationResult.setTo(clock.animationAxisNormalized).multiply(variableValue);
+										
+										for(BoundingBox box : collisionBoxes){
+											//Use the center point as a vector we rotate to get the applied offset.
+											//We need to take into account the current offset here, as we might have rotated on a prior call.
+											collisionGroupWorkingAngleOffset.setTo(box.globalCenter).subtract(box.localCenter);
+											box.globalCenter.subtract(clock.animation.centerPoint).subtract(collisionGroupWorkingAngleOffset).rotateFine(collisionGroupAnimationResult).add(clock.animation.centerPoint).add(collisionGroupWorkingAngleOffset);
+										}
+										
+										//Apply rotation.  We need to do this after translation operations to ensure proper offsets.
+										collisionGroupWorkingAngles.add(collisionGroupAnimationResult);
+									}
+									break;
+								}
+								case SCALING :{
+									//Do nothing.
+									break;
+								}
+							}
+							if(inhibitCollision){
+								//No need to process further.
+								break;
+							}
+						}
+						
+						//Update collisions using temp offset.
+						//Need to move it to temp variable to not get overwritten.
+						if(!inhibitCollision){
+							for(BoundingBox box : collisionBoxes){
+								collisionGroupAnimationResult.setTo(box.globalCenter).subtract(box.localCenter);
+								box.updateToEntity(this, collisionGroupAnimationResult);
+							}
+						}else{
+							//Don't let these boxes get added to the list.
+							continue;
 						}
 					}else{
-						//Don't let these boxes get added to the list.
-						continue;
+						for(BoundingBox box : collisionBoxes){
+							box.updateToEntity(this, null);
+						}
 					}
-				}else{
-					for(BoundingBox box : collisionBoxes){
-						box.updateToEntity(this, null);
+					entityCollisionBoxes.addAll(collisionBoxes);
+					if(!groupDef.isInterior && !ConfigSystem.configObject.general.noclipVehicles.value){
+						blockCollisionBoxes.addAll(collisionBoxes);
 					}
-				}
-				entityCollisionBoxes.addAll(collisionBoxes);
-				if(!groupDef.isInterior && !ConfigSystem.configObject.general.noclipVehicles.value){
-					blockCollisionBoxes.addAll(collisionBoxes);
 				}
 			}
     	}
@@ -667,6 +668,28 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 	 */
 	public void attack(Damage damage){
 		if(!damage.isWater){ 
+			if(definition.collisionGroups != null){
+				for(JSONCollisionGroup groupDef : definition.collisionGroups){
+					Set<BoundingBox> collisionBoxes = definitionCollisionBoxes.get(groupDef);
+					if(collisionBoxes.contains(damage.box)){
+						if(groupDef.health != 0){
+							String variableName = "collision_" + (definition.collisionGroups.indexOf(groupDef) + 1) + "_damage";
+							double currentDamage = getVariable(variableName) + damage.amount;
+							if(currentDamage > groupDef.health){
+								double amountActuallyNeeded = damage.amount - (currentDamage - groupDef.health);
+								currentDamage = groupDef.health;
+								InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, variableName, amountActuallyNeeded));
+							}else{
+								InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, variableName, damage.amount));
+							}
+							setVariable(variableName, currentDamage);
+							return;
+						}
+					}
+				}
+			}
+			
+			//Didn't hit a collision box or found one with no health defined 
 			damageAmount += damage.amount;
 			//FIXME this goes away when we make fake guns go away.
 			if(definition.general != null && damageAmount > definition.general.health){
