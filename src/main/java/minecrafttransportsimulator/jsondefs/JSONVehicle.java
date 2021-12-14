@@ -93,13 +93,13 @@ public class JSONVehicle extends AJSONPartProvider{
     	@JSONDescription("A value dictating the oversteer force of a vehicle when skidding.")
     	public float overSteer;
     	
-	@JSONDescription("A value dictating the understeer force of a vehicle when skidding.")
+    	@JSONDescription("A value dictating the understeer force of a vehicle when skidding.")
     	public float underSteer;
     	
     	@JSONDescription("Used similarly to overSteer to control the exact rate of skidding during extreme acceleration.")
     	public float overSteerAccel;
     	
-	@JSONDescription("Used similarly to underSteer to control the exact rate of skidding during extreme deceleration.")
+    	@JSONDescription("Used similarly to underSteer to control the exact rate of skidding during extreme deceleration.")
     	public float overSteerDecel;
 	
     	@JSONDescription("The gear ratio present for the axle of this vehicle.  This is a constant, vehicle-specific ratio that will be multiplied with the gear ratio of the currently-selected gear of the engine to determine the rotation of the wheels.  A good many cars have a 3.55 ratio, but other of course are possible.  All depends on how much power you expect your engine to have, and how fast you want your car to go.  Note that this parameter is required if you want your engine to drive wheels and you have isFrontWheelDrive or isRearWheelDrive set.")
@@ -114,7 +114,7 @@ public class JSONVehicle extends AJSONPartProvider{
     	@JSONDescription("How fast flaps deploy, in degrees/tick.  Only used if the vehicle has flap notches set.")
         public float flapSpeed;
     	
-    	@JSONDescription("How areodynamic this vehicle is.  Not required, but for things like cars this will make a significant difference in your high-speed performance.  So do some research before you slap some random value in here!  If you don't set this parameter, one will be automatically generated.  Planes and non-planes have a different formula, as planes are more areodynamic than most other vehicles.")
+    	@JSONDescription("How areodynamic this vehicle is.  Defaults to 0.03 for aircraft, and 2.0 for cars, but can be adjusted to other values.  For things like cars this will make a significant difference in your high-speed performance.  So do some research before you slap some random value in here!  If you don't set this parameter, one will be automatically generated.  Planes and non-planes have a different formula, as planes are more areodynamic than most other vehicles.")
     	public float dragCoefficient;
     	
     	@JSONDescription("The distance from the center of rotation of the model, to the center point of the tail, in the Z-axis, in meters.  This essentially tells MTS where the rudder and elevators are located so it knows where to apply the forces they create.")
@@ -159,6 +159,9 @@ public class JSONVehicle extends AJSONPartProvider{
         @JSONRequired(dependentField="isTrailer", dependentValues={"true"})
         @JSONDescription("A listing of variables that will be checked off the towing vehicle if this vehicle is a trailer and connected.  Used by trailers to get the states of their towing vehicles for light and door animations.")
         public List<String> hookupVariables;
+        
+        @JSONDescription("A listing of physics modifiers.  These may be used to modify the vehicle's physics dynamically as opposed to the static values above.  If present, these values will add-on to any above values.")
+        public List<JSONPhysicsModifier> physicsModifiers;
     	
         @Deprecated
     	public boolean hasFlaps;

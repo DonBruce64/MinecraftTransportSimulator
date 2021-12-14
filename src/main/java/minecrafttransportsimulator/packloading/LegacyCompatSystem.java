@@ -162,6 +162,7 @@ public final class LegacyCompatSystem{
 		if(definition.blimp != null){
 			definition.general.isAircraft = true;
 			definition.general.isBlimp = true;
+			definition.motorized.isBlimp = true;
 			definition.motorized.crossSectionalArea = definition.blimp.crossSectionalArea;
 			definition.motorized.tailDistance = definition.blimp.tailDistance;
 			definition.motorized.rudderArea = definition.blimp.rudderArea;
@@ -217,6 +218,11 @@ public final class LegacyCompatSystem{
 				definition.motorized.flapNotches.add((float) (i*5));
 			}
 			definition.motorized.hasFlaps = false;
+		}
+		
+		//Check if we didn't specify drag.
+		if(definition.motorized.dragCoefficient == 0){
+			definition.motorized.dragCoefficient = definition.motorized.isAircraft || definition.motorized.isBlimp ? 0.03F : 2.0F;
 		}
 		
 		//Check if we didn't specify a braking force.

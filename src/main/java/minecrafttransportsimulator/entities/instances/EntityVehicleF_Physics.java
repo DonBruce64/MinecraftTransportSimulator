@@ -5,11 +5,14 @@ import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.TrailerConnection;
+import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
+import minecrafttransportsimulator.jsondefs.JSONPhysicsModifier;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
+import minecrafttransportsimulator.rendering.components.DurationDelayClock;
 import minecrafttransportsimulator.rendering.instances.RenderVehicle;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
@@ -73,9 +76,18 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	//Internal states.
 	public boolean hasRotors;
 	private double pitchDirectionFactor;
-	private double currentWingArea;
 	public double trackAngle;
 	private final Set<EntityVehicleF_Physics> towedVehiclesCheckedForWeights = new HashSet<EntityVehicleF_Physics>();
+	
+	//Properties.
+	public float currentWingArea;
+	public float currentWingSpan;
+	public float currentAileronArea;
+	public float currentElevatorArea;
+	public float currentRudderArea;
+	public float currentDragCoefficient;
+	public float currentBallastVolume;
+	public float currentAxleRatio;
 	
 	//Coefficients.
 	private double wingLiftCoeff;
@@ -115,6 +127,20 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	public EntityVehicleF_Physics(WrapperWorld world, WrapperNBT data){
 		super(world, data);
 		this.flapCurrentAngle = data.getDouble("flapCurrentAngle");
+	}
+	
+	@Override
+	protected void initializeDefinition(){
+		super.initializeDefinition();
+		if(definition.motorized.physicsModifiers != null){
+			for(JSONPhysicsModifier modifier : definition.motorized.physicsModifiers){
+				if(modifier.animations != null){
+					for(JSONAnimationDefinition animation : modifier.animations){
+						animationClocks.put(animation, new DurationDelayClock(animation));
+					}
+				}
+			}
+		}
 	}
 	
 	@Override
@@ -201,6 +227,84 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	
 	@Override
 	protected void getForcesAndMotions(){
+		//Get current variable values.
+		currentWingArea = (float) (definition.motorized.wingArea + definition.motorized.wingArea*0.15F*flapCurrentAngle/MAX_FLAP_ANGLE_REFERENCE);
+		currentWingSpan = definition.motorized.wingSpan;
+		currentAileronArea = definition.motorized.aileronArea;
+		currentElevatorArea = definition.motorized.elevatorArea;
+		currentRudderArea = definition.motorized.rudderArea;
+		currentDragCoefficient = definition.motorized.dragCoefficient;
+		currentBallastVolume = definition.motorized.ballastVolume;
+		currentAxleRatio = definition.motorized.axleRatio;
+		
+		//Adjust current variables to physics modifiers, if any exist.
+		if(definition.motorized.physicsModifiers != null){
+			for(JSONPhysicsModifier modifier : definition.motorized.physicsModifiers){
+				boolean doModification = true;
+				if(modifier.animations != null){
+					boolean inhibitAnimations = false;
+					for(JSONAnimationDefinition animation : modifier.animations){
+						DurationDelayClock clock = animationClocks.get(animation);
+						if(clock != null){
+							switch(animation.animationType){
+								case VISIBILITY :{
+									if(!inhibitAnimations){
+										double variableValue = getAnimatedVariableValue(clock, 0);
+										if(variableValue < clock.animation.clampMin || variableValue > clock.animation.clampMax){
+											doModification = false;
+										}
+									}
+									break;
+								}
+								case INHIBITOR :{
+									if(!inhibitAnimations){
+										double variableValue = getAnimatedVariableValue(clock, 0);
+										if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
+											inhibitAnimations = true;
+										}
+									}
+									break;
+								}
+								case ACTIVATOR :{
+									if(inhibitAnimations){
+										double variableValue = getAnimatedVariableValue(clock, 0);
+										if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
+											inhibitAnimations = false;
+										}
+									}
+									break;
+								}
+								case TRANSLATION :{
+									//Do nothing.
+									break;
+								}
+								case ROTATION :{
+									//Do nothing.
+									break;
+								}
+								case SCALING :{
+									//Do nothing.
+									break;
+								}
+							}
+						}
+					}
+				}
+				if(doModification){
+					switch(modifier.property){
+						case WING_AREA : currentWingArea += modifier.value; break;
+						case WING_SPAN : currentWingSpan += modifier.value; break;
+						case AILERON_AREA : currentAileronArea += modifier.value; break;
+						case ELEVATOR_AREA : currentElevatorArea += modifier.value; break;
+						case RUDDER_AREA : currentRudderArea += modifier.value; break;
+						case DRAG_COEFFICIENT : currentDragCoefficient += modifier.value; break;
+						case BALLAST_VOLUME : currentBallastVolume += modifier.value; break;
+						case AXLE_RATIO : currentAxleRatio += modifier.value; break;
+					}
+				}
+			}
+		}
+		
 		//If we are free, do normal updates.  But if we are towed by a vehicle, do trailer forces instead.
 		//This prevents trailers from behaving badly and flinging themselves into the abyss.
 		if(towedByConnection == null){
@@ -268,7 +372,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 			
 			//Get forces.  Some forces are specific to JSON sections.
 			//First get gravity.
-			gravitationalForce = definition.motorized.ballastVolume == 0 ? currentMass*(9.8/400) : 0;
+			gravitationalForce = currentBallastVolume == 0 ? currentMass*(9.8/400) : 0;
 			if(!definition.motorized.isAircraft){
 				gravitationalForce *= ConfigSystem.configObject.general.gravityFactor.value;
 			}
@@ -301,16 +405,15 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 			aileronLiftCoeff = getLiftCoeff((aileronAngle + aileronTrim), 2);
 			elevatorLiftCoeff = getLiftCoeff(-2.5 + trackAngle - (elevatorAngle + elevatorTrim), 2);
 			rudderLiftCoeff = getLiftCoeff((rudderAngle + rudderTrim) - yawAngleDelta, 2);
-			currentWingArea = definition.motorized.wingArea + definition.motorized.wingArea*0.15D*flapCurrentAngle/MAX_FLAP_ANGLE_REFERENCE;
 			
 			//Get the drag coefficient and force.
 			if(definition.motorized.isBlimp){
-				dragCoeff = 0.004F*Math.pow(Math.abs(yawAngleDelta), 2) + (definition.motorized.dragCoefficient != 0 ? definition.motorized.dragCoefficient : 0.03D);
+				dragCoeff = 0.004F*Math.pow(Math.abs(yawAngleDelta), 2) + currentDragCoefficient;
 			}else if(definition.motorized.isAircraft){
 				//Aircraft are 0.03 by default, or whatever is specified.
-				dragCoeff = 0.0004F*Math.pow(trackAngle, 2) + (definition.motorized.dragCoefficient != 0 ? definition.motorized.dragCoefficient : 0.03D);
+				dragCoeff = 0.0004F*Math.pow(trackAngle, 2) + currentDragCoefficient;
 			}else{
-				dragCoeff = definition.motorized.dragCoefficient != 0 ? definition.motorized.dragCoefficient : 2.0D;
+				dragCoeff = currentDragCoefficient;
 				//If we aren't an aircraft, check for grounded ground devices.
 				//If we don't have any grounded ground devices, assume we are in the air or in water.
 				//This results in an increase in drag due to poor airflow.
@@ -320,23 +423,23 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 			}
 			if(definition.motorized.crossSectionalArea > 0){
 				dragForce = 0.5F*airDensity*velocity*velocity*definition.motorized.crossSectionalArea*dragCoeff;
-			}else if(definition.motorized.wingSpan > 0){
+			}else if(currentWingSpan > 0){
 				dragForce = 0.5F*airDensity*velocity*velocity*currentWingArea*(dragCoeff + wingLiftCoeff*wingLiftCoeff/(Math.PI*definition.motorized.wingSpan*definition.motorized.wingSpan/currentWingArea*0.8));
 			}else{
 				dragForce = 0.5F*airDensity*velocity*velocity*5.0F*dragCoeff;
 			}
 			
 			//Get ballast force.
-			if(definition.motorized.ballastVolume > 0){
+			if(currentBallastVolume > 0){
 				//Ballast gets less effective at applying positive lift at higher altitudes.
 				//This prevents blimps from ascending into space.
 				//Also take into account motionY, as we should provide less force if we are already going in the same direction.
 				if(elevatorAngle < 0){
-					ballastForce = airDensity*definition.motorized.ballastVolume*-elevatorAngle/10D;
+					ballastForce = airDensity*currentBallastVolume*-elevatorAngle/10D;
 				}else if(elevatorAngle > 0){
-					ballastForce = 1.225*definition.motorized.ballastVolume*-elevatorAngle/10D;
+					ballastForce = 1.225*currentBallastVolume*-elevatorAngle/10D;
 				}else{
-					ballastForce = 1.225*definition.motorized.ballastVolume*10D*-motion.y;
+					ballastForce = 1.225*currentBallastVolume*10D*-motion.y;
 				}
 				if(motion.y*ballastForce != 0){
 					ballastForce /= Math.pow(1 + Math.abs(motion.y), 2);
@@ -345,12 +448,12 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 			
 			//Get all other forces.
 			wingForce = 0.5F*airDensity*axialVelocity*axialVelocity*currentWingArea*wingLiftCoeff;
-			aileronForce = 0.5F*airDensity*axialVelocity*axialVelocity*definition.motorized.aileronArea*aileronLiftCoeff;
-			elevatorForce = 0.5F*airDensity*axialVelocity*axialVelocity*definition.motorized.elevatorArea*elevatorLiftCoeff;			
-			rudderForce = 0.5F*airDensity*axialVelocity*axialVelocity*definition.motorized.rudderArea*rudderLiftCoeff;
+			aileronForce = 0.5F*airDensity*axialVelocity*axialVelocity*currentAileronArea*aileronLiftCoeff;
+			elevatorForce = 0.5F*airDensity*axialVelocity*axialVelocity*currentElevatorArea*elevatorLiftCoeff;			
+			rudderForce = 0.5F*airDensity*axialVelocity*axialVelocity*currentRudderArea*rudderLiftCoeff;
 			
 			//Get torques.  Point for ailerons is 0.75% to the edge of the wing.
-			aileronTorque = aileronForce*definition.motorized.wingSpan*0.5F*0.75F;
+			aileronTorque = aileronForce*currentWingSpan*0.5F*0.75F;
 			elevatorTorque = elevatorForce*definition.motorized.tailDistance;
 			rudderTorque = rudderForce*definition.motorized.tailDistance;
 			
@@ -389,7 +492,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 			
 			//As a special case, if the vehicle is a stalled plane, add a forwards pitch to allow the plane to right itself.
 			//This is needed to prevent the plane from getting stuck in a vertical position and crashing.
-			if(definition.motorized.wingArea > 0 && trackAngle > 40 && angles.x < 45 && !groundDeviceCollective.isAnythingOnGround()){
+			if(currentWingArea > 0 && trackAngle > 40 && angles.x < 45 && !groundDeviceCollective.isAnythingOnGround()){
 				elevatorTorque += 100;
 			}
 			

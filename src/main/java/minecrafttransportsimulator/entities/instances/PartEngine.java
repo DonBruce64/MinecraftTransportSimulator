@@ -108,7 +108,7 @@ public class PartEngine extends APart{
 		//If we are on an aircraft, set our gear to 1 as aircraft don't have shifters.
 		//Well, except blimps, but that's a special case.
 		if(vehicleOn != null && vehicleOn.definition.motorized.isAircraft){
-			currentGear = 1;
+			setVariable(GEAR_VARIABLE, 1);
 		}
 	}
 	
@@ -460,7 +460,7 @@ public class PartEngine extends APart{
 					if(currentGearRatio != 0 && starterLevel == 0){
 						//Don't adjust it down to stall the engine, that can only be done via backfire.
 						if(wheelFriction > 0){
-							double desiredRPM = lowestWheelVelocity*1200F*currentGearRatio*vehicleOn.definition.motorized.axleRatio;
+							double desiredRPM = lowestWheelVelocity*1200F*currentGearRatio*vehicleOn.currentAxleRatio;
 							rpm += (desiredRPM - rpm)/definition.engine.revResistance;
 							if(rpm < definition.engine.idleRPM && running && backfireCooldown <= 0){//Checks if we're backfiring and sets lugging rpm to stall rpm, otherwise sets lug rpm to idle
 								rpm = definition.engine.idleRPM;
@@ -472,7 +472,7 @@ public class PartEngine extends APart{
 							//No wheel force.  Adjust wheels to engine speed.
 							for(PartGroundDevice wheel : vehicleOn.groundDeviceCollective.drivenWheels){
 								if(currentGearRatio != 0){
-									wheel.angularVelocity = rpm/currentGearRatio/vehicleOn.definition.motorized.axleRatio/1200D;
+									wheel.angularVelocity = rpm/currentGearRatio/vehicleOn.currentAxleRatio/1200D;
 								}else if(wheel.angularVelocity > 0){
 									wheel.angularVelocity = Math.max(0, wheel.angularVelocity - 0.01D);
 								}else{
@@ -904,7 +904,7 @@ public class PartEngine extends APart{
 				if(rpm > definition.engine.revlimitRPM && definition.engine.revlimitRPM != -1){
 					wheelForce = -rpm/definition.engine.maxRPM*Math.signum(currentGear)*60;
 				}else{
-					wheelForce = (engineTargetRPM - rpm)/definition.engine.maxRPM*currentGearRatio*vehicleOn.definition.motorized.axleRatio*(definition.engine.fuelConsumption + (definition.engine.superchargerFuelConsumption*definition.engine.superchargerEfficiency))*0.6F*30F;
+					wheelForce = (engineTargetRPM - rpm)/definition.engine.maxRPM*currentGearRatio*vehicleOn.currentAxleRatio*(definition.engine.fuelConsumption + (definition.engine.superchargerFuelConsumption*definition.engine.superchargerEfficiency))*0.6F*30F;
 				}
 				if(wheelForce != 0){
 					//Check to see if the wheels need to spin out.
@@ -914,15 +914,15 @@ public class PartEngine extends APart{
 						for(PartGroundDevice wheel : vehicleOn.groundDeviceCollective.drivenWheels){
 							if(currentGearRatio > 0){
 								if(wheelForce >= 0){
-									wheel.angularVelocity = Math.min(engineTargetRPM/1200F/currentGearRatio/vehicleOn.definition.motorized.axleRatio, wheel.angularVelocity + 0.01D);
+									wheel.angularVelocity = Math.min(engineTargetRPM/1200F/currentGearRatio/vehicleOn.currentAxleRatio, wheel.angularVelocity + 0.01D);
 								}else{
-									wheel.angularVelocity = Math.max(engineTargetRPM/1200F/currentGearRatio/vehicleOn.definition.motorized.axleRatio, wheel.angularVelocity - 0.01D);
+									wheel.angularVelocity = Math.max(engineTargetRPM/1200F/currentGearRatio/vehicleOn.currentAxleRatio, wheel.angularVelocity - 0.01D);
 								}
 							}else{
 								if(wheelForce >= 0){
-									wheel.angularVelocity = Math.min(engineTargetRPM/1200F/currentGearRatio/vehicleOn.definition.motorized.axleRatio, wheel.angularVelocity + 0.01D);
+									wheel.angularVelocity = Math.min(engineTargetRPM/1200F/currentGearRatio/vehicleOn.currentAxleRatio, wheel.angularVelocity + 0.01D);
 								}else{
-									wheel.angularVelocity = Math.max(engineTargetRPM/1200F/currentGearRatio/vehicleOn.definition.motorized.axleRatio, wheel.angularVelocity - 0.01D);
+									wheel.angularVelocity = Math.max(engineTargetRPM/1200F/currentGearRatio/vehicleOn.currentAxleRatio, wheel.angularVelocity - 0.01D);
 								}
 							}
 							wheel.skipAngularCalcs = true;
