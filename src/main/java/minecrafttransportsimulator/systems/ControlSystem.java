@@ -239,9 +239,9 @@ public final class ControlSystem{
 		//Check flaps.
 		if(aircraft.definition.motorized.flapNotches != null && !aircraft.definition.motorized.flapNotches.isEmpty()){
 			int currentFlapSetting = aircraft.definition.motorized.flapNotches.indexOf((float)aircraft.flapDesiredAngle);
-			if(ControlsKeyboard.AIRCRAFT_FLAPS_U.isPressed() && currentFlapSetting + 1 < aircraft.definition.motorized.flapNotches.size()){
+			if(ControlsKeyboard.AIRCRAFT_FLAPS_D.isPressed() && currentFlapSetting + 1 < aircraft.definition.motorized.flapNotches.size()){
 				InterfacePacket.sendToServer(new PacketEntityVariableSet(aircraft, EntityVehicleF_Physics.FLAPS_VARIABLE, aircraft.definition.motorized.flapNotches.get(currentFlapSetting + 1)));
-			}else if(ControlsKeyboard.AIRCRAFT_FLAPS_D.isPressed() && currentFlapSetting > 0){
+			}else if(ControlsKeyboard.AIRCRAFT_FLAPS_U.isPressed() && currentFlapSetting > 0){
 				InterfacePacket.sendToServer(new PacketEntityVariableSet(aircraft, EntityVehicleF_Physics.FLAPS_VARIABLE, aircraft.definition.motorized.flapNotches.get(currentFlapSetting - 1)));
 			}
 		}
