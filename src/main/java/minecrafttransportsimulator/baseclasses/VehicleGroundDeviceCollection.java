@@ -433,9 +433,15 @@ public class VehicleGroundDeviceCollection{
 			//This prevents wall-climbing and other odd physics.
 			if(vehicle.motion.y - groundBoost <= 0.01 && (pitch ? Math.abs(vehicle.angles.x + testRotation) < 85 : true)){
 				//Add rotation and motion, and check for box collisions.
+				//Check if correction is in opposite to requested rotation.
+				///If so, don't apply it and bail.
 				double intialLinearMovement = Math.sin(Math.toRadians(testRotation))*groundedSideOffset;
 				if(pitch){
-					vehicle.rotation.x += testRotation;
+					if(vehicle.rotation.x*testRotation < 0){
+						return 0;
+					}else{
+						vehicle.rotation.x += testRotation;
+					}
 				}else{
 					vehicle.rotation.z += testRotation;
 				}
