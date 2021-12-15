@@ -115,7 +115,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 					//If we don't have anything set, we just use the existing texture.
 					for(Entry<JSONText, String> textEntry : entity.text.entrySet()){
 						JSONText textDef = textEntry.getKey();
-						if(textDef.fieldName.equals(object.name)){
+						if(object.name.contains(textDef.fieldName)){
 							String textValue = entity.text.get(textDef);
 							if(!textValue.isEmpty() && !textValue.contains(" ")){
 								String errorString = InterfaceRender.downloadURLTexture(textValue);
