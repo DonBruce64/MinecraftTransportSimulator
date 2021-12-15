@@ -279,7 +279,10 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 									break;
 								}
 								case TRANSLATION :{
-									//Do nothing.
+									if(!inhibitAnimations){
+										double variableValue = getAnimatedVariableValue(clock, clock.animationAxisMagnitude, 0);
+										modifier.value = (float) variableValue;
+									}
 									break;
 								}
 								case ROTATION :{
