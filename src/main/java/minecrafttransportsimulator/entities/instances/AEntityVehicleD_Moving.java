@@ -50,6 +50,12 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	public double groundVelocity;
 	public double weightTransfer = 0;
 	
+	//Properties
+	public float currentDownForce;
+	public float currentBrakingFactor;
+	public float currentOverSteer;
+	public float currentUnderSteer;
+	
 	//Road-following data.
 	protected RoadFollowingState frontFollower;
 	protected RoadFollowingState rearFollower;
@@ -243,7 +249,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	 */
 	private void performGroundOperations(){
 		//Get braking force and apply it to the motions.
-		float brakingFactor = towedByConnection == null ? getBrakingForce()*definition.motorized.brakingFactor : 0;
+		float brakingFactor = towedByConnection == null ? getBrakingForce()*currentBrakingFactor : 0;
 		if(brakingFactor > 0){
 			double brakingForce = 20F*brakingFactor/currentMass;
 			if(brakingForce > velocity){
@@ -294,16 +300,16 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			if (this.towedByConnection == null){
 				double overSteerForce = Math.max(velocity / 4, 1);
 				if (definition.motorized.overSteerAccel != 0){
-					weightTransfer += ((motion.dotProduct(motion) - prevMotion.dotProduct(prevMotion)) * weightTransfer) * definition.motorized.overSteer;
+					weightTransfer += ((motion.dotProduct(motion) - prevMotion.dotProduct(prevMotion)) * weightTransfer) * currentOverSteer;
 					if (Math.abs(weightTransfer) > Math.abs(definition.motorized.overSteerAccel) && Math.abs(weightTransfer) > Math.abs(definition.motorized.overSteerDecel)){
 			    			weightTransfer = definition.motorized.overSteerAccel;
 					}else if(Math.abs(weightTransfer) < Math.abs(definition.motorized.overSteerDecel) && weightTransfer < Math.abs(definition.motorized.overSteerAccel)){
 						weightTransfer = definition.motorized.overSteerDecel;
 					}
 				}else{
-					weightTransfer = definition.motorized.overSteer;
+					weightTransfer = currentOverSteer;
 				}
-				rotation.y += crossProduct.y * weightTransfer + (Math.abs(crossProduct.y) * -definition.motorized.underSteer * turningForce) * overSteerForce;
+				rotation.y += crossProduct.y * weightTransfer + (Math.abs(crossProduct.y) * -currentUnderSteer * turningForce) * overSteerForce;
 			}	
 			
 			//If we are offset, adjust our angle.
@@ -466,7 +472,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 				double turningForce = steeringAngle/turningDistance;
 				//Decrease force by the speed of the vehicle.  If we are going fast, we can't turn as quickly.
 				if(groundVelocity > 0.35D){
-					turningForce *= Math.pow(0.3F, (groundVelocity*(1 - definition.motorized.downForce) - 0.35D));
+					turningForce *= Math.pow(0.3F, (groundVelocity*(1 - currentDownForce) - 0.35D));
 				}
 				//Calculate the force the steering produces.  Start with adjusting the steering factor by the ground velocity.
 				//This is because the faster we go the quicker we need to turn to keep pace with the vehicle's movement.

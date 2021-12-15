@@ -235,6 +235,10 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 		currentRudderArea = definition.motorized.rudderArea;
 		currentDragCoefficient = definition.motorized.dragCoefficient;
 		currentBallastVolume = definition.motorized.ballastVolume;
+		currentDownForce = definition.motorized.downForce;
+		currentBrakingFactor = definition.motorized.brakingFactor;
+		currentOverSteer = definition.motorized.overSteer;
+		currentUnderSteer = definition.motorized.underSteer;
 		currentAxleRatio = definition.motorized.axleRatio;
 		
 		//Adjust current variables to physics modifiers, if any exist.
@@ -299,6 +303,10 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 						case RUDDER_AREA : currentRudderArea += modifier.value; break;
 						case DRAG_COEFFICIENT : currentDragCoefficient += modifier.value; break;
 						case BALLAST_VOLUME : currentBallastVolume += modifier.value; break;
+						case DOWN_FORCE : currentDownForce += modifier.value; break;
+						case BRAKING_FACTOR : currentBrakingFactor += modifier.value; break;
+						case OVER_STEER : currentOverSteer += modifier.value; break;
+						case UNDER_STEER : currentUnderSteer += modifier.value; break;
 						case AXLE_RATIO : currentAxleRatio += modifier.value; break;
 					}
 				}
