@@ -29,7 +29,7 @@ public class JSONCollisionBox{
     public VariableType variableType;
 	
 	@JSONDescription("The value to set the variable to for SET types, or the amount to increment by for INCREMENT types.")
-    public double variableValue;
+    public float variableValue;
 	
 	public static enum VariableType{
 		@JSONDescription("Clicking this box will toggle the variable from 0 to 1.")
