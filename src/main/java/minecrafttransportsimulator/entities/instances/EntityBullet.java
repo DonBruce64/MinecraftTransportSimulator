@@ -131,7 +131,6 @@ public class EntityBullet extends AEntityC_Definable<JSONBullet>{
 						//If we hit an armor box, set that to what we attacked.
 						//If we didn't, see if we hit a part instead.
 						if(armorBoxHit != null){
-							InterfacePacket.sendToServer(new PacketPartGunBulletHit(gun, this, armorBoxHit, entity));
 							lastHit = HitType.ARMOR;
 							remove();
 							return false;
@@ -320,7 +319,8 @@ public class EntityBullet extends AEntityC_Definable<JSONBullet>{
     @Override
 	public double getRawVariableValue(String variable, float partialTicks){
 		switch(variable){
-			case("bullet_hit"): return lastHit != null ? 1 : 0;	
+			case("bullet_hit"): return lastHit != null ? 1 : 0;
+			case("bullet_burntime"): return ticksExisted > definition.bullet.burnTime ? 0 : definition.bullet.burnTime - ticksExisted;	
 			case("bullet_hit_block"): return HitType.BLOCK.equals(lastHit) ? 1 : 0;
 			case("bullet_hit_entity"): return HitType.ENTITY.equals(lastHit) ? 1 : 0;
 			case("bullet_hit_part"): return HitType.PART.equals(lastHit) ? 1 : 0;
