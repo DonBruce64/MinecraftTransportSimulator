@@ -290,7 +290,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 									} else if (clock.animation.clampMax != 0 && getAnimatedVariableValue(clock, clock.animationAxisMagnitude, 0) > clock.animation.clampMax) {
 									    clampedValue = clock.animation.clampMax;
 									} else {
-									    clampedValue = (float) getAnimatedVariableValue(clock, clock.animationAxisMagnitude, 0);
+									    clampedValue = (float) getAnimatedVariableValue(clock, clock.animation.axis.y, 0);
 									}
 									modifiedValue += modifier.value + clampedValue;
 								    }
