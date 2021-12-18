@@ -284,15 +284,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 								}
 								case TRANSLATION :{
 								    if(!inhibitAnimations){
-									float clampedValue;
-									if (clock.animation.clampMin != 0 && getAnimatedVariableValue(clock, clock.animationAxisMagnitude, 0) < clock.animation.clampMin){
-									    clampedValue = clock.animation.clampMin;
-									} else if (clock.animation.clampMax != 0 && getAnimatedVariableValue(clock, clock.animationAxisMagnitude, 0) > clock.animation.clampMax) {
-									    clampedValue = clock.animation.clampMax;
-									} else {
-									    clampedValue = (float) getAnimatedVariableValue(clock, clock.animation.axis.y, 0);
-									}
-									modifiedValue += modifier.value + clampedValue;
+									modifiedValue += modifier.value + getAnimatedVariableValue(clock, clock.animation.axis.y, 0);
 								    }
 								    break;
 								}
