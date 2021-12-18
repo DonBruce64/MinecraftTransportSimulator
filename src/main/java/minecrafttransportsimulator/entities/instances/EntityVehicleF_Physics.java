@@ -245,6 +245,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 		if(definition.motorized.physicsModifiers != null){
 			for(JSONPhysicsModifier modifier : definition.motorized.physicsModifiers){
 				boolean doModification = true;
+				float modifiedValue = 0;
 				if(modifier.animations != null){
 					boolean inhibitAnimations = false;
 					for(JSONAnimationDefinition animation : modifier.animations){
@@ -254,6 +255,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 								case VISIBILITY :{
 									if(!inhibitAnimations){
 										double variableValue = getAnimatedVariableValue(clock, 0);
+										modifiedValue += modifier.value;
 										if(variableValue < clock.animation.clampMin || variableValue > clock.animation.clampMax){
 											doModification = false;
 										}
@@ -263,6 +265,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 								case INHIBITOR :{
 									if(!inhibitAnimations){
 										double variableValue = getAnimatedVariableValue(clock, 0);
+										modifiedValue += modifier.value;
 										if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
 											inhibitAnimations = true;
 										}
@@ -272,6 +275,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 								case ACTIVATOR :{
 									if(inhibitAnimations){
 										double variableValue = getAnimatedVariableValue(clock, 0);
+										modifiedValue += modifier.value;
 										if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
 											inhibitAnimations = false;
 										}
@@ -279,11 +283,18 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 									break;
 								}
 								case TRANSLATION :{
-									if(!inhibitAnimations){
-										double variableValue = getAnimatedVariableValue(clock, clock.animationAxisMagnitude, 0);
-										modifier.value = (float) variableValue;
+								    if(!inhibitAnimations){
+									float clampedValue;
+									if (clock.animation.clampMin != 0 && getAnimatedVariableValue(clock, clock.animationAxisMagnitude, 0) < clock.animation.clampMin){
+									    clampedValue = clock.animation.clampMin;
+									} else if (clock.animation.clampMax != 0 && getAnimatedVariableValue(clock, clock.animationAxisMagnitude, 0) > clock.animation.clampMax) {
+									    clampedValue = clock.animation.clampMax;
+									} else {
+									    clampedValue = (float) getAnimatedVariableValue(clock, clock.animationAxisMagnitude, 0);
 									}
-									break;
+									modifiedValue += modifier.value + clampedValue;
+								    }
+								    break;
 								}
 								case ROTATION :{
 									//Do nothing.
@@ -299,18 +310,18 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 				}
 				if(doModification){
 					switch(modifier.property){
-						case WING_AREA : currentWingArea += modifier.value; break;
-						case WING_SPAN : currentWingSpan += modifier.value; break;
-						case AILERON_AREA : currentAileronArea += modifier.value; break;
-						case ELEVATOR_AREA : currentElevatorArea += modifier.value; break;
-						case RUDDER_AREA : currentRudderArea += modifier.value; break;
-						case DRAG_COEFFICIENT : currentDragCoefficient += modifier.value; break;
-						case BALLAST_VOLUME : currentBallastVolume += modifier.value; break;
-						case DOWN_FORCE : currentDownForce += modifier.value; break;
-						case BRAKING_FACTOR : currentBrakingFactor += modifier.value; break;
-						case OVER_STEER : currentOverSteer += modifier.value; break;
-						case UNDER_STEER : currentUnderSteer += modifier.value; break;
-						case AXLE_RATIO : currentAxleRatio += modifier.value; break;
+						case WING_AREA : currentWingArea= modifiedValue; break;
+						case WING_SPAN : currentWingSpan = modifiedValue; break;
+						case AILERON_AREA : currentAileronArea = modifiedValue; break;
+						case ELEVATOR_AREA : currentElevatorArea = modifiedValue; break;
+						case RUDDER_AREA : currentRudderArea = modifiedValue; break;
+						case DRAG_COEFFICIENT : currentDragCoefficient = modifiedValue; break;
+						case BALLAST_VOLUME : currentBallastVolume = modifiedValue; break;
+						case DOWN_FORCE : currentDownForce = modifiedValue; break;
+						case BRAKING_FACTOR : currentBrakingFactor = modifiedValue; break;
+						case OVER_STEER : currentOverSteer = modifiedValue; break;
+						case UNDER_STEER : currentUnderSteer = modifiedValue; break;
+						case AXLE_RATIO : currentAxleRatio = modifiedValue; break;
 					}
 				}
 			}
