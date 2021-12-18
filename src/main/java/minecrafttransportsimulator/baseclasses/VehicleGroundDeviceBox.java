@@ -90,7 +90,7 @@ public class VehicleGroundDeviceBox{
 		canRollOnGround = false;
 		for(APart part : vehicle.parts){
 			if(part instanceof PartGroundDevice){
-				if(!part.placementDefinition.isSpare && part.isActive){
+				if(!part.placementDefinition.isSpare){
 					//X-offsets of 0 are both left and right as they are center points.
 					//This ensures we don't roll to try and align a center point.
 					if(isFront && part.placementOffset.z > 0){
@@ -354,5 +354,12 @@ public class VehicleGroundDeviceBox{
 	 */
 	public boolean isPartofBox(PartGroundDevice groundDevice){
 		return groundDevices.contains(groundDevice) || liquidDevices.contains(groundDevice);
+	}
+	
+	/**
+	 * Returns the list of all the ground devices that are part of this box.
+	 */
+	public List<PartGroundDevice> getGroundDevices(){
+		return groundDevices;
 	}
 }

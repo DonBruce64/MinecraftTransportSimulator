@@ -309,8 +309,6 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 			while(engines.containsKey(engineNumber++));
 			engineNumber--;
 			engines.put(engineNumber, (PartEngine) part);
-		}else if(!part.placementDefinition.isSpare && part instanceof PartGroundDevice){
-			groundDeviceCollective.addGroundDevice((PartGroundDevice) part);
 		}
 	}
 	
@@ -318,9 +316,6 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 	public void removePart(APart part, Iterator<APart> iterator){
 		super.removePart(part, iterator);
 		engines.inverse().remove(part);
-		if(!part.placementDefinition.isSpare && part instanceof PartGroundDevice){
-			groundDeviceCollective.removeGroundDevice((PartGroundDevice) part);
-		}
 	}
 	
 	public void acquireMissile(EntityBullet missile){

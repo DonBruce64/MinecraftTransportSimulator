@@ -33,24 +33,6 @@ public class VehicleGroundDeviceCollection{
 	}
 	
 	/**
-	 * Adds a ground device to this collection.  Should be done whenever one ia added to the vehicle.
-	 * This ensures that the {@link #drivenWheels} are kept in-sync.
-	 */
-	public void addGroundDevice(PartGroundDevice ground){
-		if((ground.definition.ground.isWheel || ground.definition.ground.isTread) && ((ground.placementOffset.z > 0 && vehicle.definition.motorized.isFrontWheelDrive) || (ground.placementOffset.z <= 0 && vehicle.definition.motorized.isRearWheelDrive))){
-			drivenWheels.add(ground);
-		}
-	}
-	
-	/**
-	 * Removes a ground device from this collection.  Should be done whenever one ia added to the vehicle.
-	 * This ensures that the {@link #drivenWheels} are kept in-sync.
-	 */
-	public void removeGroundDevice(PartGroundDevice ground){
-		drivenWheels.remove(ground);
-	}
-	
-	/**
 	 * Updates the members of all GDBs.
 	 */
 	public void updateMembers(){
@@ -58,6 +40,27 @@ public class VehicleGroundDeviceCollection{
 		frontRightGDB.updateMembers();
 		rearLeftGDB.updateMembers();
 		rearRightGDB.updateMembers();
+		drivenWheels.clear();
+		for(PartGroundDevice ground : frontLeftGDB.getGroundDevices()){
+			if(!ground.placementDefinition.isSpare && ground.isActive && (ground.definition.ground.isWheel || ground.definition.ground.isTread) && (vehicle.definition.motorized.isFrontWheelDrive)){
+				drivenWheels.add(ground);
+			}
+		}
+		for(PartGroundDevice ground : frontRightGDB.getGroundDevices()){
+			if(!ground.placementDefinition.isSpare && ground.isActive && (ground.definition.ground.isWheel || ground.definition.ground.isTread) && (vehicle.definition.motorized.isFrontWheelDrive)){
+				drivenWheels.add(ground);
+			}
+		}
+		for(PartGroundDevice ground : rearLeftGDB.getGroundDevices()){
+			if(!ground.placementDefinition.isSpare && ground.isActive && (ground.definition.ground.isWheel || ground.definition.ground.isTread) && (vehicle.definition.motorized.isRearWheelDrive)){
+				drivenWheels.add(ground);
+			}
+		}
+		for(PartGroundDevice ground : rearRightGDB.getGroundDevices()){
+			if(!ground.placementDefinition.isSpare && ground.isActive && (ground.definition.ground.isWheel || ground.definition.ground.isTread) && (vehicle.definition.motorized.isRearWheelDrive)){
+				drivenWheels.add(ground);
+			}
+		}
 	}
 	
 	/**
