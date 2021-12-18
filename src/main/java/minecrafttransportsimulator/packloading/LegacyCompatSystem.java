@@ -9,6 +9,7 @@ import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.components.ABlockBase.BlockMaterial;
+import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad.RoadComponent;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartEngine;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent.PoleComponentType;
@@ -49,6 +50,7 @@ import minecrafttransportsimulator.jsondefs.JSONParticle;
 import minecrafttransportsimulator.jsondefs.JSONParticle.ParticleType;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONRendering;
+import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
 import minecrafttransportsimulator.jsondefs.JSONSkin;
 import minecrafttransportsimulator.jsondefs.JSONSound;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
@@ -80,6 +82,8 @@ public final class LegacyCompatSystem{
 			performPoleLegacyCompats((JSONPoleComponent) definition);
 		}else if(definition instanceof JSONDecor){
 			performDecorLegacyCompats((JSONDecor) definition);
+		}else if(definition instanceof JSONRoadComponent){
+			performRoadLegacyCompats((JSONRoadComponent) definition);
 		}else if(definition instanceof JSONItem){
 			performItemLegacyCompats((JSONItem) definition);
 		}else if(definition instanceof JSONSkin){
@@ -1362,6 +1366,13 @@ public final class LegacyCompatSystem{
 			definition.decor.partTypes = null;
 			definition.decor.crafting.items = definition.decor.items;
 			definition.decor.items = null;
+		}
+	}
+	
+	private static void performRoadLegacyCompats(JSONRoadComponent definition){
+		//Make road segment length 1 if it's 0 and we are a dynamic road.
+		if(definition.road.type.equals(RoadComponent.CORE_DYNAMIC) && definition.road.segmentLength == 0){
+			definition.road.segmentLength = 1.0F;
 		}
 	}
 	

@@ -77,11 +77,16 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 								//Core components need to be transformed to wedges.
 								Point3d priorPosition = new Point3d();
 								Point3d priorRotation = new Point3d();
+								Point3d testPoint1 = new Point3d();
+								Point3d testPoint2 = new Point3d();
+								Point3d vertexOffsetPriorLine = new Point3d();
+								Point3d vertexOffsetCurrentLine = new Point3d();
+								Point3d segmentVector = new Point3d();
+								Point3d renderedVertex = new Point3d();
 								float indexDelta = (float) (road.dynamicCurve.pathLength/Math.floor(road.dynamicCurve.pathLength/road.definition.road.segmentLength));
 								boolean finalSegment = false;
 								float priorIndex = 0;
 								float currentIndex = 0;
-								System.out.format("%f %f %f %d\n", road.dynamicCurve.pathLength, road.definition.road.segmentLength, indexDelta, (int) Math.floor(road.dynamicCurve.pathLength/road.definition.road.segmentLength));
 								List<float[]> segmentVertices = new ArrayList<float[]>();
 								while(!finalSegment){
 									//If we are at the last index, do special logic to get the very end point.
@@ -105,8 +110,8 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 									//Check for this, and if we have done so, skip this segment.
 									//If we detect this in the last 3 segments, skip right to the end.
 									//This prevents a missing end segment due to collision.
-									Point3d testPoint1 = new Point3d(road.definition.road.borderOffset, 0, 0).rotateFine(priorRotation).add(priorPosition);
-									Point3d testPoint2 = new Point3d(road.definition.road.borderOffset, 0, 0).rotateFine(rotation).add(position);
+									testPoint1.set(road.definition.road.borderOffset, 0, 0).rotateFine(priorRotation).add(priorPosition);
+									testPoint2.set(road.definition.road.borderOffset, 0, 0).rotateFine(rotation).add(position);
 									if(currentIndex != road.dynamicCurve.pathLength && ((position.x - priorPosition.x)*(testPoint2.x - testPoint1.x) < 0 || (position.z - priorPosition.z)*(testPoint2.z - testPoint1.z) < 0)){
 										if(currentIndex + 3*indexDelta > road.dynamicCurve.pathLength){
 											currentIndex = road.dynamicCurve.pathLength - indexDelta;
@@ -118,7 +123,7 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 									//This depends on how far the vertex is from the origin of the model, and how big the delta is.
 									//For all points, their magnitude depends on how far away they are on the Z-axis.
 									for(int i=0; i<parsedVertices.capacity(); i+=8){
-										float[] convertedVertexData = new float[8]; 
+										float[] convertedVertexData = new float[8];
 										
 										//Add the normals and UVs first.  These won't change.
 										parsedVertices.get(convertedVertexData, 0, 5);
@@ -127,13 +132,13 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 										float x = parsedVertices.get();
 										float y = parsedVertices.get();
 										float z = parsedVertices.get();
-										Point3d vertexOffsetPriorLine = new Point3d(x, y, 0);
+										vertexOffsetPriorLine.set(x, y, 0);
 										vertexOffsetPriorLine.rotateFine(priorRotation).add(priorPosition);
-										Point3d vertexOffsetCurrentLine = new Point3d(x, y, 0);
+										vertexOffsetCurrentLine.set(x, y, 0);
 										vertexOffsetCurrentLine.rotateFine(rotation).add(position);
 										
-										Point3d segmentVector = vertexOffsetCurrentLine.copy().subtract(vertexOffsetPriorLine).multiply(Math.abs(z)/road.definition.road.segmentLength);
-										Point3d renderedVertex = vertexOffsetPriorLine.add(segmentVector);
+										segmentVector.setTo(vertexOffsetCurrentLine).subtract(vertexOffsetPriorLine).multiply(Math.abs(z)/road.definition.road.segmentLength);
+										renderedVertex.setTo(vertexOffsetPriorLine).add(segmentVector);
 										
 										convertedVertexData[5] = (float) renderedVertex.x;
 										convertedVertexData[6] = (float) renderedVertex.y;
