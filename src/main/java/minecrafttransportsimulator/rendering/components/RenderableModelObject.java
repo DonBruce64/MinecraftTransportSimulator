@@ -428,6 +428,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 			colorObject.color.setTo(color);
 			colorObject.alpha = lightLevel;
 			colorObject.isMirrored = object.isMirrored;
+			colorObject.scale = object.scale;
 			colorObject.render();
 			
 		}
@@ -464,6 +465,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 					flareObject.color.setTo(color);
 					flareObject.alpha = blendableBrightness;
 					flareObject.isMirrored = object.isMirrored;
+					flareObject.scale = object.scale;
 					flareObject.render();
 				}
 				
@@ -474,6 +476,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 					beamObject.color.setTo(color);
 					beamObject.alpha = blendableBrightness;
 					beamObject.isMirrored = object.isMirrored;
+					beamObject.scale = object.scale;
 					beamObject.render();
 				}
 			}
@@ -491,6 +494,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 			
 			coverObject.disableLighting = ConfigSystem.configObject.clientRendering.brightLights.value && lightLevel > 0;
 			coverObject.isMirrored = object.isMirrored;
+			coverObject.scale = object.scale;
 			coverObject.render();
 		}
 	}
