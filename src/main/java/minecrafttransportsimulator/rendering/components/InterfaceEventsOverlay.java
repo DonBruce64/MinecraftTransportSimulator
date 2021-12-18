@@ -143,7 +143,7 @@ public class InterfaceEventsOverlay{
 							RenderText.draw2DText("Active Gun:", null, screenWidth, 8, ColorRGB.WHITE, TextAlignment.RIGHT_ALIGNED, 1.0F, false, 0);
 							if(seat.activeGun != null){
 								String gunNumberText = seat.activeGun.definition.gun.fireSolo ? " [" + (seat.gunIndex + 1) + "]" : "";
-								RenderText.draw2DText(seat.activeGun.getItemName() + gunNumberText, null, screenWidth, 8, ColorRGB.WHITE, TextAlignment.RIGHT_ALIGNED, 1.0F, false, 0);
+								RenderText.draw2DText(seat.activeGun.getItemName() + gunNumberText, null, screenWidth, 16, ColorRGB.WHITE, TextAlignment.RIGHT_ALIGNED, 1.0F, false, 0);
 							}else{
 								RenderText.draw2DText("None", null, screenWidth, 16, ColorRGB.WHITE, TextAlignment.RIGHT_ALIGNED, 1.0F, false, 0);
 							}
