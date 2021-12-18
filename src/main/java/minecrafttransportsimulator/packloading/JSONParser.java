@@ -390,6 +390,7 @@ public class JSONParser{
 		return new GsonBuilder()
 				.setPrettyPrinting()
 				.disableHtmlEscaping()
+				.enableComplexMapKeySerialization() //Used for enum keys.
 				.registerTypeAdapter(Boolean.class, booleanAdapter)
 				.registerTypeAdapter(Integer.class, integerAdapter)
 				.registerTypeAdapter(Float.class, floatAdapter)
