@@ -75,15 +75,6 @@ public class RenderText{
 	}
 	
 	/**
-	 *  Returns the width of the passed-in text string.  This will be in pixels.
-	 *  Note that this may not directly correspond to font-pixels, as higher-res
-	 *  fonts may have multiple font-pixels per texture pixel.
-	 */
-	public static float getStringWidth(String text, String fontName){
-		return getFontData(fontName).getStringWidth(text);
-	}
-	
-	/**
 	 *  Returns the correct font rendering charset for the passed-in font,
 	 *  creating it if it does not exist.  Does not bind the actual texture,
 	 *  but does load it for calculating charset bounds.
@@ -245,23 +236,7 @@ public class RenderText{
 			}
 		}
 		
-		public float getStringWidth(String text){
-			float width = 0;
-			boolean skipNext = false;
-			for(char textChar : text.toCharArray()){
-				//Skip formatting chars and their next char.
-				if(textChar == FORMATTING_CHAR){
-					skipNext = true;
-				}else if(skipNext){
-					skipNext = false;
-				}else{
-					width += charWidths[textChar];
-				}
-			}
-			return width + text.length()*CHAR_SPACING;
-		}
-		
-		public void renderText(String text, Point3d position, Point3d rotation, TextAlignment alignment, float scale, boolean autoScale, int wrapWidth, float preScaledFactor, boolean pixelCoords, ColorRGB color, boolean renderLit){
+		private void renderText(String text, Point3d position, Point3d rotation, TextAlignment alignment, float scale, boolean autoScale, int wrapWidth, float preScaledFactor, boolean pixelCoords, ColorRGB color, boolean renderLit){
 			//Cull text to total chars.
 			//This is all we can render in one pass.
 			if(text.length() > MAX_VERTCIES_PER_RENDER/6){
@@ -315,18 +290,35 @@ public class RenderText{
 				DEFAULT_ADJ.set(0, 0, 0);
 			}
 			
+			//Get the text without formatting chars, and the width of said text.
+			float stringWidth = 0;
+			int totalChars = 0;
+			boolean skipNext = false;
+			for(char textChar : text.toCharArray()){
+				//Skip formatting chars and their next char.
+				if(textChar == FORMATTING_CHAR){
+					skipNext = true;
+				}else if(skipNext){
+					skipNext = false;
+				}else{
+					stringWidth += charWidths[textChar];
+					++totalChars;
+				}
+			}
+			stringWidth += totalChars*CHAR_SPACING;
+			
 			//Check for auto-scaling.
 			if(autoScale && wrapWidth > 0){
 				//Get the string width.  This is in text-pixels.
 				//We scale this to the actual pixel-width by multiplying it by the incoming scale.
 				//If the string width in pixels is greater than the wrap width, adjust scale.
 				//We also need to cancel wrapping if our scaled value is within bounds.
-				float stringWidth = scale*getStringWidth(text);
+				float adjustedStringWidthFactor = scale*stringWidth;
 				if(!pixelCoords){
-					stringWidth *= 16;
+					adjustedStringWidthFactor *= 16;
 				}
-				if(stringWidth > wrapWidth){
-					double scaleFactor = wrapWidth/stringWidth;
+				if(adjustedStringWidthFactor > wrapWidth){
+					double scaleFactor = wrapWidth/adjustedStringWidthFactor;
 					if(pixelCoords){
 						DEFAULT_ADJ.add(0, -DEFAULT_PIXELS_PER_CHAR*(scale*scaleFactor - scale)/2D, 0);
 					}else{
@@ -349,9 +341,9 @@ public class RenderText{
 			//Besides, who is going to do word-wrapping on fancy text?
 			float alignmentOffset = 0;
 			if(alignment.equals(TextAlignment.CENTERED)){
-				alignmentOffset = (wrapWidth == 0 ? -getStringWidth(text) : -wrapWidth)/2F;
+				alignmentOffset = (wrapWidth == 0 ? -stringWidth : -wrapWidth)/2F;
 			}else if(alignment.equals(TextAlignment.RIGHT_ALIGNED)){
-				alignmentOffset = (-getStringWidth(text) - text.length()*CHAR_SPACING);
+				alignmentOffset = -stringWidth;
 			}
 			
 			//Divide the wrap width by the scale.

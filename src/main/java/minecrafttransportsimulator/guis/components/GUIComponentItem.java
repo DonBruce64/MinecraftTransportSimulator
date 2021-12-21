@@ -2,7 +2,14 @@ package minecrafttransportsimulator.guis.components;
 
 import java.util.List;
 
+import org.lwjgl.opengl.GL11;
+
+import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.mcinterface.InterfaceGUI;
+import minecrafttransportsimulator.rendering.components.RenderableObject;
+import minecrafttransportsimulator.rendering.instances.RenderText;
+import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.item.ItemStack;
 
 /**Custom item render class.  This class is designed to render a {@link ItemStack} 
@@ -21,6 +28,9 @@ public class GUIComponentItem extends AGUIComponent{
 	public final float scale;
 	public ItemStack stack;
 	public List<ItemStack> stacks;
+	private ItemStack stackToRender;
+	private ItemStack lastStackRendered;
+	private RenderableObject stackModel;
 	
 	/**Default item constructor.**/
 	public GUIComponentItem(int x, int y, float scale){
@@ -35,21 +45,79 @@ public class GUIComponentItem extends AGUIComponent{
 
     @Override
 	public void render(int mouseX, int mouseY, int textureWidth, int textureHeight, boolean blendingEnabled, float partialTicks){
+    	
     	if(stack != null){
-    		InterfaceGUI.drawItem(stack, x, y, scale);
+    		//InterfaceGUI.drawItem(stack, x, y, scale);
     	}else if(stacks != null && !stacks.isEmpty()){
-    		InterfaceGUI.drawItem(stacks.get((int) (System.currentTimeMillis()%(stacks.size()*500)/500)), x, y, scale);
+    		//InterfaceGUI.drawItem(stacks.get((int) (System.currentTimeMillis()%(stacks.size()*500)/500)), x, y, scale);
+    	}
+    	if(stack != null){
+    		stackToRender = stack;
+    	}else if(stacks != null && !stacks.isEmpty()){
+    		stackToRender = stacks.get((int) (System.currentTimeMillis()%(stacks.size()*500)/500));
+    	}else{
+    		stackToRender = null;
+    	}
+    	
+    	if(stackToRender != null && !stackToRender.isEmpty()){
+    		if(!stackToRender.equals(lastStackRendered)){
+	    		stackModel = InterfaceGUI.getItemModel(stackToRender);
+	    		lastStackRendered = stackToRender;
+	    		if(stackToRender.getCount() > 1){
+	    			text = ((char) 167) + "l" + String.valueOf(stackToRender.getCount());
+	    		}
+    		}
+    	}else{
+    		stackModel = null;
+    		lastStackRendered = null;
+    		text = null;
+    	}
+    	
+    	if(stackModel != null){
+    		GL11.glPushMatrix();
+			GL11.glTranslatef(x, y, 0);
+			GL11.glScalef(scale, scale, scale);
+			
+	        //This makes sure normal-lighting doesn't get fouled by scaling operations.
+	         GlStateManager.enableRescaleNormal();
+
+	         //Required to get 3D models 100% in front of the background.
+	        GlStateManager.translate(0, 0, 100.0F + 50);
+	        
+	        //Items are normally rendered with origin at bottom-right like normal models.
+	        //This moves them to top-left orientation.
+	        GlStateManager.translate(0, 16.0F, 0.0F);
+	        
+	        //Flip the model across the Y-axis as GUIs are inverted.
+	        GlStateManager.scale(1.0F, -1.0F, 1.0F);
+	        
+	        //Scale up model, as it's normally 1 unit -> 1 block, not 1px, and we want 16px default.
+	        GlStateManager.scale(16.0F, 16.0F, 16.0F);
+	        		
+    		//Need to enable lighting for proper shading on block-items.
+    		GlStateManager.enableLighting();
+    		
+    		//Renders.
+        	stackModel.render();
+	        
+	        
+	        GlStateManager.disableRescaleNormal();
+	        GlStateManager.disableLighting();
+			
+			
+			GL11.glPopMatrix();
     	}
     }
     
     @Override
+    public void renderText(boolean renderTextLit){
+    	GL11.glTranslated(0, 0, 250);
+    	RenderText.draw2DText(text, null, x + (int) (scale*16), y + (int) (scale*8), ColorRGB.WHITE, TextAlignment.RIGHT_ALIGNED, scale, false, 0);
+    	GL11.glTranslated(0, 0, -250);
+    }
+    
+    @Override
 	public void renderTooltip(AGUIBase gui, int mouseX, int mouseY){
-    	ItemStack stackToRender = null;
-    	if(stack != null){
-    		stackToRender = stack;
-    	}else if(stacks != null && !stacks.isEmpty()){
-    		stackToRender = stacks.get((int) (System.currentTimeMillis()%(stacks.size()*1000)/1000));
-    	}
     	if(stackToRender != null && !stackToRender.isEmpty()){
     		float itemTooltipBounds = 16*scale;
     		if(mouseX > x && mouseX < x + itemTooltipBounds && mouseY > y && mouseY < y + itemTooltipBounds){

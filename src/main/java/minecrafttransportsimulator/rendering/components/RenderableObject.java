@@ -63,6 +63,9 @@ public class RenderableObject{
 	public boolean disableLighting;
 	public boolean enableBrightBlending;
 	
+	/**the Global texture.  This contains all block/item textures for the game.  Used when rendering said blocks/items.**/
+	public static final String GLOBAL_TEXTURE_NAME = "GLOBAL";
+	
 	private static final int[][] FACE_POINT_INDEXES = new int[][]{
 		//X-axis.
 		new int[]{0, 1, 3, 2},

@@ -167,6 +167,11 @@ public class BuilderGUI extends GuiScreen{
 		for(GUIComponentItem item : gui.items){
 			item.render(mouseX, mouseY, textureWidth, textureHeight, false, partialTicks);
 		}
+		for(GUIComponentItem item : gui.items){
+			if(item.visible && item.text != null && !item.text.isEmpty()){
+				item.renderText(isTextLit);
+			}
+		}
 		
 		//Render any tooltips.  These are the final thing to render as they need to render over everything else.
 		for(AGUIComponent component : gui.generalComponents){

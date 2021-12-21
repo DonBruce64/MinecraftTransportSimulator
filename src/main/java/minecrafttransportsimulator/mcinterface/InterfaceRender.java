@@ -25,6 +25,7 @@ import minecrafttransportsimulator.rendering.components.RenderableObject;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
+import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.texture.TextureUtil;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
@@ -161,10 +162,13 @@ public class InterfaceRender{
 	 *  the string values that are passed-in.
 	 */
 	public static void bindTexture(String textureLocation){
-		//Special case for GIFs.
 		if(animatedGIFs.containsKey(textureLocation)){
+			//Special case for GIFs.
 			ParsedGIF parsedGIF = animatedGIFs.get(textureLocation);
 			GlStateManager.bindTexture(parsedGIF.getCurrentTextureIndex());
+		}else if(textureLocation.equals(RenderableObject.GLOBAL_TEXTURE_NAME)){
+			//Default texture.
+			Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
 		}else{
 			//Parse texture if we don't have it yet.
 			if(!textures.containsKey(textureLocation)){
