@@ -378,7 +378,13 @@ public class RenderText{
 						case (UNDERLINE_FORMATTING_CHAR) : currentState = STATES[currentState.index | FontRenderState.UNDERLINE_BIT_INDEX]; break;
 						case (STRIKETHROUGH_FORMATTING_CHAR) : currentState = STATES[currentState.index | FontRenderState.STRIKETHROUGH_BIT_INDEX]; break;
 						case (RESET_FORMATTING_CHAR) : currentState = STATES[0]; currentColor = color; break;
-						default: currentColor = COLORS[Integer.decode("0x"+formattingChar)]; break;
+						default: {
+							try{
+								currentColor = COLORS[Integer.decode("0x"+formattingChar)]; break;
+							}catch (Exception e){
+								//Skip this formatting char, as it's invalid.
+							}
+						}
 					}
 					//Go back though the loop again to the next char.
 					continue;
