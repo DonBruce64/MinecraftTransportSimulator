@@ -255,7 +255,6 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 								case VISIBILITY :{
 									if(!inhibitAnimations){
 										double variableValue = getAnimatedVariableValue(clock, 0);
-										modifiedValue += modifier.value;
 										if(variableValue < clock.animation.clampMin || variableValue > clock.animation.clampMax){
 											doModification = false;
 										}
@@ -265,7 +264,6 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 								case INHIBITOR :{
 									if(!inhibitAnimations){
 										double variableValue = getAnimatedVariableValue(clock, 0);
-										modifiedValue += modifier.value;
 										if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
 											inhibitAnimations = true;
 										}
@@ -275,7 +273,6 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 								case ACTIVATOR :{
 									if(inhibitAnimations){
 										double variableValue = getAnimatedVariableValue(clock, 0);
-										modifiedValue += modifier.value;
 										if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
 											inhibitAnimations = false;
 										}
