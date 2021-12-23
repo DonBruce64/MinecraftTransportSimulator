@@ -281,7 +281,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 								}
 								case TRANSLATION :{
 								    if(!inhibitAnimations){
-									modifiedValue += modifier.value + getAnimatedVariableValue(clock, clock.animation.axis.y, 0);
+									modifiedValue += getAnimatedVariableValue(clock, clock.animation.axis.y, 0);
 								    }
 								    break;
 								}
@@ -299,18 +299,18 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 				}
 				if(doModification){
 					switch(modifier.property){
-						case WING_AREA : currentWingArea= modifiedValue; break;
-						case WING_SPAN : currentWingSpan = modifiedValue; break;
-						case AILERON_AREA : currentAileronArea = modifiedValue; break;
-						case ELEVATOR_AREA : currentElevatorArea = modifiedValue; break;
-						case RUDDER_AREA : currentRudderArea = modifiedValue; break;
-						case DRAG_COEFFICIENT : currentDragCoefficient = modifiedValue; break;
-						case BALLAST_VOLUME : currentBallastVolume = modifiedValue; break;
-						case DOWN_FORCE : currentDownForce = modifiedValue; break;
-						case BRAKING_FACTOR : currentBrakingFactor = modifiedValue; break;
-						case OVER_STEER : currentOverSteer = modifiedValue; break;
-						case UNDER_STEER : currentUnderSteer = modifiedValue; break;
-						case AXLE_RATIO : currentAxleRatio = modifiedValue; break;
+						case WING_AREA : currentWingArea = modifier.value + modifiedValue; break;
+						case WING_SPAN : currentWingSpan = modifier.value + modifiedValue; break;
+						case AILERON_AREA : currentAileronArea = modifier.value + modifiedValue; break;
+						case ELEVATOR_AREA : currentElevatorArea = modifier.value + modifiedValue; break;
+						case RUDDER_AREA : currentRudderArea = modifier.value + modifiedValue; break;
+						case DRAG_COEFFICIENT : currentDragCoefficient = modifier.value + modifiedValue; break;
+						case BALLAST_VOLUME : currentBallastVolume = modifier.value + modifiedValue; break;
+						case DOWN_FORCE : currentDownForce = modifier.value + modifiedValue; break;
+						case BRAKING_FACTOR : currentBrakingFactor = modifier.value + modifiedValue; break;
+						case OVER_STEER : currentOverSteer = modifier.value + modifiedValue; break;
+						case UNDER_STEER : currentUnderSteer = modifier.value + modifiedValue; break;
+						case AXLE_RATIO : currentAxleRatio = modifier.value + modifiedValue; break;
 					}
 				}
 			}
