@@ -17,8 +17,9 @@ import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
  * @author don_bruce
  */
 public abstract class GUIComponentButton extends GUIComponentCutout{
-	private static final int DEFAULT_BUTTON_SECTION_WIDTH = 200;
+	private static final int DEFAULT_BUTTON_SECTION_WIDTH = 100;
 	private static final int DEFAULT_BUTTON_SECTION_HEIGHT = 20;
+	private static final int DEFAULT_BUTTON_SECTION_BORDER = 6;
 	private static final int DEFAULT_BUTTON_SECTION_WIDTH_OFFSET = 0;
 	private static final int DEFAULT_BUTTON_SECTION_HEIGHT_OFFSET = 196;
 	public static final int ITEM_BUTTON_SIZE = 18;
@@ -66,8 +67,8 @@ public abstract class GUIComponentButton extends GUIComponentCutout{
 	 *  position and current button state.  Used to know if we need to call
 	 *  {@link #onClicked(boolean)} to do clicking actions.
 	 */
-	public boolean canClick(int xPos, int yPos){
-		return visible && enabled && x < xPos && xPos < x + width && y < yPos && yPos < y + height; 
+	public boolean canClick(int mouseX, int mouseY){
+		return visible && enabled && isMouseInBounds(mouseX, mouseY); 
 	}
 	
 	/**
@@ -95,7 +96,7 @@ public abstract class GUIComponentButton extends GUIComponentCutout{
     	if(textureSectionWidth != 0 && textureSectionHeight != 0){
 			int textureUStart;
     		if(enabled){
-				if(mouseX >= x && mouseY >= y && mouseX < x + width && mouseY < y + height){
+				if(isMouseInBounds(mouseX, mouseY)){
 					textureUStart = textureYOffset + 2*textureSectionHeight;//Highlighted
 				}else{
 					textureUStart = textureYOffset + 1*textureSectionHeight;//Normal
@@ -103,16 +104,19 @@ public abstract class GUIComponentButton extends GUIComponentCutout{
 			}else{
 				textureUStart = textureYOffset;//Disabled
 			}
-    		//Render the left and right sides of the texture, but cut the middle so they don't squash pixels.
-    		InterfaceGUI.renderSheetTexture(x, y, width/2, height, textureXOffset, textureUStart, textureXOffset + width/2, textureUStart + textureSectionHeight, textureWidth, textureHeight);
-    		InterfaceGUI.renderSheetTexture(x + width/2, y, width/2, height, textureXOffset + textureSectionWidth - width/2, textureUStart, textureXOffset + textureSectionWidth, textureUStart + textureSectionHeight, textureWidth, textureHeight);
+    		//Left border.
+    		InterfaceGUI.renderSheetTexture(x, y, DEFAULT_BUTTON_SECTION_BORDER, height, textureXOffset, textureUStart, textureXOffset + DEFAULT_BUTTON_SECTION_BORDER, textureUStart + textureSectionHeight, textureWidth, textureHeight);
+    		
+    		//Center streched segment.
+    		InterfaceGUI.renderSheetTexture(x + DEFAULT_BUTTON_SECTION_BORDER, y, width - 2*DEFAULT_BUTTON_SECTION_BORDER, height, textureXOffset + DEFAULT_BUTTON_SECTION_BORDER, textureUStart, textureXOffset + textureSectionWidth - DEFAULT_BUTTON_SECTION_BORDER, textureUStart + textureSectionHeight, textureWidth, textureHeight);
+    		
+    		//Right border.
+    		InterfaceGUI.renderSheetTexture(x + width - DEFAULT_BUTTON_SECTION_BORDER, y, DEFAULT_BUTTON_SECTION_BORDER, height, textureXOffset + textureSectionWidth - DEFAULT_BUTTON_SECTION_BORDER, textureUStart, textureXOffset + textureSectionWidth, textureUStart + textureSectionHeight, textureWidth, textureHeight);
 		}
     }
     
     @Override
 	public void renderText(boolean renderTextLit){
-    	if(!text.isEmpty()){
-    		RenderText.draw2DText(text, null, centeredText ? x + width/2 : x, y + (height-8)/2, textColor, centeredText ? TextAlignment.CENTERED : TextAlignment.LEFT_ALIGNED, 1.0F, false, 0);
-    	}
+    	RenderText.draw2DText(text, null, centeredText ? x + width/2 : x, y + (height-8)/2, textColor, centeredText ? TextAlignment.CENTERED : TextAlignment.LEFT_ALIGNED, 1.0F, false, 0);
     }
 }

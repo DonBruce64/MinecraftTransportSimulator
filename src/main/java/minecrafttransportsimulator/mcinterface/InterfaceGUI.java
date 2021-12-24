@@ -3,12 +3,9 @@ package minecrafttransportsimulator.mcinterface;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import javax.vecmath.Matrix4f;
-
-import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.guis.components.AGUIBase;
@@ -17,7 +14,6 @@ import minecrafttransportsimulator.rendering.components.RenderableObject;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.RenderItem;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.IBakedModel;
@@ -25,12 +21,9 @@ import net.minecraft.client.renderer.block.model.ItemCameraTransforms;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.renderer.vertex.VertexFormat;
 import net.minecraft.client.renderer.vertex.VertexFormatElement;
-import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.Vec3i;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraftforge.fml.client.config.GuiUtils;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 
 /**Interface for MC GUI classes.  Allows access to various GUI-specific functions.
@@ -40,62 +33,10 @@ import net.minecraftforge.fml.common.FMLCommonHandler;
 public class InterfaceGUI{
 	
 	/**
-	 *  Draws the item's tooltip on the GUI.  This should be
-	 *  the last thing that gets rendered, as otherwise it may render
-	 *  behind other components.
-	 */
-	public static void drawItemTooltip(AGUIBase gui, int mouseX, int mouseY, ItemStack stack){
-		Minecraft mc = Minecraft.getMinecraft();
-		List<String> tooltipText = stack.getTooltip(mc.player, mc.gameSettings.advancedItemTooltips ? ITooltipFlag.TooltipFlags.ADVANCED : ITooltipFlag.TooltipFlags.NORMAL);
-        for(int i = 0; i < tooltipText.size(); ++i){
-            if(i == 0){
-                tooltipText.set(i, tooltipText.get(i));
-            }else{
-                tooltipText.set(i, TextFormatting.GRAY + tooltipText.get(i));
-            }
-        }
-		GuiUtils.drawHoveringText(stack, tooltipText, mouseX, mouseY, mc.currentScreen.width, mc.currentScreen.height, -1, mc.fontRenderer);
-	}
-	
-	/**
-	 *  Draws a tooltip into the GUI.  This is for things that are NOT items, so
-	 *  rather than passing-in item parameters you need to pass in the lines to render.
-	 *  This should be rendered at the end of the render call to prevent the odd texture
-	 *  binding of this method from conflicting from other renders.
-	 */
-	public static void drawGenericTooltip(AGUIBase gui, int mouseX, int mouseY, String tooltip){
-		Minecraft mc = Minecraft.getMinecraft();
-		GuiUtils.drawHoveringText(Arrays.asList(new String[]{tooltip}), mouseX, mouseY, mc.currentScreen.width, mc.currentScreen.height, -1, mc.fontRenderer);
-	}
-	
-	/**
-	 *  Draws the specified item on the GUI at the specified scale.  Note that MC
-	 *  renders all items from their top-left corner, so take this into account when
-	 *  choosing where to put this component in your GUI.
-	 */
-	public static void drawItem(ItemStack stack, int x, int y, float scale){
-		RenderItem itemRenderer = Minecraft.getMinecraft().getRenderItem();
-		if(scale != 1.0F){
-			GL11.glPushMatrix();
-			GL11.glTranslatef(x, y, 0);
-			GL11.glScalef(scale, scale, scale);
-			itemRenderer.renderItemAndEffectIntoGUI(stack, 0, 0);
-			if(stack.getCount() > 1){
-				itemRenderer.renderItemOverlays(Minecraft.getMinecraft().fontRenderer, stack, 0, 0);
-			}
-			GL11.glPopMatrix();
-		}else{
-			itemRenderer.renderItemAndEffectIntoGUI(stack, x, y);
-			if(stack.getCount() > 1){
-				itemRenderer.renderItemOverlays(Minecraft.getMinecraft().fontRenderer, stack, x, y);
-			}
-		}
-	}
-	
-	/**
 	 *  Returns a {@link RenderableObject} of the passed-in item model for item rendering.
 	 *  Note that this does not include the count of the items in the stack: this must be
-	 *  rendered on its own.
+	 *  rendered on its own.  Also note the item is in block-coords.  This means that normally
+	 *  the model will be from 0->1 in the axial directions.
 	 */
 	public static RenderableObject getItemModel(ItemStack stack){
 		//Get normal model.

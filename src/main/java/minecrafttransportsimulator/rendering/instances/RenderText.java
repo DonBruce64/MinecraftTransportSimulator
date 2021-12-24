@@ -34,11 +34,11 @@ public class RenderText{
 	 *  that the top-left of the string like normal.  The same goes for right-justify.  If wrapWidth is anything else but 0, 
 	 *  then the wordWrap method will be called to render multi-line text.
 	 */
-	public static void draw2DText(String text, String customFontName, int x, int y, ColorRGB color, TextAlignment alignment, float scale, boolean autoScale, int wrapWidth){
+	public static void draw2DText(String text, String fontName, int x, int y, ColorRGB color, TextAlignment alignment, float scale, boolean autoScale, int wrapWidth){
 		if(!text.isEmpty()){
 			mutablePosition.set(x, y, 0);
 			//Need to invert 2D GUI text, as it's Y coord origin is top-left VS UV-mapped bottom-left.
-			getFontData(customFontName).renderText(text, mutablePosition, FLIPPED_TEXT_FOR_GUIS, alignment, scale, autoScale, wrapWidth, 1.0F, true, color, true);
+			getFontData(fontName).renderText(text, mutablePosition, FLIPPED_TEXT_FOR_GUIS, alignment, scale, autoScale, wrapWidth, 1.0F, true, color, true);
 		}
 	}
 	
@@ -71,6 +71,40 @@ public class RenderText{
 				mutablePosition.y = -mutablePosition.y;
 			}
 			fontData.renderText(text, mutablePosition, definition.rot, TextAlignment.values()[definition.renderPosition], scale, definition.autoScale, definition.wrapWidth, preScaledFactor, pixelCoords, color, definition.lightsUp && entity.renderTextLit());
+		}
+	}
+	
+	/**
+	 *  Returns the width of the passed-in text.  Units are in pixels,
+	 *  though these are standardized for the default font.  Fonts with
+	 *  higher resolutions may result in non-whole-pixel widths.
+	 *  NOTE: this applies an automatic 1.4 scaling to the default font
+	 *  as this is done internally by the renderer.  This won't matter for
+	 *  most things, but keep it in mind if sizes don't seem to match.
+	 */
+	public static float getStringWidth(String text, String fontName){
+		FontData font = getFontData(fontName);
+		if(font.isDefault){
+			return 1.4F*font.getStringWidth(text);
+		}else{
+			return font.getStringWidth(text);
+		}
+	}
+	
+	/**
+	 *  Returns the height of the number of lines of text.  Units are in pixels,
+	 *  though these are standardized for the default font.  Fonts with
+	 *  higher resolutions may result in non-whole-pixel widths.
+	 *  NOTE: this applies an automatic 1.4 scaling to the default font
+	 *  as this is done internally by the renderer.  This won't matter for
+	 *  most things, but keep it in mind if sizes don't seem to match.
+	 */
+	public static float getHeight(int numberLines, String fontName){
+		float height = numberLines*(FontData.DEFAULT_PIXELS_PER_CHAR + FontData.CHAR_SPACING);
+		if(getFontData(fontName).isDefault){
+			return 1.4F*height;
+		}else{
+			return height;
 		}
 	}
 	
@@ -290,22 +324,9 @@ public class RenderText{
 				DEFAULT_ADJ.set(0, 0, 0);
 			}
 			
-			//Get the text without formatting chars, and the width of said text.
-			float stringWidth = 0;
-			int totalChars = 0;
-			boolean skipNext = false;
-			for(char textChar : text.toCharArray()){
-				//Skip formatting chars and their next char.
-				if(textChar == FORMATTING_CHAR){
-					skipNext = true;
-				}else if(skipNext){
-					skipNext = false;
-				}else{
-					stringWidth += charWidths[textChar];
-					++totalChars;
-				}
-			}
-			stringWidth += totalChars*CHAR_SPACING;
+			//Get the text width.
+			float stringWidth = getStringWidth(text);
+			
 			
 			//Check for auto-scaling.
 			if(autoScale && wrapWidth > 0){
@@ -640,6 +661,24 @@ public class RenderText{
 				map1.put(color, object);
 			}
 			return object;
+		}
+		
+		private float getStringWidth(String text){
+			float stringWidth = 0;
+			int totalChars = 0;
+			boolean skipNext = false;
+			for(char textChar : text.toCharArray()){
+				//Skip formatting chars and their next char.
+				if(textChar == FORMATTING_CHAR){
+					skipNext = true;
+				}else if(skipNext){
+					skipNext = false;
+				}else{
+					stringWidth += charWidths[textChar];
+					++totalChars;
+				}
+			}
+			return stringWidth + totalChars*CHAR_SPACING;
 		}
 		
 		private static class FontRenderState{

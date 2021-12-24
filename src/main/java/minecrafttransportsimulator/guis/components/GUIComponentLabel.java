@@ -35,7 +35,7 @@ public class GUIComponentLabel extends AGUIComponent{
 	}
 	
 	public GUIComponentLabel(int x, int y, ColorRGB color, String text, TextAlignment alignment, float scale, int wrapWidth, String fontName, boolean autoScale){
-		super(x, y);
+		super(x, y, 0, 0);
 		this.color = color;
 		this.text = text;
 		this.fontName = fontName;

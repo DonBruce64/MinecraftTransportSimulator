@@ -20,7 +20,7 @@ public class GUIComponentInstrument extends AGUIComponent{
 	public final AEntityD_Interactable<?> entity;
 	    	
 	public GUIComponentInstrument(int guiLeft, int guiTop, int instrumentPackIndex, AEntityD_Interactable<?> entity){
-		super(guiLeft, guiTop);
+		super(guiLeft, guiTop, 0, 0);
 		this.packInstrument = entity.definition.instruments.get(instrumentPackIndex);
 		this.instrument = entity.instruments.get(instrumentPackIndex);
 		this.offsetX = packInstrument.hudX;

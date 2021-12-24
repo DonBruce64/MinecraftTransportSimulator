@@ -14,9 +14,10 @@ import minecrafttransportsimulator.mcinterface.InterfaceGUI;
  * @author don_bruce
  */
 public abstract class AGUIBase{
-	private static final int STANDARD_GUI_WIDTH = 256;
-	private static final int STANDARD_GUI_HEIGHT = 192;
-	private static final String STANDARD_TEXTURE_NAME = "mts:textures/guis/standard.png";
+	public static final int STANDARD_GUI_WIDTH = 256;
+	public static final int STANDARD_GUI_HEIGHT = 192;
+	//TODO make this private when we handle rendering order ourself.
+	public static final String STANDARD_TEXTURE_NAME = "mts:textures/guis/standard.png";
 	protected static final int STANDARD_COLOR_WIDTH = 20;
 	protected static final int STANDARD_COLOR_HEIGHT = 20;
 	protected static final int STANDARD_COLOR_WIDTH_OFFSET = 216;

@@ -164,10 +164,11 @@ public final class RenderVehicle extends ARenderEntity<EntityVehicleF_Physics>{
 						RenderText.draw2DText(partToRender.getItemName(), null, 0, 0, ColorRGB.BLACK, TextAlignment.CENTERED, 1/64F, false, 0);
 						
 						//Do translations to get to the center of where the item will render and render it.
-						//Items also need to be offset by -150 units due to how MC does rendering.
 						//Also need to translate to the center as items are rendered from the top-left corner.
-						GL11.glTranslated(-0.5D, 0.25F, -150D/16D);
-						InterfaceGUI.drawItem(partToRender.getNewStack(), 0, 0, 1F/16F);
+						GL11.glTranslated(-0.5D, 1.0F, 0D);
+						GL11.glScalef(1.0F, -1.0F, 1.0F);
+						//Flip the model across the Y-axis as Items are inverted.
+						InterfaceGUI.getItemModel(partToRender.getNewStack()).render();
 					}
 					GL11.glPopMatrix();
 				}

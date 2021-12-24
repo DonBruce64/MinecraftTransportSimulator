@@ -9,8 +9,11 @@ import minecrafttransportsimulator.mcinterface.InterfaceGUI;
 import minecrafttransportsimulator.rendering.components.RenderableObject;
 import minecrafttransportsimulator.rendering.instances.RenderText;
 import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.text.TextFormatting;
 
 /**Custom item render class.  This class is designed to render a {@link ItemStack} 
  * or list of stacks into the GUI.  This allows us to use a simple string 
@@ -34,7 +37,7 @@ public class GUIComponentItem extends AGUIComponent{
 	
 	/**Default item constructor.**/
 	public GUIComponentItem(int x, int y, float scale){
-		super(x, y);
+		super(x, y, (int) (16*scale), (int) (16*scale));
 		this.scale = scale;
 	}
 	
@@ -76,13 +79,14 @@ public class GUIComponentItem extends AGUIComponent{
     	if(stackModel != null){
     		GL11.glPushMatrix();
 			GL11.glTranslatef(x, y, 0);
+			
+			//Required to get 3D models 100% in front of the background.
+	        GlStateManager.translate(0, 0, 100.0F + 50);
+			
 			GL11.glScalef(scale, scale, scale);
 			
 	        //This makes sure normal-lighting doesn't get fouled by scaling operations.
-	         GlStateManager.enableRescaleNormal();
-
-	         //Required to get 3D models 100% in front of the background.
-	        GlStateManager.translate(0, 0, 100.0F + 50);
+	         GlStateManager.enableRescaleNormal(); 
 	        
 	        //Items are normally rendered with origin at bottom-right like normal models.
 	        //This moves them to top-left orientation.
@@ -111,18 +115,26 @@ public class GUIComponentItem extends AGUIComponent{
     
     @Override
     public void renderText(boolean renderTextLit){
+    	//TODO make this dynamic or something?
     	GL11.glTranslated(0, 0, 250);
     	RenderText.draw2DText(text, null, x + (int) (scale*16), y + (int) (scale*8), ColorRGB.WHITE, TextAlignment.RIGHT_ALIGNED, scale, false, 0);
     	GL11.glTranslated(0, 0, -250);
     }
     
     @Override
-	public void renderTooltip(AGUIBase gui, int mouseX, int mouseY){
+	public List<String> getTooltipText(){
     	if(stackToRender != null && !stackToRender.isEmpty()){
-    		float itemTooltipBounds = 16*scale;
-    		if(mouseX > x && mouseX < x + itemTooltipBounds && mouseY > y && mouseY < y + itemTooltipBounds){
-    			InterfaceGUI.drawItemTooltip(gui, mouseX, mouseY, stackToRender);
-    		}
+    		Minecraft mc = Minecraft.getMinecraft();
+			List<String> tooltipText = stackToRender.getTooltip(mc.player, mc.gameSettings.advancedItemTooltips ? ITooltipFlag.TooltipFlags.ADVANCED : ITooltipFlag.TooltipFlags.NORMAL);
+	        for(int i = 0; i < tooltipText.size(); ++i){
+	            if(i != 0){
+	            	//Add grey formatting text to non-first line tooltips.
+	            	tooltipText.set(i, TextFormatting.GRAY + tooltipText.get(i));
+	            }
+	        }
+	        return tooltipText;
+    	}else{
+    		return null;
     	}
     }
 }

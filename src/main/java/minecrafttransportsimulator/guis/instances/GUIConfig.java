@@ -506,13 +506,11 @@ public class GUIConfig extends AGUIBase{
 							}
 							
 							@Override
-							public void renderTooltip(AGUIBase gui, int mouseX, int mouseY){
-								if(visible){
-									if(mouseX >= x && mouseY >= y && mouseX < x + width && mouseY < y + height){
-										InterfaceGUI.drawGenericTooltip(gui, mouseX, mouseY, configEntry.comment);
-									}
-								}
-							}
+							public List<String> getTooltipText(){
+								List<String> tooltipText = new ArrayList<String>();
+								tooltipText.add(configEntry.comment);
+						        return tooltipText;
+						    }
 						};
 						addComponent(button);
 						configButtons.put(button, (JSONConfigEntry<Boolean>) configEntry);

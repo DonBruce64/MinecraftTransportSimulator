@@ -10,10 +10,6 @@ import minecrafttransportsimulator.mcinterface.InterfaceGUI;
  */
 public class GUIComponentCutout extends AGUIComponent{
 	
-	//Rendering variables.
-	public final int width;
-	public final int height;
-	
 	//Texture variables.
 	protected final int textureXOffset;
 	protected final int textureYOffset;
@@ -27,9 +23,7 @@ public class GUIComponentCutout extends AGUIComponent{
 	
 	/**Expanded constructor for 1:x rendering.  This allows the rendered texture component to be a different size than the texture.**/
 	public GUIComponentCutout(int x, int y, int width, int height, int textureXOffset, int textureYOffset, int textureSectionWidth, int textureSectionHeight){
-		super(x, y);
-		this.width = width;
-		this.height = height;
+		super(x, y, width, height);
 		this.textureXOffset = textureXOffset;
 		this.textureYOffset = textureYOffset;
 		this.textureSectionWidth = textureSectionWidth;

@@ -38,7 +38,7 @@ public class GUIComponent3DModel extends AGUIComponent{
 	public String textureLocation;
 	    	
 	public GUIComponent3DModel(int x, int y, float scaleFactor, boolean isometric, boolean spin, boolean staticScaling){
-		super(x, y);
+		super(x, y, 0, 0);
 		this.scaleFactor = scaleFactor;
 		this.isometric = isometric;
 		this.spin = spin;

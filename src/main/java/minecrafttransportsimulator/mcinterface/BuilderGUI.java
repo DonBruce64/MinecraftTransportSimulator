@@ -163,7 +163,6 @@ public class BuilderGUI extends GuiScreen{
 		//These will cause a texture re-bind, so they need to go after the components.
 		//However, since they muck up the lighting, they MUST go last no matter what.
 		RenderHelper.enableGUIStandardItemLighting();
-		mc.entityRenderer.disableLightmap();
 		for(GUIComponentItem item : gui.items){
 			item.render(mouseX, mouseY, textureWidth, textureHeight, false, partialTicks);
 		}
@@ -175,13 +174,13 @@ public class BuilderGUI extends GuiScreen{
 		
 		//Render any tooltips.  These are the final thing to render as they need to render over everything else.
 		for(AGUIComponent component : gui.generalComponents){
-			if(component.visible){
-				component.renderTooltip(gui, mouseX, mouseY);
+			if(component.visible && component.isMouseInBounds(mouseX, mouseY)){
+				component.renderTooltip(mouseX, mouseY, mc.currentScreen.width, mc.currentScreen.height);
 			}
 		}
 		for(GUIComponentItem item : gui.items){
-			if(item.visible){
-				item.renderTooltip(gui, mouseX, mouseY);
+			if(item.visible && item.isMouseInBounds(mouseX, mouseY)){
+				item.renderTooltip(mouseX, mouseY, mc.currentScreen.width, mc.currentScreen.height);
 			}
 		}
 	}
