@@ -588,7 +588,7 @@ public final class LegacyCompatSystem{
 				}
 			}
 			if(definition.engine.revlimitBounce == 0){
-				definition.engine.revlimitBounce = 8;
+				definition.engine.revlimitBounce = definition.engine.revResistance;
 			}
 			if(definition.engine.startRPM == 0){
 				definition.engine.startRPM = (int) (definition.engine.idleRPM*1.2);
@@ -603,7 +603,7 @@ public final class LegacyCompatSystem{
 			if(definition.engine.engineWinddownRate == 0){
 				definition.engine.engineWinddownRate = 10;
 			}
-			if(definition.engine.engineWearFactor <= 0.25){
+			if(definition.engine.engineWearFactor == 0){
 				definition.engine.engineWearFactor = 1;
 			}
 			if(definition.engine.coolingCoefficient == 0){
