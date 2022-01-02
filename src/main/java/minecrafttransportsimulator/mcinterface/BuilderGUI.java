@@ -67,10 +67,6 @@ public class BuilderGUI extends GuiScreen{
 		//First set the states for things in this GUI.
 		gui.setStates();
 		
-		//Set color to default in case some other rendering was being done prior and didn't clean up.
-		//TODO remove when we go to generic rendering.
-		GL11.glColor3f(1, 1, 1);
-		
 		//Set Y-axis to inverted to have correct orientation.
 		GL11.glScalef(1.0F, -1.0F, 1.0F);
 		

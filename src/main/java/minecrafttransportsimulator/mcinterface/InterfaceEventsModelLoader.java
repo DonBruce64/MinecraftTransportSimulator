@@ -23,6 +23,7 @@ import minecrafttransportsimulator.packloading.PackResourceLoader;
 import minecrafttransportsimulator.packloading.PackResourceLoader.ResourceType;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.culling.ICamera;
 import net.minecraft.client.renderer.entity.Render;
@@ -84,6 +85,9 @@ public class InterfaceEventsModelLoader{
 						if(allEntities != null){
 					        //Use smooth shading for model rendering.
 							GL11.glShadeModel(GL11.GL_SMOOTH);
+							//Enable normal re-sccaling for model rendering.
+							//This prevents bad lighting.
+							GlStateManager.enableRescaleNormal();
 							
 							//Need to put all entities into a collection in case we spawn them as particles during this rendering operation.
 							entities.clear();

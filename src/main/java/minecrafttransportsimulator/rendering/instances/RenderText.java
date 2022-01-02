@@ -270,7 +270,7 @@ public class RenderText{
 			}
 			//Pre-calculate rotation of normals, as these won't change.
 			boolean doRotation = rotation != null && !rotation.isZero();
-			float[] normals = new float[]{0.0F, 0.0F, scale*preScaledFactor};
+			float[] normals = new float[]{0.0F, 0.0F, 1.0F};
 			if(doRotation){
 				Point3d rotatedNormals = new Point3d(normals[0], normals[1], normals[2]).rotateFine(rotation);
 				normals[0] = (float) rotatedNormals.x;
@@ -345,10 +345,6 @@ public class RenderText{
 			
 			//Add the adjustment and multiply position by prev scale.
 			//This moves the position to the appropriate one for the scale the entire text segment is rendered at.
-			//GUI coordinates use top-left as origin rather than bottom-left, need to account for this.
-			if(pixelCoords){
-				//MUTABLE_POSITION.y = -MUTABLE_POSITION.y;
-			}
 			MUTABLE_POSITION.add(DEFAULT_ADJ);
 			MUTABLE_POSITION.multiply(preScaledFactor);
 			
