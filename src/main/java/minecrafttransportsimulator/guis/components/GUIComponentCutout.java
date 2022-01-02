@@ -37,7 +37,7 @@ public class GUIComponentCutout extends AGUIComponent{
 	
 	@Override
     public void render(AGUIBase gui, int mouseX, int mouseY, boolean blendingEnabled, float partialTicks){
-		if(renderable == null){
+		if(renderable == null || !renderable.texture.equals(gui.getTexture())){
 			renderable = new RenderableObject("gui_cutout", gui.getTexture(), ColorRGB.WHITE, FloatBuffer.allocate(8*6), false);
 		}
 		if(renderable.vertices.position() == 0){
