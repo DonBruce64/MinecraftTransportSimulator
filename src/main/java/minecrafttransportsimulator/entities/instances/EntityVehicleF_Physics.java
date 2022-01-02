@@ -659,19 +659,19 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 			//Normal aircraft.  Do autopilot operations if required.
 			//If we are not flying at a steady elevation, angle the elevator to compensate
 			if(-motion.y*100 > elevatorTrim + 1 && elevatorTrim < MAX_ELEVATOR_TRIM){
-				setVariable(ELEVATOR_TRIM_VARIABLE, elevatorTrim + 1);
-				InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_TRIM_VARIABLE, 1));
+				setVariable(ELEVATOR_TRIM_VARIABLE, elevatorTrim + 0.1);
+				InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_TRIM_VARIABLE, 0.1));
 			}else if(-motion.y*100 < elevatorTrim - 1 && elevatorTrim > -MAX_ELEVATOR_TRIM){
-				setVariable(ELEVATOR_TRIM_VARIABLE, elevatorTrim - 1);
-				InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_TRIM_VARIABLE, -1));
+				setVariable(ELEVATOR_TRIM_VARIABLE, elevatorTrim - 0.1);
+				InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_TRIM_VARIABLE, -0.1));
 			}
 			//Keep the roll angle at 0.
-			if(-angles.z > aileronTrim + 1 && aileronTrim < MAX_AILERON_TRIM){
-				setVariable(AILERON_TRIM_VARIABLE, aileronTrim + 1);
-				InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_TRIM_VARIABLE, 1));
-			}else if(-angles.z < aileronTrim - 1 && aileronTrim > -MAX_AILERON_TRIM){
-				setVariable(AILERON_TRIM_VARIABLE, aileronTrim - 1);
-				InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_TRIM_VARIABLE, -1));
+			if(-angles.z > aileronTrim + 0.1 && aileronTrim < MAX_AILERON_TRIM){
+				setVariable(AILERON_TRIM_VARIABLE, aileronTrim + 0.1);
+				InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_TRIM_VARIABLE, 0.1));
+			}else if(-angles.z < aileronTrim - 0.1 && aileronTrim > -MAX_AILERON_TRIM){
+				setVariable(AILERON_TRIM_VARIABLE, aileronTrim - 0.1);
+				InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_TRIM_VARIABLE, -0.1));
 			}
 		}
 		

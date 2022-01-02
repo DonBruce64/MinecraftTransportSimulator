@@ -191,9 +191,9 @@ public final class ControlSystem{
 	
 	private static void controlControlTrim(EntityVehicleF_Physics vehicle, ControlsJoystick increment, ControlsJoystick decrement, double bounds, String variable){
 		if(increment.isPressed()){
-			InterfacePacket.sendToServer(new PacketEntityVariableIncrement(vehicle, variable, 1, -bounds, bounds));
+			InterfacePacket.sendToServer(new PacketEntityVariableIncrement(vehicle, variable, 0.1, -bounds, bounds));
 		}else if(decrement.isPressed()){
-			InterfacePacket.sendToServer(new PacketEntityVariableIncrement(vehicle, variable, -1, -bounds, bounds));
+			InterfacePacket.sendToServer(new PacketEntityVariableIncrement(vehicle, variable, -0.1, -bounds, bounds));
 		}
 	}
 	
