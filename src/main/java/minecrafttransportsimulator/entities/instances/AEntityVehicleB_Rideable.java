@@ -145,41 +145,45 @@ abstract class AEntityVehicleB_Rideable extends AEntityE_Multipart<JSONVehicle>{
 			}
 		}
 		
-		//Get rid of any potion effects that were caused by the seat
+		//Get the part this rider is riding on.  This might be null if the part was removed (say due to a pack change).
 		JSONPartDefinition packPart = getPackDefForLocation(riderLocation);
-		if(packPart.seatEffects != null) {
-			for(JSONPotionEffect effect: packPart.seatEffects){
-				rider.removePotionEffect(effect);
-			}
-		}
 		
-		//Set the rider dismount position.
-		//If we have a dismount position in the JSON.  Use it.
-		//Otherwise, put us to the right or left of the seat depending on x-offset.
-		//Make sure to take into the movement of the seat we were riding if it had moved.
-		//This ensures the dismount moves with the seat.
-		Point3d dismountPosition;
-		APart partRiding = getPartAtLocation(riderLocation);
-		if(packPart.dismountPos != null){
-			if(partRiding != null){
-				dismountPosition = packPart.dismountPos.copy().add(partRiding.localOffset).subtract(partRiding.placementOffset).rotateFine(angles).add(position);
-			}else{
-				dismountPosition = packPart.dismountPos.copy().rotateFine(angles).add(position);
+		if(packPart != null){
+			//Get rid of any potion effects that were caused by the seat
+			if(packPart.seatEffects != null) {
+				for(JSONPotionEffect effect: packPart.seatEffects){
+					rider.removePotionEffect(effect);
+				}
 			}
-		}else{
-			if(partRiding != null){
-				Point3d partDelta = partRiding.localOffset.copy().subtract(partRiding.placementOffset);
-				if(riderLocation.x < 0){
-					partDelta.x = -partDelta.x;
-					dismountPosition = riderLocation.copy().add(-2D, 0D, 0D).add(partDelta).rotateFine(angles).add(position);
+			
+			//Set the rider dismount position.
+			//If we have a dismount position in the JSON.  Use it.
+			//Otherwise, put us to the right or left of the seat depending on x-offset.
+			//Make sure to take into the movement of the seat we were riding if it had moved.
+			//This ensures the dismount moves with the seat.
+			Point3d dismountPosition;
+			APart partRiding = getPartAtLocation(riderLocation);
+			if(packPart.dismountPos != null){
+				if(partRiding != null){
+					dismountPosition = packPart.dismountPos.copy().add(partRiding.localOffset).subtract(partRiding.placementOffset).rotateFine(angles).add(position);
 				}else{
-					dismountPosition = riderLocation.copy().add(2D, 0D, 0D).add(partDelta).rotateFine(angles).add(position);
+					dismountPosition = packPart.dismountPos.copy().rotateFine(angles).add(position);
 				}
 			}else{
-				dismountPosition = riderLocation.copy().add(riderLocation.x > 0 ? 2D : -2D, 0D, 0D).rotateFine(angles).add(position);
+				if(partRiding != null){
+					Point3d partDelta = partRiding.localOffset.copy().subtract(partRiding.placementOffset);
+					if(riderLocation.x < 0){
+						partDelta.x = -partDelta.x;
+						dismountPosition = riderLocation.copy().add(-2D, 0D, 0D).add(partDelta).rotateFine(angles).add(position);
+					}else{
+						dismountPosition = riderLocation.copy().add(2D, 0D, 0D).add(partDelta).rotateFine(angles).add(position);
+					}
+				}else{
+					dismountPosition = riderLocation.copy().add(riderLocation.x > 0 ? 2D : -2D, 0D, 0D).rotateFine(angles).add(position);
+				}
 			}
+			rider.setPosition(dismountPosition);
 		}
-		rider.setPosition(dismountPosition);
 		
 		//If we are on the client, disable mouse-yoke blocking.
 		if(world.isClient() && InterfaceClient.getClientPlayer().equals(rider)){
