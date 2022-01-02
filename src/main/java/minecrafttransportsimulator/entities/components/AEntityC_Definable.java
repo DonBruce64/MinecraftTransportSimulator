@@ -289,6 +289,20 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 				}
 			}
 		}
+		
+		//Store text data if we have it, then reset it.
+		List<String> oldTextValues = new ArrayList<String>();
+		oldTextValues.addAll(text.values());
+		text.clear();
+		if(definition.rendering != null && definition.rendering.textObjects != null){
+			for(int i=0; i<definition.rendering.textObjects.size(); ++i){
+				if(oldTextValues.size() < i){
+					text.put(definition.rendering.textObjects.get(i), oldTextValues.get(i));
+				}else{
+					text.put(definition.rendering.textObjects.get(i), definition.rendering.textObjects.get(i).defaultText);
+				}
+			}
+		}
 	}
 	
 	@Override
