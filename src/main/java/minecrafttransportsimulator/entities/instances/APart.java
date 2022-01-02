@@ -426,13 +426,14 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 			correctedPartDef.pos.add(placementOffset);
 			
 			//If the parent part is mirrored, we need to invert our X-position to match.
-			if(placementOffset.x < 0 ^ disableMirroring){
+			if(mirrored){
 				correctedPartDef.pos.x -= 2*subPartDef.pos.x;
 			}
 			
-			//Use the parent's turnsWithSteer and isSpare variables, as that's based on the vehicle, not the part.
+			//Use the parent's turnsWithSteer, mirroring, and isSpare variables, as that's based on the vehicle, not the part.
 			correctedPartDef.turnsWithSteer = placementDefinition.turnsWithSteer;
-			correctedPartDef.isSpare= placementDefinition.isSpare;
+			correctedPartDef.inverseMirroring = placementDefinition.inverseMirroring;
+			correctedPartDef.isSpare = placementDefinition.isSpare;
 			
 			//Save the corrected pack into the mappings for later use.
 	        subpackMappings.put(subPartDef, correctedPartDef);
