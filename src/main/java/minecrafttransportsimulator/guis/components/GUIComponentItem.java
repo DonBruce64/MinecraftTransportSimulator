@@ -6,11 +6,9 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.mcinterface.InterfaceGUI;
-import minecrafttransportsimulator.rendering.components.RenderableObject;
 import minecrafttransportsimulator.rendering.instances.RenderText;
 import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.text.TextFormatting;
@@ -33,92 +31,74 @@ public class GUIComponentItem extends AGUIComponent{
 	public List<ItemStack> stacks;
 	private ItemStack stackToRender;
 	private ItemStack lastStackRendered;
-	private RenderableObject stackModel;
 	
 	/**Default item constructor.**/
 	public GUIComponentItem(int x, int y, float scale){
 		super(x, y, (int) (16*scale), (int) (16*scale));
 		this.scale = scale;
+		//Items are normally rendered with origin at bottom-right like normal models.
+        //The 16 y-offset moves them to top-left orientation.
+		this.textPosition.set(position.x + scale*16, position.y - 16F*scale + scale*8, textPosition.z);
 	}
 	
 	/**Constructor for an item linked with a button.  Button is assumed to be 18x18px so item will be offset 1px to center.**/
 	public GUIComponentItem(GUIComponentButton linkedButton){
-		this(linkedButton.x + 1, linkedButton.y + 1, 1.0F);
+		this(linkedButton.constructedX + 1, linkedButton.constructedY + 1, 1.0F);
+	}
+	
+	@Override
+	public int getZOffset(){
+		return MODEL_DEFAULT_ZOFFSET;
 	}
 
     @Override
-	public void render(int mouseX, int mouseY, int textureWidth, int textureHeight, boolean blendingEnabled, float partialTicks){
-    	
-    	if(stack != null){
-    		//InterfaceGUI.drawItem(stack, x, y, scale);
-    	}else if(stacks != null && !stacks.isEmpty()){
-    		//InterfaceGUI.drawItem(stacks.get((int) (System.currentTimeMillis()%(stacks.size()*500)/500)), x, y, scale);
-    	}
-    	if(stack != null){
-    		stackToRender = stack;
-    	}else if(stacks != null && !stacks.isEmpty()){
-    		stackToRender = stacks.get((int) (System.currentTimeMillis()%(stacks.size()*500)/500));
-    	}else{
-    		stackToRender = null;
-    	}
-    	
-    	if(stackToRender != null && !stackToRender.isEmpty()){
-    		if(!stackToRender.equals(lastStackRendered)){
-	    		stackModel = InterfaceGUI.getItemModel(stackToRender);
-	    		lastStackRendered = stackToRender;
-	    		if(stackToRender.getCount() > 1){
-	    			text = ((char) 167) + "l" + String.valueOf(stackToRender.getCount());
+	public void render(AGUIBase gui, int mouseX, int mouseY, boolean blendingEnabled, float partialTicks){
+    	if(!blendingEnabled){
+	    	if(stack != null){
+	    		stackToRender = stack;
+	    	}else if(stacks != null && !stacks.isEmpty()){
+	    		stackToRender = stacks.get((int) (System.currentTimeMillis()%(stacks.size()*500)/500));
+	    	}else{
+	    		stackToRender = null;
+	    	}
+	    	
+	    	if(stackToRender != null && !stackToRender.isEmpty()){
+	    		if(!stackToRender.equals(lastStackRendered)){
+		    		renderable = InterfaceGUI.getItemModel(stackToRender);
+		    		lastStackRendered = stackToRender;
+		    		if(stackToRender.getCount() > 1){
+		    			text = ((char) 167) + "l" + String.valueOf(stackToRender.getCount());
+		    		}
 	    		}
-    		}
-    	}else{
-    		stackModel = null;
-    		lastStackRendered = null;
-    		text = null;
-    	}
-    	
-    	if(stackModel != null){
-    		GL11.glPushMatrix();
-			GL11.glTranslatef(x, y, 0);
-			
-			//Required to get 3D models 100% in front of the background.
-	        GlStateManager.translate(0, 0, 100.0F + 50);
-			
-			GL11.glScalef(scale, scale, scale);
-			
-	        //This makes sure normal-lighting doesn't get fouled by scaling operations.
-	         GlStateManager.enableRescaleNormal(); 
-	        
-	        //Items are normally rendered with origin at bottom-right like normal models.
-	        //This moves them to top-left orientation.
-	        GlStateManager.translate(0, 16.0F, 0.0F);
-	        
-	        //Flip the model across the Y-axis as GUIs are inverted.
-	        GlStateManager.scale(1.0F, -1.0F, 1.0F);
-	        
-	        //Scale up model, as it's normally 1 unit -> 1 block, not 1px, and we want 16px default.
-	        GlStateManager.scale(16.0F, 16.0F, 16.0F);
-	        		
-    		//Need to enable lighting for proper shading on block-items.
-    		GlStateManager.enableLighting();
-    		
-    		//Renders.
-        	stackModel.render();
-	        
-	        
-	        GlStateManager.disableRescaleNormal();
-	        GlStateManager.disableLighting();
-			
-			
-			GL11.glPopMatrix();
+	    	}else{
+	    		renderable = null;
+	    		lastStackRendered = null;
+	    		text = null;
+	    	}
+	    	
+	    	if(renderable != null){
+	    		GL11.glPushMatrix();
+	    		
+	    		//Translate to position.
+	    		//Items are normally rendered with origin at bottom-right like normal models.
+	            //The 16 y-offset moves them to top-left orientation.
+				GL11.glTranslated(position.x, position.y - 16F*scale, position.z);
+				
+				//Apply scale, but also scale up the model by 16x.
+				//It's normally 1 unit -> 1 block, not 1px, and we want 16px default.
+				GL11.glScalef(scale*16, scale*16, scale*16);
+		        		
+	    		//Render.
+				renderable.render();
+				
+				GL11.glPopMatrix();
+	    	}
     	}
     }
     
     @Override
     public void renderText(boolean renderTextLit){
-    	//TODO make this dynamic or something?
-    	GL11.glTranslated(0, 0, 250);
-    	RenderText.draw2DText(text, null, x + (int) (scale*16), y + (int) (scale*8), ColorRGB.WHITE, TextAlignment.RIGHT_ALIGNED, scale, false, 0);
-    	GL11.glTranslated(0, 0, -250);
+    	RenderText.drawText(text, null, textPosition, null, ColorRGB.WHITE, TextAlignment.RIGHT_ALIGNED, scale, false, 0, 1.0F, true);
     }
     
     @Override

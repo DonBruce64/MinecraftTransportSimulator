@@ -113,7 +113,8 @@ public class GUIPartBench extends AGUIBase{
 	}
 
 	@Override
-	public void setupComponents(int guiLeft, int guiTop){	
+	public void setupComponents(int guiLeft, int guiTop){
+		super.setupComponents(guiLeft, guiTop);
 		//Create pack navigation section.
 		addComponent(prevPackButton = new GUIComponentButton(guiLeft + 17, guiTop + 11, 20, 20, 40, 196, 20, 20){
 			@Override
@@ -131,26 +132,26 @@ public class GUIPartBench extends AGUIBase{
 				updateNames();
 			}
 		});
-		int centerBetweenButtons = prevPackButton.x + prevPackButton.width + (nextPackButton.x - (prevPackButton.x + prevPackButton.width))/2;
+		int centerBetweenButtons = prevPackButton.constructedX + prevPackButton.width + (nextPackButton.constructedX - (prevPackButton.constructedX + prevPackButton.width))/2;
 		addComponent(packName = new GUIComponentLabel(centerBetweenButtons, guiTop + 16, ColorRGB.WHITE, "", TextAlignment.CENTERED, 1.0F));
 		
 		
 		//Create part navigation section.
-		addComponent(prevPartButton = new GUIComponentButton(prevPackButton.x, prevPackButton.y + prevPackButton.height, 20, 20, 40, 196, 20, 20){
+		addComponent(prevPartButton = new GUIComponentButton(prevPackButton.constructedX, prevPackButton.constructedY + prevPackButton.height, 20, 20, 40, 196, 20, 20){
 			@Override
 			public void onClicked(boolean leftSide){
 				currentItem = prevItem;
 				updateNames();
 			}
 		});
-		addComponent(nextPartButton = new GUIComponentButton(nextPackButton.x, nextPackButton.y + nextPackButton.height, 20, 20, 60, 196, 20, 20){
+		addComponent(nextPartButton = new GUIComponentButton(nextPackButton.constructedX, nextPackButton.constructedY + nextPackButton.height, 20, 20, 60, 196, 20, 20){
 			@Override
 			public void onClicked(boolean leftSide){
 				currentItem = nextItem;
 				updateNames();
 			}
 		});
-		addComponent(partName = new GUIComponentLabel(packName.x, packName.y + prevPackButton.height, ColorRGB.WHITE, "", TextAlignment.CENTERED, 0.75F));
+		addComponent(partName = new GUIComponentLabel(packName.constructedX, packName.constructedY + prevPackButton.height, ColorRGB.WHITE, "", TextAlignment.CENTERED, 0.75F));
 		addComponent(partInfo = new GUIComponentLabel(guiLeft + 17, guiTop + 60, ColorRGB.WHITE, "", TextAlignment.LEFT_ALIGNED, 0.75F, 150));
 		addComponent(vehicleInfo = new GUIComponentLabel(guiLeft + 17, guiTop + 60, ColorRGB.WHITE, "", TextAlignment.LEFT_ALIGNED, 1.0F, 150));
 		
@@ -170,7 +171,7 @@ public class GUIPartBench extends AGUIBase{
 				updateNames();
 			}
 		});
-		addComponent(new GUIComponentLabel(prevColorButton.x + prevColorButton.width + (nextColorButton.x - (prevColorButton.x + prevColorButton.width))/2, guiTop + 136, ColorRGB.WHITE, InterfaceCore.translate("gui.vehicle_bench.color"), TextAlignment.CENTERED, 1.0F).setButton(nextColorButton));
+		addComponent(new GUIComponentLabel(prevColorButton.constructedX + prevColorButton.width + (nextColorButton.constructedX - (prevColorButton.constructedX + prevColorButton.width))/2, guiTop + 136, ColorRGB.WHITE, InterfaceCore.translate("gui.vehicle_bench.color"), TextAlignment.CENTERED, 1.0F).setButton(nextColorButton));
 		
 		
 		//Create the crafting item slots.  14 16X16 slots (7X2) need to be made here.
@@ -230,7 +231,8 @@ public class GUIPartBench extends AGUIBase{
 	}
 
 	@Override
-	public void setStates(){				
+	public void setStates(){
+		super.setStates();
 		//Set buttons based on if we have prev or next items.
 		prevPackButton.enabled = prevPack != null;
 		nextPackButton.enabled = nextPack != null;

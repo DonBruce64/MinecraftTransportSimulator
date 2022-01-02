@@ -60,7 +60,8 @@ public class GUIPaintGun extends AGUIBase{
 	}
 
 	@Override
-	public void setupComponents(int guiLeft, int guiTop){	
+	public void setupComponents(int guiLeft, int guiTop){
+		super.setupComponents(guiLeft, guiTop);
 		//Create color navigation section.
 		addComponent(prevColorButton = new GUIComponentButton(guiLeft + 38, guiTop + 135, 20, 20, 40, 196, 20, 20){
 			@Override
@@ -103,7 +104,8 @@ public class GUIPaintGun extends AGUIBase{
 	}
 
 	@Override
-	public void setStates(){				
+	public void setStates(){
+		super.setStates();
 		//Set buttons based on if we have prev or next items.
 		prevColorButton.enabled = prevSubItem != null;
 		nextColorButton.enabled = nextSubItem != null;

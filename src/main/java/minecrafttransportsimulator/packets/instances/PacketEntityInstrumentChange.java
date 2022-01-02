@@ -8,7 +8,6 @@ import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntityInteract;
-import minecrafttransportsimulator.rendering.components.InterfaceEventsOverlay;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**Packet used to change instruments on entities.  Sent to the server
@@ -78,11 +77,6 @@ public class PacketEntityInstrumentChange extends APacketEntityInteract<AEntityD
 				}
 			}
 			entity.instruments.put(slot, instrument);
-		}
-		
-		//If we are on the client, reset the current HUD.  This prevents load-syncinig issues.
-		if(world.isClient()){
-			InterfaceEventsOverlay.resetGUI();
 		}
 		return true;
 	}

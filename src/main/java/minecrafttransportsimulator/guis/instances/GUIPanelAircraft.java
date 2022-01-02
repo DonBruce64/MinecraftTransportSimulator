@@ -156,7 +156,7 @@ public class GUIPanelAircraft extends AGUIPanel{
 				magnetoSelectors.put(ENGINE_SINGLE_SELECTOR_INDEX, magnetoSwitch);
 				addComponent(magnetoSwitch);
 				
-				GUIComponentSelector starterSwitch = new GUIComponentSelector(magnetoSwitch.x + SELECTOR_SIZE, magnetoSwitch.y, SELECTOR_SIZE, SELECTOR_SIZE, InterfaceCore.translate("gui.panel.start"), vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, ENGINESTART_TEXTURE_WIDTH_OFFSET, ENGINESTART_TEXTURE_HEIGHT_OFFSET, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE){
+				GUIComponentSelector starterSwitch = new GUIComponentSelector(magnetoSwitch.constructedX + SELECTOR_SIZE, magnetoSwitch.constructedY, SELECTOR_SIZE, SELECTOR_SIZE, InterfaceCore.translate("gui.panel.start"), vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, ENGINESTART_TEXTURE_WIDTH_OFFSET, ENGINESTART_TEXTURE_HEIGHT_OFFSET, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE){
 					@Override
 					public void onClicked(boolean leftSide){
 						for(PartEngine engine : vehicle.engines.values()){
@@ -198,7 +198,7 @@ public class GUIPanelAircraft extends AGUIPanel{
 				magnetoSelectors.put(engineNumber, magnetoSwitch);
 				addComponent(magnetoSwitch);
 				
-				GUIComponentSelector starterSwitch = new GUIComponentSelector(magnetoSwitch.x + SELECTOR_SIZE, magnetoSwitch.y, SELECTOR_SIZE, SELECTOR_SIZE, InterfaceCore.translate("gui.panel.start"), vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, ENGINESTART_TEXTURE_WIDTH_OFFSET, ENGINESTART_TEXTURE_HEIGHT_OFFSET, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE){
+				GUIComponentSelector starterSwitch = new GUIComponentSelector(magnetoSwitch.constructedX + SELECTOR_SIZE, magnetoSwitch.constructedY, SELECTOR_SIZE, SELECTOR_SIZE, InterfaceCore.translate("gui.panel.start"), vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, ENGINESTART_TEXTURE_WIDTH_OFFSET, ENGINESTART_TEXTURE_HEIGHT_OFFSET, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE){
 					@Override
 					public void onClicked(boolean leftSide){
 						PartEngine engine = vehicle.engines.get(engineNumber);
@@ -379,7 +379,7 @@ public class GUIPanelAircraft extends AGUIPanel{
 			addComponent(beaconBox);
 			
 			//Add beacon text box label.
-			addComponent(new GUIComponentLabel(beaconBox.x + beaconBox.width/2, beaconBox.y + beaconBox.height + 1, vehicle.definition.motorized.panelTextColor != null ? vehicle.definition.motorized.panelTextColor : ColorRGB.WHITE, InterfaceCore.translate("gui.panel.beacon"), TextAlignment.CENTERED, 0.75F).setBox(beaconBox));
+			addComponent(new GUIComponentLabel(beaconBox.constructedX + beaconBox.width/2, beaconBox.constructedY + beaconBox.height + 1, vehicle.definition.motorized.panelTextColor != null ? vehicle.definition.motorized.panelTextColor : ColorRGB.WHITE, InterfaceCore.translate("gui.panel.beacon"), TextAlignment.CENTERED, 0.75F).setBox(beaconBox));
 		}
 		
 		//If we have both gear and a trailer hookup, render them side-by-side. Otherwise just render one in the middle
@@ -434,6 +434,7 @@ public class GUIPanelAircraft extends AGUIPanel{
 	
 	@Override
 	public void setStates(){
+		super.setStates();
 		//Set the states of the light selectors.
 		for(Entry<String, GUIComponentSelector> lightEntry : lightSelectors.entrySet()){
 			lightEntry.getValue().selectorState = vehicle.variablesOn.contains(lightEntry.getKey()) ? 1 : 0;

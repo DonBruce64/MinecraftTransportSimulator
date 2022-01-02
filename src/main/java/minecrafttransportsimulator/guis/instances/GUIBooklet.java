@@ -33,6 +33,7 @@ public class GUIBooklet extends AGUIBase{
 	
 	@Override 
 	public void setupComponents(int guiLeft, int guiTop){
+		super.setupComponents(guiLeft, guiTop);
 		pageTextLabels.clear();
 		
 		//Page navigation buttons.
@@ -85,7 +86,7 @@ public class GUIBooklet extends AGUIBase{
 			}
 			
 			//Button on other pages to go back to TOC.
-			addComponent(contentsButton = new GUIComponentButton(leftButton.x + leftButton.width, guiTop + 150, 20, 20, 40, 196, 20, 20){
+			addComponent(contentsButton = new GUIComponentButton(leftButton.constructedX + leftButton.width, guiTop + 150, 20, 20, 40, 196, 20, 20){
 				@Override
 				public void onClicked(boolean leftSide){
 					booklet.pageNumber = 1;
@@ -118,6 +119,7 @@ public class GUIBooklet extends AGUIBase{
 	
 	@Override
 	public void setStates(){
+		super.setStates();
 		//Set the navigation button states.
 		leftButton.visible = booklet.pageNumber > 0;
 		rightButton.visible = booklet.pageNumber + 1 < totalPages;

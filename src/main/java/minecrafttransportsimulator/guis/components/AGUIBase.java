@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.guis.components;
 
+import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,34 +17,107 @@ import minecrafttransportsimulator.mcinterface.InterfaceGUI;
 public abstract class AGUIBase{
 	public static final int STANDARD_GUI_WIDTH = 256;
 	public static final int STANDARD_GUI_HEIGHT = 192;
-	//TODO make this private when we handle rendering order ourself.
 	public static final String STANDARD_TEXTURE_NAME = "mts:textures/guis/standard.png";
 	protected static final int STANDARD_COLOR_WIDTH = 20;
 	protected static final int STANDARD_COLOR_HEIGHT = 20;
-	protected static final int STANDARD_COLOR_WIDTH_OFFSET = 216;
+	protected static final int STANDARD_COLOR_WIDTH_OFFSET = 236;
 	protected static final int STANDARD_RED_HEIGHT_OFFSET = 196;
 	protected static final int STANDARD_YELLOW_HEIGHT_OFFSET = 216;
 	protected static final int STANDARD_BLACK_HEIGHT_OFFSET = 236;
 
+	public GUIComponentCutout background;
+	public final List<AGUIComponent> components = new ArrayList<AGUIComponent>();
 	
-	public final List<AGUIComponent> generalComponents = new ArrayList<AGUIComponent>();
-	public final List<GUIComponentItem> items = new ArrayList<GUIComponentItem>();
-	public final List<GUIComponentInstrument> instruments = new ArrayList<GUIComponentInstrument>();
 	
-	//--------------------START OF NEW CUSTOM METHODS FOR MAKING GUIS--------------------	
 	/**
 	 *  Called during init to allow for the creation of GUI components.  All components
 	 *  should be created in this method, and should be added via the appropriate calls.
 	 *  The passed-in guiLeft and guiTop parameters are the top-left of the TEXTURE of
 	 *  this GUI, not the screen.  This allows for all objects to be created using offsets
-	 *  that won't change, rather than screen pixels that will. 
+	 *  that won't change, rather than screen pixels that will.  By default, this creates the
+	 *  background component based on 
 	 */
-	public abstract void setupComponents(int guiLeft, int guiTop);
+	public void setupComponents(int guiLeft, int guiTop){
+		components.clear();
+		addComponent(this.background = new GUIComponentCutout(guiLeft, guiTop, getWidth(), getHeight(), 0, 0, getWidth(), getHeight()));
+	}
 	
 	/**
-	 *  Called right before rendering to allow GUIs to set the states of their objects. 
+	 *  Adds a rendered square of texture to the passed-in buffer based on the passed-in parameters. 
 	 */
-	public abstract void setStates();
+	public void addRenderToBuffer(FloatBuffer buffer, int offsetX, int offsetY, int width, int height, float u, float v, float U, float V, int textureWidth, int textureHeight){
+		//First convert to 0->1 UV space.
+		u = u/textureWidth;
+		U = U/textureWidth;
+		v = v/textureHeight;
+		V = V/textureHeight;
+		
+		//Now populate the buffer.
+		for(int i=0; i<6; ++i){
+			//Normals will always be 0, 0, 1.
+			buffer.put(0.0F);
+			buffer.put(0.0F);
+			buffer.put(1.0F);
+			
+			//Texture and vertex X/Y are based on vertex index.
+			switch(i){
+				case(0):{//Bottom-right
+					buffer.put(U);
+					buffer.put(V);
+					buffer.put(offsetX + width);
+					buffer.put(offsetY - height);
+					break;
+				}
+				case(1):{//Top-right
+					buffer.put(U);
+					buffer.put(v);
+					buffer.put(offsetX + width);
+					buffer.put(offsetY);
+					break;
+				}
+				case(2):{//Top-left
+					buffer.put(u);
+					buffer.put(v);
+					buffer.put(offsetX);
+					buffer.put(offsetY);
+					break;
+				}
+				case(3):{//Bottom-right
+					buffer.put(U);
+					buffer.put(V);
+					buffer.put(offsetX + width);
+					buffer.put(offsetY - height);
+					break;
+				}
+				case(4):{//Top-left
+					buffer.put(u);
+					buffer.put(v);
+					buffer.put(offsetX);
+					buffer.put(offsetY);
+					break;
+				}
+				case(5):{//Bottom-left
+					buffer.put(u);
+					buffer.put(V);
+					buffer.put(offsetX);
+					buffer.put(offsetY - height);						
+					break;
+				}
+			}
+			
+			//Vertex z is always 0.
+			buffer.put(0.0F);
+		}
+	}
+	
+	/**
+	 *  Called right before rendering to allow GUIs to set the states of their objects.
+	 *  By default, this sets the state of the background based on the return value of
+	 *  {@link #renderBackground()}
+	 */
+	public void setStates(){
+		background.visible = renderBackground();
+	}
 	
 	/**
 	 *  Called right after the GUI is closed.  Normally does nothing, but can be
@@ -56,13 +130,6 @@ public abstract class AGUIBase{
 	 */
 	public boolean renderBackground(){
 		return true;
-	}
-	
-	/**
-	 *  If this is true, then the dark background gradient will be rendered behind the GUI.
-	 */
-	public boolean renderDarkBackground(){
-		return false;
 	}
 	
 	/**
@@ -153,22 +220,7 @@ public abstract class AGUIBase{
 	 *  automatically given their current state.  Said state should be set in {@link #setStates()}.
 	 */
 	public void addComponent(AGUIComponent component){
-		if(component instanceof GUIComponentInstrument){
-			instruments.add((GUIComponentInstrument) component);
-		}else if(component instanceof GUIComponentItem){
-			items.add((GUIComponentItem) component);
-		}else{
-			generalComponents.add(component);
-		}
-	}
-	
-	/**
-	 *  Convenience method to clear out all component lists.
-	 */
-	public void clearComponents(){
-		generalComponents.clear();
-		items.clear();
-		instruments.clear();
+		components.add(component);
 	}
 	
 	/**

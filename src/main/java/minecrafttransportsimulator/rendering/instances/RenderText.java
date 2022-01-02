@@ -24,40 +24,33 @@ import minecrafttransportsimulator.rendering.components.RenderableObject;
  */
 public class RenderText{
 	private static final Map<String, FontData> fontDatas = new HashMap<String, FontData>();
-	private static final Point3d mutablePosition = new Point3d();
-	private static final Point3d FLIPPED_TEXT_FOR_GUIS = new Point3d(180, 0, 0);
 	
 	/**
-	 *  Draws the specified text.  This is designed for GUIs where text only has an x and y component, but still may
+	 *  Draws the specified text.  This is designed for general draws where text is defined in-code, but still may
 	 *  use custom fonts.  This method can render the text in multiple ways depending on the parameters passed-in.  
 	 *  If a centered string is specified, then the point passed-in should be  the center point of the string, rather 
 	 *  that the top-left of the string like normal.  The same goes for right-justify.  If wrapWidth is anything else but 0, 
 	 *  then the wordWrap method will be called to render multi-line text.
+	 *  Note that this method expects transforms to be applied such that the coordinate space is local
+	 *  to the object rendering the text on, and is NOT the global coordinate space.  The coordinates MAY, however, be
+	 *  in pixel-space.  This is essentially 1/16 scale of blocks, as blocks are 16 pixels each.
+	 *  This is used for things that are already rendered in pixel-space, such as instruments and GUIs.
+	 *  This also inverts the y coordinate as with those systems +y is down whereas normally it is up.
+	 *  Also note that if a scale was applied prior to rendering this text, it should be passed-in here.
+	 *  This allows for proper normal calculations to prevent needing to re-normalize the text.
 	 */
-	public static void draw2DText(String text, String fontName, int x, int y, ColorRGB color, TextAlignment alignment, float scale, boolean autoScale, int wrapWidth){
+	public static void drawText(String text, String fontName, Point3d position, Point3d rotation, ColorRGB color, TextAlignment alignment, float scale, boolean autoScale, int wrapWidth, float prevScaleFactor, boolean pixelCoords){
 		if(!text.isEmpty()){
-			mutablePosition.set(x, y, 0);
-			//Need to invert 2D GUI text, as it's Y coord origin is top-left VS UV-mapped bottom-left.
-			getFontData(fontName).renderText(text, mutablePosition, FLIPPED_TEXT_FOR_GUIS, alignment, scale, autoScale, wrapWidth, 1.0F, true, color, true);
+			getFontData(fontName).renderText(text, position, rotation, alignment, scale, autoScale, wrapWidth, 1.0F, true, color, true);
 		}
 	}
 	
 	/**
-	 *  Similar to the 2D text drawing method, except this method
-	 *  will render the text according to the passed-in text JSON in 3D space at the point specified.
+	 *  Similar to the 2D text drawing method, except this method will render the text according to the passed-in text JSON in 3D space at the point specified.
 	 *  Essentially, this is JSON-defined rendering rather than manual entry of points.
-	 *  Note that this method expects transforms to be applied such that the coordinate space is local
-	 *  to the passed-in entity, and is NOT the global coordinate space.  The coordinates MAY, however, be
-	 *  in pixel-space.  This is essentially 1/16 scale of blocks, as blocks are 16 pixels each.
-	 *  This is used for things that are already rendered in pixel-space, such as instruments.
-	 *  Also note that if a scale was applied prior to rendering this text, it should be passed-in here.
-	 *  This allows for proper normal calculations to prevent needing to re-normalize the text.
 	 */
 	public static void draw3DText(String text, AEntityC_Definable<?> entity, JSONText definition, float preScaledFactor, boolean pixelCoords){
 		if(!text.isEmpty()){
-			//Get font data for requested font.
-			FontData fontData = getFontData(definition.fontName);
-			
 			//Get the actual color we will need to render with based on JSON.
 			ColorRGB color = entity.getTextColor(definition.inheritedColorIndex, definition.color);
 			
@@ -65,12 +58,7 @@ public class RenderText{
 			float scale = pixelCoords ? definition.scale : definition.scale/16F;
 			
 			//Render the text.
-			mutablePosition.setTo(definition.pos);
-			if(pixelCoords){
-				//GUI coordinates use top-left as origin rather than bottom-left.
-				mutablePosition.y = -mutablePosition.y;
-			}
-			fontData.renderText(text, mutablePosition, definition.rot, TextAlignment.values()[definition.renderPosition], scale, definition.autoScale, definition.wrapWidth, preScaledFactor, pixelCoords, color, definition.lightsUp && entity.renderTextLit());
+			getFontData(definition.fontName).renderText(text, definition.pos, definition.rot, TextAlignment.values()[definition.renderPosition], scale, definition.autoScale, definition.wrapWidth, preScaledFactor, pixelCoords, color, definition.lightsUp && entity.renderTextLit());
 		}
 	}
 	
@@ -163,6 +151,7 @@ public class RenderText{
 		private static final FontRenderState[] STATES = FontRenderState.generateDefaults();
 		private static final int MAX_VERTCIES_PER_RENDER = 1000*6;
 		private static final Point3d DEFAULT_ADJ = new Point3d();
+		private static final Point3d MUTABLE_POSITION = new Point3d();
 		
 		private final boolean isDefault;
 		/*Texture locations for the font files.**/
@@ -271,13 +260,16 @@ public class RenderText{
 		}
 		
 		private void renderText(String text, Point3d position, Point3d rotation, TextAlignment alignment, float scale, boolean autoScale, int wrapWidth, float preScaledFactor, boolean pixelCoords, ColorRGB color, boolean renderLit){
+			//Use mutable position here as we need to modify it and don't want to modify the actual variable.
+			MUTABLE_POSITION.setTo(position);
+			
 			//Cull text to total chars.
 			//This is all we can render in one pass.
 			if(text.length() > MAX_VERTCIES_PER_RENDER/6){
 				text = text.substring(0, MAX_VERTCIES_PER_RENDER/6);
 			}
 			//Pre-calculate rotation of normals, as these won't change.
-			boolean doRotation = !rotation.isZero();
+			boolean doRotation = rotation != null && !rotation.isZero();
 			float[] normals = new float[]{0.0F, 0.0F, scale*preScaledFactor};
 			if(doRotation){
 				Point3d rotatedNormals = new Point3d(normals[0], normals[1], normals[2]).rotateFine(rotation);
@@ -353,8 +345,13 @@ public class RenderText{
 			
 			//Add the adjustment and multiply position by prev scale.
 			//This moves the position to the appropriate one for the scale the entire text segment is rendered at.
-			position.add(DEFAULT_ADJ);
-			position.multiply(preScaledFactor);
+			//GUI coordinates use top-left as origin rather than bottom-left, need to account for this.
+			if(pixelCoords){
+				//MUTABLE_POSITION.y = -MUTABLE_POSITION.y;
+			}
+			MUTABLE_POSITION.add(DEFAULT_ADJ);
+			MUTABLE_POSITION.multiply(preScaledFactor);
+			
 			
 			//Check if we need to adjust our offset for our alignment.
 			//While this will be slightly off due to formatting and non-printable chars in the string,
@@ -629,7 +626,7 @@ public class RenderText{
 			
 			//All points obtained, render.
 			GL11.glPushMatrix();
-			GL11.glTranslated(position.x, position.y, position.z);
+			GL11.glTranslated(MUTABLE_POSITION.x, MUTABLE_POSITION.y, MUTABLE_POSITION.z);
 			for(RenderableObject object : activeRenderObjects){
 				object.disableLighting = renderLit;
 				object.scale = scale*preScaledFactor;

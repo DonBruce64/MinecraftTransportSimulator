@@ -113,6 +113,7 @@ public abstract class AGUIPanel extends AGUIBase{
 	
 	@Override
 	public final void setupComponents(int guiLeft, int guiTop){
+		super.setupComponents(guiLeft, guiTop);
 		//Tracking variable for how far to the left we are rendering things.
 		//This allows for things to be on different columns depending on vehicle configuration.
 		//We make this method final and create an abstract method to use instead of this one for

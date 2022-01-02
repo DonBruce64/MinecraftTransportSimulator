@@ -45,12 +45,17 @@ public class GUIComponent3DModel extends AGUIComponent{
 		this.staticScaling = staticScaling;
 	}
 	
+	@Override
+	public int getZOffset(){
+		return MODEL_DEFAULT_ZOFFSET;
+	}
+	
 	/**
 	 *  Renders the model that this component defines.
 	 */
     @Override
-	public void render(int mouseX, int mouseY, int textureWidth, int textureHeight, boolean blendingEnabled, float partialTicks){
-		if(modelLocation != null){
+	public void render(AGUIBase gui, int mouseX, int mouseY, boolean blendingEnabled, float partialTicks){
+		if(!blendingEnabled && modelLocation != null){
 			if(!modelParsedObjects.containsKey(modelLocation)){
 				List<RenderableObject> parsedObjects = AModelParser.parseModel(modelLocation);
 				//Remove any windows and "commented" objects from the model.  We don't want to render those.
@@ -93,11 +98,11 @@ public class GUIComponent3DModel extends AGUIComponent{
 			}
 			GL11.glPushMatrix();
 			//Translate to position and rotate to isometric view if required.
-			GL11.glTranslatef(x, y, 100);
-			GL11.glRotatef(180, 1, 0, 0);
+			//Need to translate -y due to different model position.
+			GL11.glTranslated(position.x, position.y, position.z);
 			if(isometric){
 				GL11.glRotatef(45, 0, 1, 0);
-				GL11.glRotatef(-35.264F, 1, 0, 1);
+				GL11.glRotatef(35.264F, 1, 0, 1);
 			}
 			
 			//If set to rotate, do so now based on time.
@@ -109,7 +114,6 @@ public class GUIComponent3DModel extends AGUIComponent{
 			if(!staticScaling){
 				scale = modelScalingFactors.get(modelLocation);
 			}
-			GL11.glScalef(1.0F, 1.0F, -1.0F);
 			RenderableObject object = modelParsedObjects.get(modelLocation);
 			object.scale = scale*scaleFactor;
 			object.texture = textureLocation;

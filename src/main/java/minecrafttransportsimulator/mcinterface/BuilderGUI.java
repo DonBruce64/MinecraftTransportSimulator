@@ -8,7 +8,6 @@ import org.lwjgl.opengl.GL11;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.AGUIBase.GUILightingMode;
 import minecrafttransportsimulator.guis.components.AGUIComponent;
-import minecrafttransportsimulator.guis.components.GUIComponent3DModel;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentInstrument;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
@@ -16,7 +15,6 @@ import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox.TextBoxControlKey;
 import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.init.SoundEvents;
 
 /**Builder for MC GUI classes.  Created when {@link InterfaceGUI#openGUI(AGUIBase)}
@@ -52,10 +50,7 @@ public class BuilderGUI extends GuiScreen{
 			guiTop = (height - gui.getHeight())/2;
 		}
 		
-		
-		//Clear out the component lists before populating them again.
-		//If we don't, we get duplicates when re-sizing.
-		gui.clearComponents();
+		//Setup components now.
 		gui.setupComponents(guiLeft, guiTop);
 	}
 	
@@ -69,17 +64,15 @@ public class BuilderGUI extends GuiScreen{
 	 */
 	@Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks){
-		super.drawScreen(mouseX, mouseY, partialTicks);
 		//First set the states for things in this GUI.
 		gui.setStates();
 		
 		//Set color to default in case some other rendering was being done prior and didn't clean up.
+		//TODO remove when we go to generic rendering.
 		GL11.glColor3f(1, 1, 1);
 		
-		//Draw gradient if required.
-		if(gui.renderDarkBackground()){
-			drawDefaultBackground();
-		}
+		//Set Y-axis to inverted to have correct orientation.
+		GL11.glScalef(1.0F, -1.0F, 1.0F);
 		
 		//If we are light-sensitive, enable lighting.
 		if(!gui.getGUILightMode().equals(GUILightingMode.NONE)){
@@ -87,29 +80,17 @@ public class BuilderGUI extends GuiScreen{
 			InterfaceRender.setLightingToPosition(gui.getGUILightSource().position);
 		}
 		
-		//Get the current texture width and height.  This is needed for future render calls.
-		final int textureWidth = gui.getTextureWidth();
-		final int textureHeight = gui.getTextureHeight();
-		
 		//Bind the standard texture and render the background.
 		//If we are translucent, enable blending.
 		if(gui.renderTranslucent()){
 			InterfaceRender.setBlend(true);
 		}
-		InterfaceRender.bindTexture(gui.getTexture());
-		if(gui.renderBackground()){
-			InterfaceGUI.renderSheetTexture(guiLeft, guiTop, gui.getWidth(), gui.getHeight(), 0, 0, gui.getWidth(), gui.getHeight(), textureWidth, textureHeight);
-		}
 		
 		//Render textured components.  These choose if they render or not depending on visibility.
-		for(AGUIComponent component : gui.generalComponents){
-			if(component.visible && !(component instanceof GUIComponent3DModel)){
-				component.render(mouseX, mouseY, textureWidth, textureHeight, false, partialTicks);
+		for(AGUIComponent component : gui.components){
+			if(component.visible && !(component instanceof GUIComponentInstrument)){
+				component.render(gui, mouseX, mouseY, false, partialTicks);
 			}
-		}
-		//Disable translucency if we had it enabled.
-		if(gui.renderTranslucent()){
-			InterfaceRender.setBlend(false);
 		}
 		
 		//If we are light-sensitive, and this GUI is said to be lit up, disable the lightmap.
@@ -118,71 +99,56 @@ public class BuilderGUI extends GuiScreen{
 		if(gui.getGUILightMode().equals(GUILightingMode.LIT)){
 			InterfaceRender.setLightingState(false);
 			InterfaceRender.bindTexture(gui.getTexture().replace(".png", "_lit.png"));
-			if(gui.renderBackground()){
-				InterfaceGUI.renderSheetTexture(guiLeft, guiTop, gui.getWidth(), gui.getHeight(), 0, 0, gui.getWidth(), gui.getHeight(), textureWidth, textureHeight);
-			}
-			for(AGUIComponent component : gui.generalComponents){
-				if(component.visible && !(component instanceof GUIComponent3DModel)){
-					component.render(mouseX, mouseY, textureWidth, textureHeight, true, partialTicks);
+			for(AGUIComponent component : gui.components){
+				if(component.visible && !(component instanceof GUIComponentInstrument) && !(component instanceof GUIComponentItem)){
+					component.render(gui, mouseX, mouseY, true, partialTicks);
 				}
 			}
 		}
 		
+		//Disable translucency if we had it enabled.
+		if(gui.renderTranslucent()){
+			InterfaceRender.setBlend(false);
+		}
+		
 		//Now that all main rendering is done, render text.
 		//This includes labels, button text, and text boxes.
+		//We only need to do this once, even if we are lit, as we just change the text lighting.
 		boolean isTextLit = gui.getGUILightMode().equals(GUILightingMode.LIT);
-		for(AGUIComponent component : gui.generalComponents){
+		for(AGUIComponent component : gui.components){
 			if(component.visible && component.text != null && !component.text.isEmpty()){
 				component.renderText(isTextLit);
 			}
 		}
 		
-		//Re-enable lighting for instrument rendering,
+		//Enable lighting for instrument rendering,
 		//then render the instruments.  These use their own texture,
 		//so the text texture will be overridden at this point.
 		InterfaceRender.setLightingState(true);
-		for(GUIComponentInstrument instrument : gui.instruments){
-			instrument.render(mouseX, mouseY, textureWidth, textureHeight, false, partialTicks);
+		for(AGUIComponent component : gui.components){
+			if(component instanceof GUIComponentInstrument){
+				component.render(gui, mouseX, mouseY, false, partialTicks);
+			}
 		}
+		
 		//Now render blended parts of the instrument.
 		InterfaceRender.setBlend(true);
-		for(GUIComponentInstrument instrument : gui.instruments){
-			instrument.render(mouseX, mouseY, textureWidth, textureHeight, true, partialTicks);
+		for(AGUIComponent component : gui.components){
+			if(component instanceof GUIComponentInstrument){
+				component.render(gui, mouseX, mouseY, true, partialTicks);
+			}
 		}
 		InterfaceRender.setBlend(false);
 		
-		//Render 3D models now, as they don't have the same texture.
-		for(AGUIComponent component : gui.generalComponents){
-			if(component.visible && component instanceof GUIComponent3DModel){
-				component.render(mouseX, mouseY, textureWidth, textureHeight, false, partialTicks);
-			}
-		}
-		
-		
-		//Now render items.
-		//These will cause a texture re-bind, so they need to go after the components.
-		//However, since they muck up the lighting, they MUST go last no matter what.
-		RenderHelper.enableGUIStandardItemLighting();
-		for(GUIComponentItem item : gui.items){
-			item.render(mouseX, mouseY, textureWidth, textureHeight, false, partialTicks);
-		}
-		for(GUIComponentItem item : gui.items){
-			if(item.visible && item.text != null && !item.text.isEmpty()){
-				item.renderText(isTextLit);
-			}
-		}
-		
-		//Render any tooltips.  These are the final thing to render as they need to render over everything else.
-		for(AGUIComponent component : gui.generalComponents){
+		//Render any tooltips.
+		for(AGUIComponent component : gui.components){
 			if(component.visible && component.isMouseInBounds(mouseX, mouseY)){
-				component.renderTooltip(mouseX, mouseY, mc.currentScreen.width, mc.currentScreen.height);
+				component.renderTooltip(gui, mouseX, mouseY, mc.currentScreen.width, mc.currentScreen.height);
 			}
 		}
-		for(GUIComponentItem item : gui.items){
-			if(item.visible && item.isMouseInBounds(mouseX, mouseY)){
-				item.renderTooltip(mouseX, mouseY, mc.currentScreen.width, mc.currentScreen.height);
-			}
-		}
+		
+		//Set Y-axis back to regular orientation.
+		GL11.glScalef(1.0F, -1.0F, 1.0F);
 	}
 	
 	/**
@@ -193,18 +159,18 @@ public class BuilderGUI extends GuiScreen{
 	 */
 	@Override
 	protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException{
-        for(AGUIComponent component : gui.generalComponents){
+        for(AGUIComponent component : gui.components){
         	if(component instanceof GUIComponentButton){
         		GUIComponentButton button = (GUIComponentButton) component;
 	        	if(button.canClick(mouseX, mouseY)){
 	    			mc.getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(SoundEvents.UI_BUTTON_CLICK, 1.0F));
-	    			button.onClicked(mouseX <= button.x + button.width/2);
+	    			button.onClicked(mouseX <= button.constructedX + button.width/2);
 	    			lastButtonClicked = button;
 	    			return;
 	        	}
         	}
         }
-        for(AGUIComponent component: gui.generalComponents){
+        for(AGUIComponent component: gui.components){
         	if(component instanceof GUIComponentTextBox){
         		((GUIComponentTextBox) component).updateFocus(mouseX, mouseY);
         	}
@@ -232,7 +198,7 @@ public class BuilderGUI extends GuiScreen{
 	@Override
 	protected void keyTyped(char key, int keyCode) throws IOException{
 		super.keyTyped(key, keyCode);
-		 for(AGUIComponent component: gui.generalComponents){
+		 for(AGUIComponent component: gui.components){
 	        if(component instanceof GUIComponentTextBox){
 	        	GUIComponentTextBox textBox = (GUIComponentTextBox) component;
 				if(textBox.focused){

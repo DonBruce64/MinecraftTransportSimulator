@@ -89,7 +89,8 @@ public class GUIInstruments extends AGUIBase{
 	}
 
 	@Override
-	public void setupComponents(int guiLeft, int guiTop){	
+	public void setupComponents(int guiLeft, int guiTop){
+		super.setupComponents(guiLeft, guiTop);
 		//Create the prior and next pack buttons.
 		addComponent(prevPackButton = new GUIComponentButton(guiLeft, guiTop - 74, 20, 20, "<", true, ColorRGB.WHITE, false){
 			@Override
@@ -139,7 +140,7 @@ public class GUIInstruments extends AGUIBase{
 				selectedInstrumentDefinition = null;
 			}
 		});
-		addComponent(new GUIComponentCutout(clearButton.x, clearButton.y, clearButton.width, clearButton.height, 448, 0, 64, 64));
+		addComponent(new GUIComponentCutout(clearButton.constructedX, clearButton.constructedY, clearButton.width, clearButton.height, 448, 0, 64, 64));
 		
 		//Create the HUD selection button.
 		addComponent(hudButton = new GUIComponentButton(guiLeft, guiTop - 20, 100, 20, InterfaceCore.translate("gui.instruments.main"), true, ColorRGB.WHITE, false){
@@ -148,8 +149,7 @@ public class GUIInstruments extends AGUIBase{
 				hudSelected = true;
 				selectedEntity = null;
 				selectedInstrumentDefinition = null;
-				clearComponents();
-				setupComponents(this.x, this.y + 20);
+				setupComponents(this.constructedX, this.constructedY + 20);
 			}
 		});
 		
@@ -160,8 +160,7 @@ public class GUIInstruments extends AGUIBase{
 				hudSelected = false;
 				selectedEntity = null;
 				selectedInstrumentDefinition = null;
-				clearComponents();
-				setupComponents(this.x - getWidth() + 100, this.y + 20);
+				setupComponents(this.constructedX - getWidth() + 100, this.constructedY + 20);
 			}
 		});
 		
@@ -197,6 +196,7 @@ public class GUIInstruments extends AGUIBase{
 
 	@Override
 	public void setStates(){
+		super.setStates();
 		//Set pack prior and pack next buttons depending if we have such packs.
 		prevPackButton.visible = playerInstruments.lowerKey(currentPack) != null;
 		nextPackButton.visible = playerInstruments.higherKey(currentPack) != null;
@@ -237,11 +237,6 @@ public class GUIInstruments extends AGUIBase{
 		//Set info and clear state based on if we've clicked an instrument.
 		infoLabel.text = selectedInstrumentDefinition == null ? "\\/  " + InterfaceCore.translate("gui.instruments.idle") + "  \\/" : "/\\  " + InterfaceCore.translate("gui.instruments.decide") + "  /\\";
 		clearButton.enabled = selectedInstrumentDefinition != null && selectedEntity.instruments.containsKey(selectedEntity.definition.instruments.indexOf(selectedInstrumentDefinition));
-	}
-	
-	@Override
-	public boolean renderDarkBackground(){
-		return true;
 	}
 	
 	@Override

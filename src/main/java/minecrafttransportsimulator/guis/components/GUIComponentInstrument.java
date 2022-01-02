@@ -23,19 +23,18 @@ public class GUIComponentInstrument extends AGUIComponent{
 		super(guiLeft, guiTop, 0, 0);
 		this.packInstrument = entity.definition.instruments.get(instrumentPackIndex);
 		this.instrument = entity.instruments.get(instrumentPackIndex);
-		this.offsetX = packInstrument.hudX;
-		this.offsetY = packInstrument.hudY;
+		position.x += packInstrument.hudX;
+    	//Need to offset in opposite Y position due to inverted coords.
+		position.y -= packInstrument.hudY;
 		this.instrumentPackIndex = instrumentPackIndex;
 		this.entity = entity;
 	}
 
     @Override
-	public void render(int mouseX, int mouseY, int textureWidth, int textureHeight, boolean blendingEnabled, float partialTicks){
+	public void render(AGUIBase gui, int mouseX, int mouseY, boolean blendingEnabled, float partialTicks){
     	if(visible){
 	    	GL11.glPushMatrix();
-			GL11.glTranslated(x + offsetX, y + offsetY, 0);
-			//Need to scale y by -1 due to inverse coordinates.
-			GL11.glScalef(1.0F, -1.0F, 1.0F);
+			GL11.glTranslated(position.x, position.y, position.z);
 			RenderInstrument.drawInstrument(instrument, packInstrument.optionalPartNumber, entity, packInstrument.hudScale, blendingEnabled, partialTicks);
 			GL11.glPopMatrix();
     	}

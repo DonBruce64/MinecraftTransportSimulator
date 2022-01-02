@@ -1,33 +1,44 @@
 package minecrafttransportsimulator.guis.components;
 
+import java.nio.FloatBuffer;
 import java.util.List;
 
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.mcinterface.InterfaceGUI;
-import minecrafttransportsimulator.mcinterface.InterfaceRender;
+import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.rendering.components.RenderableObject;
 import minecrafttransportsimulator.rendering.instances.RenderText;
 import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
 
 /**Base class for all components.  Contains basic common variables to all rendering.
+ * Note that {@link #constructedX} and {@link #constructedY} are only valid as the values
+ * passed-in to the constructor, and should NOT be used for rendering or anything as the
+ * component could have been moved at that point.  Also, because for construction ease
+ * y is aligned with textures for a top-left origin.  Whereas OpenGL rendering uses a bottom-left.
+ * Therefore, the y-value in {@link #position} will be inverted from this value upon construction.
  *
  * @author don_bruce
  */
 public abstract class AGUIComponent{
 	
 	//Rendering variables.
-	public final int x;
-	public int offsetX;
-	public final int y;
-	public int offsetY;
-	public final int width;
-	public final int height;
+	public final int constructedX;
+	public final int constructedY;
+	public final Point3d position;
+	public final Point3d textPosition;
+	public int width;
+	public int height;
 	
 	//State variables.
 	public boolean visible = true;
 	public String text;
+	protected RenderableObject renderable;
+	private static final RenderableObject mutableTooltipRenderable = new RenderableObject("gui_tooltip", AGUIBase.STANDARD_TEXTURE_NAME, ColorRGB.WHITE, FloatBuffer.allocate(9*6*8), false);
+	private static final Point3d mutableTooltipPosition = new Point3d();
 	
+	protected static final int TEXT_DEFAULT_ZOFFSET = 300;
+	protected static final int MODEL_DEFAULT_ZOFFSET = 150;
 	private static final int TOOLTIP_BORDER_PADDING = 4;
 	private static final int TOOLTIP_SECTION_WIDTH = 100;
 	private static final int TOOLTIP_SECTION_HEIGHT = 60;
@@ -38,24 +49,39 @@ public abstract class AGUIComponent{
 	private static final int TOOLTIP_TEXTURE_HEIGHT =256;
 	
 	public AGUIComponent(int x, int y, int width, int height){
-		this.x = x;
-		this.y = y;
+		this.constructedX = x;
+		this.constructedY = y;
+		//Use -y as GUI construction uses inverted Y coords.
+		this.position = new Point3d(x, -y, getZOffset());
+		this.textPosition = new Point3d(position.x, position.y, position.z + TEXT_DEFAULT_ZOFFSET);
 		this.width = width;
 		this.height = height;
 	}
 	
 	/**
+	 *  Returns the z-offset for this component.  This defines what "layer" the component will render on in the GUI.
+	 *  Components of different types should NOT share layers, as this will cause z-fighting.  It is recommended that 
+	 *  any 3d models be placed at least 150 units away from all others to prevent clipping.  This includes
+	 *  text, which should be rendered on top of all components.  Therefore, text is defaulted to 300 units forward.  All
+	 *  of these defaults can be modified if desired, however, by overriding this method.   
+	 */
+    public int getZOffset(){
+    	return 0;
+    }
+	
+	/**
 	 *  Returns true if the mouse is within the bounds of this component.
 	 */
     public boolean isMouseInBounds(int mouseX, int mouseY){
-    	return mouseX >= x && mouseY >= y && mouseX < x + width && mouseY < y + height;
+    	return mouseX >= position.x && mouseY >= -position.y && mouseX < position.x + width && mouseY < -position.y + height;
     }
 	
 	/**
 	 *  Renders the main portion of the component.
 	 *  Note that this method, and all other methods, are not called if {@link #visible} is false.
+	 *  This should create the {@link #renderable} object and render it.
 	 */
-    public abstract void render(int mouseX, int mouseY, int textureWidth, int textureHeight, boolean blendingEnabled, float partialTicks);
+    public abstract void render(AGUIBase gui, int mouseX, int mouseY, boolean blendingEnabled, float partialTicks);
     
     /**
 	 *  Renders the component's text.  This is done separately from the main render as text uses its own texture,
@@ -72,7 +98,7 @@ public abstract class AGUIComponent{
 	 *  {@link #isMouseInBounds(int, int)} returns false, and that this method won't render
 	 *  anything if {@link #getTooltipText()} returns null.
 	 */
-    public final void renderTooltip(int mouseX, int mouseY, int screenWidth, int screenHeight){
+    public final void renderTooltip(AGUIBase gui, int mouseX, int mouseY, int screenWidth, int screenHeight){
     	List<String> tooltipTextLines = getTooltipText();
     	if(tooltipTextLines != null && !tooltipTextLines.isEmpty()){
     		//Find the max string width.  This is used to define text bounds.
@@ -110,41 +136,42 @@ public abstract class AGUIComponent{
 				//Render top.
 				yOffset = mouseY - actualStringHeight - 2*TOOLTIP_BORDER_PADDING;
 			}
-    		
-    		//Do the text and background render.
-    		//TODO make this dynamic or something?
-        	GL11.glTranslated(0, 0, 250);
-        	InterfaceRender.bindTexture(AGUIBase.STANDARD_TEXTURE_NAME);
-    		//TODO make this use static parameters in the main GUI when it's moved there.
         	
         	//Render the 4 corners, and then the 4 edge bits.  This prevents stretching.
+        	mutableTooltipRenderable.vertices.clear();
         	int horizontalSegmentSize = actualStringWidth + 2*TOOLTIP_BORDER_PADDING;
         	int verticalSegmentSize = actualStringHeight + 2*TOOLTIP_BORDER_PADDING;
-        	
         	//Top-left.
-    		InterfaceGUI.renderSheetTexture(xOffset, yOffset, TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_WIDTH_OFFSET, TOOLTIP_SECTION_HEIGHT_OFFSET, TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_BORDER, TOOLTIP_TEXTURE_WIDTH, TOOLTIP_TEXTURE_HEIGHT);
+    		gui.addRenderToBuffer(mutableTooltipRenderable.vertices, xOffset, -yOffset, TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_WIDTH_OFFSET, TOOLTIP_SECTION_HEIGHT_OFFSET, TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_BORDER, TOOLTIP_TEXTURE_WIDTH, TOOLTIP_TEXTURE_HEIGHT);
     		//Top-right.
-    		InterfaceGUI.renderSheetTexture(xOffset + horizontalSegmentSize - TOOLTIP_SECTION_BORDER, yOffset, TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_WIDTH - TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_HEIGHT_OFFSET, TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_WIDTH, TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_BORDER, TOOLTIP_TEXTURE_WIDTH, TOOLTIP_TEXTURE_HEIGHT);
+    		gui.addRenderToBuffer(mutableTooltipRenderable.vertices, xOffset + horizontalSegmentSize - TOOLTIP_SECTION_BORDER, -yOffset, TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_WIDTH - TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_HEIGHT_OFFSET, TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_WIDTH, TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_BORDER, TOOLTIP_TEXTURE_WIDTH, TOOLTIP_TEXTURE_HEIGHT);
     		//Bottom-left.
-    		InterfaceGUI.renderSheetTexture(xOffset, yOffset + verticalSegmentSize - TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_WIDTH_OFFSET, TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_HEIGHT - TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_HEIGHT, TOOLTIP_TEXTURE_WIDTH, TOOLTIP_TEXTURE_HEIGHT);
+    		gui.addRenderToBuffer(mutableTooltipRenderable.vertices, xOffset, -(yOffset + verticalSegmentSize - TOOLTIP_SECTION_BORDER), TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_WIDTH_OFFSET, TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_HEIGHT - TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_HEIGHT, TOOLTIP_TEXTURE_WIDTH, TOOLTIP_TEXTURE_HEIGHT);
     		//Bottom-right.
-    		InterfaceGUI.renderSheetTexture(xOffset + horizontalSegmentSize - TOOLTIP_SECTION_BORDER, yOffset + verticalSegmentSize - TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_WIDTH - TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_HEIGHT - TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_WIDTH, TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_HEIGHT, TOOLTIP_TEXTURE_WIDTH, TOOLTIP_TEXTURE_HEIGHT);
+    		gui.addRenderToBuffer(mutableTooltipRenderable.vertices, xOffset + horizontalSegmentSize - TOOLTIP_SECTION_BORDER, -(yOffset + verticalSegmentSize - TOOLTIP_SECTION_BORDER), TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_WIDTH - TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_HEIGHT - TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_WIDTH, TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_HEIGHT, TOOLTIP_TEXTURE_WIDTH, TOOLTIP_TEXTURE_HEIGHT);
     		
     		//Top-center.
-    		InterfaceGUI.renderSheetTexture(xOffset + TOOLTIP_SECTION_BORDER, yOffset, horizontalSegmentSize - 2*TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_HEIGHT_OFFSET, TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_WIDTH - TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_BORDER, TOOLTIP_TEXTURE_WIDTH, TOOLTIP_TEXTURE_HEIGHT);
+    		gui.addRenderToBuffer(mutableTooltipRenderable.vertices, xOffset + TOOLTIP_SECTION_BORDER, -yOffset, horizontalSegmentSize - 2*TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_HEIGHT_OFFSET, TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_WIDTH - TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_BORDER, TOOLTIP_TEXTURE_WIDTH, TOOLTIP_TEXTURE_HEIGHT);
     		//Bottom-center.
-    		InterfaceGUI.renderSheetTexture(xOffset + TOOLTIP_SECTION_BORDER, yOffset + verticalSegmentSize - TOOLTIP_SECTION_BORDER, horizontalSegmentSize - 2*TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_HEIGHT - TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_WIDTH - TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_HEIGHT, TOOLTIP_TEXTURE_WIDTH, TOOLTIP_TEXTURE_HEIGHT);
+    		gui.addRenderToBuffer(mutableTooltipRenderable.vertices, xOffset + TOOLTIP_SECTION_BORDER, -(yOffset + verticalSegmentSize - TOOLTIP_SECTION_BORDER), horizontalSegmentSize - 2*TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_HEIGHT - TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_WIDTH - TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_HEIGHT, TOOLTIP_TEXTURE_WIDTH, TOOLTIP_TEXTURE_HEIGHT);
     		//Left-center.
-    		InterfaceGUI.renderSheetTexture(xOffset, yOffset + TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_BORDER, verticalSegmentSize - 2*TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_WIDTH_OFFSET, TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_HEIGHT - TOOLTIP_SECTION_BORDER, TOOLTIP_TEXTURE_WIDTH, TOOLTIP_TEXTURE_HEIGHT);
+    		gui.addRenderToBuffer(mutableTooltipRenderable.vertices, xOffset, -(yOffset + TOOLTIP_SECTION_BORDER), TOOLTIP_SECTION_BORDER, verticalSegmentSize - 2*TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_WIDTH_OFFSET, TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_HEIGHT - TOOLTIP_SECTION_BORDER, TOOLTIP_TEXTURE_WIDTH, TOOLTIP_TEXTURE_HEIGHT);
     		//Right-center.
-    		InterfaceGUI.renderSheetTexture(xOffset + horizontalSegmentSize - TOOLTIP_SECTION_BORDER, yOffset + TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_BORDER, verticalSegmentSize - 2*TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_WIDTH - TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_WIDTH, TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_HEIGHT - TOOLTIP_SECTION_BORDER, TOOLTIP_TEXTURE_WIDTH, TOOLTIP_TEXTURE_HEIGHT);
+    		gui.addRenderToBuffer(mutableTooltipRenderable.vertices, xOffset + horizontalSegmentSize - TOOLTIP_SECTION_BORDER, -(yOffset + TOOLTIP_SECTION_BORDER), TOOLTIP_SECTION_BORDER, verticalSegmentSize - 2*TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_WIDTH - TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_WIDTH, TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_HEIGHT - TOOLTIP_SECTION_BORDER, TOOLTIP_TEXTURE_WIDTH, TOOLTIP_TEXTURE_HEIGHT);
     		
-    		//Actual-center.
-    		InterfaceGUI.renderSheetTexture(xOffset + TOOLTIP_SECTION_BORDER, yOffset + TOOLTIP_SECTION_BORDER, horizontalSegmentSize - 2*TOOLTIP_SECTION_BORDER, verticalSegmentSize - 2*TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_WIDTH - TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_HEIGHT - TOOLTIP_SECTION_BORDER, TOOLTIP_TEXTURE_WIDTH, TOOLTIP_TEXTURE_HEIGHT);
+    		//Center-center.
+    		gui.addRenderToBuffer(mutableTooltipRenderable.vertices, xOffset + TOOLTIP_SECTION_BORDER, -(yOffset + TOOLTIP_SECTION_BORDER), horizontalSegmentSize - 2*TOOLTIP_SECTION_BORDER, verticalSegmentSize - 2*TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_WIDTH - TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_HEIGHT - TOOLTIP_SECTION_BORDER, TOOLTIP_TEXTURE_WIDTH, TOOLTIP_TEXTURE_HEIGHT);
+    		mutableTooltipRenderable.vertices.flip();
     		
-    		GL11.glTranslated(0, 0, 50);
-    		RenderText.draw2DText(tooltipCombinedText, null, xOffset + TOOLTIP_BORDER_PADDING, yOffset + TOOLTIP_BORDER_PADDING, ColorRGB.WHITE, TextAlignment.LEFT_ALIGNED, 1.0F, false, wrapWidth);
-    		GL11.glTranslated(0, 0, -300);
+    		
+    		//Do the actual rendering.
+    		GL11.glTranslated(0, 0, textPosition.z + 25);
+    		mutableTooltipRenderable.render();
+    		GL11.glTranslated(0, 0, -textPosition.z - 25);
+    		
+    		//Need to move tooltip text by -y to account for inverted coords.
+    		mutableTooltipPosition.set(xOffset + TOOLTIP_BORDER_PADDING, -(yOffset + TOOLTIP_BORDER_PADDING), textPosition.z + 50);
+    		RenderText.drawText(tooltipCombinedText, null, mutableTooltipPosition, null, ColorRGB.WHITE, TextAlignment.LEFT_ALIGNED, 1.0F, false, wrapWidth, 1.0F, true);
     	}
     }
     

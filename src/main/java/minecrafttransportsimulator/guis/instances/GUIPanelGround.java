@@ -129,7 +129,7 @@ public class GUIPanelGround extends AGUIPanel{
 			addComponent(beaconBox);
 			
 			//Add beacon text box label.
-			addComponent(new GUIComponentLabel(beaconBox.x + beaconBox.width/2, beaconBox.y + beaconBox.height + 1, vehicle.definition.motorized.panelTextColor != null ? vehicle.definition.motorized.panelTextColor : ColorRGB.WHITE, InterfaceCore.translate("gui.panel.beacon"), TextAlignment.CENTERED, 0.75F).setBox(beaconBox));
+			addComponent(new GUIComponentLabel(beaconBox.constructedX + beaconBox.width/2, beaconBox.constructedY + beaconBox.height + 1, vehicle.definition.motorized.panelTextColor != null ? vehicle.definition.motorized.panelTextColor : ColorRGB.WHITE, InterfaceCore.translate("gui.panel.beacon"), TextAlignment.CENTERED, 0.75F).setBox(beaconBox));
 		}
 	}
 	
@@ -336,6 +336,7 @@ public class GUIPanelGround extends AGUIPanel{
 	
 	@Override
 	public void setStates(){
+		super.setStates();
 		//Set the state of the light selector.
 		if(lightSelector != null){
 			lightSelector.selectorState = vehicle.variablesOn.contains(EntityVehicleF_Physics.HEADLIGHT_VARIABLE) ? 2 : (vehicle.variablesOn.contains(EntityVehicleF_Physics.RUNNINGLIGHT_VARIABLE) ? 1 : 0);

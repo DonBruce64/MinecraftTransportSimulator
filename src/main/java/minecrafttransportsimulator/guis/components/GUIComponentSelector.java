@@ -1,7 +1,11 @@
 package minecrafttransportsimulator.guis.components;
 
+import java.nio.FloatBuffer;
+
+import org.lwjgl.opengl.GL11;
+
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.mcinterface.InterfaceGUI;
+import minecrafttransportsimulator.rendering.components.RenderableObject;
 import minecrafttransportsimulator.rendering.instances.RenderText;
 import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
 
@@ -23,18 +27,43 @@ public abstract class GUIComponentSelector extends GUIComponentButton{
 	public GUIComponentSelector(int x, int y, int width, int height, String text, ColorRGB regularColor, ColorRGB litColor, int textureXOffset, int textureYOffset, int textureSectionWidth, int textureSectionHeight){
 		super(x, y, width, height, textureXOffset, textureYOffset, textureSectionWidth, textureSectionHeight);
 		this.text = text;
+		this.textPosition.set(position.x + width/2, position.y - height - 1, textPosition.z);
 		this.regularColor = regularColor != null ? regularColor : ColorRGB.WHITE;
 		this.litColor = regularColor != null ? litColor : ColorRGB.WHITE;
 	}
     
 	@Override
-	public void render(int mouseX, int mouseY, int textureWidth, int textureHeight, boolean blendingEnabled, float partialTicks){
-		int textureUStart = textureYOffset + selectorState*textureSectionHeight;
-		InterfaceGUI.renderSheetTexture(x, y, width, height, textureXOffset, textureUStart, textureXOffset + textureSectionWidth, textureUStart + textureSectionHeight, textureWidth, textureHeight);
+	public void render(AGUIBase gui, int mouseX, int mouseY, boolean blendingEnabled, float partialTicks){
+		if(renderable == null){
+			for(int i=0; i<3; ++i){
+				int textureUStart = textureYOffset + i*textureSectionHeight;
+    			FloatBuffer buffer = FloatBuffer.allocate(8*6);
+    			gui.addRenderToBuffer(buffer, 0, 0, width, height, textureXOffset, textureUStart, textureXOffset + textureSectionWidth, textureUStart + textureSectionHeight, gui.getTextureWidth(), gui.getTextureHeight());
+    			buffer.flip();
+    			
+    			if(i==0){
+    				renderable = new RenderableObject("gui_selector_0", gui.getTexture(), ColorRGB.WHITE, buffer, false);
+    			}else if(i==1){
+    				renderable2 = new RenderableObject("gui_selector_1", gui.getTexture(), ColorRGB.WHITE, buffer, false);
+    			}else{
+    				renderable3 = new RenderableObject("gui_selector_2", gui.getTexture(), ColorRGB.WHITE, buffer, false);
+    			}
+			}
+		}
+		
+		GL11.glTranslated(position.x, position.y, position.z);
+		if(selectorState == 0){
+			renderable.render();
+		}else if(selectorState == 1){
+			renderable2.render();
+		}else{
+			renderable3.render();
+		}
+		GL11.glTranslated(-position.x, -position.y, -position.z);
     }
 	
     @Override
 	public void renderText(boolean lightsOn){
-    	RenderText.draw2DText(text, null, x + width/2, y + height + 1, lightsOn ? litColor : regularColor, TextAlignment.CENTERED, 0.75F, false, 0);
+    	RenderText.drawText(text, null, textPosition, null, lightsOn ? litColor : regularColor, TextAlignment.CENTERED, 0.75F, false, 0, 1.0F, true);
     }
 }

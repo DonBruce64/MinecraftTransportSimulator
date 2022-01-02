@@ -15,17 +15,13 @@ import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
  */
 public class GUIComponentTextBox extends GUIComponentCutout{	
 	private static final String VALID_SPECIAL_CHARS = "/*!@#$%^&*()\"{}_[]|\\?/<>,.- ";
-	private static final int DEFAULT_BACKGROUND_SECTION_WIDTH = 40;
-	private static final int DEFAULT_BACKGROUND_SECTION_HEIGHT = 20;
-	private static final int DEFAULT_BACKGROUND_SECTION_WIDTH_OFFSET = 216;
-	private static final int DEFAULT_BACKGROUND_SECTION_HEIGHT_OFFSET = 236;
 	
 	public ColorRGB fontColor;
 	
 	public boolean enabled = true;
 	public boolean focused = false;
 	
-	private int position;
+	private int textIndex;
 	private int maxTextLength;
 	private String flashText;
 	    	
@@ -34,11 +30,12 @@ public class GUIComponentTextBox extends GUIComponentCutout{
 	}
 	
 	public GUIComponentTextBox(int x, int y, int width, int height, String text, ColorRGB fontColor, int maxTextLength){
-		this(x, y, width, height, text, fontColor, maxTextLength, DEFAULT_BACKGROUND_SECTION_WIDTH_OFFSET, DEFAULT_BACKGROUND_SECTION_HEIGHT_OFFSET, DEFAULT_BACKGROUND_SECTION_WIDTH, DEFAULT_BACKGROUND_SECTION_HEIGHT);
+		this(x, y, width, height, text, fontColor, maxTextLength, AGUIBase.STANDARD_COLOR_WIDTH_OFFSET, AGUIBase.STANDARD_BLACK_HEIGHT_OFFSET, AGUIBase.STANDARD_COLOR_WIDTH, AGUIBase.STANDARD_COLOR_HEIGHT);
 	}
 	
 	public GUIComponentTextBox(int x, int y, int width, int height, String text, ColorRGB fontColor, int maxTextLength, int textureXOffset, int textureYOffset, int textureSectionWidth, int textureSectionHeight){
 		super(x, y, width, height, textureXOffset, textureYOffset, textureSectionWidth, textureSectionHeight);
+		this.textPosition.set(position.x + 4, position.y - (height >= 20 ? 5 : 1 + height/10), textPosition.z);
 		this.fontColor = fontColor;
 		this.maxTextLength = maxTextLength;
 		setText(text);
@@ -48,8 +45,8 @@ public class GUIComponentTextBox extends GUIComponentCutout{
 	 *  Updates the focused property depending on mouse position and state.  Should be called whenever
 	 *  the mouse is clicked to focus the text box and allow the GUI to send user input to it. 
 	 */
-	public void updateFocus(int xPos, int yPos){
-		focused = visible && enabled && x < xPos && xPos < x + width && y < yPos && yPos < y + height;
+	public void updateFocus(int mouseX, int mouseY){
+		focused = visible && enabled && isMouseInBounds(mouseX, mouseY);
 	}
 	
 	/**
@@ -65,35 +62,35 @@ public class GUIComponentTextBox extends GUIComponentCutout{
 		//Handle control operation, or basic key typed.
 		if(control != null){
 			if(control.equals(TextBoxControlKey.BACKSPACE)){
-				if(position != 0){
+				if(textIndex != 0){
 					//Remove the char before the current position.
-					text = text.substring(0, position - 1) + text.substring(position, text.length());
-					--position;
+					text = text.substring(0, textIndex - 1) + text.substring(textIndex, text.length());
+					--textIndex;
 					if(isTextValid(text)){
 						handleTextChange();
 					}
 				}
 			}else if(control.equals(TextBoxControlKey.DELETE)){
-				if(position != text.length()){
+				if(textIndex != text.length()){
 					//Remove the char at the current position.
-					text = text.substring(0, position) + text.substring(position + 1, text.length());
+					text = text.substring(0, textIndex) + text.substring(textIndex + 1, text.length());
 					if(isTextValid(text)){
 						handleTextChange();
 					}
 				}
 			}else if(control.equals(TextBoxControlKey.LEFT)){
-				if(position > 0){
-					--position;
+				if(textIndex > 0){
+					--textIndex;
 				}
 			}else if(control.equals(TextBoxControlKey.RIGHT)){
-				if(position < text.length()){
-					++position;
+				if(textIndex < text.length()){
+					++textIndex;
 				}
 			}
 		}else if(Character.isLetterOrDigit(typedChar) || VALID_SPECIAL_CHARS.contains(Character.toString(typedChar))){
 			if(text.length() < maxTextLength){
-				text = text.substring(0, position) + typedChar + text.substring(position, text.length());
-				++position;
+				text = text.substring(0, textIndex) + typedChar + text.substring(textIndex, text.length());
+				++textIndex;
 				if(isTextValid(text)){
 					handleTextChange();
 				}
@@ -103,10 +100,10 @@ public class GUIComponentTextBox extends GUIComponentCutout{
 		//Update flashText;
 		if(text.isEmpty()){
 			flashText = "_";
-		}else if(position == text.length()){
+		}else if(textIndex == text.length()){
 			flashText = text + "_";
 		}else{
-			flashText = text.substring(0, position) + "_" + text.substring(position + 1, text.length());
+			flashText = text.substring(0, textIndex) + "_" + text.substring(textIndex + 1, text.length());
 		}
 	}
 	
@@ -137,17 +134,17 @@ public class GUIComponentTextBox extends GUIComponentCutout{
 		}else{
 			text = newText;
 		}
-		position = text.length();
+		textIndex = text.length();
 		
 		//Set flash text for cursor.  Should flash at current position.
 		if(text.isEmpty()){
 			flashText = "_";
-		}else if(position == 0){
+		}else if(textIndex == 0){
 			flashText = "_" + text.substring(1);
-		}else if(position == text.length()){
+		}else if(textIndex == text.length()){
 			flashText = text + "_";
 		}else{
-			flashText = text.substring(0, position) + text.substring(position + 1);
+			flashText = text.substring(0, textIndex) + text.substring(textIndex + 1);
 		} 
 	}
 	
@@ -164,12 +161,12 @@ public class GUIComponentTextBox extends GUIComponentCutout{
 		//Otherwise, render it at the top aligned.
 		if(enabled){
 			if(focused && AGUIBase.inClockPeriod(20, 10)){
-				RenderText.draw2DText(flashText, null, x + 4, y + (height >= 20 ? 5 : 1 + height/10), fontColor, TextAlignment.LEFT_ALIGNED, 1.0F, false, width);
+				RenderText.drawText(flashText, null, textPosition, null, fontColor, TextAlignment.LEFT_ALIGNED, 1.0F, false, width, 1.0F, true);
 			}else{
-				RenderText.draw2DText(text, null, x + 4, y + (height >= 20 ? 5 : 1 + height/10), fontColor, TextAlignment.LEFT_ALIGNED, 1.0F, false, width);
+				RenderText.drawText(text, null, textPosition, null, fontColor, TextAlignment.LEFT_ALIGNED, 1.0F, false, width, 1.0F, true);
 			}
 		}else{
-			RenderText.draw2DText(text, null, x + 4, y + (height >= 20 ? 5 : 1 + height/10), ColorRGB.GRAY, TextAlignment.LEFT_ALIGNED, 1.0F, false, width);
+			RenderText.drawText(text, null, textPosition, null, ColorRGB.GRAY, TextAlignment.LEFT_ALIGNED, 1.0F, false, width, 1.0F, true);
 		}
     }
     

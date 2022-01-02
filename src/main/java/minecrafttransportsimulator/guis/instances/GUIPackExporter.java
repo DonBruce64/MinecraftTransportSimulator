@@ -52,6 +52,7 @@ public class GUIPackExporter extends AGUIBase{
 	
 	@Override 
 	public void setupComponents(int guiLeft, int guiTop){
+		super.setupComponents(guiLeft, guiTop);
 		int buttonWidth = 350/4;
 		int buttonOffset = -(350 - getWidth())/2;
 		addComponent(packExportButton = new GUIComponentButton(guiLeft + buttonOffset, guiTop + 0, buttonWidth, 20, "EXPORT PACKS"){
@@ -204,8 +205,8 @@ public class GUIPackExporter extends AGUIBase{
 					int dataEntryBoxIndex = 0;
 					componentItemModel.modelLocation = String.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
 					componentItemModel.textureLocation = String.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
-					componentItemModel.offsetX = Integer.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
-					componentItemModel.offsetY = Integer.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
+					componentItemModel.position.x = componentItemModel.constructedX + Integer.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
+					componentItemModel.position.y = componentItemModel.constructedY + Integer.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
 					componentItemModel.scale = Float.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
 				}catch(Exception e){}
 			}
@@ -221,7 +222,7 @@ public class GUIPackExporter extends AGUIBase{
 		for(byte i=0; i<5; ++i){
 			int height = i < 2 ? 40 : 10;
 			GUIComponentTextBox dataEntryBox = new GUIComponentTextBox(guiLeft + 100, guiTop + currentRow, 140, height, "", ColorRGB.WHITE, 100);
-			GUIComponentLabel dataEntryLabel = new GUIComponentLabel(guiLeft + 15, dataEntryBox.y, ColorRGB.WHITE, "").setBox(dataEntryBox);
+			GUIComponentLabel dataEntryLabel = new GUIComponentLabel(guiLeft + 15, dataEntryBox.constructedY, ColorRGB.WHITE, "").setBox(dataEntryBox);
 			dataEntryBoxes.add(dataEntryBox);
 			dataEntryLabels.add(dataEntryLabel);
 			addComponent(dataEntryBox);
@@ -231,8 +232,7 @@ public class GUIPackExporter extends AGUIBase{
 		
 		//Add item icon model component.
 		componentItemModel = new GUIComponent3DModel(guiLeft, guiTop, 1.0F, true, false, true);
-		componentItemModel.offsetX = 208;
-		componentItemModel.offsetY = 205;
+		componentItemModel.position.add(208, 205, 0);
 		componentItemModel.scale = 6.0F;
 		addComponent(componentItemModel);
 		
@@ -243,9 +243,9 @@ public class GUIPackExporter extends AGUIBase{
 		dataEntryLabels.get(labelBoxIndex).text = "Texture:";
 		dataEntryBoxes.get(labelBoxIndex++).setText(vehicleClicked.definition.getTextureLocation(vehicleClicked.subName));
 		dataEntryLabels.get(labelBoxIndex).text = "X-Pos (px):";
-		dataEntryBoxes.get(labelBoxIndex++).setText(String.valueOf(componentItemModel.offsetX));
+		dataEntryBoxes.get(labelBoxIndex++).setText(String.valueOf((int) (componentItemModel.position.x) - componentItemModel.constructedX));
 		dataEntryLabels.get(labelBoxIndex).text = "Y-Pos (px):";
-		dataEntryBoxes.get(labelBoxIndex++).setText(String.valueOf(componentItemModel.offsetY));
+		dataEntryBoxes.get(labelBoxIndex++).setText(String.valueOf((int) (componentItemModel.position.y) - componentItemModel.constructedY));
 		dataEntryLabels.get(labelBoxIndex).text = "Scale (1blk=1px):";
 		dataEntryBoxes.get(labelBoxIndex++).setText(String.valueOf(componentItemModel.scale));
 		
@@ -255,9 +255,10 @@ public class GUIPackExporter extends AGUIBase{
 
 	@Override
 	public void setStates(){
+		super.setStates();
 		try{
-			componentItemModel.offsetX = Integer.valueOf(dataEntryBoxes.get(2).getText());
-			componentItemModel.offsetY = Integer.valueOf(dataEntryBoxes.get(3).getText());
+			componentItemModel.position.x = componentItemModel.constructedX + Integer.valueOf(dataEntryBoxes.get(2).getText());
+			componentItemModel.position.y = componentItemModel.constructedY + Integer.valueOf(dataEntryBoxes.get(3).getText());
 			componentItemModel.scale = Float.valueOf(dataEntryBoxes.get(4).getText());
 		}catch(Exception e){
 			

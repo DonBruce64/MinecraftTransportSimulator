@@ -46,14 +46,6 @@ public class InterfaceEventsOverlay{
 	private static AGUIBase currentGUI;
 	private static BuilderGUI currentBuilder;
 	private static boolean inFirstPersonLastRender;
-	
-	/**
-	 *  Resets the overlay GUI by nulling it out.  This will cause it to re-create itself next tick.
-	 *  Useful if something on it has changed and you need it to re-create the overlay.
-	 */
-	public static void resetGUI(){
-		currentGUI = null;
-	}
     
     /**
      * Renders an overlay GUI, or other overlay components like the fluid in a tank if we are mousing-over a vehicle.
@@ -107,7 +99,7 @@ public class InterfaceEventsOverlay{
 											EntityFluidTank tank = ((PartInteractable) part).tank;
 											if(tank != null){
 												String tankText = tank.getFluid().isEmpty() ? "EMPTY" : tank.getFluid().toUpperCase() + " : " + tank.getFluidLevel() + "/" + tank.getMaxLevel();
-												RenderText.draw2DText(tankText, null, screenWidth/2 + 4, screenHeight/2, ColorRGB.WHITE, TextAlignment.LEFT_ALIGNED, 1.0F, false, 0);
+												RenderText.drawText(tankText, null, new Point3d(screenWidth/2 + 4, screenHeight/2, 0), null, ColorRGB.WHITE, TextAlignment.LEFT_ALIGNED, 1.0F, false, 0, 1.0F, true);
 											}
 										}
 									}
@@ -123,7 +115,7 @@ public class InterfaceEventsOverlay{
 								EntityFluidTank tank = builder.tileEntity.getTank();
 								if(tank != null){
 									String tankText = tank.getFluid().isEmpty() ? "EMPTY" : tank.getFluid().toUpperCase() + " : " + tank.getFluidLevel() + "/" + tank.getMaxLevel();
-									RenderText.draw2DText(tankText, null, screenWidth/2 + 4, screenHeight/2, ColorRGB.WHITE, TextAlignment.LEFT_ALIGNED, 1.0F, false, 0);
+									RenderText.drawText(tankText, null, new Point3d(screenWidth/2 + 4, screenHeight/2, 0), null, ColorRGB.WHITE, TextAlignment.LEFT_ALIGNED, 1.0F, false, 0, 1.0F, true);
 								}
 							}
 						}
@@ -140,18 +132,18 @@ public class InterfaceEventsOverlay{
 						
 						//If we are in a seat controlling a gun, render a text line for it.
 						if(seat.canControlGuns && !InterfaceClient.isChatOpen()){
-							RenderText.draw2DText("Active Gun:", null, screenWidth, 8, ColorRGB.WHITE, TextAlignment.RIGHT_ALIGNED, 1.0F, false, 0);
+							RenderText.drawText("Active Gun:", null, new Point3d(screenWidth, 8, 0), null, ColorRGB.WHITE, TextAlignment.RIGHT_ALIGNED, 1.0F, false, 0, 1.0F, true);
 							if(seat.activeGun != null){
 								String gunNumberText = seat.activeGun.definition.gun.fireSolo ? " [" + (seat.gunIndex + 1) + "]" : "";
-								RenderText.draw2DText(seat.activeGun.getItemName() + gunNumberText, null, screenWidth, 16, ColorRGB.WHITE, TextAlignment.RIGHT_ALIGNED, 1.0F, false, 0);
+								RenderText.drawText(seat.activeGun.getItemName() + gunNumberText, null, new Point3d(screenWidth, 16, 0), null, ColorRGB.WHITE, TextAlignment.RIGHT_ALIGNED, 1.0F, false, 0, 1.0F, true);
 							}else{
-								RenderText.draw2DText("None", null, screenWidth, 16, ColorRGB.WHITE, TextAlignment.RIGHT_ALIGNED, 1.0F, false, 0);
+								RenderText.drawText("None", null, new Point3d(screenWidth, 16, 0), null, ColorRGB.WHITE, TextAlignment.RIGHT_ALIGNED, 1.0F, false, 0, 1.0F, true);
 							}
 						}
 						
 						//If the seat is a controller, render the HUD if it's set.
 						if(seat.placementDefinition.isController && (InterfaceClient.inFirstPerson() ? ConfigSystem.configObject.clientRendering.renderHUD_1P.value : ConfigSystem.configObject.clientRendering.renderHUD_3P.value)){
-							RenderText.draw2DText(String.format("Health:%3.1f%%", 100*(ridingEntity.definition.general.health - ridingEntity.damageAmount)/ridingEntity.definition.general.health), null, screenWidth, 0, ColorRGB.WHITE, TextAlignment.RIGHT_ALIGNED, 1.0F, false, 0);
+							RenderText.drawText(String.format("Health:%3.1f%%", 100*(ridingEntity.definition.general.health - ridingEntity.damageAmount)/ridingEntity.definition.general.health), null, new Point3d(screenWidth, 0, 0), null, ColorRGB.WHITE, TextAlignment.RIGHT_ALIGNED, 1.0F, false, 0, 1.0F, true);
 							
 							//Create a new GUI for the HUD if we don't have one or if we changed from first-person to third-person.
 							if(currentGUI == null || (inFirstPersonLastRender ^ InterfaceClient.inFirstPerson())){
@@ -195,8 +187,8 @@ public class InterfaceEventsOverlay{
 				}
 			}
 			
-			//Not riding a vehicle.  Reset GUI.
-			resetGUI();
+			//Not riding a vehicle.  Set GUI to null.
+			currentGUI = null;
     	}
     }
 }

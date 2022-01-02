@@ -1,7 +1,11 @@
 package minecrafttransportsimulator.guis.components;
 
+import java.nio.FloatBuffer;
+
+import org.lwjgl.opengl.GL11;
+
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.mcinterface.InterfaceGUI;
+import minecrafttransportsimulator.rendering.components.RenderableObject;
 import minecrafttransportsimulator.rendering.instances.RenderText;
 import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
 
@@ -28,6 +32,8 @@ public abstract class GUIComponentButton extends GUIComponentCutout{
 	
 	public boolean enabled = true;
 	public final ColorRGB textColor;
+	protected RenderableObject renderable2;
+	protected RenderableObject renderable3;
 	
 	/**A Simple button with a rendered string in grey and center-aligned.**/
 	public GUIComponentButton(int x, int y, int width, int height, String text){
@@ -57,6 +63,7 @@ public abstract class GUIComponentButton extends GUIComponentCutout{
 	/**A fully-customizable button with custom texture alignment and font color.  Note that making the width or the height of the texture section 0 will result in no texture being rendered.**/
 	private GUIComponentButton(int x, int y, int width, int height, String text, boolean centeredText, ColorRGB textColor, int textureXOffset, int textureYOffset, int textureSectionWidth, int textureSectionHeight){
 		super(x, y, width, height, textureXOffset, textureYOffset, textureSectionWidth, textureSectionHeight);
+		this.textPosition.set(centeredText ? position.x + width/2 : position.x, position.y - (height-8)/2, textPosition.z);
 		this.text = text;
 		this.centeredText = centeredText;
 		this.textColor = textColor;
@@ -92,31 +99,47 @@ public abstract class GUIComponentButton extends GUIComponentCutout{
 	public void onReleased(){};
 	
 	@Override
-    public void render(int mouseX, int mouseY, int textureWidth, int textureHeight, boolean blendingEnabled, float partialTicks){
+    public void render(AGUIBase gui, int mouseX, int mouseY, boolean blendingEnabled, float partialTicks){
     	if(textureSectionWidth != 0 && textureSectionHeight != 0){
-			int textureUStart;
+    		if(renderable == null){
+    			for(int i=0; i<3; ++i){
+    				int textureUStart = textureYOffset + i*textureSectionHeight;
+    				
+	    			FloatBuffer buffer = FloatBuffer.allocate(3*8*6);
+	    			//Left border.
+	    			gui.addRenderToBuffer(buffer, 0, 0, DEFAULT_BUTTON_SECTION_BORDER, height, textureXOffset, textureUStart, textureXOffset + DEFAULT_BUTTON_SECTION_BORDER, textureUStart + textureSectionHeight, gui.getTextureWidth(), gui.getTextureHeight());
+	        		//Center stretched segment.
+	    			gui.addRenderToBuffer(buffer, DEFAULT_BUTTON_SECTION_BORDER, 0, width - 2*DEFAULT_BUTTON_SECTION_BORDER, height, textureXOffset + DEFAULT_BUTTON_SECTION_BORDER, textureUStart, textureXOffset + textureSectionWidth - DEFAULT_BUTTON_SECTION_BORDER, textureUStart + textureSectionHeight, gui.getTextureWidth(), gui.getTextureHeight());
+	        		//Right border.
+	    			gui.addRenderToBuffer(buffer, width - DEFAULT_BUTTON_SECTION_BORDER, 0, DEFAULT_BUTTON_SECTION_BORDER, height, textureXOffset + textureSectionWidth - DEFAULT_BUTTON_SECTION_BORDER, textureUStart, textureXOffset + textureSectionWidth, textureUStart + textureSectionHeight, gui.getTextureWidth(), gui.getTextureHeight());
+	    			buffer.flip();
+	    			
+	    			if(i==0){
+	    				renderable = new RenderableObject("gui_button_disabled", gui.getTexture(), ColorRGB.WHITE, buffer, false);
+	    			}else if(i==1){
+	    				renderable2 = new RenderableObject("gui_button_normal", gui.getTexture(), ColorRGB.WHITE, buffer, false);
+	    			}else{
+	    				renderable3 = new RenderableObject("gui_button_highlight", gui.getTexture(), ColorRGB.WHITE, buffer, false);
+	    			}
+    			}
+    		}
+    		
+    		GL11.glTranslated(position.x, position.y, position.z);
     		if(enabled){
-				if(isMouseInBounds(mouseX, mouseY)){
-					textureUStart = textureYOffset + 2*textureSectionHeight;//Highlighted
-				}else{
-					textureUStart = textureYOffset + 1*textureSectionHeight;//Normal
+				if(isMouseInBounds(mouseX, mouseY)){//Highlighted
+					renderable3.render();
+				}else{//Normal
+					renderable2.render();
 				}
-			}else{
-				textureUStart = textureYOffset;//Disabled
+			}else{//Disabled
+				renderable.render();
 			}
-    		//Left border.
-    		InterfaceGUI.renderSheetTexture(x, y, DEFAULT_BUTTON_SECTION_BORDER, height, textureXOffset, textureUStart, textureXOffset + DEFAULT_BUTTON_SECTION_BORDER, textureUStart + textureSectionHeight, textureWidth, textureHeight);
-    		
-    		//Center streched segment.
-    		InterfaceGUI.renderSheetTexture(x + DEFAULT_BUTTON_SECTION_BORDER, y, width - 2*DEFAULT_BUTTON_SECTION_BORDER, height, textureXOffset + DEFAULT_BUTTON_SECTION_BORDER, textureUStart, textureXOffset + textureSectionWidth - DEFAULT_BUTTON_SECTION_BORDER, textureUStart + textureSectionHeight, textureWidth, textureHeight);
-    		
-    		//Right border.
-    		InterfaceGUI.renderSheetTexture(x + width - DEFAULT_BUTTON_SECTION_BORDER, y, DEFAULT_BUTTON_SECTION_BORDER, height, textureXOffset + textureSectionWidth - DEFAULT_BUTTON_SECTION_BORDER, textureUStart, textureXOffset + textureSectionWidth, textureUStart + textureSectionHeight, textureWidth, textureHeight);
+    		GL11.glTranslated(-position.x, -position.y, -position.z);
 		}
     }
     
     @Override
 	public void renderText(boolean renderTextLit){
-    	RenderText.draw2DText(text, null, centeredText ? x + width/2 : x, y + (height-8)/2, textColor, centeredText ? TextAlignment.CENTERED : TextAlignment.LEFT_ALIGNED, 1.0F, false, 0);
+    	RenderText.drawText(text, null, textPosition, null, textColor, centeredText ? TextAlignment.CENTERED : TextAlignment.LEFT_ALIGNED, 1.0F, false, 0, 1.0F, true);
     }
 }

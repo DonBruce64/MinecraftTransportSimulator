@@ -5,7 +5,6 @@ import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentCutout;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.jsondefs.JSONPart.FurnaceComponentType;
-import minecrafttransportsimulator.mcinterface.InterfaceGUI;
 import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketPlayerItemTransfer;
 import net.minecraft.item.ItemStack;
@@ -20,6 +19,7 @@ import net.minecraft.item.ItemStack;
 public class GUIFurnace extends AGUIInventory{
 	
 	private GUIComponentCutout fuelIcon;
+	private GUIComponentCutout smeltingProgress;
 	
 	private final EntityFurnace furnace;
 	
@@ -36,7 +36,7 @@ public class GUIFurnace extends AGUIInventory{
 		interactableSlotButtons.clear();
 		interactableSlotIcons.clear();
 		
-		GUIComponentButton smeltingItemButton = new GUIComponentButton(guiLeft + 52, guiTop + 21, false){
+		GUIComponentButton smeltingItemButton = new GUIComponentButton(guiLeft + 51, guiTop + 20, false){
 			@Override
 			public void onClicked(boolean leftSide){
 				InterfacePacket.sendToServer(new PacketPlayerItemTransfer(furnace, player, interactableSlotButtons.indexOf(this), -1));
@@ -89,34 +89,10 @@ public class GUIFurnace extends AGUIInventory{
 		addComponent(new GUIComponentCutout(guiLeft + 61, guiTop + 53, 54, 18, 176, backplaneOffset));
 		
 		//Add the flame section that displays how much fuel the furnace has.
-		addComponent(this.fuelIcon = new GUIComponentCutout(guiLeft + 81, guiTop + 38, 14, 14, 176, 0){
-			@Override
-			public void render(int mouseX, int mouseY, int textureWidth, int textureHeight, boolean blendingEnabled, float partialTicks){
-				if(furnace.definition.furnaceType.equals(FurnaceComponentType.ELECTRIC)){
-					super.render(mouseX, mouseY, textureWidth, textureHeight, blendingEnabled, partialTicks);
-				}else{
-					if(furnace.ticksLeftOfFuel > 0){
-						int pixelsRemoved = (int) (textureSectionHeight - textureSectionHeight*((double)furnace.ticksLeftOfFuel/furnace.ticksAddedOfFuel));
-						//This could be over due to packet lag.
-						if(pixelsRemoved < 0){
-							pixelsRemoved = 0;
-						}
-				    	InterfaceGUI.renderSheetTexture(x + offsetX, y + offsetY + pixelsRemoved, width, height - pixelsRemoved, textureXOffset, textureYOffset + pixelsRemoved, textureXOffset + textureSectionWidth, textureYOffset + textureSectionHeight, textureWidth, textureHeight);
-					}
-				}
-		    }
-		});
+		addComponent(this.fuelIcon = new GUIComponentCutout(guiLeft + 81, guiTop + 38, 14, 14, 176, 0));
 		
 		//Add the arrow section that displays how far along the smelting operation is.
-		addComponent(new GUIComponentCutout(guiLeft + 77, guiTop + 20, 24, 17, 176, 14){
-			@Override
-			public void render(int mouseX, int mouseY, int textureWidth, int textureHeight, boolean blendingEnabled, float partialTicks){
-				if(furnace.ticksLeftToSmelt > 0){
-					int pixelsRemoved = (int) (textureSectionWidth*((double)furnace.ticksLeftToSmelt/furnace.ticksNeededToSmelt));
-			    	InterfaceGUI.renderSheetTexture(x + offsetX, y + offsetY, width - pixelsRemoved, height, textureXOffset, textureYOffset, textureXOffset + textureSectionWidth - pixelsRemoved, textureYOffset + textureSectionHeight, textureWidth, textureHeight);
-				}
-		    }
-		});
+		addComponent(this.smeltingProgress = new GUIComponentCutout(guiLeft + 77, guiTop + 20, 24, 17, 176, 14));
 	}
 
 	@Override
@@ -129,7 +105,28 @@ public class GUIFurnace extends AGUIInventory{
 			interactableSlotIcons.get(i).stack = stack;
 		}
 		
+		//Set fuel state.
 		fuelIcon.visible = furnace.ticksLeftOfFuel > 0;
+		if(!furnace.definition.furnaceType.equals(FurnaceComponentType.ELECTRIC)){
+			int pixelsRemoved = (int) (fuelIcon.textureSectionHeight - fuelIcon.textureSectionHeight*((double)furnace.ticksLeftOfFuel/furnace.ticksAddedOfFuel));
+			//This could be over due to packet lag.
+			if(pixelsRemoved < 0){
+				pixelsRemoved = 0;
+			}
+			fuelIcon.position.y = -fuelIcon.constructedY - pixelsRemoved;
+			fuelIcon.height = 14 - pixelsRemoved;
+			fuelIcon.textureYOffset = pixelsRemoved;
+		}
+		
+		//Set smelting state.
+		if(furnace.ticksNeededToSmelt > 0 && furnace.ticksLeftToSmelt > 0){
+			int pixelsRemoved = (int) (24*((double)furnace.ticksLeftToSmelt/furnace.ticksNeededToSmelt));
+	    	smeltingProgress.width = 24 - pixelsRemoved;
+	    	smeltingProgress.textureSectionWidth = 24 - pixelsRemoved;
+	    	smeltingProgress.visible = true;
+		}else{
+			smeltingProgress.visible = false;
+		}
 	}
 	
 	@Override

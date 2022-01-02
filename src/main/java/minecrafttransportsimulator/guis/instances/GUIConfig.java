@@ -9,11 +9,11 @@ import java.util.Map;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
+import minecrafttransportsimulator.guis.components.GUIComponentCutout;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.jsondefs.JSONConfig.JSONConfigEntry;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
-import minecrafttransportsimulator.mcinterface.InterfaceGUI;
 import minecrafttransportsimulator.mcinterface.InterfaceInput;
 import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -58,7 +58,9 @@ public class GUIConfig extends AGUIBase{
 	private GUIComponentButton deadzone_moreButton;
 	private GUIComponentButton deadzone_lessButton;
 	private GUIComponentTextBox deadzone_text;
-	private List<JoystickControlButton> joystickComponentSelectionButtons = new ArrayList<JoystickControlButton>();
+	private List<GUIComponentButton> joystickComponentSelectionButtons = new ArrayList<GUIComponentButton>();
+	private List<GUIComponentCutout> joystickComponentStateBackgrounds = new ArrayList<GUIComponentCutout>();
+	private List<GUIComponentCutout> joystickComponentStateForegrounds = new ArrayList<GUIComponentCutout>();
 	
 	//Joystick assignment variables.
 	private boolean assigningDigital;
@@ -88,6 +90,7 @@ public class GUIConfig extends AGUIBase{
 	
 	@Override
 	public void setupComponents(int guiLeft, int guiTop){
+		super.setupComponents(guiLeft, guiTop);
 		//Global header buttons.
 		addComponent(renderConfigScreenButton = new GUIComponentButton(guiLeft + 0, guiTop - 20, 85, 20, InterfaceCore.translate("gui.config.header.config.rendering")){
 			@Override
@@ -184,7 +187,7 @@ public class GUIConfig extends AGUIBase{
 					addComponent(box);
 					
 					//Now create the label.
-					addComponent(new GUIComponentLabel(box.x - 70, box.y + 2, ColorRGB.BLACK, keyboardControl.translatedName + ":").setBox(box));
+					addComponent(new GUIComponentLabel(box.constructedX - 70, box.constructedY + 2, ColorRGB.BLACK, keyboardControl.translatedName + ":").setBox(box));
 					
 					verticalOffset += 11;
 					if(verticalOffset > 20 + 11*9){
@@ -235,10 +238,28 @@ public class GUIConfig extends AGUIBase{
 		
 		//Joystick component selection buttons and text.
 		joystickComponentSelectionButtons.clear();
+		joystickComponentStateBackgrounds.clear();
+		joystickComponentStateForegrounds.clear();
 		for(int i=0; i<9; ++i){
-			JoystickControlButton button = new JoystickControlButton(guiLeft+10, guiTop+45+15*i);
+			GUIComponentButton button = new GUIComponentButton(guiLeft+10, guiTop+45+15*i, 215, 15, "", false, ColorRGB.DARK_GRAY, true){
+				@Override
+				public void onClicked(boolean leftSide){
+					joystickComponentId = joystickComponentSelectionButtons.indexOf(this) + scrollSpot;
+					if(InterfaceInput.isJoystickComponentAxis(selectedJoystick, joystickComponentId)){
+						assigningDigital = false;
+					}else{
+						assigningDigital = true;
+					}
+				}
+			};
 			joystickComponentSelectionButtons.add(button);
 			addComponent(button);
+			GUIComponentCutout componentBackground = new GUIComponentCutout(button.constructedX + 100, button.constructedY + 2, 40, 10, STANDARD_COLOR_WIDTH_OFFSET, STANDARD_BLACK_HEIGHT_OFFSET, STANDARD_COLOR_WIDTH, STANDARD_COLOR_HEIGHT);
+			joystickComponentStateBackgrounds.add(componentBackground);
+			addComponent(componentBackground);
+			GUIComponentCutout componentForeground = new GUIComponentCutout(button.constructedX + 100, button.constructedY + 2, 40, 10, STANDARD_COLOR_WIDTH_OFFSET, 0, STANDARD_COLOR_WIDTH, STANDARD_COLOR_HEIGHT);
+			joystickComponentStateForegrounds.add(componentForeground);
+			addComponent(componentForeground);
 		}
 		addComponent(componentListUpButton = new GUIComponentButton(guiLeft + 225, guiTop + 45, 20, 20, "/\\"){@Override
 		public void onClicked(boolean leftSide){scrollSpot -= 9;}});
@@ -357,6 +378,7 @@ public class GUIConfig extends AGUIBase{
 	
 	@Override
 	public void setStates(){
+		super.setStates();
 		//Global headers are just toggles depending on operation.
 		renderConfigScreenButton.enabled = configuringControls || (!configuringControls && !configuringRendering);
 		controlConfigScreenButton.enabled = configuringControls || (!configuringControls && configuringRendering);
@@ -417,7 +439,11 @@ public class GUIConfig extends AGUIBase{
 		boolean onComponentSelectScreen = selectedJoystick != null && joystickComponentId == -1;
 		for(byte i=0; i<9; ++i){
 			GUIComponentButton button = joystickComponentSelectionButtons.get(i);
+			GUIComponentCutout componentBackground = joystickComponentStateBackgrounds.get(i);
+			GUIComponentCutout componentForeground = joystickComponentStateForegrounds.get(i);
 			button.visible = onComponentSelectScreen && i + scrollSpot < selectedJoystickComponentCount;
+			componentBackground.visible = button.visible;
+			componentForeground.visible = button.visible;
 			if(button.visible){
 				//Set basic button text.
 				int controlIndex = i+scrollSpot;
@@ -429,6 +455,35 @@ public class GUIConfig extends AGUIBase{
 						if(joystickControl.config.buttonIndex == controlIndex && joystickControl.systemName.startsWith(vehicleConfiguring)){
 							button.text += String.format("          %s", joystickControl.translatedName);
 						}
+					}
+				}
+				
+				//Set state of color rendering to display axis state.
+				//Joystick component selection buttons and text.
+				float pollData = InterfaceInput.getJoystickAxisValue(selectedJoystick, controlIndex);
+				if(InterfaceInput.isJoystickComponentAxis(selectedJoystick, controlIndex)){
+					int pollDataInt = (int) (pollData*20);
+					componentBackground.visible = true;
+					componentForeground.position.x = componentForeground.constructedX;
+					if(pollDataInt > 0){
+						componentForeground.position.x += 20;
+						componentForeground.width = pollDataInt;
+					}else{
+						componentForeground.position.x += (20 + pollDataInt);
+						componentForeground.width = -pollDataInt;
+					}
+					componentForeground.textureYOffset = STANDARD_RED_HEIGHT_OFFSET;
+				}else{
+					componentBackground.visible = false;
+					componentForeground.position.x = componentForeground.constructedX + 15;
+					componentForeground.width = 10;
+					if(pollData == 0){
+						componentForeground.textureYOffset = STANDARD_BLACK_HEIGHT_OFFSET;
+					}else if(pollData == 1){
+						componentForeground.textureYOffset = STANDARD_RED_HEIGHT_OFFSET;
+					}else{
+						//For digitals with fractions like hats.
+						componentForeground.textureYOffset = STANDARD_YELLOW_HEIGHT_OFFSET;
 					}
 				}
 			}
@@ -514,62 +569,10 @@ public class GUIConfig extends AGUIBase{
 						};
 						addComponent(button);
 						configButtons.put(button, (JSONConfigEntry<Boolean>) configEntry);
-						addComponent(new GUIComponentLabel(button.x - 75, button.y + 5, ColorRGB.BLACK, field.getName()).setButton(button));
+						addComponent(new GUIComponentLabel(button.constructedX - 75, button.constructedY + 5, ColorRGB.BLACK, field.getName()).setButton(button));
 					}
 				}catch(Exception e){
 					//How the heck does this even happen?
-				}
-			}
-		}
-	}
-	
-	
-	/**Custom button class.  We use this here to render the state of the joystick polled
-	 * on top of the button after after we render the button.
-	 *
-	 * @author don_bruce
-	 */
-	private class JoystickControlButton extends GUIComponentButton{
-		public JoystickControlButton(int x, int y){
-			super(x, y, 215, 15, "", false, ColorRGB.DARK_GRAY, true);
-		}
-
-		@Override
-		public void onClicked(boolean leftSide){
-			joystickComponentId = joystickComponentSelectionButtons.indexOf(this) + scrollSpot;
-			if(InterfaceInput.isJoystickComponentAxis(selectedJoystick, joystickComponentId)){
-				assigningDigital = false;
-			}else{
-				assigningDigital = true;
-			}
-		}
-		
-		@Override
-		public void render(int mouseX, int mouseY, int textureWidth, int textureHeight, boolean blendingEnabled, float partialTicks){
-			super.render(mouseX, mouseY, textureWidth, textureHeight, blendingEnabled, partialTicks);
-			//We need to manually draw the joystick state here.
-			int buttonIndex = joystickComponentSelectionButtons.indexOf(this);
-			int controlIndex = buttonIndex + scrollSpot;
-			float pollData = InterfaceInput.getJoystickAxisValue(selectedJoystick, controlIndex);
-			int displayOffset = 100;
-			int displayWidth = 20;
-			if(InterfaceInput.isJoystickComponentAxis(selectedJoystick, controlIndex)){
-				InterfaceGUI.renderSheetTexture(x + displayOffset, y + 2, 40, height - 4, STANDARD_COLOR_WIDTH_OFFSET, STANDARD_BLACK_HEIGHT_OFFSET, STANDARD_COLOR_WIDTH_OFFSET + STANDARD_COLOR_WIDTH, STANDARD_BLACK_HEIGHT_OFFSET + STANDARD_COLOR_HEIGHT, textureWidth, textureHeight);
-				if(Math.abs(pollData) > ConfigSystem.configObject.clientControls.joystickDeadZone.value){
-					if(pollData < 0){
-						InterfaceGUI.renderSheetTexture(x + displayOffset + displayWidth + (int) (pollData*20), y + 2, (int) (-pollData*20), height - 4, STANDARD_COLOR_WIDTH_OFFSET, STANDARD_RED_HEIGHT_OFFSET, STANDARD_COLOR_WIDTH_OFFSET + STANDARD_COLOR_WIDTH, STANDARD_RED_HEIGHT_OFFSET + STANDARD_COLOR_HEIGHT, textureWidth, textureHeight);
-					}else{
-						InterfaceGUI.renderSheetTexture(x + displayOffset + displayWidth, y + 2, (int) (pollData*20), height - 4, STANDARD_COLOR_WIDTH_OFFSET, STANDARD_RED_HEIGHT_OFFSET, STANDARD_COLOR_WIDTH_OFFSET + STANDARD_COLOR_WIDTH, STANDARD_RED_HEIGHT_OFFSET + STANDARD_COLOR_HEIGHT, textureWidth, textureHeight);
-					}
-				}
-			}else{
-				if(pollData == 0){
-					InterfaceGUI.renderSheetTexture(x + displayOffset + displayWidth - (height - 4)/2, y + 2, height - 4, height - 4, STANDARD_COLOR_WIDTH_OFFSET, STANDARD_BLACK_HEIGHT_OFFSET, STANDARD_COLOR_WIDTH_OFFSET + STANDARD_COLOR_WIDTH, STANDARD_BLACK_HEIGHT_OFFSET + STANDARD_COLOR_HEIGHT, textureWidth, textureHeight);
-				}else if(pollData == 1){
-					InterfaceGUI.renderSheetTexture(x + displayOffset + displayWidth - (height - 4)/2, y + 2, height - 4, height - 4, STANDARD_COLOR_WIDTH_OFFSET, STANDARD_RED_HEIGHT_OFFSET, STANDARD_COLOR_WIDTH_OFFSET + STANDARD_COLOR_WIDTH, STANDARD_RED_HEIGHT_OFFSET + STANDARD_COLOR_HEIGHT, textureWidth, textureHeight);
-				}else{
-					//For digitals with fractions like hats.
-					InterfaceGUI.renderSheetTexture(x + displayOffset + displayWidth - (height - 4)/2, y + 2, height - 4, height - 4, STANDARD_COLOR_WIDTH_OFFSET, STANDARD_YELLOW_HEIGHT_OFFSET, STANDARD_COLOR_WIDTH_OFFSET + STANDARD_COLOR_WIDTH, STANDARD_YELLOW_HEIGHT_OFFSET + STANDARD_COLOR_HEIGHT, textureWidth, textureHeight);
 				}
 			}
 		}

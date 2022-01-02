@@ -129,6 +129,7 @@ public final class RenderVehicle extends ARenderEntity<EntityVehicleF_Physics>{
 					//Render the type, min/max, and customTypes info.
 					//To do this, we first need to translate to the top-center of the bounding box.
 					//We also rotate to face the player.
+					Point3d zeroPos = new Point3d();
 					GL11.glPushMatrix();
 					GL11.glTranslated(highlightedBox.localCenter.x, highlightedBox.localCenter.y + highlightedBox.heightRadius, highlightedBox.localCenter.z);
 					GL11.glRotated(player.getYaw() - vehicle.angles.y, 0, 1, 0);
@@ -138,14 +139,14 @@ public final class RenderVehicle extends ARenderEntity<EntityVehicleF_Physics>{
 					
 					//Translate to the spot above where the item would render and render the standard text.
 					GL11.glTranslated(0, -1.75F, 0);
-					RenderText.draw2DText("Types: " + packVehicleDef.types.toString(), null, 0, 0, ColorRGB.WHITE, TextAlignment.CENTERED, 1/64F, false, 0);
+					RenderText.drawText("Types: " + packVehicleDef.types.toString(), null, zeroPos, null, ColorRGB.WHITE, TextAlignment.CENTERED, 1/64F, false, 0, 1.0F, true);
 					GL11.glTranslated(0, 0.15F, 0);
-					RenderText.draw2DText("Min/Max: " + String.valueOf(packVehicleDef.minValue) + "/" + String.valueOf(packVehicleDef.maxValue), null, 0, 0, ColorRGB.WHITE, TextAlignment.CENTERED, 1/64F, false, 0);
+					RenderText.drawText("Min/Max: " + String.valueOf(packVehicleDef.minValue) + "/" + String.valueOf(packVehicleDef.maxValue), null, zeroPos, null, ColorRGB.WHITE, TextAlignment.CENTERED, 1/64F, false, 0, 1.0F, true);
 					GL11.glTranslated(0, 0.15F, 0);
 					if(packVehicleDef.customTypes != null){
-						RenderText.draw2DText("CustomTypes: " + packVehicleDef.customTypes.toString(), null, 0, 0, ColorRGB.WHITE, TextAlignment.CENTERED, 1/64F, false, 0);
+						RenderText.drawText("CustomTypes: " + packVehicleDef.customTypes.toString(), null, zeroPos, null, ColorRGB.WHITE, TextAlignment.CENTERED, 1/64F, false, 0, 1.0F, true);
 					}else{
-						RenderText.draw2DText("CustomTypes: None", null, 0, 0, ColorRGB.WHITE, TextAlignment.CENTERED, 1/64F, false, 0);
+						RenderText.drawText("CustomTypes: None", null, zeroPos, null, ColorRGB.WHITE, TextAlignment.CENTERED, 1/64F, false, 0, 1.0F, true);
 					}
 					GL11.glTranslated(0, 0.25F, 0);
 					
@@ -161,7 +162,7 @@ public final class RenderVehicle extends ARenderEntity<EntityVehicleF_Physics>{
 						}
 						
 						//Render the part's name.
-						RenderText.draw2DText(partToRender.getItemName(), null, 0, 0, ColorRGB.BLACK, TextAlignment.CENTERED, 1/64F, false, 0);
+						RenderText.drawText(partToRender.getItemName(), null, zeroPos, null, ColorRGB.BLACK, TextAlignment.CENTERED, 1/64F, false, 0, 1.0F, true);
 						
 						//Do translations to get to the center of where the item will render and render it.
 						//Also need to translate to the center as items are rendered from the top-left corner.

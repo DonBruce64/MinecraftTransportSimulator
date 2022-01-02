@@ -1,6 +1,11 @@
 package minecrafttransportsimulator.guis.components;
 
-import minecrafttransportsimulator.mcinterface.InterfaceGUI;
+import java.nio.FloatBuffer;
+
+import org.lwjgl.opengl.GL11;
+
+import minecrafttransportsimulator.baseclasses.ColorRGB;
+import minecrafttransportsimulator.rendering.components.RenderableObject;
 
 /**Class that renders a cut-out area of the currently bound texture.  This is cleaner than doing manual
  * rendering in the draw calls, and allows for standardized component batch-rendering.
@@ -11,10 +16,10 @@ import minecrafttransportsimulator.mcinterface.InterfaceGUI;
 public class GUIComponentCutout extends AGUIComponent{
 	
 	//Texture variables.
-	protected final int textureXOffset;
-	protected final int textureYOffset;
-	protected final int textureSectionWidth;
-	protected final int textureSectionHeight;
+	public int textureXOffset;
+	public int textureYOffset;
+	public int textureSectionWidth;
+	public int textureSectionHeight;
 	
 	/**Standard constructor for a 1:1 rendering.**/
 	public GUIComponentCutout(int x, int y, int width, int height, int textureXOffset, int textureYOffset){
@@ -31,7 +36,16 @@ public class GUIComponentCutout extends AGUIComponent{
 	}
 	
 	@Override
-    public void render(int mouseX, int mouseY, int textureWidth, int textureHeight, boolean blendingEnabled, float partialTicks){
-    	InterfaceGUI.renderSheetTexture(x + offsetX, y + offsetY, width, height, textureXOffset, textureYOffset, textureXOffset + textureSectionWidth, textureYOffset + textureSectionHeight, textureWidth, textureHeight);
+    public void render(AGUIBase gui, int mouseX, int mouseY, boolean blendingEnabled, float partialTicks){
+		if(renderable == null){
+			renderable = new RenderableObject("gui_cutout", gui.getTexture(), ColorRGB.WHITE, FloatBuffer.allocate(8*6), false);
+		}
+		if(renderable.vertices.position() == 0){
+			gui.addRenderToBuffer(renderable.vertices, 0, 0, width, height, textureXOffset, textureYOffset, textureXOffset + textureSectionWidth, textureYOffset + textureSectionHeight, gui.getTextureWidth(), gui.getTextureHeight());
+			renderable.vertices.flip();
+		}
+		GL11.glTranslated(position.x, position.y, position.z);
+		renderable.render();
+		GL11.glTranslated(-position.x, -position.y, -position.z);
     }
 }

@@ -99,7 +99,6 @@ public class InterfaceGUI{
 						float z = quadData.getFloat(quadDataIndexOffset + vertexOffset + 2*Float.BYTES);
 						
 						if(matrix != null){
-							//TODO Need to also add offsets to align in GUIs, this gets removed when GUIs are overhauled.  
 							float xNew = matrix.m00*x + matrix.m01*y + matrix.m02*z + matrix.m03 + 1;
 							float yNew = matrix.m10*x + matrix.m11*y + matrix.m12*z + matrix.m13 + 0.25F;
 							float zNew = matrix.m30*x + matrix.m31*y + matrix.m32*z + matrix.m33;
@@ -133,8 +132,8 @@ public class InterfaceGUI{
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder bufferbuilder = tessellator.getBuffer();
         bufferbuilder.begin(7, DefaultVertexFormats.POSITION_TEX);
-        bufferbuilder.pos(x, 			y + height, 0.0D).tex(u * widthPixelPercent, 	V * heightPixelPercent).endVertex();
-        bufferbuilder.pos(x + width, 	y + height, 0.0D).tex(U * widthPixelPercent, 	V * heightPixelPercent).endVertex();
+        bufferbuilder.pos(x, 			y - height, 0.0D).tex(u * widthPixelPercent, 	V * heightPixelPercent).endVertex();
+        bufferbuilder.pos(x + width, 	y - height, 0.0D).tex(U * widthPixelPercent, 	V * heightPixelPercent).endVertex();
         bufferbuilder.pos(x + width, 	y, 			0.0D).tex(U * widthPixelPercent, 	v * heightPixelPercent).endVertex();
         bufferbuilder.pos(x, 			y, 			0.0D).tex(u * widthPixelPercent, 	v * heightPixelPercent).endVertex();
         tessellator.draw();

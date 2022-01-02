@@ -11,6 +11,7 @@ public class GUIPackMissing extends AGUIBase{
 	
 	@Override
 	public void setupComponents(int guiLeft, int guiTop){
+		super.setupComponents(guiLeft, guiTop);
 		addComponent(noticeLabel = new GUIComponentLabel(guiLeft + 130, guiTop + 10, ColorRGB.RED, InterfaceCore.translate("gui.packmissing.title"), TextAlignment.CENTERED, 3.0F));
 		addComponent(new GUIComponentLabel(guiLeft + 10, guiTop + 40, ColorRGB.BLACK, InterfaceCore.translate("gui.packmissing.reason"), TextAlignment.LEFT_ALIGNED, 0.75F, 240));
 		addComponent(new GUIComponentLabel(guiLeft + 10, guiTop + 65, ColorRGB.BLACK, InterfaceCore.translate("gui.packmissing.nomod"), TextAlignment.LEFT_ALIGNED, 0.75F, 240));
@@ -21,11 +22,7 @@ public class GUIPackMissing extends AGUIBase{
 
 	@Override
 	public void setStates(){
+		super.setStates();
 		noticeLabel.visible = inClockPeriod(40, 20);
-	}
-	
-	@Override
-	public boolean renderDarkBackground(){
-		return true;
 	}
 }

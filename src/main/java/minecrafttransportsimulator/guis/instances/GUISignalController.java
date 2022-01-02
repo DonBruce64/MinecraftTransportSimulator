@@ -61,6 +61,7 @@ public class GUISignalController extends AGUIBase{
 	
 	@Override 
 	public void setupComponents(int guiLeft, int guiTop){
+		super.setupComponents(guiLeft, guiTop);
 		int topOffset = guiTop + 15;
 		int leftTextOffset = guiLeft + 20;
 		int leftObjectOffset = guiLeft + 100;
@@ -136,7 +137,7 @@ public class GUISignalController extends AGUIBase{
 				controller.intersectionCenterPoint.x = getDoubleValue();
 			}
 		});
-		addComponent(scanCenterZText = new GUIComponentNumericTextBox(scanCenterXText.x + scanCenterXText.width + 5, topOffset, String.valueOf(controller.intersectionCenterPoint.z), 60){
+		addComponent(scanCenterZText = new GUIComponentNumericTextBox(scanCenterXText.constructedX + scanCenterXText.width + 5, topOffset, String.valueOf(controller.intersectionCenterPoint.z), 60){
 			@Override
 			public void setVariable(){
 				controller.intersectionCenterPoint.z = getDoubleValue();
@@ -154,7 +155,7 @@ public class GUISignalController extends AGUIBase{
 		addComponent(new GUIComponentLabel(leftTextOffset, topOffset, ColorRGB.WHITE, "Radius:").setBox(scanDistanceText));
 		
 		//Found count.
-		addComponent(trafficSignalCount = new GUIComponentLabel(scanDistanceText.x + scanDistanceText.width + 5, topOffset, ColorRGB.WHITE, "Found: " + String.valueOf(controller.componentLocations.size())));
+		addComponent(trafficSignalCount = new GUIComponentLabel(scanDistanceText.constructedX + scanDistanceText.width + 5, topOffset, ColorRGB.WHITE, "Found: " + String.valueOf(controller.componentLocations.size())));
 		topOffset += scanDistanceText.height + rowSpacing*3;
 		
 		
@@ -322,6 +323,7 @@ public class GUISignalController extends AGUIBase{
 	
 	@Override
 	public void setStates(){
+		super.setStates();
 		trafficSignalCount.text = "Found: " + String.valueOf(controller.componentLocations.size());
 		
 		scanButton.visible = !onLaneScreen;

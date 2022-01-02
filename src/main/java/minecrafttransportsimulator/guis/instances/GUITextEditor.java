@@ -40,6 +40,7 @@ public class GUITextEditor extends AGUIBase{
 	
 	@Override 
 	public void setupComponents(int guiLeft, int guiTop){
+		super.setupComponents(guiLeft, guiTop);
 		int boxWidth;
 		List<JSONText> textObjects;
 		List<String> textLines;
@@ -62,7 +63,7 @@ public class GUITextEditor extends AGUIBase{
 			signTextLabels.clear();
 			for(byte i=0; i<textObjects.size(); ++i){
 				JSONText textDef = textObjects.get(i);
-				GUIComponentLabel label = new GUIComponentLabel(modelRender.x + (int) (textDef.pos.x*64F), modelRender.y - (int) (textDef.pos.y*64F), textDef.color, textLines.get(i), TextAlignment.values()[textDef.renderPosition], textDef.scale*64F/16F, textDef.wrapWidth*64/16, textDef.fontName, textDef.autoScale);
+				GUIComponentLabel label = new GUIComponentLabel(modelRender.constructedX + (int) (textDef.pos.x*64F), modelRender.constructedY - (int) (textDef.pos.y*64F), textDef.color, textLines.get(i), TextAlignment.values()[textDef.renderPosition], textDef.scale*64F/16F, textDef.wrapWidth*64/16, textDef.fontName, textDef.autoScale);
 				addComponent(label);
 				signTextLabels.add(label);
 			}
@@ -92,7 +93,7 @@ public class GUITextEditor extends AGUIBase{
 				GUIComponentLabel label = new GUIComponentLabel(guiLeft + 20, guiTop + 30 + currentOffset, ColorRGB.BLACK, textObject.fieldName);
 				addComponent(label);
 				int textRowsRequired = 1 + 5*textObject.maxLength/boxWidth;
-				GUIComponentTextBox box = new GUIComponentTextBox(guiLeft + 20, label.y + 10, boxWidth, 12*textRowsRequired, textLines.get(textObjects.indexOf(textObject)), ColorRGB.WHITE, textObject.maxLength);
+				GUIComponentTextBox box = new GUIComponentTextBox(guiLeft + 20, label.constructedY + 10, boxWidth, 12*textRowsRequired, textLines.get(textObjects.indexOf(textObject)), ColorRGB.WHITE, textObject.maxLength);
 				addComponent(box);
 				textInputBoxes.add(box);
 				currentOffset += box.height + 12;
@@ -116,6 +117,7 @@ public class GUITextEditor extends AGUIBase{
 	
 	@Override
 	public void setStates(){
+		super.setStates();
 		confirmButton.enabled = true;
 		for(int i=0; i<signTextLabels.size(); ++i){
 			signTextLabels.get(i).text = textInputBoxes.get(i).getText();

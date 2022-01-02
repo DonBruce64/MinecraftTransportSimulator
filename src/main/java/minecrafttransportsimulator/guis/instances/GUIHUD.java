@@ -26,6 +26,7 @@ public class GUIHUD extends AGUIBase{
 	
 	@Override
 	public final void setupComponents(int guiLeft, int guiTop){
+		super.setupComponents(guiLeft, guiTop);
 		//Add instruments.  These go wherever they are specified in the JSON.
 		for(Integer instrumentNumber : vehicle.instruments.keySet()){
 			if(!vehicle.definition.instruments.get(instrumentNumber).placeOnPanel){
@@ -41,9 +42,6 @@ public class GUIHUD extends AGUIBase{
 			}
 		}
 	}
-
-	@Override
-	public void setStates(){}
 	
 	@Override
 	public boolean renderBackground(){
