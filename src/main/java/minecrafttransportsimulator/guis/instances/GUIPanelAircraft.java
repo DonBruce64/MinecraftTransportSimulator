@@ -2,8 +2,10 @@ package minecrafttransportsimulator.guis.instances;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Map.Entry;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
@@ -340,7 +342,7 @@ public class GUIPanelAircraft extends AGUIPanel{
 		//Add custom selectors if we have any.
 		//These are the right-most selector and are vehicle-specific.
 		//We render two rows of side-by-side selectors here.
-		List<String> customVariables = new ArrayList<String>();
+		Set<String> customVariables = new LinkedHashSet<String>();
 		if(vehicle.definition.rendering.customVariables != null){
 			customVariables.addAll(vehicle.definition.rendering.customVariables);
 		}
