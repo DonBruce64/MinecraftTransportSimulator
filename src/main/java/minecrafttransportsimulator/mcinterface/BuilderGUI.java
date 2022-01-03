@@ -51,6 +51,7 @@ public class BuilderGUI extends GuiScreen{
 		}
 		
 		//Setup components now.
+		Keyboard.enableRepeatEvents(true);
 		gui.setupComponents(guiLeft, guiTop);
 	}
 	
