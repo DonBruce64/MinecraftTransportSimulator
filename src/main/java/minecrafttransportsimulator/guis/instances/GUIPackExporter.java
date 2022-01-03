@@ -206,7 +206,7 @@ public class GUIPackExporter extends AGUIBase{
 					componentItemModel.modelLocation = String.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
 					componentItemModel.textureLocation = String.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
 					componentItemModel.position.x = componentItemModel.constructedX + Integer.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
-					componentItemModel.position.y = componentItemModel.constructedY + Integer.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
+					componentItemModel.position.y = -componentItemModel.constructedY - Integer.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
 					componentItemModel.scale = Float.valueOf(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
 				}catch(Exception e){}
 			}
@@ -232,7 +232,7 @@ public class GUIPackExporter extends AGUIBase{
 		
 		//Add item icon model component.
 		componentItemModel = new GUIComponent3DModel(guiLeft, guiTop, 1.0F, true, false, true);
-		componentItemModel.position.add(208, 205, 0);
+		componentItemModel.position.add(208, -205, 0);
 		componentItemModel.scale = 6.0F;
 		addComponent(componentItemModel);
 		
@@ -245,7 +245,7 @@ public class GUIPackExporter extends AGUIBase{
 		dataEntryLabels.get(labelBoxIndex).text = "X-Pos (px):";
 		dataEntryBoxes.get(labelBoxIndex++).setText(String.valueOf((int) (componentItemModel.position.x) - componentItemModel.constructedX));
 		dataEntryLabels.get(labelBoxIndex).text = "Y-Pos (px):";
-		dataEntryBoxes.get(labelBoxIndex++).setText(String.valueOf((int) (componentItemModel.position.y) - componentItemModel.constructedY));
+		dataEntryBoxes.get(labelBoxIndex++).setText(String.valueOf((int) (-componentItemModel.position.y) + componentItemModel.constructedY));
 		dataEntryLabels.get(labelBoxIndex).text = "Scale (1blk=1px):";
 		dataEntryBoxes.get(labelBoxIndex++).setText(String.valueOf(componentItemModel.scale));
 		
@@ -258,7 +258,7 @@ public class GUIPackExporter extends AGUIBase{
 		super.setStates();
 		try{
 			componentItemModel.position.x = componentItemModel.constructedX + Integer.valueOf(dataEntryBoxes.get(2).getText());
-			componentItemModel.position.y = componentItemModel.constructedY + Integer.valueOf(dataEntryBoxes.get(3).getText());
+			componentItemModel.position.y = componentItemModel.constructedY - Integer.valueOf(dataEntryBoxes.get(3).getText());
 			componentItemModel.scale = Float.valueOf(dataEntryBoxes.get(4).getText());
 		}catch(Exception e){
 			
