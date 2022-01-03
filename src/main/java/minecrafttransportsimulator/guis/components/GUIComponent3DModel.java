@@ -101,8 +101,8 @@ public class GUIComponent3DModel extends AGUIComponent{
 			//Need to translate -y due to different model position.
 			GL11.glTranslated(position.x, position.y, position.z);
 			if(isometric){
-				GL11.glRotatef(45, 0, 1, 0);
-				GL11.glRotatef(35.264F, 1, 0, 1);
+				GL11.glRotatef(-45, 0, 1, 0);
+				GL11.glRotatef(35.264F, 1, 0, -1);
 			}
 			
 			//If set to rotate, do so now based on time.
