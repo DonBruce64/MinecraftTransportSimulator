@@ -303,7 +303,7 @@ public class VehicleGroundDeviceBox{
 		for(AEntityC_Definable<?> entity : AEntityC_Definable.getRenderableEntities(vehicle.world)){
 			if(entity instanceof AEntityD_Interactable && !entity.equals(vehicle)){
 				AEntityD_Interactable<?> interactable = (AEntityD_Interactable<?>) entity;
-				if(vehicle.canCollideWith(interactable) && !interactable.collidedEntities.contains(vehicle) && interactable.boundingBox.intersects(solidBox)){
+				if(vehicle.canCollideWith(interactable) && !interactable.collidedEntities.contains(vehicle) && interactable.encompassingBox.intersects(solidBox)){
 					//We know we could have hit this entity.  Check if we actually did.
 					BoundingBox collidingBox = null;
 					double boxCollisionDepth = 0;
