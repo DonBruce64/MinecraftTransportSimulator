@@ -28,6 +28,7 @@ import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.texture.TextureUtil;
 import net.minecraft.entity.Entity;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 
 /**Interface for the various MC rendering engines.  This class has functions for
@@ -36,7 +37,8 @@ import net.minecraft.util.math.BlockPos;
  * @author don_bruce
  */
 public class InterfaceRender{
-	private static final Map<String, Integer> textures = new HashMap<String, Integer>();
+	private static final Map<String, ResourceLocation> internalTextures = new HashMap<String, ResourceLocation>();
+	private static final Map<String, Integer> onlineTextures = new HashMap<String, Integer>();
 	private static final Map<String, ParsedGIF> animatedGIFs = new HashMap<String, ParsedGIF>();
 	private static float lastLightmapX;
 	private static float lastLightmapY;
@@ -166,31 +168,33 @@ public class InterfaceRender{
 			//Special case for GIFs.
 			ParsedGIF parsedGIF = animatedGIFs.get(textureLocation);
 			GlStateManager.bindTexture(parsedGIF.getCurrentTextureIndex());
+		}else if(onlineTextures.containsKey(textureLocation)){
+			//Online texture.
+			GlStateManager.bindTexture(onlineTextures.get(textureLocation));
 		}else if(textureLocation.equals(RenderableObject.GLOBAL_TEXTURE_NAME)){
 			//Default texture.
 			Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
 		}else{
 			//Parse texture if we don't have it yet.
-			if(!textures.containsKey(textureLocation)){
+			if(!internalTextures.containsKey(textureLocation)){
 				//If the texture has a colon, it's a short-hand form that needs to be converted.
 				String formattedLocation = textureLocation;
 				if(textureLocation.indexOf(":") != -1){
 					formattedLocation = "/assets/" + textureLocation.replace(":", "/");
 				}
 				
-				//Parse the texture, get the OpenGL integer that represents this texture, and save it.
-				//FAR less jank than using MC's resource system.
-				try{
-					BufferedImage bufferedimage = TextureUtil.readBufferedImage(InterfaceRender.class.getResourceAsStream(formattedLocation));
-					int glTexturePointer = TextureUtil.glGenTextures();
-			        TextureUtil.uploadTextureImageAllocate(glTexturePointer, bufferedimage, false, false);
-			        textures.put(textureLocation, glTexturePointer);
-				}catch(Exception e){
+				//Check if the texture exists.
+				if(InterfaceRender.class.getResource(formattedLocation) != null){
+					//Convert the classpath-location to a domain-location path for MC.
+					String domain = formattedLocation.substring("/assets/".length(), formattedLocation.indexOf("/", "/assets/".length()));
+					String location = formattedLocation.substring("/assets/".length() +  domain.length() + 1);
+					internalTextures.put(textureLocation, new ResourceLocation(domain, location));
+				}else{
 					InterfaceCore.logError("Could not find texture: " + formattedLocation + " Reverting to fallback texture.");
-					textures.put(textureLocation, TextureUtil.MISSING_TEXTURE.getGlTextureId());
+					internalTextures.put(textureLocation, TextureMap.LOCATION_MISSING_TEXTURE);
 				}
 			}
-			GlStateManager.bindTexture(textures.get(textureLocation));
+			Minecraft.getMinecraft().getTextureManager().bindTexture(internalTextures.get(textureLocation));
 		}
 	}
 	
@@ -203,7 +207,7 @@ public class InterfaceRender{
 	 *  {@link #bindTexture(String)} with the passed-in URL.
 	 */
 	public static String downloadURLTexture(String textureURL){
-		if(!textures.containsKey(textureURL) && !animatedGIFs.containsKey(textureURL)){
+		if(!onlineTextures.containsKey(textureURL) && !animatedGIFs.containsKey(textureURL)){
 			//Parse the texture, get the OpenGL integer that represents this texture, and save it.
 			//FAR less jank than using MC's resource system.
 			try{
@@ -230,23 +234,23 @@ public class InterfaceRender{
 							BufferedImage bufferedimage = TextureUtil.readBufferedImage(url.openStream());
 							int glTexturePointer = TextureUtil.glGenTextures();
 					        TextureUtil.uploadTextureImageAllocate(glTexturePointer, bufferedimage, false, false);
-					        textures.put(textureURL, glTexturePointer);
+					        onlineTextures.put(textureURL, glTexturePointer);
 						}
 					}else{
 						String errorString = "Invalid content type found.  Found:" + contentType + ", but the only valid types are: ";
 						for(String validType : validContentTypes){
 							errorString += validType + ", ";
 						}
-						textures.put(textureURL, TextureUtil.MISSING_TEXTURE.getGlTextureId());
+						onlineTextures.put(textureURL, TextureUtil.MISSING_TEXTURE.getGlTextureId());
 						return errorString;
 					}
 				}catch(Exception e){
-					textures.put(textureURL, TextureUtil.MISSING_TEXTURE.getGlTextureId());
+					onlineTextures.put(textureURL, TextureUtil.MISSING_TEXTURE.getGlTextureId());
 					e.printStackTrace();
 					return "Could not parse images.  Error was: " + e.getMessage();
 				}
 			}catch(Exception e){
-				textures.put(textureURL, TextureUtil.MISSING_TEXTURE.getGlTextureId());
+				onlineTextures.put(textureURL, TextureUtil.MISSING_TEXTURE.getGlTextureId());
 				e.printStackTrace();
 				return "Could not open URL for processing.  Error was: " + e.getMessage();
 			}

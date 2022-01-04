@@ -224,6 +224,9 @@ public class InterfaceEventsModelLoader{
 				}
 			}else{
 				try{
+					//First check if this is for an item or a model.
+					boolean isItemPNG = rawPackInfo.contains("/items/") || rawPackInfo.contains("_item");
+					
 					//Strip off the auto-generated prefix and suffix data.
 					String combinedPackInfo = rawPackInfo;
 					combinedPackInfo = combinedPackInfo.substring("textures/".length(), combinedPackInfo.length() - ".png".length());
@@ -238,27 +241,38 @@ public class InterfaceEventsModelLoader{
 					}
 					AItemPack<?> packItem = PackParserSystem.getItem(packID, systemName);
 					
-					String streamLocation = null;
 					if(packItem != null){
 						//Get the actual resource path for this resource and return its stream.
-						streamLocation = PackResourceLoader.getPackResource(packItem.definition, ResourceType.ITEM_PNG, systemName);
+						String streamLocation = PackResourceLoader.getPackResource(packItem.definition, isItemPNG ? ResourceType.ITEM_PNG : ResourceType.PNG, systemName);
 						stream = getClass().getResourceAsStream(streamLocation);
-					}else{
-						stream = null;
-					}
-					
-					if(stream == null){
-						//We might not have this file, but we also might have a JSON-defined item here.
-						//Try the JSON standards before throwing an error.
-						String streamJSONLocation = "/assets/" + packID + "/" + rawPackInfo;
-						stream = getClass().getResourceAsStream(streamJSONLocation);
+						
 						if(stream == null){
-							if(streamLocation != null){
-								InterfaceCore.logError("Could not find item PNG at specified location: " + streamLocation + "  Or potential JSON location: " + streamJSONLocation);
+							if(isItemPNG){
+								//We might not have this file, but we also might have a JSON-defined item here.
+								//Try the JSON standards before throwing an error.
+								String streamJSONLocation = "/assets/" + packID + "/" + rawPackInfo;
+								stream = getClass().getResourceAsStream(streamJSONLocation);
+								if(stream == null){
+									if(streamLocation != null){
+										InterfaceCore.logError("Could not find item PNG at specified location: " + streamLocation + "  Or potential JSON location: " + streamJSONLocation);
+									}else{
+										InterfaceCore.logError("Could not find JSON PNG: " + streamJSONLocation);
+									}
+									throw new FileNotFoundException(rawPackInfo);
+								}
 							}else{
-								InterfaceCore.logError("Could not find JSON PNG: " + streamJSONLocation);
+								InterfaceCore.logError("Could not find OBJ PNG: " + streamLocation);
+								throw new FileNotFoundException(rawPackInfo);
 							}
-							throw new FileNotFoundException(rawPackInfo);
+						}
+					}else{
+						//No pack item for this texture.  Must be an internal texture for other things.
+						//In this case, we just get the stream exact location.
+						String streamLocation = "/assets/" + domain + "/" + rawPackInfo;
+						stream = getClass().getResourceAsStream(streamLocation);
+						if(stream == null){
+							InterfaceCore.logError("Couldn't find...whatever this is: " + streamLocation);
+							throw new FileNotFoundException(rawPackInfo);	
 						}
 					}
 				}catch(Exception e){
