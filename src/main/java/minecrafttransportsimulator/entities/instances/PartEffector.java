@@ -13,8 +13,9 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
+import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.packets.components.InterfacePacket;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.instances.PacketPartEffector;
 import net.minecraft.item.ItemStack;
 
@@ -29,8 +30,8 @@ public class PartEffector extends APart{
 	private final Map<BoundingBox, Integer> boxTimeSpentAtPosition = new HashMap<BoundingBox, Integer>();
 	private final Set<Point3d> blockFlooredPositionsBrokeThisTick = new HashSet<Point3d>()
 ;	
-	public PartEffector(AEntityE_Multipart<?> entityOn, JSONPartDefinition placementDefinition, WrapperNBT data, APart parentPart){
-		super(entityOn, placementDefinition, data, parentPart);
+	public PartEffector(AEntityE_Multipart<?> entityOn, WrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, WrapperNBT data, APart parentPart){
+		super(entityOn, placingPlayer, placementDefinition, data, parentPart);
 		this.blocksBroken = data.getInteger("blocksBroken");
 	}
 	

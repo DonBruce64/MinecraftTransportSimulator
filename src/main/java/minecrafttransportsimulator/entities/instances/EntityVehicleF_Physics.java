@@ -8,9 +8,10 @@ import minecrafttransportsimulator.baseclasses.TrailerConnection;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONPhysicsModifier;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
+import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
 import minecrafttransportsimulator.rendering.components.DurationDelayClock;
 import minecrafttransportsimulator.rendering.instances.RenderVehicle;
@@ -124,8 +125,8 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	//Animator for vehicles
 	private static RenderVehicle renderer;;
 
-	public EntityVehicleF_Physics(WrapperWorld world, WrapperNBT data){
-		super(world, data);
+	public EntityVehicleF_Physics(WrapperWorld world, WrapperPlayer placingPlayer, WrapperNBT data){
+		super(world, placingPlayer, data);
 		this.flapCurrentAngle = data.getDouble("flapCurrentAngle");
 	}
 	

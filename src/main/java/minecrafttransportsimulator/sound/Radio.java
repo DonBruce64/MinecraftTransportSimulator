@@ -29,7 +29,7 @@ public class Radio extends AEntityB_Existing{
 	private SoundInstance currentSound;
 	
 	public Radio(AEntityB_Existing provider, WrapperNBT data){
-		super(provider.world, data);
+		super(provider.world, null, data);
 		this.provider = provider;
 		if(world.isClient()){
 			if(data.getBoolean("savedRadio")){

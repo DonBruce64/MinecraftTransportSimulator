@@ -4,9 +4,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import minecrafttransportsimulator.baseclasses.NavBeacon;
+import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketBeaconListingChange;
 
 /**Class responsible for managing beacons in the world.  Handles access to beacons,

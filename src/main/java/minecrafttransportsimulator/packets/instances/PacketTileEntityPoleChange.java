@@ -5,21 +5,22 @@ import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent.PoleComponentType;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packets.components.APacketEntity;
+import minecrafttransportsimulator.packets.components.APacketEntityInteract;
 
 /**Packet sent to poles to change their states.  This gets sent when a player clicks a pole on the server
  * and a component is added or removed from the pole.
  * 
  * @author don_bruce
  */
-public class PacketTileEntityPoleChange extends APacketEntity<TileEntityPole>{
+public class PacketTileEntityPoleChange extends APacketEntityInteract<TileEntityPole, WrapperPlayer>{
 	private final Axis axis;
 	private final WrapperNBT data;
 	
 	
-	public PacketTileEntityPoleChange(TileEntityPole pole, Axis axis, WrapperNBT data){
-		super(pole);
+	public PacketTileEntityPoleChange(TileEntityPole pole, WrapperPlayer player, Axis axis, WrapperNBT data){
+		super(pole, player);
 		this.axis = axis;
 		this.data = data;
 	}
@@ -47,10 +48,10 @@ public class PacketTileEntityPoleChange extends APacketEntity<TileEntityPole>{
 	}
 	
 	@Override
-	protected boolean handle(WrapperWorld world, TileEntityPole pole){
+	protected boolean handle(WrapperWorld world, TileEntityPole pole, WrapperPlayer player){
 		if(data != null){
 			//Player clicked with a component.  Add it.
-			pole.changeComponent(axis, PoleComponentType.createComponent(pole, axis, data));
+			pole.changeComponent(axis, PoleComponentType.createComponent(pole, player, axis, data));
 		}else{
 			pole.changeComponent(axis, null);
 		}

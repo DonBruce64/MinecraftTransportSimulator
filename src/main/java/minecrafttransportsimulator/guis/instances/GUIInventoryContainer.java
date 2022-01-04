@@ -4,7 +4,7 @@ import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentCutout;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
-import minecrafttransportsimulator.packets.components.InterfacePacket;
+import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketPlayerItemTransfer;
 import net.minecraft.item.ItemStack;
 

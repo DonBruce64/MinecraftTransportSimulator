@@ -1,13 +1,11 @@
-package minecrafttransportsimulator.packets.components;
+package minecrafttransportsimulator.mcinterface;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MasterLoader;
-import minecrafttransportsimulator.mcinterface.InterfaceClient;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.packets.components.APacketBase;
 import minecrafttransportsimulator.packets.instances.PacketBeaconListingChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityCSHandshakeClient;
 import minecrafttransportsimulator.packets.instances.PacketEntityCSHandshakeServer;

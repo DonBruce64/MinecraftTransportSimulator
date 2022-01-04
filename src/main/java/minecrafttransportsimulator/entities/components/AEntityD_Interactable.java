@@ -25,11 +25,11 @@ import minecrafttransportsimulator.jsondefs.JSONConnection;
 import minecrafttransportsimulator.jsondefs.JSONConnectionGroup;
 import minecrafttransportsimulator.jsondefs.JSONInstrumentDefinition;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
+import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityTrailerChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
@@ -109,7 +109,7 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 	/**The ID of the owner of this entity. If this string is empty, it can be assumed that there is no owner.
 	 * UUIDs are set at creation time of an entity, and will never change, even on world re-loads.
 	 **/
-	public String ownerUUID;
+	public final String ownerUUID;
 	
 	/**The amount of damage on this entity.  This value is not necessarily used on all entities, but is put here
 	 * as damage is something that a good number of entities will have and that the base entity should track.
@@ -136,17 +136,14 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 	private final Point3d collisionGroupWorkingAngles = new Point3d();
 	private final Point3d collisionGroupWorkingAngleOffset = new Point3d();
 	
-	public AEntityD_Interactable(WrapperWorld world, WrapperNBT data){
-		super(world, data);
+	public AEntityD_Interactable(WrapperWorld world, WrapperPlayer placingPlayer, WrapperNBT data){
+		super(world, placingPlayer, data);
 		//Load saved rider positions.  We don't have riders here yet (as those get created later), 
 		//so just make the locations for the moment so they are ready when riders are created.
 		this.savedRiderLocations.addAll(data.getPoint3ds("savedRiderLocations"));
 		this.locked = data.getBoolean("locked");
-		this.ownerUUID = data.getString("ownerUUID");
+		this.ownerUUID = placingPlayer != null ? placingPlayer.getID() : data.getString("ownerUUID");
 		this.damageAmount = data.getDouble("damageAmount");
-		
-		//Add collision boxes to interaction list.
-		interactionBoxes.addAll(entityCollisionBoxes);
 
 		//Load towing data.
 		WrapperNBT towData = data.getData("towedByConnection");
@@ -162,16 +159,40 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 			}
 		}
 		
-		//Load instruments.
+		//Load instruments.  If we are new, create the default ones.
 		if(definition.instruments != null){
-			for(int i = 0; i<definition.instruments.size(); ++i){
-				String instrumentPackID = data.getString("instrument" + i + "_packID");
-				String instrumentSystemName = data.getString("instrument" + i + "_systemName");
-				if(!instrumentPackID.isEmpty()){
-					ItemInstrument instrument = PackParserSystem.getItem(instrumentPackID, instrumentSystemName);
-					//Check to prevent loading of faulty instruments due to updates.
-					if(instrument != null){
-						instruments.put(i, instrument);
+			if(newlyCreated){
+				for(JSONInstrumentDefinition packInstrument : definition.instruments){
+					if(packInstrument.defaultInstrument != null){
+						try{
+							String instrumentPackID = packInstrument.defaultInstrument.substring(0, packInstrument.defaultInstrument.indexOf(':'));
+							String instrumentSystemName = packInstrument.defaultInstrument.substring(packInstrument.defaultInstrument.indexOf(':') + 1);
+							try{
+								ItemInstrument instrument = PackParserSystem.getItem(instrumentPackID, instrumentSystemName);
+								if(instrument != null){
+									instruments.put(definition.instruments.indexOf(packInstrument), instrument);
+									continue;
+								}
+							}catch(NullPointerException e){
+								remove();
+								throw new IllegalArgumentException("Attempted to add defaultInstrument: " + instrumentPackID + ":" + instrumentSystemName + " to: " + definition.packID + ":" + definition.systemName + " but that instrument doesn't exist in the pack item registry.");
+							}
+						}catch(IndexOutOfBoundsException e){
+							remove();
+							throw new IllegalArgumentException("Could not parse defaultInstrument definition: " + packInstrument.defaultInstrument + ".  Format should be \"packId:instrumentName\"");
+						}
+					}
+				}
+			}else{
+				for(int i = 0; i<definition.instruments.size(); ++i){
+					String instrumentPackID = data.getString("instrument" + i + "_packID");
+					String instrumentSystemName = data.getString("instrument" + i + "_systemName");
+					if(!instrumentPackID.isEmpty()){
+						ItemInstrument instrument = PackParserSystem.getItem(instrumentPackID, instrumentSystemName);
+						//Check to prevent loading of faulty instruments due to updates.
+						if(instrument != null){
+							instruments.put(i, instrument);
+						}
 					}
 				}
 			}
@@ -700,34 +721,6 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 				InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, DAMAGE_VARIABLE, damage.amount));
 			}
 			setVariable(DAMAGE_VARIABLE, damageAmount);
-		}
-	}
-	
-	/**
-	 * Helper method to add all default instruments to this entity.  These instruments
-	 * should be added when the entity is first placed into the world.
-	 */
-	public void addDefaultInstruments(){
-		if(definition.instruments != null){
-			for(JSONInstrumentDefinition packInstrument : definition.instruments){
-				if(packInstrument.defaultInstrument != null){
-					try{
-						String instrumentPackID = packInstrument.defaultInstrument.substring(0, packInstrument.defaultInstrument.indexOf(':'));
-						String instrumentSystemName = packInstrument.defaultInstrument.substring(packInstrument.defaultInstrument.indexOf(':') + 1);
-						try{
-							ItemInstrument instrument = PackParserSystem.getItem(instrumentPackID, instrumentSystemName);
-							if(instrument != null){
-								instruments.put(definition.instruments.indexOf(packInstrument), instrument);
-								continue;
-							}
-						}catch(NullPointerException e){
-							throw new IllegalArgumentException("Attempted to add defaultInstrument: " + instrumentPackID + ":" + instrumentSystemName + " to: " + definition.packID + ":" + definition.systemName + " but that instrument doesn't exist in the pack item registry.");
-						}
-					}catch(IndexOutOfBoundsException e){
-						throw new IllegalArgumentException("Could not parse defaultInstrument definition: " + packInstrument.defaultInstrument + ".  Format should be \"packId:instrumentName\"");
-					}
-				}
-			}
 		}
 	}
 	

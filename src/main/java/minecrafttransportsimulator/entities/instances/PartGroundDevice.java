@@ -5,8 +5,9 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
 import minecrafttransportsimulator.items.instances.ItemPartGroundDevice;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
+import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.packets.components.InterfacePacket;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.instances.PacketPartGroundDevice;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
@@ -37,8 +38,8 @@ public class PartGroundDevice extends APart{
 	private double prevAngularVelocity;
 	private final PartGroundDeviceFake fakePart;
 	
-	public PartGroundDevice(AEntityE_Multipart<?> entityOn, JSONPartDefinition placementDefinition, WrapperNBT data, APart parentPart){
-		super(entityOn, placementDefinition, data, parentPart);
+	public PartGroundDevice(AEntityE_Multipart<?> entityOn, WrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, WrapperNBT data, APart parentPart){
+		super(entityOn, placingPlayer, placementDefinition, data, parentPart);
 		this.isFlat = data.getBoolean("isFlat");
 		
 		//If we are a long ground device, add a fake ground device at the offset to make us
@@ -50,7 +51,7 @@ public class PartGroundDevice extends APart{
 			//Need to swap placement for fake part so it uses the offset.
 			Point3d actualPlacement = placementDefinition.pos;
 			placementDefinition.pos = placementDefinition.pos.copy().add(0D, 0D, getLongPartOffset());
-			fakePart = new PartGroundDeviceFake(this, placementDefinition, data, null);
+			fakePart = new PartGroundDeviceFake(this, placingPlayer, placementDefinition, data, null);
 			placementDefinition.pos = actualPlacement;
 			//Add the fake part to the NBT list, as we don't want to foul up construction operations.
 			vehicleOn.partsFromNBT.add(fakePart);

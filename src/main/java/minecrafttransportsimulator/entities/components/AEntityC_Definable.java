@@ -33,6 +33,7 @@ import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.InterfaceRender;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
@@ -105,8 +106,8 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	public final Map<String, JSONLight> lightObjectDefinitions = new HashMap<String, JSONLight>();
 	
 	/**Constructor for synced entities**/
-	public AEntityC_Definable(WrapperWorld world, WrapperNBT data){
-		super(world, data);
+	public AEntityC_Definable(WrapperWorld world, WrapperPlayer placingPlayer, WrapperNBT data){
+		super(world, placingPlayer, data);
 		this.subName = data.getString("subName");
 		AItemSubTyped<JSONDefinition> item = PackParserSystem.getItem(data.getString("packID"), data.getString("systemName"), subName);
 		this.definition = item != null ? item.definition : generateDefaultDefinition();
@@ -123,7 +124,9 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 		for(String variableName : data.getStrings("variables")){
 			variables.put(variableName, data.getDouble(variableName));
 		}
-		
+		if(newlyCreated && definition.rendering != null && definition.rendering.initialVariables != null){
+			variablesOn.addAll(definition.rendering.initialVariables);
+		}
 		if(definition.rendering != null && definition.rendering.constants != null){
 			variablesOn.addAll(definition.rendering.constants);
 		}

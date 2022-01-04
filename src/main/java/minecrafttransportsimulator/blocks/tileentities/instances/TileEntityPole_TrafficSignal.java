@@ -4,6 +4,7 @@ import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController.SignalGroup;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 
 /**Traffic signal component for poles.  This doesn't tick, as the state of the light
  * is by default having the unlinked light on until changed by a {@link TileEntitySignalController}.
@@ -13,8 +14,8 @@ import minecrafttransportsimulator.mcinterface.WrapperNBT;
 public class TileEntityPole_TrafficSignal extends ATileEntityPole_Component{
 	public TileEntitySignalController linkedController;
 	
-	public TileEntityPole_TrafficSignal(TileEntityPole core,  Axis axis, WrapperNBT data){
-		super(core, axis, data);
+	public TileEntityPole_TrafficSignal(TileEntityPole core, WrapperPlayer placingPlayer,  Axis axis, WrapperNBT data){
+		super(core, placingPlayer, axis, data);
 	}
 	
 	@Override

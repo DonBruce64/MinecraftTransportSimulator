@@ -68,8 +68,8 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 	public final Point3d prevLocalOffset;
 	public final Point3d localAngles;
 		
-	public APart(AEntityE_Multipart<?> entityOn, JSONPartDefinition placementDefinition, WrapperNBT data, APart parentPart){
-		super(entityOn.world, data);
+	public APart(AEntityE_Multipart<?> entityOn, WrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, WrapperNBT data, APart parentPart){
+		super(entityOn.world, placingPlayer, data);
 		this.entityOn = entityOn;
 		this.vehicleOn = entityOn instanceof EntityVehicleF_Physics ? (EntityVehicleF_Physics) entityOn : null;
 		this.placementOffset = placementDefinition.pos;

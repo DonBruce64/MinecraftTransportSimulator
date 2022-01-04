@@ -14,7 +14,7 @@ import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentInstrument;
 import minecrafttransportsimulator.jsondefs.JSONConnectionGroup;
 import minecrafttransportsimulator.mcinterface.InterfaceGUI;
-import minecrafttransportsimulator.packets.components.InterfacePacket;
+import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 
 /**A GUI/control system hybrid, this takes the place of the HUD when called up.

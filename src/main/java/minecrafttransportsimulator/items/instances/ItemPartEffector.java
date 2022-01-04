@@ -7,6 +7,7 @@ import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 
 public class ItemPartEffector extends AItemPart{
 	
@@ -15,8 +16,8 @@ public class ItemPartEffector extends AItemPart{
 	}
 
 	@Override
-	public PartEffector createPart(AEntityE_Multipart<?> entity, JSONPartDefinition packVehicleDef, WrapperNBT partData, APart parentPart) {
-		return new PartEffector(entity, packVehicleDef, validateData(partData), parentPart);
+	public PartEffector createPart(AEntityE_Multipart<?> entity, WrapperPlayer placingPlayer, JSONPartDefinition packVehicleDef, WrapperNBT partData, APart parentPart) {
+		return new PartEffector(entity, placingPlayer, packVehicleDef, validateData(partData), parentPart);
 	}
 	
 	public static final AItemPartCreator CREATOR = new AItemPartCreator(){

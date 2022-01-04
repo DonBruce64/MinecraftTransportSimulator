@@ -13,8 +13,8 @@ import minecrafttransportsimulator.jsondefs.JSONRoadComponent.JSONLaneSector;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent.JSONLaneSectorEndPoint;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent.JSONLaneSectorPointSet;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
+import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityRoadConnectionUpdate;
 
 /**Helper class for containing lane data.  Lanes contain a reference to the road

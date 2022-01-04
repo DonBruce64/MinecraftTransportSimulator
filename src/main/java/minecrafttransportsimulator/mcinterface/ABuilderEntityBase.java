@@ -3,7 +3,6 @@ package minecrafttransportsimulator.mcinterface;
 import java.util.ArrayList;
 import java.util.List;
 
-import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketEntityCSHandshakeClient;
 import minecrafttransportsimulator.packets.instances.PacketEntityCSHandshakeServer;
 import net.minecraft.entity.Entity;

@@ -3,6 +3,7 @@ package minecrafttransportsimulator.entities.instances;
 import minecrafttransportsimulator.items.instances.ItemPartGroundDevice;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 
 /**A fake ground device that will be added to the vehicle when long ground devices are present.
  * Does not render and will be removed in tandem with the ground device that's linked to it.
@@ -12,8 +13,8 @@ import minecrafttransportsimulator.mcinterface.WrapperNBT;
 public final class PartGroundDeviceFake extends PartGroundDevice{
 	private final PartGroundDevice masterPart;
 	
-	public PartGroundDeviceFake(PartGroundDevice masterPart, JSONPartDefinition placementDefinition, WrapperNBT data, APart parentPart){
-		super(masterPart.entityOn, placementDefinition, data, parentPart);
+	public PartGroundDeviceFake(PartGroundDevice masterPart, WrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, WrapperNBT data, APart parentPart){
+		super(masterPart.entityOn, placingPlayer, placementDefinition, data, parentPart);
 		this.masterPart = masterPart;
 	}
 	

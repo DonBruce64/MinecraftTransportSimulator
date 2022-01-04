@@ -38,13 +38,15 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	public BoundingBox boundingBox;
 	public double airDensity;
 	public double velocity;
+	/**The player that placed this entity.  Only valid on the server where placement occurs. Client-side will always be null.**/
+	public final WrapperPlayer placingPlayer;
 	
 	//Internal sound variables.
 	public final Radio radio;
 	public List<SoundInstance> sounds = new ArrayList<SoundInstance>();
 	
 	/**Constructor for synced entities**/
-	public AEntityB_Existing(WrapperWorld world, WrapperNBT data){
+	public AEntityB_Existing(WrapperWorld world, WrapperPlayer placingPlayer, WrapperNBT data){
 		super(world, data);
 		this.position = data.getPoint3d("position");
 		this.prevPosition = position.copy();
@@ -56,6 +58,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 		this.prevRotation = rotation.copy();
 		this.orientation = data.getOrientation3d("orientation");
 		this.prevOrientation = orientation.copy();
+		this.placingPlayer = placingPlayer;
 		this.boundingBox = new BoundingBox(new Point3d(), position, 0.5, 0.5, 0.5, false);
 		this.radio = hasRadio() ? new Radio(this, data.getDataOrNew("radio")) : null;
 	}
@@ -73,6 +76,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 		this.prevRotation = rotation.copy();
 		this.orientation = new Orientation3d();
 		this.prevOrientation = orientation.copy();
+		this.placingPlayer = null;
 		this.boundingBox = new BoundingBox(new Point3d(), position, 0.5, 0.5, 0.5, false);
 		this.radio = null;
 	}

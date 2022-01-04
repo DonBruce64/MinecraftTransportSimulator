@@ -25,11 +25,11 @@ import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
+import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketPartChange;
 import minecrafttransportsimulator.rendering.components.RenderableObject;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -91,8 +91,8 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 	private final float PART_SLOT_HITBOX_WIDTH = 0.75F;
 	private final float PART_SLOT_HITBOX_HEIGHT = 2.25F;
 	
-	public AEntityE_Multipart(WrapperWorld world, WrapperNBT data){
-		super(world, data);
+	public AEntityE_Multipart(WrapperWorld world, WrapperPlayer placingPlayer, WrapperNBT data){
+		super(world, placingPlayer, data);
 		//Add parts.
 		//Also Replace ride-able locations with seat locations.
 		//This ensures we use the proper location for mapping operations.
@@ -103,7 +103,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 				WrapperNBT partData = data.getData("part_" + i);
 				AItemPart partItem = PackParserSystem.getItem(partData.getString("packID"), partData.getString("systemName"), partData.getString("subName"));
 				Point3d partOffset = partData.getPoint3d("offset");
-				addPartFromItem(partItem, partData, partOffset, true);
+				addPartFromItem(partItem, placingPlayer, partData, partOffset, true);
 			}catch(Exception e){
 				InterfaceCore.logError("Could not load part from NBT.  Did you un-install a pack?");
 			}
@@ -396,7 +396,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 	 * prevent calling the lists, maps, and other systems that aren't set up yet.
 	 * This method returns the part if it was added, null if it wasn't.
 	 */
-    public APart addPartFromItem(AItemPart partItem, WrapperNBT partData, Point3d offset, boolean addedDuringConstruction){
+    public APart addPartFromItem(AItemPart partItem, WrapperPlayer playerAdding, WrapperNBT partData, Point3d offset, boolean addedDuringConstruction){
     	//Get the part pack to add.
 		JSONPartDefinition newPartDef = getPackDefForLocation(offset);
 		APart partToAdd = null;
@@ -455,7 +455,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 				}
 				
 				//Part is valid.  Create it.
-				partToAdd = partItem.createPart(this, newPartDef, partData, parentPart); 
+				partToAdd = partItem.createPart(this, playerAdding, newPartDef, partData, parentPart); 
 			}
 		}
     	
@@ -471,13 +471,6 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
     		}else{
     			//Need to know if we are a new part or not.
     			boolean newPart = partData == null || partData.getString("uniqueUUID").isEmpty();
-    			if(newPart){
-					//Add any default instruments and variables this new part may have.
-    				partToAdd.addDefaultInstruments();
-    				if(partToAdd.definition.rendering != null && partToAdd.definition.rendering.initialVariables != null){
-    					partToAdd.variablesOn.addAll(partToAdd.definition.rendering.initialVariables);
-					}
-				}
     			
     			//Now add the part as all instruments and variables are on it.
     			addPart(partToAdd, true);
@@ -486,7 +479,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 				//Need to make sure to convert the part placement defs to the right type as they're offset.
 				if(partToAdd.definition.parts != null){
 					for(JSONPartDefinition subPartPack : partToAdd.definition.parts){
-						addDefaultPart(partToAdd.getPackForSubPart(subPartPack), partToAdd.definition, addedDuringConstruction, !newPart);
+						addDefaultPart(partToAdd.getPackForSubPart(subPartPack), playerAdding, partToAdd.definition, addedDuringConstruction, !newPart);
 					}
 				}
     		}
@@ -520,7 +513,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 		
 		//If we are on the server, and need to notify clients, do so.
 		if(sendPacket && !world.isClient()){
-			InterfacePacket.sendToAllClients(new PacketPartChange(this, part));
+			InterfacePacket.sendToAllClients(new PacketPartChange(this,  part));
 		}
 	}
 	
@@ -729,22 +722,14 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 	 * The savedParent flag is to let this method add only default permanent parts, as they get
 	 * removed with the part when wrenched, and added back when placed again, and don't save their states.
 	 */
-	public void addDefaultPart(JSONPartDefinition partDef, AJSONPartProvider providingDef, boolean addedDuringConstruction, boolean savedParent){
+	public void addDefaultPart(JSONPartDefinition partDef, WrapperPlayer playerAdding, AJSONPartProvider providingDef, boolean addedDuringConstruction, boolean savedParent){
 		if(partDef.defaultPart != null && (!savedParent || partDef.isPermanent)){
 			try{
 				String partPackID = partDef.defaultPart.substring(0, partDef.defaultPart.indexOf(':'));
 				String partSystemName = partDef.defaultPart.substring(partDef.defaultPart.indexOf(':') + 1);
 				try{
-					APart addedPart = addPartFromItem(PackParserSystem.getItem(partPackID, partSystemName), null, partDef.pos, addedDuringConstruction);
+					APart addedPart = addPartFromItem(PackParserSystem.getItem(partPackID, partSystemName), playerAdding, null, partDef.pos, addedDuringConstruction);
 					if(addedPart != null){
-						//Add any default instruments this default part may have.
-						try{
-							addedPart.addDefaultInstruments();
-						}catch(Exception e){
-							addedPart.remove();
-							throw e;
-						}
-						
 						//Set the default tone for the part, if it requests one and we can provide one.
 						updatePartTone(addedPart);
 						
@@ -752,7 +737,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 						//If so, we need to check that for default parts.
 						if(partDef.additionalParts != null){
 							for(JSONPartDefinition additionalPartDef : partDef.additionalParts){
-								addDefaultPart(addedPart.placementDefinition.isSubPart ? addedPart.parentPart.getPackForSubPart(additionalPartDef) : additionalPartDef, providingDef, addedDuringConstruction, savedParent);
+								addDefaultPart(addedPart.placementDefinition.isSubPart ? addedPart.parentPart.getPackForSubPart(additionalPartDef) : additionalPartDef, playerAdding, providingDef, addedDuringConstruction, savedParent);
 							}
 						}
 						
@@ -760,7 +745,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 						//We need to make sure to convert them to the right type as they're offset.
 						if(addedPart.definition.parts != null){
 							for(JSONPartDefinition subPartPack : addedPart.definition.parts){
-								addDefaultPart(addedPart.getPackForSubPart(subPartPack), addedPart.definition, addedDuringConstruction, savedParent);
+								addDefaultPart(addedPart.getPackForSubPart(subPartPack), playerAdding, addedPart.definition, addedDuringConstruction, savedParent);
 							}
 						}
 					}

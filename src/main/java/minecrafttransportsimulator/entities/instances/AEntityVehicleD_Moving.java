@@ -15,9 +15,10 @@ import minecrafttransportsimulator.blocks.tileentities.components.RoadLane.LaneS
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
+import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
@@ -81,8 +82,8 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	private AEntityD_Interactable<?> lastCollidedEntity;
   	public VehicleGroundDeviceCollection groundDeviceCollective;
 	
-	public AEntityVehicleD_Moving(WrapperWorld world, WrapperNBT data){
-		super(world, data);
+	public AEntityVehicleD_Moving(WrapperWorld world, WrapperPlayer placingPlayer, WrapperNBT data){
+		super(world, placingPlayer, data);
 		this.serverDeltaM = data.getPoint3d("serverDeltaM");
 		this.serverDeltaR = data.getPoint3d("serverDeltaR");
 		this.clientDeltaM = serverDeltaM.copy();

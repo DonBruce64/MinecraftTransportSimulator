@@ -6,7 +6,6 @@ import java.util.Map;
 
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.packets.components.APacketBase;
-import minecrafttransportsimulator.packets.components.InterfacePacket;
 import net.minecraft.block.BlockWorkbench;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.EntityLiving;
@@ -16,6 +15,7 @@ import net.minecraft.inventory.Container;
 import net.minecraft.inventory.ContainerWorkbench;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraftforge.event.world.WorldEvent;
@@ -33,8 +33,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 public class WrapperPlayer extends WrapperEntity{
 	private static final Map<EntityPlayer, WrapperPlayer> playerWrappers = new HashMap<EntityPlayer, WrapperPlayer>();
 	
-	//TODO this needs to be private when item interaction is abstracted.
-	public final EntityPlayer player;
+	protected final EntityPlayer player;
 	
 	public WrapperPlayer(EntityPlayer player){
 		super(player);
@@ -130,6 +129,13 @@ public class WrapperPlayer extends WrapperEntity{
 	 */
 	public ItemStack getHeldStack(){
 		return player.getHeldItemMainhand();
+	}
+	
+	/**
+	 *  Sets the held stack.  Overwrites what was in the hand before this.
+	 */
+	public void setHeldStack(ItemStack stack){
+		player.setHeldItem(EnumHand.MAIN_HAND, stack);;
 	}
 	
 	/**

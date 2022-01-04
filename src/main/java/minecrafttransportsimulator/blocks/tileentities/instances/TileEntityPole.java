@@ -17,10 +17,10 @@ import minecrafttransportsimulator.items.instances.ItemPoleComponent;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent.PoleComponentType;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
+import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest.EntityGUIType;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleChange;
@@ -49,12 +49,12 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 		for(Axis axis : Axis.values()){
 			WrapperNBT componentData = data.getData(axis.name());
 			if(componentData != null){
-				ATileEntityPole_Component newComponent = PoleComponentType.createComponent(this, axis, componentData);
+				ATileEntityPole_Component newComponent = PoleComponentType.createComponent(this, placingPlayer, axis, componentData);
 				changeComponent(axis, newComponent);
 			}else if(axis.equals(Axis.NONE)){
 				//Add our core component to the NONE axis.
 				//This is done for ease of rendering and lookup routines.
-				changeComponent(axis, PoleComponentType.createComponent(this, axis, getItem().validateData(null)));
+				changeComponent(axis, PoleComponentType.createComponent(this, placingPlayer, axis, getItem().validateData(null)));
 			}
 		}
 	}
@@ -101,7 +101,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 						WrapperNBT removedComponentData = component.save(new WrapperNBT());
 						if(player.isCreative() || player.getInventory().addItem(component.getItem(), removedComponentData)){
 							changeComponent(axis, null);
-							InterfacePacket.sendToAllClients(new PacketTileEntityPoleChange(this, axis, null));
+							InterfacePacket.sendToAllClients(new PacketTileEntityPoleChange(this, player, axis, null));
 						}
 						return true;
 					}
@@ -112,12 +112,12 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 				}else if(heldItem instanceof ItemPoleComponent && !((ItemPoleComponent) heldItem).definition.pole.type.equals(PoleComponentType.CORE) && !pole.components.containsKey(axis)){
 					//Player is holding component that could be added.  Try and do so.
 					ItemPoleComponent componentItem = (ItemPoleComponent) heldItem;
-					ATileEntityPole_Component newComponent = PoleComponentType.createComponent(pole, axis, componentItem.validateData(new WrapperNBT(heldStack)));
+					ATileEntityPole_Component newComponent = PoleComponentType.createComponent(pole, player, axis, componentItem.validateData(new WrapperNBT(heldStack)));
 					changeComponent(axis, newComponent);
 					if(!player.isCreative()){
 						player.getInventory().removeStack(player.getHeldStack(), 1);
 					}
-					InterfacePacket.sendToAllClients(new PacketTileEntityPoleChange(this, axis, newComponent.save(new WrapperNBT())));
+					InterfacePacket.sendToAllClients(new PacketTileEntityPoleChange(this, player, axis, newComponent.save(new WrapperNBT())));
 					return true;
 				}
 			}

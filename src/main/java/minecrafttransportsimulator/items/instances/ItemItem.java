@@ -23,11 +23,11 @@ import minecrafttransportsimulator.items.components.IItemVehicleInteractable;
 import minecrafttransportsimulator.jsondefs.JSONItem;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
+import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
@@ -123,55 +123,40 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 			}
 			case KEY : {
 				if(!vehicle.world.isClient() && rightClick){
-					if(player.isSneaking()){
-						//Try to change ownership of the vehicle.
-						if(vehicle.ownerUUID.isEmpty()){
-							vehicle.ownerUUID = player.getID();
-							player.sendPacket(new PacketPlayerChatMessage(player, "interact.key.info.own"));
-						}else{
-							if(!ownerState.equals(PlayerOwnerState.USER)){
-								vehicle.ownerUUID = "";
-								player.sendPacket(new PacketPlayerChatMessage(player, "interact.key.info.unown"));
-							}else{
-								player.sendPacket(new PacketPlayerChatMessage(player, "interact.key.failure.alreadyowned"));
-							}
-						}
-					}else{
-						//Try to lock the vehicle.
-						//First check to see if we need to set this key's vehicle.
-						ItemStack stack = player.getHeldStack();
-						WrapperNBT data = new WrapperNBT(stack);
-						String keyVehicleUUID = data.getString("vehicle");
-						if(keyVehicleUUID.isEmpty()){
-							//Check if we are the owner before making this a valid key.
-							if(!vehicle.ownerUUID.isEmpty() && ownerState.equals(PlayerOwnerState.USER)){
-								player.sendPacket(new PacketPlayerChatMessage(player, "interact.key.failure.notowner"));
-								return CallbackType.NONE;
-							}
-							
-							keyVehicleUUID = vehicle.uniqueUUID;
-							data.setString("vehicle", keyVehicleUUID);
-							stack.setTagCompound(data.tag);
+					//Try to lock the vehicle.
+					//First check to see if we need to set this key's vehicle.
+					ItemStack stack = player.getHeldStack();
+					WrapperNBT data = new WrapperNBT(stack);
+					String keyVehicleUUID = data.getString("vehicle");
+					if(keyVehicleUUID.isEmpty()){
+						//Check if we are the owner before making this a valid key.
+						if(!vehicle.ownerUUID.isEmpty() && ownerState.equals(PlayerOwnerState.USER)){
+							player.sendPacket(new PacketPlayerChatMessage(player, "interact.key.failure.notowner"));
+							return CallbackType.NONE;
 						}
 						
-						//Try to lock or unlock this vehicle.
-						//If we succeed, send callback to clients to change locked state.
-						if(!keyVehicleUUID.equals(vehicle.uniqueUUID)){
-							player.sendPacket(new PacketPlayerChatMessage(player, "interact.key.failure.wrongkey"));
-						}else{
-							if(vehicle.locked){
-								vehicle.locked = false;
-								player.sendPacket(new PacketPlayerChatMessage(player, "interact.key.info.unlock"));
-								//If we aren't in this vehicle, and we clicked a seat, start riding the vehicle.
-								if(part instanceof PartSeat && player.getEntityRiding() == null){
-									part.interact(player);
-								}
-							}else{
-								vehicle.locked = true;
-								player.sendPacket(new PacketPlayerChatMessage(player, "interact.key.info.lock"));
+						keyVehicleUUID = vehicle.uniqueUUID;
+						data.setString("vehicle", keyVehicleUUID);
+						stack.setTagCompound(data.tag);
+					}
+					
+					//Try to lock or unlock this vehicle.
+					//If we succeed, send callback to clients to change locked state.
+					if(!keyVehicleUUID.equals(vehicle.uniqueUUID)){
+						player.sendPacket(new PacketPlayerChatMessage(player, "interact.key.failure.wrongkey"));
+					}else{
+						if(vehicle.locked){
+							vehicle.locked = false;
+							player.sendPacket(new PacketPlayerChatMessage(player, "interact.key.info.unlock"));
+							//If we aren't in this vehicle, and we clicked a seat, start riding the vehicle.
+							if(part instanceof PartSeat && player.getEntityRiding() == null){
+								part.interact(player);
 							}
-							return CallbackType.ALL;
+						}else{
+							vehicle.locked = true;
+							player.sendPacket(new PacketPlayerChatMessage(player, "interact.key.info.lock"));
 						}
+						return CallbackType.ALL;
 					}
 				}else{
 					vehicle.locked = !vehicle.locked;

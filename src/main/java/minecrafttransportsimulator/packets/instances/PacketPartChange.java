@@ -87,7 +87,7 @@ public class PacketPartChange extends APacketEntity<AEntityE_Multipart<?>>{
 			}
 		}else{
 			JSONPartDefinition packVehicleDef = entity.getPackDefForLocation(partOffset);
-			entity.addPart(partItem.createPart(entity, packVehicleDef, partData, entity.getPartAtLocation(parentPartOffset)), false);
+			entity.addPart(partItem.createPart(entity, null, packVehicleDef, partData, entity.getPartAtLocation(parentPartOffset)), false);
 		}
 		return true;
 	}

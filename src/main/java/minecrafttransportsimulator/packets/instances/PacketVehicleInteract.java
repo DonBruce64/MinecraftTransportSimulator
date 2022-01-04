@@ -12,11 +12,11 @@ import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.components.IItemVehicleInteractable;
+import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntityInteract;
-import minecrafttransportsimulator.packets.components.InterfacePacket;
 import net.minecraft.item.ItemStack;
 
 /**Packet used to interact with vehicles.  Initially sent from clients to the server
@@ -98,7 +98,7 @@ public class PacketVehicleInteract extends APacketEntityInteract<EntityVehicleF_
 			}else{
 				//Attempt to add a part.  Vehicle is responsible for callback packet here.
 				if(heldItem instanceof AItemPart){
-					if(vehicle.addPartFromItem((AItemPart) heldItem, new WrapperNBT(heldStack), hitBoxLocalCenter, false) != null && !player.isCreative()){				
+					if(vehicle.addPartFromItem((AItemPart) heldItem, player, new WrapperNBT(heldStack), hitBoxLocalCenter, false) != null && !player.isCreative()){				
 						player.getInventory().removeStack(heldStack, 1);
 					}
 				}

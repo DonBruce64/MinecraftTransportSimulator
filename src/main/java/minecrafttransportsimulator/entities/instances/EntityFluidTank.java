@@ -3,14 +3,13 @@ package minecrafttransportsimulator.entities.instances;
 import java.util.Map;
 
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
+import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketFluidTankChange;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.EnumHand;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
@@ -163,7 +162,7 @@ public class EntityFluidTank extends AEntityA_Base{
 					if(drainedStack != null){
 						//Was able to provide liquid from item.  Fill the tank.
 						double amountFilled = fill(drainedStack.getFluid().getName(), drainedStack.amount, true);
-						player.player.setHeldItem(EnumHand.MAIN_HAND, handler.getContainer());
+						player.setHeldStack(handler.getContainer());
 						return amountFilled;
 					}
 				}
@@ -175,7 +174,7 @@ public class EntityFluidTank extends AEntityA_Base{
 				if(amountFilled > 0){
 					//Were able to fill the item.  Apply state change to tank and item.
 					double amountDrained = drain(getFluid(), amountFilled, true);
-					player.player.setHeldItem(EnumHand.MAIN_HAND, handler.getContainer());
+					player.setHeldStack(handler.getContainer());
 					return amountDrained;
 				}
 			}

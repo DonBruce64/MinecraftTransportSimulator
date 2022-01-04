@@ -5,11 +5,11 @@ import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
 import minecrafttransportsimulator.guis.instances.GUIInventoryContainer;
 import minecrafttransportsimulator.mcinterface.InterfaceGUI;
+import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketPlayer;
-import minecrafttransportsimulator.packets.components.InterfacePacket;
 
 /**Packet used to sync hand-held interactable crate inventory.  This is first sent by the server to the client
  * to open the crate GUI.  Once the client closes the GUI, this packet is sent back to the server to update

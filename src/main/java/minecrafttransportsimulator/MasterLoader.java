@@ -17,7 +17,7 @@ import minecrafttransportsimulator.items.instances.ItemPartSeat;
 import minecrafttransportsimulator.mcinterface.InterfaceChunkloader;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.InterfaceInput;
-import minecrafttransportsimulator.packets.components.InterfacePacket;
+import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraftforge.common.ForgeChunkManager;

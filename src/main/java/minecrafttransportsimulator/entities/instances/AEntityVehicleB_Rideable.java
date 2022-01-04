@@ -31,8 +31,22 @@ abstract class AEntityVehicleB_Rideable extends AEntityE_Multipart<JSONVehicle>{
 	/**Cached value for speedFactor.  Saves us from having to use the long form all over.  Not like it'll change in-game...*/
 	public static final double SPEED_FACTOR = ConfigSystem.configObject.general.speedFactor.value;
 	
-	public AEntityVehicleB_Rideable(WrapperWorld world, WrapperNBT data){
-		super(world, data);
+	public AEntityVehicleB_Rideable(WrapperWorld world, WrapperPlayer placingPlayer, WrapperNBT data){
+		super(world, placingPlayer, data);
+		
+		//Set position to the spot that was clicked by the player.
+		//Add a -90 rotation offset so the vehicle is facing perpendicular.
+		//Remove motion to prevent it if it was previously stored.
+		//Makes placement easier and is less likely for players to get stuck.
+		if(placingPlayer != null){
+			Point3d playerSightVector = placingPlayer.getLineOfSight(3);
+			position.setTo(placingPlayer.getPosition().add(playerSightVector.x, 0, playerSightVector.z));
+			prevPosition.setTo(position);
+			angles.set(0, placingPlayer.getYaw() + 90, 0);
+			prevAngles.setTo(angles);
+			motion.set(0, 0, 0);
+			prevMotion.set(0, 0, 0);
+		}
 	}
 	
 	@Override

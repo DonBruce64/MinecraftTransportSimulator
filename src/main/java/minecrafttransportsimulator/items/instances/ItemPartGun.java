@@ -12,6 +12,7 @@ import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 
 public class ItemPartGun extends AItemPart implements IItemEntityProvider<EntityPlayerGun>{
@@ -26,8 +27,8 @@ public class ItemPartGun extends AItemPart implements IItemEntityProvider<Entity
 	}
 	
 	@Override
-	public PartGun createPart(AEntityE_Multipart<?> entity, JSONPartDefinition packVehicleDef, WrapperNBT partData, APart parentPart){
-		return new PartGun(entity, packVehicleDef, validateData(partData), parentPart);
+	public PartGun createPart(AEntityE_Multipart<?> entity, WrapperPlayer placingPlayer, JSONPartDefinition packVehicleDef, WrapperNBT partData, APart parentPart){
+		return new PartGun(entity, placingPlayer, packVehicleDef, validateData(partData), parentPart);
 	}
 	
 	@Override
@@ -51,8 +52,8 @@ public class ItemPartGun extends AItemPart implements IItemEntityProvider<Entity
 	}
 	
 	@Override
-	public EntityPlayerGun createEntity(WrapperWorld world, WrapperNBT data){
-		return new EntityPlayerGun(world, null, data);
+	public EntityPlayerGun createEntity(WrapperWorld world, WrapperPlayer placingPlayer, WrapperNBT data){
+		return new EntityPlayerGun(world, placingPlayer, data);
 	}
 
 	@Override

@@ -39,15 +39,19 @@ public abstract class AEntityA_Base{
 	public final int lookupID;
 	/**True as long as this entity is part of the world and being ticked.  May be set false internally or externally to remove this entity from the world.**/
 	public boolean isValid = true;
+	/**Returns true if this entity was newly created and not loaded from saved data.  More formally, it checks if the {@link #uniqueUUID} was not stored in the data, or if the data was null.
+	 * In this case, we know that the data was not valid for the entity and thus the entity has to have been created without data.**/
+	public final boolean newlyCreated;
 	/**Counter for how many ticks this entity has existed in the world.  Realistically, it's the number of update cycles.**/
 	public long ticksExisted;
 	
 	public AEntityA_Base(WrapperWorld world, WrapperNBT data){
 		this.world = world;
+		this.newlyCreated = data == null || data.getString("uniqueUUID").isEmpty();
 		
 		//Get the map of entities we belong to.
 		if(shouldSync()){
-			this.uniqueUUID = data.getString("uniqueUUID").isEmpty() ? UUID.randomUUID().toString() : data.getString("uniqueUUID");
+			this.uniqueUUID = newlyCreated ? UUID.randomUUID().toString() : data.getString("uniqueUUID");
 			HashMap<Integer, AEntityA_Base> worldEntities = entityMaps.get(world);
 			if(worldEntities == null){
 				worldEntities = new HashMap<Integer, AEntityA_Base>();

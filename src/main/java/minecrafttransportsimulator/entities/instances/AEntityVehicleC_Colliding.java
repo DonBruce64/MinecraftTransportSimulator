@@ -7,10 +7,13 @@ import java.util.List;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
+import minecrafttransportsimulator.jsondefs.JSONCollisionGroup;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.item.ItemStack;
 
@@ -33,14 +36,53 @@ abstract class AEntityVehicleC_Colliding extends AEntityVehicleB_Rideable{
 	public final Point3d sideVector = new Point3d();
 	public final Point3d normalizedVelocityVector = new Point3d();
 	
-	public AEntityVehicleC_Colliding(WrapperWorld world, WrapperNBT data){
-		super(world, data);
+	public AEntityVehicleC_Colliding(WrapperWorld world, WrapperPlayer placingPlayer, WrapperNBT data){
+		super(world, placingPlayer, data);
 	}
 	
 	@Override
 	public boolean update(){
 		if(super.update()){
 			world.beginProfiling("VehicleC_Level", true);
+
+			//If we were placed down, and this is our first tick, check our collision boxes to make sure we are't in the ground.
+			if(placingPlayer != null && ticksExisted == 2 && !world.isClient()){
+				//Get how far above the ground the vehicle needs to be, and move it to that position.
+				//First boost Y based on collision boxes.
+				double furthestDownPoint = 0;
+				for(JSONCollisionGroup collisionGroup : definition.collisionGroups){
+					for(JSONCollisionBox collisionBox : collisionGroup.collisions){
+						furthestDownPoint = Math.min(collisionBox.pos.y - collisionBox.height/2F, furthestDownPoint);
+					}
+				}
+				
+				//Next, boost based on parts.
+				for(APart part : parts){
+					furthestDownPoint = Math.min(part.placementOffset.y - part.getHeight()/2F, furthestDownPoint);
+				}
+				
+				//Add on -0.1 blocks for the default collision clamping.
+				//This prevents the clamping of the collision boxes from hitting the ground if they were clamped.
+				furthestDownPoint += -0.1;
+				
+				//Apply the boost, and check collisions.
+				//If the core collisions are colliding, set the vehicle as dead and abort.
+				//We need to update the boxes first, however, as they haven't been updated yet.
+				position.y += -furthestDownPoint;
+				for(BoundingBox coreBox : allBlockCollisionBoxes){
+					coreBox.updateToEntity(this, null);
+					if(coreBox.updateCollidingBlocks(world, new Point3d(0D, -furthestDownPoint, 0D))){
+						//New vehicle shouldn't have been spawned.  Bail out.
+						remove();
+						placingPlayer.sendPacket(new PacketPlayerChatMessage(placingPlayer, "interact.failure.nospace"));
+						//Need to add stack back as it will have been removed here.
+						if(!placingPlayer.isCreative()){
+							placingPlayer.setHeldStack(getItem().getNewStack());
+						}
+						return false;
+					}
+				}
+			}
 			
 			//Set vectors to current velocity and orientation.
 			world.beginProfiling("SetVectors", true);

@@ -1,7 +1,7 @@
 {
   "general": {
 	"name" : "Key",
-	"description" : "Use on a vehicle to lock.\nVehicle may only be opened with key.\nSneak-use to take ownership.\nSneak-use again to relinquish.\nOwned vehicles may only be destroyed by you and OPs.",
+	"description" : "Because leaving a car unlocked in Minecraft is like leaving it unlocked in GTA...",
 	"materials" : [],
 	"type" : "key"
   }

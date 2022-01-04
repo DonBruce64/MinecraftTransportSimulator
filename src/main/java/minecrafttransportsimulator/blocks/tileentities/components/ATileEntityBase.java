@@ -26,7 +26,7 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONMultiModelProv
 	private float lastLightLevel;
 	
 	public ATileEntityBase(WrapperWorld world, Point3d position, WrapperPlayer placingPlayer, WrapperNBT data){
-		super(world, data);
+		super(world, placingPlayer, data);
 		this.position.setTo(position);
 		if(placingPlayer != null){
 			int clampAngle = getRotationIncrement();

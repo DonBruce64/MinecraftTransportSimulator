@@ -2,6 +2,7 @@ package minecrafttransportsimulator.items.components;
 
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 
 /**Interface for items that create entities when used.
@@ -13,7 +14,7 @@ public interface IItemEntityProvider<EntityType extends AEntityB_Existing>{
 	/**
 	 *  Gets a new instance of the entity this item creates.
 	 */
-	public EntityType createEntity(WrapperWorld world, WrapperNBT data);
+	public EntityType createEntity(WrapperWorld world, WrapperPlayer placingPlayer, WrapperNBT data);
 	
 	/**
 	 *  Gets the class of the Entity this item makes.

@@ -14,11 +14,11 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
+import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine;
@@ -75,14 +75,19 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 	//Map containing incoming missiles, sorted by distance, which is the value for this map.
 	public final List<EntityBullet> missilesIncoming = new ArrayList<EntityBullet>();
 	
-	public AEntityVehicleE_Powered(WrapperWorld world, WrapperNBT data){
-		super(world, data);
+	public AEntityVehicleE_Powered(WrapperWorld world, WrapperPlayer placingPlayer, WrapperNBT data){
+		super(world, placingPlayer, data);
 		
 		//Load simple variables.
 		this.electricPower = data.getDouble("electricPower");
 		this.selectedBeaconName = data.getString("selectedBeaconName");
 		this.selectedBeacon = NavBeaconSystem.getBeacon(world, selectedBeaconName);
 		this.fuelTank = new EntityFluidTank(world, data.getDataOrNew("fuelTank"), definition.motorized.fuelCapacity);
+		
+		if(newlyCreated){
+			//Set initial electrical power.
+			electricPower = 12;
+		}
 	}
 	
 	@Override

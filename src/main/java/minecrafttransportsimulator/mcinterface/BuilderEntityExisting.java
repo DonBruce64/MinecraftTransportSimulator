@@ -17,7 +17,6 @@ import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.IItemEntityProvider;
-import minecrafttransportsimulator.packets.components.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketVehicleInteract;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.client.Minecraft;
@@ -143,7 +142,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase{
     		if(!loadedFromSavedNBT && loadFromSavedNBT){
 				WrapperWorld worldWrapper = WrapperWorld.getWrapperFor(world);
 				try{
-					entity = entityMap.get(lastLoadedNBT.getString("entityid")).createEntity(worldWrapper, new WrapperNBT(lastLoadedNBT));
+					entity = entityMap.get(lastLoadedNBT.getString("entityid")).createEntity(worldWrapper, null, new WrapperNBT(lastLoadedNBT));
 					loadedFromSavedNBT = true;
 					lastLoadedNBT = null;
 				}catch(Exception e){

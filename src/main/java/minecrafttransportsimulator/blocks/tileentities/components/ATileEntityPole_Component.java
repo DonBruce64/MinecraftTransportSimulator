@@ -5,6 +5,7 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole;
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.rendering.instances.RenderPoleComponent;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
@@ -19,8 +20,8 @@ public abstract class ATileEntityPole_Component extends AEntityC_Definable<JSONP
 	
 	private static RenderPoleComponent renderer;
 	
-	public ATileEntityPole_Component(TileEntityPole core, Axis axis, WrapperNBT data){
-		super(core.world, data);
+	public ATileEntityPole_Component(TileEntityPole core, WrapperPlayer placingPlayer, Axis axis, WrapperNBT data){
+		super(core.world, placingPlayer, data);
 		this.core = core;
 		this.axis = axis;
 	}

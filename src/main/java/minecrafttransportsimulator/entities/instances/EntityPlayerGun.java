@@ -43,12 +43,12 @@ public class EntityPlayerGun extends AEntityE_Multipart<JSONPlayerGun>{
 	
 	private static RenderPlayerGun renderer;
 	
-	public EntityPlayerGun(WrapperWorld world, WrapperPlayer playerSpawning, WrapperNBT data){
-		super(world, data);
+	public EntityPlayerGun(WrapperWorld world, WrapperPlayer placingPlayer, WrapperNBT data){
+		super(world, placingPlayer, data);
 		//Get the player spawning us.
-		if(playerSpawning != null){
+		if(placingPlayer != null){
 			//Newly-spawned entity.
-			this.player = playerSpawning;
+			this.player = placingPlayer;
 			position.setTo(player.getPosition());
 			prevPosition.setTo(position);
 			angles.set(player.getPitch(), player.getYaw(), 0);
@@ -163,7 +163,7 @@ public class EntityPlayerGun extends AEntityE_Multipart<JSONPlayerGun>{
 							ItemPartGun heldGun = (ItemPartGun) heldItem;
 							if(heldGun.definition.gun.handHeld){
 								gunStack = player.getHeldStack();
-								addPartFromItem(heldGun, new WrapperNBT(gunStack), new Point3d(), false);
+								addPartFromItem(heldGun, player, new WrapperNBT(gunStack), new Point3d(), false);
 								hotbarSelected = player.getHotbarIndex();
 							}
 						}

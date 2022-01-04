@@ -322,7 +322,7 @@
             "rot": [0.0,0.0,0.0],
             "scale": 0.85,
             "fieldName": "",
-            "defaultText": "The only thing worse than getting your nice car blown up by a creeper is having it (or parts of it) stolen by other players.  Normally vehicles can be messed with by anyone, but by using a key you can mark them as owned, allowing only you to change their parts, instruments, or remove them from the world.  You may also lock the vehicle.",
+            "defaultText": "The only thing worse than getting your nice car blown up by a creeper is having it (or parts of it) stolen by other players.  Normally, vehicles may only be modfiied by their owners, but can be driven by anyone.  But by using a key you can lock them, ensuring nobody can drive off with, or take things out of, your vehicle.",
             "color": "000000",
             "wrapWidth": 180,
             "renderPosition": 1
@@ -332,7 +332,7 @@
             "rot": [0.0,0.0,0.0],
             "scale": 0.85,
             "fieldName": "",
-            "defaultText": "Locked vehicles may not be entered, and their inventories may not be accessed, except by players inside them.  This allows you to lock yourself into vehicles to prevent random passengers.  If a player that isn't the vehicle's owner has a key, they may enter and drive it, but they still cannot modity it.  Note that OPs bypass these restrictions to allow server admins to move/remove abandoned vehicles.",
+            "defaultText": "Locked vehicles may not be entered, and their inventories may not be accessed, except by players inside them.  This allows you to lock yourself into vehicles to prevent random passengers.  If a player that isn't the vehicle's owner has a key, they may enter and drive it, but they still cannot modity it.  Note that OPs bypass these restrictions to allow server admins to move/remove abandoned vehicles.  You can also tow vehicles you're not the owner of.  Wink wink.",
             "color": "000000",
             "wrapWidth": 180,
             "renderPosition": 1
