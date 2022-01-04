@@ -201,7 +201,7 @@ public class RenderText{
 			
 			//Parse char widths.
 			for(int i=0; i<fontLocations.length; ++i){
-				fontLocations[i] = String.format("%s%02d.png", fontBaseLocation, i);
+				fontLocations[i] = String.format("%s%02x.png", fontBaseLocation, i);
 				BufferedImage bufferedImage;
 				try{
 					bufferedImage = ImageIO.read(RenderText.class.getResourceAsStream(fontLocations[i]));
