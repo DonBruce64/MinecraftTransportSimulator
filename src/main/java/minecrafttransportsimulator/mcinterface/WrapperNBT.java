@@ -17,6 +17,7 @@ import net.minecraft.nbt.NBTTagCompound;
  * @author don_bruce
  */
 public class WrapperNBT{
+	//TODO this whouldn't be accessible normally.  It's mostly here for items.
 	public final NBTTagCompound tag;
 	
 	public WrapperNBT(){

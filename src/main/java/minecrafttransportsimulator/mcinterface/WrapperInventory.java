@@ -53,7 +53,7 @@ public class WrapperInventory{
 	public boolean hasItem(AItemBase itemToFind){
 		for(int i=0; i<getSize(); ++i){
 			ItemStack currentStack = inventory.getStackInSlot(i);
-			if(itemToFind.getBuilder().equals(currentStack.getItem())){
+			if(itemToFind.getNewStack().isItemEqual(currentStack)){
 				return true;
 			}
 		}

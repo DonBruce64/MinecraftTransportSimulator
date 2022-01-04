@@ -92,6 +92,7 @@ public class WrapperWorld{
 	private final List<AxisAlignedBB> collidingAABBs = new ArrayList<AxisAlignedBB>();
 	private final Set<BlockPos> knownAirBlocks = new HashSet<BlockPos>();
 	
+	//TODO make this protected when we abstract overlays and packets.
 	public final World world;
 	public InterfaceWorldSavedData savedDataAccessor;
 	public static final String STORED_WORLD_DATA_ID = MasterLoader.MODID + "_WORLD_DATA";

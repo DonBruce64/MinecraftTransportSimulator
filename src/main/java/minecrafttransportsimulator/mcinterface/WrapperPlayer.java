@@ -33,6 +33,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 public class WrapperPlayer extends WrapperEntity{
 	private static final Map<EntityPlayer, WrapperPlayer> playerWrappers = new HashMap<EntityPlayer, WrapperPlayer>();
 	
+	//TODO this needs to be private when item interaction is abstracted.
 	public final EntityPlayer player;
 	
 	public WrapperPlayer(EntityPlayer player){

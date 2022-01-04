@@ -43,8 +43,8 @@ public class InterfaceEventsEntityRendering{
 	private static float playerPrevOffsetYawTemp;
 	private static float playerHeadYawTemp;
 	private static float playerPrevHeadYawTemp;
-	public static boolean renderCurrentRiderSitting;
-	public static boolean renderCurrentRiderControlling;
+	protected static boolean renderCurrentRiderSitting;
+	protected static boolean renderCurrentRiderControlling;
 	
 	/**
 	 *  World last event.  This occurs at the end of rendering in a special pass of -1.

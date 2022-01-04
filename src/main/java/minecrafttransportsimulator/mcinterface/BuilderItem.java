@@ -62,9 +62,10 @@ import net.minecraftforge.oredict.OreDictionary;
 @EventBusSubscriber
 public class BuilderItem extends Item{
 	/**Map of created items linked to their builder instances.  Used for interface operations.**/
-	public static final Map<AItemBase, BuilderItem> itemMap = new LinkedHashMap<AItemBase, BuilderItem>();
+	protected static final Map<AItemBase, BuilderItem> itemMap = new LinkedHashMap<AItemBase, BuilderItem>();
 	
-	/**Current entity we are built around.**/
+	/**Current item we are built around.**/
+	//TODO make protected when we have wrapped item stacks.
 	public final AItemBase item;
 	
 	public BuilderItem(AItemBase item){
@@ -240,9 +241,9 @@ public class BuilderItem extends Item{
 				String tabID = item.getCreativeTabID();
 				if(!BuilderCreativeTab.createdTabs.containsKey(tabID)){
 					JSONPack packConfiguration = PackParserSystem.getPackConfiguration(tabID);
-					BuilderCreativeTab.createdTabs.put(tabID, new BuilderCreativeTab(packConfiguration.packName, packConfiguration.packItem != null ? PackParserSystem.getItem(packConfiguration.packID,  packConfiguration.packItem) : null)); 
+					BuilderCreativeTab.createdTabs.put(tabID, new BuilderCreativeTab(packConfiguration.packName, itemMap.get(PackParserSystem.getItem(packConfiguration.packID,  packConfiguration.packItem)))); 
 				}
-				BuilderCreativeTab.createdTabs.get(tabID).addItem(item);
+				BuilderCreativeTab.createdTabs.get(tabID).addItem(item, mcItem);
 			}
 			
 			//Register the item.

@@ -22,8 +22,8 @@ import net.minecraftforge.fml.common.registry.EntityEntryBuilder;
 @EventBusSubscriber
 public class BuilderEntityRenderForwarder extends ABuilderEntityBase{
 	
-	public EntityPlayer playerFollowing;
-	public int idleTickCounter;
+	protected EntityPlayer playerFollowing;
+	protected int idleTickCounter;
 	private long[] lastTickRendered = new long[]{0L, 0L, 0L};
 	private float[] lastPartialTickRendered = new float[]{0F, 0F, 0F};
 	private boolean doneRenderingShaders;

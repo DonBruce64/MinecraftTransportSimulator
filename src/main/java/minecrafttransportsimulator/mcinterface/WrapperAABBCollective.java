@@ -19,9 +19,8 @@ import net.minecraft.util.math.Vec3d;
  * @author don_bruce
  */
 public class WrapperAABBCollective extends AxisAlignedBB{
-	public final BoundingBox encompassingBox;
-	public final Collection<BoundingBox> boxes;
-	public BoundingBox lastBoxRayTraced;
+	protected final Collection<BoundingBox> boxes;
+	protected BoundingBox lastBoxRayTraced;
 	
 	public WrapperAABBCollective(BoundingBox encompassingBox, Collection<BoundingBox> boxes){
 		super(	encompassingBox.globalCenter.x - encompassingBox.widthRadius,
@@ -31,7 +30,6 @@ public class WrapperAABBCollective extends AxisAlignedBB{
 				encompassingBox.globalCenter.y + encompassingBox.heightRadius,
 				encompassingBox.globalCenter.z + encompassingBox.depthRadius
 			);
-		this.encompassingBox = encompassingBox;
 		this.boxes = boxes;
 	}
 	

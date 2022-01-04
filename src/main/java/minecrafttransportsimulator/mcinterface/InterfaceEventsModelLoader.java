@@ -18,6 +18,7 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
+import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.packloading.PackResourceLoader;
 import minecrafttransportsimulator.packloading.PackResourceLoader.ResourceType;
@@ -136,11 +137,14 @@ public class InterfaceEventsModelLoader{
 		//Now register items for the packs.
 		//When we register a pack item from an external pack, we'll need to make a resource loader for it.
 		//This is done to allow MC/Forge to play nice with item textures.
-		for(AItemPack<?> packItem : PackParserSystem.getAllPackItems()){
-			if(!PackResourcePack.createdLoaders.containsKey(packItem.definition.packID)){
-				defaultPacks.add(new PackResourcePack(packItem.definition.packID));
+		for(AItemBase item : BuilderItem.itemMap.keySet()){
+			if(item instanceof AItemPack){
+				AItemPack<?> packItem = (AItemPack<?>) item;
+				if(!PackResourcePack.createdLoaders.containsKey(packItem.definition.packID)){
+					defaultPacks.add(new PackResourcePack(packItem.definition.packID));
+				}
+				ModelLoader.setCustomModelResourceLocation(BuilderItem.itemMap.get(packItem), 0, new ModelResourceLocation(MasterLoader.MODID + "_packs:" + packItem.getRegistrationName(), "inventory"));
 			}
-			ModelLoader.setCustomModelResourceLocation(packItem.getBuilder(), 0, new ModelResourceLocation(MasterLoader.MODID + "_packs:" + packItem.getRegistrationName(), "inventory"));
 		}
 		
 		//Now that we've created all the pack loaders, reload the resource manager to add them to the systems.

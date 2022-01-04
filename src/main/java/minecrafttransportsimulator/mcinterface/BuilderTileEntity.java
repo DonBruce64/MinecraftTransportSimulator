@@ -36,6 +36,7 @@ public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extend
 	 * loading entity data when this entity isn't being ticked.  Some mods love to do this by making a lot of entities
 	 * to do their funky logic.  I'm looking at YOU The One Probe!  This should be either set by NBT loaded from disk
 	 * on servers, or set by packet on clients.*/
+	//TODO make this and the other NBT bits protected when we abstract packet reg, and move packets here.
 	public NBTTagCompound lastLoadedNBT;
 	/**Set to true when NBT is loaded on servers from disk, or when NBT arrives from clients on servers.  This is set on the update loop when data is
 	 * detected from server NBT loading, but for clients this is set when a data packet arrives.  This prevents loading client-based NBT before

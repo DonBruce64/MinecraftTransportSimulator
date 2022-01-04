@@ -28,21 +28,20 @@ import net.minecraftforge.fml.relauncher.Side;
 @EventBusSubscriber(Side.CLIENT)
 public class BuilderCreativeTab extends CreativeTabs{
 	/**Map of created tabs names linked to their builder instances.  Used for interface operations.**/
-	public static final Map<String, BuilderCreativeTab> createdTabs = new HashMap<String, BuilderCreativeTab>();
+	protected static final Map<String, BuilderCreativeTab> createdTabs = new HashMap<String, BuilderCreativeTab>();
 	
 	private Item itemIcon;
 	private final List<Item> items = new ArrayList<Item>();
 	
-	BuilderCreativeTab(String name, AItemBase iconItem){
+	BuilderCreativeTab(String name, BuilderItem mcItem){
 		super(name);
-		this.itemIcon = iconItem != null ? iconItem.getBuilder() : null;
+		this.itemIcon = mcItem;
 	}
 	
 	/**
      * Adds the passed-in item to this tab.
      */
-	public void addItem(AItemBase item){
-		Item mcItem = item.getBuilder();
+	public void addItem(AItemBase item, BuilderItem mcItem){
 		items.add(mcItem);
 		mcItem.setCreativeTab(this);
     }

@@ -55,9 +55,10 @@ import net.minecraftforge.fml.common.registry.EntityEntryBuilder;
 @EventBusSubscriber
 public class BuilderEntityExisting extends ABuilderEntityBase{
 	/**Maps Entity class names to instances of the IItemEntityProvider class that creates them.**/
-	public static final Map<String, IItemEntityProvider<?>> entityMap = new HashMap<String, IItemEntityProvider<?>>();
+	protected static final Map<String, IItemEntityProvider<?>> entityMap = new HashMap<String, IItemEntityProvider<?>>();
 	
 	/**Current entity we are built around.  This MAY be null if we haven't loaded NBT from the server yet.**/
+	//TODO make this protected when we abstract the overlay/HUD code.
 	public AEntityB_Existing entity;
 	/**Last saved explosion position (used for damage calcs).**/
 	private static Point3d lastExplosionPosition;

@@ -39,7 +39,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 public class WrapperEntity{
 	private static final Map<Entity, WrapperEntity> entityWrappers = new HashMap<Entity, WrapperEntity>();
 	
-	public final Entity entity;
+	protected final Entity entity;
 	
 	/**
 	 *  Returns a wrapper instance for the passed-in entity instance.

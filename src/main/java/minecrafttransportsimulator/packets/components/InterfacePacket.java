@@ -76,6 +76,7 @@ public class InterfacePacket{
 	 *  Packets should be registered at this point in this constructor.
 	 */
 	public static void init(){
+		//TODO this needs to be default packets, but then a method for adding new ones.  Interface belongs with interfaces.
 		//Register the main wrapper packet.
 		network.registerMessage(WrapperHandler.class, WrapperPacket.class, 0, Side.CLIENT);
 		network.registerMessage(WrapperHandler.class, WrapperPacket.class, 1, Side.SERVER);

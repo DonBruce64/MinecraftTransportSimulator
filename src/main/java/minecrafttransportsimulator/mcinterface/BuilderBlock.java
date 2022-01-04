@@ -57,10 +57,10 @@ import net.minecraftforge.fml.common.registry.GameRegistry;
 @EventBusSubscriber
 public class BuilderBlock extends Block{
 	/**Map of created blocks linked to their builder instances.  Used for interface operations.**/
-	public static final Map<ABlockBase, BuilderBlock> blockMap = new HashMap<ABlockBase, BuilderBlock>();
+	protected static final Map<ABlockBase, BuilderBlock> blockMap = new HashMap<ABlockBase, BuilderBlock>();
 	
 	/**Current block we are built around.**/
-	public final ABlockBase block;
+	protected final ABlockBase block;
 	/**Holding map for block drops.  MC calls breakage code after the TE is removed, so we need to store drops 
 	created during the drop checks here to ensure they actually drop when the block is broken. **/
 	private static final Map<BlockPos, List<ItemStack>> dropsAtPositions = new HashMap<BlockPos, List<ItemStack>>();
@@ -300,7 +300,9 @@ public class BuilderBlock extends Block{
 		//which blocks we need to register.
 		for(String packID : PackParserSystem.getAllPackIDs()){
 			for(AItemPack<?> packItem : PackParserSystem.getAllItemsForPack(packID, true)){
-				new BuilderItem(packItem);
+				if(packItem.autoGenerate()){
+					new BuilderItem(packItem);
+				}
 			}
 		}
 		
