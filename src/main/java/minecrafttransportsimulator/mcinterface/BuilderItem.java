@@ -232,6 +232,7 @@ public class BuilderItem extends Item{
 	public static void registerItems(RegistryEvent.Register<Item> event){
 		//Register all items in our wrapper map.
 		for(Entry<AItemBase, BuilderItem> entry : itemMap.entrySet()){
+			if(!entry.getKey().autoGenerate()) continue;
 			AItemPack<?> item = (AItemPack<?>) entry.getKey();
 			BuilderItem mcItem = entry.getValue();
 			
