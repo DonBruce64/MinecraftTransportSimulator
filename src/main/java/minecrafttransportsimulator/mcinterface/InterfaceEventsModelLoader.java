@@ -139,6 +139,7 @@ public class InterfaceEventsModelLoader{
 		//This is done to allow MC/Forge to play nice with item textures.
 		for(AItemBase item : BuilderItem.itemMap.keySet()){
 			if(item instanceof AItemPack){
+				if(!item.autoGenerate()) continue;
 				AItemPack<?> packItem = (AItemPack<?>) item;
 				if(!PackResourcePack.createdLoaders.containsKey(packItem.definition.packID)){
 					defaultPacks.add(new PackResourcePack(packItem.definition.packID));
