@@ -126,6 +126,11 @@ public abstract class APart extends AEntityD_Interactable<JSONPart>{
 				activeClocks.add(new DurationDelayClock(animation));
 			}
 		}
+		if(placementDefinition.activeAnimations != null){
+			for(JSONAnimationDefinition animation : placementDefinition.activeAnimations){
+				activeClocks.add(new DurationDelayClock(animation));
+			}
+		}
 	}
 	
 	@Override
