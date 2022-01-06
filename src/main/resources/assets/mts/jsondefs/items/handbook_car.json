@@ -84,7 +84,7 @@
             "rot": [0.0,0.0,0.0],
             "scale": 0.85,
             "fieldName": "",
-            "defaultText": "Like most mods that have packs and lots of content, IV uses crafting benches for crafting.  The Drafting Table is used to craft vehicles, while the other benches craft their own parts.  You'll likely want to start filling your garage early with these benches as most vehicles use at least one type of every part.  JEI is supported, and will tell you what benches make what parts.",
+            "defaultText": "Like most mods that have packs and lots of content, IV uses crafting benches for crafting.  The Vehicle Bench is used to craft vehicles, while the other benches craft their own parts.  You'll likely want to start filling your garage early with these benches as most vehicles use at least one type of every part.  JEI is supported, and will tell you what benches make what parts.",
             "color": "000000",
             "wrapWidth": 180,
             "renderPosition": 1
