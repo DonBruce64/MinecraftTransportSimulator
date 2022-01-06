@@ -189,6 +189,7 @@ public final class PackParserSystem{
 			defaultItems.put("decorbench", ItemClassification.DECOR);
 			defaultItems.put("itembench", ItemClassification.DECOR);
 			defaultItems.put("invisible_seat", ItemClassification.PART);
+			defaultItems.put("invisible_standing", ItemClassification.PART);
 			defaultItems.put("invisible_wheel", ItemClassification.PART);
 			
 			String prefixFolders = "/assets/" + MasterLoader.MODID + "/jsondefs/";

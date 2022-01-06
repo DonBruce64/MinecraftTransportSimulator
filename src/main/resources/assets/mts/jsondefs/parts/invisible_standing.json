@@ -1,0 +1,18 @@
+{
+    "general": {
+        "name" : "Invisible Standing Seat (DO NOT USE!)",
+        "type" : "seat",
+				"materials" : []
+    },
+		"seat": {
+			"standing" : true
+		},
+    "definitions": [
+        {
+            "subName": "",
+            "extraMaterials": [],
+						"modelName": "invisible",
+						"textureName": "invisible"
+        }
+    ]
+}
