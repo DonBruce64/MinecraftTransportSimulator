@@ -126,7 +126,7 @@ public class GUIPaintGun extends AGUIBase{
 	
 	@Override
 	public String getTexture(){
-		return "mts:textures/guis/paintgun.png";
+		return "mts:textures/guis/repainting.png";
 	}
 	
 	/**
