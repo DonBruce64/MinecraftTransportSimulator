@@ -23,6 +23,16 @@ import minecrafttransportsimulator.rendering.components.RenderableObject;
  * @author don_bruce
  */
 public class RenderText{
+	public static final char FORMATTING_CHAR = 167;//'§';
+	public static final char BOLD_FORMATTING_CHAR = 'l';
+	public static final char ITALIC_FORMATTING_CHAR = 'o';
+	public static final char UNDERLINE_FORMATTING_CHAR = 'n';
+	public static final char STRIKETHROUGH_FORMATTING_CHAR = 'm';
+	public static final char RANDOM_FORMATTING_CHAR = 'k';
+	public static final char RESET_FORMATTING_CHAR = 'r';
+	public static final char UNDERLINE_CHAR = '_';
+	public static final char STRIKETHROUGH_CHAR = '-';
+	
 	private static final Map<String, FontData> fontDatas = new HashMap<String, FontData>();
 	
 	/**
@@ -116,16 +126,6 @@ public class RenderText{
 	 *  element representing the char index on the texture sheet.
 	 */
 	private static class FontData{
-		private static final char FORMATTING_CHAR = 167;//'§';
-		private static final char BOLD_FORMATTING_CHAR = 'l';
-		private static final char ITALIC_FORMATTING_CHAR = 'o';
-		private static final char UNDERLINE_FORMATTING_CHAR = 'n';
-		private static final char STRIKETHROUGH_FORMATTING_CHAR = 'm';
-		private static final char RANDOM_FORMATTING_CHAR = 'k';
-		private static final char RESET_FORMATTING_CHAR = 'r';
-		private static final char UNDERLINE_CHAR = '_';
-		private static final char STRIKETHROUGH_CHAR = '-';
-		
 		private static final byte CHARS_PER_ROWCOL = 16;
 		private static final int CHARS_PER_TEXTURE_SHEET = CHARS_PER_ROWCOL*CHARS_PER_ROWCOL;
 		private static final byte DEFAULT_PIXELS_PER_CHAR = 8;
@@ -533,8 +533,8 @@ public class RenderText{
 								
 								if(currentState.bold && j < 12){
 									//Just render a second char slightly offset.
-									supplementalVertex[0] += 0.3F;
-									supplementalVertex[1] += 0.3F;
+									supplementalVertex[0] += 0.2F*scale;
+									supplementalVertex[1] += 0.2F*scale;
 									currentRenderObject.vertices.put(normals).put(supplementalUV).put(supplementalVertex);
 								}else{
 									char customChar;

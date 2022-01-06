@@ -67,7 +67,7 @@ public class GUIComponentItem extends AGUIComponent{
 		    		renderable = InterfaceGUI.getItemModel(stackToRender);
 		    		lastStackRendered = stackToRender;
 		    		if(stackToRender.getCount() > 1){
-		    			text = ((char) 167) + "l" + String.valueOf(stackToRender.getCount());
+		    			text = String.valueOf(RenderText.FORMATTING_CHAR) + String.valueOf(RenderText.BOLD_FORMATTING_CHAR) + String.valueOf(stackToRender.getCount());
 		    		}
 	    		}
 	    	}else{
