@@ -86,16 +86,20 @@ public class InterfaceEventsModelLoader{
 						if(allEntities != null){
 					        //Use smooth shading for model rendering.
 							GL11.glShadeModel(GL11.GL_SMOOTH);
-							//Enable normal re-sccaling for model rendering.
+							//Enable normal re-scaling for model rendering.
 							//This prevents bad lighting.
 							GlStateManager.enableRescaleNormal();
 							
-							//Need to put all entities into a collection in case we spawn them as particles during this rendering operation.
+							//Need to put all entities into a collection in case we spawn particles during this rendering operation.
+							//Doing so will add the particle to the entity list, and will get us a CME for our efforts.
 							entities.clear();
 							entities.addAll(allEntities);
 							for(AEntityC_Definable<?> entity : entities){
 								entity.getRenderer().render(entity, MinecraftForgeClient.getRenderPass() == 1, partialTicks);
 							}
+							
+							//Render the HUD/GUI if we have one open.
+							
 							
 							GL11.glShadeModel(GL11.GL_FLAT);
 						}
@@ -300,7 +304,7 @@ public class InterfaceEventsModelLoader{
 					&& !location.getPath().contains("blockstates") 
 					&& !location.getPath().contains("armatures") 
 					&& !location.getPath().contains("mcmeta")
-					&& (location.getPath().startsWith("models/item/") || location.getPath().startsWith("textures/"));
+					&& ((location.getPath().endsWith(".json") && !location.getPath().equals("sounds.json")) || location.getPath().endsWith(".png"));
 		}
 
 		@Override
