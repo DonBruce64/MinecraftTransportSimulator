@@ -368,14 +368,14 @@ public class GUIPackEditor extends JFrame{
 			checkBox.setSelected((Boolean) obj);
 			checkBox.addActionListener(actionListener);
 			return checkBox;
-		}else if(objectClass.equals(Integer.TYPE)){
+		}else if(objectClass.equals(Integer.TYPE) || objectClass.equals(Integer.class)){
 			JTextField textBox = new JTextField();
 			textBox.setFont(NORMAL_FONT);
 			textBox.setText(String.valueOf(obj));
 			textBox.setPreferredSize(NUMBER_TEXT_BOX_DIM);
 			textBox.addFocusListener(focusListener);
 			return textBox;
-		}else if(objectClass.equals(Float.TYPE)){
+		}else if(objectClass.equals(Float.TYPE) || objectClass.equals(Float.class)){
 			JTextField textBox = new JTextField();
 			textBox.setFont(NORMAL_FONT);
 			textBox.setText(String.valueOf(obj));
@@ -516,6 +516,10 @@ public class GUIPackEditor extends JFrame{
 					}
 				}
 				return null;
+			}else if(fieldClass.equals(Integer.class)){
+				return new Integer(0);
+			}else if(fieldClass.equals(Float.class)){
+				return new Float(0);
 			}else{
 				try{
 					return fieldClass.getConstructor().newInstance(); 
