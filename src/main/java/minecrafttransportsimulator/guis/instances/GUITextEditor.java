@@ -38,7 +38,7 @@ public class GUITextEditor extends AGUIBase{
 		this.entity = entity;
 	}
 	
-	@Override 
+	@Override
 	public void setupComponents(int guiLeft, int guiTop){
 		super.setupComponents(guiLeft, guiTop);
 		int boxWidth;
@@ -116,7 +116,7 @@ public class GUITextEditor extends AGUIBase{
 	}
 	
 	@Override
-	public void setStates(){
+	protected void setStates(){
 		super.setStates();
 		confirmButton.enabled = true;
 		for(int i=0; i<signTextLabels.size(); ++i){

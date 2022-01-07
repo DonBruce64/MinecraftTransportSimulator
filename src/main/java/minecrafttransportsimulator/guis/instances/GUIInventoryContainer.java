@@ -82,7 +82,7 @@ public class GUIInventoryContainer extends AGUIInventory{
 	}
 
 	@Override
-	public void setStates(){
+	protected void setStates(){
 		super.setStates();
 		//Set slider, next, and prior row button states, if we have scrolling.
 		if(maxRowIncrements > 0){

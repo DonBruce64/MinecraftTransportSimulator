@@ -31,7 +31,7 @@ public class GUIBooklet extends AGUIBase{
 		this.totalPages = booklet.definition.booklet.disableTOC ? 1 + booklet.definition.booklet.pages.size() : 2 + booklet.definition.booklet.pages.size();
 	}
 	
-	@Override 
+	@Override
 	public void setupComponents(int guiLeft, int guiTop){
 		super.setupComponents(guiLeft, guiTop);
 		pageTextLabels.clear();
@@ -118,7 +118,7 @@ public class GUIBooklet extends AGUIBase{
 	}
 	
 	@Override
-	public void setStates(){
+	protected void setStates(){
 		super.setStates();
 		//Set the navigation button states.
 		leftButton.visible = booklet.pageNumber > 0;
@@ -161,7 +161,7 @@ public class GUIBooklet extends AGUIBase{
 	}
 	
 	@Override
-	public String getTexture(){
+	protected String getTexture(){
 		if(booklet.pageNumber == 0){
 			return booklet.definition.booklet.coverTexture;
 		}else if(!booklet.definition.booklet.disableTOC){

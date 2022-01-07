@@ -6,15 +6,14 @@ import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.guis.components.AGUIBase;
-import minecrafttransportsimulator.guis.components.AGUIBase.GUILightingMode;
 import minecrafttransportsimulator.guis.components.AGUIComponent;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
-import minecrafttransportsimulator.guis.components.GUIComponentInstrument;
-import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox.TextBoxControlKey;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.init.SoundEvents;
 
 /**Builder for MC GUI classes.  Created when {@link InterfaceGUI#openGUI(AGUIBase)}
@@ -65,86 +64,24 @@ public class BuilderGUI extends GuiScreen{
 	 */
 	@Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks){
-		//First set the states for things in this GUI.
-		gui.setStates();
-		
 		//Set Y-axis to inverted to have correct orientation.
 		GL11.glScalef(1.0F, -1.0F, 1.0F);
 		
-		//If we are light-sensitive, enable lighting.
-		if(!gui.getGUILightMode().equals(GUILightingMode.NONE)){
-			InterfaceRender.setInternalLightingState(true);
-			InterfaceRender.setLightingToPosition(gui.getGUILightSource().position);
-		}
-		
-		//Bind the standard texture and render the background.
-		//If we are translucent, enable blending.
-		if(gui.renderTranslucent()){
-			InterfaceRender.setBlend(true);
-		}
-		
-		//Render textured components.  These choose if they render or not depending on visibility.
-		for(AGUIComponent component : gui.components){
-			if(component.visible && !(component instanceof GUIComponentInstrument)){
-				component.render(gui, mouseX, mouseY, false, partialTicks);
-			}
-		}
-		
-		//If we are light-sensitive, and this GUI is said to be lit up, disable the lightmap.
-		//This allows all text to be lit up if required.  We also render the lit texture now.
-		//This requires a re-render of all the components to ensure the lit texture portions of said components render.
-		if(gui.getGUILightMode().equals(GUILightingMode.LIT)){
-			InterfaceRender.setLightingState(false);
-			InterfaceRender.bindTexture(gui.getTexture().replace(".png", "_lit.png"));
-			for(AGUIComponent component : gui.components){
-				if(component.visible && !(component instanceof GUIComponentInstrument) && !(component instanceof GUIComponentItem)){
-					component.render(gui, mouseX, mouseY, true, partialTicks);
-				}
-			}
-		}
-		
-		//Disable translucency if we had it enabled.
-		if(gui.renderTranslucent()){
-			InterfaceRender.setBlend(false);
-		}
-		
-		//Now that all main rendering is done, render text.
-		//This includes labels, button text, and text boxes.
-		//We only need to do this once, even if we are lit, as we just change the text lighting.
-		boolean isTextLit = gui.getGUILightMode().equals(GUILightingMode.LIT);
-		for(AGUIComponent component : gui.components){
-			if(component.visible && component.text != null && !component.text.isEmpty()){
-				component.renderText(isTextLit);
-			}
-		}
-		
-		//Enable lighting for instrument rendering,
-		//then render the instruments.  These use their own texture,
-		//so the text texture will be overridden at this point.
+		//Enable lighting.
+		RenderHelper.enableStandardItemLighting();
+		Minecraft.getMinecraft().entityRenderer.enableLightmap();
 		InterfaceRender.setLightingState(true);
-		for(AGUIComponent component : gui.components){
-			if(component instanceof GUIComponentInstrument){
-				component.render(gui, mouseX, mouseY, false, partialTicks);
-			}
-		}
 		
-		//Now render blended parts of the instrument.
+		//Render main pass, then blended pass.
+		gui.render(width, height, mouseX, mouseY, false, partialTicks);
 		InterfaceRender.setBlend(true);
-		for(AGUIComponent component : gui.components){
-			if(component instanceof GUIComponentInstrument){
-				component.render(gui, mouseX, mouseY, true, partialTicks);
-			}
-		}
+		gui.render(width, height, mouseX, mouseY, true, partialTicks);
+		
+		//Set states back to normal.
 		InterfaceRender.setBlend(false);
-		
-		//Render any tooltips.
-		for(AGUIComponent component : gui.components){
-			if(component.visible && component.isMouseInBounds(mouseX, mouseY)){
-				component.renderTooltip(gui, mouseX, mouseY, mc.currentScreen.width, mc.currentScreen.height);
-			}
-		}
-		
-		//Set Y-axis back to regular orientation.
+		InterfaceRender.setLightingState(false);
+		Minecraft.getMinecraft().entityRenderer.disableLightmap();
+		RenderHelper.disableStandardItemLighting();
 		GL11.glScalef(1.0F, -1.0F, 1.0F);
 	}
 	

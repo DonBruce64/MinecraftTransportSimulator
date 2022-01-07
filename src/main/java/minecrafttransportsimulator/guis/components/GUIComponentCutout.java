@@ -36,7 +36,7 @@ public class GUIComponentCutout extends AGUIComponent{
 	}
 	
 	@Override
-    public void render(AGUIBase gui, int mouseX, int mouseY, boolean blendingEnabled, float partialTicks){
+    public void render(AGUIBase gui, int mouseX, int mouseY, boolean renderBright, boolean renderLitTexture, boolean blendingEnabled, float partialTicks){
 		if(renderable == null || !renderable.texture.equals(gui.getTexture())){
 			renderable = new RenderableObject("gui_cutout", gui.getTexture(), ColorRGB.WHITE, FloatBuffer.allocate(8*6), false);
 		}
@@ -45,6 +45,8 @@ public class GUIComponentCutout extends AGUIComponent{
 			renderable.vertices.flip();
 		}
 		GL11.glTranslated(position.x, position.y, position.z);
+		renderable.disableLighting = renderBright;
+		renderable.texture = renderLitTexture ? gui.getTexture().replace(".png", "_lit.png") : gui.getTexture();
 		renderable.render();
 		GL11.glTranslated(-position.x, -position.y, -position.z);
     }

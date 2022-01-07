@@ -87,7 +87,7 @@ public class GUIFuelPump extends AGUIInventory{
 	}
 
 	@Override
-	public void setStates(){
+	protected void setStates(){
 		super.setStates();
 		//If we are configuring, change item states.
 		if(configuring){

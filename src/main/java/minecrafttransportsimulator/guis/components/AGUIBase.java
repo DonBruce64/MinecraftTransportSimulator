@@ -6,6 +6,7 @@ import java.util.List;
 
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.mcinterface.InterfaceGUI;
+import minecrafttransportsimulator.mcinterface.InterfaceRender;
 
 /**Base GUI class.  This type is used in conjunction with {@link InterfaceGUI} to allow us to use
  * completely custom GUI code that is not associated with MC's standard GUI code.  Allows us to only
@@ -25,7 +26,7 @@ public abstract class AGUIBase{
 	protected static final int STANDARD_YELLOW_HEIGHT_OFFSET = 216;
 	protected static final int STANDARD_BLACK_HEIGHT_OFFSET = 236;
 
-	public GUIComponentCutout background;
+	private GUIComponentCutout background;
 	public final List<AGUIComponent> components = new ArrayList<AGUIComponent>();
 	
 	
@@ -115,8 +116,74 @@ public abstract class AGUIBase{
 	 *  By default, this sets the state of the background based on the return value of
 	 *  {@link #renderBackground()}
 	 */
-	public void setStates(){
+	protected void setStates(){
 		background.visible = renderBackground();
+	}
+	
+	/**
+	 *  Called to render the components in this GUI.  This is a final method to discourage manual rendering
+	 *  and instead force use of the component-based rendering that provides a state-safe framework. 
+	 */
+	public final void render(int screenWidth, int screenHeight, int mouseX, int mouseY, boolean blendingEnabled, float partialTicks){
+		//First set the states for things in this GUI.
+		//Only do this on the normal render pass.
+		if(!blendingEnabled){
+			setStates();
+		}
+		
+		//If we are light-sensitive, set lighting to our position.
+		boolean ignoreLightState = getGUILightMode().equals(GUILightingMode.NONE); 
+		if(!ignoreLightState){
+			InterfaceRender.setLightingToPosition(getGUILightSource().position);
+		}
+		
+		//Render main components once, but only based on translucent state.
+		//While instruments might get rendered on both passes, normal components
+		//only get rendered on one or the other.
+		if(!(renderTranslucent() ^ blendingEnabled)){
+			//Render textured components except instruments.  These choose if they render or not depending on visibility.
+			for(AGUIComponent component : components){
+				if(component.visible && !(component instanceof GUIComponentInstrument)){
+					component.render(this, mouseX, mouseY, ignoreLightState, false, blendingEnabled, partialTicks);
+				}
+			}
+			
+			//If we are light-sensitive, and this GUI is said to be lit up, render the lit components here.
+			//This requires a re-render of all the components to ensure the lit texture portions of said components render.
+			if(getGUILightMode().equals(GUILightingMode.LIT)){
+				for(AGUIComponent component : components){
+					if(component.visible && !(component instanceof GUIComponentInstrument) && !(component instanceof GUIComponentItem)){
+						component.render(this, mouseX, mouseY, true, true, true, partialTicks);
+					}
+				}
+			}
+			
+			//Now that all main rendering is done, render text.
+			//This includes labels, button text, and text boxes.
+			//We only need to do this once, even if we are lit, as we just change the text lighting.
+			boolean isTextLit = !getGUILightMode().equals(GUILightingMode.DARK);
+			for(AGUIComponent component : components){
+				if(component.visible && component.text != null && !component.text.isEmpty()){
+					component.renderText(isTextLit);
+				}
+			}
+		}
+		
+		//Render instruments.  These need both normal and blended passes.
+		for(AGUIComponent component : components){
+			if(component instanceof GUIComponentInstrument){
+				component.render(this, mouseX, mouseY, false, false, blendingEnabled, partialTicks);
+			}
+		}
+		
+		//Render any tooltips.  These only render on non-blended passes.
+		if(!blendingEnabled){
+			for(AGUIComponent component : components){
+				if(component.visible && component.isMouseInBounds(mouseX, mouseY)){
+					component.renderTooltip(this, mouseX, mouseY, screenWidth, screenHeight);
+				}
+			}
+		}
 	}
 	
 	/**
@@ -128,7 +195,7 @@ public abstract class AGUIBase{
 	/**
 	 *  If this is false, then no background texture will be rendered.
 	 */
-	public boolean renderBackground(){
+	protected boolean renderBackground(){
 		return true;
 	}
 	
@@ -141,7 +208,7 @@ public abstract class AGUIBase{
 	 *  can be used to make light-sensitive GUIs for vehicles as well as other things.
 	 *  
 	 */
-	public GUILightingMode getGUILightMode(){
+	protected GUILightingMode getGUILightMode(){
 		return GUILightingMode.NONE;
 	}
 	
@@ -149,7 +216,7 @@ public abstract class AGUIBase{
 	 *  Returns the source of where to calculate the light for this GUI.  This is required
 	 *  if {@link #getGUILightMode()} is any value other than {@link GUILightingMode#NONE}.
 	 */
-	public AEntityB_Existing getGUILightSource(){
+	protected AEntityB_Existing getGUILightSource(){
 		return null;
 	}
 	
@@ -158,6 +225,13 @@ public abstract class AGUIBase{
 	 */
 	public boolean pauseOnOpen(){
 		return false;
+	}
+	
+	/**
+	 *  If this is true, then the GUI will capture the mouse when open.  This also prevents player movement.
+	 */
+	public boolean haltOnOpen(){
+		return true;
 	}
 	
 	/**
@@ -195,14 +269,14 @@ public abstract class AGUIBase{
 	/**
 	 *  Returns the width of this GUI's texture.  Used for rendering.
 	 */
-	public final int getTextureWidth(){
+	protected final int getTextureWidth(){
 		return getWidth() <= 256 ? 256 : (getWidth() <= 512 ? 512 : (getWidth() <= 1024 ? 1024 : 2048));
 	}
 	
 	/**
 	 *  Returns the height of this GUI's texture.  Used for rendering.
 	 */
-	public final int getTextureHeight(){
+	protected final int getTextureHeight(){
 		return getHeight() <= 256 ? 256 : (getHeight() <= 512 ? 512 : (getHeight() <= 1024 ? 1024 : 2048));
 	}
 	
@@ -211,7 +285,7 @@ public abstract class AGUIBase{
 	 *  all rendering operations on this cycle, but may be changed out
 	 *  on different cycles if needed.
 	 */
-	public String getTexture(){
+	protected String getTexture(){
 		return STANDARD_TEXTURE_NAME;
 	}
 	
@@ -219,7 +293,7 @@ public abstract class AGUIBase{
 	 *  Adds an {@link AGUIComponent} to this GUIs component set.  These are rendered
 	 *  automatically given their current state.  Said state should be set in {@link #setStates()}.
 	 */
-	public void addComponent(AGUIComponent component){
+	protected void addComponent(AGUIComponent component){
 		components.add(component);
 	}
 	
@@ -228,14 +302,14 @@ public abstract class AGUIBase{
 	 *  for all GUIs to use.  Returns true if the period is active.  Both
 	 *  parameters are in ticks, or 1/20 a second.
 	 */
-	public static boolean inClockPeriod(int totalPeriod, int onPeriod){
+	protected static boolean inClockPeriod(int totalPeriod, int onPeriod){
 		return System.currentTimeMillis()*0.02D%totalPeriod <= onPeriod;
 	}
 	
 	/**
 	 *  List of enums that define if the GUI is lit or not.
 	 */
-	public enum GUILightingMode{
+	protected enum GUILightingMode{
 		NONE,
 		DARK,
 		LIT;

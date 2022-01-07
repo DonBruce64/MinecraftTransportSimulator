@@ -25,7 +25,8 @@ public class GUIHUD extends AGUIBase{
 	}
 	
 	@Override
-	public final void setupComponents(int guiLeft, int guiTop){
+	public
+	final void setupComponents(int guiLeft, int guiTop){
 		super.setupComponents(guiLeft, guiTop);
 		//Add instruments.  These go wherever they are specified in the JSON.
 		for(Integer instrumentNumber : vehicle.instruments.keySet()){
@@ -44,18 +45,23 @@ public class GUIHUD extends AGUIBase{
 	}
 	
 	@Override
-	public boolean renderBackground(){
+	protected boolean renderBackground(){
 		return InterfaceClient.inFirstPerson() ? !ConfigSystem.configObject.clientRendering.transpHUD_1P.value : !ConfigSystem.configObject.clientRendering.transpHUD_3P.value;
 	}
 	
 	@Override
-	public GUILightingMode getGUILightMode(){
+	protected GUILightingMode getGUILightMode(){
 		return vehicle.renderTextLit() ? GUILightingMode.LIT : GUILightingMode.DARK;
 	}
 	
 	@Override
-	public EntityVehicleF_Physics getGUILightSource(){
+	protected EntityVehicleF_Physics getGUILightSource(){
 		return vehicle;
+	}
+	
+	@Override
+	public boolean haltOnOpen(){
+		return false;
 	}
 	
 	@Override
@@ -79,7 +85,7 @@ public class GUIHUD extends AGUIBase{
 	}
 	
 	@Override
-	public String getTexture(){
+	protected String getTexture(){
 		return vehicle.definition.motorized.hudTexture != null ? vehicle.definition.motorized.hudTexture : "mts:textures/guis/hud.png";
 	}
 }

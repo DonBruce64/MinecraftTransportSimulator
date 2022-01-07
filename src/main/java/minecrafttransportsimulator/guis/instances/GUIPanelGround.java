@@ -337,7 +337,7 @@ public class GUIPanelGround extends AGUIPanel{
 	}
 	
 	@Override
-	public void setStates(){
+	protected void setStates(){
 		super.setStates();
 		//Set the state of the light selector.
 		if(lightSelector != null){

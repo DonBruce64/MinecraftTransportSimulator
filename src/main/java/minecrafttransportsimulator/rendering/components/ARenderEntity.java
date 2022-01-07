@@ -53,11 +53,8 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Definable<?>
 			//Get the entity rotation.
 			Point3d entityRotation = entity.prevAngles.getInterpolatedPoint(entity.angles, partialTicks);
 	       
-	        //Set up lighting.  Set it to 1 block above, as entities can travel low and easily clip into blocks.
-			//That results in black entities.
-			++entity.position.y;
+	        //Set up lighting.
 	        InterfaceRender.setLightingToPosition(entity.position);
-	        --entity.position.y;
 	        
 	        //Update internal lighting states.
 	        entity.updateLightBrightness(partialTicks);

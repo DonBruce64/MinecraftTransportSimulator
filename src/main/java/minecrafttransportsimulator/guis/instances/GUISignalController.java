@@ -59,7 +59,7 @@ public class GUISignalController extends AGUIBase{
 		this.controller = controller;
 	}
 	
-	@Override 
+	@Override
 	public void setupComponents(int guiLeft, int guiTop){
 		super.setupComponents(guiLeft, guiTop);
 		int topOffset = guiTop + 15;
@@ -322,7 +322,7 @@ public class GUISignalController extends AGUIBase{
 	}
 	
 	@Override
-	public void setStates(){
+	protected void setStates(){
 		super.setStates();
 		trafficSignalCount.text = "Found: " + String.valueOf(controller.componentLocations.size());
 		

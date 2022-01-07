@@ -271,8 +271,8 @@ public class InterfaceRender{
 	 *  Enables or disables OpenGL lighting for this draw sequence.
 	 *  This effectively prevents OpenGL lighting calculations on textures.
 	 *  Do note that the normal internal lightmapping will still be applied.
-	 *  This can be used to prevent OpenGL from doing shadowing on things
-	 *  that it gets wrong, such as text. 
+	 *  This essentially prevents shadow creation on models based on their face
+	 *  orientation relative to the main light "source".
 	 */
 	private static void setSystemLightingState(boolean enabled){
 		if(enabled){
@@ -288,7 +288,7 @@ public class InterfaceRender{
 	 *  texture as bright as it would be during daytime.  Do note that the system
 	 *  lighting calculations for shadowing will still be applied to the model.
 	 */
-	public static void setInternalLightingState(boolean enabled){
+	private static void setInternalLightingState(boolean enabled){
 		if(enabled){
 			OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lastLightmapX, lastLightmapY);
 		}else{
@@ -304,7 +304,8 @@ public class InterfaceRender{
 	 *  passed-in position.
 	 */
 	public static void setLightingToPosition(Point3d position){
-		int lightVar = Minecraft.getMinecraft().world.getCombinedLight(new BlockPos(position.x, position.y, position.z), 0);
+		//Get lighting 1 block above position, as actual position will result in blocked light.
+		int lightVar = Minecraft.getMinecraft().world.getCombinedLight(new BlockPos(position.x, position.y + 1, position.z), 0);
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lightVar%65536, lightVar/65536);
 	}
 	
@@ -340,7 +341,7 @@ public class InterfaceRender{
 	 *  In particular, this is needed if colors are changed during MC internal draw calls,
 	 *  such as rendering a string, changing the color, and then rendering another string.
 	 */
-	public static void setColorState(ColorRGB color, float alpha){
+	private static void setColorState(ColorRGB color, float alpha){
 		GlStateManager.color(color.red, color.green, color.blue, alpha);
 	}
 	

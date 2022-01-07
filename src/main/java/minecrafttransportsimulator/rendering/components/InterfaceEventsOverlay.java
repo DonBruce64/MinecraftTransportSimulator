@@ -89,7 +89,7 @@ public class InterfaceEventsOverlay{
 					Point3d mousedOverPoint = new Point3d(lastHit.hitVec.x, lastHit.hitVec.y, lastHit.hitVec.z);
 					if(lastHit.entityHit != null){
 						if(lastHit.entityHit instanceof BuilderEntityExisting){
-							AEntityB_Existing mousedOverEntity = ((BuilderEntityExisting) lastHit.entityHit).entity;
+							AEntityB_Existing mousedOverEntity = null;// ((BuilderEntityExisting) lastHit.entityHit).entity;
 							if(mousedOverEntity instanceof EntityVehicleF_Physics){
 								EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) mousedOverEntity;
 								for(BoundingBox box : vehicle.allInteractionBoxes){

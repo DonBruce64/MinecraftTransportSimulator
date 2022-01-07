@@ -68,7 +68,7 @@ public abstract class AGUIInventory extends AGUIBase{
 	}
 
 	@Override
-	public void setStates(){
+	protected void setStates(){
 		super.setStates();
 		//Set player item icons to player inventory.
 		for(int i=0; i<playerSlotButtons.size(); ++i){
@@ -95,7 +95,7 @@ public abstract class AGUIInventory extends AGUIBase{
 	}
 	
 	@Override
-	public String getTexture(){
+	protected String getTexture(){
 		return texture;
 	}
 }

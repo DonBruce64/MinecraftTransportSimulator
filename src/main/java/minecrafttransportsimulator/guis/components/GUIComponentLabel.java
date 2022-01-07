@@ -66,14 +66,14 @@ public class GUIComponentLabel extends AGUIComponent{
 	}
 
 	@Override
-	public void render(AGUIBase gui, int mouseX, int mouseY, boolean blendingEnabled, float partialTicks){
+	public void render(AGUIBase gui, int mouseX, int mouseY, boolean renderBright, boolean renderLitTexture, boolean blendingEnabled, float partialTicks){
 		//Don't render anything for the label background.
 	}
 	
     @Override
 	public void renderText(boolean renderTextLit){
 		if(button == null ? (box == null || box.visible) : button.visible){
-			RenderText.drawText(text, fontName, textPosition, null, color, alignment, scale, autoScale, wrapWidth, 1.0F, true);
+			RenderText.drawText(text, fontName, textPosition, null, color, alignment, scale, autoScale, wrapWidth, 1.0F, renderTextLit);
 		}
     }
 }

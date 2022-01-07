@@ -33,7 +33,7 @@ public abstract class GUIComponentSelector extends GUIComponentButton{
 	}
     
 	@Override
-	public void render(AGUIBase gui, int mouseX, int mouseY, boolean blendingEnabled, float partialTicks){
+	public void render(AGUIBase gui, int mouseX, int mouseY, boolean renderBright, boolean renderLitTexture, boolean blendingEnabled, float partialTicks){
 		if(renderable == null){
 			for(int i=0; i<3; ++i){
 				int textureUStart = textureYOffset + i*textureSectionHeight;
@@ -53,17 +53,23 @@ public abstract class GUIComponentSelector extends GUIComponentButton{
 		
 		GL11.glTranslated(position.x, position.y, position.z);
 		if(selectorState == 0){
+			renderable.disableLighting = renderBright;
+			renderable.texture = renderLitTexture ? gui.getTexture().replace(".png", "_lit.png") : gui.getTexture();
 			renderable.render();
 		}else if(selectorState == 1){
+			renderable2.disableLighting = renderBright;
+			renderable2.texture = renderLitTexture ? gui.getTexture().replace(".png", "_lit.png") : gui.getTexture();
 			renderable2.render();
 		}else{
+			renderable3.disableLighting = renderBright;
+			renderable3.texture = renderLitTexture ? gui.getTexture().replace(".png", "_lit.png") : gui.getTexture();
 			renderable3.render();
 		}
 		GL11.glTranslated(-position.x, -position.y, -position.z);
     }
 	
     @Override
-	public void renderText(boolean lightsOn){
-    	RenderText.drawText(text, null, textPosition, null, lightsOn ? litColor : regularColor, TextAlignment.CENTERED, 0.75F, false, 0, 1.0F, true);
+	public void renderText(boolean renderTextLit){
+    	RenderText.drawText(text, null, textPosition, null, renderTextLit ? litColor : regularColor, TextAlignment.CENTERED, 0.75F, false, 0, 1.0F, renderTextLit);
     }
 }

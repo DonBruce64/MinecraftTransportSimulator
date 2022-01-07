@@ -195,7 +195,7 @@ public class GUIInstruments extends AGUIBase{
 	}
 
 	@Override
-	public void setStates(){
+	protected void setStates(){
 		super.setStates();
 		//Set pack prior and pack next buttons depending if we have such packs.
 		prevPackButton.visible = playerInstruments.lowerKey(currentPack) != null;
@@ -240,12 +240,12 @@ public class GUIInstruments extends AGUIBase{
 	}
 	
 	@Override
-	public GUILightingMode getGUILightMode(){
+	protected GUILightingMode getGUILightMode(){
 		return hudSelected ? hudGUI.getGUILightMode() : panelGUI.getGUILightMode();
 	}
 	
 	@Override
-	public EntityVehicleF_Physics getGUILightSource(){
+	protected EntityVehicleF_Physics getGUILightSource(){
 		return hudSelected ? hudGUI.getGUILightSource() : panelGUI.getGUILightSource();
 	}
 	
@@ -270,7 +270,7 @@ public class GUIInstruments extends AGUIBase{
 	}
 	
 	@Override
-	public String getTexture(){
+	protected String getTexture(){
 		return hudSelected ? hudGUI.getTexture() : panelGUI.getTexture();
 	}
 	

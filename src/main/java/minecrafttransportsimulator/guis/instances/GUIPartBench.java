@@ -228,7 +228,7 @@ public class GUIPartBench extends AGUIBase{
 	}
 
 	@Override
-	public void setStates(){
+	protected void setStates(){
 		super.setStates();
 		//If materials are null, it means we are on first launch and need to update them.
 		//We put this here as putting it in the setup step will mask the fault because the GUI packet will catch it.
@@ -300,7 +300,7 @@ public class GUIPartBench extends AGUIBase{
 	}
 	
 	@Override
-	public String getTexture(){
+	protected String getTexture(){
 		return "mts:textures/guis/crafting.png";
 	}
 	

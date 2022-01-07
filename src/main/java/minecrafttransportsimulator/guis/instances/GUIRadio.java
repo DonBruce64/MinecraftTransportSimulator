@@ -5,7 +5,6 @@ import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.guis.components.AGUIBase;
-import minecrafttransportsimulator.guis.components.AGUIComponent;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentCutout;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
@@ -185,15 +184,9 @@ public class GUIRadio extends AGUIBase{
 	}
 	
 	@Override
-	public void setStates(){
+	protected void setStates(){
 		super.setStates();
 		//Set visibility based on if we are in equalizer mode or not.
-		for(AGUIComponent component : this.components){
-			if(component instanceof GUIComponentButton){
-				GUIComponentButton button = (GUIComponentButton) component;
-				button.visible = !((button.equals(equalizerBackButton) || equalizerButtons.contains(button)) ^ equalizerMode);
-			}
-		}
 		equalizerButton.visible = !equalizerMode;
 		equalizerBackButton.visible = equalizerMode;
 		equalizerResetButton.visible = equalizerMode;
@@ -235,7 +228,10 @@ public class GUIRadio extends AGUIBase{
 			presetButtons.get(i).enabled = radio.preset - 1 != i;
 		}
 		
-		//Adjust equalizer sliders and bands.
+		//Adjust equalizer buttons, sliders, and bands.
+		for(GUIComponentButton button : equalizerButtons){
+			button.visible = equalizerMode;
+		}
 		for(GUIComponentCutout band : equalizerSliderBands){
 			band.visible = equalizerMode;
 		}

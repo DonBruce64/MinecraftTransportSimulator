@@ -54,7 +54,7 @@ public class GUIComponent3DModel extends AGUIComponent{
 	 *  Renders the model that this component defines.
 	 */
     @Override
-	public void render(AGUIBase gui, int mouseX, int mouseY, boolean blendingEnabled, float partialTicks){
+	public void render(AGUIBase gui, int mouseX, int mouseY, boolean renderBright, boolean renderLitTexture, boolean blendingEnabled, float partialTicks){
 		if(!blendingEnabled && modelLocation != null){
 			if(!modelParsedObjects.containsKey(modelLocation)){
 				List<RenderableObject> parsedObjects = AModelParser.parseModel(modelLocation);
@@ -117,6 +117,7 @@ public class GUIComponent3DModel extends AGUIComponent{
 			RenderableObject object = modelParsedObjects.get(modelLocation);
 			object.scale = scale*scaleFactor;
 			object.texture = textureLocation;
+			object.disableLighting = renderBright;
 			object.render();
 			GL11.glPopMatrix();
 		}

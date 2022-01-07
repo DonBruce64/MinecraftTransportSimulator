@@ -21,7 +21,7 @@ public class GUIPackMissing extends AGUIBase{
 	}
 
 	@Override
-	public void setStates(){
+	protected void setStates(){
 		super.setStates();
 		noticeLabel.visible = inClockPeriod(40, 20);
 	}

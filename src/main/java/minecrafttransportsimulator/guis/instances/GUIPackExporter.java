@@ -50,7 +50,7 @@ public class GUIPackExporter extends AGUIBase{
 		this.vehicleClicked = vehicleClicked;
 	}
 	
-	@Override 
+	@Override
 	public void setupComponents(int guiLeft, int guiTop){
 		super.setupComponents(guiLeft, guiTop);
 		int buttonWidth = 350/4;
@@ -254,7 +254,7 @@ public class GUIPackExporter extends AGUIBase{
 	}
 
 	@Override
-	public void setStates(){
+	protected void setStates(){
 		super.setStates();
 		try{
 			componentItemModel.position.x = componentItemModel.constructedX + Integer.valueOf(dataEntryBoxes.get(2).getText());
@@ -266,7 +266,7 @@ public class GUIPackExporter extends AGUIBase{
 	}
 	
 	@Override
-	public boolean renderBackground(){
+	protected boolean renderBackground(){
 		return componentItemModel != null && componentItemModel.visible;
 	}
 	

@@ -80,8 +80,9 @@ public abstract class AGUIComponent{
 	 *  Renders the main portion of the component.
 	 *  Note that this method, and all other methods, are not called if {@link #visible} is false.
 	 *  This should create the {@link #renderable} object and render it.
+	 * @param renderLitTexture TODO
 	 */
-    public abstract void render(AGUIBase gui, int mouseX, int mouseY, boolean blendingEnabled, float partialTicks);
+    public abstract void render(AGUIBase gui, int mouseX, int mouseY, boolean renderBright, boolean renderLitTexture, boolean blendingEnabled, float partialTicks);
     
     /**
 	 *  Renders the component's text.  This is done separately from the main render as text uses its own texture,
@@ -163,6 +164,8 @@ public abstract class AGUIComponent{
     		gui.addRenderToBuffer(mutableTooltipRenderable.vertices, xOffset + TOOLTIP_SECTION_BORDER, -(yOffset + TOOLTIP_SECTION_BORDER), horizontalSegmentSize - 2*TOOLTIP_SECTION_BORDER, verticalSegmentSize - 2*TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_WIDTH_OFFSET + TOOLTIP_SECTION_WIDTH - TOOLTIP_SECTION_BORDER, TOOLTIP_SECTION_HEIGHT_OFFSET + TOOLTIP_SECTION_HEIGHT - TOOLTIP_SECTION_BORDER, TOOLTIP_TEXTURE_WIDTH, TOOLTIP_TEXTURE_HEIGHT);
     		mutableTooltipRenderable.vertices.flip();
     		
+    		//Don't take into account lighting.
+    		mutableTooltipRenderable.disableLighting = true;
     		
     		//Do the actual rendering.
     		GL11.glTranslated(0, 0, textPosition.z + 25);

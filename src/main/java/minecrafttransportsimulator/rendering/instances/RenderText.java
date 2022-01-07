@@ -49,9 +49,9 @@ public class RenderText{
 	 *  Also note that if a scale was applied prior to rendering this text, it should be passed-in here.
 	 *  This allows for proper normal calculations to prevent needing to re-normalize the text.
 	 */
-	public static void drawText(String text, String fontName, Point3d position, Point3d rotation, ColorRGB color, TextAlignment alignment, float scale, boolean autoScale, int wrapWidth, float prevScaleFactor, boolean pixelCoords){
+	public static void drawText(String text, String fontName, Point3d position, Point3d rotation, ColorRGB color, TextAlignment alignment, float scale, boolean autoScale, int wrapWidth, float prevScaleFactor, boolean renderLit){
 		if(!text.isEmpty()){
-			getFontData(fontName).renderText(text, position, rotation, alignment, scale, autoScale, wrapWidth, 1.0F, true, color, true);
+			getFontData(fontName).renderText(text, position, rotation, alignment, scale, autoScale, wrapWidth, 1.0F, true, color, renderLit);
 		}
 	}
 	

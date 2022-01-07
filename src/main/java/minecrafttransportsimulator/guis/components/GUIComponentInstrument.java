@@ -31,10 +31,10 @@ public class GUIComponentInstrument extends AGUIComponent{
 	}
 
     @Override
-	public void render(AGUIBase gui, int mouseX, int mouseY, boolean blendingEnabled, float partialTicks){
+	public void render(AGUIBase gui, int mouseX, int mouseY, boolean renderBright, boolean renderLitTexture, boolean blendingEnabled, float partialTicks){
     	if(visible){
 	    	GL11.glPushMatrix();
-			GL11.glTranslated(position.x, position.y, position.z);
+			GL11.glTranslated(position.x, position.y, position.z + MODEL_DEFAULT_ZOFFSET*0.5);
 			RenderInstrument.drawInstrument(instrument, packInstrument.optionalPartNumber, entity, packInstrument.hudScale, blendingEnabled, partialTicks);
 			GL11.glPopMatrix();
     	}

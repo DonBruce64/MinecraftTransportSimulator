@@ -57,8 +57,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase{
 	protected static final Map<String, IItemEntityProvider<?>> entityMap = new HashMap<String, IItemEntityProvider<?>>();
 	
 	/**Current entity we are built around.  This MAY be null if we haven't loaded NBT from the server yet.**/
-	//TODO make this protected when we abstract the overlay/HUD code.
-	public AEntityB_Existing entity;
+	protected AEntityB_Existing entity;
 	/**Last saved explosion position (used for damage calcs).**/
 	private static Point3d lastExplosionPosition;
 	/**Collective for interaction boxes.  These are used by this entity to allow players to interact with it.**/

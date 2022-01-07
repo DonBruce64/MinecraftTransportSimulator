@@ -104,7 +104,7 @@ public class GUIPaintGun extends AGUIBase{
 	}
 
 	@Override
-	public void setStates(){
+	protected void setStates(){
 		super.setStates();
 		//Set buttons based on if we have prev or next items.
 		prevColorButton.enabled = prevSubItem != null;
@@ -125,7 +125,7 @@ public class GUIPaintGun extends AGUIBase{
 	}
 	
 	@Override
-	public String getTexture(){
+	protected String getTexture(){
 		return "mts:textures/guis/repainting.png";
 	}
 	

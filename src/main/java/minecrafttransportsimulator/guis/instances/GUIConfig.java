@@ -377,7 +377,7 @@ public class GUIConfig extends AGUIBase{
 	}
 	
 	@Override
-	public void setStates(){
+	protected void setStates(){
 		super.setStates();
 		//Global headers are just toggles depending on operation.
 		renderConfigScreenButton.enabled = configuringControls || (!configuringControls && !configuringRendering);

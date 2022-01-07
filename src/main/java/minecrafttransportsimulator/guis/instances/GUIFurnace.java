@@ -96,7 +96,7 @@ public class GUIFurnace extends AGUIInventory{
 	}
 
 	@Override
-	public void setStates(){
+	protected void setStates(){
 		super.setStates();
 		//Set other item icons to other inventory.
 		for(int i=0; i<interactableSlotButtons.size(); ++i){

@@ -98,9 +98,7 @@ public class InterfaceEventsModelLoader{
 								entity.getRenderer().render(entity, MinecraftForgeClient.getRenderPass() == 1, partialTicks);
 							}
 							
-							//Render the HUD/GUI if we have one open.
-							
-							
+							//Set shade model back to flat for other rendering.
 							GL11.glShadeModel(GL11.GL_FLAT);
 						}
 					}

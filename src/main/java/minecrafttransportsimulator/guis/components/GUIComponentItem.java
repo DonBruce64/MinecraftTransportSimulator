@@ -52,7 +52,7 @@ public class GUIComponentItem extends AGUIComponent{
 	}
 
     @Override
-	public void render(AGUIBase gui, int mouseX, int mouseY, boolean blendingEnabled, float partialTicks){
+	public void render(AGUIBase gui, int mouseX, int mouseY, boolean renderBright, boolean renderLitTexture, boolean blendingEnabled, float partialTicks){
     	if(!blendingEnabled){
 	    	if(stack != null){
 	    		stackToRender = stack;
@@ -89,6 +89,7 @@ public class GUIComponentItem extends AGUIComponent{
 				GL11.glScalef(scale*16, scale*16, scale*16);
 		        		
 	    		//Render.
+				renderable.disableLighting = renderBright;
 				renderable.render();
 				
 				GL11.glPopMatrix();
@@ -98,7 +99,7 @@ public class GUIComponentItem extends AGUIComponent{
     
     @Override
     public void renderText(boolean renderTextLit){
-    	RenderText.drawText(text, null, textPosition, null, ColorRGB.WHITE, TextAlignment.RIGHT_ALIGNED, scale, false, 0, 1.0F, true);
+    	RenderText.drawText(text, null, textPosition, null, ColorRGB.WHITE, TextAlignment.RIGHT_ALIGNED, scale, false, 0, 1.0F, renderTextLit);
     }
     
     @Override

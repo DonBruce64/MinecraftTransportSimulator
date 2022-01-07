@@ -112,7 +112,8 @@ public abstract class AGUIPanel extends AGUIBase{
 	}
 	
 	@Override
-	public final void setupComponents(int guiLeft, int guiTop){
+	public
+	final void setupComponents(int guiLeft, int guiTop){
 		super.setupComponents(guiLeft, guiTop);
 		//Tracking variable for how far to the left we are rendering things.
 		//This allows for things to be on different columns depending on vehicle configuration.
@@ -161,12 +162,12 @@ public abstract class AGUIPanel extends AGUIBase{
 	protected abstract void setupCustomComponents(int guiLeft, int guiTop);
 	
 	@Override
-	public GUILightingMode getGUILightMode(){
+	protected GUILightingMode getGUILightMode(){
 		return vehicle.renderTextLit() ? GUILightingMode.LIT : GUILightingMode.DARK;
 	}
 	
 	@Override
-	public EntityVehicleF_Physics getGUILightSource(){
+	protected EntityVehicleF_Physics getGUILightSource(){
 		return vehicle;
 	}
 	
@@ -191,7 +192,7 @@ public abstract class AGUIPanel extends AGUIBase{
 	}
 	
 	@Override
-	public String getTexture(){
+	protected String getTexture(){
 		return vehicle.definition.motorized.panelTexture != null ? vehicle.definition.motorized.panelTexture : "mts:textures/guis/panel.png";
 	}
 	
