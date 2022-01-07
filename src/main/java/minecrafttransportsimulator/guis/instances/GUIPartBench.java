@@ -225,14 +225,17 @@ public class GUIPartBench extends AGUIBase{
 				InterfacePacket.sendToServer(new PacketPlayerCraftItem(player, currentItem, viewingRepair));
 			}
 		});
-		
-		//Update the names now that we have everything put together.
-		updateNames();
 	}
 
 	@Override
 	public void setStates(){
 		super.setStates();
+		//If materials are null, it means we are on first launch and need to update them.
+		//We put this here as putting it in the setup step will mask the fault because the GUI packet will catch it.
+		if(normalMaterials == null){
+			updateNames();
+		}
+		
 		//Set buttons based on if we have prev or next items.
 		prevPackButton.enabled = prevPack != null;
 		nextPackButton.enabled = nextPack != null;
@@ -245,14 +248,14 @@ public class GUIPartBench extends AGUIBase{
 		
 		vehicleInfoButton.visible = currentItem instanceof ItemVehicle && !displayVehicleInfo;
 		vehicleDescriptionButton.visible = currentItem instanceof ItemVehicle && displayVehicleInfo;
-		repairCraftingButton.visible = !viewingRepair && currentItem != null && currentItem.definition.general.repairMaterials != null;
+		repairCraftingButton.visible = !viewingRepair && currentItem != null && repairMaterials != null && !repairMaterials.isEmpty();
 		normalCraftingButton.visible = viewingRepair;
 		partInfo.visible = !displayVehicleInfo;
 		vehicleInfo.visible = displayVehicleInfo;
 		
 		//Set materials.
 		//Get the offset index based on the clock-time and the number of materials.
-		if(currentItem != null){
+		if(normalMaterials != null && repairMaterials != null){
 			List<PackMaterialComponent> materials = viewingRepair ? repairMaterials : normalMaterials;
 			int materialOffset = 1 + (materials.size() - 1)/craftingItemIcons.size();
 			materialOffset = (int) (System.currentTimeMillis()%(materialOffset*5000)/5000);
@@ -275,7 +278,7 @@ public class GUIPartBench extends AGUIBase{
 		}
 		
 		//Set confirm button based on if player has materials.
-		confirmButton.enabled = currentItem != null && (player.isCreative() || player.getInventory().hasMaterials(currentItem, true, true, false) || (!repairMaterials.isEmpty() && player.getInventory().hasMaterials(currentItem, true, true, true)));
+		confirmButton.enabled = currentItem != null && (player.isCreative() || (viewingRepair ? (repairMaterials != null && player.getInventory().hasMaterials(currentItem, true, true, true)) : (normalMaterials != null && player.getInventory().hasMaterials(currentItem, true, true, false))));
 		
 		//Check the mouse to see if it updated and we need to change items.
 		int wheelMovement = InterfaceInput.getTrackedMouseWheel();
@@ -444,7 +447,13 @@ public class GUIPartBench extends AGUIBase{
 		
 		//Parse crafting items and set icon items.
 		normalMaterials = PackMaterialComponent.parseFromJSON(currentItem, true, true, false, false);
-		repairMaterials = PackMaterialComponent.parseFromJSON(currentItem, true, true, false, true); 
+		if(normalMaterials == null){
+			partInfo.text = PackMaterialComponent.lastErrorMessage;
+		}
+		repairMaterials = PackMaterialComponent.parseFromJSON(currentItem, true, true, false, true);
+		if(repairMaterials == null){
+			partInfo.text = PackMaterialComponent.lastErrorMessage;
+		}
 		
 		//Enable render based on what component we have.
 		if(currentItem instanceof AItemSubTyped && (!(currentItem instanceof AItemPart) || !((AItemPart) currentItem).definition.generic.useVehicleTexture)){
