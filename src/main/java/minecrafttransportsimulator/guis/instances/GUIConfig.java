@@ -47,12 +47,12 @@ public class GUIConfig extends AGUIBase{
 	private Map<String, Map<GUIComponentLabel, ControlsKeyboardDynamic>> keyboardLabels = new HashMap<String, Map<GUIComponentLabel, ControlsKeyboardDynamic>>();
 	
 	//Joystick selection variables.
-	private Map<GUIComponentButton, String> joystickSelectionButtons = new HashMap<GUIComponentButton, String>();
+	private List<GUIComponentButton> joystickSelectionButtons = new ArrayList<GUIComponentButton>();
 	
 	//Joystick component selection variables.
 	private int scrollSpot = 0;
 	private int selectedJoystickComponentCount = 0;
-	private String selectedJoystick;
+	private String selectedJoystickName;
 	private GUIComponentButton componentListUpButton;
 	private GUIComponentButton componentListDownButton;
 	private GUIComponentButton deadzone_moreButton;
@@ -98,7 +98,7 @@ public class GUIConfig extends AGUIBase{
 				configuringControls = false;
 				configuringRendering = true;
 				vehicleConfiguring = "";
-				selectedJoystick = null;
+				selectedJoystickName = null;
 				scrollSpot = 0;
 				joystickComponentId = -1;
 				calibrating = false;
@@ -110,7 +110,7 @@ public class GUIConfig extends AGUIBase{
 				configuringControls = false;
 				configuringRendering = false; 
 				vehicleConfiguring = "";
-				selectedJoystick = null;
+				selectedJoystickName = null;
 				scrollSpot = 0;
 				joystickComponentId = -1;
 				calibrating = false;
@@ -215,16 +215,16 @@ public class GUIConfig extends AGUIBase{
 		
 		
 		
-		//Joystick selection buttons and text.
+		//Joystick selection buttons.
 		joystickSelectionButtons.clear();
-		for(String joystick : InterfaceInput.getAllJoysticks()){
-			GUIComponentButton button = new GUIComponentButton(guiLeft + 10, guiTop + 40 + 20*joystickSelectionButtons.size(), 235, 20, String.format(" %-30.28s", joystick)){
+		for(int i=0; i<9; ++i){
+			GUIComponentButton button = new GUIComponentButton(guiLeft + 10, guiTop + 40 + 20*joystickSelectionButtons.size(), 235, 20, ""){
 				@Override
 				public void onClicked(boolean leftSide){
-					selectedJoystick = joystickSelectionButtons.get(this);
-					selectedJoystickComponentCount = InterfaceInput.getJoystickComponentCount(selectedJoystick);
+					selectedJoystickName = InterfaceInput.getAllJoystickNames().get(joystickSelectionButtons.indexOf(this));
+					selectedJoystickComponentCount = InterfaceInput.getJoystickComponentCount(selectedJoystickName);
 				}};
-			joystickSelectionButtons.put(button, joystick);
+			joystickSelectionButtons.add(button);
 			addComponent(button);
 			
 			//Link the header text to the first joystick button.
@@ -233,7 +233,6 @@ public class GUIConfig extends AGUIBase{
 				addComponent(new GUIComponentLabel(guiLeft+15, guiTop+25, ColorRGB.BLACK, InterfaceCore.translate("gui.config.joystick.name")).setButton(button));
 			}
 		}
-		
 		
 		
 		//Joystick component selection buttons and text.
@@ -245,7 +244,7 @@ public class GUIConfig extends AGUIBase{
 				@Override
 				public void onClicked(boolean leftSide){
 					joystickComponentId = joystickComponentSelectionButtons.indexOf(this) + scrollSpot;
-					if(InterfaceInput.isJoystickComponentAxis(selectedJoystick, joystickComponentId)){
+					if(InterfaceInput.isJoystickComponentAxis(selectedJoystickName, joystickComponentId)){
 						assigningDigital = false;
 					}else{
 						assigningDigital = true;
@@ -287,7 +286,7 @@ public class GUIConfig extends AGUIBase{
 			@Override
 			public void onClicked(boolean leftSide){
 				for(ControlsJoystick joystickControl : ControlsJoystick.values()){
-					if(selectedJoystick.equals(joystickControl.config.joystickName)){
+					if(selectedJoystickName.equals(joystickControl.config.joystickName)){
 						if((joystickControl.isAxis ^ assigningDigital) && joystickControl.config.buttonIndex == joystickComponentId && joystickControl.systemName.startsWith(vehicleConfiguring)){
 							joystickControl.clearControl();
 						}
@@ -315,7 +314,7 @@ public class GUIConfig extends AGUIBase{
 						GUIComponentButton button = new GUIComponentButton(guiLeft + 8 + leftOffsetDigital, guiTop + 20 + topOffsetDigital, 80, 15, joystickControl.translatedName){
 							@Override
 							public void onClicked(boolean leftSide){
-								digitalAssignButtons.get(vehicleConfiguring).get(this).setControl(selectedJoystick, joystickComponentId);
+								digitalAssignButtons.get(vehicleConfiguring).get(this).setControl(selectedJoystickName, joystickComponentId);
 								joystickComponentId = -1;
 							}
 						};
@@ -353,7 +352,7 @@ public class GUIConfig extends AGUIBase{
 			@Override
 			public void onClicked(boolean leftSide){
 				boolean isInverted = invertAxisButton.text.contains(InterfaceCore.translate("gui.config.joystick.invert"));
-				controlCalibrating.setAxisControl(selectedJoystick, joystickComponentId, Double.valueOf(axisMinBoundsTextBox.getText()), Double.valueOf(axisMaxBoundsTextBox.getText()), isInverted);
+				controlCalibrating.setAxisControl(selectedJoystickName, joystickComponentId, Double.valueOf(axisMinBoundsTextBox.getText()), Double.valueOf(axisMaxBoundsTextBox.getText()), isInverted);
 				joystickComponentId = -1;
 				calibrating = false;
 			}
@@ -429,14 +428,21 @@ public class GUIConfig extends AGUIBase{
 		
 		//If we have selected a vehicle, and are not configuring a keyboard, but haven't selected a joystick
 		//make the joystick selection screen components visible.
-		for(GUIComponentButton button : joystickSelectionButtons.keySet()){
-			button.visible = configuringControls && !configuringKeyboard && !vehicleConfiguring.isEmpty() && selectedJoystick == null;
+		List<String> allJoystickNames = InterfaceInput.getAllJoystickNames();
+		for(byte i=0; i<9; ++i){
+			GUIComponentButton button = joystickSelectionButtons.get(i);
+			if(allJoystickNames.size() > i){
+				button.visible = configuringControls && !configuringKeyboard && !vehicleConfiguring.isEmpty() && selectedJoystickName == null;
+				button.text = String.format(" %-30.28s", allJoystickNames.get(i));
+			}else{
+				button.visible = false;
+			}
 		}
 		
 		
 		
 		//If we have selected a joystick, but not a component, make the component selection buttons visible.
-		boolean onComponentSelectScreen = selectedJoystick != null && joystickComponentId == -1;
+		boolean onComponentSelectScreen = selectedJoystickName != null && joystickComponentId == -1;
 		for(byte i=0; i<9; ++i){
 			GUIComponentButton button = joystickComponentSelectionButtons.get(i);
 			GUIComponentCutout componentBackground = joystickComponentStateBackgrounds.get(i);
@@ -447,11 +453,11 @@ public class GUIConfig extends AGUIBase{
 			if(button.visible){
 				//Set basic button text.
 				int controlIndex = i+scrollSpot;
-				button.text = String.format(" %02d  %-15.15s", controlIndex+1, InterfaceInput.getJoystickComponentName(selectedJoystick, controlIndex));
+				button.text = String.format(" %02d  %-15.15s", controlIndex+1, InterfaceInput.getJoystickComponentName(selectedJoystickName, controlIndex));
 				
 				//If this joystick is assigned to a control, append that to the text string.
 				for(ControlsJoystick joystickControl : ControlsJoystick.values()){
-					if(selectedJoystick.equals(joystickControl.config.joystickName)){
+					if(selectedJoystickName.equals(joystickControl.config.joystickName)){
 						if(joystickControl.config.buttonIndex == controlIndex && joystickControl.systemName.startsWith(vehicleConfiguring)){
 							button.text += String.format("          %s", joystickControl.translatedName);
 						}
@@ -460,8 +466,8 @@ public class GUIConfig extends AGUIBase{
 				
 				//Set state of color rendering to display axis state.
 				//Joystick component selection buttons and text.
-				float pollData = InterfaceInput.getJoystickAxisValue(selectedJoystick, controlIndex);
-				if(InterfaceInput.isJoystickComponentAxis(selectedJoystick, controlIndex)){
+				float pollData = InterfaceInput.getJoystickAxisValue(selectedJoystickName, controlIndex);
+				if(InterfaceInput.isJoystickComponentAxis(selectedJoystickName, controlIndex)){
 					int pollDataInt = (int) (pollData*20);
 					componentBackground.visible = true;
 					componentForeground.position.x = componentForeground.constructedX;
@@ -535,7 +541,7 @@ public class GUIConfig extends AGUIBase{
 		axisMinBoundsTextBox.visible = calibrating;
 		axisMaxBoundsTextBox.visible = calibrating;
 		if(calibrating){
-			float pollData = InterfaceInput.getJoystickAxisValue(selectedJoystick, joystickComponentId);
+			float pollData = InterfaceInput.getJoystickAxisValue(selectedJoystickName, joystickComponentId);
 			if(pollData < 0){
 				axisMinBoundsTextBox.setText(String.valueOf(Math.min(Double.valueOf(axisMinBoundsTextBox.getText()), pollData)));
 			}else{

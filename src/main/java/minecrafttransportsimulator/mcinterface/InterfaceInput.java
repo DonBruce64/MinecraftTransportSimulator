@@ -1,8 +1,11 @@
 package minecrafttransportsimulator.mcinterface;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -54,11 +57,11 @@ public class InterfaceInput{
 	
 	//Normal mode joystick variables.
 	private static int buttonNumberOffset;
-	private static final Map<String, org.lwjgl.input.Controller> joystickMap = new HashMap<String, org.lwjgl.input.Controller>();
+	private static final Map<String, org.lwjgl.input.Controller> joystickMap = new LinkedHashMap<String, org.lwjgl.input.Controller>();
 	private static final Set<org.lwjgl.input.Controller> rumblingControllers = new HashSet<org.lwjgl.input.Controller>();
 	
 	//Classic mode joystick variables.
-	private static final Map<String, net.java.games.input.Controller> classicJoystickMap = new HashMap<String, net.java.games.input.Controller>();
+	private static final Map<String, net.java.games.input.Controller> classicJoystickMap = new LinkedHashMap<String, net.java.games.input.Controller>();
 	
 	/**
 	 *  Called to set the master config key.  This is used by MC to allow us to use MC-controls to open
@@ -87,12 +90,17 @@ public class InterfaceInput{
 				public void run(){
 					try{
 						joystickNameCounters.clear();
+						if(ConfigSystem.configObject.clientControls.devMode.value)InterfaceCore.logError("Starting controller init.");
 						if(runningClassicMode){
+							if(ConfigSystem.configObject.clientControls.devMode.value)InterfaceCore.logError("Running classic mode.");
 							classicJoystickMap.clear();
+							if(ConfigSystem.configObject.clientControls.devMode.value)InterfaceCore.logError("Found this many controllers: " + net.java.games.input.ControllerEnvironment.getDefaultEnvironment().getControllers().length);
 							for(net.java.games.input.Controller joystick : net.java.games.input.ControllerEnvironment.getDefaultEnvironment().getControllers()){
 								joystickEnabled = true;
 								if(joystick.getType() != null && !joystick.getType().equals(net.java.games.input.Controller.Type.MOUSE) && !joystick.getType().equals(net.java.games.input.Controller.Type.KEYBOARD) && joystick.getName() != null && joystick.getComponents().length != 0){
 									String joystickName = joystick.getName();
+									if(ConfigSystem.configObject.clientControls.devMode.value)InterfaceCore.logError("Found valid controller: " + joystickName);
+									
 									//Add an index on this joystick to be sure we don't override multi-component units.
 									if(!joystickNameCounters.containsKey(joystickName)){
 										joystickNameCounters.put(joystickName, 0);
@@ -102,16 +110,21 @@ public class InterfaceInput{
 								}
 							}
 						}else{
+							if(ConfigSystem.configObject.clientControls.devMode.value)InterfaceCore.logError("Running modern mode.");
 							if(!org.lwjgl.input.Controllers.isCreated()){
+								if(ConfigSystem.configObject.clientControls.devMode.value)InterfaceCore.logError("Creating controller object.");
 								org.lwjgl.input.Controllers.create();
 							}
 							joystickMap.clear();
 							buttonNumberOffset = 0;
+							if(ConfigSystem.configObject.clientControls.devMode.value)InterfaceCore.logError("Found this many controllers: " + org.lwjgl.input.Controllers.getControllerCount());
 							for(int i=0; i<org.lwjgl.input.Controllers.getControllerCount(); ++i){
 								joystickEnabled = true;
 								org.lwjgl.input.Controller joystick = org.lwjgl.input.Controllers.getController(i);
 								if(joystick.getAxisCount() > 0 && joystick.getButtonCount() > 0 && joystick.getName() != null){
 									String joystickName = joystick.getName();
+									if(ConfigSystem.configObject.clientControls.devMode.value)InterfaceCore.logError("Found valid controller: " + joystickName);
+									
 									//Add an index on this joystick to be sure we don't override multi-component units.
 									if(!joystickNameCounters.containsKey(joystickName)){
 										joystickNameCounters.put(joystickName, 0);
@@ -214,8 +227,8 @@ public class InterfaceInput{
 	/**
 	 *  Returns a list of all joysticks currently present on the system.
 	 */
-	public static Set<String> getAllJoysticks(){
-		return runningClassicMode ? classicJoystickMap.keySet() : joystickMap.keySet();
+	public static List<String> getAllJoystickNames(){
+		return new ArrayList<String>(runningClassicMode ? classicJoystickMap.keySet() : joystickMap.keySet());
 	}
 	
 	/**
