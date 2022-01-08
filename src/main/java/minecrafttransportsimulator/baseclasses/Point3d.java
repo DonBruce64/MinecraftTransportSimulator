@@ -86,6 +86,19 @@ public class Point3d{
 	}
 	
 	/**
+	 * Adds the passed-in point's values to this point as multiplied by the factor.
+	 * This is essentially a combination of {@link #add(Point3d)} and {@link #multiply(double)},
+	 * except it allows for scaled addition on a non-zero point.
+	 * Returns the called object for nested operations.
+	 */
+	public Point3d addScaled(Point3d point, double scale){
+		this.x += point.x*scale;
+		this.y += point.y*scale;
+		this.z += point.z*scale;
+		return this;
+	}
+	
+	/**
 	 * Subtracts the passed-in point's values to this point.
 	 * Returns the called object for nested operations.
 	 */

@@ -8,6 +8,7 @@ import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.jsondefs.JSONParticle;
 import minecrafttransportsimulator.jsondefs.JSONParticle.ParticleType;
 import minecrafttransportsimulator.mcinterface.InterfaceRender;
+import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**Basic particle class.  This mimic's MC's particle logic, except we can manually set
  * movement logic.  Particles may be spawned by calling {@link InterfaceRender#spawnParticle(EntityParticle)}
@@ -30,12 +31,14 @@ public class EntityParticle extends AEntityB_Existing{
 
 	public EntityParticle(AEntityC_Definable<?> entitySpawning, JSONParticle definition){
 		super(entitySpawning.world, entitySpawning.position, ZERO_FOR_CONSTRUCTOR, ZERO_FOR_CONSTRUCTOR);
+		position.addScaled(entitySpawning.motion, ConfigSystem.configObject.general.speedFactor.value);
 		if(definition.pos != null){
 			position.add(definition.pos.copy().rotateFine(entitySpawning.angles));
 		}
 		if(definition.initialVelocity != null){
 			//Set initial velocity, but add some randomness so particles don't all go in a line.
 			Point3d adjustedVelocity = definition.initialVelocity.copy().rotateFine(entitySpawning.angles);
+			motion.addScaled(entitySpawning.motion, ConfigSystem.configObject.general.speedFactor.value);
 			motion.x += adjustedVelocity.x/10D + 0.02 - Math.random()*0.04;
 			motion.y += adjustedVelocity.y/10D + 0.02 - Math.random()*0.04;
 			motion.z += adjustedVelocity.z/10D + 0.02 - Math.random()*0.04;
