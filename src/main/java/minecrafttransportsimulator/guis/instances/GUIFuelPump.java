@@ -31,8 +31,8 @@ public class GUIFuelPump extends AGUIInventory{
 	}
 
 	@Override
-	public void setupComponents(int guiLeft, int guiTop){
-		super.setupComponents(guiLeft, guiTop);
+	public void setupComponents(){
+		super.setupComponents();
 		
 		//Create all currency slots.
 		interactableSlotBoxes.clear();
@@ -87,7 +87,7 @@ public class GUIFuelPump extends AGUIInventory{
 	}
 
 	@Override
-	protected void setStates(){
+	public void setStates(){
 		super.setStates();
 		//If we are configuring, change item states.
 		if(configuring){

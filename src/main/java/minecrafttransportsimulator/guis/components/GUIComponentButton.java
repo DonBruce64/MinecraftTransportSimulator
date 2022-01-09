@@ -127,16 +127,16 @@ public abstract class GUIComponentButton extends GUIComponentCutout{
     		GL11.glTranslated(position.x, position.y, position.z);
     		if(enabled){
 				if(isMouseInBounds(mouseX, mouseY)){//Highlighted
-					renderable3.disableLighting = renderBright;
+					renderable3.disableLighting = renderBright || ignoreGUILightingState;
 					renderable3.texture = renderLitTexture ? gui.getTexture().replace(".png", "_lit.png") : gui.getTexture();
 					renderable3.render();
 				}else{//Normal
-					renderable2.disableLighting = renderBright;
+					renderable2.disableLighting = renderBright || ignoreGUILightingState;
 					renderable2.texture = renderLitTexture ? gui.getTexture().replace(".png", "_lit.png") : gui.getTexture();
 					renderable2.render();
 				}
 			}else{//Disabled
-				renderable.disableLighting = renderBright;
+				renderable.disableLighting = renderBright || ignoreGUILightingState;
 				renderable.texture = renderLitTexture ? gui.getTexture().replace(".png", "_lit.png") : gui.getTexture();
 				renderable.render();
 			}
@@ -146,6 +146,6 @@ public abstract class GUIComponentButton extends GUIComponentCutout{
     
     @Override
 	public void renderText(boolean renderTextLit){
-    	RenderText.drawText(text, null, textPosition, null, textColor, centeredText ? TextAlignment.CENTERED : TextAlignment.LEFT_ALIGNED, 1.0F, false, 0, 1.0F, renderTextLit);
+    	RenderText.drawText(text, null, textPosition, null, textColor, centeredText ? TextAlignment.CENTERED : TextAlignment.LEFT_ALIGNED, 1.0F, false, 0, 1.0F, renderTextLit || ignoreGUILightingState);
     }
 }

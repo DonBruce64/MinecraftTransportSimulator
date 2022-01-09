@@ -45,7 +45,7 @@ public class GUIComponentCutout extends AGUIComponent{
 			renderable.vertices.flip();
 		}
 		GL11.glTranslated(position.x, position.y, position.z);
-		renderable.disableLighting = renderBright;
+		renderable.disableLighting = renderBright || ignoreGUILightingState;
 		renderable.texture = renderLitTexture ? gui.getTexture().replace(".png", "_lit.png") : gui.getTexture();
 		renderable.render();
 		GL11.glTranslated(-position.x, -position.y, -position.z);

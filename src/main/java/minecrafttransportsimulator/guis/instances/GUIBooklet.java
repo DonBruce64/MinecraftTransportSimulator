@@ -27,13 +27,14 @@ public class GUIBooklet extends AGUIBase{
 	private final int totalPages;
 	
 	public GUIBooklet(ItemItem booklet){
+		super();
 		this.booklet = booklet;
 		this.totalPages = booklet.definition.booklet.disableTOC ? 1 + booklet.definition.booklet.pages.size() : 2 + booklet.definition.booklet.pages.size();
 	}
 	
 	@Override
-	public void setupComponents(int guiLeft, int guiTop){
-		super.setupComponents(guiLeft, guiTop);
+	public void setupComponents(){
+		super.setupComponents();
 		pageTextLabels.clear();
 		
 		//Page navigation buttons.
@@ -118,7 +119,7 @@ public class GUIBooklet extends AGUIBase{
 	}
 	
 	@Override
-	protected void setStates(){
+	public void setStates(){
 		super.setStates();
 		//Set the navigation button states.
 		leftButton.visible = booklet.pageNumber > 0;

@@ -13,7 +13,6 @@ import minecrafttransportsimulator.entities.instances.PartPropeller;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentInstrument;
 import minecrafttransportsimulator.jsondefs.JSONConnectionGroup;
-import minecrafttransportsimulator.mcinterface.InterfaceGUI;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 
@@ -40,6 +39,7 @@ public abstract class AGUIPanel extends AGUIBase{
 
 
 	public AGUIPanel(EntityVehicleF_Physics vehicle){
+		super();
 		this.vehicle = vehicle;
 		//If we have propellers with reverse thrust capabilities, or are a blimp, or have jet engines, render the reverse thrust selector.
 		if(vehicle.definition.motorized.isBlimp){
@@ -97,6 +97,10 @@ public abstract class AGUIPanel extends AGUIBase{
 		}
 	}
 	
+	/**
+	 *  Call this if this GUI is open and a trailer connection changes.  This allows this GUI to
+	 *  reset its states on a trailer change, if the trailer that state was changed was one of our switches.
+	 */
 	public void handleConnectionChange(AEntityD_Interactable<?> hitchEntity, AEntityD_Interactable<?> hookupEntity){
 		boolean recreatePanel = false;
 		for(SwitchEntry entry : trailerSwitchDefs){
@@ -106,15 +110,14 @@ public abstract class AGUIPanel extends AGUIBase{
 			}
 		}
 		if(recreatePanel){
-			InterfaceGUI.closeGUI();
-			InterfaceGUI.openGUI(new GUIPanelGround(vehicle));
+			setupComponents();
 		}
 	}
 	
 	@Override
 	public
-	final void setupComponents(int guiLeft, int guiTop){
-		super.setupComponents(guiLeft, guiTop);
+	final void setupComponents(){
+		super.setupComponents();
 		//Tracking variable for how far to the left we are rendering things.
 		//This allows for things to be on different columns depending on vehicle configuration.
 		//We make this method final and create an abstract method to use instead of this one for
@@ -197,7 +200,8 @@ public abstract class AGUIPanel extends AGUIBase{
 	}
 	
 	@Override
-	public void onClosed(){
+	public void close(){
+		super.close();
 		//Turn starters off.  This prevents stuck engine starters.
 		for(PartEngine engine : vehicle.engines.values()){
 			if(engine.electricStarterEngaged){

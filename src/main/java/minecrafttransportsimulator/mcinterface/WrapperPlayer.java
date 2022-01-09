@@ -5,6 +5,8 @@ import java.util.Iterator;
 import java.util.Map;
 
 import minecrafttransportsimulator.items.components.AItemBase;
+import minecrafttransportsimulator.items.instances.ItemItem;
+import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.packets.components.APacketBase;
 import net.minecraft.block.BlockWorkbench;
 import net.minecraft.client.Minecraft;
@@ -122,6 +124,11 @@ public class WrapperPlayer extends WrapperEntity{
 	public AItemBase getHeldItem(){
 		Item heldItem = player.getHeldItemMainhand().getItem();
 		return heldItem instanceof BuilderItem ? ((BuilderItem) heldItem).item : null;
+	}
+	
+	public boolean isHoldingScanner(){
+		AItemBase heldItem = getHeldItem();
+		return heldItem instanceof ItemItem && ((ItemItem) heldItem).definition.item.type.equals(ItemComponentType.SCANNER);
 	}
 	
 	/**

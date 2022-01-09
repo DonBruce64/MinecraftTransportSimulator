@@ -812,7 +812,8 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 		allInteractionBoxes.addAll(interactionBoxes);
 		
 		//Only add active slots on clients, but all slots on servers.
-		if(world.isClient()){
+		//The only exception is if the player has a scanner, in which case we add them all to allow it to work.
+		if(world.isClient() && !InterfaceClient.getClientPlayer().isHoldingScanner()){
 			allInteractionBoxes.addAll(activePartSlotBoxes.keySet());
 		}else{
 			allInteractionBoxes.addAll(allPartSlotBoxes.keySet());

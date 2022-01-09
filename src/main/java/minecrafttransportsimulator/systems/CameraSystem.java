@@ -22,10 +22,10 @@ import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 public class CameraSystem{
     private static int zoomLevel;
 	private static boolean enableCustomCameras;
-	private static boolean runningCustomCameras;
+	public static boolean runningCustomCameras;
 	private static int customCameraIndex;
 	private static float currentFOV;
-	private static String customCameraOverlay;
+	public static String customCameraOverlay;
 	
 	/**
 	 *  Adjusts the camera zoom, zooming in or out depending on the flag.
@@ -36,20 +36,6 @@ public class CameraSystem{
 		}else if(!zoomIn){
 			zoomLevel += 2;
 		}
-	}
-	
-	/**
-	 *  Returns the current overlay, or null if there should be no overlay for the camera.
-	 */
-	public static String getOverlay(){
-		return customCameraOverlay;
-	}
-	
-	/**
-	 *  Returns true if custom cameras are active, false if regular cameras are being used.
-	 */
-	public static boolean areCustomCamerasActive(){
-		return runningCustomCameras;
 	}
 	
     /**

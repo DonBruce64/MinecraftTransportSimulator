@@ -54,6 +54,7 @@ public class GUIRadio extends AGUIBase{
 	private static boolean teachMode = false;
 	
 	public GUIRadio(Radio radio){
+		super();
 		this.radio = radio;
 		this.bandsToSkip = 4;
 		this.bandsToShow = 32/bandsToSkip;
@@ -61,8 +62,8 @@ public class GUIRadio extends AGUIBase{
 	}
 	
 	@Override
-	public void setupComponents(int guiLeft, int guiTop){
-		super.setupComponents(guiLeft, guiTop);
+	public void setupComponents(){
+		super.setupComponents();
 		//Source selector block.
 		addComponent(offButton = new GUIComponentButton(guiLeft + 20, guiTop + 25, 55, 15, "OFF"){
 			@Override
@@ -184,7 +185,7 @@ public class GUIRadio extends AGUIBase{
 	}
 	
 	@Override
-	protected void setStates(){
+	public void setStates(){
 		super.setStates();
 		//Set visibility based on if we are in equalizer mode or not.
 		equalizerButton.visible = !equalizerMode;

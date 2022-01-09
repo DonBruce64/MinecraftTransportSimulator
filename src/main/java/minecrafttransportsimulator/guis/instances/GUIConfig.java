@@ -83,14 +83,15 @@ public class GUIConfig extends AGUIBase{
 	private GUIComponentTextBox axisMaxBoundsTextBox;
 	
 	public GUIConfig(){
+		super();
 		if(!InterfaceInput.isJoystickSupportEnabled()){
 			InterfaceInput.initJoysticks();
 		}
 	}
 	
 	@Override
-	public void setupComponents(int guiLeft, int guiTop){
-		super.setupComponents(guiLeft, guiTop);
+	public void setupComponents(){
+		super.setupComponents();
 		//Global header buttons.
 		addComponent(renderConfigScreenButton = new GUIComponentButton(guiLeft + 0, guiTop - 20, 85, 20, InterfaceCore.translate("gui.config.header.config.rendering")){
 			@Override
@@ -122,8 +123,8 @@ public class GUIConfig extends AGUIBase{
 		
 		//Config buttons and text.
 		//We have two sets here.  One for rendering, one for controls.
-		populateConfigButtonList(guiLeft, guiTop, renderConfigButtons, ConfigSystem.configObject.clientRendering);
-		populateConfigButtonList(guiLeft, guiTop, controlConfigButtons, ConfigSystem.configObject.clientControls);
+		populateConfigButtonList(renderConfigButtons, ConfigSystem.configObject.clientRendering);
+		populateConfigButtonList(controlConfigButtons, ConfigSystem.configObject.clientControls);
 		
 		
 		//Vehicle selection buttons and text.
@@ -376,7 +377,7 @@ public class GUIConfig extends AGUIBase{
 	}
 	
 	@Override
-	protected void setStates(){
+	public void setStates(){
 		super.setStates();
 		//Global headers are just toggles depending on operation.
 		renderConfigScreenButton.enabled = configuringControls || (!configuringControls && !configuringRendering);
@@ -551,7 +552,7 @@ public class GUIConfig extends AGUIBase{
 	}
 	
 	@SuppressWarnings("unchecked")
-	private void populateConfigButtonList(int guiLeft, int guiTop, Map<GUIComponentButton, JSONConfigEntry<Boolean>> configButtons, Object configObject){
+	private void populateConfigButtonList(Map<GUIComponentButton, JSONConfigEntry<Boolean>> configButtons, Object configObject){
 		configButtons.clear();
 		for(Field field : configObject.getClass().getFields()){
 			if(field.getType().equals(JSONConfigEntry.class)){

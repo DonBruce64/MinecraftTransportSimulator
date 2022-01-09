@@ -4,11 +4,15 @@ import java.util.Iterator;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
+import minecrafttransportsimulator.guis.components.AGUIBase;
+import minecrafttransportsimulator.guis.instances.GUIHUD;
+import minecrafttransportsimulator.guis.instances.GUIPanelAircraft;
+import minecrafttransportsimulator.guis.instances.GUIPanelGround;
+import minecrafttransportsimulator.guis.instances.GUIRadio;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
-import minecrafttransportsimulator.mcinterface.InterfaceGUI;
 import minecrafttransportsimulator.mcinterface.InterfaceInput;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -131,13 +135,25 @@ abstract class AEntityVehicleB_Rideable extends AEntityE_Multipart<JSONVehicle>{
 		if(success){
 			//If we weren't riding before, set the player's yaw to the same yaw as the vehicle.
 			//We do this to ensure we don't have 360+ rotations to deal with.
+			//Need to invert the lookup as location may be null from the builder.
+			//Rider won't be, as it's required, so we can use it to get the actual location.
+			PartSeat newSeat = (PartSeat) getPartAtLocation(locationRiderMap.inverse().get(rider));
 			if(!riderAlreadyInSeat){
-				//Need to invert the lookup as location may be null from the builder.
-				//Rider won't be, as it's required, so we can use it to get the actual location.
-				PartSeat seat = (PartSeat) getPartAtLocation(locationRiderMap.inverse().get(rider));
-				if(seat != null){
-					rider.setYaw(angles.y + seat.localAngles.y);
+				rider.setYaw(angles.y + newSeat.localAngles.y);
+			}else{
+				//Clear out the panel and HUD if we're not in a controller seat.
+				if(world.isClient() && InterfaceClient.getClientPlayer().equals(rider)){
+					if(definition.motorized.isAircraft){
+						AGUIBase.closeIfOpen(GUIPanelAircraft.class);
+					}else{
+						AGUIBase.closeIfOpen(GUIPanelGround.class);
+					}
+					AGUIBase.closeIfOpen(GUIHUD.class);
 				}
+			}
+			//Open HUD if seat is controller. 
+			if(world.isClient() && InterfaceClient.getClientPlayer().equals(rider)){
+				new GUIHUD((EntityVehicleF_Physics) this,  newSeat);
 			}
 		}
 		
@@ -203,7 +219,13 @@ abstract class AEntityVehicleB_Rideable extends AEntityE_Multipart<JSONVehicle>{
 		if(world.isClient() && InterfaceClient.getClientPlayer().equals(rider)){
 			//Client player is the one that left the vehicle.  Make sure they don't have their mouse locked or a GUI open.
 			InterfaceInput.setMouseEnabled(true);
-			InterfaceGUI.closeGUI();
+			if(definition.motorized.isAircraft){
+				AGUIBase.closeIfOpen(GUIPanelAircraft.class);
+			}else{
+				AGUIBase.closeIfOpen(GUIPanelGround.class);
+			}
+			AGUIBase.closeIfOpen(GUIHUD.class);
+			AGUIBase.closeIfOpen(GUIRadio.class);
 		}
 	}
 	

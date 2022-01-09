@@ -6,6 +6,7 @@ import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartEngine;
 import minecrafttransportsimulator.entities.instances.PartGun;
 import minecrafttransportsimulator.entities.instances.PartSeat;
+import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIPanelAircraft;
 import minecrafttransportsimulator.guis.instances.GUIPanelGround;
 import minecrafttransportsimulator.guis.instances.GUIRadio;
@@ -13,7 +14,6 @@ import minecrafttransportsimulator.jsondefs.JSONConfig.ConfigJoystick;
 import minecrafttransportsimulator.jsondefs.JSONConfig.ConfigKeyboard;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
-import minecrafttransportsimulator.mcinterface.InterfaceGUI;
 import minecrafttransportsimulator.mcinterface.InterfaceInput;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
@@ -151,10 +151,10 @@ public final class ControlSystem{
 	
 	private static void controlRadio(EntityVehicleF_Physics vehicle, ControlsKeyboard radio){
 		if(radio.isPressed()){
-			if(InterfaceGUI.getActiveGUI() instanceof GUIRadio){
-				InterfaceGUI.closeGUI();
-			}else if(InterfaceGUI.getActiveGUI() == null){
-				InterfaceGUI.openGUI(new GUIRadio(vehicle.radio));
+			if(AGUIBase.activeInputGUI instanceof GUIRadio){
+				AGUIBase.activeInputGUI.close();
+			}else if(AGUIBase.activeInputGUI == null){
+				new GUIRadio(vehicle.radio);
 			}
 		}
 	}
@@ -209,10 +209,10 @@ public final class ControlSystem{
 		}		
 		//Open or close the panel.
 		if(ControlsKeyboard.AIRCRAFT_PANEL.isPressed()){
-			if(InterfaceGUI.getActiveGUI() instanceof GUIPanelAircraft){
-				InterfaceGUI.closeGUI();
-			}else if(InterfaceGUI.getActiveGUI() == null){
-				InterfaceGUI.openGUI(new GUIPanelAircraft(aircraft));
+			if(AGUIBase.activeInputGUI instanceof GUIPanelAircraft){
+				AGUIBase.activeInputGUI.close();
+			}else if(AGUIBase.activeInputGUI == null){
+				new GUIPanelAircraft(aircraft);
 			}
 		}
 		
@@ -252,7 +252,7 @@ public final class ControlSystem{
 		
 		//Check is mouse yoke is enabled.  If so do controls by mouse rather than buttons.
 		if(ConfigSystem.configObject.clientControls.mouseYoke.value){
-			if(EntityVehicleF_Physics.lockCameraToMovement && InterfaceGUI.getActiveGUI() == null){
+			if(EntityVehicleF_Physics.lockCameraToMovement && AGUIBase.activeInputGUI == null){
 				long mouseDelta = InterfaceInput.getMouseDelta();
 				double deltaAileron = ConfigSystem.configObject.clientControls.flightControlRate.value*((short) (mouseDelta >> Integer.SIZE));
 				double deltaElevator = ConfigSystem.configObject.clientControls.flightControlRate.value*((short) ((int) -mouseDelta));
@@ -289,10 +289,10 @@ public final class ControlSystem{
 		}
 		//Open or close the panel.
 		if(ControlsKeyboard.CAR_PANEL.isPressed()){
-			if(InterfaceGUI.getActiveGUI() instanceof GUIPanelGround){
-				InterfaceGUI.closeGUI();
-			}else if(InterfaceGUI.getActiveGUI() == null){
-				InterfaceGUI.openGUI(new GUIPanelGround(powered));
+			if(AGUIBase.activeInputGUI instanceof GUIPanelGround){
+				AGUIBase.activeInputGUI.close();
+			}else if(AGUIBase.activeInputGUI == null){
+				new GUIPanelGround(powered);
 			}
 		}
 		
@@ -411,7 +411,7 @@ public final class ControlSystem{
 		
 		//Check steering.  If mouse yoke is enabled, we do controls by mouse rather than buttons.
 		if(ConfigSystem.configObject.clientControls.mouseYoke.value){
-			if(EntityVehicleF_Physics.lockCameraToMovement && InterfaceGUI.getActiveGUI() == null){
+			if(EntityVehicleF_Physics.lockCameraToMovement && AGUIBase.activeInputGUI == null){
 				long mouseDelta = InterfaceInput.getMouseDelta();
 				double deltaRudder = ConfigSystem.configObject.clientControls.flightControlRate.value*((short) (mouseDelta >> Integer.SIZE));
 				InterfacePacket.sendToServer(new PacketEntityVariableIncrement(powered, EntityVehicleF_Physics.RUDDER_VARIABLE, deltaRudder, -EntityVehicleF_Physics.MAX_RUDDER_ANGLE, EntityVehicleF_Physics.MAX_RUDDER_ANGLE));

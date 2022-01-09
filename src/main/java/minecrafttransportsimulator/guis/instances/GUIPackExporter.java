@@ -47,12 +47,13 @@ public class GUIPackExporter extends AGUIBase{
 	private GUIComponent3DModel componentItemModel;
 	
 	public GUIPackExporter(EntityVehicleF_Physics vehicleClicked){
+		super();
 		this.vehicleClicked = vehicleClicked;
 	}
 	
 	@Override
-	public void setupComponents(int guiLeft, int guiTop){
-		super.setupComponents(guiLeft, guiTop);
+	public void setupComponents(){
+		super.setupComponents();
 		int buttonWidth = 350/4;
 		int buttonOffset = -(350 - getWidth())/2;
 		addComponent(packExportButton = new GUIComponentButton(guiLeft + buttonOffset, guiTop + 0, buttonWidth, 20, "EXPORT PACKS"){
@@ -254,7 +255,7 @@ public class GUIPackExporter extends AGUIBase{
 	}
 
 	@Override
-	protected void setStates(){
+	public void setStates(){
 		super.setStates();
 		try{
 			componentItemModel.position.x = componentItemModel.constructedX + Integer.valueOf(dataEntryBoxes.get(2).getText());

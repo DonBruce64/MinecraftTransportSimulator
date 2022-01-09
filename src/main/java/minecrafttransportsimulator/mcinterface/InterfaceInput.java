@@ -14,10 +14,12 @@ import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
 import minecrafttransportsimulator.MasterLoader;
+import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIConfig;
 import minecrafttransportsimulator.jsondefs.JSONConfig.ConfigJoystick;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ControlSystem;
+import minecrafttransportsimulator.systems.ControlSystem.ControlsJoystick;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.util.MouseHelper;
@@ -56,8 +58,8 @@ public class InterfaceInput{
 	private static final Map<String, Integer> joystickNameCounters = new HashMap<String, Integer>();
 	
 	//Normal mode joystick variables.
-	private static int buttonNumberOffset;
 	private static final Map<String, org.lwjgl.input.Controller> joystickMap = new LinkedHashMap<String, org.lwjgl.input.Controller>();
+	private static final Map<String, Integer> joystickAxisCountMap = new LinkedHashMap<String, Integer>();
 	private static final Set<org.lwjgl.input.Controller> rumblingControllers = new HashSet<org.lwjgl.input.Controller>();
 	
 	//Classic mode joystick variables.
@@ -116,7 +118,7 @@ public class InterfaceInput{
 								org.lwjgl.input.Controllers.create();
 							}
 							joystickMap.clear();
-							buttonNumberOffset = 0;
+							joystickAxisCountMap.clear();
 							if(ConfigSystem.configObject.clientControls.devMode.value)InterfaceCore.logError("Found this many controllers: " + org.lwjgl.input.Controllers.getControllerCount());
 							for(int i=0; i<org.lwjgl.input.Controllers.getControllerCount(); ++i){
 								joystickEnabled = true;
@@ -130,34 +132,42 @@ public class InterfaceInput{
 										joystickNameCounters.put(joystickName, 0);
 									}
 									joystickMap.put(joystickName + "_" + joystickNameCounters.get(joystickName), joystick);
+									joystickAxisCountMap.put(joystickName + "_" + joystickNameCounters.get(joystickName), joystick.getAxisCount());
 									joystickNameCounters.put(joystickName, joystickNameCounters.get(joystickName) + 1);
-									buttonNumberOffset += joystick.getAxisCount();
 								}
 							}
 						}
 						
 						//Validate joysticks are valid for this setup by making sure indexes aren't out of bounds.
 						Iterator<Entry<String, ConfigJoystick>> iterator = ConfigSystem.configObject.controls.joystick.entrySet().iterator();
+						if(ConfigSystem.configObject.clientControls.devMode.value)InterfaceCore.logError("Performing button validity checks.");
 						while(iterator.hasNext()){
-							ConfigJoystick config = iterator.next().getValue();
-							if(runningClassicMode){
-								if(classicJoystickMap.containsKey(config.joystickName)){
-									if(classicJoystickMap.get(config.joystickName).getComponents().length <= config.buttonIndex){
-										iterator.remove();
-									}
-								}
-							}else{
-								if(joystickMap.containsKey(config.joystickName)){
-									if(config.axisMinTravel != 0 || config.axisMaxTravel != 0){
-										if(joystickMap.get(config.joystickName).getAxisCount() <= config.buttonIndex){
-											iterator.remove();
-										}
-									}else{
-										if(joystickMap.get(config.joystickName).getButtonCount() <= config.buttonIndex - buttonNumberOffset){
+							try{
+								Entry<String, ConfigJoystick> controllerEntry = iterator.next();
+								ControlsJoystick control = ControlSystem.ControlsJoystick.valueOf(controllerEntry.getKey().toUpperCase());
+								ConfigJoystick config = controllerEntry.getValue();
+								if(runningClassicMode){
+									if(classicJoystickMap.containsKey(config.joystickName)){
+										if(classicJoystickMap.get(config.joystickName).getComponents().length <= config.buttonIndex){
 											iterator.remove();
 										}
 									}
+								}else{
+									if(joystickMap.containsKey(config.joystickName)){
+										if(control.isAxis){
+											if(joystickMap.get(config.joystickName).getAxisCount() <= config.buttonIndex){
+												iterator.remove();
+											}
+										}else{
+											if(joystickMap.get(config.joystickName).getButtonCount() <= config.buttonIndex - joystickAxisCountMap.get(config.joystickName)){
+												iterator.remove();
+											}
+										}
+									}
 								}
+							}catch(Exception e){
+								//Invalid control.
+								iterator.remove();
 							}
 						}
 
@@ -197,6 +207,15 @@ public class InterfaceInput{
 	 */
 	public static boolean isKeyPressed(int keyCode){
 		return Keyboard.isKeyDown(keyCode);
+	}
+	
+	/**
+	 *  Enables or disables keyboard repeat events.  This should always be set
+	 *  when opening a GUI that handles keypresses, but it should be un-set upon closure
+	 *  to prevent repeat presses in-game.
+	 */
+	public static void setKeyboardRepeat(boolean enabled){
+		Keyboard.enableRepeatEvents(enabled);
 	}
 	
 	/**
@@ -243,7 +262,7 @@ public class InterfaceInput{
 	 *  Returns the name of the passed-in component.
 	 */
 	public static String getJoystickComponentName(String joystickName, int index){
-		return runningClassicMode ? classicJoystickMap.get(joystickName).getComponents()[index].getName() : (isJoystickComponentAxis(joystickName, index) ? joystickMap.get(joystickName).getAxisName(index) : joystickMap.get(joystickName).getButtonName(index - buttonNumberOffset));
+		return runningClassicMode ? classicJoystickMap.get(joystickName).getComponents()[index].getName() : (isJoystickComponentAxis(joystickName, index) ? joystickMap.get(joystickName).getAxisName(index) : joystickMap.get(joystickName).getButtonName(index - joystickAxisCountMap.get(joystickName)));
 	}
 	
 	/**
@@ -296,7 +315,7 @@ public class InterfaceInput{
 		}else{
 			if(joystickMap.containsKey(joystickName)){
 				joystickMap.get(joystickName).poll();
-				return joystickMap.get(joystickName).isButtonPressed(index - buttonNumberOffset);
+				return joystickMap.get(joystickName).isButtonPressed(index - joystickAxisCountMap.get(joystickName));
 			}else{
 				return false;
 			}	
@@ -390,8 +409,8 @@ public class InterfaceInput{
     	}
     	
     	//Check if we pressed the config key.
-        if(configKey.isPressed() && InterfaceGUI.getActiveGUI() == null){
-        	InterfaceGUI.openGUI(new GUIConfig());
+        if(configKey.isPressed() && AGUIBase.activeInputGUI == null){
+        	new GUIConfig();
         }
     }
 	

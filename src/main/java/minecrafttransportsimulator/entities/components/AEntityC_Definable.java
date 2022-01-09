@@ -757,7 +757,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	    		//Check if the sound should be playing before we try to update state.
 	    		AEntityD_Interactable<?> entityRiding = InterfaceClient.getClientPlayer().getEntityRiding();
 	    		boolean playerRidingEntity = this.equals(entityRiding) || (this instanceof APart && ((APart) this).entityOn.equals(entityRiding));
-	    		boolean shouldSoundPlay = playerRidingEntity && InterfaceClient.inFirstPerson() && !CameraSystem.areCustomCamerasActive() ? !soundDef.isExterior : !soundDef.isInterior;
+	    		boolean shouldSoundPlay = playerRidingEntity && InterfaceClient.inFirstPerson() && !CameraSystem.runningCustomCameras ? !soundDef.isExterior : !soundDef.isInterior;
 				boolean anyClockMovedThisUpdate = false;
 				boolean inhibitAnimations = false;
 				if(shouldSoundPlay){
@@ -914,7 +914,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 							
 							//If the player is in a closed-top vehicle that isn't this one, dampen the sound
 							//Unless it's a radio, in which case don't do so.
-							if(!playerRidingEntity && sound.radio == null && entityRiding instanceof EntityVehicleF_Physics && !((EntityVehicleF_Physics) entityRiding).definition.motorized.hasOpenTop && InterfaceClient.inFirstPerson() && !CameraSystem.areCustomCamerasActive()){
+							if(!playerRidingEntity && sound.radio == null && entityRiding instanceof EntityVehicleF_Physics && !((EntityVehicleF_Physics) entityRiding).definition.motorized.hasOpenTop && InterfaceClient.inFirstPerson() && !CameraSystem.runningCustomCameras){
 								sound.volume *= 0.5F;
 							}
 							

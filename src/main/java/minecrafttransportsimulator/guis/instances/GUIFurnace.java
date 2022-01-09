@@ -29,8 +29,8 @@ public class GUIFurnace extends AGUIInventory{
 	}
 
 	@Override
-	public void setupComponents(int guiLeft, int guiTop){
-		super.setupComponents(guiLeft, guiTop);
+	public void setupComponents(){
+		super.setupComponents();
 		//Create the two or three inventory slots.
 		//The third is for fuel, which isn't present if we don't have that type of furnace.
 		interactableSlotButtons.clear();
@@ -96,7 +96,7 @@ public class GUIFurnace extends AGUIInventory{
 	}
 
 	@Override
-	protected void setStates(){
+	public void setStates(){
 		super.setStates();
 		//Set other item icons to other inventory.
 		for(int i=0; i<interactableSlotButtons.size(); ++i){

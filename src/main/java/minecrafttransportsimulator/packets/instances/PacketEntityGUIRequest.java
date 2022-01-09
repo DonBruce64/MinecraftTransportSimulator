@@ -17,7 +17,6 @@ import minecrafttransportsimulator.guis.instances.GUIPartBench;
 import minecrafttransportsimulator.guis.instances.GUIRadio;
 import minecrafttransportsimulator.guis.instances.GUISignalController;
 import minecrafttransportsimulator.guis.instances.GUITextEditor;
-import minecrafttransportsimulator.mcinterface.InterfaceGUI;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntityInteract;
@@ -52,16 +51,16 @@ public class PacketEntityGUIRequest extends APacketEntityInteract<AEntityB_Exist
 	@Override
 	public boolean handle(WrapperWorld world, AEntityB_Existing entity, WrapperPlayer player){
 		switch(guiRequested){
-			case INSTRUMENTS: InterfaceGUI.openGUI(new GUIInstruments((EntityVehicleF_Physics) entity)); break;
-			case INVENTORY_CHEST: InterfaceGUI.openGUI(new GUIInventoryContainer(((TileEntityChest) entity).inventory, ((TileEntityChest) entity).definition.decor.inventoryTexture)); break;
-			case FUEL_PUMP: InterfaceGUI.openGUI(new GUIFuelPump((TileEntityFuelPump) entity, false)); break;
-			case FUEL_PUMP_CONFIG: InterfaceGUI.openGUI(new GUIFuelPump((TileEntityFuelPump) entity, true)); break;
-			case PACK_EXPORTER: InterfaceGUI.openGUI(new GUIPackExporter((EntityVehicleF_Physics) entity));	break;
-			case PAINT_GUN: InterfaceGUI.openGUI(new GUIPaintGun((AEntityC_Definable<?>) entity, player));	break;
-			case PART_BENCH: InterfaceGUI.openGUI(new GUIPartBench(((TileEntityDecor) entity).definition.decor.crafting)); break;
-			case RADIO: InterfaceGUI.openGUI(new GUIRadio((Radio) entity)); break;
-			case SIGNAL_CONTROLLER: InterfaceGUI.openGUI(new GUISignalController((TileEntitySignalController) entity)); break;
-			case TEXT_EDITOR: InterfaceGUI.openGUI(new GUITextEditor((AEntityC_Definable<?>) entity)); break;
+			case INSTRUMENTS: new GUIInstruments((EntityVehicleF_Physics) entity); break;
+			case INVENTORY_CHEST: new GUIInventoryContainer(((TileEntityChest) entity).inventory, ((TileEntityChest) entity).definition.decor.inventoryTexture); break;
+			case FUEL_PUMP: new GUIFuelPump((TileEntityFuelPump) entity, false); break;
+			case FUEL_PUMP_CONFIG: new GUIFuelPump((TileEntityFuelPump) entity, true); break;
+			case PACK_EXPORTER: new GUIPackExporter((EntityVehicleF_Physics) entity);	break;
+			case PAINT_GUN: new GUIPaintGun((AEntityC_Definable<?>) entity, player);	break;
+			case PART_BENCH: new GUIPartBench(((TileEntityDecor) entity).definition.decor.crafting); break;
+			case RADIO: new GUIRadio((Radio) entity); break;
+			case SIGNAL_CONTROLLER: new GUISignalController((TileEntitySignalController) entity); break;
+			case TEXT_EDITOR: new GUITextEditor((AEntityC_Definable<?>) entity); break;
 		}
 		return true;
 	}

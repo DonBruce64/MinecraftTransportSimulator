@@ -19,7 +19,6 @@ import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
-import minecrafttransportsimulator.mcinterface.InterfaceGUI;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketTileEntitySignalControllerChange;
 import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
@@ -56,12 +55,13 @@ public class GUISignalController extends AGUIBase{
 	private final TileEntitySignalController controller;
 	
 	public GUISignalController(TileEntitySignalController controller){
+		super();
 		this.controller = controller;
 	}
 	
 	@Override
-	public void setupComponents(int guiLeft, int guiTop){
-		super.setupComponents(guiLeft, guiTop);
+	public void setupComponents(){
+		super.setupComponents();
 		int topOffset = guiTop + 15;
 		int leftTextOffset = guiLeft + 20;
 		int leftObjectOffset = guiLeft + 100;
@@ -279,7 +279,7 @@ public class GUISignalController extends AGUIBase{
 			public void onClicked(boolean leftSide){
 				InterfacePacket.sendToServer(new PacketTileEntitySignalControllerChange(controller));
 				controller.unsavedClientChangesPreset = false;
-				InterfaceGUI.closeGUI();
+				close();
 			}
 		});
 		
@@ -322,7 +322,7 @@ public class GUISignalController extends AGUIBase{
 	}
 	
 	@Override
-	protected void setStates(){
+	public void setStates(){
 		super.setStates();
 		trafficSignalCount.text = "Found: " + String.valueOf(controller.componentLocations.size());
 		

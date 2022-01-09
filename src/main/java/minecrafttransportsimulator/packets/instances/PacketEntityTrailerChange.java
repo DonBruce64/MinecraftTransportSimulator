@@ -4,8 +4,8 @@ import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.TrailerConnection;
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
+import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIPanelGround;
-import minecrafttransportsimulator.mcinterface.InterfaceGUI;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
@@ -62,9 +62,8 @@ public class PacketEntityTrailerChange extends APacketEntity<AEntityD_Interactab
 		}else{
 			hitchEntity.disconnectTrailer(connection);
 		}
-		//Reset ground GUI if we changed a vehicle's trailer.
-		if(InterfaceGUI.getActiveGUI() instanceof GUIPanelGround){
-			((GUIPanelGround) InterfaceGUI.getActiveGUI()).handleConnectionChange(hitchEntity, hookupEntity);
+		if(AGUIBase.activeInputGUI instanceof GUIPanelGround){
+			((GUIPanelGround) AGUIBase.activeInputGUI).handleConnectionChange(hitchEntity, hookupEntity);
 		}
 		return true;
 	}

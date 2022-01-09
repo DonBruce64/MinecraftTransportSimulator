@@ -15,7 +15,6 @@ import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
-import minecrafttransportsimulator.mcinterface.InterfaceGUI;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketEntityTextChange;
 import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
@@ -35,12 +34,13 @@ public class GUITextEditor extends AGUIBase{
 	private final List<GUIComponentLabel> signTextLabels = new ArrayList<GUIComponentLabel>();
 	
 	public GUITextEditor(AEntityC_Definable<?> entity){
+		super();
 		this.entity = entity;
 	}
 	
 	@Override
-	public void setupComponents(int guiLeft, int guiTop){
-		super.setupComponents(guiLeft, guiTop);
+	public void setupComponents(){
+		super.setupComponents();
 		int boxWidth;
 		List<JSONText> textObjects;
 		List<String> textLines;
@@ -110,13 +110,13 @@ public class GUITextEditor extends AGUIBase{
 					packetTextLines.add(textInputBoxes.get(textInputFieldNames.indexOf(textObject.fieldName)).getText());
 				}
 				InterfacePacket.sendToServer(new PacketEntityTextChange(entity, packetTextLines));
-				InterfaceGUI.closeGUI();
+				close();
 			}
 		});
 	}
 	
 	@Override
-	protected void setStates(){
+	public void setStates(){
 		super.setStates();
 		confirmButton.enabled = true;
 		for(int i=0; i<signTextLabels.size(); ++i){

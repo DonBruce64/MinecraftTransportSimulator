@@ -32,13 +32,14 @@ public abstract class AGUIComponent{
 	
 	//State variables.
 	public boolean visible = true;
+	public boolean ignoreGUILightingState;
 	public String text;
 	protected RenderableObject renderable;
 	private static final RenderableObject mutableTooltipRenderable = new RenderableObject("gui_tooltip", AGUIBase.STANDARD_TEXTURE_NAME, ColorRGB.WHITE, FloatBuffer.allocate(9*6*8), false);
 	private static final Point3d mutableTooltipPosition = new Point3d();
 	
-	protected static final int TEXT_DEFAULT_ZOFFSET = 300;
-	protected static final int MODEL_DEFAULT_ZOFFSET = 150;
+	protected static final int TEXT_DEFAULT_ZOFFSET = 200;
+	protected static final int MODEL_DEFAULT_ZOFFSET = 100;
 	private static final int TOOLTIP_BORDER_PADDING = 4;
 	private static final int TOOLTIP_SECTION_WIDTH = 100;
 	private static final int TOOLTIP_SECTION_HEIGHT = 60;
@@ -99,12 +100,12 @@ public abstract class AGUIComponent{
 	 *  {@link #isMouseInBounds(int, int)} returns false, and that this method won't render
 	 *  anything if {@link #getTooltipText()} returns null.
 	 */
-    public final void renderTooltip(AGUIBase gui, int mouseX, int mouseY, int screenWidth, int screenHeight){
+    public void renderTooltip(AGUIBase gui, int mouseX, int mouseY){
     	List<String> tooltipTextLines = getTooltipText();
     	if(tooltipTextLines != null && !tooltipTextLines.isEmpty()){
     		//Find the max string width.  This is used to define text bounds.
     		//We need to know how many lines we wrap to offset our rendering of our text.
-    		int wrapWidth = screenWidth - mouseX > mouseX ? screenWidth - mouseX - 2*TOOLTIP_BORDER_PADDING :  mouseX - 2*TOOLTIP_BORDER_PADDING;
+    		int wrapWidth = gui.screenWidth - mouseX > mouseX ? gui.screenWidth - mouseX - 2*TOOLTIP_BORDER_PADDING :  mouseX - 2*TOOLTIP_BORDER_PADDING;
     		float longestLineWidth = 0;
     		int linesOfText = 0;
     		String tooltipCombinedText = "";
@@ -121,7 +122,7 @@ public abstract class AGUIComponent{
     		
     		//We now know how wide the text will be, and how high.  Find quadrant.
     		int xOffset;
-    		if(screenWidth - mouseX > mouseX){
+    		if(gui.screenWidth - mouseX > mouseX){
     			//Render right.
     			xOffset = mouseX + TOOLTIP_BORDER_PADDING;
     		}else{
@@ -130,7 +131,7 @@ public abstract class AGUIComponent{
     		}
     		
     		int yOffset;
-    		if(screenHeight - mouseY > mouseY){
+    		if(gui.screenHeight - mouseY > mouseY){
     			//Render bottom.
 				yOffset = mouseY + TOOLTIP_BORDER_PADDING;
 			}else{
@@ -179,7 +180,7 @@ public abstract class AGUIComponent{
     }
     
     /**
-	 *  Returns the tooltip text lines for this tooltip.  Only called if {@link #renderTooltip(int, int, int)}
+	 *  Returns the tooltip text lines for this tooltip.  Only called if {@link #renderTooltip(AGUIBase, int, int)}
 	 *  is called.
 	 */
     public List<String> getTooltipText(){

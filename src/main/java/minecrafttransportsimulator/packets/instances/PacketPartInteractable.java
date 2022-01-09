@@ -10,7 +10,6 @@ import minecrafttransportsimulator.guis.instances.GUIFurnace;
 import minecrafttransportsimulator.guis.instances.GUIInventoryContainer;
 import minecrafttransportsimulator.guis.instances.GUIPartBench;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
-import minecrafttransportsimulator.mcinterface.InterfaceGUI;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntityInteract;
@@ -72,11 +71,11 @@ public class PacketPartInteractable extends APacketEntityInteract<PartInteractab
 			}
 		}else{
 			if(interactable.definition.interactable.interactionType.equals(InteractableComponentType.CRAFTING_BENCH)){
-				InterfaceGUI.openGUI(new GUIPartBench(interactable.definition.interactable.crafting));
+				new GUIPartBench(interactable.definition.interactable.crafting);
 			}else if(interactable.definition.interactable.interactionType.equals(InteractableComponentType.CRATE)){
-				InterfaceGUI.openGUI(new GUIInventoryContainer(interactable.inventory, interactable.definition.interactable.inventoryTexture));
+				new GUIInventoryContainer(interactable.inventory, interactable.definition.interactable.inventoryTexture);
 			}else if(interactable.definition.interactable.interactionType.equals(InteractableComponentType.FURNACE)){
-				InterfaceGUI.openGUI(new GUIFurnace(interactable.furnace, interactable.definition.interactable.inventoryTexture));
+				new GUIFurnace(interactable.furnace, interactable.definition.interactable.inventoryTexture);
 			}
 		}
 		return true;

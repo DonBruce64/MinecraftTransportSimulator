@@ -40,15 +40,13 @@ public class GUIInstruments extends AGUIBase{
 	//GUIs components created at opening.
 	private final EntityVehicleF_Physics vehicle;
 	private final WrapperPlayer player;
-	private final GUIHUD hudGUI;
-	private final AGUIPanel panelGUI;
 	private final TreeMap<String, List<ItemInstrument>> playerInstruments = new TreeMap<String, List<ItemInstrument>>();
 	
 	//Runtime variables.
 	private GUIComponentButton prevPackButton;
 	private GUIComponentButton nextPackButton;
 	private GUIComponentButton clearButton;
-	private String currentPack;
+	private static String currentPack;
 	private GUIComponentLabel packName;
 	
 	private boolean hudSelected = true;
@@ -63,10 +61,9 @@ public class GUIInstruments extends AGUIBase{
 	private final Map<AEntityD_Interactable<?>, List<InstrumentSlotBlock>> entityInstrumentBlocks = new HashMap<AEntityD_Interactable<?>, List<InstrumentSlotBlock>>();
 	
 	public GUIInstruments(EntityVehicleF_Physics vehicle){
+		super();
 		this.vehicle = vehicle;
 		this.player = InterfaceClient.getClientPlayer();
-		this.hudGUI = new GUIHUD(vehicle);
-		this.panelGUI = vehicle.definition.motorized.isAircraft ? new GUIPanelAircraft(vehicle) : new GUIPanelGround(vehicle);
 		
 		//Add all packs that have instruments in them.
 		//This depends on if the player has the instruments, or if they are in creative.
@@ -89,8 +86,9 @@ public class GUIInstruments extends AGUIBase{
 	}
 
 	@Override
-	public void setupComponents(int guiLeft, int guiTop){
-		super.setupComponents(guiLeft, guiTop);
+	public void setupComponents(){
+		super.setupComponents();
+		
 		//Create the prior and next pack buttons.
 		addComponent(prevPackButton = new GUIComponentButton(guiLeft, guiTop - 74, 20, 20, "<", true, ColorRGB.WHITE, false){
 			@Override
@@ -149,7 +147,7 @@ public class GUIInstruments extends AGUIBase{
 				hudSelected = true;
 				selectedEntity = null;
 				selectedInstrumentDefinition = null;
-				setupComponents(this.constructedX, this.constructedY + 20);
+				setupComponents();
 			}
 		});
 		
@@ -160,7 +158,7 @@ public class GUIInstruments extends AGUIBase{
 				hudSelected = false;
 				selectedEntity = null;
 				selectedInstrumentDefinition = null;
-				setupComponents(this.constructedX - getWidth() + 100, this.constructedY + 20);
+				setupComponents();
 			}
 		});
 		
@@ -195,8 +193,9 @@ public class GUIInstruments extends AGUIBase{
 	}
 
 	@Override
-	protected void setStates(){
+	public void setStates(){
 		super.setStates();
+		
 		//Set pack prior and pack next buttons depending if we have such packs.
 		prevPackButton.visible = playerInstruments.lowerKey(currentPack) != null;
 		nextPackButton.visible = playerInstruments.higherKey(currentPack) != null;
@@ -208,7 +207,6 @@ public class GUIInstruments extends AGUIBase{
 					instrumentSlots.get(i).visible = true;
 					instrumentSlots.get(i).enabled = selectedInstrumentDefinition != null;
 					instrumentSlotIcons.get(i).stack = playerInstruments.get(currentPack).get(i).getNewStack();
-					
 				}else{
 					instrumentSlots.get(i).visible = false;
 					instrumentSlotIcons.get(i).stack = null;
@@ -240,38 +238,32 @@ public class GUIInstruments extends AGUIBase{
 	}
 	
 	@Override
-	protected GUILightingMode getGUILightMode(){
-		return hudSelected ? hudGUI.getGUILightMode() : panelGUI.getGUILightMode();
-	}
-	
-	@Override
 	protected EntityVehicleF_Physics getGUILightSource(){
-		return hudSelected ? hudGUI.getGUILightSource() : panelGUI.getGUILightSource();
+		return vehicle;
 	}
 	
 	@Override
 	public int getWidth(){
-		return hudSelected ? hudGUI.getWidth() : panelGUI.getWidth();
+		return AGUIPanel.PANEL_WIDTH;
 	}
 	
 	@Override
 	public int getHeight(){
-		return hudSelected ? hudGUI.getHeight() : panelGUI.getHeight();
+		return AGUIPanel.PANEL_HEIGHT;
 	}
 	
 	@Override
 	public boolean renderFlushBottom(){
-		return hudSelected ? hudGUI.renderFlushBottom() : panelGUI.renderFlushBottom();
-	}
-	
-	@Override
-	public boolean renderTranslucent(){
-		return hudSelected ? hudGUI.renderTranslucent() : panelGUI.renderTranslucent();
+		return true;
 	}
 	
 	@Override
 	protected String getTexture(){
-		return hudSelected ? hudGUI.getTexture() : panelGUI.getTexture();
+		if(hudSelected){
+			return vehicle.definition.motorized.hudTexture != null ? vehicle.definition.motorized.hudTexture : "mts:textures/guis/hud.png";
+		}else{
+			return vehicle.definition.motorized.panelTexture != null ? vehicle.definition.motorized.panelTexture : "mts:textures/guis/panel.png";
+		}
 	}
 	
 	private class InstrumentSlotBlock{

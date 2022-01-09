@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIPackMissing;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -86,11 +87,11 @@ public class BuilderCreativeTab extends CreativeTabs{
      */
     @SubscribeEvent
     public static void on(DrawScreenEvent.Post event){
-    	if(!PackParserSystem.arePacksPresent()){
+    	if(!PackParserSystem.arePacksPresent() && AGUIBase.activeInputGUI == null){
 	    	if(event.getGui() instanceof GuiContainerCreative){
 	    		GuiContainerCreative creativeScreen = (GuiContainerCreative) event.getGui();
 	    		if(createdTabs.values().contains(CreativeTabs.CREATIVE_TAB_ARRAY[creativeScreen.getSelectedTabIndex()])){
-	    			InterfaceGUI.openGUI(new GUIPackMissing());
+	    			new GUIPackMissing();
 	    		}
 	    	}
     	}

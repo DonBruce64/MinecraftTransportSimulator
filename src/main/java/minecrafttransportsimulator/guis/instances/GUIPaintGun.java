@@ -12,7 +12,6 @@ import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
-import minecrafttransportsimulator.mcinterface.InterfaceGUI;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.instances.PacketEntityColorChange;
@@ -54,14 +53,15 @@ public class GUIPaintGun extends AGUIBase{
 	private AItemSubTyped<?> nextSubItem;
 
 	public GUIPaintGun(AEntityC_Definable<?> entity, WrapperPlayer player){
+		super();
 		this.entity = entity;
 		this.player = player;
 		this.currentItem = (AItemSubTyped<?>) PackParserSystem.getItem(entity.definition.packID, entity.definition.systemName, entity.subName);
 	}
 
 	@Override
-	public void setupComponents(int guiLeft, int guiTop){
-		super.setupComponents(guiLeft, guiTop);
+	public void setupComponents(){
+		super.setupComponents();
 		//Create color navigation section.
 		addComponent(prevColorButton = new GUIComponentButton(guiLeft + 38, guiTop + 135, 20, 20, 40, 196, 20, 20){
 			@Override
@@ -95,7 +95,7 @@ public class GUIPaintGun extends AGUIBase{
 			@Override
 			public void onClicked(boolean leftSide){
 				InterfacePacket.sendToServer(new PacketEntityColorChange(entity, player, currentItem));
-				InterfaceGUI.closeGUI();
+				close();
 			}
 		});
 		
@@ -104,7 +104,7 @@ public class GUIPaintGun extends AGUIBase{
 	}
 
 	@Override
-	protected void setStates(){
+	public void setStates(){
 		super.setStates();
 		//Set buttons based on if we have prev or next items.
 		prevColorButton.enabled = prevSubItem != null;

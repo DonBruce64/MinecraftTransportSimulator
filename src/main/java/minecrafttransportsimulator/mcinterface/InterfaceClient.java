@@ -2,13 +2,21 @@ package minecrafttransportsimulator.mcinterface;
 
 import org.lwjgl.openal.AL;
 
+import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.entities.components.AEntityB_Existing;
+import minecrafttransportsimulator.entities.instances.APart;
+import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
+import minecrafttransportsimulator.guis.components.AGUIBase;
 import net.minecraft.block.SoundType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.RayTraceResult;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.relauncher.Side;
 
@@ -85,6 +93,59 @@ public class InterfaceClient{
 	 */
 	public static void setFOV(float setting){
 		Minecraft.getMinecraft().gameSettings.fovSetting = setting;
+	}
+	
+	/**
+	 *  Returns the entity we are moused over.  This includes Tile Entities.
+	 */
+	public static AEntityB_Existing getMousedOverEntity(){
+    	if(InterfaceClient.inFirstPerson()){
+    		//See what we are hitting.
+    		RayTraceResult lastHit = Minecraft.getMinecraft().objectMouseOver;
+			if(lastHit != null){
+				Point3d mousedOverPoint = new Point3d(lastHit.hitVec.x, lastHit.hitVec.y, lastHit.hitVec.z);
+				if(lastHit.entityHit != null){
+					if(lastHit.entityHit instanceof BuilderEntityExisting){
+						AEntityB_Existing mousedOverEntity = ((BuilderEntityExisting) lastHit.entityHit).entity;
+						if(mousedOverEntity instanceof EntityVehicleF_Physics){
+							EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) mousedOverEntity;
+							for(BoundingBox box : vehicle.allInteractionBoxes){
+								if(box.isPointInside(mousedOverPoint)){
+									APart part = vehicle.getPartWithBox(box);
+									if(part != null){
+										return part;
+									}
+								}
+							}
+						}
+						return mousedOverEntity;
+					}
+				}else{
+					TileEntity mcTile = getClientWorld().world.getTileEntity(lastHit.getBlockPos());
+					if(mcTile instanceof BuilderTileEntityFluidTank){
+						BuilderTileEntityFluidTank<?> builder = (BuilderTileEntityFluidTank<?>) mcTile;
+						return builder.tileEntity;
+					}
+				}
+			}
+		}
+    	return null;
+	}
+	
+	/**
+	 *  Closes the currently-opened GUI, returning back to the main game.
+	 *  This should only be done on GUIs where {@link AGUIBase#capturesPlayer()} is true.
+	 */
+	public static void closeGUI(){
+		Minecraft.getMinecraft().displayGuiScreen(null);
+	}
+	
+	/**
+	 *  Sets the GUI as active.  This will result in it handling key-presses.
+	 *  This should only be done on GUIs where {@link AGUIBase#capturesPlayer()} is true.
+	 */
+	public static void setActiveGUI(AGUIBase gui){
+		FMLCommonHandler.instance().showGuiScreen(new BuilderGUI(gui));
 	}
 	
 	/**

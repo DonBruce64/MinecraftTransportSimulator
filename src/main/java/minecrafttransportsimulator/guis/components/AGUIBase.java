@@ -5,10 +5,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
-import minecrafttransportsimulator.mcinterface.InterfaceGUI;
+import minecrafttransportsimulator.guis.instances.GUIOverlay;
+import minecrafttransportsimulator.mcinterface.InterfaceClient;
+import minecrafttransportsimulator.mcinterface.InterfaceInput;
 import minecrafttransportsimulator.mcinterface.InterfaceRender;
 
-/**Base GUI class.  This type is used in conjunction with {@link InterfaceGUI} to allow us to use
+/**Base GUI class.  This type is used in lieu of the MC GUI class to allow us to use
  * completely custom GUI code that is not associated with MC's standard GUI code.  Allows us to only
  * update the wrapper rather than the whole GUI. In essence, this class holds the data and state of the
  * GUI, while the wrapper chooses how to interpret and render said state.
@@ -29,6 +31,40 @@ public abstract class AGUIBase{
 	private GUIComponentCutout background;
 	public final List<AGUIComponent> components = new ArrayList<AGUIComponent>();
 	
+	public static final List<AGUIBase> activeGUIs = new ArrayList<AGUIBase>();
+	public static AGUIBase activeInputGUI;
+	
+	protected int screenWidth;
+	protected int screenHeight;
+	protected int guiLeft;
+	protected int guiTop;
+	
+	static {
+		//Add the overlay GUI to the GUI listing and keep it there forever.
+		new GUIOverlay();
+	}
+	
+	public AGUIBase(){
+		activeGUIs.add(this);
+		if(capturesPlayer()){
+			activeInputGUI = this;
+			InterfaceClient.setActiveGUI(this);
+			InterfaceInput.setKeyboardRepeat(true);
+		}
+	}
+	
+	/**
+	 *  Called to start the component setup sequence.  This sets the screen size variables.
+	 *  If one needs to re-create the screen without changing size, call {@link #setupComponents()},
+	 *  not this method.
+	 */
+	public void setupComponentsInit(int screenWidth, int screenHeight){
+		this.screenWidth = screenWidth;
+		this.screenHeight = screenHeight;
+		this.guiLeft = (screenWidth - getWidth())/2;
+		this.guiTop = renderFlushBottom() ? screenHeight - getHeight() : (screenHeight - getHeight())/2;
+		setupComponents();
+	}
 	
 	/**
 	 *  Called during init to allow for the creation of GUI components.  All components
@@ -36,9 +72,9 @@ public abstract class AGUIBase{
 	 *  The passed-in guiLeft and guiTop parameters are the top-left of the TEXTURE of
 	 *  this GUI, not the screen.  This allows for all objects to be created using offsets
 	 *  that won't change, rather than screen pixels that will.  By default, this creates the
-	 *  background component based on 
+	 *  background component based on the various methods in here.
 	 */
-	public void setupComponents(int guiLeft, int guiTop){
+	public void setupComponents(){
 		components.clear();
 		addComponent(this.background = new GUIComponentCutout(guiLeft, guiTop, getWidth(), getHeight(), 0, 0, getWidth(), getHeight()));
 	}
@@ -116,7 +152,7 @@ public abstract class AGUIBase{
 	 *  By default, this sets the state of the background based on the return value of
 	 *  {@link #renderBackground()}
 	 */
-	protected void setStates(){
+	public void setStates(){
 		background.visible = renderBackground();
 	}
 	
@@ -124,7 +160,7 @@ public abstract class AGUIBase{
 	 *  Called to render the components in this GUI.  This is a final method to discourage manual rendering
 	 *  and instead force use of the component-based rendering that provides a state-safe framework. 
 	 */
-	public final void render(int screenWidth, int screenHeight, int mouseX, int mouseY, boolean blendingEnabled, float partialTicks){
+	public final void render(int mouseX, int mouseY, boolean blendingEnabled, float partialTicks){
 		//First set the states for things in this GUI.
 		//Only do this on the normal render pass.
 		if(!blendingEnabled){
@@ -180,17 +216,44 @@ public abstract class AGUIBase{
 		if(!blendingEnabled){
 			for(AGUIComponent component : components){
 				if(component.visible && component.isMouseInBounds(mouseX, mouseY)){
-					component.renderTooltip(this, mouseX, mouseY, screenWidth, screenHeight);
+					component.renderTooltip(this, mouseX, mouseY);
 				}
 			}
 		}
 	}
 	
 	/**
-	 *  Called right after the GUI is closed.  Normally does nothing, but can be
-	 *  used for closure events. 
+	 *  Closes this GUI.  Normally just removes us from the active list and
+	 *  clears model caches, but can be extended to do other things.
 	 */
-	public void onClosed(){}
+	public void close(){
+		if(activeGUIs.contains(this)){
+			activeGUIs.remove(this);
+			if(capturesPlayer()){
+				activeInputGUI = null;
+				InterfaceClient.closeGUI();
+				InterfaceInput.setKeyboardRepeat(false);
+			}
+			GUIComponent3DModel.clearModelCaches();
+		}
+	}
+	
+	/**
+	 *  If the passed-in GUI class is currently active, this closes it.
+	 *  Prevents the need to loop over and watch out for CMEs in generic closing code.
+	 */
+	public static void closeIfOpen(Class<? extends AGUIBase> guiClass){
+		AGUIBase guiToClose = null;
+		for(AGUIBase gui : activeGUIs){
+			if(gui.getClass().equals(guiClass)){
+				guiToClose = gui;
+				break;
+			}
+		}
+		if(guiToClose != null){
+			guiToClose.close();
+		}
+	}
 	
 	/**
 	 *  If this is false, then no background texture will be rendered.
@@ -230,7 +293,7 @@ public abstract class AGUIBase{
 	/**
 	 *  If this is true, then the GUI will capture the mouse when open.  This also prevents player movement.
 	 */
-	public boolean haltOnOpen(){
+	public boolean capturesPlayer(){
 		return true;
 	}
 	

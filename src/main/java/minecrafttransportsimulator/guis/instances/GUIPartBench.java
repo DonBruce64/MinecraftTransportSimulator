@@ -95,6 +95,7 @@ public class GUIPartBench extends AGUIBase{
 	
 
 	public GUIPartBench(JSONCraftingBench definition){
+		super();
 		this.definition = definition;
 		this.player = InterfaceClient.getClientPlayer();
 		if(lastOpenedItem.containsKey(definition)){
@@ -113,8 +114,8 @@ public class GUIPartBench extends AGUIBase{
 	}
 
 	@Override
-	public void setupComponents(int guiLeft, int guiTop){
-		super.setupComponents(guiLeft, guiTop);
+	public void setupComponents(){
+		super.setupComponents();
 		//Create pack navigation section.
 		addComponent(prevPackButton = new GUIComponentButton(guiLeft + 17, guiTop + 11, 20, 20, 40, 196, 20, 20){
 			@Override
@@ -228,7 +229,7 @@ public class GUIPartBench extends AGUIBase{
 	}
 
 	@Override
-	protected void setStates(){
+	public void setStates(){
 		super.setStates();
 		//If materials are null, it means we are on first launch and need to update them.
 		//We put this here as putting it in the setup step will mask the fault because the GUI packet will catch it.

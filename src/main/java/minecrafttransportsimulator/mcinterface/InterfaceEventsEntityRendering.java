@@ -3,6 +3,7 @@ package minecrafttransportsimulator.mcinterface;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
@@ -11,10 +12,13 @@ import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
 import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartSeat;
+import minecrafttransportsimulator.guis.components.AGUIBase;
+import minecrafttransportsimulator.systems.CameraSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.model.ModelPlayer;
 import net.minecraft.client.model.ModelRenderer;
 import net.minecraft.client.renderer.GlStateManager;
@@ -22,6 +26,7 @@ import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderHandEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.client.event.RenderSpecificHandEvent;
@@ -32,7 +37,7 @@ import net.minecraftforge.fml.relauncher.Side;
 
 /**Interface for handling events pertaining to entity rendering.  This modifies the player's rendered state
  * to handle them being in vehicles, as well as ensuring their model adapts to any objects they may be holding.
- * This also handles the final world rendering pass, which may render entities.
+ * This also handles the final world rendering pass, which may render entities, and the 2D GUI rendering.
  *
  * @author don_bruce
  */
@@ -58,6 +63,8 @@ public class InterfaceEventsEntityRendering{
     	
     	//Enable lighting as pass -1 has that disabled.
     	RenderHelper.enableStandardItemLighting();
+    	//TODO check if we need this.  If so, this goes into the render interface as a block.
+    	//Minecraft.getMinecraft().entityRenderer.enableLightmap();
     	InterfaceRender.setLightingState(true);
     	
     	//Render pass 0 and 1 here manually.
@@ -83,6 +90,83 @@ public class InterfaceEventsEntityRendering{
 		//Turn lighting back off.
 		RenderHelper.disableStandardItemLighting();
 		InterfaceRender.setLightingState(false);
+    }
+    
+    private static int lastScreenWidth;
+	private static int lastScreenHeight;
+    
+    /**
+     * Renders an overlay GUI, or other overlay components like the fluid in a tank if we are mousing-over a vehicle.
+     * Also responsible for rendering overlays on custom cameras.  If we need to render a GUI,
+     * it should be returned.  Otherwise, return null.
+     */
+	@SubscribeEvent
+    public static void on(RenderGameOverlayEvent.Pre event){
+		 //If we have a custom camera overlay active, don't render the crosshairs or the hotbar.
+		 if(CameraSystem.customCameraOverlay != null && (event.getType().equals(RenderGameOverlayEvent.ElementType.CROSSHAIRS) || event.getType().equals(RenderGameOverlayEvent.ElementType.HOTBAR))){
+			 event.setCanceled(true);
+			 return;
+		 }
+    	
+    	//Do overlay rendering before the chat window is rendered.
+    	//This renders them over the main hotbar, but doesn't block the chat window.
+    	if(event.getType().equals(RenderGameOverlayEvent.ElementType.CHAT)){
+			//Set up variables.
+	    	ScaledResolution screenResolution = new ScaledResolution(Minecraft.getMinecraft());
+	    	int screenWidth = screenResolution.getScaledWidth();
+	    	int screenHeight = screenResolution.getScaledHeight();
+	    	int mouseX = Mouse.getX() * screenWidth / Minecraft.getMinecraft().displayWidth;
+	        int mouseY = screenHeight - Mouse.getY() * screenHeight / Minecraft.getMinecraft().displayHeight - 1;
+	    	
+	    	float partialTicks = event.getPartialTicks();
+	    	boolean updateGUIs = screenWidth != lastScreenWidth || screenHeight != lastScreenHeight;
+	    	if(updateGUIs){
+	    		lastScreenWidth = screenWidth;
+	    		lastScreenHeight = screenHeight;
+	    	}
+	    	
+	    	//Render GUIs, re-creating their components if needed.
+	    	//Set Y-axis to inverted to have correct orientation.
+			GL11.glScalef(1.0F, -1.0F, 1.0F);
+			
+			//Enable alpha testing.  This can be disabled by mods doing bad state management during their event calls.
+    		//We don't want to enable blending though, as that's on-demand.
+    		//Just in case it is enabled, however, disable it.
+    		//This ensures the blending state is as it will be for the main rendering pass of -1.
+    		InterfaceRender.setBlend(false);
+    		GL11.glEnable(GL11.GL_ALPHA_TEST);
+			
+			//Enable lighting.
+			RenderHelper.enableStandardItemLighting();
+			Minecraft.getMinecraft().entityRenderer.enableLightmap();
+			InterfaceRender.setLightingState(true);
+			
+			//Translate far enough to not render behind the items.
+			GL11.glPushMatrix();
+    		GL11.glTranslated(0, 0, 200);
+			
+			//Render main pass, then blended pass.
+			for(AGUIBase gui : AGUIBase.activeGUIs){
+	    		if(updateGUIs || gui.components.isEmpty()){
+	    			gui.setupComponentsInit(screenWidth, screenHeight);
+	    		}
+	    		gui.render(mouseX, mouseY, false, partialTicks);
+	    		GL11.glTranslated(0, 0, 250);
+	    	}
+			GL11.glTranslated(0, 0, -250*AGUIBase.activeGUIs.size());
+			InterfaceRender.setBlend(true);
+			for(AGUIBase gui : AGUIBase.activeGUIs){
+				gui.render(mouseX, mouseY, true, partialTicks);
+				GL11.glTranslated(0, 0, 250);
+	    	}
+			
+			//Pop the matrix, and set lighting back to normal.
+    		GL11.glPopMatrix();
+			InterfaceRender.setLightingState(false);
+			Minecraft.getMinecraft().entityRenderer.disableLightmap();
+			RenderHelper.disableStandardItemLighting();
+			GL11.glScalef(1.0F, -1.0F, 1.0F);
+    	}
     }
 	
 	 /**

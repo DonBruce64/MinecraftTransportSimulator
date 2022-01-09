@@ -5,7 +5,7 @@ import java.util.List;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.mcinterface.InterfaceGUI;
+import minecrafttransportsimulator.mcinterface.InterfaceEventsModelLoader;
 import minecrafttransportsimulator.rendering.instances.RenderText;
 import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
 import net.minecraft.client.Minecraft;
@@ -53,47 +53,45 @@ public class GUIComponentItem extends AGUIComponent{
 
     @Override
 	public void render(AGUIBase gui, int mouseX, int mouseY, boolean renderBright, boolean renderLitTexture, boolean blendingEnabled, float partialTicks){
-    	if(!blendingEnabled){
-	    	if(stack != null){
-	    		stackToRender = stack;
-	    	}else if(stacks != null && !stacks.isEmpty()){
-	    		stackToRender = stacks.get((int) (System.currentTimeMillis()%(stacks.size()*500)/500));
-	    	}else{
-	    		stackToRender = null;
-	    	}
-	    	
-	    	if(stackToRender != null && !stackToRender.isEmpty()){
-	    		if(!stackToRender.equals(lastStackRendered)){
-		    		renderable = InterfaceGUI.getItemModel(stackToRender);
-		    		lastStackRendered = stackToRender;
-		    		if(stackToRender.getCount() > 1){
-		    			text = String.valueOf(RenderText.FORMATTING_CHAR) + String.valueOf(RenderText.BOLD_FORMATTING_CHAR) + String.valueOf(stackToRender.getCount());
-		    		}
+    	if(stack != null){
+    		stackToRender = stack;
+    	}else if(stacks != null && !stacks.isEmpty()){
+    		stackToRender = stacks.get((int) (System.currentTimeMillis()%(stacks.size()*500)/500));
+    	}else{
+    		stackToRender = null;
+    	}
+    	
+    	if(stackToRender != null && !stackToRender.isEmpty()){
+    		if(!stackToRender.equals(lastStackRendered)){
+	    		renderable = InterfaceEventsModelLoader.getItemModel(stackToRender);
+	    		lastStackRendered = stackToRender;
+	    		if(stackToRender.getCount() > 1){
+	    			text = String.valueOf(RenderText.FORMATTING_CHAR) + String.valueOf(RenderText.BOLD_FORMATTING_CHAR) + String.valueOf(stackToRender.getCount());
 	    		}
-	    	}else{
-	    		renderable = null;
-	    		lastStackRendered = null;
-	    		text = null;
-	    	}
-	    	
-	    	if(renderable != null){
-	    		GL11.glPushMatrix();
-	    		
-	    		//Translate to position.
-	    		//Items are normally rendered with origin at bottom-right like normal models.
-	            //The 16 y-offset moves them to top-left orientation.
-				GL11.glTranslated(position.x, position.y - 16F*scale, position.z);
-				
-				//Apply scale, but also scale up the model by 16x.
-				//It's normally 1 unit -> 1 block, not 1px, and we want 16px default.
-				GL11.glScalef(scale*16, scale*16, scale*16);
-		        		
-	    		//Render.
-				renderable.disableLighting = renderBright;
-				renderable.render();
-				
-				GL11.glPopMatrix();
-	    	}
+    		}
+    	}else{
+    		renderable = null;
+    		lastStackRendered = null;
+    		text = null;
+    	}
+    	
+    	if(renderable != null){
+    		GL11.glPushMatrix();
+    		
+    		//Translate to position.
+    		//Items are normally rendered with origin at bottom-right like normal models.
+            //The 16 y-offset moves them to top-left orientation.
+			GL11.glTranslated(position.x, position.y - 16F*scale, position.z);
+			
+			//Apply scale, but also scale up the model by 16x.
+			//It's normally 1 unit -> 1 block, not 1px, and we want 16px default.
+			GL11.glScalef(scale*16, scale*16, scale*16);
+	        		
+    		//Render.
+			renderable.disableLighting = renderBright || ignoreGUILightingState;
+			renderable.render();
+			
+			GL11.glPopMatrix();
     	}
     }
     

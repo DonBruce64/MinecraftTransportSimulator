@@ -3,27 +3,23 @@ package minecrafttransportsimulator.mcinterface;
 import java.io.IOException;
 
 import org.lwjgl.input.Keyboard;
-import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.AGUIComponent;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox.TextBoxControlKey;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.init.SoundEvents;
 
-/**Builder for MC GUI classes.  Created when {@link InterfaceGUI#openGUI(AGUIBase)}
- * is called to open a GUI.  GUI instance is not saved after closed.
+/**Builder for MC GUI classes.  Created when {@link InterfaceClient#setActiveGUI(AGUIBase)}}
+ * is called to open a GUI.  This builer is purely to handle input forwarding and game pause
+ * requests and does no actual rendering as that's left for non-GUI generic rendering code.
  *
  * @author don_bruce
  */
 public class BuilderGUI extends GuiScreen{
-	private int guiLeft;
-	private int guiTop;
 	private GUIComponentButton lastButtonClicked;
 	
 	/**Current gui we are built around.**/
@@ -31,58 +27,6 @@ public class BuilderGUI extends GuiScreen{
 	
 	public BuilderGUI(AGUIBase gui){
 		this.gui = gui;
-	}
-	
-	/**
-	 *  This is called by the main MC system when this GUI is first initialized, or when it
-	 *  is re-sized.  We use this call, and send out the re-factored width and height
-	 *  point of the top-left of the GUI texture via {@link #setupComponents(int, int)} for
-	 *  GUIs to create their objects with.
-	 */
-	@Override 
-	public void initGui(){
-		super.initGui();
-		guiLeft = (width - gui.getWidth())/2;
-		if(gui.renderFlushBottom()){
-			guiTop = height - gui.getHeight();
-		}else{
-			guiTop = (height - gui.getHeight())/2;
-		}
-		
-		//Setup components now.
-		Keyboard.enableRepeatEvents(true);
-		gui.setupComponents(guiLeft, guiTop);
-	}
-	
-	/**
-	 *  This is called by the main MC system when this GUI is set to render.  We do all
-	 *  the rendering here using the component states to ensure a better order that
-	 *  doesn't risk clashing textures or other issues like normal rendering does.
-	 *  Because of this, this method should never need to be overridden by classes
-	 *  extending this class.  Instead, they should populate the appropriate component
-	 *  lists and set the appropriate states.
-	 */
-	@Override
-    public void drawScreen(int mouseX, int mouseY, float partialTicks){
-		//Set Y-axis to inverted to have correct orientation.
-		GL11.glScalef(1.0F, -1.0F, 1.0F);
-		
-		//Enable lighting.
-		RenderHelper.enableStandardItemLighting();
-		Minecraft.getMinecraft().entityRenderer.enableLightmap();
-		InterfaceRender.setLightingState(true);
-		
-		//Render main pass, then blended pass.
-		gui.render(width, height, mouseX, mouseY, false, partialTicks);
-		InterfaceRender.setBlend(true);
-		gui.render(width, height, mouseX, mouseY, true, partialTicks);
-		
-		//Set states back to normal.
-		InterfaceRender.setBlend(false);
-		InterfaceRender.setLightingState(false);
-		Minecraft.getMinecraft().entityRenderer.disableLightmap();
-		RenderHelper.disableStandardItemLighting();
-		GL11.glScalef(1.0F, -1.0F, 1.0F);
 	}
 	
 	/**
@@ -156,7 +100,8 @@ public class BuilderGUI extends GuiScreen{
 	
 	@Override
 	public void onGuiClosed(){
-		gui.onClosed();
+		//Forward close event as this comes from an ESC key that we don't see.
+		gui.close();
     }
 	
 	@Override

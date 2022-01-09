@@ -35,8 +35,8 @@ public class GUIInventoryContainer extends AGUIInventory{
 	}
 
 	@Override
-	public void setupComponents(int guiLeft, int guiTop){
-		super.setupComponents(guiLeft, guiTop);
+	public void setupComponents(){
+		super.setupComponents();
 		
 		//Make a slider if we need to show extra rows.
 		if(maxRowIncrements > 0){
@@ -82,7 +82,7 @@ public class GUIInventoryContainer extends AGUIInventory{
 	}
 
 	@Override
-	protected void setStates(){
+	public void setStates(){
 		super.setStates();
 		//Set slider, next, and prior row button states, if we have scrolling.
 		if(maxRowIncrements > 0){

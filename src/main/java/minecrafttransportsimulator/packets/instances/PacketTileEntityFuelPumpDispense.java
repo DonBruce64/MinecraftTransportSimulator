@@ -2,8 +2,9 @@ package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityFuelPump;
+import minecrafttransportsimulator.guis.components.AGUIBase;
+import minecrafttransportsimulator.guis.instances.GUIFuelPump;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
-import minecrafttransportsimulator.mcinterface.InterfaceGUI;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntityInteract;
@@ -54,8 +55,8 @@ public class PacketTileEntityFuelPumpDispense extends APacketEntityInteract<Tile
 			ItemStack stack = pump.fuelItems.getStack(slotClicked);
 			if(player.getInventory().removeStack(stack, stack.getCount())){
 				pump.fuelPurchasedRemaining += pump.fuelAmounts.get(slotClicked);
-				if(world.isClient() && player.equals(InterfaceClient.getClientPlayer())){
-					InterfaceGUI.closeGUI();
+				if(world.isClient() && player.equals(InterfaceClient.getClientPlayer()) && AGUIBase.activeInputGUI instanceof GUIFuelPump){
+					AGUIBase.activeInputGUI.close();
 				}
 				return true;
 			}else{

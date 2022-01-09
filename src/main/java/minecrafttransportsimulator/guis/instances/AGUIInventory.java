@@ -27,14 +27,15 @@ public abstract class AGUIInventory extends AGUIBase{
 	protected final List<GUIComponentItem> interactableSlotIcons = new ArrayList<GUIComponentItem>();
 	
 	public AGUIInventory(String texture){
+		super();
 		this.texture = texture != null ? texture : "mts:textures/guis/inventory.png";
 		this.player = InterfaceClient.getClientPlayer();
 		this.playerInventory = player.getInventory();
 	}
 
 	@Override
-	public void setupComponents(int guiLeft, int guiTop){
-		super.setupComponents(guiLeft, guiTop);
+	public void setupComponents(){
+		super.setupComponents();
 		//Create the player item buttons and icons.  This is a static list of all 36 slots.
 		//Rendering will occur if the player has an item in that slot.
 		playerSlotButtons.clear();
@@ -68,7 +69,7 @@ public abstract class AGUIInventory extends AGUIBase{
 	}
 
 	@Override
-	protected void setStates(){
+	public void setStates(){
 		super.setStates();
 		//Set player item icons to player inventory.
 		for(int i=0; i<playerSlotButtons.size(); ++i){

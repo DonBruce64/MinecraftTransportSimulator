@@ -435,7 +435,7 @@ public class GUIPanelAircraft extends AGUIPanel{
 	}
 	
 	@Override
-	protected void setStates(){
+	public void setStates(){
 		super.setStates();
 		//Set the states of the light selectors.
 		for(Entry<String, GUIComponentSelector> lightEntry : lightSelectors.entrySet()){

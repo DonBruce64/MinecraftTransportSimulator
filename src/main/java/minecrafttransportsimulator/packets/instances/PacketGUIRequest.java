@@ -3,7 +3,6 @@ package minecrafttransportsimulator.packets.instances;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.guis.instances.GUIBooklet;
 import minecrafttransportsimulator.items.instances.ItemItem;
-import minecrafttransportsimulator.mcinterface.InterfaceGUI;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketPlayer;
@@ -37,7 +36,7 @@ public class PacketGUIRequest extends APacketPlayer{
 	@Override
 	public void handle(WrapperWorld world, WrapperPlayer player){
 		switch(guiRequested){
-			case BOOKELET: InterfaceGUI.openGUI(new GUIBooklet((ItemItem) player.getHeldItem())); break;
+			case BOOKELET: new GUIBooklet((ItemItem) player.getHeldItem()); break;
 		}
 	}
 	
