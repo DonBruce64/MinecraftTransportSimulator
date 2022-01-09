@@ -1,10 +1,12 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.NavBeacon;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.jsondefs.JSONRendering;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
@@ -32,24 +34,34 @@ public class TileEntityBeacon extends TileEntityDecor{
 		//Manually add textLines, as these won't be in the JSON.
 		this.nameTextObject = new JSONText();
 		nameTextObject.attachedTo = "NULL";
-		nameTextObject.pos = new Point3d();
+		nameTextObject.pos = new Point3d(0, -500, 0);
 		nameTextObject.rot = new Point3d();
 		nameTextObject.fieldName = "Beacon Name";
 		nameTextObject.maxLength = 5;
 		
 		this.glideslopeTextObject = new JSONText();
 		glideslopeTextObject.attachedTo = "NULL";
-		glideslopeTextObject.pos = new Point3d();
+		glideslopeTextObject.pos = new Point3d(0, -500, 0);
 		glideslopeTextObject.rot = new Point3d();
 		glideslopeTextObject.fieldName = "Glide Slope (Deg)";
 		glideslopeTextObject.maxLength = 5;
 		
 		this.bearingTextObject = new JSONText();
 		bearingTextObject.attachedTo = "NULL";
-		bearingTextObject.pos = new Point3d();
+		bearingTextObject.pos = new Point3d(0, -500, 0);
 		bearingTextObject.rot = new Point3d();
 		bearingTextObject.fieldName = "Bearing (Deg)";
 		bearingTextObject.maxLength = 5;
+		
+		if(definition.rendering == null){
+			definition.rendering = new JSONRendering();
+		}
+		if(definition.rendering.textObjects == null){
+			definition.rendering.textObjects = new ArrayList<JSONText>();
+		}
+		definition.rendering.textObjects.add(nameTextObject);
+		definition.rendering.textObjects.add(glideslopeTextObject);
+		definition.rendering.textObjects.add(bearingTextObject);
 		
 		this.beaconName = data.getString("beaconName");
 		if(beaconName.isEmpty()){
