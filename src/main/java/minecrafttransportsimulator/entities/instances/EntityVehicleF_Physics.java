@@ -132,8 +132,8 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	@Override
 	protected void initializeDefinition(){
 		super.initializeDefinition();
-		if(definition.motorized.physicsModifiers != null){
-			for(JSONPhysicsModifier modifier : definition.motorized.physicsModifiers){
+		if(definition.physicsModifiers != null){
+			for(JSONPhysicsModifier modifier : definition.physicsModifiers){
 				if(modifier.animations != null){
 					for(JSONAnimationDefinition animation : modifier.animations){
 						animationClocks.put(animation, new DurationDelayClock(animation));
@@ -242,8 +242,8 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 		currentAxleRatio = definition.motorized.axleRatio;
 		
 		//Adjust current variables to physics modifiers, if any exist.
-		if(definition.motorized.physicsModifiers != null){
-			for(JSONPhysicsModifier modifier : definition.motorized.physicsModifiers){
+		if(definition.physicsModifiers != null){
+			for(JSONPhysicsModifier modifier : definition.physicsModifiers){
 				boolean doModification = true;
 				float modifiedValue = 0;
 				if(modifier.animations != null){
