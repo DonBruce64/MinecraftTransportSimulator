@@ -299,7 +299,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 		text.clear();
 		if(definition.rendering != null && definition.rendering.textObjects != null){
 			for(int i=0; i<definition.rendering.textObjects.size(); ++i){
-				if(oldTextValues.size() < i){
+				if(i < oldTextValues.size()){
 					text.put(definition.rendering.textObjects.get(i), oldTextValues.get(i));
 				}else{
 					text.put(definition.rendering.textObjects.get(i), definition.rendering.textObjects.get(i).defaultText);
