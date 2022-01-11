@@ -14,6 +14,7 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.openal.AL10;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.entities.instances.EntityRadio;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
@@ -293,13 +294,13 @@ public class InterfaceSound{
 	 *  from all the sounds for all the radios.  If the radios are invalid
 	 *  or not synced, then they are turned off for safety.
 	 */
-	public static int getFreeStationBuffer(Set<Radio> playingRadios){
+	public static int getFreeStationBuffer(Set<EntityRadio> playingRadios){
 		boolean freeBuffer = true;
-		Radio badRadio = null;
+		EntityRadio badRadio = null;
 		AL10.alGetError();
-		Iterator<Radio> iterator = playingRadios.iterator();
+		Iterator<EntityRadio> iterator = playingRadios.iterator();
 		while(iterator.hasNext()){
-			Radio radio = iterator.next();
+			EntityRadio radio = iterator.next();
 			SoundInstance sound = radio.getPlayingSound();
 			if(AL10.alGetSourcei(sound.sourceIndex, AL10.AL_BUFFERS_PROCESSED) == 0){
 				freeBuffer = false;
@@ -316,7 +317,7 @@ public class InterfaceSound{
 			//First get the old buffer index.
 			int freeBufferIndex = 0;
 			IntBuffer oldDataBuffer = BufferUtils.createIntBuffer(1);
-			for(Radio radio : playingRadios){
+			for(EntityRadio radio : playingRadios){
 				SoundInstance sound = radio.getPlayingSound();
 				AL10.alSourceUnqueueBuffers(sound.sourceIndex, oldDataBuffer);
 				if(freeBufferIndex == 0){

@@ -6,10 +6,10 @@ import java.util.List;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Orientation3d;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.entities.instances.EntityRadio;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.sound.Radio;
 import minecrafttransportsimulator.sound.SoundInstance;
 
 /**Base class for entities that exist in the world. In addition to the normal functions
@@ -42,7 +42,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	public final WrapperPlayer placingPlayer;
 	
 	//Internal sound variables.
-	public final Radio radio;
+	public final EntityRadio radio;
 	public List<SoundInstance> sounds = new ArrayList<SoundInstance>();
 	
 	/**Constructor for synced entities**/
@@ -60,7 +60,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 		this.prevOrientation = orientation.copy();
 		this.placingPlayer = placingPlayer;
 		this.boundingBox = new BoundingBox(new Point3d(), position, 0.5, 0.5, 0.5, false);
-		this.radio = hasRadio() ? new Radio(this, data.getDataOrNew("radio")) : null;
+		this.radio = hasRadio() ? new EntityRadio(this, data.getDataOrNew("radio")) : null;
 	}
 	
 	/**Constructor for un-synced entities.  Allows for specification of position/motion/angles.**/

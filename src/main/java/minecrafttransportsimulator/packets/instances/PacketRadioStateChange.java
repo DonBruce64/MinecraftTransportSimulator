@@ -1,9 +1,9 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
+import minecrafttransportsimulator.entities.instances.EntityRadio;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
-import minecrafttransportsimulator.sound.Radio;
 import minecrafttransportsimulator.sound.RadioManager.RadioSources;
 
 /**This packet is sent to servers when a radio changes state. It sets the state on the server.  After this,
@@ -12,7 +12,7 @@ import minecrafttransportsimulator.sound.RadioManager.RadioSources;
  * 
  * @author don_bruce
  */
-public class PacketRadioStateChange extends APacketEntity<Radio>{
+public class PacketRadioStateChange extends APacketEntity<EntityRadio>{
 	private final RadioSources source;
 	private final int volume;
 	private final int preset;
@@ -20,7 +20,7 @@ public class PacketRadioStateChange extends APacketEntity<Radio>{
 	private final String currentURL;
 	
 	/**Source change constructor**/
-	public PacketRadioStateChange(Radio radio, RadioSources source){
+	public PacketRadioStateChange(EntityRadio radio, RadioSources source){
 		super(radio);
 		this.source = source;
 		this.volume = radio.volume;
@@ -30,7 +30,7 @@ public class PacketRadioStateChange extends APacketEntity<Radio>{
 	}
 	
 	/**Volume change constructor**/
-	public PacketRadioStateChange(Radio radio, int volume){
+	public PacketRadioStateChange(EntityRadio radio, int volume){
 		super(radio);
 		this.source = radio.getSource();
 		this.volume = volume;
@@ -40,7 +40,7 @@ public class PacketRadioStateChange extends APacketEntity<Radio>{
 	}
 	
 	/**Local playback start constructor**/
-	public PacketRadioStateChange(Radio radio, int preset, boolean randomOrder){
+	public PacketRadioStateChange(EntityRadio radio, int preset, boolean randomOrder){
 		super(radio);
 		this.source = radio.getSource();
 		this.volume = radio.volume;
@@ -50,7 +50,7 @@ public class PacketRadioStateChange extends APacketEntity<Radio>{
 	}
 	
 	/**Internet playback start constructor**/
-	public PacketRadioStateChange(Radio radio, int preset, String currentURL){
+	public PacketRadioStateChange(EntityRadio radio, int preset, String currentURL){
 		super(radio);
 		this.source = radio.getSource();
 		this.volume = radio.volume;
@@ -60,7 +60,7 @@ public class PacketRadioStateChange extends APacketEntity<Radio>{
 	}
 	
 	/**Stop playback start constructor**/
-	public PacketRadioStateChange(Radio radio){
+	public PacketRadioStateChange(EntityRadio radio){
 		super(radio);
 		this.source = radio.getSource();
 		this.volume = radio.volume;
@@ -89,7 +89,7 @@ public class PacketRadioStateChange extends APacketEntity<Radio>{
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, Radio radio){
+	public boolean handle(WrapperWorld world, EntityRadio radio){
 		if(radio != null){
 			if(world.isClient()){
 				if(!radio.getSource().equals(source)){

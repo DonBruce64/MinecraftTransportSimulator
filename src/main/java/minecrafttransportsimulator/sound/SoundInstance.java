@@ -2,6 +2,7 @@ package minecrafttransportsimulator.sound;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
+import minecrafttransportsimulator.entities.instances.EntityRadio;
 import minecrafttransportsimulator.jsondefs.JSONSound;
 
 /**Class that holds sound information.  One class is created for each sound that's playing
@@ -16,7 +17,7 @@ public class SoundInstance{
 	public final AEntityB_Existing entity;
 	public final String soundName;
 	public final JSONSound soundDef;
-	public final Radio radio;
+	public final EntityRadio radio;
 	public final Point3d position;
 	
 	//Runtime variables.
@@ -33,7 +34,7 @@ public class SoundInstance{
 		this(entity, soundDef.name, soundDef, null);
 	}
 
-	public SoundInstance(AEntityB_Existing entity, String soundName, JSONSound soundDef, Radio radio){
+	public SoundInstance(AEntityB_Existing entity, String soundName, JSONSound soundDef, EntityRadio radio){
 		this.entity = entity;
 		this.soundName = soundName;
 		this.soundDef = soundDef;

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
+import minecrafttransportsimulator.entities.instances.EntityRadio;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentCutout;
@@ -12,7 +13,6 @@ import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketRadioStateChange;
 import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
-import minecrafttransportsimulator.sound.Radio;
 import minecrafttransportsimulator.sound.RadioManager;
 import minecrafttransportsimulator.sound.RadioManager.RadioSources;
 
@@ -46,14 +46,14 @@ public class GUIRadio extends AGUIBase{
 	private GUIComponentTextBox volumeDisplay;
 	
 	//Runtime information.
-	private final Radio radio;
+	private final EntityRadio radio;
 	private final int bandsToSkip;
 	private final int bandsToShow;
 	private final int bandButtonSize;
 	private static boolean equalizerMode = false;
 	private static boolean teachMode = false;
 	
-	public GUIRadio(Radio radio){
+	public GUIRadio(EntityRadio radio){
 		super();
 		this.radio = radio;
 		this.bandsToSkip = 4;

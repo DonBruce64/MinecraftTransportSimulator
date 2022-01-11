@@ -1,9 +1,12 @@
-package minecrafttransportsimulator.sound;
+package minecrafttransportsimulator.entities.instances;
 
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
+import minecrafttransportsimulator.sound.RadioManager;
+import minecrafttransportsimulator.sound.RadioStation;
+import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.sound.RadioManager.RadioSources;
 
 /**Base class for radios.  Used to provide a common set of tools for all radio implementations.
@@ -13,7 +16,7 @@ import minecrafttransportsimulator.sound.RadioManager.RadioSources;
 *
 * @author don_bruce
 */
-public class Radio extends AEntityB_Existing{
+public class EntityRadio extends AEntityB_Existing{
 	
 	//Public variables for modifying state.
 	public boolean randomOrder;
@@ -28,7 +31,7 @@ public class Radio extends AEntityB_Existing{
 	private RadioSources currentSource;
 	private SoundInstance currentSound;
 	
-	public Radio(AEntityB_Existing provider, WrapperNBT data){
+	public EntityRadio(AEntityB_Existing provider, WrapperNBT data){
 		super(provider.world, null, data);
 		this.provider = provider;
 		if(world.isClient()){

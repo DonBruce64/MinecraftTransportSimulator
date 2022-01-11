@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Set;
 
 import javazoom.jl.decoder.Equalizer;
+import minecrafttransportsimulator.entities.instances.EntityRadio;
 import minecrafttransportsimulator.sound.RadioManager.RadioSources;
 
 /**Radio stations are sources that radios can hook into to provide sound.  All radios share the
@@ -27,8 +28,8 @@ public class RadioStation{
 	private final boolean randomOrder;
 	private final String url;
 	private final List<File> musicFiles;
-	private final Set<Radio> queuedRadios = new HashSet<Radio>();
-	private final Set<Radio> playingRadios = new HashSet<Radio>();
+	private final Set<EntityRadio> queuedRadios = new HashSet<EntityRadio>();
+	private final Set<EntityRadio> playingRadios = new HashSet<EntityRadio>();
 	
 	//Runtime variables.
 	//Due to how the mp3 parser works, we can only have one equalizer per station.
@@ -94,14 +95,14 @@ public class RadioStation{
 	 * is playing, then the radio is queued to start on the next buffer call.  This allows for syncing
 	 * of radios in the world.
 	 */
-	public void addRadio(Radio radio){
+	public void addRadio(EntityRadio radio){
 		queuedRadios.add(radio);
 	}
 	
 	/**
 	 * Removes a radio to this station for playback.
 	 */
-	public void removeRadio(Radio radio){
+	public void removeRadio(EntityRadio radio){
 		playingRadios.remove(radio);
 		queuedRadios.remove(radio);
 	}
@@ -132,7 +133,7 @@ public class RadioStation{
 				//If we removed a buffer, or if we don't have any playing radios, start our radios.
 				//This syncs new radios if we are playing one, and starts new radios if we aren't.
 				if((freeBufferIndex != 0 || playingRadios.isEmpty()) && !queuedRadios.isEmpty()){
-					for(Radio radio : queuedRadios){
+					for(EntityRadio radio : queuedRadios){
 						radio.start();
 						InterfaceSound.addRadioSound(radio.getPlayingSound(), activeBuffers);
 						playingRadios.add(radio);
@@ -144,7 +145,7 @@ public class RadioStation{
 				if(activeBuffers.size() < 5){
 					int newIndex = generateBufferIndex();
 					if(newIndex != 0){
-						for(Radio radio : playingRadios){
+						for(EntityRadio radio : playingRadios){
 							InterfaceSound.bindBuffer(radio.getPlayingSound(), newIndex);
 						}
 					}
