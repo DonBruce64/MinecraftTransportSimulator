@@ -17,6 +17,7 @@ import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.items.instances.ItemPartInteractable;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
+import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
@@ -76,22 +77,6 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityFl
 			for(int i=0; i<fuelItems.getSize(); ++i){
 				if(!fuelItems.getStack(i).isEmpty()){
 					isCreative = false;
-				}
-			}
-			
-			//Update text lines to the current tank status if required.
-			//Only do this on clients, as servers don't render any text.
-			if(world.isClient() && definition.rendering != null && definition.rendering.textObjects != null){
-				text.clear();
-				String fluidName = tank.getFluidLevel() > 0 ? InterfaceCore.getFluidName(tank.getFluid()) : "";
-				String fluidLevel = InterfaceCore.translate("tile.fuelpump.level") + String.format("%04.1f", tank.getFluidLevel()/1000F) + "b";
-				String fluidDispensed = InterfaceCore.translate("tile.fuelpump.dispensed") + String.format("%04.1f", tank.getAmountDispensed()/1000F) + "b";
-				for(int i=0; i<definition.rendering.textObjects.size(); ++i){
-					switch(i%3){
-						case(0) : text.put(definition.rendering.textObjects.get(i), fluidName); break;
-						case(1) : text.put(definition.rendering.textObjects.get(i), fluidLevel); break;
-						case(2) : text.put(definition.rendering.textObjects.get(i), fluidDispensed); break;
-					}
 				}
 			}
 			
@@ -257,13 +242,22 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityFl
 	public double getRawVariableValue(String variable, float partialTicks){
 		switch(variable){
 			case("fuelpump_active"): return connectedVehicle != null ? 1 : 0;	
-			case("fuelpump_stored"): return getTank().getFluidLevel();
-			case("fuelpump_dispensed"): return getTank().getAmountDispensed();
+			case("fuelpump_stored"): return tank.getFluidLevel();
+			case("fuelpump_dispensed"): return tank.getAmountDispensed();
 			case("fuelpump_free"): return isCreative ? 1 : 0;
 			case("fuelpump_purchased"): return fuelPurchasedRemaining;
 		}
 		
 		return super.getRawVariableValue(variable, partialTicks);
+	}
+	
+	@Override
+	public String getRawTextVariableValue(JSONText textDef, float partialTicks){
+		if(textDef.variableName.equals("fuelpump_fluid")){
+			return tank.getFluidLevel() > 0 ? InterfaceCore.getFluidName(tank.getFluid()) : "";
+		}
+		
+		return super.getRawTextVariableValue(textDef, partialTicks);
 	}
 	
 	@Override

@@ -3,6 +3,7 @@ package minecrafttransportsimulator.mcinterface;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.Orientation3d;
 import minecrafttransportsimulator.baseclasses.Point3d;
@@ -172,5 +173,9 @@ public class WrapperNBT{
 	
 	public void deleteData(String name){
 		tag.removeTag(name);
+	}
+	
+	public Set<String> getAllNames(){
+		return tag.getKeySet();
 	}
 }

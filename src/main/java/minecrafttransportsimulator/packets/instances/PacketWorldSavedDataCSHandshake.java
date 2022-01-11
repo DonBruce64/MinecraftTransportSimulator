@@ -4,25 +4,27 @@ import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.mcinterface.WrapperWorld.InterfaceWorldSavedData;
 import minecrafttransportsimulator.packets.components.APacketPlayer;
 
 /**Packet used to request world NBT data from the server, and to send that data back to clients.
- * Used when world data is requested on a client, as MC is too dumb to let us simply set a flag to
- * get the NBT data from the server in an easy way.
+ * REquesting an empty string will return all data, whereas requesting a specific tag will
+ * return that specific tag only.
  * 
  * @author don_bruce
  */
 public class PacketWorldSavedDataCSHandshake extends APacketPlayer{
+	private final String name;
 	private final WrapperNBT data;
 	
-	public PacketWorldSavedDataCSHandshake(WrapperPlayer player, WrapperNBT data){
+	public PacketWorldSavedDataCSHandshake(WrapperPlayer player, String name, WrapperNBT data){
 		super(player);
+		this.name = name;
 		this.data = data;
 	}
 	
 	public PacketWorldSavedDataCSHandshake(ByteBuf buf){
 		super(buf);
+		this.name = readStringFromBuffer(buf);
 		if(buf.readBoolean()){
 			this.data = readDataFromBuffer(buf);
 		}else{
@@ -33,6 +35,7 @@ public class PacketWorldSavedDataCSHandshake extends APacketPlayer{
 	@Override
 	public void writeToBuffer(ByteBuf buf){
 		super.writeToBuffer(buf);
+		writeStringToBuffer(name, buf);
 		if(data != null){
 			buf.writeBoolean(true);
 			writeDataToBuffer(data, buf);
@@ -45,17 +48,24 @@ public class PacketWorldSavedDataCSHandshake extends APacketPlayer{
 	public void handle(WrapperWorld world, WrapperPlayer player){
 		if(world.isClient()){
 			//Set the world saved data.
-			world.savedDataAccessor = new InterfaceWorldSavedData(WrapperWorld.STORED_WORLD_DATA_ID);
-			world.savedDataAccessor.readFromNBT(data.tag);
+			world.setData(name, data);
 		}else{
 			//Send back a packet to the player who requested it.
-			WrapperNBT savedData = new WrapperNBT();
-			if(world.savedDataAccessor == null){
-				//Call the getData method here to create data.
-				world.getData();
+			WrapperNBT savedData = world.getData(name);
+			if(name.isEmpty()){
+				//Full data block, break up and send back in batches.
+				for(String dataName : savedData.getAllNames()){
+					player.sendPacket(new PacketWorldSavedDataCSHandshake(player, dataName, savedData.getData(dataName)));
+				}
+			}else{
+				//Partial block, send as-is.
+				player.sendPacket(new PacketWorldSavedDataCSHandshake(player, name, savedData));
 			}
-			world.savedDataAccessor.writeToNBT(savedData.tag);
-			player.sendPacket(new PacketWorldSavedDataCSHandshake(player, savedData));
 		}
+	}
+	
+	@Override
+	public boolean runOnMainThread(){
+		return false;
 	}
 }

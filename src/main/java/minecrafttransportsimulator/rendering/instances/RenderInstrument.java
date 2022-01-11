@@ -56,15 +56,16 @@ public final class RenderInstrument{
 				GL11.glPushMatrix();
 				GL11.glTranslatef(0.0F, 0.0F, i*0.0001F);
 				if(component.textObject != null){
-					int variablePartNumber = AEntityC_Definable.getVariableNumber(component.textObject.fieldName);
-					final boolean addSuffix = variablePartNumber == -1 && ((component.textObject.fieldName.startsWith("engine_") || component.textObject.fieldName.startsWith("propeller_") || component.textObject.fieldName.startsWith("gun_") || component.textObject.fieldName.startsWith("seat_")));
-					double textNumeric = entity.getRawVariableValue(addSuffix ? component.textObject.fieldName + "_" + partNumber : component.textObject.fieldName, 0)*component.textFactor;;
-					if(Double.isNaN(textNumeric)){
-						textNumeric = 0;
-					}
-					
-					String text = String.format("%0" + component.textObject.maxLength + "d", (int) textNumeric);
-					RenderText.draw3DText(text, entity, component.textObject, globalScale*component.scale, true);
+					int variablePartNumber = AEntityC_Definable.getVariableNumber(component.textObject.variableName);
+					final boolean addSuffix = variablePartNumber == -1 && ((component.textObject.variableName.startsWith("engine_") || component.textObject.variableName.startsWith("propeller_") || component.textObject.variableName.startsWith("gun_") || component.textObject.variableName.startsWith("seat_")));
+					if(addSuffix){
+						String oldName = component.textObject.variableName; 
+						component.textObject.variableName += "_" + partNumber;
+						RenderText.draw3DText(entity.getAnimatedTextVariableValue(component.textObject, partialTicks), entity, component.textObject, globalScale*component.scale, true);
+						component.textObject.variableName = oldName;
+					}else{
+						RenderText.draw3DText(entity.getAnimatedTextVariableValue(component.textObject, partialTicks), entity, component.textObject, globalScale*component.scale, true);
+					}					
 				}else{
 					//Init variables.
 					renderObject.texture = "/assets/" + instrument.definition.packID + "/textures/instruments.png";

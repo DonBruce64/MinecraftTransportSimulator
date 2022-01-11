@@ -27,6 +27,17 @@ public abstract class APacketBase{
 	 *  out will cause crashes!
 	 */
 	public APacketBase(ByteBuf buf){}
+	
+	/**
+	 *  Normally, all packets will need to run on the main game thread
+	 *  for proper I/O access.  However, sometimes the data they access
+	 *  is read-only, or may be thread-safe.  In that case, it is prefered
+	 *  to have the packet be handled on the networking thread to help reduce
+	 *  main game load.  If so, then false should be returned here.
+	 */
+	public boolean runOnMainThread(){
+		return true;
+	}
 
 	/**
 	 *  This is called to write the field values from this class into a buffer.

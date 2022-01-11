@@ -48,7 +48,8 @@ public class PackResourceLoader{
     }
     
     public enum ResourceType{
-    	OBJ("objmodels/", ".obj", ".obj"),
+    	OBJ_MODEL("objmodels/", ".obj", ".obj"),
+    	LT_MODEL("littletilesmodels/", ".txt", ".txt"),
     	PNG("textures/", ".png", ".png"),
     	ITEM_PNG("textures/items/", ".png", "_item.png"),
     	ITEM_JSON("models/item/", ".json", "_item.json");

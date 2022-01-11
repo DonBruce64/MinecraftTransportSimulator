@@ -115,7 +115,8 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 		//Load text.
 		if(definition.rendering != null && definition.rendering.textObjects != null){
 			for(int i=0; i<definition.rendering.textObjects.size(); ++i){
-				text.put(definition.rendering.textObjects.get(i), data.getString("textLine" + i));
+				JSONText textDef = definition.rendering.textObjects.get(i);
+				text.put(textDef, newlyCreated ? textDef.defaultText : data.getString("textLine" + i));
 			}
 		}
 		
@@ -152,6 +153,17 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 				initializeDefinition();
 				animationsInitialized = true;
 			}
+			
+			//Update value-based text.  Only do this on clients as servers won't render this text.
+			if(world.isClient() && !text.isEmpty()){
+				for(Entry<JSONText, String> textEntry : text.entrySet()){
+					JSONText textDef = textEntry.getKey();
+					if(textDef.variableName != null){
+						textEntry.setValue(getAnimatedTextVariableValue(textDef, 0));
+					}
+				}
+			}
+			
 			world.endProfiling();
 			return true;
 		}else{
@@ -397,8 +409,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
     public void updateText(List<String> textLines){
     	int linesChecked = 0;
 		for(Entry<JSONText, String> textEntry : text.entrySet()){
-			textEntry.setValue(textLines.get(linesChecked));
-			++linesChecked;
+			textEntry.setValue(textLines.get(linesChecked++));
 		}
     }
     
@@ -636,6 +647,15 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	}
 	
 	/**
+	 *  Similar to {@link #getRawVariableValue(String, float)}, but returns
+	 *  a String for text-based parameters rather than a double.  If no match
+	 *  is found, return null.  Otherwise, return the string.
+	 */
+	public String getRawTextVariableValue(JSONText textDef, float partialTicks){
+		return null;
+	}
+	
+	/**
 	 *  Returns the value for the passed-in variable, subject to the clamping, and duration/delay requested in the 
 	 *  animation definition.  The passed-in offset is used to allow for stacking animations, and should be 0 if 
 	 *  this functionality is not required.  Note that the animation offset is applied AFTER the scaling performed by
@@ -690,6 +710,24 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 			return value;
 		}else{
 			return (animation.absolute ? Math.abs(value) : value)*scaleFactor + animation.offset;
+		}
+	}
+	
+	/**
+	 *  Returns the value for the passed-in variable, subject to the formatting and factoring in the 
+	 *  text definition.
+	 */
+	public final String getAnimatedTextVariableValue(JSONText textDef, float partialTicks){
+		//Check text values first, then anmiated values.
+		String value = getRawTextVariableValue(textDef, 0);
+		if(value == null){
+			double numberValue = getRawVariableValue(textDef.variableName, 0);
+			if(Double.isNaN(numberValue)){
+				numberValue = 0;
+			}
+			return String.format(textDef.variableFormat, numberValue*textDef.variableFactor);
+		}else{
+			return String.format(textDef.variableFormat, value);
 		}
 	}
 	

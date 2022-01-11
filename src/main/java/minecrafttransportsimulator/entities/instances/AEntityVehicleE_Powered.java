@@ -24,7 +24,6 @@ import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine.Signal;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.systems.NavBeaconSystem;
 
 /**This class adds engine components for vehicles, such as fuel, throttle,
  * and electricity.  Contains numerous methods for gauges, HUDs, and fuel systems.
@@ -81,7 +80,7 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 		//Load simple variables.
 		this.electricPower = data.getDouble("electricPower");
 		this.selectedBeaconName = data.getString("selectedBeaconName");
-		this.selectedBeacon = NavBeaconSystem.getBeacon(world, selectedBeaconName);
+		this.selectedBeacon = NavBeacon.getByNameFromWorld(world, selectedBeaconName);
 		this.fuelTank = new EntityFluidTank(world, data.getDataOrNew("fuelTank"), definition.motorized.fuelCapacity);
 		
 		if(newlyCreated){
@@ -117,7 +116,11 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 			//It might not be valid if it has been removed from the world,
 			//or one might have been placed that matches our selection.
 			if(definition.motorized.isAircraft && ticksExisted%20 == 0){
-				selectedBeacon = NavBeaconSystem.getBeacon(world, selectedBeaconName);
+				if(!selectedBeaconName.isEmpty()){
+					selectedBeacon = NavBeacon.getByNameFromWorld(world, selectedBeaconName);
+				}else{
+					selectedBeacon = null;
+				}
 			}
 			
 			//Do trailer-specific logic, if we are one and towed.

@@ -293,9 +293,6 @@ info.item.jerrycan.empty=Can is currently empty.
 info.item.jerrycan.contains=Can contains: 
 
 
-tile.fuelpump.level=LVL:
-tile.fuelpump.dispensed=DISP:
-
 key.categories.mts=Minecraft Transport Simulator
 key.mts.config=Open configuration screen
 

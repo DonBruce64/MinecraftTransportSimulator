@@ -1,5 +1,8 @@
 package minecrafttransportsimulator.mcinterface;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -10,7 +13,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
@@ -55,7 +57,7 @@ import net.minecraft.init.SoundEvents;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemDye;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
@@ -67,7 +69,6 @@ import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
-import net.minecraft.world.storage.WorldSavedData;
 import net.minecraftforge.common.IPlantable;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
@@ -88,18 +89,31 @@ public class WrapperWorld{
 	private static final Map<World, WrapperWorld> worldWrappers = new HashMap<World, WrapperWorld>();
 	private final Map<WrapperPlayer, Integer> ticksSincePlayerJoin = new HashMap<WrapperPlayer, Integer>();
 	private final Map<WrapperPlayer, BuilderEntityRenderForwarder> activePlayerFollowers = new HashMap<WrapperPlayer, BuilderEntityRenderForwarder>();
-	private final List<AxisAlignedBB> collidingAABBs = new ArrayList<AxisAlignedBB>();
+	private final List<AxisAlignedBB> mutableCollidingAABBs = new ArrayList<AxisAlignedBB>();
 	private final Set<BlockPos> knownAirBlocks = new HashSet<BlockPos>();
+	private final WrapperNBT savedData;
 	
 	//TODO make this protected when we abstract overlays and packets.
 	public final World world;
-	public InterfaceWorldSavedData savedDataAccessor;
-	public static final String STORED_WORLD_DATA_ID = MasterLoader.MODID + "_WORLD_DATA";
 
 	private WrapperWorld(World world){
 		this.world = world;
 		if(world.isRemote){
-			InterfacePacket.sendToServer(new PacketWorldSavedDataCSHandshake(InterfaceClient.getClientPlayer(), (WrapperNBT)null));
+			//Send packet to server to request data for this world.
+			this.savedData = new WrapperNBT();
+			InterfacePacket.sendToServer(new PacketWorldSavedDataCSHandshake(InterfaceClient.getClientPlayer(), "", null));
+		}else{
+			//Load data from disk.
+			try{
+				if(getDataFile().exists()){
+					this.savedData = new WrapperNBT(CompressedStreamTools.readCompressed(new FileInputStream(getDataFile())));
+				}else{
+					this.savedData = new WrapperNBT();
+				}
+			}catch(Exception e){
+				e.printStackTrace();
+				throw new IllegalStateException("Could not load saved data from disk!  This will result in data loss if we continue!");
+			}
 		}
 	}
 	
@@ -135,6 +149,14 @@ public class WrapperWorld{
 	public long getTime(){
 		return world.getWorldTime();
 	}
+	
+	/**
+	 *  Returns the name of this world.  All names are assured to be unique, so this may
+	 *  be used as a map-key or other identifier.
+	 */
+	public String getName(){
+		return world.getWorldInfo().getWorldName();
+	}
 		
 	/**
 	 *  Returns the max build height for the world.  Note that entities may move and be saved
@@ -168,37 +190,47 @@ public class WrapperWorld{
 	}
 	
 	/**
-	 *  Returns the saved world data for this world.  As servers save data, while clients don't,
+	 *  Returns the requested saved data for this world.  As servers save data, while clients don't,
 	 *  this method will only ensure valid return values on the server.  On clients, there will
 	 *  be some delay in obtaining the data from the server due to packets.  As such, this method
 	 *  may return null if the data hasn't arrived from the server.  After this, the object will 
 	 *  contain all the server data, and will remain updated with data changes from the server.  
 	 *  Do NOT attempt to modify the data object on the client, as it will result in a
 	 *  de-synchronized state.  Instead, send a packet to the server to modify its copy, 
-	 *  and then wait for the synchronizing packet.
+	 *  and then wait for the synchronizing packet.  Note that passing-in an empty string here
+	 *  will return the entire data block rather than the specific block of data.  This may be
+	 *  used to parse through the data, or to break it up into chunks to send to other clients.
 	 */
-	public WrapperNBT getData(){
-		if(!world.isRemote){
-			if(savedDataAccessor == null){
-				savedDataAccessor = (InterfaceWorldSavedData) world.getPerWorldStorage().getOrLoadData(InterfaceWorldSavedData.class, STORED_WORLD_DATA_ID);
-				if(savedDataAccessor == null){
-					savedDataAccessor = new InterfaceWorldSavedData(STORED_WORLD_DATA_ID);
-				}
-			}
-		}else if(savedDataAccessor == null){
-			return null;
+	public WrapperNBT getData(String name){
+		if(name.isEmpty()){
+			return savedData;
+		}else{
+			return savedData.getData(name);
 		}
-		return new WrapperNBT(savedDataAccessor.internalData);
 	}
 	
 	/**
-	 *  Saves the passed-in data as the world's additional saved data.
-	 *  Do NOT call this on clients.
+	 *  Sends all saved data to the passed-in player.
+	 *  This is used 
 	 */
-	public void setData(WrapperNBT data){
-		savedDataAccessor.internalData = data.tag;
-		savedDataAccessor.markDirty();
-		world.getPerWorldStorage().setData(savedDataAccessor.mapName, savedDataAccessor);
+	public void setData(String name, WrapperNBT value){
+		savedData.setData(name, value);
+		if(!isClient()){
+			try{
+				CompressedStreamTools.writeCompressed(savedData.tag, new FileOutputStream(getDataFile()));
+			}catch(Exception e){
+				e.printStackTrace();
+				throw new IllegalStateException("Could not save data to disk!  This will result in data loss if we continue!");
+			}
+		}
+	}
+	
+	/**
+	 *  Returns the data file where saved data is stored for this world.  This is only valid
+	 *  on servers.
+	 */
+	public File getDataFile(){
+		return new File(world.getSaveHandler().getWorldDirectory(), "mtsdata.dat");
 	}
 	
 	/**
@@ -587,7 +619,7 @@ public class WrapperWorld{
 	public void updateBoundingBoxCollisions(BoundingBox box, Point3d collisionMotion, boolean ignoreIfGreater){
 		AxisAlignedBB mcBox = box.convert();
 		box.collidingBlockPositions.clear();
-		collidingAABBs.clear();
+		mutableCollidingAABBs.clear();
 		for(int i = (int) Math.floor(mcBox.minX); i < Math.ceil(mcBox.maxX); ++i){
     		for(int j = (int) Math.floor(mcBox.minY); j < Math.ceil(mcBox.maxY); ++j){
     			for(int k = (int) Math.floor(mcBox.minZ); k < Math.ceil(mcBox.maxZ); ++k){
@@ -595,14 +627,14 @@ public class WrapperWorld{
     				if(world.isBlockLoaded(pos)){
 	    				IBlockState state = world.getBlockState(pos);
 	    				if(state.getBlock().canCollideCheck(state, false) && state.getCollisionBoundingBox(world, pos) != null){
-	    					int oldCollidingBlockCount = collidingAABBs.size();
-	    					state.addCollisionBoxToList(world, pos, mcBox, collidingAABBs, null, false);
-	    					if(collidingAABBs.size() > oldCollidingBlockCount){
+	    					int oldCollidingBlockCount = mutableCollidingAABBs.size();
+	    					state.addCollisionBoxToList(world, pos, mcBox, mutableCollidingAABBs, null, false);
+	    					if(mutableCollidingAABBs.size() > oldCollidingBlockCount){
 	    						box.collidingBlockPositions.add(new Point3d(i, j, k));
 	    					}
 	    				}
 						if(box.collidesWithLiquids && state.getMaterial().isLiquid()){
-							collidingAABBs.add(state.getBoundingBox(world, pos).offset(pos));
+							mutableCollidingAABBs.add(state.getBoundingBox(world, pos).offset(pos));
 							box.collidingBlockPositions.add(new Point3d(i, j, k));
 						}
     				}
@@ -613,7 +645,7 @@ public class WrapperWorld{
 		//If we are in the depth bounds for this collision, set it as the collision depth.
 		box.currentCollisionDepth.set(0D, 0D, 0D);
 		double boxCollisionDepth;
-		for(AxisAlignedBB colBox : collidingAABBs){
+		for(AxisAlignedBB colBox : mutableCollidingAABBs){
 			if(collisionMotion.x > 0){
 				boxCollisionDepth = mcBox.maxX - colBox.minX;
 				if(!ignoreIfGreater || collisionMotion.x - boxCollisionDepth > 0){
@@ -661,7 +693,7 @@ public class WrapperWorld{
 		if(clearCache){
 			knownAirBlocks.clear();
 		}
-		collidingAABBs.clear();
+		mutableCollidingAABBs.clear();
 		AxisAlignedBB mcBox = box.convert();
 		for(int i = (int) Math.floor(mcBox.minX); i < Math.ceil(mcBox.maxX); ++i){
     		for(int j = (int) Math.floor(mcBox.minY); j < Math.ceil(mcBox.maxY); ++j){
@@ -671,9 +703,9 @@ public class WrapperWorld{
     					if(world.isBlockLoaded(pos)){
     	    				IBlockState state = world.getBlockState(pos);
     	    				if(state.getBlock().canCollideCheck(state, false) && state.getCollisionBoundingBox(world, pos) != null){
-    	    					int oldCollidingBlockCount = collidingAABBs.size();
-    	    					state.addCollisionBoxToList(world, pos, mcBox, collidingAABBs, null, false);
-    	    					if(collidingAABBs.size() > oldCollidingBlockCount){
+    	    					int oldCollidingBlockCount = mutableCollidingAABBs.size();
+    	    					state.addCollisionBoxToList(world, pos, mcBox, mutableCollidingAABBs, null, false);
+    	    					if(mutableCollidingAABBs.size() > oldCollidingBlockCount){
     	    						return true;
     	    					}
     	    				}else{
@@ -1092,26 +1124,4 @@ public class WrapperWorld{
 	    	worldWrappers.remove(event.getWorld());
     	}
     }
-	
-	/**
-	 *  Class used to interface with world saved data methods.
-	 */
-	public static class InterfaceWorldSavedData extends WorldSavedData{
-		private NBTTagCompound internalData = new NBTTagCompound(); 
-		
-		public InterfaceWorldSavedData(String name){
-			super(name);
-		}
-
-		@Override
-		public void readFromNBT(NBTTagCompound tag){
-			internalData = tag.getCompoundTag("internalData");
-		}
-
-		@Override
-		public NBTTagCompound writeToNBT(NBTTagCompound tag){
-			tag.setTag("internalData", internalData);
-			return tag;
-		}
-	}
 }

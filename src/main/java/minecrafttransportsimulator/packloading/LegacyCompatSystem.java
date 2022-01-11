@@ -1158,6 +1158,16 @@ public final class LegacyCompatSystem{
 			if(component.scale == 0.0){
 				component.scale = 1.0F;
 			}
+			//Move fieldName to variableName for consistency.
+			if(component.textObject != null){
+				if(component.textObject.variableName == null){
+					component.textObject.variableName = component.textObject.fieldName;
+					component.textObject.variableFormat = "%0" + component.textObject.maxLength + ".0f";
+					component.textObject.variableFactor = 1.0F;
+					component.textObject.fieldName = null;
+					component.textObject.maxLength = 0;
+				}
+			}
 		}
 	}
 	
@@ -1366,6 +1376,71 @@ public final class LegacyCompatSystem{
 			definition.decor.partTypes = null;
 			definition.decor.crafting.items = definition.decor.items;
 			definition.decor.items = null;
+		}
+		
+		//If we are a fuel pump with auto-generated text, set the rest of the properties.
+		if(definition.decor.type.equals(DecorComponentType.FUEL_PUMP)){
+			if(definition.rendering != null && definition.rendering.textObjects != null){
+				for(int i=0; i<definition.rendering.textObjects.size(); ++i){
+					JSONText textDef = definition.rendering.textObjects.get(i);
+					switch(i%3){
+						case(0) : {
+							textDef.variableName = "fuelpump_fluid";
+							textDef.variableFormat = "%s";
+							break;
+						}
+						case(1) : {
+							textDef.variableName = "fuelpump_stored";
+							textDef.variableFactor = 0.001F;
+							textDef.variableFormat = "LVL:%04.1fb";
+							break;							
+						}
+						case(2) : {
+							textDef.variableName = "fuelpump_dispensed";
+							textDef.variableFactor = 0.001F;
+							textDef.variableFormat = "DISP:%04.1fb";
+							break;
+						}
+					}
+				}
+			}
+		}
+		
+		//If we are a beaon with no text, add it as it's required.
+		if(definition.decor.type.equals(DecorComponentType.BEACON)){
+			if(definition.rendering == null){
+				definition.rendering = new JSONRendering();
+				if(definition.rendering.textObjects == null){
+					definition.rendering.textObjects = new ArrayList<JSONText>();
+					
+					JSONText nameTextObject = new JSONText();
+					nameTextObject.pos = new Point3d(0, -500, 0);
+					nameTextObject.rot = new Point3d();
+					nameTextObject.fieldName = "Beacon Name";
+					nameTextObject.defaultText = "NONE";
+					nameTextObject.maxLength = 5;
+					nameTextObject.color = ColorRGB.WHITE;
+					definition.rendering.textObjects.add(nameTextObject);
+					
+					JSONText glideslopeTextObject = new JSONText();
+					glideslopeTextObject.pos = new Point3d(0, -500, 0);
+					glideslopeTextObject.rot = new Point3d();
+					glideslopeTextObject.fieldName = "Glide Slope (Deg)";
+					glideslopeTextObject.defaultText = "10.0";
+					glideslopeTextObject.maxLength = 5;
+					glideslopeTextObject.color = ColorRGB.WHITE;
+					definition.rendering.textObjects.add(glideslopeTextObject);
+					
+					JSONText bearingTextObject = new JSONText();
+					bearingTextObject.pos = new Point3d(0, -500, 0);
+					bearingTextObject.rot = new Point3d();
+					bearingTextObject.fieldName = "Bearing (Deg)";
+					bearingTextObject.defaultText = "0.0";
+					bearingTextObject.maxLength = 5;
+					bearingTextObject.color = ColorRGB.WHITE;
+					definition.rendering.textObjects.add(bearingTextObject);
+				}
+			}
 		}
 	}
 	

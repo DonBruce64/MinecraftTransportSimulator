@@ -21,6 +21,17 @@ public class JSONText{
 	@JSONDescription("The name for this text field.  If two text fields share a name, then they both will be combined in the text GUI into one entry, and changing the text in the GUI will affect both of them.  Useful for license plates and route signs.\nNote: if this object is part of text-based rendering system, this defines which variable is displayed.")
 	public String fieldName;
 	
+	@JSONRequired(dependentField="variableFormat")
+	@JSONDescription("If this is present, then this text field will be set to the value of this variable and will not be editable.  Mainly useful for instruments, but may be used on 3D models if desired.")
+	public String variableName;
+	
+	@JSONDescription("The factor to apply to the variable before formatting.  Not used if the variable is text-based.")
+	public float variableFactor;
+	
+	@JSONRequired(dependentField="variableName")
+	@JSONDescription("The format to display the variable in.  This follows the Java String.format() format, with the input being a floating-point number (%f) for normal variables, and a string (%s) for text variables.  This has many different ways of formatting things.  Google will be your friend here, this documentation shall not.")
+	public String variableFormat;
+	
 	@JSONDescription("An optional folder of a font to use for this field.  If included, this text will be rendered with this font rather than the default font.  Format is [packID:fontname].  Fonts are then named: assets/packID/textures/fonts/unicode_page_xx.png, where xx corresponds with the default font you are replacing.")
 	public String fontName;
 	

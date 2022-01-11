@@ -88,7 +88,7 @@ public class GUITextEditor extends AGUIBase{
 		textInputFieldNames.clear();
 		int currentOffset = 0;
 		for(JSONText textObject : textObjects){
-			if(!textInputFieldNames.contains(textObject.fieldName)){
+			if(textObject.variableName == null && !textInputFieldNames.contains(textObject.fieldName)){
 				//No text box present for the field name.  Create a new one.
 				GUIComponentLabel label = new GUIComponentLabel(guiLeft + 20, guiTop + 30 + currentOffset, ColorRGB.BLACK, textObject.fieldName);
 				addComponent(label);

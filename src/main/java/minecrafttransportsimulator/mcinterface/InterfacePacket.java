@@ -6,7 +6,6 @@ import com.google.common.collect.HashBiMap;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.packets.components.APacketBase;
-import minecrafttransportsimulator.packets.instances.PacketBeaconListingChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityCSHandshakeClient;
 import minecrafttransportsimulator.packets.instances.PacketEntityCSHandshakeServer;
 import minecrafttransportsimulator.packets.instances.PacketEntityColorChange;
@@ -82,7 +81,6 @@ public class InterfacePacket{
 		//Register all classes in the minecrafttransportsimulator.packets.instances package.
 		//Ideally this could be done via reflection, but it doesn't work too well so we don't do that.
 		byte packetIndex = 0;
-		registerPacket(packetIndex++, PacketBeaconListingChange.class);
 		
 		//Entity packets.
 		registerPacket(packetIndex++, PacketEntityCSHandshakeClient.class);
@@ -235,20 +233,28 @@ public class InterfacePacket{
 	public static class WrapperHandler implements IMessageHandler<WrapperPacket, IMessage>{
 		@Override
 		public IMessage onMessage(WrapperPacket message, MessageContext ctx){
-			//Need to put this in a runnable to not run it on the network thread and get a CME.
-			FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
-				@Override
-				public void run(){
-					//We need to use side-specific getters here to avoid side-specific classes from trying to be loaded
-					//by the JVM when this method is created.  Failure to do this will result in network faults.
-					//For this, we use abstract methods that are extended in our sub-classes.
-					if(ctx.side.isServer()){
-						message.packet.handle(getServerWorld(ctx));
-					}else{
-						message.packet.handle(InterfaceClient.getClientWorld());
+			if(message.packet.runOnMainThread()){
+				//Need to put this in a runnable to not run it on the network thread and get a CME.
+				FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(new Runnable(){
+					@Override
+					public void run(){
+						//We need to use side-specific getters here to avoid side-specific classes from trying to be loaded
+						//by the JVM when this method is created.  Failure to do this will result in network faults.
+						//For this, we use abstract methods that are extended in our sub-classes.
+						if(ctx.side.isServer()){
+							message.packet.handle(getServerWorld(ctx));
+						}else{
+							message.packet.handle(InterfaceClient.getClientWorld());
+						}
 					}
+				});
+			}else{
+				if(ctx.side.isServer()){
+					message.packet.handle(getServerWorld(ctx));
+				}else{
+					message.packet.handle(InterfaceClient.getClientWorld());
 				}
-			});
+			}
 			return null;
 		}
 	};

@@ -81,7 +81,6 @@ public abstract class AGUIComponent{
 	 *  Renders the main portion of the component.
 	 *  Note that this method, and all other methods, are not called if {@link #visible} is false.
 	 *  This should create the {@link #renderable} object and render it.
-	 * @param renderLitTexture TODO
 	 */
     public abstract void render(AGUIBase gui, int mouseX, int mouseY, boolean renderBright, boolean renderLitTexture, boolean blendingEnabled, float partialTicks);
     

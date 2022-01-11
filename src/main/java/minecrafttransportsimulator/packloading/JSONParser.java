@@ -44,6 +44,7 @@ import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.rendering.components.ARenderEntity;
+import minecrafttransportsimulator.rendering.instances.ModelParserLT.LTBox;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**This class contains various methods to parse out JSON data from JSON files.
@@ -201,6 +202,35 @@ public class JSONParser{
 				}
 				writer.value(hexString);
 			}
+		}
+	};
+	
+	private static final TypeAdapter<LTBox> ltBoxAdapter = new TypeAdapter<LTBox>(){
+		@Override
+		public LTBox read(JsonReader reader) throws IOException{
+			if(reader.peek() == JsonToken.NULL){
+				reader.nextNull();
+				return null;
+			}else{
+				reader.beginArray();
+				LTBox value = new LTBox();
+				//First item is actually a string due to dumb semicolon.
+				value.pos1 = new int[]{Integer.valueOf(reader.nextString().substring(2)), reader.nextInt(), reader.nextInt()};
+				value.pos2 = new int[]{reader.nextInt(), reader.nextInt(), reader.nextInt()};
+				
+				//Consume remaining tokens in case we have supplemental data.
+				while(reader.hasNext()){
+					reader.nextInt();
+				}
+				reader.endArray();
+				return value;
+			}
+		}
+		
+		@Override
+		public void write(JsonWriter writer, LTBox value) throws IOException{
+			//No need to parse back out the LT box.  We don't export them.
+			writer.nullValue();
 		}
 	};
 	
@@ -396,6 +426,7 @@ public class JSONParser{
 				.registerTypeAdapter(Float.class, floatAdapter)
 				.registerTypeAdapter(Point3d.class, point3dAdapter)
 				.registerTypeAdapter(ColorRGB.class, colorAdapter)
+				.registerTypeAdapter(LTBox.class, ltBoxAdapter)
 				.registerTypeAdapter(new TypeToken<List<Integer>>(){}.getType(), intListAdapter)
 				.registerTypeAdapter(new TypeToken<List<Float>>(){}.getType(), floatListAdapter)
 				.registerTypeAdapter(new TypeToken<List<String>>(){}.getType(), stringListAdapter)
