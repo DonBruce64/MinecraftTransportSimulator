@@ -221,6 +221,8 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 				}
 			}
 		}
+		//Update collision boxes as they might have changed.
+		updateCollisionBoxes();
 				
 		//Create instrument animation clocks.
 		if(definition.instruments != null){
@@ -317,9 +319,6 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 				setVariable(TRAILER_CONNECTION_REQUEST_VARIABLE, 0);
 			}
 			
-			world.beginProfiling("CollisionBoxUpdates", true);
-			updateCollisionBoxes();
-			world.endProfiling();
 			world.endProfiling();
 			return true;
 		}else{
@@ -515,6 +514,11 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 	 * Calling this before the entity finishes moving will lead to things "lagging" behind the entity.
 	 */
 	public void updatePostMovement(){
+		//Update collision boxes to new position.
+		world.beginProfiling("CollisionBoxUpdates", true);
+		updateCollisionBoxes();
+		world.endProfiling();
+		
 		//If we are towing entities, update them now.
 		if(!towingConnections.isEmpty()){
 			world.beginProfiling("TowedEntities", true);
