@@ -15,10 +15,13 @@ import minecrafttransportsimulator.blocks.tileentities.components.RoadLane.LaneS
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
+import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
+import minecrafttransportsimulator.jsondefs.JSONCollisionGroup;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
@@ -95,6 +98,51 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	public boolean update(){
 		if(super.update()){
 			world.beginProfiling("VehicleD_Level", true);
+			
+			//If we were placed down, and this is our first tick, check our collision boxes to make sure we are't in the ground.
+			if(ticksExisted == 1 && placingPlayer != null && !world.isClient()){
+				//Get how far above the ground the vehicle needs to be, and move it to that position.
+				//First boost Y based on collision boxes.
+				double furthestDownPoint = 0;
+				for(JSONCollisionGroup collisionGroup : definition.collisionGroups){
+					for(JSONCollisionBox collisionBox : collisionGroup.collisions){
+						furthestDownPoint = Math.min(collisionBox.pos.y - collisionBox.height/2F, furthestDownPoint);
+					}
+				}
+				
+				//Next, boost based on parts.
+				for(APart part : parts){
+					furthestDownPoint = Math.min(part.placementOffset.y - part.getHeight()/2F, furthestDownPoint);
+				}
+				
+				//Add on -0.1 blocks for the default collision clamping.
+				//This prevents the clamping of the collision boxes from hitting the ground if they were clamped.
+				furthestDownPoint += -0.1;
+				
+				//Apply the boost, and check collisions.
+				//If the core collisions are colliding, set the vehicle as dead and abort.
+				//We need to update the boxes first, however, as they haven't been updated yet.
+				motionApplied.set(0, -furthestDownPoint, 0);
+				rotationApplied.set(0, 0, 0);
+				position.add(motionApplied);
+				for(BoundingBox coreBox : allBlockCollisionBoxes){
+					coreBox.updateToEntity(this, null);
+					if(coreBox.updateCollidingBlocks(world, new Point3d(0D, -furthestDownPoint, 0D))){
+						//New vehicle shouldn't have been spawned.  Bail out.
+						remove();
+						placingPlayer.sendPacket(new PacketPlayerChatMessage(placingPlayer, "interact.failure.nospace"));
+						//Need to add stack back as it will have been removed here.
+						if(!placingPlayer.isCreative()){
+							placingPlayer.setHeldStack(getItem().getNewStack());
+						}
+						return false;
+					}else{
+						//Update deltas and send to clients.
+						addToServerDeltas(motionApplied, rotationApplied);
+						InterfacePacket.sendToAllClients(new PacketVehicleServerMovement((EntityVehicleF_Physics) this, motionApplied, rotationApplied));
+					}
+				}
+			}
 			
 			//Update brake status.  This is used in a lot of locations, so we don't want to query the set every time.
 			brake = getVariable(BRAKE_VARIABLE);
