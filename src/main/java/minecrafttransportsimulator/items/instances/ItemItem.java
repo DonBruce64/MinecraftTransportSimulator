@@ -56,7 +56,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 	}
 	
 	@Override
-	public CallbackType doVehicleInteraction(EntityVehicleF_Physics vehicle, APart part, WrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick){
+	public CallbackType doVehicleInteraction(EntityVehicleF_Physics vehicle, APart part, BoundingBox hitBox, WrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick){
 		switch(definition.item.type){
 			case WRENCH : {
 				if(!vehicle.world.isClient()){
@@ -145,16 +145,34 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 					if(!keyVehicleUUID.equals(vehicle.uniqueUUID)){
 						player.sendPacket(new PacketPlayerChatMessage(player, "interact.key.failure.wrongkey"));
 					}else{
-						if(vehicle.locked){
+						if(part instanceof PartSeat){
+							//Part is a seat, don't do locking changes, instead, change seat.
+							//Returning skip will make the seat-clicking code activate in the packet.
+							return CallbackType.SKIP;
+						}else if(vehicle.locked){
 							vehicle.locked = false;
 							player.sendPacket(new PacketPlayerChatMessage(player, "interact.key.info.unlock"));
-							//If we aren't in this vehicle, and we clicked a seat, start riding the vehicle.
-							if(part instanceof PartSeat && player.getEntityRiding() == null){
-								part.interact(player);
+							
+							//Also check collision boxes that block seats, in case we clicked one of those.
+							if(hitBox.definition != null){
+								if(hitBox.definition.variableName != null){
+									if(!vehicle.variablesOn.contains(hitBox.definition.variableName) && vehicle.getVariable(hitBox.definition.variableName) == 0){
+										return CallbackType.ALL_AND_MORE;
+									}
+								}
 							}
 						}else{
 							vehicle.locked = true;
 							player.sendPacket(new PacketPlayerChatMessage(player, "interact.key.info.lock"));
+							
+							//Also check collision boxes that block seats, in case we clicked one of those.
+							if(hitBox.definition != null){
+								if(hitBox.definition.variableName != null){
+									if(vehicle.variablesOn.contains(hitBox.definition.variableName) || vehicle.getVariable(hitBox.definition.variableName) != 0){
+										return CallbackType.ALL_AND_MORE;
+									}
+								}
+							}
 						}
 						return CallbackType.ALL;
 					}

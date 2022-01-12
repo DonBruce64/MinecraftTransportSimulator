@@ -11,9 +11,13 @@ import com.google.common.collect.HashBiMap;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.NavBeacon;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
+import minecrafttransportsimulator.items.instances.ItemItem;
+import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
+import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -212,7 +216,7 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 	public boolean addRider(WrapperEntity rider, Point3d riderLocation){
 		if(super.addRider(rider, riderLocation)){
 			if(world.isClient() && ConfigSystem.configObject.clientControls.autostartEng.value && rider.equals(InterfaceClient.getClientPlayer())){
-				if(rider instanceof WrapperPlayer && locationRiderMap.containsValue(rider) && getPartAtLocation(locationRiderMap.inverse().get(rider)).placementDefinition.isController){
+				if(rider instanceof WrapperPlayer && locationRiderMap.containsValue(rider) && getPartAtLocation(locationRiderMap.inverse().get(rider)).placementDefinition.isController && canPlayerStartEngines((WrapperPlayer) rider)){
 					for(PartEngine engine : engines.values()){
 						InterfacePacket.sendToServer(new PacketPartEngine(engine, Signal.AS_ON));
 					}
@@ -330,6 +334,26 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 		//Add this missile with its current distance
 		if(!missilesIncoming.contains(missile)){
 			missilesIncoming.add(missile);
+		}
+	}
+	
+	public boolean canPlayerStartEngines(WrapperPlayer player){
+		if(!ConfigSystem.configObject.general.keyRequiredToStartVehicles.value){
+			return true;
+		}else{
+			AItemBase heldItem = player.getHeldItem();
+			if(heldItem instanceof ItemItem){
+				ItemItem packItem = (ItemItem) heldItem;
+				if(packItem.definition.item.type.equals(ItemComponentType.KEY)){
+					if(uniqueUUID.equals(new WrapperNBT(player.getHeldStack()).getString("vehicle"))){
+						return true;
+					}
+				}
+			}
+			if(world.isClient()){
+				player.displayChatMessage(InterfaceCore.translate("interact.key.failure.needvehiclekey"));
+			}
+			return false;
 		}
 	}
 	

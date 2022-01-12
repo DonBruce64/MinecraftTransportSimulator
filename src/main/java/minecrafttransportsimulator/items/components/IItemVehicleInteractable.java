@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.items.components;
 
+import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.entities.components.AEntityD_Interactable.PlayerOwnerState;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
@@ -23,7 +24,8 @@ public interface IItemVehicleInteractable{
 	 *  {@link CallbackType#ALL} will send this to all players that have this vehicle loaded.
 	 *  {@link CallbackType#NONE} will abort processing and will prevent any packets from being sent.
 	 *  {@link CallbackType#SKIP} passes over this item an allow for further vehicle processing.  Useful for items
-	 *  that may only be active somtimes  based on their state, and shouldn't impede other vehicle interactions.
+	 *  that may only be active sometimes  based on their state, and shouldn't impede other vehicle interactions.
+	 *  {@link CallbackType#ALL_AND_MORE} will return the packet like ALL, but will also continue processing like SKIP.
 	 *  <br><br>
 	 *  NOTE: When this method is called on the server, the passed-in player is the player clicking the vehicle.
 	 *  However, when the callback packet is sent to trigger this method on clients, the player instance is the
@@ -31,12 +33,13 @@ public interface IItemVehicleInteractable{
 	 *  this, any client-side interactions that need to know something about the player who initially interacted 
 	 *  with this vehicle should NOT use {@link CallbackType#ALL}, as this will not give the "correct" player instance.
 	 */
-	public CallbackType doVehicleInteraction(EntityVehicleF_Physics vehicle, APart part, WrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick);
+	public CallbackType doVehicleInteraction(EntityVehicleF_Physics vehicle, APart part, BoundingBox hitBox, WrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick);
 	
 	public static enum CallbackType{
 		NONE,
 		PLAYER,
 		ALL,
+		ALL_AND_MORE,
 		SKIP;
 	}
 }

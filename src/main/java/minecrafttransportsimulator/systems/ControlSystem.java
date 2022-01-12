@@ -209,10 +209,12 @@ public final class ControlSystem{
 		}		
 		//Open or close the panel.
 		if(ControlsKeyboard.AIRCRAFT_PANEL.isPressed()){
-			if(AGUIBase.activeInputGUI instanceof GUIPanelAircraft){
-				AGUIBase.activeInputGUI.close();
-			}else if(AGUIBase.activeInputGUI == null){
-				new GUIPanelAircraft(aircraft);
+			if(aircraft.canPlayerStartEngines(clientPlayer)){
+				if(AGUIBase.activeInputGUI instanceof GUIPanelAircraft){
+					AGUIBase.activeInputGUI.close();
+				}else if(AGUIBase.activeInputGUI == null){
+					new GUIPanelAircraft(aircraft);
+				}	
 			}
 		}
 		
@@ -289,10 +291,12 @@ public final class ControlSystem{
 		}
 		//Open or close the panel.
 		if(ControlsKeyboard.CAR_PANEL.isPressed()){
-			if(AGUIBase.activeInputGUI instanceof GUIPanelGround){
-				AGUIBase.activeInputGUI.close();
-			}else if(AGUIBase.activeInputGUI == null){
-				new GUIPanelGround(powered);
+			if(powered.canPlayerStartEngines(clientPlayer)){
+				if(AGUIBase.activeInputGUI instanceof GUIPanelGround){
+					AGUIBase.activeInputGUI.close();
+				}else if(AGUIBase.activeInputGUI == null){
+					new GUIPanelGround(powered);
+				}
 			}
 		}
 		

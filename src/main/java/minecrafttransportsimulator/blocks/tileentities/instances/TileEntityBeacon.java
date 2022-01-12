@@ -20,7 +20,7 @@ import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
  * @author don_bruce
  */
 public class TileEntityBeacon extends TileEntityDecor{
-	private String lastBeaconName;
+	public NavBeacon currentBeacon;
 	
 	public TileEntityBeacon(WrapperWorld world, Point3d position, WrapperPlayer placingPlayer, WrapperNBT data){
 		super(world, position, placingPlayer, data);
@@ -29,9 +29,8 @@ public class TileEntityBeacon extends TileEntityDecor{
 	@Override
 	protected void initializeDefinition(){
 		super.initializeDefinition();
-		//Need to set our text boxes here for other calls.
 		for(JSONText textDef : text.keySet()){
-			lastBeaconName = text.get(textDef);
+			currentBeacon = NavBeacon.getByNameFromWorld(world, text.get(textDef));
 			return;
 		}
 	}
@@ -39,7 +38,9 @@ public class TileEntityBeacon extends TileEntityDecor{
 	@Override
     public void destroy(BoundingBox box){
     	super.destroy(box);
-    	NavBeacon.removeFromWorld(world, lastBeaconName);
+    	if(currentBeacon != null){
+			NavBeacon.removeFromWorld(world, currentBeacon.name);
+		}
     }
 		
     @Override
@@ -50,13 +51,16 @@ public class TileEntityBeacon extends TileEntityDecor{
 	
 	@Override
 	public void updateText(List<String> textLines){
-		NavBeacon.removeFromWorld(world, lastBeaconName);
+		if(currentBeacon != null){
+			NavBeacon.removeFromWorld(world, currentBeacon.name);
+			currentBeacon = null;
+		}
 		try{
 			//Try to create the beacon before setting text.  If it's invalid text, we don't want to save it.
 			//If the object can be created, then we just call super and let it handle this.
 			NavBeacon newBeacon = new NavBeacon(world, textLines.get(0), Double.valueOf(textLines.get(1)), Double.valueOf(textLines.get(2)), position);
 			super.updateText(textLines);
-			lastBeaconName = newBeacon.name;
+			currentBeacon = newBeacon;
 		}catch(Exception e){
 			//Don't update text.  It's entered invalid.
 		}

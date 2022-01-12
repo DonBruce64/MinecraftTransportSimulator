@@ -143,7 +143,6 @@ public class InterfaceEventsEntityRendering{
 			
 			//Translate far enough to not render behind the items.
 			GL11.glPushMatrix();
-    		GL11.glTranslated(0, 0, 200);
 			
 			//Render main pass, then blended pass.
 			for(AGUIBase gui : AGUIBase.activeGUIs){

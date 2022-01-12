@@ -2,6 +2,7 @@ package minecrafttransportsimulator.items.instances;
 
 import java.util.List;
 
+import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.entities.components.AEntityD_Interactable.PlayerOwnerState;
 import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
@@ -72,7 +73,7 @@ public class ItemPartInteractable extends AItemPart implements IItemVehicleInter
 	}
 	
 	@Override
-	public CallbackType doVehicleInteraction(EntityVehicleF_Physics vehicle, APart part, WrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick){
+	public CallbackType doVehicleInteraction(EntityVehicleF_Physics vehicle, APart part, BoundingBox hitBox, WrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick){
 		if(definition.interactable.interactionType.equals(InteractableComponentType.JERRYCAN)){
 			if(!vehicle.world.isClient()){
 				if(rightClick){
