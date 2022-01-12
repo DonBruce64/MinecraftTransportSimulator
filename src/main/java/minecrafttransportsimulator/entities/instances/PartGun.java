@@ -1,10 +1,8 @@
 package minecrafttransportsimulator.entities.instances;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
@@ -76,7 +74,7 @@ public class PartGun extends APart{
 	private WrapperEntity entityTarget;
 	private long millisecondCamOffset;
 	private long lastTimeFired;
-	private final Set<EntityBullet> activeBullets = new HashSet<EntityBullet>();
+	private final List<EntityBullet> activeBullets = new ArrayList<EntityBullet>();
 	public final List<Integer> bulletsHitOnServer = new ArrayList<Integer>();
 	public final RenderableObject muzzleWireframe = new RenderableObject(new BoundingBox(new Point3d(), 0.25, 0.25, 0.25), ColorRGB.BLUE, false);
 		
@@ -360,6 +358,15 @@ public class PartGun extends APart{
 			return true;
 		}else{
 			return false;
+		}
+	}
+	
+	@Override
+	public void remove(){
+		super.remove();
+		//Remove all bullets we have active.
+		for(EntityBullet bullet : activeBullets){
+			bullet.remove();
 		}
 	}
 	
