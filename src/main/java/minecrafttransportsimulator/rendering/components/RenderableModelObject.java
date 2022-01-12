@@ -305,7 +305,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 		if(isOnlineTexture){
 			//Make sure the entity has a texture for us.
 			for(JSONText textDef : entity.text.keySet()){
-				if(textDef.fieldName.equals(object.name)){
+				if(object.name.contains(textDef.fieldName)){
 					if(entity.text.get(textDef).isEmpty()){
 						return false;
 					}
