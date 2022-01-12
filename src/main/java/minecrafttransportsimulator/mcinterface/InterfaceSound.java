@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.sound;
+package minecrafttransportsimulator.mcinterface;
 
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
@@ -15,9 +15,11 @@ import org.lwjgl.openal.AL10;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.instances.EntityRadio;
-import minecrafttransportsimulator.mcinterface.InterfaceClient;
-import minecrafttransportsimulator.mcinterface.InterfaceCore;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.sound.DecodedFile;
+import minecrafttransportsimulator.sound.IStreamDecoder;
+import minecrafttransportsimulator.sound.OGGDecoder;
+import minecrafttransportsimulator.sound.RadioStation;
+import minecrafttransportsimulator.sound.SoundInstance;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;

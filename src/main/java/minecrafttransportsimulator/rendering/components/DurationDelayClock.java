@@ -4,7 +4,7 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition.AnimationComponentType;
-import minecrafttransportsimulator.sound.InterfaceSound;
+import minecrafttransportsimulator.mcinterface.InterfaceSound;
 import minecrafttransportsimulator.sound.SoundInstance;
 
 /**Class designed for maintaining the state of a duration/delay for an animation.

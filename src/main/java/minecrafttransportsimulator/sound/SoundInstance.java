@@ -4,6 +4,7 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.instances.EntityRadio;
 import minecrafttransportsimulator.jsondefs.JSONSound;
+import minecrafttransportsimulator.mcinterface.InterfaceSound;
 
 /**Class that holds sound information.  One class is created for each sound that's playing
  * in the {@link InterfaceSound}.  This class holds data such as the current

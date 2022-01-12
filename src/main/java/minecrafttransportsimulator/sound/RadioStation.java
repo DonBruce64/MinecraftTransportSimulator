@@ -13,6 +13,7 @@ import java.util.Set;
 
 import javazoom.jl.decoder.Equalizer;
 import minecrafttransportsimulator.entities.instances.EntityRadio;
+import minecrafttransportsimulator.mcinterface.InterfaceSound;
 import minecrafttransportsimulator.sound.RadioManager.RadioSources;
 
 /**Radio stations are sources that radios can hook into to provide sound.  All radios share the
