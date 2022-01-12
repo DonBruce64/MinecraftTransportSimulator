@@ -356,8 +356,8 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 					brakingFactor += Math.max(groundDevicePower - groundDevice.getFrictionLoss(), 0);
 				}
 			}
-			if(parkingBrakeOn){
-				brakingFactor += 0.5D*groundDeviceCollective.getNumberBoxesInLiquid();
+			if(brakingPower > 0){
+				brakingFactor += 0.15D*brakingPower*groundDeviceCollective.getNumberBoxesInLiquid();
 			}
 		}
 		
