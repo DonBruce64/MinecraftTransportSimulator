@@ -3,7 +3,7 @@ package minecrafttransportsimulator.entities.instances;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
+import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
@@ -86,7 +86,7 @@ public class PartEngine extends APart{
 	public static final float MAX_SHIFT_SPEED = 0.35F;
 	
 	
-	public PartEngine(AEntityE_Multipart<?> entityOn, WrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, WrapperNBT data, APart parentPart){
+	public PartEngine(AEntityF_Multipart<?> entityOn, WrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, WrapperNBT data, APart parentPart){
 		super(entityOn, placingPlayer, placementDefinition, data, parentPart);
 		this.isCreative = data.getBoolean("isCreative");
 		this.oilLeak = data.getBoolean("oilLeak");

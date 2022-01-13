@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.packets.components;
 
+import java.util.UUID;
+
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
@@ -12,27 +14,27 @@ import minecrafttransportsimulator.mcinterface.WrapperWorld;
  * @author don_bruce
  */
 public abstract class APacketEntity<EntityType extends AEntityA_Base> extends APacketBase{
-	private final int lookupID;
+	private final UUID uniqueUUID;
 	
 	public APacketEntity(AEntityA_Base entity){
 		super(null);
-		this.lookupID = entity.lookupID;
+		this.uniqueUUID = entity.uniqueUUID;
 	}
 	
 	public APacketEntity(ByteBuf buf){
 		super(buf);
-		this.lookupID = buf.readInt();
+		this.uniqueUUID = readUUIDFromBuffer(buf);
 	};
 
 	@Override
 	public void writeToBuffer(ByteBuf buf){
 		super.writeToBuffer(buf);
-		buf.writeInt(lookupID);
+		writeUUIDToBuffer(uniqueUUID, buf);
 	}
 	
 	@Override
 	public void handle(WrapperWorld world){
-		EntityType entity = AEntityA_Base.getEntity(world, lookupID);
+		EntityType entity = world.getEntity(uniqueUUID);
 		if(entity != null && handle(world, entity) && !world.isClient()){
 			InterfacePacket.sendToAllClients(this);
 			if(entity instanceof ATileEntityBase){

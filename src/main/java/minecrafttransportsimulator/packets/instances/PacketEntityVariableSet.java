@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.entities.components.AEntityC_Definable;
+import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
@@ -15,11 +15,11 @@ import minecrafttransportsimulator.packets.components.APacketEntity;
  * 
  * @author don_bruce
  */
-public class PacketEntityVariableSet extends APacketEntity<AEntityC_Definable<?>>{
+public class PacketEntityVariableSet extends APacketEntity<AEntityD_Definable<?>>{
 	private final String variableName;
 	private final double variableValue;
 	
-	public PacketEntityVariableSet(AEntityC_Definable<?> entity, String variableName, double variableValue){
+	public PacketEntityVariableSet(AEntityD_Definable<?> entity, String variableName, double variableValue){
 		super(entity);
 		this.variableName = variableName;
 		this.variableValue = variableValue;
@@ -39,7 +39,7 @@ public class PacketEntityVariableSet extends APacketEntity<AEntityC_Definable<?>
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, AEntityC_Definable<?> entity){
+	public boolean handle(WrapperWorld world, AEntityD_Definable<?> entity){
 		entity.setVariable(variableName, variableValue);
 		return true;
 	}

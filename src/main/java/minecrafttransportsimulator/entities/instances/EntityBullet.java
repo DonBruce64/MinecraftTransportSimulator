@@ -9,8 +9,8 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
-import minecrafttransportsimulator.entities.components.AEntityC_Definable;
-import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
+import minecrafttransportsimulator.entities.components.AEntityD_Definable;
+import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.jsondefs.JSONBullet;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
@@ -30,7 +30,7 @@ import minecrafttransportsimulator.systems.ConfigSystem;
  * @author don_bruce
  */
 
-public class EntityBullet extends AEntityC_Definable<JSONBullet>{	
+public class EntityBullet extends AEntityD_Definable<JSONBullet>{	
 	//Properties
 	private final PartGun gun;
 	public final int bulletNumber;
@@ -73,8 +73,8 @@ public class EntityBullet extends AEntityC_Definable<JSONBullet>{
     	this(position, motion, gun);
     	AEntityA_Base entity = externalEntityTargeted.getBaseEntity();
 		if(entity != null){
-			if(entity instanceof AEntityE_Multipart){
-				for(APart part : ((AEntityE_Multipart<?>) entity).parts){
+			if(entity instanceof AEntityF_Multipart){
+				for(APart part : ((AEntityF_Multipart<?>) entity).parts){
 					if(part instanceof PartEngine && ((PartEngine) part).temp > PartEngine.COLD_TEMP){
 						engineTargeted = (PartEngine) part;
 						targetPosition = engineTargeted.position;
@@ -121,8 +121,8 @@ public class EntityBullet extends AEntityC_Definable<JSONBullet>{
 								}else{
 									armorBoxHit = hitBox;
 								}
-							}else if(baseEntity instanceof AEntityE_Multipart){
-								if(((AEntityE_Multipart<?>) baseEntity).getPartWithBox(hitBox) != null){
+							}else if(baseEntity instanceof AEntityF_Multipart){
+								if(((AEntityF_Multipart<?>) baseEntity).getPartWithBox(hitBox) != null){
 									break;
 								}
 							}
@@ -136,7 +136,7 @@ public class EntityBullet extends AEntityC_Definable<JSONBullet>{
 							return false;
 						}else{
 							for(BoundingBox hitBox : hitBoxes){
-								if(baseEntity instanceof AEntityE_Multipart && ((AEntityE_Multipart<?>) baseEntity).getPartWithBox(hitBox) != null){
+								if(baseEntity instanceof AEntityF_Multipart && ((AEntityF_Multipart<?>) baseEntity).getPartWithBox(hitBox) != null){
 									lastHit = HitType.PART;
 								}else{
 									lastHit = HitType.ENTITY;

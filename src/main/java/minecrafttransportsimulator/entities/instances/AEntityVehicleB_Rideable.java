@@ -3,7 +3,7 @@ package minecrafttransportsimulator.entities.instances;
 import java.util.Iterator;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
+import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIHUD;
 import minecrafttransportsimulator.guis.instances.GUIPanelAircraft;
@@ -29,7 +29,7 @@ import minecrafttransportsimulator.systems.ControlSystem;
  * 
  * @author don_bruce
  */
-abstract class AEntityVehicleB_Rideable extends AEntityE_Multipart<JSONVehicle>{
+abstract class AEntityVehicleB_Rideable extends AEntityF_Multipart<JSONVehicle>{
 	public static boolean lockCameraToMovement = true;
 	
 	/**Cached value for speedFactor.  Saves us from having to use the long form all over.  Not like it'll change in-game...*/

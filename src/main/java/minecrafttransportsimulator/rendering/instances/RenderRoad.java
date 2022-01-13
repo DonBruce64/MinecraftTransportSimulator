@@ -27,7 +27,9 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 		
 	@Override
-	public void renderAdditionalModels(TileEntityRoad road, boolean blendingEnabled, float partialTicks){
+	protected void renderModel(TileEntityRoad road, boolean blendingEnabled, float partialTicks){
+		//Don't call super, we don't want to render the normal way.
+		
 		if(road.isActive() ^ blendingEnabled){
 			//Render road components.
 			for(RoadComponent component : road.components.keySet()){
@@ -338,15 +340,10 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 	}
 	
 	@Override
-	public boolean disableModelRendering(TileEntityRoad road, float partialTicks){
-		return true;
-	}
-	
-	@Override
-	public void adjustPositionRotation(TileEntityRoad road, float partialTicks, Point3d entityPosition, Point3d entityRotation){
-		super.adjustPositionRotation(road, partialTicks, entityPosition, entityRotation);
+	public void adjustPositionRotation(TileEntityRoad road, Point3d entityPositionDelta, Point3d entityRotationDelta, float partialTicks){
+		super.adjustPositionRotation(road, entityPositionDelta, entityRotationDelta, partialTicks);
 		//Set angles to 0 as we do rendering based on the curve properties, which already have angles. 
-		entityRotation.set(0, 0, 0);
+		entityRotationDelta.set(0, 0, 0);
 	}
 	
 	@Override

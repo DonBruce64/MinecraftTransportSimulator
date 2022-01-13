@@ -1,9 +1,10 @@
 package minecrafttransportsimulator.packets.instances;
 
+import java.util.UUID;
+
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.TrailerConnection;
-import minecrafttransportsimulator.entities.components.AEntityA_Base;
-import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
+import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIPanelGround;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
@@ -14,8 +15,8 @@ import minecrafttransportsimulator.packets.components.APacketEntity;
  * 
  * @author don_bruce
  */
-public class PacketEntityTrailerChange extends APacketEntity<AEntityD_Interactable<?>>{
-	private final int hookupEntityID;
+public class PacketEntityTrailerChange extends APacketEntity<AEntityE_Interactable<?>>{
+	private final UUID hookupEntityID;
 	private final int hitchGroupIndex;
 	private final int hitchConnectionIndex;
 	private final int hookupGroupIndex;
@@ -24,7 +25,7 @@ public class PacketEntityTrailerChange extends APacketEntity<AEntityD_Interactab
 	
 	public PacketEntityTrailerChange(TrailerConnection connection, boolean connect){
 		super(connection.hitchEntity);
-		this.hookupEntityID = connection.hookupEntity.lookupID;
+		this.hookupEntityID = connection.hookupEntity.uniqueUUID;
 		this.hitchGroupIndex = connection.hitchGroupIndex;
 		this.hitchConnectionIndex = connection.hitchConnectionIndex;
 		this.hookupGroupIndex = connection.hookupGroupIndex;
@@ -34,7 +35,7 @@ public class PacketEntityTrailerChange extends APacketEntity<AEntityD_Interactab
 	
 	public PacketEntityTrailerChange(ByteBuf buf){
 		super(buf);
-		this.hookupEntityID = buf.readInt();
+		this.hookupEntityID = readUUIDFromBuffer(buf);
 		this.hitchGroupIndex = buf.readInt();
 		this.hitchConnectionIndex = buf.readInt();
 		this.hookupGroupIndex = buf.readInt();
@@ -45,7 +46,7 @@ public class PacketEntityTrailerChange extends APacketEntity<AEntityD_Interactab
 	@Override
 	public void writeToBuffer(ByteBuf buf){
 		super.writeToBuffer(buf);
-		buf.writeInt(hookupEntityID);
+		writeUUIDToBuffer(hookupEntityID, buf);
 		buf.writeInt(hitchGroupIndex);
 		buf.writeInt(hitchConnectionIndex);
 		buf.writeInt(hookupGroupIndex);
@@ -54,8 +55,8 @@ public class PacketEntityTrailerChange extends APacketEntity<AEntityD_Interactab
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, AEntityD_Interactable<?> hitchEntity){
-		AEntityD_Interactable<?> hookupEntity = AEntityA_Base.getEntity(world, hookupEntityID);
+	public boolean handle(WrapperWorld world, AEntityE_Interactable<?> hitchEntity){
+		AEntityE_Interactable<?> hookupEntity = world.getEntity(hookupEntityID);
 		TrailerConnection connection = new TrailerConnection(hitchEntity, hitchGroupIndex, hitchConnectionIndex, hookupEntity, hookupGroupIndex, hookupConnectionIndex);
 		if(connect){
 			hitchEntity.connectTrailer(connection);

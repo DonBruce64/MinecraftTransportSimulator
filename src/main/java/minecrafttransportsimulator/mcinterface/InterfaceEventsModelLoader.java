@@ -12,10 +12,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.vecmath.Matrix4f;
 
@@ -23,7 +23,8 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.entities.components.AEntityC_Definable;
+import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.packloading.PackResourceLoader;
@@ -40,6 +41,7 @@ import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.culling.ICamera;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.vertex.VertexFormat;
 import net.minecraft.client.renderer.vertex.VertexFormatElement;
 import net.minecraft.client.resources.IResourcePack;
@@ -48,6 +50,7 @@ import net.minecraft.client.resources.data.MetadataSerializer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.client.event.ModelRegistryEvent;
@@ -159,6 +162,16 @@ public class InterfaceEventsModelLoader{
 	}
 	
 	/**
+	 *  Returns a 4-float array for the block break texture at the passed-in position in the passed-in world.
+	 */
+	public static float[] getBlockBreakTexture(WrapperWorld world, Point3d position){
+		//Get normal model.
+		IBlockState state = world.world.getBlockState(new BlockPos(position.x, position.y, position.z));
+		TextureAtlasSprite sprite = Minecraft.getMinecraft().getBlockRendererDispatcher().getBlockModelShapes().getTexture(state);
+		return new float[]{sprite.getMinU(), sprite.getMaxU(), sprite.getMinV(), sprite.getMaxV()};
+	}
+	
+	/**
 	 *  Event that's called to register models.  We register our render wrapper
 	 *  classes here, as well as all item JSONs.
 	 */
@@ -170,7 +183,6 @@ public class InterfaceEventsModelLoader{
 			@Override
 			public Render<? super BuilderEntityRenderForwarder> createRenderFor(RenderManager manager){
 			return new Render<BuilderEntityRenderForwarder>(manager){
-				LinkedHashSet<AEntityC_Definable<?>> entities = new LinkedHashSet<AEntityC_Definable<?>>();
 				@Override
 				protected ResourceLocation getEntityTexture(BuilderEntityRenderForwarder builder){
 					return null;
@@ -186,8 +198,9 @@ public class InterfaceEventsModelLoader{
 				public void doRender(BuilderEntityRenderForwarder builder, double x, double y, double z, float entityYaw, float partialTicks){
 					//Get all entities in the world, and render them manually for this one builder.
 					//Only do this if the player the builder is following is the client player.
+					WrapperWorld world = WrapperWorld.getWrapperFor(builder.world);
 					if(Minecraft.getMinecraft().player.equals(builder.playerFollowing) && builder.shouldRenderEntity(partialTicks)){
-						LinkedHashSet<AEntityC_Definable<?>> allEntities = AEntityC_Definable.getRenderableEntities(WrapperWorld.getWrapperFor(builder.world));
+						ConcurrentLinkedQueue<AEntityC_Renderable> allEntities = world.renderableEntities;
 						if(allEntities != null){
 					        //Use smooth shading for model rendering.
 							GL11.glShadeModel(GL11.GL_SMOOTH);
@@ -195,12 +208,11 @@ public class InterfaceEventsModelLoader{
 							//This prevents bad lighting.
 							GlStateManager.enableRescaleNormal();
 							
-							//Need to put all entities into a collection in case we spawn particles during this rendering operation.
-							//Doing so will add the particle to the entity list, and will get us a CME for our efforts.
-							entities.clear();
-							entities.addAll(allEntities);
-							for(AEntityC_Definable<?> entity : entities){
+							//Start master profiling section.
+							for(AEntityC_Renderable entity : allEntities){
+								world.beginProfiling("MTSRendering", true);
 								entity.getRenderer().render(entity, MinecraftForgeClient.getRenderPass() == 1, partialTicks);
+								world.endProfiling();
 							}
 							
 							//Set shade model back to flat for other rendering.

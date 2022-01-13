@@ -28,7 +28,7 @@ import com.google.gson.stream.JsonWriter;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
-import minecrafttransportsimulator.entities.components.AEntityC_Definable;
+import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.AJSONInteractableEntity;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
@@ -43,7 +43,7 @@ import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
-import minecrafttransportsimulator.rendering.components.ARenderEntity;
+import minecrafttransportsimulator.rendering.components.ARenderEntityDefinable;
 import minecrafttransportsimulator.rendering.instances.ModelParserLT.LTBox;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
@@ -580,13 +580,13 @@ public class JSONParser{
 		
 			//Reset renderers and send reset commands to entities.
 			if(definitionToOverride instanceof AJSONMultiModelProvider){
-				ARenderEntity.clearObjectCaches((AJSONMultiModelProvider) definitionToOverride);
+				ARenderEntityDefinable.clearObjectCaches((AJSONMultiModelProvider) definitionToOverride);
 			}
-			for(AEntityA_Base entity : AEntityA_Base.getEntities(InterfaceClient.getClientWorld())){
-				if(entity instanceof AEntityC_Definable){
-					AEntityC_Definable<?> definableEntity = (AEntityC_Definable<?>) entity;
+			for(AEntityA_Base entity : InterfaceClient.getClientWorld().renderableEntities){
+				if(entity instanceof AEntityD_Definable){
+					AEntityD_Definable<?> definableEntity = (AEntityD_Definable<?>) entity;
 					if(definitionToOverride.packID.equals(definableEntity.definition.packID) && definitionToOverride.systemName.equals(definableEntity.definition.systemName)){
-						((AEntityC_Definable<?>) entity).animationsInitialized = false;
+						((AEntityD_Definable<?>) entity).animationsInitialized = false;
 					}
 				}
 			}

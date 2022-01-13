@@ -61,10 +61,13 @@ public class RenderableObject{
 	public float lineWidth = 0.0F;
 	public float scale = 1.0F;
 	public boolean disableLighting;
+	public boolean ignoreWorldShading;
 	public boolean enableBrightBlending;
 	
-	/**the Global texture.  This contains all block/item textures for the game.  Used when rendering said blocks/items.**/
+	/**The Global texture.  This contains all block/item textures for the game.  Used when rendering said blocks/items.**/
 	public static final String GLOBAL_TEXTURE_NAME = "GLOBAL";
+	/**The Particle texture.  This contains all built-in particle textures for the game.  Used when rendering particles with default textures.**/
+	public static final String PARTICLE_TEXTURE_NAME = "PARTICLE";
 	
 	private static final int[][] FACE_POINT_INDEXES = new int[][]{
 		//X-axis.

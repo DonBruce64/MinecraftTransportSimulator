@@ -7,7 +7,7 @@ import java.util.List;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
+import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.instances.ItemBullet;
@@ -78,7 +78,7 @@ public class PartGun extends APart{
 	public final List<Integer> bulletsHitOnServer = new ArrayList<Integer>();
 	public final RenderableObject muzzleWireframe = new RenderableObject(new BoundingBox(new Point3d(), 0.25, 0.25, 0.25), ColorRGB.BLUE, false);
 		
-	public PartGun(AEntityE_Multipart<?> entityOn, WrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, WrapperNBT data, APart parentPart){
+	public PartGun(AEntityF_Multipart<?> entityOn, WrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, WrapperNBT data, APart parentPart){
 		super(entityOn, placingPlayer, placementDefinition, data, parentPart);
 		
 		//Set min/max yaw/pitch angles based on our definition and the entity definition.

@@ -13,7 +13,7 @@ import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.rendering.components.ARenderEntity;
+import minecrafttransportsimulator.rendering.components.ARenderEntityDefinable;
 import minecrafttransportsimulator.rendering.components.RenderableObject;
 
 /**Main render class for all vehicles.  Renders the vehicle, along with all parts.
@@ -24,11 +24,14 @@ import minecrafttransportsimulator.rendering.components.RenderableObject;
  *
  * @author don_bruce
  */
-public final class RenderVehicle extends ARenderEntity<EntityVehicleF_Physics>{	
+public final class RenderVehicle extends ARenderEntityDefinable<EntityVehicleF_Physics>{	
 	
 	@Override
-	public void renderAdditionalModels(EntityVehicleF_Physics vehicle, boolean blendingEnabled, float partialTicks){
+	protected void renderModel(EntityVehicleF_Physics vehicle, boolean blendingEnabled, float partialTicks){
+		super.renderModel(vehicle, blendingEnabled, partialTicks);
+		
 		//Render holograms for missing parts.
+		vehicle.world.beginProfiling("PartHoloboxes", true);
 		if(blendingEnabled){
 			//If we are holding a part, render the valid slots.
 			//If we are holding a scanner, render all slots.
@@ -93,6 +96,7 @@ public final class RenderVehicle extends ARenderEntity<EntityVehicleF_Physics>{
 				GL11.glPopMatrix();
 			}
 		}
+		vehicle.world.endProfiling();
 	}
 	
 	@Override

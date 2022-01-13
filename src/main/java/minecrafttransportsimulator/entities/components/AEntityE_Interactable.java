@@ -16,6 +16,8 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.TrailerConnection;
+import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
+import minecrafttransportsimulator.entities.instances.PartGeneric;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.AJSONInteractableEntity;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
@@ -45,7 +47,7 @@ import minecrafttransportsimulator.systems.PackParserSystem;
  * 
  * @author don_bruce
  */
-public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteractableEntity> extends AEntityC_Definable<JSONDefinition>{
+public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteractableEntity> extends AEntityD_Definable<JSONDefinition>{
 	
 	/**List of boxes generated from JSON.  These are stored here as objects since they may not be
 	 * added to their respective maps if they aren't active.**/
@@ -71,7 +73,7 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 	/**Set of entities that this entity collided with this tick.  Any entity that is in this set 
 	 * should NOT do collision checks with this entity, or infinite loops will occur.
 	 * This set should be cleared after all collisions have been checked.**/
-	public final Set<AEntityD_Interactable<?>> collidedEntities = new HashSet<AEntityD_Interactable<?>>();
+	public final Set<AEntityE_Interactable<?>> collidedEntities = new HashSet<AEntityE_Interactable<?>>();
 	
 	/**List of all possible locations for riders on this entity.  For the actual riders in these positions,
 	 * see the map.  This list is only used to allow for querying of valid locations for placing riders.
@@ -136,7 +138,7 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 	private final Point3d collisionGroupWorkingAngles = new Point3d();
 	private final Point3d collisionGroupWorkingAngleOffset = new Point3d();
 	
-	public AEntityD_Interactable(WrapperWorld world, WrapperPlayer placingPlayer, WrapperNBT data){
+	public AEntityE_Interactable(WrapperWorld world, WrapperPlayer placingPlayer, WrapperNBT data){
 		super(world, placingPlayer, data);
 		//Load saved rider positions.  We don't have riders here yet (as those get created later), 
 		//so just make the locations for the moment so they are ready when riders are created.
@@ -257,7 +259,7 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 		//Now check if we can do the actual update based on our towing status.
 		//We want to do the towing checks first, as we don't want to call super if we are blocked by being towed.
 		if((towedByConnection == null || overrideTowingChecks) && super.update()){
-			world.beginProfiling("EntityD_Level", true);
+			world.beginProfiling("EntityE_Level", true);
 			
 			//Update damage value
 			damageAmount = getVariable(DAMAGE_VARIABLE);
@@ -508,12 +510,9 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
     	encompassingBox.updateToEntity(this, null);
     }
 	
-	/**
-	 * Called to perform supplemental update logic on this entity.  This should be called after all movement on the
-	 * entity has been performed, and is used to do updates that require the new positional logic to be ready.
-	 * Calling this before the entity finishes moving will lead to things "lagging" behind the entity.
-	 */
+	@Override
 	public void updatePostMovement(){
+		super.updatePostMovement();
 		//Update collision boxes to new position.
 		world.beginProfiling("CollisionBoxUpdates", true);
 		updateCollisionBoxes();
@@ -736,7 +735,7 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 	 * using only that connection group.
 	 * 
 	 */
-	public EntityConnectionResult checkIfTrailerCanConnect(AEntityD_Interactable<?> hookupEntity, int hitchGroupIndex, int hookupGroupIndex){
+	public EntityConnectionResult checkIfTrailerCanConnect(AEntityE_Interactable<?> hookupEntity, int hitchGroupIndex, int hookupGroupIndex){
 		//Init variables.
 		boolean matchingConnection = false;
 		boolean trailerInRange = false;
@@ -815,10 +814,14 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 		if(connect){
 			boolean matchingConnection = false;
 			boolean trailerInRange = false;
+			List<AEntityE_Interactable<?>> entitiesToCheck = new ArrayList<AEntityE_Interactable<?>>();
+			entitiesToCheck.addAll(world.getEntitiesOfType(EntityVehicleF_Physics.class));
+			entitiesToCheck.addAll(world.getEntitiesOfType(PartGeneric.class));
+			
 			if(requestIsToBecomeTrailer){
-				for(AEntityA_Base testEntity : AEntityA_Base.getEntities(world)){
-					if(testEntity instanceof AEntityD_Interactable && shouldConnect((AEntityD_Interactable<?>) testEntity, this)){
-						switch(((AEntityD_Interactable<?>) testEntity).checkIfTrailerCanConnect(this, -1, connectionGroupIndex)){
+				for(AEntityE_Interactable<?> testEntity : entitiesToCheck){
+					if(shouldConnect(testEntity, this)){
+						switch(((AEntityE_Interactable<?>) testEntity).checkIfTrailerCanConnect(this, -1, connectionGroupIndex)){
 							case TRAILER_CONNECTED : packetMessage = "interact.trailer.connect"; break;
 							case TRAILER_TOO_FAR : matchingConnection = true; break;
 							case TRAILER_WRONG_HITCH : trailerInRange = true; break;
@@ -830,9 +833,9 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 					}
 				}
 			}else{
-				for(AEntityA_Base testEntity : AEntityA_Base.getEntities(world)){
-					if(testEntity instanceof AEntityD_Interactable  && shouldConnect(this, (AEntityD_Interactable<?>) testEntity)){
-						switch(this.checkIfTrailerCanConnect((AEntityD_Interactable<?>) testEntity, connectionGroupIndex, -1)){
+				for(AEntityE_Interactable<?> testEntity : entitiesToCheck){
+					if(shouldConnect(this, testEntity)){
+						switch(this.checkIfTrailerCanConnect(testEntity, connectionGroupIndex, -1)){
 							case TRAILER_CONNECTED : packetMessage = "interact.trailer.connect"; break;
 							case TRAILER_TOO_FAR : matchingConnection = true; break;
 							case TRAILER_WRONG_HITCH : trailerInRange = true; break;
@@ -880,14 +883,14 @@ public abstract class AEntityD_Interactable<JSONDefinition extends AJSONInteract
 		}
 	}
 	
-	private static boolean shouldConnect(AEntityD_Interactable<?> hitchEntity, AEntityD_Interactable<?> hookupEntity){
+	private static boolean shouldConnect(AEntityE_Interactable<?> hitchEntity, AEntityE_Interactable<?> hookupEntity){
 		if(hookupEntity.towedByConnection != null){
 			return false; //Entity is already hooked up.
 		}else if(hookupEntity.equals(hitchEntity)){
 			return false; //Entity is the same.
-		}else if(hookupEntity instanceof AEntityE_Multipart && ((AEntityE_Multipart<?>) hookupEntity).parts.contains(hitchEntity)){
+		}else if(hookupEntity instanceof AEntityF_Multipart && ((AEntityF_Multipart<?>) hookupEntity).parts.contains(hitchEntity)){
 			return false; //Hitch is a part on hookup.
-		}else if(hitchEntity instanceof AEntityE_Multipart && ((AEntityE_Multipart<?>) hitchEntity).parts.contains(hookupEntity)){
+		}else if(hitchEntity instanceof AEntityF_Multipart && ((AEntityF_Multipart<?>) hitchEntity).parts.contains(hookupEntity)){
 			return false; //Hookup is a part on hitch.
 		}else{
 			//Check to make sure the hookupEntity isn't towing the hitchEntity.

@@ -1,8 +1,8 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.entities.components.AEntityC_Definable;
-import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
+import minecrafttransportsimulator.entities.components.AEntityD_Definable;
+import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.mcinterface.WrapperInventory;
@@ -17,10 +17,10 @@ import minecrafttransportsimulator.systems.PackParserSystem;
  * 
  * @author don_bruce
  */
-public class PacketEntityColorChange extends APacketEntityInteract<AEntityC_Definable<?>, WrapperPlayer>{
+public class PacketEntityColorChange extends APacketEntityInteract<AEntityD_Definable<?>, WrapperPlayer>{
 	private final AItemSubTyped<?> newItem;
 	
-	public PacketEntityColorChange(AEntityC_Definable<?> entity, WrapperPlayer player, AItemSubTyped<?> newItem){
+	public PacketEntityColorChange(AEntityD_Definable<?> entity, WrapperPlayer player, AItemSubTyped<?> newItem){
 		super(entity, player);
 		this.newItem = newItem;
 	}
@@ -39,7 +39,7 @@ public class PacketEntityColorChange extends APacketEntityInteract<AEntityC_Defi
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, AEntityC_Definable<?> entity, WrapperPlayer player){
+	public boolean handle(WrapperWorld world, AEntityD_Definable<?> entity, WrapperPlayer player){
 		WrapperInventory inventory = player.getInventory();
 		if(player.isCreative() || inventory.hasMaterials(newItem, false, true, false)){
 			//Remove livery materials (if required) and set new subName.
@@ -49,9 +49,9 @@ public class PacketEntityColorChange extends APacketEntityInteract<AEntityC_Defi
 			entity.subName = newItem.subName;
 			
 			//If we have parts, and have a second tone, change parts to match if possible.
-			if(entity instanceof AEntityE_Multipart){
-				for(APart part : ((AEntityE_Multipart<?>) entity).parts){
-					((AEntityE_Multipart<?>) entity).updatePartTone(part);
+			if(entity instanceof AEntityF_Multipart){
+				for(APart part : ((AEntityF_Multipart<?>) entity).parts){
+					((AEntityF_Multipart<?>) entity).updatePartTone(part);
 				}
 			}
 			return true;

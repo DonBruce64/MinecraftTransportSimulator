@@ -11,8 +11,8 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
-import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
-import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
+import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
+import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.components.AItemPack;
@@ -100,8 +100,8 @@ public class BuilderEntityExisting extends ABuilderEntityBase{
 	    			return;
 	    		}
 	    		
-	    		if(entity instanceof AEntityD_Interactable){
-	    			AEntityD_Interactable<?> interactable = ((AEntityD_Interactable<?>) entity);
+	    		if(entity instanceof AEntityE_Interactable){
+	    			AEntityE_Interactable<?> interactable = ((AEntityE_Interactable<?>) entity);
 	    			
 	    			//Update AABBs.
 	        		//We need to know if we need to increase the max world collision bounds to detect this entity.
@@ -176,8 +176,8 @@ public class BuilderEntityExisting extends ABuilderEntityBase{
     
     @Override
     public boolean attackEntityFrom(DamageSource source, float amount){
-		if(!world.isRemote && entity instanceof AEntityD_Interactable){
-			AEntityD_Interactable<?> interactable = ((AEntityD_Interactable<?>) entity);
+		if(!world.isRemote && entity instanceof AEntityE_Interactable){
+			AEntityE_Interactable<?> interactable = ((AEntityE_Interactable<?>) entity);
 			Entity attacker = source.getImmediateSource();
 			Entity trueSource = source.getTrueSource();
 			WrapperPlayer playerSource = trueSource instanceof EntityPlayer ? WrapperPlayer.getWrapperFor((EntityPlayer) trueSource) : null;
@@ -225,8 +225,8 @@ public class BuilderEntityExisting extends ABuilderEntityBase{
     @Override
     public void updatePassenger(Entity passenger){
     	//Forward passenger updates to the entity, if it exists.
-    	if(entity instanceof AEntityD_Interactable){
-    		AEntityD_Interactable<?> interactable = ((AEntityD_Interactable<?>) entity);
+    	if(entity instanceof AEntityE_Interactable){
+    		AEntityE_Interactable<?> interactable = ((AEntityE_Interactable<?>) entity);
     		Iterator<WrapperEntity> iterator = interactable.locationRiderMap.inverse().keySet().iterator();
     		while(iterator.hasNext()){
     			WrapperEntity rider = iterator.next();
@@ -262,8 +262,8 @@ public class BuilderEntityExisting extends ABuilderEntityBase{
 	
 	@Override
 	public ItemStack getPickedResult(RayTraceResult target){
-		if(entity instanceof AEntityE_Multipart){
-			for(APart part : ((AEntityE_Multipart<?>) entity).parts){
+		if(entity instanceof AEntityF_Multipart){
+			for(APart part : ((AEntityF_Multipart<?>) entity).parts){
 				for(BoundingBox box : part.interactionBoxes){
 					if(box.isPointInside(new Point3d(target.hitVec.x, target.hitVec.y, target.hitVec.z))){
 						AItemPack<?> partItem = part.getItem();

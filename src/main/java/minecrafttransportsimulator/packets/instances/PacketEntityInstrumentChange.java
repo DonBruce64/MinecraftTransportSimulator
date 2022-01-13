@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
+import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.guis.instances.GUIInstruments;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.items.instances.ItemItem;
@@ -18,12 +18,12 @@ import minecrafttransportsimulator.systems.PackParserSystem;
  * 
  * @author don_bruce
  */
-public class PacketEntityInstrumentChange extends APacketEntityInteract<AEntityD_Interactable<?>, WrapperPlayer>{
+public class PacketEntityInstrumentChange extends APacketEntityInteract<AEntityE_Interactable<?>, WrapperPlayer>{
 	private final int slot;
 	private final String instrumentPackID;
 	private final String instrumentSystemName;
 	
-	public PacketEntityInstrumentChange(AEntityD_Interactable<?> entity, WrapperPlayer player, int slot, ItemInstrument instrument){
+	public PacketEntityInstrumentChange(AEntityE_Interactable<?> entity, WrapperPlayer player, int slot, ItemInstrument instrument){
 		super(entity, player);
 		this.slot = slot;
 		if(instrument != null){
@@ -51,7 +51,7 @@ public class PacketEntityInstrumentChange extends APacketEntityInteract<AEntityD
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, AEntityD_Interactable<?> entity, WrapperPlayer player){
+	public boolean handle(WrapperWorld world, AEntityE_Interactable<?> entity, WrapperPlayer player){
 		//Check to make sure the instrument can fit in survival player's inventories.
 		//Only check this on the server, as adding things to the client doesn't do us any good.
 		if(!world.isClient() && !player.isCreative() && entity.instruments.containsKey(slot)){

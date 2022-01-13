@@ -2,7 +2,7 @@ package minecrafttransportsimulator.items.instances;
 
 import java.util.List;
 
-import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
+import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.PartPropeller;
 import minecrafttransportsimulator.items.components.AItemPart;
@@ -24,7 +24,7 @@ public class ItemPartPropeller extends AItemPart{
 	}
 	
 	@Override
-	public PartPropeller createPart(AEntityE_Multipart<?> entity, WrapperPlayer placingPlayer, JSONPartDefinition packVehicleDef, WrapperNBT partData, APart parentPart){
+	public PartPropeller createPart(AEntityF_Multipart<?> entity, WrapperPlayer placingPlayer, JSONPartDefinition packVehicleDef, WrapperNBT partData, APart parentPart){
 		return new PartPropeller(entity, placingPlayer, packVehicleDef, validateData(partData), parentPart);
 	}
 	

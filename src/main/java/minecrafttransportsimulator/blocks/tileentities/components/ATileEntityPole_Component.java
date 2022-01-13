@@ -2,7 +2,7 @@ package minecrafttransportsimulator.blocks.tileentities.components;
 
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole;
-import minecrafttransportsimulator.entities.components.AEntityC_Definable;
+import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
@@ -13,7 +13,7 @@ import minecrafttransportsimulator.systems.ConfigSystem;
  * 
  * @author don_bruce
  */
-public abstract class ATileEntityPole_Component extends AEntityC_Definable<JSONPoleComponent>{
+public abstract class ATileEntityPole_Component extends AEntityD_Definable<JSONPoleComponent>{
 	
 	public final TileEntityPole core;
 	public final Axis axis;

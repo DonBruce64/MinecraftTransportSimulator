@@ -2,7 +2,7 @@ package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
+import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
@@ -16,13 +16,13 @@ import minecrafttransportsimulator.systems.PackParserSystem;
  * 
  * @author don_bruce
  */
-public class PacketPartChange extends APacketEntity<AEntityE_Multipart<?>>{
+public class PacketPartChange extends APacketEntity<AEntityF_Multipart<?>>{
 	private final Point3d partOffset;
 	private final AItemPart partItem;
 	private final WrapperNBT partData;
 	private Point3d parentPartOffset;
 	
-	public PacketPartChange(AEntityE_Multipart<?> entity, Point3d partOffset){
+	public PacketPartChange(AEntityF_Multipart<?> entity, Point3d partOffset){
 		super(entity);
 		this.partOffset = partOffset;
 		this.partItem = null;
@@ -30,7 +30,7 @@ public class PacketPartChange extends APacketEntity<AEntityE_Multipart<?>>{
 		this.parentPartOffset = null;
 	}
 	
-	public PacketPartChange(AEntityE_Multipart<?> entity, APart partAdded){
+	public PacketPartChange(AEntityF_Multipart<?> entity, APart partAdded){
 		super(entity);
 		this.partOffset = partAdded.placementOffset;
 		this.partItem = partAdded.getItem();
@@ -79,7 +79,7 @@ public class PacketPartChange extends APacketEntity<AEntityE_Multipart<?>>{
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, AEntityE_Multipart<?> entity){
+	public boolean handle(WrapperWorld world, AEntityF_Multipart<?> entity){
 		if(partItem == null){
 			APart part = entity.getPartAtLocation(partOffset);
 			if(part != null){

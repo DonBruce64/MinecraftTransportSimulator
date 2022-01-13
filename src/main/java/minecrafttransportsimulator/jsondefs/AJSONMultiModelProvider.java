@@ -21,18 +21,8 @@ public abstract class AJSONMultiModelProvider extends AJSONItem{
 	public String getModelLocation(String currentSubName){
 		for(JSONSubDefinition subDefinition : definitions){
 			if(subDefinition.subName.equals(currentSubName)){
-				String objPath = PackResourceLoader.getPackResource(this, ResourceType.OBJ_MODEL, subDefinition.modelName != null ? subDefinition.modelName : systemName);
-				if(AJSONMultiModelProvider.class.getResource(objPath) == null){
-					//Try LT model.
-					String ltPath = PackResourceLoader.getPackResource(this, ResourceType.OBJ_MODEL, subDefinition.modelName != null ? subDefinition.modelName : systemName);
-					if(ltPath != null){
-						return ltPath;
-					}else{
-						return objPath;
-					}
-				}else{
-					return objPath;
-				}
+				return PackResourceLoader.getPackResource(this, ResourceType.OBJ_MODEL, subDefinition.modelName != null ? subDefinition.modelName : systemName);
+				//TODO add flag for LT model so we don't need to check for the resource every call.
 			}
 		}
 		//We'll never get here.

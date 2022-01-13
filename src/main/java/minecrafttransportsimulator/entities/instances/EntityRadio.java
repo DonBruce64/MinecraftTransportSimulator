@@ -5,9 +5,9 @@ import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 import minecrafttransportsimulator.sound.RadioManager;
+import minecrafttransportsimulator.sound.RadioManager.RadioSources;
 import minecrafttransportsimulator.sound.RadioStation;
 import minecrafttransportsimulator.sound.SoundInstance;
-import minecrafttransportsimulator.sound.RadioManager.RadioSources;
 
 /**Base class for radios.  Used to provide a common set of tools for all radio implementations.
  * This class keeps track of the radio station currently selected, as well as the
@@ -84,7 +84,7 @@ public class EntityRadio extends AEntityB_Existing{
 	 * it has connected and is ready to play sound.
 	 */
 	public void start(){
-		currentSound = new SoundInstance(this, "Radio_" + lookupID, null, this);
+		currentSound = new SoundInstance(this, "Radio_" + uniqueUUID, null, this);
 		currentSound.volume = volume/10F;
 	}
 	

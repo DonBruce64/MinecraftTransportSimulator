@@ -2,7 +2,7 @@ package minecrafttransportsimulator.blocks.tileentities.components;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.entities.components.AEntityC_Definable;
+import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
@@ -21,7 +21,7 @@ import minecrafttransportsimulator.systems.ConfigSystem;
  *
  * @author don_bruce
  */
-public abstract class ATileEntityBase<JSONDefinition extends AJSONMultiModelProvider> extends AEntityC_Definable<JSONDefinition>{
+public abstract class ATileEntityBase<JSONDefinition extends AJSONMultiModelProvider> extends AEntityD_Definable<JSONDefinition>{
 	
 	private float lastLightLevel;
 	

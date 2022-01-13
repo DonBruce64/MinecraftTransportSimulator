@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.TrailerConnection;
-import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
-import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
+import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
+import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartEngine;
@@ -62,7 +62,7 @@ public abstract class AGUIPanel extends AGUIBase{
 		setupTowingButtons(vehicle);
 	}
 	
-	private void setupTowingButtons(AEntityD_Interactable<?> entity){
+	private void setupTowingButtons(AEntityE_Interactable<?> entity){
 		//Add trailer switch defs to allow switches to be displayed.
 		//These depend on our connections, and our part's connections.
 		//This method allows for recursion for connected trailers.
@@ -84,8 +84,8 @@ public abstract class AGUIPanel extends AGUIBase{
 		}
 		
 		//Check parts, if we have any.
-		if(entity instanceof AEntityE_Multipart){
-			for(APart part : ((AEntityE_Multipart<?>) entity).parts){
+		if(entity instanceof AEntityF_Multipart){
+			for(APart part : ((AEntityF_Multipart<?>) entity).parts){
 				if(part.definition.connectionGroups != null){
 					for(JSONConnectionGroup connectionGroup : part.definition.connectionGroups){
 						if(connectionGroup.canIntiateConnections){
@@ -101,7 +101,7 @@ public abstract class AGUIPanel extends AGUIBase{
 	 *  Call this if this GUI is open and a trailer connection changes.  This allows this GUI to
 	 *  reset its states on a trailer change, if the trailer that state was changed was one of our switches.
 	 */
-	public void handleConnectionChange(AEntityD_Interactable<?> hitchEntity, AEntityD_Interactable<?> hookupEntity){
+	public void handleConnectionChange(AEntityE_Interactable<?> hitchEntity, AEntityE_Interactable<?> hookupEntity){
 		boolean recreatePanel = false;
 		for(SwitchEntry entry : trailerSwitchDefs){
 			if(entry.entityOn.equals(hitchEntity) || entry.entityOn.equals(hookupEntity)){
@@ -211,11 +211,11 @@ public abstract class AGUIPanel extends AGUIBase{
 	}
 	
 	protected static class SwitchEntry{
-		protected final AEntityD_Interactable<?> entityOn;
+		protected final AEntityE_Interactable<?> entityOn;
 		protected final JSONConnectionGroup connectionGroup;
 		protected final int connectionGroupIndex;
 		
-		private SwitchEntry(AEntityD_Interactable<?> entityOn, JSONConnectionGroup connectionGroup){
+		private SwitchEntry(AEntityE_Interactable<?> entityOn, JSONConnectionGroup connectionGroup){
 			this.entityOn = entityOn;
 			this.connectionGroup = connectionGroup;
 			this.connectionGroupIndex = entityOn.definition.connectionGroups.indexOf(connectionGroup);

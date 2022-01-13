@@ -11,7 +11,7 @@ import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBas
  *
  * @author don_bruce
  */
-public abstract class ARenderTileEntityBase<RenderedTileEntity extends ATileEntityBase<?>> extends ARenderEntity<RenderedTileEntity>{
+public abstract class ARenderTileEntityBase<RenderedTileEntity extends ATileEntityBase<?>> extends ARenderEntityDefinable<RenderedTileEntity>{
 	
 	/**
 	 *  Returns true if this TE should translated down 0.5 units to sink on half-slabs.
@@ -21,12 +21,12 @@ public abstract class ARenderTileEntityBase<RenderedTileEntity extends ATileEnti
 	}
 	
 	@Override
-	public void adjustPositionRotation(RenderedTileEntity entity, float partialTicks, Point3d entityPosition, Point3d entityRotation){
+	public void adjustPositionRotation(RenderedTileEntity entity, Point3d entityPositionDelta, Point3d entityRotationDelta, float partialTicks){
 		//Offset X and Z to be centered in the block.
-		entityPosition.x += 0.5;
-		entityPosition.z += 0.5;
+		entityPositionDelta.x += 0.5;
+		entityPositionDelta.z += 0.5;
 		if(translateToSlabs() && entity.world.isBlockBottomSlab(entity.position.copy().add(0, -1, 0))){
-			entityPosition.y -= 0.5D;			
+			entityPositionDelta.y -= 0.5D;			
 		}
 	}
 	

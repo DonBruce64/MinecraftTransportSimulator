@@ -5,8 +5,8 @@ import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_Sign;
-import minecrafttransportsimulator.entities.components.AEntityC_Definable;
-import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
+import minecrafttransportsimulator.entities.components.AEntityD_Definable;
+import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponent3DModel;
@@ -28,12 +28,12 @@ public class GUITextEditor extends AGUIBase{
 	private final List<String> textInputFieldNames = new ArrayList<String>();
 	
 	//Entity clicked.
-	private final AEntityC_Definable<?> entity;
+	private final AEntityD_Definable<?> entity;
 	
 	//Labels for sign.  These do fancy rendering.
 	private final List<GUIComponentLabel> signTextLabels = new ArrayList<GUIComponentLabel>();
 	
-	public GUITextEditor(AEntityC_Definable<?> entity){
+	public GUITextEditor(AEntityD_Definable<?> entity){
 		super();
 		this.entity = entity;
 	}
@@ -75,8 +75,8 @@ public class GUITextEditor extends AGUIBase{
 			textLines.addAll(entity.text.values());
 			
 			//Add part text objects if we are a multipart.
-			if(entity instanceof AEntityE_Multipart){
-				for(APart part : ((AEntityE_Multipart<?>) entity).parts){
+			if(entity instanceof AEntityF_Multipart){
+				for(APart part : ((AEntityF_Multipart<?>) entity).parts){
 					textObjects.addAll(part.text.keySet());
 					textLines.addAll(part.text.values());
 				}

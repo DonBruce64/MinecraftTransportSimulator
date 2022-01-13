@@ -2,6 +2,7 @@ package minecrafttransportsimulator.items.instances;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.UUID;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
@@ -9,8 +10,7 @@ import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole;
-import minecrafttransportsimulator.entities.components.AEntityA_Base;
-import minecrafttransportsimulator.entities.components.AEntityD_Interactable.PlayerOwnerState;
+import minecrafttransportsimulator.entities.components.AEntityE_Interactable.PlayerOwnerState;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartEngine;
@@ -127,8 +127,8 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 					//First check to see if we need to set this key's vehicle.
 					ItemStack stack = player.getHeldStack();
 					WrapperNBT data = new WrapperNBT(stack);
-					String keyVehicleUUID = data.getString("vehicle");
-					if(keyVehicleUUID.isEmpty()){
+					UUID keyVehicleUUID = data.getUUID("vehicle");
+					if(keyVehicleUUID == null){
 						//Check if we are the owner before making this a valid key.
 						if(!vehicle.ownerUUID.isEmpty() && ownerState.equals(PlayerOwnerState.USER)){
 							player.sendPacket(new PacketPlayerChatMessage(player, "interact.key.failure.notowner"));
@@ -136,7 +136,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 						}
 						
 						keyVehicleUUID = vehicle.uniqueUUID;
-						data.setString("vehicle", keyVehicleUUID);
+						data.setUUID("vehicle", keyVehicleUUID);
 						stack.setTagCompound(data.tag);
 					}
 					
@@ -334,24 +334,21 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 			}
 		}else if(definition.item.type.equals(ItemComponentType.Y2K_BUTTON)){
 			if(!world.isClient() && player.isOP()){
-				for(AEntityA_Base entity : AEntityA_Base.getEntities(world)){
-					if(entity instanceof EntityVehicleF_Physics){
-						EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) entity;
-						vehicle.setVariable(EntityVehicleF_Physics.THROTTLE_VARIABLE, 0);
-						InterfacePacket.sendToAllClients(new PacketEntityVariableSet(vehicle, EntityVehicleF_Physics.THROTTLE_VARIABLE, 0));
-						if(!vehicle.parkingBrakeOn){
-							vehicle.variablesOn.add(EntityVehicleF_Physics.PARKINGBRAKE_VARIABLE);
-							InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.PARKINGBRAKE_VARIABLE));
+				for(EntityVehicleF_Physics vehicle : world.getEntitiesOfType(EntityVehicleF_Physics.class)){
+					vehicle.setVariable(EntityVehicleF_Physics.THROTTLE_VARIABLE, 0);
+					InterfacePacket.sendToAllClients(new PacketEntityVariableSet(vehicle, EntityVehicleF_Physics.THROTTLE_VARIABLE, 0));
+					if(!vehicle.parkingBrakeOn){
+						vehicle.variablesOn.add(EntityVehicleF_Physics.PARKINGBRAKE_VARIABLE);
+						InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.PARKINGBRAKE_VARIABLE));
+					}
+					for(PartEngine engine : vehicle.engines.values()){
+						if(engine.magnetoOn){
+							engine.variablesOn.remove(PartEngine.MAGNETO_VARIABLE);
+							InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(engine, PartEngine.MAGNETO_VARIABLE));
 						}
-						for(PartEngine engine : vehicle.engines.values()){
-							if(engine.magnetoOn){
-								engine.variablesOn.remove(PartEngine.MAGNETO_VARIABLE);
-								InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(engine, PartEngine.MAGNETO_VARIABLE));
-							}
-						}
-						for(String variable : vehicle.variablesOn){
-							InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(vehicle, variable));
-						}
+					}
+					for(String variable : vehicle.variablesOn){
+						InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(vehicle, variable));
 					}
 				}
 			}

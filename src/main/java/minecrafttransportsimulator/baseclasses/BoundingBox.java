@@ -3,7 +3,7 @@ package minecrafttransportsimulator.baseclasses;
 import java.util.ArrayList;
 import java.util.List;
 
-import minecrafttransportsimulator.entities.components.AEntityC_Definable;
+import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup;
 import minecrafttransportsimulator.mcinterface.InterfaceRender;
@@ -125,7 +125,7 @@ public class BoundingBox{
 	 *  better interaction while standing on entities.  Optional extra offset is present should
 	 *  a supplemental translation need to be performed before aligning to the entity.
 	 */
-	public void updateToEntity(AEntityC_Definable<?> entity, Point3d optionalOffset){
+	public void updateToEntity(AEntityD_Definable<?> entity, Point3d optionalOffset){
 		globalCenter.setTo(localCenter);
 		if(optionalOffset != null){
 			globalCenter.add(optionalOffset);

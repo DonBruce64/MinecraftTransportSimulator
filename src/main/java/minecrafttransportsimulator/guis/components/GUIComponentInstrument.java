@@ -2,7 +2,7 @@ package minecrafttransportsimulator.guis.components;
 
 import org.lwjgl.opengl.GL11;
 
-import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
+import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.JSONInstrumentDefinition;
 import minecrafttransportsimulator.rendering.instances.RenderInstrument;
@@ -17,9 +17,9 @@ public class GUIComponentInstrument extends AGUIComponent{
 	public final int instrumentPackIndex;
 	public final JSONInstrumentDefinition packInstrument;
 	public ItemInstrument instrument;
-	public final AEntityD_Interactable<?> entity;
+	public final AEntityE_Interactable<?> entity;
 	    	
-	public GUIComponentInstrument(int guiLeft, int guiTop, int instrumentPackIndex, AEntityD_Interactable<?> entity){
+	public GUIComponentInstrument(int guiLeft, int guiTop, int instrumentPackIndex, AEntityE_Interactable<?> entity){
 		super(guiLeft, guiTop, 0, 0);
 		this.packInstrument = entity.definition.instruments.get(instrumentPackIndex);
 		this.instrument = entity.instruments.get(instrumentPackIndex);

@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.rendering.components;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.entities.components.AEntityC_Definable;
+import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition.AnimationComponentType;
 import minecrafttransportsimulator.mcinterface.InterfaceSound;
@@ -49,7 +49,7 @@ public class DurationDelayClock{
 	 *  Returns the actual 0-1 value for a state-based duration/delay variable.
 	 *  Optionally plays sounds if the state changes appropriately.
 	 */
-	public double getFactoredState(AEntityC_Definable<?> entity, double value, float partialTicks){
+	public double getFactoredState(AEntityD_Definable<?> entity, double value, float partialTicks){
 		boolean commandForwards = value > 0;
 		//We do all time here in milliseconds, not ticks.  This allows for partial ticks.
 		long currentTime = (long) ((entity.ticksExisted + partialTicks)*50D);

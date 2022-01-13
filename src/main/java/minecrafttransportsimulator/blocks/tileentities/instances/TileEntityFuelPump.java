@@ -6,7 +6,6 @@ import java.util.List;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityFluidTankProvider;
-import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityFluidTank;
 import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
@@ -180,14 +179,11 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityFl
 			//Get the closest vehicle within a 16-block radius.
 			EntityVehicleF_Physics nearestVehicle = null;
 			double lowestDistance = 16D;
-			for(AEntityA_Base entity : AEntityA_Base.getEntities(world)){
-				if(entity instanceof EntityVehicleF_Physics){
-					EntityVehicleF_Physics testVehicle = (EntityVehicleF_Physics) entity;
-					double vehicleDistance = testVehicle.position.distanceTo(position);
-					if(vehicleDistance < lowestDistance){
-						lowestDistance = vehicleDistance;
-						nearestVehicle = testVehicle;
-					}
+			for(EntityVehicleF_Physics testVehicle : world.getEntitiesOfType(EntityVehicleF_Physics.class)){
+				double vehicleDistance = testVehicle.position.distanceTo(position);
+				if(vehicleDistance < lowestDistance){
+					lowestDistance = vehicleDistance;
+					nearestVehicle = testVehicle;
 				}
 			}
 			

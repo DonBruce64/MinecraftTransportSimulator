@@ -7,9 +7,9 @@ import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.PartGun;
 import minecrafttransportsimulator.jsondefs.JSONMuzzle;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
-import minecrafttransportsimulator.rendering.components.ARenderEntity;
+import minecrafttransportsimulator.rendering.components.ARenderEntityDefinable;
 
-public final class RenderPart extends ARenderEntity<APart>{
+public final class RenderPart extends ARenderEntityDefinable<APart>{
 	
 	@Override
 	public boolean disableRendering(APart part, float partialTicks){
@@ -17,9 +17,9 @@ public final class RenderPart extends ARenderEntity<APart>{
 	}
 	
 	@Override
-	public void adjustPositionRotation(APart part, float partialTicks, Point3d entityPosition, Point3d entityRotation){
+	public void adjustPositionRotation(APart part, Point3d entityPositionDelta, Point3d entityRotationDelta, float partialTicks){
 		//Rotate the part according to its rendering rotation if we need to do so.
-		entityRotation.add(part.getRenderingRotation(partialTicks));
+		entityRotationDelta.add(part.getRenderingRotation(partialTicks));
 	}
 	
 	@Override

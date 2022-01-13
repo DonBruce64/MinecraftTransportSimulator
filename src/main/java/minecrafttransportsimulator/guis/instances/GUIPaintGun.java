@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.entities.components.AEntityC_Definable;
+import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponent3DModel;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
@@ -30,7 +30,7 @@ import net.minecraft.item.ItemStack;
 public class GUIPaintGun extends AGUIBase{
 	
 	//Init variables.
-	private final AEntityC_Definable<?> entity;
+	private final AEntityD_Definable<?> entity;
 	private final WrapperPlayer player;
 	
 	//Buttons and labels.
@@ -52,7 +52,7 @@ public class GUIPaintGun extends AGUIBase{
 	private AItemSubTyped<?> prevSubItem;
 	private AItemSubTyped<?> nextSubItem;
 
-	public GUIPaintGun(AEntityC_Definable<?> entity, WrapperPlayer player){
+	public GUIPaintGun(AEntityD_Definable<?> entity, WrapperPlayer player){
 		super();
 		this.entity = entity;
 		this.player = player;

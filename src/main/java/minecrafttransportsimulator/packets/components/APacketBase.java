@@ -2,6 +2,7 @@ package minecrafttransportsimulator.packets.components;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.Point3d;
@@ -77,6 +78,21 @@ public abstract class APacketBase{
 		//Need to increment the index as the read doesn't do that automatically.
 		buf.readerIndex(buf.readerIndex() + stringLength);
 		return returnString;
+	}
+	
+	/**
+	 *  Helper method to write a UUID to the buffer.
+	 */
+	protected static void writeUUIDToBuffer(UUID uniqueUUID, ByteBuf buf){
+		buf.writeLong(uniqueUUID.getMostSignificantBits());
+		buf.writeLong(uniqueUUID.getLeastSignificantBits());
+	}
+	
+	/**
+	 *  Helper method to read a UUID from the buffer.
+	 */
+	protected static UUID readUUIDFromBuffer(ByteBuf buf){
+		return new UUID(buf.readLong(), buf.readLong());
 	}
 	
 	/**

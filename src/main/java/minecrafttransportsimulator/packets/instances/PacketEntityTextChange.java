@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.entities.components.AEntityC_Definable;
+import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
@@ -13,10 +13,10 @@ import minecrafttransportsimulator.packets.components.APacketEntity;
  * 
  * @author don_bruce
  */
-public class PacketEntityTextChange extends APacketEntity<AEntityC_Definable<?>>{
+public class PacketEntityTextChange extends APacketEntity<AEntityD_Definable<?>>{
 	private final List<String> textLines;
 	
-	public PacketEntityTextChange(AEntityC_Definable<?> entity, List<String> textLines){
+	public PacketEntityTextChange(AEntityD_Definable<?> entity, List<String> textLines){
 		super(entity);
 		this.textLines = textLines;
 	}
@@ -40,7 +40,7 @@ public class PacketEntityTextChange extends APacketEntity<AEntityC_Definable<?>>
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, AEntityC_Definable<?> entity){
+	public boolean handle(WrapperWorld world, AEntityD_Definable<?> entity){
 		entity.updateText(textLines);
 		return true;
 	}

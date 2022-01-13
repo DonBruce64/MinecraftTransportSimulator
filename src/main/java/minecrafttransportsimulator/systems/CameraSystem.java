@@ -1,9 +1,9 @@
 package minecrafttransportsimulator.systems;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.entities.components.AEntityC_Definable;
-import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
-import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
+import minecrafttransportsimulator.entities.components.AEntityD_Definable;
+import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
+import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.PartSeat;
@@ -51,8 +51,8 @@ public class CameraSystem{
 	 */
     public static boolean adjustCamera(WrapperPlayer player, Point3d cameraPosition, Point3d cameraRotation, float partialTicks){
     	//Get variables.
-		AEntityD_Interactable<?> ridingEntity = player.getEntityRiding();
-		AEntityE_Multipart<?> multipart = ridingEntity instanceof AEntityE_Multipart ? (AEntityE_Multipart<?>) ridingEntity : null;
+		AEntityE_Interactable<?> ridingEntity = player.getEntityRiding();
+		AEntityF_Multipart<?> multipart = ridingEntity instanceof AEntityF_Multipart ? (AEntityF_Multipart<?>) ridingEntity : null;
 		PartSeat sittingSeat = multipart != null ? (PartSeat) multipart.getPartAtLocation(multipart.locationRiderMap.inverse().get(player)) : null;
 		EntityPlayerGun playerGunEntity = EntityPlayerGun.playerClientGuns.get(player.getID());
 		
@@ -77,7 +77,7 @@ public class CameraSystem{
 				runningCustomCameras = true;
 		    	int camerasChecked = 0;
 		    	JSONCameraObject camera = null;
-		    	AEntityC_Definable<?> cameraProvider = null;
+		    	AEntityD_Definable<?> cameraProvider = null;
 		    	
 				if(multipart != null){
 					if(multipart.definition.rendering.cameraObjects != null){
@@ -272,7 +272,7 @@ public class CameraSystem{
 		return false;
     }
     
-    private static boolean isCameraActive(JSONCameraObject camera, AEntityC_Definable<?> entity, float partialTicks){
+    private static boolean isCameraActive(JSONCameraObject camera, AEntityD_Definable<?> entity, float partialTicks){
 		if(camera.animations != null){
 			for(JSONAnimationDefinition animation : camera.animations){
 				if(animation.animationType.equals(AnimationComponentType.VISIBILITY)){

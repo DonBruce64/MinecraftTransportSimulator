@@ -2,9 +2,6 @@ package minecrafttransportsimulator.blocks.tileentities.instances;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityFluidTankProvider;
-import minecrafttransportsimulator.entities.components.AEntityA_Base;
-import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
-import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityFluidTank;
 import minecrafttransportsimulator.entities.instances.PartInteractable;
 import minecrafttransportsimulator.jsondefs.JSONDecor.DecorComponentType;
@@ -77,30 +74,18 @@ public class TileEntityFluidLoader extends TileEntityDecor implements ITileEntit
 		PartInteractable nearestPart = null;
 		double nearestDistance = 999;
 		if((tank.getFluidLevel() > 0 && !isUnloader) || (tank.getFluidLevel() < tank.getMaxLevel() && isUnloader)){
-			for(AEntityA_Base entity : AEntityA_Base.getEntities(world)){
-				if(entity instanceof AEntityE_Multipart){
-					AEntityE_Multipart<?> multipart = (AEntityE_Multipart<?>) entity;
-					if(multipart.position.distanceTo(position) < 100){
-						for(APart part : multipart.parts){
-							if(part.position.distanceTo(position) < 10){
-								if(part instanceof PartInteractable){
-									EntityFluidTank partTank = ((PartInteractable) part).tank;
-									if(partTank != null){
-										if(isUnloader){
-											if(partTank.drain(tank.getFluid(), 1, false) > 0){
-												if(part.position.distanceTo(position) < nearestDistance){
-													nearestPart = (PartInteractable) part;
-												}
-											}
-										}else{
-											if(partTank.fill(tank.getFluid(), 1, false) > 0){
-												if(part.position.distanceTo(position) < nearestDistance){
-													nearestPart = (PartInteractable) part;
-												}
-											}
-										}
-									}
-								}
+			for(PartInteractable interactablePart : world.getEntitiesOfType(PartInteractable.class)){
+				if(interactablePart.tank != null){
+					if(isUnloader){
+						if(interactablePart.tank.drain(tank.getFluid(), 1, false) > 0){
+							if(interactablePart.position.distanceTo(position) < nearestDistance){
+								nearestPart = interactablePart;
+							}
+						}
+					}else{
+						if(interactablePart.tank.fill(tank.getFluid(), 1, false) > 0){
+							if(interactablePart.position.distanceTo(position) < nearestDistance){
+								nearestPart = interactablePart;
 							}
 						}
 					}

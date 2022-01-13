@@ -6,8 +6,8 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.entities.components.AEntityC_Definable;
-import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
+import minecrafttransportsimulator.entities.components.AEntityD_Definable;
+import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
@@ -38,7 +38,7 @@ public final class RenderInstrument{
      * Also note that the parameters in the JSON here are in png-texture space, so y is inverted.  Hence the various
      * negations in translation transforms.
      */
-	public static void drawInstrument(ItemInstrument instrument, int partNumber, AEntityD_Interactable<?> entity, float scale, boolean blendingEnabled, float partialTicks){
+	public static void drawInstrument(ItemInstrument instrument, int partNumber, AEntityE_Interactable<?> entity, float scale, boolean blendingEnabled, float partialTicks){
 		//Check if the lights are on.  If so, render the overlays and the text lit if requested.
 		boolean lightsOn = entity.renderTextLit();
 		
@@ -56,7 +56,7 @@ public final class RenderInstrument{
 				GL11.glPushMatrix();
 				GL11.glTranslatef(0.0F, 0.0F, i*0.0001F);
 				if(component.textObject != null){
-					int variablePartNumber = AEntityC_Definable.getVariableNumber(component.textObject.variableName);
+					int variablePartNumber = AEntityD_Definable.getVariableNumber(component.textObject.variableName);
 					final boolean addSuffix = variablePartNumber == -1 && ((component.textObject.variableName.startsWith("engine_") || component.textObject.variableName.startsWith("propeller_") || component.textObject.variableName.startsWith("gun_") || component.textObject.variableName.startsWith("seat_")));
 					if(addSuffix){
 						String oldName = component.textObject.variableName; 
@@ -84,7 +84,7 @@ public final class RenderInstrument{
 							//We also need to set the partNumber to 1 if we have a part number of 0 and we're
 							//doing a part-specific animation.
 							//Skip adding a suffix if one already exists.
-							int variablePartNumber = AEntityC_Definable.getVariableNumber(animation.variable);
+							int variablePartNumber = AEntityD_Definable.getVariableNumber(animation.variable);
 							final boolean addSuffix = variablePartNumber == -1 && !(entity instanceof APart) && (animation.variable.startsWith("engine_") || animation.variable.startsWith("propeller_") || animation.variable.startsWith("gun_") || animation.variable.startsWith("seat_"));
 							if(partNumber == 0 && addSuffix){
 								partNumber = 1;

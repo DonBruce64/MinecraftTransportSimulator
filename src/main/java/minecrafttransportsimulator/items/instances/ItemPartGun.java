@@ -2,7 +2,7 @@ package minecrafttransportsimulator.items.instances;
 
 import java.util.List;
 
-import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
+import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.PartGun;
@@ -27,7 +27,7 @@ public class ItemPartGun extends AItemPart implements IItemEntityProvider<Entity
 	}
 	
 	@Override
-	public PartGun createPart(AEntityE_Multipart<?> entity, WrapperPlayer placingPlayer, JSONPartDefinition packVehicleDef, WrapperNBT partData, APart parentPart){
+	public PartGun createPart(AEntityF_Multipart<?> entity, WrapperPlayer placingPlayer, JSONPartDefinition packVehicleDef, WrapperNBT partData, APart parentPart){
 		return new PartGun(entity, placingPlayer, packVehicleDef, validateData(partData), parentPart);
 	}
 	

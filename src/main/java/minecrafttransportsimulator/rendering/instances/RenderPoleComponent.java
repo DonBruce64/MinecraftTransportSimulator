@@ -2,12 +2,12 @@ package minecrafttransportsimulator.rendering.instances;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
-import minecrafttransportsimulator.rendering.components.ARenderEntity;
+import minecrafttransportsimulator.rendering.components.ARenderEntityDefinable;
 
-public class RenderPoleComponent extends ARenderEntity<ATileEntityPole_Component>{
+public class RenderPoleComponent extends ARenderEntityDefinable<ATileEntityPole_Component>{
 	
 	@Override
-	public void adjustPositionRotation(ATileEntityPole_Component component, float partialTicks, Point3d entityPosition, Point3d entityRotation){
-		component.core.getRenderer().adjustPositionRotation(component.core, partialTicks, entityPosition, entityRotation);
+	public void adjustPositionRotation(ATileEntityPole_Component component, Point3d entityPositionDelta, Point3d entityRotationDelta, float partialTicks){
+		component.core.getRenderer().adjustPositionRotation(component.core, entityPositionDelta, entityRotationDelta, partialTicks);
 	}
 }

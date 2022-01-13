@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
+import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.guis.components.AGUIBase;
@@ -53,12 +53,12 @@ public class GUIInstruments extends AGUIBase{
 	private GUIComponentButton hudButton;
 	private GUIComponentButton panelButton;
 	private GUIComponentLabel infoLabel;
-	private AEntityD_Interactable<?> selectedEntity;
+	private AEntityE_Interactable<?> selectedEntity;
 	private JSONInstrumentDefinition selectedInstrumentDefinition;
 	
 	private final List<GUIComponentButton> instrumentSlots = new ArrayList<GUIComponentButton>();
 	private final List<GUIComponentItem> instrumentSlotIcons = new ArrayList<GUIComponentItem>();
-	private final Map<AEntityD_Interactable<?>, List<InstrumentSlotBlock>> entityInstrumentBlocks = new HashMap<AEntityD_Interactable<?>, List<InstrumentSlotBlock>>();
+	private final Map<AEntityE_Interactable<?>, List<InstrumentSlotBlock>> entityInstrumentBlocks = new HashMap<AEntityE_Interactable<?>, List<InstrumentSlotBlock>>();
 	
 	public GUIInstruments(EntityVehicleF_Physics vehicle){
 		super();
@@ -167,7 +167,7 @@ public class GUIInstruments extends AGUIBase{
 		
 		//Get all entities with instruments and adds them to the list. definitions, and add them to a map-list.
 		//These come from the vehicle and all parts.
-		List<AEntityD_Interactable<?>> entitiesWithInstruments = new ArrayList<AEntityD_Interactable<?>>();
+		List<AEntityE_Interactable<?>> entitiesWithInstruments = new ArrayList<AEntityE_Interactable<?>>();
 		if(vehicle.definition.instruments != null){
 			entitiesWithInstruments.add(vehicle);
 		}
@@ -181,7 +181,7 @@ public class GUIInstruments extends AGUIBase{
 		//We need one for every instrument, present or not, as we can click on any instrument.
 		//This allows us to render instruments as they are added or removed.
 		entityInstrumentBlocks.clear();
-		for(AEntityD_Interactable<?> entity : entitiesWithInstruments){
+		for(AEntityE_Interactable<?> entity : entitiesWithInstruments){
 			List<InstrumentSlotBlock> instrumentBlocks = new ArrayList<InstrumentSlotBlock>();
 			for(JSONInstrumentDefinition packInstrument : entity.definition.instruments){
 				if(hudSelected ^ packInstrument.placeOnPanel){
@@ -216,7 +216,7 @@ public class GUIInstruments extends AGUIBase{
 		}
 		
 		//Set entity instrument states.
-		for(AEntityD_Interactable<?> entity : entityInstrumentBlocks.keySet()){
+		for(AEntityE_Interactable<?> entity : entityInstrumentBlocks.keySet()){
 			for(InstrumentSlotBlock block : entityInstrumentBlocks.get(entity)){
 				block.selectorOverlay.visible = entity.equals(selectedEntity) && block.definition.equals(selectedInstrumentDefinition) && inClockPeriod(40, 20);
 				block.instrument.visible = !block.selectorOverlay.visible && entity.instruments.containsKey(block.instrument.instrumentPackIndex);
@@ -274,7 +274,7 @@ public class GUIInstruments extends AGUIBase{
 		private final GUIComponentCutout blank;
 		private final GUIComponentCutout selectorOverlay;
 		
-		private InstrumentSlotBlock(int guiLeft, int guiTop, AEntityD_Interactable<?> entity, JSONInstrumentDefinition definition){
+		private InstrumentSlotBlock(int guiLeft, int guiTop, AEntityE_Interactable<?> entity, JSONInstrumentDefinition definition){
 			this.definition = definition;
 			int instrumentRadius = (int) (64F*definition.hudScale);
 			addComponent(this.instrument = new GUIComponentInstrument(guiLeft, guiTop, entity.definition.instruments.indexOf(definition), entity));

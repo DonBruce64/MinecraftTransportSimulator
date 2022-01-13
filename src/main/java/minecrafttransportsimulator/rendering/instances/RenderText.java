@@ -13,7 +13,7 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.entities.components.AEntityC_Definable;
+import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.rendering.components.RenderableObject;
 
@@ -59,7 +59,7 @@ public class RenderText{
 	 *  Similar to the 2D text drawing method, except this method will render the text according to the passed-in text JSON in 3D space at the point specified.
 	 *  Essentially, this is JSON-defined rendering rather than manual entry of points.
 	 */
-	public static void draw3DText(String text, AEntityC_Definable<?> entity, JSONText definition, float preScaledFactor, boolean pixelCoords){
+	public static void draw3DText(String text, AEntityD_Definable<?> entity, JSONText definition, float preScaledFactor, boolean pixelCoords){
 		if(!text.isEmpty()){
 			//Get the actual color we will need to render with based on JSON.
 			ColorRGB color = entity.getTextColor(definition.inheritedColorIndex, definition.color);

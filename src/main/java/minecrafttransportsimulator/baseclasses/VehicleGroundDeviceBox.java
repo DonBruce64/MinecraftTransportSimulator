@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import minecrafttransportsimulator.entities.components.AEntityC_Definable;
-import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartGroundDevice;
@@ -294,40 +292,31 @@ public class VehicleGroundDeviceBox{
 	 */
 	private boolean checkEntityCollisions(Point3d collisionMotion){
 		boolean didCollision = false;
-		//Commented out as LT ents don't support collision yet.
-		/*for(WrapperEntity entity : vehicle.world.getEntitiesClassNamed("com.creativemd.littletiles.common.entity.EntityAnimation")){
-			if(entity.updateBoundingBoxCollisions(solidBox, collisionMotion, false)){
-				didCollision = true;
-			}
-		}*/
-		for(AEntityC_Definable<?> entity : AEntityC_Definable.getRenderableEntities(vehicle.world)){
-			if(entity instanceof AEntityD_Interactable && !entity.equals(vehicle)){
-				AEntityD_Interactable<?> interactable = (AEntityD_Interactable<?>) entity;
-				if(vehicle.canCollideWith(interactable) && !interactable.collidedEntities.contains(vehicle) && interactable.encompassingBox.intersects(solidBox)){
-					//We know we could have hit this entity.  Check if we actually did.
-					BoundingBox collidingBox = null;
-					double boxCollisionDepth = 0;
-					for(BoundingBox box : interactable.getCollisionBoxes()){
-						if(box.intersects(solidBox)){
-							if(collisionMotion.y > 0){
-								boxCollisionDepth = solidBox.globalCenter.y + solidBox.heightRadius - (box.globalCenter.y - box.heightRadius);
-								if(boxCollisionDepth > solidBox.currentCollisionDepth.y){
-									solidBox.currentCollisionDepth.y = boxCollisionDepth;
-									collidingBox = box;
-								}
-							}else{
-								boxCollisionDepth = box.globalCenter.y + box.heightRadius - (solidBox.globalCenter.y - solidBox.heightRadius);
-								if(boxCollisionDepth > solidBox.currentCollisionDepth.y){
-									solidBox.currentCollisionDepth.y = boxCollisionDepth;
-									collidingBox = box;
-								}
+		for(EntityVehicleF_Physics otherVehicle : vehicle.world.getEntitiesOfType(EntityVehicleF_Physics.class)){
+			if(!otherVehicle.equals(vehicle) && vehicle.canCollideWith(otherVehicle) && !otherVehicle.collidedEntities.contains(vehicle) && otherVehicle.encompassingBox.intersects(solidBox)){
+				//We know we could have hit this entity.  Check if we actually did.
+				BoundingBox collidingBox = null;
+				double boxCollisionDepth = 0;
+				for(BoundingBox box : otherVehicle.getCollisionBoxes()){
+					if(box.intersects(solidBox)){
+						if(collisionMotion.y > 0){
+							boxCollisionDepth = solidBox.globalCenter.y + solidBox.heightRadius - (box.globalCenter.y - box.heightRadius);
+							if(boxCollisionDepth > solidBox.currentCollisionDepth.y){
+								solidBox.currentCollisionDepth.y = boxCollisionDepth;
+								collidingBox = box;
+							}
+						}else{
+							boxCollisionDepth = box.globalCenter.y + box.heightRadius - (solidBox.globalCenter.y - solidBox.heightRadius);
+							if(boxCollisionDepth > solidBox.currentCollisionDepth.y){
+								solidBox.currentCollisionDepth.y = boxCollisionDepth;
+								collidingBox = box;
 							}
 						}
 					}
-					if(collidingBox != null){
-						vehicle.collidedEntities.add(interactable);
-						didCollision = true;
-					}
+				}
+				if(collidingBox != null){
+					vehicle.collidedEntities.add(otherVehicle);
+					didCollision = true;
 				}
 			}
 		}

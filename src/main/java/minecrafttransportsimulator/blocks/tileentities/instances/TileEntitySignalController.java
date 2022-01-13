@@ -11,7 +11,6 @@ import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
-import minecrafttransportsimulator.entities.components.AEntityC_Definable;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
@@ -356,15 +355,13 @@ public class TileEntitySignalController extends TileEntityDecor{
 									//Just wait until the other signals don't have any cooldown, then set them red.
 									stateChangeRequested = true;
 								}else{
-									for(AEntityC_Definable<?> entity : AEntityC_Definable.getRenderableEntities(world)){
-										if(entity instanceof EntityVehicleF_Physics){
-											Point3d adjustedPos = entity.position.copy().subtract(intersectionCenterPoint).rotateY(-axis.yRotation);
-											if(adjustedPos.x > signalLineCenter.x - signalLineWidth/2D && adjustedPos.x < signalLineCenter.x + signalLineWidth/2D && adjustedPos.z > signalLineCenter.z && adjustedPos.z < signalLineCenter.z + 16){
-												//Vehicle present.  If we are blocked, send the respective signal states to the other signals to change them.
-												//Flag this signal as pending changes to blocked signals to avoid checking until those signals change.
-												stateChangeRequested = true;
-												break;
-											}
+									for(EntityVehicleF_Physics vehicle : world.getEntitiesOfType(EntityVehicleF_Physics.class)){
+										Point3d adjustedPos = vehicle.position.copy().subtract(intersectionCenterPoint).rotateY(-axis.yRotation);
+										if(adjustedPos.x > signalLineCenter.x - signalLineWidth/2D && adjustedPos.x < signalLineCenter.x + signalLineWidth/2D && adjustedPos.z > signalLineCenter.z && adjustedPos.z < signalLineCenter.z + 16){
+											//Vehicle present.  If we are blocked, send the respective signal states to the other signals to change them.
+											//Flag this signal as pending changes to blocked signals to avoid checking until those signals change.
+											stateChangeRequested = true;
+											break;
 										}
 									}
 								}

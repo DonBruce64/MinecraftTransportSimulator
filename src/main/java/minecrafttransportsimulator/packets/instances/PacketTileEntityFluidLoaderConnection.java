@@ -1,10 +1,11 @@
 package minecrafttransportsimulator.packets.instances;
 
+import java.util.UUID;
+
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityFluidLoader;
-import minecrafttransportsimulator.entities.components.AEntityA_Base;
-import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
+import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.PartInteractable;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
@@ -14,20 +15,20 @@ import minecrafttransportsimulator.packets.components.APacketEntity;
  * @author don_bruce
  */
 public class PacketTileEntityFluidLoaderConnection extends APacketEntity<TileEntityFluidLoader>{
-	private final int linkedID;
+	private final UUID linkedID;
 	private final Point3d partOffset;
 	private final boolean connect;
 	
 	public PacketTileEntityFluidLoaderConnection(TileEntityFluidLoader loader, boolean connect){
 		super(loader);
-		this.linkedID = loader.connectedPart.entityOn.lookupID;
+		this.linkedID = loader.connectedPart.entityOn.uniqueUUID;
 		this.partOffset = loader.connectedPart.placementOffset;
 		this.connect = connect;
 	}
 	
 	public PacketTileEntityFluidLoaderConnection(ByteBuf buf){
 		super(buf);
-		this.linkedID = buf.readInt();
+		this.linkedID = readUUIDFromBuffer(buf);
 		this.partOffset = readPoint3dFromBuffer(buf);
 		this.connect = buf.readBoolean();
 	}
@@ -35,14 +36,14 @@ public class PacketTileEntityFluidLoaderConnection extends APacketEntity<TileEnt
 	@Override
 	public void writeToBuffer(ByteBuf buf){
 		super.writeToBuffer(buf);
-		buf.writeInt(linkedID);
+		writeUUIDToBuffer(linkedID, buf);
 		buf.writeBoolean(connect);
 		writePoint3dToBuffer(partOffset, buf);
 	}
 	
 	@Override
 	protected boolean handle(WrapperWorld world, TileEntityFluidLoader loader){
-		AEntityE_Multipart<?> entity = (AEntityE_Multipart<?>) AEntityA_Base.getEntity(world, linkedID);
+		AEntityF_Multipart<?> entity = world.getEntity(linkedID);
 		if(entity != null){
 			if(connect){
 				loader.connectedPart = (PartInteractable) entity.getPartAtLocation(partOffset);

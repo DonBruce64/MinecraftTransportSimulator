@@ -17,8 +17,7 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
-import minecrafttransportsimulator.entities.instances.EntityParticle;
+import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.rendering.components.GIFParser;
 import minecrafttransportsimulator.rendering.components.GIFParser.ParsedGIF;
 import minecrafttransportsimulator.rendering.components.RenderableObject;
@@ -43,6 +42,9 @@ public class InterfaceRender{
 	private static float lastLightmapX;
 	private static float lastLightmapY;
 	
+	//Copied from ParticleManager as it's not accessable.
+	private static final ResourceLocation PARTICLE_TEXTURES = new ResourceLocation("textures/particle/particles.png");
+	
 	/**
 	 *  Renders the vertices stored in the passed-in {@link RenderableObject}.
 	 *  If the vertices should be cached per {@link RenderableObject#cacheVertices},
@@ -54,6 +56,9 @@ public class InterfaceRender{
 	public static void renderVertices(RenderableObject object){
 		if(object.disableLighting){
 			setLightingState(false);
+		}
+		if(object.ignoreWorldShading){
+			setSystemLightingState(false);
 		}
 		if(object.enableBrightBlending){
 			setBlendBright(true);
@@ -91,7 +96,7 @@ public class InterfaceRender{
 		if(object.texture == null){
 			GL11.glEnable(GL11.GL_TEXTURE_2D);
 		}
-		if(object.disableLighting){
+		if(object.disableLighting || object.ignoreWorldShading){
 			setLightingState(true);
 		}
 		if(object.enableBrightBlending){
@@ -174,6 +179,9 @@ public class InterfaceRender{
 		}else if(textureLocation.equals(RenderableObject.GLOBAL_TEXTURE_NAME)){
 			//Default texture.
 			Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
+		}else if(textureLocation.equals(RenderableObject.PARTICLE_TEXTURE_NAME)){
+			//Particle texture.
+			Minecraft.getMinecraft().getTextureManager().bindTexture(PARTICLE_TEXTURES);
 		}else{
 			//Parse texture if we don't have it yet.
 			if(!internalTextures.containsKey(textureLocation)){
@@ -356,7 +364,7 @@ public class InterfaceRender{
 	 *  This method manually renders all riders on an entity.  Useful if you're rendering the entity manually
 	 *  and the entity and its riders have been culled from rendering.
 	 */
-	public static void renderEntityRiders(AEntityD_Interactable<?> entity, float partialTicks){
+	public static void renderEntityRiders(AEntityE_Interactable<?> entity, float partialTicks){
 		for(WrapperEntity rider : entity.locationRiderMap.values()){
 			Entity riderEntity = rider.entity;
 			if(!(InterfaceClient.getClientPlayer().equals(rider) && InterfaceClient.inFirstPerson()) && riderEntity.posY > riderEntity.world.getHeight()){
@@ -366,17 +374,6 @@ public class InterfaceRender{
 				Minecraft.getMinecraft().getRenderManager().renderEntityStatic(riderEntity, partialTicks, false);
 				GL11.glPopMatrix();
 			}
-		}
-	}
-	
-	/**
-	 *  Spawns a particle into the world.  Particles are simply entities that are client-side only.
-	 *  This is handy if you have a lot of them flying around but could care less where they are and
-	 *  don't want to hamper the server with tons of ticking entities.
-	 */
-	public static void spawnParticle(EntityParticle particle){
-		if(Minecraft.getMinecraft().effectRenderer != null){
-			Minecraft.getMinecraft().effectRenderer.addEffect(new BuilderParticle(particle));
 		}
 	}
 }

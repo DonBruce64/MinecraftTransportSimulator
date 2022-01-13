@@ -3,8 +3,8 @@ package minecrafttransportsimulator.items.instances;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.entities.components.AEntityD_Interactable.PlayerOwnerState;
-import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
+import minecrafttransportsimulator.entities.components.AEntityE_Interactable.PlayerOwnerState;
+import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityFluidTank;
 import minecrafttransportsimulator.entities.instances.EntityFurnace;
@@ -39,7 +39,7 @@ public class ItemPartInteractable extends AItemPart implements IItemVehicleInter
 	}
 	
 	@Override
-	public PartInteractable createPart(AEntityE_Multipart<?> entity, WrapperPlayer placingPlayer, JSONPartDefinition packVehicleDef, WrapperNBT partData, APart parentPart){
+	public PartInteractable createPart(AEntityF_Multipart<?> entity, WrapperPlayer placingPlayer, JSONPartDefinition packVehicleDef, WrapperNBT partData, APart parentPart){
 		return new PartInteractable(entity, placingPlayer, packVehicleDef, validateData(partData), parentPart);
 	}
 	

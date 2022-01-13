@@ -1,7 +1,8 @@
 package minecrafttransportsimulator.baseclasses;
 
-import minecrafttransportsimulator.entities.components.AEntityA_Base;
-import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
+import java.util.UUID;
+
+import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.jsondefs.JSONConnection;
 import minecrafttransportsimulator.jsondefs.JSONConnectionGroup;
@@ -13,22 +14,22 @@ import minecrafttransportsimulator.mcinterface.WrapperWorld;
  * @author don_bruce
  */
 public class TrailerConnection{
-	private final String hitchEntityUUID;
-	private final String hookupEntityUUID;
+	private final UUID hitchEntityUUID;
+	private final UUID hookupEntityUUID;
 	public final int hitchGroupIndex;
 	public final int hitchConnectionIndex;
 	public final int hookupGroupIndex;
 	public final int hookupConnectionIndex;
-	public AEntityD_Interactable<?> hitchEntity;
-	public AEntityD_Interactable<?> hitchBaseEntity;
-	public AEntityD_Interactable<?> hookupEntity;
-	public AEntityD_Interactable<?> hookupBaseEntity;
+	public AEntityE_Interactable<?> hitchEntity;
+	public AEntityE_Interactable<?> hitchBaseEntity;
+	public AEntityE_Interactable<?> hookupEntity;
+	public AEntityE_Interactable<?> hookupBaseEntity;
 	public JSONConnectionGroup hitchConnectionGroup;
 	public JSONConnection hitchConnection;
 	public JSONConnectionGroup hookupConnectionGroup;
 	public JSONConnection hookupConnection;
 	
-	public TrailerConnection(AEntityD_Interactable<?> hitchEntity, int hitchGroupIndex, int hitchConnectionIndex, AEntityD_Interactable<?> hookupEntity, int hookupGroupIndex, int hookupConnectionIndex){
+	public TrailerConnection(AEntityE_Interactable<?> hitchEntity, int hitchGroupIndex, int hitchConnectionIndex, AEntityE_Interactable<?> hookupEntity, int hookupGroupIndex, int hookupConnectionIndex){
 		this.hitchEntityUUID = hitchEntity.uniqueUUID;
 		this.hookupEntityUUID = hookupEntity.uniqueUUID;
 		this.hitchGroupIndex = hitchGroupIndex;
@@ -41,8 +42,8 @@ public class TrailerConnection{
 	}
 	
 	public TrailerConnection(WrapperNBT data){
-		this.hitchEntityUUID = data.getString("hitchEntityUUID");
-		this.hookupEntityUUID = data.getString("hookupEntityUUID");
+		this.hitchEntityUUID = data.getUUID("hitchEntityUUID");
+		this.hookupEntityUUID = data.getUUID("hookupEntityUUID");
 		this.hitchGroupIndex = data.getInteger("hitchGroupIndex");
 		this.hitchConnectionIndex = data.getInteger("hitchConnectionIndex");
 		this.hookupGroupIndex = data.getInteger("hookupGroupIndex");
@@ -51,7 +52,7 @@ public class TrailerConnection{
 	
 	public boolean setConnection(WrapperWorld world){
 		if(hitchEntity == null){
-			hitchEntity = AEntityA_Base.getEntity(world, hitchEntityUUID);
+			hitchEntity = world.getEntity(hitchEntityUUID);
 		}
 		if(hitchEntity != null){
 			hitchBaseEntity = hitchEntity instanceof APart ? ((APart) hitchEntity).entityOn : hitchEntity;
@@ -59,7 +60,7 @@ public class TrailerConnection{
 			hitchConnection = hitchConnectionGroup.connections.get(hitchConnectionIndex);
 		}
 		if(hookupEntity == null){
-			hookupEntity = AEntityA_Base.getEntity(world, hookupEntityUUID);
+			hookupEntity = world.getEntity(hookupEntityUUID);
 		}
 		if(hookupEntity != null){
 			hookupBaseEntity = hookupEntity instanceof APart ? ((APart) hookupEntity).entityOn : hookupEntity;
@@ -87,8 +88,8 @@ public class TrailerConnection{
 	
 	public WrapperNBT getData(){
 		WrapperNBT data = new WrapperNBT();
-		data.setString("hitchEntityUUID", hitchEntityUUID);
-		data.setString("hookupEntityUUID", hookupEntityUUID);
+		data.setUUID("hitchEntityUUID", hitchEntityUUID);
+		data.setUUID("hookupEntityUUID", hookupEntityUUID);
 		data.setInteger("hitchGroupIndex", hitchGroupIndex);
 		data.setInteger("hitchConnectionIndex", hitchConnectionIndex);
 		data.setInteger("hookupGroupIndex", hookupGroupIndex);

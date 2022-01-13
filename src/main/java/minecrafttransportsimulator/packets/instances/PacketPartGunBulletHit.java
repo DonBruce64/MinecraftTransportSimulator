@@ -4,7 +4,7 @@ import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
+import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.EntityBullet;
 import minecrafttransportsimulator.entities.instances.PartGun;
 import minecrafttransportsimulator.items.instances.ItemBullet;
@@ -90,9 +90,9 @@ public class PacketPartGunBulletHit extends APacketEntity<PartGun>{
 					WrapperEntity entityHit = world.getEntity(hitEntityID);
 					if(entityHit != null){
 						BoundingBox hitBox = null;
-						if(entityHit.getBaseEntity() instanceof AEntityE_Multipart){
+						if(entityHit.getBaseEntity() instanceof AEntityF_Multipart){
 							//Need to get the part box hit for reference.
-							for(BoundingBox box : ((AEntityE_Multipart<?>) entityHit.getBaseEntity()).allInteractionBoxes){
+							for(BoundingBox box : ((AEntityF_Multipart<?>) entityHit.getBaseEntity()).allInteractionBoxes){
 								if(box.localCenter.equals(localCenter)){
 									hitBox = box;
 									break;

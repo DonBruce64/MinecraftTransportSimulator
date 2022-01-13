@@ -40,7 +40,7 @@ import minecrafttransportsimulator.systems.PackParserSystem;
  * 
  * @author don_bruce
  */
-public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvider> extends AEntityD_Interactable<JSONDefinition>{
+public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvider> extends AEntityE_Interactable<JSONDefinition>{
 	
 	/**This list contains all parts this entity has.  Do NOT directly modify this list.  Instead,
 	 * call {@link #addPart}, {@link #addPartFromItem}, or {@link #removePart} to ensure all sub-classed
@@ -91,7 +91,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 	private final float PART_SLOT_HITBOX_WIDTH = 0.75F;
 	private final float PART_SLOT_HITBOX_HEIGHT = 2.25F;
 	
-	public AEntityE_Multipart(WrapperWorld world, WrapperPlayer placingPlayer, WrapperNBT data){
+	public AEntityF_Multipart(WrapperWorld world, WrapperPlayer placingPlayer, WrapperNBT data){
 		super(world, placingPlayer, data);
 		//Add parts.
 		//Also Replace ride-able locations with seat locations.
@@ -135,7 +135,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 	@Override
 	public boolean update(){
 		if(super.update()){
-			world.beginProfiling("EntityE_Level", true);
+			world.beginProfiling("EntityF_Level", true);
 			
 			//If we have any NBT parts, add them now.
 			if(!partsFromNBT.isEmpty()){
@@ -883,7 +883,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 	 * Helper method to return the part at the specific index for the passed-in variable.
 	 * Returns null if the part doesn't exist.
 	 */
-	public static APart getSpecificPart(AEntityC_Definable<? extends AJSONPartProvider> entityAnimating, String variable, int partNumber){
+	public static APart getSpecificPart(AEntityD_Definable<? extends AJSONPartProvider> entityAnimating, String variable, int partNumber){
 		//Iterate through our parts to find the index of the pack def for the part we want.
 		String partType = variable.substring(0, variable.indexOf("_"));
 		JSONPartDefinition foundDef = null;
@@ -927,7 +927,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 					APart part = (APart) entityAnimating;
 					return part.entityOn.getPartAtLocation(part.getPackForSubPart(foundDef).pos);
 				}else{
-					AEntityE_Multipart<?> provider = (AEntityE_Multipart<?>) entityAnimating;
+					AEntityF_Multipart<?> provider = (AEntityF_Multipart<?>) entityAnimating;
 					return provider.getPartAtLocation(foundDef.pos);
 				}
 			}
@@ -941,7 +941,7 @@ public abstract class AEntityE_Multipart<JSONDefinition extends AJSONPartProvide
 	 * Helper method to return the value of an animation for a specific part, as
 	 * determined by the index of that part.
 	 */
-	public static double getSpecificPartAnimation(AEntityC_Definable<? extends AJSONPartProvider> entityAnimating, String variable, int partNumber, float partialTicks){
+	public static double getSpecificPartAnimation(AEntityD_Definable<? extends AJSONPartProvider> entityAnimating, String variable, int partNumber, float partialTicks){
 		APart foundPart = getSpecificPart(entityAnimating, variable, partNumber);
 		if(foundPart != null){
 			return foundPart.getRawVariableValue(variable.substring(0, variable.lastIndexOf("_")), partialTicks);

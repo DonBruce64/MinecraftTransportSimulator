@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.UUID;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
@@ -345,7 +346,7 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 			if(heldItem instanceof ItemItem){
 				ItemItem packItem = (ItemItem) heldItem;
 				if(packItem.definition.item.type.equals(ItemComponentType.KEY)){
-					if(uniqueUUID.equals(new WrapperNBT(player.getHeldStack()).getString("vehicle"))){
+					if(uniqueUUID.equals(UUID.fromString(new WrapperNBT(player.getHeldStack()).getString("vehicle")))){
 						return true;
 					}
 				}

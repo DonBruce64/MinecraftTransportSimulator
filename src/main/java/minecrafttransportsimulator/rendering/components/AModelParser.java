@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import minecrafttransportsimulator.entities.components.AEntityC_Definable;
+import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.rendering.instances.ModelParserOBJ;
 
 /**Abstract class for parsing models.  This contains methods for determining what models
@@ -60,10 +60,8 @@ public abstract class AModelParser{
 	 *  These are returned as a list.  Objects in the parsed model are cross-checked with the passed-in 
 	 *  definition to ensure the proper constructors are created.  All objects in the model
 	 *  are assured to be turned into one of the objects in the returned list.
-	 *  The passed-in definition may be null to prevent checking against JSON, though non-JSON model objects
-	 *  will still be generated as applicable.
 	 */
-	public static <AnimationEntity extends AEntityC_Definable<?>> List<RenderableModelObject<AnimationEntity>> generateRenderables(AEntityC_Definable<?> entity){
+	public static <AnimationEntity extends AEntityD_Definable<?>> List<RenderableModelObject<AnimationEntity>> generateRenderables(AEntityD_Definable<?> entity){
 		String modelLocation = entity.definition.getModelLocation(entity.subName);
 		List<RenderableObject> parsedModelObjects = parseModel(modelLocation);
 		List<RenderableModelObject<AnimationEntity>> modelObjects = new ArrayList<RenderableModelObject<AnimationEntity>>();

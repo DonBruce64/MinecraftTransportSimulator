@@ -1,43 +1,52 @@
 package minecrafttransportsimulator.entities.instances;
 
+import java.nio.FloatBuffer;
+
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.entities.components.AEntityB_Existing;
-import minecrafttransportsimulator.entities.components.AEntityC_Definable;
+import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
+import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.JSONParticle;
 import minecrafttransportsimulator.jsondefs.JSONParticle.ParticleType;
-import minecrafttransportsimulator.mcinterface.InterfaceRender;
+import minecrafttransportsimulator.mcinterface.InterfaceClient;
+import minecrafttransportsimulator.mcinterface.InterfaceEventsModelLoader;
+import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.rendering.components.RenderableObject;
+import minecrafttransportsimulator.rendering.instances.RenderParticle;
 
 /**Basic particle class.  This mimic's MC's particle logic, except we can manually set
- * movement logic.  Particles may be spawned by calling {@link InterfaceRender#spawnParticle(EntityParticle)}
+ * movement logic.
  *
  * @author don_bruce
  */
-public class EntityParticle extends AEntityB_Existing{
+public class EntityParticle extends AEntityC_Renderable{
+	private static final FloatBuffer STANDARD_RENDER_BUFFER = generateStandardBuffer();
+	private static final int PARTICLES_PER_ROWCOL = 16;
 	
 	//Constant properties.
-	public final JSONParticle definition;
-	public final int maxAge;
+	private final JSONParticle definition;
+	private final int maxAge;
 	
 	private final ColorRGB startColor;
 	private final ColorRGB endColor;
 	private final ColorRGB staticColor;
+	private final RenderableObject renderable;
 
 	//Runtime variables.
 	public boolean touchingBlocks;
 	public int age;
+	
+	private static RenderParticle renderer;
 
-	public EntityParticle(AEntityC_Definable<?> entitySpawning, JSONParticle definition){
+	public EntityParticle(AEntityD_Definable<?> entitySpawning, JSONParticle definition){
 		super(entitySpawning.world, entitySpawning.position, ZERO_FOR_CONSTRUCTOR, ZERO_FOR_CONSTRUCTOR);
-		position.addScaled(entitySpawning.motion, AEntityVehicleB_Rideable.SPEED_FACTOR);
 		if(definition.pos != null){
 			position.add(definition.pos.copy().rotateFine(entitySpawning.angles));
 		}
 		if(definition.initialVelocity != null){
 			//Set initial velocity, but add some randomness so particles don't all go in a line.
 			Point3d adjustedVelocity = definition.initialVelocity.copy().rotateFine(entitySpawning.angles);
-			motion.addScaled(entitySpawning.motion, AEntityVehicleB_Rideable.SPEED_FACTOR);
 			motion.x += adjustedVelocity.x/10D + 0.02 - Math.random()*0.04;
 			motion.y += adjustedVelocity.y/10D + 0.02 - Math.random()*0.04;
 			motion.z += adjustedVelocity.z/10D + 0.02 - Math.random()*0.04;
@@ -61,6 +70,18 @@ public class EntityParticle extends AEntityB_Existing{
 			this.startColor = null;
 			this.endColor = null;
 			this.staticColor = ColorRGB.WHITE; 
+		}
+		
+		//Generate the points for this particle's renderable and create it.
+		FloatBuffer buffer = FloatBuffer.allocate(STANDARD_RENDER_BUFFER.capacity());
+		buffer.put(STANDARD_RENDER_BUFFER);
+		STANDARD_RENDER_BUFFER.rewind();
+		buffer.flip();
+		this.renderable = new RenderableObject("particle", definition.texture != null ? definition.texture : (definition.type.equals(ParticleType.BREAK) ? RenderableObject.GLOBAL_TEXTURE_NAME : RenderableObject.PARTICLE_TEXTURE_NAME), staticColor != null ? staticColor : new ColorRGB(), buffer, false);
+		renderable.disableLighting = definition.type.equals(ParticleType.FLAME);
+		renderable.ignoreWorldShading = true;
+		if(definition.type.equals(ParticleType.BREAK)){
+			setParticleTextureBounds(0, 0);
 		}
 	}
 	
@@ -147,6 +168,12 @@ public class EntityParticle extends AEntityB_Existing{
 			if(++age == maxAge){
 				remove();
 			}
+			
+			//Update rotation to always face the player.
+			WrapperPlayer clientPlayer = InterfaceClient.getClientPlayer();
+			angles.setTo(position).subtract(clientPlayer.getPosition()).add(0, -clientPlayer.getEyeHeight(), 0).subtract(InterfaceClient.getCameraPosition()).getAngles(true);
+			angles.y += 180;
+			angles.x = -angles.x;
 			return true;
 		}else{
 			return false;
@@ -161,6 +188,15 @@ public class EntityParticle extends AEntityB_Existing{
 	@Override
 	public boolean shouldSavePosition(){
 		return false;
+	}
+	
+	@Override
+	@SuppressWarnings("unchecked")
+	public RenderParticle getRenderer(){
+		if(renderer == null){
+			renderer = new RenderParticle();
+		}
+		return renderer;
 	}
 	
 	/**
@@ -188,57 +224,45 @@ public class EntityParticle extends AEntityB_Existing{
 	
 	/**
 	 *  Gets the current size of the particle.  This parameter
-	 *  is used for the particle's bounding box, and does not need
-	 *  to take the scale of the particle into account.
+	 *  is used for the particle's bounding box for collision, and
+	 *  does not necessarily need to take the scale of the particle into account.
 	 */
-	public float getSize(){
+	private float getSize(){
 		return definition.type.equals(ParticleType.DRIP) || definition.type.equals(ParticleType.BREAK) ? 0.1F : 0.2F;
 	}
 	
 	/**
-	 *  Gets the current red color value of the particle.  This parameter
-	 *  is used to change the particle's color.  Normally only used on smoke.
+	 *  Called to render the particle..
+	 *  Clearner as we don't need to preface variable references.
 	 */
-	public float getRed(){
-		if(staticColor != null){
-			return staticColor.red;
-		}else{
-			return startColor.red + (endColor.red - startColor.red)*age/maxAge;
+	public void render(float partialTicks){
+		if(staticColor == null){
+			renderable.color.red = startColor.red + (endColor.red - startColor.red)*(age+partialTicks)/maxAge;
+			renderable.color.green = startColor.green + (endColor.green - startColor.green)*(age+partialTicks)/maxAge;
+			renderable.color.blue = startColor.blue + (endColor.blue - startColor.blue)*(age+partialTicks)/maxAge;
 		}
-	}
-	
-	/**
-	 *  Gets the current green color value of the particle.  This parameter
-	 *  is used to change the particle's color.  Normally only used on smoke.
-	 */
-	public float getGreen(){
-		if(staticColor != null){
-			return staticColor.green;
-		}else{
-			return startColor.green + (endColor.green - startColor.green)*age/maxAge;
+		renderable.alpha = getAlpha(partialTicks);
+		renderable.scale = getSize()*getScale(partialTicks);
+		
+		switch(definition.type){
+			case SMOKE: setParticleTextureBounds(7 - age*8/maxAge, 0); break;//Smoke gets smaller as it ages.
+			case FLAME: setParticleTextureBounds(0, 3); break;
+			case DRIP: setParticleTextureBounds(touchingBlocks ? 1 : 0, 7); break;//Drips become flat when they hit the ground.
+			case BUBBLE: setParticleTextureBounds(0, 2); break;
+			case BREAK: break;//Do nothing, this will have been set at construction.
+			case GENERIC: break;//Do nothing, this is the same as the default buffer.
 		}
-	}
-	
-	/**
-	 *  Gets the current blue color value of the particle.  This parameter
-	 *  is used to change the particle's color.  Normally only used on smoke.
-	 */
-	public float getBlue(){
-		if(staticColor != null){
-			return staticColor.blue;
-		}else{
-			return startColor.blue + (endColor.blue - startColor.blue)*age/maxAge;
-		}
+		renderable.render();
 	}
 	
 	/**
 	 *  Gets the current alpha value of the particle.  This parameter
 	 *  is used to make the particle translucent.
 	 */
-	public float getAlpha(){
+	private float getAlpha(float partialTicks){
 		if(definition.transparency != 0){
 			if(definition.toTransparency != 0){
-				return definition.transparency + (definition.toTransparency - definition.transparency)*age/maxAge;
+				return definition.transparency + (definition.toTransparency - definition.transparency)*(age+partialTicks)/maxAge;
 			}else{
 				return definition.transparency;
 			}
@@ -249,12 +273,12 @@ public class EntityParticle extends AEntityB_Existing{
 	
 	/**
 	 *  Gets the current scale of the particle.
-	 *  This is for rendering, and does not reflect particle bounds.
+	 *  This is for rendering only; it does not affect collision.
 	 */
-	public float getScale(float partialTicks){
+	private float getScale(float partialTicks){
 		if(definition.scale != 0){
 			if(definition.toScale != 0){
-				return definition.scale + (definition.toScale - definition.scale)*age/maxAge;	
+				return definition.scale + (definition.toScale - definition.scale)*(age+partialTicks)/maxAge;	
 			}else{
 				return definition.scale;
 			}
@@ -265,5 +289,124 @@ public class EntityParticle extends AEntityB_Existing{
 				default: return 1.0F;
 			}
 		}
+	}
+	
+	private void setParticleTextureBounds(int uRow, int vCol){
+		float u;
+		float U;
+		float v;
+		float V;
+		if(definition.type.equals(ParticleType.BREAK)){
+			--position.y;
+			float[] uvPoints = InterfaceEventsModelLoader.getBlockBreakTexture(world, position);
+			++position.y;
+			u = uvPoints[0];
+			U = uvPoints[1];
+			v = uvPoints[2];
+			V = uvPoints[3];	
+		}else{
+			u = uRow++/(float)PARTICLES_PER_ROWCOL;
+			U = uRow/(float)PARTICLES_PER_ROWCOL;
+			v = vCol++/(float)PARTICLES_PER_ROWCOL;
+			V = vCol/(float)PARTICLES_PER_ROWCOL;	
+		}
+		
+		for(int i=0; i<6; ++i){
+			switch(i){
+				case(0):{//Bottom-right
+					renderable.vertices.put(i*8+3, U);
+					renderable.vertices.put(i*8+4, V);
+					break;
+				}
+				case(1):{//Top-right
+					renderable.vertices.put(i*8+3, U);
+					renderable.vertices.put(i*8+4, v);
+					break;
+				}
+				case(2):{//Top-left
+					renderable.vertices.put(i*8+3, u);
+					renderable.vertices.put(i*8+4, v);
+					break;
+				}
+				case(3):{//Bottom-right
+					renderable.vertices.put(i*8+3, U);
+					renderable.vertices.put(i*8+4, V);
+					break;
+				}
+				case(4):{//Top-left
+					renderable.vertices.put(i*8+3, u);
+					renderable.vertices.put(i*8+4, v);	
+					break;
+				}
+				case(5):{//Bottom-left
+					renderable.vertices.put(i*8+3, u);
+					renderable.vertices.put(i*8+4, V);
+					break;
+				}
+			}
+		}
+	}
+	
+	/**
+	 *  Helper method to generate a standard buffer to be used for all particles as a
+	 *  starting buffer.  Saves computation when creating particles.  Particle is assumed
+	 *  to have a size of 1x1 with UV-pamming of 0->1.
+	 */
+	private static FloatBuffer generateStandardBuffer(){
+		FloatBuffer buffer = FloatBuffer.allocate(6*8);
+		for(int i=0; i<6; ++i){
+			//Normal is always 0, 0, 1.
+			buffer.put(0);
+			buffer.put(0);
+			buffer.put(1);
+			switch(i){
+				case(0):{//Bottom-right
+					buffer.put(1);
+					buffer.put(1);
+					buffer.put(0.5F);
+					buffer.put(-0.5F);
+					break;
+				}
+				case(1):{//Top-right
+					buffer.put(1);
+					buffer.put(0);
+					buffer.put(0.5F);
+					buffer.put(0.5F);
+					break;
+				}
+				case(2):{//Top-left
+					buffer.put(0);
+					buffer.put(0);
+					buffer.put(-0.5F);
+					buffer.put(0.5F);
+					break;
+				}
+				case(3):{//Bottom-right
+					buffer.put(1);
+					buffer.put(1);
+					buffer.put(0.5F);
+					buffer.put(-0.5F);
+					break;
+				}
+				case(4):{//Top-left
+					buffer.put(0);
+					buffer.put(0);
+					buffer.put(-0.5F);
+					buffer.put(0.5F);	
+					break;
+				}
+				case(5):{//Bottom-left
+					buffer.put(0);
+					buffer.put(1);
+					buffer.put(-0.5F);
+					buffer.put(-0.5F);				
+					break;
+				}
+			}
+			//Z is always 0.
+			buffer.put(0);
+		}
+		buffer.flip();
+		return buffer;
 	}
 }

@@ -1,8 +1,8 @@
 package minecrafttransportsimulator.rendering.instances;
 
 import minecrafttransportsimulator.entities.instances.EntityBullet;
-import minecrafttransportsimulator.rendering.components.ARenderEntity;
+import minecrafttransportsimulator.rendering.components.ARenderEntityDefinable;
 
-public class RenderBullet extends ARenderEntity<EntityBullet>{
+public class RenderBullet extends ARenderEntityDefinable<EntityBullet>{
 
 }

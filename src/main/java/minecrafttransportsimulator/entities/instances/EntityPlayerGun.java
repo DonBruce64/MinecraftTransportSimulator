@@ -6,7 +6,7 @@ import java.util.Map;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
+import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.PartGun.GunState;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
@@ -31,7 +31,7 @@ import net.minecraft.item.ItemStack;
  *  
  * @author don_bruce
  */
-public class EntityPlayerGun extends AEntityE_Multipart<JSONPlayerGun>{
+public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun>{
 	public static final Map<String, EntityPlayerGun> playerClientGuns = new HashMap<String, EntityPlayerGun>();
 	public static final Map<String, EntityPlayerGun> playerServerGuns = new HashMap<String, EntityPlayerGun>();
 	

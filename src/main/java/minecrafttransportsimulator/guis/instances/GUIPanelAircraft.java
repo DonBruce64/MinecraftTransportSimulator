@@ -10,7 +10,7 @@ import java.util.Map.Entry;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.TrailerConnection;
-import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
+import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartEngine;
@@ -401,7 +401,7 @@ public class GUIPanelAircraft extends AGUIPanel{
 				@Override
 				public void onClicked(boolean leftSide){
 					SwitchEntry switchDef = trailerSwitchDefs.get(0);
-					InterfacePacket.sendToServer(new PacketEntityVariableSet(switchDef.entityOn, AEntityD_Interactable.TRAILER_CONNECTION_REQUEST_VARIABLE, switchDef.connectionGroupIndex + 1));
+					InterfacePacket.sendToServer(new PacketEntityVariableSet(switchDef.entityOn, AEntityE_Interactable.TRAILER_CONNECTION_REQUEST_VARIABLE, switchDef.connectionGroupIndex + 1));
 				}
 				
 				@Override
@@ -424,7 +424,7 @@ public class GUIPanelAircraft extends AGUIPanel{
 				@Override
 				public void onClicked(boolean leftSide){
 					SwitchEntry switchDef = trailerSwitchDefs.get(0);
-					InterfacePacket.sendToServer(new PacketEntityVariableSet(switchDef.entityOn, AEntityD_Interactable.TRAILER_CONNECTION_REQUEST_VARIABLE, switchDef.connectionGroupIndex + 1));
+					InterfacePacket.sendToServer(new PacketEntityVariableSet(switchDef.entityOn, AEntityE_Interactable.TRAILER_CONNECTION_REQUEST_VARIABLE, switchDef.connectionGroupIndex + 1));
 				}
 				
 				@Override

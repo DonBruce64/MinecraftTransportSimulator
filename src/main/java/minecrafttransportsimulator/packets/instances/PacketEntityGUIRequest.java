@@ -6,7 +6,7 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityFuelPump;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
-import minecrafttransportsimulator.entities.components.AEntityC_Definable;
+import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.EntityRadio;
 import minecrafttransportsimulator.guis.instances.GUIFuelPump;
@@ -56,11 +56,11 @@ public class PacketEntityGUIRequest extends APacketEntityInteract<AEntityB_Exist
 			case FUEL_PUMP: new GUIFuelPump((TileEntityFuelPump) entity, false); break;
 			case FUEL_PUMP_CONFIG: new GUIFuelPump((TileEntityFuelPump) entity, true); break;
 			case PACK_EXPORTER: new GUIPackExporter((EntityVehicleF_Physics) entity);	break;
-			case PAINT_GUN: new GUIPaintGun((AEntityC_Definable<?>) entity, player);	break;
+			case PAINT_GUN: new GUIPaintGun((AEntityD_Definable<?>) entity, player);	break;
 			case PART_BENCH: new GUIPartBench(((TileEntityDecor) entity).definition.decor.crafting); break;
 			case RADIO: new GUIRadio((EntityRadio) entity); break;
 			case SIGNAL_CONTROLLER: new GUISignalController((TileEntitySignalController) entity); break;
-			case TEXT_EDITOR: new GUITextEditor((AEntityC_Definable<?>) entity); break;
+			case TEXT_EDITOR: new GUITextEditor((AEntityD_Definable<?>) entity); break;
 		}
 		return true;
 	}

@@ -11,7 +11,7 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.entities.components.AEntityC_Definable;
+import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartGroundDevice;
@@ -31,7 +31,7 @@ import minecrafttransportsimulator.systems.ConfigSystem;
  *
  * @author don_bruce
  */
-public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>>{
+public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>>{
 	protected final String modelLocation;
 	protected final RenderableObject object;
 	private final List<RenderableModelObject<AnimationEntity>> allObjects;
@@ -204,7 +204,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 	 *  If the object should not render due to a transform, return false.
 	 *  This is static as it's common to all renderable objects, including those not in this class.
 	 */
-	public static boolean doPreRenderTransforms(AEntityC_Definable<?> entity, List<JSONAnimationDefinition> animations, boolean blendingEnabled, float partialTicks){
+	public static boolean doPreRenderTransforms(AEntityD_Definable<?> entity, List<JSONAnimationDefinition> animations, boolean blendingEnabled, float partialTicks){
 		if(animations != null){
 			double variableValue = 0;
 			double priorOffset = 0;
@@ -323,7 +323,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 	}
 	
 	private void doTreadRendering(PartGroundDevice tread, float partialTicks){
-		AEntityC_Definable<?> entityTreadAttachedTo = tread.placementDefinition.isSubPart ? tread.parentPart : tread.entityOn;
+		AEntityD_Definable<?> entityTreadAttachedTo = tread.placementDefinition.isSubPart ? tread.parentPart : tread.entityOn;
 		String treadPathModel = entityTreadAttachedTo.definition.getModelLocation(entityTreadAttachedTo.subName); 
 		Map<Float, List<Double[]>> treadPointsMap = treadPoints.get(treadPathModel);
 		if(treadPointsMap == null){
@@ -632,11 +632,11 @@ public class RenderableModelObject<AnimationEntity extends AEntityC_Definable<?>
 		return beamObject;
 	}
 	
-	private static <TreadEntity extends AEntityC_Definable<?>> List<Double[]> generateTreads(TreadEntity entityTreadAttachedTo, String treadPathModel, Map<Float, List<Double[]>> treadPointsMap, PartGroundDevice tread){
+	private static <TreadEntity extends AEntityD_Definable<?>> List<Double[]> generateTreads(TreadEntity entityTreadAttachedTo, String treadPathModel, Map<Float, List<Double[]>> treadPointsMap, PartGroundDevice tread){
 		//If we don't have the deltas, calculate them based on the points of the rollers on the model.			
 		//Search through rotatable parts on the model and grab the rollers.
 		Map<Integer, RenderableTreadRoller<TreadEntity>> parsedRollers = new HashMap<Integer, RenderableTreadRoller<TreadEntity>>();
-		for(RenderableModelObject<?> modelObject : entityTreadAttachedTo.getRenderer().objectLists.get(treadPathModel)){
+		for(RenderableModelObject<?> modelObject : ((ARenderEntityDefinable<?>) entityTreadAttachedTo.getRenderer()).objectLists.get(treadPathModel)){
 			if(modelObject instanceof RenderableTreadRoller){
 				@SuppressWarnings("unchecked")
 				RenderableTreadRoller<TreadEntity> treadObject = (RenderableTreadRoller<TreadEntity>) modelObject;

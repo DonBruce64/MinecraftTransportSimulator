@@ -1,7 +1,8 @@
 package minecrafttransportsimulator.packets.instances;
 
+import java.util.UUID;
+
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
 import minecrafttransportsimulator.guis.instances.GUIInventoryContainer;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
@@ -20,22 +21,22 @@ import minecrafttransportsimulator.packets.components.APacketPlayer;
  * @author don_bruce
  */
 public class PacketItemInteractable extends APacketPlayer{
-	private final int lookupID;
+	private final UUID uniqueUUID;
 	private final WrapperNBT data;
 	private final int units;
 	private final String texture;
 	
 	public PacketItemInteractable(WrapperPlayer player, EntityInventoryContainer inventory, String texture){
 		super(player);
-		this.lookupID = inventory.lookupID;
+		this.uniqueUUID = inventory.uniqueUUID;
 		this.data = inventory.save(new WrapperNBT());
 		this.units = inventory.getSize();
 		this.texture = texture;
 	}
 	
-	private PacketItemInteractable(WrapperPlayer player, int lookupID){
+	private PacketItemInteractable(WrapperPlayer player, UUID uniqueUUID){
 		super(player);
-		this.lookupID = lookupID;
+		this.uniqueUUID = uniqueUUID;
 		this.data = null;
 		this.units = 0;
 		this.texture = null;
@@ -43,7 +44,7 @@ public class PacketItemInteractable extends APacketPlayer{
 	
 	public PacketItemInteractable(ByteBuf buf){
 		super(buf);
-		this.lookupID = buf.readInt();
+		this.uniqueUUID = readUUIDFromBuffer(buf);
 		if(buf.readBoolean()){
 			this.data = readDataFromBuffer(buf);
 			this.units = buf.readInt();
@@ -62,7 +63,7 @@ public class PacketItemInteractable extends APacketPlayer{
 	@Override
 	public void writeToBuffer(ByteBuf buf){
 		super.writeToBuffer(buf);
-		buf.writeInt(lookupID);
+		writeUUIDToBuffer(uniqueUUID, buf);
 		if(data == null){
 			buf.writeBoolean(false);
 		}else{
@@ -88,12 +89,12 @@ public class PacketItemInteractable extends APacketPlayer{
 					super.close();
 					//Sends a packet back to the server to have it save state.
 					//Also kills the inventory to prevent memory leaks.
-					InterfacePacket.sendToServer(new PacketItemInteractable(player, lookupID));
+					InterfacePacket.sendToServer(new PacketItemInteractable(player, uniqueUUID));
 					inventory.remove();
 				}
 			};
 		}else{
-			EntityInventoryContainer inventory = AEntityA_Base.getEntity(world, lookupID);
+			EntityInventoryContainer inventory = world.getEntity(uniqueUUID);
 			WrapperNBT newData = new WrapperNBT();
 			newData.setData("inventory", inventory.save(new WrapperNBT()));
 			player.getHeldStack().setTagCompound(newData.tag);

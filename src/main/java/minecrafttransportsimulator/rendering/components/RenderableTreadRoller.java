@@ -3,7 +3,7 @@ package minecrafttransportsimulator.rendering.components;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.entities.components.AEntityC_Definable;
+import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 
 /**A specific class of {@link RenderableModelObject}, designed
  * for tread rollers.  Contains an extra method for calculating things.
@@ -11,7 +11,7 @@ import minecrafttransportsimulator.entities.components.AEntityC_Definable;
  *
  * @author don_bruce
  */
-public class RenderableTreadRoller<AnimationEntity extends AEntityC_Definable<?>> extends RenderableModelObject<AnimationEntity>{
+public class RenderableTreadRoller<AnimationEntity extends AEntityD_Definable<?>> extends RenderableModelObject<AnimationEntity>{
 	public final boolean isLeft;
 	public final int rollerNumber;
 	public final Point3d centerPoint;

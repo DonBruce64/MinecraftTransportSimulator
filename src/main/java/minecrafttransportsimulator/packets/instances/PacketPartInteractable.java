@@ -1,9 +1,11 @@
 package minecrafttransportsimulator.packets.instances;
 
+import java.util.UUID;
+
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
-import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
+import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartInteractable;
 import minecrafttransportsimulator.guis.instances.GUIFurnace;
@@ -23,33 +25,33 @@ import minecrafttransportsimulator.packets.components.APacketEntityInteract;
  * @author don_bruce
  */
 public class PacketPartInteractable extends APacketEntityInteract<PartInteractable, WrapperPlayer>{
-	private final int linkedID;
+	private final UUID linkedID;
 	private final Point3d linkedOffset;
 	
 	public PacketPartInteractable(PartInteractable interactable, WrapperPlayer player){
 		super(interactable, player);
 		if(interactable.linkedVehicle != null){
-			this.linkedID = interactable.linkedVehicle.lookupID;
+			this.linkedID = interactable.linkedVehicle.uniqueUUID;
 			this.linkedOffset = null;
 		}else if(interactable.linkedPart != null){
-			this.linkedID = interactable.linkedPart.entityOn.lookupID;
+			this.linkedID = interactable.linkedPart.entityOn.uniqueUUID;
 			this.linkedOffset = interactable.linkedPart.placementOffset;
 		}else{
-			this.linkedID = -1;
+			this.linkedID = null;
 			this.linkedOffset = null;
 		}
 	}
 	
 	public PacketPartInteractable(ByteBuf buf){
 		super(buf);
-		this.linkedID = buf.readInt();
+		this.linkedID = readUUIDFromBuffer(buf);
 		this.linkedOffset = buf.readBoolean() ? readPoint3dFromBuffer(buf) : null;
 	}
 	
 	@Override
 	public void writeToBuffer(ByteBuf buf){
 		super.writeToBuffer(buf);
-		buf.writeInt(linkedID);
+		writeUUIDToBuffer(linkedID, buf);
 		if(linkedOffset != null){
 			buf.writeBoolean(true);
 			writePoint3dToBuffer(linkedOffset, buf);
@@ -60,13 +62,13 @@ public class PacketPartInteractable extends APacketEntityInteract<PartInteractab
 	
 	@Override
 	public boolean handle(WrapperWorld world, PartInteractable interactable, WrapperPlayer player){
-		if(linkedID != -1){
-			AEntityA_Base linkedEntity = AEntityA_Base.getEntity(world, linkedID);
+		if(linkedID != null){
+			AEntityA_Base linkedEntity = world.getEntity(linkedID);
 			if(linkedEntity != null){
 				if(linkedOffset == null){
 					interactable.linkedVehicle = (EntityVehicleF_Physics) linkedEntity;
 				}else{
-					interactable.linkedPart = (PartInteractable) ((AEntityE_Multipart<?>) linkedEntity).getPartAtLocation(linkedOffset);
+					interactable.linkedPart = (PartInteractable) ((AEntityF_Multipart<?>) linkedEntity).getPartAtLocation(linkedOffset);
 				}
 			}
 		}else{

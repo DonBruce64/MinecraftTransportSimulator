@@ -12,6 +12,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
@@ -23,9 +26,9 @@ import minecrafttransportsimulator.blocks.components.ABlockBaseTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
-import minecrafttransportsimulator.entities.components.AEntityC_Definable;
-import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
-import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
+import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
+import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
+import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
@@ -70,6 +73,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 import net.minecraftforge.common.IPlantable;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -91,10 +95,18 @@ public class WrapperWorld{
 	private final Map<WrapperPlayer, BuilderEntityRenderForwarder> activePlayerFollowers = new HashMap<WrapperPlayer, BuilderEntityRenderForwarder>();
 	private final List<AxisAlignedBB> mutableCollidingAABBs = new ArrayList<AxisAlignedBB>();
 	private final Set<BlockPos> knownAirBlocks = new HashSet<BlockPos>();
-	private final WrapperNBT savedData;
 	
 	//TODO make this protected when we abstract overlays and packets.
 	public final World world;
+	
+	
+	public final ConcurrentLinkedQueue<AEntityA_Base> allEntities = new ConcurrentLinkedQueue<AEntityA_Base>();
+	public final ConcurrentLinkedQueue<AEntityC_Renderable> renderableEntities = new ConcurrentLinkedQueue<AEntityC_Renderable>();
+	private final ConcurrentHashMap<Class<? extends AEntityA_Base>, ConcurrentLinkedQueue<? extends AEntityA_Base>> entitiesByClass = new ConcurrentHashMap<Class<? extends AEntityA_Base>, ConcurrentLinkedQueue<? extends AEntityA_Base>>();
+	private final ConcurrentHashMap<UUID, AEntityA_Base> trackedEntityMap = new ConcurrentHashMap<UUID, AEntityA_Base>();
+	
+	private final WrapperNBT savedData;
+	
 
 	private WrapperWorld(World world){
 		this.world = world;
@@ -115,6 +127,7 @@ public class WrapperWorld{
 				throw new IllegalStateException("Could not load saved data from disk!  This will result in data loss if we continue!");
 			}
 		}
+		MinecraftForge.EVENT_BUS.register(this);
 	}
 	
 	/**
@@ -263,19 +276,6 @@ public class WrapperWorld{
 	}
 	
 	/**
-	 *  Returns a list of entities with the specified class name in the world.
-	 */
-	public List<WrapperEntity> getEntitiesClassNamed(String className){
-		List<WrapperEntity> entities = new ArrayList<WrapperEntity>();
-		for(Entity entity : world.loadedEntityList){
-			if(entity.getClass().getCanonicalName().equals(className)){
-				entities.add(WrapperEntity.getWrapperFor(entity));
-			}
-		}
-		return entities;
-	}
-	
-	/**
 	 *  Returns a list of all hostile entities in the specified radius.
 	 */
 	public List<WrapperEntity> getEntitiesHostile(WrapperEntity lookingEntity, double radius){
@@ -315,7 +315,7 @@ public class WrapperWorld{
 	}
 	
 	/**
-	 *  Spawns the entity into the world.
+	 *  Spawns the brand-new entity into the world.
 	 */
 	public void spawnEntity(AEntityB_Existing entity){
 		BuilderEntityExisting builder = new BuilderEntityExisting(entity.world.world);
@@ -378,8 +378,8 @@ public class WrapperWorld{
 						//Don't attack ourselves.
 						iterator.remove();
 						continue;
-					}else if(entityAttacked instanceof AEntityE_Multipart){
-						if(((AEntityE_Multipart<?>) entityAttacked).parts.contains(damage.damgeSource)){
+					}else if(entityAttacked instanceof AEntityF_Multipart){
+						if(((AEntityF_Multipart<?>) entityAttacked).parts.contains(damage.damgeSource)){
 							//Don't attack the entity we are a part on.
 							iterator.remove();
 							continue;
@@ -390,15 +390,15 @@ public class WrapperWorld{
 				//Get hitboxes hit if we are a moving source of damage.
 				if(motion != null){
 					TreeMap<Double, BoundingBox> hitBoxes = new TreeMap<Double, BoundingBox>();
-					if(entityAttacked instanceof AEntityE_Multipart){
-						for(BoundingBox box : ((AEntityE_Multipart<?>) entityAttacked).allInteractionBoxes){
+					if(entityAttacked instanceof AEntityF_Multipart){
+						for(BoundingBox box : ((AEntityF_Multipart<?>) entityAttacked).allInteractionBoxes){
 							Point3d delta = box.getIntersectionPoint(startPoint, endPoint); 
 							if(delta != null){
 								hitBoxes.put(delta.distanceTo(startPoint), box);
 							}
 						}
-					}else if(entityAttacked instanceof AEntityD_Interactable){
-						for(BoundingBox box : ((AEntityD_Interactable<?>) entityAttacked).interactionBoxes){
+					}else if(entityAttacked instanceof AEntityE_Interactable){
+						for(BoundingBox box : ((AEntityE_Interactable<?>) entityAttacked).interactionBoxes){
 							Point3d delta = box.getIntersectionPoint(startPoint, endPoint); 
 							if(delta != null){
 								hitBoxes.put(delta.distanceTo(startPoint), box);
@@ -462,7 +462,7 @@ public class WrapperWorld{
 	 *  Loads all entities that are in the passed-in range into the passed-in entity.
 	 *  Only non-hostile mobs that are not already riding an entity will be loaded.
 	 */
-	public void loadEntities(BoundingBox box, AEntityD_Interactable<?> entityToLoad){
+	public void loadEntities(BoundingBox box, AEntityE_Interactable<?> entityToLoad){
 		for(Entity entity : world.getEntitiesWithinAABB(Entity.class, box.convert())){
 			if(!entity.isRiding() && (entity instanceof INpc || entity instanceof EntityCreature) && !(entity instanceof IMob)){
 				for(Point3d ridableLocation : entityToLoad.ridableLocations){
@@ -1049,6 +1049,10 @@ public class WrapperWorld{
 	public void spawnExplosion(Point3d location, double strength, boolean flames){
 		world.newExplosion(null, location.x, location.y, location.z, (float) strength, flames, ConfigSystem.configObject.general.blockBreakage.value);
 	}
+	
+	
+	//ENTITY MANAGEMENT CODE----- TO BE OUTSOURCED WHEN CONVERTING.
+	
    
    /**
     * Spawn "follower" entities for the player if they don't exist already.
@@ -1058,43 +1062,43 @@ public class WrapperWorld{
     * This handles players leaving.  We could use events for this, but they're not reliable.
     */
    @SubscribeEvent
-   public static void on(TickEvent.WorldTickEvent event){
-	   if(event.phase.equals(Phase.END) && !event.world.isRemote){
+   public void on(TickEvent.WorldTickEvent event){
+	   //Need to check if it's our world, because Forge is stupid like that.
+	   if(event.world.equals(world) && event.phase.equals(Phase.END) && !event.world.isRemote){
 		   for(EntityPlayer player : event.world.playerEntities){
-			   WrapperWorld worldWrapper = getWrapperFor(event.world);
 			   //Need to use wrapper here as the player equality tests don't work if there are two players with the same ID.
 			   WrapperPlayer playerWrapper = WrapperPlayer.getWrapperFor(player);
-			   if(worldWrapper.activePlayerFollowers.containsKey(playerWrapper)){
+			   if(activePlayerFollowers.containsKey(playerWrapper)){
 				   //Follower exists, check if world is the same and it is actually updating.
 				   //We check basic states, and then the watchdog bit that gets reset every tick.
 				   //This way if we're in the world, but not valid we will know.
-				   BuilderEntityRenderForwarder follower = worldWrapper.activePlayerFollowers.get(playerWrapper);
+				   BuilderEntityRenderForwarder follower = activePlayerFollowers.get(playerWrapper);
 				   if(follower.world != player.world || follower.playerFollowing != player || player.isDead || follower.isDead || follower.idleTickCounter == 20){
 					   //Follower is not linked.  Remove it and re-create in code below.
 					   follower.setDead();
-					   worldWrapper.activePlayerFollowers.remove(playerWrapper);
-					   worldWrapper.ticksSincePlayerJoin.remove(playerWrapper);
+					   activePlayerFollowers.remove(playerWrapper);
+					   ticksSincePlayerJoin.remove(playerWrapper);
 				   }else{
 					   ++follower.idleTickCounter;
 					   continue;
 				   }
 			   }
 			   
-			   if(!worldWrapper.activePlayerFollowers.containsKey(playerWrapper)){
+			   if(!activePlayerFollowers.containsKey(playerWrapper)){
 				   //Follower does not exist, check if player has been present for 3 seconds and spawn it.
 				   int totalTicksWaited = 0;
-				   if(worldWrapper.ticksSincePlayerJoin.containsKey(playerWrapper)){
-					   totalTicksWaited = worldWrapper.ticksSincePlayerJoin.get(playerWrapper); 
+				   if(ticksSincePlayerJoin.containsKey(playerWrapper)){
+					   totalTicksWaited = ticksSincePlayerJoin.get(playerWrapper); 
 				   }
 				   if(++totalTicksWaited == 60){
 					   //Spawn fowarder and gun.
 					   BuilderEntityRenderForwarder follower = new BuilderEntityRenderForwarder(player);
 					   follower.loadedFromSavedNBT = true;
 					   event.world.spawnEntity(follower);
-					   worldWrapper.activePlayerFollowers.put(playerWrapper, follower);
+					   activePlayerFollowers.put(playerWrapper, follower);
 					   
-					   EntityPlayerGun entity = new EntityPlayerGun(worldWrapper, playerWrapper, new WrapperNBT());
-					   worldWrapper.spawnEntity(entity);
+					   EntityPlayerGun entity = new EntityPlayerGun(this, playerWrapper, new WrapperNBT());
+					   spawnEntity(entity);
 					   
 					   //If the player is new, also add handbooks.
 					   if(!ConfigSystem.configObject.general.joinedPlayers.value.contains(playerWrapper.getID())){
@@ -1104,10 +1108,64 @@ public class WrapperWorld{
 						   ConfigSystem.saveToDisk();
 					   }
 				   }else{
-					   worldWrapper.ticksSincePlayerJoin.put(playerWrapper, totalTicksWaited);
+					   ticksSincePlayerJoin.put(playerWrapper, totalTicksWaited);
 				   }
 			   }
 		   }
+	   }
+   }
+   
+   /**
+    * Adds the entity to the world.  This will make it get update ticks and be rendered
+    * and do collision checks, as applicable.  Note that this should only be called after
+    * FULL construction.  As such, it is recommended to NOT put the call in the entity
+    * constructor itself as that would prevent extending the class.
+    */
+   public <EntityType extends AEntityA_Base> void addEntity(EntityType entity){
+	   allEntities.add(entity);
+	   if(entity instanceof AEntityC_Renderable){
+		   renderableEntities.add((AEntityC_Renderable) entity);
+	   }
+	   
+	   @SuppressWarnings("unchecked")
+	   ConcurrentLinkedQueue<EntityType> classList = (ConcurrentLinkedQueue<EntityType>) entitiesByClass.get(entity.getClass());
+	   if(classList == null){
+		   classList = new ConcurrentLinkedQueue<EntityType>();
+		   entitiesByClass.put(entity.getClass(), classList);
+	   }
+	   classList.add(entity);
+	   if(entity.shouldSync()){
+		   trackedEntityMap.put(entity.uniqueUUID, entity);
+	   }
+   }
+   
+   /**
+    * Gets the entity with the requested UUID.
+    */
+   @SuppressWarnings("unchecked")
+   public <EntityType extends AEntityA_Base> EntityType getEntity(UUID uniqueUUID){
+	   return (EntityType) trackedEntityMap.get(uniqueUUID);
+   }
+   
+   /**
+    * Gets the list of all entities of the specified class.
+    */
+   @SuppressWarnings("unchecked")
+   public <EntityType extends AEntityA_Base> ConcurrentLinkedQueue<EntityType> getEntitiesOfType(Class<EntityType> entityClass){
+	   return (ConcurrentLinkedQueue<EntityType>) entitiesByClass.get(entityClass);
+   }
+   
+   /**
+    * Removes this entity from the world.  Taking it off the update/functional lists.
+    */
+   public void removeEntity(AEntityA_Base entity){
+	   allEntities.remove(entity);
+	   if(entity instanceof AEntityC_Renderable){
+		   renderableEntities.remove(entity);
+	   }
+	   entitiesByClass.get(entity.getClass()).remove(entity);
+	   if(entity.shouldSync()){
+		   trackedEntityMap.remove(entity.uniqueUUID);
 	   }
    }
 	
@@ -1116,12 +1174,13 @@ public class WrapperWorld{
      * Also remove this wrapper from the created lists, as it's invalid.
      */
     @SubscribeEvent
-    public static void on(WorldEvent.Unload event){
-    	if(worldWrappers.containsKey(event.getWorld())){
-    		//Need to remove C before A as A removes the world mapping that C will call.
-    		AEntityC_Definable.removaAllEntities(worldWrappers.get(event.getWorld()));
-    		AEntityA_Base.removaAllEntities(worldWrappers.get(event.getWorld()));
-	    	worldWrappers.remove(event.getWorld());
+    public void on(WorldEvent.Unload event){
+    	//Need to check if it's our world, because Forge is stupid like that.
+    	if(event.getWorld().equals(world)){
+	    	for(AEntityA_Base entity : allEntities){
+	    		entity.remove();
+	    	}
+	    	worldWrappers.remove(this);
     	}
     }
 }

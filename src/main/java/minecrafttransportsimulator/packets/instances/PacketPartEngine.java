@@ -1,9 +1,10 @@
 package minecrafttransportsimulator.packets.instances;
 
+import java.util.UUID;
+
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.entities.components.AEntityA_Base;
-import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
+import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.PartEngine;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
@@ -23,7 +24,7 @@ public class PacketPartEngine extends APacketEntity<PartEngine>{
 	private final boolean oilLeak;
 	private final boolean fuelLeak;
 	private final boolean brokenStarter;
-	private final int linkedID;
+	private final UUID linkedID;
 	private final Point3d linkedPos;
 	
 	public PacketPartEngine(PartEngine engine, Signal packetType){
@@ -33,7 +34,7 @@ public class PacketPartEngine extends APacketEntity<PartEngine>{
 		this.oilLeak = false;
 		this.fuelLeak = false;
 		this.brokenStarter = false;
-		this.linkedID = 0;
+		this.linkedID = null;
 		this.linkedPos = null;
 	}
 	
@@ -44,7 +45,7 @@ public class PacketPartEngine extends APacketEntity<PartEngine>{
 		this.oilLeak = oilLeak;
 		this.fuelLeak = fuelLeak;
 		this.brokenStarter = brokenStarter;
-		this.linkedID = 0;
+		this.linkedID = null;
 		this.linkedPos = null;
 	}
 	
@@ -55,7 +56,7 @@ public class PacketPartEngine extends APacketEntity<PartEngine>{
 		this.oilLeak = false;
 		this.fuelLeak = false;
 		this.brokenStarter = false;
-		this.linkedID = linkedEngine.entityOn.lookupID;
+		this.linkedID = linkedEngine.entityOn.uniqueUUID;
 		this.linkedPos = linkedEngine.placementOffset;
 	}
 	
@@ -74,10 +75,10 @@ public class PacketPartEngine extends APacketEntity<PartEngine>{
 			this.brokenStarter = false;
 		}
 		if(packetType.equals(Signal.LINK)){
-			this.linkedID = buf.readInt();
+			this.linkedID = readUUIDFromBuffer(buf);
 			this.linkedPos = readPoint3dFromBuffer(buf);
 		}else{
-			this.linkedID = 0;
+			this.linkedID = null;
 			this.linkedPos = null;
 		}
 	}
@@ -92,7 +93,7 @@ public class PacketPartEngine extends APacketEntity<PartEngine>{
 			buf.writeBoolean(fuelLeak);
 			buf.writeBoolean(brokenStarter);
 		}else if(packetType.equals(Signal.LINK)){
-			buf.writeInt(linkedID);
+			writeUUIDToBuffer(linkedID, buf);
 			writePoint3dToBuffer(linkedPos, buf);
 		}
 	}
@@ -122,7 +123,7 @@ public class PacketPartEngine extends APacketEntity<PartEngine>{
 				}
 				break;
 			}case LINK: {
-				AEntityE_Multipart<?> otherEntity = (AEntityE_Multipart<?>) AEntityA_Base.getEntity(world, linkedID);
+				AEntityF_Multipart<?> otherEntity = world.getEntity(linkedID);
 				if(otherEntity != null){
 					for(APart part : otherEntity.parts){
 						if(part.placementOffset.equals(linkedPos)){

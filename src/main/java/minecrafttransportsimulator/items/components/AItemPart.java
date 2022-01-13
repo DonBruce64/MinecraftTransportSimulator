@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.items.components;
 
-import minecrafttransportsimulator.entities.components.AEntityE_Multipart;
+import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
@@ -45,7 +45,7 @@ public abstract class AItemPart extends AItemSubTyped<JSONPart>{
 	 * perform data-validation on said data so it has all properties required to create the part in the
 	 * part's constructor.
 	 */
-	public abstract APart createPart(AEntityE_Multipart<?> entity, WrapperPlayer placingPlayer, JSONPartDefinition packVehicleDef, WrapperNBT partData, APart parentPart);
+	public abstract APart createPart(AEntityF_Multipart<?> entity, WrapperPlayer placingPlayer, JSONPartDefinition packVehicleDef, WrapperNBT partData, APart parentPart);
 	
 	/**Class used to create instances of part items.  One of these should be registered
 	 * for every item before packs are parsed so the parser knows which to create.

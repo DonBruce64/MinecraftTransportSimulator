@@ -8,7 +8,7 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
-import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
+import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartSeat;
@@ -199,7 +199,7 @@ public class InterfaceEventsEntityRendering{
     	
     	//If we are riding an entity, adjust seating.
     	if(player.getRidingEntity() instanceof BuilderEntityExisting){
-        	AEntityD_Interactable<?> ridingEntity = (AEntityD_Interactable<?>) ((BuilderEntityExisting) player.getRidingEntity()).entity;
+        	AEntityE_Interactable<?> ridingEntity = (AEntityE_Interactable<?>) ((BuilderEntityExisting) player.getRidingEntity()).entity;
         	float playerWidthScale = 1.0F;
         	float playerHeightScale = 1.0F;
         	GL11.glPushMatrix();

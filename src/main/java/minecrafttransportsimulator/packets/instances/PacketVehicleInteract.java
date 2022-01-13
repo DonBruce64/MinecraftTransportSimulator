@@ -1,12 +1,13 @@
 package minecrafttransportsimulator.packets.instances;
 
+import java.util.UUID;
+
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.entities.components.AEntityA_Base;
-import minecrafttransportsimulator.entities.components.AEntityC_Definable;
-import minecrafttransportsimulator.entities.components.AEntityD_Interactable.PlayerOwnerState;
+import minecrafttransportsimulator.entities.components.AEntityD_Definable;
+import minecrafttransportsimulator.entities.components.AEntityE_Interactable.PlayerOwnerState;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.components.AItemBase;
@@ -28,21 +29,25 @@ import net.minecraft.item.ItemStack;
  * @author don_bruce
  */
 public class PacketVehicleInteract extends APacketEntityInteract<EntityVehicleF_Physics, WrapperPlayer>{
-	private final int hitPartLookupID;
+	private final UUID hitPartUniqueUUID;
 	private final Point3d hitBoxLocalCenter;
 	private final boolean rightClick;
 		
 	public PacketVehicleInteract(EntityVehicleF_Physics vehicle, WrapperPlayer player, BoundingBox hitBox, boolean rightClick){
 		super(vehicle, player);
 		APart hitPart = vehicle.getPartWithBox(hitBox);
-		this.hitPartLookupID = hitPart != null ? hitPart.lookupID : -1;
+		this.hitPartUniqueUUID = hitPart != null ? hitPart.uniqueUUID : null;
 		this.hitBoxLocalCenter = hitBox.localCenter;
 		this.rightClick = rightClick;
 	}
 	
 	public PacketVehicleInteract(ByteBuf buf){
 		super(buf);
-		this.hitPartLookupID = buf.readInt();
+		if(buf.readBoolean()){
+			this.hitPartUniqueUUID = readUUIDFromBuffer(buf);
+		}else{
+			this.hitPartUniqueUUID = null;
+		}
 		this.hitBoxLocalCenter = readPoint3dFromBuffer(buf);
 		this.rightClick = buf.readBoolean();
 	}
@@ -50,7 +55,12 @@ public class PacketVehicleInteract extends APacketEntityInteract<EntityVehicleF_
 	@Override
 	public void writeToBuffer(ByteBuf buf){
 		super.writeToBuffer(buf);
-		buf.writeInt(hitPartLookupID);
+		if(hitPartUniqueUUID != null){
+			buf.writeBoolean(true);
+			writeUUIDToBuffer(hitPartUniqueUUID, buf);
+		}else{
+			buf.writeBoolean(false);
+		}
 		writePoint3dToBuffer(hitBoxLocalCenter, buf);
 		buf.writeBoolean(rightClick);
 	}
@@ -62,7 +72,7 @@ public class PacketVehicleInteract extends APacketEntityInteract<EntityVehicleF_
 		AItemBase heldItem = player.getHeldItem();
 		
 		//Get the part we hit, if one was specified.
-		APart part = hitPartLookupID != -1 ? AEntityA_Base.getEntity(world, hitPartLookupID) : null;
+		APart part = hitPartUniqueUUID != null ? world.getEntity(hitPartUniqueUUID) : null;
 		
 		//Next, get the bounding box.  This is either from the part or the main entity.
 		BoundingBox hitBox = null;
@@ -125,7 +135,7 @@ public class PacketVehicleInteract extends APacketEntityInteract<EntityVehicleF_
 			if(vehicle.locked && !hadAllCondition){
 				player.sendPacket(new PacketPlayerChatMessage(player, "interact.failure.vehiclelocked"));
 			}else{
-				AEntityC_Definable<?> entity = part != null ? part : vehicle;
+				AEntityD_Definable<?> entity = part != null ? part : vehicle;
 				switch(hitBox.definition.variableType){
 					case INCREMENT:
 						entity.setVariable(hitBox.definition.variableName, entity.getVariable(hitBox.definition.variableName) + hitBox.definition.variableValue);

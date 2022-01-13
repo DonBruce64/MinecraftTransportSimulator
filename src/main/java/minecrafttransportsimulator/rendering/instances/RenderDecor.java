@@ -14,7 +14,9 @@ import minecrafttransportsimulator.rendering.components.ARenderTileEntityBase;
 public class RenderDecor extends ARenderTileEntityBase<TileEntityDecor>{
 	
 	@Override
-	public void renderAdditionalModels(TileEntityDecor decor, boolean blendingEnabled, float partialTicks){
+	protected void renderModel(TileEntityDecor decor, boolean blendingEnabled, float partialTicks){
+		super.renderModel(decor, blendingEnabled, partialTicks);
+		
 		//Render lane holo-boxes if we are a signal controller that's being edited.
 		if(blendingEnabled && decor instanceof TileEntitySignalController){
 			TileEntitySignalController controller = (TileEntitySignalController) decor;

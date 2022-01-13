@@ -14,7 +14,7 @@ import minecrafttransportsimulator.blocks.tileentities.components.RoadLane;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLane.LaneSelectionRequest;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
-import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
+import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
@@ -82,7 +82,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	private final Point3d tempBoxRotation = new Point3d();
 	private final Point3d normalizedGroundVelocityVector = new Point3d();
 	private final Point3d normalizedGroundHeadingVector = new Point3d();
-	private AEntityD_Interactable<?> lastCollidedEntity;
+	private AEntityE_Interactable<?> lastCollidedEntity;
   	public VehicleGroundDeviceCollection groundDeviceCollective;
 	
 	public AEntityVehicleD_Moving(WrapperWorld world, WrapperPlayer placingPlayer, WrapperNBT data){
@@ -703,7 +703,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		//This allows for transports without mounting.
 		if(!collidedEntities.isEmpty()){
 			world.beginProfiling("EntityMoveAlong", false);
-			for(AEntityD_Interactable<?> interactable : collidedEntities){
+			for(AEntityE_Interactable<?> interactable : collidedEntities){
 				if(interactable instanceof AEntityVehicleD_Moving){
 					AEntityVehicleD_Moving mainVehicle = (AEntityVehicleD_Moving) interactable;
 					//Set angluar movement delta.

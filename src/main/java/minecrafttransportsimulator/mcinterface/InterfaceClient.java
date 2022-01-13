@@ -10,12 +10,14 @@ import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import net.minecraft.block.SoundType;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.ActiveRenderInfo;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.relauncher.Side;
@@ -175,6 +177,17 @@ public class InterfaceClient{
 		Entity entity = Minecraft.getMinecraft().getRenderViewEntity();
 		return WrapperEntity.getWrapperFor(entity);
 	}
+	
+	/**
+	 *  Returns the current camera position.
+	 *  The returned position may by modified without affecting the entity's actual position.
+	 */
+	public static Point3d getCameraPosition(){
+		Vec3d position = ActiveRenderInfo.getCameraPosition();
+		mutablePosition.set(position.x, position.y, position.z);
+		return mutablePosition;
+	}
+	private static final Point3d mutablePosition = new Point3d();
 	
 	/**
 	 *  Returns true OpenAL is ready to play sounds.  This may be changed by mods, so

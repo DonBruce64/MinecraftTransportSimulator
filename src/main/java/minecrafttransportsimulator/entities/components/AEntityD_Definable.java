@@ -7,8 +7,8 @@ import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -31,7 +31,6 @@ import minecrafttransportsimulator.jsondefs.JSONSound;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
-import minecrafttransportsimulator.mcinterface.InterfaceRender;
 import minecrafttransportsimulator.mcinterface.InterfaceSound;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
@@ -39,7 +38,6 @@ import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
-import minecrafttransportsimulator.rendering.components.ARenderEntity;
 import minecrafttransportsimulator.rendering.components.DurationDelayClock;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.CameraSystem;
@@ -52,10 +50,7 @@ import net.minecraft.item.ItemStack;
  * 
  * @author don_bruce
  */
-public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelProvider> extends AEntityB_Existing{
-	/**Map of created entities that can be rendered in the world, including those without {@link #lookupID}s.**/
-	private static final Map<WrapperWorld, LinkedHashSet<AEntityC_Definable<?>>> renderableEntities = new HashMap<WrapperWorld, LinkedHashSet<AEntityC_Definable<?>>>();
-	
+public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelProvider> extends AEntityC_Renderable{	
 	/**The pack definition for this entity.  May contain extra sections if the super-classes
 	 * have them in their respective JSONs.
 	 */
@@ -66,12 +61,6 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	
 	/**Variable for saving animation initialized state.  Is set true on the first tick, but may be set false afterwards to re-initialize animations.*/
 	public boolean animationsInitialized;
-	
-	/**The scale of this entity.  Is not used to move bounding boxes.  More for rendering, but does some physics.*/
-	public float scale = 1.0F;
-	
-	/**The mirrored state of this entity.  Only used for rendering to flip the model across the x-axis.*/
-	public boolean mirrored;
 	
 	/**Map containing text lines for saved text provided by this entity.**/
 	public final LinkedHashMap<JSONText, String> text = new LinkedHashMap<JSONText, String>();
@@ -105,8 +94,11 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	/**Maps light (model) object names to their definitions.  This is created from the JSON definition to prevent the need to do loops.**/
 	public final Map<String, JSONLight> lightObjectDefinitions = new HashMap<String, JSONLight>();
 	
+	/**Listing of active particles this entity has spawned.  These are updated every tick.**/
+	private final List<EntityParticle> activeParticles = new ArrayList<EntityParticle>();
+	
 	/**Constructor for synced entities**/
-	public AEntityC_Definable(WrapperWorld world, WrapperPlayer placingPlayer, WrapperNBT data){
+	public AEntityD_Definable(WrapperWorld world, WrapperPlayer placingPlayer, WrapperNBT data){
 		super(world, placingPlayer, data);
 		this.subName = data.getString("subName");
 		AItemSubTyped<JSONDefinition> item = PackParserSystem.getItem(data.getString("packID"), data.getString("systemName"), subName);
@@ -134,7 +126,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	}
 	
 	/**Constructor for un-synced entities.  Allows for specification of position/motion/angles.**/
-	public AEntityC_Definable(WrapperWorld world, Point3d position, Point3d motion, Point3d angles, AItemSubTyped<JSONDefinition> creatingItem){
+	public AEntityD_Definable(WrapperWorld world, Point3d position, Point3d motion, Point3d angles, AItemSubTyped<JSONDefinition> creatingItem){
 		super(world, position, motion, angles);
 		this.subName = creatingItem.subName;
 		this.definition = creatingItem.definition;
@@ -148,7 +140,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	@Override
 	public boolean update(){
 		if(super.update()){
-			world.beginProfiling("EntityC_Level", true);
+			world.beginProfiling("EntityD_Level", true);
 			if(!animationsInitialized){
 				initializeDefinition();
 				animationsInitialized = true;
@@ -163,7 +155,6 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 					}
 				}
 			}
-			
 			world.endProfiling();
 			return true;
 		}else{
@@ -172,33 +163,22 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	}
 	
 	/**
-	 * Call to get all renderable entities from the world.  This includes
-	 * both tracked and un-tracked entities.  This list may be null on the
-	 * first frame before any entities have been spawned, and entities
-	 * may be removed from this list at any time, so watch out for CMEs!
-	 * Note that this listing is a linked hash set, so iteration will be
-	 * in the same order entities were added.
-	 * 
+	 * Called to perform supplemental update logic on this entity.  This should be called after all movement on the
+	 * entity has been performed, and is used to do updates that require the new positional logic to be ready.
+	 * Calling this before the entity finishes moving will lead to things "lagging" behind the entity.
 	 */
-	public static LinkedHashSet<AEntityC_Definable<?>> getRenderableEntities(WrapperWorld world){
-		return renderableEntities.get(world);
-	}
-	
-	/**
-	 * Call this if you need to remove all entities from the world.  Used mainly when
-	 * a world is un-loaded because no players are in it anymore.
-	 */
-	public static void removaAllEntities(WrapperWorld world){
-		LinkedHashSet<AEntityC_Definable<?>> existingEntities = renderableEntities.get(world);
-		if(existingEntities != null){
-			//Need to copy the entities so we don't CME the map keys.
-			LinkedHashSet<AEntityA_Base> entities = new LinkedHashSet<AEntityA_Base>();
-			entities.addAll(existingEntities);
-			for(AEntityA_Base entity : entities){
-				entity.remove();
+	public void updatePostMovement(){
+		//Update particles to new position.
+		world.beginProfiling("ParticleUpdates", true);
+		Iterator<EntityParticle> iterator = activeParticles.iterator();
+		while(iterator.hasNext()){
+			EntityParticle particle = iterator.next();
+			particle.update();
+			if(!particle.isValid){
+				iterator.remove();
 			}
-			renderableEntities.remove(world);
 		}
+		world.endProfiling();
 	}
 	
 	/**
@@ -206,14 +186,6 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	 *  This should create (and reset) all JSON clocks and other static objects that depend on the definition. 
 	 */
 	protected void initializeDefinition(){
-		//Add us to the entity rendering list.
-		LinkedHashSet<AEntityC_Definable<?>> worldEntities = renderableEntities.get(world);
-		if(worldEntities == null){
-			worldEntities = new LinkedHashSet<AEntityC_Definable<?>>();
-			renderableEntities.put(world, worldEntities);
-		}
-		worldEntities.add(this);
-		
 		allSoundDefs.clear();
 		soundActiveClocks.clear();
 		soundVolumeClocks.clear();
@@ -324,10 +296,9 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	public void remove(){
 		if(isValid){
 			super.remove();
-			//Need to check for null, as this key may not exist if we were an entity spawned in a world but never ticked.
-			LinkedHashSet<AEntityC_Definable<?>> entities = renderableEntities.get(world);
-			if(entities != null){
-				renderableEntities.get(world).remove(this);
+			//Remove all particles we have active.
+			for(EntityParticle particle : activeParticles){
+				particle.remove();
 			}
 		}
 	}
@@ -488,10 +459,10 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 				lastTickParticleSpawned.put(particleDef, ticksExisted);
 				if(particleDef.quantity > 0){
 					for(int i=0; i<particleDef.quantity; ++i){
-						InterfaceRender.spawnParticle(new EntityParticle(this, particleDef));
+						activeParticles.add(new EntityParticle(this, particleDef));
 					}
 				}else{
-					InterfaceRender.spawnParticle(new EntityParticle(this, particleDef));
+					activeParticles.add(new EntityParticle(this, particleDef));
 				}
 			}
     	}
@@ -777,15 +748,6 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 		}
 	}
     
-    /**
-	 *  Gets the renderer for this entity.  No actual rendering should be done in this method, 
-	 *  as doing so could result in classes being imported during object instantiation on the server 
-	 *  for graphics libraries that do not exist.  Instead, generate a class that does this and call it.
-	 *  This method is assured to be only called on clients, so you can just do the construction of the
-	 *  renderer in this method and pass it back as the return.
-	 */
-	public abstract <RendererInstance extends ARenderEntity<AnimationEntity>, AnimationEntity extends AEntityC_Definable<?>> RendererInstance getRenderer();
-    
     @Override
     public void updateSounds(float partialTicks){
     	super.updateSounds(partialTicks);
@@ -793,7 +755,7 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
     	for(JSONSound soundDef : allSoundDefs){
     		if(soundDef.canPlayOnPartialTicks ^ partialTicks == 0){
 	    		//Check if the sound should be playing before we try to update state.
-	    		AEntityD_Interactable<?> entityRiding = InterfaceClient.getClientPlayer().getEntityRiding();
+	    		AEntityE_Interactable<?> entityRiding = InterfaceClient.getClientPlayer().getEntityRiding();
 	    		boolean playerRidingEntity = this.equals(entityRiding) || (this instanceof APart && ((APart) this).entityOn.equals(entityRiding));
 	    		boolean shouldSoundPlay = playerRidingEntity && InterfaceClient.inFirstPerson() && !CameraSystem.runningCustomCameras ? !soundDef.isExterior : !soundDef.isInterior;
 				boolean anyClockMovedThisUpdate = false;
@@ -1038,8 +1000,8 @@ public abstract class AEntityC_Definable<JSONDefinition extends AJSONMultiModelP
 	
 	/**
 	 * Indicates that this field is a derived value from
-	 * one of the variables in {@link AEntityC_Definable#variables},
-	 * or one of the states in {@link AEntityC_Definable#variablesOn},
+	 * one of the variables in {@link AEntityD_Definable#variables},
+	 * or one of the states in {@link AEntityD_Definable#variablesOn},
 	 * Variables that are derived are parsed from the map every update.
 	 * To modify them you will need to update their values in the respective
 	 * variable set via 

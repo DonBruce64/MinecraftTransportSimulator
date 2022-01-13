@@ -8,7 +8,7 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
-import minecrafttransportsimulator.entities.components.AEntityD_Interactable;
+import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.entity.Entity;
@@ -113,8 +113,8 @@ public class WrapperEntity{
 	 *  the entity is not riding any MTS entity (rider may will be riding
 	 *  a vanilla entity).
 	 */
-	public AEntityD_Interactable<?> getEntityRiding(){
-		return entity.getRidingEntity() instanceof BuilderEntityExisting ? (AEntityD_Interactable<?>) ((BuilderEntityExisting) entity.getRidingEntity()).entity : null;
+	public AEntityE_Interactable<?> getEntityRiding(){
+		return entity.getRidingEntity() instanceof BuilderEntityExisting ? (AEntityE_Interactable<?>) ((BuilderEntityExisting) entity.getRidingEntity()).entity : null;
 	}
 	
 	/**
@@ -122,7 +122,7 @@ public class WrapperEntity{
 	 *  If null is passed-in, then this rider will stop riding whatever entity it
 	 *  is riding, if it was riding any entity.
 	 */
-	public void setRiding(AEntityD_Interactable<?> entityToRide){
+	public void setRiding(AEntityE_Interactable<?> entityToRide){
 		if(entityToRide != null){
 			//Get the builder for this entity and set the player to riding it.
 			AxisAlignedBB searchBounds = new AxisAlignedBB(new BlockPos(entityToRide.position.x, entityToRide.position.y, entityToRide.position.z)).grow(World.MAX_ENTITY_RADIUS);
@@ -337,8 +337,8 @@ public class WrapperEntity{
 	public void attack(Damage damage){
 		//If this entity is one of ours, just forward the damage and exit.
 		if(entity instanceof BuilderEntityExisting){
-			if(((BuilderEntityExisting) entity).entity instanceof AEntityD_Interactable){
-				((AEntityD_Interactable<?>) ((BuilderEntityExisting) entity).entity).attack(damage);
+			if(((BuilderEntityExisting) entity).entity instanceof AEntityE_Interactable){
+				((AEntityE_Interactable<?>) ((BuilderEntityExisting) entity).entity).attack(damage);
 				return;
 			}
 		}

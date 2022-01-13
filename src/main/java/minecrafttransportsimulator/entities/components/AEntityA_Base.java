@@ -1,10 +1,5 @@
 package minecrafttransportsimulator.entities.components;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -26,17 +21,10 @@ import minecrafttransportsimulator.mcinterface.WrapperWorld;
  * @author don_bruce
  */
 public abstract class AEntityA_Base{
-	/**Mapping of created entities.  Keyed to world instances and then their {@link #lookupID}**/
-	private static final Map<WrapperWorld, HashMap<Integer, AEntityA_Base>> entityMaps = new HashMap<WrapperWorld, HashMap<Integer, AEntityA_Base>>();
-	/**Internal ID counter.**/
-	private static int lookupIDCounter = 0;
-	
 	/**The world this entity is a part of.**/
 	public final WrapperWorld world;
 	/**A unique ID for this entity.  This is only set when this entity is first spawned, and never changes, even on save/load operations.  Ideal if you need a static reference to the entity.**/
-	public final String uniqueUUID;
-	/**A general ID for this entity.  This is set when this entity is loaded, and changes between games.  Used for client/server syncing.**/
-	public final int lookupID;
+	public final UUID uniqueUUID;
 	/**True as long as this entity is part of the world and being ticked.  May be set false internally or externally to remove this entity from the world.**/
 	public boolean isValid = true;
 	/**Returns true if this entity was newly created and not loaded from saved data.  More formally, it checks if the {@link #uniqueUUID} was not stored in the data, or if the data was null.
@@ -47,88 +35,15 @@ public abstract class AEntityA_Base{
 	
 	public AEntityA_Base(WrapperWorld world, WrapperNBT data){
 		this.world = world;
-		this.newlyCreated = data == null || data.getString("uniqueUUID").isEmpty();
+		this.newlyCreated = data == null || data.getUUID("uniqueUUID") == null;
 		
 		//Get the map of entities we belong to.
 		if(shouldSync()){
-			this.uniqueUUID = newlyCreated ? UUID.randomUUID().toString() : data.getString("uniqueUUID");
-			HashMap<Integer, AEntityA_Base> worldEntities = entityMaps.get(world);
-			if(worldEntities == null){
-				worldEntities = new HashMap<Integer, AEntityA_Base>();
-				entityMaps.put(world, worldEntities);
-			}
-			
-			//Get our lookupID, or make a new one.
-			this.lookupID = world.isClient() ? data.getInteger("lookupID") : lookupIDCounter++;
-			worldEntities.put(lookupID, this);
+			this.uniqueUUID = newlyCreated ? UUID.randomUUID() : data.getUUID("uniqueUUID");
 		}else{
-			this.uniqueUUID = UUID.randomUUID().toString();
-			this.lookupID = -1;
+			this.uniqueUUID = UUID.randomUUID();
 		}
-	}
-	
-	/**
-	 * Call to get the entity with the passed-in ID from the passed-in world.
-	 * Returned value may be null if the entity doesn't exist in the world.
-	 */
-	@SuppressWarnings("unchecked")
-	public static <EntityType extends AEntityA_Base> EntityType getEntity(WrapperWorld world, int lookupID){
-		HashMap<Integer, AEntityA_Base> entities = entityMaps.get(world);
-		if(entities != null){
-			return (EntityType) entities.get(lookupID);
-		}else{
-			return null;
-		}
-	}
-	
-	/**
-	 * Call to get the entity with the passed-in UUID from the passed-in world.
-	 * This should be used sparingly, as in general the {@link #getEntity(WrapperWorld, int)}
-	 * is faster due to using the {@link #lookupID} rather than a string-based ID, and is lighter
-	 * on networking systems, which are the bulk of what does lookups.
-	 */
-	@SuppressWarnings("unchecked")
-	public static <EntityType extends AEntityA_Base> EntityType getEntity(WrapperWorld world, String uniqueUUID){
-		HashMap<Integer, AEntityA_Base> entities = entityMaps.get(world);
-		if(entities != null){
-			for(AEntityA_Base entity : entities.values()){
-				if(entity.uniqueUUID.equals(uniqueUUID)){
-					return (EntityType) entity;
-				}
-			}
-		}
-		return null;
-	}
-	
-	/**
-	 * Call to get all tracked entities from the world.  Does not include
-	 * un-tracked, client-only entities.
-	 * 
-	 */
-	public static Collection<AEntityA_Base> getEntities(WrapperWorld world){
-		HashMap<Integer, AEntityA_Base> entities = entityMaps.get(world);
-		if(entities != null){
-			return entities.values();
-		}else{
-			return null;
-		}
-	}
-	
-	/**
-	 * Call this if you need to remove all entities from the world.  Used mainly when
-	 * a world is un-loaded because no players are in it anymore.
-	 */
-	public static void removaAllEntities(WrapperWorld world){
-		Collection<AEntityA_Base> existingEntities = getEntities(world);
-		if(existingEntities != null){
-			//Need to copy the entities so we don't CME the map keys.
-			Set<AEntityA_Base> entities = new HashSet<AEntityA_Base>();
-			entities.addAll(existingEntities);
-			for(AEntityA_Base entity : entities){
-				entity.remove();
-			}
-			entityMaps.remove(world);
-		}
+		world.addEntity(this);
 	}
 	
 	 /**
@@ -145,7 +60,7 @@ public abstract class AEntityA_Base{
 	}
 	
 	/**
-	 * Normally, all entities sync across clients and servers via their {@link #lookupID}.
+	 * Normally, all entities sync across clients and servers via their {@link #uniqueUUID}.
 	 * However, some entities may be client-side only.  These entities should return false
 	 * here to prevent corrupting the lookup mappings.  This also should prevent the loading
 	 * of any NBT data in the constructor, as none exists to load from and that variable will
@@ -158,14 +73,13 @@ public abstract class AEntityA_Base{
 	/**
 	 * Called to remove this entity from the world.  Removal should perform any and all logic required to ensure
 	 * no references are left to this entity in any objects.  This ensures memory can be freed for use elsewhere,
-	 * and lingering references do not exist.  After removal, the entity will no longer be returned by {@link #getEntity(WrapperWorld, int)}
+	 * and lingering references do not exist.  After removal, the entity should be removed from the world map
+	 * to let the world to not tick or render it anymore.
 	 */
 	public void remove(){
 		if(isValid){
 			isValid = false;
-			if(shouldSync()){
-				entityMaps.get(world).remove(lookupID);
-			}
+			world.removeEntity(this);
 		}
 	}
 
@@ -183,8 +97,7 @@ public abstract class AEntityA_Base{
 	 *  Returns the passed-in data wrapper for convenience.
 	 */
 	public WrapperNBT save(WrapperNBT data){
-		data.setInteger("lookupID", lookupID);
-		data.setString("uniqueUUID", uniqueUUID);
+		data.setUUID("uniqueUUID", uniqueUUID);
 		return data;
 	}
 }
