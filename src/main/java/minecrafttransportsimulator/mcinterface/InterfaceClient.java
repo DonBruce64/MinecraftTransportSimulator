@@ -101,33 +101,31 @@ public class InterfaceClient{
 	 *  Returns the entity we are moused over.  This includes Tile Entities.
 	 */
 	public static AEntityB_Existing getMousedOverEntity(){
-    	if(InterfaceClient.inFirstPerson()){
-    		//See what we are hitting.
-    		RayTraceResult lastHit = Minecraft.getMinecraft().objectMouseOver;
-			if(lastHit != null){
-				Point3d mousedOverPoint = new Point3d(lastHit.hitVec.x, lastHit.hitVec.y, lastHit.hitVec.z);
-				if(lastHit.entityHit != null){
-					if(lastHit.entityHit instanceof BuilderEntityExisting){
-						AEntityB_Existing mousedOverEntity = ((BuilderEntityExisting) lastHit.entityHit).entity;
-						if(mousedOverEntity instanceof EntityVehicleF_Physics){
-							EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) mousedOverEntity;
-							for(BoundingBox box : vehicle.allInteractionBoxes){
-								if(box.isPointInside(mousedOverPoint)){
-									APart part = vehicle.getPartWithBox(box);
-									if(part != null){
-										return part;
-									}
+		//See what we are hitting.
+		RayTraceResult lastHit = Minecraft.getMinecraft().objectMouseOver;
+		if(lastHit != null){
+			Point3d mousedOverPoint = new Point3d(lastHit.hitVec.x, lastHit.hitVec.y, lastHit.hitVec.z);
+			if(lastHit.entityHit != null){
+				if(lastHit.entityHit instanceof BuilderEntityExisting){
+					AEntityB_Existing mousedOverEntity = ((BuilderEntityExisting) lastHit.entityHit).entity;
+					if(mousedOverEntity instanceof EntityVehicleF_Physics){
+						EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) mousedOverEntity;
+						for(BoundingBox box : vehicle.allInteractionBoxes){
+							if(box.isPointInside(mousedOverPoint)){
+								APart part = vehicle.getPartWithBox(box);
+								if(part != null){
+									return part;
 								}
 							}
 						}
-						return mousedOverEntity;
 					}
-				}else{
-					TileEntity mcTile = getClientWorld().world.getTileEntity(lastHit.getBlockPos());
-					if(mcTile instanceof BuilderTileEntityFluidTank){
-						BuilderTileEntityFluidTank<?> builder = (BuilderTileEntityFluidTank<?>) mcTile;
-						return builder.tileEntity;
-					}
+					return mousedOverEntity;
+				}
+			}else{
+				TileEntity mcTile = getClientWorld().world.getTileEntity(lastHit.getBlockPos());
+				if(mcTile instanceof BuilderTileEntityFluidTank){
+					BuilderTileEntityFluidTank<?> builder = (BuilderTileEntityFluidTank<?>) mcTile;
+					return builder.tileEntity;
 				}
 			}
 		}
