@@ -70,10 +70,10 @@ public final class RenderInstrument{
 					//Init variables.
 					renderObject.texture = "/assets/" + instrument.definition.packID + "/textures/instruments.png";
 					renderObject.scale = globalScale*component.scale;
-					bottomLeft.set(-component.textureWidth/2D, -component.textureHeight/2D, 0);
-					topLeft.set(-component.textureWidth/2D, component.textureHeight/2D, 0);
-					topRight.set(component.textureWidth/2D, component.textureHeight/2D, 0);
-					bottomRight.set(component.textureWidth/2D, -component.textureHeight/2D, 0);
+					bottomLeft.set(-component.textureWidth/2D, component.textureHeight/2D, 0);
+					topLeft.set(-component.textureWidth/2D, -component.textureHeight/2D, 0);
+					topRight.set(component.textureWidth/2D, -component.textureHeight/2D, 0);
+					bottomRight.set(component.textureWidth/2D, component.textureHeight/2D, 0);
 					boolean skipRender = false;
 					boolean skipFurtherTransforms = false;
 					if(component.animations != null){
@@ -264,42 +264,42 @@ public final class RenderInstrument{
 					charVertex[5] = component.textureWidth/2;
 					charVertex[6] = -component.textureHeight/2;
 					charVertex[3] = (float) bottomRight.x;
-					charVertex[4] = (float) topRight.y;
+					charVertex[4] = (float) bottomRight.y;
 					break;
 				}
 				case(1):{//Top-right
 					charVertex[5] = component.textureWidth/2;
 					charVertex[6] = component.textureHeight/2;
 					charVertex[3] = (float) topRight.x;
-					charVertex[4] = (float) bottomRight.y;
+					charVertex[4] = (float) topRight.y;
 					break;
 				}
 				case(2):{//Top-left
 					charVertex[5] = -component.textureWidth/2;
 					charVertex[6] = component.textureHeight/2;
 					charVertex[3] = (float) topLeft.x;
-					charVertex[4] = (float) bottomLeft.y;
+					charVertex[4] = (float) topLeft.y;
 					break;
 				}
 				case(3):{//Bottom-right
 					charVertex[5] = component.textureWidth/2;
 					charVertex[6] = -component.textureHeight/2;
 					charVertex[3] = (float) bottomRight.x;
-					charVertex[4] = (float) topRight.y;
+					charVertex[4] = (float) bottomRight.y;
 					break;
 				}
 				case(4):{//Top-left
 					charVertex[5] = -component.textureWidth/2;
 					charVertex[6] = component.textureHeight/2;
 					charVertex[3] = (float) topLeft.x;
-					charVertex[4] = (float) bottomLeft.y;
+					charVertex[4] = (float) topLeft.y;
 					break;
 				}
 				case(5):{//Bottom-left
 					charVertex[5] = -component.textureWidth/2;
 					charVertex[6] = -component.textureHeight/2;
 					charVertex[3] = (float) bottomLeft.x;
-					charVertex[4] = (float) topLeft.y;						
+					charVertex[4] = (float) bottomLeft.y;						
 					break;
 				}
 			}
