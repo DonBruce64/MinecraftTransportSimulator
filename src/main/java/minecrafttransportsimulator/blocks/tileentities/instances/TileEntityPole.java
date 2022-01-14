@@ -240,7 +240,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 				newComponent.position.set(0, 0, definition.pole.radius + 0.001).rotateY(newAxis.yRotation).add(position);
 				newComponent.prevPosition.setTo(newComponent.position);
 				newComponent.orientation.setTo(orientation);
-				newComponent.orientation.setY(newComponent.orientation.y.rotation + newAxis.yRotation);
+				newComponent.orientation.rotateY(newAxis.yRotation);
 			}
 			world.addEntity(newComponent);
 		}else if(components.containsKey(newAxis)){

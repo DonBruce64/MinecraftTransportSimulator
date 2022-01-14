@@ -6,6 +6,7 @@ import java.util.List;
 
 import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
+import minecrafttransportsimulator.baseclasses.Orientation3d;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.components.ABlockBase.BlockMaterial;
@@ -194,7 +195,7 @@ public final class LegacyCompatSystem{
 				connection.type = hitchName;
 				connection.pos = definition.motorized.hitchPos;
 				if(connection.mounted){
-					connection.rot = new Point3d();
+					connection.rot = new Orientation3d(new Point3d(0, 0, 0));
 				}
 				definition.connections.add(connection);
 			}

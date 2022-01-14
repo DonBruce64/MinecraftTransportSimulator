@@ -64,12 +64,14 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
         }else{
         	velocityToAddEachTick = new Point3d();
         }
-        if(isBomb){
-        	orientation.setTo(gun.orientation);
-        }else{
-        	orientation.setXYZ(motion.copy().getAngles(true));
-        }        
-        orientation.updatePrior();
+        //FIXME make bullets spawn via orientation rather than rotation/motion.
+        /*orientation.setXYZ(motion.copy().getAngles(true));
+		if(isBomb){
+			orientation.setTo(gun.orientation);
+		}else{
+			orientation.setXYZ(motion.copy().getAngles(true));
+		}*/
+        prevOrientation.setTo(orientation);
     }
     
     /**Positional target.**/
@@ -322,9 +324,10 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 			//Then set the angles to match the motion.
 			//Doing this last lets us damage on the first update tick.
 			position.add(motion);
-			if(!isBomb){
+			///FIXME same as constructor commetn.
+			/*if(!isBomb){
 				orientation.setXYZ(motion.copy().getAngles(true));
-			}
+			}*/
 			return true;
 		}else{
 			return false;

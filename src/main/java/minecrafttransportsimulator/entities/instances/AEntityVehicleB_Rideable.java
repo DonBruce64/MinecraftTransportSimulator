@@ -86,7 +86,7 @@ abstract class AEntityVehicleB_Rideable extends AEntityF_Multipart<JSONVehicle>{
 			if(seat.definition.seat.heightScale != 0){
 				seatYPos *= seat.definition.seat.heightScale;
 			}
-			Point3d seatLocationOffset = seat.orientation.net.rotatePoint(new Point3d(0D, seatYPos, 0D)).add(seat.position).add(0D, -rider.getEyeHeight(), 0D);
+			Point3d seatLocationOffset = seat.orientation.rotatePoint(new Point3d(0D, seatYPos, 0D)).add(seat.position).add(0D, -rider.getEyeHeight(), 0D);
 			rider.setPosition(seatLocationOffset, false);
 			rider.setVelocity(motion);
 			
@@ -139,7 +139,7 @@ abstract class AEntityVehicleB_Rideable extends AEntityF_Multipart<JSONVehicle>{
 			//Rider won't be, as it's required, so we can use it to get the actual location.
 			PartSeat newSeat = (PartSeat) getPartAtLocation(locationRiderMap.inverse().get(rider));
 			if(!riderAlreadyInSeat){
-				rider.setYaw(newSeat.orientation.y.rotation);
+				rider.setYaw(newSeat.orientation.getAngles().y);
 			}else{
 				//Clear out the panel if we're not in a controller seat.
 				if(world.isClient() && InterfaceClient.getClientPlayer().equals(rider)){

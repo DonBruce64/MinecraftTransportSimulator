@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.Orientation3d;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.PartGun.GunState;
@@ -103,7 +104,7 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun>{
 		
 		JSONPartDefinition fakeDef = new JSONPartDefinition();
 		fakeDef.pos = new Point3d();
-		fakeDef.rot = new Point3d();
+		fakeDef.rot = new Orientation3d();
 		fakeDef.types = new ArrayList<String>();
 		//Look though all gun types and add them.
 		for(AItemPack<?> packItem : PackParserSystem.getAllPackItems()){

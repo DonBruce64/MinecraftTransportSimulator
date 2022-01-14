@@ -65,12 +65,6 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	
 	public TileEntityRoad(WrapperWorld world, Point3d position, WrapperPlayer placingPlayer, WrapperNBT data){
 		super(world, position, placingPlayer, data);
-		//Normally blocks are placed facing us.  For roads though, we want us to have the angles of the players. Facing.
-		if(placingPlayer != null){
-			int clampAngle = getRotationIncrement();
-			//Need to set the angles so the TE is facing the player, not the direction the player was facing.
-			orientation.setY(Math.round((placingPlayer.getYaw())/clampAngle)*clampAngle%360);
-		}
 		
 		//Set the bounding box.
 		this.boundingBox = new BoundingBox(position.copy().add(0, (definition.road.collisionHeight - 16)/16D/2D, 0), 0.5D, definition.road.collisionHeight/16D/2D, 0.5D);
@@ -105,6 +99,13 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 		//If we have points for collision due to use creating collision blocks, load them now.
 		this.collisionBlockOffsets = data.getPoint3dsCompact("collisionBlockOffsets");
 		this.collidingBlockOffsets = data.getPoint3dsCompact("collidingBlockOffsets");
+	}
+	
+	@Override
+	public double getPlacementRotation(WrapperPlayer player){
+		int clampAngle = getRotationIncrement();
+		//Normally blocks are placed facing us.  For roads though, we want us to have the angles the player is facing.
+		return Math.round((player.getYaw())/clampAngle)*clampAngle%360;
 	}
 	
 	/**
@@ -266,10 +267,9 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 		}else{
 			//Do static block additions for static component.
 			for(JSONRoadCollisionArea collisionArea : definition.road.collisionAreas){
-				System.out.println(collisionArea.firstCorner);
 				for(double x=collisionArea.firstCorner.x; x<=collisionArea.secondCorner.x-0.5; x += 0.5){
 					for(double z=collisionArea.firstCorner.z; z<=collisionArea.secondCorner.z-0.5; z += 0.5){
-						Point3d testPoint = orientation.net.rotatePoint(new Point3d(x, 0, z));
+						Point3d testPoint = orientation.rotatePoint(new Point3d(x, 0, z));
 						testPoint.x = (int) testPoint.x;
 						testPoint.z = (int) testPoint.z;
 						

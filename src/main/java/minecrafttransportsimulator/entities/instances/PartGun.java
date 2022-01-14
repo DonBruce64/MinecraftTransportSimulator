@@ -429,6 +429,8 @@ public class PartGun extends APart{
 		//When the player rotates their head, they don't do so relative to the pitch of the entity the gun is on, 
 		//so a yaw change can result in a pitch change.
 		if(!(entityOn instanceof EntityPlayerGun)){
+			//FIXME needs to use oreintation when we get that worked out.
+			/*
 			double partYawContribution = localAngles.y - prevGunOrientation.y;
 			double partPitchContribution = definition.gun.pitchIsInternal ? localAngles.x : localAngles.x - prevGunOrientation.x;
 			double entityPitchContribution = (entityOn.angles.x + partPitchContribution)*Math.cos(Math.toRadians(partYawContribution));
@@ -436,6 +438,7 @@ public class PartGun extends APart{
 			double targetYaw = controller.getYaw() - (entityOn.angles.y + partYawContribution);
 			double targetPitch = controller.getPitch() - (entityPitchContribution + entityRollContribution);
 			handleMovement(targetYaw, targetPitch);
+			*/
 		}
 	}
 	
@@ -597,7 +600,7 @@ public class PartGun extends APart{
 		if(definition.gun.bulletSpreadFactor > 0){
 			bulletVelocity.rotateFine(new Point3d((Math.random() - 0.5F)*definition.gun.bulletSpreadFactor, (Math.random() - 0.5F)*definition.gun.bulletSpreadFactor, 0D));
 		}
-		bulletVelocity.rotateFine(localAngles).rotateFine(entityOn.angles);
+		orientation.rotatePoint(bulletVelocity);
 		
 		//Add gun velocity to bullet to ensure we spawn with the offset.
 		bulletVelocity.addScaled(motion, EntityVehicleF_Physics.SPEED_FACTOR);
@@ -610,7 +613,7 @@ public class PartGun extends APart{
 		}else{
 			bulletPosition.setTo(muzzle.pos);
 		}
-		bulletPosition.rotateFine(localAngles).rotateFine(entityOn.angles).add(position);
+		orientation.rotatePoint(bulletPosition).add(position);
 	}
 	
 	@Override

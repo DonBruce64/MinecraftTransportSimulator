@@ -44,11 +44,11 @@ public class EntityParticle extends AEntityC_Renderable{
 	public EntityParticle(AEntityD_Definable<?> entitySpawning, JSONParticle definition){
 		super(entitySpawning.world, entitySpawning.position, ZERO_FOR_CONSTRUCTOR, ZERO_FOR_CONSTRUCTOR);
 		if(definition.pos != null){
-			position.add(entitySpawning.orientation.net.rotatePoint(definition.pos.copy()));
+			position.add(entitySpawning.orientation.rotatePoint(definition.pos.copy()));
 		}
 		if(definition.initialVelocity != null){
 			//Set initial velocity, but add some randomness so particles don't all go in a line.
-			Point3d adjustedVelocity = entitySpawning.orientation.net.rotatePoint(definition.initialVelocity.copy());
+			Point3d adjustedVelocity = entitySpawning.orientation.rotatePoint(definition.initialVelocity.copy());
 			motion.x += adjustedVelocity.x/10D + 0.02 - Math.random()*0.04;
 			motion.y += adjustedVelocity.y/10D + 0.02 - Math.random()*0.04;
 			motion.z += adjustedVelocity.z/10D + 0.02 - Math.random()*0.04;
@@ -175,7 +175,8 @@ public class EntityParticle extends AEntityC_Renderable{
 			angles.setTo(position).subtract(clientPlayer.getPosition()).add(0, -clientPlayer.getEyeHeight(), 0).subtract(InterfaceClient.getCameraPosition()).getAngles(true);
 			angles.y += 180;
 			angles.x = -angles.x;
-			orientation.setXYZ(angles);
+			//FIXME make this orientation based, not angles.
+			//orientation.setXYZ(angles);
 			return true;
 		}else{
 			return false;

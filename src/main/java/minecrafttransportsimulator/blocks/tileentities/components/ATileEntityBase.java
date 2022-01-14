@@ -28,11 +28,12 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONMultiModelProv
 	public ATileEntityBase(WrapperWorld world, Point3d position, WrapperPlayer placingPlayer, WrapperNBT data){
 		super(world, placingPlayer, data);
 		this.position.setTo(position);
-		if(placingPlayer != null){
-			int clampAngle = getRotationIncrement();
-			//Need to set the angles so the TE is facing the player, not the direction the player was facing.
-			orientation.setY(Math.round((placingPlayer.getYaw()+180)/clampAngle)*clampAngle%360);
-		}
+	}
+	
+	@Override
+	public double getPlacementRotation(WrapperPlayer player){
+		int clampAngle = getRotationIncrement();
+		return Math.round((player.getYaw()+180)/clampAngle)*clampAngle%360;
 	}
 	
 	@Override

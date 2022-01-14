@@ -482,7 +482,8 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 				Point3d hookupRotatedOffset = towedByConnection.getHookupCurrentPosition();
 				motion.setTo(hitchRotatedOffset).subtract(hookupRotatedOffset).multiply(1/SPEED_FACTOR);
 				//TODO whatever maths we apply to the part rendering we need to apply here.
-				rotation.setTo(towedByConnection.hitchEntity.angles).add(towedByConnection.hitchConnection.rot).subtract(angles);
+				//FIXME for sure do this, as it's disabled for now.
+				//rotation.setTo(towedByConnection.hitchEntity.angles).add(towedByConnection.hitchConnection.rot).subtract(angles);
 			}else{
 				//Need to apply both motion to move the trailer, and yaw to adjust the trailer's angle relative to the truck.
 				//Yaw is applied based on the current and next position of the truck's hookup.

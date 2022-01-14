@@ -3,6 +3,7 @@ package minecrafttransportsimulator.rendering.components;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.Orientation3d;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 
@@ -21,7 +22,7 @@ public abstract class ARenderTileEntityBase<RenderedTileEntity extends ATileEnti
 	}
 	
 	@Override
-	public void adjustPosition(RenderedTileEntity entity, Point3d entityPositionDelta, float partialTicks){
+	public void adjustPositionOrientation(RenderedTileEntity entity, Point3d entityPositionDelta, Orientation3d interpolatedOrientation, float partialTicks){
 		//Offset X and Z to be centered in the block.
 		entityPositionDelta.x += 0.5;
 		entityPositionDelta.z += 0.5;

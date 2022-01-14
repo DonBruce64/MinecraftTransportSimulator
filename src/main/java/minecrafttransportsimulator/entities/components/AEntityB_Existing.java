@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.OrientationCollection;
+import minecrafttransportsimulator.baseclasses.Orientation3d;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.instances.EntityRadio;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -26,7 +26,8 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	public final Point3d prevPosition;
 	public final Point3d motion;
 	public final Point3d prevMotion;
-	public final OrientationCollection orientation;
+	public final Orientation3d orientation;
+	public final Orientation3d prevOrientation;
 	
 	public BoundingBox boundingBox;
 	public double airDensity;
@@ -45,7 +46,12 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 		this.prevPosition = position.copy();
 		this.motion = data.getPoint3d("motion");
 		this.prevMotion = motion.copy();
-		this.orientation = new OrientationCollection(data);
+		if(placingPlayer != null){
+			this.orientation = new Orientation3d(new Point3d(0, getPlacementRotation(placingPlayer), 0));
+		}else{
+			this.orientation = new Orientation3d(data);
+		}
+		this.prevOrientation = new Orientation3d().setTo(orientation);
 		this.placingPlayer = placingPlayer;
 		this.boundingBox = new BoundingBox(new Point3d(), position, 0.5, 0.5, 0.5, false);
 		if(hasRadio()){
@@ -63,7 +69,8 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 		this.prevPosition = position.copy();
 		this.motion = motion.copy();
 		this.prevMotion = motion.copy();
-		this.orientation = new OrientationCollection(angles);
+		this.orientation = new Orientation3d(angles);
+		this.prevOrientation = new Orientation3d().setTo(orientation);
 		this.placingPlayer = null;
 		this.boundingBox = new BoundingBox(new Point3d(), position, 0.5, 0.5, 0.5, false);
 		this.radio = null;
@@ -78,7 +85,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 			}
 			prevPosition.setTo(position);
 			prevMotion.setTo(motion);
-			orientation.updatePrior();
+			prevOrientation.setTo(orientation);
 			airDensity = 1.225*Math.pow(2, -position.y/(500D*world.getMaxHeight()/256D));
 			velocity = motion.length();
 			world.endProfiling();
@@ -130,6 +137,14 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	 */
 	public boolean shouldSavePosition(){
 		return true;
+	}
+	
+	/**
+	 *  Returns the rotation, in the Y-direction, that should be applied to newly-placed instances of this entity.
+	 *  The player is passed-in as it is expected the rotation will depend on the player's rotation.
+	 */
+	public double getPlacementRotation(WrapperPlayer player){
+		return 0;
 	}
 	
 	/**

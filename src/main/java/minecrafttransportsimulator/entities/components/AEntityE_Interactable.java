@@ -15,6 +15,7 @@ import com.google.common.collect.HashBiMap;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
+import minecrafttransportsimulator.baseclasses.Orientation3d;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.TrailerConnection;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
@@ -289,7 +290,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 			world.beginProfiling("EntityE_Level", true);
 			//FIXME this is only here as a hack to get this to work with existing rendering.
 			prevAngles.setTo(angles);
-			orientation.setXYZ(angles);
+			orientation.setTo(new Orientation3d(angles));
 			
 			//Update damage value
 			damageAmount = getVariable(DAMAGE_VARIABLE);
@@ -1049,7 +1050,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 	 */
 	public void connectAsTrailer(TrailerConnection connection){
 		towedByConnection = connection;
-		updateAnglesToTowed();
+		updateOrientationToTowed();
 	}
 	
 	/**
@@ -1086,18 +1087,19 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 	/**
 	 * Helper method for aligning trailer connections.  Used to prevent yaw mis-alignments.
 	 */
-	protected void updateAnglesToTowed(){
+	protected void updateOrientationToTowed(){
 		//Need to set angles for mounted/restricted connections.
 		if(towedByConnection.hitchConnection.mounted || towedByConnection.hitchConnection.restricted){
-			angles.y = towedByConnection.hitchEntity.angles.y;
-			if(towedByConnection.hitchConnection.mounted){
-				angles.add(towedByConnection.hitchConnection.rot);
-			}
-			prevAngles.y = angles.y;
+			//FIXME disabled as this should probably just use SLERP for the trailer logic.
+			//orientation.setY(towedByConnection.hitchEntity.orientation.y.rotation);
+			//if(towedByConnection.hitchConnection.mounted){
+				//angles.add(towedByConnection.hitchConnection.rot);
+			//}
+			//prevAngles.y = angles.y;
 			
 			//Also set trailer yaw.
 			for(TrailerConnection trailerConnection : towingConnections){
-				trailerConnection.hookupVehicle.updateAnglesToTowed();
+				trailerConnection.hookupVehicle.updateOrientationToTowed();
 			}
 		}
 	}

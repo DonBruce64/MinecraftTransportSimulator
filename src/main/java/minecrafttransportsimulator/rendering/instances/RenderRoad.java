@@ -10,6 +10,7 @@ import org.lwjgl.opengl.GL11;
 import minecrafttransportsimulator.baseclasses.BezierCurve;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
+import minecrafttransportsimulator.baseclasses.Orientation3d;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.instances.BlockCollision;
@@ -29,7 +30,6 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 	@Override
 	protected void renderModel(TileEntityRoad road, boolean blendingEnabled, float partialTicks){
 		//Don't call super, we don't want to render the normal way.
-		//FIXME this needs to take into account orientation.
 		if(road.isActive() ^ blendingEnabled){
 			//Render road components.
 			for(RoadComponent component : road.components.keySet()){
@@ -45,7 +45,7 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 								totalVertices += object.vertices.capacity();
 								for(int i=0; i<object.vertices.capacity(); i+=8){
 									position.set(object.vertices.get(i+5) - 0.5, object.vertices.get(i+6), object.vertices.get(i+7) - 0.5);
-									road.orientation.net.rotatePoint(position);
+									road.orientation.rotatePoint(position);
 									object.vertices.put(i+5, (float) position.x);
 									object.vertices.put(i+6, (float) position.y);
 									object.vertices.put(i+7, (float) position.z);
@@ -337,6 +337,13 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 				}
 			}
 		}
+	}
+	
+	@Override
+	public void adjustPositionOrientation(TileEntityRoad road, Point3d entityPositionDelta, Orientation3d interpolatedOrientation, float partialTicks){
+		super.adjustPositionOrientation(road, entityPositionDelta, interpolatedOrientation, partialTicks);
+		//Undo orientation.  We don't want to rotate for this render call as all our curve data is absolute reference..
+		interpolatedOrientation.rotation = 0;
 	}
 	
 	@Override

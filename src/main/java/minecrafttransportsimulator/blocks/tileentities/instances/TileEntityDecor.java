@@ -35,7 +35,7 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor>{
 			this.boundingBox = new BoundingBox(position.copy().add(0, definition.decor.height/2D - 0.5D, 0), 0, 0, 0);
 		}
 		boundingBox.heightRadius = definition.decor.height/2D;
-		if(Math.abs(orientation.y.rotation%180) == 0){
+		if(Math.abs(orientation.getAngles().y%180) == 0){
 			boundingBox.widthRadius = definition.decor.width/2D;
 			boundingBox.depthRadius = definition.decor.depth/2D;
 		}else{

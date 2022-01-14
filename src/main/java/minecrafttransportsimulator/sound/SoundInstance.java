@@ -45,7 +45,7 @@ public class SoundInstance{
 	
 	public void updatePosition(){
 		if(soundDef != null && soundDef.pos != null){
-			entity.orientation.net.rotatePoint(position.setTo(soundDef.pos)).add(entity.position);
+			entity.orientation.rotatePoint(position.setTo(soundDef.pos)).add(entity.position);
 		}else{
 			position.setTo(entity.position);
 		}

@@ -317,7 +317,7 @@ public class VehicleGroundDeviceCollection{
 			Point3d hookupPoint = vehicle.towedByConnection.hookupConnection.pos.copy();
 			if(vehicle.towedByConnection.hookupEntity instanceof APart){
 				APart hookupPart = (APart) vehicle.towedByConnection.hookupEntity;
-				hookupPoint = hookupPoint.rotateFine(hookupPart.localAngles).add(hookupPart.localOffset);
+				hookupPoint = hookupPart.localOrientation.rotatePoint(hookupPoint).add(hookupPart.localOffset);
 			}
 			if(hookupPoint.z > 0){
 				if(!rearLeftGDB.isGrounded && !rearRightGDB.isGrounded){

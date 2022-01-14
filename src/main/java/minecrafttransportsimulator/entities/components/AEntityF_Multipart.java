@@ -144,26 +144,25 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 				partsFromNBT.clear();
 			}
 			
-			//Update part slot box positions.
+			//Update part slot box positions.  We just update the ones for us.
 			world.beginProfiling("PartSlotPositions", true);
-			for(BoundingBox box : allPartSlotBoxes.keySet()){
-				JSONPartDefinition packVehicleDef = allPartSlotBoxes.get(box);
-				boolean updatedToSubPart = false;
-				for(APart part : parts){
-					if(part.definition.parts != null){
-						for(JSONPartDefinition subPartDef : part.definition.parts){
-							if(packVehicleDef.equals(part.getPackForSubPart(subPartDef))){
-								//Need to find the delta between our 0-degree position and our current position.
-								Point3d delta = subPartDef.pos.copy().rotateFine(part.localAngles).subtract(subPartDef.pos);
-								box.updateToEntity(this, delta);
-								updatedToSubPart = true;
-								break;
+			for(Entry<BoundingBox, JSONPartDefinition> entry : allPartSlotBoxes.entrySet()){
+				JSONPartDefinition packVehicleDef = entry.getValue();
+				if(!packVehicleDef.isSubPart){
+					entry.getKey().updateToEntity(this, null);
+				}else{
+					for(APart part : parts){
+						if(part.definition.parts != null){
+							for(JSONPartDefinition subPartDef : part.definition.parts){
+								if(packVehicleDef.equals(part.getPackForSubPart(subPartDef))){
+									//Need to find the delta between part 0-degree position and our current position.
+									Point3d delta = part.orientation.rotatePoint(subPartDef.pos.copy()).subtract(subPartDef.pos);
+									entry.getKey().updateToEntity(this, delta);
+									break;
+								}
 							}
 						}
 					}
-				}
-				if(!updatedToSubPart){
-					box.updateToEntity(this, null);
 				}
 			}
 			

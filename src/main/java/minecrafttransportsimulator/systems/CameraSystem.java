@@ -178,7 +178,7 @@ public class CameraSystem{
 					
     				//Now that the transformed camera is ready, add the camera initial offset position and rotation.
 					//FIXME this needs to use ornetation methods for proper rotaiton.
-					Orientation3d entityOrientation = cameraProvider.orientation.getInterpolated(null, partialTicks);
+					Orientation3d entityOrientation = cameraProvider.prevOrientation.getInterpolated(cameraProvider.orientation, null, partialTicks);
 					//cameraRotation.add(entityOrientation);
 					entityOrientation.rotatePoint(cameraPosition.add(camera.pos));
     				if(camera.rot != null){

@@ -2,6 +2,7 @@ package minecrafttransportsimulator.jsondefs;
 
 import java.util.List;
 
+import minecrafttransportsimulator.baseclasses.Orientation3d;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
@@ -14,7 +15,7 @@ public class JSONPartDefinition{
     public Point3d pos;
 	
 	@JSONDescription("This parameter is optional.  If included, it defines the x, y, and z rotations that tell MTS how to rotate this part.  This does not affect regular rotations for the part itself, such as propeller rotation when moving.")
-    public Point3d rot;
+    public Orientation3d rot;
 	
 	@JSONDescription("Like pos, but in this case this is where the player should dismount the seat that is placed in this position.  By default, MTS will attempt to dismount the player directly to the left or right of the seat (depends on X position).  If this is set, MTS will instead attempt to dismount the player at this position.  Note that in either case if the dismount position is blocked MTS will fall back to allowing Minecraft to dismount the player, which can lead to the player becoming stuck in a vehicle.  If you have a vehicle with a complex hitbox, make sure you set this!")
     public Point3d dismountPos;

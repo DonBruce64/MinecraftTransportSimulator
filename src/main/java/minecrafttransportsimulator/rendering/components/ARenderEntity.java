@@ -29,8 +29,11 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Renderable>{
 			//Subtract the entity's position by the render entity position to get the delta for translating.
 			entityPositionDelta.subtract(InterfaceClient.getRenderViewEntity().getRenderedPosition(partialTicks));
 			
-			//Adjust position, if needed.
-			adjustPosition(entity, entityPositionDelta, partialTicks);
+			//Get interpolated orientation.
+			Orientation3d interpolatedOrientation = entity.prevOrientation.getInterpolated(entity.orientation, null, partialTicks);
+			
+			//Adjust position and orientation, if needed.
+			adjustPositionOrientation(entity, entityPositionDelta, interpolatedOrientation, partialTicks);
 	       
 	        //Set up lighting.
 	        InterfaceRender.setLightingToPosition(entity.position);
@@ -38,7 +41,6 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Renderable>{
 	        //Push the matrix on the stack and translate and rotate to the enitty's position.
 			GL11.glPushMatrix();
 	        GL11.glTranslated(entityPositionDelta.x, entityPositionDelta.y, entityPositionDelta.z);
-	        Orientation3d interpolatedOrientation = entity.orientation.getInterpolated(null, partialTicks);
 	        GL11.glRotated(interpolatedOrientation.rotation, interpolatedOrientation.axis.x, interpolatedOrientation.axis.y, interpolatedOrientation.axis.z);
 			
 	        //Render the main model.
@@ -72,11 +74,11 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Renderable>{
 	}
 	
 	/**
-	 *  Called to do supplemental modifications to the position of the entity prior to rendering.
+	 *  Called to do supplemental modifications to the position/orientation of the entity prior to rendering.
 	 *  The passed-in position is where the code thinks the entity is: where you want to render
 	 *  it may not be at this position/rotation.  Hence the ability to modify these parameters.
 	 */
-	protected void adjustPosition(RenderedEntity entity, Point3d entityPositionDelta, float partialTicks){}
+	protected void adjustPositionOrientation(RenderedEntity entity, Point3d entityPositionDelta, Orientation3d interpolatedOrientation, float partialTicks){}
 	
 	/**
 	 *  Called to render the main model.  At this point the matrix state will be aligned
