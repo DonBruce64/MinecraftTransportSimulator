@@ -49,8 +49,10 @@ public class PacketEntityCSHandshakeServer extends APacketBase{
 		if(builderID.contains(",")){
 			String[] stringPos = builderID.split(",");
 			BuilderTileEntity<?> tile = (BuilderTileEntity<?>) world.world.getTileEntity(new BlockPos(Integer.valueOf(stringPos[0]), Integer.valueOf(stringPos[1]), Integer.valueOf(stringPos[2])));
-			tile.lastLoadedNBT = data.tag;
-			tile.loadFromSavedNBT = true;
+			if(tile != null){
+				tile.lastLoadedNBT = data.tag;
+				tile.loadFromSavedNBT = true;
+			}
 		}else{
 			for(Entity entity : world.world.loadedEntityList){
 				if(entity.getCachedUniqueIdString().equals(builderID)){
