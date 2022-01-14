@@ -346,7 +346,8 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 			if(heldItem instanceof ItemItem){
 				ItemItem packItem = (ItemItem) heldItem;
 				if(packItem.definition.item.type.equals(ItemComponentType.KEY)){
-					if(uniqueUUID.equals(UUID.fromString(new WrapperNBT(player.getHeldStack()).getString("vehicle")))){
+					String uniqueUUIDString = new WrapperNBT(player.getHeldStack()).getString("vehicle");
+					if(!uniqueUUIDString.isEmpty() && uniqueUUID.equals(UUID.fromString(uniqueUUIDString))){
 						return true;
 					}
 				}
