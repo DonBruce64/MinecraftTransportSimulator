@@ -44,14 +44,23 @@ public class PacketPartInteractable extends APacketEntityInteract<PartInteractab
 	
 	public PacketPartInteractable(ByteBuf buf){
 		super(buf);
-		this.linkedID = readUUIDFromBuffer(buf);
+		if(buf.readBoolean()){
+			this.linkedID = readUUIDFromBuffer(buf);
+		}else{
+			this.linkedID = null;
+		}
 		this.linkedOffset = buf.readBoolean() ? readPoint3dFromBuffer(buf) : null;
 	}
 	
 	@Override
 	public void writeToBuffer(ByteBuf buf){
 		super.writeToBuffer(buf);
-		writeUUIDToBuffer(linkedID, buf);
+		if(linkedID != null){
+			buf.writeBoolean(true);
+			writeUUIDToBuffer(linkedID, buf);
+		}else{
+			buf.writeBoolean(false);
+		}
 		if(linkedOffset != null){
 			buf.writeBoolean(true);
 			writePoint3dToBuffer(linkedOffset, buf);
