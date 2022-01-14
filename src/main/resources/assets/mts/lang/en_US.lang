@@ -102,6 +102,7 @@ input.aircraft.flaps_u=FlapsUp
 input.aircraft.flaps_d=FlapsDown
 input.aircraft.brake=Brake
 input.aircraft.brake_digital=Brake
+input.aircraft.gear=Gear
 input.aircraft.panel=Panel
 input.aircraft.park=ParkingBrake
 input.aircraft.gun_fire=Gun

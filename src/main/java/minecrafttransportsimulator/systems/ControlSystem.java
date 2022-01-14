@@ -226,6 +226,11 @@ public final class ControlSystem{
 			InterfacePacket.sendToServer(new PacketEntityVariableToggle(aircraft, EntityVehicleF_Physics.REVERSE_THRUST_VARIABLE));
 		}
 		
+		//Check for gear button.
+		if(ControlsJoystick.AIRCRAFT_GEAR.isPressed()){
+			InterfacePacket.sendToServer(new PacketEntityVariableToggle(aircraft, EntityVehicleF_Physics.GEAR_VARIABLE));
+		}
+		
 		//Increment or decrement throttle.
 		if(InterfaceInput.isJoystickPresent(ControlsJoystick.AIRCRAFT_THROTTLE.config.joystickName)){
 			InterfacePacket.sendToServer(new PacketEntityVariableSet(aircraft, EntityVehicleF_Physics.THROTTLE_VARIABLE, ControlsJoystick.AIRCRAFT_THROTTLE.getAxisState(true)*EntityVehicleF_Physics.MAX_THROTTLE));
@@ -604,6 +609,7 @@ public final class ControlSystem{
 		AIRCRAFT_THROTTLE(true, false),
 		AIRCRAFT_BRAKE(true, false),
 		AIRCRAFT_BRAKE_DIGITAL(false, false),
+		AIRCRAFT_GEAR(false, true),
 		AIRCRAFT_FLAPS_U(false, true),
 		AIRCRAFT_FLAPS_D(false, true),
 		AIRCRAFT_PANEL(false, true),
