@@ -141,15 +141,16 @@ abstract class AEntityVehicleB_Rideable extends AEntityF_Multipart<JSONVehicle>{
 			if(!riderAlreadyInSeat){
 				rider.setYaw(angles.y + newSeat.localAngles.y);
 			}else{
-				//Clear out the panel and HUD if we're not in a controller seat.
+				//Clear out the panel if we're not in a controller seat.
 				if(world.isClient() && InterfaceClient.getClientPlayer().equals(rider)){
 					if(definition.motorized.isAircraft){
 						AGUIBase.closeIfOpen(GUIPanelAircraft.class);
 					}else{
 						AGUIBase.closeIfOpen(GUIPanelGround.class);
 					}
-					AGUIBase.closeIfOpen(GUIHUD.class);
 				}
+				//Close the HUD so we don't make two of them later.
+				AGUIBase.closeIfOpen(GUIHUD.class);
 			}
 			//Open HUD if seat is controller. 
 			if(world.isClient() && InterfaceClient.getClientPlayer().equals(rider)){

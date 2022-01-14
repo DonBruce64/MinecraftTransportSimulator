@@ -94,11 +94,12 @@ public class GUIHUD extends AGUIBase{
 		//Set all instrument invisible if we're not rendering the main HUD.
 		//Otherwise, set them all visible.
 		for(GUIComponentInstrument instrument : instruments){
-			instrument.visible = CameraSystem.customCameraOverlay == null && (InterfaceClient.inFirstPerson() ? ConfigSystem.configObject.clientRendering.renderHUD_1P.value : ConfigSystem.configObject.clientRendering.renderHUD_3P.value);
+			instrument.visible = CameraSystem.customCameraOverlay == null && seat.placementDefinition.isController && (InterfaceClient.inFirstPerson() ? ConfigSystem.configObject.clientRendering.renderHUD_1P.value : ConfigSystem.configObject.clientRendering.renderHUD_3P.value);
 		}
 		
-		//Set health label text.
+		//Set health label text and visibility.
 		healthLabel.text = String.format("Health:%3.1f%%", 100*(vehicle.definition.general.health - vehicle.damageAmount)/vehicle.definition.general.health);
+		healthLabel.visible = seat.placementDefinition.isController;
 		
 		//Set gun label text, if we are in a seat that has one.
 		//If we are in a seat controlling a gun, render a text line for it.
@@ -117,7 +118,7 @@ public class GUIHUD extends AGUIBase{
 	
 	@Override
 	protected boolean renderBackground(){
-		return CameraSystem.customCameraOverlay == null && (InterfaceClient.inFirstPerson() ? (ConfigSystem.configObject.clientRendering.renderHUD_1P.value && !ConfigSystem.configObject.clientRendering.transpHUD_1P.value) : (ConfigSystem.configObject.clientRendering.renderHUD_3P.value && !ConfigSystem.configObject.clientRendering.transpHUD_3P.value));
+		return CameraSystem.customCameraOverlay == null && seat.placementDefinition.isController && (InterfaceClient.inFirstPerson() ? (ConfigSystem.configObject.clientRendering.renderHUD_1P.value && !ConfigSystem.configObject.clientRendering.transpHUD_1P.value) : (ConfigSystem.configObject.clientRendering.renderHUD_3P.value && !ConfigSystem.configObject.clientRendering.transpHUD_3P.value));
 	}
 	
 	@Override
