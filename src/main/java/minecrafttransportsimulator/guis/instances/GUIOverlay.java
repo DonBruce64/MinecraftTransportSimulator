@@ -145,6 +145,11 @@ public class GUIOverlay extends AGUIBase{
 	}
 	
 	@Override
+	protected boolean renderBackgroundFullTexture(){
+		return true;
+	}
+	
+	@Override
 	public boolean capturesPlayer(){
 		return false;
 	}

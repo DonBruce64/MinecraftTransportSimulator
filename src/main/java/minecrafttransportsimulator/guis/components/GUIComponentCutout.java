@@ -16,12 +16,19 @@ import minecrafttransportsimulator.rendering.components.RenderableObject;
 public class GUIComponentCutout extends AGUIComponent{
 	
 	//Texture variables.
+	private boolean renderFullScreen;
 	public int textureXOffset;
 	public int textureYOffset;
 	public int textureSectionWidth;
 	public int textureSectionHeight;
 	
 	/**Standard constructor for a 1:1 rendering.**/
+	public GUIComponentCutout(int x, int y, int width, int height){
+		this(x, y, width, height, 0, 0, width, height);
+		this.renderFullScreen = true;
+	}
+	
+	/**Shortened constructor for rendering across whole screen.**/
 	public GUIComponentCutout(int x, int y, int width, int height, int textureXOffset, int textureYOffset){
 		this(x, y, width, height, textureXOffset, textureYOffset, width, height);
 	}
@@ -41,7 +48,11 @@ public class GUIComponentCutout extends AGUIComponent{
 			renderable = new RenderableObject("gui_cutout", gui.getTexture(), ColorRGB.WHITE, FloatBuffer.allocate(8*6), false);
 		}
 		if(renderable.vertices.position() == 0){
-			gui.addRenderToBuffer(renderable.vertices, 0, 0, width, height, textureXOffset, textureYOffset, textureXOffset + textureSectionWidth, textureYOffset + textureSectionHeight, gui.getTextureWidth(), gui.getTextureHeight());
+			if(renderFullScreen){
+				gui.addRenderToBuffer(renderable.vertices, 0, 0, width, height, 0, 0, width, height, width, height);
+			}else{
+				gui.addRenderToBuffer(renderable.vertices, 0, 0, width, height, textureXOffset, textureYOffset, textureXOffset + textureSectionWidth, textureYOffset + textureSectionHeight, gui.getTextureWidth(), gui.getTextureHeight());
+			}
 			renderable.vertices.flip();
 		}
 		GL11.glTranslated(position.x, position.y, position.z);

@@ -76,7 +76,11 @@ public abstract class AGUIBase{
 	 */
 	public void setupComponents(){
 		components.clear();
-		addComponent(this.background = new GUIComponentCutout(guiLeft, guiTop, getWidth(), getHeight(), 0, 0, getWidth(), getHeight()));
+		if(renderBackgroundFullTexture()){
+			addComponent(this.background = new GUIComponentCutout(guiLeft, guiTop, getWidth(), getHeight()));
+		}else{
+			addComponent(this.background = new GUIComponentCutout(guiLeft, guiTop, getWidth(), getHeight(), 0, 0, getWidth(), getHeight()));
+		}
 	}
 	
 	/**
@@ -260,6 +264,14 @@ public abstract class AGUIBase{
 	 */
 	protected boolean renderBackground(){
 		return true;
+	}
+	
+	/**
+	 *  If this is true, then no background texture will be fitted to the entire screen.
+	 *  Normally false, as this stretches it, but for whole overlays this should be true.
+	 */
+	protected boolean renderBackgroundFullTexture(){
+		return false;
 	}
 	
 	/**
