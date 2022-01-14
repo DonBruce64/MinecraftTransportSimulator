@@ -64,6 +64,7 @@ public class PartGun extends APart{
 	public GunState state;
 	public boolean firedThisRequest;
 	public boolean firedThisCheck;
+	public boolean playerHoldingTrigger;
 	public boolean isHandHeldGunAimed;
 	public int ticksFiring;
 	public int reloadTimeRemaining;
@@ -437,6 +438,13 @@ public class PartGun extends APart{
 			if(world.isClient() && loadedBullet != null && loadedBullet.definition.bullet.turnFactor > 0){
 				//Try to find the entity the controller is looking at.
 				entityTarget = world.getEntityLookingAt(controller, 750);
+			}
+			
+			//If we are holding the trigger, request to fire.
+			if(playerHoldingTrigger){
+				state = state.promote(GunState.FIRING_REQUESTED);
+			}else{
+				state = state.demote(GunState.CONTROLLED);
 			}
 		}
 	
