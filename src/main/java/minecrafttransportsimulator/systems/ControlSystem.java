@@ -179,9 +179,9 @@ public final class ControlSystem{
 				InterfacePacket.sendToServer(new PacketEntityVariableIncrement(vehicle, variable, rate*(currentValue < 0 ? 2 : 1), -bounds, bounds));
 			}else if(decrement.isPressed()){
 				InterfacePacket.sendToServer(new PacketEntityVariableIncrement(vehicle, variable, -rate*(currentValue > 0 ? 2 : 1), -bounds, bounds));
-			}else if(currentValue > rate){
+			}else if(currentValue > 0){
 				InterfacePacket.sendToServer(new PacketEntityVariableIncrement(vehicle, variable, -rate, 0, bounds));
-			}else if(currentValue < -rate){
+			}else if(currentValue < 0){
 				InterfacePacket.sendToServer(new PacketEntityVariableIncrement(vehicle, variable, rate, -bounds, 0));
 			}
 		}
