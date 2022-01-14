@@ -65,11 +65,11 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
         	velocityToAddEachTick = new Point3d();
         }
         if(isBomb){
-        	angles.setTo(gun.angles);
+        	orientation.setTo(gun.orientation);
         }else{
-        	angles.setTo(motion).getAngles(true);
-        }
-        prevAngles.setTo(angles);
+        	orientation.setXYZ(motion.copy().getAngles(true));
+        }        
+        orientation.updatePrior();
     }
     
     /**Positional target.**/
@@ -321,10 +321,10 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 			//Add our updated motion to the position.
 			//Then set the angles to match the motion.
 			//Doing this last lets us damage on the first update tick.
-			if(!isBomb){
-				angles.setTo(motion).getAngles(true);
-			}
 			position.add(motion);
+			if(!isBomb){
+				orientation.setXYZ(motion.copy().getAngles(true));
+			}
 			return true;
 		}else{
 			return false;

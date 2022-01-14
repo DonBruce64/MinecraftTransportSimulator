@@ -2,6 +2,7 @@ package minecrafttransportsimulator.rendering.components;
 
 import org.lwjgl.opengl.GL11;
 
+import minecrafttransportsimulator.baseclasses.Orientation3d;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
@@ -28,19 +29,17 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Renderable>{
 			//Subtract the entity's position by the render entity position to get the delta for translating.
 			entityPositionDelta.subtract(InterfaceClient.getRenderViewEntity().getRenderedPosition(partialTicks));
 			
-			//Get the entity rotation.
-			Point3d entityRotation = entity.prevAngles.getInterpolatedPoint(entity.angles, partialTicks);
+			//Adjust position, if needed.
+			adjustPosition(entity, entityPositionDelta, partialTicks);
 	       
 	        //Set up lighting.
 	        InterfaceRender.setLightingToPosition(entity.position);
 	        
 	        //Push the matrix on the stack and translate and rotate to the enitty's position.
-			adjustPositionRotation(entity, entityPositionDelta, entityRotation, partialTicks);
 			GL11.glPushMatrix();
 	        GL11.glTranslated(entityPositionDelta.x, entityPositionDelta.y, entityPositionDelta.z);
-	        GL11.glRotated(entityRotation.y, 0, 1, 0);
-	        GL11.glRotated(entityRotation.x, 1, 0, 0);
-	        GL11.glRotated(entityRotation.z, 0, 0, 1);
+	        Orientation3d interpolatedOrientation = entity.orientation.getInterpolated(null, partialTicks);
+	        GL11.glRotated(interpolatedOrientation.rotation, interpolatedOrientation.axis.x, interpolatedOrientation.axis.y, interpolatedOrientation.axis.z);
 			
 	        //Render the main model.
 	        entity.world.endProfiling();
@@ -73,11 +72,11 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Renderable>{
 	}
 	
 	/**
-	 *  Called to do supplemental modifications to the position and rotation of the entity prior to rendering.
-	 *  The passed-in position and rotation are where the code thinks the entity is: where you want to render
+	 *  Called to do supplemental modifications to the position of the entity prior to rendering.
+	 *  The passed-in position is where the code thinks the entity is: where you want to render
 	 *  it may not be at this position/rotation.  Hence the ability to modify these parameters.
 	 */
-	protected void adjustPositionRotation(RenderedEntity entity, Point3d entityPositionDelta, Point3d entityRotationDelta, float partialTicks){}
+	protected void adjustPosition(RenderedEntity entity, Point3d entityPositionDelta, float partialTicks){}
 	
 	/**
 	 *  Called to render the main model.  At this point the matrix state will be aligned

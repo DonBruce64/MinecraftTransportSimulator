@@ -169,19 +169,6 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			if(ticksExisted == 1){
 				groundDeviceCollective.updateBounds();
 			}
-			for(APart part : parts){
-				if(part instanceof PartGroundDevice){
-					if(part.prevActive != part.isActive){
-						groundDeviceCollective.updateMembers();
-						groundDeviceCollective.updateBounds();
-						break;
-					}
-					if(!part.localOffset.equals(part.prevLocalOffset)){
-						groundDeviceCollective.updateBounds();
-						break;
-					}
-				}
-			}
 			
 			//Now do update calculations and logic.
 			if(!ConfigSystem.configObject.general.noclipVehicles.value || groundDeviceCollective.isReady()){
@@ -837,8 +824,6 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		position.add(motionApplied);
 		angles.add(rotationApplied);
 		totalPathDelta += pathingApplied;
-		orientation.axis.set(0, 0, 1).rotateFine(angles);
-		orientation.updateQuaternion(false);
 		
 		//Before we end this tick we need to remove any motions added for ground devices.  These motions are required 
 		//only for the updating of the vehicle position due to rotation operations and should not be considered forces.

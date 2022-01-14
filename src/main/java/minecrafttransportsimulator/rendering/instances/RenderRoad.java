@@ -29,7 +29,7 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 	@Override
 	protected void renderModel(TileEntityRoad road, boolean blendingEnabled, float partialTicks){
 		//Don't call super, we don't want to render the normal way.
-		
+		//FIXME this needs to take into account orientation.
 		if(road.isActive() ^ blendingEnabled){
 			//Render road components.
 			for(RoadComponent component : road.components.keySet()){
@@ -45,7 +45,7 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 								totalVertices += object.vertices.capacity();
 								for(int i=0; i<object.vertices.capacity(); i+=8){
 									position.set(object.vertices.get(i+5) - 0.5, object.vertices.get(i+6), object.vertices.get(i+7) - 0.5);
-									position.rotateFine(road.angles);
+									road.orientation.net.rotatePoint(position);
 									object.vertices.put(i+5, (float) position.x);
 									object.vertices.put(i+6, (float) position.y);
 									object.vertices.put(i+7, (float) position.z);
@@ -337,13 +337,6 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 				}
 			}
 		}
-	}
-	
-	@Override
-	public void adjustPositionRotation(TileEntityRoad road, Point3d entityPositionDelta, Point3d entityRotationDelta, float partialTicks){
-		super.adjustPositionRotation(road, entityPositionDelta, entityRotationDelta, partialTicks);
-		//Set angles to 0 as we do rendering based on the curve properties, which already have angles. 
-		entityRotationDelta.set(0, 0, 0);
 	}
 	
 	@Override

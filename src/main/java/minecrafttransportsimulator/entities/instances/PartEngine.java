@@ -507,8 +507,7 @@ public class PartEngine extends APart{
 				for(APart part : childParts){
 					if(part instanceof PartPropeller){
 						attachedPropeller = (PartPropeller) part;
-						Point3d propellerThrustAxis = new Point3d(0D, 0D, 1D).rotateFine(attachedPropeller.localAngles.copy().add(vehicleOn.angles));
-						propellerAxialVelocity = vehicleOn.motion.dotProduct(propellerThrustAxis);
+						propellerAxialVelocity = vehicleOn.motion.dotProduct(attachedPropeller.orientation.net.axis);
 						propellerGearboxRatio = Math.signum(currentGearRatio)*(definition.engine.propellerRatio != 0 ? definition.engine.propellerRatio : Math.abs(currentGearRatio));
 						
 						//If wheel friction is 0, and we aren't in neutral, get RPM contributions for that.
@@ -566,8 +565,7 @@ public class PartEngine extends APart{
 				
 				///Update variables used for jet thrust.
 				if(definition.engine.jetPowerFactor > 0){
-					Point3d engineThrustAxis = new Point3d(0D, 0D, 1D).rotateFine(localAngles.copy().add(vehicleOn.angles));
-					engineAxialVelocity = vehicleOn.motion.dotProduct(engineThrustAxis);
+					engineAxialVelocity = vehicleOn.motion.dotProduct(orientation.net.axis);
 					
 					//Check for entities forward and aft of the engine and damage them.
 					if(!world.isClient() && rpm >= 5000){
@@ -1024,7 +1022,7 @@ public class PartEngine extends APart{
 			double thrust = (vehicleOn.reverseThrust ? -(coreContribution + fanContribution) : coreContribution + fanContribution)*definition.engine.jetPowerFactor;
 			
 			//Add the jet force to the engine.  Use the engine rotation to define the power vector.
-			engineForce.add(new Point3d(0D, 0D, thrust).rotateFine(localAngles));
+			engineForce.addScaled(orientation.net.axis, thrust);
 		}
 		
 		//Finally, return the force we calculated.

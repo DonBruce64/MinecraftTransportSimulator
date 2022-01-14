@@ -7,7 +7,7 @@ import minecrafttransportsimulator.rendering.components.ARenderEntityDefinable;
 public class RenderPoleComponent extends ARenderEntityDefinable<ATileEntityPole_Component>{
 	
 	@Override
-	public void adjustPositionRotation(ATileEntityPole_Component component, Point3d entityPositionDelta, Point3d entityRotationDelta, float partialTicks){
-		component.core.getRenderer().adjustPositionRotation(component.core, entityPositionDelta, entityRotationDelta, partialTicks);
+	public void adjustPosition(ATileEntityPole_Component component, Point3d entityPositionDelta, float partialTicks){
+		component.core.getRenderer().adjustPosition(component.core, entityPositionDelta, partialTicks);
 	}
 }

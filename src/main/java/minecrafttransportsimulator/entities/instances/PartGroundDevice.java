@@ -43,11 +43,14 @@ public class PartGroundDevice extends APart{
 	private boolean animateAsOnGround;
 	private int ticksCalcsSkipped = 0;
 	private double prevAngularVelocity;
+	private boolean prevActive;
+	private final Point3d prevLocalOffset;
 	private final PartGroundDeviceFake fakePart;
 	
 	public PartGroundDevice(AEntityF_Multipart<?> entityOn, WrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, WrapperNBT data, APart parentPart){
 		super(entityOn, placingPlayer, placementDefinition, data, parentPart);
 		this.isFlat = data.getBoolean("isFlat");
+		this.prevLocalOffset = localOffset.copy();
 		
 		//If we are a long ground device, add a fake ground device at the offset to make us
 		//have a better contact area.  If we are a fake part calling this as a super constructor,
@@ -79,6 +82,18 @@ public class PartGroundDevice extends APart{
 	public boolean update(){
 		if(super.update()){
 			if(vehicleOn != null && !placementDefinition.isSpare){
+				//Change ground device collective if we changed active state or offset.
+				if(prevActive != isActive){
+					vehicleOn.groundDeviceCollective.updateMembers();
+					vehicleOn.groundDeviceCollective.updateBounds();
+					prevActive = isActive;
+				}
+				if(!localOffset.equals(prevLocalOffset)){
+					vehicleOn.groundDeviceCollective.updateBounds();
+					prevLocalOffset.setTo(localOffset);
+				}
+				
+				//If we are on the ground, adjust rotation.
 				if(vehicleOn.groundDeviceCollective.groundedGroundDevices.contains(this)){
 					animateAsOnGround = true;
 					

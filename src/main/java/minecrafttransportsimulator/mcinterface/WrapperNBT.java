@@ -180,7 +180,7 @@ public class WrapperNBT{
 	
 	//Oreintation3d
 	public Orientation3d getOrientation3d(String name){
-		return new Orientation3d(getPoint3d(name), getDouble(name + "r"), false);
+		return new Orientation3d(getPoint3d(name), getDouble(name + "r"));
 	}
 	
 	public void setOrientation3d(String name, Orientation3d value){

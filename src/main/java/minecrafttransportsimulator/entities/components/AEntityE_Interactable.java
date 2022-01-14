@@ -140,6 +140,12 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 	private final Point3d collisionGroupWorkingAngles = new Point3d();
 	private final Point3d collisionGroupWorkingAngleOffset = new Point3d();
 	
+
+	
+	public final Point3d angles;
+	public final Point3d prevAngles;
+	public final Point3d rotation;
+	
 	public AEntityE_Interactable(WrapperWorld world, WrapperPlayer placingPlayer, WrapperNBT data){
 		super(world, placingPlayer, data);
 		//Load saved rider positions.  We don't have riders here yet (as those get created later), 
@@ -200,6 +206,11 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 				}
 			}
 		}
+		
+
+		this.angles = data.getPoint3d("angles");
+		this.prevAngles = angles.copy();
+		this.rotation = data.getPoint3d("rotation");
 	}
 	
 	@Override
@@ -276,6 +287,9 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 		//We want to do the towing checks first, as we don't want to call super if we are blocked by being towed.
 		if((towedByConnection == null || overrideTowingChecks) && super.update()){
 			world.beginProfiling("EntityE_Level", true);
+			//FIXME this is only here as a hack to get this to work with existing rendering.
+			prevAngles.setTo(angles);
+			orientation.setXYZ(angles);
 			
 			//Update damage value
 			damageAmount = getVariable(DAMAGE_VARIABLE);
@@ -1117,6 +1131,9 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 				}
 			}
 		}
+
+		data.setPoint3d("angles", angles);
+		data.setPoint3d("rotation", rotation);
 		return data;
 	}
 	

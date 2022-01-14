@@ -86,11 +86,9 @@ public class BuilderEntityExisting extends ABuilderEntityBase{
 	    		//Forward the update call.
 	    		entity.update();
 	    		
-	    		//Set the new position and rotation.
+	    		//Set the new position.
 	    		entity.world.beginProfiling("MovementOverhead", false);
 	    		setPosition(entity.position.x, entity.position.y, entity.position.z);
-	    		rotationYaw = (float) -entity.angles.y;
-	    		rotationPitch = (float) entity.angles.x;
 	    		
 	    		//If we are outside valid bounds on the server, set us as dead and exit.
 	    		if(!world.isRemote && posY < 0 && world.isOutsideBuildHeight(getPosition())){

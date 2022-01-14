@@ -63,9 +63,7 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 	private final Map<JSONPartDefinition, JSONPartDefinition> subpackMappings = new HashMap<JSONPartDefinition, JSONPartDefinition>();
 	public boolean isDisabled;
 	public boolean isActive = true;
-	public boolean prevActive = true;
 	public final Point3d localOffset;
-	public final Point3d prevLocalOffset;
 	public final Point3d localAngles;
 		
 	public APart(AEntityF_Multipart<?> entityOn, WrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, WrapperNBT data, APart parentPart){
@@ -74,7 +72,6 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 		this.vehicleOn = entityOn instanceof EntityVehicleF_Physics ? (EntityVehicleF_Physics) entityOn : null;
 		this.placementOffset = placementDefinition.pos;
 		this.localOffset = placementOffset.copy();
-		this.prevLocalOffset = localOffset.copy();
 		this.placementDefinition = placementDefinition;
 		this.boundingBox = new BoundingBox(placementOffset, position, getWidth()/2D, getHeight()/2D, getWidth()/2D, definition.ground != null ? definition.ground.canFloat : false);
 		this.placementAngles = placementDefinition.rot != null ? placementDefinition.rot : new Point3d();
@@ -137,7 +134,6 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 	public boolean update(){
 		if(super.update()){
 			//Update active state.
-			prevActive = isActive;
 			isActive = placementDefinition.isSubPart ? parentPart.isActive : true;
 			if(isActive && !activeClocks.isEmpty()){
 				boolean inhibitAnimations = false;
@@ -193,7 +189,10 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 			
 			prevMotion.setTo(entityOn.prevMotion);
 			motion.setTo(entityOn.motion);
-			prevLocalOffset.setTo(localOffset);
+			
+			
+			
+			
 			isDisabled = updateLocals();
 			//If we have a parent part, we need to change our offsets to be relative to it.
 			if(parentPart != null && placementDefinition.isSubPart){
@@ -219,11 +218,8 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 			}
 			
 			//Set position and rotation to our net offset pos on the entity.
-			position.setTo(localOffset).rotateFine(entityOn.angles).add(entityOn.position);
-			//orientation.axis.set(0, 0, 1).rotateFine(localAngles);
-			//orientation.updateQuaternion(false);
-			//orientation.rotateByOrientation(entityOn.orientation);
-			//angles.set(orientation.rotationX, orientation.rotationY, orientation.rotation);
+			entityOn.orientation.net.rotatePoint(position.setTo(localOffset)).add(entityOn.position);
+			//System.out.println(entityOn.orientationNet);
 			angles.setTo(localAngles).add(entityOn.angles);
 			
 			//Update post-movement things.

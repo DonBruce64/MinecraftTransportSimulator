@@ -17,12 +17,6 @@ public class RenderPart extends ARenderEntityDefinable<APart>{
 	}
 	
 	@Override
-	public void adjustPositionRotation(APart part, Point3d entityPositionDelta, Point3d entityRotationDelta, float partialTicks){
-		//Rotate the part according to its rendering rotation if we need to do so.
-		entityRotationDelta.add(part.getRenderingRotation(partialTicks));
-	}
-	
-	@Override
 	protected void renderBoundingBoxes(APart part, Point3d entityPositionDelta){
 		if(!part.entityOn.areVariablesBlocking(part.placementDefinition, InterfaceClient.getClientPlayer())){
 			super.renderBoundingBoxes(part, entityPositionDelta);

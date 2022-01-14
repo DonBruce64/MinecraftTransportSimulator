@@ -21,7 +21,7 @@ public abstract class ARenderTileEntityBase<RenderedTileEntity extends ATileEnti
 	}
 	
 	@Override
-	public void adjustPositionRotation(RenderedTileEntity entity, Point3d entityPositionDelta, Point3d entityRotationDelta, float partialTicks){
+	public void adjustPosition(RenderedTileEntity entity, Point3d entityPositionDelta, float partialTicks){
 		//Offset X and Z to be centered in the block.
 		entityPositionDelta.x += 0.5;
 		entityPositionDelta.z += 0.5;

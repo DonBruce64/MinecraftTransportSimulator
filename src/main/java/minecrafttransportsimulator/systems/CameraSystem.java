@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.systems;
 
+import minecrafttransportsimulator.baseclasses.Orientation3d;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
@@ -176,9 +177,10 @@ public class CameraSystem{
         			}
 					
     				//Now that the transformed camera is ready, add the camera initial offset position and rotation.
-					Point3d entityAnglesDelta = cameraProvider.prevAngles.getInterpolatedPoint(cameraProvider.angles, partialTicks);
-					cameraRotation.add(entityAnglesDelta);
-					cameraPosition.add(camera.pos).rotateFine(entityAnglesDelta);
+					//FIXME this needs to use ornetation methods for proper rotaiton.
+					Orientation3d entityOrientation = cameraProvider.orientation.getInterpolated(null, partialTicks);
+					//cameraRotation.add(entityOrientation);
+					entityOrientation.rotatePoint(cameraPosition.add(camera.pos));
     				if(camera.rot != null){
     					cameraRotation.add(camera.rot);
     				}

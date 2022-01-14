@@ -396,7 +396,7 @@ public class InterfaceEventsEntityRendering{
 	    			//Rotate to match player's facing direction if we aren't in a vehicle
 	    			if(!renderCurrentRiderControlling){
 		    			if(ridingEntity != null){
-		    	    		GL11.glRotated(player.rotationYaw + ridingEntity.angles.y, 0, 1, 0);
+		    	    		GL11.glRotated(player.rotationYaw + ridingEntity.orientation.y.rotation, 0, 1, 0);
 		    	        }else{
 		    	        	GL11.glRotated(player.rotationYaw, 0, 1, 0);
 		    	        }

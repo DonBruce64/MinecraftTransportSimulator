@@ -27,6 +27,7 @@ public class EntityParticle extends AEntityC_Renderable{
 	//Constant properties.
 	private final JSONParticle definition;
 	private final int maxAge;
+	private final WrapperPlayer clientPlayer = InterfaceClient.getClientPlayer();
 	
 	private final ColorRGB startColor;
 	private final ColorRGB endColor;
@@ -34,19 +35,20 @@ public class EntityParticle extends AEntityC_Renderable{
 	private final RenderableObject renderable;
 
 	//Runtime variables.
-	public boolean touchingBlocks;
-	public int age;
+	private boolean touchingBlocks;
+	private int age;
+	private Point3d angles = new Point3d();
 	
 	private static RenderParticle renderer;
 
 	public EntityParticle(AEntityD_Definable<?> entitySpawning, JSONParticle definition){
 		super(entitySpawning.world, entitySpawning.position, ZERO_FOR_CONSTRUCTOR, ZERO_FOR_CONSTRUCTOR);
 		if(definition.pos != null){
-			position.add(definition.pos.copy().rotateFine(entitySpawning.angles));
+			position.add(entitySpawning.orientation.net.rotatePoint(definition.pos.copy()));
 		}
 		if(definition.initialVelocity != null){
 			//Set initial velocity, but add some randomness so particles don't all go in a line.
-			Point3d adjustedVelocity = definition.initialVelocity.copy().rotateFine(entitySpawning.angles);
+			Point3d adjustedVelocity = entitySpawning.orientation.net.rotatePoint(definition.initialVelocity.copy());
 			motion.x += adjustedVelocity.x/10D + 0.02 - Math.random()*0.04;
 			motion.y += adjustedVelocity.y/10D + 0.02 - Math.random()*0.04;
 			motion.z += adjustedVelocity.z/10D + 0.02 - Math.random()*0.04;
@@ -169,11 +171,11 @@ public class EntityParticle extends AEntityC_Renderable{
 				remove();
 			}
 			
-			//Update rotation to always face the player.
-			WrapperPlayer clientPlayer = InterfaceClient.getClientPlayer();
+			//Update orientation to always face the player.
 			angles.setTo(position).subtract(clientPlayer.getPosition()).add(0, -clientPlayer.getEyeHeight(), 0).subtract(InterfaceClient.getCameraPosition()).getAngles(true);
 			angles.y += 180;
 			angles.x = -angles.x;
+			orientation.setXYZ(angles);
 			return true;
 		}else{
 			return false;

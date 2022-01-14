@@ -69,7 +69,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 		if(placingPlayer != null){
 			int clampAngle = getRotationIncrement();
 			//Need to set the angles so the TE is facing the player, not the direction the player was facing.
-			angles.y = Math.round((placingPlayer.getYaw())/clampAngle)*clampAngle%360;
+			orientation.setY(Math.round((placingPlayer.getYaw())/clampAngle)*clampAngle%360);
 		}
 		
 		//Set the bounding box.
@@ -269,7 +269,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 				System.out.println(collisionArea.firstCorner);
 				for(double x=collisionArea.firstCorner.x; x<=collisionArea.secondCorner.x-0.5; x += 0.5){
 					for(double z=collisionArea.firstCorner.z; z<=collisionArea.secondCorner.z-0.5; z += 0.5){
-						Point3d testPoint = new Point3d(x, 0, z).rotateFine(angles);
+						Point3d testPoint = orientation.net.rotatePoint(new Point3d(x, 0, z));
 						testPoint.x = (int) testPoint.x;
 						testPoint.z = (int) testPoint.z;
 						
