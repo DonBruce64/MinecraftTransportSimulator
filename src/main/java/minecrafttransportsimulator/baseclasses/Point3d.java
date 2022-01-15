@@ -9,7 +9,6 @@ package minecrafttransportsimulator.baseclasses;
  * @author don_bruce
  */
 public class Point3d{
-	private static final Point3d ZERO = new Point3d();
 	
 	public double x;
 	public double y;
@@ -251,7 +250,7 @@ public class Point3d{
 	 * Returns true if this point is 0,0,0.
 	 */
 	public boolean isZero(){
-		return this.equals(ZERO);
+		return x == 0 && y == 0 && z == 0;
 	}
 	
 	/**

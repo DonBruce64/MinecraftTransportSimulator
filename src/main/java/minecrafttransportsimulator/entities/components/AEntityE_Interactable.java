@@ -13,6 +13,7 @@ import java.util.UUID;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 
+import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Orientation3d;
@@ -55,7 +56,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 	/**List of boxes generated from JSON.  These are stored here as objects since they may not be
 	 * added to their respective maps if they aren't active.**/
 	public final Map<JSONCollisionGroup, Set<BoundingBox>> definitionCollisionBoxes = new HashMap<JSONCollisionGroup, Set<BoundingBox>>();
-	private final Map<JSONCollisionGroup, List<DurationDelayClock>> collisionClocks = new HashMap<JSONCollisionGroup, List<DurationDelayClock>>();
+	private final Map<JSONCollisionGroup, AnimationSwitchbox> collisionSwitchboxes = new HashMap<JSONCollisionGroup, AnimationSwitchbox>();
 	
 	/**List of bounding boxes that should be used to check collision of this entity with blocks.**/
 	public final Set<BoundingBox> blockCollisionBoxes = new HashSet<BoundingBox>();
@@ -136,12 +137,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 	private final Set<TrailerConnection> savedTowingConnections = new HashSet<TrailerConnection>();
 	public static final String TRAILER_CONNECTION_REQUEST_VARIABLE = "connection_requested";
 	
-	//Mutable variables.
-	private final Point3d collisionGroupAnimationResult = new Point3d();
-	private final Point3d collisionGroupWorkingAngles = new Point3d();
-	private final Point3d collisionGroupWorkingAngleOffset = new Point3d();
-	
-
+	private final Point3d collisionGroupAnimationOffset = new Point3d();
 	
 	public final Point3d angles;
 	public final Point3d prevAngles;
@@ -218,9 +214,9 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 	protected void initializeDefinition(){
 		super.initializeDefinition();
 		//Create collision boxes.
-		definitionCollisionBoxes.clear();
-		collisionClocks.clear();
 		if(definition.collisionGroups != null){
+			definitionCollisionBoxes.clear();
+			collisionSwitchboxes.clear();
 			for(JSONCollisionGroup groupDef : definition.collisionGroups){
 				Set<BoundingBox> boxes = new HashSet<BoundingBox>();
 				for(JSONCollisionBox boxDef : groupDef.collisions){
@@ -228,11 +224,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 				}
 				definitionCollisionBoxes.put(groupDef, boxes);
 				if(groupDef.animations != null){
-					List<DurationDelayClock> animations = new ArrayList<DurationDelayClock>();
-					for(JSONAnimationDefinition animation : groupDef.animations){
-						animations.add(new DurationDelayClock(animation));
-					}
-					collisionClocks.put(groupDef, animations);
+					collisionSwitchboxes.put(groupDef, new AnimationSwitchbox(this, groupDef.animations));
 				}
 			}
 		}
@@ -428,101 +420,26 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 					return;
 				}
 				if(groupDef.health == 0 || getVariable("collision_" + (definition.collisionGroups.indexOf(groupDef) + 1) + "_damage") < groupDef.health){
-					if(groupDef.animations != null){
-						boolean inhibitAnimations = false;
-						boolean inhibitCollision = false;
-						//Reset working angles, but don't reset offset as it's not required.
-						collisionGroupWorkingAngles.set(0, 0, 0);
-						//Set box global center to local center.  This is used as a temp storage to do proper animation math.
-						for(BoundingBox box : collisionBoxes){
-							box.globalCenter.setTo(box.localCenter);
-						}
-						for(DurationDelayClock clock : collisionClocks.get(groupDef)){
-							switch(clock.animation.animationType){
-								case VISIBILITY :{
-									if(!inhibitAnimations){
-										double variableValue = getAnimatedVariableValue(clock, 0);
-										if(variableValue < clock.animation.clampMin || variableValue > clock.animation.clampMax){
-											inhibitCollision = true;
-										}
-									}
-									break;
-								}
-								case INHIBITOR :{
-									if(!inhibitAnimations){
-										double variableValue = getAnimatedVariableValue(clock, 0);
-										if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
-											inhibitAnimations = true;
-										}
-									}
-									break;
-								}
-								case ACTIVATOR :{
-									if(inhibitAnimations){
-										double variableValue = getAnimatedVariableValue(clock, 0);
-										if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
-											inhibitAnimations = false;
-										}
-									}
-									break;
-								}
-								case TRANSLATION :{
-									if(!inhibitAnimations){
-										//Found translation.  This gets applied in the translation axis direction directly.
-										double variableValue = getAnimatedVariableValue(clock, clock.animationAxisMagnitude, 0);
-										collisionGroupAnimationResult.setTo(clock.animationAxisNormalized).multiply(variableValue).rotateFine(collisionGroupWorkingAngles);
-										for(BoundingBox box : collisionBoxes){
-											box.globalCenter.add(collisionGroupAnimationResult);
-										}
-									}
-									break;
-								}
-								case ROTATION :{
-									if(!inhibitAnimations){
-										//Found rotation.  Get angles that needs to be applied.
-										//We need to apply this to every box differently due to offsets.
-										double variableValue = getAnimatedVariableValue(clock, clock.animationAxisMagnitude, 0);
-										collisionGroupAnimationResult.setTo(clock.animationAxisNormalized).multiply(variableValue);
-										
-										for(BoundingBox box : collisionBoxes){
-											//Use the center point as a vector we rotate to get the applied offset.
-											//We need to take into account the current offset here, as we might have rotated on a prior call.
-											collisionGroupWorkingAngleOffset.setTo(box.globalCenter).subtract(box.localCenter);
-											box.globalCenter.subtract(clock.animation.centerPoint).subtract(collisionGroupWorkingAngleOffset).rotateFine(collisionGroupAnimationResult).add(clock.animation.centerPoint).add(collisionGroupWorkingAngleOffset);
-										}
-										
-										//Apply rotation.  We need to do this after translation operations to ensure proper offsets.
-										collisionGroupWorkingAngles.add(collisionGroupAnimationResult);
-									}
-									break;
-								}
-								case SCALING :{
-									//Do nothing.
-									break;
-								}
-							}
-							if(inhibitCollision){
-								//No need to process further.
-								break;
-							}
-						}
-						
-						//Update collisions using temp offset.
-						//Need to move it to temp variable to not get overwritten.
-						if(!inhibitCollision){
+					AnimationSwitchbox switchBox = this.collisionSwitchboxes.get(groupDef);
+					//FIXME if parts work, make this use multiple boxes.
+					//if(switchBox != null){
+						/*if(switchBox.runSwitchbox(0)){
 							for(BoundingBox box : collisionBoxes){
-								collisionGroupAnimationResult.setTo(box.globalCenter).subtract(box.localCenter);
-								box.updateToEntity(this, collisionGroupAnimationResult);
+								//Need to rotate the local center, then add on the delta we got, then remove local center.
+								//Locan center gets added in the update function, so we need to pre-remove it.
+								collisionGroupAnimationOffset.setTo(box.localCenter);
+								switchBox.animationOrientation.rotatePoint(collisionGroupAnimationOffset).add(switchBox.animationOffset).subtract(box.localCenter);
+								box.updateToEntity(this, collisionGroupAnimationOffset);
 							}
 						}else{
 							//Don't let these boxes get added to the list.
 							continue;
-						}
-					}else{
+						}*/
+					//}else{
 						for(BoundingBox box : collisionBoxes){
 							box.updateToEntity(this, null);
 						}
-					}
+					//}
 					entityCollisionBoxes.addAll(collisionBoxes);
 					if(!groupDef.isInterior && !ConfigSystem.configObject.general.noclipVehicles.value){
 						blockCollisionBoxes.addAll(collisionBoxes);

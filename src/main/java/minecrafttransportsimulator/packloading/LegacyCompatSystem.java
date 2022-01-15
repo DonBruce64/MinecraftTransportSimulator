@@ -678,7 +678,7 @@ public final class LegacyCompatSystem{
 				muzzleGroup.muzzles = new ArrayList<JSONMuzzle>();
 				JSONMuzzle muzzle = new JSONMuzzle();
 				muzzle.pos = new Point3d(0, 0, definition.gun.length);
-				muzzle.rot = new Point3d();
+				muzzle.rot = new Orientation3d(new Point3d(0, 0, 0));
 				muzzle.center = new Point3d();
 				muzzleGroup.muzzles.add(muzzle);
 				definition.gun.muzzleGroups.add(muzzleGroup);
@@ -1680,7 +1680,7 @@ public final class LegacyCompatSystem{
 			if(partName.equals("ground_wheel") && partDef.turnsWithSteer && partDef.animations == null){
 				partDef.animations = new ArrayList<JSONAnimationDefinition>();
 				JSONAnimationDefinition animation = new JSONAnimationDefinition();
-				animation.centerPoint = new Point3d();
+				animation.centerPoint = partDef.pos.copy();
 				animation.axis = new Point3d(0, partDef.pos.z > 0 ? -1 : 1, 0);
 				animation.animationType = AnimationComponentType.ROTATION;
 				animation.variable = "rudder";

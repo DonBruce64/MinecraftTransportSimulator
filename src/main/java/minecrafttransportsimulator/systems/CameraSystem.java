@@ -94,7 +94,7 @@ public class CameraSystem{
 					if(!multipart.cameraSwitchboxes.isEmpty()){
 						for(Entry<JSONCameraObject, AnimationSwitchbox> switchboxEntry : multipart.cameraSwitchboxes.entrySet()){
 							JSONCameraObject testCamera = switchboxEntry.getKey();
-							if(switchboxEntry.getValue().runSwitchbox(partialTicks)){
+							if(switchboxEntry.getValue().runSwitchbox(null, partialTicks)){
 								if(camerasChecked++ == customCameraIndex){
 									camera = testCamera;
 									cameraProvider = multipart;
@@ -108,7 +108,7 @@ public class CameraSystem{
 						if(!part.cameraSwitchboxes.isEmpty()){
 							for(Entry<JSONCameraObject, AnimationSwitchbox> switchboxEntry : part.cameraSwitchboxes.entrySet()){
 								JSONCameraObject testCamera = switchboxEntry.getKey();
-								if(switchboxEntry.getValue().runSwitchbox(partialTicks)){
+								if(switchboxEntry.getValue().runSwitchbox(null, partialTicks)){
 									if(camerasChecked++ == customCameraIndex){
 										camera = testCamera;
 										cameraProvider = part;
@@ -126,7 +126,7 @@ public class CameraSystem{
 					if(!playerGunEntity.activeGun.cameraSwitchboxes.isEmpty()){
 						for(Entry<JSONCameraObject, AnimationSwitchbox> switchboxEntry : playerGunEntity.activeGun.cameraSwitchboxes.entrySet()){
 							JSONCameraObject testCamera = switchboxEntry.getKey();
-							if(switchboxEntry.getValue().runSwitchbox(partialTicks)){
+							if(switchboxEntry.getValue().runSwitchbox(null, partialTicks)){
 								if(camerasChecked++ == customCameraIndex){
 									camera = testCamera;
 									cameraProvider = playerGunEntity.activeGun;
@@ -161,15 +161,16 @@ public class CameraSystem{
 					cameraOrientation.multiplyBy(entityOrientation);
 					
 					//Now that camera is aligned to entity, set it to the starting position/orientation.
-					entityOrientation.addRotationToPoint(camera.pos, cameraPosition);
+					entityOrientation.rotateAndAddTo(camera.pos, cameraPosition);
     				if(camera.rot != null){
     					cameraOrientation.multiplyBy(camera.rot);
     				}
 					
 					//Apply transforms.
 					//These happen in-order to ensure proper rendering sequencing.
-    				switchbox.runSwitchbox(partialTicks);
-    				cameraOrientation.addRotationToPoint(switchbox.animationOffset, cameraPosition);
+    				//FIXME this probably shouldn't be null, but nothing to test yet.
+    				switchbox.runSwitchbox(null, partialTicks);
+    				cameraOrientation.rotateAndAddTo(switchbox.animationOffset, cameraPosition);
     				cameraOrientation.multiplyBy(switchbox.animationOrientation);
     				return true;
 				}

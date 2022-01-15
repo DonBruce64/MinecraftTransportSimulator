@@ -125,10 +125,10 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 			//Update active state.
 			isActive = placementDefinition.isSubPart ? parentPart.isActive : true;
 			if(isActive && placementActiveSwitchbox != null){
-				isActive = placementActiveSwitchbox.runSwitchbox(0);
+				isActive = placementActiveSwitchbox.runSwitchbox(null, 0);
 			}
 			if(isActive && internalActiveSwitchbox != null){
-				isActive = internalActiveSwitchbox.runSwitchbox(0);
+				isActive = internalActiveSwitchbox.runSwitchbox(null, 0);
 			}
 			
 			//Set initial offsets.
@@ -137,7 +137,7 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 				motion.setTo(parentPart.motion);
 				position.setTo(parentPart.position);
 				orientation.setTo(parentPart.orientation);
-				localOffset.setTo(placementOffset).multiply(parentPart.scale);
+				localOffset.setTo(placementOffset);
 			}else{
 				prevMotion.setTo(entityOn.prevMotion);
 				motion.setTo(entityOn.motion);
@@ -148,29 +148,41 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 			
 			//Update local position, orientation, scale, and enabled state.
 			isInvisible = false;
-			localOrientation.setTo(placementDefinition.rot);
 			scale = placementDefinition.isSubPart && parentPart != null ? parentPart.scale : 1.0F;
+			localOffset.multiply(scale);
+			localOrientation.setRotation(0);
+			
+			//Placement movement uses the coords of the thing we are on.
 			if(placementMovementSwitchbox != null){
-				isInvisible = !placementMovementSwitchbox.runSwitchbox(0);
+				isInvisible = !placementMovementSwitchbox.runSwitchbox(localOffset, 0);
 				scale *= placementMovementSwitchbox.animationScale;
-				localOrientation.addRotationToPoint(placementMovementSwitchbox.animationOffset, localOffset);
+				//Update local orientation to match rotated.
+				localOffset.setTo(placementMovementSwitchbox.animationOffset);
 				localOrientation.multiplyBy(placementMovementSwitchbox.animationOrientation);
 			}
+			
+			//Internal movement uses local coords.
+			//First rotate orientation to face rotated state.
+			localOrientation.multiplyBy(placementDefinition.rot);
 			if(internalMovementSwitchbox != null){
-				isInvisible = !internalMovementSwitchbox.runSwitchbox(0) || isInvisible;
+				isInvisible = !internalMovementSwitchbox.runSwitchbox(null, 0) || isInvisible;
 				scale *= internalMovementSwitchbox.animationScale;
-				localOrientation.addRotationToPoint(internalMovementSwitchbox.animationOffset, localOffset);
+				//Need to update offset to account for offset found in the animation.
+				//This doesn't apply to the local offset, as this is in the part's coodrinate
+				//system, not the one that the part is placed on.
+				localOrientation.rotateAndAddTo(internalMovementSwitchbox.animationOffset, localOffset);
+				//Update local orientation to match rotated.
 				localOrientation.multiplyBy(internalMovementSwitchbox.animationOrientation);
 			}
+			
+			//Now that locals are set, set globals to reflect them.
+			orientation.rotateAndAddTo(localOffset, position);
+			orientation.multiplyBy(localOrientation);
 			
 			//Update bounding box, as scale changes width/height.
 			boundingBox.widthRadius = getWidth()/2D;
 			boundingBox.heightRadius = getHeight()/2D;
 			boundingBox.depthRadius = getWidth()/2D;
-			
-			//Now that locals are set, set globals to reflect them.
-			orientation.addRotationToPoint(localOffset, position);
-			orientation.multiplyBy(localOrientation);
 			
 			//Update post-movement things.
 			updatePostMovement();

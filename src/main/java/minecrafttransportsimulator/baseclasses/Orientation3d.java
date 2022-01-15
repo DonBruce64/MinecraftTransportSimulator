@@ -15,6 +15,7 @@ public class Orientation3d{
 	private static final Orientation3d mutableOrientationX = new Orientation3d(new Point3d(1, 0, 0), 0);
 	private static final Orientation3d mutableOrientationY = new Orientation3d(new Point3d(0, 1, 0), 0);
 	private static final Orientation3d mutableOrientationZ = new Orientation3d(new Point3d(0, 0, 1), 0);
+	private static final Orientation3d mutableOrientationPoint = new Orientation3d(new Point3d(0, 0, 0), 0);
 	private static final Orientation3d interpolatedOrientation = new Orientation3d(new Point3d(0, 0, 1), 0);
 	private final Point3d mutablePoint = new Point3d();
 	
@@ -85,7 +86,7 @@ public class Orientation3d{
 	 * Sets the rotation for this orientation, updating values as appropriate.
 	 * Internal method only for MXY calcs.
 	 */
-	private Orientation3d setRotation(double newRotation){
+	public Orientation3d setRotation(double newRotation){
 		rotation = newRotation;
 		updateQuaternion(false);
 		return this;
@@ -232,20 +233,46 @@ public class Orientation3d{
 	 * Returns the storing object for nested operations.
 	 */
 	public Point3d rotatePoint(Point3d rotate){
-		//Check if we even need to rotate.  If the one to multiply by has a rotation 0, it's a null transform.
-		if(rotation != 0){
-			//First multiply the point by the quaternion.  Point has imaginary w param of 0.
+		//Check if we even need to rotate.  If we have a rotation 0, or the point is zero, it's a null transform.
+		if(rotation != 0 || !rotate.isZero()){
+			//Make the point a quaternion.
+			mutableOrientationPoint.w = 0;
+			mutableOrientationPoint.x = rotate.x;
+			mutableOrientationPoint.y = rotate.y;
+			mutableOrientationPoint.z = rotate.z;
+			
+			//Multiply us and the mutable together
+			//double mW = w * mutableOrientationPoint.w - x * mutableOrientationPoint.x - y * mutableOrientationPoint.y - z * mutableOrientationPoint.z;
+			//double mX = w * mutableOrientationPoint.x + x * mutableOrientationPoint.w + y * mutableOrientationPoint.z - z * mutableOrientationPoint.y;
+			//double mY = w * mutableOrientationPoint.y - x * mutableOrientationPoint.z + y * mutableOrientationPoint.w + z * mutableOrientationPoint.x;
+			//double mZ = w * mutableOrientationPoint.z + x * mutableOrientationPoint.y - y * mutableOrientationPoint.x + z * mutableOrientationPoint.w;
 			double mW = - x * rotate.x - y * rotate.y - z * rotate.z;
 			double mX = w * rotate.x + y * rotate.z - z * rotate.y;
 			double mY = w * rotate.y - x * rotate.z + z * rotate.x;
 			double mZ = w * rotate.z + x * rotate.y - y * rotate.x;
 			
+			//Now multiply the result and the conjugate.
+			double mW2 = mW * w - mX * -x - mY * -y - mZ * -z;
+			double mX2 = mW * -x + mX * w + mY * -z - mZ * -y;
+			double mY2 = mW * -y - mX * -z + mY * w + mZ * -x;
+			double mZ2 = mW * -z + mX * -y - mY * -x + mZ * w;
+			
+			//Now store this result in the point.
+			rotate.x = mX2;
+			rotate.y = mY2;
+			rotate.z = mZ2;
 			//Next, multiply the result by the conjugate of the quaternion.
 			//We don't need to calculate the W parameter here as it has to be 0.
 			//storeIn.w = mW * w - mX * -x - mY * -y - mZ * -z;
-			rotate.x = mW * -x + mX * w + mY * -z - mZ * -y;
-			rotate.y = mW * -y - mX * -z + mY * w + mZ * -x;
-			rotate.z = mW * -z + mX * -y - mY * -x + mZ * w;
+			//rotate.x = mW * -x + mX * w + mY * -z - mZ * -y;
+			//rotate.y = mW * -y - mX * -z + mY * w + mZ * -x;
+			//rotate.z = mW * -z + mX * -y - mY * -x + mZ * w;
+			
+			/*
+			//First multiply the point by the quaternion.  Point has imaginary w param of 0.
+			
+			
+			*/
 		}
 		return rotate;
 	}
@@ -255,7 +282,7 @@ public class Orientation3d{
 	 * is added to the second parameter and the first parameter is un-changed.
 	 * Returns the second parameter for nested calls.
 	 */
-	public Point3d addRotationToPoint(Point3d rotate, Point3d addTo){
+	public Point3d rotateAndAddTo(Point3d rotate, Point3d addTo){
 		return addTo.add(rotatePoint(mutablePoint.setTo(rotate)));
 	}
 	

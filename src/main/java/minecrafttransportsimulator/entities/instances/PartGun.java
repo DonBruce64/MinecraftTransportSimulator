@@ -5,6 +5,7 @@ import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
+import minecrafttransportsimulator.baseclasses.Orientation3d;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.items.components.AItemBase;
@@ -53,8 +54,8 @@ public class PartGun extends APart{
 	public int bulletsReloading;
 	public int bulletsRemovedThisRequest;
 	public int currentMuzzleGroupIndex;
-	public final Point3d currentGunOrientation;
-	public final Point3d prevGunOrientation;
+	public final Orientation3d currentInternalElevation;
+	public final Orientation3d prevInternalElevation;
 	public ItemBullet loadedBullet;
 	
 	//These variables are used during firing and will be reset on loading.
@@ -127,8 +128,8 @@ public class PartGun extends APart{
 		this.bulletsLeft = data.getInteger("bulletsLeft");
 		this.bulletsReloading = data.getInteger("bulletsReloading");
 		this.currentMuzzleGroupIndex = data.getInteger("currentMuzzleGroupIndex");
-		this.currentGunOrientation = data.getPoint3d("currentOrientation");
-		this.prevGunOrientation = currentGunOrientation.copy();
+		this.currentInternalElevation = new Orientation3d(new Point3d(1, 0, 0), data.getDouble("internalElevation"));
+		this.prevInternalElevation = new Orientation3d(currentInternalElevation);
 		String loadedBulletPack = data.getString("loadedBulletPack");
 		String loadedBulletName = data.getString("loadedBulletName");
 		if(!loadedBulletPack.isEmpty()){
@@ -449,63 +450,63 @@ public class PartGun extends APart{
 	 */
 	private void handleMovement(double targetYaw, double targetPitch){
 		//Set prev orientation now that we don't need it for the gun delta calculations.
-		prevGunOrientation.setTo(currentGunOrientation);
+		/*prevInternalElevation.setTo(currentInternalElevation);
 		
 		//Adjust yaw.  We need to normalize the delta here as yaw can go past -180 to 180.
-		double deltaYaw = -currentGunOrientation.getClampedYDelta(targetYaw);
+		double deltaYaw = -currentInternalElevation.getClampedYDelta(targetYaw);
 		if(deltaYaw < 0){
 			if(deltaYaw < -definition.gun.yawSpeed){
 				deltaYaw = -definition.gun.yawSpeed;
 			}
-			currentGunOrientation.y += deltaYaw; 
+			currentInternalElevation.y += deltaYaw; 
 		}else if(deltaYaw > 0){
 			if(deltaYaw > definition.gun.yawSpeed){
 				deltaYaw = definition.gun.yawSpeed;
 			}
-			currentGunOrientation.y += deltaYaw;
+			currentInternalElevation.y += deltaYaw;
 		}
 		
 		//Apply yaw clamps.
 		//If yaw is from -180 to 180, we are a gun that can spin around on its mount.
 		//We need to do special logic for this type of gun.
 		if(minYaw == -180  && maxYaw == 180){
-			if(currentGunOrientation.y > 180 ){
-				currentGunOrientation.y -= 360;
-				prevGunOrientation.y -= 360;
-			}else if(currentGunOrientation.y < -180){
-				currentGunOrientation.y += 360;
-				prevGunOrientation.y += 360;
+			if(currentInternalElevation.y > 180 ){
+				currentInternalElevation.y -= 360;
+				prevInternalElevation.y -= 360;
+			}else if(currentInternalElevation.y < -180){
+				currentInternalElevation.y += 360;
+				prevInternalElevation.y += 360;
 			}
 		}else{
-			if(currentGunOrientation.y > maxYaw){
-				currentGunOrientation.y = maxYaw;
+			if(currentInternalElevation.y > maxYaw){
+				currentInternalElevation.y = maxYaw;
 			}
-			if(currentGunOrientation.y < minYaw){
-				currentGunOrientation.y = minYaw;
+			if(currentInternalElevation.y < minYaw){
+				currentInternalElevation.y = minYaw;
 			}
 		}
 		
 		//Adjust pitch.
-		double deltaPitch = targetPitch - currentGunOrientation.x;
+		double deltaPitch = targetPitch - currentInternalElevation.x;
 		if(deltaPitch < 0){
 			if(deltaPitch < -definition.gun.pitchSpeed){
 				deltaPitch = -definition.gun.pitchSpeed;
 			}
-			currentGunOrientation.x += deltaPitch; 
+			currentInternalElevation.x += deltaPitch; 
 		}else if(deltaPitch > 0){
 			if(deltaPitch > definition.gun.pitchSpeed){
 				deltaPitch = definition.gun.pitchSpeed;
 			}
-			currentGunOrientation.x += deltaPitch;
+			currentInternalElevation.x += deltaPitch;
 		}
 		
 		//Apply pitch clamps.
-		if(currentGunOrientation.x > maxPitch){
-			currentGunOrientation.x = maxPitch;
+		if(currentInternalElevation.x > maxPitch){
+			currentInternalElevation.x = maxPitch;
 		}
-		if(currentGunOrientation.x < minPitch){
-			currentGunOrientation.x = minPitch;
-		}
+		if(currentInternalElevation.x < minPitch){
+			currentInternalElevation.x = minPitch;
+		}*/
 	}
 	
 	/**
@@ -585,33 +586,27 @@ public class PartGun extends APart{
 	 * Used in both spawning the bullet, and in rendering where the muzzle position is.
 	 */
 	public void setBulletSpawn(Point3d bulletPosition, Point3d bulletVelocity, JSONMuzzle muzzle){
-		//Set initial velocity to gun's velocity, otherwise it starts at 0.
+		//Set velocity.
 		if(definition.gun.muzzleVelocity > 0){
 			bulletVelocity.set(0, 0, definition.gun.muzzleVelocity/20D/10D);
-		}else{
-			bulletVelocity.set(0, 0, 0);
 		}
-		
-		//Velocity is based on the current gun orientation, plus a slight fudge-factor based on the spread factor.
-		if(definition.gun.pitchIsInternal){
-			bulletVelocity.rotateFine(new Point3d(currentGunOrientation.x, 0, 0));
-		}
-		bulletVelocity.rotateFine(muzzle.rot);
 		if(definition.gun.bulletSpreadFactor > 0){
-			bulletVelocity.rotateFine(new Point3d((Math.random() - 0.5F)*definition.gun.bulletSpreadFactor, (Math.random() - 0.5F)*definition.gun.bulletSpreadFactor, 0D));
+			new Orientation3d(new Point3d((Math.random() - 0.5F)*definition.gun.bulletSpreadFactor, (Math.random() - 0.5F)*definition.gun.bulletSpreadFactor, 0D)).rotatePoint(bulletVelocity);
 		}
+		//Now that velocity is set, rotate it to match the gun's orientation.
 		orientation.rotatePoint(bulletVelocity);
+		muzzle.rot.rotatePoint(bulletVelocity);
+		if(definition.gun.pitchIsInternal){
+			currentInternalElevation.rotatePoint(bulletVelocity);
+		}
 		
 		//Add gun velocity to bullet to ensure we spawn with the offset.
 		bulletVelocity.addScaled(motion, EntityVehicleF_Physics.SPEED_FACTOR);
-		
-		//Position is based on JSON parameters and current orientation.
+
+		//Now set position.
+		bulletPosition.setTo(muzzle.pos);
 		if(definition.gun.pitchIsInternal){
-			Point3d muzzleDelta = muzzle.pos.copy().subtract(muzzle.center);
-			bulletPosition.setTo(muzzleDelta).rotateFine(new Point3d(currentGunOrientation.x, 0, 0)).subtract(muzzleDelta);
-			bulletPosition.add(muzzle.pos);
-		}else{
-			bulletPosition.setTo(muzzle.pos);
+			currentInternalElevation.rotateWithOffset(bulletPosition, muzzle.center);
 		}
 		orientation.rotatePoint(bulletPosition).add(position);
 	}
@@ -624,10 +619,11 @@ public class PartGun extends APart{
 			case("gun_firing"): return state.isAtLeast(GunState.FIRING_CURRENTLY) ? 1 : 0;
 			case("gun_fired"): return firedThisCheck ? 1 : 0;
 			case("gun_lockedon"): return entityTarget != null ? 1 : 0;
-			case("gun_pitch"): return prevGunOrientation.x + (currentGunOrientation.x - prevGunOrientation.x)*partialTicks;
-			case("gun_yaw"): return prevGunOrientation.y + (currentGunOrientation.y - prevGunOrientation.y)*partialTicks;
-			case("gun_pitching"): return prevGunOrientation.x != currentGunOrientation.x ? 1 : 0;
-			case("gun_yawing"): return prevGunOrientation.y != currentGunOrientation.y ? 1 : 0;
+			//FIXME fix these.
+			//case("gun_pitch"): return prevInternalElevation.x + (currentInternalElevation.x - prevInternalElevation.x)*partialTicks;
+			//case("gun_yaw"): return prevInternalElevation.y + (currentInternalElevation.y - prevInternalElevation.y)*partialTicks;
+			//case("gun_pitching"): return prevInternalElevation.x != currentInternalElevation.x ? 1 : 0;
+			//case("gun_yawing"): return prevInternalElevation.y != currentInternalElevation.y ? 1 : 0;
 			case("gun_cooldown"): return state.isAtLeast(GunState.FIRING_CURRENTLY) && lastTimeFired != 0 ? (System.currentTimeMillis() - lastTimeFired)/50D : 0;
 			case("gun_windup_time"): return windupTimeCurrent;
 			case("gun_windup_rotation"): return windupRotation;
@@ -714,7 +710,7 @@ public class PartGun extends APart{
 		data.setInteger("bulletsLeft", bulletsLeft);
 		data.setInteger("bulletsReloading", bulletsReloading);
 		data.setInteger("currentMuzzleGroupIndex", currentMuzzleGroupIndex);
-		data.setPoint3d("currentOrientation", currentGunOrientation);
+		data.setDouble("internalElevation", currentInternalElevation.rotation);
 		if(loadedBullet != null){
 			data.setString("loadedBulletPack", loadedBullet.definition.packID);
 			data.setString("loadedBulletName", loadedBullet.definition.systemName);

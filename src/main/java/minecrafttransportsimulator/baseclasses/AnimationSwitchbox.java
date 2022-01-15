@@ -5,6 +5,7 @@ import java.util.List;
 
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
+import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition.AnimationComponentType;
 import minecrafttransportsimulator.rendering.components.DurationDelayClock;
 
 /**A helper class of sorts for doing switch-based animations for {@link JSONAnimationDefinition}
@@ -27,6 +28,7 @@ public class AnimationSwitchbox{
 	private boolean inhibitAnimations;
 	private final Point3d mutablePoint = new Point3d();
 	private final Orientation3d mutableOrientation = new Orientation3d(mutablePoint);
+	private final List<DurationDelayClock> clocksToRun = new ArrayList<DurationDelayClock>();
 	
 	public AnimationSwitchbox(AEntityD_Definable<?> entity, List<JSONAnimationDefinition> animations){
 		this.entity = entity;
@@ -35,23 +37,28 @@ public class AnimationSwitchbox{
 		}
 	}
 	
-	public boolean runSwitchbox(float partialTicks){
+	public boolean runSwitchbox(Point3d initialOffset, float partialTicks){
 		inhibitAnimations = false;
 		anyClockMovedThisUpdate = false;
-		animationOffset.set(0, 0, 0);
-		animationOrientation.setAngles(animationOffset);
+		if(initialOffset != null){
+			animationOffset.setTo(initialOffset);
+		}else{
+			animationOffset.set(0, 0, 0);
+		}
+		animationOrientation.setRotation(0);
 		animationScale = 1.0;
+		clocksToRun.clear();
 		for(DurationDelayClock clock : clocks){
 			switch(clock.animation.animationType){
 				case TRANSLATION :{
 					if(!inhibitAnimations){
-						runTranslation(clock, partialTicks);
+						clocksToRun.add(0, clock);
 					}
 					break;
 				}
 				case ROTATION :{
 					if(!inhibitAnimations){
-						runRotation(clock, partialTicks);
+						clocksToRun.add(0, clock);
 					}
 					break;
 				}
@@ -93,21 +100,26 @@ public class AnimationSwitchbox{
 				}
 			}
 		}
+		
+		///Run clocks now.  They need to be run in reverse for the proper order.
+		for(DurationDelayClock clock : clocksToRun){
+			if(clock.animation.animationType.equals(AnimationComponentType.TRANSLATION)){
+				runTranslation(clock, partialTicks);
+			}else{
+				runRotation(clock, partialTicks);
+			}
+		}
+		
 		return true;
 	}
 	
 	public void runTranslation(DurationDelayClock clock, float partialTicks){
 		//Found translation.  This gets applied in the translation axis direction directly.
 		double variableValue = entity.getAnimatedVariableValue(clock, clock.animationAxisMagnitude, partialTicks);
-		if(animationOrientation.rotation != 0){
-			//Existing rotation, apply our offset to it.
-			mutablePoint.setTo(clock.animationAxisNormalized).multiply(variableValue);
-			animationOrientation.rotatePoint(mutablePoint);
-			animationOffset.add(mutablePoint);
-		}else{
-			//No rotation, just apply directly.
-			animationOffset.addScaled(clock.animationAxisNormalized, variableValue);
-		}
+		mutablePoint.setTo(clock.animationAxisNormalized).multiply(variableValue);
+		
+		//Add this point to the total translation, rotating it by the existing rotation.
+		animationOrientation.rotateAndAddTo(mutablePoint, animationOffset);
 	}
 	
 	public void runRotation(DurationDelayClock clock, float partialTicks){
@@ -115,16 +127,17 @@ public class AnimationSwitchbox{
 		double variableValue = entity.getAnimatedVariableValue(clock, clock.animationAxisMagnitude, partialTicks);
 		mutableOrientation.setTo(clock.animationAxisNormalized, variableValue);
 		
-		//Check if we need to apply a translation based on this rotation.
-		if(!clock.animation.centerPoint.isZero()){
-			mutableOrientation.rotateWithOffset(animationOffset, clock.animation.centerPoint);
-		}
+		//Rotate existing point to new orientation, taking into account offset.
+		mutableOrientation.rotateWithOffset(animationOffset, clock.animation.centerPoint);
 		
-		//Now apply orientation changes.
-		if(animationOrientation.rotation == 0){
-			animationOrientation.setTo(mutableOrientation);
-		}else{
-			animationOrientation.multiplyBy(mutableOrientation);
-		}
+		//Now apply orientation changes so orientation faces the proper way.
+		animationOrientation.multiplyBy(mutableOrientation);
+		
+		//Rotate existing point to new orientation, taking into account offset.
+		//animationOrientation.multiplyBy(mutableOrientation);
+		//mutableOrientation.rotateWithOffset(animationOffset, clock.animation.centerPoint);
+		
+		//Now apply orientation changes so orientation faces the proper way.
+		
 	}
 }
