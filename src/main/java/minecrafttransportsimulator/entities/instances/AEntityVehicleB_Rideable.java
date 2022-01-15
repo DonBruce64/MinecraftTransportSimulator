@@ -106,8 +106,9 @@ abstract class AEntityVehicleB_Rideable extends AEntityF_Multipart<JSONVehicle>{
             	if(playerYawDelta > 180){
             		playerYawDelta-=360;
             	}
-            	rider.setYaw(rider.getYaw() + angles.y - prevAngles.y);
-        		rider.setPitch(rider.getPitch() + Math.cos(Math.toRadians(playerYawDelta))*(angles.x - prevAngles.x) + Math.sin(Math.toRadians(playerYawDelta))*(angles.z - prevAngles.z));
+            	//FIXME update this.
+            	//rider.setYaw(rider.getYaw() + angles.y - prevAngles.y);
+        		//rider.setPitch(rider.getPitch() + angles.x - prevAngles.x);
              }
 			
 			//If we are on the client, and the rider is the main client player, check controls.

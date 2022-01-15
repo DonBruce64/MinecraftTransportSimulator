@@ -30,7 +30,7 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Renderable>{
 			entityPositionDelta.subtract(InterfaceClient.getRenderViewEntity().getRenderedPosition(partialTicks));
 			
 			//Get interpolated orientation.
-			Orientation3d interpolatedOrientation = entity.prevOrientation.getInterpolated(entity.orientation, null, partialTicks);
+			Orientation3d interpolatedOrientation = entity.prevOrientation.getInterpolated(entity.orientation, partialTicks);
 			
 			//Adjust position and orientation, if needed.
 			adjustPositionOrientation(entity, entityPositionDelta, interpolatedOrientation, partialTicks);

@@ -7,6 +7,7 @@ import java.util.UUID;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
+import minecrafttransportsimulator.baseclasses.Orientation3d;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
@@ -201,6 +202,19 @@ public class WrapperEntity{
 		entity.motionY = motion.y;
 		entity.motionZ = motion.z;
 	}
+	
+	/**
+	 *  Returns the entity's orientation.
+	 *  The returned object is mutable and may be modified without
+	 *  affecting the entity's state.
+	 */
+	public Orientation3d getOrientation(){
+		mutableAngles.set(entity.rotationPitch, -entity.rotationYaw, 0);
+		mutableOrientation.setAngles(mutableAngles);
+		return mutableOrientation;
+	}
+	Point3d mutableAngles = new Point3d();
+	Orientation3d mutableOrientation = new Orientation3d(new Point3d());
 	
 	/**
 	 *  Returns the entity's pitch (x-axis rotation).

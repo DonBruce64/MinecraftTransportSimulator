@@ -37,7 +37,6 @@ public class EntityParticle extends AEntityC_Renderable{
 	//Runtime variables.
 	private boolean touchingBlocks;
 	private int age;
-	private Point3d angles = new Point3d();
 	
 	private static RenderParticle renderer;
 
@@ -172,11 +171,7 @@ public class EntityParticle extends AEntityC_Renderable{
 			}
 			
 			//Update orientation to always face the player.
-			angles.setTo(position).subtract(clientPlayer.getPosition()).add(0, -clientPlayer.getEyeHeight(), 0).subtract(InterfaceClient.getCameraPosition()).getAngles(true);
-			angles.y += 180;
-			angles.x = -angles.x;
-			//FIXME make this orientation based, not angles.
-			//orientation.setXYZ(angles);
+			orientation.setAngles(clientPlayer.getPosition().add(0, clientPlayer.getEyeHeight(), 0).add(InterfaceClient.getCameraPosition()).subtract(position).getAngles(true));
 			return true;
 		}else{
 			return false;

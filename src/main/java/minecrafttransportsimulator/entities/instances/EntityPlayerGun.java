@@ -104,7 +104,7 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun>{
 		
 		JSONPartDefinition fakeDef = new JSONPartDefinition();
 		fakeDef.pos = new Point3d();
-		fakeDef.rot = new Orientation3d();
+		fakeDef.rot = new Orientation3d(new Point3d(0, 0, 0));
 		fakeDef.types = new ArrayList<String>();
 		//Look though all gun types and add them.
 		for(AItemPack<?> packItem : PackParserSystem.getAllPackItems()){
@@ -233,7 +233,7 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun>{
 			updatePostMovement();
 			//If we have a gun, and the player is spectating, don't allow the gun to render.
 			if(activeGun != null){
-				activeGun.isDisabled = player != null && player.isSpectator();
+				activeGun.isInvisible = player != null && player.isSpectator();
 			}
 			return true;
 		}else{

@@ -507,7 +507,7 @@ public class PartEngine extends APart{
 				for(APart part : childParts){
 					if(part instanceof PartPropeller){
 						attachedPropeller = (PartPropeller) part;
-						propellerAxialVelocity = vehicleOn.motion.dotProduct(attachedPropeller.orientation.axis);
+						propellerAxialVelocity = vehicleOn.motion.dotProduct(attachedPropeller.axialOrientation);
 						propellerGearboxRatio = Math.signum(currentGearRatio)*(definition.engine.propellerRatio != 0 ? definition.engine.propellerRatio : Math.abs(currentGearRatio));
 						
 						//If wheel friction is 0, and we aren't in neutral, get RPM contributions for that.
@@ -565,7 +565,7 @@ public class PartEngine extends APart{
 				
 				///Update variables used for jet thrust.
 				if(definition.engine.jetPowerFactor > 0){
-					engineAxialVelocity = vehicleOn.motion.dotProduct(orientation.axis);
+					engineAxialVelocity = vehicleOn.motion.dotProduct(vehicleOn.axialOrientation);
 					
 					//Check for entities forward and aft of the engine and damage them.
 					if(!world.isClient() && rpm >= 5000){
@@ -1000,7 +1000,7 @@ public class PartEngine extends APart{
 				//Not running, do engine braking.
 				wheelForce = -rpm/currentMaxRPM*Math.signum(currentGear)*30;
 			}
-			engineForce.z += wheelForce;
+			engineForce.addScaled(vehicleOn.axialOrientation, wheelForce);
 		}
 		
 		//If we provide jet power, add it now.  This may be done with any parts or wheels on the ground.
@@ -1022,7 +1022,7 @@ public class PartEngine extends APart{
 			double thrust = (vehicleOn.reverseThrust ? -(coreContribution + fanContribution) : coreContribution + fanContribution)*definition.engine.jetPowerFactor;
 			
 			//Add the jet force to the engine.  Use the engine rotation to define the power vector.
-			engineForce.addScaled(orientation.axis, thrust);
+			engineForce.addScaled(vehicleOn.axialOrientation, thrust);
 		}
 		
 		//Finally, return the force we calculated.

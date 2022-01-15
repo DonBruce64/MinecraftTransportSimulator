@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.instances.APart;
@@ -75,6 +76,9 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 	
 	/**Maps animations to their respective clocks.  Used for anything that has an animation block.**/
 	public final Map<JSONAnimationDefinition, DurationDelayClock> animationClocks = new HashMap<JSONAnimationDefinition, DurationDelayClock>();
+	
+	/**Maps cameras to their respective switchboxes.**/
+	public final Map<JSONCameraObject, AnimationSwitchbox> cameraSwitchboxes = new HashMap<JSONCameraObject, AnimationSwitchbox>();
 	
 	/**Maps animated (model) object names to their definitions.  This is created from the JSON definition to prevent the need to do loops.**/
 	public final Map<String, JSONAnimatedObject> animatedObjectDefinitions = new HashMap<String, JSONAnimatedObject>();
@@ -244,13 +248,14 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 				}
 			}
 			if(definition.rendering.cameraObjects != null){
-				for(JSONCameraObject cameraDef : definition.rendering.cameraObjects){
-					if(cameraDef.animations != null){
-						for(JSONAnimationDefinition animation : cameraDef.animations){
-							animationClocks.put(animation, new DurationDelayClock(animation));
-						}
-					}
-				}
+				
+			}
+		}
+		
+		if(definition.rendering != null && definition.rendering.cameraObjects != null){
+			cameraSwitchboxes.clear();
+			for(JSONCameraObject cameraDef : definition.rendering.cameraObjects){
+				cameraSwitchboxes.put(cameraDef, new AnimationSwitchbox(this, cameraDef.animations));
 			}
 		}
 		

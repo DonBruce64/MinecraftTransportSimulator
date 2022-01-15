@@ -460,7 +460,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 			}
 			
 			//Add all forces to the main force matrix and apply them.
-			totalAxialForce.set(0D, wingForce - elevatorForce, 0D).add(thrustForce).rotateFine(angles);
+			totalAxialForce.set(0D, wingForce - elevatorForce, 0D).rotateFine(angles).add(thrustForce);
 			totalMotiveForce.set(-dragForce, -dragForce, -dragForce).multiply(normalizedVelocityVector);
 			totalGlobalForce.set(0D, ballastForce - gravitationalForce, 0D);
 			totalForce.setTo(totalAxialForce).add(totalMotiveForce).add(totalGlobalForce).multiply(1/currentMass);

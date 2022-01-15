@@ -696,7 +696,8 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 				//Don't do roll correction if we don't have roll.
 				if(groundDeviceCollective.canDoRollChecks()){
 					world.beginProfiling("GroundHandlingRoll", false);
-					groundRotationBoost = groundDeviceCollective.performRollCorrection(groundCollisionBoost + groundRotationBoost);
+					//FIXME this no work.
+					//groundRotationBoost = groundDeviceCollective.performRollCorrection(groundCollisionBoost + groundRotationBoost);
 				}
 				
 				//If we are flagged as a tilting vehicle try to keep us upright, unless we are turning, in which case turn into the turn.

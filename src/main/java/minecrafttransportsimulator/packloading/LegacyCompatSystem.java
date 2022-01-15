@@ -716,6 +716,34 @@ public final class LegacyCompatSystem{
 		performVehicleConnectionLegacyCompats(definition);
 		performVehicleCollisionLegacyCompats(definition);
 		
+		//Do compats for wheel rotation.
+		if(definition.ground != null && definition.ground.isWheel){
+			if(definition.generic.movementAnimations == null){
+				definition.generic.movementAnimations = new ArrayList<JSONAnimationDefinition>();
+				
+				JSONAnimationDefinition animation = new JSONAnimationDefinition();
+				animation.centerPoint = new Point3d(0, 0, 0);
+				animation.axis = new Point3d(1, 0, 0);
+				animation.animationType = AnimationComponentType.ROTATION;
+				animation.variable = "ground_rotation";
+				definition.generic.movementAnimations.add(animation);
+			}
+		}
+		
+		//Do compats for propeller rotation.
+		if(definition.propeller != null){
+			if(definition.generic.movementAnimations == null){
+				definition.generic.movementAnimations = new ArrayList<JSONAnimationDefinition>();
+				
+				JSONAnimationDefinition animation = new JSONAnimationDefinition();
+				animation.centerPoint = new Point3d(0, 0, 0);
+				animation.axis = new Point3d(0, 0, 1);
+				animation.animationType = AnimationComponentType.ROTATION;
+				animation.variable = "propeller_rotation";
+				definition.generic.movementAnimations.add(animation);
+			}
+		}
+		
 		//Do compats for engine and gun sounds.
 		if(definition.rendering == null || definition.rendering.sounds == null){
 			if(definition.engine != null){
@@ -1547,6 +1575,9 @@ public final class LegacyCompatSystem{
 	}
 	
 	private static void performVehiclePartDefLegacyCompats(JSONPartDefinition partDef){
+		if(partDef.rot == null){
+			partDef.rot = new Orientation3d(new Point3d(0, 0, 0));
+		}
 		if(partDef.additionalPart != null){
 			partDef.additionalParts = new ArrayList<JSONPartDefinition>();
 			partDef.additionalParts.add(partDef.additionalPart);

@@ -28,6 +28,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	public final Point3d prevMotion;
 	public final Orientation3d orientation;
 	public final Orientation3d prevOrientation;
+	public final Point3d axialOrientation;
 	
 	public BoundingBox boundingBox;
 	public double airDensity;
@@ -51,7 +52,8 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 		}else{
 			this.orientation = new Orientation3d(data);
 		}
-		this.prevOrientation = new Orientation3d().setTo(orientation);
+		this.prevOrientation = new Orientation3d(orientation);
+		this.axialOrientation = orientation.rotatePoint(new Point3d(0, 0, 1));
 		this.placingPlayer = placingPlayer;
 		this.boundingBox = new BoundingBox(new Point3d(), position, 0.5, 0.5, 0.5, false);
 		if(hasRadio()){
@@ -70,7 +72,8 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 		this.motion = motion.copy();
 		this.prevMotion = motion.copy();
 		this.orientation = new Orientation3d(angles);
-		this.prevOrientation = new Orientation3d().setTo(orientation);
+		this.prevOrientation = new Orientation3d(orientation);
+		this.axialOrientation = orientation.rotatePoint(new Point3d(0, 0, 1));
 		this.placingPlayer = null;
 		this.boundingBox = new BoundingBox(new Point3d(), position, 0.5, 0.5, 0.5, false);
 		this.radio = null;
@@ -86,6 +89,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 			prevPosition.setTo(position);
 			prevMotion.setTo(motion);
 			prevOrientation.setTo(orientation);
+			orientation.rotatePoint(axialOrientation.set(0, 0, 1));
 			airDensity = 1.225*Math.pow(2, -position.y/(500D*world.getMaxHeight()/256D));
 			velocity = motion.length();
 			world.endProfiling();

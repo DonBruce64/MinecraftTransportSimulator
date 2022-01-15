@@ -221,11 +221,6 @@ public class PartGroundDevice extends APart{
 		return (isFlat ? definition.ground.flatHeight : definition.ground.height)*scale;
 	}
 	
-	@Override
-	public Point3d getRenderingRotation(float partialTicks){
-		return new Point3d(definition.ground.isWheel ? EntityVehicleF_Physics.SPEED_FACTOR*(angularPosition + angularVelocity*partialTicks)*360D : 0, 0, 0D);
-	}
-	
 	/**
 	 * Attempts to set the ground device flat state to the passed-in state.  Checks to make
 	 * sure the ground device can actually go flat if it is being requested to do so.

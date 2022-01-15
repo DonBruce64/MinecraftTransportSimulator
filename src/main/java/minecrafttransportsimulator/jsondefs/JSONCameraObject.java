@@ -2,6 +2,7 @@ package minecrafttransportsimulator.jsondefs;
 
 import java.util.List;
 
+import minecrafttransportsimulator.baseclasses.Orientation3d;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
@@ -12,7 +13,7 @@ public class JSONCameraObject{
 	public Point3d pos;
 	
 	@JSONDescription("This parameter is optional.  If included, it defines the x, y, and z rotations for this camera.")
-	public Point3d rot;
+	public Orientation3d rot;
 	
 	@JSONDescription("This parameter is optional.  If included, MTS will set the player's FOV to this value when they are in this camera mode.  Useful for simulating zoom functions on scopes and sights.")
 	public float fovOverride;

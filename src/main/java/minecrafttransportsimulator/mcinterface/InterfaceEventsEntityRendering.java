@@ -396,6 +396,7 @@ public class InterfaceEventsEntityRendering{
 	    			//Rotate to match player's facing direction if we aren't in a vehicle
 	    			if(!renderCurrentRiderControlling){
 		    			if(ridingEntity != null){
+		    				//FIXME doesn't work.
 		    	    		GL11.glRotated(player.rotationYaw + ridingEntity.orientation.getAngles().y, 0, 1, 0);
 		    	        }else{
 		    	        	GL11.glRotated(player.rotationYaw, 0, 1, 0);

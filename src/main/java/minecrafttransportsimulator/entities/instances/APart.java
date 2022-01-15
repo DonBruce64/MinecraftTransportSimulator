@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Orientation3d;
@@ -14,14 +15,12 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.TrailerConnection;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
-import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packloading.JSONParser;
-import minecrafttransportsimulator.rendering.components.DurationDelayClock;
 import minecrafttransportsimulator.rendering.instances.RenderPart;
 
 /**This class is the base for all parts and should be extended for any entity-compatible parts.
@@ -34,7 +33,6 @@ import minecrafttransportsimulator.rendering.instances.RenderPart;
  * @author don_bruce
  */
 public abstract class APart extends AEntityE_Interactable<JSONPart>{
-	private static final Point3d ZERO_POINT = new Point3d();
 	private static RenderPart renderer;
 	
 	//JSON properties.
@@ -52,21 +50,19 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 	/**Children to this part.  Can be either additional parts or sub-parts.*/
 	public final List<APart> childParts = new ArrayList<APart>();
 	
-	//Runtime variables.	
-	private final List<DurationDelayClock> activeClocks = new ArrayList<DurationDelayClock>();
-	private final List<DurationDelayClock> movementClocks = new ArrayList<DurationDelayClock>();;
-	
 	/**Cached pack definition mappings for sub-part packs.  First key is the parent part definition, which links to a map.
 	 * This second map is keyed by a part definition, with the value equal to a corrected definition.  This means that
 	 * in total, this object contains all sub-packs created on any entity for any part with sub-packs.  This is done as parts with
 	 * sub-parts use relative locations, and thus we need to ensure we have the correct position for them on any entity part location.*/
 	private final Map<JSONPartDefinition, JSONPartDefinition> subpackMappings = new HashMap<JSONPartDefinition, JSONPartDefinition>();
-	public boolean isDisabled;
+	public boolean isInvisible = false;
 	public boolean isActive = true;
 	public final Point3d localOffset;
 	public final Orientation3d localOrientation;
-	private final Point3d animationOffset = new Point3d();
-	public Orientation3d animationOrientation;
+	private AnimationSwitchbox placementActiveSwitchbox;
+	private AnimationSwitchbox internalActiveSwitchbox;
+	private AnimationSwitchbox placementMovementSwitchbox;
+	private AnimationSwitchbox internalMovementSwitchbox;
 		
 	public APart(AEntityF_Multipart<?> entityOn, WrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, WrapperNBT data, APart parentPart){
 		super(entityOn.world, placingPlayer, data);
@@ -77,7 +73,7 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 		this.placementOffset = placementDefinition.pos;
 		
 		this.localOffset = placementOffset.copy();
-		this.localOrientation = placementDefinition.rot != null ? new Orientation3d(placementDefinition.rot) : new Orientation3d();
+		this.localOrientation = placementDefinition.rot != null ? new Orientation3d(placementDefinition.rot) : new Orientation3d(new Point3d(0, 0, 0));
 		
 		//If we are an additional part or sub-part, link ourselves now.
 		//If we are a fake part, don't even bother checking.
@@ -109,27 +105,17 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 	@Override
 	protected void initializeDefinition(){
 		super.initializeDefinition();
-		movementClocks.clear();
-		if(definition.generic.movementAnimations != null){
-			for(JSONAnimationDefinition animation : definition.generic.movementAnimations){
-				movementClocks.add(new DurationDelayClock(animation));
-			}
-		}
 		if(placementDefinition.animations != null){
-			for(JSONAnimationDefinition animation : placementDefinition.animations){
-				movementClocks.add(new DurationDelayClock(animation));
-			}
+			placementMovementSwitchbox = new AnimationSwitchbox(this, placementDefinition.animations);
 		}
-		activeClocks.clear();
-		if(definition.generic.activeAnimations != null){
-			for(JSONAnimationDefinition animation : definition.generic.activeAnimations){
-				activeClocks.add(new DurationDelayClock(animation));
-			}
+		if(definition.generic.movementAnimations != null){
+			internalMovementSwitchbox = new AnimationSwitchbox(this, definition.generic.movementAnimations);
 		}
 		if(placementDefinition.activeAnimations != null){
-			for(JSONAnimationDefinition animation : placementDefinition.activeAnimations){
-				activeClocks.add(new DurationDelayClock(animation));
-			}
+			placementActiveSwitchbox = new AnimationSwitchbox(this, placementDefinition.activeAnimations);
+		}
+		if(definition.generic.activeAnimations != null){
+			internalActiveSwitchbox = new AnimationSwitchbox(this, definition.generic.activeAnimations);
 		}
 	}
 	
@@ -138,56 +124,11 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 		if(super.update()){
 			//Update active state.
 			isActive = placementDefinition.isSubPart ? parentPart.isActive : true;
-			if(isActive && !activeClocks.isEmpty()){
-				boolean inhibitAnimations = false;
-				for(DurationDelayClock clock : activeClocks){
-					switch(clock.animation.animationType){
-						case VISIBILITY :{
-							if(!inhibitAnimations){
-								double variableValue = getAnimatedVariableValue(clock, 0);
-								if(variableValue < clock.animation.clampMin || variableValue > clock.animation.clampMax){
-									isActive = false;
-								}
-							}
-							break;
-						}
-						case INHIBITOR :{
-							if(!inhibitAnimations){
-								double variableValue = getAnimatedVariableValue(clock, 0);
-								if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
-									inhibitAnimations = true;
-								}
-							}
-							break;
-						}
-						case ACTIVATOR :{
-							if(inhibitAnimations){
-								double variableValue = getAnimatedVariableValue(clock, 0);
-								if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
-									inhibitAnimations = false;
-								}
-							}
-							break;
-						}
-						case TRANSLATION :{
-							//Do nothing.
-							break;
-						}
-						case ROTATION :{
-							//Do nothing.
-							break;
-						}
-						case SCALING :{
-							//Do nothing.
-							break;
-						}
-					}
-				
-					if(!isActive){
-						//Don't need to process any further as we can't play.
-						break;
-					}
-				}
+			if(isActive && placementActiveSwitchbox != null){
+				isActive = placementActiveSwitchbox.runSwitchbox(0);
+			}
+			if(isActive && internalActiveSwitchbox != null){
+				isActive = internalActiveSwitchbox.runSwitchbox(0);
 			}
 			
 			//Set initial offsets.
@@ -204,105 +145,28 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 				orientation.setTo(entityOn.orientation);
 				localOffset.setTo(placementOffset);
 			}
-			if(placementDefinition.rot != null){
-				localOrientation.setTo(placementDefinition.rot);
-			}
 			
 			//Update local position, orientation, scale, and enabled state.
-			boolean inhibitAnimations = false;
-			isDisabled = false;
+			isInvisible = false;
+			localOrientation.setTo(placementDefinition.rot);
 			scale = placementDefinition.isSubPart && parentPart != null ? parentPart.scale : 1.0F;
-			if(!movementClocks.isEmpty()){
-				//Set animation variables.
-				animationOffset.set(0, 0, 0);
-				animationOrientation = null;
-				
-				for(DurationDelayClock clock : movementClocks){
-					switch(clock.animation.animationType){
-						case TRANSLATION :{
-							if(!inhibitAnimations){
-								//Found translation.  This gets applied in the translation axis direction directly.
-								double variableValue = getAnimatedVariableValue(clock, clock.animationAxisMagnitude, 0);
-								Point3d appliedTranslation = clock.animationAxisNormalized.copy().multiply(variableValue);
-								if(animationOrientation != null){
-									animationOffset.add(animationOrientation.rotatePoint(appliedTranslation));
-								}else{
-									animationOffset.add(appliedTranslation);
-								}
-							}
-							break;
-						}
-						case ROTATION :{
-							if(!inhibitAnimations){
-								//Found rotation.  Get angles that needs to be applied.
-								double variableValue = getAnimatedVariableValue(clock, clock.animationAxisMagnitude, 0);
-								Orientation3d appliedRotation = new Orientation3d(clock.animationAxisNormalized, variableValue);
-								
-								//Check if we need to apply a translation based on this rotation.
-								if(!clock.animation.centerPoint.isZero()){
-									appliedRotation.rotateWithOffset(animationOffset, clock.animation.centerPoint);
-								}
-								
-								//Now apply orientation changes.
-								if(animationOrientation == null){
-									animationOrientation = appliedRotation;
-								}else{
-									animationOrientation.multiplyBy(appliedRotation);
-								}
-							}
-							break;
-						}
-						case SCALING :{
-							if(!inhibitAnimations){
-								//Found scaling.  This gets applied during rendering, so we don't directly use the value here.
-								//Instead, we save it and use it later.
-								scale *= getAnimatedVariableValue(clock, clock.animationAxisMagnitude, 0);
-								//Update bounding box, as scale changes width/height.
-								boundingBox.widthRadius = getWidth()/2D;
-								boundingBox.heightRadius = getHeight()/2D;
-								boundingBox.depthRadius = getWidth()/2D;
-							}
-							break;
-						}
-						case VISIBILITY :{
-							if(!inhibitAnimations){
-								double variableValue = getAnimatedVariableValue(clock, 0);
-								if(variableValue < clock.animation.clampMin || variableValue > clock.animation.clampMax){
-									isDisabled = true;
-								}
-							}
-							break;
-						}
-						case INHIBITOR :{
-							if(!inhibitAnimations){
-								double variableValue = getAnimatedVariableValue(clock, 0);
-								if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
-									inhibitAnimations = true;
-								}
-							}
-							break;
-						}
-						case ACTIVATOR :{
-							if(inhibitAnimations){
-								double variableValue = getAnimatedVariableValue(clock, 0);
-								if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
-									inhibitAnimations = false;
-								}
-							}
-							break;
-						}
-					}
-					if(isDisabled){
-						break;
-					}
-				}
-				
-				//Animation block done.  Apply to the local values to get updated locals.
-				localOrientation.addRotationToPoint(animationOffset, localOffset);
-				if(animationOrientation != null){
-					localOrientation.multiplyBy(animationOrientation);
-				}
+			if(placementMovementSwitchbox != null){
+				isInvisible = !placementMovementSwitchbox.runSwitchbox(0);
+				scale *= placementMovementSwitchbox.animationScale;
+				localOrientation.addRotationToPoint(placementMovementSwitchbox.animationOffset, localOffset);
+				localOrientation.multiplyBy(placementMovementSwitchbox.animationOrientation);
 			}
+			if(internalMovementSwitchbox != null){
+				isInvisible = !internalMovementSwitchbox.runSwitchbox(0) || isInvisible;
+				scale *= internalMovementSwitchbox.animationScale;
+				localOrientation.addRotationToPoint(internalMovementSwitchbox.animationOffset, localOffset);
+				localOrientation.multiplyBy(internalMovementSwitchbox.animationOrientation);
+			}
+			
+			//Update bounding box, as scale changes width/height.
+			boundingBox.widthRadius = getWidth()/2D;
+			boundingBox.heightRadius = getHeight()/2D;
+			boundingBox.depthRadius = getWidth()/2D;
 			
 			//Now that locals are set, set globals to reflect them.
 			orientation.addRotationToPoint(localOffset, position);
@@ -427,15 +291,6 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 	        subpackMappings.put(subPartDef, correctedPartDef);
 		}
 		return subpackMappings.get(subPartDef);
-	}
-	
-	/**
-	 * Gets the rotation angles for the part as a vector.
-	 * This rotation is only for custom rendering operations, and cannot be modified via JSON.
-	 * If we have a parent part and this part is on it, use its rotation.
-	 */
-	public Point3d getRenderingRotation(float partialTicks){
-		return parentPart != null ? parentPart.getRenderingRotation(partialTicks) : ZERO_POINT;
 	}
 	
 	/**

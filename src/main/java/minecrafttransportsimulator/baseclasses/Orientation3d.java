@@ -15,7 +15,7 @@ public class Orientation3d{
 	private static final Orientation3d mutableOrientationX = new Orientation3d(new Point3d(1, 0, 0), 0);
 	private static final Orientation3d mutableOrientationY = new Orientation3d(new Point3d(0, 1, 0), 0);
 	private static final Orientation3d mutableOrientationZ = new Orientation3d(new Point3d(0, 0, 1), 0);
-	private static final Orientation3d interpolatedOrientation = new Orientation3d();
+	private static final Orientation3d interpolatedOrientation = new Orientation3d(new Point3d(0, 0, 1), 0);
 	private final Point3d mutablePoint = new Point3d();
 	
 	public final Point3d axis;
@@ -26,12 +26,7 @@ public class Orientation3d{
 	private double y;
 	private double z;
 	
-	private boolean angleModSinceLastReq;
-	private final Point3d angles;
-	
-	public Orientation3d(){
-		this(new Point3d(0, 0, 1), 0);
-	}
+	private final Point3d angles = new Point3d();
 	
 	public Orientation3d(Orientation3d other){
 		this(other.axis, other.rotation);
@@ -39,20 +34,11 @@ public class Orientation3d{
 	
 	public Orientation3d(Point3d angles){
 		this.axis = new Point3d();
-		this.angles = angles;
-		//Create component orientation, then consolidate into just one.
-		mutableOrientationX.setRotation(angles.x);
-		mutableOrientationY.setRotation(angles.y);
-		mutableOrientationZ.setRotation(angles.z);
-		this.setTo(mutableOrientationY).multiplyBy(mutableOrientationX).multiplyBy(mutableOrientationZ);
-		updateQuaternion(true);
-		//Set to false, as angles are actually current right now.
-		angleModSinceLastReq = false;
+		setAngles(angles);
 	}
 	
 	public Orientation3d(Point3d axis, double rotation){
-		this.axis = axis;
-		this.angles = new Point3d();
+		this.axis = axis.copy();
 		this.rotation = rotation;
 		updateQuaternion(false);
 	}
@@ -93,7 +79,16 @@ public class Orientation3d{
 			y = axis.y*sinRad;
 			z = axis.z*sinRad;
 		}
-		angleModSinceLastReq = true;
+	}
+	
+	/**
+	 * Sets the rotation for this orientation, updating values as appropriate.
+	 * Internal method only for MXY calcs.
+	 */
+	private Orientation3d setRotation(double newRotation){
+		rotation = newRotation;
+		updateQuaternion(false);
+		return this;
 	}
 	
 	/**
@@ -111,12 +106,37 @@ public class Orientation3d{
 	}
 	
 	/**
-	 * Sets the rotation for this orientation, updating values as appropriate.
+	 * Sets this orientation to the passed-in axis/rotation representation.
 	 * Returns this object for nested operations.
 	 */
-	public Orientation3d setRotation(double newRotation){
-		rotation = newRotation;
+	public Orientation3d setTo(Point3d axis, double rotation){
+		this.axis.setTo(axis);
+		this.rotation = rotation;
 		updateQuaternion(false);
+		return this;
+	}
+	
+	/**
+	 * Sets the angles for this orientation, updating values as appropriate.
+	 * Returns this object for nested operations.
+	 */
+	public Orientation3d setAngles(Point3d angles){
+		this.angles.setTo(angles);
+		if(angles.isZero()){
+			//Skip maths and just reset us.
+			w = 1;
+			x = 0;
+			y = 0;
+			z = 0;
+			rotation = 0;
+		}else{
+			//Create component orientation, then consolidate into just one.
+			mutableOrientationX.setRotation(angles.x);
+			mutableOrientationY.setRotation(angles.y);
+			mutableOrientationZ.setRotation(angles.z);
+			this.setTo(mutableOrientationY).multiplyBy(mutableOrientationX).multiplyBy(mutableOrientationZ);
+			updateQuaternion(true);
+		}
 		return this;
 	}
 	
@@ -125,6 +145,7 @@ public class Orientation3d{
 	 * Returns this object for nested operations.
 	 */
 	public Orientation3d rotateX(double addedRotation){
+		angles.x += addedRotation;
 		return multiplyBy(mutableOrientationX.setRotation(addedRotation));
 	}
 	
@@ -133,6 +154,7 @@ public class Orientation3d{
 	 * Returns this object for nested operations.
 	 */
 	public Orientation3d rotateY(double addedRotation){
+		angles.y += addedRotation;
 		return multiplyBy(mutableOrientationY.setRotation(addedRotation));
 	}
 	
@@ -141,6 +163,7 @@ public class Orientation3d{
 	 * Returns this object for nested operations.
 	 */
 	public Orientation3d rotateZ(double addedRotation){
+		angles.z += addedRotation;
 		return multiplyBy(mutableOrientationZ.setRotation(addedRotation));
 	}
 	
@@ -152,37 +175,36 @@ public class Orientation3d{
 	 * Returns this object for nested operations.
 	 */
 	public Orientation3d multiplyBy(Orientation3d multiplyBy){
-		//Check if we even need to multiply.  If the one to multiply by has an axis of 0,0,1 and rotation 0, it's default and don't.
-		if(multiplyBy.axis.z != 1 || multiplyBy.rotation != 0){
-			//Need to put these into variables as we use all four WXYZ params.
-			double mW = w * multiplyBy.w - x * multiplyBy.x - y * multiplyBy.y - z * multiplyBy.z;
-			double mX = w * multiplyBy.x + x * multiplyBy.w + y * multiplyBy.z - z * multiplyBy.y;
-			double mY = w * multiplyBy.y - x * multiplyBy.z + y * multiplyBy.w + z * multiplyBy.x;
-			double mZ = w * multiplyBy.z + x * multiplyBy.y - y * multiplyBy.x + z * multiplyBy.w;
-			
-			this.x = mX;
-			this.y = mY;
-			this.z = mZ;
-			this.w = mW;
-			updateQuaternion(true);
+		//Check if we even need to multiply.  If the one to multiply by has a rotation 0, it's a null transform.
+		if(multiplyBy.rotation != 0){
+			//If we are 0-rotation, we can just set ourselves to the multipied orientation.
+			if(rotation == 0){
+				return setTo(multiplyBy);
+			}else{
+				//Need to put these into variables as we use all four WXYZ params.
+				double mW = w * multiplyBy.w - x * multiplyBy.x - y * multiplyBy.y - z * multiplyBy.z;
+				double mX = w * multiplyBy.x + x * multiplyBy.w + y * multiplyBy.z - z * multiplyBy.y;
+				double mY = w * multiplyBy.y - x * multiplyBy.z + y * multiplyBy.w + z * multiplyBy.x;
+				double mZ = w * multiplyBy.z + x * multiplyBy.y - y * multiplyBy.x + z * multiplyBy.w;
+				
+				this.x = mX;
+				this.y = mY;
+				this.z = mZ;
+				this.w = mW;
+				updateQuaternion(true);
+			}
 		}
 		return this;
 	}
 	
 	/**
 	 * Interpolate between the current orientation and the passed-in orientation.
-	 * If an orientation is passed-in, then the function will set the orientation
-	 * to the interpolated value.  If null is passed-in, then a mutable object will
-	 * be returned with the value.  This object will be re-used on subsequent calls,
+	 * A mutable object is returned.  This object will be re-used on subsequent calls,
 	 * so do not keep a reference to it.  The only exception to this rule is if the
 	 * interpolation function determines that there is no delta between the orientations.
 	 * In this case, the called orientation is returned.
 	 */
-	public Orientation3d getInterpolated(Orientation3d other, Orientation3d store, float partialTicks){
-		if(store == null){
-			store = interpolatedOrientation;
-		}
-		
+	public Orientation3d getInterpolated(Orientation3d other, float partialTicks){
 		//Don't do interpolation if we don't need to because we are the same.
 		if(w != other.w || x != other.x || y != other.y || z != other.z){
 			double cosHalfTheta = w * other.w + x * other.x + y * other.y + z * other.z;
@@ -194,12 +216,12 @@ public class Orientation3d{
 				double ratioB = Math.sin(partialTicks * halfThetaRad) / sinHalfTheta;
 				
 				//Need to put these into variables as we use all four WXYZ params.
-				store.w = w * ratioA + other.w * ratioB;
-				store.x = x * ratioA + other.x * ratioB;
-				store.y = y * ratioA + other.y * ratioB;
-				store.z = z * ratioA + other.z * ratioB;
-				store.updateQuaternion(true);
-				return store;
+				interpolatedOrientation.w = w * ratioA + other.w * ratioB;
+				interpolatedOrientation.x = x * ratioA + other.x * ratioB;
+				interpolatedOrientation.y = y * ratioA + other.y * ratioB;
+				interpolatedOrientation.z = z * ratioA + other.z * ratioB;
+				interpolatedOrientation.updateQuaternion(true);
+				return interpolatedOrientation;
 			}
 		}
 		return this;
@@ -210,8 +232,8 @@ public class Orientation3d{
 	 * Returns the storing object for nested operations.
 	 */
 	public Point3d rotatePoint(Point3d rotate){
-		//Check if we even need to rotate.  If we are an axis of 0,0,1 and rotation 0, we're default and don't.
-		if(axis.z != 1 || rotation != 0){
+		//Check if we even need to rotate.  If the one to multiply by has a rotation 0, it's a null transform.
+		if(rotation != 0){
 			//First multiply the point by the quaternion.  Point has imaginary w param of 0.
 			double mW = - x * rotate.x - y * rotate.y - z * rotate.z;
 			double mX = w * rotate.x + y * rotate.z - z * rotate.y;
@@ -257,15 +279,12 @@ public class Orientation3d{
 	/**
 	 * Returns the angles for this orientation.  These
 	 * are not automatically updated with the rest of the
-	 * variables and will be created on-demand when this
-	 * method is called if a modification has been made since
-	 * the last call.
+	 * variables and are only valid if the angle-based
+	 * constructor is called and {@link #rotateX(double)},
+	 * {@link #rotateY(double)}, and {@link #rotateZ(double)}
+	 * are the only methods subsequently called.
 	 */
 	public Point3d getAngles(){
-		if(angleModSinceLastReq){
-			angles.setTo(axis).getAngles(false);
-			angleModSinceLastReq = false;
-		}
 		return angles;
 	}
 	
