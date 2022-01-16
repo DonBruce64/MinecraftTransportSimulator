@@ -137,8 +137,6 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 	private final Set<TrailerConnection> savedTowingConnections = new HashSet<TrailerConnection>();
 	public static final String TRAILER_CONNECTION_REQUEST_VARIABLE = "connection_requested";
 	
-	private final Point3d collisionGroupAnimationOffset = new Point3d();
-	
 	public final Point3d angles;
 	public final Point3d prevAngles;
 	public final Point3d rotation;
@@ -422,24 +420,25 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 				if(groupDef.health == 0 || getVariable("collision_" + (definition.collisionGroups.indexOf(groupDef) + 1) + "_damage") < groupDef.health){
 					AnimationSwitchbox switchBox = this.collisionSwitchboxes.get(groupDef);
 					//FIXME if parts work, make this use multiple boxes.
-					//if(switchBox != null){
-						/*if(switchBox.runSwitchbox(0)){
+					if(switchBox != null){
+						if(switchBox.runSwitchbox(0)){
 							for(BoundingBox box : collisionBoxes){
 								//Need to rotate the local center, then add on the delta we got, then remove local center.
-								//Locan center gets added in the update function, so we need to pre-remove it.
-								collisionGroupAnimationOffset.setTo(box.localCenter);
-								switchBox.animationOrientation.rotatePoint(collisionGroupAnimationOffset).add(switchBox.animationOffset).subtract(box.localCenter);
+								//Local center gets added in the update function, so we need to pre-remove it.
+								javax.vecmath.Point3d helper = new javax.vecmath.Point3d(box.localCenter.x, box.localCenter.y, box.localCenter.z);
+								switchBox.netMatrix.transform(helper);
+								Point3d collisionGroupAnimationOffset = new Point3d(helper.x, helper.y, helper.z).subtract(box.localCenter);
 								box.updateToEntity(this, collisionGroupAnimationOffset);
 							}
 						}else{
 							//Don't let these boxes get added to the list.
 							continue;
-						}*/
-					//}else{
+						}
+					}else{
 						for(BoundingBox box : collisionBoxes){
 							box.updateToEntity(this, null);
 						}
-					//}
+					}
 					entityCollisionBoxes.addAll(collisionBoxes);
 					if(!groupDef.isInterior && !ConfigSystem.configObject.general.noclipVehicles.value){
 						blockCollisionBoxes.addAll(collisionBoxes);

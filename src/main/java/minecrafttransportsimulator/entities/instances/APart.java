@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.vecmath.Vector3d;
+
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
@@ -125,10 +127,10 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 			//Update active state.
 			isActive = placementDefinition.isSubPart ? parentPart.isActive : true;
 			if(isActive && placementActiveSwitchbox != null){
-				isActive = placementActiveSwitchbox.runSwitchbox(null, 0);
+				isActive = placementActiveSwitchbox.runSwitchbox(0);
 			}
 			if(isActive && internalActiveSwitchbox != null){
-				isActive = internalActiveSwitchbox.runSwitchbox(null, 0);
+				isActive = internalActiveSwitchbox.runSwitchbox(0);
 			}
 			
 			//Set initial offsets.
@@ -153,26 +155,31 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 			localOrientation.setRotation(0);
 			
 			//Placement movement uses the coords of the thing we are on.
-			if(placementMovementSwitchbox != null){
-				isInvisible = !placementMovementSwitchbox.runSwitchbox(localOffset, 0);
+			if(placementMovementSwitchbox != null && definition.systemName.contains("invi")){
+				isInvisible = !placementMovementSwitchbox.runSwitchbox(0);
 				scale *= placementMovementSwitchbox.animationScale;
+				
+				javax.vecmath.Point3d helper = new javax.vecmath.Point3d(localOffset.x, localOffset.y, localOffset.z);
+				placementMovementSwitchbox.netMatrix.transform(helper);
+				localOffset.set(helper.x, helper.y, helper.z);
+				
 				//Update local orientation to match rotated.
-				localOffset.setTo(placementMovementSwitchbox.animationOffset);
-				localOrientation.multiplyBy(placementMovementSwitchbox.animationOrientation);
+				//localOffset.setTo(placementMovementSwitchbox.animationOffset);
+				//localOrientation.multiplyBy(placementMovementSwitchbox.animationOrientation);
 			}
 			
 			//Internal movement uses local coords.
 			//First rotate orientation to face rotated state.
 			localOrientation.multiplyBy(placementDefinition.rot);
 			if(internalMovementSwitchbox != null){
-				isInvisible = !internalMovementSwitchbox.runSwitchbox(null, 0) || isInvisible;
+				isInvisible = !internalMovementSwitchbox.runSwitchbox(0) || isInvisible;
 				scale *= internalMovementSwitchbox.animationScale;
 				//Need to update offset to account for offset found in the animation.
 				//This doesn't apply to the local offset, as this is in the part's coodrinate
 				//system, not the one that the part is placed on.
-				localOrientation.rotateAndAddTo(internalMovementSwitchbox.animationOffset, localOffset);
+				//localOrientation.rotateAndAddTo(internalMovementSwitchbox.animationOffset, localOffset);
 				//Update local orientation to match rotated.
-				localOrientation.multiplyBy(internalMovementSwitchbox.animationOrientation);
+				//localOrientation.multiplyBy(internalMovementSwitchbox.animationOrientation);
 			}
 			
 			//Now that locals are set, set globals to reflect them.

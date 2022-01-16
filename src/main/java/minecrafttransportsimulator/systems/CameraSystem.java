@@ -94,7 +94,7 @@ public class CameraSystem{
 					if(!multipart.cameraSwitchboxes.isEmpty()){
 						for(Entry<JSONCameraObject, AnimationSwitchbox> switchboxEntry : multipart.cameraSwitchboxes.entrySet()){
 							JSONCameraObject testCamera = switchboxEntry.getKey();
-							if(switchboxEntry.getValue().runSwitchbox(null, partialTicks)){
+							if(switchboxEntry.getValue().runSwitchbox(partialTicks)){
 								if(camerasChecked++ == customCameraIndex){
 									camera = testCamera;
 									cameraProvider = multipart;
@@ -108,7 +108,7 @@ public class CameraSystem{
 						if(!part.cameraSwitchboxes.isEmpty()){
 							for(Entry<JSONCameraObject, AnimationSwitchbox> switchboxEntry : part.cameraSwitchboxes.entrySet()){
 								JSONCameraObject testCamera = switchboxEntry.getKey();
-								if(switchboxEntry.getValue().runSwitchbox(null, partialTicks)){
+								if(switchboxEntry.getValue().runSwitchbox(partialTicks)){
 									if(camerasChecked++ == customCameraIndex){
 										camera = testCamera;
 										cameraProvider = part;
@@ -126,7 +126,7 @@ public class CameraSystem{
 					if(!playerGunEntity.activeGun.cameraSwitchboxes.isEmpty()){
 						for(Entry<JSONCameraObject, AnimationSwitchbox> switchboxEntry : playerGunEntity.activeGun.cameraSwitchboxes.entrySet()){
 							JSONCameraObject testCamera = switchboxEntry.getKey();
-							if(switchboxEntry.getValue().runSwitchbox(null, partialTicks)){
+							if(switchboxEntry.getValue().runSwitchbox(partialTicks)){
 								if(camerasChecked++ == customCameraIndex){
 									camera = testCamera;
 									cameraProvider = playerGunEntity.activeGun;
@@ -169,9 +169,11 @@ public class CameraSystem{
 					//Apply transforms.
 					//These happen in-order to ensure proper rendering sequencing.
     				//FIXME this probably shouldn't be null, but nothing to test yet.
-    				switchbox.runSwitchbox(null, partialTicks);
-    				cameraOrientation.rotateAndAddTo(switchbox.animationOffset, cameraPosition);
-    				cameraOrientation.multiplyBy(switchbox.animationOrientation);
+    				
+    				//FIXME fix with switchbox.
+    				switchbox.runSwitchbox(partialTicks);
+    				//cameraOrientation.rotateAndAddTo(switchbox.animationOffset, cameraPosition);
+    				//cameraOrientation.multiplyBy(switchbox.animationOrientation);
     				return true;
 				}
 				
@@ -181,7 +183,8 @@ public class CameraSystem{
 			}else if(sittingSeat != null){
             	cameraOrientation.setTo(sittingSeat.entityOn.prevOrientation.getInterpolated(sittingSeat.orientation, partialTicks));
             	cameraOrientation.multiplyBy(player.getOrientation());
-            	return true;
+            	//FIXME fix camera here too.
+            	return false;
 			}
     	}else if(InterfaceClient.inThirdPerson()){
     		//If we were running a custom camera, and hit the switch key, increment our camera index.
@@ -201,7 +204,8 @@ public class CameraSystem{
         		cameraOrientation.multiplyBy(player.getOrientation());
         		cameraPosition.set(-sittingSeat.localOffset.x, 0, -zoomLevel);
     			cameraOrientation.rotatePoint(cameraPosition);
-    			return true;
+    			//FIXME fix camera here too.
+            	return false;
     		}
         }else{
         	//Assuming inverted third-person mode.
@@ -224,7 +228,8 @@ public class CameraSystem{
         		cameraOrientation.multiplyBy(player.getOrientation());
         		cameraPosition.set(-sittingSeat.localOffset.x, 0, zoomLevel);
     			cameraOrientation.rotatePoint(cameraPosition);
-        		return true;
+    			//FIXME fix camera here too.
+            	return false;
         	}
 		}
 		return false;
