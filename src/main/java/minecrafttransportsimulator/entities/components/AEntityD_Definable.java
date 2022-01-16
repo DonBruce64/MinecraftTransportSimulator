@@ -78,7 +78,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 	public final Map<JSONAnimationDefinition, DurationDelayClock> animationClocks = new HashMap<JSONAnimationDefinition, DurationDelayClock>();
 	
 	/**Maps cameras to their respective switchboxes.**/
-	public final Map<JSONCameraObject, AnimationSwitchbox> cameraSwitchboxes = new HashMap<JSONCameraObject, AnimationSwitchbox>();
+	public final Map<JSONCameraObject, AnimationSwitchbox> cameraSwitchboxes = new LinkedHashMap<JSONCameraObject, AnimationSwitchbox>();
 	
 	/**Maps animated (model) object names to their definitions.  This is created from the JSON definition to prevent the need to do loops.**/
 	public final Map<String, JSONAnimatedObject> animatedObjectDefinitions = new HashMap<String, JSONAnimatedObject>();

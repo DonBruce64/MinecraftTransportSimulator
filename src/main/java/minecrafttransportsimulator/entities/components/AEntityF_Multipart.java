@@ -158,7 +158,6 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 									//Need to find the delta between part 0-degree position and our current position.
 									Point3dPlus delta = subPartDef.pos.copy();
 									part.orientation.transform(delta);
-									delta.subtract(subPartDef.pos);
 									entry.getKey().updateToEntity(this, delta);
 									break;
 								}

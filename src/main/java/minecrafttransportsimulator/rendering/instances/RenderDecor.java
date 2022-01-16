@@ -28,7 +28,8 @@ public class RenderDecor extends ARenderTileEntityBase<TileEntityDecor>{
 							signalGroup.renderable.setHolographicBoundingBox(box);
 							
 							GL11.glPushMatrix();
-							controller.orientation.applyTransformOpenGL();
+							//FIXME this should not need these transforms.
+							InterfaceRender.applyTransformOpenGL(controller.orientation);
 							GL11.glTranslated(box.globalCenter.x, box.globalCenter.y, box.globalCenter.z);
 							GL11.glRotated(signalGroup.axis.yRotation, 0, 1, 0);
 							signalGroup.renderable.render();

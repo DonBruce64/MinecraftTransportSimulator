@@ -3,6 +3,9 @@ package minecrafttransportsimulator.mcinterface;
 import java.awt.image.BufferedImage;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.DoubleBuffer;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,6 +15,7 @@ import java.util.Map;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.stream.ImageInputStream;
+import javax.vecmath.Matrix4d;
 
 import org.lwjgl.opengl.GL11;
 
@@ -36,6 +40,7 @@ import net.minecraft.util.math.BlockPos;
  * @author don_bruce
  */
 public class InterfaceRender{
+	private static final DoubleBuffer buffer = ByteBuffer.allocateDirect(16*Double.BYTES).order(ByteOrder.nativeOrder()).asDoubleBuffer();
 	private static final Map<String, ResourceLocation> internalTextures = new HashMap<String, ResourceLocation>();
 	private static final Map<String, Integer> onlineTextures = new HashMap<String, Integer>();
 	private static final Map<String, ParsedGIF> animatedGIFs = new HashMap<String, ParsedGIF>();
@@ -121,6 +126,32 @@ public class InterfaceRender{
 		if(object.enableBrightBlending){
 			setBlendBright(false);
 		}
+	}
+	
+	/**
+	 *  Applies an OpenGL transform to the current pipeline based on the
+	 *  passed-in matrix.
+	 */
+	public static void applyTransformOpenGL(Matrix4d matrix){
+		buffer.clear();
+		buffer.put(matrix.m00);
+		buffer.put(matrix.m10);
+		buffer.put(matrix.m20);
+		buffer.put(matrix.m30);
+		buffer.put(matrix.m01);
+		buffer.put(matrix.m11);
+		buffer.put(matrix.m21);
+		buffer.put(matrix.m31);
+		buffer.put(matrix.m02);
+		buffer.put(matrix.m12);
+		buffer.put(matrix.m22);
+		buffer.put(matrix.m32);
+		buffer.put(matrix.m03);
+		buffer.put(matrix.m13);
+		buffer.put(matrix.m23);
+		buffer.put(matrix.m33);
+		buffer.flip();
+		GL11.glMultMatrix(buffer);
 	}
 	
 	/**

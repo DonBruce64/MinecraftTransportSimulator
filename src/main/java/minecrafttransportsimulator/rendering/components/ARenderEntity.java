@@ -13,6 +13,7 @@ import minecrafttransportsimulator.mcinterface.InterfaceRender;
  * @author don_bruce
  */
 public abstract class ARenderEntity<RenderedEntity extends AEntityC_Renderable>{
+	private static final Matrix4dPlus interpolatedOrientationHolder = new Matrix4dPlus();
 	
 	/**
 	 *  Called to render this entity.  This is the setup method that sets states to the appropriate values.
@@ -31,10 +32,10 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Renderable>{
 			entityPositionDelta.subtract(InterfaceClient.getRenderViewEntity().getRenderedPosition(partialTicks));
 			
 			//Get interpolated orientation.
-			Matrix4dPlus interpolatedOrientation = entity.prevOrientation.getInterpolated(entity.orientation, partialTicks);
+			entity.getInterpolatedOrientation(interpolatedOrientationHolder, partialTicks);
 			
 			//Adjust position and orientation, if needed.
-			adjustPositionOrientation(entity, entityPositionDelta, interpolatedOrientation, partialTicks);
+			adjustPositionOrientation(entity, entityPositionDelta, interpolatedOrientationHolder, partialTicks);
 	       
 	        //Set up lighting.
 	        InterfaceRender.setLightingToPosition(entity.position);
@@ -42,7 +43,7 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Renderable>{
 	        //Push the matrix on the stack and translate and rotate to the enitty's position.
 			GL11.glPushMatrix();
 	        GL11.glTranslated(entityPositionDelta.x, entityPositionDelta.y, entityPositionDelta.z);
-	        interpolatedOrientation.applyTransformOpenGL();
+	        InterfaceRender.applyTransformOpenGL(interpolatedOrientationHolder);
 			
 	        //Render the main model.
 	        entity.world.endProfiling();

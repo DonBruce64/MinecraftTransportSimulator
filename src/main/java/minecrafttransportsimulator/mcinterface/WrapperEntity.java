@@ -205,16 +205,24 @@ public class WrapperEntity{
 	
 	/**
 	 *  Returns the entity's orientation.
-	 *  The returned object is mutable and may be modified without
-	 *  affecting the entity's state.
+	 *  Do NOT modify the returned object.  This object is cached on
+	 *  calculation to avoid the need to re-calculate it every tick/frame.
+	 *  If you modify the object and the entity does not change, you will get
+	 *  invalid results.
 	 */
 	public Matrix4dPlus getOrientation(){
-		mutableAngles.set(entity.rotationPitch, -entity.rotationYaw, 0);
-		mutableOrientation.setAngles(mutableAngles);
+		if(lastPitchChecked != entity.rotationPitch || lastYawChecked != entity.rotationYaw){
+			lastPitchChecked = entity.rotationPitch;
+			lastYawChecked = entity.rotationYaw;
+			mutableAngles.set(entity.rotationPitch, -entity.rotationYaw, 0);
+			mutableOrientation.setAngles(mutableAngles);
+		}
 		return mutableOrientation;
 	}
-	Point3dPlus mutableAngles = new Point3dPlus();
-	Matrix4dPlus mutableOrientation = new Matrix4dPlus();
+	private final Point3dPlus mutableAngles = new Point3dPlus();
+	private final Matrix4dPlus mutableOrientation = new Matrix4dPlus();
+	private float lastPitchChecked;
+	private float lastYawChecked;
 	
 	/**
 	 *  Returns the entity's pitch (x-axis rotation).

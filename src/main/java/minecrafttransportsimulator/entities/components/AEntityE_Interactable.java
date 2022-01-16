@@ -405,16 +405,12 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 				}
 				if(groupDef.health == 0 || getVariable("collision_" + (definition.collisionGroups.indexOf(groupDef) + 1) + "_damage") < groupDef.health){
 					AnimationSwitchbox switchBox = this.collisionSwitchboxes.get(groupDef);
-					//FIXME if parts work, make this use multiple boxes.
 					if(switchBox != null){
 						if(switchBox.runSwitchbox(0)){
 							for(BoundingBox box : collisionBoxes){
-								//Need to rotate the local center, then add on the delta we got, then remove local center.
-								//Local center gets added in the update function, so we need to pre-remove it.
-								javax.vecmath.Point3d helper = new javax.vecmath.Point3d(box.localCenter.x, box.localCenter.y, box.localCenter.z);
-								switchBox.netMatrix.transform(helper);
-								Point3dPlus collisionGroupAnimationOffset = new Point3dPlus(helper.x, helper.y, helper.z).subtract(box.localCenter);
-								box.updateToEntity(this, collisionGroupAnimationOffset);
+								box.globalCenter.set(box.localCenter);
+								switchBox.netMatrix.transform(box.globalCenter);
+								box.updateToEntity(this, box.globalCenter);
 							}
 						}else{
 							//Don't let these boxes get added to the list.

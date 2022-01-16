@@ -120,15 +120,15 @@ public class BoundingBox{
 	
 	/**
 	 *  Sets the global center of this box to the position of the passed-in entity, rotated by the
-	 *  entity's rotation and offset by the local center.  Mostly used for updating hitboxes that
-	 *  rotate with the entity.  Rotation is done using the fine Point3d rotation to allow for
-	 *  better interaction while standing on entities.  Optional extra offset is present should
-	 *  a supplemental translation need to be performed before aligning to the entity.
+	 *  entity's rotation and offset by the local center, or the passed-in offset if it is non-null.
+	 *  Mostly used for updating hitboxes that rotate with the entity.  Rotation is done using the fine 
+	 *  Point3d rotation to allow for better interaction while standing on entities.
 	 */
 	public void updateToEntity(AEntityD_Definable<?> entity, Point3dPlus optionalOffset){
-		globalCenter.set(localCenter);
 		if(optionalOffset != null){
-			globalCenter.add(optionalOffset);
+			globalCenter.set(optionalOffset);
+		}else{
+			globalCenter.set(localCenter);
 		}
 		entity.orientation.transform(globalCenter);
 		globalCenter.add(entity.position);

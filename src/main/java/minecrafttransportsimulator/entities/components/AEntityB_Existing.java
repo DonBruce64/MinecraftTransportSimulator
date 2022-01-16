@@ -3,6 +3,9 @@ package minecrafttransportsimulator.entities.components;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.vecmath.Matrix4d;
+import javax.vecmath.Quat4d;
+
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
 import minecrafttransportsimulator.baseclasses.Point3dPlus;
@@ -31,9 +34,12 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	public final Point3dPlus prevAngles;
 	public final Point3dPlus rotation;
 	
+	/*The rotational component of orientation for this entity.*/
 	public final Matrix4dPlus orientation;
 	public final Matrix4dPlus prevOrientation;
 	public final Point3dPlus axialOrientation;
+	private final Quat4d interpHelperQuatStart = new Quat4d();
+	private final Quat4d interpHelperQuatEnd = new Quat4d();
 	
 	public BoundingBox boundingBox;
 	public double airDensity;
@@ -172,6 +178,19 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	 */
 	public double getPlacementRotation(WrapperPlayer player){
 		return 0;
+	}
+	
+	/**
+	 *  Sets the interpolated orientation into the passed-in Matrix4d.
+	 *  The position is not interpolated with this as {@link #orientation}
+	 *  only contains the rotational elements of this entity. 
+	 */
+	public void getInterpolatedOrientation(Matrix4d store, double partialTicks){
+		orientation.get(interpHelperQuatStart);
+		prevOrientation.get(interpHelperQuatEnd);
+		interpHelperQuatStart.interpolate(interpHelperQuatEnd, partialTicks);
+		store.setIdentity();
+		store.setRotation(interpHelperQuatStart);
 	}
 	
 	/**
