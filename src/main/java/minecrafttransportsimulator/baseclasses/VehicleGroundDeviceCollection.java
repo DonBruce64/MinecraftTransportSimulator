@@ -380,15 +380,15 @@ public class VehicleGroundDeviceCollection{
 			if((!rearRightGDB.isGrounded || rearRightGDB.contactPoint.x == 0) && (!frontRightGDB.isGrounded || frontRightGDB.contactPoint.x == 0)){
 				side1Delta = Math.hypot(rearRightGDB.contactPoint.y, rearRightGDB.contactPoint.x);
 				side2Delta = Math.hypot(frontRightGDB.contactPoint.y, frontRightGDB.contactPoint.x);
-				if(rearLeftGDB.isGrounded && !frontRightGDB.isGrounded){
+				if(rearLeftGDB.isGrounded && !frontLeftGDB.isGrounded){
 					groundedSideOffset = -Math.hypot(rearLeftGDB.contactPoint.y, rearLeftGDB.contactPoint.x);
 				}else if(!rearLeftGDB.isGrounded && frontLeftGDB.isGrounded){
 					groundedSideOffset = -Math.hypot(frontLeftGDB.contactPoint.y, frontLeftGDB.contactPoint.x);
 				}else{
 					groundedSideOffset = -Math.max(Math.hypot(rearLeftGDB.contactPoint.y, rearLeftGDB.contactPoint.x), Math.hypot(frontLeftGDB.contactPoint.y, frontLeftGDB.contactPoint.x));
 				}
-				testBox1 = rearLeftGDB;
-				testBox2 = rearRightGDB;
+				testBox1 = rearRightGDB;
+				testBox2 = frontRightGDB;
 			}
 		}
 		if(rearRightGDB.isGrounded || frontRightGDB.isGrounded){
@@ -402,8 +402,8 @@ public class VehicleGroundDeviceCollection{
 				}else{
 					groundedSideOffset = Math.max(Math.hypot(rearRightGDB.contactPoint.y, rearRightGDB.contactPoint.x), Math.hypot(frontRightGDB.contactPoint.y, frontRightGDB.contactPoint.x));
 				}
-				testBox1 = frontLeftGDB;
-				testBox2 = frontRightGDB;
+				testBox1 = rearLeftGDB;
+				testBox2 = frontLeftGDB;
 			}
 		}
 		
@@ -440,7 +440,7 @@ public class VehicleGroundDeviceCollection{
 				///If so, don't apply it and bail.
 				double intialLinearMovement = Math.sin(Math.toRadians(testRotation))*groundedSideOffset;
 				if(pitch){
-					if(vehicle.rotation.x*testRotation < 0){
+					if(vehicle.rotation.x*testRotation < 0 && vehicle.velocity > 0.5){
 						return 0;
 					}else{
 						vehicle.rotation.x += testRotation;
