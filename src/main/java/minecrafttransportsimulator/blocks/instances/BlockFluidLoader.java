@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.blocks.instances;
 
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.blocks.components.ABlockBaseTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityFluidLoader;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -19,7 +19,7 @@ public class BlockFluidLoader extends ABlockBaseTileEntity{
     }
 	
     @Override
-	public TileEntityFluidLoader createTileEntity(WrapperWorld world, Point3d position, WrapperPlayer placingPlayer, WrapperNBT data){
+	public TileEntityFluidLoader createTileEntity(WrapperWorld world, Point3dPlus position, WrapperPlayer placingPlayer, WrapperNBT data){
 		return new TileEntityFluidLoader(world, position, placingPlayer, data);
 	}
 }

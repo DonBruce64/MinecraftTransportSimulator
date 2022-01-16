@@ -16,8 +16,7 @@ import com.google.common.collect.HashBiMap;
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
-import minecrafttransportsimulator.baseclasses.Orientation3d;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.baseclasses.TrailerConnection;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartGeneric;
@@ -72,7 +71,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 	
 	/**Box that encompasses all boxes on this entity.  This can be used as a pre-check for collision operations
 	 * to check a single large box rather than multiple small ones to save processing power.**/
-	public final BoundingBox encompassingBox = new BoundingBox(new Point3d(), new Point3d(), 0, 0, 0, false);
+	public final BoundingBox encompassingBox = new BoundingBox(new Point3dPlus(), new Point3dPlus(), 0, 0, 0, false);
 	
 	/**Set of entities that this entity collided with this tick.  Any entity that is in this set 
 	 * should NOT do collision checks with this entity, or infinite loops will occur.
@@ -86,12 +85,12 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 	 * hash equality in the keys.  If you need to interface with the map with a new Point3d object, you should do equality
 	 * checks on this list to find the "same" point and use that in map operations to ensure hash-matching of the map.
 	 **/
-	public final Set<Point3d> ridableLocations = new HashSet<Point3d>();
+	public final Set<Point3dPlus> ridableLocations = new HashSet<Point3dPlus>();
 	
 	/**List of locations where rider were last save.  This is used to re-populate riders on reloads.
 	 * It can be assumed that riders will be re-added in the same order the location list was saved.
 	 **/
-	public final List<Point3d> savedRiderLocations = new ArrayList<Point3d>();
+	public final List<Point3dPlus> savedRiderLocations = new ArrayList<Point3dPlus>();
 	
 	/**Maps relative position locations to riders riding at those positions.  Only one rider
 	 * may be present per position.  Positions should be modified via mutable modification to
@@ -99,7 +98,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 	 * mounting/dismounting this entity and we don't want to track them anymore.
 	 * While you are free to read this map, all modifications should be through the method calls in this class.
 	 **/
-	public final BiMap<Point3d, WrapperEntity> locationRiderMap = HashBiMap.create();
+	public final BiMap<Point3dPlus, WrapperEntity> locationRiderMap = HashBiMap.create();
 	
 	/**Maps instruments to their place in the JSON.  This is done instead of a list as there may
 	 * be instruments not present, so we'd need to have empty slots in a list for this, and maps
@@ -136,10 +135,6 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 	private TrailerConnection savedTowedByConnection;
 	private final Set<TrailerConnection> savedTowingConnections = new HashSet<TrailerConnection>();
 	public static final String TRAILER_CONNECTION_REQUEST_VARIABLE = "connection_requested";
-	
-	public final Point3d angles;
-	public final Point3d prevAngles;
-	public final Point3d rotation;
 	
 	public AEntityE_Interactable(WrapperWorld world, WrapperPlayer placingPlayer, WrapperNBT data){
 		super(world, placingPlayer, data);
@@ -201,11 +196,6 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 				}
 			}
 		}
-		
-
-		this.angles = data.getPoint3d("angles");
-		this.prevAngles = angles.copy();
-		this.rotation = data.getPoint3d("rotation");
 	}
 	
 	@Override
@@ -278,10 +268,6 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 		//We want to do the towing checks first, as we don't want to call super if we are blocked by being towed.
 		if((towedByConnection == null || overrideTowingChecks) && super.update()){
 			world.beginProfiling("EntityE_Level", true);
-			//FIXME this is only here as a hack to get this to work with existing rendering.
-			prevAngles.setTo(angles);
-			orientation.setTo(new Orientation3d(angles));
-			
 			//Update damage value
 			damageAmount = getVariable(DAMAGE_VARIABLE);
 			
@@ -427,7 +413,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 								//Local center gets added in the update function, so we need to pre-remove it.
 								javax.vecmath.Point3d helper = new javax.vecmath.Point3d(box.localCenter.x, box.localCenter.y, box.localCenter.z);
 								switchBox.netMatrix.transform(helper);
-								Point3d collisionGroupAnimationOffset = new Point3d(helper.x, helper.y, helper.z).subtract(box.localCenter);
+								Point3dPlus collisionGroupAnimationOffset = new Point3dPlus(helper.x, helper.y, helper.z).subtract(box.localCenter);
 								box.updateToEntity(this, collisionGroupAnimationOffset);
 							}
 						}else{
@@ -583,15 +569,15 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 							double entityBottomDelta = box.globalCenter.y + box.heightRadius - (entityBounds.globalCenter.y - entityBounds.heightRadius + 0.25F);
 							if(entityBottomDelta >= -0.5 && entityBottomDelta <= 0.5){
 								//Only move the entity if it's going slow or in the delta.  Don't move if it's going fast as they might have jumped.
-								Point3d entityVelocity = entity.getVelocity();
+								Point3dPlus entityVelocity = entity.getVelocity();
 								if(entityVelocity.y < 0 || entityVelocity.y < entityBottomDelta){
 									//Get how much the entity moved the collision box the entity collided with so we know how much to move the entity.
 									//This lets entities "move along" with entities when touching a collision box.
-									Point3d entityPosition = entity.getPosition();
-									Point3d linearMovement = position.copy().subtract(prevPosition);
-									Point3d angularMovement = angles.copy().subtract(prevAngles);
-									Point3d entityDeltaOffset = entityPosition.copy().subtract(prevPosition);
-									Point3d vehicleBoxMovement = entityDeltaOffset.copy().rotateFine(angularMovement).subtract(entityDeltaOffset).add(linearMovement);
+									Point3dPlus entityPosition = entity.getPosition();
+									Point3dPlus linearMovement = position.copy().subtract(prevPosition);
+									Point3dPlus angularMovement = angles.copy().subtract(prevAngles);
+									Point3dPlus entityDeltaOffset = entityPosition.copy().subtract(prevPosition);
+									Point3dPlus vehicleBoxMovement = entityDeltaOffset.copy().rotateFine(angularMovement).subtract(entityDeltaOffset).add(linearMovement);
 									
 									//Apply motions to move entity.
 									entityPosition.add(vehicleBoxMovement).add(0, entityBottomDelta, 0);
@@ -647,7 +633,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 	 *  If we are re-loading a rider from saved data, pass-in null as the position
 	 *  
 	 */
-	public boolean addRider(WrapperEntity rider, Point3d riderLocation){
+	public boolean addRider(WrapperEntity rider, Point3dPlus riderLocation){
 		if(riderLocation == null){
 			if(savedRiderLocations.isEmpty()){
 				return false;
@@ -657,7 +643,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 		}
 		
 		//Need to find the actual point reference for this to ensure hash equality.
-		for(Point3d location : ridableLocations){
+		for(Point3dPlus location : ridableLocations){
 			if(riderLocation.equals(location)){
 				riderLocation = location;
 				break;
@@ -786,10 +772,10 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 							if(hookupConnectionGroup.hookup && (hookupGroupIndex == -1 || hookupEntity.definition.connectionGroups.indexOf(hookupConnectionGroup) == hookupGroupIndex)){
 								//We can potentially connect these two entities.  See if we actually can.
 								for(JSONConnection hitchConnection : hitchConnectionGroup.connections){
-									Point3d hitchPos = hitchConnection.pos.copy().rotateFine(angles).add(position);
+									Point3dPlus hitchPos = hitchConnection.pos.copy().rotateFine(angles).add(position);
 									double maxDistance = hitchConnection.distance > 0 ? hitchConnection.distance : 2;
 									for(JSONConnection hookupConnection : hookupConnectionGroup.connections){
-										Point3d hookupPos = hookupConnection.pos.copy().rotateFine(hookupEntity.angles).add(hookupEntity.position);
+										Point3dPlus hookupPos = hookupConnection.pos.copy().rotateFine(hookupEntity.angles).add(hookupEntity.position);
 										if(hitchPos.distanceTo(hookupPos) < maxDistance + 10){
 											boolean validType = hitchConnection.type.equals(hookupConnection.type);
 											boolean validDistance = hitchPos.distanceTo(hookupPos) < maxDistance;
@@ -1049,9 +1035,6 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 				}
 			}
 		}
-
-		data.setPoint3d("angles", angles);
-		data.setPoint3d("rotation", rotation);
 		return data;
 	}
 	

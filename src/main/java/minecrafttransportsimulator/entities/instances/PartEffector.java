@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
@@ -25,10 +25,10 @@ public class PartEffector extends APart{
 	
 	//Variables used for drills.
 	public int blocksBroken;
-	private final Point3d flooredCenter = new Point3d();
-	private final Map<BoundingBox, Point3d> boxLastPositionsFloored = new HashMap<BoundingBox, Point3d>();
+	private final Point3dPlus flooredCenter = new Point3dPlus();
+	private final Map<BoundingBox, Point3dPlus> boxLastPositionsFloored = new HashMap<BoundingBox, Point3dPlus>();
 	private final Map<BoundingBox, Integer> boxTimeSpentAtPosition = new HashMap<BoundingBox, Integer>();
-	private final Set<Point3d> blockFlooredPositionsBrokeThisTick = new HashSet<Point3d>();
+	private final Set<Point3dPlus> blockFlooredPositionsBrokeThisTick = new HashSet<Point3dPlus>();
 	
 	public PartEffector(AEntityF_Multipart<?> entityOn, WrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, WrapperNBT data, APart parentPart){
 		super(entityOn, placingPlayer, placementDefinition, data, parentPart);
@@ -104,7 +104,7 @@ public class PartEffector extends APart{
 								float blockHardness = world.getBlockHardness(box.globalCenter);
 								if(blockHardness <= definition.effector.drillHardness){
 									if(!boxLastPositionsFloored.containsKey(box)){
-										boxLastPositionsFloored.put(box, new Point3d());
+										boxLastPositionsFloored.put(box, new Point3dPlus());
 										boxTimeSpentAtPosition.put(box, 0);
 									}
 									

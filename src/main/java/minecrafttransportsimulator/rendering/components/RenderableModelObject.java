@@ -10,7 +10,7 @@ import java.util.Map.Entry;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
@@ -539,9 +539,9 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 		for(int i=0; i<flareDefs.size(); ++i){
 			JSONLightBlendableComponent flareDef = flareDefs.get(i);
 			//Get the angle that is needed to rotate points to the normalized vector.
-			Point3d rotation = flareDef.axis.copy().getAngles(false);
-			Point3d vertexOffset = new Point3d();
-			Point3d centerOffset = flareDef.axis.copy().multiply(FLARE_OFFSET).add(flareDef.pos);
+			Point3dPlus rotation = flareDef.axis.copy().getAngles(false);
+			Point3dPlus vertexOffset = new Point3dPlus();
+			Point3dPlus centerOffset = flareDef.axis.copy().multiply(FLARE_OFFSET).add(flareDef.pos);
 			for(int j=0; j<6; ++j){
 				float[] newVertex = new float[8];
 				//Get the current UV points.
@@ -584,9 +584,9 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 		for(int i=0; i<beamDefs.size(); ++i){
 			JSONLightBlendableComponent beamDef = beamDefs.get(i);
 			//Get the angle that is needed to rotate points to the normalized vector.
-			Point3d rotation = beamDef.axis.copy().getAngles(false);
-			Point3d vertexOffset = new Point3d();
-			Point3d centerOffset = beamDef.axis.copy().multiply(BEAM_OFFSET).add(beamDef.pos);
+			Point3dPlus rotation = beamDef.axis.copy().getAngles(false);
+			Point3dPlus vertexOffset = new Point3dPlus();
+			Point3dPlus centerOffset = beamDef.axis.copy().multiply(BEAM_OFFSET).add(beamDef.pos);
 			//Go from negative to positive to render both beam-faces in the same loop.
 			for(int j=-BEAM_SEGMENTS; j<BEAM_SEGMENTS; ++j){
 				for(int k=0; k<3; ++k){

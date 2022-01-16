@@ -7,13 +7,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.vecmath.Vector3d;
-
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
-import minecrafttransportsimulator.baseclasses.Orientation3d;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
+import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.baseclasses.TrailerConnection;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
@@ -39,7 +37,7 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 	
 	//JSON properties.
 	public final JSONPartDefinition placementDefinition;
-	public final Point3d placementOffset;
+	public final Point3dPlus placementOffset;
 	public final boolean disableMirroring;
 	
 	//Instance properties.
@@ -59,8 +57,8 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 	private final Map<JSONPartDefinition, JSONPartDefinition> subpackMappings = new HashMap<JSONPartDefinition, JSONPartDefinition>();
 	public boolean isInvisible = false;
 	public boolean isActive = true;
-	public final Point3d localOffset;
-	public final Orientation3d localOrientation;
+	public final Point3dPlus localOffset;
+	public final Matrix4dPlus localOrientation;
 	private AnimationSwitchbox placementActiveSwitchbox;
 	private AnimationSwitchbox internalActiveSwitchbox;
 	private AnimationSwitchbox placementMovementSwitchbox;
@@ -75,7 +73,7 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 		this.placementOffset = placementDefinition.pos;
 		
 		this.localOffset = placementOffset.copy();
-		this.localOrientation = placementDefinition.rot != null ? new Orientation3d(placementDefinition.rot) : new Orientation3d(new Point3d(0, 0, 0));
+		this.localOrientation = new Matrix4dPlus(placementDefinition.rot);
 		
 		//If we are an additional part or sub-part, link ourselves now.
 		//If we are a fake part, don't even bother checking.
@@ -95,10 +93,14 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 		//Set initial position and rotation.  This ensures part doesn't "warp" the first tick.
 		//Note that this isn't exact, as we can't calculate the exact locals until after the first tick.
 		//This is why it does not take into account parent part positions.
-		localOrientation.rotatePoint(position.setTo(localOffset)).add(entityOn.position);
-		orientation.setTo(entityOn.orientation).multiplyBy(localOrientation);
-		prevPosition.setTo(position);
-		prevOrientation.setTo(orientation);
+		position.set(localOffset);
+		localOrientation.transform(position);
+		position.add(entityOn.position);
+		prevPosition.set(position);
+		
+		orientation.set(entityOn.orientation);
+		orientation.mul(localOrientation);
+		prevOrientation.set(orientation);
 		
 		//Set mirrored state.
 		this.mirrored = ((placementOffset.x < 0 && !placementDefinition.inverseMirroring) || (placementOffset.x >= 0 && placementDefinition.inverseMirroring)) && !disableMirroring;
@@ -135,56 +137,53 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 			
 			//Set initial offsets.
 			if(parentPart != null && placementDefinition.isSubPart){
-				prevMotion.setTo(parentPart.prevMotion);
-				motion.setTo(parentPart.motion);
-				position.setTo(parentPart.position);
-				orientation.setTo(parentPart.orientation);
-				localOffset.setTo(placementOffset);
+				prevMotion.set(parentPart.prevMotion);
+				motion.set(parentPart.motion);
+				position.set(parentPart.position);
+				orientation.set(parentPart.orientation);
+				localOffset.set(placementOffset);
 			}else{
-				prevMotion.setTo(entityOn.prevMotion);
-				motion.setTo(entityOn.motion);
-				position.setTo(entityOn.position);
-				orientation.setTo(entityOn.orientation);
-				localOffset.setTo(placementOffset);
+				prevMotion.set(entityOn.prevMotion);
+				motion.set(entityOn.motion);
+				position.set(entityOn.position);
+				orientation.set(entityOn.orientation);
+				localOffset.set(placementOffset);
 			}
 			
 			//Update local position, orientation, scale, and enabled state.
 			isInvisible = false;
 			scale = placementDefinition.isSubPart && parentPart != null ? parentPart.scale : 1.0F;
 			localOffset.multiply(scale);
-			localOrientation.setRotation(0);
+			localOrientation.setIdentity();
 			
 			//Placement movement uses the coords of the thing we are on.
-			if(placementMovementSwitchbox != null && definition.systemName.contains("invi")){
+			if(placementMovementSwitchbox != null){
 				isInvisible = !placementMovementSwitchbox.runSwitchbox(0);
 				scale *= placementMovementSwitchbox.animationScale;
-				
-				javax.vecmath.Point3d helper = new javax.vecmath.Point3d(localOffset.x, localOffset.y, localOffset.z);
-				placementMovementSwitchbox.netMatrix.transform(helper);
-				localOffset.set(helper.x, helper.y, helper.z);
-				
-				//Update local orientation to match rotated.
-				//localOffset.setTo(placementMovementSwitchbox.animationOffset);
-				//localOrientation.multiplyBy(placementMovementSwitchbox.animationOrientation);
+				//Offset needs to move according to full transform.
+				//This is because these coords are from what we are on.
+				//Orientation just needs to update according to new rotation.
+				placementMovementSwitchbox.netMatrix.transform(localOffset);
+				localOrientation.mul(placementMovementSwitchbox.rotationMatrix);
 			}
 			
 			//Internal movement uses local coords.
 			//First rotate orientation to face rotated state.
-			localOrientation.multiplyBy(placementDefinition.rot);
+			localOrientation.mul(placementDefinition.rot);
 			if(internalMovementSwitchbox != null){
 				isInvisible = !internalMovementSwitchbox.runSwitchbox(0) || isInvisible;
 				scale *= internalMovementSwitchbox.animationScale;
-				//Need to update offset to account for offset found in the animation.
-				//This doesn't apply to the local offset, as this is in the part's coodrinate
-				//system, not the one that the part is placed on.
-				//localOrientation.rotateAndAddTo(internalMovementSwitchbox.animationOffset, localOffset);
-				//Update local orientation to match rotated.
-				//localOrientation.multiplyBy(internalMovementSwitchbox.animationOrientation);
+				//Offset here is local and just needs translation, as it's
+				//assuming that we are the origin.
+				localOffset.add(internalMovementSwitchbox.translation);
+				localOrientation.mul(internalMovementSwitchbox.rotationMatrix);
 			}
 			
 			//Now that locals are set, set globals to reflect them.
-			orientation.rotateAndAddTo(localOffset, position);
-			orientation.multiplyBy(localOrientation);
+			Point3dPlus positionHoldingArea = new Point3dPlus();
+			orientation.transform(localOffset, positionHoldingArea);
+			position.add(positionHoldingArea);
+			orientation.mul(localOrientation);
 			
 			//Update bounding box, as scale changes width/height.
 			boundingBox.widthRadius = getWidth()/2D;

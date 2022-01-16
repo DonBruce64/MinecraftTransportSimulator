@@ -13,7 +13,7 @@ import java.util.Set;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.openal.AL10;
 
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.entities.instances.EntityRadio;
 import minecrafttransportsimulator.sound.DecodedFile;
 import minecrafttransportsimulator.sound.IStreamDecoder;
@@ -134,7 +134,7 @@ public class InterfaceSound{
 					//If the sound is looping, and the player isn't riding the source, calculate doppler pitch effect.
 					//Otherwise, set pitch as normal.
 					if(sound.soundDef != null && sound.soundDef.looping && !sound.entity.equals(player.getEntityRiding())){
-						Point3d playerVelocity = player.getVelocity();
+						Point3dPlus playerVelocity = player.getVelocity();
 						playerVelocity.y = 0;
 						double initalDelta = player.getPosition().subtract(sound.entity.position).length();
 						double finalDelta = player.getPosition().add(playerVelocity).subtract(sound.entity.position).add(-sound.entity.motion.x, 0D, -sound.entity.motion.z).length();

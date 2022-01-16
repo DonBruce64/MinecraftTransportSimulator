@@ -8,7 +8,7 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 import minecrafttransportsimulator.MasterLoader;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.ABlockBaseTileEntity;
 import minecrafttransportsimulator.blocks.instances.BlockCollision;
@@ -181,7 +181,7 @@ public class BuilderBlock extends Block{
     @Override
     public void breakBlock(World world, BlockPos pos, IBlockState state){
     	//Forward the breaking call to the block to allow for breaking logic.
-    	block.onBroken(WrapperWorld.getWrapperFor(world), new Point3d(pos.getX(), pos.getY(), pos.getZ()));
+    	block.onBroken(WrapperWorld.getWrapperFor(world), new Point3dPlus(pos.getX(), pos.getY(), pos.getZ()));
     	//This gets called before the block is broken to do logic.  Save drops to static map to be
     	//spawned during the getDrops method.  Also notify the block that it's been broken in case
     	//it needs to do operations.

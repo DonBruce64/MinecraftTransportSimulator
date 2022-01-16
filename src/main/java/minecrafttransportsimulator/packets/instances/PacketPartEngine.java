@@ -3,7 +3,7 @@ package minecrafttransportsimulator.packets.instances;
 import java.util.UUID;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.PartEngine;
@@ -25,7 +25,7 @@ public class PacketPartEngine extends APacketEntity<PartEngine>{
 	private final boolean fuelLeak;
 	private final boolean brokenStarter;
 	private final UUID linkedID;
-	private final Point3d linkedPos;
+	private final Point3dPlus linkedPos;
 	
 	public PacketPartEngine(PartEngine engine, Signal packetType){
 		super(engine);

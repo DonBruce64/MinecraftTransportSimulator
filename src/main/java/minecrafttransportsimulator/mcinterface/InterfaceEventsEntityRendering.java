@@ -6,7 +6,7 @@ import java.util.Map;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
@@ -218,14 +218,16 @@ public class InterfaceEventsEntityRendering{
         	GL11.glPushMatrix();
         	if(ridingEntity != null){
         		//Get total angles for the entity the player is riding.
-        		Point3d entityAngles = ridingEntity.angles.copy();
-        		Point3d ridingAngles = new Point3d();
+        		Point3dPlus entityAngles = ridingEntity.angles.copy();
+        		Point3dPlus ridingAngles = new Point3dPlus();
 	            if(ridingEntity instanceof EntityVehicleF_Physics){
 	            	//Set our angles to match the seat we are riding in.
 	            	for(WrapperEntity rider : ridingEntity.locationRiderMap.values()){
 						if(player.equals(rider.entity)){
 							PartSeat seat = (PartSeat) ((EntityVehicleF_Physics) ridingEntity).getPartAtLocation(ridingEntity.locationRiderMap.inverse().get(rider));
-							ridingAngles = seat.prevAngles.getInterpolatedPoint(seat.angles, event.getPartialRenderTick()).subtract(seat.entityOn.angles);
+							ridingAngles.set(seat.prevAngles);
+							ridingAngles.interpolate(seat.angles, (double)event.getPartialRenderTick());
+							ridingAngles.subtract(seat.entityOn.angles);
 		            		
 		            		//Set sitting mode to the seat we are sitting in.
 		            		//If we aren't standing, we'll need to adjust the legs.
@@ -320,8 +322,8 @@ public class InterfaceEventsEntityRendering{
     	EntityPlayer player = event.getEntityPlayer();
     	ModelPlayer playerModel = event.getRenderer().getMainModel();
     	AEntityB_Existing ridingEntity = null;
-    	Point3d rightArmAngles = null;
-		Point3d leftArmAngles = null;
+    	Point3dPlus rightArmAngles = null;
+		Point3dPlus leftArmAngles = null;
 		
 		//Set variables back to their previous values.
     	player.renderYawOffset = playerOffsetYawTemp;
@@ -344,7 +346,7 @@ public class InterfaceEventsEntityRendering{
     		EntityPlayerGun gunEntity = EntityPlayerGun.playerClientGuns.get(player.getUniqueID().toString());
 	    	if(gunEntity != null && gunEntity.activeGun != null){	    		
 	    		//Get arm rotations.
-	    		Point3d heldVector;
+	    		Point3dPlus heldVector;
 				if(gunEntity.activeGun.isHandHeldGunAimed){
 					heldVector = gunEntity.activeGun.definition.gun.handHeldAimedOffset;
 				}else{
@@ -355,13 +357,13 @@ public class InterfaceEventsEntityRendering{
 				double armYawOffset = -Math.atan2(heldVector.x/heldVectorLength, heldVector.z/heldVectorLength);
 	    		
 	    		//Set rotation points on the model.
-	    		rightArmAngles = new Point3d(armPitchOffset, armYawOffset, 0);
-	    		leftArmAngles = gunEntity.activeGun.isHandHeldGunAimed ? new Point3d(armPitchOffset, -armYawOffset, 0) : null;
+	    		rightArmAngles = new Point3dPlus(armPitchOffset, armYawOffset, 0);
+	    		leftArmAngles = gunEntity.activeGun.isHandHeldGunAimed ? new Point3dPlus(armPitchOffset, -armYawOffset, 0) : null;
 	    	}else if(renderCurrentRiderControlling){
 	    		if(ridingEntity instanceof EntityVehicleF_Physics){
     				double turningAngle = ((EntityVehicleF_Physics) ridingEntity).rudderAngle/2D;
-    				rightArmAngles = new Point3d(Math.toRadians(-75 + turningAngle), Math.toRadians(-10), 0);
-    				leftArmAngles = new Point3d(Math.toRadians(-75 - turningAngle), Math.toRadians(10), 0);
+    				rightArmAngles = new Point3dPlus(Math.toRadians(-75 + turningAngle), Math.toRadians(-10), 0);
+    				leftArmAngles = new Point3dPlus(Math.toRadians(-75 - turningAngle), Math.toRadians(10), 0);
     	        }
 	    	}
 	    	
@@ -397,7 +399,7 @@ public class InterfaceEventsEntityRendering{
 	    			if(!renderCurrentRiderControlling){
 		    			if(ridingEntity != null){
 		    				//FIXME doesn't work.
-		    	    		GL11.glRotated(player.rotationYaw + ridingEntity.orientation.getAngles().y, 0, 1, 0);
+		    	    		GL11.glRotated(player.rotationYaw + ridingEntity.angles.y, 0, 1, 0);
 		    	        }else{
 		    	        	GL11.glRotated(player.rotationYaw, 0, 1, 0);
 		    	        }
@@ -483,7 +485,7 @@ public class InterfaceEventsEntityRendering{
     	playerModel.bipedLeftLegwear.isHidden = false;
     }
     
-    private static void renderArmsAtAngles(ModelPlayer playerModel, float scale, Point3d rightArmAngles, Point3d leftArmAngles){
+    private static void renderArmsAtAngles(ModelPlayer playerModel, float scale, Point3dPlus rightArmAngles, Point3dPlus leftArmAngles){
 		//Render right and left arms if we are told.
 		if(rightArmAngles != null){
 			ModelRenderer rightArm = playerModel.bipedRightArm;

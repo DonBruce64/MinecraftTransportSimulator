@@ -5,7 +5,7 @@ import java.util.List;
 import org.lwjgl.openal.AL;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityBullet;
@@ -119,7 +119,7 @@ public class InterfaceClient{
 		//See what we are hitting.
 		RayTraceResult lastHit = Minecraft.getMinecraft().objectMouseOver;
 		if(lastHit != null){
-			Point3d mousedOverPoint = new Point3d(lastHit.hitVec.x, lastHit.hitVec.y, lastHit.hitVec.z);
+			Point3dPlus mousedOverPoint = new Point3dPlus(lastHit.hitVec.x, lastHit.hitVec.y, lastHit.hitVec.z);
 			if(lastHit.entityHit != null){
 				if(lastHit.entityHit instanceof BuilderEntityExisting){
 					AEntityB_Existing mousedOverEntity = ((BuilderEntityExisting) lastHit.entityHit).entity;
@@ -195,12 +195,12 @@ public class InterfaceClient{
 	 *  Returns the current camera position.
 	 *  The returned position may by modified without affecting the entity's actual position.
 	 */
-	public static Point3d getCameraPosition(){
+	public static Point3dPlus getCameraPosition(){
 		Vec3d position = ActiveRenderInfo.getCameraPosition();
 		mutablePosition.set(position.x, position.y, position.z);
 		return mutablePosition;
 	}
-	private static final Point3d mutablePosition = new Point3d();
+	private static final Point3dPlus mutablePosition = new Point3dPlus();
 	
 	/**
 	 *  Returns true OpenAL is ready to play sounds.  This may be changed by mods, so
@@ -213,7 +213,7 @@ public class InterfaceClient{
 	/**
 	 *  Plays the block breaking sound for the block at the passed-in position.
 	 */
-	public static void playBlockBreakSound(Point3d position){
+	public static void playBlockBreakSound(Point3dPlus position){
 		BlockPos pos = new BlockPos(position.x, position.y, position.z);
 		if(!Minecraft.getMinecraft().world.isAirBlock(pos)){
 			SoundType soundType = Minecraft.getMinecraft().world.getBlockState(pos).getBlock().getSoundType(Minecraft.getMinecraft().world.getBlockState(pos), Minecraft.getMinecraft().player.world, pos, null);

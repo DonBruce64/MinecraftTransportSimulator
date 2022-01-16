@@ -2,7 +2,7 @@ package minecrafttransportsimulator.entities.instances;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
@@ -89,7 +89,7 @@ public class PartEngine extends APart{
 	private double driveshaftRotation;
 	private double prevDriveshaftRotation;
 	private PartPropeller attachedPropeller;
-	private final Point3d engineForce = new Point3d();
+	private final Point3dPlus engineForce = new Point3dPlus();
 	
 	//Constants and static variables.
 	public static final String MAGNETO_VARIABLE = "engine_magneto";
@@ -942,7 +942,7 @@ public class PartEngine extends APart{
 		return driveshaftRotation + (driveshaftRotation - prevDriveshaftRotation)*partialTicks;
 	}
 	
-	public Point3d getForceOutput(){
+	public Point3dPlus getForceOutput(){
 		engineForce.set(0D, 0D, 0D);
 		//First get wheel forces, if we have friction to do so.
 		if(definition.engine.jetPowerFactor == 0 && wheelFriction != 0){
@@ -1000,7 +1000,7 @@ public class PartEngine extends APart{
 				//Not running, do engine braking.
 				wheelForce = -rpm/currentMaxRPM*Math.signum(currentGear)*30;
 			}
-			engineForce.addScaled(vehicleOn.axialOrientation, wheelForce);
+			engineForce.scaleAdd(wheelForce, vehicleOn.axialOrientation, engineForce);
 		}
 		
 		//If we provide jet power, add it now.  This may be done with any parts or wheels on the ground.
@@ -1022,7 +1022,7 @@ public class PartEngine extends APart{
 			double thrust = (vehicleOn.reverseThrust ? -(coreContribution + fanContribution) : coreContribution + fanContribution)*definition.engine.jetPowerFactor;
 			
 			//Add the jet force to the engine.  Use the engine rotation to define the power vector.
-			engineForce.addScaled(vehicleOn.axialOrientation, thrust);
+			engineForce.scaleAdd(thrust, vehicleOn.axialOrientation, engineForce);
 		}
 		
 		//Finally, return the force we calculated.

@@ -16,7 +16,7 @@ import javax.imageio.stream.ImageInputStream;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.rendering.components.GIFParser;
 import minecrafttransportsimulator.rendering.components.GIFParser.ParsedGIF;
@@ -330,7 +330,7 @@ public class InterfaceRender{
 	 *  Updates the internal lightmap to be consistent with the light at the
 	 *  passed-in position.
 	 */
-	public static void setLightingToPosition(Point3d position){
+	public static void setLightingToPosition(Point3dPlus position){
 		//Get lighting 1 block above position, as actual position will result in blocked light.
 		int lightVar = Minecraft.getMinecraft().world.getCombinedLight(new BlockPos(position.x, position.y + 1, position.z), 0);
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lightVar%65536, lightVar/65536);
@@ -386,7 +386,7 @@ public class InterfaceRender{
 			Entity riderEntity = rider.entity;
 			if(!(InterfaceClient.getClientPlayer().equals(rider) && InterfaceClient.inFirstPerson()) && riderEntity.posY > riderEntity.world.getHeight()){
 				GL11.glPushMatrix();
-				Point3d riderPosition = rider.getRenderedPosition(partialTicks);
+				Point3dPlus riderPosition = rider.getRenderedPosition(partialTicks);
 				GL11.glTranslated(riderPosition.x, riderPosition.y, riderPosition.z);
 				Minecraft.getMinecraft().getRenderManager().renderEntityStatic(riderEntity, partialTicks, false);
 				GL11.glPopMatrix();

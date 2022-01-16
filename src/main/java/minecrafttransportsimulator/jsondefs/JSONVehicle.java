@@ -3,7 +3,7 @@ package minecrafttransportsimulator.jsondefs;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable.ModifiableValue;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
@@ -184,11 +184,11 @@ public class JSONVehicle extends AJSONPartProvider{
         @Deprecated
     	public String sirenSound;
     	@Deprecated
-        public Point3d hitchPos;
+        public Point3dPlus hitchPos;
     	@Deprecated
         public List<String> hitchTypes;
     	@Deprecated
-        public Point3d hookupPos;
+        public Point3dPlus hookupPos;
     	@Deprecated
         public String hookupType;
     	@SuppressWarnings("hiding")

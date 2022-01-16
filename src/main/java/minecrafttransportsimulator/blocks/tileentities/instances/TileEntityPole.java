@@ -5,8 +5,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javax.vecmath.AxisAngle4d;
+
 import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
+import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.instances.BlockPole;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
@@ -39,10 +42,10 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 	private float maxTotalLightLevel;
 	private static RenderPole renderer;
 	
-	public TileEntityPole(WrapperWorld world, Point3d position, WrapperPlayer placingPlayer, WrapperNBT data){
+	public TileEntityPole(WrapperWorld world, Point3dPlus position, WrapperPlayer placingPlayer, WrapperNBT data){
 		super(world, position, placingPlayer, data);
 		//Need custom bounding box.  Default assumes centered to position.
-		this.boundingBox = new BoundingBox(new Point3d(), 0, 0, 0);
+		this.boundingBox = new BoundingBox(new Point3dPlus(), 0, 0, 0);
 		
 		//Load components back in.
 		for(Axis axis : Axis.values()){
@@ -136,7 +139,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 		boundingBox.widthRadius = definition.pole.radius;
 		boundingBox.heightRadius = definition.pole.radius;
 		boundingBox.depthRadius = definition.pole.radius;
-		boundingBox.globalCenter.setTo(position);
+		boundingBox.globalCenter.set(position);
 		for(Axis axis : Axis.values()){
 			if(axis.blockBased){
 				if(world.getBlock(axis.getOffsetPoint(position)) instanceof BlockPole || world.isBlockSolid(axis.getOffsetPoint(position), axis.getOpposite()) || components.containsKey(axis)){
@@ -233,14 +236,16 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 		if(newComponent != null){
 			components.put(newAxis, newComponent);
 			if(newAxis.equals(Axis.NONE)){
-				newComponent.position.setTo(position);
-				newComponent.prevPosition.setTo(newComponent.position);
-				newComponent.orientation.setTo(orientation);
+				newComponent.position.set(position);
+				newComponent.prevPosition.set(newComponent.position);
+				newComponent.orientation.set(orientation);
 			}else{
-				newComponent.position.set(0, 0, definition.pole.radius + 0.001).rotateY(newAxis.yRotation).add(position);
-				newComponent.prevPosition.setTo(newComponent.position);
-				newComponent.orientation.setTo(orientation);
-				newComponent.orientation.rotateY(newAxis.yRotation);
+				newComponent.position.set(0, 0, definition.pole.radius + 0.001);
+				newComponent.position.rotateY(newAxis.yRotation).add(position);
+				newComponent.prevPosition.set(newComponent.position);
+				newComponent.orientation.set(orientation);
+				//FIXME fix this./
+				//newComponent.orientation.mul(new Matrix4dPlus(new AxisAngle4d(0, 1, 0, newAxis.yRotation)));
 			}
 			world.addEntity(newComponent);
 		}else if(components.containsKey(newAxis)){

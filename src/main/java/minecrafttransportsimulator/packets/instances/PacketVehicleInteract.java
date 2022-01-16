@@ -5,7 +5,7 @@ import java.util.UUID;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable.PlayerOwnerState;
 import minecrafttransportsimulator.entities.instances.APart;
@@ -29,7 +29,7 @@ import minecrafttransportsimulator.packets.components.APacketEntityInteract;
  */
 public class PacketVehicleInteract extends APacketEntityInteract<EntityVehicleF_Physics, WrapperPlayer>{
 	private final UUID hitPartUniqueUUID;
-	private final Point3d hitBoxLocalCenter;
+	private final Point3dPlus hitBoxLocalCenter;
 	private final boolean rightClick;
 		
 	public PacketVehicleInteract(EntityVehicleF_Physics vehicle, WrapperPlayer player, BoundingBox hitBox, boolean rightClick){

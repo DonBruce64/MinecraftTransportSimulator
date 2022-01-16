@@ -26,8 +26,8 @@ import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.Orientation3d;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
+import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.AJSONInteractableEntity;
@@ -124,22 +124,22 @@ public class JSONParser{
 		}
 	};
 	
-	private static final TypeAdapter<Point3d> point3dAdapter = new TypeAdapter<Point3d>(){
+	private static final TypeAdapter<Point3dPlus> point3dAdapter = new TypeAdapter<Point3dPlus>(){
 		@Override
-		public Point3d read(JsonReader reader) throws IOException{
+		public Point3dPlus read(JsonReader reader) throws IOException{
 			if(reader.peek() == JsonToken.NULL){
 				reader.nextNull();
 				return null;
 			}else{
 				reader.beginArray();
-				Point3d value = new Point3d(reader.nextDouble(), reader.nextDouble(), reader.nextDouble());
+				Point3dPlus value = new Point3dPlus(reader.nextDouble(), reader.nextDouble(), reader.nextDouble());
 				reader.endArray();
 				return value;
 			}
 		}
 		
 		@Override
-		public void write(JsonWriter writer, Point3d value) throws IOException{
+		public void write(JsonWriter writer, Point3dPlus value) throws IOException{
 			if(value == null){
 				writer.nullValue();
 				return;
@@ -157,22 +157,24 @@ public class JSONParser{
 		}
 	};
 	
-	private static final TypeAdapter<Orientation3d> orientation3dAdapter = new TypeAdapter<Orientation3d>(){
+	private static final TypeAdapter<Matrix4dPlus> matrix3dAdapter = new TypeAdapter<Matrix4dPlus>(){
 		@Override
-		public Orientation3d read(JsonReader reader) throws IOException{
+		public Matrix4dPlus read(JsonReader reader) throws IOException{
 			if(reader.peek() == JsonToken.NULL){
 				reader.nextNull();
 				return null;
 			}else{
 				reader.beginArray();
-				Point3d value = new Point3d(reader.nextDouble(), reader.nextDouble(), reader.nextDouble());
+				Point3dPlus angles = new Point3dPlus(reader.nextDouble(), reader.nextDouble(), reader.nextDouble());
 				reader.endArray();
-				return new Orientation3d(value);
+				Matrix4dPlus value = new Matrix4dPlus();
+				value.setAngles(angles);
+				return value;
 			}
 		}
 		
 		@Override
-		public void write(JsonWriter writer, Orientation3d value) throws IOException{
+		public void write(JsonWriter writer, Matrix4dPlus value) throws IOException{
 			if(value == null){
 				writer.nullValue();
 				return;
@@ -181,10 +183,9 @@ public class JSONParser{
 				//We need to set the indent to the value afterwards though to keep pretty printing.
 				writer.beginArray();
 				writer.setIndent("");
-				Point3d angles = value.getAngles();
-				writer.value(angles.x);
-				writer.value(angles.y);
-				writer.value(angles.z);
+				writer.value(value.lastAnglesSet.x);
+				writer.value(value.lastAnglesSet.y);
+				writer.value(value.lastAnglesSet.z);
 				writer.endArray();
 				writer.setIndent("  ");
 			}
@@ -460,8 +461,8 @@ public class JSONParser{
 				.registerTypeAdapter(Boolean.class, booleanAdapter)
 				.registerTypeAdapter(Integer.class, integerAdapter)
 				.registerTypeAdapter(Float.class, floatAdapter)
-				.registerTypeAdapter(Point3d.class, point3dAdapter)
-				.registerTypeAdapter(Orientation3d.class, orientation3dAdapter)
+				.registerTypeAdapter(Point3dPlus.class, point3dAdapter)
+				.registerTypeAdapter(Matrix4dPlus.class, matrix3dAdapter)
 				.registerTypeAdapter(ColorRGB.class, colorAdapter)
 				.registerTypeAdapter(LTBox.class, ltBoxAdapter)
 				.registerTypeAdapter(new TypeToken<List<Integer>>(){}.getType(), intListAdapter)

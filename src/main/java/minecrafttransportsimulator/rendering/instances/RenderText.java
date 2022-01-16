@@ -12,7 +12,7 @@ import javax.imageio.ImageIO;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.rendering.components.RenderableObject;
@@ -49,7 +49,7 @@ public class RenderText{
 	 *  Also note that if a scale was applied prior to rendering this text, it should be passed-in here.
 	 *  This allows for proper normal calculations to prevent needing to re-normalize the text.
 	 */
-	public static void drawText(String text, String fontName, Point3d position, Point3d rotation, ColorRGB color, TextAlignment alignment, float scale, boolean autoScale, int wrapWidth, float prevScaleFactor, boolean renderLit){
+	public static void drawText(String text, String fontName, Point3dPlus position, Point3dPlus rotation, ColorRGB color, TextAlignment alignment, float scale, boolean autoScale, int wrapWidth, float prevScaleFactor, boolean renderLit){
 		if(!text.isEmpty()){
 			getFontData(fontName).renderText(text, position, rotation, alignment, scale, autoScale, wrapWidth, 1.0F, true, color, renderLit);
 		}
@@ -150,8 +150,8 @@ public class RenderText{
 		};
 		private static final FontRenderState[] STATES = FontRenderState.generateDefaults();
 		private static final int MAX_VERTCIES_PER_RENDER = 1000*6;
-		private static final Point3d DEFAULT_ADJ = new Point3d();
-		private static final Point3d MUTABLE_POSITION = new Point3d();
+		private static final Point3dPlus DEFAULT_ADJ = new Point3dPlus();
+		private static final Point3dPlus MUTABLE_POSITION = new Point3dPlus();
 		
 		private final boolean isDefault;
 		/*Texture locations for the font files.**/
@@ -185,7 +185,7 @@ public class RenderText{
 		/**Mutable helper for doing uv-building operations for font effects like bold and underline.**/
 		private final float[] supplementalUV = new float[2];
 		/**Mutable helper for rotating vertices.**/
-		private final Point3d rotatedVertex = new Point3d();
+		private final Point3dPlus rotatedVertex = new Point3dPlus();
 		
 		
 		private FontData(String fontName){
@@ -259,9 +259,9 @@ public class RenderText{
 			}
 		}
 		
-		private void renderText(String text, Point3d position, Point3d rotation, TextAlignment alignment, float scale, boolean autoScale, int wrapWidth, float preScaledFactor, boolean pixelCoords, ColorRGB color, boolean renderLit){
+		private void renderText(String text, Point3dPlus position, Point3dPlus rotation, TextAlignment alignment, float scale, boolean autoScale, int wrapWidth, float preScaledFactor, boolean pixelCoords, ColorRGB color, boolean renderLit){
 			//Use mutable position here as we need to modify it and don't want to modify the actual variable.
-			MUTABLE_POSITION.setTo(position);
+			MUTABLE_POSITION.set(position);
 			
 			//Cull text to total chars.
 			//This is all we can render in one pass.
@@ -272,7 +272,7 @@ public class RenderText{
 			boolean doRotation = rotation != null && !rotation.isZero();
 			float[] normals = new float[]{0.0F, 0.0F, 1.0F};
 			if(doRotation){
-				Point3d rotatedNormals = new Point3d(normals[0], normals[1], normals[2]).rotateFine(rotation);
+				Point3dPlus rotatedNormals = new Point3dPlus(normals[0], normals[1], normals[2]).rotateFine(rotation);
 				normals[0] = (float) rotatedNormals.x;
 				normals[1] = (float) rotatedNormals.y;
 				normals[2] = (float) rotatedNormals.z;
@@ -603,7 +603,8 @@ public class RenderText{
 							
 							//Rotate vertices if required.
 							if(doRotation){
-								rotatedVertex.set(charVertex[0], charVertex[1], charVertex[2]).rotateFine(rotation);
+								rotatedVertex.set(charVertex[0], charVertex[1], charVertex[2]);
+								rotatedVertex.rotateFine(rotation);
 								charVertex[0] = (float) rotatedVertex.x;
 								charVertex[1] = (float) rotatedVertex.y;
 								charVertex[2] = (float) rotatedVertex.z;

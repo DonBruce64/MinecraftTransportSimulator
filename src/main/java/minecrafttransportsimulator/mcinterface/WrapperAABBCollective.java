@@ -5,7 +5,7 @@ import java.util.Collection;
 import javax.annotation.Nullable;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.RayTraceResult;
@@ -134,12 +134,12 @@ public class WrapperAABBCollective extends AxisAlignedBB{
     public RayTraceResult calculateIntercept(Vec3d vecA, Vec3d vecB){
 		lastBoxRayTraced = null;
 		//Check all the bounding boxes for collision to see if we hit one of them.
-		Point3d start = new Point3d(vecA.x, vecA.y, vecA.z);
-		Point3d end = new Point3d(vecB.x, vecB.y, vecB.z);
-		Point3d intersection = null;
+		Point3dPlus start = new Point3dPlus(vecA.x, vecA.y, vecA.z);
+		Point3dPlus end = new Point3dPlus(vecB.x, vecB.y, vecB.z);
+		Point3dPlus intersection = null;
 		EnumFacing sideHit = null;
 		for(BoundingBox testBox : boxes){
-			Point3d testIntersection = testBox.getIntersectionPoint(start, end);
+			Point3dPlus testIntersection = testBox.getIntersectionPoint(start, end);
 			if(testIntersection != null){
 				if(intersection == null || testIntersection.distanceTo(start) < intersection.distanceTo(start)){
 					intersection = testIntersection;

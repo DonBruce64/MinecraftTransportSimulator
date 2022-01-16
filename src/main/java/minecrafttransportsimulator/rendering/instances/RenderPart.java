@@ -2,7 +2,7 @@ package minecrafttransportsimulator.rendering.instances;
 
 import org.lwjgl.opengl.GL11;
 
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.PartGun;
 import minecrafttransportsimulator.jsondefs.JSONMuzzle;
@@ -17,14 +17,14 @@ public class RenderPart extends ARenderEntityDefinable<APart>{
 	}
 	
 	@Override
-	protected void renderBoundingBoxes(APart part, Point3d entityPositionDelta){
+	protected void renderBoundingBoxes(APart part, Point3dPlus entityPositionDelta){
 		if(!part.entityOn.areVariablesBlocking(part.placementDefinition, InterfaceClient.getClientPlayer())){
 			super.renderBoundingBoxes(part, entityPositionDelta);
 			//Draw the gun muzzle bounding boxes.
 			if(part instanceof PartGun){
 				PartGun gun = (PartGun) part;
-				Point3d bulletPosition = new Point3d();
-				Point3d bulletVelocity = new Point3d();
+				Point3dPlus bulletPosition = new Point3dPlus();
+				Point3dPlus bulletVelocity = new Point3dPlus();
 				for(JSONMuzzle muzzle : gun.definition.gun.muzzleGroups.get(gun.currentMuzzleGroupIndex).muzzles){
 					gun.setBulletSpawn(bulletPosition, bulletVelocity, muzzle);
 					bulletPosition.subtract(gun.position).add(entityPositionDelta);

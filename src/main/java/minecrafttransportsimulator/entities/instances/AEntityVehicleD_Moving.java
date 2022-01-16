@@ -4,7 +4,7 @@ import java.util.Iterator;
 
 import minecrafttransportsimulator.baseclasses.BezierCurve;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.baseclasses.TrailerConnection;
 import minecrafttransportsimulator.baseclasses.VehicleGroundDeviceCollection;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
@@ -73,26 +73,26 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	private double prevTotalPathDelta;
 	
 	//Internal movement variables.
-	private final Point3d serverDeltaM;
-	private final Point3d serverDeltaR;
+	private final Point3dPlus serverDeltaM;
+	private final Point3dPlus serverDeltaR;
 	private double serverDeltaP;
-	private final Point3d clientDeltaM;
-	private final Point3d clientDeltaR;
+	private final Point3dPlus clientDeltaM;
+	private final Point3dPlus clientDeltaR;
 	private double clientDeltaP;
-	private final Point3d clientDeltaMApplied = new Point3d();
-	private final Point3d clientDeltaRApplied = new Point3d();
+	private final Point3dPlus clientDeltaMApplied = new Point3dPlus();
+	private final Point3dPlus clientDeltaRApplied = new Point3dPlus();
 	private double clientDeltaPApplied;
-	private final Point3d roadMotion = new Point3d();
-	private final Point3d roadRotation = new Point3d();
-	private final Point3d collisionMotion = new Point3d();
-	private final Point3d collisionRotation = new Point3d();
-	private final Point3d motionApplied = new Point3d();
-	private final Point3d rotationApplied = new Point3d();
+	private final Point3dPlus roadMotion = new Point3dPlus();
+	private final Point3dPlus roadRotation = new Point3dPlus();
+	private final Point3dPlus collisionMotion = new Point3dPlus();
+	private final Point3dPlus collisionRotation = new Point3dPlus();
+	private final Point3dPlus motionApplied = new Point3dPlus();
+	private final Point3dPlus rotationApplied = new Point3dPlus();
 	private double pathingApplied;
-	private final Point3d tempBoxPosition = new Point3d();
-	private final Point3d tempBoxRotation = new Point3d();
-	private final Point3d normalizedGroundVelocityVector = new Point3d();
-	private final Point3d normalizedGroundHeadingVector = new Point3d();
+	private final Point3dPlus tempBoxPosition = new Point3dPlus();
+	private final Point3dPlus tempBoxRotation = new Point3dPlus();
+	private final Point3dPlus normalizedGroundVelocityVector = new Point3dPlus();
+	private final Point3dPlus normalizedGroundHeadingVector = new Point3dPlus();
 	private AEntityE_Interactable<?> lastCollidedEntity;
   	public VehicleGroundDeviceCollection groundDeviceCollective;
 	
@@ -142,7 +142,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 				position.add(motionApplied);
 				for(BoundingBox coreBox : allBlockCollisionBoxes){
 					coreBox.updateToEntity(this, null);
-					if(coreBox.updateCollidingBlocks(world, new Point3d(0D, -furthestDownPoint, 0D))){
+					if(coreBox.updateCollidingBlocks(world, new Point3dPlus(0D, -furthestDownPoint, 0D))){
 						//New vehicle shouldn't have been spawned.  Bail out.
 						remove();
 						placingPlayer.sendPacket(new PacketPlayerChatMessage(placingPlayer, "interact.failure.nospace"));
@@ -263,10 +263,10 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	 * front and the rear position.  This may be the same curve, this may not.
 	 */
 	private RoadFollowingState getFollower(){
-		Point3d contactPoint = groundDeviceCollective.getContactPoint(false);
+		Point3dPlus contactPoint = groundDeviceCollective.getContactPoint(false);
 		if(contactPoint != null){
 			contactPoint.rotateFine(angles).add(position);
-			Point3d testPoint = new Point3d();
+			Point3dPlus testPoint = new Point3dPlus();
 			ABlockBase block =  world.getBlock(contactPoint);
 			if(block instanceof BlockCollision){
 				TileEntityRoad road = ((BlockCollision) block).getMasterRoad(world, contactPoint);
@@ -320,7 +320,8 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		normalizedGroundVelocityVector.set(motion.x, 0D, motion.z);
 		groundVelocity = normalizedGroundVelocityVector.length();
 		normalizedGroundVelocityVector.normalize();
-		normalizedGroundHeadingVector.set(headingVector.x, 0D, headingVector.z).normalize();
+		normalizedGroundHeadingVector.set(headingVector.x, 0D, headingVector.z);
+		normalizedGroundHeadingVector.normalize();
 		double turningForce = getTurningForce();
 		double dotProduct = normalizedGroundVelocityVector.dotProduct(normalizedGroundHeadingVector);
 		//TODO having velocity in the formula here has the potential to lead to hang-ups. Use packets perhaps?
@@ -340,7 +341,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		float skiddingFactor = getSkiddingForce();
 		if(skiddingFactor != 0 && groundVelocity > 0.01){
 			//Have enough grip, get angle delta between heading and motion.
-			Point3d crossProduct = normalizedGroundVelocityVector.crossProduct(normalizedGroundHeadingVector);
+			Point3dPlus crossProduct = normalizedGroundVelocityVector.crossProduct(normalizedGroundHeadingVector);
 			double vectorDelta = Math.toDegrees(Math.atan2(crossProduct.y, dotProduct));
 			//Check if we are backwards and adjust our delta angle if so.
 			if(goingInReverse && dotProduct < 0){
@@ -380,7 +381,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 				//Apply motive changes to the vehicle based on how much we can turn it.
 				//We basically take the two components of the motion, and apply one or the other depending on
 				//how much delta the vector says we can change.
-				Point3d idealMotion = goingInReverse ? normalizedGroundHeadingVector.copy().multiply(-groundVelocity) : normalizedGroundHeadingVector.copy().multiply(groundVelocity);
+				Point3dPlus idealMotion = goingInReverse ? normalizedGroundHeadingVector.copy().multiply(-groundVelocity) : normalizedGroundHeadingVector.copy().multiply(groundVelocity);
 				idealMotion.multiply(motionFactor).add(motion.x*(1-motionFactor), 0D, motion.z*(1-motionFactor));
 				motion.x = idealMotion.x;
 				motion.z = idealMotion.z;
@@ -545,8 +546,8 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			frontFollower = null;
 			rearFollower = null;
 		}else if((frontFollower == null || rearFollower == null) && ticksExisted%20 == 0){
-			Point3d frontContact = groundDeviceCollective.getContactPoint(true);
-			Point3d rearContact = groundDeviceCollective.getContactPoint(false);
+			Point3dPlus frontContact = groundDeviceCollective.getContactPoint(true);
+			Point3dPlus rearContact = groundDeviceCollective.getContactPoint(false);
 			if(frontContact != null && rearContact != null){
 				rearFollower = getFollower();
 				//If we are being towed, and we got followers, adjust them to our actual position.
@@ -597,7 +598,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			prevTotalPathDelta = totalPathDelta;
 			frontFollower = frontFollower.updateCurvePoints(segmentDelta, selectedSegment);
 			rearFollower = rearFollower.updateCurvePoints(segmentDelta, selectedSegment);
-			Point3d rearPoint = groundDeviceCollective.getContactPoint(false);
+			Point3dPlus rearPoint = groundDeviceCollective.getContactPoint(false);
 			
 			//Check to make sure followers are still valid, and do logic.
 			if(frontFollower != null && rearFollower != null && rearPoint != null){
@@ -605,11 +606,12 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 				//To do this, we get the distance between our contact points for front and rear, and then interpolate between them.
 				//First get the rear point.  This defines the delta for the movement of the vehicle.
 				rearPoint.rotateFine(angles).add(position);
-				Point3d rearDesiredPoint = rearFollower.getCurrentPoint();
+				Point3dPlus rearDesiredPoint = rearFollower.getCurrentPoint();
 				
 				//Apply the motion based on the delta between the actual and desired.
 				//Also set motion Y to 0 in case we were doing ground device things.
-				roadMotion.setTo(rearDesiredPoint).subtract(rearPoint);
+				roadMotion.set(rearDesiredPoint);
+				roadMotion.subtract(rearPoint);
 				if(roadMotion.length() > 1){
 					roadMotion.set(0, 0, 0);
 					frontFollower = null;
@@ -619,7 +621,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 					
 					//Now get the front desired point.  We don't care about actual point here, as we set angle base on the point delta.
 					//Desired angle is the one that gives us the vector between the front and rear points.
-					Point3d desiredVector = frontFollower.getCurrentPoint().subtract(rearDesiredPoint);
+					Point3dPlus desiredVector = frontFollower.getCurrentPoint().subtract(rearDesiredPoint);
 					double yawDelta = Math.toDegrees(Math.atan2(desiredVector.x, desiredVector.z));
 					double pitchDelta = -Math.toDegrees(Math.atan2(desiredVector.y, Math.hypot(desiredVector.x, desiredVector.z)));
 					double rollDelta = 0;
@@ -682,7 +684,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			if(isCollisionBoxCollided()){
 				world.beginProfiling("CollisionHandling", false);
 				if(towedByConnection != null){
-					Point3d initalMotion = motion.copy();
+					Point3dPlus initalMotion = motion.copy();
 					if(correctCollidingMovement()){
 						return;
 					}
@@ -718,13 +720,16 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 				if(interactable instanceof AEntityVehicleD_Moving){
 					AEntityVehicleD_Moving mainVehicle = (AEntityVehicleD_Moving) interactable;
 					//Set angluar movement delta.
-					collisionRotation.setTo(mainVehicle.angles).subtract(mainVehicle.prevAngles);
+					collisionRotation.set(mainVehicle.angles);
+					collisionRotation.subtract(mainVehicle.prevAngles);
 					
 					//Get vector from collided box to this entity.
-					Point3d centerOffset = position.copy().subtract(mainVehicle.prevPosition);
+					Point3dPlus centerOffset = position.copy().subtract(mainVehicle.prevPosition);
 					
 					//Add rotation contribution to offset.
-					collisionMotion.setTo(centerOffset).rotateFine(collisionRotation).subtract(centerOffset);
+					collisionMotion.set(centerOffset);
+					collisionMotion.rotateFine(collisionRotation);
+					collisionMotion.subtract(centerOffset);
 					
 					//Add linear contribution to offset.
 					collisionMotion.add(mainVehicle.position).subtract(mainVehicle.prevPosition);
@@ -751,8 +756,15 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 
 		//Now that that the movement has been checked, move the vehicle.
 		world.beginProfiling("ApplyMotions", false);
-		motionApplied.setTo(motion).multiply(SPEED_FACTOR).add(roadMotion).add(collisionMotion);
-		rotationApplied.setTo(rotation).add(roadRotation).add(collisionRotation);
+		motionApplied.set(motion);
+		motionApplied.multiply(SPEED_FACTOR);
+		motionApplied.add(roadMotion);
+		motionApplied.add(collisionMotion);
+		
+		rotationApplied.set(rotation);
+		rotationApplied.add(roadRotation);
+		rotationApplied.add(collisionRotation);
+		
 		if(lockedOnRoad){
 			if(towedByConnection != null){
 				pathingApplied = ((AEntityVehicleD_Moving) towedByConnection.hitchVehicle).pathingApplied;
@@ -762,6 +774,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		}else{
 			pathingApplied = 0;
 		}
+		
 		collisionMotion.set(0, 0, 0);
 		collisionRotation.set(0, 0, 0);
 		if(!world.isClient()){
@@ -776,7 +789,8 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 				//This gives us a good "rubberbanding correction" formula for deltas.
 				//We add this correction motion to the existing motion applied.
 				//We need to keep the sign after squaring, however, as that tells us what direction to apply the deltas in.
-				clientDeltaMApplied.setTo(serverDeltaM).subtract(clientDeltaM);
+				clientDeltaMApplied.set(serverDeltaM);
+				clientDeltaMApplied.subtract(clientDeltaM);
 				clientDeltaMApplied.x *= Math.abs(clientDeltaMApplied.x);
 				clientDeltaMApplied.y *= Math.abs(clientDeltaMApplied.y);
 				clientDeltaMApplied.z *= Math.abs(clientDeltaMApplied.z);
@@ -792,7 +806,8 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 				}
 				motionApplied.add(clientDeltaMApplied);
 				
-				clientDeltaRApplied.setTo(serverDeltaR).subtract(clientDeltaR);
+				clientDeltaRApplied.set(serverDeltaR);
+				clientDeltaRApplied.subtract(clientDeltaR);
 				clientDeltaRApplied.x *= Math.abs(clientDeltaRApplied.x);
 				clientDeltaRApplied.y *= Math.abs(clientDeltaRApplied.y);
 				clientDeltaRApplied.z *= Math.abs(clientDeltaRApplied.z);
@@ -842,7 +857,12 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		if(motion.length() > 0.001){
 			boolean clearedCache = false;
 			for(BoundingBox box : allBlockCollisionBoxes){
-				tempBoxPosition.setTo(box.globalCenter).subtract(position).rotateFine(rotation).subtract(box.globalCenter).add(position).addScaled(motion, SPEED_FACTOR);
+				tempBoxPosition.set(box.globalCenter);
+				tempBoxPosition.subtract(position);
+				tempBoxPosition.rotateFine(rotation);
+				tempBoxPosition.subtract(box.globalCenter);
+				tempBoxPosition.add(position);
+				tempBoxPosition.scaleAdd(SPEED_FACTOR, motion, tempBoxPosition);
 				if(!box.collidesWithLiquids && world.checkForCollisions(box, tempBoxPosition, !clearedCache)){
 					return true;
 				}
@@ -922,7 +942,11 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			tempBoxRotation.set(0D, rotation.y, 0D);
 			for(BoundingBox box : allBlockCollisionBoxes){
 				while(rotation.y != 0){
-					tempBoxPosition.setTo(box.globalCenter).subtract(position).rotateFine(tempBoxRotation).add(position).add(motion.x*SPEED_FACTOR, motion.y*SPEED_FACTOR, motion.z*SPEED_FACTOR);
+					tempBoxPosition.set(box.globalCenter);
+					tempBoxPosition.subtract(position);
+					tempBoxPosition.rotateFine(tempBoxRotation);
+					tempBoxPosition.add(position);
+					tempBoxPosition.scaleAdd(SPEED_FACTOR, motion, tempBoxPosition);
 					//Raise this box ever so slightly because Floating Point errors are a PITA.
 					tempBoxPosition.add(0D, 0.1D, 0D);
 					if(!box.updateCollidingBlocks(world, tempBoxPosition.subtract(box.globalCenter))){
@@ -943,7 +967,11 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			tempBoxRotation.set(rotation.x, rotation.y, 0D);
 			for(BoundingBox box : allBlockCollisionBoxes){
 				while(rotation.x != 0){
-					tempBoxPosition.setTo(box.globalCenter).subtract(position).rotateFine(tempBoxRotation).add(position).add(motion.x*SPEED_FACTOR, motion.y*SPEED_FACTOR, motion.z*SPEED_FACTOR);
+					tempBoxPosition.set(box.globalCenter);
+					tempBoxPosition.subtract(position);
+					tempBoxPosition.rotateFine(tempBoxRotation);
+					tempBoxPosition.add(position);
+					tempBoxPosition.scaleAdd(SPEED_FACTOR, motion, tempBoxPosition);
 					if(!box.updateCollidingBlocks(world, tempBoxPosition.subtract(box.globalCenter))){
 						break;
 					}
@@ -958,10 +986,14 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		
 		//And lastly the roll.
 		if(rotation.z != 0){
-			tempBoxRotation.setTo(rotation);
+			tempBoxRotation.set(rotation);
 			for(BoundingBox box : allBlockCollisionBoxes){
 				while(rotation.z != 0){
-					tempBoxPosition.setTo(box.globalCenter).subtract(position).rotateFine(tempBoxRotation).add(position).add(motion.x*SPEED_FACTOR, motion.y*SPEED_FACTOR, motion.z*SPEED_FACTOR);
+					tempBoxPosition.set(box.globalCenter);
+					tempBoxPosition.subtract(position);
+					tempBoxPosition.rotateFine(tempBoxRotation);
+					tempBoxPosition.add(position);
+					tempBoxPosition.scaleAdd(SPEED_FACTOR, motion, tempBoxPosition);
 					if(!box.updateCollidingBlocks(world, tempBoxPosition.subtract(box.globalCenter))){
 						break;
 					}
@@ -976,7 +1008,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		return false;
 	}
 	
-	public void addToServerDeltas(Point3d motionAdded, Point3d rotationAdded, double pathingAdded){
+	public void addToServerDeltas(Point3dPlus motionAdded, Point3dPlus rotationAdded, double pathingAdded){
 		serverDeltaM.add(motionAdded);
 		serverDeltaR.add(rotationAdded);
 		serverDeltaP += pathingAdded;

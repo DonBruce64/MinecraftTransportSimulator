@@ -5,7 +5,7 @@ import java.nio.FloatBuffer;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.instances.APart;
@@ -23,11 +23,11 @@ import minecrafttransportsimulator.systems.ConfigSystem;
  * @author don_bruce
  */
 public final class RenderInstrument{
-	private static final Point3d bottomLeft = new Point3d();
-	private static final Point3d topLeft = new Point3d();
-	private static final Point3d topRight = new Point3d();
-	private static final Point3d bottomRight = new Point3d();
-	private static final Point3d rotation = new Point3d();
+	private static final Point3dPlus bottomLeft = new Point3dPlus();
+	private static final Point3dPlus topLeft = new Point3dPlus();
+	private static final Point3dPlus topRight = new Point3dPlus();
+	private static final Point3dPlus bottomRight = new Point3dPlus();
+	private static final Point3dPlus rotation = new Point3dPlus();
 	private static final float[][] points = new float[6][8];
 	private static final RenderableObject renderObject = new RenderableObject("instrument", null, new ColorRGB(), FloatBuffer.allocate(6*8), false);
 	

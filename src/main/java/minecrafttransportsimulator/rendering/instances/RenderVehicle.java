@@ -6,7 +6,7 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPart;
@@ -101,11 +101,11 @@ public class RenderVehicle extends ARenderEntityDefinable<EntityVehicleF_Physics
 	}
 	
 	@Override
-	protected void renderBoundingBoxes(EntityVehicleF_Physics vehicle, Point3d entityPositionDelta){
+	protected void renderBoundingBoxes(EntityVehicleF_Physics vehicle, Point3dPlus entityPositionDelta){
 		super.renderBoundingBoxes(vehicle, entityPositionDelta);
 		//Draw the ground bounding boxes.
 		for(BoundingBox box : vehicle.groundDeviceCollective.getGroundBounds()){
-			Point3d boxCenterDelta = box.globalCenter.copy().subtract(vehicle.position).add(entityPositionDelta);
+			Point3dPlus boxCenterDelta = box.globalCenter.copy().subtract(vehicle.position).add(entityPositionDelta);
 			GL11.glTranslated(boxCenterDelta.x, boxCenterDelta.y, boxCenterDelta.z);
 			
 			//Need to re-add vertices in case the wheels changed since creation of the bounding box.

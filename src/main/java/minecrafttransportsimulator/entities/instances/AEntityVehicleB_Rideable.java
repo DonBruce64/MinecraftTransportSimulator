@@ -2,7 +2,7 @@ package minecrafttransportsimulator.entities.instances;
 
 import java.util.Iterator;
 
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIHUD;
@@ -43,11 +43,11 @@ abstract class AEntityVehicleB_Rideable extends AEntityF_Multipart<JSONVehicle>{
 		//Remove motion to prevent it if it was previously stored.
 		//Makes placement easier and is less likely for players to get stuck.
 		if(placingPlayer != null){
-			Point3d playerSightVector = placingPlayer.getLineOfSight(3);
-			position.setTo(placingPlayer.getPosition().add(playerSightVector.x, 0, playerSightVector.z));
-			prevPosition.setTo(position);
+			Point3dPlus playerSightVector = placingPlayer.getLineOfSight(3);
+			position.set(placingPlayer.getPosition().add(playerSightVector.x, 0, playerSightVector.z));
+			prevPosition.set(position);
 			angles.set(0, placingPlayer.getYaw() + 90, 0);
-			prevAngles.setTo(angles);
+			prevAngles.set(angles);
 			motion.set(0, 0, 0);
 			prevMotion.set(0, 0, 0);
 		}
@@ -64,7 +64,7 @@ abstract class AEntityVehicleB_Rideable extends AEntityF_Multipart<JSONVehicle>{
 		//on how the part they are riding moves.  If we modified the rider position, then we'd
 		//allow for multiple riders at the same position.  That's Bad Stuff.
 		//Update rider positions based on the location they are set to.
-		Point3d riderPositionOffset = locationRiderMap.inverse().get(rider);
+		Point3dPlus riderPositionOffset = locationRiderMap.inverse().get(rider);
 		PartSeat seat = (PartSeat) getPartAtLocation(riderPositionOffset);
 		if(rider.isValid() && seat != null){
 			//Add all vehicle-wide effects to the rider
@@ -86,7 +86,10 @@ abstract class AEntityVehicleB_Rideable extends AEntityF_Multipart<JSONVehicle>{
 			if(seat.definition.seat.heightScale != 0){
 				seatYPos *= seat.definition.seat.heightScale;
 			}
-			Point3d seatLocationOffset = seat.orientation.rotatePoint(new Point3d(0D, seatYPos, 0D)).add(seat.position).add(0D, -rider.getEyeHeight(), 0D);
+			Point3dPlus seatLocationOffset = new Point3dPlus(0D, seatYPos, 0D);
+			seat.orientation.transform(seatLocationOffset);
+			seatLocationOffset.add(seat.position);
+			seatLocationOffset.add(0D, -rider.getEyeHeight(), 0D);
 			rider.setPosition(seatLocationOffset, false);
 			rider.setVelocity(motion);
 			
@@ -126,7 +129,7 @@ abstract class AEntityVehicleB_Rideable extends AEntityF_Multipart<JSONVehicle>{
 	}
 	
 	@Override
-	public boolean addRider(WrapperEntity rider, Point3d riderLocation){
+	public boolean addRider(WrapperEntity rider, Point3dPlus riderLocation){
 		//We override the default rider addition behavior here as we need to rotate
 		//riders to face forwards in seats that they start riding in.
 		//Check if this rider is already riding this vehicle.
@@ -140,7 +143,8 @@ abstract class AEntityVehicleB_Rideable extends AEntityF_Multipart<JSONVehicle>{
 			//Rider won't be, as it's required, so we can use it to get the actual location.
 			PartSeat newSeat = (PartSeat) getPartAtLocation(locationRiderMap.inverse().get(rider));
 			if(!riderAlreadyInSeat){
-				rider.setYaw(newSeat.orientation.getAngles().y);
+				//FIXME we shouldn't use angles for this.  It's not gonna work well.
+				//rider.setYaw(newSeat.orientation.getAngles().y);
 			}else{
 				//Clear out the panel if we're not in a controller seat.
 				if(world.isClient() && InterfaceClient.getClientPlayer().equals(rider)){
@@ -167,7 +171,7 @@ abstract class AEntityVehicleB_Rideable extends AEntityF_Multipart<JSONVehicle>{
 		//We override the default rider removal behavior here as the dismount position
 		//of riders can be modified via JSON or via part placement location.
 		//Get the position the rider was sitting in before we dismount them.
-		Point3d riderLocation = locationRiderMap.inverse().get(rider);
+		Point3dPlus riderLocation = locationRiderMap.inverse().get(rider);
 		super.removeRider(rider, iterator);
 
 		//Get rid of any potion effects that were caused by the vehicle
@@ -193,7 +197,7 @@ abstract class AEntityVehicleB_Rideable extends AEntityF_Multipart<JSONVehicle>{
 			//Otherwise, put us to the right or left of the seat depending on x-offset.
 			//Make sure to take into the movement of the seat we were riding if it had moved.
 			//This ensures the dismount moves with the seat.
-			Point3d dismountPosition;
+			Point3dPlus dismountPosition;
 			APart partRiding = getPartAtLocation(riderLocation);
 			if(packPart.dismountPos != null){
 				if(partRiding != null){
@@ -203,7 +207,7 @@ abstract class AEntityVehicleB_Rideable extends AEntityF_Multipart<JSONVehicle>{
 				}
 			}else{
 				if(partRiding != null){
-					Point3d partDelta = partRiding.localOffset.copy().subtract(partRiding.placementOffset);
+					Point3dPlus partDelta = partRiding.localOffset.copy().subtract(partRiding.placementOffset);
 					if(riderLocation.x < 0){
 						partDelta.x = -partDelta.x;
 						dismountPosition = riderLocation.copy().add(-2D, 0D, 0D).add(partDelta).rotateFine(angles).add(position);
@@ -235,7 +239,7 @@ abstract class AEntityVehicleB_Rideable extends AEntityF_Multipart<JSONVehicle>{
 	 *  Helper method used to get the controlling player for this vehicle.
 	 */
 	public WrapperPlayer getController(){
-		for(Point3d location : locationRiderMap.keySet()){
+		for(Point3dPlus location : locationRiderMap.keySet()){
 			PartSeat seat = (PartSeat) getPartAtLocation(location);
 			WrapperEntity rider = locationRiderMap.get(location);
 			if(seat != null && seat.placementDefinition.isController && rider instanceof WrapperPlayer){

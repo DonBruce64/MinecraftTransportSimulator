@@ -4,7 +4,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
@@ -138,7 +138,7 @@ public abstract class APacketBase{
 	/**
 	 *  Helper method to write a Point3d to the buffer.
 	 */
-	protected static void writePoint3dToBuffer(Point3d point, ByteBuf buf){
+	protected static void writePoint3dToBuffer(Point3dPlus point, ByteBuf buf){
 		buf.writeDouble(point.x);
 		buf.writeDouble(point.y);
 		buf.writeDouble(point.z);
@@ -147,8 +147,8 @@ public abstract class APacketBase{
 	/**
 	 *  Helper method to read a Point3d from the buffer.
 	 */
-	protected static Point3d readPoint3dFromBuffer(ByteBuf buf){
-		return new Point3d(buf.readDouble(), buf.readDouble(), buf.readDouble());
+	protected static Point3dPlus readPoint3dFromBuffer(ByteBuf buf){
+		return new Point3dPlus(buf.readDouble(), buf.readDouble(), buf.readDouble());
 	}
 	
 	/**
@@ -156,7 +156,7 @@ public abstract class APacketBase{
 	 *  Does so in a compact way by casting-down the doubles to ints.
 	 *  Useful if you don't need the floating-point and want to save on bandwidth.
 	 */
-	protected static void writePoint3dCompactToBuffer(Point3d point, ByteBuf buf){
+	protected static void writePoint3dCompactToBuffer(Point3dPlus point, ByteBuf buf){
 		buf.writeInt((int) point.x);
 		buf.writeInt((int) point.y);
 		buf.writeInt((int) point.z);
@@ -165,8 +165,8 @@ public abstract class APacketBase{
 	/**
 	 *  Helper method to read a compact Point3d from the buffer.
 	 */
-	protected static Point3d readPoint3dCompactFromBuffer(ByteBuf buf){
-		return new Point3d(buf.readInt(), buf.readInt(), buf.readInt());
+	protected static Point3dPlus readPoint3dCompactFromBuffer(ByteBuf buf){
+		return new Point3dPlus(buf.readInt(), buf.readInt(), buf.readInt());
 	}
 	
 	/**

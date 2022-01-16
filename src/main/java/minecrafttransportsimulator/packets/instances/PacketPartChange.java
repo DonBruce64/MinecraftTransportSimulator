@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.items.components.AItemPart;
@@ -17,12 +17,12 @@ import minecrafttransportsimulator.systems.PackParserSystem;
  * @author don_bruce
  */
 public class PacketPartChange extends APacketEntity<AEntityF_Multipart<?>>{
-	private final Point3d partOffset;
+	private final Point3dPlus partOffset;
 	private final AItemPart partItem;
 	private final WrapperNBT partData;
-	private Point3d parentPartOffset;
+	private Point3dPlus parentPartOffset;
 	
-	public PacketPartChange(AEntityF_Multipart<?> entity, Point3d partOffset){
+	public PacketPartChange(AEntityF_Multipart<?> entity, Point3dPlus partOffset){
 		super(entity);
 		this.partOffset = partOffset;
 		this.partItem = null;

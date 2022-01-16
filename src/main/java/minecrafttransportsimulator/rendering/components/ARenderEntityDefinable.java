@@ -8,7 +8,7 @@ import java.util.Map;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
@@ -127,7 +127,7 @@ public abstract class ARenderEntityDefinable<RenderedEntity extends AEntityD_Def
 	}
 	
 	@Override
-	protected void renderBoundingBoxes(RenderedEntity entity, Point3d entityPositionDelta){
+	protected void renderBoundingBoxes(RenderedEntity entity, Point3dPlus entityPositionDelta){
 		if(entity instanceof AEntityE_Interactable){
 			AEntityE_Interactable<?> interactable = (AEntityE_Interactable<?>) entity;
 			//Draw encompassing box for the entity.
@@ -137,7 +137,7 @@ public abstract class ARenderEntityDefinable<RenderedEntity extends AEntityD_Def
 			
 			//Draw collision boxes for the entity.
 			for(BoundingBox box : interactable.interactionBoxes){
-				Point3d boxCenterDelta = box.globalCenter.copy().subtract(entity.position).add(entityPositionDelta);
+				Point3dPlus boxCenterDelta = box.globalCenter.copy().subtract(entity.position).add(entityPositionDelta);
 				GL11.glTranslated(boxCenterDelta.x, boxCenterDelta.y, boxCenterDelta.z);
 				box.renderable.render();
 				GL11.glTranslated(-boxCenterDelta.x, -boxCenterDelta.y, -boxCenterDelta.z);

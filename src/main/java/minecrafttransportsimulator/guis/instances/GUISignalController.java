@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
@@ -81,7 +81,7 @@ public class GUISignalController extends AGUIBase{
 				for(double i=controller.position.x-scanDistance; i<=controller.position.x+scanDistance; ++i){
 					for(double j=controller.position.y-scanDistance; j<=controller.position.y+scanDistance; ++j){
 						for(double k=controller.position.z-scanDistance; k<=controller.position.z+scanDistance; ++k){
-							Point3d checkPosition = new Point3d(i, j, k);
+							Point3dPlus checkPosition = new Point3dPlus(i, j, k);
 							ATileEntityBase<?> tile = controller.world.getTileEntity(checkPosition);
 							if(tile instanceof TileEntityPole){
 								for(ATileEntityPole_Component component : ((TileEntityPole) tile).components.values()){

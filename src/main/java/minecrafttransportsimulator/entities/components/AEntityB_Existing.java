@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.Orientation3d;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
+import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.entities.instances.EntityRadio;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
@@ -20,15 +20,20 @@ import minecrafttransportsimulator.sound.SoundInstance;
  * @author don_bruce
  */
 public abstract class AEntityB_Existing extends AEntityA_Base{
-	protected static final Point3d ZERO_FOR_CONSTRUCTOR = new Point3d();
+	protected static final Point3dPlus ZERO_FOR_CONSTRUCTOR = new Point3dPlus();
 	
-	public final Point3d position;
-	public final Point3d prevPosition;
-	public final Point3d motion;
-	public final Point3d prevMotion;
-	public final Orientation3d orientation;
-	public final Orientation3d prevOrientation;
-	public final Point3d axialOrientation;
+	public final Point3dPlus position;
+	public final Point3dPlus prevPosition;
+	public final Point3dPlus motion;
+	public final Point3dPlus prevMotion;
+	
+	public final Point3dPlus angles;
+	public final Point3dPlus prevAngles;
+	public final Point3dPlus rotation;
+	
+	public final Matrix4dPlus orientation;
+	public final Matrix4dPlus prevOrientation;
+	public final Point3dPlus axialOrientation;
 	
 	public BoundingBox boundingBox;
 	public double airDensity;
@@ -47,15 +52,19 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 		this.prevPosition = position.copy();
 		this.motion = data.getPoint3d("motion");
 		this.prevMotion = motion.copy();
+		this.angles = data.getPoint3d("angles");
+		this.prevAngles = angles.copy();
+		this.rotation = data.getPoint3d("rotation");
 		if(placingPlayer != null){
-			this.orientation = new Orientation3d(new Point3d(0, getPlacementRotation(placingPlayer), 0));
-		}else{
-			this.orientation = new Orientation3d(data);
+			angles.y = getPlacementRotation(placingPlayer);
 		}
-		this.prevOrientation = new Orientation3d(orientation);
-		this.axialOrientation = orientation.rotatePoint(new Point3d(0, 0, 1));
+		this.orientation = new Matrix4dPlus();
+		orientation.setAngles(angles);
+		this.prevOrientation = new Matrix4dPlus(orientation);
+		this.axialOrientation = new Point3dPlus(0, 0, 1);
+		orientation.transform(axialOrientation);
 		this.placingPlayer = placingPlayer;
-		this.boundingBox = new BoundingBox(new Point3d(), position, 0.5, 0.5, 0.5, false);
+		this.boundingBox = new BoundingBox(new Point3dPlus(), position, 0.5, 0.5, 0.5, false);
 		if(hasRadio()){
 			this.radio = new EntityRadio(this, data.getDataOrNew("radio"));
 			world.addEntity(radio);
@@ -65,17 +74,22 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	}
 	
 	/**Constructor for un-synced entities.  Allows for specification of position/motion/angles.**/
-	public AEntityB_Existing(WrapperWorld world, Point3d position, Point3d motion, Point3d angles){
+	public AEntityB_Existing(WrapperWorld world, Point3dPlus position, Point3dPlus motion, Point3dPlus angles){
 		super(world, null);
 		this.position = position.copy();
 		this.prevPosition = position.copy();
 		this.motion = motion.copy();
 		this.prevMotion = motion.copy();
-		this.orientation = new Orientation3d(angles);
-		this.prevOrientation = new Orientation3d(orientation);
-		this.axialOrientation = orientation.rotatePoint(new Point3d(0, 0, 1));
+		this.angles = angles.copy();
+		this.prevAngles = angles.copy();
+		this.rotation = new Point3dPlus();
+		this.orientation = new Matrix4dPlus();
+		orientation.setAngles(angles);
+		this.prevOrientation = new Matrix4dPlus(orientation);
+		this.axialOrientation = new Point3dPlus(0, 0, 1);
+		orientation.transform(axialOrientation);
 		this.placingPlayer = null;
-		this.boundingBox = new BoundingBox(new Point3d(), position, 0.5, 0.5, 0.5, false);
+		this.boundingBox = new BoundingBox(new Point3dPlus(), position, 0.5, 0.5, 0.5, false);
 		this.radio = null;
 	}
 	
@@ -86,10 +100,19 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 			if(world.isClient()){
 				updateSounds(0);
 			}
-			prevPosition.setTo(position);
-			prevMotion.setTo(motion);
-			prevOrientation.setTo(orientation);
-			orientation.rotatePoint(axialOrientation.set(0, 0, 1));
+			prevPosition.set(position);
+			prevMotion.set(motion);
+			
+			prevOrientation.set(orientation);
+			if(!angles.equals(prevAngles)){
+				//Don't re-create the matrix if we didn't change angles.
+				//FIXME this is only here as a hack to get this to work with existing rendering.  See if we can remove angles after we are done.
+				orientation.setAngles(angles);
+			}
+			prevAngles.set(angles);			
+			
+			axialOrientation.set(0, 0, 1);
+			orientation.transform(axialOrientation);
 			airDensity = 1.225*Math.pow(2, -position.y/(500D*world.getMaxHeight()/256D));
 			velocity = motion.length();
 			world.endProfiling();
@@ -211,7 +234,8 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 		if(shouldSavePosition()){
 			data.setPoint3d("position", position);
 			data.setPoint3d("motion", motion);
-			orientation.save(data);
+			data.setPoint3d("angles", angles);
+			data.setPoint3d("rotation", rotation);
 		}
 		if(radio != null){
 			data.setData("radio", radio.save(new WrapperNBT()));

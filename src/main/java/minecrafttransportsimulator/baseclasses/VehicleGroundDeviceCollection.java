@@ -152,7 +152,7 @@ public class VehicleGroundDeviceCollection{
 	 * If there are no ground devices for the contact point, null is returned.
 	 * Note that this point is in the vehicle's local coordinates.
 	 */
-	public Point3d getContactPoint(boolean front){
+	public Point3dPlus getContactPoint(boolean front){
 		if(front){
 			if(frontLeftGDB.contactPoint.isZero()){
 				if(frontRightGDB.contactPoint.isZero()){
@@ -314,10 +314,11 @@ public class VehicleGroundDeviceCollection{
 				}
 			}
 		}else{
-			Point3d hookupPoint = vehicle.towedByConnection.hookupConnection.pos.copy();
+			Point3dPlus hookupPoint = vehicle.towedByConnection.hookupConnection.pos.copy();
 			if(vehicle.towedByConnection.hookupEntity instanceof APart){
 				APart hookupPart = (APart) vehicle.towedByConnection.hookupEntity;
-				hookupPoint = hookupPart.localOrientation.rotatePoint(hookupPoint).add(hookupPart.localOffset);
+				hookupPart.localOrientation.transform(hookupPoint);
+				hookupPoint.add(hookupPart.localOffset);
 			}
 			if(hookupPoint.z > 0){
 				if(!rearLeftGDB.isGrounded && !rearRightGDB.isGrounded){

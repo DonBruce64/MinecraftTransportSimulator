@@ -5,8 +5,8 @@ import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.Orientation3d;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
+import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPart;
@@ -54,8 +54,8 @@ public class PartGun extends APart{
 	public int bulletsReloading;
 	public int bulletsRemovedThisRequest;
 	public int currentMuzzleGroupIndex;
-	public final Orientation3d currentInternalElevation;
-	public final Orientation3d prevInternalElevation;
+	//public final Matrix4dPlus currentInternalElevation;
+	//public final Matrix4dPlus prevInternalElevation;
 	public ItemBullet loadedBullet;
 	
 	//These variables are used during firing and will be reset on loading.
@@ -73,8 +73,10 @@ public class PartGun extends APart{
 	private WrapperEntity entityTarget;
 	private long millisecondCamOffset;
 	private long lastTimeFired;
+	private Matrix4dPlus firingSpreadMatrix = new Matrix4dPlus();
+	private Point3dPlus firingSpreadAngles = new Point3dPlus();
 	public final List<Integer> bulletsHitOnServer = new ArrayList<Integer>();
-	public final RenderableObject muzzleWireframe = new RenderableObject(new BoundingBox(new Point3d(), 0.25, 0.25, 0.25), ColorRGB.BLUE, false);
+	public final RenderableObject muzzleWireframe = new RenderableObject(new BoundingBox(new Point3dPlus(), 0.25, 0.25, 0.25), ColorRGB.BLUE, false);
 		
 	public PartGun(AEntityF_Multipart<?> entityOn, WrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, WrapperNBT data, APart parentPart){
 		super(entityOn, placingPlayer, placementDefinition, data, parentPart);
@@ -128,8 +130,9 @@ public class PartGun extends APart{
 		this.bulletsLeft = data.getInteger("bulletsLeft");
 		this.bulletsReloading = data.getInteger("bulletsReloading");
 		this.currentMuzzleGroupIndex = data.getInteger("currentMuzzleGroupIndex");
-		this.currentInternalElevation = new Orientation3d(new Point3d(1, 0, 0), data.getDouble("internalElevation"));
-		this.prevInternalElevation = new Orientation3d(currentInternalElevation);
+		//FIXME fix this.
+		//this.currentInternalElevation = new Matrix4dPlus(new Point3dPlus(data.getDouble("internalElevation"), 0, 0));
+		//this.prevInternalElevation = new Matrix4dPlus(currentInternalElevation);
 		String loadedBulletPack = data.getString("loadedBulletPack");
 		String loadedBulletName = data.getString("loadedBulletName");
 		if(!loadedBulletPack.isEmpty()){
@@ -361,13 +364,15 @@ public class PartGun extends APart{
 		//This makes them track better when the target is moving.
 		//We only do this 
 		if(!(controller instanceof WrapperPlayer)){
-			Point3d targetAngles = new Point3d();
+			//FIXME fix auto-aiming.
+			Point3dPlus targetAngles = new Point3dPlus();
 			if(entityTarget != null){
 				if(entityTarget.isValid()){
 					//Check if target is still in bounds to hit.  If not, we need to find another.
 					//This could be a valid entity, but might not be.  Do raytracing to make sure we can see them.
-					Point3d positionDelta = entityTarget.getPosition().add(0D, entityTarget.getEyeHeight()/2D, 0D).subtract(position);
-					targetAngles.setTo(positionDelta).getAngles(true).subtract(angles);
+					Point3dPlus positionDelta = entityTarget.getPosition().add(0D, entityTarget.getEyeHeight()/2D, 0D).subtract(position);
+					targetAngles.set(positionDelta);
+					targetAngles.getAngles(true).subtract(angles);
 					if(targetAngles.y < -180)targetAngles.y += 360;
 					if(targetAngles.y > 180)targetAngles.y -= 360;
 					if(((minYaw != -180 || maxYaw != 180) && (targetAngles.y < minYaw || targetAngles.y > maxYaw)) || targetAngles.x < minPitch || targetAngles.x > maxPitch || world.getBlockHit(position, positionDelta) != null){
@@ -380,8 +385,9 @@ public class PartGun extends APart{
 			if(entityTarget == null || !entityTarget.isValid()){
 				//Target is null or dead, get another one.
 				for(WrapperEntity entity : world.getEntitiesHostile(controller, 48)){
-					Point3d positionDelta = entity.getPosition().add(0D, entity.getEyeHeight()/2D, 0D).subtract(position);
-					targetAngles.setTo(positionDelta).getAngles(true).subtract(angles);
+					Point3dPlus positionDelta = entity.getPosition().add(0D, entity.getEyeHeight()/2D, 0D).subtract(position);
+					targetAngles.set(positionDelta);
+					targetAngles.getAngles(true).subtract(angles);
 					if(targetAngles.y < -180)targetAngles.y += 360;
 					if(targetAngles.y > 180)targetAngles.y -= 360;
 					//Check the distance between this target and our current one, if we have one.
@@ -585,30 +591,32 @@ public class PartGun extends APart{
 	 * This is based on the passed-in muzzle, and the parameters of that muzzle.
 	 * Used in both spawning the bullet, and in rendering where the muzzle position is.
 	 */
-	public void setBulletSpawn(Point3d bulletPosition, Point3d bulletVelocity, JSONMuzzle muzzle){
+	public void setBulletSpawn(Point3dPlus bulletPosition, Point3dPlus bulletVelocity, JSONMuzzle muzzle){
 		//Set velocity.
-		if(definition.gun.muzzleVelocity > 0){
-			bulletVelocity.set(0, 0, definition.gun.muzzleVelocity/20D/10D);
-		}
+		bulletVelocity.set(0, 0, definition.gun.muzzleVelocity/20D/10D);
 		if(definition.gun.bulletSpreadFactor > 0){
-			new Orientation3d(new Point3d((Math.random() - 0.5F)*definition.gun.bulletSpreadFactor, (Math.random() - 0.5F)*definition.gun.bulletSpreadFactor, 0D)).rotatePoint(bulletVelocity);
+			//FIXME fix this.
+			//firingSpreadAngles.set((Math.random() - 0.5F)*definition.gun.bulletSpreadFactor, (Math.random() - 0.5F)*definition.gun.bulletSpreadFactor, 0D);
+			///new Matrix4dPlus(new Point3dPlus().transform(bulletVelocity);
 		}
 		//Now that velocity is set, rotate it to match the gun's orientation.
-		orientation.rotatePoint(bulletVelocity);
-		muzzle.rot.rotatePoint(bulletVelocity);
+		orientation.transform(bulletVelocity);
+		muzzle.rot.transform(bulletVelocity);
 		if(definition.gun.pitchIsInternal){
-			currentInternalElevation.rotatePoint(bulletVelocity);
+			//currentInternalElevation.transform(bulletVelocity);
 		}
 		
 		//Add gun velocity to bullet to ensure we spawn with the offset.
 		bulletVelocity.addScaled(motion, EntityVehicleF_Physics.SPEED_FACTOR);
 
 		//Now set position.
-		bulletPosition.setTo(muzzle.pos);
+		bulletPosition.set(muzzle.pos);
 		if(definition.gun.pitchIsInternal){
-			currentInternalElevation.rotateWithOffset(bulletPosition, muzzle.center);
+			//FIXME fix this.
+			//currentInternalElevation.rotateWithOffset(bulletPosition, muzzle.center);
 		}
-		orientation.rotatePoint(bulletPosition).add(position);
+		orientation.transform(bulletPosition);
+		bulletPosition.add(position);
 	}
 	
 	@Override
@@ -648,8 +656,8 @@ public class PartGun extends APart{
 		//We still need to run the gun code on the server, however, as we need to mess with inventory.
 		long timeSinceFiring = System.currentTimeMillis() - lastTimeFired;
 		if(state.isAtLeast(GunState.FIRING_CURRENTLY) && bulletsLeft > 0 && (!definition.gun.isSemiAuto || !firedThisRequest) && timeSinceFiring >= millisecondFiringDelay){
-			Point3d bulletPosition = new Point3d();
-			Point3d bulletVelocity = new Point3d();
+			Point3dPlus bulletPosition = new Point3dPlus();
+			Point3dPlus bulletVelocity = new Point3dPlus();
 			for(JSONMuzzle muzzle : definition.gun.muzzleGroups.get(currentMuzzleGroupIndex).muzzles){
 				//Get the bullet's state.
 				setBulletSpawn(bulletPosition, bulletVelocity, muzzle);
@@ -662,8 +670,8 @@ public class PartGun extends APart{
 						newBullet = new EntityBullet(bulletPosition, bulletVelocity, this, entityTarget);
 					}else{
 						//No entity found, try blocks.
-						Point3d lineOfSight = lastController.getLineOfSight(2000F);
-						Point3d blockTarget = world.getBlockHit(lastController.getPosition().add(0D, lastController.getEyeHeight(), 0D), lineOfSight);
+						Point3dPlus lineOfSight = lastController.getLineOfSight(2000F);
+						Point3dPlus blockTarget = world.getBlockHit(lastController.getPosition().add(0D, lastController.getEyeHeight(), 0D), lineOfSight);
 						if(blockTarget != null){
 							newBullet = new EntityBullet(bulletPosition, bulletVelocity, this, blockTarget);
 						}else{
@@ -710,7 +718,8 @@ public class PartGun extends APart{
 		data.setInteger("bulletsLeft", bulletsLeft);
 		data.setInteger("bulletsReloading", bulletsReloading);
 		data.setInteger("currentMuzzleGroupIndex", currentMuzzleGroupIndex);
-		data.setDouble("internalElevation", currentInternalElevation.rotation);
+		//FIXME fix this.
+		//data.setDouble("internalElevation", currentInternalElevation.rotation);
 		if(loadedBullet != null){
 			data.setString("loadedBulletPack", loadedBullet.definition.packID);
 			data.setString("loadedBulletName", loadedBullet.definition.systemName);

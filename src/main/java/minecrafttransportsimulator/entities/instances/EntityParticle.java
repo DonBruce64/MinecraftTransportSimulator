@@ -4,7 +4,7 @@ import java.nio.FloatBuffer;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.JSONParticle;
@@ -43,15 +43,18 @@ public class EntityParticle extends AEntityC_Renderable{
 	public EntityParticle(AEntityD_Definable<?> entitySpawning, JSONParticle definition){
 		super(entitySpawning.world, entitySpawning.position, ZERO_FOR_CONSTRUCTOR, ZERO_FOR_CONSTRUCTOR);
 		if(definition.pos != null){
-			position.add(entitySpawning.orientation.rotatePoint(definition.pos.copy()));
+			Point3dPlus positionOffset = definition.pos.copy();
+			entitySpawning.orientation.transform(positionOffset);
+			position.add(positionOffset);
 		}
 		if(definition.initialVelocity != null){
 			//Set initial velocity, but add some randomness so particles don't all go in a line.
-			Point3d adjustedVelocity = entitySpawning.orientation.rotatePoint(definition.initialVelocity.copy());
+			Point3dPlus adjustedVelocity = definition.initialVelocity.copy();
+			entitySpawning.orientation.transform(adjustedVelocity);
 			motion.x += adjustedVelocity.x/10D + 0.02 - Math.random()*0.04;
 			motion.y += adjustedVelocity.y/10D + 0.02 - Math.random()*0.04;
 			motion.z += adjustedVelocity.z/10D + 0.02 - Math.random()*0.04;
-			this.prevMotion.setTo(motion);
+			this.prevMotion.set(motion);
 		}
 		
 		this.definition = definition;
@@ -171,7 +174,8 @@ public class EntityParticle extends AEntityC_Renderable{
 			}
 			
 			//Update orientation to always face the player.
-			orientation.setAngles(clientPlayer.getPosition().add(0, clientPlayer.getEyeHeight(), 0).add(InterfaceClient.getCameraPosition()).subtract(position).getAngles(true));
+			//FIXME there has GOT to be a simpler waay to calculate this...
+			//orientation.setAngles(clientPlayer.getPosition().add(0, clientPlayer.getEyeHeight(), 0).add(InterfaceClient.getCameraPosition()).subtract(position).getAngles(true));
 			return true;
 		}else{
 			return false;

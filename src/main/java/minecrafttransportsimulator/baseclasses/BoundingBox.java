@@ -29,12 +29,12 @@ import net.minecraft.util.math.AxisAlignedBB;
  */
 public class BoundingBox{
 	private static final double HITBOX_CLAMP = 0.015625;
-	public final Point3d localCenter;
-	public final Point3d globalCenter;
-	public final Point3d currentCollisionDepth;
-	public final List<Point3d> collidingBlockPositions = new ArrayList<Point3d>();
+	public final Point3dPlus localCenter;
+	public final Point3dPlus globalCenter;
+	public final Point3dPlus currentCollisionDepth;
+	public final List<Point3dPlus> collidingBlockPositions = new ArrayList<Point3dPlus>();
 	public final RenderableObject renderable;
-	private final Point3d tempGlobalCenter;
+	private final Point3dPlus tempGlobalCenter;
 	
 	public double widthRadius;
 	public double heightRadius;
@@ -43,12 +43,12 @@ public class BoundingBox{
 	public final JSONCollisionBox definition;
 	
 	/**Simple constructor.  Used for blocks, bounds checks, or other things that don't need local/global positional differences.**/
-	public BoundingBox(Point3d center, double widthRadius, double heightRadius, double depthRadius){
+	public BoundingBox(Point3dPlus center, double widthRadius, double heightRadius, double depthRadius){
 		this(center, center, widthRadius, heightRadius, depthRadius, false, null, null);
 	}
 	
 	/**Complex constructor.  Used for things that have local and global positions.  These can also collide with liquid blocks.**/
-	public BoundingBox(Point3d localCenter, Point3d globalCenter, double widthRadius, double heightRadius, double depthRadius, boolean collidesWithLiquids){
+	public BoundingBox(Point3dPlus localCenter, Point3dPlus globalCenter, double widthRadius, double heightRadius, double depthRadius, boolean collidesWithLiquids){
 		this(localCenter, globalCenter, widthRadius, heightRadius, depthRadius, collidesWithLiquids, null, null);
 	}
 	
@@ -58,11 +58,11 @@ public class BoundingBox{
 	}
 	
 	/**Master constructor.  Used for main creation.**/
-	private BoundingBox(Point3d localCenter, Point3d globalCenter, double widthRadius, double heightRadius, double depthRadius, boolean collidesWithLiquids, JSONCollisionBox definition, JSONCollisionGroup groupDef){
+	private BoundingBox(Point3dPlus localCenter, Point3dPlus globalCenter, double widthRadius, double heightRadius, double depthRadius, boolean collidesWithLiquids, JSONCollisionBox definition, JSONCollisionGroup groupDef){
 		this.localCenter = localCenter;
 		this.globalCenter = globalCenter;
 		this.tempGlobalCenter = globalCenter.copy();
-		this.currentCollisionDepth = new Point3d();
+		this.currentCollisionDepth = new Point3dPlus();
 		this.widthRadius = widthRadius;
 		this.heightRadius = heightRadius;
 		this.depthRadius = depthRadius;
@@ -98,23 +98,23 @@ public class BoundingBox{
 	 *  Note that the passed-in offset is only applied for this check,  and is reverted after this call.
 	 *  If blocks collided with this box after this method, true is returned.
 	 */
-	public boolean updateCollidingBlocks(WrapperWorld world, Point3d offset){
+	public boolean updateCollidingBlocks(WrapperWorld world, Point3dPlus offset){
 		return updateCollisions(world, offset, false);
 	}
 	
 	/**
-	 *  Like {@link #updateCollidingBlocks(WrapperWorld, Point3d)}, but takes movement into account
+	 *  Like {@link #updateCollidingBlocks(WrapperWorld, Point3dPlus)}, but takes movement into account
 	 *  when setting collision depth.
 	 */
-	public boolean updateMovingCollisions(WrapperWorld world, Point3d offset){
+	public boolean updateMovingCollisions(WrapperWorld world, Point3dPlus offset){
 		return updateCollisions(world, offset, true);
 	}
 	
-	private boolean updateCollisions(WrapperWorld world, Point3d offset, boolean ignoreIfGreater){
-		tempGlobalCenter.setTo(globalCenter);
+	private boolean updateCollisions(WrapperWorld world, Point3dPlus offset, boolean ignoreIfGreater){
+		tempGlobalCenter.set(globalCenter);
 		globalCenter.add(offset);
 		world.updateBoundingBoxCollisions(this, offset, ignoreIfGreater);
-		globalCenter.setTo(tempGlobalCenter);
+		globalCenter.set(tempGlobalCenter);
 		return !collidingBlockPositions.isEmpty();
 	}
 	
@@ -125,12 +125,13 @@ public class BoundingBox{
 	 *  better interaction while standing on entities.  Optional extra offset is present should
 	 *  a supplemental translation need to be performed before aligning to the entity.
 	 */
-	public void updateToEntity(AEntityD_Definable<?> entity, Point3d optionalOffset){
-		globalCenter.setTo(localCenter);
+	public void updateToEntity(AEntityD_Definable<?> entity, Point3dPlus optionalOffset){
+		globalCenter.set(localCenter);
 		if(optionalOffset != null){
 			globalCenter.add(optionalOffset);
 		}
-		entity.orientation.rotatePoint(globalCenter).add(entity.position);
+		entity.orientation.transform(globalCenter);
+		globalCenter.add(entity.position);
 		if(definition != null){
 			//Need to round box to prevent floating-point errors for player and entity collision.
 			globalCenter.x = ((int) (globalCenter.x/HITBOX_CLAMP))*HITBOX_CLAMP;
@@ -170,7 +171,7 @@ public class BoundingBox{
 	 *  Note that this returns true for points on the border, to allow use to use in
 	 *  in conjunction with hit-scanning code to find out which box got hit-scanned.
 	 */
-	public boolean isPointInside(Point3d point){
+	public boolean isPointInside(Point3dPlus point){
 		return 	globalCenter.x - widthRadius <= point.x &&
 				globalCenter.x + widthRadius >= point.x &&
 				globalCenter.y - heightRadius <= point.y &&
@@ -194,21 +195,21 @@ public class BoundingBox{
 	/**
 	 *  Returns true if the passed-in point intersects this box in the YZ-plane.
 	 */
-	public boolean intersectsWithYZ(Point3d point){
+	public boolean intersectsWithYZ(Point3dPlus point){
         return point.y >= globalCenter.y - heightRadius && point.y <= globalCenter.y + heightRadius && point.z >= globalCenter.z - depthRadius && point.z <= globalCenter.z + depthRadius;
     }
 	
 	/**
 	 *  Returns true if the passed-in point intersects this box in the XZ-plane.
 	 */
-	public boolean intersectsWithXZ(Point3d point){
+	public boolean intersectsWithXZ(Point3dPlus point){
         return point.x >= globalCenter.x - widthRadius && point.x <= globalCenter.x + widthRadius && point.z >= globalCenter.z - depthRadius && point.z <= globalCenter.z + depthRadius;
     }
 	
 	/**
 	 *  Returns true if the passed-in point intersects this box in the XY-plane.
 	 */
-	public boolean intersectsWithXY(Point3d point){
+	public boolean intersectsWithXY(Point3dPlus point){
         return point.x >= globalCenter.x - widthRadius && point.x <= globalCenter.x + widthRadius && point.y >= globalCenter.y - heightRadius && point.y <= globalCenter.y + heightRadius;
     }
 	
@@ -216,8 +217,8 @@ public class BoundingBox{
 	 *  Returns the point between the start and end points that collides with this box,
 	 *  or null if such a point does not exist.
 	 */
-	public Point3d getXPlaneCollision(Point3d start, Point3d end, double xPoint){
-        Point3d collisionPoint = start.getIntermediateWithXValue(end, xPoint);
+	public Point3dPlus getXPlaneCollision(Point3dPlus start, Point3dPlus end, double xPoint){
+        Point3dPlus collisionPoint = start.getIntermediateWithXValue(end, xPoint);
         return collisionPoint != null && this.intersectsWithYZ(collisionPoint) ? collisionPoint : null;
     }
 
@@ -225,8 +226,8 @@ public class BoundingBox{
 	 *  Returns the point between the start and end points that collides with this box,
 	 *  or null if such a point does not exist.
 	 */
-    public Point3d getYPlaneCollision(Point3d start, Point3d end, double yPoint){
-    	Point3d collisionPoint = start.getIntermediateWithYValue(end, yPoint);
+    public Point3dPlus getYPlaneCollision(Point3dPlus start, Point3dPlus end, double yPoint){
+    	Point3dPlus collisionPoint = start.getIntermediateWithYValue(end, yPoint);
         return collisionPoint != null && this.intersectsWithXZ(collisionPoint) ? collisionPoint : null;
     }
     
@@ -234,8 +235,8 @@ public class BoundingBox{
 	 *  Returns the point between the start and end points that collides with this box,
 	 *  or null if such a point does not exist.
 	 */
-    public Point3d getZPlaneCollision(Point3d start, Point3d end, double zPoint){
-    	Point3d collisionPoint = start.getIntermediateWithZValue(end, zPoint);
+    public Point3dPlus getZPlaneCollision(Point3dPlus start, Point3dPlus end, double zPoint){
+    	Point3dPlus collisionPoint = start.getIntermediateWithZValue(end, zPoint);
         return collisionPoint != null && this.intersectsWithXY(collisionPoint) ? collisionPoint : null;
     }
 	
@@ -244,12 +245,12 @@ public class BoundingBox{
 	 *  If so, then a new point is returned on the first point of intersection (outer bounds).  If the
 	 *  line created by the two points does not intersect this box, null is returned.
 	 */
-	public Point3d getIntersectionPoint(Point3d start, Point3d end){
+	public Point3dPlus getIntersectionPoint(Point3dPlus start, Point3dPlus end){
 		//First check minX.
-		Point3d intersection = getXPlaneCollision(start, end, globalCenter.x - widthRadius);
+		Point3dPlus intersection = getXPlaneCollision(start, end, globalCenter.x - widthRadius);
 		
 		//Now get maxX.
-		Point3d secondIntersection = getXPlaneCollision(start, end, globalCenter.x + widthRadius);
+		Point3dPlus secondIntersection = getXPlaneCollision(start, end, globalCenter.x + widthRadius);
 		
 		//If minX is null, or if maxX is not null, and is closer to the start point than minX, it's our new intersection.
 		if(secondIntersection != null && (intersection == null || start.distanceTo(secondIntersection) < start.distanceTo(intersection))){

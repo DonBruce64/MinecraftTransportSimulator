@@ -2,8 +2,8 @@ package minecrafttransportsimulator.rendering.components;
 
 import org.lwjgl.opengl.GL11;
 
-import minecrafttransportsimulator.baseclasses.Orientation3d;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
+import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.InterfaceRender;
@@ -24,13 +24,14 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Renderable>{
 		if(!disableRendering(entity, partialTicks)){
 			//Get the render offset.
 			//This is the interpolated movement, plus the prior position.
-			Point3d entityPositionDelta = entity.prevPosition.getInterpolatedPoint(entity.position, partialTicks);
+			Point3dPlus entityPositionDelta = new Point3dPlus(entity.prevPosition);
+			entityPositionDelta.interpolate(entity.position, (double)partialTicks);
 			
 			//Subtract the entity's position by the render entity position to get the delta for translating.
 			entityPositionDelta.subtract(InterfaceClient.getRenderViewEntity().getRenderedPosition(partialTicks));
 			
 			//Get interpolated orientation.
-			Orientation3d interpolatedOrientation = entity.prevOrientation.getInterpolated(entity.orientation, partialTicks);
+			Matrix4dPlus interpolatedOrientation = entity.prevOrientation.getInterpolated(entity.orientation, partialTicks);
 			
 			//Adjust position and orientation, if needed.
 			adjustPositionOrientation(entity, entityPositionDelta, interpolatedOrientation, partialTicks);
@@ -41,7 +42,7 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Renderable>{
 	        //Push the matrix on the stack and translate and rotate to the enitty's position.
 			GL11.glPushMatrix();
 	        GL11.glTranslated(entityPositionDelta.x, entityPositionDelta.y, entityPositionDelta.z);
-	        GL11.glRotated(interpolatedOrientation.rotation, interpolatedOrientation.axis.x, interpolatedOrientation.axis.y, interpolatedOrientation.axis.z);
+	        interpolatedOrientation.applyTransformOpenGL();
 			
 	        //Render the main model.
 	        entity.world.endProfiling();
@@ -78,7 +79,7 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Renderable>{
 	 *  The passed-in position is where the code thinks the entity is: where you want to render
 	 *  it may not be at this position/rotation.  Hence the ability to modify these parameters.
 	 */
-	protected void adjustPositionOrientation(RenderedEntity entity, Point3d entityPositionDelta, Orientation3d interpolatedOrientation, float partialTicks){}
+	protected void adjustPositionOrientation(RenderedEntity entity, Point3dPlus entityPositionDelta, Matrix4dPlus interpolatedOrientation, float partialTicks){}
 	
 	/**
 	 *  Called to render the main model.  At this point the matrix state will be aligned
@@ -92,5 +93,5 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Renderable>{
 	 *  will be un-done, as boxes need to be rendered according to their world state.
 	 *  The passed-in delta is the delta between the player and the entity.
 	 */
-	protected abstract void renderBoundingBoxes(RenderedEntity entity, Point3d entityPositionDelta);
+	protected abstract void renderBoundingBoxes(RenderedEntity entity, Point3dPlus entityPositionDelta);
 }

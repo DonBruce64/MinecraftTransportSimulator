@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
@@ -26,11 +26,11 @@ public class BlockCollision extends ABlockBase{
     	}
     	float heightRadiusRequired = collisionHeightInPixels/16F/2F;
     	float centerPositionOffset = -(0.5F - heightRadiusRequired);
-    	this.blockBounds = new BoundingBox(new Point3d(0, centerPositionOffset, 0), 0.5D, heightRadiusRequired, 0.5D);
+    	this.blockBounds = new BoundingBox(new Point3dPlus(0, centerPositionOffset, 0), 0.5D, heightRadiusRequired, 0.5D);
 	}
     
     @Override
-    public void onBroken(WrapperWorld world, Point3d position){
+    public void onBroken(WrapperWorld world, Point3dPlus position){
     	TileEntityRoad masterBlock = getMasterRoad(world, position);
     	if(masterBlock != null && masterBlock.isActive()){
     		//We belong to this TE.  Destroy the block.  This will end up
@@ -48,14 +48,15 @@ public class BlockCollision extends ABlockBase{
 	 *  prior to trying to call this method, as there aren't any bound-able checks we can do on the two
 	 *  input variables.
 	 */
-    public TileEntityRoad getMasterRoad(WrapperWorld world, Point3d position){
-    	Point3d blockOffset = new Point3d();
-    	Point3d testPoint = new Point3d();
+    public TileEntityRoad getMasterRoad(WrapperWorld world, Point3dPlus position){
+    	Point3dPlus blockOffset = new Point3dPlus();
+    	Point3dPlus testPoint = new Point3dPlus();
     	for(int i=-TileEntityRoad.MAX_COLLISION_DISTANCE; i<2*TileEntityRoad.MAX_COLLISION_DISTANCE; ++i){
     		for(int j=-TileEntityRoad.MAX_COLLISION_DISTANCE; j<2*TileEntityRoad.MAX_COLLISION_DISTANCE; ++j){
     			for(int k=-TileEntityRoad.MAX_COLLISION_DISTANCE; k<2*TileEntityRoad.MAX_COLLISION_DISTANCE; ++k){
     				blockOffset.set(i, j, k);
-    				testPoint.setTo(position).subtract(blockOffset);
+    				testPoint.set(position);
+    				testPoint.subtract(blockOffset);
             		ATileEntityBase<?> testTile = world.getTileEntity(testPoint);
             		if(testTile instanceof TileEntityRoad){
             			if(((TileEntityRoad) testTile).collisionBlockOffsets.contains(blockOffset)){

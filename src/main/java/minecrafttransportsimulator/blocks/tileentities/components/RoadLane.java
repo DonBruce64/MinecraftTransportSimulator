@@ -5,7 +5,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.BezierCurve;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.instances.BlockCollision;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
@@ -63,7 +63,7 @@ public class RoadLane{
 		}
 	}
 	
-	private Point3d generateCurves(){
+	private Point3dPlus generateCurves(){
 		//Curves are generated based on the definition of the road, and the points for our lane.
 		//If we are a dynamic road, then we don't use end points.  Instead, we use an
 		//end offset point.  If we were made from a dynamic road, then the road's curve will be non-null;
@@ -86,7 +86,8 @@ public class RoadLane{
 			JSONLaneSectorPointSet points = sector.lanes.get(offsetSectorLaneNumber);
 			for(JSONLaneSectorEndPoint endPoint : points.endPoints){
 				//Need to offset by 0.5 to account for the position of the TE being centered in the block.
-				curves.add(new BezierCurve(road.orientation.rotatePoint(points.startPoint.copy().add(-0.5, 0.0, -0.5)), road.orientation.rotatePoint(endPoint.pos.copy().add(-0.5, 0.0, -0.5)), sector.sectorStartAngle + (float) road.orientation.getAngles().y, endPoint.angle + (float) road.orientation.getAngles().y));
+				//FIXME fix this.
+				//curves.add(new BezierCurve(road.orientation.rotatePoint(points.startPoint.copy().add(-0.5, 0.0, -0.5)), road.orientation.rotatePoint(endPoint.pos.copy().add(-0.5, 0.0, -0.5)), sector.sectorStartAngle + (float) road.orientation.getAngles().y, endPoint.angle + (float) road.orientation.getAngles().y));
 			}
 			return points.startPoint;
 		}
@@ -116,13 +117,13 @@ public class RoadLane{
 		int curveNumber = curves.indexOf(curve);
 		for(int j=-1; j>=-2; --j){
 			boolean foundRoadsThisCheck = false;
-			Point3d offsetPoint;
-			Point3d ownCurvePoint;
+			Point3dPlus offsetPoint;
+			Point3dPlus ownCurvePoint;
 			if(checkingStart){
-				offsetPoint = new Point3d(0, 0, j).rotateY(curve.startAngle).add(curve.startPos).add(road.position);
+				offsetPoint = new Point3dPlus(0, 0, j).rotateY(curve.startAngle).add(curve.startPos).add(road.position);
 				ownCurvePoint = curve.startPos.copy().add(road.position);	
 			}else{
-				offsetPoint = new Point3d(0, 0, j).rotateY(curve.endAngle).add(curve.endPos).add(road.position);
+				offsetPoint = new Point3dPlus(0, 0, j).rotateY(curve.endAngle).add(curve.endPos).add(road.position);
 				ownCurvePoint = curve.endPos.copy().add(road.position);
 			}
 			
@@ -133,8 +134,8 @@ public class RoadLane{
 					foundRoadsThisCheck = true;
 					for(RoadLane otherRoadLane : otherRoad.lanes){
 						for(BezierCurve otherRoadCurve : otherRoadLane.curves){
-							Point3d otherCurveStart = otherRoadCurve.startPos.copy().add(otherRoad.position);
-							Point3d otherCurveEnd = otherRoadCurve.endPos.copy().add(otherRoad.position);
+							Point3dPlus otherCurveStart = otherRoadCurve.startPos.copy().add(otherRoad.position);
+							Point3dPlus otherCurveEnd = otherRoadCurve.endPos.copy().add(otherRoad.position);
 							int otherCurveNumber = otherRoadLane.curves.indexOf(otherRoadCurve);
 							
 							//For any connection we make here, we send the packet to the OTHER curve.

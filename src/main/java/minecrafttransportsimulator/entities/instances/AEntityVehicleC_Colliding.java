@@ -6,7 +6,7 @@ import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperItemStack;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -28,10 +28,10 @@ abstract class AEntityVehicleC_Colliding extends AEntityVehicleB_Rideable{
 	private float hardnessHitThisTick = 0;
 	public double currentMass;
 	public double axialVelocity;
-	public final Point3d headingVector = new Point3d();
-	public final Point3d verticalVector = new Point3d();
-	public final Point3d sideVector = new Point3d();
-	public final Point3d normalizedVelocityVector = new Point3d();
+	public final Point3dPlus headingVector = new Point3dPlus();
+	public final Point3dPlus verticalVector = new Point3dPlus();
+	public final Point3dPlus sideVector = new Point3dPlus();
+	public final Point3dPlus normalizedVelocityVector = new Point3dPlus();
 	
 	public AEntityVehicleC_Colliding(WrapperWorld world, WrapperPlayer placingPlayer, WrapperNBT data){
 		super(world, placingPlayer, data);
@@ -44,10 +44,13 @@ abstract class AEntityVehicleC_Colliding extends AEntityVehicleB_Rideable{
 			
 			//Set vectors to current velocity and orientation.
 			world.beginProfiling("SetVectors", true);
-			headingVector.set(0D, 0D, 1D).rotateFine(angles);
-			verticalVector.set(0D, 1D, 0D).rotateFine(angles);
-			sideVector.setTo(verticalVector.crossProduct(headingVector));
-			normalizedVelocityVector.setTo(motion).normalize();
+			headingVector.set(0D, 0D, 1D);
+			headingVector.rotateFine(angles);
+			verticalVector.set(0D, 1D, 0D);
+			verticalVector.rotateFine(angles);
+			sideVector.set(verticalVector.crossProduct(headingVector));
+			normalizedVelocityVector.set(motion);
+			normalizedVelocityVector.normalize();
 			axialVelocity = Math.abs(motion.dotProduct(headingVector));
 			
 			//Update mass.
@@ -84,13 +87,13 @@ abstract class AEntityVehicleC_Colliding extends AEntityVehicleB_Rideable{
 	 */
 	protected double getCollisionForAxis(BoundingBox box, boolean xAxis, boolean yAxis, boolean zAxis){
 		//Get the motion the entity is trying to move, and add it to the passed-in box value.
-		Point3d collisionMotion = motion.copy().multiply(SPEED_FACTOR);
+		Point3dPlus collisionMotion = motion.copy().multiply(SPEED_FACTOR);
 		
 		//If we collided, so check to see if we can break some blocks or if we need to explode.
 		//Don't bother with this logic if it's impossible for us to break anything.
 		if(box.updateCollidingBlocks(world, collisionMotion)){
 			float hardnessHitThisBox = 0;
-			for(Point3d blockPosition : box.collidingBlockPositions){
+			for(Point3dPlus blockPosition : box.collidingBlockPositions){
 				float blockHardness = world.getBlockHardness(blockPosition);
 				if(!world.isBlockLiquid(blockPosition)){
 					if(ConfigSystem.configObject.general.blockBreakage.value && blockHardness <= velocity*currentMass/250F && blockHardness >= 0){

@@ -3,8 +3,8 @@ package minecrafttransportsimulator.rendering.components;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.Orientation3d;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
+import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 
 /**Base Tile Entity rendering class (TESR).  
@@ -22,7 +22,7 @@ public abstract class ARenderTileEntityBase<RenderedTileEntity extends ATileEnti
 	}
 	
 	@Override
-	public void adjustPositionOrientation(RenderedTileEntity entity, Point3d entityPositionDelta, Orientation3d interpolatedOrientation, float partialTicks){
+	public void adjustPositionOrientation(RenderedTileEntity entity, Point3dPlus entityPositionDelta, Matrix4dPlus interpolatedOrientation, float partialTicks){
 		//Offset X and Z to be centered in the block.
 		entityPositionDelta.x += 0.5;
 		entityPositionDelta.z += 0.5;
@@ -32,12 +32,12 @@ public abstract class ARenderTileEntityBase<RenderedTileEntity extends ATileEnti
 	}
 	
 	@Override
-	protected void renderBoundingBoxes(RenderedTileEntity entity, Point3d entityPositionDelta){
+	protected void renderBoundingBoxes(RenderedTileEntity entity, Point3dPlus entityPositionDelta){
 		super.renderBoundingBoxes(entity, entityPositionDelta);
 		
 		//Render our collision box.
 		BoundingBox box = entity.getCollisionBox();
-		Point3d boxCenterDelta = box.globalCenter.copy().subtract(entity.position).add(entityPositionDelta);
+		Point3dPlus boxCenterDelta = box.globalCenter.copy().subtract(entity.position).add(entityPositionDelta);
 		GL11.glTranslated(boxCenterDelta.x, boxCenterDelta.y + 0.5, boxCenterDelta.z);
 		box.renderable.render();
 		GL11.glTranslated(-boxCenterDelta.x, -boxCenterDelta.y - 0.5, -boxCenterDelta.z);

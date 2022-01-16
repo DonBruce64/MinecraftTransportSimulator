@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.rendering.components;
 
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition.AnimationComponentType;
@@ -25,7 +25,7 @@ public class DurationDelayClock{
 	
 	public final JSONAnimationDefinition animation;
 	public final double animationAxisMagnitude;
-	public final Point3d animationAxisNormalized;
+	public final Point3dPlus animationAxisNormalized;
 	public final boolean isUseful;
 	public boolean movedThisUpdate;
 	private Long timeCommandedForwards = 0L;

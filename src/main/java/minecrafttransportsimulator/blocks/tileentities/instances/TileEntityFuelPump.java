@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.UUID;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityFluidTankProvider;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityFluidTank;
@@ -38,7 +38,7 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityFl
     public boolean isCreative;
 	public UUID placingPlayerID;
 
-    public TileEntityFuelPump(WrapperWorld world, Point3d position, WrapperPlayer placingPlayer, WrapperNBT data){
+    public TileEntityFuelPump(WrapperWorld world, Point3dPlus position, WrapperPlayer placingPlayer, WrapperNBT data){
 		super(world, position, placingPlayer, data);
     	this.tank = new EntityFluidTank(world, data.getDataOrNew("tank"), definition.decor.fuelCapacity){
     		@Override

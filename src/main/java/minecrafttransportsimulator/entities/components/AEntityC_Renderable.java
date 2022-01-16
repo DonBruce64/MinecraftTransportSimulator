@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.entities.components;
 
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
@@ -25,7 +25,7 @@ public abstract class AEntityC_Renderable extends AEntityB_Existing{
 	}
 	
 	/**Constructor for un-synced entities.  Allows for specification of position/motion/angles.**/
-	public AEntityC_Renderable(WrapperWorld world, Point3d position, Point3d motion, Point3d angles){
+	public AEntityC_Renderable(WrapperWorld world, Point3dPlus position, Point3dPlus motion, Point3dPlus angles){
 		super(world, position, motion, angles);
 	}
     

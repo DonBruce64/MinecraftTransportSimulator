@@ -6,8 +6,8 @@ import java.util.Map;
 import java.util.UUID;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.Orientation3d;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
+import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.PartGun.GunState;
 import minecrafttransportsimulator.items.components.AItemBase;
@@ -52,10 +52,10 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun>{
 		if(placingPlayer != null){
 			//Newly-spawned entity.
 			this.player = placingPlayer;
-			position.setTo(player.getPosition());
-			prevPosition.setTo(position);
+			position.set(player.getPosition());
+			prevPosition.set(position);
 			angles.set(player.getPitch(), player.getYaw(), 0);
-			prevAngles.setTo(angles);
+			prevAngles.set(angles);
 		}else{
 			//Saved entity.  Either on the server or client.
 			//Get player via saved NBT.  If the player isn't found, we're not valid.
@@ -103,8 +103,8 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun>{
 		defaultDefinition.general.health = 100;
 		
 		JSONPartDefinition fakeDef = new JSONPartDefinition();
-		fakeDef.pos = new Point3d();
-		fakeDef.rot = new Orientation3d(new Point3d(0, 0, 0));
+		fakeDef.pos = new Point3dPlus();
+		fakeDef.rot = new Matrix4dPlus();
 		fakeDef.types = new ArrayList<String>();
 		//Look though all gun types and add them.
 		for(AItemPack<?> packItem : PackParserSystem.getAllPackItems()){
@@ -130,8 +130,8 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun>{
 			//Make sure player is still valid and haven't left the server.
 			if(player != null && player.isValid()){
 				//Set our position to the player's position.  We may update this later if we have a gun.
-				position.setTo(player.getPosition());
-				motion.setTo(player.getVelocity());
+				position.set(player.getPosition());
+				motion.set(player.getVelocity());
 				
 				//Get the current gun.
 				activeGun = parts.isEmpty() ? null : (PartGun) parts.get(0);
@@ -168,7 +168,7 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun>{
 							ItemPartGun heldGun = (ItemPartGun) heldItem;
 							if(heldGun.definition.gun.handHeld){
 								gunStack = player.getHeldStack();
-								addPartFromItem(heldGun, player, gunStack.getData(), new Point3d(), false);
+								addPartFromItem(heldGun, player, gunStack.getData(), new Point3dPlus(), false);
 								hotbarSelected = player.getHotbarIndex();
 							}
 						}
@@ -181,7 +181,7 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun>{
 				if(activeGun != null){
 					//Set our position relative to the the player's hand.
 					//Center point is at the player's arm, with offset being where the offset is.
-					Point3d heldVector;
+					Point3dPlus heldVector;
 					if(activeGun.isHandHeldGunAimed){
 						heldVector = activeGun.definition.gun.handHeldAimedOffset;
 					}else{
@@ -192,8 +192,9 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun>{
 					//Arm center is 0.3125 blocks away in X, 1.375 blocks up in Y.
 					//Sneaking lowers arm by 0.2 blocks.
 					//First rotate point based on pitch.  This is for only the arm movement.
-					Point3d armRotation = new Point3d(angles.x, 0, 0);
-					position.setTo(heldVector).rotateFine(armRotation);
+					Point3dPlus armRotation = new Point3dPlus(angles.x, 0, 0);
+					position.set(heldVector);
+					position.rotateFine(armRotation);
 					
 					//Now rotate based on player yaw.  We need to take the arm offset into account here.
 					armRotation.set(0, angles.y, 0);

@@ -5,13 +5,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
 
+import javax.vecmath.AxisAngle4d;
+
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.BezierCurve;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.Orientation3d;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
+import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.instances.BlockCollision;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLane;
@@ -26,6 +28,7 @@ import minecrafttransportsimulator.rendering.components.RenderableObject;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
+	private static final AxisAngle4d ROAD_ZERO_ROTATION = new AxisAngle4d(0, 0, 0, 0);
 		
 	@Override
 	protected void renderModel(TileEntityRoad road, boolean blendingEnabled, float partialTicks){
@@ -34,8 +37,8 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 			//Render road components.
 			for(RoadComponent component : road.components.keySet()){
 				if(!road.componentRenderables.containsKey(component)){
-					Point3d position = new Point3d();
-					Point3d rotation = new Point3d();
+					Point3dPlus position = new Point3dPlus();
+					Point3dPlus rotation = new Point3dPlus();
 					ItemRoadComponent componentItem = road.components.get(component);
 					switch(component){
 						case CORE_STATIC: {
@@ -45,7 +48,7 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 								totalVertices += object.vertices.capacity();
 								for(int i=0; i<object.vertices.capacity(); i+=8){
 									position.set(object.vertices.get(i+5) - 0.5, object.vertices.get(i+6), object.vertices.get(i+7) - 0.5);
-									road.orientation.rotatePoint(position);
+									road.orientation.transform(position);
 									object.vertices.put(i+5, (float) position.x);
 									object.vertices.put(i+6, (float) position.y);
 									object.vertices.put(i+7, (float) position.z);
@@ -77,14 +80,14 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 								parsedVertices.flip();
 								
 								//Core components need to be transformed to wedges.
-								Point3d priorPosition = new Point3d();
-								Point3d priorRotation = new Point3d();
-								Point3d testPoint1 = new Point3d();
-								Point3d testPoint2 = new Point3d();
-								Point3d vertexOffsetPriorLine = new Point3d();
-								Point3d vertexOffsetCurrentLine = new Point3d();
-								Point3d segmentVector = new Point3d();
-								Point3d renderedVertex = new Point3d();
+								Point3dPlus priorPosition = new Point3dPlus();
+								Point3dPlus priorRotation = new Point3dPlus();
+								Point3dPlus testPoint1 = new Point3dPlus();
+								Point3dPlus testPoint2 = new Point3dPlus();
+								Point3dPlus vertexOffsetPriorLine = new Point3dPlus();
+								Point3dPlus vertexOffsetCurrentLine = new Point3dPlus();
+								Point3dPlus segmentVector = new Point3dPlus();
+								Point3dPlus renderedVertex = new Point3dPlus();
 								float indexDelta = (float) (road.dynamicCurve.pathLength/Math.floor(road.dynamicCurve.pathLength/road.definition.road.segmentLength));
 								boolean finalSegment = false;
 								float priorIndex = 0;
@@ -112,8 +115,10 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 									//Check for this, and if we have done so, skip this segment.
 									//If we detect this in the last 3 segments, skip right to the end.
 									//This prevents a missing end segment due to collision.
-									testPoint1.set(road.definition.road.borderOffset, 0, 0).rotateFine(priorRotation).add(priorPosition);
-									testPoint2.set(road.definition.road.borderOffset, 0, 0).rotateFine(rotation).add(position);
+									testPoint1.set(road.definition.road.borderOffset, 0, 0);
+									testPoint1.rotateFine(priorRotation).add(priorPosition);
+									testPoint2.set(road.definition.road.borderOffset, 0, 0);
+									testPoint2.rotateFine(rotation).add(position);
 									if(currentIndex != road.dynamicCurve.pathLength && ((position.x - priorPosition.x)*(testPoint2.x - testPoint1.x) < 0 || (position.z - priorPosition.z)*(testPoint2.z - testPoint1.z) < 0)){
 										if(currentIndex + 3*indexDelta > road.dynamicCurve.pathLength){
 											currentIndex = road.dynamicCurve.pathLength - indexDelta;
@@ -139,8 +144,12 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 										vertexOffsetCurrentLine.set(x, y, 0);
 										vertexOffsetCurrentLine.rotateFine(rotation).add(position);
 										
-										segmentVector.setTo(vertexOffsetCurrentLine).subtract(vertexOffsetPriorLine).multiply(Math.abs(z)/road.definition.road.segmentLength);
-										renderedVertex.setTo(vertexOffsetPriorLine).add(segmentVector);
+										segmentVector.set(vertexOffsetCurrentLine);
+										segmentVector.subtract(vertexOffsetPriorLine);
+										segmentVector.multiply(Math.abs(z)/road.definition.road.segmentLength);
+										
+										renderedVertex.set(vertexOffsetPriorLine);
+										renderedVertex.add(segmentVector);
 										
 										convertedVertexData[5] = (float) renderedVertex.x;
 										convertedVertexData[6] = (float) renderedVertex.y;
@@ -186,13 +195,13 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 			//If we are inactive render the blocking blocks and the main block.
 			if(!road.isActive()){
 				if(road.blockingRenderables.isEmpty()){
-					road.blockingRenderables.put(new Point3d(0.0, 0.75, 0.0), new RenderableObject(new BoundingBox(new Point3d(), 0.15, 1.5, 0.15), ColorRGB.BLUE, true));
-					for(Point3d location : road.collidingBlockOffsets){
+					road.blockingRenderables.put(new Point3dPlus(0.0, 0.75, 0.0), new RenderableObject(new BoundingBox(new Point3dPlus(), 0.15, 1.5, 0.15), ColorRGB.BLUE, true));
+					for(Point3dPlus location : road.collidingBlockOffsets){
 						road.blockingRenderables.put(location, new RenderableObject(new BoundingBox(location, 0.55, 0.55, 0.55), ColorRGB.RED, true));
 					}
 				}
-				for(Entry<Point3d, RenderableObject> renderableEntry : road.blockingRenderables.entrySet()){
-					Point3d location = renderableEntry.getKey();
+				for(Entry<Point3dPlus, RenderableObject> renderableEntry : road.blockingRenderables.entrySet()){
+					Point3dPlus location = renderableEntry.getKey();
 					RenderableObject renderable = renderableEntry.getValue();
 					GL11.glTranslated(location.x, location.y + 0.5, location.z);
 					renderable.render();
@@ -213,11 +222,11 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 	}
 	
 	@Override
-	protected void renderBoundingBoxes(TileEntityRoad road, Point3d entityPositionDelta){
+	protected void renderBoundingBoxes(TileEntityRoad road, Point3dPlus entityPositionDelta){
 		super.renderBoundingBoxes(road, entityPositionDelta);
 		//Render all collision boxes too.
 		GL11.glTranslated(entityPositionDelta.x, entityPositionDelta.y, entityPositionDelta.z);
-		for(Point3d blockOffset : road.collisionBlockOffsets){
+		for(Point3dPlus blockOffset : road.collisionBlockOffsets){
 			ABlockBase block = road.world.getBlock(road.position.copy().add(blockOffset));
 			if(block instanceof BlockCollision){
 				BoundingBox blockBounds = ((BlockCollision) block).blockBounds;
@@ -231,8 +240,8 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 	
 	private static void generateDevElements(TileEntityRoad road){
 		//Create the information hashes.
-		Point3d point1 = new Point3d();
-		Point3d point2 = new Point3d();
+		Point3dPlus point1 = new Point3dPlus();
+		Point3dPlus point2 = new Point3dPlus();
 		RenderableObject curveObject;
 		if(road.dynamicCurve != null){
 			//Render actual curve.
@@ -248,7 +257,8 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 			curveObject = new RenderableObject(ColorRGB.CYAN, (int) (road.dynamicCurve.pathLength*10));
 			for(float f=0; curveObject.vertices.hasRemaining(); f+=0.1){
 				road.dynamicCurve.setPointToRotationAt(point2, f);
-				point1.set(road.definition.road.borderOffset, 0, 0).rotateFine(point2);
+				point1.set(road.definition.road.borderOffset, 0, 0);
+				point1.rotateFine(point2);
 				road.dynamicCurve.offsetPointByPositionAt(point1, f);
 				curveObject.addLine((float) point1.x, (float) point1.y, (float) point1.z, (float) point1.x, (float) point1.y + 1.0F, (float) point1.z);
 			}
@@ -261,7 +271,7 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 			for(BezierCurve laneCurve : lane.curves){
 				//Render the curve bearing indicator
 				curveObject = new RenderableObject(ColorRGB.RED, 2);
-				Point3d bearingPos = laneCurve.endPos.copy().subtract(laneCurve.startPos).normalize().add(laneCurve.startPos);
+				Point3dPlus bearingPos = laneCurve.endPos.copy().subtract(laneCurve.startPos).normalize().add(laneCurve.startPos);
 				curveObject.addLine((float) laneCurve.startPos.x, (float) laneCurve.startPos.y, (float) laneCurve.startPos.z, (float) laneCurve.startPos.x, (float) laneCurve.startPos.y + 3.0F, (float) laneCurve.startPos.z);
 				curveObject.addLine((float) laneCurve.startPos.x, (float) laneCurve.startPos.y + 3.0F, (float) laneCurve.startPos.z, (float) bearingPos.x, (float) bearingPos.y + 3.0F, (float) bearingPos.z);
 				curveObject.vertices.flip();
@@ -340,10 +350,10 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 	}
 	
 	@Override
-	public void adjustPositionOrientation(TileEntityRoad road, Point3d entityPositionDelta, Orientation3d interpolatedOrientation, float partialTicks){
+	public void adjustPositionOrientation(TileEntityRoad road, Point3dPlus entityPositionDelta, Matrix4dPlus interpolatedOrientation, float partialTicks){
 		super.adjustPositionOrientation(road, entityPositionDelta, interpolatedOrientation, partialTicks);
 		//Undo orientation.  We don't want to rotate for this render call as all our curve data is absolute reference..
-		interpolatedOrientation.rotation = 0;
+		interpolatedOrientation.setRotation(ROAD_ZERO_ROTATION);
 	}
 	
 	@Override

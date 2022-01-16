@@ -573,7 +573,6 @@ public final class PackParserSystem{
     @SuppressWarnings("unchecked")
 	public static <PackItem extends AItemPack<JSONDefinition>, JSONDefinition extends AJSONItem> PackItem getItem(String packID, String systemName, String subName){
     	if(packItemMap.containsKey(packID)){
-    		PackItem item = (PackItem) packItemMap.get(packID).get(systemName + subName);
     		return (PackItem) packItemMap.get(packID).get(systemName + subName);
     	}
     	return null;

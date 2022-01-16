@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.blocks.tileentities.components;
 
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
 import minecrafttransportsimulator.entities.instances.PartInteractable;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
@@ -12,7 +12,7 @@ import minecrafttransportsimulator.packets.instances.PacketTileEntityLoaderConne
 public abstract class ATileEntityLoader extends TileEntityDecor{
 	public PartInteractable connectedPart;
 
-    public ATileEntityLoader(WrapperWorld world, Point3d position, WrapperPlayer placingPlayer, WrapperNBT data){
+    public ATileEntityLoader(WrapperWorld world, Point3dPlus position, WrapperPlayer placingPlayer, WrapperNBT data){
 		super(world, position, placingPlayer, data);
     }
 	

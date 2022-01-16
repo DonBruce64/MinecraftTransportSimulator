@@ -3,8 +3,8 @@ package minecrafttransportsimulator.systems;
 import java.util.Map.Entry;
 
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
-import minecrafttransportsimulator.baseclasses.Orientation3d;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
+import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
@@ -51,7 +51,7 @@ public class CameraSystem{
 	 * transforms for the camera, return true.  If we only offset the camera and want to keep its 
 	 * frame of reference and use local transformations rather than global, return false.
 	 */
-    public static boolean adjustCamera(WrapperPlayer player, Point3d cameraPosition, Orientation3d cameraOrientation, float partialTicks){
+    public static boolean adjustCamera(WrapperPlayer player, Point3dPlus cameraPosition, Matrix4dPlus cameraOrientation, float partialTicks){
     	//Get variables.
 		AEntityE_Interactable<?> ridingEntity = player.getEntityRiding();
 		AEntityF_Multipart<?> multipart = ridingEntity instanceof AEntityF_Multipart ? (AEntityF_Multipart<?>) ridingEntity : null;
@@ -154,16 +154,17 @@ public class CameraSystem{
 					//Apply entity position to the camera first, as that's common.
 					//Get the distance from the entity's center point to the rendered player to get a 0,0,0 starting point.
         			//Need to take into account the player's eye height.  This is where the camera is, but not where the player is positioned.
-					Point3d entityPositionDelta = cameraProvider.prevPosition.getInterpolatedPoint(cameraProvider.position, partialTicks);
+					Point3dPlus entityPositionDelta = new Point3dPlus(cameraProvider.prevPosition);
+					entityPositionDelta.interpolate(cameraProvider.position, (double)partialTicks);
 					entityPositionDelta.subtract(player.getRenderedPosition(partialTicks).add(0, player.getEyeHeight(), 0));
 					cameraPosition.add(entityPositionDelta);
-					Orientation3d entityOrientation = cameraProvider.prevOrientation.getInterpolated(cameraProvider.orientation, partialTicks);
-					cameraOrientation.multiplyBy(entityOrientation);
+					Matrix4dPlus entityOrientation = cameraProvider.prevOrientation.getInterpolated(cameraProvider.orientation, partialTicks);
+					cameraOrientation.mul(entityOrientation);
 					
 					//Now that camera is aligned to entity, set it to the starting position/orientation.
-					entityOrientation.rotateAndAddTo(camera.pos, cameraPosition);
+					//entityOrientation.rotateAndAddTo(camera.pos, cameraPosition);
     				if(camera.rot != null){
-    					cameraOrientation.multiplyBy(camera.rot);
+    					cameraOrientation.mul(camera.rot);
     				}
 					
 					//Apply transforms.
@@ -181,8 +182,9 @@ public class CameraSystem{
 				enableCustomCameras = false;
 				runningCustomCameras = false;
 			}else if(sittingSeat != null){
-            	cameraOrientation.setTo(sittingSeat.entityOn.prevOrientation.getInterpolated(sittingSeat.orientation, partialTicks));
-            	cameraOrientation.multiplyBy(player.getOrientation());
+            	cameraOrientation.set(sittingSeat.entityOn.prevOrientation);
+            	cameraOrientation.getInterpolated(sittingSeat.orientation, partialTicks);
+            	cameraOrientation.mul(player.getOrientation());
             	//FIXME fix camera here too.
             	return false;
 			}
@@ -200,10 +202,11 @@ public class CameraSystem{
         		customCameraIndex = 0;
     			
     			//Add the zoom offset for third-person view.  This takes hold if we don't have any custom cameras.
-        		cameraOrientation.setTo(sittingSeat.entityOn.prevOrientation.getInterpolated(sittingSeat.orientation, partialTicks));
-        		cameraOrientation.multiplyBy(player.getOrientation());
+        		cameraOrientation.set(sittingSeat.entityOn.prevOrientation);
+            	cameraOrientation.getInterpolated(sittingSeat.orientation, partialTicks);
+        		cameraOrientation.mul(player.getOrientation());
         		cameraPosition.set(-sittingSeat.localOffset.x, 0, -zoomLevel);
-    			cameraOrientation.rotatePoint(cameraPosition);
+    			cameraOrientation.transform(cameraPosition);
     			//FIXME fix camera here too.
             	return false;
     		}
@@ -224,10 +227,11 @@ public class CameraSystem{
 				}
 
 	        	//Add the zoom offset for third-person view.
-        		cameraOrientation.setTo(sittingSeat.entityOn.prevOrientation.getInterpolated(sittingSeat.orientation, partialTicks));
-        		cameraOrientation.multiplyBy(player.getOrientation());
+	        	cameraOrientation.set(sittingSeat.entityOn.prevOrientation);
+            	cameraOrientation.getInterpolated(sittingSeat.orientation, partialTicks);
+        		cameraOrientation.mul(player.getOrientation());
         		cameraPosition.set(-sittingSeat.localOffset.x, 0, zoomLevel);
-    			cameraOrientation.rotatePoint(cameraPosition);
+    			cameraOrientation.transform(cameraPosition);
     			//FIXME fix camera here too.
             	return false;
         	}

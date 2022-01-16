@@ -6,7 +6,7 @@ import java.util.TreeMap;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.JSONBullet;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
@@ -38,10 +38,10 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 	private final boolean isBomb;
 	private final double initialVelocity;
 	private final double anglePerTickSpeed;
-	private final Point3d velocityToAddEachTick;
+	private final Point3dPlus velocityToAddEachTick;
 	
 	//States
-	private Point3d targetPosition;
+	private Point3dPlus targetPosition;
 	public double targetDistance;
 	private PartEngine engineTargeted;
 	private WrapperEntity externalEntityTargeted;
@@ -50,7 +50,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 	private static RenderBullet renderer;
 	
 	/**Generic constructor for no target.**/
-    public EntityBullet(Point3d position, Point3d motion, PartGun gun){
+    public EntityBullet(Point3dPlus position, Point3dPlus motion, PartGun gun){
     	super(gun.world, position, motion, ZERO_FOR_CONSTRUCTOR, gun.loadedBullet);
     	this.gun = gun;
         this.bulletNumber = gun.bulletsFired;
@@ -60,9 +60,9 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
         this.anglePerTickSpeed = definition.bullet.turnFactor * 1000/definition.bullet.diameter;
         if(definition.bullet.accelerationTime > 0){
         	double velocityDelta = definition.bullet.maxVelocity/20D/10D - motion.length();
-        	this.velocityToAddEachTick = new Point3d(0, 0, 1).rotateFine(gun.angles).multiply(velocityDelta/definition.bullet.accelerationTime);
+        	this.velocityToAddEachTick = new Point3dPlus(0, 0, 1).rotateFine(gun.angles).multiply(velocityDelta/definition.bullet.accelerationTime);
         }else{
-        	velocityToAddEachTick = new Point3d();
+        	velocityToAddEachTick = new Point3dPlus();
         }
         //FIXME make bullets spawn via orientation rather than rotation/motion.
         /*orientation.setXYZ(motion.copy().getAngles(true));
@@ -71,17 +71,17 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 		}else{
 			orientation.setXYZ(motion.copy().getAngles(true));
 		}*/
-        prevOrientation.setTo(orientation);
+        prevOrientation.set(orientation);
     }
     
     /**Positional target.**/
-    public EntityBullet(Point3d position, Point3d motion,  PartGun gun, Point3d blockTargetPos){
+    public EntityBullet(Point3dPlus position, Point3dPlus motion,  PartGun gun, Point3dPlus blockTargetPos){
     	this(position, motion, gun);
     	this.targetPosition = blockTargetPos;
     }
     
     /**Engine target.**/
-    public EntityBullet(Point3d position, Point3d motion, PartGun gun, PartEngine engineTargeted){
+    public EntityBullet(Point3dPlus position, Point3dPlus motion, PartGun gun, PartEngine engineTargeted){
     	this(position, motion, gun, engineTargeted.position);
     	if(engineTargeted.entityOn instanceof EntityVehicleF_Physics){
     		((EntityVehicleF_Physics) engineTargeted.entityOn).acquireMissile(this);
@@ -92,8 +92,8 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
     }
     
     /**Wrapper target.**/
-    public EntityBullet(Point3d position, Point3d motion, PartGun gun, WrapperEntity externalEntityTargeted){
-    	this(position, motion, gun, new Point3d(externalEntityTargeted.getPosition()));
+    public EntityBullet(Point3dPlus position, Point3dPlus motion, PartGun gun, WrapperEntity externalEntityTargeted){
+    	this(position, motion, gun, new Point3dPlus(externalEntityTargeted.getPosition()));
 	    this.externalEntityTargeted = externalEntityTargeted;
     }
 	
@@ -125,7 +125,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 					//If the target is an external entity, update target position.
 					if(externalEntityTargeted != null){
 						if(externalEntityTargeted.isValid()){
-							targetPosition.setTo(externalEntityTargeted.getPosition());
+							targetPosition.set(externalEntityTargeted.getPosition());
 						}else{
 							//Entity is dead.  Don't target it anymore.
 							externalEntityTargeted = null;
@@ -168,7 +168,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 							}
 						}
 						
-						Point3d deltas = motion.copy().getAngles(true).add(-pitchTarget, -yawTarget, 0).multiply(-1);
+						Point3dPlus deltas = motion.copy().getAngles(true).add(-pitchTarget, -yawTarget, 0).multiply(-1);
 						//Adjust deltaYaw as necessary, then apply it
 						while(deltas.y > 180)deltas.y -= 360;
 						while(deltas.y < -180)deltas.y += 360;
@@ -189,12 +189,12 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 							if(deltas.x < -anglePerTickSpeed){
 								deltas.x = -anglePerTickSpeed;
 							}
-							motion.rotateFine((new Point3d(motion.z, 0, -1*motion.x)).multiply(deltas.x)); 
+							motion.rotateFine((new Point3dPlus(motion.z, 0, -1*motion.x)).multiply(deltas.x)); 
 						}else if(deltas.x > 0){
 							if(deltas.x > anglePerTickSpeed){
 								deltas.x = anglePerTickSpeed;
 							}
-							motion.rotateFine((new Point3d(motion.z, 0, -1*motion.x)).multiply(deltas.x)); 
+							motion.rotateFine((new Point3dPlus(motion.z, 0, -1*motion.x)).multiply(deltas.x)); 
 						}
 					}
 				}	
@@ -218,7 +218,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 			
 			//Check for collided internal entities and attack them.
 			//This is a bit more involved, as we need to check all possible types and check hitbox distance.
-			Point3d endPoint = position.copy().add(motion);
+			Point3dPlus endPoint = position.copy().add(motion);
 			BoundingBox bulletMovmenetBounds = new BoundingBox(endPoint.copy().subtract(position).multiply(0.5D).add(position), Math.abs(motion.x/2D), Math.abs(motion.y/2D), Math.abs(motion.z/2D));
 			for(EntityVehicleF_Physics entity : world.getEntitiesOfType(EntityVehicleF_Physics.class)){
 				double armorPenetrated = 0;
@@ -230,7 +230,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 						//Sort them by distance for later.
 						TreeMap<Double, BoundingBox> hitBoxes = new TreeMap<Double, BoundingBox>();
 						for(BoundingBox box : entity.allInteractionBoxes){
-							Point3d delta = box.getIntersectionPoint(position, endPoint); 
+							Point3dPlus delta = box.getIntersectionPoint(position, endPoint); 
 							if(delta != null){
 								hitBoxes.put(delta.distanceTo(position), box);
 							}
@@ -278,7 +278,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 			}
 			
 			//Didn't hit an entity.  Check for blocks.
-			Point3d hitPos = world.getBlockHit(position, motion);
+			Point3dPlus hitPos = world.getBlockHit(position, motion);
 			if(hitPos != null){
 				InterfacePacket.sendToServer(new PacketEntityBulletHitBlock(this, hitPos));
 				lastHit = HitType.BLOCK;

@@ -71,20 +71,25 @@ public class TrailerConnection{
 		return hitchConnection != null && hookupConnection != null;
 	}
 	
-	public Point3d getHitchCurrentPosition(){
-		return hitchEntity.orientation.rotatePoint(hitchConnection.pos.copy()).add(hitchEntity.position);
+	//FIXME make this update once per tick at the start of the cycle, don't create points all the time.
+	public Point3dPlus getHitchCurrentPosition(){
+		return null;
+		//return hitchEntity.orientation.rotatePoint(hitchConnection.pos.copy()).add(hitchEntity.position);
 	}
 	
-	public Point3d getHitchPrevPosition(){
-		return hitchEntity.prevOrientation.rotatePoint(hitchConnection.pos.copy()).add(hitchEntity.prevPosition);
+	public Point3dPlus getHitchPrevPosition(){
+		return null;
+		//return hitchEntity.prevOrientation.rotatePoint(hitchConnection.pos.copy()).add(hitchEntity.prevPosition);
 	}
 	
-	public Point3d getHookupCurrentPosition(){
-		return hookupEntity.orientation.rotatePoint(hookupConnection.pos.copy()).add(hookupEntity.position);
+	public Point3dPlus getHookupCurrentPosition(){
+		return null;
+		//return hookupEntity.orientation.rotatePoint(hookupConnection.pos.copy()).add(hookupEntity.position);
 	}
 	
-	public Point3d getHookupPrevPosition(){
-		return hookupEntity.prevOrientation.rotatePoint(hookupConnection.pos.copy()).add(hookupEntity.prevPosition);
+	public Point3dPlus getHookupPrevPosition(){
+		return null;
+		//return hookupEntity.prevOrientation.rotatePoint(hookupConnection.pos.copy()).add(hookupEntity.prevPosition);
 	}
 	
 	public WrapperNBT getData(){

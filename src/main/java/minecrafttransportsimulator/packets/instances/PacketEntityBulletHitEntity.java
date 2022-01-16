@@ -5,7 +5,7 @@ import java.util.UUID;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.instances.EntityBullet;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
@@ -17,7 +17,7 @@ import minecrafttransportsimulator.systems.ConfigSystem;
  * @author don_bruce
  */
 public class PacketEntityBulletHitEntity extends PacketEntityBulletHit{
-	private final Point3d localCenter;
+	private final Point3dPlus localCenter;
 	private final double bulletVelocity;
 	private final UUID hitEntityID;
 	private final UUID controllerEntityID;

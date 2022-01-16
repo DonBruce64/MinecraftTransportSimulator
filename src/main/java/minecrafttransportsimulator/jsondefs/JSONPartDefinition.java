@@ -2,8 +2,8 @@ package minecrafttransportsimulator.jsondefs;
 
 import java.util.List;
 
-import minecrafttransportsimulator.baseclasses.Orientation3d;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
+import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 
@@ -12,14 +12,14 @@ public class JSONPartDefinition{
 	
 	@JSONRequired
 	@JSONDescription("An entry of x, y, and z coordinates that define the center point of where this part will attach to the object.")
-    public Point3d pos;
+    public Point3dPlus pos;
 	
 	@JSONRequired
 	@JSONDescription("The x, y, and z rotations that tell MTS how to rotate this part.")
-    public Orientation3d rot;
+    public Matrix4dPlus rot;
 	
 	@JSONDescription("Like pos, but in this case this is where the player should dismount the seat that is placed in this position.  By default, MTS will attempt to dismount the player directly to the left or right of the seat (depends on X position).  If this is set, MTS will instead attempt to dismount the player at this position.  Note that in either case if the dismount position is blocked MTS will fall back to allowing Minecraft to dismount the player, which can lead to the player becoming stuck in a vehicle.  If you have a vehicle with a complex hitbox, make sure you set this!")
-    public Point3d dismountPos;
+    public Point3dPlus dismountPos;
 	
 	@JSONDescription("This parameter is optional.  If included and set to true, the part will be used to steer vehicles.  If you want the part to visually turn, you will need to add an animation block and specify this.")
     public boolean turnsWithSteer;
@@ -124,7 +124,7 @@ public class JSONPartDefinition{
     @Deprecated
     public String translationVariable;
     @Deprecated
-    public Point3d translationPosition;
+    public Point3dPlus translationPosition;
     @Deprecated
     public float translationClampMin;
     @Deprecated
@@ -134,9 +134,9 @@ public class JSONPartDefinition{
     @Deprecated
     public String rotationVariable;
     @Deprecated
-    public Point3d rotationPosition;
+    public Point3dPlus rotationPosition;
     @Deprecated
-    public Point3d rotationAngles;
+    public Point3dPlus rotationAngles;
     @Deprecated
     public float rotationClampMin;
     @Deprecated
@@ -158,8 +158,8 @@ public class JSONPartDefinition{
     @Deprecated
 	public class ExhaustObject{
     	@SuppressWarnings("hiding")
-		public Point3d pos;
-    	public Point3d velocity;
+		public Point3dPlus pos;
+    	public Point3dPlus velocity;
     	public float scale;
     }
 }

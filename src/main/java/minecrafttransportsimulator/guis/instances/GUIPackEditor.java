@@ -43,7 +43,7 @@ import javax.swing.ToolTipManager;
 import javax.swing.border.TitledBorder;
 
 import minecrafttransportsimulator.MasterLoader;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
@@ -392,7 +392,7 @@ public class GUIPackEditor extends JFrame{
 			}
 			textBox.addFocusListener(focusListener);
 			return textBox;
-		}else if(objectClass.equals(Point3d.class)){
+		}else if(objectClass.equals(Point3dPlus.class)){
 			JPanel pointPanel = new JPanel();
 			pointPanel.setLayout(new FlowLayout());
 			pointPanel.setBorder(BorderFactory.createLoweredBevelBorder());
@@ -417,7 +417,7 @@ public class GUIPackEditor extends JFrame{
 			zText.addFocusListener(new FocusForwarder(focusListener));
 			
 			if(obj != null){
-				Point3d point = ((Point3d) obj);
+				Point3dPlus point = ((Point3dPlus) obj);
 				xText.setText(String.valueOf(point.x));
 				yText.setText(String.valueOf(point.y));
 				zText.setText(String.valueOf(point.z));
@@ -634,7 +634,7 @@ public class GUIPackEditor extends JFrame{
 					list.set(index, Float.valueOf(((JTextField) component).getText()));
 				}else if(objectClass.equals(String.class)){
 					list.set(index, ((JTextField) component).getText());
-				}else if(objectClass.equals(Point3d.class)){
+				}else if(objectClass.equals(Point3dPlus.class)){
 					//Don't want to change the color of the whole panel.  Just the box we are in.
 					int fieldChecking = 1;
 					try{
@@ -647,7 +647,7 @@ public class GUIPackEditor extends JFrame{
 						double z = Float.valueOf(((JTextField) component.getComponent(fieldChecking)).getText());
 						component.getComponent(fieldChecking).setBackground(Color.WHITE);
 						
-						Point3d newPoint = new Point3d(x, y, z);
+						Point3dPlus newPoint = new Point3dPlus(x, y, z);
 						list.set(index, newPoint);
 						return;
 					}catch(Exception e){
@@ -696,7 +696,7 @@ public class GUIPackEditor extends JFrame{
 					}else{
 						objectField.set(declaringObject, text);
 					}
-				}else if(objectClass.equals(Point3d.class)){
+				}else if(objectClass.equals(Point3dPlus.class)){
 					//Don't want to change the color of the whole panel.  Just the box we are in.
 					int fieldChecking = 1;
 					try{
@@ -709,7 +709,7 @@ public class GUIPackEditor extends JFrame{
 						double z = Float.valueOf(((JTextField) component.getComponent(fieldChecking)).getText());
 						component.getComponent(fieldChecking).setBackground(Color.WHITE);
 						
-						Point3d newPoint = new Point3d(x, y, z);
+						Point3dPlus newPoint = new Point3dPlus(x, y, z);
 						if(newPoint.isZero()){
 							objectField.set(declaringObject, null);
 						}else{

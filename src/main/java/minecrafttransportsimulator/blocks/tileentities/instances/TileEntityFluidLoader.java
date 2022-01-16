@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityLoader;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityFluidTankProvider;
 import minecrafttransportsimulator.entities.instances.EntityFluidTank;
@@ -13,7 +13,7 @@ import minecrafttransportsimulator.mcinterface.WrapperWorld;
 public class TileEntityFluidLoader extends ATileEntityLoader implements ITileEntityFluidTankProvider{
     private EntityFluidTank tank;
 
-    public TileEntityFluidLoader(WrapperWorld world, Point3d position, WrapperPlayer placingPlayer, WrapperNBT data){
+    public TileEntityFluidLoader(WrapperWorld world, Point3dPlus position, WrapperPlayer placingPlayer, WrapperNBT data){
 		super(world, position, placingPlayer, data);
     	this.tank = new EntityFluidTank(world, data.getDataOrNew("tank"), definition.decor.fuelCapacity);
 		world.addEntity(tank);

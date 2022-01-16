@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.blocks.tileentities.components;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -25,9 +25,9 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONMultiModelProv
 	
 	private float lastLightLevel;
 	
-	public ATileEntityBase(WrapperWorld world, Point3d position, WrapperPlayer placingPlayer, WrapperNBT data){
+	public ATileEntityBase(WrapperWorld world, Point3dPlus position, WrapperPlayer placingPlayer, WrapperNBT data){
 		super(world, placingPlayer, data);
-		this.position.setTo(position);
+		this.position.set(position);
 	}
 	
 	@Override

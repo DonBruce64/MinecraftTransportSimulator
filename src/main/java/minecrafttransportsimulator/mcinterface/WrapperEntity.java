@@ -7,8 +7,8 @@ import java.util.UUID;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
-import minecrafttransportsimulator.baseclasses.Orientation3d;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
+import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -164,11 +164,11 @@ public class WrapperEntity{
 	 *  The returned position may by modified without affecting the entity's actual position.
 	 *  However, the object itself may be re-used on the next call, so do not keep reference to it.
 	 */
-	public Point3d getPosition(){
+	public Point3dPlus getPosition(){
 		mutablePosition.set(entity.posX, entity.posY, entity.posZ);
 		return mutablePosition;
 	}
-	private final Point3d mutablePosition = new Point3d();
+	private final Point3dPlus mutablePosition = new Point3dPlus();
 	
 	/**
 	 *  Sets the entity's position to the passed-in point.
@@ -176,7 +176,7 @@ public class WrapperEntity{
 	 *  be set if the entity is on another entity collision box,
 	 *  but not if they are riding an entity.
 	 */
-	public void setPosition(Point3d position, boolean onGround){
+	public void setPosition(Point3dPlus position, boolean onGround){
 		entity.setPosition(position.x, position.y, position.z);
 		//Set fallDistance to 0 to prevent damage.
 		entity.fallDistance = 0;
@@ -188,16 +188,16 @@ public class WrapperEntity{
 	 *  The returned velocity may by modified without affecting the entity's actual velocity.
 	 *  However, the object itself may be re-used on the next call, so do not keep reference to it.
 	 */
-	public Point3d getVelocity(){
+	public Point3dPlus getVelocity(){
 		mutableVelocity.set(entity.motionX, entity.motionY, entity.motionZ);
 		return mutableVelocity;
 	}
-	private final Point3d mutableVelocity = new Point3d();
+	private final Point3dPlus mutableVelocity = new Point3dPlus();
 	
 	/**
 	 *  Sets the entity's velocity to the passed-in vector.
 	 */
-	public void setVelocity(Point3d motion){
+	public void setVelocity(Point3dPlus motion){
 		entity.motionX = motion.x;
 		entity.motionY = motion.y;
 		entity.motionZ = motion.z;
@@ -208,13 +208,13 @@ public class WrapperEntity{
 	 *  The returned object is mutable and may be modified without
 	 *  affecting the entity's state.
 	 */
-	public Orientation3d getOrientation(){
+	public Matrix4dPlus getOrientation(){
 		mutableAngles.set(entity.rotationPitch, -entity.rotationYaw, 0);
 		mutableOrientation.setAngles(mutableAngles);
 		return mutableOrientation;
 	}
-	Point3d mutableAngles = new Point3d();
-	Orientation3d mutableOrientation = new Orientation3d(new Point3d());
+	Point3dPlus mutableAngles = new Point3dPlus();
+	Matrix4dPlus mutableOrientation = new Matrix4dPlus();
 	
 	/**
 	 *  Returns the entity's pitch (x-axis rotation).
@@ -251,12 +251,13 @@ public class WrapperEntity{
 	 *  The returned vector  may by modified without affecting the entity's actual line of sight.
 	 *  However, the object itself may be re-used on the next call, so do not keep references to it.
 	 */
-	public Point3d getLineOfSight(double distance){
+	public Point3dPlus getLineOfSight(double distance){
 		mutableSightRotation.set(entity.rotationPitch, -entity.rotationYaw, 0);
-		return mutableSight.set(0,  0,  distance).rotateFine(mutableSightRotation);
+		mutableSight.set(0,  0,  distance);
+		return mutableSight.rotateFine(mutableSightRotation);
 	}
-	private final Point3d mutableSight = new Point3d();
-	private final Point3d mutableSightRotation = new Point3d();
+	private final Point3dPlus mutableSight = new Point3dPlus();
+	private final Point3dPlus mutableSightRotation = new Point3dPlus();
 	
 	/**
 	 *  Sets the entity's yaw to the passed-in yaw.
@@ -301,7 +302,7 @@ public class WrapperEntity{
 		mutableBounds.globalCenter.set(entity.posX, entity.posY + mutableBounds.heightRadius, entity.posZ);
 		return mutableBounds;
 	}
-	private final BoundingBox mutableBounds = new BoundingBox(new Point3d(), 0, 0, 0);
+	private final BoundingBox mutableBounds = new BoundingBox(new Point3dPlus(), 0, 0, 0);
 	
 	/**
 	 *  Returns the entity's NBT data.
@@ -406,13 +407,13 @@ public class WrapperEntity{
 	 *  The returned position may by modified without affecting the actual rendered position.
 	 *  However, the object itself may be re-used on the next call, so do not keep reference to it.
 	 */
-	public Point3d getRenderedPosition(float partialTicks){
+	public Point3dPlus getRenderedPosition(float partialTicks){
 		mutableRenderPosition.x = entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * partialTicks;
 		mutableRenderPosition.y = entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * partialTicks;
 		mutableRenderPosition.z = entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * partialTicks;
 		return mutableRenderPosition;
 	}
-	private final Point3d mutableRenderPosition = new Point3d();
+	private final Point3dPlus mutableRenderPosition = new Point3dPlus();
 	
 	/**
 	 * Adds the potion effect with the specified name to the entity.  Only valid for living entities that

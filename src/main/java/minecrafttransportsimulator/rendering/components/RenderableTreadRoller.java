@@ -2,7 +2,7 @@ package minecrafttransportsimulator.rendering.components;
 
 import java.util.List;
 
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 
 /**A specific class of {@link RenderableModelObject}, designed
@@ -14,7 +14,7 @@ import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 public class RenderableTreadRoller<AnimationEntity extends AEntityD_Definable<?>> extends RenderableModelObject<AnimationEntity>{
 	public final boolean isLeft;
 	public final int rollerNumber;
-	public final Point3d centerPoint;
+	public final Point3dPlus centerPoint;
 	public final double radius;
 	public final double circumference;
 	
@@ -44,7 +44,7 @@ public class RenderableTreadRoller<AnimationEntity extends AEntityD_Definable<?>
 			minZ = Math.min(minZ, z);
 			maxZ = Math.max(maxZ, z);
 		}
-		this.centerPoint = new Point3d(0, minY + (maxY - minY)/2D, minZ + (maxZ - minZ)/2D);
+		this.centerPoint = new Point3dPlus(0, minY + (maxY - minY)/2D, minZ + (maxZ - minZ)/2D);
 		this.radius = (maxZ - minZ)/2D;
 		this.circumference = 2*Math.PI*radius;
 	}
