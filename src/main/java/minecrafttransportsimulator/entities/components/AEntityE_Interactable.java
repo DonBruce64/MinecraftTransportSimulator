@@ -115,6 +115,9 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 	/**Maps instrument components to their respective switchboxes.**/
 	public final Map<JSONInstrumentComponent, InstrumentSwitchbox> instrumentSwitchboxes = new LinkedHashMap<JSONInstrumentComponent, InstrumentSwitchbox>();
 	
+	/**Maps variable modifers to their respective switchboxes.**/
+	public final Map<JSONVariableModifier, VariableModifierSwitchbox> variableModiferSwitchboxes = new LinkedHashMap<JSONVariableModifier, VariableModifierSwitchbox>();
+	
 	/**Locked state.  Locked entities should not be able to be interacted with except by entities riding them,
 	 * their owners, or OP players (server admins).
 	 **/
@@ -272,13 +275,13 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 		
 		//Add variable modifiers.
 		if(definition.variableModifiers != null){
+			variableModiferSwitchboxes.clear();
 			for(JSONVariableModifier modifier : definition.variableModifiers){
 				if(modifier.animations != null){
-					for(JSONAnimationDefinition animation : modifier.animations){
-						animationClocks.put(animation, new DurationDelayClock(animation));
-					}
+					variableModiferSwitchboxes.put(modifier,  new VariableModifierSwitchbox(this, modifier.animations));
 				}
 			}
+			
 		}
 	}
 	
@@ -499,68 +502,44 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 	 */
 	protected float adjustVariable(JSONVariableModifier modifier, float currentValue){
 		float modifiedValue = modifier.setValue != 0 ? modifier.setValue : currentValue + modifier.addValue;
-		boolean doModification = true;
-		if(modifier.animations != null){
-			boolean inhibitAnimations = false;
-			for(JSONAnimationDefinition animation : modifier.animations){
-				DurationDelayClock clock = animationClocks.get(animation);
-				if(clock != null){
-					switch(animation.animationType){
-						case VISIBILITY :{
-							if(!inhibitAnimations){
-								double variableValue = getAnimatedVariableValue(clock, 0);
-								if(variableValue < clock.animation.clampMin || variableValue > clock.animation.clampMax){
-									doModification = false;
-								}
-							}
-							break;
-						}
-						case INHIBITOR :{
-							if(!inhibitAnimations){
-								double variableValue = getAnimatedVariableValue(clock, 0);
-								if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
-									inhibitAnimations = true;
-								}
-							}
-							break;
-						}
-						case ACTIVATOR :{
-							if(inhibitAnimations){
-								double variableValue = getAnimatedVariableValue(clock, 0);
-								if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
-									inhibitAnimations = false;
-								}
-							}
-							break;
-						}
-						case TRANSLATION :{
-						    if(!inhibitAnimations){
-						    	if(clock.animation.axis.x != 0){
-									modifiedValue *= getAnimatedVariableValue(clock, clock.animation.axis.x, 0);
-								}else if(clock.animation.axis.y != 0){
-									modifiedValue += getAnimatedVariableValue(clock, clock.animation.axis.y, 0);
-								}else{
-									modifiedValue = (float) getAnimatedVariableValue(clock, clock.animation.axis.z, 0);
-								} 
-						    }
-						    break;
-						}
-						case ROTATION :{
-							//Do nothing.
-							break;
-						}
-						case SCALING :{
-							//Do nothing.
-							break;
-						}
-					}
-					if(!doModification){
-						break;
-					}
-				}
+		VariableModifierSwitchbox switchbox = variableModiferSwitchboxes.get(modifier);
+		if(switchbox != null){
+			switchbox.modifiedValue = modifiedValue;
+			if(switchbox.runSwitchbox(0)){
+				return switchbox.modifiedValue;
+			}else{
+				return currentValue;
+			}
+		}else{
+			return modifiedValue;
+		}
+	}
+	
+	/**
+	 *  Custom variable modifier switchbox class.
+	 */
+	private static class VariableModifierSwitchbox extends AnimationSwitchbox{
+		private float modifiedValue = 0;
+		
+		private VariableModifierSwitchbox(AEntityD_Definable<?> entity, List<JSONAnimationDefinition> animations){
+			super(entity, animations);
+		}
+		
+		@Override
+		public boolean runSwitchbox(float partialTicks){
+			return super.runSwitchbox(partialTicks);
+		}
+		
+		@Override
+		public void runTranslation(DurationDelayClock clock, float partialTicks){
+			if(clock.animation.axis.x != 0){
+				modifiedValue *= entity.getAnimatedVariableValue(clock, clock.animation.axis.x, partialTicks);
+			}else if(clock.animation.axis.y != 0){
+				modifiedValue += entity.getAnimatedVariableValue(clock, clock.animation.axis.y, partialTicks);
+			}else{
+				modifiedValue = (float) (entity.getAnimatedVariableValue(clock, clock.animation.axis.z, partialTicks));
 			}
 		}
-		return doModification ? modifiedValue : currentValue;
 	}
 	
     /**
