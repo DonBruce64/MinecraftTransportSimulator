@@ -302,19 +302,19 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 					}
 					if(doModification){
 						switch(modifier.variable){
-							case "wingArea" : currentWingArea = modifiedValue; break;
-							case "wingSpan" : currentWingSpan = modifiedValue; break;
-							case "aileronArea" : currentAileronArea = modifiedValue; break;
-							case "elevatorArea" : currentElevatorArea = modifiedValue; break;
-							case "rudderArea" : currentRudderArea = modifiedValue; break;
-							case "dragCoefficient" : currentDragCoefficient = modifiedValue; break;
-							case "ballastVolume" : currentBallastVolume = modifiedValue; break;
-							case "downForce" : currentDownForce = modifiedValue; break;
-							case "brakingFactor" : currentBrakingFactor = modifiedValue; break;
-							case "overSteer" : currentOverSteer = modifiedValue; break;
-							case "underSteer" : currentUnderSteer = modifiedValue; break;
-							case "axleRatio" : currentAxleRatio = modifiedValue; break;
-							default : setVariable(modifier.variable, modifiedValue); break;
+							case "wingArea" : currentWingArea += modifiedValue; break;
+							case "wingSpan" : currentWingSpan += modifiedValue; break;
+							case "aileronArea" : currentAileronArea += modifiedValue; break;
+							case "elevatorArea" : currentElevatorArea += modifiedValue; break;
+							case "rudderArea" : currentRudderArea += modifiedValue; break;
+							case "dragCoefficient" : currentDragCoefficient += modifiedValue; break;
+							case "ballastVolume" : currentBallastVolume += modifiedValue; break;
+							case "downForce" : currentDownForce += modifiedValue; break;
+							case "brakingFactor" : currentBrakingFactor += modifiedValue; break;
+							case "overSteer" : currentOverSteer += modifiedValue; break;
+							case "underSteer" : currentUnderSteer += modifiedValue; break;
+							case "axleRatio" : currentAxleRatio += modifiedValue; break;
+							default : setVariable(modifier.variable, getVariable(modifier.variable) + modifiedValue); break;
 						}
 					}
 				}
