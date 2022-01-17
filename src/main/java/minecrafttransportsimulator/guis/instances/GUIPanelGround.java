@@ -341,19 +341,19 @@ public class GUIPanelGround extends AGUIPanel{
 		super.setStates();
 		//Set the state of the light selector.
 		if(lightSelector != null){
-			lightSelector.selectorState = vehicle.variablesOn.contains(EntityVehicleF_Physics.HEADLIGHT_VARIABLE) ? 2 : (vehicle.variablesOn.contains(EntityVehicleF_Physics.RUNNINGLIGHT_VARIABLE) ? 1 : 0);
+			lightSelector.selectorState = vehicle.isVariableActive(EntityVehicleF_Physics.HEADLIGHT_VARIABLE) ? 2 : (vehicle.isVariableActive(EntityVehicleF_Physics.RUNNINGLIGHT_VARIABLE) ? 1 : 0);
 		}
 		
 		//Set the state of the turn signal selector.
 		if(turnSignalSelector != null){
 			boolean halfSecondClock = inClockPeriod(20, 10);
-			if(vehicle.variablesOn.contains(EntityVehicleF_Physics.LEFTTURNLIGHT_VARIABLE) && halfSecondClock){
-				if(vehicle.variablesOn.contains(EntityVehicleF_Physics.RIGHTTURNLIGHT_VARIABLE)){
+			if(vehicle.isVariableActive(EntityVehicleF_Physics.LEFTTURNLIGHT_VARIABLE) && halfSecondClock){
+				if(vehicle.isVariableActive(EntityVehicleF_Physics.RIGHTTURNLIGHT_VARIABLE)){
 					turnSignalSelector.selectorState = 3;
 				}else{
 					turnSignalSelector.selectorState = 1;
 				}
-			}else if(vehicle.variablesOn.contains(EntityVehicleF_Physics.RIGHTTURNLIGHT_VARIABLE) && halfSecondClock){
+			}else if(vehicle.isVariableActive(EntityVehicleF_Physics.RIGHTTURNLIGHT_VARIABLE) && halfSecondClock){
 				turnSignalSelector.selectorState = 2;
 			}else{
 				turnSignalSelector.selectorState = 0;
@@ -397,7 +397,7 @@ public class GUIPanelGround extends AGUIPanel{
 		
 		//If we have gear, set the selector state.
 		if(gearSelector != null){
-			if(vehicle.variablesOn.contains(EntityVehicleF_Physics.GEAR_VARIABLE)){
+			if(vehicle.isVariableActive(EntityVehicleF_Physics.GEAR_VARIABLE)){
 				gearSelector.selectorState = vehicle.gearMovementTime == vehicle.definition.motorized.gearSequenceDuration ? 2 : 3;
 			}else{
 				gearSelector.selectorState = vehicle.gearMovementTime == 0 ? 0 : 1;
@@ -429,7 +429,7 @@ public class GUIPanelGround extends AGUIPanel{
 		
 		//Iterate through custom selectors and set their states.
 		for(GUIComponentSelector customSelector : customSelectors){
-			customSelector.selectorState = vehicle.variablesOn.contains(customSelector.text) ? 1 : 0;
+			customSelector.selectorState = vehicle.isVariableActive(customSelector.text) ? 1 : 0;
 		}
 	}
 }

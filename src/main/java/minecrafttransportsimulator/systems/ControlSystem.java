@@ -455,9 +455,9 @@ public final class ControlSystem{
 		}
 		
 		//Check if horn button is pressed.
-		if(ControlsKeyboard.CAR_HORN.isPressed() && !powered.variablesOn.contains(EntityVehicleF_Physics.HORN_VARIABLE)){
+		if(ControlsKeyboard.CAR_HORN.isPressed() && !powered.isVariableActive(EntityVehicleF_Physics.HORN_VARIABLE)){
 			InterfacePacket.sendToServer(new PacketEntityVariableToggle(powered, EntityVehicleF_Physics.HORN_VARIABLE));
-		}else if(!ControlsKeyboard.CAR_HORN.isPressed() && powered.variablesOn.contains(EntityVehicleF_Physics.HORN_VARIABLE)){
+		}else if(!ControlsKeyboard.CAR_HORN.isPressed() && powered.isVariableActive(EntityVehicleF_Physics.HORN_VARIABLE)){
 			InterfacePacket.sendToServer(new PacketEntityVariableToggle(powered, EntityVehicleF_Physics.HORN_VARIABLE));
 		}
 		

@@ -221,7 +221,9 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 		if(super.addRider(rider, riderLocation)){
 			PartSeat seat = (PartSeat) getPartAtLocation(locationRiderMap.inverse().get(rider));
 			if(seat != null && seat.placementDefinition.linkedVariables != null){
-				variablesOn.removeAll(seat.placementDefinition.linkedVariables);
+				for(String variable : seat.placementDefinition.linkedVariables){
+					setVariable(variable, 0);
+				}
 			}
 			return true;
 		}else{
@@ -234,7 +236,9 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 		//Auto-open doors for the rider in the seat they were in, if such doors exist.
 		PartSeat seat = (PartSeat) getPartAtLocation(locationRiderMap.inverse().get(rider));
 		if(seat != null && seat.placementDefinition.linkedVariables != null){
-			variablesOn.addAll(seat.placementDefinition.linkedVariables);
+			for(String variable : seat.placementDefinition.linkedVariables){
+				setVariable(variable, 1);
+			}
 		}
 		super.removeRider(rider, iterator);
 	}
@@ -335,11 +339,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 			APart foundPart = getSpecificPart(this, variable, partNumber);
 			if(foundPart != null){
 				variable = variable.substring(0, variable.lastIndexOf("_"));
-				if(foundPart.variablesOn.contains(variable)){
-					foundPart.variablesOn.remove(variable);
-				}else{
-					foundPart.variablesOn.add(variable);
-				}
+				foundPart.toggleVariable(variable);
 			}
 		}else{
 			super.toggleVariable(variable);

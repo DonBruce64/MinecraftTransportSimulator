@@ -122,7 +122,7 @@ public class PartEngine extends APart{
 					if(damage.entityResponsible instanceof WrapperPlayer && ((WrapperPlayer) damage.entityResponsible).getHeldStack().isEmpty()){
 						if(!entityOn.equals(damage.entityResponsible.getEntityRiding())){
 							if(!magnetoOn){
-								variablesOn.add(MAGNETO_VARIABLE);
+								setVariable(MAGNETO_VARIABLE, 1);
 								InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(this, MAGNETO_VARIABLE));
 							}
 							handStartEngine();
@@ -162,9 +162,9 @@ public class PartEngine extends APart{
 			//Reset states.
 			backfired = false;
 			badShift = false;
-			magnetoOn = variablesOn.contains(MAGNETO_VARIABLE);
-			electricStarterEngaged = variablesOn.contains(ELECTRIC_STARTER_VARIABLE);
-			handStarterEngaged = variablesOn.contains(HAND_STARTER_VARIABLE);
+			magnetoOn = isVariableActive(MAGNETO_VARIABLE);
+			electricStarterEngaged = isVariableActive(ELECTRIC_STARTER_VARIABLE);
+			handStarterEngaged = isVariableActive(HAND_STARTER_VARIABLE);
 			currentGear = (byte) getVariable(GEAR_VARIABLE);
 			
 			//If the engine is running, but the magneto is off, turn the engine off.
@@ -230,7 +230,7 @@ public class PartEngine extends APart{
 						if(vehicleOn.electricPower > 1){
 							starterLevel += 4;
 						}else{
-							variablesOn.remove(ELECTRIC_STARTER_VARIABLE);
+							setVariable(ELECTRIC_STARTER_VARIABLE, 0);
 							InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(this, ELECTRIC_STARTER_VARIABLE));
 						}
 					}
@@ -244,13 +244,13 @@ public class PartEngine extends APart{
 					}
 					if(autoStarterEngaged){
 						if(running){
-							variablesOn.remove(ELECTRIC_STARTER_VARIABLE);
+							setVariable(ELECTRIC_STARTER_VARIABLE, 0);
 							InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(this, ELECTRIC_STARTER_VARIABLE));
 						}
 					}
 				}else if(handStarterEngaged){
 					if(starterLevel == 0){
-						variablesOn.remove(HAND_STARTER_VARIABLE);
+						setVariable(HAND_STARTER_VARIABLE, 0);
 					}
 				}else{
 					starterLevel = 0;
@@ -273,15 +273,15 @@ public class PartEngine extends APart{
 				}
 				
 				//Check for any shifting requests.
-				if(variablesOn.contains(UP_SHIFT_VARIABLE)){
+				if(isVariableActive(UP_SHIFT_VARIABLE)){
 					shiftUp(false);
-					variablesOn.remove(UP_SHIFT_VARIABLE);
-				}else if(variablesOn.contains(DOWN_SHIFT_VARIABLE)){
+					toggleVariable(UP_SHIFT_VARIABLE);
+				}else if(isVariableActive(DOWN_SHIFT_VARIABLE)){
 					shiftDown(false);
-					variablesOn.remove(DOWN_SHIFT_VARIABLE);
-				}else if(variablesOn.contains(NEUTRAL_SHIFT_VARIABLE)){
+					toggleVariable(DOWN_SHIFT_VARIABLE);
+				}else if(isVariableActive(NEUTRAL_SHIFT_VARIABLE)){
 					shiftNeutral();
-					variablesOn.remove(NEUTRAL_SHIFT_VARIABLE);
+					toggleVariable(NEUTRAL_SHIFT_VARIABLE);
 				}
 				
 				//Check for reversing if we are on a blimp with reversed thrust.
@@ -699,7 +699,7 @@ public class PartEngine extends APart{
 	}
 	
 	public void handStartEngine(){
-		variablesOn.add(HAND_STARTER_VARIABLE);
+		setVariable(HAND_STARTER_VARIABLE, 1);
 		
 		//Add a small amount to the starter level from the player's hand.
 		starterLevel += 4;
@@ -709,8 +709,8 @@ public class PartEngine extends APart{
 		//Only engage auto-starter if we aren't running and we have the right fuel.
 		if(!running && (isCreative || vehicleOn.fuelTank.getFluidLevel() > 0)){
 			autoStarterEngaged = true;
-			variablesOn.add(MAGNETO_VARIABLE);
-			variablesOn.add(ELECTRIC_STARTER_VARIABLE);
+			setVariable(MAGNETO_VARIABLE, 1);
+			setVariable(ELECTRIC_STARTER_VARIABLE, 1);
 		}
 	}
 	

@@ -790,7 +790,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 			case("turn_coordinator"): return ((angles.z - prevAngles.z)/10 + angles.y - prevAngles.y)/0.15D*25;
 			case("turn_indicator"): return (angles.y - prevAngles.y)/0.15F*25F;
 			case("slip"): return 75*sideVector.dotProduct(normalizedVelocityVector);
-			case("gear_moving"): return (variablesOn.contains(GEAR_VARIABLE) ? gearMovementTime != definition.motorized.gearSequenceDuration : gearMovementTime != 0) ? 1 : 0;
+			case("gear_moving"): return (isVariableActive(GEAR_VARIABLE) ? gearMovementTime != definition.motorized.gearSequenceDuration : gearMovementTime != 0) ? 1 : 0;
 			case("beacon_direction"): return selectedBeacon != null ? angles.getClampedYDelta(Math.toDegrees(Math.atan2(selectedBeacon.position.x - position.x, selectedBeacon.position.z - position.z))) : 0;
 			case("beacon_bearing_setpoint"): return selectedBeacon != null ? selectedBeacon.bearing : 0;
 			case("beacon_bearing_delta"): return selectedBeacon != null ? selectedBeacon.getBearingDelta(this) : 0;

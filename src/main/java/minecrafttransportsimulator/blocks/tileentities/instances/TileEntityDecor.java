@@ -46,8 +46,8 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor>{
 	public boolean update(){
 		if(super.update()){
 			//Reset clicked state.
-			if(variablesOn.contains("clicked")){
-				variablesOn.remove("clicked");
+			if(isVariableActive("clicked")){
+				setVariable("clicked", 0);
 			}
 			return true;
 		}else{
@@ -72,12 +72,8 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor>{
 			}
 		}
 		if(!world.isClient()){
-			variablesOn.add("clicked");
-			if(variablesOn.contains("activated")){
-				variablesOn.remove("activated");
-			}else{
-				variablesOn.add("activated");
-			}
+			setVariable("clicked", 1);
+			toggleVariable("activated");
 			InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(this, "clicked"));
 			InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(this, "activated"));
 		}

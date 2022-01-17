@@ -100,7 +100,7 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 			world.beginProfiling("VehicleE_Level", true);
 			//Get throttle and reverse state.
 			throttle = getVariable(THROTTLE_VARIABLE);
-			reverseThrust = variablesOn.contains(REVERSE_THRUST_VARIABLE);
+			reverseThrust = isVariableActive(REVERSE_THRUST_VARIABLE);
 			
 			//If we have space for fuel, and we have tanks with it, transfer it.
 			if(!world.isClient() && fuelTank.getFluidLevel() < definition.motorized.fuelCapacity - 100){
@@ -182,7 +182,7 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 			}
 			
 			//Adjust gear variables.
-			if(variablesOn.contains(EntityVehicleF_Physics.GEAR_VARIABLE)){
+			if(isVariableActive(EntityVehicleF_Physics.GEAR_VARIABLE)){
 				if(gearMovementTime < definition.motorized.gearSequenceDuration){
 					++gearMovementTime;
 				}
@@ -367,12 +367,12 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 	
 	@Override
 	public boolean renderTextLit(){
-		if(definition.motorized.hasRunningLights && variablesOn.contains(RUNNINGLIGHT_VARIABLE)) return electricPower > 3 && super.renderTextLit();
-		if(definition.motorized.hasHeadlights && variablesOn.contains(HEADLIGHT_VARIABLE)) return electricPower > 3 && super.renderTextLit();
-		if(definition.motorized.hasNavLights && variablesOn.contains(NAVIGATIONLIGHT_VARIABLE)) return electricPower > 3 && super.renderTextLit();
-		if(definition.motorized.hasStrobeLights && variablesOn.contains(STROBELIGHT_VARIABLE)) return electricPower > 3 && super.renderTextLit();
-		if(definition.motorized.hasTaxiLights && variablesOn.contains(TAXILIGHT_VARIABLE)) return electricPower > 3 && super.renderTextLit();
-		if(definition.motorized.hasLandingLights && variablesOn.contains(LANDINGLIGHT_VARIABLE)) return electricPower > 3 && super.renderTextLit();
+		if(definition.motorized.hasRunningLights && isVariableActive(RUNNINGLIGHT_VARIABLE)) return electricPower > 3 && super.renderTextLit();
+		if(definition.motorized.hasHeadlights && isVariableActive(HEADLIGHT_VARIABLE)) return electricPower > 3 && super.renderTextLit();
+		if(definition.motorized.hasNavLights && isVariableActive(NAVIGATIONLIGHT_VARIABLE)) return electricPower > 3 && super.renderTextLit();
+		if(definition.motorized.hasStrobeLights && isVariableActive(STROBELIGHT_VARIABLE)) return electricPower > 3 && super.renderTextLit();
+		if(definition.motorized.hasTaxiLights && isVariableActive(TAXILIGHT_VARIABLE)) return electricPower > 3 && super.renderTextLit();
+		if(definition.motorized.hasLandingLights && isVariableActive(LANDINGLIGHT_VARIABLE)) return electricPower > 3 && super.renderTextLit();
 		return false;
 	}
 	

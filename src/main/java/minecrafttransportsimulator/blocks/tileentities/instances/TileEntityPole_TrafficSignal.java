@@ -2,6 +2,7 @@ package minecrafttransportsimulator.blocks.tileentities.instances;
 
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
+import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController.LightType;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController.SignalGroup;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
@@ -21,11 +22,14 @@ public class TileEntityPole_TrafficSignal extends ATileEntityPole_Component{
 	@Override
 	public boolean update(){
 		if(super.update() && linkedController != null){
-			variablesOn.clear();
+			//Remove all old lights, then add our new one.
+			for(LightType light : LightType.values()){
+				setVariable(light.lowercaseName, 0);
+			}
 			if(linkedController.isValid && linkedController.controlledSignals.contains(this)){
 				for(SignalGroup group : linkedController.signalGroups.get(axis)){
 					if(group.currentLight.lowercaseName != null){
-						variablesOn.add(group.currentLight.lowercaseName);
+						setVariable(group.currentLight.lowercaseName, 1);
 					}
 				}
 			}else{

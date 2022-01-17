@@ -146,7 +146,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			
 			//Update brake status.  This is used in a lot of locations, so we don't want to query the set every time.
 			brake = getVariable(BRAKE_VARIABLE);
-			parkingBrakeOn = variablesOn.contains(PARKINGBRAKE_VARIABLE);
+			parkingBrakeOn = isVariableActive(PARKINGBRAKE_VARIABLE);
 			
 			//Update our GDB members if any of our ground devices don't have the same total offset as placement.
 			//This is required to move the GDBs if the GDs move.
@@ -573,9 +573,9 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			//Check for the potential to change the requested segment.
 			//We can only do this if both our followers are on the same segment.
 			LaneSelectionRequest requestedSegment;
-			if(!(variablesOn.contains(LEFTTURNLIGHT_VARIABLE) ^ variablesOn.contains(RIGHTTURNLIGHT_VARIABLE))){
+			if(!(isVariableActive(LEFTTURNLIGHT_VARIABLE) ^ isVariableActive(RIGHTTURNLIGHT_VARIABLE))){
 				requestedSegment = LaneSelectionRequest.NONE;
-			}else if(variablesOn.contains(LEFTTURNLIGHT_VARIABLE)){
+			}else if(isVariableActive(LEFTTURNLIGHT_VARIABLE)){
 				requestedSegment = goingInReverse ? LaneSelectionRequest.RIGHT : LaneSelectionRequest.LEFT;
 			}else{
 				requestedSegment = goingInReverse ? LaneSelectionRequest.LEFT : LaneSelectionRequest.RIGHT;

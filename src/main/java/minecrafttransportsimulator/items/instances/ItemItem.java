@@ -156,7 +156,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 							//Also check collision boxes that block seats, in case we clicked one of those.
 							if(hitBox.definition != null){
 								if(hitBox.definition.variableName != null){
-									if(!vehicle.variablesOn.contains(hitBox.definition.variableName) && vehicle.getVariable(hitBox.definition.variableName) == 0){
+									if(!vehicle.isVariableActive(hitBox.definition.variableName) && vehicle.getVariable(hitBox.definition.variableName) == 0){
 										return CallbackType.ALL_AND_MORE;
 									}
 								}
@@ -168,7 +168,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 							//Also check collision boxes that block seats, in case we clicked one of those.
 							if(hitBox.definition != null){
 								if(hitBox.definition.variableName != null){
-									if(vehicle.variablesOn.contains(hitBox.definition.variableName) || vehicle.getVariable(hitBox.definition.variableName) != 0){
+									if(vehicle.isVariableActive(hitBox.definition.variableName) || vehicle.getVariable(hitBox.definition.variableName) != 0){
 										return CallbackType.ALL_AND_MORE;
 									}
 								}
@@ -337,18 +337,15 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 				for(EntityVehicleF_Physics vehicle : world.getEntitiesOfType(EntityVehicleF_Physics.class)){
 					vehicle.setVariable(EntityVehicleF_Physics.THROTTLE_VARIABLE, 0);
 					InterfacePacket.sendToAllClients(new PacketEntityVariableSet(vehicle, EntityVehicleF_Physics.THROTTLE_VARIABLE, 0));
-					if(!vehicle.parkingBrakeOn){
-						vehicle.variablesOn.add(EntityVehicleF_Physics.PARKINGBRAKE_VARIABLE);
+					if(!vehicle.isVariableActive(EntityVehicleF_Physics.PARKINGBRAKE_VARIABLE)){
+						vehicle.setVariable(EntityVehicleF_Physics.PARKINGBRAKE_VARIABLE, 1);
 						InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.PARKINGBRAKE_VARIABLE));
 					}
 					for(PartEngine engine : vehicle.engines.values()){
-						if(engine.magnetoOn){
-							engine.variablesOn.remove(PartEngine.MAGNETO_VARIABLE);
+						if(engine.isVariableActive(PartEngine.MAGNETO_VARIABLE)){
+							engine.setVariable(PartEngine.MAGNETO_VARIABLE, 0);
 							InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(engine, PartEngine.MAGNETO_VARIABLE));
 						}
-					}
-					for(String variable : vehicle.variablesOn){
-						InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(vehicle, variable));
 					}
 				}
 			}

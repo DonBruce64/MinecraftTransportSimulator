@@ -58,7 +58,7 @@ abstract class AEntityVehicleC_Colliding extends AEntityVehicleB_Rideable{
 			//Only do this once a second to prevent lag.
 			if(velocity > 0.5 && ticksExisted%20 == 0){
 				world.beginProfiling("CloseDoors", false);
-				Iterator<String> variableIterator = variablesOn.iterator();
+				Iterator<String> variableIterator = variables.keySet().iterator();
 				while(variableIterator.hasNext()){
 					if(variableIterator.next().startsWith("door")){
 						variableIterator.remove();

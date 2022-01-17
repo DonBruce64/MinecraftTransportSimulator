@@ -6,13 +6,11 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3d;
@@ -65,11 +63,8 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 	/**Map containing text lines for saved text provided by this entity.**/
 	public final LinkedHashMap<JSONText, String> text = new LinkedHashMap<JSONText, String>();
 	
-	/**Set of variables that are "on" for this entity.  Used for animations.**/
-	public final Set<String> variablesOn = new HashSet<String>();
-	
-	/**Map of variables.  These are generic and can be interfaced with in the JSON.  Some names are hard-coded to specific variables.  Used for animations/physics.**/
-	private final Map<String, Double> variables = new HashMap<String, Double>();
+	/**Map of variables.  These are generic and can be interfaced with in the JSON.  Some names are hard-coded to specific variables.Used for animations/physics.**/
+	protected final Map<String, Double> variables = new HashMap<String, Double>();
 	
 	private final List<JSONSound> allSoundDefs = new ArrayList<JSONSound>();
 	private final Map<JSONSound, List<DurationDelayClock>> soundActiveClocks = new HashMap<JSONSound, List<DurationDelayClock>>();
@@ -113,15 +108,18 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 		}
 		
 		//Load variables.
-		this.variablesOn.addAll(data.getStrings("variablesOn"));
 		for(String variableName : data.getStrings("variables")){
 			variables.put(variableName, data.getDouble(variableName));
 		}
 		if(newlyCreated && definition.rendering != null && definition.rendering.initialVariables != null){
-			variablesOn.addAll(definition.rendering.initialVariables);
+			for(String variable : definition.rendering.initialVariables){
+				variables.put(variable, 1D);
+			}
 		}
 		if(definition.rendering != null && definition.rendering.constants != null){
-			variablesOn.addAll(definition.rendering.constants);
+			for(String variable : definition.rendering.constants){
+				variables.put(variable, 1D);
+			}
 		}
 	}
 	
@@ -133,7 +131,9 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 		
 		//Add constants.
 		if(definition.rendering != null && definition.rendering.constants != null){
-			variablesOn.addAll(definition.rendering.constants);
+			for(String variable : definition.rendering.constants){
+				variables.put(variable, 1D);
+			}
 		}
 	}
 	
@@ -605,9 +605,6 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 		}
 		
 		//Check if this is a generic variable.  This contains lights in most cases.
-		if(variablesOn.contains(variable)){
-			return 1;
-		}
 		Double variableValue = variables.get(variable);
 		if(variableValue != null){
 			return variableValue;
@@ -720,10 +717,10 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 	 *  Helper method to toggle a variable for this entity.
 	 */
 	public void toggleVariable(String variable){
-		if(variablesOn.contains(variable)){
-			variablesOn.remove(variable);
-		}else{
-			variablesOn.add(variable);
+		//Try to remove the variable,this requires only one key-search operation, unlike a containsKey followed by a remove.
+		if(variables.remove(variable) == null){
+			//No key was in this map prior, so this variable was off, set it on.
+			variables.put(variable, 1D);
 		}
 	}
 	
@@ -750,6 +747,14 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 		}else{
 			return value;
 		}
+	}
+	
+	/**
+	 *  Helper method to check if a variable is non-zero.
+	 *  This is a bit quicker than getting the value due to auto-boxing off the map.
+	 */
+	public boolean isVariableActive(String variable){
+		return variables.containsKey(variable);
 	}
     
     @Override
@@ -994,7 +999,6 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 		for(String textLine : text.values()){
 			data.setString("textLine" + lineNumber++, textLine);
 		}
-		data.setStrings("variablesOn", variablesOn);
 		data.setStrings("variables", variables.keySet());
 		for(String variableName : variables.keySet()){
 			data.setDouble(variableName, variables.get(variableName));

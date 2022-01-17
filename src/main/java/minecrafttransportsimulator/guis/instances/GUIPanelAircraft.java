@@ -439,7 +439,7 @@ public class GUIPanelAircraft extends AGUIPanel{
 		super.setStates();
 		//Set the states of the light selectors.
 		for(Entry<String, GUIComponentSelector> lightEntry : lightSelectors.entrySet()){
-			lightEntry.getValue().selectorState = vehicle.variablesOn.contains(lightEntry.getKey()) ? 1 : 0;
+			lightEntry.getValue().selectorState = vehicle.isVariableActive(lightEntry.getKey()) ? 1 : 0;
 		}
 		
 		//Set the states of the magneto selectors.
@@ -513,7 +513,7 @@ public class GUIPanelAircraft extends AGUIPanel{
 		
 		//If we have gear, set the selector state.
 		if(gearSelector != null){
-			if(vehicle.variablesOn.contains(EntityVehicleF_Physics.GEAR_VARIABLE)){
+			if(vehicle.isVariableActive(EntityVehicleF_Physics.GEAR_VARIABLE)){
 				gearSelector.selectorState = vehicle.gearMovementTime == vehicle.definition.motorized.gearSequenceDuration ? 2 : 3;
 			}else{
 				gearSelector.selectorState = vehicle.gearMovementTime == 0 ? 0 : 1;
@@ -543,7 +543,7 @@ public class GUIPanelAircraft extends AGUIPanel{
 		
 		//Iterate through custom selectors and set their states.
 		for(GUIComponentSelector customSelector : customSelectors){
-			customSelector.selectorState = vehicle.variablesOn.contains(customSelector.text) ? 1 : 0;
+			customSelector.selectorState = vehicle.isVariableActive(customSelector.text) ? 1 : 0;
 		}
 	}
 }
