@@ -160,9 +160,6 @@ public class JSONVehicle extends AJSONPartProvider{
         @JSONDescription("A listing of variables that will be checked off the towing vehicle if this vehicle is a trailer and connected.  Used by trailers to get the states of their towing vehicles for light and door animations.")
         public List<String> hookupVariables;
         
-        @JSONDescription("A listing of physics modifiers.  These may be used to modify the vehicle's physics dynamically as opposed to the static values above.  If present, these values will add-on to any above values.")
-        public List<JSONPhysicsModifier> physicsModifiers;
-    	
         @Deprecated
     	public boolean hasFlaps;
     	@Deprecated
