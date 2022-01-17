@@ -748,6 +748,27 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 	}
 	
 	/**
+	 *  Helper method to increment a variable for this entity.
+	 *  This will adjust the value between the clamps.  Returns
+	 *  true if the value was changed.
+	 */
+	public boolean incrementVariable(String variable, double incrementValue, double minValue, double maxValue){
+		double currentValue = getVariable(variable);
+		double newValue = currentValue + incrementValue;
+		if(newValue < minValue){
+			newValue = minValue;
+		}else if(newValue > maxValue){
+			newValue = maxValue;
+		}
+		if(newValue != currentValue){
+			setVariable(variable, newValue);
+			return true;
+		}else{
+			return false;
+		}
+	}
+	
+	/**
 	 *  Helper method to get get a variable for this entity.
 	 */
 	public double getVariable(String variable){

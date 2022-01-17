@@ -49,18 +49,6 @@ public class PacketEntityVariableIncrement extends APacketEntity<AEntityD_Defina
 	
 	@Override
 	public boolean handle(WrapperWorld world, AEntityD_Definable<?> entity){
-		double currentValue = entity.getVariable(variableName);
-		double newValue = currentValue + incrementValue;
-		if(newValue < minValue){
-			newValue = minValue;
-		}else if(newValue > maxValue){
-			newValue = maxValue;
-		}
-		if(newValue != currentValue){
-			entity.setVariable(variableName, newValue);
-			return true;
-		}else{
-			return false;
-		}
+		return entity.incrementVariable(variableName, incrementValue, minValue, maxValue);
 	}
 }

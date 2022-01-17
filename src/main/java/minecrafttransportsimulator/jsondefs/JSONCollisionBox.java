@@ -31,6 +31,12 @@ public class JSONCollisionBox{
 	@JSONDescription("The value to set the variable to for SET types, or the amount to increment by for INCREMENT types.")
     public float variableValue;
 	
+	@JSONDescription("The min value for this box to set.  Only used when the variable type is increment.")
+    public float clampMin;
+	
+	@JSONDescription("The max value for this box to set.  Only used when the variable type is increment.")
+    public float clampMax;
+	
 	public static enum VariableType{
 		@JSONDescription("Clicking this box will toggle the variable from 0 to 1.")
 		TOGGLE,

@@ -140,8 +140,9 @@ public class PacketVehicleInteract extends APacketEntityInteract<EntityVehicleF_
 				AEntityD_Definable<?> entity = part != null ? part : vehicle;
 				switch(hitBox.definition.variableType){
 					case INCREMENT:
-						entity.setVariable(hitBox.definition.variableName, entity.getVariable(hitBox.definition.variableName) + hitBox.definition.variableValue);
-						InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(entity, hitBox.definition.variableName, hitBox.definition.variableValue));
+						if(entity.incrementVariable(hitBox.definition.variableName, hitBox.definition.variableValue, hitBox.definition.clampMin, hitBox.definition.clampMax)){
+							InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(entity, hitBox.definition.variableName, hitBox.definition.variableValue, hitBox.definition.clampMin, hitBox.definition.clampMax));	
+						}
 						break;
 					case SET:
 						entity.setVariable(hitBox.definition.variableName, hitBox.definition.variableValue);
