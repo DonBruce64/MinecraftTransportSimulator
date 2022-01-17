@@ -28,7 +28,7 @@ import com.google.gson.stream.JsonWriter;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
 import minecrafttransportsimulator.baseclasses.Point3dPlus;
-import minecrafttransportsimulator.entities.components.AEntityA_Base;
+import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.AJSONInteractableEntity;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
@@ -621,12 +621,10 @@ public class JSONParser{
 			if(definitionToOverride instanceof AJSONMultiModelProvider){
 				ARenderEntityDefinable.clearObjectCaches((AJSONMultiModelProvider) definitionToOverride);
 			}
-			for(AEntityA_Base entity : InterfaceClient.getClientWorld().renderableEntities){
+			for(AEntityC_Renderable entity : InterfaceClient.getClientWorld().renderableEntities){
 				if(entity instanceof AEntityD_Definable){
-					AEntityD_Definable<?> definableEntity = (AEntityD_Definable<?>) entity;
-					if(definitionToOverride.packID.equals(definableEntity.definition.packID) && definitionToOverride.systemName.equals(definableEntity.definition.systemName)){
-						((AEntityD_Definable<?>) entity).animationsInitialized = false;
-					}
+					//Reset animations for all entities, as we don't know part linking or instrument placement or whatnot.
+					((AEntityD_Definable<?>) entity).animationsInitialized = false;
 				}
 			}
 			

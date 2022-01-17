@@ -4,14 +4,14 @@ import java.nio.FloatBuffer;
 
 import org.lwjgl.opengl.GL11;
 
+import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
-import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
-import minecrafttransportsimulator.jsondefs.JSONInstrument.Component;
+import minecrafttransportsimulator.jsondefs.JSONInstrument.JSONInstrumentComponent;
 import minecrafttransportsimulator.rendering.components.DurationDelayClock;
 import minecrafttransportsimulator.rendering.components.RenderableObject;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -23,6 +23,8 @@ import minecrafttransportsimulator.systems.ConfigSystem;
  * @author don_bruce
  */
 public final class RenderInstrument{
+	private static float globalScale = 0;
+	private static int partNumber = 0;
 	private static final Point3dPlus bottomLeft = new Point3dPlus();
 	private static final Point3dPlus topLeft = new Point3dPlus();
 	private static final Point3dPlus topRight = new Point3dPlus();
@@ -38,18 +40,21 @@ public final class RenderInstrument{
      * Also note that the parameters in the JSON here are in png-texture space, so y is inverted.  Hence the various
      * negations in translation transforms.
      */
-	public static void drawInstrument(ItemInstrument instrument, int partNumber, AEntityE_Interactable<?> entity, float scale, boolean blendingEnabled, float partialTicks){
+	public static void drawInstrument(ItemInstrument instrument, int partNumberIn, AEntityE_Interactable<?> entity, float scale, boolean blendingEnabled, float partialTicks){
 		//Check if the lights are on.  If so, render the overlays and the text lit if requested.
 		boolean lightsOn = entity.renderTextLit();
 		
 		//Get scale of the instrument, before component scaling.
-		float globalScale = entity.scale*scale;
+		globalScale = entity.scale*scale;
+		
+		//Set the part number for switchbox reference.
+		partNumber = partNumberIn;
 		
 		//Finally, render the instrument based on the JSON instrument.definitions.
 		//We cache up all the draw calls for this blend pass, and then render them all at once.
 		//This is more efficient than rendering each one individually.
-		for(byte i=0; i<instrument.definition.components.size(); ++i){
-			Component component = instrument.definition.components.get(i);
+		for(int i=0; i<instrument.definition.components.size(); ++i){
+			JSONInstrumentComponent component = instrument.definition.components.get(i);
 			if(component.overlayTexture ? blendingEnabled : !blendingEnabled){
 				//If we have text, do a text render.  Otherwise, do a normal instrument render.
 				//Also translate slightly away from the instrument location to prevent clipping.
@@ -74,154 +79,10 @@ public final class RenderInstrument{
 					topLeft.set(-component.textureWidth/2D, -component.textureHeight/2D, 0);
 					topRight.set(component.textureWidth/2D, -component.textureHeight/2D, 0);
 					bottomRight.set(component.textureWidth/2D, component.textureHeight/2D, 0);
-					boolean skipRender = false;
-					boolean skipFurtherTransforms = false;
-					if(component.animations != null){
-						for(JSONAnimationDefinition animation : component.animations){
-							//If the partNumber is non-zero, we need to check if we are applying a part-based animation.
-							//If so, we need to let the animation system know by adding a suffix to the variable.
-							//Otherwise, as we don't pass-in the part, it will assume it's an entity variable.
-							//We also need to set the partNumber to 1 if we have a part number of 0 and we're
-							//doing a part-specific animation.
-							//Skip adding a suffix if one already exists.
-							int variablePartNumber = AEntityD_Definable.getVariableNumber(animation.variable);
-							final boolean addSuffix = variablePartNumber == -1 && !(entity instanceof APart) && (animation.variable.startsWith("engine_") || animation.variable.startsWith("propeller_") || animation.variable.startsWith("gun_") || animation.variable.startsWith("seat_"));
-							if(partNumber == 0 && addSuffix){
-								partNumber = 1;
-							}
-							if(addSuffix){
-								animation.variable += "_" + partNumber;
-							}
-							
-							DurationDelayClock animationClock = entity.animationClocks.get(animation);
-							if(animationClock == null){
-								animationClock = new DurationDelayClock(animation);
-								entity.animationClocks.put(animation, animationClock);
-							}
-							
-							switch(animation.animationType){
-								case ROTATION :{
-									if(!skipFurtherTransforms){
-										double variableValue = -entity.getAnimatedVariableValue(animationClock, animation.axis.z, partialTicks);
-										//Depending on what variables are set we do different rendering operations.
-										//If we are rotating the window, but not the texture we should offset the texture points to that rotated point.
-										//Otherwise, we apply an OpenGL rotation operation.
-										if(component.rotateWindow){
-											//Add rotation offset to the points.
-											bottomLeft.add(animation.centerPoint);
-											topLeft.add(animation.centerPoint);
-											topRight.add(animation.centerPoint);
-											bottomRight.add(animation.centerPoint);
-											
-											//Rotate the points by the rotation.
-											rotation.set(0, 0, variableValue);
-											bottomLeft.rotateFine(rotation);
-											topLeft.rotateFine(rotation);
-											topRight.rotateFine(rotation);
-											bottomRight.rotateFine(rotation);
-											
-											//Remove the rotation offsets.
-											bottomLeft.subtract(animation.centerPoint);
-											topLeft.subtract(animation.centerPoint);
-											topRight.subtract(animation.centerPoint);
-											bottomRight.subtract(animation.centerPoint);
-										}else{
-											GL11.glTranslated((component.xCenter + animation.centerPoint.x)*globalScale, -(component.yCenter + animation.centerPoint.y)*globalScale, 0.0F);
-											GL11.glRotated(variableValue, 0, 0, 1);
-											GL11.glTranslated(-(component.xCenter + animation.centerPoint.x)*globalScale, (component.yCenter + animation.centerPoint.y)*globalScale, 0.0F);
-										}
-									}
-									break;
-								}
-								case TRANSLATION :{
-									if(!skipFurtherTransforms){
-										//Offset the coords based on the translated amount.
-										//Adjust the window to either move or scale depending on settings.
-										double xTranslation = entity.getAnimatedVariableValue(animationClock, animation.axis.x, partialTicks);
-										double yTranslation = entity.getAnimatedVariableValue(animationClock, animation.axis.y, partialTicks);
-										if(component.extendWindow){
-											//We need to add to the edge of the window in this case rather than move the entire window.
-											if(animation.axis.x < 0){
-												bottomLeft.x += xTranslation;
-												topLeft.x += xTranslation;
-											}else if(animation.axis.x > 0){
-												topRight.x += xTranslation;
-												bottomRight.x += xTranslation;
-											}
-											if(animation.axis.y < 0){
-												bottomLeft.y += yTranslation;
-												bottomRight.y += yTranslation;
-											}else if(animation.axis.y > 0){
-												topLeft.y += yTranslation;
-												topRight.y += yTranslation;
-											}
-										}else if(component.moveComponent){
-											//Translate the rather than adjust the window coords.
-											GL11.glTranslated(xTranslation*globalScale, yTranslation*globalScale, 0);
-										}else{
-											//Offset the window coords to the appropriate section of the texture sheet.
-											//We don't want to do an OpenGL translation here as that would move the texture's
-											//rendered position on the instrument rather than change what texture is rendered.
-											if(animation.axis.x != 0){
-												bottomLeft.x += xTranslation;
-												topLeft.x += xTranslation;
-												topRight.x += xTranslation;
-												bottomRight.x += xTranslation;
-											}
-											if(animation.axis.y != 0){
-												bottomLeft.y += yTranslation;
-												topLeft.y += yTranslation;
-												topRight.y += yTranslation;
-												bottomRight.y += yTranslation;
-											}
-										}
-									}
-									break;
-								}
-								case SCALING :{
-									//Do nothing.  Translation does scaling here.
-									break;
-								}
-								case VISIBILITY:{
-									if(!skipFurtherTransforms){
-										//Skip rendering this component if this is false.
-										double variableValue = entity.getAnimatedVariableValue(animationClock, partialTicks);
-										skipRender = variableValue < animation.clampMin || variableValue > animation.clampMax;
-									}
-									break;
-								}
-								case INHIBITOR:{
-									//Skip further operations if this is true.
-									if(!skipFurtherTransforms){
-										double variableValue = entity.getAnimatedVariableValue(animationClock, partialTicks);
-										skipFurtherTransforms = variableValue >= animation.clampMin && variableValue <= animation.clampMax;
-									}
-									break;
-								}
-								case ACTIVATOR:{
-									//Prevent skipping  further operations if this is true.
-									if(skipFurtherTransforms){
-										double variableValue = entity.getAnimatedVariableValue(animationClock, partialTicks);
-										skipFurtherTransforms = !(variableValue >= animation.clampMin && variableValue <= animation.clampMax);
-									}
-									break;
-								}
-							}
-							
-							//Put suffix back to normal.
-							if(addSuffix){
-								animation.variable = animation.variable.substring(0, animation.variable.length() - ("_" + partNumber).length());
-							}
-							
-							//Don't do any more transforms if we shouldn't render.
-							if(skipRender){
-								break;
-							}
-						}
-					}
 					
-					//Now that all transforms are done, render the instrument if enabled.
-					if(!skipRender){
+					//Render if we don't have transforms, or of those transforms said we were good.
+					InstrumentSwitchbox switchbox = entity.instrumentSwitchboxes.get(component);
+					if(switchbox == null || switchbox.runSwitchbox(partialTicks)){
 						//Add the instrument UV-map offsets.
 						//These don't get added to the initial points to allow for rotation.
 						bottomLeft.add(component.textureXCenter, component.textureYCenter, 0);
@@ -251,10 +112,130 @@ public final class RenderInstrument{
 		}
 	}
 	
+	/**
+	 *  Custom instrument switchbox class.
+	 */
+	public static class InstrumentSwitchbox extends AnimationSwitchbox{
+		private final JSONInstrumentComponent component;
+
+		public InstrumentSwitchbox(AEntityD_Definable<?> entity, JSONInstrumentComponent component){
+			super(entity, component.animations);
+			this.component = component;
+		}
+		
+		private String convertAnimationPartNumber(DurationDelayClock clock){
+			//If the partNumber is non-zero, we need to check if we are applying a part-based animation.
+			//If so, we need to let the animation system know by adding a suffix to the variable.
+			//Otherwise, as we don't pass-in the part, it will assume it's an entity variable.
+			//We also need to set the partNumber to 1 if we have a part number of 0 and we're
+			//doing a part-specific animation.
+			//Skip adding a suffix if one already exists.
+			int variablePartNumber = AEntityD_Definable.getVariableNumber(clock.animation.variable);
+			final boolean addSuffix = variablePartNumber == -1 && !(entity instanceof APart) && (clock.animation.variable.startsWith("engine_") || clock.animation.variable.startsWith("propeller_") || clock.animation.variable.startsWith("gun_") || clock.animation.variable.startsWith("seat_"));
+			if(partNumber == 0 && addSuffix){
+				partNumber = 1;
+			}
+			String oldVariable = clock.animation.variable;
+			if(addSuffix){
+				clock.animation.variable += "_" + partNumber;
+			}
+			return oldVariable;
+		}
+		
+		@Override
+		public boolean runSwitchbox(float partialTicks){
+			
+			
+			return super.runSwitchbox(partialTicks);
+		}
+		
+		@Override
+		public void runTranslation(DurationDelayClock clock, float partialTicks){
+			//Offset the coords based on the translated amount.
+			//Adjust the window to either move or scale depending on settings.
+			String oldVariable = convertAnimationPartNumber(clock);
+			double xTranslation = entity.getAnimatedVariableValue(clock, clock.animation.axis.x, partialTicks);
+			double yTranslation = entity.getAnimatedVariableValue(clock, clock.animation.axis.y, partialTicks);
+			clock.animation.variable = oldVariable;
+			
+			if(component.extendWindow){
+				//We need to add to the edge of the window in this case rather than move the entire window.
+				if(clock.animation.axis.x < 0){
+					bottomLeft.x += xTranslation;
+					topLeft.x += xTranslation;
+				}else if(clock.animation.axis.x > 0){
+					topRight.x += xTranslation;
+					bottomRight.x += xTranslation;
+				}
+				if(clock.animation.axis.y < 0){
+					bottomLeft.y += yTranslation;
+					bottomRight.y += yTranslation;
+				}else if(clock.animation.axis.y > 0){
+					topLeft.y += yTranslation;
+					topRight.y += yTranslation;
+				}
+			}else if(component.moveComponent){
+				//Translate the rather than adjust the window coords.
+				GL11.glTranslated(xTranslation*globalScale, yTranslation*globalScale, 0);
+			}else{
+				//Offset the window coords to the appropriate section of the texture sheet.
+				//We don't want to do an OpenGL translation here as that would move the texture's
+				//rendered position on the instrument rather than change what texture is rendered.
+				if(clock.animation.axis.x != 0){
+					bottomLeft.x += xTranslation;
+					topLeft.x += xTranslation;
+					topRight.x += xTranslation;
+					bottomRight.x += xTranslation;
+				}
+				if(clock.animation.axis.y != 0){
+					bottomLeft.y += yTranslation;
+					topLeft.y += yTranslation;
+					topRight.y += yTranslation;
+					bottomRight.y += yTranslation;
+				}
+			}
+		}
+		
+		@Override
+		public void runRotation(DurationDelayClock clock, float partialTicks){
+			String oldVariable = convertAnimationPartNumber(clock);
+			double variableValue = -entity.getAnimatedVariableValue(clock, clock.animation.axis.z, partialTicks);
+			clock.animation.variable = oldVariable;
+			
+			//Depending on what variables are set we do different rendering operations.
+			//If we are rotating the window, but not the texture we should offset the texture points to that rotated point.
+			//Otherwise, we apply an OpenGL rotation operation.
+			if(component.rotateWindow){
+				//Add rotation offset to the points.
+				bottomLeft.add(clock.animation.centerPoint);
+				topLeft.add(clock.animation.centerPoint);
+				topRight.add(clock.animation.centerPoint);
+				bottomRight.add(clock.animation.centerPoint);
+				
+				//Rotate the points by the rotation.
+				rotation.set(0, 0, variableValue);
+				bottomLeft.rotateFine(rotation);
+				topLeft.rotateFine(rotation);
+				topRight.rotateFine(rotation);
+				bottomRight.rotateFine(rotation);
+				
+				//Remove the rotation offsets.
+				bottomLeft.subtract(clock.animation.centerPoint);
+				topLeft.subtract(clock.animation.centerPoint);
+				topRight.subtract(clock.animation.centerPoint);
+				bottomRight.subtract(clock.animation.centerPoint);
+			}else{
+				GL11.glTranslated((component.xCenter + clock.animation.centerPoint.x)*globalScale, -(component.yCenter + clock.animation.centerPoint.y)*globalScale, 0.0F);
+				GL11.glRotated(variableValue, 0, 0, 1);
+				GL11.glTranslated(-(component.xCenter + clock.animation.centerPoint.x)*globalScale, (component.yCenter + clock.animation.centerPoint.y)*globalScale, 0.0F);
+			}
+		}
+	}
+	
     /**
      * Helper method for setting points for rendering.
      */
-	private static void renderSquareUV(Component component, float componentScale){
+	private static void renderSquareUV(JSONInstrumentComponent component, float componentScale){
 		//Set X, Y, U, V, and normal Z.  All other values are 0.
 		//Also invert V, as we're going off of pixel-coords here.
 		for(int i=0; i<points.length; ++i){

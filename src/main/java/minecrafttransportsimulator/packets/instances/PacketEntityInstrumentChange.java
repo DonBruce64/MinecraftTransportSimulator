@@ -63,7 +63,7 @@ public class PacketEntityInstrumentChange extends APacketEntityInteract<AEntityE
 		//If we are removing the instrument, do so now.
 		//Otherwise add the instrument.
 		if(instrumentPackID.isEmpty()){
-			entity.instruments.remove(slot);
+			entity.removeIntrument(slot);
 		}else{
 			//Check to make sure player has the instrument they are trying to put in.
 			//This is only done on the server, as checking on the client won't make any difference.
@@ -76,7 +76,7 @@ public class PacketEntityInstrumentChange extends APacketEntityInteract<AEntityE
 					return false;
 				}
 			}
-			entity.instruments.put(slot, instrument);
+			entity.addInstrument(instrument, slot);
 		}
 		return true;
 	}

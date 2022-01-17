@@ -29,7 +29,7 @@ public class AnimationSwitchbox{
 	public boolean anyClockMovedThisUpdate;
 	
 	//Computational variables.
-	private final AEntityD_Definable<?> entity;
+	protected final AEntityD_Definable<?> entity;
 	private final List<DurationDelayClock> clocks = new ArrayList<DurationDelayClock>();
 	private final Vector3d helperVector = new Vector3d();
 	private final AxisAngle4d helperRotator = new AxisAngle4d();
@@ -68,12 +68,6 @@ public class AnimationSwitchbox{
 					}
 					break;
 				}
-				case SCALING :{
-					if(!inhibitAnimations){
-						animationScale *= entity.getAnimatedVariableValue(clock, clock.animationAxisMagnitude, partialTicks);
-					}
-					break;
-				}
 				case VISIBILITY :{
 					if(!inhibitAnimations){
 						double variableValue = entity.getAnimatedVariableValue(clock, partialTicks);
@@ -101,6 +95,12 @@ public class AnimationSwitchbox{
 						if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
 							inhibitAnimations = false;
 						}
+					}
+					break;
+				}
+				case SCALING :{
+					if(!inhibitAnimations){
+						animationScale *= entity.getAnimatedVariableValue(clock, clock.animationAxisMagnitude, partialTicks);
 					}
 					break;
 				}

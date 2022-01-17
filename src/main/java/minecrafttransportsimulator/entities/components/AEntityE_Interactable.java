@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -28,6 +29,7 @@ import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup;
 import minecrafttransportsimulator.jsondefs.JSONConnection;
 import minecrafttransportsimulator.jsondefs.JSONConnectionGroup;
+import minecrafttransportsimulator.jsondefs.JSONInstrument.JSONInstrumentComponent;
 import minecrafttransportsimulator.jsondefs.JSONInstrumentDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
@@ -41,6 +43,7 @@ import minecrafttransportsimulator.packets.instances.PacketEntityTrailerChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.rendering.components.DurationDelayClock;
+import minecrafttransportsimulator.rendering.instances.RenderInstrument.InstrumentSwitchbox;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
@@ -103,9 +106,14 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 	
 	/**Maps instruments to their place in the JSON.  This is done instead of a list as there may
 	 * be instruments not present, so we'd need to have empty slots in a list for this, and maps
-	 * work better for this from a code standpoint than lists anyways.
+	 * work better for this from a code standpoint than lists anyways.  Do NOT modify this map
+	 * directly.  Instead, use the add/remove methods in this class.  This ensures proper animation
+	 * switchbox creation.
 	 **/
 	public final Map<Integer, ItemInstrument> instruments = new HashMap<Integer, ItemInstrument>();
+	
+	/**Maps instrument components to their respective switchboxes.**/
+	public final Map<JSONInstrumentComponent, InstrumentSwitchbox> instrumentSwitchboxes = new LinkedHashMap<JSONInstrumentComponent, InstrumentSwitchbox>();
 	
 	/**Locked state.  Locked entities should not be able to be interacted with except by entities riding them,
 	 * their owners, or OP players (server admins).
@@ -170,7 +178,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 							try{
 								ItemInstrument instrument = PackParserSystem.getItem(instrumentPackID, instrumentSystemName);
 								if(instrument != null){
-									instruments.put(definition.instruments.indexOf(packInstrument), instrument);
+									addInstrument(instrument, definition.instruments.indexOf(packInstrument));
 									continue;
 								}
 							}catch(NullPointerException e){
@@ -191,7 +199,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 						ItemInstrument instrument = PackParserSystem.getItem(instrumentPackID, instrumentSystemName);
 						//Check to prevent loading of faulty instruments due to updates.
 						if(instrument != null){
-							instruments.put(i, instrument);
+							addInstrument(instrument, i);
 						}
 					}
 				}
@@ -250,6 +258,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 		updateCollisionBoxes();
 				
 		//Create instrument animation clocks.
+		//FIXME this goes into switchbox for rendering of instruments.
 		if(definition.instruments != null){
 			for(int i=0; i<definition.instruments.size(); ++i){
 				JSONInstrumentDefinition packInstrument = definition.instruments.get(i);
@@ -719,6 +728,30 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 			}
 		}
 	}
+	
+	/**
+   	 *  Adds the instrument to the specified slot.
+   	 */
+    public void addInstrument(ItemInstrument instrument, int slot){
+    	instruments.put(slot, instrument);
+    	for(JSONInstrumentComponent component : instrument.definition.components){
+    		if(component.animations != null){
+    			instrumentSwitchboxes.put(component, new InstrumentSwitchbox(this, component));
+    		}
+		}
+    }
+    
+    /**
+   	 *  Removes the instrument from the specified slot.
+   	 */
+    public void removeIntrument(int slot){
+    	ItemInstrument removedInstrument = instruments.remove(slot);
+		if(removedInstrument != null){
+			for(JSONInstrumentComponent component : removedInstrument.definition.components){
+				instrumentSwitchboxes.remove(component);
+			}
+		}
+    }
 	
 	/**
 	 *  Returns the owner state of the passed-in player, relative to this entity.

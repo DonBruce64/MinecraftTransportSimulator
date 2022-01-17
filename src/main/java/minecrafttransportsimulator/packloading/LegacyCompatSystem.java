@@ -368,43 +368,43 @@ public final class LegacyCompatSystem{
 			//Do compats for particles.
 			if(definition.rendering.particles == null){
 				definition.rendering.particles = new ArrayList<JSONParticle>();
-				int engineNumber = 0;
-				for(JSONPartDefinition partDef : definition.parts){
-					if(partDef.particleObjects != null){
-						++engineNumber;
-						int pistonNumber = 0;
-						for(JSONParticle exhaustDef : partDef.particleObjects){
-							++pistonNumber;
-							exhaustDef.type = ParticleType.SMOKE;
-							exhaustDef.activeAnimations = new ArrayList<JSONAnimationDefinition>();
-							exhaustDef.initialVelocity = exhaustDef.velocityVector;
-							exhaustDef.velocityVector = null;
-							JSONAnimationDefinition activeAnimation = new JSONAnimationDefinition();
-							activeAnimation.animationType = AnimationComponentType.VISIBILITY;
-							activeAnimation.variable = "engine_piston_" + pistonNumber + "_" + partDef.particleObjects.size() + "_cam_" + engineNumber;
-							activeAnimation.clampMin = 1.0F;
-							activeAnimation.clampMax = 1.0F;
-							exhaustDef.activeAnimations.add(activeAnimation);
-							definition.rendering.particles.add(exhaustDef);
-							
-							JSONParticle backfireDef = new JSONParticle();
-							backfireDef.type = exhaustDef.type;
-							backfireDef.color = ColorRGB.BLACK;
-							backfireDef.scale = 2.5F;
-							backfireDef.quantity = 5;
-							backfireDef.pos = exhaustDef.pos;
-							backfireDef.initialVelocity = exhaustDef.initialVelocity;
-							backfireDef.activeAnimations = new ArrayList<JSONAnimationDefinition>();
-							activeAnimation = new JSONAnimationDefinition();
-							activeAnimation.animationType = AnimationComponentType.VISIBILITY;
-							activeAnimation.variable = "engine_backfired_" + engineNumber;
-							activeAnimation.clampMin = 1.0F;
-							activeAnimation.clampMax = 1.0F;
-							backfireDef.activeAnimations.add(activeAnimation);
-							definition.rendering.particles.add(backfireDef);
-						}
-						partDef.particleObjects = null;
+			}
+			int engineNumber = 0;
+			for(JSONPartDefinition partDef : definition.parts){
+				if(partDef.particleObjects != null){
+					++engineNumber;
+					int pistonNumber = 0;
+					for(JSONParticle exhaustDef : partDef.particleObjects){
+						++pistonNumber;
+						exhaustDef.type = ParticleType.SMOKE;
+						exhaustDef.activeAnimations = new ArrayList<JSONAnimationDefinition>();
+						exhaustDef.initialVelocity = exhaustDef.velocityVector;
+						exhaustDef.velocityVector = null;
+						JSONAnimationDefinition activeAnimation = new JSONAnimationDefinition();
+						activeAnimation.animationType = AnimationComponentType.VISIBILITY;
+						activeAnimation.variable = "engine_piston_" + pistonNumber + "_" + partDef.particleObjects.size() + "_cam_" + engineNumber;
+						activeAnimation.clampMin = 1.0F;
+						activeAnimation.clampMax = 1.0F;
+						exhaustDef.activeAnimations.add(activeAnimation);
+						definition.rendering.particles.add(exhaustDef);
+						
+						JSONParticle backfireDef = new JSONParticle();
+						backfireDef.type = exhaustDef.type;
+						backfireDef.color = ColorRGB.BLACK;
+						backfireDef.scale = 2.5F;
+						backfireDef.quantity = 5;
+						backfireDef.pos = exhaustDef.pos;
+						backfireDef.initialVelocity = exhaustDef.initialVelocity;
+						backfireDef.activeAnimations = new ArrayList<JSONAnimationDefinition>();
+						activeAnimation = new JSONAnimationDefinition();
+						activeAnimation.animationType = AnimationComponentType.VISIBILITY;
+						activeAnimation.variable = "engine_backfired_" + engineNumber;
+						activeAnimation.clampMin = 1.0F;
+						activeAnimation.clampMax = 1.0F;
+						backfireDef.activeAnimations.add(activeAnimation);
+						definition.rendering.particles.add(backfireDef);
 					}
+					partDef.particleObjects = null;
 				}
 			}
 			
@@ -1135,13 +1135,13 @@ public final class LegacyCompatSystem{
 		//Check if we have any old component definitions.  If so, we need
 		//to make all textures light-up.
 		boolean oldDefinition = false;
-		for(JSONInstrument.Component component : definition.components){
+		for(JSONInstrument.JSONInstrumentComponent component : definition.components){
 			if(component.rotationVariable != null || component.translationVariable != null){
 				oldDefinition = true;
 			}
 		}
 		//Convert any old component definitions to the new style.
-		for(JSONInstrument.Component component : definition.components){
+		for(JSONInstrument.JSONInstrumentComponent component : definition.components){
 			if(oldDefinition){
 				component.lightUpTexture = true;
 				component.overlayTexture = component.lightOverlay;
