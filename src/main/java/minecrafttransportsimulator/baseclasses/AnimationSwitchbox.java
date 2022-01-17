@@ -43,6 +43,7 @@ public class AnimationSwitchbox{
 		for(JSONAnimationDefinition animation : animations){
 			clocks.add(new DurationDelayClock(animation));
 		}
+		helperTranslationMatrix.setIdentity();
 	}
 	
 	public boolean runSwitchbox(float partialTicks){
@@ -139,7 +140,6 @@ public class AnimationSwitchbox{
 			
 			//Translate back.  This requires inverting the translation.
 			helperVector.negate();
-			helperTranslationMatrix.setIdentity();
 			helperTranslationMatrix.setTranslation(helperVector);
 			helperTranslatedRotationMatrix.mul(helperTranslationMatrix);
 			

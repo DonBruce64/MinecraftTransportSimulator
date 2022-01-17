@@ -22,6 +22,7 @@ import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartGeneric;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.AJSONInteractableEntity;
+import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup;
@@ -211,8 +212,37 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 					boxes.add(new BoundingBox(boxDef, groupDef));
 				}
 				definitionCollisionBoxes.put(groupDef, boxes);
-				if(groupDef.animations != null){
-					collisionSwitchboxes.put(groupDef, new AnimationSwitchbox(this, groupDef.animations));
+				if(groupDef.animations != null || groupDef.applyAfter != null){
+					List<JSONAnimationDefinition> groupAnimations = new ArrayList<JSONAnimationDefinition>();
+					if(groupDef.animations != null){
+						groupAnimations.addAll(groupDef.animations);
+					}
+					if(groupDef.applyAfter != null){
+						if(definition.rendering != null && definition.rendering.animatedObjects != null){
+							String objectSought = groupDef.applyAfter;
+							while(objectSought != null){
+								boolean objectFound = false;
+								for(JSONAnimatedObject animatedObject : definition.rendering.animatedObjects){
+									if(animatedObject.objectName.equals(objectSought)){
+										objectFound = true;
+										if(groupAnimations.isEmpty()){
+											groupAnimations.addAll(animatedObject.animations);
+										}else{
+											groupAnimations.addAll(0, animatedObject.animations);
+										}
+										objectSought = animatedObject.applyAfter;
+										break;
+									}
+								}
+								if(!objectFound){
+									throw new IllegalArgumentException("Was told to applyAfter the object " + objectSought + " on collision boxes for " + definition.packID + ":" + definition.systemName + ", but there's no animations that have that object!");
+								}
+							}
+						}else{
+							throw new IllegalArgumentException("Was told to applyAfter on collision boxes, but there's no animations to applyAfter!");
+						}
+					}
+					collisionSwitchboxes.put(groupDef, new AnimationSwitchbox(this, groupAnimations));
 				}
 			}
 		}
