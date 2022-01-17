@@ -731,18 +731,22 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 	 *  Helper method to set a variable for this entity.
 	 */
 	public void setVariable(String variable, double value){
-		variables.put(variable, value);
+		if(value == 0){
+			//Remove variable from the map so we don't have as many to deal with.
+			variables.remove(variable);
+		}else{
+			variables.put(variable, value);
+		}
 	}
 	
 	/**
-	 *  Helper method to set get a variable for this entity.
-	 *  Does null checks to ensure we return a non-null entry in the variable map.
+	 *  Helper method to get get a variable for this entity.
 	 */
 	public double getVariable(String variable){
 		Double value = variables.get(variable);
 		if(value == null){
-			variables.put(variable, 0D);
-			return 0D;
+			//Don't add the variable to the map, just return 0 here.
+			return 0;
 		}else{
 			return value;
 		}

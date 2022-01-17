@@ -26,6 +26,7 @@ import minecrafttransportsimulator.jsondefs.JSONCollisionGroup;
 import minecrafttransportsimulator.jsondefs.JSONConnection;
 import minecrafttransportsimulator.jsondefs.JSONConnectionGroup;
 import minecrafttransportsimulator.jsondefs.JSONInstrumentDefinition;
+import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
@@ -232,6 +233,17 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 				JSONInstrumentDefinition packInstrument = definition.instruments.get(i);
 				if(packInstrument.animations != null){
 					for(JSONAnimationDefinition animation : packInstrument.animations){
+						animationClocks.put(animation, new DurationDelayClock(animation));
+					}
+				}
+			}
+		}
+		
+		//Add variable modifiers.
+		if(definition.variableModifiers != null){
+			for(JSONVariableModifier modifier : definition.variableModifiers){
+				if(modifier.animations != null){
+					for(JSONAnimationDefinition animation : modifier.animations){
 						animationClocks.put(animation, new DurationDelayClock(animation));
 					}
 				}

@@ -1,12 +1,17 @@
 package minecrafttransportsimulator.entities.instances;
 
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.TrailerConnection;
+import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
-import minecrafttransportsimulator.jsondefs.JSONPhysicsModifier;
+import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -131,20 +136,6 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	}
 	
 	@Override
-	protected void initializeDefinition(){
-		super.initializeDefinition();
-		if(definition.physicsModifiers != null){
-			for(JSONPhysicsModifier modifier : definition.physicsModifiers){
-				if(modifier.animations != null){
-					for(JSONAnimationDefinition animation : modifier.animations){
-						animationClocks.put(animation, new DurationDelayClock(animation));
-					}
-				}
-			}
-		}
-	}
-	
-	@Override
 	public boolean update(){
 		if(super.update()){
 			world.beginProfiling("VehicleF_Level", true);
@@ -243,75 +234,88 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 		currentAxleRatio = definition.motorized.axleRatio;
 		
 		//Adjust current variables to physics modifiers, if any exist.
-		if(definition.physicsModifiers != null){
-			for(JSONPhysicsModifier modifier : definition.physicsModifiers){
-				boolean doModification = true;
-				float modifiedValue = 0;
-				if(modifier.animations != null){
-					boolean inhibitAnimations = false;
-					for(JSONAnimationDefinition animation : modifier.animations){
-						DurationDelayClock clock = animationClocks.get(animation);
-						if(clock != null){
-							switch(animation.animationType){
-								case VISIBILITY :{
-									if(!inhibitAnimations){
-										double variableValue = getAnimatedVariableValue(clock, 0);
-										if(variableValue < clock.animation.clampMin || variableValue > clock.animation.clampMax){
-											doModification = false;
+		Map<AEntityD_Definable<?>, List<JSONVariableModifier>> modifyingEntities = new LinkedHashMap<AEntityD_Definable<?>, List<JSONVariableModifier>>();
+		if(definition.variableModifiers != null){
+			modifyingEntities.put(this, definition.variableModifiers);
+		}
+		for(APart part : parts){
+			if(part.definition.variableModifiers != null){
+				modifyingEntities.put(part, part.definition.variableModifiers);
+			}
+		}
+		if(!modifyingEntities.isEmpty()){
+			for(Entry<AEntityD_Definable<?>, List<JSONVariableModifier>> entry : modifyingEntities.entrySet()){
+				AEntityD_Definable<?> entity = entry.getKey();
+				for(JSONVariableModifier modifier : entry.getValue()){
+					boolean doModification = true;
+					float modifiedValue = modifier.value;
+					if(modifier.animations != null){
+						boolean inhibitAnimations = false;
+						for(JSONAnimationDefinition animation : modifier.animations){
+							DurationDelayClock clock = entity.animationClocks.get(animation);
+							if(clock != null){
+								switch(animation.animationType){
+									case VISIBILITY :{
+										if(!inhibitAnimations){
+											double variableValue = getAnimatedVariableValue(clock, 0);
+											if(variableValue < clock.animation.clampMin || variableValue > clock.animation.clampMax){
+												doModification = false;
+											}
 										}
+										break;
 									}
-									break;
-								}
-								case INHIBITOR :{
-									if(!inhibitAnimations){
-										double variableValue = getAnimatedVariableValue(clock, 0);
-										if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
-											inhibitAnimations = true;
+									case INHIBITOR :{
+										if(!inhibitAnimations){
+											double variableValue = getAnimatedVariableValue(clock, 0);
+											if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
+												inhibitAnimations = true;
+											}
 										}
+										break;
 									}
-									break;
-								}
-								case ACTIVATOR :{
-									if(inhibitAnimations){
-										double variableValue = getAnimatedVariableValue(clock, 0);
-										if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
-											inhibitAnimations = false;
+									case ACTIVATOR :{
+										if(inhibitAnimations){
+											double variableValue = getAnimatedVariableValue(clock, 0);
+											if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
+												inhibitAnimations = false;
+											}
 										}
+										break;
 									}
-									break;
-								}
-								case TRANSLATION :{
-								    if(!inhibitAnimations){
-									modifiedValue += getAnimatedVariableValue(clock, clock.animation.axis.y, 0);
-								    }
-								    break;
-								}
-								case ROTATION :{
-									//Do nothing.
-									break;
-								}
-								case SCALING :{
-									//Do nothing.
-									break;
+									case TRANSLATION :{
+									    if(!inhibitAnimations){
+									    	modifiedValue += getAnimatedVariableValue(clock, clock.animation.axis.y, 0);
+									    }
+									    break;
+									}
+									case ROTATION :{
+										//Do nothing.
+										break;
+									}
+									case SCALING :{
+										//Do nothing.
+										break;
+									}
 								}
 							}
 						}
 					}
-				}
-				if(doModification){
-					switch(modifier.property){
-						case WING_AREA : currentWingArea = modifier.value + modifiedValue; break;
-						case WING_SPAN : currentWingSpan = modifier.value + modifiedValue; break;
-						case AILERON_AREA : currentAileronArea = modifier.value + modifiedValue; break;
-						case ELEVATOR_AREA : currentElevatorArea = modifier.value + modifiedValue; break;
-						case RUDDER_AREA : currentRudderArea = modifier.value + modifiedValue; break;
-						case DRAG_COEFFICIENT : currentDragCoefficient = modifier.value + modifiedValue; break;
-						case BALLAST_VOLUME : currentBallastVolume = modifier.value + modifiedValue; break;
-						case DOWN_FORCE : currentDownForce = modifier.value + modifiedValue; break;
-						case BRAKING_FACTOR : currentBrakingFactor = modifier.value + modifiedValue; break;
-						case OVER_STEER : currentOverSteer = modifier.value + modifiedValue; break;
-						case UNDER_STEER : currentUnderSteer = modifier.value + modifiedValue; break;
-						case AXLE_RATIO : currentAxleRatio = modifier.value + modifiedValue; break;
+					if(doModification){
+						switch(modifier.variable){
+							case "wingArea" : currentWingArea = modifiedValue; break;
+							case "wingSpan" : currentWingSpan = modifiedValue; break;
+							case "aileronArea" : currentAileronArea = modifiedValue; break;
+							case "elevatorArea" : currentElevatorArea = modifiedValue; break;
+							case "rudderArea" : currentRudderArea = modifiedValue; break;
+							case "dragCoefficient" : currentDragCoefficient = modifiedValue; break;
+							case "ballastVolume" : currentBallastVolume = modifiedValue; break;
+							case "downForce" : currentDownForce = modifiedValue; break;
+							case "brakingFactor" : currentBrakingFactor = modifiedValue; break;
+							case "overSteer" : currentOverSteer = modifiedValue; break;
+							case "underSteer" : currentUnderSteer = modifiedValue; break;
+							case "axleRatio" : currentAxleRatio = modifiedValue; break;
+							default : setVariable(modifier.variable, modifiedValue); break;
+						}
 					}
 				}
 			}

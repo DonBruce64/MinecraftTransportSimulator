@@ -17,6 +17,9 @@ public abstract class AJSONInteractableEntity extends AJSONMultiModelProvider{
     
 	@JSONDescription("A list of instruments definitions.  Instrument definitions are used to tell MTS where to render instruments on the object, and where they correspond to on the HUD.  They may also specfy which part the instrument goes to.")
     public List<JSONInstrumentDefinition> instruments;
+	
+	@JSONDescription("A listing of variable modifiers.  These may be used to modify the vehicle's physics or other variables dynamically.  If present, these values will add-on to any defined value as the base, and will modify and keep the modification for any generic variable.")
+    public List<JSONVariableModifier> variableModifiers;
     
     @Deprecated
     public List<JSONConnection> connections;
