@@ -43,7 +43,7 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Renderable>{
 	        //Push the matrix on the stack and translate and rotate to the enitty's position.
 			GL11.glPushMatrix();
 	        GL11.glTranslated(entityPositionDelta.x, entityPositionDelta.y, entityPositionDelta.z);
-	        InterfaceRender.applyTransformOpenGL(interpolatedOrientationHolder);
+	        InterfaceRender.applyTransformOpenGL(interpolatedOrientationHolder, false);
 			
 	        //Render the main model.
 	        entity.world.endProfiling();

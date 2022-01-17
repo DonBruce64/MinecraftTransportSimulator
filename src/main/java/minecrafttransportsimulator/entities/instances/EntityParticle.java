@@ -174,8 +174,7 @@ public class EntityParticle extends AEntityC_Renderable{
 			}
 			
 			//Update orientation to always face the player.
-			//FIXME there has GOT to be a simpler waay to calculate this...
-			//orientation.setAngles(clientPlayer.getPosition().add(0, clientPlayer.getEyeHeight(), 0).add(InterfaceClient.getCameraPosition()).subtract(position).getAngles(true));
+			orientation.setAngles(clientPlayer.getPosition().add(0, clientPlayer.getEyeHeight(), 0).add(InterfaceClient.getCameraPosition()).subtract(position).getAngles(true));
 			return true;
 		}else{
 			return false;

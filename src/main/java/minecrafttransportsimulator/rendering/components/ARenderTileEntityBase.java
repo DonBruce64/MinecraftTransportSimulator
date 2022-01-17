@@ -26,7 +26,7 @@ public abstract class ARenderTileEntityBase<RenderedTileEntity extends ATileEnti
 		//Offset X and Z to be centered in the block.
 		entityPositionDelta.x += 0.5;
 		entityPositionDelta.z += 0.5;
-		if(translateToSlabs() && entity.world.isBlockBottomSlab(entity.position.copy().add(0, -1, 0))){
+		if(translateToSlabs() && entity.world.isBlockBelowBottomSlab(entity.position)){
 			entityPositionDelta.y -= 0.5D;			
 		}
 	}

@@ -137,7 +137,7 @@ public class AnimationSwitchbox{
 			helperTranslatedRotationMatrix.setTranslation(helperVector);
 			helperTranslatedRotationMatrix.mul(helperRotationMatrix);
 			
-			//Translate back.  This required inverting the translation.
+			//Translate back.  This requires inverting the translation.
 			helperVector.negate();
 			helperTranslationMatrix.setIdentity();
 			helperTranslationMatrix.setTranslation(helperVector);
@@ -148,21 +148,6 @@ public class AnimationSwitchbox{
 			rotationMatrix.mul(helperRotationMatrix);
 			helperTranslatedRotationMatrix.get(helperVector);
 			translation.add(helperVector);
-			
-			/*
-			helperVector.set(clock.animation.centerPoint.x, clock.animation.centerPoint.y, clock.animation.centerPoint.z);
-			helperTranslationMatrix.setIdentity();
-			helperTranslationMatrix.setTranslation(helperVector);
-			netMatrix.mul(helperTranslationMatrix);
-			
-			//Now perform the actual rotation.
-			netMatrix.mul(helperRotationMatrix);
-			
-			//Now undo the translation.
-			helperVector.negate();
-			helperTranslationMatrix.setTranslation(helperVector);
-			netMatrix.mul(helperTranslationMatrix);
-			*/
 		}else{
 			netMatrix.mul(helperRotationMatrix);
 			rotationMatrix.mul(helperRotationMatrix);

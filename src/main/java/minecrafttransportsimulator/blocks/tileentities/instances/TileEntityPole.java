@@ -5,10 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javax.vecmath.AxisAngle4d;
-
 import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
 import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.instances.BlockPole;
@@ -240,12 +237,17 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 				newComponent.prevPosition.set(newComponent.position);
 				newComponent.orientation.set(orientation);
 			}else{
+				//Update angles/orientation to account for axis rotation.
+				newComponent.angles.y = newAxis.yRotation;
+				newComponent.prevAngles.set(newComponent.angles);
+				newComponent.orientation.setAngles(newComponent.angles);
+				newComponent.prevOrientation.set(newComponent.orientation);
+				
+				//Adjust position to new orientation.
 				newComponent.position.set(0, 0, definition.pole.radius + 0.001);
-				newComponent.position.rotateY(newAxis.yRotation).add(position);
+				newComponent.orientation.transform(newComponent.position);
+				newComponent.position.add(position);
 				newComponent.prevPosition.set(newComponent.position);
-				newComponent.orientation.set(orientation);
-				//FIXME fix this./
-				//newComponent.orientation.mul(new Matrix4dPlus(new AxisAngle4d(0, 1, 0, newAxis.yRotation)));
 			}
 			world.addEntity(newComponent);
 		}else if(components.containsKey(newAxis)){

@@ -110,11 +110,8 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 			prevMotion.set(motion);
 			
 			prevOrientation.set(orientation);
-			if(!angles.equals(prevAngles)){
-				//Don't re-create the matrix if we didn't change angles.
-				//FIXME this is only here as a hack to get this to work with existing rendering.  See if we can remove angles after we are done.
-				orientation.setAngles(angles);
-			}
+			//FIXME this is only here as a hack to get this to work with existing rendering.  See if we can remove angles after we are done.
+			orientation.setAngles(angles);
 			prevAngles.set(angles);			
 			
 			axialOrientation.set(0, 0, 1);
@@ -188,9 +185,9 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	public void getInterpolatedOrientation(Matrix4d store, double partialTicks){
 		orientation.get(interpHelperQuatStart);
 		prevOrientation.get(interpHelperQuatEnd);
-		interpHelperQuatStart.interpolate(interpHelperQuatEnd, partialTicks);
+		interpHelperQuatEnd.interpolate(interpHelperQuatStart, partialTicks);
 		store.setIdentity();
-		store.setRotation(interpHelperQuatStart);
+		store.set(interpHelperQuatEnd);
 	}
 	
 	/**

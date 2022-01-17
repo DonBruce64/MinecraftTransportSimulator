@@ -526,23 +526,23 @@ public class WrapperWorld{
 	}
 	
 	/**
-	 *  Returns true if the block at the passed-in position is a slab, but only the
+	 *  Returns true if the block below the passed-in position is a slab, but only the
 	 *  bottom portion of the slab.  May be used to adjust renders to do half-block
 	 *  rendering to avoid floating blocks.
 	 */
-	public boolean isBlockBottomSlab(Point3dPlus position){
-		IBlockState state = world.getBlockState(new BlockPos(position.x, position.y, position.z));
+	public boolean isBlockBelowBottomSlab(Point3dPlus position){
+		IBlockState state = world.getBlockState(new BlockPos(position.x, position.y-1, position.z));
 		Block block = state.getBlock();
 		return block instanceof BlockSlab && !((BlockSlab) block).isDouble() && state.getValue(BlockSlab.HALF) == BlockSlab.EnumBlockHalf.BOTTOM;
 	}
 	
 	/**
-	 *  Returns true if the block at the passed-in position is a slab, but only the
+	 *  Returns true if the block above the passed-in position is a slab, but only the
 	 *  top portion of the slab.  May be used to adjust renders to do half-block
 	 *  rendering to avoid floating blocks.
 	 */
-	public boolean isBlockTopSlab(Point3dPlus position){
-		IBlockState state = world.getBlockState(new BlockPos(position.x, position.y, position.z));
+	public boolean isBlockAboveTopSlab(Point3dPlus position){
+		IBlockState state = world.getBlockState(new BlockPos(position.x, position.y+1, position.z));
 		Block block = state.getBlock();
 		return block instanceof BlockSlab && !((BlockSlab) block).isDouble() && state.getValue(BlockSlab.HALF) == BlockSlab.EnumBlockHalf.TOP;
 	}

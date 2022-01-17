@@ -1,22 +1,19 @@
 package minecrafttransportsimulator.baseclasses;
 
-import javax.vecmath.AxisAngle4d;
+import javax.vecmath.Matrix3d;
 import javax.vecmath.Matrix4d;
 
-/**Basic Orientation class.  Stores an axis for direction, and rotation about that axis as a double.
- * Maintains a Quaternion of these, which allows it to be multiplied with other objects to 
- * produce a final rotation.  Used to store the orientation of objects and render them without the use 
- * of Euler Angles.  This allow for multiple axis of rotation to be applied and prevents odd bugs with 
- * interpolation due to sign differences.  Note that you should NEVER modify axis, and should always modify
- * rotation via {@link #setRotation(double)} to ensure proper state is maintained.
+/**Upgraded Matrix4d class that allows for a method to convert
+ * Euler angles into the matrix as the rotational component. 
  *
  * @author don_bruce
  */
 public class Matrix4dPlus extends Matrix4d{
 	public final Point3dPlus lastAnglesSet = new Point3dPlus();
-	private final AxisAngle4d helperAxisAngle = new AxisAngle4d();
-	//Can't be created on class construction or we'll infinite loop.
-	private Matrix4dPlus helperMatrix;
+
+	private Matrix3d matX = new Matrix3d();
+	private Matrix3d matY = new Matrix3d();
+	private Matrix3d matZ = new Matrix3d();
 	
 	public Matrix4dPlus(){
 		super();
@@ -28,29 +25,18 @@ public class Matrix4dPlus extends Matrix4d{
 	}
 	
 	public void setAngles(Point3dPlus angles){
-		lastAnglesSet.set(angles);
-		if(helperMatrix == null){
-			helperMatrix = new Matrix4dPlus();
-		}
-		
-		setIdentity();
-		if(angles.y != 0){
-			helperAxisAngle.set(0, 1, 0, Math.toRadians(angles.y));
-			setRotation(helperAxisAngle);
-		}
-		
-		if(angles.x != 0){
-			helperAxisAngle.set(1, 0, 0, Math.toRadians(angles.x));
-			helperMatrix.setIdentity();
-			helperMatrix.setRotation(helperAxisAngle);
-			mul(helperMatrix);
-		}
-		
-		if(angles.z != 0){
-			helperAxisAngle.set(0, 0, 1, Math.toRadians(angles.z));
-			helperMatrix.setIdentity();
-			helperMatrix.setRotation(helperAxisAngle);
-			mul(helperMatrix);
+		//Don't bother setting angles if they are already correct.
+		if(!lastAnglesSet.equals(angles)){
+			lastAnglesSet.set(angles);
+			matX.rotX(Math.toRadians(angles.x));
+			matY.rotY(Math.toRadians(angles.y));
+			matZ.rotZ(Math.toRadians(angles.z));
+			matY.mul(matX);
+			matY.mul(matZ);
+			
+			setRotationScale(matY);
+			//Need to set this in case we didn't set ourselves as an identity before.
+			m33 = 1.0;
 		}
 	}
 }

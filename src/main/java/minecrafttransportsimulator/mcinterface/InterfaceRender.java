@@ -130,26 +130,47 @@ public class InterfaceRender{
 	
 	/**
 	 *  Applies an OpenGL transform to the current pipeline based on the
-	 *  passed-in matrix.
+	 *  passed-in matrix.  Allows for inverted transformation, should this
+	 *  be desired.  In this case, the rotation will be transposed and the
+	 *  translation will be inverted.  Fourth-row elements will be left as-is.
 	 */
-	public static void applyTransformOpenGL(Matrix4d matrix){
+	public static void applyTransformOpenGL(Matrix4d matrix, boolean inverted){
 		buffer.clear();
-		buffer.put(matrix.m00);
-		buffer.put(matrix.m10);
-		buffer.put(matrix.m20);
-		buffer.put(matrix.m30);
-		buffer.put(matrix.m01);
-		buffer.put(matrix.m11);
-		buffer.put(matrix.m21);
-		buffer.put(matrix.m31);
-		buffer.put(matrix.m02);
-		buffer.put(matrix.m12);
-		buffer.put(matrix.m22);
-		buffer.put(matrix.m32);
-		buffer.put(matrix.m03);
-		buffer.put(matrix.m13);
-		buffer.put(matrix.m23);
-		buffer.put(matrix.m33);
+		if(inverted){
+			buffer.put(matrix.m00);
+			buffer.put(matrix.m01);
+			buffer.put(matrix.m02);
+			buffer.put(matrix.m30);
+			buffer.put(matrix.m10);
+			buffer.put(matrix.m11);
+			buffer.put(matrix.m12);
+			buffer.put(matrix.m31);
+			buffer.put(matrix.m20);
+			buffer.put(matrix.m21);
+			buffer.put(matrix.m22);
+			buffer.put(matrix.m32);
+			buffer.put(-matrix.m03);
+			buffer.put(-matrix.m13);
+			buffer.put(-matrix.m23);
+			buffer.put(matrix.m33);
+		}else{
+			buffer.put(matrix.m00);
+			buffer.put(matrix.m10);
+			buffer.put(matrix.m20);
+			buffer.put(matrix.m30);
+			buffer.put(matrix.m01);
+			buffer.put(matrix.m11);
+			buffer.put(matrix.m21);
+			buffer.put(matrix.m31);
+			buffer.put(matrix.m02);
+			buffer.put(matrix.m12);
+			buffer.put(matrix.m22);
+			buffer.put(matrix.m32);
+			buffer.put(matrix.m03);
+			buffer.put(matrix.m13);
+			buffer.put(matrix.m23);
+			buffer.put(matrix.m33);
+		}
 		buffer.flip();
 		GL11.glMultMatrix(buffer);
 	}

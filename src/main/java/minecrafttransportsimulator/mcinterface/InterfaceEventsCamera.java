@@ -1,8 +1,5 @@
 package minecrafttransportsimulator.mcinterface;
 
-import javax.vecmath.Matrix3d;
-import javax.vecmath.Vector3d;
-
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
@@ -24,8 +21,6 @@ import net.minecraftforge.fml.relauncher.Side;
 public class InterfaceEventsCamera{
 	private static final Matrix4dPlus cameraAdjustedOrientation = new Matrix4dPlus();
 	private static final Point3dPlus cameraAdjustedPosition = new Point3dPlus();
-	private static final Matrix3d rotationMatrix = new Matrix3d();
-	private static final Vector3d translationVector = new Vector3d();
 	
     @SubscribeEvent
     public static void on(CameraSetup event){
@@ -39,13 +34,7 @@ public class InterfaceEventsCamera{
         		GL11.glRotated(180, 0, 1, 0);
 				
 				//Now apply our actual offsets.  Need to invert them as this is camera position, not object position.
-        		cameraAdjustedOrientation.getRotationScale(rotationMatrix);
-        		rotationMatrix.transpose();
-        		cameraAdjustedOrientation.setRotationScale(rotationMatrix);
-        		cameraAdjustedOrientation.get(translationVector);
-        		translationVector.negate();
-        		cameraAdjustedOrientation.setTranslation(translationVector);
-        		InterfaceRender.applyTransformOpenGL(cameraAdjustedOrientation);
+        		InterfaceRender.applyTransformOpenGL(cameraAdjustedOrientation, true);
         		cameraAdjustedPosition.negate();
         		GL11.glTranslated(cameraAdjustedPosition.x, cameraAdjustedPosition.y, cameraAdjustedPosition.z);
     			event.setPitch(0);
