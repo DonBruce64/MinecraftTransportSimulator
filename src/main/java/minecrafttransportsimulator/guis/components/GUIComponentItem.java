@@ -2,9 +2,8 @@ package minecrafttransportsimulator.guis.components;
 
 import java.util.List;
 
-import org.lwjgl.opengl.GL11;
-
 import minecrafttransportsimulator.baseclasses.ColorRGB;
+import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.InterfaceRender;
 import minecrafttransportsimulator.mcinterface.WrapperItemStack;
@@ -28,6 +27,7 @@ public class GUIComponentItem extends AGUIComponent{
 	public WrapperItemStack stack;
 	public List<WrapperItemStack> stacks;
 	private WrapperItemStack stackToRender;
+	private Matrix4dPlus transform = new Matrix4dPlus();
 	
 	/**Default item constructor.**/
 	public GUIComponentItem(int x, int y, float scale){
@@ -60,13 +60,12 @@ public class GUIComponentItem extends AGUIComponent{
     	}
     	
     	if(stackToRender != null){
-    		GL11.glPushMatrix();
-			GL11.glTranslated(position.x, position.y, position.z);
-			GL11.glScalef(scale, scale, scale);
-			InterfaceRender.renderItemModel(stackToRender);
-			GL11.glPopMatrix();
-			
-			if(stackToRender.getSize() > 1){
+    		transform.resetTransforms();
+    		transform.translate(position.x, position.y, position.z);
+    		transform.scale(scale);
+    		InterfaceRender.renderItemModel(stackToRender, transform);
+    		
+    		if(stackToRender.getSize() > 1){
     			text = String.valueOf(RenderText.FORMATTING_CHAR) + String.valueOf(RenderText.BOLD_FORMATTING_CHAR) + String.valueOf(stackToRender.getSize());
     		}else{
     			text = null;

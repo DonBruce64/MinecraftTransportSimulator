@@ -240,7 +240,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 				//Update angles/orientation to account for axis rotation.
 				newComponent.angles.y = newAxis.yRotation;
 				newComponent.prevAngles.set(newComponent.angles);
-				newComponent.orientation.setAngles(newComponent.angles);
+				newComponent.orientation.setToAngles(newComponent.angles);
 				newComponent.prevOrientation.set(newComponent.orientation);
 				
 				//Adjust position to new orientation.

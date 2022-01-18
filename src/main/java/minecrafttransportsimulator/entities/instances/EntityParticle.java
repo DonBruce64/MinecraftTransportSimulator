@@ -174,7 +174,7 @@ public class EntityParticle extends AEntityC_Renderable{
 			}
 			
 			//Update orientation to always face the player.
-			orientation.setAngles(clientPlayer.getPosition().add(0, clientPlayer.getEyeHeight(), 0).add(InterfaceClient.getCameraPosition()).subtract(position).getAngles(true));
+			orientation.setToAngles(clientPlayer.getPosition().add(0, clientPlayer.getEyeHeight(), 0).add(InterfaceClient.getCameraPosition()).subtract(position).getAngles(true));
 			return true;
 		}else{
 			return false;
@@ -234,7 +234,7 @@ public class EntityParticle extends AEntityC_Renderable{
 	
 	/**
 	 *  Called to render the particle..
-	 *  Clearner as we don't need to preface variable references.
+	 *  Cleaner as we don't need to preface variable references.
 	 */
 	public void render(float partialTicks){
 		if(staticColor == null){
@@ -243,7 +243,8 @@ public class EntityParticle extends AEntityC_Renderable{
 			renderable.color.blue = startColor.blue + (endColor.blue - startColor.blue)*(age+partialTicks)/maxAge;
 		}
 		renderable.alpha = getAlpha(partialTicks);
-		renderable.scale = getSize()*getScale(partialTicks);
+		renderable.transform.resetTransforms();
+		renderable.transform.scale(getSize()*getScale(partialTicks));
 		
 		switch(definition.type){
 			case SMOKE: setParticleTextureBounds(7 - age*8/maxAge, 0); break;//Smoke gets smaller as it ages.

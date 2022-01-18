@@ -5,7 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.lwjgl.opengl.GL11;
+import javax.vecmath.AxisAngle4d;
+import javax.vecmath.Matrix4d;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.rendering.components.AModelParser;
@@ -27,6 +28,7 @@ public class GUIComponent3DModel extends AGUIComponent{
 	/**Parsed vertex indexes.  Keyed by model name.*/
 	private static final Map<String, RenderableObject> modelParsedObjects = new HashMap<String, RenderableObject>();
 	private static final Map<String, Float> modelScalingFactors = new HashMap<String, Float>();
+	private static final Matrix4d ISOMETRIC_TRANSFORM = generateIsometricTransform();
 	
 	public final float scaleFactor;
 	public final boolean isometric;
@@ -96,30 +98,22 @@ public class GUIComponent3DModel extends AGUIComponent{
 				RenderableObject combinedObject = new RenderableObject("model", textureLocation, ColorRGB.WHITE, totalModel, true);
 				modelParsedObjects.put(modelLocation, combinedObject);
 			}
-			GL11.glPushMatrix();
-			//Translate to position and rotate to isometric view if required.
-			//Need to translate -y due to different model position.
-			GL11.glTranslated(position.x, position.y, position.z);
+			RenderableObject object = modelParsedObjects.get(modelLocation);
+			object.transform.resetTransforms();
+			object.transform.translate(position);
 			if(isometric){
-				GL11.glRotatef(-45, 0, 1, 0);
-				GL11.glRotatef(35.264F, 1, 0, -1);
+				object.transform.combine(ISOMETRIC_TRANSFORM);
 			}
-			
-			//If set to rotate, do so now based on time.
 			if(spin){
-				GL11.glRotatef((36*System.currentTimeMillis()/1000)%360, 0, 1, 0);
+				object.transform.rotate((36*System.currentTimeMillis()/1000)%360, 0, 1, 0);
 			}
-
-			//Scale based on our scaling factor and render.
 			if(!staticScaling){
 				scale = modelScalingFactors.get(modelLocation);
 			}
-			RenderableObject object = modelParsedObjects.get(modelLocation);
-			object.scale = scale*scaleFactor;
+			object.transform.scale(scale*scaleFactor);
 			object.texture = textureLocation;
 			object.disableLighting = renderBright;
 			object.render();
-			GL11.glPopMatrix();
 		}
     }
     
@@ -129,5 +123,16 @@ public class GUIComponent3DModel extends AGUIComponent{
     public static void clearModelCaches(){
     	modelParsedObjects.values().forEach(modelParsedObject -> modelParsedObject.destroy());
     	modelParsedObjects.clear();
+    }
+    
+    private static Matrix4d generateIsometricTransform(){
+    	Matrix4d transform = new Matrix4d();
+    	transform.setIdentity();
+    	transform.set(new AxisAngle4d(0, 1, 0, Math.toRadians(-45)));
+    	Matrix4d transform2 = new Matrix4d();
+    	transform2.setIdentity();
+    	transform2.set(new AxisAngle4d(1, 0, -1, Math.toRadians(35.264)));
+    	transform.mul(transform2);
+    	return transform;
     }
 }

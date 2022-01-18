@@ -31,7 +31,7 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 	private static final AxisAngle4d ROAD_ZERO_ROTATION = new AxisAngle4d(0, 0, 0, 0);
 		
 	@Override
-	protected void renderModel(TileEntityRoad road, boolean blendingEnabled, float partialTicks){
+	protected void renderModel(TileEntityRoad road, Matrix4dPlus transform, boolean blendingEnabled, float partialTicks){
 		//Don't call super, we don't want to render the normal way.
 		if(road.isActive() ^ blendingEnabled){
 			//Render road components.
@@ -222,20 +222,19 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 	}
 	
 	@Override
-	protected void renderBoundingBoxes(TileEntityRoad road, Point3dPlus entityPositionDelta){
-		super.renderBoundingBoxes(road, entityPositionDelta);
+	protected void renderBoundingBoxes(TileEntityRoad road, Matrix4dPlus transform){
+		super.renderBoundingBoxes(road, transform);
 		//Render all collision boxes too.
-		GL11.glTranslated(entityPositionDelta.x, entityPositionDelta.y, entityPositionDelta.z);
 		for(Point3dPlus blockOffset : road.collisionBlockOffsets){
 			ABlockBase block = road.world.getBlock(road.position.copy().add(blockOffset));
 			if(block instanceof BlockCollision){
 				BoundingBox blockBounds = ((BlockCollision) block).blockBounds;
 				GL11.glTranslated(blockOffset.x, blockOffset.y + blockBounds.heightRadius, blockOffset.z);
-				blockBounds.renderable.render();
+				//FIXME this isn't right, but it'll work fornoe.
+				blockBounds.renderWireframe(road, transform, null);
 				GL11.glTranslated(-blockOffset.x, -blockOffset.y - blockBounds.heightRadius, -blockOffset.z);
 			}
 		}
-		GL11.glTranslated(-entityPositionDelta.x, -entityPositionDelta.y, -entityPositionDelta.z);
 	}
 	
 	private static void generateDevElements(TileEntityRoad road){

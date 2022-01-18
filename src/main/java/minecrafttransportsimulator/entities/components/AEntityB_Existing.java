@@ -65,7 +65,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 			angles.y = getPlacementRotation(placingPlayer);
 		}
 		this.orientation = new Matrix4dPlus();
-		orientation.setAngles(angles);
+		orientation.setToAngles(angles);
 		this.prevOrientation = new Matrix4dPlus(orientation);
 		this.axialOrientation = new Point3dPlus(0, 0, 1);
 		orientation.transform(axialOrientation);
@@ -90,7 +90,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 		this.prevAngles = angles.copy();
 		this.rotation = new Point3dPlus();
 		this.orientation = new Matrix4dPlus();
-		orientation.setAngles(angles);
+		orientation.setToAngles(angles);
 		this.prevOrientation = new Matrix4dPlus(orientation);
 		this.axialOrientation = new Point3dPlus(0, 0, 1);
 		orientation.transform(axialOrientation);
@@ -111,7 +111,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 			
 			prevOrientation.set(orientation);
 			//FIXME this is only here as a hack to get this to work with existing rendering.  See if we can remove angles after we are done.
-			orientation.setAngles(angles);
+			orientation.setToAngles(angles);
 			prevAngles.set(angles);			
 			
 			axialOrientation.set(0, 0, 1);

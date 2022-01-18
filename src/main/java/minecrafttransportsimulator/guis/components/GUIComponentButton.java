@@ -2,8 +2,6 @@ package minecrafttransportsimulator.guis.components;
 
 import java.nio.FloatBuffer;
 
-import org.lwjgl.opengl.GL11;
-
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.rendering.components.RenderableObject;
 import minecrafttransportsimulator.rendering.instances.RenderText;
@@ -124,23 +122,27 @@ public abstract class GUIComponentButton extends GUIComponentCutout{
     			}
     		}
     		
-    		GL11.glTranslated(position.x, position.y, position.z);
     		if(enabled){
 				if(isMouseInBounds(mouseX, mouseY)){//Highlighted
 					renderable3.disableLighting = renderBright || ignoreGUILightingState;
 					renderable3.texture = renderLitTexture ? gui.getTexture().replace(".png", "_lit.png") : gui.getTexture();
+					renderable3.transform.resetTransforms();
+					renderable3.transform.translate(position);
 					renderable3.render();
 				}else{//Normal
 					renderable2.disableLighting = renderBright || ignoreGUILightingState;
 					renderable2.texture = renderLitTexture ? gui.getTexture().replace(".png", "_lit.png") : gui.getTexture();
+					renderable2.transform.resetTransforms();
+					renderable2.transform.translate(position);
 					renderable2.render();
 				}
 			}else{//Disabled
 				renderable.disableLighting = renderBright || ignoreGUILightingState;
 				renderable.texture = renderLitTexture ? gui.getTexture().replace(".png", "_lit.png") : gui.getTexture();
+				renderable.transform.resetTransforms();
+	    		renderable.transform.translate(position);
 				renderable.render();
 			}
-    		GL11.glTranslated(-position.x, -position.y, -position.z);
 		}
     }
     

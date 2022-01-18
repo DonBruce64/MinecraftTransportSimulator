@@ -7,8 +7,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.lwjgl.opengl.GL11;
+import javax.vecmath.Matrix4d;
 
+import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
@@ -16,7 +17,6 @@ import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartGroundDevice;
 import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
-import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONLight;
 import minecrafttransportsimulator.jsondefs.JSONLight.JSONLightBlendableComponent;
 import minecrafttransportsimulator.jsondefs.JSONText;
@@ -43,9 +43,11 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 	private final Map<JSONLight, RenderableObject> flareObjects = new HashMap<JSONLight, RenderableObject>();
 	private final Map<JSONLight, RenderableObject> beamObjects = new HashMap<JSONLight, RenderableObject>();
 	
+	
 	/**Map of tread points, keyed by the model the tread is pathing about, then the spacing of the tread.
 	 * This can be shared for two different treads of the same spacing as they render the same.**/
 	private static final Map<String, Map<Float, List<Double[]>>> treadPoints = new HashMap<String, Map<Float, List<Double[]>>>();
+	private static final Matrix4d treadPathBaseTransform = new Matrix4d();
 	private static final float COLOR_OFFSET = 0.0001F;
 	private static final float FLARE_OFFSET = 0.0002F;
 	private static final float COVER_OFFSET = 0.0003F;
@@ -91,16 +93,20 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 	 *  Renders this object, applying any transforms that need to happen.  This method also
 	 *  renders any objects that depend on this object's transforms after rendering.
 	 */
-	public void render(AnimationEntity entity, boolean blendingEnabled, float partialTicks){
+	public void render(AnimationEntity entity, Matrix4d transform, boolean blendingEnabled, float partialTicks){
 		JSONLight lightDef = entity.lightObjectDefinitions.get(object.name);
 		float lightLevel = lightDef != null ? entity.lightBrightnessValues.get(lightDef) : 0;
 		if(shouldRender(entity, lightDef, blendingEnabled)){
 			//Do pre-render checks based on the object we are rendering.
 			//This may block rendering if there are false visibility transforms.
-			GL11.glPushMatrix();
-			object.scale = entity.scale;
-			JSONAnimatedObject definition = entity.animatedObjectDefinitions.get(object.name);
-			if(doPreRenderTransforms(entity, definition != null ? definition.animations : null, blendingEnabled, partialTicks)){
+			object.transform.set(transform);
+			AnimationSwitchbox switchbox = entity.animatedObjectSwitchboxes.get(object.name);
+			if(switchbox == null || switchbox.runSwitchbox(partialTicks)){
+				//Apply switchbox transform, if we have one.
+				if(switchbox != null){
+					object.transform.combine(switchbox.netMatrix);
+				}
+				
 				//Set mirrored statues.
 				object.isMirrored = entity.mirrored;
 				
@@ -165,7 +171,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 						object.render();
 						if(interiorWindowObject != null && ConfigSystem.configObject.clientRendering.innerWindows.value){
 							interiorWindowObject.isMirrored = object.isMirrored;
-							interiorWindowObject.scale = object.scale;
+							interiorWindowObject.transform.set(object.transform);
 							interiorWindowObject.render();
 						}
 					}
@@ -189,101 +195,11 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 				for(RenderableModelObject<AnimationEntity> modelObject : allObjects){
 					JSONAnimatedObject animation = entity.animatedObjectDefinitions.get(modelObject.object.name);
 					if(animation != null && object.name.equals(animation.applyAfter)){
-						modelObject.render(entity, blendingEnabled, partialTicks);
-					}
-				}
-			}
-			
-			//Pop state.
-			GL11.glPopMatrix();
-		}
-	}
-	
-	/**
-	 *  Does all the transforms for this object.  If the object should render, return true. 
-	 *  If the object should not render due to a transform, return false.
-	 *  This is static as it's common to all renderable objects, including those not in this class.
-	 */
-	public static boolean doPreRenderTransforms(AEntityD_Definable<?> entity, List<JSONAnimationDefinition> animations, boolean blendingEnabled, float partialTicks){
-		if(animations != null){
-			double variableValue = 0;
-			double priorOffset = 0;
-			boolean inhibitAnimations = false;
-			for(JSONAnimationDefinition animation : animations){
-				//If the animation is a cumulative offset, we need to add the prior value to our variable. 
-				priorOffset = animation.addPriorOffset ? variableValue : 0;
-				variableValue = 0;
-				DurationDelayClock clock = entity.animationClocks.get(animation);
-				switch(animation.animationType){
-					case VISIBILITY :{
-						if(!inhibitAnimations){
-							variableValue = entity.getAnimatedVariableValue(clock, partialTicks);
-							if(variableValue < animation.clampMin || variableValue > animation.clampMax){
-								return false;
-							}
-						}
-						break;
-					}
-					case INHIBITOR :{
-						if(!inhibitAnimations){
-							variableValue =  entity.getAnimatedVariableValue(clock, partialTicks);
-							if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
-								inhibitAnimations = true;
-							}
-						}
-						break;
-					}
-					case ACTIVATOR :{
-						if(inhibitAnimations){
-							variableValue = entity.getAnimatedVariableValue(clock, partialTicks);
-							if(variableValue >= animation.clampMin && variableValue <= animation.clampMax){
-								inhibitAnimations = false;
-							}
-						}
-						break;
-					}
-					case TRANSLATION :{
-						if(!inhibitAnimations){
-							variableValue = entity.getAnimatedVariableValue(clock, clock.animationAxisMagnitude, priorOffset, partialTicks);
-							//Do the actual translation, if we aren't 0.
-							if(animation.addPriorOffset){
-								GL11.glTranslated((variableValue - priorOffset)*animation.axis.x/clock.animationAxisMagnitude, (variableValue - priorOffset)*animation.axis.y/clock.animationAxisMagnitude, (variableValue - priorOffset)*animation.axis.z/clock.animationAxisMagnitude);
-							}else if(variableValue != 0){
-								GL11.glTranslated(variableValue*animation.axis.x/clock.animationAxisMagnitude, variableValue*animation.axis.y/clock.animationAxisMagnitude, variableValue*animation.axis.z/clock.animationAxisMagnitude);
-							}
-						}
-						break;
-					}
-					case ROTATION :{
-						if(!inhibitAnimations){
-							variableValue = entity.getAnimatedVariableValue(clock, clock.animationAxisMagnitude, priorOffset, partialTicks);
-							//Do rotation.
-							if(animation.addPriorOffset){
-								GL11.glTranslated(animation.centerPoint.x, animation.centerPoint.y, animation.centerPoint.z);
-								GL11.glRotated((variableValue - priorOffset), animation.axis.x/clock.animationAxisMagnitude, animation.axis.y/clock.animationAxisMagnitude, animation.axis.z/clock.animationAxisMagnitude);
-								GL11.glTranslated(-animation.centerPoint.x, -animation.centerPoint.y, -animation.centerPoint.z);
-							}else if(variableValue != 0){
-								GL11.glTranslated(animation.centerPoint.x, animation.centerPoint.y, animation.centerPoint.z);
-								GL11.glRotated(variableValue, animation.axis.x/clock.animationAxisMagnitude, animation.axis.y/clock.animationAxisMagnitude, animation.axis.z/clock.animationAxisMagnitude);
-								GL11.glTranslated(-animation.centerPoint.x, -animation.centerPoint.y, -animation.centerPoint.z);
-							}
-						}
-						break;
-					}
-					case SCALING :{
-						if(!inhibitAnimations){
-							variableValue = entity.getAnimatedVariableValue(clock, clock.animationAxisMagnitude, priorOffset, partialTicks);
-							//Do the actual scaling.
-							GL11.glTranslated(animation.centerPoint.x, animation.centerPoint.y, animation.centerPoint.z);
-							GL11.glScaled(animation.axis.x == 0 ? 1.0 : variableValue*animation.axis.x/clock.animationAxisMagnitude, animation.axis.y == 0 ? 1.0 : variableValue*animation.axis.y/clock.animationAxisMagnitude, animation.axis.z == 0 ? 1.0 : variableValue*animation.axis.z/clock.animationAxisMagnitude);
-							GL11.glTranslated(-animation.centerPoint.x, -animation.centerPoint.y, -animation.centerPoint.z);
-						}
-						break;
+						modelObject.render(entity, object.transform, blendingEnabled, partialTicks);
 					}
 				}
 			}
 		}
-		return true;
 	}
 	
 	/**
@@ -355,9 +271,14 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 		//Tread rendering is done via the thing the tread is on, which will assume the part is centered at 0, 0, 0.
 		//We need to undo the offset of the tread part for this routine.
 		if(!(entityTreadAttachedTo instanceof APart)){
-			GL11.glTranslated(0, -tread.localOffset.y, -tread.localOffset.z);	
+			object.transform.translate(0, -tread.localOffset.y, -tread.localOffset.z);
 		}
 		
+		//Add initial translation for the first point
+		point = points.get(0);
+		object.transform.translate(0, point[0], point[1]);
+		
+		//Now transform all points.
 		for(int i=0; i<points.size() - 1; ++i){
 			//Update variables.
 			//If we're at the last point, set the next point to the first point.
@@ -371,11 +292,6 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 			zDelta = nextPoint[1] - point[1];
 			angleDelta = nextPoint[2] - point[2];
 			
-			//If we're at the first point, do initial translation.
-			if(i == 0){
-				GL11.glTranslated(0, point[0], point[1]);
-			}
-			
 			//If our angle delta is greater than 180, we can assume that we're inverted.
 			//This happens when we cross the 360 degree rotation barrier.
 			if(angleDelta > 180){
@@ -384,31 +300,32 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 				angleDelta += 360;
 			}
 			
-			//If there's no rotation to the point, and no delta between points, don't do rotation.
-			//That's an expensive operation due to sin and cos operations.
-			//Do note that the model needs to be flipped 180 on the X-axis due to all our points
-			//assuming a YZ coordinate system with 0 degrees rotation being in +Y.
+			//Translate to the current position of the tread based on the percent it has moved.
+			//This is determined by partial ticks and actual tread position.
+			//Once there, render the tread.  Then translate the remainder of the way to prepare
+			//to render the next tread.
+			object.transform.translate(0, yDelta*treadMovementPercentage, zDelta*treadMovementPercentage);
+			
+			//If there's no rotation to the point, and no delta between points, don't do rotation.  That's just extra math.
+			//Do note that the model needs to be rotated 180 on the X-axis due to all our points
+			//assuming a YZ coordinate system with 0 degrees rotation being in +Y (just how the math comes out).
 			//This is why 180 is added to all points cached in the operations above.
 			if(point[2] != 0 || angleDelta != 0){
 				//We can't use a running rotation here as we'll end up translating in the rotated
 				//coordinate system.  To combat this, we translate like normal, but then push a
 				//stack and rotate prior to rendering.  This keeps us from having to do another
 				//rotation to get the old coordinate system back.
-				GL11.glPushMatrix();
-				GL11.glTranslated(0, yDelta*treadMovementPercentage, zDelta*treadMovementPercentage);
-				GL11.glRotated(point[2] + angleDelta*treadMovementPercentage, 1, 0, 0);
+				treadPathBaseTransform.set(object.transform);
+				object.transform.rotate(point[2] + angleDelta*treadMovementPercentage, 1, 0, 0);
 				object.render();
-				GL11.glPopMatrix();
-				GL11.glTranslated(0, yDelta, zDelta);
+				object.transform.set(treadPathBaseTransform);
 			}else{
-				//Translate to the current position of the tread based on the percent it has moved.
-				//This is determined by partial ticks and actual tread position.
-				//Once there, render the tread.  Then translate the remainder of the way to prepare
-				//to render the next tread.
-				GL11.glTranslated(0, yDelta*treadMovementPercentage, zDelta*treadMovementPercentage);
+				//Just render as normal as we didn't rotate.
 				object.render();
-				GL11.glTranslated(0, yDelta*(1 - treadMovementPercentage), zDelta*(1 - treadMovementPercentage));
 			}
+			
+			//Add remaining translation.
+			object.transform.translate(0, yDelta*(1 - treadMovementPercentage), zDelta*(1 - treadMovementPercentage));
 		}
 	}
 		
@@ -428,7 +345,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 			colorObject.color.setTo(color);
 			colorObject.alpha = lightLevel;
 			colorObject.isMirrored = object.isMirrored;
-			colorObject.scale = object.scale;
+			colorObject.transform.set(object.transform);
 			colorObject.render();
 			
 		}
@@ -465,7 +382,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 					flareObject.color.setTo(color);
 					flareObject.alpha = blendableBrightness;
 					flareObject.isMirrored = object.isMirrored;
-					flareObject.scale = object.scale;
+					flareObject.transform.set(object.transform);
 					flareObject.render();
 				}
 				
@@ -476,7 +393,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 					beamObject.color.setTo(color);
 					beamObject.alpha = blendableBrightness;
 					beamObject.isMirrored = object.isMirrored;
-					beamObject.scale = object.scale;
+					beamObject.transform.set(object.transform);
 					beamObject.render();
 				}
 			}
@@ -494,7 +411,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 			
 			coverObject.disableLighting = ConfigSystem.configObject.clientRendering.brightLights.value && lightLevel > 0;
 			coverObject.isMirrored = object.isMirrored;
-			coverObject.scale = object.scale;
+			coverObject.transform.set(object.transform);
 			coverObject.render();
 		}
 	}

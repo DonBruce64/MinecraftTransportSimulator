@@ -2,12 +2,13 @@ package minecrafttransportsimulator.rendering.instances;
 
 import java.util.Set;
 
-import org.lwjgl.opengl.GL11;
-
 import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.ColorRGB;
+import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
 import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController;
+import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController.SignalDirection;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController.SignalGroup;
 import minecrafttransportsimulator.mcinterface.InterfaceRender;
 import minecrafttransportsimulator.rendering.components.ARenderTileEntityBase;
@@ -15,11 +16,9 @@ import minecrafttransportsimulator.rendering.components.ARenderTileEntityBase;
 public class RenderDecor extends ARenderTileEntityBase<TileEntityDecor>{
 	
 	@Override
-	protected void renderModel(TileEntityDecor decor, boolean blendingEnabled, float partialTicks){
-		super.renderModel(decor, blendingEnabled, partialTicks);
-		
+	protected void renderHolographicBoxes(TileEntityDecor decor, Matrix4dPlus transform){
 		//Render lane holo-boxes if we are a signal controller that's being edited.
-		if(blendingEnabled && decor instanceof TileEntitySignalController){
+		if(decor instanceof TileEntitySignalController){
 			TileEntitySignalController controller = (TileEntitySignalController) decor;
 			if(controller.unsavedClientChangesPreset || InterfaceRender.shouldRenderBoundingBoxes()){
 				for(Set<SignalGroup> signalGroupSet : controller.signalGroups.values()){
@@ -37,19 +36,12 @@ public class RenderDecor extends ARenderTileEntityBase<TileEntityDecor>{
 							boxRelativeCenter.add(controller.intersectionCenterPoint);
 							boxRelativeCenter.sub(controller.position);
 							
-							//Create bounding box.
+							//Create bounding box and transform for it..
 							BoundingBox box = new BoundingBox(boxRelativeCenter, signalGroup.signalLineWidth/2D, 2, 8);
-							signalGroup.renderable.setHolographicBoundingBox(box);
-							
-							//Undo controller transform and then translate to the box position and render.
-							//Will need to rotate to the proper orientation once there.
-							GL11.glPushMatrix();
-							InterfaceRender.applyTransformOpenGL(controller.orientation, true);
-							GL11.glTranslated(box.globalCenter.x, box.globalCenter.y, box.globalCenter.z);
-							GL11.glRotated(signalGroup.axis.yRotation, 0, 1, 0);
-							signalGroup.renderable.render();
-							GL11.glPopMatrix();
-							
+							Matrix4dPlus newTransform = new Matrix4dPlus(transform);
+							newTransform.translate(boxRelativeCenter);
+							newTransform.rotate(signalGroup.axis.yRotation, 0, 1, 0);
+							box.renderHolographic(newTransform, null, signalGroup.direction.equals(SignalDirection.LEFT) ? ColorRGB.BLUE : (signalGroup.direction.equals(SignalDirection.RIGHT) ? ColorRGB.YELLOW : ColorRGB.GREEN));
 						}
 		        	}
 				}

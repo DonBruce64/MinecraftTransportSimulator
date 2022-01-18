@@ -260,7 +260,7 @@ public class RenderText{
 		private void renderText(String text, Point3dPlus position, Point3dPlus rotation, TextAlignment alignment, float scale, boolean autoScale, int wrapWidth, float preScaledFactor, boolean pixelCoords, ColorRGB color, boolean renderLit){
 			//Clear out the active object list as it was set last pass.
 			for(RenderableObject object : activeRenderObjects){
-				object.resetTransforms();
+				object.transform.resetTransforms();
 				object.vertices.clear();
 			}
 			activeRenderObjects.clear();
@@ -629,8 +629,8 @@ public class RenderText{
 			//All points obtained, render.
 			for(RenderableObject object : activeRenderObjects){
 				object.disableLighting = renderLit;
-				object.applyTranslation(mutablePosition, false);
-				object.applyScale(scale*preScaledFactor, false);
+				object.transform.translate(mutablePosition);
+				object.transform.scale(scale*preScaledFactor);
 				object.vertices.flip();
 				object.render();
 			}

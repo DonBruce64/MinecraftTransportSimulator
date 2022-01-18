@@ -6,8 +6,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
@@ -16,7 +14,6 @@ import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
-import minecrafttransportsimulator.rendering.components.RenderableObject;
 
 /**Traffic signal controller tile entity.  Responsible for keeping the state of traffic
  * intersections.
@@ -261,7 +258,6 @@ public class TileEntitySignalController extends TileEntityDecor{
 		public final Axis axis;
 		public final SignalDirection direction;
 		public final boolean isMainSignal;
-		public final RenderableObject renderable;
 		public boolean isActive;
 		
 		protected LightType currentLight;
@@ -279,7 +275,6 @@ public class TileEntitySignalController extends TileEntityDecor{
 			this.axis = axis;
 			this.direction = direction;
 			this.isMainSignal = axis.equals(mainDirectionAxis) || axis.equals(mainDirectionAxis.getOpposite());
-			this.renderable = new RenderableObject(new BoundingBox(new Point3dPlus(), 0.0, 0.0, 0.0), direction.equals(SignalDirection.LEFT) ? ColorRGB.BLUE : (direction.equals(SignalDirection.RIGHT) ? ColorRGB.YELLOW : ColorRGB.GREEN), true);
 			
 			//Get saved light status.
 			String currentLightName = data.getString("currentLight");

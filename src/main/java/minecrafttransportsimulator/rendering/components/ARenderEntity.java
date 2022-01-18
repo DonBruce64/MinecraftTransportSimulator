@@ -14,6 +14,7 @@ import minecrafttransportsimulator.mcinterface.InterfaceRender;
  */
 public abstract class ARenderEntity<RenderedEntity extends AEntityC_Renderable>{
 	private static final Matrix4dPlus interpolatedOrientationHolder = new Matrix4dPlus();
+	private static final Matrix4dPlus startingMatrix = new Matrix4dPlus();
 	
 	/**
 	 *  Called to render this entity.  This is the setup method that sets states to the appropriate values.
@@ -43,21 +44,34 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Renderable>{
 	        //Push the matrix on the stack and translate and rotate to the enitty's position.
 			GL11.glPushMatrix();
 	        GL11.glTranslated(entityPositionDelta.x, entityPositionDelta.y, entityPositionDelta.z);
+	       
+	        GL11.glPushMatrix();
 	        InterfaceRender.applyTransformOpenGL(interpolatedOrientationHolder, false);
 			
 	        //Render the main model.
 	        entity.world.endProfiling();
-	        renderModel(entity, blendingEnabled, partialTicks);
+	        //FIXME this is this way for testing.
+	        startingMatrix.resetTransforms();
+	        startingMatrix.scale(entity.scale);
+	        renderModel(entity, startingMatrix, blendingEnabled, partialTicks);
 			
 			//End rotation render matrix.
 			GL11.glPopMatrix();
 			
+			//Render holoboxes.
+			if(blendingEnabled){
+				renderHolographicBoxes(entity, startingMatrix);
+			}
+			
 			//Render bounding boxes.
 			if(!blendingEnabled && InterfaceRender.shouldRenderBoundingBoxes()){
 				entity.world.beginProfiling("BoundingBoxes", true);
-				renderBoundingBoxes(entity, entityPositionDelta);
-				 entity.world.endProfiling();
+				renderBoundingBoxes(entity, startingMatrix);
+				entity.world.endProfiling();
 			}
+			
+			//End translation render matrix.
+			GL11.glPopMatrix();
 			
 			//Handle sounds.  These will be partial-tick only ones.
 			//Normal sounds are handled on the main tick loop.
@@ -86,7 +100,15 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Renderable>{
 	 *  Called to render the main model.  At this point the matrix state will be aligned
 	 *  to the position and rotation of the entity relative to the player-camera.
 	 */
-	protected abstract void renderModel(RenderedEntity entity, boolean blendingEnabled, float partialTicks);
+	protected abstract void renderModel(RenderedEntity entity, Matrix4dPlus transform, boolean blendingEnabled, float partialTicks);
+	
+	/**
+	 *  Called to render holdgraphic boxes.  These shouldn't rotate with the model, so rotation is not present here.
+	 *  However, at this point the transforms will be set to the entity position, as it is assumed everything will
+	 *  at least be relative to it.
+	 *  Also, this method is only called when blending is enabled, because holographic stuff ain't solid.
+	 */
+	protected void renderHolographicBoxes(RenderedEntity entity, Matrix4dPlus transform){};
 	
 	/**
 	 *  Renders the bounding boxes for the entity, if any are present.
@@ -94,5 +116,5 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Renderable>{
 	 *  will be un-done, as boxes need to be rendered according to their world state.
 	 *  The passed-in delta is the delta between the player and the entity.
 	 */
-	protected abstract void renderBoundingBoxes(RenderedEntity entity, Point3dPlus entityPositionDelta);
+	protected abstract void renderBoundingBoxes(RenderedEntity entity, Matrix4dPlus transform);
 }

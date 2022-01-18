@@ -24,9 +24,6 @@ public class JSONAnimationDefinition{
 	@JSONDescription("The offset for this animation.  This will add-on to the value returned by the variable.  Clamps are applied to the total value of the variable plus the offset.")
 	public float offset;
 	
-	@JSONDescription("If true, the value returned from the animation defined before this one will be applied to this animation, in addition to the specified offset.  This allows for multiple different variables to apply animations in the same direction with a global clamp.")
-	public boolean addPriorOffset;
-	
 	@JSONRequired(dependentField="animationType", dependentValues={"VISIBILITY"})
 	@JSONDescription("If included, MTS will clamp the total animation value (the value of variable, times the scale, plus the offsets) to always be greater than this value.  If the animation is a visibility, this is the lowest value the object will be visible at.  If the animation is an inhibitor, this is the lowest value at which animations will be inhibited.")
 	public float clampMin;

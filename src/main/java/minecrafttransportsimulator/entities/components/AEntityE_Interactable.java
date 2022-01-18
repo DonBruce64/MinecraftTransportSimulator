@@ -113,7 +113,10 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 	public final Map<Integer, ItemInstrument> instruments = new HashMap<Integer, ItemInstrument>();
 	
 	/**Maps instrument components to their respective switchboxes.**/
-	public final Map<JSONInstrumentComponent, InstrumentSwitchbox> instrumentSwitchboxes = new LinkedHashMap<JSONInstrumentComponent, InstrumentSwitchbox>();
+	public final Map<JSONInstrumentComponent, InstrumentSwitchbox> instrumentComponentSwitchboxes = new LinkedHashMap<JSONInstrumentComponent, InstrumentSwitchbox>();
+	
+	/**Maps instrument slot transforms to their respective switchboxes.**/
+	public final Map<JSONInstrumentDefinition, AnimationSwitchbox> instrumentSlotSwitchboxes = new LinkedHashMap<JSONInstrumentDefinition, AnimationSwitchbox>();
 	
 	/**Maps variable modifers to their respective switchboxes.**/
 	public final Map<JSONVariableModifier, VariableModifierSwitchbox> variableModiferSwitchboxes = new LinkedHashMap<JSONVariableModifier, VariableModifierSwitchbox>();
@@ -224,51 +227,29 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 				}
 				definitionCollisionBoxes.put(groupDef, boxes);
 				if(groupDef.animations != null || groupDef.applyAfter != null){
-					List<JSONAnimationDefinition> groupAnimations = new ArrayList<JSONAnimationDefinition>();
+					List<JSONAnimationDefinition> animations = new ArrayList<JSONAnimationDefinition>();
 					if(groupDef.animations != null){
-						groupAnimations.addAll(groupDef.animations);
+						animations.addAll(groupDef.animations);
 					}
-					if(groupDef.applyAfter != null){
-						if(definition.rendering != null && definition.rendering.animatedObjects != null){
-							String objectSought = groupDef.applyAfter;
-							while(objectSought != null){
-								boolean objectFound = false;
-								for(JSONAnimatedObject animatedObject : definition.rendering.animatedObjects){
-									if(animatedObject.objectName.equals(objectSought)){
-										objectFound = true;
-										if(groupAnimations.isEmpty()){
-											groupAnimations.addAll(animatedObject.animations);
-										}else{
-											groupAnimations.addAll(0, animatedObject.animations);
-										}
-										objectSought = animatedObject.applyAfter;
-										break;
-									}
-								}
-								if(!objectFound){
-									throw new IllegalArgumentException("Was told to applyAfter the object " + objectSought + " on collision boxes for " + definition.packID + ":" + definition.systemName + ", but there's no animations that have that object!");
-								}
-							}
-						}else{
-							throw new IllegalArgumentException("Was told to applyAfter on collision boxes, but there's no animations to applyAfter!");
-						}
-					}
-					collisionSwitchboxes.put(groupDef, new AnimationSwitchbox(this, groupAnimations));
+					populateApplyAfters(groupDef.applyAfter, animations, "collision boxes");
+					collisionSwitchboxes.put(groupDef, new AnimationSwitchbox(this, animations));
 				}
 			}
 		}
 		//Update collision boxes as they might have changed.
 		updateCollisionBoxes();
-				
+		
 		//Create instrument animation clocks.
-		//FIXME this goes into switchbox for rendering of instruments.
 		if(definition.instruments != null){
-			for(int i=0; i<definition.instruments.size(); ++i){
-				JSONInstrumentDefinition packInstrument = definition.instruments.get(i);
+			instrumentSlotSwitchboxes.clear();
+			for(JSONInstrumentDefinition packInstrument : definition.instruments){
 				if(packInstrument.animations != null){
-					for(JSONAnimationDefinition animation : packInstrument.animations){
-						animationClocks.put(animation, new DurationDelayClock(animation));
+					List<JSONAnimationDefinition> animations = new ArrayList<JSONAnimationDefinition>();
+					if(packInstrument.animations != null){
+						animations.addAll(packInstrument.animations);
 					}
+					populateApplyAfters(packInstrument.applyAfter, animations, "instrument slots");
+					instrumentSlotSwitchboxes.put(packInstrument, new AnimationSwitchbox(this, animations));
 				}
 			}
 		}
@@ -282,6 +263,37 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 				}
 			}
 			
+		}
+	}
+	
+	/**
+   	 *  Helper method to populate applyAfter things for JSONs. 
+   	 */
+	protected void populateApplyAfters(String applyAfter, List<JSONAnimationDefinition> animations, String debugName){
+		if(applyAfter != null){
+			if(definition.rendering != null && definition.rendering.animatedObjects != null){
+				String objectSought = applyAfter;
+				while(objectSought != null){
+					boolean objectFound = false;
+					for(JSONAnimatedObject animatedObject : definition.rendering.animatedObjects){
+						if(animatedObject.objectName.equals(objectSought)){
+							objectFound = true;
+							if(animations.isEmpty()){
+								animations.addAll(animatedObject.animations);
+							}else{
+								animations.addAll(0, animatedObject.animations);
+							}
+							objectSought = animatedObject.applyAfter;
+							break;
+						}
+					}
+					if(!objectFound){
+						throw new IllegalArgumentException("Was told to applyAfter the object " + objectSought + " on " + debugName + " for " + definition.packID + ":" + definition.systemName + ", but there's no animations that have that object!");
+					}
+				}
+			}else{
+				throw new IllegalArgumentException("Was told to applyAfter on " + debugName + ", but there's no animations to applyAfter!");
+			}
 		}
 	}
 	
@@ -715,7 +727,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
     	instruments.put(slot, instrument);
     	for(JSONInstrumentComponent component : instrument.definition.components){
     		if(component.animations != null){
-    			instrumentSwitchboxes.put(component, new InstrumentSwitchbox(this, component));
+    			instrumentComponentSwitchboxes.put(component, new InstrumentSwitchbox(this, component));
     		}
 		}
     }
@@ -727,7 +739,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
     	ItemInstrument removedInstrument = instruments.remove(slot);
 		if(removedInstrument != null){
 			for(JSONInstrumentComponent component : removedInstrument.definition.components){
-				instrumentSwitchboxes.remove(component);
+				instrumentComponentSwitchboxes.remove(component);
 			}
 		}
     }

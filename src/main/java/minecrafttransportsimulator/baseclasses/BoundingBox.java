@@ -3,10 +3,14 @@ package minecrafttransportsimulator.baseclasses;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.vecmath.Matrix4d;
+import javax.vecmath.Point3d;
+import javax.vecmath.Tuple3d;
+
+import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup;
-import minecrafttransportsimulator.mcinterface.InterfaceRender;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.rendering.components.RenderableObject;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -33,7 +37,8 @@ public class BoundingBox{
 	public final Point3dPlus globalCenter;
 	public final Point3dPlus currentCollisionDepth;
 	public final List<Point3dPlus> collidingBlockPositions = new ArrayList<Point3dPlus>();
-	public final RenderableObject renderable;
+	public final RenderableObject wireframeRenderable;
+	public final RenderableObject holographicRenderable;
 	private final Point3dPlus tempGlobalCenter;
 	
 	public double widthRadius;
@@ -41,6 +46,8 @@ public class BoundingBox{
 	public double depthRadius;
 	public final boolean collidesWithLiquids;
 	public final JSONCollisionBox definition;
+	
+	private static final Point3d helperPoint = new Point3d();
 	
 	/**Simple constructor.  Used for blocks, bounds checks, or other things that don't need local/global positional differences.**/
 	public BoundingBox(Point3dPlus center, double widthRadius, double heightRadius, double depthRadius){
@@ -85,7 +92,8 @@ public class BoundingBox{
 			//Not a defined collision box.  Must be an interaction box.  Yellow.
 			boxColor = ColorRGB.YELLOW;
 		}
-		this.renderable = new RenderableObject(this, new ColorRGB(boxColor.rgbInt), false);
+		this.wireframeRenderable = new RenderableObject(this, new ColorRGB(boxColor.rgbInt), false);
+		this.holographicRenderable = new RenderableObject(this, new ColorRGB(), true);
 	}
 	
 	@Override
@@ -137,10 +145,6 @@ public class BoundingBox{
 			globalCenter.x = ((int) (globalCenter.x/HITBOX_CLAMP))*HITBOX_CLAMP;
 			globalCenter.y = ((int) (globalCenter.y/HITBOX_CLAMP))*HITBOX_CLAMP;
 			globalCenter.z = ((int) (globalCenter.z/HITBOX_CLAMP))*HITBOX_CLAMP;
-		}
-		//If we are on the client, and are rendering bounding boxes, update the position.
-		if(entity.world.isClient() && InterfaceRender.shouldRenderBoundingBoxes()){
-			renderable.setWireframeBoundingBox(this);
 		}
 	}
 	
@@ -310,5 +314,36 @@ public class BoundingBox{
 			y + globalCenter.y + heightRadius,
 			z + globalCenter.z + depthRadius
 		);
+	}
+	
+	/**
+	 *  Renders this bounding box as a wireframe model.
+	 *  Automatically applies appropriate transforms to go from entity center to itself.
+	 */
+	public void renderWireframe(AEntityC_Renderable entity, Matrix4d transform, ColorRGB color){
+		wireframeRenderable.transform.set(transform);
+		helperPoint.set(globalCenter);
+		helperPoint.sub(entity.position);
+		wireframeRenderable.transform.translate(helperPoint);
+		if(color != null){
+			wireframeRenderable.color.setTo(color);
+		}
+		wireframeRenderable.setWireframeBoundingBox(this);
+		wireframeRenderable.render();
+	}
+	
+	/**
+	 *  Renders this bounding box as a holographic model.  Does
+	 *  not offset to its global position, as this might not play
+	 *  nicely with the current matrix sate.
+	 */
+	public void renderHolographic(Matrix4d transform, Tuple3d offset, ColorRGB color){
+		holographicRenderable.transform.set(transform);
+		if(offset != null){
+			holographicRenderable.transform.translate(offset);
+		}
+		holographicRenderable.color.setTo(color);
+		holographicRenderable.setHolographicBoundingBox(this);
+		holographicRenderable.render();
 	}
 }

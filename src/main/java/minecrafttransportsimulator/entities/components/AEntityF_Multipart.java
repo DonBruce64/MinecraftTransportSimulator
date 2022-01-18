@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.entities.instances.APart;
@@ -30,7 +29,6 @@ import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.instances.PacketPartChange;
-import minecrafttransportsimulator.rendering.components.RenderableObject;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**Base class for multipart entities.  These entities hold other, part-based entities.  These part
@@ -82,9 +80,6 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 	
 	/**Map of active part slot boxes.  Contains {@link #allPartSlotBoxes}, though may not contain all of them due to them not being active.**/
 	public final Map<BoundingBox, JSONPartDefinition> activePartSlotBoxes = new HashMap<BoundingBox, JSONPartDefinition>();
-	
-	/**Map of part slot renderables.  Contains {@link #allPartSlotBoxes} boxes.  Rendering is left up to calling functions.**/
-	public final Map<BoundingBox, RenderableObject> allPartSlotRenderables = new HashMap<BoundingBox, RenderableObject>();
 	
 	//Constants
 	private final float PART_SLOT_HITBOX_WIDTH = 0.75F;
@@ -789,12 +784,10 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 	 */
 	private void recalculatePartSlots(){
 		allPartSlotBoxes.clear();
-		allPartSlotRenderables.clear();
 		for(Entry<Point3dPlus, JSONPartDefinition> packPartEntry : getAllPossiblePackParts().entrySet()){
 			if(getPartAtLocation(packPartEntry.getKey()) == null){
 				BoundingBox newSlotBox = new BoundingBox(packPartEntry.getKey(), packPartEntry.getKey().copy().rotateFine(angles).add(position), PART_SLOT_HITBOX_WIDTH/2D, PART_SLOT_HITBOX_HEIGHT/2D, PART_SLOT_HITBOX_WIDTH/2D, false);
 				allPartSlotBoxes.put(newSlotBox, packPartEntry.getValue());
-				allPartSlotRenderables.put(newSlotBox, new RenderableObject(newSlotBox, new ColorRGB(), true));
 			}
 		}
 	}

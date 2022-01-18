@@ -7,10 +7,12 @@ import java.util.Map;
 
 import org.lwjgl.opengl.GL11;
 
+import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.Point3dPlus;
+import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
+import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONInstrumentDefinition;
@@ -36,7 +38,7 @@ public abstract class ARenderEntityDefinable<RenderedEntity extends AEntityD_Def
 	}
 	
 	@Override
-	protected void renderModel(RenderedEntity entity, boolean blendingEnabled, float partialTicks){
+	protected void renderModel(RenderedEntity entity, Matrix4dPlus transform, boolean blendingEnabled, float partialTicks){
 		//Update internal lighting states.
 		entity.world.beginProfiling("LightStateUpdates", true);
         entity.updateLightBrightness(partialTicks);
@@ -54,10 +56,9 @@ public abstract class ARenderEntityDefinable<RenderedEntity extends AEntityD_Def
 		for(RenderableModelObject<RenderedEntity> modelObject : map){
 			JSONAnimatedObject animation = entity.animatedObjectDefinitions.get(modelObject.object.name);
 			if(animation == null || animation.applyAfter == null){
-				modelObject.render(entity, blendingEnabled, partialTicks);
+				modelObject.render(entity, transform, blendingEnabled, partialTicks);
 			}
 		}
-		
 		
 		//Render any static text.
 		entity.world.beginProfiling("MainText", false);
@@ -102,7 +103,8 @@ public abstract class ARenderEntityDefinable<RenderedEntity extends AEntityD_Def
 			AEntityE_Interactable<?> interactable = (AEntityE_Interactable<?>) entity;
 			if(interactable.definition.instruments != null){
 				for(int i=0; i<interactable.definition.instruments.size(); ++i){
-					if(interactable.instruments.containsKey(i)){
+					ItemInstrument instrument = interactable.instruments.get(i);
+					if(instrument != null){
 						JSONInstrumentDefinition packInstrument = interactable.definition.instruments.get(i);
 						
 						//Translate and rotate to standard position.
@@ -115,9 +117,10 @@ public abstract class ARenderEntityDefinable<RenderedEntity extends AEntityD_Def
 						GL11.glRotated(packInstrument.rot.z, 0, 0, 1);
 						
 						//Do transforms if required and render if allowed.
-						if(RenderableModelObject.doPreRenderTransforms(entity, packInstrument.animations, blendingEnabled, partialTicks)){
+						AnimationSwitchbox switchbox = interactable.instrumentSlotSwitchboxes.get(packInstrument);
+						if(switchbox == null || switchbox.runSwitchbox(partialTicks)){
 							//Instruments render with 1 unit being 1 pixel, not 1 block, so scale by the set scale, but divided by 16.
-							RenderInstrument.drawInstrument(interactable.instruments.get(i), packInstrument.optionalPartNumber, interactable, packInstrument.scale/16F, blendingEnabled, partialTicks);
+							RenderInstrument.drawInstrument(instrument, packInstrument.optionalPartNumber, interactable, packInstrument.scale/16F, blendingEnabled, partialTicks);
 						}
 						GL11.glPopMatrix();
 					}
@@ -127,20 +130,12 @@ public abstract class ARenderEntityDefinable<RenderedEntity extends AEntityD_Def
 	}
 	
 	@Override
-	protected void renderBoundingBoxes(RenderedEntity entity, Point3dPlus entityPositionDelta){
+	protected void renderBoundingBoxes(RenderedEntity entity, Matrix4dPlus transform){
 		if(entity instanceof AEntityE_Interactable){
 			AEntityE_Interactable<?> interactable = (AEntityE_Interactable<?>) entity;
-			//Draw encompassing box for the entity.
-			GL11.glTranslated(entityPositionDelta.x, entityPositionDelta.y, entityPositionDelta.z);
-			interactable.encompassingBox.renderable.render();
-			GL11.glTranslated(-entityPositionDelta.x, -entityPositionDelta.y, -entityPositionDelta.z);
-			
-			//Draw collision boxes for the entity.
+			interactable.encompassingBox.renderWireframe(entity, transform, null);
 			for(BoundingBox box : interactable.interactionBoxes){
-				Point3dPlus boxCenterDelta = box.globalCenter.copy().subtract(entity.position).add(entityPositionDelta);
-				GL11.glTranslated(boxCenterDelta.x, boxCenterDelta.y, boxCenterDelta.z);
-				box.renderable.render();
-				GL11.glTranslated(-boxCenterDelta.x, -boxCenterDelta.y, -boxCenterDelta.z);
+				box.renderWireframe(entity, transform, null);
 			}
 		}
 	}

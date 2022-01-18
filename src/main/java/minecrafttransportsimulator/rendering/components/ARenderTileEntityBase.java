@@ -1,8 +1,5 @@
 package minecrafttransportsimulator.rendering.components;
 
-import org.lwjgl.opengl.GL11;
-
-import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
 import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
@@ -32,14 +29,9 @@ public abstract class ARenderTileEntityBase<RenderedTileEntity extends ATileEnti
 	}
 	
 	@Override
-	protected void renderBoundingBoxes(RenderedTileEntity entity, Point3dPlus entityPositionDelta){
-		super.renderBoundingBoxes(entity, entityPositionDelta);
-		
-		//Render our collision box.
-		BoundingBox box = entity.getCollisionBox();
-		Point3dPlus boxCenterDelta = box.globalCenter.copy().subtract(entity.position).add(entityPositionDelta);
-		GL11.glTranslated(boxCenterDelta.x, boxCenterDelta.y + 0.5, boxCenterDelta.z);
-		box.renderable.render();
-		GL11.glTranslated(-boxCenterDelta.x, -boxCenterDelta.y - 0.5, -boxCenterDelta.z);
+	protected void renderBoundingBoxes(RenderedTileEntity entity, Matrix4dPlus transform){
+		super.renderBoundingBoxes(entity, transform);
+		//FIXME figure out why we need a 1/2 block offset here.  Shouldn't this already be offset?
+		entity.getCollisionBox().renderWireframe(entity, transform, null);
 	}
 }

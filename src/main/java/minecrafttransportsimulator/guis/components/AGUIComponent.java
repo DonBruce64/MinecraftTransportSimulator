@@ -3,8 +3,6 @@ package minecrafttransportsimulator.guis.components;
 import java.nio.FloatBuffer;
 import java.util.List;
 
-import org.lwjgl.opengl.GL11;
-
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.rendering.components.RenderableObject;
@@ -168,9 +166,9 @@ public abstract class AGUIComponent{
     		mutableTooltipRenderable.disableLighting = true;
     		
     		//Do the actual rendering.
-    		GL11.glTranslated(0, 0, textPosition.z + 25);
+    		mutableTooltipRenderable.transform.resetTransforms();
+    		mutableTooltipRenderable.transform.translate(0, 0, textPosition.z + 25);
     		mutableTooltipRenderable.render();
-    		GL11.glTranslated(0, 0, -textPosition.z - 25);
     		
     		//Need to move tooltip text by -y to account for inverted coords.
     		mutableTooltipPosition.set(xOffset + TOOLTIP_BORDER_PADDING, -(yOffset + TOOLTIP_BORDER_PADDING), textPosition.z + 50);

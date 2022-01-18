@@ -13,10 +13,8 @@ import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
 import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.baseclasses.TrailerConnection;
-import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
-import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
@@ -117,32 +115,7 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 			if(placementDefinition.animations != null){
 				animations.addAll(placementDefinition.animations);
 			}
-			if(placementDefinition.applyAfter != null){
-				AEntityD_Definable<?> entityDefining = parentPart != null ? parentPart : entityOn;
-				if(entityDefining.definition.rendering != null && entityDefining.definition.rendering.animatedObjects != null){
-					String objectSought = placementDefinition.applyAfter;
-					while(objectSought != null){
-						boolean objectFound = false;
-						for(JSONAnimatedObject animatedObject : entityDefining.definition.rendering.animatedObjects){
-							if(animatedObject.objectName.equals(objectSought)){
-								objectFound = true;
-								if(animations.isEmpty()){
-									animations.addAll(animatedObject.animations);
-								}else{
-									animations.addAll(0, animatedObject.animations);
-								}
-								objectSought = animatedObject.applyAfter;
-								break;
-							}
-						}
-						if(!objectFound){
-							throw new IllegalArgumentException("Was told to applyAfter the object " + objectSought + " on part slot movement for " + entityDefining.definition.packID + ":" + entityDefining.definition.systemName + ", but there's no animations that have that object!");
-						}
-					}
-				}else{
-					throw new IllegalArgumentException("Was told to applyAfter on a part slot for " + entityDefining.definition.packID + ":" + entityDefining.definition.systemName + ", but there's no animations to applyAfter!");
-				}
-			}
+			populateApplyAfters(placementDefinition.applyAfter, animations, "part slot");
 			placementMovementSwitchbox = new AnimationSwitchbox(this, animations);
 		}
 		if(definition.generic.movementAnimations != null){

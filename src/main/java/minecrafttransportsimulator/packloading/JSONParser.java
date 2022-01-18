@@ -168,7 +168,7 @@ public class JSONParser{
 				Point3dPlus angles = new Point3dPlus(reader.nextDouble(), reader.nextDouble(), reader.nextDouble());
 				reader.endArray();
 				Matrix4dPlus value = new Matrix4dPlus();
-				value.setAngles(angles);
+				value.setToAngles(angles);
 				return value;
 			}
 		}

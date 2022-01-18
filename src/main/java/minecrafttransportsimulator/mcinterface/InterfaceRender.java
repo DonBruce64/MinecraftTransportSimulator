@@ -20,6 +20,7 @@ import javax.vecmath.Matrix4d;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
+import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
 import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.rendering.components.GIFParser;
@@ -54,9 +55,14 @@ public class InterfaceRender{
 	 *  Renders the item model for the passed-in stack.  Only
 	 *  renders the item model: does not render text for counts.
 	 */
-	public static void renderItemModel(WrapperItemStack stack){
+	//FIXME make this do a batch call rather than individual.
+	public static void renderItemModel(WrapperItemStack stack, Matrix4dPlus transform){
 		GL11.glPushMatrix();
 		setInternalLightingState(false);
+		
+		//Apply existing transform.
+		applyTransformOpenGL(transform, false);
+		
 		//Need to translate back to pre-undo the renderer offset.
 		float offset = 100.0F + Minecraft.getMinecraft().getRenderItem().zLevel;
 		GL11.glTranslated(0, 0, -offset);
@@ -97,10 +103,8 @@ public class InterfaceRender{
 		GL11.glPushMatrix();
 		applyTransformOpenGL(object.transform, false);
 		if(object.isMirrored){
-			GL11.glScalef(-object.scale, object.scale, object.scale);
+			GL11.glScalef(-1.0F, 1.0F, 1.0F);
 			GL11.glCullFace(GL11.GL_FRONT);
-		}else{
-			GL11.glScalef(object.scale, object.scale, object.scale);
 		}
 		if(object.cacheVertices){
 			if(object.cachedVertexIndex == -1){

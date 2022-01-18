@@ -74,14 +74,15 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 	private final Map<JSONParticle, AnimationSwitchbox> particleActiveSwitchboxes = new HashMap<JSONParticle, AnimationSwitchbox>();
 	private final Map<JSONParticle, Long> lastTickParticleSpawned = new HashMap<JSONParticle, Long>();
 	
-	/**Maps animations to their respective clocks.  Used for anything that has an animation block.**/
-	public final Map<JSONAnimationDefinition, DurationDelayClock> animationClocks = new HashMap<JSONAnimationDefinition, DurationDelayClock>();
+	/**Maps animated (model) object names to their JSON bits for this entity.  Used for model lookups as the same model might be used on multiple JSONs,
+	 * and iterating through the entire rendering section of the JSON is time-consuming.**/
+	public final Map<String, JSONAnimatedObject> animatedObjectDefinitions = new HashMap<String, JSONAnimatedObject>();
+	
+	/**Maps animated (model) object names to their switchboxes.  This is created from the JSON definition as each entity has their own switchbox.**/
+	public final Map<String, AnimationSwitchbox> animatedObjectSwitchboxes = new HashMap<String, AnimationSwitchbox>();
 	
 	/**Maps cameras to their respective switchboxes.**/
 	public final Map<JSONCameraObject, AnimationSwitchbox> cameraSwitchboxes = new LinkedHashMap<JSONCameraObject, AnimationSwitchbox>();
-	
-	/**Maps animated (model) object names to their definitions.  This is created from the JSON definition to prevent the need to do loops.**/
-	public final Map<String, JSONAnimatedObject> animatedObjectDefinitions = new HashMap<String, JSONAnimatedObject>();
 	
 	/**Maps light definitions to their current brightness.  This is updated every frame prior to rendering.**/
 	public final Map<JSONLight, Float> lightBrightnessValues = new HashMap<JSONLight, Float>();
@@ -210,16 +211,14 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 			}
 		}
 		
-		animationClocks.clear();
-		animatedObjectDefinitions.clear();
 		if(definition.rendering != null){
 			if(definition.rendering.animatedObjects != null){
+				animatedObjectDefinitions.clear();
+				animatedObjectSwitchboxes.clear();
 				for(JSONAnimatedObject animatedDef : definition.rendering.animatedObjects){
 					animatedObjectDefinitions.put(animatedDef.objectName, animatedDef);
 					if(animatedDef.animations != null){
-						for(JSONAnimationDefinition animation : animatedDef.animations){
-							animationClocks.put(animation, new DurationDelayClock(animation));
-						}
+						animatedObjectSwitchboxes.put(animatedDef.objectName, new AnimationSwitchbox(this, animatedDef.animations));
 					}
 				}
 			}
