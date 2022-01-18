@@ -2,6 +2,9 @@ package minecrafttransportsimulator.rendering.components;
 
 import java.nio.FloatBuffer;
 
+import javax.vecmath.Matrix4d;
+import javax.vecmath.Tuple3d;
+
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.mcinterface.InterfaceRender;
@@ -60,9 +63,13 @@ public class RenderableObject{
 	public float alpha = 1.0F;
 	public float lineWidth = 0.0F;
 	public float scale = 1.0F;
+	public final Matrix4d transform = new Matrix4d();
 	public boolean disableLighting;
 	public boolean ignoreWorldShading;
 	public boolean enableBrightBlending;
+
+	private final Matrix4d helperTranslationTransform = new Matrix4d();
+	private final Matrix4d helperScalingTransform = new Matrix4d();
 	
 	/**The Global texture.  This contains all block/item textures for the game.  Used when rendering said blocks/items.**/
 	public static final String GLOBAL_TEXTURE_NAME = "GLOBAL";
@@ -130,6 +137,9 @@ public class RenderableObject{
 		this.cacheVertices = cacheVertices;
 		this.isTranslucent = name.toLowerCase().contains(AModelParser.TRANSLUCENT_OBJECT_NAME);
 		this.vertices = vertices;
+		transform.setIdentity();
+		helperTranslationTransform.setIdentity();
+		helperScalingTransform.setIdentity();
 	}
 	
 	/*Shortened constructor used for lines.  Automatically sets line width and lighting.**/
@@ -225,6 +235,57 @@ public class RenderableObject{
 			vertices.put(points[indexes[1]]);
 		}
 		vertices.flip();
+	}
+	
+	/**Resets this object's transform to default.  This should be done
+	 * prior to applying any transforms on it.
+	 */
+	public void resetTransforms(){
+		transform.setIdentity();
+	}
+	
+	/**Applies a translation transform to this object.
+	 * This is here to prevent the need to create transform objects
+	 * in all classes that just want to translate renderables.
+	 */
+	public void applyTranslation(Tuple3d translation, boolean preTransform){
+		helperTranslationTransform.m03 = translation.x;
+		helperTranslationTransform.m13 = translation.y;
+		helperTranslationTransform.m23 = translation.z;
+		if(preTransform){
+			applyPreTransform(helperTranslationTransform);
+		}else{
+			applyTransform(helperTranslationTransform);
+		}
+	}
+	
+	/**Applies a scaling transform to this object.
+	 * This is here to prevent the need to create transform objects
+	 * in all classes that just want to scale renderables.
+	 */
+	public void applyScale(double scaling, boolean preTransform){
+		helperScalingTransform.m00 = scaling;
+		helperScalingTransform.m11 = scaling;
+		helperScalingTransform.m22 = scaling; 
+		if(preTransform){
+			applyPreTransform(helperScalingTransform);
+		}else{
+			applyTransform(helperScalingTransform);
+		}
+	}
+	
+	/**Applies a general transform to this object.
+	 */
+	public void applyTransform(Matrix4d transformToApply){
+		transform.mul(transformToApply);
+	}
+	
+	/**Applies a pre-transform to this object.
+	 * This basically applies a transform that happens before
+	 * the current object's transform operation.
+	 */
+	public void applyPreTransform(Matrix4d transformToApply){
+		transform.mul(transformToApply, transformToApply);
 	}
 	
 	/**Normalizes the UVs in this object.  This is done to re-map them to the 0->1 texture space

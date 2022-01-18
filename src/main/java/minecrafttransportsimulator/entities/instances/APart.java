@@ -193,7 +193,6 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 			//Placement movement uses the coords of the thing we are on.
 			if(placementMovementSwitchbox != null){
 				isInvisible = !placementMovementSwitchbox.runSwitchbox(0);
-				scale *= placementMovementSwitchbox.animationScale;
 				//Offset needs to move according to full transform.
 				//This is because these coords are from what we are on.
 				//Orientation just needs to update according to new rotation.
@@ -206,7 +205,6 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 			localOrientation.mul(placementDefinition.rot);
 			if(internalMovementSwitchbox != null){
 				isInvisible = !internalMovementSwitchbox.runSwitchbox(0) || isInvisible;
-				scale *= internalMovementSwitchbox.animationScale;
 				//Offset here is local and just needs translation, as it's
 				//assuming that we are the origin.
 				localOffset.add(internalMovementSwitchbox.translation);

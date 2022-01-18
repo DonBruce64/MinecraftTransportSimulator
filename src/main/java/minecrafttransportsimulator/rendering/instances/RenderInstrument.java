@@ -29,6 +29,7 @@ public final class RenderInstrument{
 	private static final Point3dPlus topLeft = new Point3dPlus();
 	private static final Point3dPlus topRight = new Point3dPlus();
 	private static final Point3dPlus bottomRight = new Point3dPlus();
+	private static final Point3dPlus translation = new Point3dPlus();
 	private static final Point3dPlus rotation = new Point3dPlus();
 	private static final float[][] points = new float[6][8];
 	private static final RenderableObject renderObject = new RenderableObject("instrument", null, new ColorRGB(), FloatBuffer.allocate(6*8), false);
@@ -57,10 +58,10 @@ public final class RenderInstrument{
 			JSONInstrumentComponent component = instrument.definition.components.get(i);
 			if(component.overlayTexture ? blendingEnabled : !blendingEnabled){
 				//If we have text, do a text render.  Otherwise, do a normal instrument render.
-				//Also translate slightly away from the instrument location to prevent clipping.
-				GL11.glPushMatrix();
-				GL11.glTranslatef(0.0F, 0.0F, i*0.0001F);
 				if(component.textObject != null){
+					//Also translate slightly away from the instrument location to prevent clipping.
+					GL11.glPushMatrix();
+					GL11.glTranslatef(0.0F, 0.0F, i*0.0001F);
 					int variablePartNumber = AEntityD_Definable.getVariableNumber(component.textObject.variableName);
 					final boolean addSuffix = variablePartNumber == -1 && ((component.textObject.variableName.startsWith("engine_") || component.textObject.variableName.startsWith("propeller_") || component.textObject.variableName.startsWith("gun_") || component.textObject.variableName.startsWith("seat_")));
 					if(addSuffix){
@@ -70,10 +71,14 @@ public final class RenderInstrument{
 						component.textObject.variableName = oldName;
 					}else{
 						RenderText.draw3DText(entity.getAnimatedTextVariableValue(component.textObject, partialTicks), entity, component.textObject, globalScale*component.scale, true);
-					}					
+					}
+					GL11.glPopMatrix();
 				}else{
 					//Init variables.
 					renderObject.texture = "/assets/" + instrument.definition.packID + "/textures/" + instrument.definition.textureName;
+					translation.set(0.0, 0.0, i*0.0001);
+					renderObject.resetTransforms();
+					renderObject.applyTranslation(translation, false);
 					renderObject.scale = globalScale*component.scale;
 					bottomLeft.set(-component.textureWidth/2D, component.textureHeight/2D, 0);
 					topLeft.set(-component.textureWidth/2D, -component.textureHeight/2D, 0);
@@ -97,7 +102,8 @@ public final class RenderInstrument{
 						bottomRight.multiply(1D/1024D);
 						
 						//Translate to the component.
-						GL11.glTranslatef(component.xCenter*globalScale, -component.yCenter*globalScale, 0.0F);
+						translation.set(component.xCenter*globalScale, -component.yCenter*globalScale, 0);
+						renderObject.applyTranslation(translation, false);
 						
 						//Set points to the variables here and render them.
 						//If the shape is lit, disable lighting for blending.
@@ -105,9 +111,6 @@ public final class RenderInstrument{
 						renderSquareUV(component, globalScale*component.scale);
 					}
 				}
-				
-				//Done rendering.  Pop matrix.
-				GL11.glPopMatrix();
 			}
 		}
 	}
@@ -176,7 +179,8 @@ public final class RenderInstrument{
 				}
 			}else if(component.moveComponent){
 				//Translate the rather than adjust the window coords.
-				GL11.glTranslated(xTranslation*globalScale, yTranslation*globalScale, 0);
+				helperVector.set(xTranslation*globalScale, yTranslation*globalScale, 0);
+				renderObject.applyTranslation(helperVector, false);
 			}else{
 				//Offset the window coords to the appropriate section of the texture sheet.
 				//We don't want to do an OpenGL translation here as that would move the texture's
@@ -225,9 +229,13 @@ public final class RenderInstrument{
 				topRight.subtract(clock.animation.centerPoint);
 				bottomRight.subtract(clock.animation.centerPoint);
 			}else{
-				GL11.glTranslated((component.xCenter + clock.animation.centerPoint.x)*globalScale, -(component.yCenter + clock.animation.centerPoint.y)*globalScale, 0.0F);
-				GL11.glRotated(variableValue, 0, 0, 1);
-				GL11.glTranslated(-(component.xCenter + clock.animation.centerPoint.x)*globalScale, (component.yCenter + clock.animation.centerPoint.y)*globalScale, 0.0F);
+				helperVector.set((component.xCenter + clock.animation.centerPoint.x)*globalScale, -(component.yCenter + clock.animation.centerPoint.y)*globalScale, 0.0);
+				renderObject.applyTranslation(helperVector, false);
+				helperRotator.set(0, 0, 1, variableValue);
+				helperRotationMatrix.set(helperRotator);
+				renderObject.applyTransform(helperRotationMatrix);
+				helperVector.negate();
+				renderObject.applyTranslation(helperVector, false);
 			}
 		}
 	}

@@ -95,6 +95,7 @@ public class InterfaceRender{
 		setColorState(object.color, object.alpha);
 		
 		GL11.glPushMatrix();
+		applyTransformOpenGL(object.transform, false);
 		if(object.isMirrored){
 			GL11.glScalef(-object.scale, object.scale, object.scale);
 			GL11.glCullFace(GL11.GL_FRONT);

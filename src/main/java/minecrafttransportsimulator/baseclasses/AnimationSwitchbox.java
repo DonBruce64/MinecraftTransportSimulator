@@ -31,11 +31,12 @@ public class AnimationSwitchbox{
 	//Computational variables.
 	protected final AEntityD_Definable<?> entity;
 	private final List<DurationDelayClock> clocks = new ArrayList<DurationDelayClock>();
-	private final Vector3d helperVector = new Vector3d();
-	private final AxisAngle4d helperRotator = new AxisAngle4d();
-	private final Matrix4d helperTranslationMatrix = new Matrix4d();
-	private final Matrix4d helperRotationMatrix = new Matrix4d();
-	private final Matrix4d helperTranslatedRotationMatrix = new Matrix4d();
+	protected final Vector3d helperVector = new Vector3d();
+	protected final AxisAngle4d helperRotator = new AxisAngle4d();
+	protected final Matrix4d helperTranslationMatrix = new Matrix4d();
+	protected final Matrix4d helperRotationMatrix = new Matrix4d();
+	protected final Matrix4d helperScalingMatrix = new Matrix4d();
+	protected final Matrix4d helperOffsetOperationMatrix = new Matrix4d();
 	private boolean inhibitAnimations;
 	
 	public AnimationSwitchbox(AEntityD_Definable<?> entity, List<JSONAnimationDefinition> animations){
@@ -100,7 +101,7 @@ public class AnimationSwitchbox{
 				}
 				case SCALING :{
 					if(!inhibitAnimations){
-						animationScale *= entity.getAnimatedVariableValue(clock, clock.animationAxisMagnitude, partialTicks);
+						runScaling(clock, partialTicks);
 					}
 					break;
 				}
@@ -131,26 +132,64 @@ public class AnimationSwitchbox{
 		//If we have a center offset, do special translation code to handle it.
 		//Otherwise, don't bother, as it'll just take cycles.
 		if(clock.animation.centerPoint.x != 0 || clock.animation.centerPoint.y != 0 || clock.animation.centerPoint.z != 0){
-			helperVector.set(clock.animation.centerPoint.x, clock.animation.centerPoint.y, clock.animation.centerPoint.z);
+			helperVector.set(clock.animation.centerPoint);
 			
 			//Get a net matrix representing the total rotation.
-			helperTranslatedRotationMatrix.setIdentity();
-			helperTranslatedRotationMatrix.setTranslation(helperVector);
-			helperTranslatedRotationMatrix.mul(helperRotationMatrix);
+			helperOffsetOperationMatrix.setIdentity();
+			helperOffsetOperationMatrix.setTranslation(helperVector);
+			helperOffsetOperationMatrix.mul(helperRotationMatrix);
 			
 			//Translate back.  This requires inverting the translation.
 			helperVector.negate();
 			helperTranslationMatrix.setTranslation(helperVector);
-			helperTranslatedRotationMatrix.mul(helperTranslationMatrix);
+			helperOffsetOperationMatrix.mul(helperTranslationMatrix);
 			
 			//Apply that net value to our matrix components.
-			netMatrix.mul(helperTranslatedRotationMatrix);
+			netMatrix.mul(helperOffsetOperationMatrix);
 			rotationMatrix.mul(helperRotationMatrix);
-			helperTranslatedRotationMatrix.get(helperVector);
+			helperOffsetOperationMatrix.get(helperVector);
 			translation.add(helperVector);
 		}else{
 			netMatrix.mul(helperRotationMatrix);
 			rotationMatrix.mul(helperRotationMatrix);
+		}
+	}
+	
+	public void runScaling(DurationDelayClock clock, float partialTicks){
+		//Found scaling.  Get scale that needs to be applied.
+		double variableValue = entity.getAnimatedVariableValue(clock, clock.animationAxisMagnitude, partialTicks);
+		helperVector.set(clock.animation.axis.x, clock.animation.axis.y, clock.animation.axis.z);
+		helperVector.scale(variableValue);
+		//Check for 0s and remove them.
+		if(helperVector.x == 0)helperVector.x = 1.0;
+		if(helperVector.y == 0)helperVector.z = 1.0;
+		if(helperVector.z == 0)helperVector.z = 1.0;
+		
+		//Set the scaling matrix.
+		helperScalingMatrix.m00 = helperVector.x;
+		helperScalingMatrix.m11 = helperVector.y;
+		helperScalingMatrix.m22 = helperVector.z;
+		helperScalingMatrix.m33 = 1;
+		
+		//If we have a center offset, do special translation code to handle it.
+		//Otherwise, don't bother, as it'll just take cycles.
+		if(clock.animation.centerPoint.x != 0 || clock.animation.centerPoint.y != 0 || clock.animation.centerPoint.z != 0){
+			helperVector.set(clock.animation.centerPoint);
+			
+			//Get a net matrix representing the total scaling.
+			helperOffsetOperationMatrix.setIdentity();
+			helperOffsetOperationMatrix.setTranslation(helperVector);
+			helperOffsetOperationMatrix.mul(helperScalingMatrix);
+			
+			//Translate back.  This requires inverting the translation.
+			helperVector.negate();
+			helperTranslationMatrix.setTranslation(helperVector);
+			helperOffsetOperationMatrix.mul(helperTranslationMatrix);
+			
+			//Apply that net value to our matrix components.
+			netMatrix.mul(helperOffsetOperationMatrix);
+		}else{
+			netMatrix.mul(helperScalingMatrix);
 		}
 	}
 }

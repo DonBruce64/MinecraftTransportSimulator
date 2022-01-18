@@ -9,8 +9,6 @@ import java.util.Set;
 
 import javax.imageio.ImageIO;
 
-import org.lwjgl.opengl.GL11;
-
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
@@ -151,7 +149,7 @@ public class RenderText{
 		private static final FontRenderState[] STATES = FontRenderState.generateDefaults();
 		private static final int MAX_VERTCIES_PER_RENDER = 1000*6;
 		private static final Point3dPlus DEFAULT_ADJ = new Point3dPlus();
-		private static final Point3dPlus MUTABLE_POSITION = new Point3dPlus();
+		private static final Point3dPlus mutablePosition = new Point3dPlus();
 		
 		private final boolean isDefault;
 		/*Texture locations for the font files.**/
@@ -260,8 +258,15 @@ public class RenderText{
 		}
 		
 		private void renderText(String text, Point3dPlus position, Point3dPlus rotation, TextAlignment alignment, float scale, boolean autoScale, int wrapWidth, float preScaledFactor, boolean pixelCoords, ColorRGB color, boolean renderLit){
+			//Clear out the active object list as it was set last pass.
+			for(RenderableObject object : activeRenderObjects){
+				object.resetTransforms();
+				object.vertices.clear();
+			}
+			activeRenderObjects.clear();
+			
 			//Use mutable position here as we need to modify it and don't want to modify the actual variable.
-			MUTABLE_POSITION.set(position);
+			mutablePosition.set(position);
 			
 			//Cull text to total chars.
 			//This is all we can render in one pass.
@@ -345,8 +350,8 @@ public class RenderText{
 			
 			//Add the adjustment and multiply position by prev scale.
 			//This moves the position to the appropriate one for the scale the entire text segment is rendered at.
-			MUTABLE_POSITION.add(DEFAULT_ADJ);
-			MUTABLE_POSITION.multiply(preScaledFactor);
+			mutablePosition.add(DEFAULT_ADJ);
+			mutablePosition.multiply(preScaledFactor);
 			
 			
 			//Check if we need to adjust our offset for our alignment.
@@ -622,18 +627,13 @@ public class RenderText{
 			}
 			
 			//All points obtained, render.
-			GL11.glPushMatrix();
-			GL11.glTranslated(MUTABLE_POSITION.x, MUTABLE_POSITION.y, MUTABLE_POSITION.z);
 			for(RenderableObject object : activeRenderObjects){
 				object.disableLighting = renderLit;
-				object.scale = scale*preScaledFactor;
+				object.applyTranslation(mutablePosition, false);
+				object.applyScale(scale*preScaledFactor, false);
 				object.vertices.flip();
 				object.render();
-				object.vertices.clear();
 			}
-			//Clear out the active object list to prep for next pass, then pop state.
-			activeRenderObjects.clear();
-			GL11.glPopMatrix();
 		}
 		
 		private RenderableObject getObjectFor(char textChar, ColorRGB color){
