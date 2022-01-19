@@ -13,7 +13,7 @@ public final class RenderPart extends ARenderEntityDefinable<APart>{
 	
 	@Override
 	public boolean disableRendering(APart part, float partialTicks){
-		return part.isFake() || part.isDisabled;
+		return super.disableRendering(part, partialTicks) || part.isFake() || part.isDisabled;
 	}
 	
 	@Override

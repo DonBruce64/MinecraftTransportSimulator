@@ -24,12 +24,6 @@ public final class PartGroundDeviceFake extends PartGroundDevice{
 	}
 	
 	@Override
-	public void remove(){
-		//Do nothing here as we should not be removing ourselves from the vehicle.
-		//That is our master part's job.
-	}
-	
-	@Override
 	public float getWidth(){
 		return masterPart != null ? masterPart.getWidth() : 1.0F;
 	}

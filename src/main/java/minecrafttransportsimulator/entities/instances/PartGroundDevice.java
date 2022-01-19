@@ -148,7 +148,7 @@ public class PartGroundDevice extends APart{
 	public void remove(){
 		super.remove();
 		if(fakePart != null){
-			fakePart.isValid = false;
+			fakePart.remove();
 		}
 	}
 	
