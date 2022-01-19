@@ -3,10 +3,6 @@ package minecrafttransportsimulator.baseclasses;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.vecmath.Matrix4d;
-import javax.vecmath.Point3d;
-import javax.vecmath.Tuple3d;
-
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
@@ -47,7 +43,7 @@ public class BoundingBox{
 	public final boolean collidesWithLiquids;
 	public final JSONCollisionBox definition;
 	
-	private static final Point3d helperPoint = new Point3d();
+	private static final Point3dPlus helperPoint = new Point3dPlus();
 	
 	/**Simple constructor.  Used for blocks, bounds checks, or other things that don't need local/global positional differences.**/
 	public BoundingBox(Point3dPlus center, double widthRadius, double heightRadius, double depthRadius){
@@ -138,6 +134,7 @@ public class BoundingBox{
 		}else{
 			globalCenter.set(localCenter);
 		}
+		globalCenter.scale(entity.scale);
 		entity.orientation.transform(globalCenter);
 		globalCenter.add(entity.position);
 		if(definition != null){
@@ -320,7 +317,7 @@ public class BoundingBox{
 	 *  Renders this bounding box as a wireframe model.
 	 *  Automatically applies appropriate transforms to go from entity center to itself.
 	 */
-	public void renderWireframe(AEntityC_Renderable entity, Matrix4d transform, ColorRGB color){
+	public void renderWireframe(AEntityC_Renderable entity, Matrix4dPlus transform, ColorRGB color){
 		wireframeRenderable.transform.set(transform);
 		helperPoint.set(globalCenter);
 		helperPoint.sub(entity.position);
@@ -337,7 +334,7 @@ public class BoundingBox{
 	 *  not offset to its global position, as this might not play
 	 *  nicely with the current matrix sate.
 	 */
-	public void renderHolographic(Matrix4d transform, Tuple3d offset, ColorRGB color){
+	public void renderHolographic(Matrix4dPlus transform, Point3dPlus offset, ColorRGB color){
 		holographicRenderable.transform.set(transform);
 		if(offset != null){
 			holographicRenderable.transform.translate(offset);

@@ -1,7 +1,5 @@
 package minecrafttransportsimulator.rendering.instances;
 
-import org.lwjgl.opengl.GL11;
-
 import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
 import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.entities.instances.APart;
@@ -29,9 +27,9 @@ public class RenderPart extends ARenderEntityDefinable<APart>{
 				for(JSONMuzzle muzzle : gun.definition.gun.muzzleGroups.get(gun.currentMuzzleGroupIndex).muzzles){
 					gun.setBulletSpawn(bulletPosition, bulletVelocity, muzzle);
 					bulletPosition.subtract(gun.position);
-					GL11.glTranslated(bulletPosition.x, bulletPosition.y, bulletPosition.z);
+					gun.muzzleWireframe.transform.set(transform);
+					gun.muzzleWireframe.transform.translate(bulletPosition);
 					gun.muzzleWireframe.render();
-					GL11.glTranslated(-bulletPosition.x, -bulletPosition.y, -bulletPosition.z);
 				}
 			}
 		}

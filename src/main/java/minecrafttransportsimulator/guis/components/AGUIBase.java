@@ -211,7 +211,7 @@ public abstract class AGUIBase{
 		
 		//Render instruments.  These need both normal and blended passes.
 		for(AGUIComponent component : components){
-			if(component instanceof GUIComponentInstrument){
+			if(component.visible && component instanceof GUIComponentInstrument){
 				component.render(this, mouseX, mouseY, false, false, blendingEnabled, partialTicks);
 			}
 		}

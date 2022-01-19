@@ -1,9 +1,7 @@
 package minecrafttransportsimulator.guis.components;
 
-import org.lwjgl.opengl.GL11;
-
+import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
-import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.JSONInstrumentDefinition;
 import minecrafttransportsimulator.rendering.instances.RenderInstrument;
 
@@ -14,29 +12,24 @@ import minecrafttransportsimulator.rendering.instances.RenderInstrument;
  * @author don_bruce
  */
 public class GUIComponentInstrument extends AGUIComponent{
-	public final int instrumentPackIndex;
-	public final JSONInstrumentDefinition packInstrument;
-	public ItemInstrument instrument;
 	public final AEntityE_Interactable<?> entity;
+	public final int slot;
+	private static final Matrix4dPlus transform = new Matrix4dPlus();
 	    	
-	public GUIComponentInstrument(int guiLeft, int guiTop, int instrumentPackIndex, AEntityE_Interactable<?> entity){
+	public GUIComponentInstrument(int guiLeft, int guiTop, AEntityE_Interactable<?> entity, int slot){
 		super(guiLeft, guiTop, 0, 0);
-		this.packInstrument = entity.definition.instruments.get(instrumentPackIndex);
-		this.instrument = entity.instruments.get(instrumentPackIndex);
+		this.entity = entity;
+		this.slot = slot;
+		JSONInstrumentDefinition packInstrument = entity.definition.instruments.get(slot);
 		position.x += packInstrument.hudX;
     	//Need to offset in opposite Y position due to inverted coords.
 		position.y -= packInstrument.hudY;
-		this.instrumentPackIndex = instrumentPackIndex;
-		this.entity = entity;
 	}
 
     @Override
 	public void render(AGUIBase gui, int mouseX, int mouseY, boolean renderBright, boolean renderLitTexture, boolean blendingEnabled, float partialTicks){
-    	if(visible){
-	    	GL11.glPushMatrix();
-			GL11.glTranslated(position.x, position.y, position.z + MODEL_DEFAULT_ZOFFSET*0.5);
-			RenderInstrument.drawInstrument(instrument, packInstrument.optionalPartNumber, entity, packInstrument.hudScale, blendingEnabled, partialTicks);
-			GL11.glPopMatrix();
-    	}
+    	transform.resetTransforms();
+    	transform.translate(position.x, position.y, position.z + MODEL_DEFAULT_ZOFFSET*0.5);
+    	RenderInstrument.drawInstrument(entity, transform, slot, true, blendingEnabled, partialTicks);
     }
 }

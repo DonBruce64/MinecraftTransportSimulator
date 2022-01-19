@@ -273,8 +273,10 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 	public void destroy(BoundingBox box){
 		super.destroy(box);
 		//Spawn instruments in the world.
-		for(ItemInstrument instrument : instruments.values()){
-			world.spawnItem(instrument, null, box.globalCenter);
+		for(ItemInstrument instrument : instruments){
+			if(instrument != null){
+				world.spawnItem(instrument, null, box.globalCenter);
+			}
 		}
 		
 		//Oh, and add explosions.  Because those are always fun.

@@ -3,7 +3,6 @@ package minecrafttransportsimulator.entities.components;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.vecmath.Matrix4d;
 import javax.vecmath.Quat4d;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
@@ -182,7 +181,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	 *  The position is not interpolated with this as {@link #orientation}
 	 *  only contains the rotational elements of this entity. 
 	 */
-	public void getInterpolatedOrientation(Matrix4d store, double partialTicks){
+	public void getInterpolatedOrientation(Matrix4dPlus store, double partialTicks){
 		orientation.get(interpHelperQuatStart);
 		prevOrientation.get(interpHelperQuatEnd);
 		interpHelperQuatEnd.interpolate(interpHelperQuatStart, partialTicks);

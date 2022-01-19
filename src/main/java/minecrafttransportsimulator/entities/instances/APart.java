@@ -115,7 +115,7 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 			if(placementDefinition.animations != null){
 				animations.addAll(placementDefinition.animations);
 			}
-			populateApplyAfters(placementDefinition.applyAfter, animations, "part slot");
+			entityOn.populateApplyAfters(placementDefinition.applyAfter, animations, "part slot");
 			placementMovementSwitchbox = new AnimationSwitchbox(this, animations);
 		}
 		if(definition.generic.movementAnimations != null){
@@ -159,8 +159,7 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 			
 			//Update local position, orientation, scale, and enabled state.
 			isInvisible = false;
-			scale = placementDefinition.isSubPart && parentPart != null ? parentPart.scale : 1.0F;
-			localOffset.multiply(scale);
+			scale = placementDefinition.isSubPart && parentPart != null ? parentPart.scale : entityOn.scale;
 			localOrientation.setIdentity();
 			
 			//Placement movement uses the coords of the thing we are on.
@@ -183,6 +182,9 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 				localOffset.add(internalMovementSwitchbox.translation);
 				localOrientation.mul(internalMovementSwitchbox.rotationMatrix);
 			}
+			
+			//Multiply local offset by the scale to reflect the scaled offset.
+			localOffset.multiply(scale);
 			
 			//Now that locals are set, set globals to reflect them.
 			Point3dPlus positionHoldingArea = new Point3dPlus();

@@ -1,17 +1,14 @@
 package minecrafttransportsimulator.rendering.instances;
 
-import java.nio.FloatBuffer;
-
-import org.lwjgl.opengl.GL11;
-
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
-import minecrafttransportsimulator.baseclasses.ColorRGB;
+import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
 import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.JSONInstrument.JSONInstrumentComponent;
+import minecrafttransportsimulator.jsondefs.JSONInstrumentDefinition;
 import minecrafttransportsimulator.rendering.components.DurationDelayClock;
 import minecrafttransportsimulator.rendering.components.RenderableObject;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -23,15 +20,15 @@ import minecrafttransportsimulator.systems.ConfigSystem;
  * @author don_bruce
  */
 public final class RenderInstrument{
-	private static float globalScale = 0;
 	private static int partNumber = 0;
+	private static RenderableObject renderObject = null;
+	private static Matrix4dPlus textTransform = new Matrix4dPlus();
 	private static final Point3dPlus bottomLeft = new Point3dPlus();
 	private static final Point3dPlus topLeft = new Point3dPlus();
 	private static final Point3dPlus topRight = new Point3dPlus();
 	private static final Point3dPlus bottomRight = new Point3dPlus();
 	private static final Point3dPlus helperRotation = new Point3dPlus();
 	private static final float[][] instrumentSingleComponentPoints = new float[6][8];
-	private static final RenderableObject renderObject = new RenderableObject("instrument", null, new ColorRGB(), FloatBuffer.allocate(6*8), false);
 	
 	/**
      * Renders the passed-in instrument using the entity's current state.  Note that this method does NOT take any 
@@ -40,15 +37,19 @@ public final class RenderInstrument{
      * Also note that the parameters in the JSON here are in png-texture space, so y is inverted.  Hence the various
      * negations in translation transforms.
      */
-	public static void drawInstrument(ItemInstrument instrument, int partNumberIn, AEntityE_Interactable<?> entity, float scale, boolean blendingEnabled, float partialTicks){
+	public static void drawInstrument(AEntityE_Interactable<?> entity, Matrix4dPlus transform, int slot, boolean onGUI, boolean blendingEnabled, float partialTicks){
+		//Get the item and slot definition here, as that's needed for future calls.
+		ItemInstrument instrument = entity.instruments.get(slot);
+		JSONInstrumentDefinition slotDefinition = entity.definition.instruments.get(slot);
+		
 		//Check if the lights are on.  If so, render the overlays and the text lit if requested.
 		boolean lightsOn = entity.renderTextLit();
 		
 		//Get scale of the instrument, before component scaling.
-		globalScale = entity.scale*scale;
+		float slotScale = onGUI ? slotDefinition.hudScale : slotDefinition.scale;
 		
 		//Set the part number for switchbox reference.
-		partNumber = partNumberIn;
+		partNumber = slotDefinition.optionalPartNumber;
 		
 		//Finally, render the instrument based on the JSON instrument.definitions.
 		//We cache up all the draw calls for this blend pass, and then render them all at once.
@@ -59,25 +60,26 @@ public final class RenderInstrument{
 				//If we have text, do a text render.  Otherwise, do a normal instrument render.
 				if(component.textObject != null){
 					//Also translate slightly away from the instrument location to prevent clipping.
-					GL11.glPushMatrix();
-					GL11.glTranslatef(0.0F, 0.0F, i*0.0001F);
+					textTransform.set(transform);
+					textTransform.translate(0, 0, i*0.0001F);
+					textTransform.scale(slotScale*component.scale);
 					int variablePartNumber = AEntityD_Definable.getVariableNumber(component.textObject.variableName);
 					final boolean addSuffix = variablePartNumber == -1 && ((component.textObject.variableName.startsWith("engine_") || component.textObject.variableName.startsWith("propeller_") || component.textObject.variableName.startsWith("gun_") || component.textObject.variableName.startsWith("seat_")));
 					if(addSuffix){
 						String oldName = component.textObject.variableName; 
 						component.textObject.variableName += "_" + partNumber;
-						RenderText.draw3DText(entity.getAnimatedTextVariableValue(component.textObject, partialTicks), entity, component.textObject, globalScale*component.scale, true);
+						RenderText.draw3DText(entity.getAnimatedTextVariableValue(component.textObject, partialTicks), entity, textTransform, component.textObject, true);
 						component.textObject.variableName = oldName;
 					}else{
-						RenderText.draw3DText(entity.getAnimatedTextVariableValue(component.textObject, partialTicks), entity, component.textObject, globalScale*component.scale, true);
+						RenderText.draw3DText(entity.getAnimatedTextVariableValue(component.textObject, partialTicks), entity, textTransform, component.textObject, true);
 					}
-					GL11.glPopMatrix();
 				}else{
 					//Init variables.
+					renderObject = entity.instrumentRenderables.get(slot).get(i);
 					renderObject.texture = "/assets/" + instrument.definition.packID + "/textures/" + instrument.definition.textureName;
-					renderObject.transform.resetTransforms();
+					renderObject.transform.set(transform);
 					renderObject.transform.translate(0.0, 0.0, i*0.0001);
-					renderObject.transform.scale(globalScale);
+					renderObject.transform.scale(slotScale);
 					bottomLeft.set(-component.textureWidth/2D, component.textureHeight/2D, 0);
 					topLeft.set(-component.textureWidth/2D, -component.textureHeight/2D, 0);
 					topRight.set(component.textureWidth/2D, -component.textureHeight/2D, 0);
@@ -102,10 +104,13 @@ public final class RenderInstrument{
 						//Translate to the component.
 						renderObject.transform.translate(component.xCenter, -component.yCenter, 0);
 						
+						//Scale to match definition.
+						renderObject.transform.scale(component.scale);
+						
 						//Set points to the variables here and render them.
 						//If the shape is lit, disable lighting for blending.
 						renderObject.disableLighting = component.lightUpTexture && lightsOn && ConfigSystem.configObject.clientRendering.brightLights.value;
-						renderSquareUV(component);
+						renderComponentFromState(component);
 					}
 				}
 			}
@@ -228,7 +233,7 @@ public final class RenderInstrument{
     /**
      * Helper method for setting points for rendering.
      */
-	private static void renderSquareUV(JSONInstrumentComponent component){
+	private static void renderComponentFromState(JSONInstrumentComponent component){
 		//Set X, Y, U, V, and normal Z.  All other values are 0.
 		//Also invert V, as we're going off of pixel-coords here.
 		for(int i=0; i<instrumentSingleComponentPoints.length; ++i){
@@ -281,7 +286,6 @@ public final class RenderInstrument{
 			renderObject.vertices.put(vertex);
 		}
 		renderObject.vertices.flip();
-		renderObject.transform.scale(component.scale);
 		renderObject.render();
 	}
 }

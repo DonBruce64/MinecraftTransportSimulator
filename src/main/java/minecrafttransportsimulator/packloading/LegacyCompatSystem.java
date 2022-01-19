@@ -1236,7 +1236,6 @@ public final class LegacyCompatSystem{
 				object.scale = line.scale;
 				object.maxLength = line.characters;
 				object.pos = new Point3dPlus(line.xPos, line.yPos, line.zPos + 0.01D);
-				object.rot = new Point3dPlus();
 				object.fieldName = "TextLine #" + (definition.general.textObjects.size() + 1);
 				definition.general.textObjects.add(object);
 			}
@@ -1390,10 +1389,10 @@ public final class LegacyCompatSystem{
 				object.scale = line.scale;
 				if(lineNumber++ < 3){
 					object.pos = new Point3dPlus(line.xPos, line.yPos, line.zPos + 0.0001D);
-					object.rot = new Point3dPlus();
 				}else{
 					object.pos = new Point3dPlus(line.xPos, line.yPos, line.zPos - 0.0001D);
-					object.rot = new Point3dPlus(0, 180, 0);
+					object.rot = new Matrix4dPlus();
+					object.rot.rotate(180, 0, 1, 0);
 				}
 				object.fieldName = "TextLine #" + (definition.general.textObjects.size() + 1);
 				definition.general.textObjects.add(object);
@@ -1467,7 +1466,6 @@ public final class LegacyCompatSystem{
 					
 					JSONText nameTextObject = new JSONText();
 					nameTextObject.pos = new Point3dPlus(0, -500, 0);
-					nameTextObject.rot = new Point3dPlus();
 					nameTextObject.fieldName = "Beacon Name";
 					nameTextObject.defaultText = "NONE";
 					nameTextObject.maxLength = 5;
@@ -1476,7 +1474,6 @@ public final class LegacyCompatSystem{
 					
 					JSONText glideslopeTextObject = new JSONText();
 					glideslopeTextObject.pos = new Point3dPlus(0, -500, 0);
-					glideslopeTextObject.rot = new Point3dPlus();
 					glideslopeTextObject.fieldName = "Glide Slope (Deg)";
 					glideslopeTextObject.defaultText = "10.0";
 					glideslopeTextObject.maxLength = 5;
@@ -1485,7 +1482,6 @@ public final class LegacyCompatSystem{
 					
 					JSONText bearingTextObject = new JSONText();
 					bearingTextObject.pos = new Point3dPlus(0, -500, 0);
-					bearingTextObject.rot = new Point3dPlus();
 					bearingTextObject.fieldName = "Bearing (Deg)";
 					bearingTextObject.defaultText = "0.0";
 					bearingTextObject.maxLength = 5;

@@ -15,7 +15,6 @@ import java.util.Map;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.stream.ImageInputStream;
-import javax.vecmath.Matrix4d;
 
 import org.lwjgl.opengl.GL11;
 
@@ -139,7 +138,7 @@ public class InterfaceRender{
 	 *  be desired.  In this case, the rotation will be transposed and the
 	 *  translation will be inverted.  Fourth-row elements will be left as-is.
 	 */
-	public static void applyTransformOpenGL(Matrix4d matrix, boolean inverted){
+	public static void applyTransformOpenGL(Matrix4dPlus matrix, boolean inverted){
 		buffer.clear();
 		if(inverted){
 			buffer.put(matrix.m00);

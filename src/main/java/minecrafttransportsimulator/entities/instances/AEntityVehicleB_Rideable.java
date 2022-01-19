@@ -159,7 +159,7 @@ abstract class AEntityVehicleB_Rideable extends AEntityF_Multipart<JSONVehicle>{
 			}
 			//Open HUD if seat is controller. 
 			if(world.isClient() && InterfaceClient.getClientPlayer().equals(rider)){
-				new GUIHUD((EntityVehicleF_Physics) this,  newSeat);
+				new GUIHUD((EntityVehicleF_Physics) this, newSeat);
 			}
 		}
 		

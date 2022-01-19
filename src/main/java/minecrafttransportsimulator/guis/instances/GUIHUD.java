@@ -51,20 +51,18 @@ public class GUIHUD extends AGUIBase{
 		
 		//Add instruments.  These go wherever they are specified in the JSON.
 		instruments.clear();
-		for(Integer instrumentNumber : vehicle.instruments.keySet()){
-			if(!vehicle.definition.instruments.get(instrumentNumber).placeOnPanel){
-				GUIComponentInstrument instrument = new GUIComponentInstrument(guiLeft, guiTop, instrumentNumber, vehicle); 
+		for(int i=0; i<vehicle.instruments.size(); ++i){
+			if(vehicle.instruments.get(i) != null && !vehicle.definition.instruments.get(i).placeOnPanel){
+				GUIComponentInstrument instrument = new GUIComponentInstrument(guiLeft, guiTop, vehicle, i);
 				instruments.add(instrument);
 				addComponent(instrument);
 			}
 		}
 		//Now add part instruments.
 		for(APart part : vehicle.parts){
-			for(Integer instrumentNumber : part.instruments.keySet()){
-				if(!part.definition.instruments.get(instrumentNumber).placeOnPanel){
-					GUIComponentInstrument instrument = new GUIComponentInstrument(guiLeft, guiTop, instrumentNumber, vehicle); 
-					instruments.add(instrument);
-					addComponent(instrument);
+			for(int i=0; i<part.instruments.size(); ++i){
+				if(part.instruments.get(i) != null && !part.definition.instruments.get(i).placeOnPanel){
+					addComponent(new GUIComponentInstrument(guiLeft, guiTop, part, i));
 				}
 			}
 		}

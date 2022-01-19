@@ -4,6 +4,7 @@ import java.nio.FloatBuffer;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
+import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
 import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
@@ -236,14 +237,14 @@ public class EntityParticle extends AEntityC_Renderable{
 	 *  Called to render the particle..
 	 *  Cleaner as we don't need to preface variable references.
 	 */
-	public void render(float partialTicks){
+	public void render(Matrix4dPlus transform, float partialTicks){
 		if(staticColor == null){
 			renderable.color.red = startColor.red + (endColor.red - startColor.red)*(age+partialTicks)/maxAge;
 			renderable.color.green = startColor.green + (endColor.green - startColor.green)*(age+partialTicks)/maxAge;
 			renderable.color.blue = startColor.blue + (endColor.blue - startColor.blue)*(age+partialTicks)/maxAge;
 		}
 		renderable.alpha = getAlpha(partialTicks);
-		renderable.transform.resetTransforms();
+		renderable.transform.set(transform);
 		renderable.transform.scale(getSize()*getScale(partialTicks));
 		
 		switch(definition.type){

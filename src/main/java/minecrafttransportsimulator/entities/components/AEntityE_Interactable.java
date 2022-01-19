@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.entities.components;
 
+import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -16,6 +17,7 @@ import com.google.common.collect.HashBiMap;
 
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.baseclasses.TrailerConnection;
@@ -43,6 +45,7 @@ import minecrafttransportsimulator.packets.instances.PacketEntityTrailerChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.rendering.components.DurationDelayClock;
+import minecrafttransportsimulator.rendering.components.RenderableObject;
 import minecrafttransportsimulator.rendering.instances.RenderInstrument.InstrumentSwitchbox;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -104,13 +107,16 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 	 **/
 	public final BiMap<Point3dPlus, WrapperEntity> locationRiderMap = HashBiMap.create();
 	
-	/**Maps instruments to their place in the JSON.  This is done instead of a list as there may
-	 * be instruments not present, so we'd need to have empty slots in a list for this, and maps
-	 * work better for this from a code standpoint than lists anyways.  Do NOT modify this map
-	 * directly.  Instead, use the add/remove methods in this class.  This ensures proper animation
-	 * switchbox creation.
+	/**List of instruments based on their slot in the JSON.  Note that this list is created on first construction
+	 * and will contain null elements for any instrument that isn't present in that slot.
+	 * Do NOT modify this list directly.  Instead, use the add/remove methods in this class.
+	 * This ensures proper animation component creation.
 	 **/
-	public final Map<Integer, ItemInstrument> instruments = new HashMap<Integer, ItemInstrument>();
+	public final List<ItemInstrument> instruments = new ArrayList<ItemInstrument>();
+	
+	/**Similar to {@link #instruments}, except this is the renderable bits for them.  There's one entry for each component, 
+	 * with text being a null entry as text components render via the text rendering system.*/
+	public final List<List<RenderableObject>> instrumentRenderables = new ArrayList<List<RenderableObject>>();
 	
 	/**Maps instrument components to their respective switchboxes.**/
 	public final Map<JSONInstrumentComponent, InstrumentSwitchbox> instrumentComponentSwitchboxes = new LinkedHashMap<JSONInstrumentComponent, InstrumentSwitchbox>();
@@ -175,6 +181,11 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 		
 		//Load instruments.  If we are new, create the default ones.
 		if(definition.instruments != null){
+			//Need to init lists.
+			for(int i=0; i<definition.instruments.size(); ++i){
+				instruments.add(null);
+				instrumentRenderables.add(null);
+			}
 			if(newlyCreated){
 				for(JSONInstrumentDefinition packInstrument : definition.instruments){
 					if(packInstrument.defaultInstrument != null){
@@ -239,9 +250,26 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 		//Update collision boxes as they might have changed.
 		updateCollisionBoxes();
 		
-		//Create instrument animation clocks.
+		//Create instrument lists and animation clocks.
 		if(definition.instruments != null){
+			//Check for existing instruments and save them.  Then make new ones based on JSON.
+			List<ItemInstrument> oldInstruments = new ArrayList<ItemInstrument>();
+			oldInstruments.addAll(instruments);
+			instruments.clear();
+			instrumentRenderables.clear();
 			instrumentSlotSwitchboxes.clear();
+			for(int i=0; i<definition.instruments.size(); ++i){
+				instruments.add(null);
+				instrumentRenderables.add(null);
+				if(i < instruments.size()){
+					ItemInstrument oldInstrument = oldInstruments.get(i);
+					if(oldInstrument != null){
+						addInstrument(oldInstrument, i);
+					}
+				}
+			}
+			
+			//Old instruments added, make animation definitions.
 			for(JSONInstrumentDefinition packInstrument : definition.instruments){
 				if(packInstrument.animations != null){
 					List<JSONAnimationDefinition> animations = new ArrayList<JSONAnimationDefinition>();
@@ -269,7 +297,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 	/**
    	 *  Helper method to populate applyAfter things for JSONs. 
    	 */
-	protected void populateApplyAfters(String applyAfter, List<JSONAnimationDefinition> animations, String debugName){
+	public void populateApplyAfters(String applyAfter, List<JSONAnimationDefinition> animations, String debugName){
 		if(applyAfter != null){
 			if(definition.rendering != null && definition.rendering.animatedObjects != null){
 				String objectSought = applyAfter;
@@ -724,23 +752,31 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
    	 *  Adds the instrument to the specified slot.
    	 */
     public void addInstrument(ItemInstrument instrument, int slot){
-    	instruments.put(slot, instrument);
+    	instruments.set(slot, instrument);
+    	List<RenderableObject> renderables = new ArrayList<RenderableObject>();
     	for(JSONInstrumentComponent component : instrument.definition.components){
+    		if(component.textObject != null){
+    			renderables.add(null);
+    		}else{
+    			renderables.add(new RenderableObject("instrument", null, new ColorRGB(), FloatBuffer.allocate(6*8), false));
+    		}
     		if(component.animations != null){
     			instrumentComponentSwitchboxes.put(component, new InstrumentSwitchbox(this, component));
     		}
 		}
+    	instrumentRenderables.set(slot, renderables);
     }
     
     /**
    	 *  Removes the instrument from the specified slot.
    	 */
     public void removeIntrument(int slot){
-    	ItemInstrument removedInstrument = instruments.remove(slot);
+    	ItemInstrument removedInstrument = instruments.set(slot, null);
 		if(removedInstrument != null){
 			for(JSONInstrumentComponent component : removedInstrument.definition.components){
 				instrumentComponentSwitchboxes.remove(component);
 			}
+			instrumentRenderables.set(slot, null);
 		}
     }
 	
@@ -1079,9 +1115,10 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 		if(definition.instruments != null){
 			String[] instrumentsInSlots = new String[definition.instruments.size()];
 			for(int i=0; i<instrumentsInSlots.length; ++i){
-				if(instruments.containsKey(i)){
-					data.setString("instrument" + i + "_packID", instruments.get(i).definition.packID);
-					data.setString("instrument" + i + "_systemName", instruments.get(i).definition.systemName);
+				ItemInstrument instrument = instruments.get(i);
+				if(instrument != null){
+					data.setString("instrument" + i + "_packID", instrument.definition.packID);
+					data.setString("instrument" + i + "_systemName", instrument.definition.systemName);
 				}
 			}
 		}

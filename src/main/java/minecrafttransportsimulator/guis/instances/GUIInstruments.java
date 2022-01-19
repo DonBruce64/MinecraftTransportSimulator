@@ -224,10 +224,7 @@ public class GUIInstruments extends AGUIBase{
 		for(AEntityE_Interactable<?> entity : entityInstrumentBlocks.keySet()){
 			for(InstrumentSlotBlock block : entityInstrumentBlocks.get(entity)){
 				block.selectorOverlay.visible = entity.equals(selectedEntity) && block.definition.equals(selectedInstrumentDefinition) && inClockPeriod(40, 20);
-				block.instrument.visible = !block.selectorOverlay.visible && entity.instruments.containsKey(block.instrument.instrumentPackIndex);
-				if(block.instrument.visible){
-					block.instrument.instrument = entity.instruments.get(block.instrument.instrumentPackIndex);
-				}
+				block.instrument.visible = !block.selectorOverlay.visible && entity.instruments.get(block.instrument.slot) != null;
 				block.blank.visible = !block.selectorOverlay.visible && !block.instrument.visible;
 			}
 		}
@@ -239,7 +236,7 @@ public class GUIInstruments extends AGUIBase{
 		
 		//Set info and clear state based on if we've clicked an instrument.
 		infoLabel.text = selectedInstrumentDefinition == null ? "\\/  " + InterfaceCore.translate("gui.instruments.idle") + "  \\/" : "/\\  " + InterfaceCore.translate("gui.instruments.decide") + "  /\\";
-		clearButton.enabled = selectedInstrumentDefinition != null && selectedEntity.instruments.containsKey(selectedEntity.definition.instruments.indexOf(selectedInstrumentDefinition));
+		clearButton.enabled = selectedInstrumentDefinition != null && selectedEntity.instruments.get(selectedEntity.definition.instruments.indexOf(selectedInstrumentDefinition)) != null;
 	}
 	
 	@Override
@@ -282,7 +279,7 @@ public class GUIInstruments extends AGUIBase{
 		private InstrumentSlotBlock(int guiLeft, int guiTop, AEntityE_Interactable<?> entity, JSONInstrumentDefinition definition){
 			this.definition = definition;
 			int instrumentRadius = (int) (64F*definition.hudScale);
-			addComponent(this.instrument = new GUIComponentInstrument(guiLeft, guiTop, entity.definition.instruments.indexOf(definition), entity));
+			addComponent(this.instrument = new GUIComponentInstrument(guiLeft, guiTop, entity, entity.definition.instruments.indexOf(definition)));
 			addComponent(this.button = new GUIComponentButton(guiLeft + definition.hudX - instrumentRadius, guiTop + definition.hudY - instrumentRadius, 2*instrumentRadius, 2*instrumentRadius){
 				@Override
 				public void onClicked(boolean leftSide){

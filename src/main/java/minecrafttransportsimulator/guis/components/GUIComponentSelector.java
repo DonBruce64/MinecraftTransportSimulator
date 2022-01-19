@@ -79,6 +79,6 @@ public abstract class GUIComponentSelector extends GUIComponentButton{
 	
     @Override
 	public void renderText(boolean renderTextLit){
-    	RenderText.drawText(text, null, textPosition, null, (renderTextLit || ignoreGUILightingState) ? litColor : regularColor, TextAlignment.CENTERED, 0.75F, false, 0, 1.0F, renderTextLit || ignoreGUILightingState);
+    	RenderText.drawText(text, null, textPosition, (renderTextLit || ignoreGUILightingState) ? litColor : regularColor, TextAlignment.CENTERED, 0.75F, false, 0, renderTextLit || ignoreGUILightingState);
     }
 }

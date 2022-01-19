@@ -5,10 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.vecmath.AxisAngle4d;
-import javax.vecmath.Matrix4d;
-
 import minecrafttransportsimulator.baseclasses.ColorRGB;
+import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
 import minecrafttransportsimulator.rendering.components.AModelParser;
 import minecrafttransportsimulator.rendering.components.RenderableObject;
 
@@ -28,7 +26,7 @@ public class GUIComponent3DModel extends AGUIComponent{
 	/**Parsed vertex indexes.  Keyed by model name.*/
 	private static final Map<String, RenderableObject> modelParsedObjects = new HashMap<String, RenderableObject>();
 	private static final Map<String, Float> modelScalingFactors = new HashMap<String, Float>();
-	private static final Matrix4d ISOMETRIC_TRANSFORM = generateIsometricTransform();
+	private static final Matrix4dPlus ISOMETRIC_TRANSFORM = generateIsometricTransform();
 	
 	public final float scaleFactor;
 	public final boolean isometric;
@@ -102,7 +100,7 @@ public class GUIComponent3DModel extends AGUIComponent{
 			object.transform.resetTransforms();
 			object.transform.translate(position);
 			if(isometric){
-				object.transform.combine(ISOMETRIC_TRANSFORM);
+				object.transform.matrix(ISOMETRIC_TRANSFORM);
 			}
 			if(spin){
 				object.transform.rotate((36*System.currentTimeMillis()/1000)%360, 0, 1, 0);
@@ -125,14 +123,10 @@ public class GUIComponent3DModel extends AGUIComponent{
     	modelParsedObjects.clear();
     }
     
-    private static Matrix4d generateIsometricTransform(){
-    	Matrix4d transform = new Matrix4d();
-    	transform.setIdentity();
-    	transform.set(new AxisAngle4d(0, 1, 0, Math.toRadians(-45)));
-    	Matrix4d transform2 = new Matrix4d();
-    	transform2.setIdentity();
-    	transform2.set(new AxisAngle4d(1, 0, -1, Math.toRadians(35.264)));
-    	transform.mul(transform2);
+    private static Matrix4dPlus generateIsometricTransform(){
+    	Matrix4dPlus transform = new Matrix4dPlus();
+    	transform.rotate(-45, 0, 1, 0);
+    	transform.rotate(35.264, 1, 0, -1);
     	return transform;
     }
 }

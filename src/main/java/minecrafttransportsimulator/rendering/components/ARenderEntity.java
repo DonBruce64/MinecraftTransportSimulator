@@ -1,7 +1,5 @@
 package minecrafttransportsimulator.rendering.components;
 
-import org.lwjgl.opengl.GL11;
-
 import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
 import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
@@ -14,7 +12,8 @@ import minecrafttransportsimulator.mcinterface.InterfaceRender;
  */
 public abstract class ARenderEntity<RenderedEntity extends AEntityC_Renderable>{
 	private static final Matrix4dPlus interpolatedOrientationHolder = new Matrix4dPlus();
-	private static final Matrix4dPlus startingMatrix = new Matrix4dPlus();
+	private static final Matrix4dPlus translatedMatrix = new Matrix4dPlus();
+	private static final Matrix4dPlus rotatedMatrix = new Matrix4dPlus();
 	
 	/**
 	 *  Called to render this entity.  This is the setup method that sets states to the appropriate values.
@@ -41,37 +40,29 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Renderable>{
 	        //Set up lighting.
 	        InterfaceRender.setLightingToPosition(entity.position);
 	        
-	        //Push the matrix on the stack and translate and rotate to the enitty's position.
-			GL11.glPushMatrix();
-	        GL11.glTranslated(entityPositionDelta.x, entityPositionDelta.y, entityPositionDelta.z);
-	       
-	        GL11.glPushMatrix();
-	        InterfaceRender.applyTransformOpenGL(interpolatedOrientationHolder, false);
+	        //Set up matrixes.
+	        translatedMatrix.resetTransforms();
+	        translatedMatrix.translate(entityPositionDelta);
+			rotatedMatrix.set(translatedMatrix);
+			rotatedMatrix.matrix(interpolatedOrientationHolder);
+			rotatedMatrix.scale(entity.prevScale + (entity.scale - entity.prevScale)*partialTicks);
 			
 	        //Render the main model.
 	        entity.world.endProfiling();
-	        //FIXME this is this way for testing.
-	        startingMatrix.resetTransforms();
-	        startingMatrix.scale(entity.scale);
-	        renderModel(entity, startingMatrix, blendingEnabled, partialTicks);
+	        renderModel(entity, rotatedMatrix, blendingEnabled, partialTicks);
 			
 			//End rotation render matrix.
-			GL11.glPopMatrix();
-			
 			//Render holoboxes.
 			if(blendingEnabled){
-				renderHolographicBoxes(entity, startingMatrix);
+				renderHolographicBoxes(entity, translatedMatrix);
 			}
 			
 			//Render bounding boxes.
 			if(!blendingEnabled && InterfaceRender.shouldRenderBoundingBoxes()){
 				entity.world.beginProfiling("BoundingBoxes", true);
-				renderBoundingBoxes(entity, startingMatrix);
+				renderBoundingBoxes(entity, translatedMatrix);
 				entity.world.endProfiling();
 			}
-			
-			//End translation render matrix.
-			GL11.glPopMatrix();
 			
 			//Handle sounds.  These will be partial-tick only ones.
 			//Normal sounds are handled on the main tick loop.

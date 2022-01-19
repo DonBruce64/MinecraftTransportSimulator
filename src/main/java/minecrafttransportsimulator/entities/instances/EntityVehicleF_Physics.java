@@ -139,16 +139,13 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	
 	@Override
 	public boolean update(){
+		//FIXME clean up testing here before release.
 		if(super.update()){
 			world.beginProfiling("VehicleF_Level", true);
 			if(definition.systemName.contains("rabbit")){
 				position.y = 10;
 				angles.set(0, 0, 0);
 				motion.set(0, 0, 0);
-			}
-			if(definition.systemName.contains("chevron")){
-				//setVariable(RUDDER_VARIABLE, 30);
-				//setVariable(THROTTLE_VARIABLE, 0.2);
 			}
 			//Parse out variables.
 			aileronAngle = getVariable(AILERON_VARIABLE);

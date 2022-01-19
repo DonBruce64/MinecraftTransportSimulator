@@ -3,6 +3,7 @@ package minecrafttransportsimulator.jsondefs;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
+import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
 import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
@@ -71,7 +72,7 @@ public class JSONRendering{
     @Deprecated
     public class VehicleDisplayText{
     	public Point3dPlus pos;
-        public Point3dPlus rot;
+        public Matrix4dPlus rot;
         public float scale;
         public ColorRGB color;
     }

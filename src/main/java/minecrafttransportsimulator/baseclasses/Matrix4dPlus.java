@@ -3,7 +3,6 @@ package minecrafttransportsimulator.baseclasses;
 import javax.vecmath.AxisAngle4d;
 import javax.vecmath.Matrix3d;
 import javax.vecmath.Matrix4d;
-import javax.vecmath.Tuple3d;
 
 /**Upgraded Matrix4d class that allows for a method to convert
  * Euler angles into the matrix as the rotational component. 
@@ -13,13 +12,13 @@ import javax.vecmath.Tuple3d;
 public class Matrix4dPlus extends Matrix4d{
 	public final Point3dPlus lastAnglesSet = new Point3dPlus();
 
-	private Matrix3d matX = new Matrix3d();
-	private Matrix3d matY = new Matrix3d();
-	private Matrix3d matZ = new Matrix3d();
-	private static final Matrix4d helperTranslationTransform = new Matrix4d();
-	private static final Matrix4d helperRotationTransform = new Matrix4d();
-	private static final Matrix4d helperScalingTransform = new Matrix4d();
-	private static final AxisAngle4d helperAxisAngle = new AxisAngle4d();
+	private final Matrix3d matX = new Matrix3d();
+	private final Matrix3d matY = new Matrix3d();
+	private final Matrix3d matZ = new Matrix3d();
+	private final Matrix4d helperTranslationTransform = new Matrix4d();
+	private final Matrix4d helperRotationTransform = new Matrix4d();
+	private final Matrix4d helperScalingTransform = new Matrix4d();
+	private final AxisAngle4d helperAxisAngle = new AxisAngle4d();
 	
 	public Matrix4dPlus(){
 		super();
@@ -65,14 +64,14 @@ public class Matrix4dPlus extends Matrix4d{
 		helperTranslationTransform.m13 = y;
 		helperTranslationTransform.m23 = z;
 		helperTranslationTransform.m33 = 1;
-		combine(helperTranslationTransform);
+		mul(helperTranslationTransform);
 	}
 	
 	/**Applies a translation transform to this object.
 	 * This is here to prevent the need to create transform objects
 	 * in all classes that just want to translate renderables.
 	 */
-	public void translate(Tuple3d translation){
+	public void translate(Point3dPlus translation){
 		translate(translation.x, translation.y, translation.z);
 	}
 	
@@ -81,26 +80,42 @@ public class Matrix4dPlus extends Matrix4d{
 	 * in all classes that just want to rotate renderables.
 	 */
 	public void rotate(double angle, double x, double y, double z){
-		helperAxisAngle.set(x, y, z, Math.toRadians(angle));
-		helperRotationTransform.set(helperAxisAngle); 
-		combine(helperRotationTransform);
+		if(angle != 0){
+			helperAxisAngle.set(x, y, z, Math.toRadians(angle));
+			helperRotationTransform.set(helperAxisAngle); 
+			mul(helperRotationTransform);
+		}
+	}
+	
+	/**Applies a uniform scaling transform to this object.
+	 * This is here to prevent the need to create transform objects
+	 * in all classes that just want to scale renderables.
+	 */
+	public void scale(double scaling){
+		if(scaling != 1.0){
+			helperScalingTransform.m00 = scaling;
+			helperScalingTransform.m11 = scaling;
+			helperScalingTransform.m22 = scaling;
+			helperScalingTransform.m33 = 1;
+			mul(helperScalingTransform);
+		}
 	}
 	
 	/**Applies a scaling transform to this object.
 	 * This is here to prevent the need to create transform objects
 	 * in all classes that just want to scale renderables.
 	 */
-	public void scale(double scaling){
-		helperScalingTransform.m00 = scaling;
-		helperScalingTransform.m11 = scaling;
-		helperScalingTransform.m22 = scaling;
+	public void scale(Point3dPlus scaling){
+		helperScalingTransform.m00 = scaling.x;
+		helperScalingTransform.m11 = scaling.y;
+		helperScalingTransform.m22 = scaling.z;
 		helperScalingTransform.m33 = 1;
-		combine(helperScalingTransform);
+		mul(helperScalingTransform);
 	}
 	
 	/**Applies a general transform to this object.
 	 */
-	public void combine(Matrix4d transformToApply){
+	public void matrix(Matrix4d transformToApply){
 		mul(transformToApply);
 	}
 	
@@ -108,7 +123,7 @@ public class Matrix4dPlus extends Matrix4d{
 	 * This basically applies a transform that happens before
 	 * the current object's transform operation.
 	 */
-	public void combinePrior(Matrix4d transformToApply){
+	public void matrixPrior(Matrix4d transformToApply){
 		mul(transformToApply, this);
 	}
 }

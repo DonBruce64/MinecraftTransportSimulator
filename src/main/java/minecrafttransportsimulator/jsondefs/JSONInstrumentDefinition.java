@@ -2,6 +2,7 @@ package minecrafttransportsimulator.jsondefs;
 
 import java.util.List;
 
+import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
 import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
@@ -13,7 +14,7 @@ public class JSONInstrumentDefinition{
 	
 	@JSONRequired
 	@JSONDescription("An entry of x, y, and z rotations that tell MTS how to rotate this instrument.  By default all instruments face -z, or the rear of the vehicle.  This can be used to change rotation to fit a different spot of the vehicle if desired.")
-    public Point3dPlus rot;
+    public Matrix4dPlus rot;
 	
 	@JSONDescription("The scale of the instrument.  By default instruments are 128x128.")
     public float scale;

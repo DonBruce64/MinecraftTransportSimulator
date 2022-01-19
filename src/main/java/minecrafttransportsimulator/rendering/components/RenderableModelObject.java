@@ -7,10 +7,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javax.vecmath.Matrix4d;
-
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
+import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
 import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.instances.APart;
@@ -47,7 +46,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 	/**Map of tread points, keyed by the model the tread is pathing about, then the spacing of the tread.
 	 * This can be shared for two different treads of the same spacing as they render the same.**/
 	private static final Map<String, Map<Float, List<Double[]>>> treadPoints = new HashMap<String, Map<Float, List<Double[]>>>();
-	private static final Matrix4d treadPathBaseTransform = new Matrix4d();
+	private static final Matrix4dPlus treadPathBaseTransform = new Matrix4dPlus();
 	private static final float COLOR_OFFSET = 0.0001F;
 	private static final float FLARE_OFFSET = 0.0002F;
 	private static final float COVER_OFFSET = 0.0003F;
@@ -93,7 +92,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 	 *  Renders this object, applying any transforms that need to happen.  This method also
 	 *  renders any objects that depend on this object's transforms after rendering.
 	 */
-	public void render(AnimationEntity entity, Matrix4d transform, boolean blendingEnabled, float partialTicks){
+	public void render(AnimationEntity entity, Matrix4dPlus transform, boolean blendingEnabled, float partialTicks){
 		JSONLight lightDef = entity.lightObjectDefinitions.get(object.name);
 		float lightLevel = lightDef != null ? entity.lightBrightnessValues.get(lightDef) : 0;
 		if(shouldRender(entity, lightDef, blendingEnabled)){
@@ -104,7 +103,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 			if(switchbox == null || switchbox.runSwitchbox(partialTicks)){
 				//Apply switchbox transform, if we have one.
 				if(switchbox != null){
-					object.transform.combine(switchbox.netMatrix);
+					object.transform.matrix(switchbox.netMatrix);
 				}
 				
 				//Set mirrored statues.
@@ -185,7 +184,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 					if(!blendingEnabled){
 						for(JSONText textDef : entity.text.keySet()){
 							if(object.name.equals(textDef.attachedTo)){
-								RenderText.draw3DText(entity.text.get(textDef), entity, textDef, entity.scale, false);
+								RenderText.draw3DText(entity.text.get(textDef), entity, object.transform, textDef, false);
 							}
 						}
 					}

@@ -54,7 +54,7 @@ public class PacketEntityInstrumentChange extends APacketEntityInteract<AEntityE
 	public boolean handle(WrapperWorld world, AEntityE_Interactable<?> entity, WrapperPlayer player){
 		//Check to make sure the instrument can fit in survival player's inventories.
 		//Only check this on the server, as adding things to the client doesn't do us any good.
-		if(!world.isClient() && !player.isCreative() && entity.instruments.containsKey(slot)){
+		if(!world.isClient() && !player.isCreative() && entity.instruments.get(slot) != null){
 			if(!player.isCreative() && !player.getInventory().addStack(entity.instruments.get(slot).getNewStack(null))){
 				return false;
 			}

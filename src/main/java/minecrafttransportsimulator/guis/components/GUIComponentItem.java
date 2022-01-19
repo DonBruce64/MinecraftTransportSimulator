@@ -75,7 +75,7 @@ public class GUIComponentItem extends AGUIComponent{
     
     @Override
     public void renderText(boolean renderTextLit){
-    	RenderText.drawText(text, null, textPosition, null, ColorRGB.WHITE, TextAlignment.RIGHT_ALIGNED, scale, false, 0, 1.0F, renderTextLit);
+    	RenderText.drawText(text, null, textPosition, ColorRGB.WHITE, TextAlignment.RIGHT_ALIGNED, scale, false, 0, renderTextLit);
     }
     
     @Override

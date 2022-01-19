@@ -73,7 +73,7 @@ public class GUIComponentLabel extends AGUIComponent{
     @Override
 	public void renderText(boolean renderTextLit){
 		if(button == null ? (box == null || box.visible) : button.visible){
-			RenderText.drawText(text, fontName, textPosition, null, color, alignment, scale, autoScale, wrapWidth, 1.0F, renderTextLit || ignoreGUILightingState);
+			RenderText.drawText(text, fontName, textPosition, color, alignment, scale, autoScale, wrapWidth, renderTextLit || ignoreGUILightingState);
 		}
     }
 }

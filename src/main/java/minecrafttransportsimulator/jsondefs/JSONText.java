@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.jsondefs;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
+import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
 import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
@@ -10,9 +11,8 @@ public class JSONText{
 	@JSONDescription("An entry of x, y, and z coordinates that define the center point of where the text should render.  Text may be left or right aligned by specifying the proper parameter.")
 	public Point3dPlus pos;
 	
-	@JSONRequired
 	@JSONDescription("An entry of x, y, and z rotations that tell MTS how to rotate this text.  By default all text faces +z, on the model.")
-    public Point3dPlus rot;
+    public Matrix4dPlus rot;
 	
 	@JSONRequired
 	@JSONDescription("The scale of the text.  1.0 will render text about ½ block high, as 1 text character pixel equates to one block texture pixel, and text is 8-pixels high.")

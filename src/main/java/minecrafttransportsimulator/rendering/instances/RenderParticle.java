@@ -9,7 +9,7 @@ public class RenderParticle extends ARenderEntity<EntityParticle>{
 	@Override
 	protected void renderModel(EntityParticle particle, Matrix4dPlus transform, boolean blendingEnabled, float partialTicks){
 		if(blendingEnabled){
-			particle.render(partialTicks);
+			particle.render(transform, partialTicks);
 		}
 	}
 

@@ -172,7 +172,7 @@ public abstract class AGUIComponent{
     		
     		//Need to move tooltip text by -y to account for inverted coords.
     		mutableTooltipPosition.set(xOffset + TOOLTIP_BORDER_PADDING, -(yOffset + TOOLTIP_BORDER_PADDING), textPosition.z + 50);
-    		RenderText.drawText(tooltipCombinedText, null, mutableTooltipPosition, null, ColorRGB.WHITE, TextAlignment.LEFT_ALIGNED, 1.0F, false, wrapWidth, 1.0F, true);
+    		RenderText.drawText(tooltipCombinedText, null, mutableTooltipPosition, ColorRGB.WHITE, TextAlignment.LEFT_ALIGNED, 1.0F, false, wrapWidth, true);
     	}
     }
     

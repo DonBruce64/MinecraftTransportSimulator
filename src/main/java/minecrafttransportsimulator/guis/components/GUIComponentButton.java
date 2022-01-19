@@ -148,6 +148,6 @@ public abstract class GUIComponentButton extends GUIComponentCutout{
     
     @Override
 	public void renderText(boolean renderTextLit){
-    	RenderText.drawText(text, null, textPosition, null, textColor, centeredText ? TextAlignment.CENTERED : TextAlignment.LEFT_ALIGNED, 1.0F, false, 0, 1.0F, renderTextLit || ignoreGUILightingState);
+    	RenderText.drawText(text, null, textPosition, textColor, centeredText ? TextAlignment.CENTERED : TextAlignment.LEFT_ALIGNED, 1.0F, false, 0, renderTextLit || ignoreGUILightingState);
     }
 }

@@ -10,6 +10,7 @@ import java.util.Set;
 import javax.imageio.ImageIO;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
+import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
 import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.JSONText;
@@ -32,6 +33,7 @@ public class RenderText{
 	public static final char STRIKETHROUGH_CHAR = '-';
 	
 	private static final Map<String, FontData> fontDatas = new HashMap<String, FontData>();
+	private static final Matrix4dPlus transformHelper = new Matrix4dPlus();
 	
 	/**
 	 *  Draws the specified text.  This is designed for general draws where text is defined in-code, but still may
@@ -47,9 +49,11 @@ public class RenderText{
 	 *  Also note that if a scale was applied prior to rendering this text, it should be passed-in here.
 	 *  This allows for proper normal calculations to prevent needing to re-normalize the text.
 	 */
-	public static void drawText(String text, String fontName, Point3dPlus position, Point3dPlus rotation, ColorRGB color, TextAlignment alignment, float scale, boolean autoScale, int wrapWidth, float prevScaleFactor, boolean renderLit){
+	public static void drawText(String text, String fontName, Point3dPlus position, ColorRGB color, TextAlignment alignment, float scale, boolean autoScale, int wrapWidth, boolean renderLit){
 		if(!text.isEmpty()){
-			getFontData(fontName).renderText(text, position, rotation, alignment, scale, autoScale, wrapWidth, 1.0F, true, color, renderLit);
+			transformHelper.resetTransforms();
+			transformHelper.translate(position);
+			getFontData(fontName).renderText(text, transformHelper, null, alignment, scale, autoScale, wrapWidth, true, color, renderLit);
 		}
 	}
 	
@@ -57,7 +61,7 @@ public class RenderText{
 	 *  Similar to the 2D text drawing method, except this method will render the text according to the passed-in text JSON in 3D space at the point specified.
 	 *  Essentially, this is JSON-defined rendering rather than manual entry of points.
 	 */
-	public static void draw3DText(String text, AEntityD_Definable<?> entity, JSONText definition, float preScaledFactor, boolean pixelCoords){
+	public static void draw3DText(String text, AEntityD_Definable<?> entity, Matrix4dPlus transform, JSONText definition, boolean pixelCoords){
 		if(!text.isEmpty()){
 			//Get the actual color we will need to render with based on JSON.
 			ColorRGB color = entity.getTextColor(definition.inheritedColorIndex, definition.color);
@@ -66,7 +70,9 @@ public class RenderText{
 			float scale = pixelCoords ? definition.scale : definition.scale/16F;
 			
 			//Render the text.
-			getFontData(definition.fontName).renderText(text, definition.pos, definition.rot, TextAlignment.values()[definition.renderPosition], scale, definition.autoScale, definition.wrapWidth, preScaledFactor, pixelCoords, color, definition.lightsUp && entity.renderTextLit());
+			transformHelper.set(transform);
+			transformHelper.translate(definition.pos);
+			getFontData(definition.fontName).renderText(text, transformHelper, definition.rot, TextAlignment.values()[definition.renderPosition], scale, definition.autoScale, definition.wrapWidth, pixelCoords, color, definition.lightsUp && entity.renderTextLit());
 		}
 	}
 	
@@ -148,8 +154,7 @@ public class RenderText{
 		};
 		private static final FontRenderState[] STATES = FontRenderState.generateDefaults();
 		private static final int MAX_VERTCIES_PER_RENDER = 1000*6;
-		private static final Point3dPlus DEFAULT_ADJ = new Point3dPlus();
-		private static final Point3dPlus mutablePosition = new Point3dPlus();
+		private static final Point3dPlus defaultAdjustmentOffset = new Point3dPlus();
 		
 		private final boolean isDefault;
 		/*Texture locations for the font files.**/
@@ -182,8 +187,6 @@ public class RenderText{
 		private final float[] charUV = new float[2];
 		/**Mutable helper for doing uv-building operations for font effects like bold and underline.**/
 		private final float[] supplementalUV = new float[2];
-		/**Mutable helper for rotating vertices.**/
-		private final Point3dPlus rotatedVertex = new Point3dPlus();
 		
 		
 		private FontData(String fontName){
@@ -257,31 +260,21 @@ public class RenderText{
 			}
 		}
 		
-		private void renderText(String text, Point3dPlus position, Point3dPlus rotation, TextAlignment alignment, float scale, boolean autoScale, int wrapWidth, float preScaledFactor, boolean pixelCoords, ColorRGB color, boolean renderLit){
+		private void renderText(String text, Matrix4dPlus transform, Matrix4dPlus rotation, TextAlignment alignment, float scale, boolean autoScale, int wrapWidth, boolean pixelCoords, ColorRGB color, boolean renderLit){
 			//Clear out the active object list as it was set last pass.
 			for(RenderableObject object : activeRenderObjects){
-				object.transform.resetTransforms();
 				object.vertices.clear();
 			}
 			activeRenderObjects.clear();
-			
-			//Use mutable position here as we need to modify it and don't want to modify the actual variable.
-			mutablePosition.set(position);
 			
 			//Cull text to total chars.
 			//This is all we can render in one pass.
 			if(text.length() > MAX_VERTCIES_PER_RENDER/6){
 				text = text.substring(0, MAX_VERTCIES_PER_RENDER/6);
 			}
-			//Pre-calculate rotation of normals, as these won't change.
-			boolean doRotation = rotation != null && !rotation.isZero();
+			
+			//Pre-calculate normals, as these won't change.
 			float[] normals = new float[]{0.0F, 0.0F, 1.0F};
-			if(doRotation){
-				Point3dPlus rotatedNormals = new Point3dPlus(normals[0], normals[1], normals[2]).rotateFine(rotation);
-				normals[0] = (float) rotatedNormals.x;
-				normals[1] = (float) rotatedNormals.y;
-				normals[2] = (float) rotatedNormals.z;
-			}
 			
 			//Check the string for a random font code char.  If we have one, we need to substitute chars.
 			//Do this prior to rendering operations as this will affect string length and blocks.
@@ -312,13 +305,10 @@ public class RenderText{
 			//If we don't, then the font will be too low for the line it is on.  Unicode fonts have 2px on the
 			//bottom whereas ASCII has 1, so they are bottom-aligned in the texture, but top-aligned in the render.
 			if(isDefault){
-				DEFAULT_ADJ.set(0, DEFAULT_PIXELS_PER_CHAR*scale*0.4, 0);
-				if(doRotation){
-					DEFAULT_ADJ.rotateFine(rotation);
-				}
+				defaultAdjustmentOffset.set(0, scale*DEFAULT_PIXELS_PER_CHAR*0.4, 0);
 				scale *= 1.4;
 			}else{
-				DEFAULT_ADJ.set(0, 0, 0);
+				defaultAdjustmentOffset.set(0, 0, 0);
 			}
 			
 			//Get the text width.
@@ -338,20 +328,15 @@ public class RenderText{
 				if(adjustedStringWidthFactor > wrapWidth){
 					double scaleFactor = wrapWidth/adjustedStringWidthFactor;
 					if(pixelCoords){
-						DEFAULT_ADJ.add(0, -DEFAULT_PIXELS_PER_CHAR*(scale*scaleFactor - scale)/2D, 0);
+						defaultAdjustmentOffset.add(0, -DEFAULT_PIXELS_PER_CHAR*(scale*scaleFactor - scale)/2D, 0);
 					}else{
-						DEFAULT_ADJ.add(0, DEFAULT_PIXELS_PER_CHAR*(scale*scaleFactor - scale)/2D, 0);
+						defaultAdjustmentOffset.add(0, DEFAULT_PIXELS_PER_CHAR*(scale*scaleFactor - scale)/2D, 0);
 					}
 					scale *= scaleFactor;
 				}
 				//Don't use wrap width if we already adjusted scale for it.
 				wrapWidth = 0;
 			}
-			
-			//Add the adjustment and multiply position by prev scale.
-			//This moves the position to the appropriate one for the scale the entire text segment is rendered at.
-			mutablePosition.add(DEFAULT_ADJ);
-			mutablePosition.multiply(preScaledFactor);
 			
 			
 			//Check if we need to adjust our offset for our alignment.
@@ -603,17 +588,8 @@ public class RenderText{
 						
 						//Only do these calcs for the first 6 vertices for the main char.
 						if(j < 6){
-							//Z is always 0 initially.  We rotate it to match the actual rotation.
+							//Z is always 0.
 							charVertex[2] = 0.0F;
-							
-							//Rotate vertices if required.
-							if(doRotation){
-								rotatedVertex.set(charVertex[0], charVertex[1], charVertex[2]);
-								rotatedVertex.rotateFine(rotation);
-								charVertex[0] = (float) rotatedVertex.x;
-								charVertex[1] = (float) rotatedVertex.y;
-								charVertex[2] = (float) rotatedVertex.z;
-							}
 							
 							//Add char vertex to render block.
 							currentRenderObject.vertices.put(normals).put(charUV).put(charVertex);
@@ -629,8 +605,12 @@ public class RenderText{
 			//All points obtained, render.
 			for(RenderableObject object : activeRenderObjects){
 				object.disableLighting = renderLit;
-				object.transform.translate(mutablePosition);
-				object.transform.scale(scale*preScaledFactor);
+				object.transform.set(transform);
+				object.transform.scale(scale);
+				if(rotation != null){
+					object.transform.matrix(rotation);
+				}
+				object.transform.translate(defaultAdjustmentOffset);
 				object.vertices.flip();
 				object.render();
 			}

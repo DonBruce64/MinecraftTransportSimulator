@@ -13,8 +13,11 @@ import minecrafttransportsimulator.rendering.components.ARenderEntity;
  */
 public abstract class AEntityC_Renderable extends AEntityB_Existing{
 	
-	/**The scale of this entity.  Is not used to move bounding boxes.  More for rendering, but does some physics.*/
+	/**The scale of this entity.*/
 	public float scale = 1.0F;
+	
+	/**The previous scale of this entity.*/
+	public float prevScale = 1.0F;
 	
 	/**The mirrored state of this entity.  Only used for rendering to flip the model across the x-axis.*/
 	public boolean mirrored;
@@ -27,6 +30,16 @@ public abstract class AEntityC_Renderable extends AEntityB_Existing{
 	/**Constructor for un-synced entities.  Allows for specification of position/motion/angles.**/
 	public AEntityC_Renderable(WrapperWorld world, Point3dPlus position, Point3dPlus motion, Point3dPlus angles){
 		super(world, position, motion, angles);
+	}
+	
+	@Override
+	public boolean update(){
+		if(super.update()){
+			prevScale = scale;
+			return true;
+		}else{
+			return false;
+		}
 	}
     
     /**
