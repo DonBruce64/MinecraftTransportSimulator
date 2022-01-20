@@ -38,8 +38,14 @@ public abstract class AEntityA_Base{
 		this.newlyCreated = data == null || data.getUUID("uniqueUUID") == null;
 		
 		//Get the map of entities we belong to.
-		if(shouldSync()){
-			this.uniqueUUID = newlyCreated ? UUID.randomUUID() : data.getUUID("uniqueUUID");
+		if(shouldSync() && !newlyCreated){
+			//Check to make sure we aren't a duplicate.
+			UUID savedUUID = data.getUUID("uniqueUUID");
+			if(!world.isClient() && world.getEntity(savedUUID) != null){
+				this.uniqueUUID = UUID.randomUUID();
+			}else{
+				this.uniqueUUID = savedUUID;
+			}
 		}else{
 			this.uniqueUUID = UUID.randomUUID();
 		}
