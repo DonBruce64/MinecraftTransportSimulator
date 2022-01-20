@@ -51,6 +51,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	public boolean goingInReverse;
 	public boolean slipping;
 	public boolean skidSteerActive;
+	public boolean lockedOnRoad;
 	public double groundVelocity;
 	public double weightTransfer = 0;
 	
@@ -61,23 +62,29 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	public float currentUnderSteer;
 	
 	//Road-following data.
-	protected RoadFollowingState frontFollower;
-	protected RoadFollowingState rearFollower;
-	protected LaneSelectionRequest selectedSegment = LaneSelectionRequest.NONE;
+	private RoadFollowingState frontFollower;
+	private RoadFollowingState rearFollower;
+	private LaneSelectionRequest selectedSegment = LaneSelectionRequest.NONE;
+	private double totalPathDelta;
+	private double prevTotalPathDelta;
 	
 	//Internal movement variables.
 	private final Point3d serverDeltaM;
 	private final Point3d serverDeltaR;
+	private double serverDeltaP;
 	private final Point3d clientDeltaM;
 	private final Point3d clientDeltaR;
+	private double clientDeltaP;
 	private final Point3d clientDeltaMApplied = new Point3d();
 	private final Point3d clientDeltaRApplied = new Point3d();
+	private double clientDeltaPApplied;
 	private final Point3d roadMotion = new Point3d();
 	private final Point3d roadRotation = new Point3d();
 	private final Point3d collisionMotion = new Point3d();
 	private final Point3d collisionRotation = new Point3d();
 	private final Point3d motionApplied = new Point3d();
 	private final Point3d rotationApplied = new Point3d();
+	private double pathingApplied;
 	private final Point3d tempBoxPosition = new Point3d();
 	private final Point3d tempBoxRotation = new Point3d();
 	private final Point3d normalizedGroundVelocityVector = new Point3d();
@@ -87,10 +94,14 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	
 	public AEntityVehicleD_Moving(WrapperWorld world, WrapperPlayer placingPlayer, WrapperNBT data){
 		super(world, placingPlayer, data);
+		this.totalPathDelta = data.getDouble("totalPathDelta");
+		this.prevTotalPathDelta = totalPathDelta;
 		this.serverDeltaM = data.getPoint3d("serverDeltaM");
 		this.serverDeltaR = data.getPoint3d("serverDeltaR");
+		this.serverDeltaP = data.getDouble("serverDeltaP");
 		this.clientDeltaM = serverDeltaM.copy();
 		this.clientDeltaR = serverDeltaR.copy();
+		this.clientDeltaP = serverDeltaP;
 		this.groundDeviceCollective = new VehicleGroundDeviceCollection((EntityVehicleF_Physics) this);
 	}
 	
@@ -138,8 +149,8 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 						return false;
 					}else{
 						//Update deltas and send to clients.
-						addToServerDeltas(motionApplied, rotationApplied);
-						InterfacePacket.sendToAllClients(new PacketVehicleServerMovement((EntityVehicleF_Physics) this, motionApplied, rotationApplied));
+						addToServerDeltas(motionApplied, rotationApplied, pathingApplied);
+						InterfacePacket.sendToAllClients(new PacketVehicleServerMovement((EntityVehicleF_Physics) this, motionApplied, rotationApplied, pathingApplied));
 					}
 				}
 			}
@@ -584,7 +595,8 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 				selectedSegment = requestedSegment;
 			}
 			
-			float segmentDelta = (float) (goingInReverse ? -velocity*SPEED_FACTOR : velocity*SPEED_FACTOR);
+			float segmentDelta = (float) (totalPathDelta - prevTotalPathDelta);
+			prevTotalPathDelta = totalPathDelta;
 			frontFollower = frontFollower.updateCurvePoints(segmentDelta, selectedSegment);
 			rearFollower = rearFollower.updateCurvePoints(segmentDelta, selectedSegment);
 			Point3d rearPoint = groundDeviceCollective.getContactPoint(false);
@@ -616,7 +628,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 					roadRotation.set(pitchDelta - angles.x, yawDelta, rollDelta - angles.z);
 					roadRotation.y = roadRotation.getClampedYDelta(angles.y);
 					if(!world.isClient()){
-						addToSteeringAngle((float) (goingInReverse ? -roadRotation.y : roadRotation.y));
+						addToSteeringAngle((float) (goingInReverse ? -roadRotation.y : roadRotation.y)*1.5F);
 					}
 				}
 			}else{
@@ -629,8 +641,9 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		
 		double groundCollisionBoost = 0;
 		double groundRotationBoost = 0;
+		lockedOnRoad = frontFollower != null && rearFollower != null; 
 		//If followers aren't valid, do normal logic.
-		if(frontFollower == null || rearFollower == null){
+		if(!lockedOnRoad){
 			//If any ground devices are collided after our movement, apply corrections to prevent this.
 			//The first correction we apply is +y motion.  This counteracts gravity, and any GDBs that may
 			//have been moved into the ground by the application of our motion and rotation.  We do this before collision
@@ -742,12 +755,13 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		world.beginProfiling("ApplyMotions", false);
 		motionApplied.setTo(motion).multiply(SPEED_FACTOR).add(roadMotion).add(collisionMotion);
 		rotationApplied.setTo(rotation).add(roadRotation).add(collisionRotation);
+		pathingApplied = lockedOnRoad ? (goingInReverse ? -velocity*SPEED_FACTOR : velocity*SPEED_FACTOR) : 0;
 		collisionMotion.set(0, 0, 0);
 		collisionRotation.set(0, 0, 0);
 		if(!world.isClient()){
 			if(!motionApplied.isZero() || !rotationApplied.isZero()){
-				addToServerDeltas(motionApplied, rotationApplied);
-				InterfacePacket.sendToAllClients(new PacketVehicleServerMovement((EntityVehicleF_Physics) this, motionApplied, rotationApplied));
+				addToServerDeltas(motionApplied, rotationApplied, pathingApplied);
+				InterfacePacket.sendToAllClients(new PacketVehicleServerMovement((EntityVehicleF_Physics) this, motionApplied, rotationApplied, pathingApplied));
 			}
 		}else{
 			//Make sure the server is sending delta packets before we try to do delta correction.
@@ -786,15 +800,25 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 					rotationApplied.y = -5;
 				}
 				
+				clientDeltaPApplied = serverDeltaP - clientDeltaP;
+				clientDeltaPApplied *= Math.abs(clientDeltaPApplied);
+				clientDeltaPApplied *= 1D/25D;
+				if(clientDeltaPApplied > 5){
+					clientDeltaPApplied = 5;
+				}
+				pathingApplied += clientDeltaPApplied;
+				
 				//Add actual movement to client deltas to prevent further corrections.
 				clientDeltaM.add(motionApplied);
 				clientDeltaR.add(rotationApplied);
+				clientDeltaP += pathingApplied;
 			}
 		}
 		
 		//Now add actual position and angles.
 		position.add(motionApplied);
 		angles.add(rotationApplied);
+		totalPathDelta += pathingApplied;
 		orientation.axis.set(0, 0, 1).rotateFine(angles);
 		orientation.updateQuaternion(false);
 		
@@ -943,11 +967,10 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		return false;
 	}
 	
-	
-	
-	public void addToServerDeltas(Point3d motionAdded, Point3d rotationAdded){
+	public void addToServerDeltas(Point3d motionAdded, Point3d rotationAdded, double pathingAdded){
 		serverDeltaM.add(motionAdded);
 		serverDeltaR.add(rotationAdded);
+		serverDeltaP += pathingAdded;
 	}
 	
 	/**
@@ -976,12 +999,12 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	 */
 	protected abstract void adjustControlSurfaces();
 	
-    
 	@Override
 	public WrapperNBT save(WrapperNBT data){
 		super.save(data);
 		data.setPoint3d("serverDeltaM", serverDeltaM);
 		data.setPoint3d("serverDeltaR", serverDeltaR);
+		data.setDouble("serverDeltaP", serverDeltaP);
 		return data;
 	}
 }

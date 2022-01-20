@@ -18,6 +18,7 @@ import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
+import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.rendering.components.DurationDelayClock;
 import minecrafttransportsimulator.rendering.instances.RenderVehicle;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -683,7 +684,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 			}
 		}
 		
-		//If we don't have a controller, reset contol states to 0.
+		//If we don't have a controller, reset control states to 0.
 		boolean haveController = false;
 		for(Point3d partPos : locationRiderMap.keySet()){
 			APart part = getPartAtLocation(partPos);
@@ -695,38 +696,38 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 			}
 		}
 		
-		if(!haveController){
+		if(!haveController && !lockedOnRoad){
 			if(aileronAngle > AILERON_DAMPEN_RATE){
 				setVariable(AILERON_VARIABLE, aileronAngle - AILERON_DAMPEN_RATE);
-				InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_VARIABLE, -AILERON_DAMPEN_RATE));
+				InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_VARIABLE, -AILERON_DAMPEN_RATE, 0, MAX_AILERON_ANGLE));
 			}else if(aileronAngle < -AILERON_DAMPEN_RATE){
 				setVariable(AILERON_VARIABLE, aileronAngle + AILERON_DAMPEN_RATE);
-				InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_VARIABLE, AILERON_DAMPEN_RATE));
+				InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_VARIABLE, AILERON_DAMPEN_RATE, -MAX_AILERON_ANGLE, 0));
 			}else if(aileronAngle != 0){
 				setVariable(AILERON_VARIABLE, 0);
-				InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_VARIABLE, -aileronAngle));
+				InterfacePacket.sendToAllClients(new PacketEntityVariableSet(this, AILERON_VARIABLE, 0));
 			}
 			
 			if(elevatorAngle > ELEVATOR_DAMPEN_RATE){
 				setVariable(ELEVATOR_VARIABLE, elevatorAngle - ELEVATOR_DAMPEN_RATE);
-				InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_VARIABLE, -ELEVATOR_DAMPEN_RATE));
+				InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_VARIABLE, -ELEVATOR_DAMPEN_RATE, 0, MAX_ELEVATOR_ANGLE));
 			}else if(elevatorAngle < -ELEVATOR_DAMPEN_RATE){
 				setVariable(ELEVATOR_VARIABLE, elevatorAngle + ELEVATOR_DAMPEN_RATE);
-				InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_VARIABLE, ELEVATOR_DAMPEN_RATE));
+				InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_VARIABLE, ELEVATOR_DAMPEN_RATE, -MAX_ELEVATOR_ANGLE, 0));
 			}else if(elevatorAngle != 0){
 				setVariable(ELEVATOR_VARIABLE, 0);
-				InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_VARIABLE, -elevatorAngle));
+				InterfacePacket.sendToAllClients(new PacketEntityVariableSet(this, ELEVATOR_VARIABLE, 0));
 			}
 			
 			if(rudderAngle > RUDDER_DAMPEN_RATE){
 				setVariable(RUDDER_VARIABLE, rudderAngle - RUDDER_DAMPEN_RATE);
-				InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, RUDDER_VARIABLE, -RUDDER_DAMPEN_RATE));
+				InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, RUDDER_VARIABLE, -RUDDER_DAMPEN_RATE, 0, MAX_RUDDER_ANGLE));
 			}else if(rudderAngle < -RUDDER_DAMPEN_RATE){
 				setVariable(RUDDER_VARIABLE, rudderAngle + RUDDER_DAMPEN_RATE);
-				InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, RUDDER_VARIABLE, RUDDER_DAMPEN_RATE));
+				InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, RUDDER_VARIABLE, RUDDER_DAMPEN_RATE, -MAX_RUDDER_ANGLE, 0));
 			}else if(rudderAngle != 0){
 				setVariable(RUDDER_VARIABLE, 0);
-				InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, RUDDER_VARIABLE, -rudderAngle));
+				InterfacePacket.sendToAllClients(new PacketEntityVariableSet(this, RUDDER_VARIABLE, 0));
 			}
 		}
 	}

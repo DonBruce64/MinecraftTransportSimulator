@@ -20,17 +20,20 @@ import minecrafttransportsimulator.packets.components.APacketEntity;
 public class PacketVehicleServerMovement extends APacketEntity<EntityVehicleF_Physics>{
 	private final Point3d motion;
 	private final Point3d rotation;
+	private final double pathing;
 	
-	public PacketVehicleServerMovement(EntityVehicleF_Physics vehicle, Point3d motion, Point3d rotation){
+	public PacketVehicleServerMovement(EntityVehicleF_Physics vehicle, Point3d motion, Point3d rotation, double pathing){
 		super(vehicle);
 		this.motion = motion;
 		this.rotation = rotation;
+		this.pathing = pathing;
 	}
 	
 	public PacketVehicleServerMovement(ByteBuf buf){
 		super(buf);
 		this.motion = readPoint3dFromBuffer(buf);
 		this.rotation = readPoint3dFromBuffer(buf);
+		this.pathing = buf.readDouble();
 	}
 	
 	@Override
@@ -38,11 +41,12 @@ public class PacketVehicleServerMovement extends APacketEntity<EntityVehicleF_Ph
 		super.writeToBuffer(buf);
 		writePoint3dToBuffer(motion, buf);
 		writePoint3dToBuffer(rotation, buf);
+		buf.writeDouble(pathing);
 	}
 	
 	@Override
 	public boolean handle(WrapperWorld world, EntityVehicleF_Physics vehicle){
-		vehicle.addToServerDeltas(motion, rotation);
+		vehicle.addToServerDeltas(motion, rotation, pathing);
 		return false;
 	}
 }

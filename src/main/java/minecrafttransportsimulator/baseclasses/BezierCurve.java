@@ -83,10 +83,23 @@ public class BezierCurve{
 	
 	/**
 	 * Offsets the passed-in Point3d by the cached value of the point at the passed-in segment location.
+	 * Unlike the other methods, this method does interpolation to get a smooth offset transition.
 	 */
 	public void offsetPointByPositionAt(Point3d point, float segmentPoint){
-		float[] cachedPoint = cachedPathPoints[Math.round(segmentPoint*CURVE_STEP)];
-		point.add(cachedPoint[0], cachedPoint[1], cachedPoint[2]);
+		float delta = segmentPoint*CURVE_STEP;
+		int lowIndex = (int) Math.floor(delta);
+		int highIndex = (int) Math.ceil(delta);
+		if(highIndex >= cachedPathPoints.length){
+			highIndex = lowIndex;
+			delta = 0;
+		}else{
+			delta -= lowIndex;
+		}
+		float[] cachedLowPoint = cachedPathPoints[lowIndex];
+		float[] cachedHighPoint = cachedPathPoints[highIndex];
+		point.add(cachedLowPoint[0] + (cachedHighPoint[0]-cachedLowPoint[0])*delta,
+				cachedLowPoint[1] + (cachedHighPoint[1]-cachedLowPoint[1])*delta,
+				cachedLowPoint[2] + (cachedHighPoint[2]-cachedLowPoint[2])*delta);
 	}
 	
 	/**
