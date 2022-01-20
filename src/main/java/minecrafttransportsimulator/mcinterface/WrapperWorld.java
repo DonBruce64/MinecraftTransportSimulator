@@ -1152,7 +1152,12 @@ public class WrapperWorld{
     */
    @SuppressWarnings("unchecked")
    public <EntityType extends AEntityA_Base> ConcurrentLinkedQueue<EntityType> getEntitiesOfType(Class<EntityType> entityClass){
-	   return (ConcurrentLinkedQueue<EntityType>) entitiesByClass.get(entityClass);
+	   ConcurrentLinkedQueue<EntityType> classListing = (ConcurrentLinkedQueue<EntityType>) entitiesByClass.get(entityClass);
+	   if(classListing == null){
+		   classListing = new ConcurrentLinkedQueue<EntityType>();
+		   entitiesByClass.put(entityClass, classListing);
+	   }
+	   return classListing;
    }
    
    /**
