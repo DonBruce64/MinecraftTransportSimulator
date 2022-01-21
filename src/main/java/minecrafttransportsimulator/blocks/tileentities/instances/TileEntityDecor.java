@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
-import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
@@ -30,11 +29,8 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor>{
 	public TileEntityDecor(WrapperWorld world, Point3dPlus position, WrapperPlayer placingPlayer, WrapperNBT data){
 		super(world, position, placingPlayer, data);
 		//Set our bounding box based on our rotation and parameters.
-		if(definition.decor.height != 1.0){
-			//Need custom bounding box.  Default assumes centered to position.
-			this.boundingBox = new BoundingBox(position.copy().add(0, definition.decor.height/2D - 0.5D, 0), 0, 0, 0);
-		}
 		boundingBox.heightRadius = definition.decor.height/2D;
+		this.boundingBox.globalCenter.y += (boundingBox.heightRadius - 0.5);
 		if(Math.abs(angles.y%180) == 0){
 			boundingBox.widthRadius = definition.decor.width/2D;
 			boundingBox.depthRadius = definition.decor.depth/2D;

@@ -67,7 +67,8 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 		super(world, position, placingPlayer, data);
 		
 		//Set the bounding box.
-		this.boundingBox = new BoundingBox(position.copy().add(0, (definition.road.collisionHeight - 16)/16D/2D, 0), 0.5D, definition.road.collisionHeight/16D/2D, 0.5D);
+		this.boundingBox.heightRadius = definition.road.collisionHeight/16D/2D;
+		this.boundingBox.globalCenter.y += boundingBox.heightRadius;
 		
 		//Get the active state.
 		this.isActive = data.getBoolean("isActive");

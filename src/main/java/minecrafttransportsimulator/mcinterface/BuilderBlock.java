@@ -136,6 +136,23 @@ public class BuilderBlock extends Block{
 		}
 		return super.onBlockActivated(world, pos, state, player, hand, side, hitX, hitY, hitZ);
 	}
+	
+	@Override
+	@SuppressWarnings("deprecation")
+	public void neighborChanged(IBlockState state, World world, BlockPos pos, Block blockIn, BlockPos fromPos){
+		//Forward the change of state of a neighbor to the tile if we have one.
+		if(block instanceof ABlockBaseTileEntity){
+			if(!world.isRemote){
+				TileEntity tile = world.getTileEntity(pos);
+	    		if(tile instanceof BuilderTileEntity){
+	    			if(((BuilderTileEntity<?>) tile).tileEntity != null){
+	    				((BuilderTileEntity<?>) tile).tileEntity.onNeighborChanged(new Point3dPlus(fromPos.getX(), fromPos.getY(), fromPos.getZ()));
+	    			}
+	    		}
+			}
+		}
+		super.neighborChanged(state, world, pos, blockIn, fromPos);
+	}
     
     @Override
 	public ItemStack getPickBlock(IBlockState state, RayTraceResult target, World world, BlockPos pos, EntityPlayer player){
@@ -224,9 +241,9 @@ public class BuilderBlock extends Block{
     			ATileEntityBase<?> tile = ((BuilderTileEntity<?>) mcTile).tileEntity;
     			if(tile != null){
     				if(globalCoords){
-    					return tile.getCollisionBox().convertWithOffset(0.5D, 0.5D, 0.5D);
+    					return tile.boundingBox.convertWithOffset(0.5D, 0.0, 0.5D);
     				}else{
-    					return tile.getCollisionBox().convertWithOffset(-pos.getX() + 0.5D, -pos.getY() + 0.5D, -pos.getZ() + 0.5D);
+    					return tile.boundingBox.convertWithOffset(-pos.getX() + 0.5D, -pos.getY(), -pos.getZ() + 0.5D);
     				}
     			}
     		}

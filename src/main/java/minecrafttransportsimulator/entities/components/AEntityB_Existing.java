@@ -33,6 +33,8 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	public final Point3dPlus prevAngles;
 	public final Point3dPlus rotation;
 	
+	public final BoundingBox boundingBox;
+	
 	/*The rotational component of orientation for this entity.*/
 	public final Matrix4dPlus orientation;
 	public final Matrix4dPlus prevOrientation;
@@ -40,7 +42,6 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	private final Quat4d interpHelperQuatStart = new Quat4d();
 	private final Quat4d interpHelperQuatEnd = new Quat4d();
 	
-	public BoundingBox boundingBox;
 	public double airDensity;
 	public double velocity;
 	/**The player that placed this entity.  Only valid on the server where placement occurs. Client-side will always be null.**/
@@ -69,7 +70,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 		this.axialOrientation = new Point3dPlus(0, 0, 1);
 		orientation.transform(axialOrientation);
 		this.placingPlayer = placingPlayer;
-		this.boundingBox = new BoundingBox(new Point3dPlus(), position, 0.5, 0.5, 0.5, false);
+		this.boundingBox = new BoundingBox(shouldLinkBoundsToPosition() ? position : new Point3dPlus(position), 0.5, 0.5, 0.5);
 		if(hasRadio()){
 			this.radio = new EntityRadio(this, data.getDataOrNew("radio"));
 			world.addEntity(radio);
@@ -94,7 +95,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 		this.axialOrientation = new Point3dPlus(0, 0, 1);
 		orientation.transform(axialOrientation);
 		this.placingPlayer = null;
-		this.boundingBox = new BoundingBox(new Point3dPlus(), position, 0.5, 0.5, 0.5, false);
+		this.boundingBox = new BoundingBox(shouldLinkBoundsToPosition() ? position : new Point3dPlus(position), 0.5, 0.5, 0.5);
 		this.radio = null;
 	}
 	
@@ -165,6 +166,16 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	 *  This will save on disk space and networking if you have a lot of entities.
 	 */
 	public boolean shouldSavePosition(){
+		return true;
+	}
+	
+	/**
+	 *  This method returns true if this entity should link its bounding box to its position.  This will
+	 *  result in the box always being centered on the entity.  This is normally true, but may be made
+	 *  false for entities that need their collision offset from their position.  This will require manual bounding
+	 *  box syncing, though the initial location of the box will be the position of the entity.
+	 */
+	public boolean shouldLinkBoundsToPosition(){
 		return true;
 	}
 	

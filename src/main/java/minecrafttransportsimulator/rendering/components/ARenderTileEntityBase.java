@@ -27,11 +27,4 @@ public abstract class ARenderTileEntityBase<RenderedTileEntity extends ATileEnti
 			entityPositionDelta.y -= 0.5D;			
 		}
 	}
-	
-	@Override
-	protected void renderBoundingBoxes(RenderedTileEntity entity, Matrix4dPlus transform){
-		super.renderBoundingBoxes(entity, transform);
-		//FIXME figure out why we need a 1/2 block offset here.  Shouldn't this already be offset?
-		entity.getCollisionBox().renderWireframe(entity, transform, null);
-	}
 }

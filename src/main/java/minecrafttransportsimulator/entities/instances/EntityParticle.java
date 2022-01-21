@@ -2,7 +2,6 @@ package minecrafttransportsimulator.entities.instances;
 
 import java.nio.FloatBuffer;
 
-import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
 import minecrafttransportsimulator.baseclasses.Point3dPlus;
@@ -59,7 +58,9 @@ public class EntityParticle extends AEntityC_Renderable{
 		}
 		
 		this.definition = definition;
-		this.boundingBox = new BoundingBox(position, getSize()/2D, getSize()/2D, getSize()/2D);
+		boundingBox.widthRadius = getSize()/2D;
+		boundingBox.heightRadius = boundingBox.widthRadius;
+		boundingBox.depthRadius = boundingBox.widthRadius;
 		this.maxAge = generateMaxAge();
 		if(definition.color != null){
 			if(definition.toColor != null){
@@ -173,6 +174,11 @@ public class EntityParticle extends AEntityC_Renderable{
 			if(++age == maxAge){
 				remove();
 			}
+			
+			//Update bounds as we might have changed size.
+			boundingBox.widthRadius = getSize()/2D;
+			boundingBox.heightRadius = boundingBox.widthRadius;
+			boundingBox.depthRadius = boundingBox.widthRadius;
 			
 			//Update orientation to always face the player.
 			orientation.setToAngles(clientPlayer.getPosition().add(0, clientPlayer.getEyeHeight(), 0).add(InterfaceClient.getCameraPosition()).subtract(position).getAngles(true));

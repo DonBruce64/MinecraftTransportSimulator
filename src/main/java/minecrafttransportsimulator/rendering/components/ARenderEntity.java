@@ -107,5 +107,7 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Renderable>{
 	 *  will be un-done, as boxes need to be rendered according to their world state.
 	 *  The passed-in delta is the delta between the player and the entity.
 	 */
-	protected abstract void renderBoundingBoxes(RenderedEntity entity, Matrix4dPlus transform);
+	protected void renderBoundingBoxes(RenderedEntity entity, Matrix4dPlus transform){
+		entity.boundingBox.renderWireframe(entity, transform, null);	
+	}
 }

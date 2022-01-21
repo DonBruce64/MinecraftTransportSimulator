@@ -25,6 +25,7 @@ public class RenderPart extends ARenderEntityDefinable<APart>{
 				Point3dPlus bulletPosition = new Point3dPlus();
 				Point3dPlus bulletVelocity = new Point3dPlus();
 				for(JSONMuzzle muzzle : gun.definition.gun.muzzleGroups.get(gun.currentMuzzleGroupIndex).muzzles){
+					//FIXME this is probably not right, but we need guns working to test.
 					gun.setBulletSpawn(bulletPosition, bulletVelocity, muzzle);
 					bulletPosition.subtract(gun.position);
 					gun.muzzleWireframe.transform.set(transform);

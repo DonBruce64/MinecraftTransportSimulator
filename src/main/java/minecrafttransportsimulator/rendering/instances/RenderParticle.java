@@ -12,9 +12,4 @@ public class RenderParticle extends ARenderEntity<EntityParticle>{
 			particle.render(transform, partialTicks);
 		}
 	}
-
-	@Override
-	protected void renderBoundingBoxes(EntityParticle entity, Matrix4dPlus transform){
-		entity.boundingBox.renderWireframe(entity, transform, null);
-	}
 }

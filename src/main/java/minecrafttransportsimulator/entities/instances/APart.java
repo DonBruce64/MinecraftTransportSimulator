@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
-import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
 import minecrafttransportsimulator.baseclasses.Point3dPlus;
@@ -67,7 +66,9 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 		
 	public APart(AEntityF_Multipart<?> entityOn, WrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, WrapperNBT data, APart parentPart){
 		super(entityOn.world, placingPlayer, data);
-		this.boundingBox = new BoundingBox(placementDefinition.pos, position, getWidth()/2D, getHeight()/2D, getWidth()/2D, definition.ground != null ? definition.ground.canFloat : false);
+		boundingBox.widthRadius = getWidth()/2D;
+		boundingBox.heightRadius = getHeight()/2D;
+		boundingBox.depthRadius = getWidth()/2D;
 		this.entityOn = entityOn;
 		this.vehicleOn = entityOn instanceof EntityVehicleF_Physics ? (EntityVehicleF_Physics) entityOn : null;
 		this.placementDefinition = placementDefinition;

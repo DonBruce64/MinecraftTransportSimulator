@@ -10,6 +10,7 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
+import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
@@ -128,12 +129,14 @@ public abstract class ARenderEntityDefinable<RenderedEntity extends AEntityD_Def
 	
 	@Override
 	protected void renderBoundingBoxes(RenderedEntity entity, Matrix4dPlus transform){
-		if(entity instanceof AEntityE_Interactable){
+		if(entity instanceof AEntityF_Multipart){
 			AEntityE_Interactable<?> interactable = (AEntityE_Interactable<?>) entity;
 			interactable.encompassingBox.renderWireframe(entity, transform, null);
 			for(BoundingBox box : interactable.interactionBoxes){
 				box.renderWireframe(entity, transform, null);
 			}
+		}else{
+			super.renderBoundingBoxes(entity, transform);
 		}
 	}
 	

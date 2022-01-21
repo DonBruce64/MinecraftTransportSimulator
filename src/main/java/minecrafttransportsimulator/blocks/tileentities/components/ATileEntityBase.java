@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.blocks.tileentities.components;
 
-import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
@@ -28,6 +27,8 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONMultiModelProv
 	public ATileEntityBase(WrapperWorld world, Point3dPlus position, WrapperPlayer placingPlayer, WrapperNBT data){
 		super(world, placingPlayer, data);
 		this.position.set(position);
+		//Need to offset the bounding box 1/2 height to center it on the block.
+		this.boundingBox.globalCenter.y += boundingBox.heightRadius;
 	}
 	
 	@Override
@@ -47,6 +48,11 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONMultiModelProv
 		}else{
 			return false;
 		}
+	}
+	
+	@Override
+	public boolean shouldLinkBoundsToPosition(){
+		return false;
 	}
 	
 	@Override
@@ -75,10 +81,9 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONMultiModelProv
     }
 	
 	/**
-	 *  Returns the collision box for this TE.  Returns it in the global space, offset to the
-	 *  TE's center.
+	 *  Called when the neighboring block of this TE changes.  This can either
+	 *  be a block being added or removed or just updating state.
+	 *  This is only called on the SERVER.
 	 */
-	public BoundingBox getCollisionBox(){
-		return boundingBox;
-    }
+	public void onNeighborChanged(Point3dPlus otherPosition){}
 }
