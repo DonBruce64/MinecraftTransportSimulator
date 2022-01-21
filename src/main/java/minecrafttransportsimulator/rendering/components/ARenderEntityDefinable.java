@@ -128,7 +128,7 @@ public abstract class ARenderEntityDefinable<RenderedEntity extends AEntityD_Def
 	}
 	
 	@Override
-	protected void renderBoundingBoxes(RenderedEntity entity, Matrix4dPlus transform){
+	public void renderBoundingBoxes(RenderedEntity entity, Matrix4dPlus transform){
 		if(entity instanceof AEntityF_Multipart){
 			AEntityE_Interactable<?> interactable = (AEntityE_Interactable<?>) entity;
 			interactable.encompassingBox.renderWireframe(entity, transform, null);

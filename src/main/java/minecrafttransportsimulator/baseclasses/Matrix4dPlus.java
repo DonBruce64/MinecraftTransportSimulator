@@ -29,7 +29,8 @@ public class Matrix4dPlus extends Matrix4d{
 	}
 	
 	public Matrix4dPlus(Matrix4dPlus other){
-		super(other);
+		this();
+		set(other);
 	}
 	
 	public void setToAngles(Point3dPlus angles){

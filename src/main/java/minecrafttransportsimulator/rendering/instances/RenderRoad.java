@@ -222,7 +222,7 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 	}
 	
 	@Override
-	protected void renderBoundingBoxes(TileEntityRoad road, Matrix4dPlus transform){
+	public void renderBoundingBoxes(TileEntityRoad road, Matrix4dPlus transform){
 		super.renderBoundingBoxes(road, transform);
 		//Render all collision boxes too.
 		for(Point3dPlus blockOffset : road.collisionBlockOffsets){

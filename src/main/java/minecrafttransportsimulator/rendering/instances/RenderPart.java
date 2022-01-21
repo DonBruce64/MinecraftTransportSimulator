@@ -16,7 +16,7 @@ public class RenderPart extends ARenderEntityDefinable<APart>{
 	}
 	
 	@Override
-	protected void renderBoundingBoxes(APart part, Matrix4dPlus transform){
+	public void renderBoundingBoxes(APart part, Matrix4dPlus transform){
 		if(!part.entityOn.areVariablesBlocking(part.placementDefinition, InterfaceClient.getClientPlayer())){
 			super.renderBoundingBoxes(part, transform);
 			//Draw the gun muzzle bounding boxes.

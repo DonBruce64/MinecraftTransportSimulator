@@ -35,9 +35,10 @@ public class RenderDecor extends ARenderTileEntityBase<TileEntityDecor>{
 							//Add delta from controller to intersection center.
 							boxRelativeCenter.add(controller.intersectionCenterPoint);
 							boxRelativeCenter.sub(controller.position);
+							boxRelativeCenter.y += 1;
 							
 							//Create bounding box and transform for it..
-							BoundingBox box = new BoundingBox(boxRelativeCenter, signalGroup.signalLineWidth/2D, 2, 8);
+							BoundingBox box = new BoundingBox(boxRelativeCenter, signalGroup.signalLineWidth/2D, 1, 8);
 							Matrix4dPlus newTransform = new Matrix4dPlus(transform);
 							newTransform.translate(boxRelativeCenter);
 							newTransform.rotate(signalGroup.axis.yRotation, 0, 1, 0);

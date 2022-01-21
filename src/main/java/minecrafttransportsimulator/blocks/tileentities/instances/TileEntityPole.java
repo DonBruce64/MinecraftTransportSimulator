@@ -275,13 +275,6 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 			}
 		}
 		
-		//Need to update core component box to our box as it's the one rendering collisions.
-		ATileEntityPole_Component coreComponent = components.get(Axis.NONE);
-		coreComponent.boundingBox.globalCenter.set(boundingBox.globalCenter);
-		coreComponent.boundingBox.widthRadius = boundingBox.widthRadius;
-		coreComponent.boundingBox.heightRadius = boundingBox.heightRadius;
-		coreComponent.boundingBox.depthRadius = boundingBox.depthRadius;
-		
 		//Send packet to clients to update them.
 		if(sendToClient && !world.isClient()){
 			InterfacePacket.sendToAllClients(new PacketTileEntityPoleCollisionUpdate(this));

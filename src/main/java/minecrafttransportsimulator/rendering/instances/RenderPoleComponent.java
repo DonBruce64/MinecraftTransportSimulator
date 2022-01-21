@@ -17,7 +17,7 @@ public class RenderPoleComponent extends ARenderEntityDefinable<ATileEntityPole_
 	public void renderBoundingBoxes(ATileEntityPole_Component component, Matrix4dPlus transform){
 		//Only render the bounding box for the core component.
 		if(component.axis.equals(Axis.NONE)){
-			super.renderBoundingBoxes(component, transform);
+			component.core.getRenderer().renderBoundingBoxes(component.core, transform);
 		}
 	}
 }
