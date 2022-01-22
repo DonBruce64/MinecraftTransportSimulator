@@ -3,11 +3,6 @@ package minecrafttransportsimulator.rendering.instances;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map.Entry;
-
-import javax.vecmath.AxisAngle4d;
-
-import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.BezierCurve;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
@@ -28,7 +23,6 @@ import minecrafttransportsimulator.rendering.components.RenderableObject;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
-	private static final AxisAngle4d ROAD_ZERO_ROTATION = new AxisAngle4d(0, 0, 0, 0);
 		
 	@Override
 	protected void renderModel(TileEntityRoad road, Matrix4dPlus transform, boolean blendingEnabled, float partialTicks){
@@ -189,23 +183,26 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 					object.alpha = 0.5F;
 					object.isTranslucent = true;
 				}
+				object.transform.set(transform);
 				object.render();
 			}
 			
 			//If we are inactive render the blocking blocks and the main block.
 			if(!road.isActive()){
-				if(road.blockingRenderables.isEmpty()){
-					road.blockingRenderables.put(new Point3dPlus(0.0, 0.75, 0.0), new RenderableObject(new BoundingBox(new Point3dPlus(), 0.15, 1.5, 0.15), ColorRGB.BLUE, true));
+				if(road.blockingBoundingBoxes.isEmpty()){
+					road.blockingBoundingBoxes.add(new BoundingBox(new Point3dPlus(0.5, 0.75, 0.5), 0.15, 0.75, 0.15));
 					for(Point3dPlus location : road.collidingBlockOffsets){
-						road.blockingRenderables.put(location, new RenderableObject(new BoundingBox(location, 0.55, 0.55, 0.55), ColorRGB.RED, true));
+						road.blockingBoundingBoxes.add(new BoundingBox(location.copy().add(0.5, 0.55, 0.5), 0.55, 0.55, 0.55));
 					}
 				}
-				for(Entry<Point3dPlus, RenderableObject> renderableEntry : road.blockingRenderables.entrySet()){
-					Point3dPlus location = renderableEntry.getKey();
-					RenderableObject renderable = renderableEntry.getValue();
-					GL11.glTranslated(location.x, location.y + 0.5, location.z);
-					renderable.render();
-					GL11.glTranslated(-location.x, -location.y - 0.5, -location.z);
+				boolean firstBox = true;
+				for(BoundingBox blockingBox : road.blockingBoundingBoxes){
+					if(firstBox){
+						blockingBox.renderHolographic(transform, blockingBox.globalCenter, ColorRGB.BLUE);
+						firstBox = false;
+					}else{
+						blockingBox.renderHolographic(transform, blockingBox.globalCenter, ColorRGB.RED);
+					}
 				}
 			}else{
 				//If we are in devMode and have hitboxes shown, render road bounds and colliding boxes.
@@ -214,6 +211,7 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 						generateDevElements(road);
 					}
 					for(RenderableObject renderable : road.devRenderables){
+						renderable.transform.set(transform);
 						renderable.render();
 					}
 				}
@@ -229,10 +227,7 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 			ABlockBase block = road.world.getBlock(road.position.copy().add(blockOffset));
 			if(block instanceof BlockCollision){
 				BoundingBox blockBounds = ((BlockCollision) block).blockBounds;
-				GL11.glTranslated(blockOffset.x, blockOffset.y + blockBounds.heightRadius, blockOffset.z);
-				//FIXME this isn't right, but it'll work fornoe.
-				blockBounds.renderWireframe(road, transform, null);
-				GL11.glTranslated(-blockOffset.x, -blockOffset.y - blockBounds.heightRadius, -blockOffset.z);
+				blockBounds.renderWireframe(road, transform, blockOffset.copy().add(0.5, 0, 0.5), null);
 			}
 		}
 	}
@@ -350,9 +345,9 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 	
 	@Override
 	public void adjustPositionOrientation(TileEntityRoad road, Point3dPlus entityPositionDelta, Matrix4dPlus interpolatedOrientation, float partialTicks){
-		super.adjustPositionOrientation(road, entityPositionDelta, interpolatedOrientation, partialTicks);
-		//Undo orientation.  We don't want to rotate for this render call as all our curve data is absolute reference..
-		interpolatedOrientation.setRotation(ROAD_ZERO_ROTATION);
+		//Undo orientation.  We don't want to rotate for this render call as all our curve data is absolute reference.
+		//We also don't call super, as that would add a 1/2 offset to us and that masks the true position of this road's curve points.
+		interpolatedOrientation.resetTransforms();
 	}
 	
 	@Override

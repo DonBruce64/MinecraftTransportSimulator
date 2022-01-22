@@ -60,7 +60,7 @@ public class PacketTileEntityRoadCollisionUpdate extends APacketEntity<TileEntit
 		road.collisionBlockOffsets.addAll(collisionBlockOffsets);
 		road.collidingBlockOffsets.clear();
 		road.collidingBlockOffsets.addAll(collidingBlockOffsets);
-		road.blockingRenderables.clear();
+		road.blockingBoundingBoxes.clear();
 		if(!road.isActive() && road.collidingBlockOffsets.isEmpty()){
 			road.setActive(true);
 		}

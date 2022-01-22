@@ -56,7 +56,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	public final Map<RoadComponent, ItemRoadComponent> components = new HashMap<RoadComponent, ItemRoadComponent>();
 	public final Map<RoadComponent, RenderableObject> componentRenderables = new HashMap<RoadComponent, RenderableObject>();
 	public final List<RenderableObject> devRenderables = new ArrayList<RenderableObject>();
-	public final Map<Point3dPlus, RenderableObject> blockingRenderables = new HashMap<Point3dPlus, RenderableObject>();
+	public final List<BoundingBox> blockingBoundingBoxes = new ArrayList<BoundingBox>();
 	public final List<Point3dPlus> collisionBlockOffsets;
 	public final List<Point3dPlus> collidingBlockOffsets;
 	

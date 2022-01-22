@@ -71,7 +71,7 @@ public class RenderVehicle extends ARenderEntityDefinable<EntityVehicleF_Physics
 	public void renderBoundingBoxes(EntityVehicleF_Physics vehicle, Matrix4dPlus transform){
 		super.renderBoundingBoxes(vehicle, transform);
 		for(BoundingBox box : vehicle.groundDeviceCollective.getGroundBounds()){
-			box.renderWireframe(vehicle, transform, ColorRGB.BLUE);
+			box.renderWireframe(vehicle, transform, null, ColorRGB.BLUE);
 		}
 	}
 }

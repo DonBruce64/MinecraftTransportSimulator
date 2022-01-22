@@ -27,8 +27,6 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONMultiModelProv
 	public ATileEntityBase(WrapperWorld world, Point3dPlus position, WrapperPlayer placingPlayer, WrapperNBT data){
 		super(world, placingPlayer, data);
 		this.position.set(position);
-		//Need to offset the bounding box 1/2 height to center it on the block.
-		this.boundingBox.globalCenter.y += boundingBox.heightRadius;
 	}
 	
 	@Override

@@ -25,8 +25,7 @@ public class BlockCollision extends ABlockBase{
     		collisionHeightInPixels = 1;
     	}
     	float heightRadiusRequired = collisionHeightInPixels/16F/2F;
-    	float centerPositionOffset = -(0.5F - heightRadiusRequired);
-    	this.blockBounds = new BoundingBox(new Point3dPlus(0, centerPositionOffset, 0), 0.5D, heightRadiusRequired, 0.5D);
+    	this.blockBounds = new BoundingBox(new Point3dPlus(0, heightRadiusRequired, 0), 0.5D, heightRadiusRequired, 0.5D);
 	}
     
     @Override

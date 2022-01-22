@@ -249,9 +249,9 @@ public class BuilderBlock extends Block{
     		}
     	}else if(block instanceof BlockCollision){
     		if(globalCoords){
-				return ((BlockCollision) block).blockBounds.convertWithOffset(pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D);
+				return ((BlockCollision) block).blockBounds.convertWithOffset(pos.getX() + 0.5D, pos.getY(), pos.getZ() + 0.5D);
 			}else{
-				return ((BlockCollision) block).blockBounds.convertWithOffset(0.5D, 0.5D, 0.5D);
+				return ((BlockCollision) block).blockBounds.convertWithOffset(0.5D, 0.0, 0.5D);
 			}
     	}
     	if(globalCoords){

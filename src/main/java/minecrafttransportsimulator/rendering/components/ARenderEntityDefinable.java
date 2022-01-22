@@ -131,9 +131,9 @@ public abstract class ARenderEntityDefinable<RenderedEntity extends AEntityD_Def
 	public void renderBoundingBoxes(RenderedEntity entity, Matrix4dPlus transform){
 		if(entity instanceof AEntityF_Multipart){
 			AEntityE_Interactable<?> interactable = (AEntityE_Interactable<?>) entity;
-			interactable.encompassingBox.renderWireframe(entity, transform, null);
+			interactable.encompassingBox.renderWireframe(entity, transform, null, null);
 			for(BoundingBox box : interactable.interactionBoxes){
-				box.renderWireframe(entity, transform, null);
+				box.renderWireframe(entity, transform, null, null);
 			}
 		}else{
 			super.renderBoundingBoxes(entity, transform);

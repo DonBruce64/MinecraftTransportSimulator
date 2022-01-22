@@ -315,12 +315,17 @@ public class BoundingBox{
 	
 	/**
 	 *  Renders this bounding box as a wireframe model.
-	 *  Automatically applies appropriate transforms to go from entity center to itself.
+	 *  Automatically applies appropriate transforms to go from entity center to itself, or uses
+	 *  the passed-in offset from global center if it is set.
 	 */
-	public void renderWireframe(AEntityC_Renderable entity, Matrix4dPlus transform, ColorRGB color){
+	public void renderWireframe(AEntityC_Renderable entity, Matrix4dPlus transform, Point3dPlus offset, ColorRGB color){
 		wireframeRenderable.transform.set(transform);
 		helperPoint.set(globalCenter);
-		helperPoint.sub(entity.position);
+		if(offset != null){
+			helperPoint.add(offset);
+		}else{
+			helperPoint.sub(entity.position);
+		}
 		wireframeRenderable.transform.translate(helperPoint);
 		if(color != null){
 			wireframeRenderable.color.setTo(color);

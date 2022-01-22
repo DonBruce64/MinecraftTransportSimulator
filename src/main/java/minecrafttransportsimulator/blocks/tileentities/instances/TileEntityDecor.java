@@ -30,7 +30,7 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor>{
 		super(world, position, placingPlayer, data);
 		//Set our bounding box based on our rotation and parameters.
 		boundingBox.heightRadius = definition.decor.height/2D;
-		this.boundingBox.globalCenter.y += (boundingBox.heightRadius - 0.5);
+		this.boundingBox.globalCenter.y += boundingBox.heightRadius;
 		if(Math.abs(angles.y%180) == 0){
 			boundingBox.widthRadius = definition.decor.width/2D;
 			boundingBox.depthRadius = definition.decor.depth/2D;
