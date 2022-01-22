@@ -153,9 +153,9 @@ public class WrapperNBT{
 	}
 	
 	public void setPoint3dCompact(String name, Point3dPlus value){
-		setInteger(name + "x", (int) value.x);
-		setInteger(name + "y", (int) value.y);
-		setInteger(name + "z", (int) value.z);
+		setInteger(name + "x", (int) Math.floor(value.x));
+		setInteger(name + "y", (int) Math.floor(value.y));
+		setInteger(name + "z", (int) Math.floor(value.z));
 	}
 	
 	public List<Point3dPlus> getPoint3dsCompact(String name){

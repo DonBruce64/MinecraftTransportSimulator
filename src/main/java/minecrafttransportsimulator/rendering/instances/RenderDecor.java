@@ -11,9 +11,9 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySigna
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController.SignalDirection;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController.SignalGroup;
 import minecrafttransportsimulator.mcinterface.InterfaceRender;
-import minecrafttransportsimulator.rendering.components.ARenderTileEntityBase;
+import minecrafttransportsimulator.rendering.components.ARenderEntityDefinable;
 
-public class RenderDecor extends ARenderTileEntityBase<TileEntityDecor>{
+public class RenderDecor extends ARenderEntityDefinable<TileEntityDecor>{
 	
 	@Override
 	protected void renderHolographicBoxes(TileEntityDecor decor, Matrix4dPlus transform){

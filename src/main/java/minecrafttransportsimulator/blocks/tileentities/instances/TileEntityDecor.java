@@ -28,6 +28,11 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor>{
 	
 	public TileEntityDecor(WrapperWorld world, Point3dPlus position, WrapperPlayer placingPlayer, WrapperNBT data){
 		super(world, position, placingPlayer, data);
+		//If we are on a slab, we go down to match it.
+		if(world.isBlockBelowBottomSlab(position)){
+			this.position.y -= 0.5D;
+			boundingBox.globalCenter.set(this.position);
+		}
 		//Set our bounding box based on our rotation and parameters.
 		boundingBox.heightRadius = definition.decor.height/2D;
 		this.boundingBox.globalCenter.y += boundingBox.heightRadius;

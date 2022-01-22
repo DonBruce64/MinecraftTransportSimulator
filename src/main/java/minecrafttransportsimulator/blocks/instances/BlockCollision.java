@@ -25,7 +25,8 @@ public class BlockCollision extends ABlockBase{
     		collisionHeightInPixels = 1;
     	}
     	float heightRadiusRequired = collisionHeightInPixels/16F/2F;
-    	this.blockBounds = new BoundingBox(new Point3dPlus(0, heightRadiusRequired, 0), 0.5D, heightRadiusRequired, 0.5D);
+    	//Need to offset by 0.5 to center ourselves in the block.
+    	this.blockBounds = new BoundingBox(new Point3dPlus(0.5, heightRadiusRequired, 0.5), 0.5D, heightRadiusRequired, 0.5D);
 	}
     
     @Override
@@ -50,8 +51,9 @@ public class BlockCollision extends ABlockBase{
     public TileEntityRoad getMasterRoad(WrapperWorld world, Point3dPlus position){
     	Point3dPlus blockOffset = new Point3dPlus();
     	Point3dPlus testPoint = new Point3dPlus();
-    	for(int i=-TileEntityRoad.MAX_COLLISION_DISTANCE; i<2*TileEntityRoad.MAX_COLLISION_DISTANCE; ++i){
-    		for(int j=-TileEntityRoad.MAX_COLLISION_DISTANCE; j<2*TileEntityRoad.MAX_COLLISION_DISTANCE; ++j){
+    	//Search XZ before Y, as most master roads are on the same Y-level as the collision block.
+    	for(int j=-TileEntityRoad.MAX_COLLISION_DISTANCE; j<2*TileEntityRoad.MAX_COLLISION_DISTANCE; ++j){
+    		for(int i=-TileEntityRoad.MAX_COLLISION_DISTANCE; i<2*TileEntityRoad.MAX_COLLISION_DISTANCE; ++i){
     			for(int k=-TileEntityRoad.MAX_COLLISION_DISTANCE; k<2*TileEntityRoad.MAX_COLLISION_DISTANCE; ++k){
     				blockOffset.set(i, j, k);
     				testPoint.set(position);

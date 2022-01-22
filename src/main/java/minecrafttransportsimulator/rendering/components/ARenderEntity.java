@@ -85,7 +85,7 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Renderable>{
 	 *  The passed-in position is where the code thinks the entity is: where you want to render
 	 *  it may not be at this position/rotation.  Hence the ability to modify these parameters.
 	 */
-	protected void adjustPositionOrientation(RenderedEntity entity, Point3dPlus entityPositionDelta, Matrix4dPlus interpolatedOrientation, float partialTicks){}
+	public void adjustPositionOrientation(RenderedEntity entity, Point3dPlus entityPositionDelta, Matrix4dPlus interpolatedOrientation, float partialTicks){}
 	
 	/**
 	 *  Called to render the main model.  At this point the matrix state will be aligned

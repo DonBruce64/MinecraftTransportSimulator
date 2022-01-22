@@ -18,11 +18,11 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad.
 import minecrafttransportsimulator.items.instances.ItemRoadComponent;
 import minecrafttransportsimulator.mcinterface.InterfaceRender;
 import minecrafttransportsimulator.rendering.components.AModelParser;
-import minecrafttransportsimulator.rendering.components.ARenderTileEntityBase;
+import minecrafttransportsimulator.rendering.components.ARenderEntityDefinable;
 import minecrafttransportsimulator.rendering.components.RenderableObject;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
-public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
+public class RenderRoad extends ARenderEntityDefinable<TileEntityRoad>{
 		
 	@Override
 	protected void renderModel(TileEntityRoad road, Matrix4dPlus transform, boolean blendingEnabled, float partialTicks){
@@ -41,7 +41,7 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 							for(RenderableObject object : parsedModel){
 								totalVertices += object.vertices.capacity();
 								for(int i=0; i<object.vertices.capacity(); i+=8){
-									position.set(object.vertices.get(i+5) - 0.5, object.vertices.get(i+6), object.vertices.get(i+7) - 0.5);
+									position.set(object.vertices.get(i+5), object.vertices.get(i+6), object.vertices.get(i+7));
 									road.orientation.transform(position);
 									object.vertices.put(i+5, (float) position.x);
 									object.vertices.put(i+6, (float) position.y);
@@ -190,9 +190,9 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 			//If we are inactive render the blocking blocks and the main block.
 			if(!road.isActive()){
 				if(road.blockingBoundingBoxes.isEmpty()){
-					road.blockingBoundingBoxes.add(new BoundingBox(new Point3dPlus(0.5, 0.75, 0.5), 0.15, 0.75, 0.15));
+					road.blockingBoundingBoxes.add(new BoundingBox(new Point3dPlus(0, 0.75, 0), 0.15, 0.75, 0.15));
 					for(Point3dPlus location : road.collidingBlockOffsets){
-						road.blockingBoundingBoxes.add(new BoundingBox(location.copy().add(0.5, 0.55, 0.5), 0.55, 0.55, 0.55));
+						road.blockingBoundingBoxes.add(new BoundingBox(location.copy().add(0, 0.55, 0), 0.55, 0.55, 0.55));
 					}
 				}
 				boolean firstBox = true;
@@ -227,7 +227,10 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 			ABlockBase block = road.world.getBlock(road.position.copy().add(blockOffset));
 			if(block instanceof BlockCollision){
 				BoundingBox blockBounds = ((BlockCollision) block).blockBounds;
-				blockBounds.renderWireframe(road, transform, blockOffset.copy().add(0.5, 0, 0.5), null);
+				Point3dPlus renderOffset = new Point3dPlus(blockOffset);
+				//Need to offset by -0.5 as the collision box bounds is centered, but the offset isn't.
+				renderOffset.add(-0.5, 0, -0.5);
+				blockBounds.renderWireframe(road, transform, renderOffset, null);
 			}
 		}
 	}
@@ -348,10 +351,5 @@ public class RenderRoad extends ARenderTileEntityBase<TileEntityRoad>{
 		//Undo orientation.  We don't want to rotate for this render call as all our curve data is absolute reference.
 		//We also don't call super, as that would add a 1/2 offset to us and that masks the true position of this road's curve points.
 		interpolatedOrientation.resetTransforms();
-	}
-	
-	@Override
-	public boolean translateToSlabs(){
-		return false;
 	}
 }

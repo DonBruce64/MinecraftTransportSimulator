@@ -86,11 +86,11 @@ public class GUISignalController extends AGUIBase{
 							if(tile instanceof TileEntityPole){
 								for(ATileEntityPole_Component component : ((TileEntityPole) tile).components.values()){
 									if(component instanceof TileEntityPole_TrafficSignal){
-										controller.componentLocations.add(checkPosition);
-										minX = Math.min(minX, checkPosition.x);
-										maxX = Math.max(maxX, checkPosition.x);
-										minZ = Math.min(minZ, checkPosition.z);
-										maxZ = Math.max(maxZ, checkPosition.z);
+										controller.componentLocations.add(tile.position);
+										minX = Math.min(minX, tile.position.x);
+										maxX = Math.max(maxX, tile.position.x);
+										minZ = Math.min(minZ, tile.position.z);
+										maxZ = Math.max(maxZ, tile.position.z);
 										break;
 									}
 								}
@@ -98,6 +98,7 @@ public class GUISignalController extends AGUIBase{
 						}
 					}
 				}
+				//Offset intersection center by 0.5 to account for the fact we're checking block bounds and blocks are entered.
 				controller.intersectionCenterPoint.set(minX + (maxX-minX)/2, controller.position.y, minZ + (maxZ - minZ)/2);
 				scanCenterXText.setText(String.valueOf(controller.intersectionCenterPoint.x));
 				scanCenterZText.setText(String.valueOf(controller.intersectionCenterPoint.z));

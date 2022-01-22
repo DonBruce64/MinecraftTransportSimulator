@@ -45,7 +45,7 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 	@Override
 	public boolean onBlockClicked(WrapperWorld world, WrapperPlayer player, Point3dPlus position, Axis axis){
 		//Only do logic on the server.
-		if(!world.isClient()){
+		if(!world.isClient()){			
 			//If we clicked an inactive road, don't do anything.
 			//The road block will handle this operation.
 			ABlockBase clickedBlock = world.getBlock(position);
@@ -55,6 +55,9 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 					return false;
 				}
 			}
+			
+			//Offset position by 0.5.  All subsequent logic here is center-block-based.
+			position.add(0.5, 0, 0.5);
 			
 			//It we are a dynamic road, create curves between the prior clicked point and the current point.
 			//If the prior point is null, set it when we click it.
@@ -72,7 +75,7 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 						clickedRoad = ((BlockCollision) clickedBlock).getMasterRoad(world, position);
 					}else{
 						clickedRoad = null;
-						lastPositionClicked.put(player, position.copy().add(0, 1, 0));
+						lastPositionClicked.put(player, new Point3dPlus(position).add(0, 1, 0));
 					}
 					
 					//If we clicked a road, get the lane number clicked.
@@ -89,7 +92,7 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 						}
 						
 						lastPositionClicked.put(player, position);
-						lastRoadClickedData.put(player, clickedRoad.getClickData(position.copy().subtract(clickedRoad.position), false));
+						lastRoadClickedData.put(player, clickedRoadData);
 					}else{
 						lastRoadClickedData.remove(player);
 					}
@@ -150,10 +153,9 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 								return true;
 							}
 						}else{
-							blockPlacementPoint = position.copy().add(0, 1, 0);
+							blockPlacementPoint = new Point3dPlus(position).add(0, 1, 0);
 							startRotation = Math.round(player.getYaw()/15)*15;
-							//Need to offset startPosition to the corner of the block we clicked.
-							startPosition = blockPlacementPoint.copy().add(new Point3dPlus(-0.5, 0.0, -0.5).rotateFine(new Point3dPlus(0, startRotation, 0)));
+							startPosition = blockPlacementPoint;
 						}
 						
 						
@@ -166,11 +168,8 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 							endPosition = endingRoadData.genPosition;
 							endRotation = endingRoadData.genRotation;
 						}else{
-							endPosition = lastPositionClicked.get(player).copy();
+							endPosition = lastPositionClicked.get(player);
 							endRotation = lastRotationClicked.get(player);
-							//Need to offset endPosition to the corner of the block we clicked.
-							//However, this needs to be on the back of the curve, so we need inverted rotation.
-							endPosition.add(new Point3dPlus(-0.5, 0.0, 0.5).rotateFine(new Point3dPlus(0, endRotation + 180, 0)));
 						}
 						
 						//Check if the start and end position are the same.
