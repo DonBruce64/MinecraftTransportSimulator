@@ -60,13 +60,12 @@ import net.minecraftforge.oredict.OreDictionary;
  * @author don_bruce
  */
 @EventBusSubscriber
-public class BuilderItem extends Item{
+public class BuilderItem extends Item implements IBuilderItemInterface{
 	/**Map of created items linked to their builder instances.  Used for interface operations.**/
 	protected static final Map<AItemBase, BuilderItem> itemMap = new LinkedHashMap<AItemBase, BuilderItem>();
 	
 	/**Current item we are built around.**/
-	//TODO make protected when we have wrapped item stacks.
-	public final AItemBase item;
+	private final AItemBase item;
 	
 	public BuilderItem(AItemBase item){
 		super();
@@ -74,6 +73,11 @@ public class BuilderItem extends Item{
 		setFull3D();
 		this.setMaxStackSize(item.getStackSize());
 		itemMap.put(item, this);
+	}
+	
+	@Override
+	public AItemBase getItem(){
+		return item;
 	}
 	
 	/**

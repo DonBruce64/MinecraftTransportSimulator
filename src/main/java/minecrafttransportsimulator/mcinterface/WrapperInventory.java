@@ -36,7 +36,7 @@ public class WrapperInventory{
 	 */
 	public AItemBase getItemInSlot(int slot){
 		Item item = inventory.getStackInSlot(slot).getItem();
-		return item instanceof BuilderItem ? ((BuilderItem) item).item : null;
+		return item instanceof IBuilderItemInterface ? ((IBuilderItemInterface) item).getItem() : null;
 	}
 	
 	/**

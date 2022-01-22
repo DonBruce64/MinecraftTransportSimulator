@@ -14,7 +14,7 @@ import minecrafttransportsimulator.items.instances.ItemBullet;
 import minecrafttransportsimulator.jsondefs.JSONMuzzle;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
-import minecrafttransportsimulator.mcinterface.BuilderItem;
+import minecrafttransportsimulator.mcinterface.IBuilderItemInterface;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperInventory;
@@ -296,8 +296,8 @@ public class PartGun extends APart{
 									for(int i=0; i<inventory.getSize(); ++i){
 										ItemStack stack = inventory.getStack(i);
 										Item item = stack.getItem();
-										if(item instanceof BuilderItem && ((BuilderItem) item).item instanceof ItemBullet){
-											if(tryToReload((ItemBullet) ((BuilderItem) item).item)){
+										if(item instanceof IBuilderItemInterface && ((IBuilderItemInterface) item).getItem() instanceof ItemBullet){
+											if(tryToReload((ItemBullet) ((IBuilderItemInterface) item).getItem())){
 												//Bullet is right type, and we can fit it.  Remove from crate and add to the gun.
 												//Return here to ensure we don't set the loadedBullet to blank since we found bullets.
 												inventory.removeItems(i, 1, true);

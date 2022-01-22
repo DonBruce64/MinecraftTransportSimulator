@@ -4,7 +4,7 @@ import java.util.Map;
 
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.items.instances.ItemBullet;
-import minecrafttransportsimulator.mcinterface.BuilderItem;
+import minecrafttransportsimulator.mcinterface.IBuilderItemInterface;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
@@ -197,8 +197,8 @@ public class EntityInventoryContainer extends AEntityA_Base{
 		double explosivePower = 0;
 		for(ItemStack stack : inventory){
 			Item item = stack.getItem();
-			if(item instanceof BuilderItem && ((BuilderItem) item).item instanceof ItemBullet){
-				ItemBullet bullet = (ItemBullet) ((BuilderItem) item).item;
+			if(item instanceof IBuilderItemInterface && ((IBuilderItemInterface) item).getItem() instanceof ItemBullet){
+				ItemBullet bullet = (ItemBullet) ((IBuilderItemInterface) item).getItem();
 				if(bullet.definition.bullet != null){
 					double blastSize = bullet.definition.bullet.blastStrength == 0 ? bullet.definition.bullet.diameter/10D : bullet.definition.bullet.blastStrength;
 					explosivePower += stack.getCount()*blastSize/10D;

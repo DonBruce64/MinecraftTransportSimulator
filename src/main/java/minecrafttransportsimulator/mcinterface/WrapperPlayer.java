@@ -123,7 +123,7 @@ public class WrapperPlayer extends WrapperEntity{
 	 */
 	public AItemBase getHeldItem(){
 		Item heldItem = player.getHeldItemMainhand().getItem();
-		return heldItem instanceof BuilderItem ? ((BuilderItem) heldItem).item : null;
+		return heldItem instanceof IBuilderItemInterface ? ((IBuilderItemInterface) heldItem).getItem() : null;
 	}
 	
 	public boolean isHoldingScanner(){
