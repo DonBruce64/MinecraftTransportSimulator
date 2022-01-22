@@ -172,6 +172,14 @@ public class InterfaceEventsModelLoader{
 	}
 	
 	/**
+	 *  Returns a 4-float array for the default block texture.  This doesn't take into account world-state.
+	 */
+	public static float[] getDefaultBlockTexture(String name){
+		TextureAtlasSprite sprite = Minecraft.getMinecraft().getBlockRendererDispatcher().getBlockModelShapes().getModelManager().getTextureMap().getAtlasSprite(name.replace(":", ":blocks/"));
+		return new float[]{sprite.getMinU(), sprite.getMaxU(), sprite.getMinV(), sprite.getMaxV()};
+	}
+	
+	/**
 	 *  Event that's called to register models.  We register our render wrapper
 	 *  classes here, as well as all item JSONs.
 	 */

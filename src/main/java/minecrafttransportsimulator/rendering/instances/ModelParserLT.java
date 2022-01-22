@@ -6,6 +6,10 @@ import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.vecmath.Point3f;
+
+import minecrafttransportsimulator.baseclasses.ColorRGB;
+import minecrafttransportsimulator.mcinterface.InterfaceEventsModelLoader;
 import minecrafttransportsimulator.packloading.JSONParser;
 import minecrafttransportsimulator.rendering.components.AModelParser;
 import minecrafttransportsimulator.rendering.components.RenderableObject;
@@ -44,10 +48,76 @@ public final class ModelParserLT extends AModelParser{
 					tile.boxes.add(tile.bBox);
 				}
 				
-				FloatBuffer buffer = FloatBuffer.allocate(tile.boxes.size()*6*8);
+				//8 floats per vert, 6 verts per side, 6 sides per box.
+				FloatBuffer buffer = FloatBuffer.allocate(tile.boxes.size()*6*6*8);
+				Point3f normal = new Point3f();
+				Point3f min = new Point3f();
+				Point3f max = new Point3f();
+				
+				float[] uvPoints = InterfaceEventsModelLoader.getDefaultBlockTexture(tile.tile.block);
+				
 				for(LTBox box : tile.boxes){
-					//TODO create model and return.
+					for(int i=0; i<6; ++i){
+						switch(i){
+							case(0):{//Bottom
+								normal.set(0, -1, 0);
+								min.set(box.pos2[0]*scale, box.pos1[1]*scale, box.pos1[2]*scale);
+								max.set(box.pos1[0]*scale, box.pos1[1]*scale, box.pos2[2]*scale);
+								float U = uvPoints[0] + (uvPoints[1] - uvPoints[0])*(box.pos2[0]-box.pos1[0])*scale;
+								float V = uvPoints[2] + (uvPoints[3] - uvPoints[2])*(box.pos2[2]-box.pos1[2])*scale;
+								addFaceToBuffer(min, max, normal, uvPoints[0], U, uvPoints[2], V, false, buffer);
+								break;
+							}
+							case(1):{//Top
+								normal.set(0, 1, 0);
+								min.set(box.pos1[0]*scale, box.pos2[1]*scale, box.pos1[2]*scale);
+								max.set(box.pos2[0]*scale, box.pos2[1]*scale, box.pos2[2]*scale);
+								float U = uvPoints[0] + (uvPoints[1] - uvPoints[0])*(box.pos2[0]-box.pos1[0])*scale;
+								float V = uvPoints[2] + (uvPoints[3] - uvPoints[2])*(box.pos2[2]-box.pos1[2])*scale;
+								addFaceToBuffer(min, max, normal, uvPoints[0], U, uvPoints[2], V, false, buffer);
+								break;
+							}
+							case(2):{//North (-Z)
+								normal.set(0, 0, -1);
+								min.set(box.pos2[0]*scale, box.pos1[1]*scale, box.pos1[2]*scale);
+								max.set(box.pos1[0]*scale, box.pos2[1]*scale, box.pos1[2]*scale);
+								float U = uvPoints[0] + (uvPoints[1] - uvPoints[0])*(box.pos2[0]-box.pos1[0])*scale;
+								float V = uvPoints[2] + (uvPoints[3] - uvPoints[2])*(box.pos2[1]-box.pos1[1])*scale;
+								addFaceToBuffer(min, max, normal, uvPoints[0], U, uvPoints[2], V, true, buffer);
+								break;
+							}
+							case(3):{//South (+Z)
+								normal.set(0, 0, 1);
+								min.set(box.pos1[0]*scale, box.pos1[1]*scale, box.pos2[2]*scale);
+								max.set(box.pos2[0]*scale, box.pos2[1]*scale, box.pos2[2]*scale);
+								float U = uvPoints[0] + (uvPoints[1] - uvPoints[0])*(box.pos2[0]-box.pos1[0])*scale;
+								float V = uvPoints[2] + (uvPoints[3] - uvPoints[2])*(box.pos2[1]-box.pos1[1])*scale;
+								addFaceToBuffer(min, max, normal, uvPoints[0], U, uvPoints[2], V, true, buffer);
+								break;
+							}
+							case(4):{//East (+X)
+								normal.set(1, 0, 0);
+								min.set(box.pos2[0]*scale, box.pos1[1]*scale, box.pos2[2]*scale);
+								max.set(box.pos2[0]*scale, box.pos2[1]*scale, box.pos1[2]*scale);								
+								float U = uvPoints[0] + (uvPoints[1] - uvPoints[0])*(box.pos2[2]-box.pos1[2])*scale;
+								float V = uvPoints[2] + (uvPoints[3] - uvPoints[2])*(box.pos2[1]-box.pos1[1])*scale;
+								addFaceToBuffer(min, max, normal, uvPoints[0], U, uvPoints[2], V, true, buffer);
+								break;
+							}
+							case(5):{//West (-X)
+								normal.set(-1, 0, 0);
+								min.set(box.pos1[0]*scale, box.pos1[1]*scale, box.pos1[2]*scale);
+								max.set(box.pos1[0]*scale, box.pos2[1]*scale, box.pos2[2]*scale);
+								float U = uvPoints[0] + (uvPoints[1] - uvPoints[0])*(box.pos2[2]-box.pos1[2])*scale;
+								float V = uvPoints[2] + (uvPoints[3] - uvPoints[2])*(box.pos2[1]-box.pos1[1])*scale;
+								addFaceToBuffer(min, max, normal, uvPoints[0], U, uvPoints[2], V, true, buffer);
+								break;
+							}
+						}
+					}
 				}
+				RenderableObject newObject = new RenderableObject("little_tiles_generated", RenderableObject.GLOBAL_TEXTURE_NAME, new ColorRGB(tile.tile.color), buffer, false);
+				objectList.add(newObject);
 			}
 			
 			return objectList;
@@ -56,12 +126,80 @@ public final class ModelParserLT extends AModelParser{
 		}
 	}
 	
+	private static void addFaceToBuffer(Point3f min, Point3f max, Point3f normal, float u, float U, float v, float V, boolean horzontalFace, FloatBuffer buffer){
+		for(int i=0; i<6; ++i){
+			//Normals are just what the point has.
+			buffer.put(normal.x);
+			buffer.put(normal.y);
+			buffer.put(normal.z);
+			
+			//Texture and vertex X/Y/Z are based on vertex index.
+			switch(i){
+				case(0)://Bottom-right
+				case(3):{
+					buffer.put(U);
+					buffer.put(V);
+					if(horzontalFace){
+						buffer.put(max.x);
+						buffer.put(min.y);
+						buffer.put(max.z);
+					}else{
+						buffer.put(max.x);
+						buffer.put(max.y);
+						buffer.put(max.z);
+					}
+					break;
+				}
+				case(1):{//Top-right
+					buffer.put(U);
+					buffer.put(v);
+					if(horzontalFace){
+						buffer.put(max.x);
+						buffer.put(max.y);
+						buffer.put(max.z);
+					}else{
+						buffer.put(max.x);
+						buffer.put(max.y);
+						buffer.put(min.z);
+					}
+					break;
+				}
+				case(2)://Top-left
+				case(4):{
+					buffer.put(u);
+					buffer.put(v);
+					if(horzontalFace){
+						buffer.put(min.x);
+						buffer.put(max.y);
+						buffer.put(min.z);
+					}else{
+						buffer.put(min.x);
+						buffer.put(max.y);
+						buffer.put(min.z);
+					}
+					break;
+				}
+				case(5):{//Bottom-left
+					buffer.put(u);
+					buffer.put(V);
+					if(horzontalFace){
+						buffer.put(min.x);
+						buffer.put(min.y);
+						buffer.put(min.z);
+					}else{
+						buffer.put(min.x);
+						buffer.put(min.y);
+						buffer.put(max.z);
+					}					
+					break;
+				}
+			}
+		}
+	}
+	
 	public static class LTMainModel{
 		public List<LTTileEntry> tiles;
-		public int[] min;
-		public int[] size;
 		public int grid;
-		public int count;
 	}
 	
 	public static class LTTileEntry{

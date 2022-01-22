@@ -109,11 +109,11 @@ public final class LegacyCompatSystem{
 			if(provider.rendering.modelType == null){
 				provider.rendering.modelType = ModelType.OBJ;
 			}
-		}
-		
-		//Parse the model and do LCs on it if we need to do so.
-		if(ConfigSystem.configObject != null && ConfigSystem.configObject.general.doLegacyLightCompats.value && definition instanceof AJSONMultiModelProvider && !(definition instanceof JSONSkin)){
-			performModelLegacyCompats((AJSONMultiModelProvider) definition);
+			
+			//Parse the model and do LCs on it if we need to do so.
+			if(ConfigSystem.configObject != null && ConfigSystem.configObject.general.doLegacyLightCompats.value && !(definition instanceof JSONSkin) && provider.rendering.modelType.equals(ModelType.OBJ)){
+				performModelLegacyCompats((AJSONMultiModelProvider) definition);
+			}
 		}
 	}
 	

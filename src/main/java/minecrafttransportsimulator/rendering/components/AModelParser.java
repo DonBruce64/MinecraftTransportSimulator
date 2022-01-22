@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
+import minecrafttransportsimulator.rendering.instances.ModelParserLT;
 import minecrafttransportsimulator.rendering.instances.ModelParserOBJ;
 
 /**Abstract class for parsing models.  This contains methods for determining what models
@@ -29,6 +30,7 @@ public abstract class AModelParser{
 	
 	static{
 		new ModelParserOBJ();
+		new ModelParserLT();
 	}
 
 	/**

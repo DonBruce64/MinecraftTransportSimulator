@@ -215,7 +215,8 @@ public class JSONParser{
 				reader.beginArray();
 				LTBox value = new LTBox();
 				//First item is actually a string due to dumb semicolon.
-				value.pos1 = new int[]{Integer.valueOf(reader.nextString().substring(2)), reader.nextInt(), reader.nextInt()};
+				reader.nextString();
+				value.pos1 = new int[]{reader.nextInt(), reader.nextInt(), reader.nextInt()};
 				value.pos2 = new int[]{reader.nextInt(), reader.nextInt(), reader.nextInt()};
 				
 				//Consume remaining tokens in case we have supplemental data.
