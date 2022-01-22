@@ -50,6 +50,7 @@ import minecrafttransportsimulator.jsondefs.JSONParticle;
 import minecrafttransportsimulator.jsondefs.JSONParticle.ParticleType;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONRendering;
+import minecrafttransportsimulator.jsondefs.JSONRendering.ModelType;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
 import minecrafttransportsimulator.jsondefs.JSONSkin;
 import minecrafttransportsimulator.jsondefs.JSONSound;
@@ -98,6 +99,16 @@ public final class LegacyCompatSystem{
 				subDef.modelName = definition.general.modelName;
 			}
 			definition.general.modelName = null;
+		}
+		//Check if the model needs a model type.
+		if(definition instanceof AJSONMultiModelProvider){
+			AJSONMultiModelProvider provider = (AJSONMultiModelProvider) definition;
+			if(provider.rendering == null){
+				provider.rendering = new JSONRendering();
+			}
+			if(provider.rendering.modelType == null){
+				provider.rendering.modelType = ModelType.OBJ;
+			}
 		}
 		
 		//Parse the model and do LCs on it if we need to do so.

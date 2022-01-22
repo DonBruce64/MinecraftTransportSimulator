@@ -6,6 +6,7 @@ import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 import minecrafttransportsimulator.packloading.PackResourceLoader;
 import minecrafttransportsimulator.packloading.PackResourceLoader.ResourceType;
+import minecrafttransportsimulator.rendering.components.RenderableObject;
 
 public abstract class AJSONMultiModelProvider extends AJSONItem{
 
@@ -21,8 +22,10 @@ public abstract class AJSONMultiModelProvider extends AJSONItem{
 	public String getModelLocation(String currentSubName){
 		for(JSONSubDefinition subDefinition : definitions){
 			if(subDefinition.subName.equals(currentSubName)){
-				return PackResourceLoader.getPackResource(this, ResourceType.OBJ_MODEL, subDefinition.modelName != null ? subDefinition.modelName : systemName);
-				//TODO add flag for LT model so we don't need to check for the resource every call.
+				switch(rendering.modelType){
+					case OBJ : return PackResourceLoader.getPackResource(this, ResourceType.OBJ_MODEL, subDefinition.modelName != null ? subDefinition.modelName : systemName);
+					case LITTLETILES : return PackResourceLoader.getPackResource(this, ResourceType.LT_MODEL, subDefinition.modelName != null ? subDefinition.modelName : systemName);
+				}
 			}
 		}
 		//We'll never get here.
@@ -36,7 +39,10 @@ public abstract class AJSONMultiModelProvider extends AJSONItem{
 	public String getTextureLocation(String currentSubName){
 		for(JSONSubDefinition subDefinition : definitions){
 			if(subDefinition.subName.equals(currentSubName)){
-				return PackResourceLoader.getPackResource(this, ResourceType.PNG, subDefinition.textureName != null ? subDefinition.textureName : systemName + currentSubName);
+				switch(rendering.modelType){
+					case OBJ : return PackResourceLoader.getPackResource(this, ResourceType.PNG, subDefinition.textureName != null ? subDefinition.textureName : systemName + currentSubName);
+					case LITTLETILES : return RenderableObject.GLOBAL_TEXTURE_NAME;
+				} 
 			}
 		}
 		//We'll never get here.

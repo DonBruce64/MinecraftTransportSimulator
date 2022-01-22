@@ -5,6 +5,7 @@ import java.util.List;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
+import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 
 public class JSONRendering{
 	@JSONDescription("Text objects are used to render text on models.  This can be used for license plates on cars, tail numbers on planes, status information on fuel pumps, etc.  Every entry is its own text section, and therefore you can have multiple objects for different things.  For example, you may want to make a bus with light-up route signs with multiple characters, but also with two license plates that are limited to 7 characters.")
@@ -33,6 +34,15 @@ public class JSONRendering{
 	
 	@JSONDescription("Particles are the little things spawned into the game to add a bit of flair to your model.  Think exhausts and burnout smoke, but also dirt from tires and water from outboard motors.")
     public List<JSONParticle> particles;
+	
+	@JSONRequired
+	@JSONDescription("The type of model that this entity will render from.")
+    public ModelType modelType;
+	
+	public static enum ModelType{
+		OBJ,
+		LITTLETILES;
+	}
 	
 
 	//Moved from old vehicle rendering classes.
