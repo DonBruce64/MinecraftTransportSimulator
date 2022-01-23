@@ -2,10 +2,15 @@ package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
+import minecrafttransportsimulator.items.components.AItemBase;
+import minecrafttransportsimulator.items.instances.ItemDecor;
+import minecrafttransportsimulator.items.instances.ItemPartInteractable;
+import minecrafttransportsimulator.mcinterface.IBuilderItemInterface;
 import minecrafttransportsimulator.mcinterface.WrapperInventory;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntityInteract;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
 /**Packet used to send transfer an item to or from a player inventory to an inventory in a
@@ -45,6 +50,18 @@ public class PacketPlayerItemTransfer extends APacketEntityInteract<EntityInvent
 			}
 		}else if(playerSlot != -1){
 			WrapperInventory playerInventory = player.getInventory();
+			Item mcItem = playerInventory.getStackInSlot(playerSlot).getItem();
+			//Make sure we aren't an inventory container.
+			//Those can't go into our inventories.
+			if(mcItem instanceof IBuilderItemInterface){
+				AItemBase item = ((IBuilderItemInterface) mcItem).getItem();
+				if(item instanceof ItemPartInteractable && ((ItemPartInteractable) item).definition.interactable.inventoryUnits != 0){
+					return false;
+				}
+				if(item instanceof ItemDecor && ((ItemDecor) item).definition.decor.inventoryUnits != 0){
+					return false;
+				}
+			}
 			playerInventory.decrementSlot(playerSlot, inventory.addStack(playerInventory.getStackInSlot(playerSlot), true));
 		}
 		return false;
