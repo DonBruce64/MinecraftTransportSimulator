@@ -17,7 +17,6 @@ import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPart;
-import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.jsondefs.AJSONPartProvider;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
@@ -813,7 +812,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 		
 		//Only add active slots on clients, but all slots on servers.
 		//The only exception is if the player has a scanner, in which case we add them all to allow it to work.
-		if(world.isClient() && !InterfaceClient.getClientPlayer().isHoldingScanner()){
+		if(world.isClient() && !InterfaceClient.getClientPlayer().isHoldingItemType(ItemComponentType.SCANNER)){
 			allInteractionBoxes.addAll(activePartSlotBoxes.keySet());
 		}else{
 			allInteractionBoxes.addAll(allPartSlotBoxes.keySet());
@@ -848,8 +847,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 				
 				//If we are holding a wrench, and the part has children, don't add it.  We can't wrench those parts.
 				//The only exception are parts that have permanent-default parts on them.  These can be wrenched.
-				AItemBase heldItem = clientPlayer.getHeldItem();
-				if(heldItem instanceof ItemItem && ((ItemItem) heldItem).definition.item.type.equals(ItemComponentType.WRENCH)){
+				if(clientPlayer.isHoldingItemType(ItemComponentType.WRENCH)){
 					boolean partHasRemovablePart = false;
 					for(APart childPart : part.childParts){
 						if(!childPart.placementDefinition.isPermanent){

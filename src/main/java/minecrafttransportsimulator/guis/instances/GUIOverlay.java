@@ -18,6 +18,7 @@ import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemPart;
+import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.InterfaceSound;
@@ -69,7 +70,7 @@ public class GUIOverlay extends AGUIBase{
 		
 		AEntityB_Existing mousedOverEntity = InterfaceClient.getMousedOverEntity();
 		WrapperPlayer player = InterfaceClient.getClientPlayer();
-		if(player.isHoldingScanner()){
+		if(player.isHoldingItemType(ItemComponentType.SCANNER)){
 			if(mousedOverEntity instanceof APart){
 				mousedOverEntity = ((APart) mousedOverEntity).entityOn;
 			}

@@ -12,7 +12,6 @@ import minecrafttransportsimulator.blocks.instances.BlockPole;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
 import minecrafttransportsimulator.items.components.AItemBase;
-import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent.PoleComponentType;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
@@ -93,7 +92,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 			AItemBase heldItem = player.getHeldItem();
 			ATileEntityPole_Component clickedComponent = pole.components.get(axis);
 			if(!ConfigSystem.configObject.general.opSignEditingOnly.value || player.isOP()){
-				if(heldItem instanceof ItemItem && ((ItemItem) heldItem).definition.item.type.equals(ItemComponentType.WRENCH)){
+				if(player.isHoldingItemType(ItemComponentType.WRENCH)){
 					//Holding a wrench, try to remove the component.
 					//Need to check if it will fit in the player's inventory.
 					if(pole.components.containsKey(axis)){

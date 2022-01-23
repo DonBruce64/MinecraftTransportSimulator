@@ -12,9 +12,7 @@ import com.google.common.collect.HashBiMap;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.NavBeacon;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
-import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
@@ -342,14 +340,10 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 		if(!ConfigSystem.configObject.general.keyRequiredToStartVehicles.value){
 			return true;
 		}else{
-			AItemBase heldItem = player.getHeldItem();
-			if(heldItem instanceof ItemItem){
-				ItemItem packItem = (ItemItem) heldItem;
-				if(packItem.definition.item.type.equals(ItemComponentType.KEY)){
-					String uniqueUUIDString = new WrapperNBT(player.getHeldStack()).getString("vehicle");
-					if(!uniqueUUIDString.isEmpty() && uniqueUUID.equals(UUID.fromString(uniqueUUIDString))){
-						return true;
-					}
+			if(player.isHoldingItemType(ItemComponentType.KEY)){
+				String uniqueUUIDString = new WrapperNBT(player.getHeldStack()).getString("vehicle");
+				if(!uniqueUUIDString.isEmpty() && uniqueUUID.equals(UUID.fromString(uniqueUUIDString))){
+					return true;
 				}
 			}
 			if(world.isClient()){

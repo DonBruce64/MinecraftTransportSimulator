@@ -12,7 +12,6 @@ import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartEngine;
 import minecrafttransportsimulator.items.components.AItemBase;
-import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.items.instances.ItemPartInteractable;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
@@ -162,8 +161,7 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityFl
 		}
 		
 		//Check if the item is a wrench, and the player can configure this pump..
-		AItemBase heldItem = player.getHeldItem();
-		if(heldItem instanceof ItemItem && ((ItemItem) heldItem).definition.item.type.equals(ItemComponentType.WRENCH) && (player.getID().equals(placingPlayerID) || player.isOP())){
+		if(player.isHoldingItemType(ItemComponentType.WRENCH) && (player.getID().equals(placingPlayerID) || player.isOP())){
 			player.sendPacket(new PacketEntityGUIRequest(this, player, PacketEntityGUIRequest.EntityGUIType.FUEL_PUMP_CONFIG));
 			return true;
 		}

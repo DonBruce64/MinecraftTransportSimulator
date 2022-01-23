@@ -126,9 +126,12 @@ public class WrapperPlayer extends WrapperEntity{
 		return heldItem instanceof IBuilderItemInterface ? ((IBuilderItemInterface) heldItem).getItem() : null;
 	}
 	
-	public boolean isHoldingScanner(){
+	/**
+	 *  Returns true if the player is holding the pack-item type passed-in.
+	 */
+	public boolean isHoldingItemType(ItemComponentType type){
 		AItemBase heldItem = getHeldItem();
-		return heldItem instanceof ItemItem && ((ItemItem) heldItem).definition.item.type.equals(ItemComponentType.SCANNER);
+		return heldItem instanceof ItemItem && ((ItemItem) heldItem).definition.item.type.equals(type);
 	}
 	
 	/**

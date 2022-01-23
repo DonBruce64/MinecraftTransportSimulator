@@ -10,6 +10,7 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPart;
+import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
@@ -38,7 +39,7 @@ public final class RenderVehicle extends ARenderEntityDefinable<EntityVehicleF_P
 			WrapperPlayer player = InterfaceClient.getClientPlayer();
 			AItemBase heldItem = player.getHeldItem();
 			AItemPart heldPart = heldItem instanceof AItemPart ? (AItemPart) heldItem : null;
-			boolean holdingScanner = player.isHoldingScanner();
+			boolean holdingScanner = player.isHoldingItemType(ItemComponentType.SCANNER);
 			if(heldPart != null || holdingScanner){
 				//Undo rotation for bounding boxes.
 				GL11.glPushMatrix();
