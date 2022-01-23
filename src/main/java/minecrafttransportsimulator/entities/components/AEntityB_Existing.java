@@ -106,18 +106,20 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 			if(world.isClient()){
 				updateSounds(0);
 			}
-			prevPosition.set(position);
-			prevMotion.set(motion);
-			
-			prevOrientation.set(orientation);
-			//FIXME this is only here as a hack to get this to work with existing rendering.  See if we can remove angles after we are done.
-			orientation.setToAngles(angles);
-			prevAngles.set(angles);			
-			
-			axialOrientation.set(0, 0, 1);
-			orientation.transform(axialOrientation);
-			airDensity = 1.225*Math.pow(2, -position.y/(500D*world.getMaxHeight()/256D));
-			velocity = motion.length();
+			if(changesPosition()){
+				prevPosition.set(position);
+				prevMotion.set(motion);
+				
+				prevOrientation.set(orientation);
+				//FIXME this is only here as a hack to get this to work with existing rendering.  See if we can remove angles after we are done.
+				orientation.setToAngles(angles);
+				prevAngles.set(angles);			
+				
+				axialOrientation.set(0, 0, 1);
+				orientation.transform(axialOrientation);
+				airDensity = 1.225*Math.pow(2, -position.y/(500D*world.getMaxHeight()/256D));
+				velocity = motion.length();
+			}
 			world.endProfiling();
 			return true;
 		}else{
@@ -176,6 +178,14 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	 *  box syncing, though the initial location of the box will be the position of the entity.
 	 */
 	public boolean shouldLinkBoundsToPosition(){
+		return true;
+	}
+	
+	/**
+	 *  This method returns true if this entity can change position (or if positional data is important to it).
+	 *  This is normally true, but some entities may not ever move, and so there are some calls we can skip.
+	 */
+	public boolean changesPosition(){
 		return true;
 	}
 	

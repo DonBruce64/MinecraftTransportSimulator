@@ -56,15 +56,15 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 				}
 			}
 			
-			//Offset position by 0.5.  All subsequent logic here is center-block-based.
-			position.add(0.5, 0, 0.5);
-			
 			//It we are a dynamic road, create curves between the prior clicked point and the current point.
 			//If the prior point is null, set it when we click it.
 			//This could be either a block or a road itself.
 			//If we click a road, we need to figure out what lane number we will connect to.
 			//If we are a static road, just try to place us down as-is.
 			if(definition.road.type.equals(RoadComponent.CORE_DYNAMIC)){
+				//Offset position by 0.5.  All subsequent logic here is center-block-based.
+				position.add(0.5, 0, 0.5);
+				
 				//If we don't have a click position or are sneaking, set the starting position.
 				if(player.isSneaking() || !lastPositionClicked.containsKey(player)){
 					lastRotationClicked.put(player, (double) Math.round(player.getYaw()/15)*15);
@@ -188,7 +188,12 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 						}
 						
 						//New road block is ready to be set.  Do so now.
+						//Need to briefly un-offset the block placement point.
+						//This is because the block-setter code applies the same offset.
+						//so we would double-offset if we used the offset value.
+						blockPlacementPoint.add(-0.5, 0.0, -0.5);
 						if(world.setBlock(getBlock(), blockPlacementPoint, player, axis)){
+							blockPlacementPoint.add(0.5, 0.0, 0.5);
 							TileEntityRoad newRoad = world.getTileEntity(blockPlacementPoint);
 							
 							//Now that the road is placed, create the dynamic curve.
@@ -230,10 +235,6 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 						for(RoadLane lane : newRoad.lanes){
 							lane.generateConnections();
 						}
-						
-						lastRoadClickedData.put(player, newRoad.getClickData(blockPlacementPoint, false));
-						lastPositionClicked.put(player, newRoad.position);
-						lastRotationClicked.put(player, Math.round(player.getYaw()/15)*15 + 180D);
 					}
 				}else{
 					player.sendPacket(new PacketPlayerChatMessage(player, "interact.roadcomponent.blockedplacement"));

@@ -65,6 +65,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	
 	public TileEntityRoad(WrapperWorld world, Point3dPlus position, WrapperPlayer placingPlayer, WrapperNBT data){
 		super(world, position, placingPlayer, data);
+		System.out.println(this.position);
 		
 		//Set the bounding box.
 		this.boundingBox.heightRadius = definition.road.collisionHeight/16D/2D;
@@ -209,12 +210,12 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	public void generateLanes(WrapperNBT data){
 		if(definition.road.type.equals(RoadComponent.CORE_DYNAMIC)){
 			for(int i=0; i<definition.road.laneOffsets.length; ++i){
-				lanes.add(new RoadLane(this, 0, lanes.size(), data != null ? data.getData("lane" + lanes.size()) : null));
+				lanes.add(new RoadLane(this, 0, lanes.size(), data != null ? data.getData("lane" + i) : null));
 			}
 		}else{
 			for(int i=0; i<definition.road.sectors.size(); ++i){
 				for(int j=0; j<definition.road.sectors.get(i).lanes.size(); ++j){
-					lanes.add(new RoadLane(this, i, lanes.size(), data != null ? data.getData("lane" + lanes.size()) : null));
+					lanes.add(new RoadLane(this, i, j, data != null ? data.getData("lane" + j) : null));
 				}
 			}
 		}
@@ -269,8 +270,8 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 		}else{
 			//Do static block additions for static component.
 			for(JSONRoadCollisionArea collisionArea : definition.road.collisionAreas){
-				for(double x=collisionArea.firstCorner.x; x<=collisionArea.secondCorner.x-0.5; x += 0.5){
-					for(double z=collisionArea.firstCorner.z; z<=collisionArea.secondCorner.z-0.5; z += 0.5){
+				for(double x=collisionArea.firstCorner.x+0.01; x<collisionArea.secondCorner.x+0.5; x += 0.5){
+					for(double z=collisionArea.firstCorner.z+0.01; z<collisionArea.secondCorner.z+0.5; z += 0.5){
 						Point3dPlus testPoint = new Point3dPlus(x, 0, z);
 						orientation.transform(testPoint);
 						testPoint.x = (int) testPoint.x;

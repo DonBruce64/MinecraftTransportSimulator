@@ -47,7 +47,7 @@ public class BoundingBox{
 	
 	/**Simple constructor.  Used for blocks, bounds checks, or other things that don't need local/global positional differences.**/
 	public BoundingBox(Point3dPlus center, double widthRadius, double heightRadius, double depthRadius){
-		this(center, center, widthRadius, heightRadius, depthRadius, false, null, null);
+		this(new Point3dPlus(), center, widthRadius, heightRadius, depthRadius, false, null, null);
 	}
 	
 	/**Complex constructor.  Used for things that have local and global positions.  These can also collide with liquid blocks.**/

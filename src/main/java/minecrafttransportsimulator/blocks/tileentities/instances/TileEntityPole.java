@@ -97,41 +97,38 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 		//Fire a packet to interact with this pole.  Will either add, remove, or allow editing of the pole.
 		//Only fire packet if player is holding a pole component that's not an actual pole, a wrench,
 		//or is clicking a sign with text.
-		TileEntityPole pole = (TileEntityPole) world.getTileEntity(position);
-		if(pole != null){
-			Axis axis = Axis.getFromRotation(player.getYaw(), pole.definition.pole.allowsDiagonals).getOpposite();
-			WrapperItemStack heldStack = player.getHeldStack();
-			AItemBase heldItem = heldStack.getItem();
-			ATileEntityPole_Component clickedComponent = pole.components.get(axis);
-			if(!ConfigSystem.configObject.general.opSignEditingOnly.value || player.isOP()){
-				if(player.isHoldingItemType(ItemComponentType.WRENCH)){
-					//Holding a wrench, try to remove the component.
-					//Need to check if it will fit in the player's inventory.
-					if(pole.components.containsKey(axis)){
-						ATileEntityPole_Component component = pole.components.get(axis);
-						if(player.isCreative() || player.getInventory().addStack(component.getItem().getNewStack(component.save(new WrapperNBT())))){
-							changeComponent(axis, null);
-							InterfacePacket.sendToAllClients(new PacketTileEntityPoleChange(this, player, axis, null));
-						}
-						return true;
+		Axis axis = Axis.getFromRotation(player.getYaw(), definition.pole.allowsDiagonals).getOpposite();
+		WrapperItemStack heldStack = player.getHeldStack();
+		AItemBase heldItem = heldStack.getItem();
+		ATileEntityPole_Component clickedComponent = components.get(axis);
+		if(!ConfigSystem.configObject.general.opSignEditingOnly.value || player.isOP()){
+			if(player.isHoldingItemType(ItemComponentType.WRENCH)){
+				//Holding a wrench, try to remove the component.
+				//Need to check if it will fit in the player's inventory.
+				if(components.containsKey(axis)){
+					ATileEntityPole_Component component = components.get(axis);
+					if(player.isCreative() || player.getInventory().addStack(component.getItem().getNewStack(component.save(new WrapperNBT())))){
+						changeComponent(axis, null);
+						InterfacePacket.sendToAllClients(new PacketTileEntityPoleChange(this, player, axis, null));
 					}
-				}else if(clickedComponent instanceof TileEntityPole_Sign && clickedComponent.definition.rendering != null && clickedComponent.definition.rendering.textObjects != null){
-					//Player clicked a sign with text.  Open the GUI to edit it.
-					player.sendPacket(new PacketEntityGUIRequest(clickedComponent, player, EntityGUIType.TEXT_EDITOR));
-					return true;
-				}else if(heldItem instanceof ItemPoleComponent && !((ItemPoleComponent) heldItem).definition.pole.type.equals(PoleComponentType.CORE) && !pole.components.containsKey(axis)){
-					//Player is holding component that could be added.  Try and do so.
-					ItemPoleComponent componentItem = (ItemPoleComponent) heldItem;
-					WrapperNBT stackData = heldStack.getData();
-					componentItem.populateDefaultData(stackData);
-					ATileEntityPole_Component newComponent = PoleComponentType.createComponent(pole, player, axis, stackData);
-					changeComponent(axis, newComponent);
-					if(!player.isCreative()){
-						player.getInventory().removeFromSlot(player.getHotbarIndex(), 1);
-					}
-					InterfacePacket.sendToAllClients(new PacketTileEntityPoleChange(this, player, axis, newComponent.save(new WrapperNBT())));
 					return true;
 				}
+			}else if(clickedComponent instanceof TileEntityPole_Sign && clickedComponent.definition.rendering != null && clickedComponent.definition.rendering.textObjects != null){
+				//Player clicked a sign with text.  Open the GUI to edit it.
+				player.sendPacket(new PacketEntityGUIRequest(clickedComponent, player, EntityGUIType.TEXT_EDITOR));
+				return true;
+			}else if(heldItem instanceof ItemPoleComponent && !((ItemPoleComponent) heldItem).definition.pole.type.equals(PoleComponentType.CORE) && !components.containsKey(axis)){
+				//Player is holding component that could be added.  Try and do so.
+				ItemPoleComponent componentItem = (ItemPoleComponent) heldItem;
+				WrapperNBT stackData = heldStack.getData();
+				componentItem.populateDefaultData(stackData);
+				ATileEntityPole_Component newComponent = PoleComponentType.createComponent(this, player, axis, stackData);
+				changeComponent(axis, newComponent);
+				if(!player.isCreative()){
+					player.getInventory().removeStack(player.getHeldStack(), 1);
+				}
+				InterfacePacket.sendToAllClients(new PacketTileEntityPoleChange(this, player, axis, newComponent.save(new WrapperNBT())));
+				return true;
 			}
 		}
 		return false;

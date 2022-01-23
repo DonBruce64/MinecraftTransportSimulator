@@ -139,7 +139,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 				partsFromNBT.clear();
 			}
 			
-			//Update part slot box positions.  We just update the ones for us.
+			//Update part slot box positions.
 			world.beginProfiling("PartSlotPositions", true);
 			for(Entry<BoundingBox, JSONPartDefinition> entry : allPartSlotBoxes.entrySet()){
 				JSONPartDefinition packVehicleDef = entry.getValue();
@@ -153,7 +153,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 									//Need to find the delta between part 0-degree position and our current position.
 									Point3dPlus delta = subPartDef.pos.copy();
 									part.orientation.transform(delta);
-									entry.getKey().updateToEntity(this, delta);
+									entry.getKey().updateToEntity(part, delta);
 									break;
 								}
 							}

@@ -780,13 +780,10 @@ public class WrapperWorld{
 	 *  is a dynamic-brightness block that extends {@link ABlockBaseTileEntity}. 
 	 */
 	public void updateLightBrightness(Point3dPlus position){
-		ATileEntityBase<?> tile = getTileEntity(position);
-		if(tile != null){
-			BlockPos pos = new BlockPos(position.x, position.y, position.z);
-			//This needs to get fired manually as even if we update the blockstate the light value won't change
-			//as the actual state of the block doesn't change, so MC doesn't think it needs to do any lighting checks.
-			world.checkLight(pos);
-		}
+		BlockPos pos = new BlockPos(position.x, position.y, position.z);
+		//This needs to get fired manually as even if we update the blockstate the light value won't change
+		//as the actual state of the block doesn't change, so MC doesn't think it needs to do any lighting checks.
+		world.checkLight(pos);
 	}
 	
 	/**

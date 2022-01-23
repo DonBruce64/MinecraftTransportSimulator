@@ -31,6 +31,7 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor>{
 		//If we are on a slab, we go down to match it.
 		if(world.isBlockBelowBottomSlab(position)){
 			this.position.y -= 0.5D;
+			this.prevPosition.set(this.position);
 			boundingBox.globalCenter.set(this.position);
 		}
 		//Set our bounding box based on our rotation and parameters.

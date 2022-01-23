@@ -34,6 +34,7 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONMultiModelProv
 		this.position.set(position);
 		this.position.add(0.5, 0, 0.5);
 		boundingBox.globalCenter.set(this.position);
+		this.prevPosition.set(this.position);
 	}
 	
 	@Override
@@ -57,6 +58,11 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONMultiModelProv
 	
 	@Override
 	public boolean shouldLinkBoundsToPosition(){
+		return false;
+	}
+	
+	@Override
+	public boolean changesPosition(){
 		return false;
 	}
 	

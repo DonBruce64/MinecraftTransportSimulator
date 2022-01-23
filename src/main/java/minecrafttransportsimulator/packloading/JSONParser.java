@@ -630,6 +630,7 @@ public class JSONParser{
 			
 			return "\nImported file: " + definitionToOverride.packID + ":" + definitionToOverride.systemName;
 		}catch(Exception e){
+			e.printStackTrace();
 			return "\nCould not import: " + definitionToOverride.packID + ":" + definitionToOverride.systemName + "\nERROR: " + e.getMessage();
 		}
 	}
