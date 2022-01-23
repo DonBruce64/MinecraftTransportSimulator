@@ -203,7 +203,7 @@ public class GUIInstruments extends AGUIBase{
 		//Set instrument icon and button states depending on which instruments the player has.
 		if(currentPack != null){
 			for(int i=0; i<instrumentSlots.size(); ++i){
-				if(playerInstruments.get(currentPack).size() > i){
+				if(currentPack != null && playerInstruments.get(currentPack).size() > i){
 					instrumentSlots.get(i).visible = true;
 					instrumentSlots.get(i).enabled = selectedInstrumentDefinition != null;
 					instrumentSlotIcons.get(i).stack = playerInstruments.get(currentPack).get(i).getNewStack();
