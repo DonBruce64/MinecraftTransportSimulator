@@ -562,6 +562,11 @@ public class PartGun extends APart{
 	 *  hodling this gun if the gun is hand-held.
 	 */
 	public WrapperEntity getController(){
+		//If the entity we are on is destroyed, don't allow anything to control us.
+		if(entityOn.damageAmount == entityOn.definition.general.health){
+			return null;
+		}
+		
 		//Check if the entity we are on is a player-holding entity.
 		if(entityOn instanceof EntityPlayerGun){
 			return ((EntityPlayerGun) entityOn).player;

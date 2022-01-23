@@ -96,6 +96,8 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun>{
 		JSONPlayerGun defaultDefinition = new JSONPlayerGun();
 		defaultDefinition.packID = "dummy";
 		defaultDefinition.systemName = "dummy";
+		defaultDefinition.general = defaultDefinition.new General();
+		defaultDefinition.general.health = 100;
 		
 		JSONPartDefinition fakeDef = new JSONPartDefinition();
 		fakeDef.pos = new Point3d();
