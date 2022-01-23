@@ -23,6 +23,7 @@ import minecrafttransportsimulator.items.components.IItemVehicleInteractable;
 import minecrafttransportsimulator.jsondefs.JSONItem;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
+import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -72,7 +73,15 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 							}
 						}else if(!vehicle.world.isClient()){
 							if(part != null && !player.isSneaking() && !part.placementDefinition.isPermanent && part.isValid){
-								//Player can remove part,  spawn item in the world and remove part.
+								//Double-check the part isn't an inventory container with inventory.
+								if(part instanceof PartInteractable){
+									PartInteractable interactable = (PartInteractable) part;
+									if(!interactable.definition.interactable.canBeOpenedInHand && interactable.getMass() > interactable.definition.generic.mass){
+										player.sendPacket(new PacketPlayerChatMessage(player, InterfaceCore.translate("interact.failure.cantremoveinventory")));
+										return CallbackType.NONE;
+									}
+								}
+								//Player can remove part, spawn item in the world and remove part.
 								//Make sure to remove the part before spawning the item.  Some parts
 								//care about this order and won't spawn items unless they've been removed.
 								part.disconnectAllConnections();
