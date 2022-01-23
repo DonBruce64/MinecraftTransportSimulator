@@ -39,7 +39,7 @@ public class GUIFurnace extends AGUIInventory{
 		GUIComponentButton smeltingItemButton = new GUIComponentButton(guiLeft + 51, guiTop + 20, false){
 			@Override
 			public void onClicked(boolean leftSide){
-				InterfacePacket.sendToServer(new PacketPlayerItemTransfer(furnace, player, interactableSlotButtons.indexOf(this), -1));
+				InterfacePacket.sendToServer(new PacketPlayerItemTransfer(furnace, player, interactableSlotButtons.indexOf(this), -1, false));
 			}
 		};
 		addComponent(smeltingItemButton);
@@ -54,7 +54,7 @@ public class GUIFurnace extends AGUIInventory{
 		GUIComponentButton smeltedItemButton = new GUIComponentButton(guiLeft + 110, guiTop + 21, false){
 			@Override
 			public void onClicked(boolean leftSide){
-				InterfacePacket.sendToServer(new PacketPlayerItemTransfer(furnace, player, interactableSlotButtons.indexOf(this), -1));
+				InterfacePacket.sendToServer(new PacketPlayerItemTransfer(furnace, player, interactableSlotButtons.indexOf(this), -1, false));
 			}
 		};
 		addComponent(smeltedItemButton);
@@ -68,7 +68,7 @@ public class GUIFurnace extends AGUIInventory{
 			GUIComponentButton fuelItemButton = new GUIComponentButton(guiLeft + 79, guiTop + 53, false){
 				@Override
 				public void onClicked(boolean leftSide){
-					InterfacePacket.sendToServer(new PacketPlayerItemTransfer(furnace, player, interactableSlotButtons.indexOf(this), -1));
+					InterfacePacket.sendToServer(new PacketPlayerItemTransfer(furnace, player, interactableSlotButtons.indexOf(this), -1, false));
 				}
 			};
 			addComponent(fuelItemButton);
@@ -131,7 +131,7 @@ public class GUIFurnace extends AGUIInventory{
 	
 	@Override
 	protected void handlePlayerItemClick(int slotClicked){
-		InterfacePacket.sendToServer(new PacketPlayerItemTransfer(furnace, player, -1, slotClicked));
+		InterfacePacket.sendToServer(new PacketPlayerItemTransfer(furnace, player, -1, slotClicked, false));
 	}
 	
 	@Override

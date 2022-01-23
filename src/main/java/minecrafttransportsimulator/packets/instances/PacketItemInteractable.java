@@ -82,23 +82,19 @@ public class PacketItemInteractable extends APacketPlayer{
 	@Override
 	public void handle(WrapperWorld world, WrapperPlayer player){
 		if(world.isClient()){
+			//Create new inventory container ad-hoc to match server's data.
+			//We then delete this container, and the one on the server, when the GUI is closed.
 			EntityInventoryContainer inventory = new EntityInventoryContainer(world, data, units);
-			new GUIInventoryContainer(inventory, texture){
+			new GUIInventoryContainer(inventory, texture, true){
 				@Override
 				public void close(){
 					super.close();
-					//Sends a packet back to the server to have it save state.
-					//Also kills the inventory to prevent memory leaks.
 					InterfacePacket.sendToServer(new PacketItemInteractable(player, uniqueUUID));
 					inventory.remove();
 				}
 			};
 		}else{
-			EntityInventoryContainer inventory = world.getEntity(uniqueUUID);
-			WrapperNBT newData = new WrapperNBT();
-			newData.setData("inventory", inventory.save(new WrapperNBT()));
-			player.getHeldStack().setTagCompound(newData.tag);
-			inventory.remove();
+			world.getEntity(uniqueUUID).remove();
 		}
 	}
 }

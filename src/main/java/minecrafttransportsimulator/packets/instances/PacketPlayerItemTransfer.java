@@ -7,6 +7,7 @@ import minecrafttransportsimulator.items.instances.ItemDecor;
 import minecrafttransportsimulator.items.instances.ItemPartInteractable;
 import minecrafttransportsimulator.mcinterface.IBuilderItemInterface;
 import minecrafttransportsimulator.mcinterface.WrapperInventory;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntityInteract;
@@ -15,24 +16,28 @@ import net.minecraft.item.ItemStack;
 
 /**Packet used to send transfer an item to or from a player inventory to an inventory in a
  * {@link EntityInventoryContainer}.  While containers have their own packets for this, player
- * inventory is handled by MC, and does not follow the same architecture.
+ * inventory is handled by MC, and does not follow the same architecture.  However, it does sync
+ * on changes like ours, so we don't need to send a client packet back for either.
  * 
  * @author don_bruce
  */
 public class PacketPlayerItemTransfer extends APacketEntityInteract<EntityInventoryContainer, WrapperPlayer>{
 	private final int inventorySlot;
 	private final int playerSlot;
+	private final boolean saveToPlayer;
 	
-	public PacketPlayerItemTransfer(EntityInventoryContainer inventory, WrapperPlayer player, int inventorySlot, int playerSlot){
+	public PacketPlayerItemTransfer(EntityInventoryContainer inventory, WrapperPlayer player, int inventorySlot, int playerSlot, boolean saveToPlayer){
 		super(inventory, player);
 		this.inventorySlot = inventorySlot;
 		this.playerSlot = playerSlot;
+		this.saveToPlayer = saveToPlayer;
 	}
 	
 	public PacketPlayerItemTransfer(ByteBuf buf){
 		super(buf);
 		this.inventorySlot = buf.readInt();
 		this.playerSlot = buf.readInt();
+		this.saveToPlayer = buf.readBoolean();
 	}
 	
 	@Override
@@ -40,6 +45,7 @@ public class PacketPlayerItemTransfer extends APacketEntityInteract<EntityInvent
 		super.writeToBuffer(buf);
 		buf.writeInt(inventorySlot);
 		buf.writeInt(playerSlot);
+		buf.writeBoolean(saveToPlayer);
 	}
 	
 	@Override
@@ -63,6 +69,11 @@ public class PacketPlayerItemTransfer extends APacketEntityInteract<EntityInvent
 				}
 			}
 			playerInventory.decrementSlot(playerSlot, inventory.addStack(playerInventory.getStackInSlot(playerSlot), true));
+		}
+		if(saveToPlayer){
+			WrapperNBT newData = new WrapperNBT();
+			newData.setData("inventory", inventory.save(new WrapperNBT()));
+			player.getHeldStack().setTagCompound(newData.tag);
 		}
 		return false;
 	}

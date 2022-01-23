@@ -52,7 +52,7 @@ public class PacketEntityGUIRequest extends APacketEntityInteract<AEntityB_Exist
 	public boolean handle(WrapperWorld world, AEntityB_Existing entity, WrapperPlayer player){
 		switch(guiRequested){
 			case INSTRUMENTS: new GUIInstruments((EntityVehicleF_Physics) entity); break;
-			case INVENTORY_CHEST: new GUIInventoryContainer(((TileEntityChest) entity).inventory, ((TileEntityChest) entity).definition.decor.inventoryTexture); break;
+			case INVENTORY_CHEST: new GUIInventoryContainer(((TileEntityChest) entity).inventory, ((TileEntityChest) entity).definition.decor.inventoryTexture, false); break;
 			case FUEL_PUMP: new GUIFuelPump((TileEntityFuelPump) entity, false); break;
 			case FUEL_PUMP_CONFIG: new GUIFuelPump((TileEntityFuelPump) entity, true); break;
 			case PACK_EXPORTER: new GUIPackExporter((EntityVehicleF_Physics) entity);	break;

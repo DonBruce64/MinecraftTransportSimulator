@@ -84,7 +84,7 @@ public class PacketPartInteractable extends APacketEntityInteract<PartInteractab
 			if(interactable.definition.interactable.interactionType.equals(InteractableComponentType.CRAFTING_BENCH)){
 				new GUIPartBench(interactable.definition.interactable.crafting);
 			}else if(interactable.definition.interactable.interactionType.equals(InteractableComponentType.CRATE)){
-				new GUIInventoryContainer(interactable.inventory, interactable.definition.interactable.inventoryTexture);
+				new GUIInventoryContainer(interactable.inventory, interactable.definition.interactable.inventoryTexture, false);
 			}else if(interactable.definition.interactable.interactionType.equals(InteractableComponentType.FURNACE)){
 				new GUIFurnace(interactable.furnace, interactable.definition.interactable.inventoryTexture);
 			}

@@ -24,13 +24,15 @@ public class GUIInventoryContainer extends AGUIInventory{
 	private final int maxRowIncrements;
 	
 	private final EntityInventoryContainer inventory;
+	private final boolean isPlayerHolding;
 	
 	//Runtime variables.
 	private int rowOffset;
 	
-	public GUIInventoryContainer(EntityInventoryContainer inventory, String texture){
+	public GUIInventoryContainer(EntityInventoryContainer inventory, String texture, boolean isPlayerHolding){
 		super(texture);
 		this.inventory = inventory;
+		this.isPlayerHolding = isPlayerHolding;
 		this.maxRowIncrements = inventory.getSize() > MAX_ITEMS_PER_SCREEN ? (inventory.getSize() - MAX_ITEMS_PER_SCREEN)/9 + 1 : 0;
 	}
 
@@ -69,7 +71,7 @@ public class GUIInventoryContainer extends AGUIInventory{
 			GUIComponentButton itemButton = new GUIComponentButton(guiLeft + 8 + GUIComponentButton.ITEM_BUTTON_SIZE*(i%9), guiTop + 12 + inventoryRowOffset + GUIComponentButton.ITEM_BUTTON_SIZE*(i/9), true){
 				@Override
 				public void onClicked(boolean leftSide){
-					InterfacePacket.sendToServer(new PacketPlayerItemTransfer(inventory, player, interactableSlotButtons.indexOf(this), -1));
+					InterfacePacket.sendToServer(new PacketPlayerItemTransfer(inventory, player, interactableSlotButtons.indexOf(this), -1, isPlayerHolding));
 				}
 			};
 			addComponent(itemButton);
@@ -108,6 +110,6 @@ public class GUIInventoryContainer extends AGUIInventory{
 	
 	@Override
 	protected void handlePlayerItemClick(int slotClicked){
-		InterfacePacket.sendToServer(new PacketPlayerItemTransfer(inventory, player, -1, slotClicked));
+		InterfacePacket.sendToServer(new PacketPlayerItemTransfer(inventory, player, -1, slotClicked, isPlayerHolding));
 	}
 }

@@ -101,7 +101,10 @@ public class BuilderGUI extends GuiScreen{
 	@Override
 	public void onGuiClosed(){
 		//Forward close event as this comes from an ESC key that we don't see.
-		gui.close();
+		//Need to check if GUI is active in case we get multiple events.
+		if(AGUIBase.activeGUIs.contains(gui)){
+			gui.close();
+		}
     }
 	
 	@Override
