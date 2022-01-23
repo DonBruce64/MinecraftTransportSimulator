@@ -19,6 +19,7 @@ import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.rendering.instances.RenderPlayerGun;
+import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ControlSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.item.ItemStack;
@@ -249,6 +250,11 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun>{
 			}
 		}
 	}
+	
+	@Override
+	public boolean shouldRenderBeams(){
+    	return ConfigSystem.configObject.clientRendering.vehicleBeams.value;
+    }
 	
 	@Override
 	protected void updateCollisionBoxes(){
