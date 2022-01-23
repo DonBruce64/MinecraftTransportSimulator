@@ -79,6 +79,7 @@ abstract class AEntityVehicleC_Colliding extends AEntityVehicleB_Rideable{
 	/**
 	 * Checks collisions and returns the collision depth for a box.
 	 * Returns -1 if collision was hard enough to destroy the vehicle.
+	 * Returns -2 if the vehicle hit a block but had to stop because blockBreaking was disabled.
 	 * Otherwise, we return the collision depth in the specified axis.
 	 */
 	protected double getCollisionForAxis(BoundingBox box, boolean xAxis, boolean yAxis, boolean zAxis){
@@ -87,12 +88,12 @@ abstract class AEntityVehicleC_Colliding extends AEntityVehicleB_Rideable{
 		
 		//If we collided, so check to see if we can break some blocks or if we need to explode.
 		//Don't bother with this logic if it's impossible for us to break anything.
-		if(box.updateCollidingBlocks(world, collisionMotion)){
+		if(box.updateMovingCollisions(world, collisionMotion)){
 			float hardnessHitThisBox = 0;
 			for(Point3d blockPosition : box.collidingBlockPositions){
 				float blockHardness = world.getBlockHardness(blockPosition);
-				if(!world.isBlockLiquid(blockPosition) && blockHardness <= velocity*currentMass/250F && blockHardness >= 0){
-					if(ConfigSystem.configObject.general.blockBreakage.value){
+				if(!world.isBlockLiquid(blockPosition)){
+					if(ConfigSystem.configObject.general.blockBreakage.value && blockHardness <= velocity*currentMass/250F && blockHardness >= 0){
 						hardnessHitThisBox += blockHardness;
 						if(!yAxis){
 							//Only add hardness if we hit in XZ movement.  Don't want to blow up from falling fast, just break tons of dirt.
@@ -109,7 +110,11 @@ abstract class AEntityVehicleC_Colliding extends AEntityVehicleB_Rideable{
 						}
 					}else{
 						hardnessHitThisTick = 0;
-						motion.set(0D, 0D, 0D);
+						//Invert XZ motion to make sure we bounce out of the block, and set collision depth to 0.
+						motion.x = motion.x > 0 ? -0.01 : 0.01;
+						motion.y = motion.y > 0 ? -0.01 : 0.01;
+						motion.z = motion.z > 0 ? -0.01 : 0.01;
+						return -2;
 					}
 				}
 			}

@@ -645,40 +645,44 @@ public class WrapperWorld{
 		//If we are in the depth bounds for this collision, set it as the collision depth.
 		box.currentCollisionDepth.set(0D, 0D, 0D);
 		double boxCollisionDepth;
+		double minDelta = 0.0001;
 		for(AxisAlignedBB colBox : mutableCollidingAABBs){
 			if(collisionMotion.x > 0){
 				boxCollisionDepth = mcBox.maxX - colBox.minX;
-				if(!ignoreIfGreater || collisionMotion.x - boxCollisionDepth > 0){
+				if(!ignoreIfGreater || collisionMotion.x - boxCollisionDepth > -minDelta){
 					box.currentCollisionDepth.x = Math.max(box.currentCollisionDepth.x, boxCollisionDepth);
 				}
 			}else if(collisionMotion.x < 0){
 				boxCollisionDepth = colBox.maxX - mcBox.minX;
-				if(!ignoreIfGreater || collisionMotion.x + boxCollisionDepth < 0){
+				if(!ignoreIfGreater || collisionMotion.x + boxCollisionDepth < minDelta){
 					box.currentCollisionDepth.x = Math.max(box.currentCollisionDepth.x, boxCollisionDepth);
 				}
 			}
 			if(collisionMotion.y > 0){
 				boxCollisionDepth = mcBox.maxY - colBox.minY;
-				if(!ignoreIfGreater || collisionMotion.y - boxCollisionDepth > 0){
+				if(!ignoreIfGreater || collisionMotion.y - boxCollisionDepth > -minDelta){
 					box.currentCollisionDepth.y = Math.max(box.currentCollisionDepth.y, boxCollisionDepth);
 				}
 			}else if(collisionMotion.y < 0){
 				boxCollisionDepth = colBox.maxY - mcBox.minY;
-				if(!ignoreIfGreater || collisionMotion.y + boxCollisionDepth < 0){
+				if(!ignoreIfGreater || collisionMotion.y + boxCollisionDepth < minDelta){
 					box.currentCollisionDepth.y = Math.max(box.currentCollisionDepth.y, boxCollisionDepth);
 				}
 			}
 			if(collisionMotion.z > 0){
 				boxCollisionDepth = mcBox.maxZ - colBox.minZ;
-				if(!ignoreIfGreater || collisionMotion.z - boxCollisionDepth > 0){
+				if(!ignoreIfGreater || collisionMotion.z - boxCollisionDepth > -minDelta){
 					box.currentCollisionDepth.z = Math.max(box.currentCollisionDepth.z, boxCollisionDepth);
 				}
 			}else if(collisionMotion.z < 0){
 				boxCollisionDepth = colBox.maxZ - mcBox.minZ;
-				if(!ignoreIfGreater || collisionMotion.z + boxCollisionDepth < 0){
+				if(!ignoreIfGreater || collisionMotion.z + boxCollisionDepth < minDelta){
 					box.currentCollisionDepth.z = Math.max(box.currentCollisionDepth.z, boxCollisionDepth);
 				}
 			}
+		}
+		if(box.currentCollisionDepth.isZero()){
+			box.collidingBlockPositions.clear();
 		}
 	}
 	

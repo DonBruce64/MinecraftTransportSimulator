@@ -420,16 +420,6 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			}
 		}
 		
-		//Get any contributions from the colliding collision bits.
-		for(BoundingBox box : allBlockCollisionBoxes){
-			if(!box.collidingBlockPositions.isEmpty()){
-				if(!world.isAir(box.globalCenter)){
-					float frictionLoss = 0.6F - world.getBlockSlipperiness(box.globalCenter) + world.getRainStrength(box.globalCenter)*0.1F;
-					brakingFactor += Math.max(2.0 - frictionLoss, 0);
-				}
-			}
-		}
-		
 		//Get any contributions from liquid boxes that aren't in liquids.
 		brakingFactor += 2.0F*groundDeviceCollective.getNumberCollidedLiquidBoxes();
 		
@@ -692,7 +682,6 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 				}else if(correctCollidingMovement()){
 					return;
 				}
-				
 			}else if(towedByConnection == null || !towedByConnection.hitchConnection.mounted){
 				world.beginProfiling("GroundHandlingPitch", false);
 				groundRotationBoost = groundDeviceCollective.performPitchCorrection(groundCollisionBoost);
@@ -839,7 +828,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			tempBoxRotation.setTo(rotation);
 			boolean clearedCache = false;
 			for(BoundingBox box : allBlockCollisionBoxes){
-				tempBoxPosition.setTo(box.globalCenter).subtract(position).rotateFine(tempBoxRotation).add(position).add(motion.x*SPEED_FACTOR, motion.y*SPEED_FACTOR, motion.z*SPEED_FACTOR);
+				tempBoxPosition.setTo(box.globalCenter).subtract(position).rotateFine(tempBoxRotation).add(position).addScaled(motion, SPEED_FACTOR);
 				if(!box.collidesWithLiquids && world.checkForCollisions(box, !clearedCache)){
 					return true;
 				}
@@ -866,6 +855,8 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 				double collisionDepth = getCollisionForAxis(box, true, false, false);
 				if(collisionDepth == -1){
 					return true;
+				}else if(collisionDepth == -2){
+					return false;
 				}else{
 					if(motion.x > 0){
 						motion.x = Math.max(motion.x - collisionDepth/SPEED_FACTOR, 0);
@@ -882,6 +873,8 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 				double collisionDepth = getCollisionForAxis(box, false, false, true);
 				if(collisionDepth == -1){
 					return true;
+				}else if(collisionDepth == -2){
+					return false;
 				}else{
 					if(motion.z > 0){
 						motion.z = Math.max(motion.z - collisionDepth/SPEED_FACTOR, 0);
@@ -898,6 +891,8 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 				double collisionDepth = getCollisionForAxis(box, false, true, false);
 				if(collisionDepth == -1){
 					return true;
+				}else if(collisionDepth == -2){
+					return false;
 				}else if(collisionDepth != 0){
 					if(motion.y > 0){
 						motion.y = Math.max(motion.y - collisionDepth/SPEED_FACTOR, 0);
