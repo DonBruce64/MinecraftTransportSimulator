@@ -210,8 +210,14 @@ public class InterfaceEventsModelLoader{
 					if(Minecraft.getMinecraft().player.equals(builder.playerFollowing) && builder.shouldRenderEntity(partialTicks)){
 						ConcurrentLinkedQueue<AEntityC_Renderable> allEntities = world.renderableEntities;
 						if(allEntities != null){
+							boolean blendingEnabled = MinecraftForgeClient.getRenderPass() == 1;
+							
 					        //Use smooth shading for model rendering.
 							GL11.glShadeModel(GL11.GL_SMOOTH);
+							//Disable alpha testing on blended pass as it discards transparent fragments.
+							if(blendingEnabled){
+								GlStateManager.disableAlpha();
+							}
 							//Enable normal re-scaling for model rendering.
 							//This prevents bad lighting.
 							GlStateManager.enableRescaleNormal();
@@ -219,12 +225,18 @@ public class InterfaceEventsModelLoader{
 							//Start master profiling section.
 							for(AEntityC_Renderable entity : allEntities){
 								world.beginProfiling("MTSRendering", true);
-								entity.getRenderer().render(entity, MinecraftForgeClient.getRenderPass() == 1, partialTicks);
+								entity.getRenderer().render(entity, blendingEnabled, partialTicks);
 								world.endProfiling();
 							}
 							
-							//Set shade model back to flat for other rendering.
+							
+							
+							//Reset states.
 							GL11.glShadeModel(GL11.GL_FLAT);
+							if(blendingEnabled){
+								GlStateManager.enableAlpha();
+							}
+							GlStateManager.disableRescaleNormal();
 						}
 					}
 				}

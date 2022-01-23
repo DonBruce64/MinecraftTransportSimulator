@@ -336,10 +336,8 @@ public class InterfaceRender{
 	 */
 	private static void setBlendBright(boolean enabled){
 		if(enabled){
-			GlStateManager.disableAlpha();
 			GlStateManager.blendFunc(GL11.GL_DST_COLOR, GL11.GL_SRC_ALPHA);
 		}else{
-			GlStateManager.enableAlpha();
 			GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		}
 	}
