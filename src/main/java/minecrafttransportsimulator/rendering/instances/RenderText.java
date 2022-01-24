@@ -66,13 +66,10 @@ public class RenderText{
 			//Get the actual color we will need to render with based on JSON.
 			ColorRGB color = entity.getTextColor(definition.inheritedColorIndex, definition.color);
 			
-			//Reduce scale by 1/16 if we're not using pixel coords.  Entity JSON assumes 1 unit is 1 block, not 1px.
-			float scale = pixelCoords ? definition.scale : definition.scale/16F;
-			
 			//Render the text.
 			transformHelper.set(transform);
 			transformHelper.translate(definition.pos);
-			getFontData(definition.fontName).renderText(text, transformHelper, definition.rot, TextAlignment.values()[definition.renderPosition], scale, definition.autoScale, definition.wrapWidth, pixelCoords, color, definition.lightsUp && entity.renderTextLit());
+			getFontData(definition.fontName).renderText(text, transformHelper, definition.rot, TextAlignment.values()[definition.renderPosition], definition.scale, definition.autoScale, definition.wrapWidth, pixelCoords, color, definition.lightsUp && entity.renderTextLit());
 		}
 	}
 	
@@ -154,7 +151,7 @@ public class RenderText{
 		};
 		private static final FontRenderState[] STATES = FontRenderState.generateDefaults();
 		private static final int MAX_VERTCIES_PER_RENDER = 1000*6;
-		private static final Point3dPlus defaultAdjustmentOffset = new Point3dPlus();
+		private static final Point3dPlus adjustmentOffset = new Point3dPlus();
 		
 		private final boolean isDefault;
 		/*Texture locations for the font files.**/
@@ -298,18 +295,29 @@ public class RenderText{
 				text = String.valueOf(textArray);
 			}
 			
-			//If we are the default font, multiply scale by (7/8)/(10/16) = 1.4.
-			//This is because normally the font height is 7px of the 8 total.
-			//But unicode uses 10px of the 16.  This makes it slightly smaller if we don't do this.
-			//Because we did this, and fonts are centered top-left, we need to offset it 0.4 as well.
-			//If we don't, then the font will be too low for the line it is on.  Unicode fonts have 2px on the
-			//bottom whereas ASCII has 1, so they are bottom-aligned in the texture, but top-aligned in the render.
+			//Standard ASCII font is 7px tall out of 8.
+			//Unicode font is 10pz tall out of 16, or 5 out of 8.
+			//To compensate, we scale the font by (7/8)/(5/8) = 1.4.
+			//However, this will move the font down, as it's top-left centered.
+			//To compensate, we move the font 2px up, which would get the unicode
+			//to the same top-char position as ASCII without scale.  We do this
+			//movement post-scaling, as if we did it pre-scaling it wouldn't work
+			//since scaled fonts have different top-alignments.
+			//We only do this on the default font, however, which is replacing ASCII.
+			//This ensures the same font size as ASCII was.
 			if(isDefault){
-				defaultAdjustmentOffset.set(0, scale*DEFAULT_PIXELS_PER_CHAR*0.4, 0);
+				adjustmentOffset.set(0, 2, 0);
 				scale *= 1.4;
 			}else{
-				defaultAdjustmentOffset.set(0, 0, 0);
+				adjustmentOffset.set(0, 0, 0);
 			}
+			
+			//Reduce scale by 16 if we're not using pixel coords.
+			//Entity JSON assumes 1 unit is 1 block (16px), not 1px.
+			if(!pixelCoords){
+				scale /= 16;
+			}
+			
 			
 			//Get the text width.
 			float stringWidth = getStringWidth(text);
@@ -317,22 +325,21 @@ public class RenderText{
 			
 			//Check for auto-scaling.
 			if(autoScale && wrapWidth > 0){
-				//Get the string width.  This is in text-pixels.
-				//We scale this to the actual pixel-width by multiplying it by the incoming scale.
-				//If the string width in pixels is greater than the wrap width, adjust scale.
-				//We also need to cancel wrapping if our scaled value is within bounds.
-				float adjustedStringWidthFactor = scale*stringWidth;
+				//Need to get the actual string width we would render at.
+				//This takes scale into account, as string upscaling would
+				//cause the width to go up.
+				float scaledStringWidth = scale*stringWidth;
 				if(!pixelCoords){
-					adjustedStringWidthFactor *= 16;
+					//Need to increase width by x16 scale as blocks scale to make 1 unit 1 block, not 1px.
+					scaledStringWidth *= 16;
 				}
-				if(adjustedStringWidthFactor > wrapWidth){
-					double scaleFactor = wrapWidth/adjustedStringWidthFactor;
-					if(pixelCoords){
-						defaultAdjustmentOffset.add(0, -DEFAULT_PIXELS_PER_CHAR*(scale*scaleFactor - scale)/2D, 0);
-					}else{
-						defaultAdjustmentOffset.add(0, DEFAULT_PIXELS_PER_CHAR*(scale*scaleFactor - scale)/2D, 0);
-					}
+				if(scaledStringWidth > wrapWidth){
+					double scaleFactor = wrapWidth/scaledStringWidth;
 					scale *= scaleFactor;
+					//Adjust text down based on how much we changed scale.
+					//Adjust based on 1/2 the height of the text, times how much we adjusted scale.
+					//So 1/2 reduction in scale will move the text 1/4 down.
+					adjustmentOffset.add(0, DEFAULT_PIXELS_PER_CHAR/2D*(scaleFactor - 1), 0);
 				}
 				//Don't use wrap width if we already adjusted scale for it.
 				wrapWidth = 0;
@@ -456,7 +463,8 @@ public class RenderText{
 					for(int j=0; j<charSteps; ++j){
 						//Set vertex properties.
 						switch(j){
-							case(0):{//Bottom-right
+							case(0)://Bottom-right
+							case(3):{
 								charVertex[0] = alignmentOffset + currentOffset + charWidth;
 								charVertex[1] = currentLineOffset - DEFAULT_PIXELS_PER_CHAR;
 								charUV[0] = offsetsMaxU[textChar];
@@ -473,23 +481,7 @@ public class RenderText{
 								charUV[1] = offsetsMaxV[textChar];
 								break;
 							}
-							case(2):{//Top-left
-								charVertex[0] = alignmentOffset + currentOffset;
-								if(currentState.italic){
-									charVertex[0] += 1;
-								}
-								charVertex[1] = currentLineOffset;
-								charUV[0] = offsetsMinU[textChar];
-								charUV[1] = offsetsMaxV[textChar];
-								break;
-							}
-							case(3):{//Bottom-right
-								charVertex[0] = alignmentOffset + currentOffset + charWidth;
-								charVertex[1] = currentLineOffset - DEFAULT_PIXELS_PER_CHAR;
-								charUV[0] = offsetsMaxU[textChar];
-								charUV[1] = offsetsMinV[textChar];
-								break;
-							}
+							case(2):
 							case(4):{//Top-left
 								charVertex[0] = alignmentOffset + currentOffset;
 								if(currentState.italic){
@@ -540,7 +532,8 @@ public class RenderText{
 									//Set position to master and set custom char.
 									supplementalVertex[1] += CHAR_SPACING;
 									switch(j%6){
-										case(0):{//Bottom-right
+										case(0):
+										case(3):{//Bottom-right
 											supplementalVertex[0] += CHAR_SPACING;
 											supplementalUV[0] = offsetsMaxU[customChar];
 											supplementalUV[1] = offsetsMinV[customChar];
@@ -552,18 +545,7 @@ public class RenderText{
 											supplementalUV[1] = offsetsMaxV[customChar];
 											break;
 										}
-										case(2):{//Top-left
-											supplementalVertex[0] -= CHAR_SPACING;
-											supplementalUV[0] = offsetsMinU[customChar];
-											supplementalUV[1] = offsetsMaxV[customChar];
-											break;
-										}
-										case(3):{//Bottom-right
-											supplementalVertex[0] += CHAR_SPACING;
-											supplementalUV[0] = offsetsMaxU[customChar];
-											supplementalUV[1] = offsetsMinV[customChar];
-											break;
-										}
+										case(2):
 										case(4):{//Top-left
 											supplementalVertex[0] -= CHAR_SPACING;
 											supplementalUV[0] = offsetsMinU[customChar];
@@ -606,11 +588,11 @@ public class RenderText{
 			for(RenderableObject object : activeRenderObjects){
 				object.disableLighting = renderLit;
 				object.transform.set(transform);
-				object.transform.scale(scale);
 				if(rotation != null){
 					object.transform.matrix(rotation);
 				}
-				object.transform.translate(defaultAdjustmentOffset);
+				object.transform.scale(scale);
+				object.transform.translate(adjustmentOffset);
 				object.vertices.flip();
 				object.render();
 			}

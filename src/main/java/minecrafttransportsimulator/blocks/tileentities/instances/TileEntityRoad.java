@@ -65,7 +65,6 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	
 	public TileEntityRoad(WrapperWorld world, Point3dPlus position, WrapperPlayer placingPlayer, WrapperNBT data){
 		super(world, position, placingPlayer, data);
-		System.out.println(this.position);
 		
 		//Set the bounding box.
 		this.boundingBox.heightRadius = definition.road.collisionHeight/16D/2D;
