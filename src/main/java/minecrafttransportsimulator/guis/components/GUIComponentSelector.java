@@ -21,6 +21,7 @@ public abstract class GUIComponentSelector extends GUIComponentButton{
 	
 	public final ColorRGB regularColor;
 	public final ColorRGB litColor;
+	private RenderableObject renderable4;
 	
 	public int selectorState = 0;
 	
@@ -35,7 +36,7 @@ public abstract class GUIComponentSelector extends GUIComponentButton{
 	@Override
 	public void render(AGUIBase gui, int mouseX, int mouseY, boolean renderBright, boolean renderLitTexture, boolean blendingEnabled, float partialTicks){
 		if(renderable == null){
-			for(int i=0; i<3; ++i){
+			for(int i=0; i<4; ++i){
 				int textureUStart = textureYOffset + i*textureSectionHeight;
     			FloatBuffer buffer = FloatBuffer.allocate(8*6);
     			gui.addRenderToBuffer(buffer, 0, 0, width, height, textureXOffset, textureUStart, textureXOffset + textureSectionWidth, textureUStart + textureSectionHeight, gui.getTextureWidth(), gui.getTextureHeight());
@@ -45,8 +46,10 @@ public abstract class GUIComponentSelector extends GUIComponentButton{
     				renderable = new RenderableObject("gui_selector_0", gui.getTexture(), ColorRGB.WHITE, buffer, false);
     			}else if(i==1){
     				renderable2 = new RenderableObject("gui_selector_1", gui.getTexture(), ColorRGB.WHITE, buffer, false);
-    			}else{
+    			}else if(i==3){
     				renderable3 = new RenderableObject("gui_selector_2", gui.getTexture(), ColorRGB.WHITE, buffer, false);
+    			}else{
+    				renderable4 = new RenderableObject("gui_selector_3", gui.getTexture(), ColorRGB.WHITE, buffer, false);
     			}
 			}
 		}
@@ -60,10 +63,14 @@ public abstract class GUIComponentSelector extends GUIComponentButton{
 			renderable2.disableLighting = renderBright || ignoreGUILightingState;
 			renderable2.texture = renderLitTexture ? gui.getTexture().replace(".png", "_lit.png") : gui.getTexture();
 			renderable2.render();
-		}else{
+		}else if(selectorState == 2){
 			renderable3.disableLighting = renderBright || ignoreGUILightingState;
 			renderable3.texture = renderLitTexture ? gui.getTexture().replace(".png", "_lit.png") : gui.getTexture();
 			renderable3.render();
+		}else{
+			renderable4.disableLighting = renderBright || ignoreGUILightingState;
+			renderable4.texture = renderLitTexture ? gui.getTexture().replace(".png", "_lit.png") : gui.getTexture();
+			renderable4.render();
 		}
 		GL11.glTranslated(-position.x, -position.y, -position.z);
     }
