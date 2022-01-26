@@ -18,12 +18,16 @@ public class JSONRoadComponent extends AJSONMultiModelProvider{
     	public RoadComponent type;
     	
     	@JSONRequired(dependentField="type", dependentValues={"CORE_DYNAMIC"})
-    	@JSONDescription("The offsets for the lanes for this road if this is a dynamic core component.  0 starts at X=0.")
-    	public float[] laneOffsets;
+    	@JSONDescription("The offset from the center of the road to the back-right corner when placed.  This will always be negative because the back-right corner is in the -X and -Z direction.")
+    	public Point3dPlus cornerOffset;
     	
     	@JSONRequired(dependentField="type", dependentValues={"CORE_DYNAMIC"})
-    	@JSONDescription("The offsets for the opposite side of the road if this is a dynamic core component.  Essentially the width of the road.")
-    	public float borderOffset;
+    	@JSONDescription("The width of the road, if this is a dynamic component.")
+    	public float roadWidth;
+    	
+    	@JSONRequired(dependentField="type", dependentValues={"CORE_DYNAMIC"})
+    	@JSONDescription("The offsets for the lanes for this road if this is a dynamic core component.  0 starts at X=0.")
+    	public float[] laneOffsets;
     	
     	@JSONRequired(dependentField="type", dependentValues={"CORE_DYNAMIC"})
     	@JSONDescription("How long each segment in this road is.  This allows for variable-length repeating model segments.")

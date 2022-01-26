@@ -33,9 +33,6 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Renderable>{
 			
 			//Get interpolated orientation.
 			entity.getInterpolatedOrientation(interpolatedOrientationHolder, partialTicks);
-			
-			//Adjust position and orientation, if needed.
-			adjustPositionOrientation(entity, entityPositionDelta, interpolatedOrientationHolder, partialTicks);
 	       
 	        //Set up lighting.
 	        InterfaceRender.setLightingToPosition(entity.position);
@@ -79,13 +76,6 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Renderable>{
 		//Don't render on the first tick, as we might have not created some variables yet.
 		return entity.ticksExisted == 0;
 	}
-	
-	/**
-	 *  Called to do supplemental modifications to the position/orientation of the entity prior to rendering.
-	 *  The passed-in position is where the code thinks the entity is: where you want to render
-	 *  it may not be at this position/rotation.  Hence the ability to modify these parameters.
-	 */
-	public void adjustPositionOrientation(RenderedEntity entity, Point3dPlus entityPositionDelta, Matrix4dPlus interpolatedOrientation, float partialTicks){}
 	
 	/**
 	 *  Called to render the main model.  At this point the matrix state will be aligned

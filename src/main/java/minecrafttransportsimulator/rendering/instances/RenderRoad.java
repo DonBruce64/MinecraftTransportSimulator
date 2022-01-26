@@ -40,13 +40,6 @@ public class RenderRoad extends ARenderEntityDefinable<TileEntityRoad>{
 							int totalVertices = 0;
 							for(RenderableObject object : parsedModel){
 								totalVertices += object.vertices.capacity();
-								for(int i=0; i<object.vertices.capacity(); i+=8){
-									position.set(object.vertices.get(i+5), object.vertices.get(i+6), object.vertices.get(i+7));
-									road.orientation.transform(position);
-									object.vertices.put(i+5, (float) position.x);
-									object.vertices.put(i+6, (float) position.y);
-									object.vertices.put(i+7, (float) position.z);
-								}
 							}
 							
 							//Cache the model now that we know how big it is.
@@ -109,9 +102,9 @@ public class RenderRoad extends ARenderEntityDefinable<TileEntityRoad>{
 									//Check for this, and if we have done so, skip this segment.
 									//If we detect this in the last 3 segments, skip right to the end.
 									//This prevents a missing end segment due to collision.
-									testPoint1.set(road.definition.road.borderOffset, 0, 0);
+									testPoint1.set(road.definition.road.roadWidth + road.definition.road.cornerOffset.x, 0, 0);
 									testPoint1.rotateFine(priorRotation).add(priorPosition);
-									testPoint2.set(road.definition.road.borderOffset, 0, 0);
+									testPoint2.set(road.definition.road.roadWidth + road.definition.road.cornerOffset.x, 0, 0);
 									testPoint2.rotateFine(rotation).add(position);
 									if(currentIndex != road.dynamicCurve.pathLength && ((position.x - priorPosition.x)*(testPoint2.x - testPoint1.x) < 0 || (position.z - priorPosition.z)*(testPoint2.z - testPoint1.z) < 0)){
 										if(currentIndex + 3*indexDelta > road.dynamicCurve.pathLength){
@@ -140,7 +133,7 @@ public class RenderRoad extends ARenderEntityDefinable<TileEntityRoad>{
 										
 										segmentVector.set(vertexOffsetCurrentLine);
 										segmentVector.subtract(vertexOffsetPriorLine);
-										segmentVector.multiply(Math.abs(z)/road.definition.road.segmentLength);
+										segmentVector.multiply(z/road.definition.road.segmentLength);
 										
 										renderedVertex.set(vertexOffsetPriorLine);
 										renderedVertex.add(segmentVector);
@@ -242,19 +235,41 @@ public class RenderRoad extends ARenderEntityDefinable<TileEntityRoad>{
 		RenderableObject curveObject;
 		if(road.dynamicCurve != null){
 			//Render actual curve.
-			curveObject = new RenderableObject(ColorRGB.GREEN, (int) (road.dynamicCurve.pathLength*10));
+			//Don't do this if the lane offset is 0, as that would interfere with the main curve.
+			boolean zeroOffsetFound = false;
+			for(float offset : road.definition.road.laneOffsets){
+				if(offset == 0.0){
+					zeroOffsetFound = true;
+					break;
+				}
+			}
+			if(!zeroOffsetFound){
+				curveObject = new RenderableObject(ColorRGB.GREEN, (int) (road.dynamicCurve.pathLength*10));
+				for(float f=0; curveObject.vertices.hasRemaining(); f+=0.1){
+					road.dynamicCurve.setPointToPositionAt(point1, f);
+					curveObject.addLine((float) point1.x, (float) point1.y, (float) point1.z, (float) point1.x, (float) point1.y + 1.0F, (float) point1.z);
+				}
+				curveObject.vertices.flip();
+				road.devRenderables.add(curveObject);
+			}
+			
+			//Render the border bounds.
+			curveObject = new RenderableObject(ColorRGB.CYAN, (int) (road.dynamicCurve.pathLength*10));
 			for(float f=0; curveObject.vertices.hasRemaining(); f+=0.1){
-				road.dynamicCurve.setPointToPositionAt(point1, f);
+				road.dynamicCurve.setPointToRotationAt(point2, f);
+				point1.set(road.definition.road.cornerOffset);
+				point1.rotateFine(point2);
+				road.dynamicCurve.offsetPointByPositionAt(point1, f);
 				curveObject.addLine((float) point1.x, (float) point1.y, (float) point1.z, (float) point1.x, (float) point1.y + 1.0F, (float) point1.z);
 			}
 			curveObject.vertices.flip();
 			road.devRenderables.add(curveObject);
 			
-			//Render the outer border bounds.
 			curveObject = new RenderableObject(ColorRGB.CYAN, (int) (road.dynamicCurve.pathLength*10));
 			for(float f=0; curveObject.vertices.hasRemaining(); f+=0.1){
 				road.dynamicCurve.setPointToRotationAt(point2, f);
-				point1.set(road.definition.road.borderOffset, 0, 0);
+				point1.set(road.definition.road.cornerOffset);
+				point1.add(road.definition.road.roadWidth, 0, 0);
 				point1.rotateFine(point2);
 				road.dynamicCurve.offsetPointByPositionAt(point1, f);
 				curveObject.addLine((float) point1.x, (float) point1.y, (float) point1.z, (float) point1.x, (float) point1.y + 1.0F, (float) point1.z);
@@ -344,12 +359,5 @@ public class RenderRoad extends ARenderEntityDefinable<TileEntityRoad>{
 				}
 			}
 		}
-	}
-	
-	@Override
-	public void adjustPositionOrientation(TileEntityRoad road, Point3dPlus entityPositionDelta, Matrix4dPlus interpolatedOrientation, float partialTicks){
-		//Undo orientation.  We don't want to rotate for this render call as all our curve data is absolute reference.
-		//We also don't call super, as that would add a 1/2 offset to us and that masks the true position of this road's curve points.
-		interpolatedOrientation.resetTransforms();
 	}
 }

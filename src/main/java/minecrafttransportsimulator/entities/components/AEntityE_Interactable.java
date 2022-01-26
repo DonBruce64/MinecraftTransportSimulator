@@ -410,6 +410,13 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 				setVariable(TRAILER_CONNECTION_REQUEST_VARIABLE, 0);
 			}
 			
+			//Update towing variables.
+			if(!towingConnections.isEmpty()){
+				for(TrailerConnection connection : towingConnections){
+					connection.update();
+				}
+			}
+			
 			world.endProfiling();
 			return true;
 		}else{

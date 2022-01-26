@@ -37,7 +37,6 @@ import minecrafttransportsimulator.jsondefs.JSONItem;
 import minecrafttransportsimulator.jsondefs.JSONPack;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
-import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
 import minecrafttransportsimulator.jsondefs.JSONSkin;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
@@ -524,7 +523,7 @@ public final class PackParserSystem{
 				}
 				case DECOR : item = new ItemDecor((JSONDecor) mainDefinition, subDefinition.subName, sourcePackID); break;
 				case POLE : item = new ItemPoleComponent((JSONPoleComponent) mainDefinition, subDefinition.subName, sourcePackID); break;
-				case ROAD : item = new ItemRoadComponent((JSONRoadComponent) mainDefinition, subDefinition.subName, sourcePackID); break;
+				case ROAD : break;//TODO re-enable roads later item = new ItemRoadComponent((JSONRoadComponent) mainDefinition, subDefinition.subName, sourcePackID); break;
 				case BULLET : item = new ItemBullet((JSONBullet) mainDefinition, subDefinition.subName, sourcePackID); break;
 				default : {
 					throw new IllegalArgumentException("A classification for a normal item is trying to register as a multi-model provider.  This is an error in the core mod.  Contact the mod author.  Asset being loaded is: " + mainDefinition.packID + ":" + mainDefinition.systemName);

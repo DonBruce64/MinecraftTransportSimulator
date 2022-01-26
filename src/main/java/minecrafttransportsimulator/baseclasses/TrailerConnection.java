@@ -29,6 +29,10 @@ public class TrailerConnection{
 	public JSONConnection hitchConnection;
 	public JSONConnectionGroup hookupConnectionGroup;
 	public JSONConnection hookupConnection;
+	public Point3dPlus hitchPriorPosition = new Point3dPlus();
+	public Point3dPlus hitchCurrentPosition = new Point3dPlus();
+	public Point3dPlus hookupPriorPosition = new Point3dPlus();
+	public Point3dPlus hookupCurrentPosition = new Point3dPlus();
 	
 	public TrailerConnection(AEntityE_Interactable<?> hitchEntity, int hitchGroupIndex, int hitchConnectionIndex, AEntityE_Interactable<?> hookupEntity, int hookupGroupIndex, int hookupConnectionIndex){
 		this.hitchEntityUUID = hitchEntity.uniqueUUID;
@@ -70,26 +74,23 @@ public class TrailerConnection{
 		}
 		return hitchConnection != null && hookupConnection != null;
 	}
-	
-	//FIXME make this update once per tick at the start of the cycle, don't create points all the time.
-	public Point3dPlus getHitchCurrentPosition(){
-		return null;
-		//return hitchEntity.orientation.rotatePoint(hitchConnection.pos.copy()).add(hitchEntity.position);
-	}
-	
-	public Point3dPlus getHitchPrevPosition(){
-		return null;
-		//return hitchEntity.prevOrientation.rotatePoint(hitchConnection.pos.copy()).add(hitchEntity.prevPosition);
-	}
-	
-	public Point3dPlus getHookupCurrentPosition(){
-		return null;
-		//return hookupEntity.orientation.rotatePoint(hookupConnection.pos.copy()).add(hookupEntity.position);
-	}
-	
-	public Point3dPlus getHookupPrevPosition(){
-		return null;
-		//return hookupEntity.prevOrientation.rotatePoint(hookupConnection.pos.copy()).add(hookupEntity.prevPosition);
+
+	public void update(){
+		hitchPriorPosition.set(hitchConnection.pos);
+		hitchEntity.prevOrientation.transform(hitchPriorPosition);
+		hitchPriorPosition.add(hitchEntity.prevPosition);
+		
+		hitchCurrentPosition.set(hitchConnection.pos);
+		hitchEntity.orientation.transform(hitchCurrentPosition);
+		hitchCurrentPosition.add(hitchEntity.position);
+		
+		hookupPriorPosition.set(hookupConnection.pos);
+		hookupEntity.prevOrientation.transform(hookupPriorPosition);
+		hookupPriorPosition.add(hookupEntity.prevPosition);
+		
+		hookupCurrentPosition.set(hookupConnection.pos);
+		hookupEntity.orientation.transform(hookupCurrentPosition);
+		hookupCurrentPosition.add(hookupEntity.position);
 	}
 	
 	public WrapperNBT getData(){

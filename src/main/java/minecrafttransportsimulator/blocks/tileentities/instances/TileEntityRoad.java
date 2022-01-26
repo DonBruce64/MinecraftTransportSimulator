@@ -104,9 +104,13 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	
 	@Override
 	public double getPlacementRotation(WrapperPlayer player){
-		int clampAngle = getRotationIncrement();
-		//Normally blocks are placed facing us.  For roads though, we want us to have the angles the player is facing.
-		return Math.round((player.getYaw())/clampAngle)*clampAngle%360;
+		if(!definition.road.type.equals(RoadComponent.CORE_DYNAMIC)){
+			int clampAngle = getRotationIncrement();
+			//Normally blocks are placed facing us.  For roads though, we want us to have the angles the player is facing.
+			return Math.round((player.getYaw())/clampAngle)*clampAngle%360;
+		}else{
+			return 0;
+		}
 	}
 	
 	/**
@@ -235,14 +239,15 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 			//If we find any colliding points, note them.
 			Point3dPlus testOffset = new Point3dPlus();
 			Point3dPlus testRotation = new Point3dPlus();
-			float segmentDelta = (float) (definition.road.borderOffset/(Math.floor(definition.road.borderOffset) + 1));
+			float segmentDelta = (float) (definition.road.roadWidth/(Math.floor(definition.road.roadWidth) + 1));
 			for(float f=0; f<dynamicCurve.pathLength; f+=0.1){
-				for(float offset=0; offset <= definition.road.borderOffset; offset += segmentDelta){
+				for(float offset=0; offset <= definition.road.roadWidth; offset += segmentDelta){
 					dynamicCurve.setPointToRotationAt(testRotation, f);
 					//We only want yaw for block placement.
 					testRotation.x = 0;
 					testRotation.z = 0;
 					testOffset.set(offset, 0, 0);
+					testOffset.add(definition.road.cornerOffset);
 					testOffset.rotateFine(testRotation).add(0, definition.road.collisionHeight/16F, 0);
 					dynamicCurve.offsetPointByPositionAt(testOffset, f);
 					Point3dPlus testPoint = new Point3dPlus((int) testOffset.x, (int) Math.floor(testOffset.y), (int) testOffset.z);

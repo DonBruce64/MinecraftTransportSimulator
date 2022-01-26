@@ -35,9 +35,18 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONMultiModelProv
 		this.position.add(0.5, 0, 0.5);
 		boundingBox.globalCenter.set(this.position);
 		this.prevPosition.set(this.position);
+		
+		//Set angles to placement rotation.
+		if(placingPlayer != null){
+			angles.y = getPlacementRotation(placingPlayer);
+			prevAngles.set(angles);
+		}
 	}
 	
-	@Override
+	/**
+	 *  Returns the rotation, in the Y-direction, that should be applied to newly-placed instances of this entity.
+	 *  The player is passed-in as it is expected the rotation will depend on the player's rotation.
+	 */
 	public double getPlacementRotation(WrapperPlayer player){
 		int clampAngle = getRotationIncrement();
 		return Math.round((player.getYaw()+180)/clampAngle)*clampAngle%360;

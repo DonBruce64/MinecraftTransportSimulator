@@ -61,9 +61,6 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 		this.angles = data.getPoint3d("angles");
 		this.prevAngles = angles.copy();
 		this.rotation = data.getPoint3d("rotation");
-		if(placingPlayer != null){
-			angles.y = getPlacementRotation(placingPlayer);
-		}
 		this.orientation = new Matrix4dPlus();
 		orientation.setToAngles(angles);
 		this.prevOrientation = new Matrix4dPlus(orientation);
@@ -187,14 +184,6 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	 */
 	public boolean changesPosition(){
 		return true;
-	}
-	
-	/**
-	 *  Returns the rotation, in the Y-direction, that should be applied to newly-placed instances of this entity.
-	 *  The player is passed-in as it is expected the rotation will depend on the player's rotation.
-	 */
-	public double getPlacementRotation(WrapperPlayer player){
-		return 0;
 	}
 	
 	/**

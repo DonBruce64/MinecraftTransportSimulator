@@ -37,24 +37,28 @@ public class RoadClickData{
 				//If this is for the end of a curve, just use the point as-is as the end point will be this curve's start point.
 				//Rotation here needs to be the opposite of the start rotation of the clicked curve, as our curve is going the opposite direction.
 				genRotation = roadClicked.dynamicCurve.startAngle + 180;
+				genPosition = new Point3dPlus(roadClicked.definition.road.cornerOffset);
 				if(curveStart){
-					genPosition = new Point3dPlus(-roadClicked.definition.road.borderOffset, 0, 0).rotateY(genRotation).add(roadClicked.position);
+					genPosition.add(roadClicked.definition.road.roadWidth, 0, 0);
+					genPosition.rotateY(roadClicked.dynamicCurve.startAngle);
 				}else{
-					genPosition = new Point3dPlus(roadClicked.position);
+					genPosition.rotateY(roadClicked.dynamicCurve.startAngle);
 				}
-				genPosition.add(roadClicked.dynamicCurve.startPos);
+				genPosition.add(roadClicked.position);
 			}else{
 				//Clicked end of the road curve segment.
 				//If this is for the start of the curve, just use the point as-is as the end point will be this curve's start point.
 				//If this is for the end of a curve, we need to offset the position in the opposite direction to account for the different curve paths.
 				//Rotation here needs to be the opposite of the end rotation of the clicked curve, as our curve is going the opposite direction.
 				genRotation = roadClicked.dynamicCurve.endAngle + 180;
+				genPosition = new Point3dPlus(roadClicked.definition.road.cornerOffset);
 				if(curveStart){
-					genPosition = new Point3dPlus(roadClicked.position);
+					genPosition.rotateY(roadClicked.dynamicCurve.startAngle);
 				}else{
-					genPosition = new Point3dPlus(roadClicked.definition.road.borderOffset, 0, 0).rotateY(genRotation).add(roadClicked.position);
+					genPosition.add(roadClicked.definition.road.roadWidth, 0, 0);
+					genPosition.rotateY(roadClicked.dynamicCurve.startAngle);
 				}
-				genPosition.add(roadClicked.dynamicCurve.endPos);
+				genPosition.add(roadClicked.position);
 			}
 			lanesOccupied = areDynamicLanesOccupied();
 		}else{
