@@ -379,8 +379,11 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 					}
 				}
 			}
-		}else if(variable.equals("damage")){
-			return damageAmount;
+		}else{
+			switch(variable){
+				case("damage"): return damageAmount;
+				case("damage_percent"): return damageAmount/definition.general.health;
+			}
 		}
 		
 		//Not a towing variable, check others.
