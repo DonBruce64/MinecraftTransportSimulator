@@ -179,13 +179,15 @@ public class WrapperEntity{
 	
 	/**
 	 *  Sets the entity's position to the passed-in point.
+	 *  Boolean is included to set ground state.  This should
+	 *  be set if the entity is on another entity collision box,
+	 *  but not if they are riding an entity.
 	 */
-	public void setPosition(Point3d position){
+	public void setPosition(Point3d position, boolean onGround){
 		entity.setPosition(position.x, position.y, position.z);
-		//Set entity as on ground to allow them to jump if they are on a collision box.
-		//Also set fallDistance to 0 to prevent damage.
-		entity.onGround = true;
+		//Set fallDistance to 0 to prevent damage.
 		entity.fallDistance = 0;
+		entity.onGround = onGround;
 	}
 	
 	/**

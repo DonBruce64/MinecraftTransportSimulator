@@ -572,7 +572,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 									
 									//Apply motions to move entity.
 									entityPosition.add(vehicleBoxMovement).add(0, entityBottomDelta, 0);
-									entity.setPosition(entityPosition);
+									entity.setPosition(entityPosition, true);
 									entity.setYaw(entity.getYaw() + angularMovement.y);
 									entity.setBodyYaw(entity.getBodyYaw() + angularMovement.y);
 									break;
@@ -608,7 +608,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 	public void updateRider(WrapperEntity rider, Iterator<WrapperEntity> iterator){
 		//Update entity position and motion.
 		if(rider.isValid()){
-			rider.setPosition(locationRiderMap.inverse().get(rider));
+			rider.setPosition(locationRiderMap.inverse().get(rider), false);
 			rider.setVelocity(motion);
 		}else{
 			//Remove invalid rider.

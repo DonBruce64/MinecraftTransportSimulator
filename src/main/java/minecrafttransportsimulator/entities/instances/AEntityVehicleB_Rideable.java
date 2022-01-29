@@ -87,7 +87,7 @@ abstract class AEntityVehicleB_Rideable extends AEntityF_Multipart<JSONVehicle>{
 				seatYPos *= seat.definition.seat.heightScale;
 			}
 			Point3d seatLocationOffset = new Point3d(0D, seatYPos, 0D).rotateFine(seat.localAngles).add(seat.localOffset).rotateFine(angles).add(position).add(0D, -rider.getEyeHeight(), 0D);
-			rider.setPosition(seatLocationOffset);
+			rider.setPosition(seatLocationOffset, false);
 			rider.setVelocity(motion);
 			
 			//Rotate the player with the vehicle.
@@ -213,7 +213,7 @@ abstract class AEntityVehicleB_Rideable extends AEntityF_Multipart<JSONVehicle>{
 					dismountPosition = riderLocation.copy().add(riderLocation.x > 0 ? 2D : -2D, 0D, 0D).rotateFine(angles).add(position);
 				}
 			}
-			rider.setPosition(dismountPosition);
+			rider.setPosition(dismountPosition, false);
 		}
 		
 		//If we are on the client, disable mouse-yoke blocking.
