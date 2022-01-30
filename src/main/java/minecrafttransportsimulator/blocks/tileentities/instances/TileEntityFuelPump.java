@@ -60,7 +60,9 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityFl
     			return super.fill(fluid, maxAmount, doFill);
     		}
     	};
+    	world.addEntity(tank);
     	this.fuelItems = new EntityInventoryContainer(world, data.getDataOrNew("inventory"), 10);
+    	world.addEntity(fuelItems);
     	for(int i=0; i<fuelItems.getSize(); ++i){
     		this.fuelAmounts.add(data.getInteger("fuelAmount" + i));
     	}

@@ -239,6 +239,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 			}
 			newComponent.prevPosition.setTo(newComponent.position);
 			newComponent.prevAngles.setTo(newComponent.angles);
+			world.addEntity(newComponent);
 		}else if(components.containsKey(newAxis)){
 			components.remove(newAxis).remove();
 		}

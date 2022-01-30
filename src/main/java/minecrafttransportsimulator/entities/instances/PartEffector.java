@@ -28,8 +28,8 @@ public class PartEffector extends APart{
 	private final Point3d flooredCenter = new Point3d();
 	private final Map<BoundingBox, Point3d> boxLastPositionsFloored = new HashMap<BoundingBox, Point3d>();
 	private final Map<BoundingBox, Integer> boxTimeSpentAtPosition = new HashMap<BoundingBox, Integer>();
-	private final Set<Point3d> blockFlooredPositionsBrokeThisTick = new HashSet<Point3d>()
-;	
+	private final Set<Point3d> blockFlooredPositionsBrokeThisTick = new HashSet<Point3d>();
+	
 	public PartEffector(AEntityF_Multipart<?> entityOn, WrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, WrapperNBT data, APart parentPart){
 		super(entityOn, placingPlayer, placementDefinition, data, parentPart);
 		this.blocksBroken = data.getInteger("blocksBroken");

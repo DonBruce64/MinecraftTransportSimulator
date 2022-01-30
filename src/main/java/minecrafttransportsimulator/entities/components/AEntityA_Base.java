@@ -49,7 +49,6 @@ public abstract class AEntityA_Base{
 		}else{
 			this.uniqueUUID = UUID.randomUUID();
 		}
-		world.addEntity(this);
 	}
 	
 	 /**

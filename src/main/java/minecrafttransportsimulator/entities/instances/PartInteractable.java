@@ -26,9 +26,25 @@ public final class PartInteractable extends APart{
 	
 	public PartInteractable(AEntityF_Multipart<?> entityOn, WrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, WrapperNBT data, APart parentPart){
 		super(entityOn, placingPlayer, placementDefinition, data, parentPart);
-		this.furnace = definition.interactable.interactionType.equals(InteractableComponentType.FURNACE) ? new EntityFurnace(world, data.getDataOrNew("furnace"), definition.interactable) : null;
-		this.inventory = definition.interactable.interactionType.equals(InteractableComponentType.CRATE) ? new EntityInventoryContainer(world, data.getDataOrNew("inventory"), (int) (definition.interactable.inventoryUnits*9F)) : furnace;
-		this.tank = definition.interactable.interactionType.equals(InteractableComponentType.BARREL) ? new EntityFluidTank(world, data.getDataOrNew("tank"), (int) definition.interactable.inventoryUnits*10000) : null;
+		if(definition.interactable.interactionType.equals(InteractableComponentType.FURNACE)){
+			this.furnace = new EntityFurnace(world, data.getDataOrNew("furnace"), definition.interactable);
+			this.inventory = furnace;
+			world.addEntity(furnace);
+		}else{
+			this.furnace = null;
+			if(definition.interactable.interactionType.equals(InteractableComponentType.CRATE)){
+				this.inventory = new EntityInventoryContainer(world, data.getDataOrNew("inventory"), (int) (definition.interactable.inventoryUnits*9F));
+				world.addEntity(inventory);
+			}else{
+				this.inventory = null;
+			}
+		}
+		if(definition.interactable.interactionType.equals(InteractableComponentType.BARREL)){
+			this.tank = new EntityFluidTank(world, data.getDataOrNew("tank"), (int) definition.interactable.inventoryUnits*10000);
+			world.addEntity(tank);
+		}else{
+			this.tank = null;
+		}
 		this.jerrycanFluid = data.getString("jerrycanFluid");
 	}
 	

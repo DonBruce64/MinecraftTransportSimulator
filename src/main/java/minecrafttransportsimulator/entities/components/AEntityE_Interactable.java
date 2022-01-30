@@ -525,9 +525,12 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
     	encompassingBox.updateToEntity(this, null);
     }
 	
-	@Override
+    /**
+	 * Called to perform supplemental update logic on this entity.  This should be called after all movement on the
+	 * entity has been performed, and is used to do updates that require the new positional logic to be ready.
+	 * Calling this before the entity finishes moving will lead to things "lagging" behind the entity.
+	 */
 	public void updatePostMovement(){
-		super.updatePostMovement();
 		//Update collision boxes to new position.
 		world.beginProfiling("CollisionBoxUpdates", true);
 		updateCollisionBoxes();

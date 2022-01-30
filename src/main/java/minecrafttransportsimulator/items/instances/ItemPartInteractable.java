@@ -141,6 +141,7 @@ public class ItemPartInteractable extends AItemPart implements IItemVehicleInter
 		if(definition.interactable.canBeOpenedInHand && definition.interactable.interactionType.equals(InteractableComponentType.CRATE)){
 			if(!world.isClient()){
 				EntityInventoryContainer inventory = new EntityInventoryContainer(world, new WrapperNBT(player.getHeldStack()).getDataOrNew("inventory"), (int) (definition.interactable.inventoryUnits*9F));
+				world.addEntity(inventory);
 				player.sendPacket(new PacketItemInteractable(player, inventory, definition.interactable.inventoryTexture));
 			}
 			return true;

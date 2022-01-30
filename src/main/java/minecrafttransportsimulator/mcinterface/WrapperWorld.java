@@ -26,6 +26,8 @@ import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.instances.APart;
+import minecrafttransportsimulator.entities.instances.EntityBullet;
+import minecrafttransportsimulator.entities.instances.EntityParticle;
 import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.components.AItemBase;
@@ -43,6 +45,7 @@ import net.minecraft.block.BlockSlab;
 import net.minecraft.block.IGrowable;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityCreature;
 import net.minecraft.entity.EntityLivingBase;
@@ -319,6 +322,7 @@ public class WrapperWorld{
 		builder.setPositionAndRotation(entity.position.x, entity.position.y, entity.position.z, (float) -entity.angles.y, (float) entity.angles.x);
 		builder.entity = entity;
 		world.spawnEntity(builder);
+		addEntity(entity);
     }
 	
 	/**
@@ -736,6 +740,7 @@ public class WrapperWorld{
 		            			}
 		            		}
 		            		builderTile.tileEntity = (TileEntityType) ((ABlockBaseTileEntity) block).createTileEntity(this, position, player, data);
+		            		addEntity(builderTile.tileEntity);
 		            	}
 		            	//Shrink stack as we placed this block.
 		                stack.shrink(1);
@@ -999,9 +1004,6 @@ public class WrapperWorld{
 		world.newExplosion(null, location.x, location.y, location.z, (float) strength, flames, ConfigSystem.configObject.general.blockBreakage.value);
 	}
 	
-	
-	//ENTITY MANAGEMENT CODE----- TO BE OUTSOURCED WHEN CONVERTING.
-	
    
    /**
     * Spawn "follower" entities for the player if they don't exist already.
@@ -1065,10 +1067,37 @@ public class WrapperWorld{
    }
    
    /**
+    * Tick client-side entities like bullets and particles.
+    * These don't get ticked normally due to the world tick event
+    * not being called on clients.
+    */
+   @SubscribeEvent
+   public void on(TickEvent.ClientTickEvent event){
+	   World clientWorld = Minecraft.getMinecraft().world;
+	   if(clientWorld != null){
+		   beginProfiling("MTS_BulletUpdates", true);
+		   for(EntityBullet bullet : getEntitiesOfType(EntityBullet.class)){
+			   bullet.update();
+		   }
+		   beginProfiling("MTS_ParticleUpdates", false);
+		   for(EntityParticle particle : getEntitiesOfType(EntityParticle.class)){
+			   particle.update();
+		   }
+		   endProfiling();
+	   }
+   }
+   
+
+	
+	//ENTITY MANAGEMENT CODE----- TO BE OUTSOURCED WHEN CONVERTING.
+	
+   
+   /**
     * Adds the entity to the world.  This will make it get update ticks and be rendered
-    * and do collision checks, as applicable.  Note that this should only be called after
+    * and do collision checks, as applicable.  Note that this should only be called at
     * FULL construction.  As such, it is recommended to NOT put the call in the entity
-    * constructor itself as that would prevent extending the class.
+    * constructor itself unless the class is final, as it is possible that extending
+    * constructors won't complete before the entity is accessed from this list.
     */
    public <EntityType extends AEntityA_Base> void addEntity(EntityType entity){
 	   allEntities.add(entity);

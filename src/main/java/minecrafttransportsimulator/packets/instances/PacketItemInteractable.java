@@ -93,6 +93,7 @@ public class PacketItemInteractable extends APacketPlayer{
 					inventory.remove();
 				}
 			};
+			world.addEntity(inventory);
 		}else{
 			world.getEntity(uniqueUUID).remove();
 		}

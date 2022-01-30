@@ -74,6 +74,7 @@ public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extend
 						Point3d position = new Point3d(pos.getX(), pos.getY(), pos.getZ());
 						ABlockBaseTileEntity block = (ABlockBaseTileEntity) worldWrapper.getBlock(position);
 						tileEntity = (TileEntityType) block.createTileEntity(worldWrapper, position, null, new WrapperNBT(lastLoadedNBT));
+						tileEntity.world.addEntity(tileEntity);
 						loadedFromSavedNBT = true;
 						lastLoadedNBT = null;
 					}catch(Exception e){

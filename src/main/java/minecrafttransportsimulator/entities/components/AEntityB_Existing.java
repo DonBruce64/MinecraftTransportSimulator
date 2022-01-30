@@ -60,7 +60,12 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 		this.prevOrientation = orientation.copy();
 		this.placingPlayer = placingPlayer;
 		this.boundingBox = new BoundingBox(new Point3d(), position, 0.5, 0.5, 0.5, false);
-		this.radio = hasRadio() ? new EntityRadio(this, data.getDataOrNew("radio")) : null;
+		if(hasRadio()){
+			this.radio = new EntityRadio(this, data.getDataOrNew("radio"));
+			world.addEntity(radio);
+		}else{
+			this.radio = null;
+		}
 	}
 	
 	/**Constructor for un-synced entities.  Allows for specification of position/motion/angles.**/

@@ -142,6 +142,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase{
 				WrapperWorld worldWrapper = WrapperWorld.getWrapperFor(world);
 				try{
 					entity = entityMap.get(lastLoadedNBT.getString("entityid")).createEntity(worldWrapper, null, new WrapperNBT(lastLoadedNBT));
+					entity.world.addEntity(entity);
 					loadedFromSavedNBT = true;
 					lastLoadedNBT = null;
 				}catch(Exception e){

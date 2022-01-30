@@ -6,7 +6,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -89,9 +88,6 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 	/**Maps light (model) object names to their definitions.  This is created from the JSON definition to prevent the need to do loops.**/
 	public final Map<String, JSONLight> lightObjectDefinitions = new HashMap<String, JSONLight>();
 	
-	/**Listing of active particles this entity has spawned.  These are updated every tick.**/
-	private final List<EntityParticle> activeParticles = new ArrayList<EntityParticle>();
-	
 	/**Constructor for synced entities**/
 	public AEntityD_Definable(WrapperWorld world, WrapperPlayer placingPlayer, WrapperNBT data){
 		super(world, placingPlayer, data);
@@ -160,25 +156,6 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 		}else{
 			return false;
 		}
-	}
-	
-	/**
-	 * Called to perform supplemental update logic on this entity.  This should be called after all movement on the
-	 * entity has been performed, and is used to do updates that require the new positional logic to be ready.
-	 * Calling this before the entity finishes moving will lead to things "lagging" behind the entity.
-	 */
-	public void updatePostMovement(){
-		//Update particles to new position.
-		world.beginProfiling("ParticleUpdates", true);
-		Iterator<EntityParticle> iterator = activeParticles.iterator();
-		while(iterator.hasNext()){
-			EntityParticle particle = iterator.next();
-			particle.update();
-			if(!particle.isValid){
-				iterator.remove();
-			}
-		}
-		world.endProfiling();
 	}
 	
 	/**
@@ -288,17 +265,6 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 				}else{
 					text.put(definition.rendering.textObjects.get(i), definition.rendering.textObjects.get(i).defaultText);
 				}
-			}
-		}
-	}
-	
-	@Override
-	public void remove(){
-		if(isValid){
-			super.remove();
-			//Remove all particles we have active.
-			for(EntityParticle particle : activeParticles){
-				particle.remove();
 			}
 		}
 	}
@@ -459,10 +425,10 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 				lastTickParticleSpawned.put(particleDef, ticksExisted);
 				if(particleDef.quantity > 0){
 					for(int i=0; i<particleDef.quantity; ++i){
-						activeParticles.add(new EntityParticle(this, particleDef));
+						world.addEntity(new EntityParticle(this, particleDef));
 					}
 				}else{
-					activeParticles.add(new EntityParticle(this, particleDef));
+					world.addEntity(new EntityParticle(this, particleDef));
 				}
 			}
     	}

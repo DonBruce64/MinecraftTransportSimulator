@@ -19,6 +19,7 @@ public class TileEntityFluidLoader extends TileEntityDecor implements ITileEntit
     public TileEntityFluidLoader(WrapperWorld world, Point3d position, WrapperPlayer placingPlayer, WrapperNBT data){
 		super(world, position, placingPlayer, data);
     	this.tank = new EntityFluidTank(world, data.getDataOrNew("tank"), definition.decor.fuelCapacity);
+		world.addEntity(tank);
     	this.isUnloader = definition.decor.type.equals(DecorComponentType.FLUID_UNLOADER);
     }
 	

@@ -511,6 +511,9 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 		if(sendPacket && !world.isClient()){
 			InterfacePacket.sendToAllClients(new PacketPartChange(this,  part));
 		}
+		
+		//Add the part to the world.
+		world.addEntity(part);
 	}
 	
 	/**

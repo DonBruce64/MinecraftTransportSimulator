@@ -21,6 +21,7 @@ public class TileEntityChest extends TileEntityDecor{
 	public TileEntityChest(WrapperWorld world, Point3d position, WrapperPlayer placingPlayer, WrapperNBT data){
 		super(world, position, placingPlayer, data);
 		this.inventory = new EntityInventoryContainer(world, data.getDataOrNew("inventory"), (int) (definition.decor.inventoryUnits*9F));
+		world.addEntity(inventory);
 	}
 	
 	@Override

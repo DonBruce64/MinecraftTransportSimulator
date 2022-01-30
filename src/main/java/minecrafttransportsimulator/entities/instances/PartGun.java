@@ -1,7 +1,6 @@
 package minecrafttransportsimulator.entities.instances;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
@@ -75,7 +74,6 @@ public class PartGun extends APart{
 	private WrapperEntity entityTarget;
 	private long millisecondCamOffset;
 	private long lastTimeFired;
-	private final List<EntityBullet> activeBullets = new ArrayList<EntityBullet>();
 	public final List<Integer> bulletsHitOnServer = new ArrayList<Integer>();
 	public final RenderableObject muzzleWireframe = new RenderableObject(new BoundingBox(new Point3d(), 0.25, 0.25, 0.25), ColorRGB.BLUE, false);
 		
@@ -346,28 +344,9 @@ public class PartGun extends APart{
 			if(!state.isAtLeast(GunState.FIRING_REQUESTED)){
 				firedThisRequest = false;
 			}
-			
-			//Update active bullets.
-			Iterator<EntityBullet> iterator = activeBullets.iterator();
-			while(iterator.hasNext()){
-				EntityBullet bullet = iterator.next();
-				bullet.update();
-				if(!bullet.isValid){
-					iterator.remove();
-				}
-			}
 			return true;
 		}else{
 			return false;
-		}
-	}
-	
-	@Override
-	public void remove(){
-		super.remove();
-		//Remove all bullets we have active.
-		for(EntityBullet bullet : activeBullets){
-			bullet.remove();
 		}
 	}
 	
@@ -680,23 +659,25 @@ public class PartGun extends APart{
 				
 				//Add the bullet as a particle.
 				//If the bullet is a missile, give it a target.
+				EntityBullet newBullet;
 				if(loadedBullet.definition.bullet.turnFactor > 0){
 					if(entityTarget != null){
-						activeBullets.add(new EntityBullet(bulletPosition, bulletVelocity, this, entityTarget));
+						newBullet = new EntityBullet(bulletPosition, bulletVelocity, this, entityTarget);
 					}else{
 						//No entity found, try blocks.
 						Point3d lineOfSight = lastController.getLineOfSight(2000F);
 						Point3d blockTarget = world.getBlockHit(lastController.getPosition().add(0D, lastController.getEyeHeight(), 0D), lineOfSight);
 						if(blockTarget != null){
-							activeBullets.add(new EntityBullet(bulletPosition, bulletVelocity, this, blockTarget));
+							newBullet = new EntityBullet(bulletPosition, bulletVelocity, this, blockTarget);
 						}else{
 							//No block found, just fire missile off in direction facing.
-							activeBullets.add(new EntityBullet(bulletPosition, bulletVelocity, this));
+							newBullet = new EntityBullet(bulletPosition, bulletVelocity, this);
 						}
 					}
 				}else{
-					activeBullets.add(new EntityBullet(bulletPosition, bulletVelocity, this));
+					newBullet = new EntityBullet(bulletPosition, bulletVelocity, this);
 				}
+				world.addEntity(newBullet);
 				
 				//Decrement bullets, but check to make sure we still have some.
 				//We might have a partial volley.

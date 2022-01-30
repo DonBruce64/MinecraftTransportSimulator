@@ -85,6 +85,7 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 		this.selectedBeaconName = data.getString("selectedBeaconName");
 		this.selectedBeacon = NavBeacon.getByNameFromWorld(world, selectedBeaconName);
 		this.fuelTank = new EntityFluidTank(world, data.getDataOrNew("fuelTank"), definition.motorized.fuelCapacity);
+		world.addEntity(fuelTank);
 		
 		if(newlyCreated){
 			//Set initial electrical power.
