@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.packets.components;
 
+import java.util.UUID;
+
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
@@ -14,7 +16,7 @@ import minecrafttransportsimulator.mcinterface.WrapperWorld;
  * @author don_bruce
  */
 public abstract class APacketPlayer extends APacketBase{
-	private final String playerID;
+	private final UUID playerID;
 	
 	public APacketPlayer(WrapperPlayer player){
 		super(null);
@@ -23,18 +25,18 @@ public abstract class APacketPlayer extends APacketBase{
 	
 	public APacketPlayer(ByteBuf buf){
 		super(buf);
-		this.playerID = readStringFromBuffer(buf);
+		this.playerID = readUUIDFromBuffer(buf);
 	};
 
 	@Override
 	public void writeToBuffer(ByteBuf buf){
 		super.writeToBuffer(buf);
-		writeStringToBuffer(playerID, buf);
+		writeUUIDToBuffer(playerID, buf);
 	}
 	
 	@Override
 	public void handle(WrapperWorld world){
-		WrapperPlayer player = (WrapperPlayer) world.getEntity(playerID);
+		WrapperPlayer player = (WrapperPlayer) world.getExternalEntity(playerID);
 		if(player != null){
 			handle(world, player);
 		}

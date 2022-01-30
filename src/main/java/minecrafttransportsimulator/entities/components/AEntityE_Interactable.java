@@ -8,6 +8,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
@@ -109,10 +110,10 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 	 **/
 	public boolean locked;
 	
-	/**The ID of the owner of this entity. If this string is empty, it can be assumed that there is no owner.
+	/**The ID of the owner of this entity. If this is null, it can be assumed that there is no owner.
 	 * UUIDs are set at creation time of an entity, and will never change, even on world re-loads.
 	 **/
-	public final String ownerUUID;
+	public final UUID ownerUUID;
 	
 	/**The amount of damage on this entity.  This value is not necessarily used on all entities, but is put here
 	 * as damage is something that a good number of entities will have and that the base entity should track.
@@ -145,8 +146,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 		//so just make the locations for the moment so they are ready when riders are created.
 		this.savedRiderLocations.addAll(data.getPoint3ds("savedRiderLocations"));
 		this.locked = data.getBoolean("locked");
-		this.ownerUUID = placingPlayer != null ? placingPlayer.getID() : data.getString("ownerUUID");
-		this.damageAmount = data.getDouble("damageAmount");
+		this.ownerUUID = placingPlayer != null ? placingPlayer.getID() : data.getUUID("ownerUUID");
 
 		//Load towing data.
 		WrapperNBT towData = data.getData("towedByConnection");
@@ -552,7 +552,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 			encompassingBox.heightRadius -= 1.0;
     		for(WrapperEntity entity : nearbyEntities){
     			//Only move Vanilla entities not riding things.  We don't want to move other things as we handle our inter-entity movement in each class.
-    			if(entity.getBaseEntity() == null && entity.getEntityRiding() == null && (entity instanceof WrapperPlayer ? !((WrapperPlayer) entity).isSpectator() : true)){
+    			if(entity.getEntityRiding() == null && (!(entity instanceof WrapperPlayer) || !((WrapperPlayer) entity).isSpectator())){
     				//Check each box individually.  Need to do this to know which delta to apply.
     				BoundingBox entityBounds = entity.getBounds();
     				entityBounds.heightRadius += 0.25;
@@ -693,17 +693,16 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 	 *  Takes into account player OP status and {@link #ownerUUID}, if set.
 	 */
 	public PlayerOwnerState getOwnerState(WrapperPlayer player){
-		boolean canPlayerEdit = player.isOP() || ownerUUID.isEmpty() || player.getID().equals(ownerUUID);
+		boolean canPlayerEdit = player.isOP() || ownerUUID == null || player.getID().equals(ownerUUID);
 		return player.isOP() ? PlayerOwnerState.ADMIN : (canPlayerEdit ? PlayerOwnerState.OWNER : PlayerOwnerState.USER);
 	}
 	
 	/**
 	 *  Called when the entity is attacked.
 	 *  This should ONLY be called on the server; clients will sync via packets.
-	 *  Always make sure to check if this entity is valid, as this function may be
-	 *  called multiple times in a single tick for multiple damage applications.  This
-	 *  means that this entity may be invalid due to the first damage when the second damage
-	 *  is applied.
+	 *  If calling this method in a loop, make sure to check if this entity is valid.
+	 *  as this function may be called multiple times in a single tick for multiple damage 
+	 *  applications, which means one of those may have made this entity invalid.
 	 */
 	public void attack(Damage damage){
 		if(!damage.isWater){ 
@@ -1005,8 +1004,9 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 		super.save(data);
 		data.setPoint3ds("savedRiderLocations", locationRiderMap.keySet());
 		data.setBoolean("locked", locked);
-		data.setString("ownerUUID", ownerUUID);
-		data.setDouble("damageAmount", damageAmount);
+		if(ownerUUID != null){
+			data.setUUID("ownerUUID", ownerUUID);
+		}
 		
 		//Save towing data.
 		if(towedByConnection != null){

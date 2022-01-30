@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import minecrafttransportsimulator.entities.instances.EntityFurnace;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
@@ -50,7 +51,7 @@ public class JSONConfig{
 		public JSONConfigEntry<Double> gravityFactor = new JSONConfigEntry<Double>(1.0D, "Factor for gravitational forces applied to vehicles.  Can be adjusted if you think cars are too 'floaty'.  Does not affect aircraft.");
 		public JSONConfigEntry<Double> engineSpeedTempFactor = new JSONConfigEntry<Double>(1.0D, "Factor for how RPM affects engine temp.  Higher values will make engines heat up quicker at higher RPMs.");
 		public JSONConfigEntry<Double> engineBiomeTempFactor = new JSONConfigEntry<Double>(1.0D, "Factor for how biome temp affects engine temp.  Higher values will make engines heat up quicker in hotter biomes.");
-		public JSONConfigEntry<List<String>> joinedPlayers = new JSONConfigEntry<List<String>>(new ArrayList<String>(), "Listing of players that have joined this world.  Players will be given the manual on their first join.");
+		public JSONConfigEntry<List<UUID>> joinedPlayers = new JSONConfigEntry<List<UUID>>(new ArrayList<UUID>(), "Listing of players that have joined this world.  Players will be given the manual on their first join.");
 		public ConfigItemWeights itemWeights = new ConfigItemWeights();
 		
 		public static class ConfigItemWeights{

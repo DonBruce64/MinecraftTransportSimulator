@@ -40,16 +40,20 @@ public class PartPropeller extends APart{
 	@Override
 	public void attack(Damage damage){
 		super.attack(damage);
-		if(isValid){
-			if(!damage.isWater){
-				if(damage.entityResponsible instanceof WrapperPlayer && ((WrapperPlayer) damage.entityResponsible).getHeldStack().isEmpty()){
-					if(!entityOn.equals(damage.entityResponsible.getEntityRiding())){
-						connectedEngine.handStartEngine();
-						InterfacePacket.sendToAllClients(new PacketPartEngine(connectedEngine, Signal.HS_ON));
-					}
-					return;
+		if(!damage.isWater){
+			if(damage.entityResponsible instanceof WrapperPlayer && ((WrapperPlayer) damage.entityResponsible).getHeldStack().isEmpty()){
+				if(!entityOn.equals(damage.entityResponsible.getEntityRiding())){
+					connectedEngine.handStartEngine();
+					InterfacePacket.sendToAllClients(new PacketPartEngine(connectedEngine, Signal.HS_ON));
 				}
-				this.damageAmount += damage.amount;
+				return;
+			}else if(damageAmount == definition.general.health){
+				if(ConfigSystem.configObject.damage.explosions.value){
+					world.spawnExplosion(position, 1F, true);
+				}else{
+					world.spawnExplosion(position, 0F, false);
+				}
+				remove();
 			}
 		}
 	}
@@ -104,39 +108,16 @@ public class PartPropeller extends APart{
 			}
 			
 			//Damage propeller or entities if required.
-			if(!world.isClient()){
-				if(connectedEngine.rpm >= 100){
-					//Expand the bounding box bounds, and send off the attack.
-					boundingBox.widthRadius += 0.2;
-					boundingBox.heightRadius += 0.2;
-					boundingBox.depthRadius += 0.2;
-					Damage propellerDamage = new Damage("propellor", ConfigSystem.configObject.damage.propellerDamageFactor.value*connectedEngine.rpm*connectedEngine.propellerGearboxRatio/500F, damageBounds, this, vehicleOn != null ? vehicleOn.getController() : null);
-					world.attackEntities(propellerDamage, null);
-					boundingBox.widthRadius -= 0.2;
-					boundingBox.heightRadius -= 0.2;
-					boundingBox.depthRadius -= 0.2;
-					
-					//If the propeller is colliding with blocks, damage it.
-					if(!boundingBox.collidingBlockPositions.isEmpty()){
-						++damageAmount;
-						
-					}
-					
-					//If the propeller is over-speeding, damage it enough to break it.
-					if(20*angularVelocity*Math.PI*definition.propeller.diameter*0.0254 > 340.29){
-						damageAmount += definition.general.health;
-					}
-				}
-				
-				//If we are too damaged, remove ourselves.
-				if(damageAmount > definition.general.health && !world.isClient()){
-					if(ConfigSystem.configObject.damage.explosions.value){
-						world.spawnExplosion(position, 1F, true);
-					}else{
-						world.spawnExplosion(position, 0F, false);
-					}
-					isValid = false;
-				}
+			if(!world.isClient() && connectedEngine.rpm >= 100){
+				//Expand the bounding box bounds, and send off the attack.
+				boundingBox.widthRadius += 0.2;
+				boundingBox.heightRadius += 0.2;
+				boundingBox.depthRadius += 0.2;
+				Damage propellerDamage = new Damage("propellor", ConfigSystem.configObject.damage.propellerDamageFactor.value*connectedEngine.rpm*connectedEngine.propellerGearboxRatio/500F, damageBounds, this, vehicleOn != null ? vehicleOn.getController() : null);
+				world.attackEntities(propellerDamage, null);
+				boundingBox.widthRadius -= 0.2;
+				boundingBox.heightRadius -= 0.2;
+				boundingBox.depthRadius -= 0.2;
 			}
 			return true;
 		}else{

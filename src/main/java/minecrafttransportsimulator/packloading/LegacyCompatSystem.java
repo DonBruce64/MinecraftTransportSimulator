@@ -548,12 +548,7 @@ public final class LegacyCompatSystem{
 		
 		//Set default health.
 		if(definition.general.health == 0){
-			if(definition.propeller != null){
-				definition.general.health = definition.propeller.startingHealth;
-				definition.propeller.startingHealth = 0;
-			}else{
-				definition.general.health = 100;
-			}
+			definition.general.health = 100;
 		}
 		
 		//Set engine new parameters.

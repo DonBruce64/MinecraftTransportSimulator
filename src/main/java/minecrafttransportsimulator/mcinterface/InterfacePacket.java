@@ -6,6 +6,10 @@ import com.google.common.collect.HashBiMap;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.packets.components.APacketBase;
+import minecrafttransportsimulator.packets.instances.PacketEntityBulletHit;
+import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitBlock;
+import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitEntity;
+import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitWrapper;
 import minecrafttransportsimulator.packets.instances.PacketEntityCSHandshakeClient;
 import minecrafttransportsimulator.packets.instances.PacketEntityCSHandshakeServer;
 import minecrafttransportsimulator.packets.instances.PacketEntityColorChange;
@@ -28,7 +32,6 @@ import minecrafttransportsimulator.packets.instances.PacketPartEffector;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine;
 import minecrafttransportsimulator.packets.instances.PacketPartGroundDevice;
 import minecrafttransportsimulator.packets.instances.PacketPartGun;
-import minecrafttransportsimulator.packets.instances.PacketPartGunBulletHit;
 import minecrafttransportsimulator.packets.instances.PacketPartInteractable;
 import minecrafttransportsimulator.packets.instances.PacketPartSeat;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
@@ -94,6 +97,12 @@ public class InterfacePacket{
 		registerPacket(packetIndex++, PacketEntityVariableSet.class);
 		registerPacket(packetIndex++, PacketEntityVariableToggle.class);
 		
+		//Bullet packets.
+		registerPacket(packetIndex++, PacketEntityBulletHit.class);
+		registerPacket(packetIndex++, PacketEntityBulletHitBlock.class);
+		registerPacket(packetIndex++, PacketEntityBulletHitEntity.class);
+		registerPacket(packetIndex++, PacketEntityBulletHitWrapper.class);
+		
 		//Fluid tank packets.
 		registerPacket(packetIndex++, PacketFluidTankChange.class);
 		
@@ -111,7 +120,6 @@ public class InterfacePacket{
 		
 		//Part packets.
 		registerPacket(packetIndex++, PacketPartChange.class);
-		registerPacket(packetIndex++, PacketPartGunBulletHit.class);
 		registerPacket(packetIndex++, PacketPartGun.class);
 		registerPacket(packetIndex++, PacketPartEffector.class);
 		registerPacket(packetIndex++, PacketPartEngine.class);

@@ -56,10 +56,8 @@ public final class PartInteractable extends APart{
 	@Override
 	public void attack(Damage damage){
 		super.attack(damage);
-		if(isValid){
-			if(!damage.isWater && (damage.amount > 25 || damageAmount > definition.general.health)){
-				destroy(damage.box);
-			}
+		if(!damage.isWater && (damage.amount > 25 || damageAmount > definition.general.health)){
+			destroy(damage.box);
 		}
 	}
 	

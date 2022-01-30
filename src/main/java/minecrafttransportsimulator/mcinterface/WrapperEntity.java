@@ -3,11 +3,11 @@ package minecrafttransportsimulator.mcinterface;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.UUID;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -97,8 +97,8 @@ public class WrapperEntity{
 	 *  servers, and the nastiest of Bukkit systems will deliberately change the UUID of players, which,
 	 *  when combined with their changing of entity IDs, makes server-client lookup impossible.
 	 */
-	public String getID(){
-		return entity.getCachedUniqueIdString();
+	public UUID getID(){
+		return entity.getUniqueID();
 	}
 	
 	/**
@@ -135,14 +135,6 @@ public class WrapperEntity{
 		}else{
 			entity.dismountRidingEntity();
 		}
-	}
-	
-	/**
-	 *  If the wrapped entity is an AEntityBase, return that
-	 *  base entity. Otherwise return null.
-	 */
-	public AEntityA_Base getBaseEntity(){
-		return entity instanceof BuilderEntityExisting ? ((BuilderEntityExisting) entity).entity : null;
 	}
 	
 	/**
@@ -337,13 +329,6 @@ public class WrapperEntity{
 	 *  Attacks the entity.
 	 */
 	public void attack(Damage damage){
-		//If this entity is one of ours, just forward the damage and exit.
-		if(entity instanceof BuilderEntityExisting){
-			if(((BuilderEntityExisting) entity).entity instanceof AEntityE_Interactable){
-				((AEntityE_Interactable<?>) ((BuilderEntityExisting) entity).entity).attack(damage);
-				return;
-			}
-		}
 		DamageSource newSource = new DamageSource(damage.name){
 			@Override
 			public ITextComponent getDeathMessage(EntityLivingBase player){

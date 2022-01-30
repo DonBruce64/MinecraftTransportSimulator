@@ -269,7 +269,6 @@ info.item.propeller.numberBlades=Blades:
 info.item.propeller.pitch=Pitch: 
 info.item.propeller.diameter=Diameter: 
 info.item.propeller.maxrpm=Max RPM: 
-info.item.propeller.health=Health: 
 info.item.gun.diameter=Barrel Diameter (mm): 
 info.item.gun.length=Barrel Length (m): 
 info.item.gun.caseRange=Case Range (mm): 

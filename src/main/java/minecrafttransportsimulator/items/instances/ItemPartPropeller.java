@@ -35,7 +35,6 @@ public class ItemPartPropeller extends AItemPart{
 		tooltipLines.add(InterfaceCore.translate("info.item.propeller.pitch") + definition.propeller.pitch);
 		tooltipLines.add(InterfaceCore.translate("info.item.propeller.diameter") + definition.propeller.diameter);
 		tooltipLines.add(InterfaceCore.translate("info.item.propeller.maxrpm") + Math.round(60*340.29/(0.0254*Math.PI*definition.propeller.diameter)));
-		tooltipLines.add(InterfaceCore.translate("info.item.propeller.health") + (definition.general.health - data.getDouble("damageAmount")));
 	}
 	
 	public static final AItemPartCreator CREATOR = new AItemPartCreator(){

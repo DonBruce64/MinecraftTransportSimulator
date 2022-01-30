@@ -19,6 +19,12 @@ public class Point3d{
 		this(0, 0, 0);
 	}
 	
+	public Point3d(Point3d other){
+		this.x = other.x;
+		this.y = other.y;
+		this.z = other.z;
+	}
+	
 	public Point3d(double x, double y, double z){
 		this.x = x;
 		this.y = y;

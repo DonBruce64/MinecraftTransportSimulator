@@ -1,20 +1,20 @@
 package minecrafttransportsimulator.entities.instances;
 
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
+import java.util.TreeMap;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
-import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.jsondefs.JSONBullet;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
-import minecrafttransportsimulator.packets.instances.PacketPartGunBulletHit;
+import minecrafttransportsimulator.packets.instances.PacketEntityBulletHit;
+import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitBlock;
+import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitEntity;
+import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitWrapper;
 import minecrafttransportsimulator.rendering.instances.RenderBullet;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
@@ -32,7 +32,7 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 
 public class EntityBullet extends AEntityD_Definable<JSONBullet>{	
 	//Properties
-	private final PartGun gun;
+	public final PartGun gun;
 	public final int bulletNumber;
 	private final double initialVelocity;
 	private final double anglePerTickSpeed;
@@ -41,12 +41,13 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 	//States
 	private Point3d targetPosition;
 	public double targetDistance;
-	private WrapperEntity externalEntityTargeted;
 	private PartEngine engineTargeted;
+	private WrapperEntity externalEntityTargeted;
 	private HitType lastHit;
 	
 	private static RenderBullet renderer;
 	
+	/**Generic constructor for no target.**/
     public EntityBullet(Point3d position, Point3d motion, PartGun gun){
     	super(gun.world, position, motion, ZERO_FOR_CONSTRUCTOR, gun.loadedBullet);
     	this.gun = gun;
@@ -64,33 +65,27 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
         prevAngles.setTo(angles);
     }
     
+    /**Positional target.**/
     public EntityBullet(Point3d position, Point3d motion,  PartGun gun, Point3d blockTargetPos){
     	this(position, motion, gun);
     	this.targetPosition = blockTargetPos;
     }
     
-    public EntityBullet(Point3d position, Point3d motion, PartGun gun, WrapperEntity externalEntityTargeted){
-    	this(position, motion, gun);
-    	AEntityA_Base entity = externalEntityTargeted.getBaseEntity();
-		if(entity != null){
-			if(entity instanceof AEntityF_Multipart){
-				for(APart part : ((AEntityF_Multipart<?>) entity).parts){
-					if(part instanceof PartEngine && ((PartEngine) part).temp > PartEngine.COLD_TEMP){
-						engineTargeted = (PartEngine) part;
-						targetPosition = engineTargeted.position;
-						externalEntityTargeted = null;
-						if(engineTargeted.entityOn instanceof EntityVehicleF_Physics){
-				    		((EntityVehicleF_Physics) engineTargeted.entityOn).acquireMissile(this);
-				    	}
-						break;
-					}
-				}
-			}
-		}
+    /**Engine target.**/
+    public EntityBullet(Point3d position, Point3d motion, PartGun gun, PartEngine engineTargeted){
+    	this(position, motion, gun, engineTargeted.position);
+    	if(engineTargeted.entityOn instanceof EntityVehicleF_Physics){
+    		((EntityVehicleF_Physics) engineTargeted.entityOn).acquireMissile(this);
+    	}
 		if(externalEntityTargeted != null){
-	    	this.targetPosition = new Point3d().setTo(externalEntityTargeted.getPosition());
-	    	this.externalEntityTargeted = externalEntityTargeted;
+	    	this.engineTargeted = engineTargeted;
 		}
+    }
+    
+    /**Wrapper target.**/
+    public EntityBullet(Point3d position, Point3d motion, PartGun gun, WrapperEntity externalEntityTargeted){
+    	this(position, motion, gun, new Point3d(externalEntityTargeted.getPosition()));
+	    this.externalEntityTargeted = externalEntityTargeted;
     }
 	
     @Override
@@ -99,60 +94,68 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 			//Get possible damage.
 			Damage damage = new Damage("bullet", velocity*definition.bullet.diameter/5*ConfigSystem.configObject.damage.bulletDamageFactor.value, boundingBox, gun, null);
 			
-			//Check for collided entities and attack them.
-			//If we collide with an armored vehicle, try to penetrate it.
-			Map<WrapperEntity, Collection<BoundingBox>> attackedEntities = world.attackEntities(damage, motion);
+			//Check for collided external entities and attack them.
+			List<WrapperEntity> attackedEntities = world.attackEntities(damage, motion);
 			if(!attackedEntities.isEmpty()){
+				//Only attack the first entity.  Bullets don't get to attack multiple per scan.
+				WrapperEntity entity = attackedEntities.get(0);
+				InterfacePacket.sendToServer(new PacketEntityBulletHitWrapper(this, entity));
+				lastHit = HitType.ENTITY;
+				remove();
+				return false;
+			}
+			
+			//Check for collided internal entities and attack them.
+			//This is a bit more involved, as we need to check all possible types and check hitbox distance.
+			Point3d endPoint = position.copy().add(motion);
+			for(EntityVehicleF_Physics entity : world.getEntitiesOfType(EntityVehicleF_Physics.class)){
 				double armorPenetrated = 0;
-				for(WrapperEntity entity : attackedEntities.keySet()){
-					Collection<BoundingBox> hitBoxes = attackedEntities.get(entity);
-					if(hitBoxes != null){
-						AEntityA_Base baseEntity = entity.getBaseEntity();
-						BoundingBox armorBoxHit = null;
-						
-						//Check all boxes for armor and see if we penetrated them.
-						Iterator<BoundingBox> hitBoxIterator = hitBoxes.iterator();
-						while(hitBoxIterator.hasNext()){
-							BoundingBox hitBox = hitBoxIterator.next();
-							if(hitBox.definition != null && hitBox.definition.armorThickness > 0){
-								if(hitBox.definition.armorThickness < definition.bullet.armorPenetration*velocity/initialVelocity - armorPenetrated){
-									armorPenetrated += hitBox.definition.armorThickness;
-									hitBoxIterator.remove();
-								}else{
-									armorBoxHit = hitBox;
-								}
-							}else if(baseEntity instanceof AEntityF_Multipart){
-								if(((AEntityF_Multipart<?>) baseEntity).getPartWithBox(hitBox) != null){
-									break;
-								}
-							}
-						}	
-						
-						//If we hit an armor box, set that to what we attacked.
-						//If we didn't, see if we hit a part instead.
-						if(armorBoxHit != null){
-							lastHit = HitType.ARMOR;
-							remove();
-							return false;
-						}else{
-							for(BoundingBox hitBox : hitBoxes){
-								if(baseEntity instanceof AEntityF_Multipart && ((AEntityF_Multipart<?>) baseEntity).getPartWithBox(hitBox) != null){
-									lastHit = HitType.PART;
-								}else{
-									lastHit = HitType.ENTITY;
-								}
-								InterfacePacket.sendToServer(new PacketPartGunBulletHit(gun, this, hitBox, entity));
-								remove();
-								return false;
+				//Don't attack the entity that has the gun that fired us.
+				if(!entity.parts.contains(gun)){
+					//Make sure that we could even possibly hit this vehicle before we try and attack it.
+					if(entity.encompassingBox.intersects(boundingBox)){
+						//Get all collision boxes on the vehicle, and check if we hit any of them.
+						//Sort them by distance for later.
+						TreeMap<Double, BoundingBox> hitBoxes = new TreeMap<Double, BoundingBox>();
+						for(BoundingBox box : entity.allInteractionBoxes){
+							Point3d delta = box.getIntersectionPoint(position, endPoint); 
+							if(delta != null){
+								hitBoxes.put(delta.distanceTo(position), box);
 							}
 						}
-					}else{
-						//Must of hit a normal entity.  Set our box to the entity's box and attack it.
-						boundingBox.globalCenter.setTo(entity.getPosition());
-						InterfacePacket.sendToServer(new PacketPartGunBulletHit(gun, this, boundingBox, entity));
-						lastHit = HitType.ENTITY;
-						remove();
-						return false;
+						
+						//If we hit at least one hitbox, do logic.
+						if(!hitBoxes.isEmpty()){
+							//Check all boxes for armor and see if we penetrated them.
+							Iterator<BoundingBox> hitBoxIterator = hitBoxes.values().iterator();
+							while(hitBoxIterator.hasNext()){
+								BoundingBox hitBox = hitBoxIterator.next();
+								if(hitBox.definition != null && hitBox.definition.armorThickness > 0){
+									if(hitBox.definition.armorThickness < definition.bullet.armorPenetration*velocity/initialVelocity - armorPenetrated){
+										armorPenetrated += hitBox.definition.armorThickness;
+									}else{
+										//hit armor.  Don't do anything except spawn explosions.
+										InterfacePacket.sendToServer(new PacketEntityBulletHit(this, hitBox.globalCenter));
+										lastHit = HitType.ARMOR;
+										remove();
+										return false;
+									}
+								}else{
+									APart hitPart = entity.getPartWithBox(hitBox);
+									if(hitPart != null){
+										InterfacePacket.sendToServer(new PacketEntityBulletHitEntity(this, hitBox, hitPart));
+										lastHit = HitType.PART;
+										remove();
+										return false;
+									}else{
+										InterfacePacket.sendToServer(new PacketEntityBulletHitEntity(this, hitBox, entity));
+										lastHit = HitType.ENTITY;
+										remove();
+										return false;
+									}
+								}
+							}
+						}
 					}
 				}
 			}
@@ -160,8 +163,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 			//Didn't hit an entity.  Check for blocks.
 			Point3d hitPos = world.getBlockHit(position, motion);
 			if(hitPos != null){
-				boundingBox.globalCenter.setTo(hitPos);
-				InterfacePacket.sendToServer(new PacketPartGunBulletHit(gun, this, boundingBox, null));
+				InterfacePacket.sendToServer(new PacketEntityBulletHitBlock(this, hitPos));
 				lastHit = HitType.BLOCK;
 				remove();
 				return false;
@@ -172,15 +174,15 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 				if(targetPosition != null){
 					double distanceUntilImpact = position.distanceTo(targetPosition);
 					if(distanceUntilImpact <= definition.bullet.proximityFuze){
-						InterfacePacket.sendToServer(new PacketPartGunBulletHit(gun, this, boundingBox, null));
+						InterfacePacket.sendToServer(new PacketEntityBulletHit(this, position));
 						lastHit = externalEntityTargeted != null ? HitType.ENTITY : (engineTargeted != null ? HitType.PART : HitType.BLOCK);
 						remove();
 						return false;
 					}
 				}
-				Point3d projectedImpactPoint = world.getBlockHit(position, motion.copy().normalize().multiply(definition.bullet.proximityFuze));
-				if(projectedImpactPoint != null){
-					InterfacePacket.sendToServer(new PacketPartGunBulletHit(gun, this, boundingBox, null));
+				
+				if(world.getBlockHit(position, motion.copy().normalize().multiply(definition.bullet.proximityFuze)) != null){
+					InterfacePacket.sendToServer(new PacketEntityBulletHitBlock(this, position));
 					lastHit = HitType.BLOCK;
 					remove();
 					return false;
@@ -190,7 +192,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 			//Didn't hit a block either. Check the air-burst time, if it was used.
 			if(definition.bullet.airBurstDelay != 0) {
 				if(ticksExisted > definition.bullet.airBurstDelay){
-					InterfacePacket.sendToServer(new PacketPartGunBulletHit(gun, this, boundingBox, null));
+					InterfacePacket.sendToServer(new PacketEntityBulletHit(this, position));
 					lastHit = HitType.BURST;
 					remove();
 					return false;

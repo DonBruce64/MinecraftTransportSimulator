@@ -139,7 +139,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 					UUID keyVehicleUUID = data.getUUID("vehicle");
 					if(keyVehicleUUID == null){
 						//Check if we are the owner before making this a valid key.
-						if(!vehicle.ownerUUID.isEmpty() && ownerState.equals(PlayerOwnerState.USER)){
+						if(vehicle.ownerUUID != null && ownerState.equals(PlayerOwnerState.USER)){
 							player.sendPacket(new PacketPlayerChatMessage(player, "interact.key.failure.notowner"));
 							return CallbackType.NONE;
 						}

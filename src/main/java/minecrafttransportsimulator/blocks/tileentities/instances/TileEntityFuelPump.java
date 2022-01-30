@@ -2,6 +2,7 @@ package minecrafttransportsimulator.blocks.tileentities.instances;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
@@ -35,7 +36,7 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityFl
     public final List<Integer> fuelAmounts = new ArrayList<Integer>();
     public int fuelPurchasedRemaining;
     public boolean isCreative;
-	public String placingPlayerID;
+	public UUID placingPlayerID;
 
     public TileEntityFuelPump(WrapperWorld world, Point3d position, WrapperPlayer placingPlayer, WrapperNBT data){
 		super(world, position, placingPlayer, data);
@@ -64,7 +65,7 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityFl
     		this.fuelAmounts.add(data.getInteger("fuelAmount" + i));
     	}
     	this.fuelPurchasedRemaining = data.getInteger("fuelPurchasedRemaining");
-    	this.placingPlayerID = placingPlayer != null ? placingPlayer.getID() : data.getString("placingPlayerID");
+    	this.placingPlayerID = placingPlayer != null ? placingPlayer.getID() : data.getUUID("placingPlayerID");
     }
 	
 	@Override
@@ -263,7 +264,9 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityFl
     		data.setInteger("fuelAmount" + i, fuelAmounts.get(i));
     	}
 		data.setInteger("fuelPurchasedRemaining", fuelPurchasedRemaining);
-		data.setString("placingPlayerID", placingPlayerID);
+		if(placingPlayerID != null){
+			data.setUUID("placingPlayerID", placingPlayerID);
+		}
 		return data;
 	}
 }

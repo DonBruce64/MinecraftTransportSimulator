@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.packets.components;
 
+import java.util.UUID;
+
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
@@ -14,7 +16,7 @@ import minecrafttransportsimulator.mcinterface.WrapperWorld;
  * @author don_bruce
  */
 public abstract class APacketEntityInteract<MainEntityType extends AEntityA_Base, InteractingEntityType extends WrapperEntity> extends APacketEntity<MainEntityType>{
-	private final String entityID;
+	private final UUID entityID;
 	
 	public APacketEntityInteract(MainEntityType entity, InteractingEntityType interactor){
 		super(entity);
@@ -23,19 +25,19 @@ public abstract class APacketEntityInteract<MainEntityType extends AEntityA_Base
 	
 	public APacketEntityInteract(ByteBuf buf){
 		super(buf);
-		this.entityID = readStringFromBuffer(buf);
+		this.entityID = readUUIDFromBuffer(buf);
 	};
 
 	@Override
 	public void writeToBuffer(ByteBuf buf){
 		super.writeToBuffer(buf);
-		writeStringToBuffer(entityID, buf);
+		writeUUIDToBuffer(entityID, buf);
 	}
 	
 	@Override
 	public boolean handle(WrapperWorld world, MainEntityType entity){
 		@SuppressWarnings("unchecked")
-		InteractingEntityType interactor = (InteractingEntityType) world.getEntity(entityID);
+		InteractingEntityType interactor = (InteractingEntityType) world.getExternalEntity(entityID);
 		return interactor != null && handle(world, entity, interactor);
 	}
 	

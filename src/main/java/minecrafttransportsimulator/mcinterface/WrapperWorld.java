@@ -4,14 +4,11 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -28,7 +25,6 @@ import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
-import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
@@ -251,9 +247,9 @@ public class WrapperWorld{
 	 *  If the entity is a player, an instance of {@link WrapperPlayer}
 	 *  is returned instead.
 	 */
-	public WrapperEntity getEntity(String entityID){
+	public WrapperEntity getExternalEntity(UUID entityID){
 		for(Entity entity : world.loadedEntityList){
-			if(entity.getCachedUniqueIdString().equals(entityID)){
+			if(entity.getUniqueID().equals(entityID)){
 				return WrapperEntity.getWrapperFor(entity);
 			}
 		}
@@ -326,21 +322,17 @@ public class WrapperWorld{
     }
 	
 	/**
-	 *  Attacks all entities that are in the passed-in damage range.  If the
-	 *  passed-in entity is not null, then any entity riding the passed-in
-	 *  entity that are inside the bounding box will not be attacked, nor will
-	 *  the passed-in entity be attacked.  Useful for vehicles, where you don't 
-	 *  want players firing weapons to hit themselves or the vehicle.
-	 *  Note that if this is called on clients, then this method will not attack
-	 *  any entities. Instead, it will return a map of all entities that could have
-	 *  been attacked with the bounding boxes attacked if they are of type 
-	 *  {@link BuilderEntityExisting} (returned in wrapper form) as the value and the key being the boxes hit.
+	 *  Attacks all entities that are in the passed-in damage range.  
+	 *  This only includes external entities, and NOT any entities
+	 *  that extend {@link BuilderEntityExisting}  If this is called on 
+	 *  clients, then this method will not attack any entities. Instead, 
+	 *  it will return a list of all entities that could have been attacked. 
 	 *  This is because attacking cannot be done on clients, but it may be useful to 
 	 *  know what entities could have been attacked should the call have been made on a server.
 	 *  Note that the passed-in motion is used to move the Damage BoundingBox a set distance to
 	 *  prevent excess collision checking, and may be null if no motion is applied.
 	 */
-	public Map<WrapperEntity, Collection<BoundingBox>> attackEntities(Damage damage, Point3d motion){
+	public List<WrapperEntity> attackEntities(Damage damage, Point3d motion){
 		AxisAlignedBB mcBox = damage.box.convert();
 		List<Entity> collidedEntities;
 		
@@ -357,90 +349,43 @@ public class WrapperWorld{
 		Point3d endPoint = null;
 		Vec3d start = null;
 		Vec3d end = null;
-		Map<WrapperEntity, Collection<BoundingBox>> rayTraceHits = null;
+		List<WrapperEntity> hitEntities = new ArrayList<WrapperEntity>();
+		
 		if(motion != null){
 			startPoint = damage.box.globalCenter;
 			endPoint = damage.box.globalCenter.copy().add(motion);
 			start = new Vec3d(startPoint.x, startPoint.y, startPoint.z);
 			end = new Vec3d(endPoint.x, endPoint.y, endPoint.z);
-			rayTraceHits = new HashMap<WrapperEntity, Collection<BoundingBox>>();
 		}
 		
 		//Validate the collided entities to make sure we didn't hit something we shouldn't have.
 		//Also get rayTrace hits for advanced checking.
-		Iterator<Entity> iterator = collidedEntities.iterator();
-		while(iterator.hasNext()){
-			Entity mcEntityCollided = iterator.next();
-			if(mcEntityCollided instanceof BuilderEntityExisting){
-				AEntityB_Existing entityAttacked = ((BuilderEntityExisting) mcEntityCollided).entity;
-				if(damage.damgeSource != null){
-					if(damage.damgeSource.equals(entityAttacked)){
-						//Don't attack ourselves.
-						iterator.remove();
-						continue;
-					}else if(entityAttacked instanceof AEntityF_Multipart){
-						if(((AEntityF_Multipart<?>) entityAttacked).parts.contains(damage.damgeSource)){
-							//Don't attack the entity we are a part on.
-							iterator.remove();
-							continue;
-						}
-					}
-				}
-				
-				//Get hitboxes hit if we are a moving source of damage.
-				if(motion != null){
-					TreeMap<Double, BoundingBox> hitBoxes = new TreeMap<Double, BoundingBox>();
-					if(entityAttacked instanceof AEntityF_Multipart){
-						for(BoundingBox box : ((AEntityF_Multipart<?>) entityAttacked).allInteractionBoxes){
-							Point3d delta = box.getIntersectionPoint(startPoint, endPoint); 
-							if(delta != null){
-								hitBoxes.put(delta.distanceTo(startPoint), box);
-							}
-						}
-					}else if(entityAttacked instanceof AEntityE_Interactable){
-						for(BoundingBox box : ((AEntityE_Interactable<?>) entityAttacked).interactionBoxes){
-							Point3d delta = box.getIntersectionPoint(startPoint, endPoint); 
-							if(delta != null){
-								hitBoxes.put(delta.distanceTo(startPoint), box);
-							}
-						}
-					}
-					
-					//If we hit any box on this entity, add it to the map.
-					//If not, remove it as we didn't hit it.
-					if(hitBoxes.isEmpty()){
-						iterator.remove();
-					}else{
-						rayTraceHits.put(WrapperEntity.getWrapperFor(mcEntityCollided), hitBoxes.values());
-					}
-				}
-			}else{
+		for(Entity mcEntityCollided : collidedEntities){
+			if(!(mcEntityCollided instanceof ABuilderEntityBase)){
 				if(damage.damgeSource != null){
 					Entity ridingEntity = mcEntityCollided.getRidingEntity();
 					if(ridingEntity instanceof BuilderEntityExisting){
 						AEntityB_Existing internalEntity = ((BuilderEntityExisting) ridingEntity).entity;
 						if(damage.damgeSource.equals(internalEntity)){
 							//Don't attack riders of the source of the damage.
-							iterator.remove();
 							continue;
 						}else if(damage.damgeSource instanceof APart){
 							APart damagingPart = (APart) damage.damgeSource;
 							if(damagingPart.entityOn.equals(internalEntity)){
 								//Don't attack riders of the multipart the part applying damage is a part of.
-								iterator.remove();
 								continue;
 							}
 						}
 					}
 				}
 				
-				//Didn't hit a builder. Do normal raytracing.
-				//If we didn't hit anything, remove the entity from the list. 
+				//Didn't hit a rider on the damage source. Do normal raytracing.
 				if(motion != null){
 					if(mcEntityCollided.getEntityBoundingBox().calculateIntercept(start, end) == null){
-						iterator.remove();
+						//Raytracing doesn't intercept the box, so no hits.
+						continue;
 					}else{
-						rayTraceHits.put(WrapperEntity.getWrapperFor(mcEntityCollided), null);
+						hitEntities.add(WrapperEntity.getWrapperFor(mcEntityCollided));
 					}
 				}
 			}
@@ -449,7 +394,7 @@ public class WrapperWorld{
 		//If we are on the server, attack the entities.
 		//If we are on a client, we won't have attacked any entities, but we need to return what we found.
 		if(isClient()){
-			return rayTraceHits;
+			return hitEntities;
 		}else{
 			for(Entity entity : collidedEntities){
 				WrapperEntity.getWrapperFor(entity).attack(damage);

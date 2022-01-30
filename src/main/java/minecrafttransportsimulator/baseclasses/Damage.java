@@ -3,7 +3,9 @@ package minecrafttransportsimulator.baseclasses;
 import java.util.List;
 
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
+import minecrafttransportsimulator.items.instances.ItemBullet;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
+import minecrafttransportsimulator.jsondefs.JSONBullet.BulletType;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 
 /**Basic damage class.  Used to make instances of damage to apply to entities.  Allows for quick addition
@@ -41,6 +43,23 @@ public class Damage{
 		this.box = box;
 		this.damgeSource = damgeSource;
 		this.entityResponsible = entityResponsible;
+	}
+	
+	/**
+	 * Sets this damage to the properties of the bullet item.
+	 */
+	public void setBullet(ItemBullet bulletItem){
+		ignoreCooldown = true;
+		if(bulletItem.definition.bullet.types.contains(BulletType.WATER)){
+			isWater = true;
+		}
+		if(bulletItem.definition.bullet.types.contains(BulletType.INCENDIARY)){
+			isFire = true;
+		}
+		if(bulletItem.definition.bullet.types.contains(BulletType.ARMOR_PIERCING)){
+			ignoreArmor = true;
+		}
+		effects = bulletItem.definition.bullet.effects;
 	}
 	
 	/**

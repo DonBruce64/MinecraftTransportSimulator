@@ -3,6 +3,7 @@ package minecrafttransportsimulator.entities.instances;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
@@ -33,8 +34,8 @@ import net.minecraft.item.ItemStack;
  * @author don_bruce
  */
 public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun>{
-	public static final Map<String, EntityPlayerGun> playerClientGuns = new HashMap<String, EntityPlayerGun>();
-	public static final Map<String, EntityPlayerGun> playerServerGuns = new HashMap<String, EntityPlayerGun>();
+	public static final Map<UUID, EntityPlayerGun> playerClientGuns = new HashMap<UUID, EntityPlayerGun>();
+	public static final Map<UUID, EntityPlayerGun> playerServerGuns = new HashMap<UUID, EntityPlayerGun>();
 	
 	public final WrapperPlayer player;
 	private int hotbarSelected = -1;
@@ -57,7 +58,7 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun>{
 		}else{
 			//Saved entity.  Either on the server or client.
 			//Get player via saved NBT.  If the player isn't found, we're not valid.
-			String playerUUID = data.getString("playerUUID");
+			UUID playerUUID = data.getUUID("playerUUID");
 			WrapperPlayer foundPlayer = null;
 			for(WrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, 16, 16, 16))){
 				if(entity instanceof WrapperPlayer){
@@ -285,7 +286,7 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun>{
 	public WrapperNBT save(WrapperNBT data){
 		super.save(data);
 		if(player != null){
-			data.setString("playerUUID", player.getID());
+			data.setUUID("playerUUID", player.getID());
 		}
 		return data;
 	}

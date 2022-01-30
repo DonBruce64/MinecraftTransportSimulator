@@ -115,44 +115,42 @@ public class PartEngine extends APart{
 	@Override
 	public void attack(Damage damage){
 		super.attack(damage);
-		if(isValid){
-			if(!damage.isWater){
-				if(definition.engine.disableAutomaticStarter){
-					//Check if this is a hand-start command.
-					if(damage.entityResponsible instanceof WrapperPlayer && ((WrapperPlayer) damage.entityResponsible).getHeldStack().isEmpty()){
-						if(!entityOn.equals(damage.entityResponsible.getEntityRiding())){
-							if(!magnetoOn){
-								setVariable(MAGNETO_VARIABLE, 1);
-								InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(this, MAGNETO_VARIABLE));
-							}
-							handStartEngine();
-							InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.HS_ON));
-							return;
+		if(!damage.isWater){
+			if(definition.engine.disableAutomaticStarter){
+				//Check if this is a hand-start command.
+				if(damage.entityResponsible instanceof WrapperPlayer && ((WrapperPlayer) damage.entityResponsible).getHeldStack().isEmpty()){
+					if(!entityOn.equals(damage.entityResponsible.getEntityRiding())){
+						if(!magnetoOn){
+							setVariable(MAGNETO_VARIABLE, 1);
+							InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(this, MAGNETO_VARIABLE));
 						}
+						handStartEngine();
+						InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.HS_ON));
+						return;
 					}
 				}
-				if(!isCreative){
-					if(damage.isExplosion){
-						hours += damage.amount*20*ConfigSystem.configObject.general.engineHoursFactor.value;
-						if(!definition.engine.isSteamPowered){
-							if(!oilLeak)oilLeak = Math.random() < ConfigSystem.configObject.damage.engineLeakProbability.value*10;
-							if(!fuelLeak)fuelLeak = Math.random() < ConfigSystem.configObject.damage.engineLeakProbability.value*10;
-							if(!brokenStarter)brokenStarter = Math.random() < 0.05;
-						}
-						InterfacePacket.sendToAllClients(new PacketPartEngine(this, damage.amount*10*ConfigSystem.configObject.general.engineHoursFactor.value, oilLeak, fuelLeak, brokenStarter));
-					}else{
-						hours += damage.amount*2*ConfigSystem.configObject.general.engineHoursFactor.value;
-						if(!definition.engine.isSteamPowered){
-							if(!oilLeak)oilLeak = Math.random() < ConfigSystem.configObject.damage.engineLeakProbability.value;
-							if(!fuelLeak)fuelLeak = Math.random() < ConfigSystem.configObject.damage.engineLeakProbability.value;
-						}
-						InterfacePacket.sendToAllClients(new PacketPartEngine(this, damage.amount*ConfigSystem.configObject.general.engineHoursFactor.value, oilLeak, fuelLeak, brokenStarter));
-					}
-				}
-			}else{
-				stallEngine(Signal.DROWN);
-				InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.DROWN));
 			}
+			if(!isCreative){
+				if(damage.isExplosion){
+					hours += damage.amount*20*ConfigSystem.configObject.general.engineHoursFactor.value;
+					if(!definition.engine.isSteamPowered){
+						if(!oilLeak)oilLeak = Math.random() < ConfigSystem.configObject.damage.engineLeakProbability.value*10;
+						if(!fuelLeak)fuelLeak = Math.random() < ConfigSystem.configObject.damage.engineLeakProbability.value*10;
+						if(!brokenStarter)brokenStarter = Math.random() < 0.05;
+					}
+					InterfacePacket.sendToAllClients(new PacketPartEngine(this, damage.amount*10*ConfigSystem.configObject.general.engineHoursFactor.value, oilLeak, fuelLeak, brokenStarter));
+				}else{
+					hours += damage.amount*2*ConfigSystem.configObject.general.engineHoursFactor.value;
+					if(!definition.engine.isSteamPowered){
+						if(!oilLeak)oilLeak = Math.random() < ConfigSystem.configObject.damage.engineLeakProbability.value;
+						if(!fuelLeak)fuelLeak = Math.random() < ConfigSystem.configObject.damage.engineLeakProbability.value;
+					}
+					InterfacePacket.sendToAllClients(new PacketPartEngine(this, damage.amount*ConfigSystem.configObject.general.engineHoursFactor.value, oilLeak, fuelLeak, brokenStarter));
+				}
+			}
+		}else{
+			stallEngine(Signal.DROWN);
+			InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.DROWN));
 		}
 	}
 	
