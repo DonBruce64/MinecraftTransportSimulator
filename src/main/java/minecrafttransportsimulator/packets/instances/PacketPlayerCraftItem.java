@@ -48,10 +48,12 @@ public class PacketPlayerCraftItem extends APacketPlayer{
 	public void handle(WrapperWorld world, WrapperPlayer player){
 		WrapperInventory inventory = player.getInventory();
 		if(player.isCreative() || inventory.hasMaterials(itemToCraft, true, true, forRepair)){
-			if(!player.isCreative()){
-				inventory.removeMaterials(itemToCraft, true, true, forRepair);
+			//Check we can add the stack before removing materials.
+			if(inventory.addStack(itemToCraft.getNewStack(null))){
+				if(!player.isCreative()){ 
+					inventory.removeMaterials(itemToCraft, true, true, forRepair);
+				}
 			}
-			inventory.addItem(itemToCraft, null);
 		}
 	}
 }

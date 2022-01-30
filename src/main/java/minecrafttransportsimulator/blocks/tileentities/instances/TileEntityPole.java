@@ -97,8 +97,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 					//Need to check if it will fit in the player's inventory.
 					if(pole.components.containsKey(axis)){
 						ATileEntityPole_Component component = pole.components.get(axis);
-						WrapperNBT removedComponentData = component.save(new WrapperNBT());
-						if(player.isCreative() || player.getInventory().addItem(component.getItem(), removedComponentData)){
+						if(player.isCreative() || player.getInventory().addStack(component.getItem().getNewStack(component.save(new WrapperNBT())))){
 							changeComponent(axis, null);
 							InterfacePacket.sendToAllClients(new PacketTileEntityPoleChange(this, player, axis, null));
 						}
@@ -114,7 +113,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 					ATileEntityPole_Component newComponent = PoleComponentType.createComponent(pole, player, axis, componentItem.validateData(new WrapperNBT(heldStack)));
 					changeComponent(axis, newComponent);
 					if(!player.isCreative()){
-						player.getInventory().removeStack(player.getHeldStack(), 1);
+						player.getInventory().removeFromSlot(player.getHotbarIndex(), 1);
 					}
 					InterfacePacket.sendToAllClients(new PacketTileEntityPoleChange(this, player, axis, newComponent.save(new WrapperNBT())));
 					return true;
@@ -216,8 +215,9 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 	@Override
 	public void addDropsToList(List<ItemStack> drops){
 		for(Axis axis : Axis.values()){
-			if(components.containsKey(axis)){
-				drops.add(components.get(axis).getItem().getNewStack());
+			ATileEntityPole_Component component = components.get(axis);
+			if(component != null){
+				drops.add(component.getItem().getNewStack(component.save(new WrapperNBT())));
 			}
 		}
 	}

@@ -980,12 +980,8 @@ public class WrapperWorld{
 	 *  leads to phantom items that can't be picked up. 
 	 */
 	public void spawnItem(AItemBase item, WrapperNBT data, Point3d point){
-		ItemStack stack = item.getNewStack();
-		if(data != null){
-			stack.setTagCompound(data.tag);
-		}
 		//Spawn 1 block above in case we're right on a block.
-		world.spawnEntity(new EntityItem(world, point.x, point.y + 1, point.z, stack));
+		world.spawnEntity(new EntityItem(world, point.x, point.y + 1, point.z, item.getNewStack(data)));
 	}
 	
 	/**
@@ -1053,8 +1049,8 @@ public class WrapperWorld{
 					   
 					   //If the player is new, also add handbooks.
 					   if(!ConfigSystem.configObject.general.joinedPlayers.value.contains(playerWrapper.getID())){
-						   player.addItemStackToInventory(PackParserSystem.getItem("mts", "handbook_car").getNewStack());
-						   player.addItemStackToInventory(PackParserSystem.getItem("mts", "handbook_plane").getNewStack());
+						   player.addItemStackToInventory(PackParserSystem.getItem("mts", "handbook_car").getNewStack(null));
+						   player.addItemStackToInventory(PackParserSystem.getItem("mts", "handbook_plane").getNewStack(null));
 						   ConfigSystem.configObject.general.joinedPlayers.value.add(playerWrapper.getID());
 						   ConfigSystem.saveToDisk();
 					   }

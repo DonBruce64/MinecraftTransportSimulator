@@ -104,7 +104,7 @@ public class GUIFuelPump extends AGUIInventory{
 			for(int i=0; i<pump.fuelItems.getSize(); ++i){
 				ItemStack stack = pump.fuelItems.getStack(i);
 				if(stack.isEmpty()){
-					InterfacePacket.sendToServer(new PacketInventoryContainerChange(pump.fuelItems, i, playerInventory.getStackInSlot(slotClicked)));
+					InterfacePacket.sendToServer(new PacketInventoryContainerChange(pump.fuelItems, i, playerInventory.getStack(slotClicked)));
 					return;
 				}
 			}

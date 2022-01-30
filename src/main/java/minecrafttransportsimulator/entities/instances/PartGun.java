@@ -150,7 +150,7 @@ public class PartGun extends APart{
 		AItemBase heldItem = player.getHeldItem();
 		if(heldItem instanceof ItemBullet){
 			if(tryToReload((ItemBullet) heldItem) && !player.isCreative()){
-				player.getInventory().removeItem(heldItem, null);
+				player.getInventory().removeFromSlot(player.getHotbarIndex(), 1);
 			}
 		}
 		return true;
@@ -275,11 +275,12 @@ public class PartGun extends APart{
 							//Check the player's inventory for bullets.
 							WrapperInventory inventory = ((WrapperPlayer) lastController).getInventory();
 							for(int i=0; i<inventory.getSize(); ++i){
-								AItemBase item = inventory.getItemInSlot(i);
-								if(item instanceof ItemBullet){
-									if(tryToReload((ItemBullet) item)){
+								ItemStack stack = inventory.getStack(i);
+								Item item = stack.getItem();
+								if(item instanceof IBuilderItemInterface && ((IBuilderItemInterface) item).getItem() instanceof ItemBullet){
+									if(tryToReload((ItemBullet) ((IBuilderItemInterface) item).getItem())){
 										//Bullet is right type, and we can fit it.  Remove from player's inventory and add to the gun.
-										inventory.decrementSlot(i, 1);
+										inventory.removeFromSlot(i, 1);
 										return true;
 									}
 								}
@@ -298,7 +299,7 @@ public class PartGun extends APart{
 											if(tryToReload((ItemBullet) ((IBuilderItemInterface) item).getItem())){
 												//Bullet is right type, and we can fit it.  Remove from crate and add to the gun.
 												//Return here to ensure we don't set the loadedBullet to blank since we found bullets.
-												inventory.removeItems(i, 1, true);
+												inventory.removeFromSlot(i, 1);
 												return true;
 											}
 										}

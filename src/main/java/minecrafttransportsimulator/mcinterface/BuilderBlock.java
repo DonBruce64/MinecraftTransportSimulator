@@ -30,7 +30,6 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.EnumFacing;
@@ -144,11 +143,7 @@ public class BuilderBlock extends Block{
     			if(tile != null){
     				AItemPack<?> item = tile.getItem();
     				if(item != null){
-    					ItemStack stack = item.getNewStack();
-    	        		WrapperNBT data = new WrapperNBT(new NBTTagCompound());
-    	        		((BuilderTileEntity<?>) mcTile).tileEntity.save(data);
-    	        		stack.setTagCompound(data.tag);
-    	            	return stack;
+    					return item.getNewStack(((BuilderTileEntity<?>) mcTile).tileEntity.save(new WrapperNBT()));
     				}
     			}
     		}

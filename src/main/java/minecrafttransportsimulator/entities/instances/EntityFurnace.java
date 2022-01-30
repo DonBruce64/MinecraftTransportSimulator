@@ -49,7 +49,7 @@ public class EntityFurnace extends EntityInventoryContainer{
 						ticksAddedOfFuel = InterfaceCore.getFuelValue(fuelStack);
 						ticksLeftOfFuel = ticksAddedOfFuel;
 						InterfacePacket.sendToAllClients(new PacketFurnaceFuelAdd(this));
-						decrementStack(FUEL_ITEM_SLOT);
+						removeFromSlot(FUEL_ITEM_SLOT, 1);
 					}
 				}
 				
@@ -80,7 +80,7 @@ public class EntityFurnace extends EntityInventoryContainer{
 							stackInResult.setCount(totalItems);
 							setStack(stackInResult, SMELTED_ITEM_SLOT);
 							
-							decrementStack(SMELTING_ITEM_SLOT);
+							removeFromSlot(SMELTING_ITEM_SLOT, 1);
 							ticksNeededToSmelt = 0;
 						}
 					}

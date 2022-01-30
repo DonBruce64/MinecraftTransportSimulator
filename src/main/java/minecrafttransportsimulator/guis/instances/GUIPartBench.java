@@ -464,7 +464,7 @@ public class GUIPartBench extends AGUIBase{
 			//Don't spin signs.  That gets annoying.
 			modelRender.spin = !(currentItem.definition instanceof JSONPoleComponent && ((JSONPoleComponent) currentItem.definition).pole.type.equals(PoleComponentType.SIGN));
 		}else{
-			itemRender.stack = currentItem.getNewStack();
+			itemRender.stack = currentItem.getNewStack(null);
 			modelRender.modelLocation = null;
 		}
 		

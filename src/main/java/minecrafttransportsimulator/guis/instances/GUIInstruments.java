@@ -64,25 +64,6 @@ public class GUIInstruments extends AGUIBase{
 		super();
 		this.vehicle = vehicle;
 		this.player = InterfaceClient.getClientPlayer();
-		
-		//Add all packs that have instruments in them.
-		//This depends on if the player has the instruments, or if they are in creative.
-		for(String packID : PackParserSystem.getAllPackIDs()){
-			for(AItemPack<?> packItem : PackParserSystem.getAllItemsForPack(packID, true)){
-				if(packItem instanceof ItemInstrument){
-					if(player.isCreative() || player.getInventory().hasItem(packItem)){
-						//Add the instrument to the list of instruments the player has.
-						if(!playerInstruments.containsKey(packID)){
-							playerInstruments.put(packID, new ArrayList<ItemInstrument>());
-							if(currentPack == null){
-								currentPack = packID;
-							}
-						}
-						playerInstruments.get(packID).add((ItemInstrument) packItem);
-					}
-				}
-			}
-		}
 	}
 
 	@Override
@@ -107,23 +88,21 @@ public class GUIInstruments extends AGUIBase{
 		//That depends if there are that many instruments present for the currentPack.
 		instrumentSlots.clear();
 		instrumentSlotIcons.clear();
-		if(currentPack != null){
-			for(byte i=0; i<36; ++i){				
-				GUIComponentButton instrumentButton = new GUIComponentButton(guiLeft + 23 + GUIComponentButton.ITEM_BUTTON_SIZE*(i/2), guiTop - 75 + GUIComponentButton.ITEM_BUTTON_SIZE*(i%2), false){
-					@Override
-					public void onClicked(boolean leftSide){
-						InterfacePacket.sendToServer(new PacketEntityInstrumentChange(selectedEntity, player, selectedEntity.definition.instruments.indexOf(selectedInstrumentDefinition), playerInstruments.get(currentPack).get(instrumentSlots.indexOf(this))));
-						selectedEntity = null;
-						selectedInstrumentDefinition = null;
-					}
-				};
-				addComponent(instrumentButton);
-				instrumentSlots.add(instrumentButton);
-				
-				GUIComponentItem instrumentItem = new GUIComponentItem(instrumentButton);
-				addComponent(instrumentItem);
-				instrumentSlotIcons.add(instrumentItem);
-			}
+		for(byte i=0; i<36; ++i){				
+			GUIComponentButton instrumentButton = new GUIComponentButton(guiLeft + 23 + GUIComponentButton.ITEM_BUTTON_SIZE*(i/2), guiTop - 75 + GUIComponentButton.ITEM_BUTTON_SIZE*(i%2), false){
+				@Override
+				public void onClicked(boolean leftSide){
+					InterfacePacket.sendToServer(new PacketEntityInstrumentChange(selectedEntity, player, selectedEntity.definition.instruments.indexOf(selectedInstrumentDefinition), playerInstruments.get(currentPack).get(instrumentSlots.indexOf(this))));
+					selectedEntity = null;
+					selectedInstrumentDefinition = null;
+				}
+			};
+			addComponent(instrumentButton);
+			instrumentSlots.add(instrumentButton);
+			
+			GUIComponentItem instrumentItem = new GUIComponentItem(instrumentButton);
+			addComponent(instrumentItem);
+			instrumentSlotIcons.add(instrumentItem);
 		}
 		
 		//Create the pack name label.
@@ -200,19 +179,45 @@ public class GUIInstruments extends AGUIBase{
 		prevPackButton.visible = playerInstruments.lowerKey(currentPack) != null;
 		nextPackButton.visible = playerInstruments.higherKey(currentPack) != null;
 		
-		//Set instrument icon and button states depending on which instruments the player has.
-		if(currentPack != null){
-			for(int i=0; i<instrumentSlots.size(); ++i){
-				if(currentPack != null && playerInstruments.get(currentPack).size() > i){
-					instrumentSlots.get(i).visible = true;
-					instrumentSlots.get(i).enabled = selectedInstrumentDefinition != null;
-					instrumentSlotIcons.get(i).stack = playerInstruments.get(currentPack).get(i).getNewStack();
-				}else{
-					instrumentSlots.get(i).visible = false;
-					instrumentSlotIcons.get(i).stack = null;
+		//Add all packs that have instruments in them.
+		//This depends on if the player has the instruments, or if they are in creative.
+		playerInstruments.clear();
+		String firstPackSeen = null;
+		for(String packID : PackParserSystem.getAllPackIDs()){
+			for(AItemPack<?> packItem : PackParserSystem.getAllItemsForPack(packID, true)){
+				if(packItem instanceof ItemInstrument){
+					if(player.isCreative() || player.getInventory().getSlotForStack(packItem.getNewStack(null)) != -1){
+						//Add the instrument to the list of instruments the player has.
+						if(!playerInstruments.containsKey(packID)){
+							playerInstruments.put(packID, new ArrayList<ItemInstrument>());
+							if(firstPackSeen == null){
+								firstPackSeen = packID;
+							}
+						}
+						playerInstruments.get(packID).add((ItemInstrument) packItem);
+					}
 				}
 			}
+		}
+		
+		//Set current pack if we don't have it or its invalid.
+		if(currentPack == null || playerInstruments.get(currentPack) == null){
+			currentPack = firstPackSeen;
+		}
+		
+		//Set instrument icon and button states depending on which instruments the player has.
+		if(currentPack != null){
 			packName.text = PackParserSystem.getPackConfiguration(currentPack).packName;
+		}
+		for(int i=0; i<instrumentSlots.size(); ++i){
+			if(currentPack != null && playerInstruments.get(currentPack).size() > i){
+				instrumentSlots.get(i).visible = true;
+				instrumentSlots.get(i).enabled = selectedInstrumentDefinition != null;
+				instrumentSlotIcons.get(i).stack = playerInstruments.get(currentPack).get(i).getNewStack(null);
+			}else{
+				instrumentSlots.get(i).visible = false;
+				instrumentSlotIcons.get(i).stack = null;
+			}
 		}
 		
 		//Set entity instrument states.

@@ -1,14 +1,11 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
-import java.util.List;
-
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
-import net.minecraft.item.ItemStack;
 
 /**Chest tile entity.
  *
@@ -57,15 +54,6 @@ public class TileEntityChest extends TileEntityDecor{
 		}
 		
 		return super.getRawVariableValue(variable, partialTicks);
-	}
-	
-	@Override
-	public void addDropsToList(List<ItemStack> drops){
-		WrapperNBT data = new WrapperNBT();
-		save(data);
-		ItemStack droppedStack = getItem().getNewStack();
-		droppedStack.setTagCompound(data.tag);
-		drops.add(droppedStack);
 	}
 	
 	@Override

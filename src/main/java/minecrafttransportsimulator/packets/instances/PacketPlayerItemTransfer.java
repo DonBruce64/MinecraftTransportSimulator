@@ -50,13 +50,14 @@ public class PacketPlayerItemTransfer extends APacketEntityInteract<EntityInvent
 	
 	@Override
 	public boolean handle(WrapperWorld world, EntityInventoryContainer inventory, WrapperPlayer player){
+		WrapperInventory playerInventory = player.getInventory();
 		if(inventorySlot != -1){
-			if(player.getInventory().addStack(inventory.getStack(inventorySlot))){
-				inventory.setStack(ItemStack.EMPTY, inventorySlot);
-			}
+			ItemStack stackToTransfer = inventory.getStack(inventorySlot);
+			int startingQty = stackToTransfer.getCount();
+			playerInventory.addStack(stackToTransfer);
+			inventory.removeFromSlot(inventorySlot, startingQty - stackToTransfer.getCount());
 		}else if(playerSlot != -1){
-			WrapperInventory playerInventory = player.getInventory();
-			Item mcItem = playerInventory.getStackInSlot(playerSlot).getItem();
+			Item mcItem = playerInventory.getStack(playerSlot).getItem();
 			//Make sure we aren't an inventory container.
 			//Those can't go into our inventories.
 			if(mcItem instanceof IBuilderItemInterface){
@@ -68,7 +69,10 @@ public class PacketPlayerItemTransfer extends APacketEntityInteract<EntityInvent
 					return false;
 				}
 			}
-			playerInventory.decrementSlot(playerSlot, inventory.addStack(playerInventory.getStackInSlot(playerSlot), true));
+			ItemStack stackToTransfer = playerInventory.getStack(playerSlot);
+			int startingQty = stackToTransfer.getCount();
+			inventory.addStack(stackToTransfer);
+			playerInventory.removeFromSlot(playerSlot, startingQty - stackToTransfer.getCount());
 		}
 		if(saveToPlayer){
 			WrapperNBT newData = new WrapperNBT();

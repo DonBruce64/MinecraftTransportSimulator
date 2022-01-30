@@ -150,6 +150,7 @@ public class WrapperPlayer extends WrapperEntity{
 	
 	/**
 	 *  Gets the index of the held stack in the hotbar.
+	 *  This corresponds to the inventory slot the item is in.
 	 */
 	public int getHotbarIndex(){
 		return player.inventory.currentItem;

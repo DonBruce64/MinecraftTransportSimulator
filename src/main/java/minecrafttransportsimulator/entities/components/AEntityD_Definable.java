@@ -285,9 +285,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 	public void addDropsToList(List<ItemStack> drops){
 		AItemPack<JSONDefinition> packItem = getItem();
 		if(packItem != null){
-			ItemStack droppedStack = getItem().getNewStack();
-			droppedStack.setTagCompound(save(new WrapperNBT()).tag);
-			drops.add(droppedStack);
+			drops.add(packItem.getNewStack(save(new WrapperNBT())));
 		}
 	}
 	

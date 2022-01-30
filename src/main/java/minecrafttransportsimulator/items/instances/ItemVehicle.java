@@ -70,7 +70,7 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 			
 			//Decrement stack if we are not in creative.
 			if(!player.isCreative()){
-				player.getInventory().removeStack(heldStack, 1);
+				player.getInventory().removeFromSlot(player.getHotbarIndex(), 1);
 			}
 		}
 		return true;

@@ -52,7 +52,7 @@ public class PartEffector extends APart{
 									for(int i=0; i<inventory.getSize(); ++i){
 										ItemStack stack = inventory.getStack(i);
 										if(world.fertilizeBlock(box.globalCenter, stack)){
-											inventory.removeItems(i, 1, true);
+											inventory.removeFromSlot(i, 1);
 											break;
 										}
 									}
@@ -73,7 +73,7 @@ public class PartEffector extends APart{
 									for(int i=0; i<inventory.getSize(); ++i){
 										ItemStack stack = inventory.getStack(i);
 										if(world.plantBlock(box.globalCenter, stack)){
-											inventory.removeItems(i, 1, true);
+											inventory.removeFromSlot(i, 1);
 											break;
 										}
 									}
@@ -141,7 +141,7 @@ public class PartEffector extends APart{
 							ItemStack dropStack = iterator.next();
 							for(APart part : entityOn.parts){
 								if(part instanceof PartInteractable && part.isActive && part.definition.interactable.interactionType.equals(InteractableComponentType.CRATE)){
-									if(((PartInteractable) part).inventory.addStack(dropStack, true) == dropStack.getCount()){
+									if(((PartInteractable) part).inventory.addStack(dropStack)){
 										iterator.remove();
 										break;
 									}
@@ -150,8 +150,8 @@ public class PartEffector extends APart{
 						}
 						
 						//Check our drops.  If we couldn't add any of them to any inventory, drop them on the ground instead.
-						for(ItemStack stack : drops){
-							world.spawnItemStack(stack, position);
+						for(ItemStack dropStack : drops){
+							world.spawnItemStack(dropStack, position);
 						}
 						drops.clear();
 					}

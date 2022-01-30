@@ -116,7 +116,7 @@ public class GUIOverlay extends AGUIBase{
 						int cycle = player.isSneaking() ? 30 : 15;
 						AItemPart partToRender = validParts.get((int) ((vehicle.ticksExisted/cycle)%validParts.size()));
 						tooltipText.add(partToRender.getItemName());
-						scannerItem.stack = partToRender.getNewStack();
+						scannerItem.stack = partToRender.getNewStack(null);
 						
 						//If we are on the start of the cycle, beep.
 						if(vehicle.ticksExisted%cycle == 0){

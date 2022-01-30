@@ -131,7 +131,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	public void addDropsToList(List<ItemStack> drops){
 		for(RoadComponent componentType : RoadComponent.values()){
 			if(components.containsKey(componentType)){
-				drops.add(components.get(componentType).getNewStack());
+				drops.add(components.get(componentType).getNewStack(null));
 			}
 		}
 	}

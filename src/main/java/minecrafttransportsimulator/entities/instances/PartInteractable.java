@@ -177,7 +177,7 @@ public final class PartInteractable extends APart{
 									if(InterfaceCore.getFuelValue(stack) != 0 && (currentFuel.isEmpty() || stack.isItemEqual(currentFuel))){
 										furnace.ticksAddedOfFuel = InterfaceCore.getFuelValue(stack);
 										furnace.ticksLeftOfFuel = furnace.ticksAddedOfFuel;
-										crate.inventory.decrementStack(i);
+										crate.inventory.removeFromSlot(i, 1);
 										InterfacePacket.sendToAllClients(new PacketFurnaceFuelAdd(furnace));
 										return;
 									}

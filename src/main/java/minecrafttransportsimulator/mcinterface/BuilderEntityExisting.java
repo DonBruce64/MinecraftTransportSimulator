@@ -269,11 +269,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase{
 					if(box.isPointInside(new Point3d(target.hitVec.x, target.hitVec.y, target.hitVec.z))){
 						AItemPack<?> partItem = part.getItem();
 						if(partItem != null){
-							ItemStack stack = part.getItem().getNewStack();
-							WrapperNBT partData = new WrapperNBT();
-							part.save(partData);
-							stack.setTagCompound(partData.tag);
-							return stack;
+							return part.getItem().getNewStack(part.save(new WrapperNBT()));
 						}
 					}
 				}

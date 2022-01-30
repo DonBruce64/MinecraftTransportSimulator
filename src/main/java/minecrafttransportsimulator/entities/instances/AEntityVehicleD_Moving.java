@@ -144,7 +144,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 						placingPlayer.sendPacket(new PacketPlayerChatMessage(placingPlayer, "interact.failure.nospace"));
 						//Need to add stack back as it will have been removed here.
 						if(!placingPlayer.isCreative()){
-							placingPlayer.setHeldStack(getItem().getNewStack());
+							placingPlayer.setHeldStack(getItem().getNewStack(save(new WrapperNBT())));
 						}
 						return false;
 					}else{

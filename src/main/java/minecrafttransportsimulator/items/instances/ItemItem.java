@@ -302,7 +302,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 					if(!vehicle.world.isClient()){
 						InterfacePacket.sendToPlayer(new PacketPlayerChatMessage(player, "interact.jumperpack.success"), player);
 						if(!player.isCreative()){
-							player.getInventory().removeStack(player.getHeldStack(), 1);
+							player.getInventory().removeFromSlot(player.getHotbarIndex(), 1);
 						}
 						return CallbackType.ALL;
 					}

@@ -73,7 +73,7 @@ public abstract class AGUIInventory extends AGUIBase{
 		super.setStates();
 		//Set player item icons to player inventory.
 		for(int i=0; i<playerSlotButtons.size(); ++i){
-			ItemStack stack = playerInventory.getStackInSlot(i);
+			ItemStack stack = playerInventory.getStack(i);
 			playerSlotButtons.get(i).enabled = !stack.isEmpty();
 			playerSlotIcons.get(i).stack = stack;
 		}

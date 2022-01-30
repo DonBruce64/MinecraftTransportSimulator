@@ -55,8 +55,7 @@ public class PacketEntityInstrumentChange extends APacketEntityInteract<AEntityE
 		//Check to make sure the instrument can fit in survival player's inventories.
 		//Only check this on the server, as adding things to the client doesn't do us any good.
 		if(!world.isClient() && !player.isCreative() && entity.instruments.containsKey(slot)){
-			ItemInstrument instrument = entity.instruments.get(slot);
-			if(!player.isCreative() && !player.getInventory().addItem(instrument, null)){
+			if(!player.isCreative() && !player.getInventory().addStack(entity.instruments.get(slot).getNewStack(null))){
 				return false;
 			}
 		}
@@ -70,8 +69,9 @@ public class PacketEntityInstrumentChange extends APacketEntityInteract<AEntityE
 			//This is only done on the server, as checking on the client won't make any difference.
 			ItemInstrument instrument = PackParserSystem.getItem(instrumentPackID, instrumentSystemName);
 			if(!world.isClient() && !player.isCreative()){
-				if(player.isCreative() || player.getInventory().hasItem(instrument)){
-					player.getInventory().removeItem(instrument, null);
+				int stackIndex = player.getInventory().getSlotForStack(instrument.getNewStack(null));
+				if(stackIndex != -1){
+					player.getInventory().removeFromSlot(stackIndex, 1);
 				}else{
 					return false;
 				}

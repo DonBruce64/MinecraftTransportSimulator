@@ -253,7 +253,7 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 			if(entityOn.locked){
 				player.sendPacket(new PacketPlayerChatMessage(player, "interact.failure.vehiclelocked"));
 			}else{
-				if(player.getInventory().addItem(getItem(), save(new WrapperNBT()))){
+				if(player.getInventory().addStack(getItem().getNewStack(save(new WrapperNBT())))){
 					disconnectAllConnections();
 					entityOn.removePart(this, null);
 				}
