@@ -6,6 +6,8 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.instances.APart;
+import minecrafttransportsimulator.entities.instances.EntityBullet;
+import minecrafttransportsimulator.entities.instances.EntityParticle;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import net.minecraft.block.SoundType;
@@ -20,6 +22,8 @@ import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
 
 /**Interface to the MC client instance.  This class has methods used for determining
@@ -203,6 +207,29 @@ public class InterfaceClient{
 		if(!Minecraft.getMinecraft().world.isAirBlock(pos)){
 			SoundType soundType = Minecraft.getMinecraft().world.getBlockState(pos).getBlock().getSoundType(Minecraft.getMinecraft().world.getBlockState(pos), Minecraft.getMinecraft().player.world, pos, null);
 			Minecraft.getMinecraft().world.playSound(Minecraft.getMinecraft().player, pos, soundType.getBreakSound(), SoundCategory.BLOCKS, soundType.getVolume(), soundType.getPitch());
+		}
+	}
+	
+
+	   
+	/**
+	* Tick client-side entities like bullets and particles.
+	* These don't get ticked normally due to the world tick event
+	* not being called on clients.
+	*/
+	@SubscribeEvent
+	public static void on(TickEvent.ClientTickEvent event){
+		WrapperWorld clientWorld = WrapperWorld.getWrapperFor(Minecraft.getMinecraft().world);
+		if(clientWorld != null){
+			clientWorld.beginProfiling("MTS_BulletUpdates", true);
+			for(EntityBullet bullet : clientWorld.getEntitiesOfType(EntityBullet.class)){
+				bullet.update();
+			}
+			clientWorld.beginProfiling("MTS_ParticleUpdates", false);
+			for(EntityParticle particle : clientWorld.getEntitiesOfType(EntityParticle.class)){
+				particle.update();
+			}
+			clientWorld.endProfiling();
 		}
 	}
 }

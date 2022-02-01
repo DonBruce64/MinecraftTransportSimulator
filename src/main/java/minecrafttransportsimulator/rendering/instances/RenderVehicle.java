@@ -25,7 +25,7 @@ import minecrafttransportsimulator.rendering.components.RenderableObject;
  *
  * @author don_bruce
  */
-public final class RenderVehicle extends ARenderEntityDefinable<EntityVehicleF_Physics>{	
+public class RenderVehicle extends ARenderEntityDefinable<EntityVehicleF_Physics>{	
 	
 	@Override
 	protected void renderModel(EntityVehicleF_Physics vehicle, boolean blendingEnabled, float partialTicks){

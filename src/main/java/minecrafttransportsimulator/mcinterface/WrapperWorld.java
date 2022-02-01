@@ -26,8 +26,6 @@ import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.instances.APart;
-import minecrafttransportsimulator.entities.instances.EntityBullet;
-import minecrafttransportsimulator.entities.instances.EntityParticle;
 import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.components.AItemBase;
@@ -45,7 +43,6 @@ import net.minecraft.block.BlockSlab;
 import net.minecraft.block.IGrowable;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityCreature;
 import net.minecraft.entity.EntityLivingBase;
@@ -1061,26 +1058,20 @@ public class WrapperWorld{
 		   }
 	   }
    }
-   
-   /**
-    * Tick client-side entities like bullets and particles.
-    * These don't get ticked normally due to the world tick event
-    * not being called on clients.
+	
+	/**
+    * Remove all entities from our maps if we unload the world.  This will cause duplicates if we don't.
+    * Also remove this wrapper from the created lists, as it's invalid.
     */
    @SubscribeEvent
-   public void on(TickEvent.ClientTickEvent event){
-	   World clientWorld = Minecraft.getMinecraft().world;
-	   if(clientWorld != null){
-		   beginProfiling("MTS_BulletUpdates", true);
-		   for(EntityBullet bullet : getEntitiesOfType(EntityBullet.class)){
-			   bullet.update();
-		   }
-		   beginProfiling("MTS_ParticleUpdates", false);
-		   for(EntityParticle particle : getEntitiesOfType(EntityParticle.class)){
-			   particle.update();
-		   }
-		   endProfiling();
-	   }
+   public void on(WorldEvent.Unload event){
+	   	//Need to check if it's our world, because Forge is stupid like that.
+	   	if(event.getWorld().equals(world)){
+	    	for(AEntityA_Base entity : allEntities){
+	    		entity.remove();
+	    	}
+	    	worldWrappers.remove(this);
+	   	}
    }
    
 
@@ -1147,19 +1138,4 @@ public class WrapperWorld{
 		   trackedEntityMap.remove(entity.uniqueUUID);
 	   }
    }
-	
-	/**
-     * Remove all entities from our maps if we unload the world.  This will cause duplicates if we don't.
-     * Also remove this wrapper from the created lists, as it's invalid.
-     */
-    @SubscribeEvent
-    public void on(WorldEvent.Unload event){
-    	//Need to check if it's our world, because Forge is stupid like that.
-    	if(event.getWorld().equals(world)){
-	    	for(AEntityA_Base entity : allEntities){
-	    		entity.remove();
-	    	}
-	    	worldWrappers.remove(this);
-    	}
-    }
 }

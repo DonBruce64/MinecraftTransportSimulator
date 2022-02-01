@@ -9,7 +9,7 @@ import minecrafttransportsimulator.jsondefs.JSONMuzzle;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.rendering.components.ARenderEntityDefinable;
 
-public final class RenderPart extends ARenderEntityDefinable<APart>{
+public class RenderPart extends ARenderEntityDefinable<APart>{
 	
 	@Override
 	public boolean disableRendering(APart part, float partialTicks){
