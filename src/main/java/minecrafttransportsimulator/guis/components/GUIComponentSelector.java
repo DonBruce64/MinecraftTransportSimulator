@@ -46,7 +46,7 @@ public abstract class GUIComponentSelector extends GUIComponentButton{
     				renderable = new RenderableObject("gui_selector_0", gui.getTexture(), ColorRGB.WHITE, buffer, false);
     			}else if(i==1){
     				renderable2 = new RenderableObject("gui_selector_1", gui.getTexture(), ColorRGB.WHITE, buffer, false);
-    			}else if(i==3){
+    			}else if(i==2){
     				renderable3 = new RenderableObject("gui_selector_2", gui.getTexture(), ColorRGB.WHITE, buffer, false);
     			}else{
     				renderable4 = new RenderableObject("gui_selector_3", gui.getTexture(), ColorRGB.WHITE, buffer, false);

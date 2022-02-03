@@ -349,12 +349,12 @@ public class GUIPanelGround extends AGUIPanel{
 			boolean halfSecondClock = inClockPeriod(20, 10);
 			if(vehicle.isVariableActive(EntityVehicleF_Physics.LEFTTURNLIGHT_VARIABLE) && halfSecondClock){
 				if(vehicle.isVariableActive(EntityVehicleF_Physics.RIGHTTURNLIGHT_VARIABLE)){
-					turnSignalSelector.selectorState = 2;
+					turnSignalSelector.selectorState = 3;
 				}else{
 					turnSignalSelector.selectorState = 1;
 				}
 			}else if(vehicle.isVariableActive(EntityVehicleF_Physics.RIGHTTURNLIGHT_VARIABLE) && halfSecondClock){
-				turnSignalSelector.selectorState = 3;
+				turnSignalSelector.selectorState = 2;
 			}else{
 				turnSignalSelector.selectorState = 0;
 			}
