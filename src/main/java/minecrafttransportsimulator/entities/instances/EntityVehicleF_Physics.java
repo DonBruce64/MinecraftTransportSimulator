@@ -138,6 +138,9 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	
 	@Override
 	public boolean update(){
+		//Need to do this before updating as these require knowledge of prior states.
+		//If we call super, then it will overwrite the prior state.
+		setPropertyVariables();
 		if(super.update()){
 			world.beginProfiling("VehicleF_Level", true);
 			//Parse out variables.
@@ -218,9 +221,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 		InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, RUDDER_VARIABLE, delta));
 	}
 	
-	@Override
-	protected void getForcesAndMotions(){
-		//Get current variable values.
+	private void setPropertyVariables(){
 		currentWingArea = (float) (definition.motorized.wingArea + definition.motorized.wingArea*0.15F*flapCurrentAngle/MAX_FLAP_ANGLE_REFERENCE);
 		currentWingSpan = definition.motorized.wingSpan;
 		currentAileronArea = definition.motorized.aileronArea;
@@ -321,7 +322,10 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 				}
 			}
 		}
-		
+	}
+	
+	@Override
+	protected void getForcesAndMotions(){
 		//If we are free, do normal updates.  But if we are towed by a vehicle, do trailer forces instead.
 		//This prevents trailers from behaving badly and flinging themselves into the abyss.
 		if(towedByConnection == null){
