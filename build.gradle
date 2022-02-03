@@ -1,77 +1,109 @@
 buildscript {
-	repositories {
-		jcenter()
-		maven { url = "http://files.minecraftforge.net/maven" }
-	}
-	dependencies {
-		classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
-	}
+    repositories {
+        maven { url = 'https://maven.minecraftforge.net' }
+				//maven { url = "https://repo.spongepowered.org/maven" }
+        mavenCentral()
+    }
+    dependencies {
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
+				//classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
+    }
 }
-apply plugin: 'net.minecraftforge.gradle.forge'
 
+//Apply plugins
+apply plugin: 'net.minecraftforge.gradle'
+apply plugin: 'eclipse'
+//apply plugin: 'maven-publish'
+//apply plugin: 'org.spongepowered.mixin'
+
+//Set file name.
 version = "1.12.2-20.5.3-BETA4"
-group= "minecrafttransportsimulator" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
+group= "minecrafttransportsimulator"
 archivesBaseName = "Immersive Vehicles"
 
+//Options for Java version to compile to.
+//java.toolchain.languageVersion = JavaLanguageVersion.of(8)
+//Don't need these with toolchain?
 sourceCompatibility = targetCompatibility = '1.8'
 compileJava {
 	sourceCompatibility = targetCompatibility = '1.8'
 	options.compilerArgs << "-Xlint:deprecation" << "-Xlint:unchecked"
 }
 
+//Minecraft mappings and run configs.
 minecraft {
-	version = "1.12.2-14.23.5.2847"
-	runDir = "run"
-	mappings = "stable_39"
-	makeObfSourceJar = false
+	// The mappings can be changed at any time, and must be in the following format.
+	// Channel:   Version:
+	// snapshot   YYYYMMDD   Snapshot are built nightly.
+	// stable     #          Stables are built at the discretion of the MCP team.
+	// official   MCVersion  Official field/method names from Mojang mapping files
+	mappings channel: 'stable', version: '39-1.12'
+	//mappings channel: 'snapshot', version: '20171003-1.12'
+	
+	//Don't make the stupid source jar. (doesn't seem to work with gradle now?)
+	//makeObfSourceJar = false
+	
+	// Default run configurations.
+	// These can be tweaked, removed, or duplicated as needed.
+	runs {
+			client {
+					workingDirectory project.file('run')
+			}
+
+			server {
+					workingDirectory project.file('run')
+			}
+		}
 }
 
 repositories {
-	maven { 
-		url 'https://mvnrepository.com/artifact/org.jcraft/jorbis'
-	}
-  maven {
-    // location of the maven that hosts JEI files
-    name = "Progwml6 maven"
-    url = "https://dvs1.progwml6.com/files/maven/"
-  }
+  maven { url = 'https://mvnrepository.com/artifact/org.jcraft/jorbis'}
+  //Location of the maven that hosts JEI files
+	maven {url = "https://dvs1.progwml6.com/files/maven/"}
 }
 
 //Configuration that holds jars to include in the jar
 configurations {
-    extraLibs
+    embed
+    compile.extendsFrom(embed)
 }
 
+//Specify dependencies.
 dependencies {
-	//Set sound code bits as extraLibs so they are included into the jar.
-  extraLibs group: 'com.googlecode.soundlibs', name: 'jlayer', version: '1.0.1.4'
-	extraLibs group: 'org.jcraft', name: 'jorbis', version: '0.0.17'
+	//Version of Minecraft to use.
+  minecraft 'net.minecraftforge:forge:1.12.2-14.23.5.2859'
+
+	//Set sound code bits as embeds so they are included into the jar.
+  embed(group: 'com.googlecode.soundlibs', name: 'jlayer', version: '1.0.1.4')
+	embed(group: 'org.jcraft', name: 'jorbis', version: '0.0.17')
 	
-	// compile against the JEI API but do not include it at runtime
-  deobfProvided "mezz.jei:jei_1.12.2:4.16.1.302:api"
-  // at runtime, use the full JEI jar
-  runtime "mezz.jei:jei_1.12.2:4.16.1.302"
+	//Compile against the JEI API but do not include it at runtime
+  compileOnly fg.deobf("mezz.jei:jei_1.12.2:4.16.1.302:api")
+  //At runtime, use the full JEI jar
+	//Disabled as Access Transformers don't work on FG 3.0 runtimes despite them saying they do.
+	//Not a huge issue, as it just prevents using JEI in-dev, and we already have it working so don't really need to test.
+  //runtimeOnly fg.deobf("mezz.jei:jei_1.12.2:4.16.1.302")
 	
-	//Compile all extraLib jars.
-	configurations.compile.extendsFrom(configurations.extraLibs)
+	//Embed mixins into the code.
+	//embed('org.spongepowered:mixin:0.8.5')
+	
+	//Apply Mixin AP ForgeGradle.
+	annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 }
 
-//Pack-in the extraLibs specified in the dependencies into the jar.
+//Set mixin properties.
+//Note, createSrgToMcp and createMcpToSrg tasks need to be run before this.
+//mixin {
+  //add sourceSets.main, "mts.refmap.json"
+	//config "mts.mixins.json"
+//}
+
+//Here is where we zip up all embeds and add them to our jar.
 jar {
     from {
-            configurations.extraLibs.collect { it.isDirectory() ? it : zipTree(it) }
-        }
+        configurations.embed.collect { it.isDirectory() ? it : zipTree(it) }
+    }
 }
 
-//Do file stuffs.  I think this just updates mcmod.info?
-processResources {
-	inputs.property "version", project.version
-	inputs.property "mcversion", project.minecraft.version
-	from(sourceSets.main.resources.srcDirs) {
-		include 'mcmod.info'
-		expand 'version':project.version, 'mcversion':project.minecraft.version
-	}
-	from(sourceSets.main.resources.srcDirs) {
-		exclude 'mcmod.info'
-	}
-}
+//Now compile the mod.
+jar.finalizedBy('reobfJar') 
