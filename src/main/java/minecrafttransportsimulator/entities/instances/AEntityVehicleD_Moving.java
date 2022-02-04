@@ -558,7 +558,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 					if(towedByConnection == null){
 						frontFollower = new RoadFollowingState(rearFollower.lane, rearFollower.curve, rearFollower.goingForwards, rearFollower.currentSegment).updateCurvePoints(pointDelta, LaneSelectionRequest.NONE);
 					}else{
-						float segmentDelta = (float) (towedByConnection.getHitchCurrentPosition().subtract(towedByConnection.hitchVehicle.position).length() + towedByConnection.getHookupCurrentPosition().subtract(towedByConnection.hookupVehicle.position).length());
+						float segmentDelta = (float) (towedByConnection.hitchCurrentPosition.copy().subtract(towedByConnection.hitchVehicle.position).length() + towedByConnection.hookupCurrentPosition.copy().subtract(towedByConnection.hookupVehicle.position).length());
 						if(towedByConnection.hitchEntity instanceof APart ? ((APart) towedByConnection.hitchEntity).localOffset.z <= 0 : towedByConnection.hitchConnection.pos.z <= 0){
 							segmentDelta = -segmentDelta;
 						}
