@@ -13,17 +13,15 @@ import minecrafttransportsimulator.items.instances.ItemBullet;
 import minecrafttransportsimulator.jsondefs.JSONMuzzle;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
-import minecrafttransportsimulator.mcinterface.IBuilderItemInterface;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperInventory;
+import minecrafttransportsimulator.mcinterface.WrapperItemStack;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.instances.PacketPartGun;
 import minecrafttransportsimulator.rendering.components.RenderableObject;
 import minecrafttransportsimulator.systems.PackParserSystem;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
 
 /**Basic gun class class.  This class is responsible for representing a gun in the world.  This gun
  * can be placed on anything and modeled by anything as the code is only for controlling the firing
@@ -275,10 +273,10 @@ public class PartGun extends APart{
 							//Check the player's inventory for bullets.
 							WrapperInventory inventory = ((WrapperPlayer) lastController).getInventory();
 							for(int i=0; i<inventory.getSize(); ++i){
-								ItemStack stack = inventory.getStack(i);
-								Item item = stack.getItem();
-								if(item instanceof IBuilderItemInterface && ((IBuilderItemInterface) item).getItem() instanceof ItemBullet){
-									if(tryToReload((ItemBullet) ((IBuilderItemInterface) item).getItem())){
+								WrapperItemStack stack = inventory.getStack(i);
+								AItemBase item = stack.getItem();
+								if(item instanceof ItemBullet){
+									if(tryToReload((ItemBullet) item)){
 										//Bullet is right type, and we can fit it.  Remove from player's inventory and add to the gun.
 										inventory.removeFromSlot(i, 1);
 										return true;
@@ -293,10 +291,10 @@ public class PartGun extends APart{
 								if(part instanceof PartInteractable && part.definition.interactable.interactionType.equals(InteractableComponentType.CRATE) && part.isActive && part.definition.interactable.feedsVehicles){
 									EntityInventoryContainer inventory = ((PartInteractable) part).inventory;
 									for(int i=0; i<inventory.getSize(); ++i){
-										ItemStack stack = inventory.getStack(i);
-										Item item = stack.getItem();
-										if(item instanceof IBuilderItemInterface && ((IBuilderItemInterface) item).getItem() instanceof ItemBullet){
-											if(tryToReload((ItemBullet) ((IBuilderItemInterface) item).getItem())){
+										WrapperItemStack stack = inventory.getStack(i);
+										AItemBase item = stack.getItem();
+										if(item instanceof ItemBullet){
+											if(tryToReload((ItemBullet) item)){
 												//Bullet is right type, and we can fit it.  Remove from crate and add to the gun.
 												//Return here to ensure we don't set the loadedBullet to blank since we found bullets.
 												inventory.removeFromSlot(i, 1);

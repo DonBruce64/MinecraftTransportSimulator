@@ -8,11 +8,11 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
+import minecrafttransportsimulator.mcinterface.WrapperItemStack;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import net.minecraft.item.ItemStack;
 
 /**Now that we have an existing vehicle its time to add the ability to collide with it,
  * and for it to do collision with other entities in the world.  This is where collision
@@ -149,12 +149,12 @@ abstract class AEntityVehicleC_Colliding extends AEntityVehicleB_Rideable{
 		super.destroy(box);
 		
 		//Spawn drops from us and our parts.
-		List<ItemStack> drops = new ArrayList<ItemStack>();
+		List<WrapperItemStack> drops = new ArrayList<WrapperItemStack>();
 		addDropsToList(drops);
 		for(APart part : parts){
 			part.addDropsToList(drops);
 		}
-		for(ItemStack stack : drops){
+		for(WrapperItemStack stack : drops){
 			world.spawnItemStack(stack, box.globalCenter);
 		}
 		

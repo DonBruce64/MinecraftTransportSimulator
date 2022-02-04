@@ -62,7 +62,7 @@ public class BuilderBlock extends Block{
 	protected final ABlockBase block;
 	/**Holding map for block drops.  MC calls breakage code after the TE is removed, so we need to store drops 
 	created during the drop checks here to ensure they actually drop when the block is broken. **/
-	private static final Map<BlockPos, List<ItemStack>> dropsAtPositions = new HashMap<BlockPos, List<ItemStack>>();
+	private static final Map<BlockPos, List<WrapperItemStack>> dropsAtPositions = new HashMap<BlockPos, List<WrapperItemStack>>();
 	
 	//TODO remove this when we figure out how to not make blocks go poof.
 	private static final PropertyDirection FACING = BlockHorizontal.FACING;
@@ -143,7 +143,7 @@ public class BuilderBlock extends Block{
     			if(tile != null){
     				AItemPack<?> item = tile.getItem();
     				if(item != null){
-    					return item.getNewStack(((BuilderTileEntity<?>) mcTile).tileEntity.save(new WrapperNBT()));
+    					return item.getNewStack(((BuilderTileEntity<?>) mcTile).tileEntity.save(new WrapperNBT())).stack;
     				}
     			}
     		}
@@ -155,8 +155,11 @@ public class BuilderBlock extends Block{
     public void getDrops(NonNullList<ItemStack> drops, IBlockAccess world, BlockPos pos, IBlockState state, int fortune){
     	//If this is a TE, drop TE drops.  Otherwise, drop normal drops.
     	if(block instanceof ABlockBaseTileEntity){
-    		if(dropsAtPositions.containsKey(pos)){
-    			drops.addAll(dropsAtPositions.get(pos));
+    		List<WrapperItemStack> positionDrops = dropsAtPositions.get(pos);
+    		if(positionDrops != null){
+    			for(WrapperItemStack stack : positionDrops){
+    				drops.add(stack.stack);
+    			}
     			dropsAtPositions.remove(pos);
     		}
     	}else{
@@ -176,7 +179,7 @@ public class BuilderBlock extends Block{
     		TileEntity tile = world.getTileEntity(pos);
     		if(tile instanceof BuilderTileEntity){
     			if(((BuilderTileEntity<?>) tile).tileEntity != null){
-    				List<ItemStack> drops = new ArrayList<ItemStack>();
+    				List<WrapperItemStack> drops = new ArrayList<WrapperItemStack>();
     				((BuilderTileEntity<?>) tile).tileEntity.addDropsToList(drops);
         			dropsAtPositions.put(pos, drops);
     			}

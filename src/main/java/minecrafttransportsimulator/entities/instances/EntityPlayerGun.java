@@ -16,6 +16,7 @@ import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONPlayerGun;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
+import minecrafttransportsimulator.mcinterface.WrapperItemStack;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
@@ -23,7 +24,6 @@ import minecrafttransportsimulator.rendering.instances.RenderPlayerGun;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ControlSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
-import net.minecraft.item.ItemStack;
 
 /**Entity class responsible for storing and syncing information about the current gun
  * any player is holding.  This entity will trigger rendering of the held gun, if it exists.
@@ -39,7 +39,7 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun>{
 	
 	public final WrapperPlayer player;
 	private int hotbarSelected = -1;
-	private ItemStack gunStack;
+	private WrapperItemStack gunStack;
 	private boolean didGunFireLastTick;
 	public PartGun activeGun;
 	
@@ -167,7 +167,7 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun>{
 							ItemPartGun heldGun = (ItemPartGun) heldItem;
 							if(heldGun.definition.gun.handHeld){
 								gunStack = player.getHeldStack();
-								addPartFromItem(heldGun, player, new WrapperNBT(gunStack), new Point3d(), false);
+								addPartFromItem(heldGun, player, gunStack.getData(), new Point3d(), false);
 								hotbarSelected = player.getHotbarIndex();
 							}
 						}
@@ -263,9 +263,7 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun>{
 	}
 	
 	private void saveGun(boolean remove){
-		WrapperNBT data = new WrapperNBT();
-		activeGun.save(data);
-		gunStack.setTagCompound(data.tag);
+		gunStack.setData(activeGun.save(gunStack.getData()));
 		didGunFireLastTick = false;
 		if(remove){
 			removePart(activeGun, null);

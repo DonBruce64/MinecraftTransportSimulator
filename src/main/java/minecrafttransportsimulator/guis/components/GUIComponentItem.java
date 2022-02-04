@@ -6,14 +6,11 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.mcinterface.InterfaceEventsModelLoader;
+import minecrafttransportsimulator.mcinterface.WrapperItemStack;
 import minecrafttransportsimulator.rendering.instances.RenderText;
 import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.text.TextFormatting;
 
-/**Custom item render class.  This class is designed to render a {@link ItemStack} 
+/**Custom item render class.  This class is designed to render a {@link WrapperItemStack} 
  * or list of stacks into the GUI.  This allows us to use a simple string 
  * name for the render rather than a bunch of MC calls.
  * Note that this component does not get a stack assigned during construction: you must
@@ -27,10 +24,10 @@ import net.minecraft.util.text.TextFormatting;
  */
 public class GUIComponentItem extends AGUIComponent{		
 	public final float scale;
-	public ItemStack stack;
-	public List<ItemStack> stacks;
-	private ItemStack stackToRender;
-	private ItemStack lastStackRendered;
+	public WrapperItemStack stack;
+	public List<WrapperItemStack> stacks;
+	private WrapperItemStack stackToRender;
+	private WrapperItemStack lastStackRendered;
 	
 	/**Default item constructor.**/
 	public GUIComponentItem(int x, int y, float scale){
@@ -65,8 +62,8 @@ public class GUIComponentItem extends AGUIComponent{
     		if(!stackToRender.equals(lastStackRendered)){
 	    		renderable = InterfaceEventsModelLoader.getItemModel(stackToRender);
 	    		lastStackRendered = stackToRender;
-	    		if(stackToRender.getCount() > 1){
-	    			text = String.valueOf(RenderText.FORMATTING_CHAR) + String.valueOf(RenderText.BOLD_FORMATTING_CHAR) + String.valueOf(stackToRender.getCount());
+	    		if(stackToRender.getSize() > 1){
+	    			text = String.valueOf(RenderText.FORMATTING_CHAR) + String.valueOf(RenderText.BOLD_FORMATTING_CHAR) + String.valueOf(stackToRender.getSize());
 	    		}
     		}
     	}else{
@@ -103,15 +100,7 @@ public class GUIComponentItem extends AGUIComponent{
     @Override
 	public List<String> getTooltipText(){
     	if(stackToRender != null && !stackToRender.isEmpty()){
-    		Minecraft mc = Minecraft.getMinecraft();
-			List<String> tooltipText = stackToRender.getTooltip(mc.player, mc.gameSettings.advancedItemTooltips ? ITooltipFlag.TooltipFlags.ADVANCED : ITooltipFlag.TooltipFlags.NORMAL);
-	        for(int i = 0; i < tooltipText.size(); ++i){
-	            if(i != 0){
-	            	//Add grey formatting text to non-first line tooltips.
-	            	tooltipText.set(i, TextFormatting.GRAY + tooltipText.get(i));
-	            }
-	        }
-	        return tooltipText;
+			return stackToRender.getTooltipLines();
     	}else{
     		return null;
     	}

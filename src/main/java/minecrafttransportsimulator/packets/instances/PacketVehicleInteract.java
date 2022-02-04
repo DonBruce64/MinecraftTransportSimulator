@@ -14,17 +14,16 @@ import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.components.IItemVehicleInteractable;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperItemStack;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntityInteract;
-import net.minecraft.item.ItemStack;
 
 /**Packet used to interact with vehicles.  Initially sent from clients to the server
  * to handle players clicking on the vehicle.  Actions (if any) are performed on the server.
  * A corresponding interaction packet may be sent to all players tracking the vehicle if the
  * action requires updates on clients.  This can be driven by the logic in this packet, or
- * the logic in {@link IItemVehicleInteractable#doVehicleInteraction(ItemStack, EntityVehicleF_Physics, APart, WrapperPlayer, PlayerOwnerState, boolean)}
+ * the logic in {@link IItemVehicleInteractable#doVehicleInteraction(WrapperItemStack, EntityVehicleF_Physics, APart, WrapperPlayer, PlayerOwnerState, boolean)}
  * 
  * @author don_bruce
  */
@@ -68,8 +67,8 @@ public class PacketVehicleInteract extends APacketEntityInteract<EntityVehicleF_
 	@Override
 	public boolean handle(WrapperWorld world, EntityVehicleF_Physics vehicle, WrapperPlayer player){
 		PlayerOwnerState ownerState = vehicle.getOwnerState(player);
-		ItemStack heldStack = player.getHeldStack();
-		AItemBase heldItem = player.getHeldItem();
+		WrapperItemStack heldStack = player.getHeldStack();
+		AItemBase heldItem = heldStack.getItem();
 		
 		//Get the part we hit, if one was specified.
 		APart part = hitPartUniqueUUID != null ? world.getEntity(hitPartUniqueUUID) : null;
@@ -108,7 +107,7 @@ public class PacketVehicleInteract extends APacketEntityInteract<EntityVehicleF_
 			}else{
 				//Attempt to add a part.  Vehicle is responsible for callback packet here.
 				if(heldItem instanceof AItemPart){
-					if(vehicle.addPartFromItem((AItemPart) heldItem, player, new WrapperNBT(heldStack), hitBoxLocalCenter, false) != null && !player.isCreative()){				
+					if(vehicle.addPartFromItem((AItemPart) heldItem, player, heldStack.getData(), hitBoxLocalCenter, false) != null && !player.isCreative()){				
 						player.getInventory().removeFromSlot(player.getHotbarIndex(), 1);
 					}
 				}

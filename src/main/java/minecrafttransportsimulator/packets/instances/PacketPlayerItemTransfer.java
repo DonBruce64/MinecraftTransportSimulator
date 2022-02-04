@@ -5,14 +5,12 @@ import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemDecor;
 import minecrafttransportsimulator.items.instances.ItemPartInteractable;
-import minecrafttransportsimulator.mcinterface.IBuilderItemInterface;
 import minecrafttransportsimulator.mcinterface.WrapperInventory;
+import minecrafttransportsimulator.mcinterface.WrapperItemStack;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntityInteract;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
 
 /**Packet used to send transfer an item to or from a player inventory to an inventory in a
  * {@link EntityInventoryContainer}.  While containers have their own packets for this, player
@@ -52,32 +50,31 @@ public class PacketPlayerItemTransfer extends APacketEntityInteract<EntityInvent
 	public boolean handle(WrapperWorld world, EntityInventoryContainer inventory, WrapperPlayer player){
 		WrapperInventory playerInventory = player.getInventory();
 		if(inventorySlot != -1){
-			ItemStack stackToTransfer = inventory.getStack(inventorySlot);
-			int startingQty = stackToTransfer.getCount();
+			WrapperItemStack stackToTransfer = inventory.getStack(inventorySlot);
+			int startingQty = stackToTransfer.getSize();
 			playerInventory.addStack(stackToTransfer);
-			inventory.removeFromSlot(inventorySlot, startingQty - stackToTransfer.getCount());
+			inventory.removeFromSlot(inventorySlot, startingQty - stackToTransfer.getSize());
 		}else if(playerSlot != -1){
-			Item mcItem = playerInventory.getStack(playerSlot).getItem();
+			WrapperItemStack stackToTransfer = playerInventory.getStack(playerSlot);
+			
 			//Make sure we aren't an inventory container.
 			//Those can't go into our inventories.
-			if(mcItem instanceof IBuilderItemInterface){
-				AItemBase item = ((IBuilderItemInterface) mcItem).getItem();
-				if(item instanceof ItemPartInteractable && ((ItemPartInteractable) item).definition.interactable.inventoryUnits != 0){
-					return false;
-				}
-				if(item instanceof ItemDecor && ((ItemDecor) item).definition.decor.inventoryUnits != 0){
-					return false;
-				}
+			AItemBase item = stackToTransfer.getItem();
+			if(item instanceof ItemPartInteractable && ((ItemPartInteractable) item).definition.interactable.inventoryUnits != 0){
+				return false;
 			}
-			ItemStack stackToTransfer = playerInventory.getStack(playerSlot);
-			int startingQty = stackToTransfer.getCount();
+			if(item instanceof ItemDecor && ((ItemDecor) item).definition.decor.inventoryUnits != 0){
+				return false;
+			}
+			
+			int startingQty = stackToTransfer.getSize();
 			inventory.addStack(stackToTransfer);
-			playerInventory.removeFromSlot(playerSlot, startingQty - stackToTransfer.getCount());
+			playerInventory.removeFromSlot(playerSlot, startingQty - stackToTransfer.getSize());
 		}
 		if(saveToPlayer){
 			WrapperNBT newData = new WrapperNBT();
 			newData.setData("inventory", inventory.save(new WrapperNBT()));
-			player.getHeldStack().setTagCompound(newData.tag);
+			player.getHeldStack().setData(newData);
 		}
 		return false;
 	}

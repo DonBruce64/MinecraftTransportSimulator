@@ -5,8 +5,8 @@ import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentCutout;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
+import minecrafttransportsimulator.mcinterface.WrapperItemStack;
 import minecrafttransportsimulator.packets.instances.PacketPlayerItemTransfer;
-import net.minecraft.item.ItemStack;
 
 /**A GUI that is used to interface with inventory containers.   Displays the player's items on the bottom,
  * and the items in the container in the top.  Works a bit differently than the MC GUIs, as it
@@ -97,7 +97,7 @@ public class GUIInventoryContainer extends AGUIInventory{
 		for(int i=0; i<interactableSlotButtons.size(); ++i){
 			int index = i + 9*rowOffset;
 			if(inventory.getSize() > index){
-				ItemStack stack = inventory.getStack(index);
+				WrapperItemStack stack = inventory.getStack(index);
 				interactableSlotButtons.get(i).visible = true;
 				interactableSlotButtons.get(i).enabled = !stack.isEmpty();
 				interactableSlotIcons.get(i).stack = stack;

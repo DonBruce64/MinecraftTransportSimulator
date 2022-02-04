@@ -32,7 +32,6 @@ import minecrafttransportsimulator.packets.instances.PacketPlayerCraftItem;
 import minecrafttransportsimulator.packloading.PackMaterialComponent;
 import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
 import minecrafttransportsimulator.systems.PackParserSystem;
-import net.minecraft.item.ItemStack;
 
 /**A GUI that is used to craft vehicle parts and other pack components.  This GUI displays
  * the items required to craft a vehicle, the item that will be crafted, and some properties
@@ -265,9 +264,6 @@ public class GUIPartBench extends AGUIBase{
 				int materialIndex = i + materialOffset;
 				if(materialIndex < materials.size()){
 					craftingItemIcons.get(i).stacks = materials.get(materialIndex).possibleItems;
-					for(ItemStack stack : craftingItemIcons.get(i).stacks){
-						stack.setCount(materials.get(materialIndex).qty);
-					}
 		    	}else{
 		    		craftingItemIcons.get(i).stacks = null;
 		    	}			

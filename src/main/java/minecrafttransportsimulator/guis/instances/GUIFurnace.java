@@ -6,8 +6,8 @@ import minecrafttransportsimulator.guis.components.GUIComponentCutout;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.jsondefs.JSONPart.FurnaceComponentType;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
+import minecrafttransportsimulator.mcinterface.WrapperItemStack;
 import minecrafttransportsimulator.packets.instances.PacketPlayerItemTransfer;
-import net.minecraft.item.ItemStack;
 
 /**A GUI that is used to interface with furnaces.   Displays the player's items on the bottom,
  * and the furnace type/status in the top.  Works a bit differently than the MC GUIs, as it
@@ -100,7 +100,7 @@ public class GUIFurnace extends AGUIInventory{
 		super.setStates();
 		//Set other item icons to other inventory.
 		for(int i=0; i<interactableSlotButtons.size(); ++i){
-			ItemStack stack = furnace.getStack(i);
+			WrapperItemStack stack = furnace.getStack(i);
 			interactableSlotButtons.get(i).enabled = !stack.isEmpty();
 			interactableSlotIcons.get(i).stack = stack;
 		}

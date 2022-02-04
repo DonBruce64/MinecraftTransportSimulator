@@ -1,56 +1,15 @@
 package minecrafttransportsimulator.mcinterface;
 
+import java.io.IOException;
+
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.packets.components.APacketBase;
-import minecrafttransportsimulator.packets.instances.PacketEntityBulletHit;
-import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitBlock;
-import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitEntity;
-import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitWrapper;
-import minecrafttransportsimulator.packets.instances.PacketEntityCSHandshakeClient;
-import minecrafttransportsimulator.packets.instances.PacketEntityCSHandshakeServer;
-import minecrafttransportsimulator.packets.instances.PacketEntityColorChange;
-import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
-import minecrafttransportsimulator.packets.instances.PacketEntityInstrumentChange;
-import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
-import minecrafttransportsimulator.packets.instances.PacketEntityTextChange;
-import minecrafttransportsimulator.packets.instances.PacketEntityTrailerChange;
-import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
-import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
-import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
-import minecrafttransportsimulator.packets.instances.PacketFluidTankChange;
-import minecrafttransportsimulator.packets.instances.PacketFurnaceFuelAdd;
-import minecrafttransportsimulator.packets.instances.PacketFurnaceTimeSet;
-import minecrafttransportsimulator.packets.instances.PacketGUIRequest;
-import minecrafttransportsimulator.packets.instances.PacketInventoryContainerChange;
-import minecrafttransportsimulator.packets.instances.PacketItemInteractable;
-import minecrafttransportsimulator.packets.instances.PacketPartChange;
-import minecrafttransportsimulator.packets.instances.PacketPartEffector;
-import minecrafttransportsimulator.packets.instances.PacketPartEngine;
-import minecrafttransportsimulator.packets.instances.PacketPartGroundDevice;
-import minecrafttransportsimulator.packets.instances.PacketPartGun;
-import minecrafttransportsimulator.packets.instances.PacketPartInteractable;
-import minecrafttransportsimulator.packets.instances.PacketPartSeat;
-import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
-import minecrafttransportsimulator.packets.instances.PacketPlayerCraftItem;
-import minecrafttransportsimulator.packets.instances.PacketPlayerItemTransfer;
-import minecrafttransportsimulator.packets.instances.PacketRadioStateChange;
-import minecrafttransportsimulator.packets.instances.PacketTileEntityFluidLoaderConnection;
-import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpConnection;
-import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpDispense;
-import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleChange;
-import minecrafttransportsimulator.packets.instances.PacketTileEntityRoadChange;
-import minecrafttransportsimulator.packets.instances.PacketTileEntityRoadCollisionUpdate;
-import minecrafttransportsimulator.packets.instances.PacketTileEntityRoadConnectionUpdate;
-import minecrafttransportsimulator.packets.instances.PacketTileEntitySignalControllerChange;
-import minecrafttransportsimulator.packets.instances.PacketVehicleBeaconChange;
-import minecrafttransportsimulator.packets.instances.PacketVehicleInteract;
-import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement;
-import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataCSHandshake;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -76,82 +35,15 @@ public class InterfacePacket{
 	 *  Packets should be registered at this point in this constructor.
 	 */
 	public static void init(){
-		//TODO this needs to be default packets, but then a method for adding new ones.  Interface belongs with interfaces.
 		//Register the main wrapper packet.
 		network.registerMessage(WrapperHandler.class, WrapperPacket.class, 0, Side.CLIENT);
 		network.registerMessage(WrapperHandler.class, WrapperPacket.class, 1, Side.SERVER);
 		
-		//Register all classes in the minecrafttransportsimulator.packets.instances package.
-		//Ideally this could be done via reflection, but it doesn't work too well so we don't do that.
+		//Register internal packets, then external.
 		byte packetIndex = 0;
-		
-		//Entity packets.
 		registerPacket(packetIndex++, PacketEntityCSHandshakeClient.class);
 		registerPacket(packetIndex++, PacketEntityCSHandshakeServer.class);
-		registerPacket(packetIndex++, PacketEntityColorChange.class);
-		registerPacket(packetIndex++, PacketEntityInstrumentChange.class);
-		registerPacket(packetIndex++, PacketEntityRiderChange.class);
-		registerPacket(packetIndex++, PacketEntityTextChange.class);
-		registerPacket(packetIndex++, PacketEntityTrailerChange.class);
-		registerPacket(packetIndex++, PacketEntityVariableIncrement.class);
-		registerPacket(packetIndex++, PacketEntityVariableSet.class);
-		registerPacket(packetIndex++, PacketEntityVariableToggle.class);
-		
-		//Bullet packets.
-		registerPacket(packetIndex++, PacketEntityBulletHit.class);
-		registerPacket(packetIndex++, PacketEntityBulletHitBlock.class);
-		registerPacket(packetIndex++, PacketEntityBulletHitEntity.class);
-		registerPacket(packetIndex++, PacketEntityBulletHitWrapper.class);
-		
-		//Fluid tank packets.
-		registerPacket(packetIndex++, PacketFluidTankChange.class);
-		
-		//Inventory container packets.
-		registerPacket(packetIndex++, PacketInventoryContainerChange.class);
-		registerPacket(packetIndex++, PacketItemInteractable.class);
-		
-		//Furnace packets.
-		registerPacket(packetIndex++, PacketFurnaceFuelAdd.class);
-		registerPacket(packetIndex++, PacketFurnaceTimeSet.class);
-		
-		//GUI packets.
-		registerPacket(packetIndex++, PacketGUIRequest.class);
-		registerPacket(packetIndex++, PacketEntityGUIRequest.class);
-		
-		//Part packets.
-		registerPacket(packetIndex++, PacketPartChange.class);
-		registerPacket(packetIndex++, PacketPartGun.class);
-		registerPacket(packetIndex++, PacketPartEffector.class);
-		registerPacket(packetIndex++, PacketPartEngine.class);
-		registerPacket(packetIndex++, PacketPartGroundDevice.class);
-		registerPacket(packetIndex++, PacketPartInteractable.class);
-		registerPacket(packetIndex++, PacketPartSeat.class);
-		
-		//Player packets.
-		registerPacket(packetIndex++, PacketPlayerChatMessage.class);
-		registerPacket(packetIndex++, PacketPlayerCraftItem.class);
-		registerPacket(packetIndex++, PacketPlayerItemTransfer.class);
-		
-		//Radio packets.
-		registerPacket(packetIndex++, PacketRadioStateChange.class);
-		
-		//Tile entity packets.
-		registerPacket(packetIndex++, PacketTileEntityFluidLoaderConnection.class);
-		registerPacket(packetIndex++, PacketTileEntityFuelPumpConnection.class);
-		registerPacket(packetIndex++, PacketTileEntityFuelPumpDispense.class);
-		registerPacket(packetIndex++, PacketTileEntityRoadCollisionUpdate.class);
-		registerPacket(packetIndex++, PacketTileEntityPoleChange.class);
-		registerPacket(packetIndex++, PacketTileEntityRoadChange.class);
-		registerPacket(packetIndex++, PacketTileEntityRoadConnectionUpdate.class);
-		registerPacket(packetIndex++, PacketTileEntitySignalControllerChange.class);
-		
-		//Vehicle packets.
-		registerPacket(packetIndex++, PacketVehicleBeaconChange.class);
-		registerPacket(packetIndex++, PacketVehicleInteract.class);
-		registerPacket(packetIndex++, PacketVehicleServerMovement.class);
-		
-		//World packets.
-		registerPacket(packetIndex++, PacketWorldSavedDataCSHandshake.class);
+		APacketBase.initPackets(packetIndex);
 	}
 	
 	/**
@@ -197,6 +89,31 @@ public class InterfacePacket{
 	 */
 	private static WrapperWorld getServerWorld(MessageContext ctx){
 		return WrapperWorld.getWrapperFor(ctx.getServerHandler().player.world);
+	}
+	
+	/**
+	 *  Helper method to write NBT data to the buffer.
+	 *  Note: there is a limit to the size of an NBT tag.
+	 *  As such, data should NOT be sent as a large tag.
+	 *  Instead, segment it out and only send what you need.
+	 *  Because you probably don't need the whole tag anyways.
+	 */
+	public static void writeDataToBuffer(WrapperNBT data, ByteBuf buf){
+		PacketBuffer pb = new PacketBuffer(buf);
+		pb.writeCompoundTag(data.tag);
+	}
+	
+	/**
+	 *  Helper method to read NBT data from the buffer.
+	 */
+	public static WrapperNBT readDataFromBuffer(ByteBuf buf){
+		PacketBuffer pb = new PacketBuffer(buf);
+        try{
+        	return new WrapperNBT(pb.readCompoundTag());
+        }catch (IOException e){
+            // Unpossible? --- Says Forge comments, so who knows?
+            throw new RuntimeException(e);
+        }
 	}
 	
 	

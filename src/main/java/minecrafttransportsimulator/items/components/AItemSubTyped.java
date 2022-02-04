@@ -44,7 +44,7 @@ public abstract class AItemSubTyped<JSONDefinition extends AJSONMultiModelProvid
 	}
 	
 	@Override
-	protected void populateDefaultData(WrapperNBT data){
+	public void populateDefaultData(WrapperNBT data){
 		super.populateDefaultData(data);
 		data.setString("subName", subName);
 	}

@@ -17,6 +17,7 @@ import minecrafttransportsimulator.items.instances.ItemPoleComponent.PoleCompone
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
+import minecrafttransportsimulator.mcinterface.WrapperItemStack;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
@@ -25,7 +26,6 @@ import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest.Enti
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleChange;
 import minecrafttransportsimulator.rendering.instances.RenderPole;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import net.minecraft.item.ItemStack;
 
 /**Pole tile entity.  Remembers what components we have attached and the state of the components.
  * This tile entity does not tick, as states can be determined without ticks or are controlled
@@ -88,8 +88,8 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 		TileEntityPole pole = (TileEntityPole) world.getTileEntity(position);
 		if(pole != null){
 			Axis axis = Axis.getFromRotation(player.getYaw(), pole.definition.pole.allowsDiagonals).getOpposite();
-			ItemStack heldStack = player.getHeldStack();
-			AItemBase heldItem = player.getHeldItem();
+			WrapperItemStack heldStack = player.getHeldStack();
+			AItemBase heldItem = heldStack.getItem();
 			ATileEntityPole_Component clickedComponent = pole.components.get(axis);
 			if(!ConfigSystem.configObject.general.opSignEditingOnly.value || player.isOP()){
 				if(player.isHoldingItemType(ItemComponentType.WRENCH)){
@@ -110,7 +110,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 				}else if(heldItem instanceof ItemPoleComponent && !((ItemPoleComponent) heldItem).definition.pole.type.equals(PoleComponentType.CORE) && !pole.components.containsKey(axis)){
 					//Player is holding component that could be added.  Try and do so.
 					ItemPoleComponent componentItem = (ItemPoleComponent) heldItem;
-					ATileEntityPole_Component newComponent = PoleComponentType.createComponent(pole, player, axis, componentItem.validateData(new WrapperNBT(heldStack)));
+					ATileEntityPole_Component newComponent = PoleComponentType.createComponent(pole, player, axis, componentItem.validateData(heldStack.getData()));
 					changeComponent(axis, newComponent);
 					if(!player.isCreative()){
 						player.getInventory().removeFromSlot(player.getHotbarIndex(), 1);
@@ -213,7 +213,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 	}
 	
 	@Override
-	public void addDropsToList(List<ItemStack> drops){
+	public void addDropsToList(List<WrapperItemStack> drops){
 		for(Axis axis : Axis.values()){
 			ATileEntityPole_Component component = components.get(axis);
 			if(component != null){

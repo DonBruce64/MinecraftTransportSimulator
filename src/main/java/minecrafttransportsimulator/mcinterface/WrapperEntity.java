@@ -62,7 +62,7 @@ public class WrapperEntity{
 		}
 	}
 	
-	public WrapperEntity(Entity entity){
+	protected WrapperEntity(Entity entity){
 		this.entity = entity;
 	}
 	

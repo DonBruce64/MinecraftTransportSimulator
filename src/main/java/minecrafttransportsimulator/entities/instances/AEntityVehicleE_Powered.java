@@ -342,7 +342,7 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 			return true;
 		}else{
 			if(player.isHoldingItemType(ItemComponentType.KEY)){
-				String uniqueUUIDString = new WrapperNBT(player.getHeldStack()).getString("vehicle");
+				String uniqueUUIDString = player.getHeldStack().getData().getString("vehicle");
 				if(!uniqueUUIDString.isEmpty() && uniqueUUID.equals(UUID.fromString(uniqueUUIDString))){
 					return true;
 				}

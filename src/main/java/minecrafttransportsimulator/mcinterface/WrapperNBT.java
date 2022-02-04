@@ -8,8 +8,10 @@ import java.util.UUID;
 
 import minecrafttransportsimulator.baseclasses.Orientation3d;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.NonNullList;
 
 /**Wrapper for interfacing with NBT data.  This pares down a few of the method to ones
  * more suited to what we use normally.  Of special importance is the ability to save
@@ -19,19 +21,15 @@ import net.minecraft.nbt.NBTTagCompound;
  * @author don_bruce
  */
 public class WrapperNBT{
-	//TODO this whouldn't be accessible normally.  It's mostly here for items.
-	public final NBTTagCompound tag;
+	protected final NBTTagCompound tag;
 	
+	//TODO this needs to be protected and get out of the main code.
 	public WrapperNBT(){
 		this.tag = new NBTTagCompound();
 	}
 	
-	public WrapperNBT(NBTTagCompound tag){
+	protected WrapperNBT(NBTTagCompound tag){
 		this.tag = tag;
-	}
-	
-	public WrapperNBT(ItemStack stack){
-		this.tag = stack.getTagCompound() != null ? stack.getTagCompound() : new NBTTagCompound();
 	}
 	
 	public boolean getBoolean(String name){
@@ -94,6 +92,26 @@ public class WrapperNBT{
 	
 	public void setUUID(String name, UUID value){
 		tag.setString(name, value.toString());
+	}
+	
+	
+	//ItemStacks
+	public List<WrapperItemStack> getStacks(int count){
+		List<WrapperItemStack> stacks = new ArrayList<WrapperItemStack>();
+		NonNullList<ItemStack> mcList = NonNullList.<ItemStack>withSize(count, ItemStack.EMPTY);
+		ItemStackHelper.loadAllItems(tag, mcList);
+		for(ItemStack stack : mcList){
+			stacks.add(new WrapperItemStack(stack));
+		}
+		return stacks;
+	}
+	
+	public void setStacks(List<WrapperItemStack> stacks){
+		NonNullList<ItemStack> mcList = NonNullList.create();
+		for(WrapperItemStack stack : stacks){
+			mcList.add(stack.stack);
+		}
+		ItemStackHelper.saveAllItems(tag, mcList);
 	}
 	
 	

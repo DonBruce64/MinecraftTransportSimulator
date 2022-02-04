@@ -30,7 +30,6 @@ import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
-import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataCSHandshake;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -92,8 +91,7 @@ public class WrapperWorld{
 	private final List<AxisAlignedBB> mutableCollidingAABBs = new ArrayList<AxisAlignedBB>();
 	private final Set<BlockPos> knownAirBlocks = new HashSet<BlockPos>();
 	
-	//TODO make this protected when we abstract overlays and packets.
-	public final World world;
+	protected final World world;
 	
 	
 	public final ConcurrentLinkedQueue<AEntityA_Base> allEntities = new ConcurrentLinkedQueue<AEntityA_Base>();
@@ -103,6 +101,22 @@ public class WrapperWorld{
 	
 	private final WrapperNBT savedData;
 	
+	/**
+	 *  Returns a wrapper instance for the passed-in world instance.
+	 *  Wrapper is cached to avoid re-creating the wrapper each time it is requested.
+	 */
+	public static WrapperWorld getWrapperFor(World world){
+		if(world != null){
+			WrapperWorld wrapper = worldWrappers.get(world);
+			if(wrapper == null || world != wrapper.world){
+				wrapper = new WrapperWorld(world);
+				worldWrappers.put(world, wrapper);
+			}
+			return wrapper;
+		}else{
+			return null;
+		}
+	}
 
 	private WrapperWorld(World world){
 		this.world = world;
@@ -124,23 +138,6 @@ public class WrapperWorld{
 			}
 		}
 		MinecraftForge.EVENT_BUS.register(this);
-	}
-	
-	/**
-	 *  Returns a wrapper instance for the passed-in world instance.
-	 *  Wrapper is cached to avoid re-creating the wrapper each time it is requested.
-	 */
-	public static WrapperWorld getWrapperFor(World world){
-		if(world != null){
-			WrapperWorld wrapper = worldWrappers.get(world);
-			if(wrapper == null || world != wrapper.world){
-				wrapper = new WrapperWorld(world);
-				worldWrappers.put(world, wrapper);
-			}
-			return wrapper;
-		}else{
-			return null;
-		}
 	}
 	
 	/**
@@ -476,12 +473,16 @@ public class WrapperWorld{
 	 *  Returns a list of block drops for the block at the passed-in position.
 	 *  Does not actually destroy the block and make it drop anything.
 	 */
-	public List<ItemStack> getBlockDrops(Point3d position){
+	public List<WrapperItemStack> getBlockDrops(Point3d position){
 		BlockPos pos = new BlockPos(position.x, position.y, position.z);
 		IBlockState state = world.getBlockState(pos);
 		NonNullList<ItemStack> drops = NonNullList.create();
 		state.getBlock().getDrops(drops, world, pos, state, 0);
-		return drops;
+		List<WrapperItemStack> convertedList = new ArrayList<WrapperItemStack>();
+		for(ItemStack stack : drops){
+			convertedList.add(new WrapperItemStack(stack.copy()));
+		}
+		return convertedList;
 	}
 	
 	/**
@@ -709,38 +710,29 @@ public class WrapperWorld{
     		BlockPos pos = new BlockPos(position.x, position.y, position.z);
     		if(playerWrapper != null){
     			WrapperPlayer player = playerWrapper;
-    	    	ItemStack stack = playerWrapper.getHeldStack();
-    	    	AItemBase item = player.getHeldItem();
+    	    	WrapperItemStack stack = playerWrapper.getHeldStack();
+    	    	AItemBase item = stack.getItem();
     	    	EnumFacing facing = EnumFacing.valueOf(axis.name());
     	    	if(!world.getBlockState(pos).getBlock().isReplaceable(world, pos)){
     	            pos = pos.offset(facing);
     	            position.add(facing.getXOffset(), facing.getYOffset(), facing.getZOffset());
     	    	}
     	    	
-	            if(item != null && player.player.canPlayerEdit(pos, facing, stack) && world.mayPlace(wrapper, pos, false, facing, null)){
+	            if(item != null && player.player.canPlayerEdit(pos, facing, stack.stack) && world.mayPlace(wrapper, pos, false, facing, null)){
 	            	IBlockState newState = wrapper.getStateForPlacement(world, pos, facing, 0, 0, 0, 0, player.player, EnumHand.MAIN_HAND);
 	            	if(world.setBlockState(pos, newState, 11)){
 		            	//Block is set.  See if we need to set TE data.
 		            	if(block instanceof ABlockBaseTileEntity){
 		            		BuilderTileEntity<TileEntityType> builderTile = (BuilderTileEntity<TileEntityType>) world.getTileEntity(pos);
-		            		WrapperNBT data;
-		            		if(stack.hasTagCompound()){
-		            			data = new WrapperNBT(stack);
-		            		}else{
-		            			data = new WrapperNBT();
-		            			if(item instanceof AItemPack){
-			            			data.setString("packID", ((AItemPack<?>) item).definition.packID);
-				            		data.setString("systemName", ((AItemPack<?>) item).definition.systemName);
-				            		if(item instanceof AItemSubTyped){
-				            			data.setString("subName", ((AItemSubTyped<?>) item).subName);
-				            		}
-		            			}
+		            		WrapperNBT data = stack.getData();
+		            		if(item instanceof AItemPack){
+		            			((AItemPack<JSONDefinition>) item).populateDefaultData(data);
 		            		}
 		            		builderTile.tileEntity = (TileEntityType) ((ABlockBaseTileEntity) block).createTileEntity(this, position, player, data);
 		            		addEntity(builderTile.tileEntity);
 		            	}
 		            	//Shrink stack as we placed this block.
-		                stack.shrink(1);
+		                stack.add(-1);
 		                return true;
 		            }
 	            }
@@ -850,7 +842,7 @@ public class WrapperWorld{
 	 *  Tries to fertilize the block at the passed-in position with the passed-in stack.
 	 *  Returns true if the block was fertilized.
 	 */
-	public boolean fertilizeBlock(Point3d position, ItemStack stack){
+	public boolean fertilizeBlock(Point3d position, WrapperItemStack stack){
 		//Check if the item can fertilize things and we are on the server.
 		if(stack.getItem().equals(Items.DYE) && !world.isRemote){
 			//Check if we are in crops.
@@ -860,7 +852,7 @@ public class WrapperWorld{
 			if(cropBlock instanceof IGrowable){
 	            IGrowable growable = (IGrowable)cropState.getBlock();
 	            if(growable.canGrow(world, cropPos, cropState, world.isRemote)){
-	            	ItemDye.applyBonemeal(stack.copy(), world, cropPos);
+	            	ItemDye.applyBonemeal(stack.stack.copy(), world, cropPos);
 					return true;
 	            }
 			}
@@ -875,10 +867,10 @@ public class WrapperWorld{
 	 *  If the block was harvested, but not crops, then the resulting drops
 	 *  are dropped on the ground and an empty list is returned.
 	 */
-	public List<ItemStack> harvestBlock(Point3d position){
+	public List<WrapperItemStack> harvestBlock(Point3d position){
 		BlockPos pos = new BlockPos(position.x, position.y, position.z);
 		IBlockState state = world.getBlockState(pos);
-		List<ItemStack> cropDrops = new ArrayList<ItemStack>();
+		List<WrapperItemStack> cropDrops = new ArrayList<WrapperItemStack>();
 		if((state.getBlock() instanceof BlockCrops && ((BlockCrops) state.getBlock()).isMaxAge(state)) || state.getBlock() instanceof BlockBush){
 			Block harvestedBlock = state.getBlock();
 			NonNullList<ItemStack> drops = NonNullList.create();
@@ -890,7 +882,7 @@ public class WrapperWorld{
 				world.setBlockToAir(pos);
 				if(harvestedBlock instanceof BlockCrops){
 					for(ItemStack drop : drops){
-						cropDrops.add(drop);
+						cropDrops.add(new WrapperItemStack(drop.copy()));
 					}
 				}else{
 					for(ItemStack stack : drops){
@@ -908,9 +900,9 @@ public class WrapperWorld{
 	 *  Tries to plant the item as a block at the passed-in position.  Only works if the land conditions are correct
 	 *  and the item is actually seeds that can be planted.
 	 */
-	public boolean plantBlock(Point3d position, ItemStack stack){
+	public boolean plantBlock(Point3d position, WrapperItemStack stack){
 		//Check for valid seeds.
-		Item item = stack.getItem();
+		Item item = stack.stack.getItem();
 		if(item instanceof IPlantable){
 			IPlantable plantable = (IPlantable) item;
 			
@@ -978,7 +970,7 @@ public class WrapperWorld{
 	 */
 	public void spawnItem(AItemBase item, WrapperNBT data, Point3d point){
 		//Spawn 1 block above in case we're right on a block.
-		world.spawnEntity(new EntityItem(world, point.x, point.y + 1, point.z, item.getNewStack(data)));
+		world.spawnEntity(new EntityItem(world, point.x, point.y + 1, point.z, item.getNewStack(data).stack));
 	}
 	
 	/**
@@ -986,8 +978,8 @@ public class WrapperWorld{
 	 *  This should be called only on servers, as spawning items on clients
 	 *  leads to phantom items that can't be picked up. 
 	 */
-	public void spawnItemStack(ItemStack stack, Point3d point){
-		world.spawnEntity(new EntityItem(world, point.x, point.y, point.z, stack));
+	public void spawnItemStack(WrapperItemStack stack, Point3d point){
+		world.spawnEntity(new EntityItem(world, point.x, point.y, point.z, stack.stack));
 	}
 	
 	/**
@@ -1046,8 +1038,8 @@ public class WrapperWorld{
 					   
 					   //If the player is new, also add handbooks.
 					   if(!ConfigSystem.configObject.general.joinedPlayers.value.contains(playerWrapper.getID())){
-						   player.addItemStackToInventory(PackParserSystem.getItem("mts", "handbook_car").getNewStack(null));
-						   player.addItemStackToInventory(PackParserSystem.getItem("mts", "handbook_plane").getNewStack(null));
+						   player.addItemStackToInventory(PackParserSystem.getItem("mts", "handbook_car").getNewStack(null).stack);
+						   player.addItemStackToInventory(PackParserSystem.getItem("mts", "handbook_plane").getNewStack(null).stack);
 						   ConfigSystem.configObject.general.joinedPlayers.value.add(playerWrapper.getID());
 						   ConfigSystem.saveToDisk();
 					   }

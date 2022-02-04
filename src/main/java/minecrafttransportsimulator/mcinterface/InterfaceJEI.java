@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.systems;
+package minecrafttransportsimulator.mcinterface;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,11 +19,17 @@ import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemDecor;
 import minecrafttransportsimulator.packloading.PackMaterialComponent;
+import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 
+/**Interface for the JEI system.  This is responsible for populating JEI with the various items,
+ * benches, configurations and whatnots.
+ *
+ * @author don_bruce
+ */
 @JEIPlugin
-public class JEISystem implements IModPlugin{
+public class InterfaceJEI implements IModPlugin{
 	private static final List<BenchRecipeCategory> benchCategories = new ArrayList<BenchRecipeCategory>();
 
 	@Override
@@ -76,10 +82,14 @@ public class JEISystem implements IModPlugin{
 		public void getIngredients(IIngredients ingredients){
 			List<List<ItemStack>> inputs = new ArrayList<List<ItemStack>>();
 			for(PackMaterialComponent component : PackMaterialComponent.parseFromJSON(packItem, true, true, false, forRepair)){
-				inputs.add(component.possibleItems);
+				List<ItemStack> stacks = new ArrayList<ItemStack>();
+				for(WrapperItemStack stack : component.possibleItems){
+					stacks.add(stack.stack);
+				}
+				inputs.add(stacks);
 			}
 			ingredients.setInputLists(VanillaTypes.ITEM, inputs);
-			ingredients.setOutput(VanillaTypes.ITEM, packItem.getNewStack(null));
+			ingredients.setOutput(VanillaTypes.ITEM, packItem.getNewStack(null).stack);
 		}
 	}
 	

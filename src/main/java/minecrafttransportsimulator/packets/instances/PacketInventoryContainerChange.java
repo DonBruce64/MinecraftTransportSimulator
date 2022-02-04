@@ -1,11 +1,14 @@
 package minecrafttransportsimulator.packets.instances;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
+import minecrafttransportsimulator.mcinterface.WrapperItemStack;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
-import net.minecraft.item.ItemStack;
 
 /**Packet sent to inventory containers to update the inventory in them.
  * 
@@ -13,9 +16,9 @@ import net.minecraft.item.ItemStack;
  */
 public class PacketInventoryContainerChange extends APacketEntity<EntityInventoryContainer>{
 	private final int index;
-	private final ItemStack stackToChangeTo;
+	private final WrapperItemStack stackToChangeTo;
 	
-	public PacketInventoryContainerChange(EntityInventoryContainer inventory, int index, ItemStack stackToChangeTo){
+	public PacketInventoryContainerChange(EntityInventoryContainer inventory, int index, WrapperItemStack stackToChangeTo){
 		super(inventory);
 		this.index = index;
 		this.stackToChangeTo = stackToChangeTo;
@@ -24,7 +27,7 @@ public class PacketInventoryContainerChange extends APacketEntity<EntityInventor
 	public PacketInventoryContainerChange(ByteBuf buf){
 		super(buf);
 		this.index = buf.readInt();
-		this.stackToChangeTo = new ItemStack(readDataFromBuffer(buf).tag);
+		this.stackToChangeTo = readDataFromBuffer(buf).getStacks(1).get(0);
 	}
 	
 	@Override
@@ -32,7 +35,9 @@ public class PacketInventoryContainerChange extends APacketEntity<EntityInventor
 		super.writeToBuffer(buf);
 		buf.writeInt(index);
 		WrapperNBT stackData = new WrapperNBT();
-		stackToChangeTo.writeToNBT(stackData.tag);
+		List<WrapperItemStack> stackList = new ArrayList<WrapperItemStack>();
+		stackList.add(stackToChangeTo);
+		stackData.setStacks(stackList);
 		writeDataToBuffer(stackData, buf);
 	}
 	

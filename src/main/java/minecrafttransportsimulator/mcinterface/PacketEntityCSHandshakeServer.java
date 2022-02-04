@@ -1,10 +1,6 @@
-package minecrafttransportsimulator.packets.instances;
+package minecrafttransportsimulator.mcinterface;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.mcinterface.ABuilderEntityBase;
-import minecrafttransportsimulator.mcinterface.BuilderTileEntity;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketBase;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;

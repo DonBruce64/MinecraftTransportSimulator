@@ -26,6 +26,7 @@ import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
+import minecrafttransportsimulator.mcinterface.WrapperItemStack;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
@@ -37,7 +38,6 @@ import minecrafttransportsimulator.packets.instances.PacketPartEngine;
 import minecrafttransportsimulator.packets.instances.PacketPartInteractable;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import net.minecraft.item.ItemStack;
 
 public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInteractable, IItemFood{
 	/*Current page of this item, if it's a booklet.  Kept here locally as only one item class is constructed for each booklet definition.*/
@@ -134,8 +134,8 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 				if(!vehicle.world.isClient() && rightClick){
 					//Try to lock the vehicle.
 					//First check to see if we need to set this key's vehicle.
-					ItemStack stack = player.getHeldStack();
-					WrapperNBT data = new WrapperNBT(stack);
+					WrapperItemStack stack = player.getHeldStack();
+					WrapperNBT data = stack.getData();
 					UUID keyVehicleUUID = data.getUUID("vehicle");
 					if(keyVehicleUUID == null){
 						//Check if we are the owner before making this a valid key.
@@ -146,7 +146,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 						
 						keyVehicleUUID = vehicle.uniqueUUID;
 						data.setUUID("vehicle", keyVehicleUUID);
-						stack.setTagCompound(data.tag);
+						stack.setData(data);
 					}
 					
 					//Try to lock or unlock this vehicle.

@@ -8,9 +8,9 @@ import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
+import minecrafttransportsimulator.mcinterface.WrapperItemStack;
 import minecrafttransportsimulator.packets.instances.PacketInventoryContainerChange;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpDispense;
-import net.minecraft.item.ItemStack;
 
 /**A GUI that is used to set up fuel pumps as a pay-to-use system.  Allows for setting various items
  * for various fluid amounts.  Opened when the pump is clicked by a wrench from an OP player.
@@ -38,14 +38,14 @@ public class GUIFuelPump extends AGUIInventory{
 		interactableSlotBoxes.clear();
 		int xOffset = 8;
 		for(int i=0; i<pump.fuelItems.getSize(); ++i){
-			ItemStack stack = pump.fuelItems.getStack(i);
+			WrapperItemStack stack = pump.fuelItems.getStack(i);
 			GUIComponentButton itemButton = new GUIComponentButton(guiLeft + xOffset, guiTop + 12 + 22*(i%5), true){
 				@Override
 				public void onClicked(boolean leftSide){
 					if(configuring){
 						//Remove stack from slot as we don't want this item available.
-						ItemStack changedStack = pump.fuelItems.getStack(interactableSlotButtons.indexOf(this));
-						changedStack.setCount(0);
+						WrapperItemStack changedStack = pump.fuelItems.getStack(interactableSlotButtons.indexOf(this));
+						changedStack.add(-changedStack.getSize());
 						InterfacePacket.sendToServer(new PacketInventoryContainerChange(pump.fuelItems, interactableSlotButtons.indexOf(this), changedStack));
 					}else{
 						//Send off packet to see if we need to remove stack count from player to pay for fuel.
@@ -102,7 +102,7 @@ public class GUIFuelPump extends AGUIInventory{
 		if(configuring){
 			//player clicked on item during config.  Set stack in next free slot.
 			for(int i=0; i<pump.fuelItems.getSize(); ++i){
-				ItemStack stack = pump.fuelItems.getStack(i);
+				WrapperItemStack stack = pump.fuelItems.getStack(i);
 				if(stack.isEmpty()){
 					InterfacePacket.sendToServer(new PacketInventoryContainerChange(pump.fuelItems, i, playerInventory.getStack(slotClicked)));
 					return;

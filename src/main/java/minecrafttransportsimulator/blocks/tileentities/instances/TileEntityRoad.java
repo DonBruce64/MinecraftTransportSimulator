@@ -19,6 +19,7 @@ import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent.JSONLaneSector;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent.JSONRoadCollisionArea;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
+import minecrafttransportsimulator.mcinterface.WrapperItemStack;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
@@ -28,7 +29,6 @@ import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.rendering.components.RenderableObject;
 import minecrafttransportsimulator.rendering.instances.RenderRoad;
 import minecrafttransportsimulator.systems.PackParserSystem;
-import net.minecraft.item.ItemStack;
 
 /**Road tile entity.  Contains the definition so we know how
  * to render this in the TESR call, as well as stores the "fake"
@@ -128,7 +128,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	}
 	
 	@Override
-	public void addDropsToList(List<ItemStack> drops){
+	public void addDropsToList(List<WrapperItemStack> drops){
 		for(RoadComponent componentType : RoadComponent.values()){
 			if(components.containsKey(componentType)){
 				drops.add(components.get(componentType).getNewStack(null));

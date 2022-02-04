@@ -16,8 +16,6 @@ import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.ContainerWorkbench;
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraftforge.event.world.WorldEvent;
@@ -37,11 +35,6 @@ public class WrapperPlayer extends WrapperEntity{
 	
 	protected final EntityPlayer player;
 	
-	public WrapperPlayer(EntityPlayer player){
-		super(player);
-		this.player = player;
-	}
-	
 	/**
 	 *  Returns a wrapper instance for the passed-in player instance.
 	 *  Null may be passed-in safely to ease function-forwarding.
@@ -60,6 +53,11 @@ public class WrapperPlayer extends WrapperEntity{
 		}else{
 			return null;
 		}
+	}
+	
+	protected WrapperPlayer(EntityPlayer player){
+		super(player);
+		this.player = player;
 	}
 	
 	@Override
@@ -119,14 +117,6 @@ public class WrapperPlayer extends WrapperEntity{
 	}
 	
 	/**
-	 *  Returns the held item.  Only valid for {@link AItemBase} items.
-	 */
-	public AItemBase getHeldItem(){
-		Item heldItem = player.getHeldItemMainhand().getItem();
-		return heldItem instanceof IBuilderItemInterface ? ((IBuilderItemInterface) heldItem).getItem() : null;
-	}
-	
-	/**
 	 *  Returns true if the player is holding the pack-item type passed-in.
 	 */
 	public boolean isHoldingItemType(ItemComponentType type){
@@ -135,17 +125,30 @@ public class WrapperPlayer extends WrapperEntity{
 	}
 	
 	/**
+	 *  Returns the held item.  Only valid for {@link AItemBase} items.
+	 *  This is less RAM-intensive than {@link #getHeldStack()} due to
+	 *  not needing to make a new wrapper during the call.  So if you only
+	 *  need to know the item the player is holding, you should use this method
+	 *  rather than getting the item out of the stack.  Of course, if you already
+	 *  have a stack, just use that.
+	 */
+	public AItemBase getHeldItem(){
+		Item heldItem = player.getHeldItemMainhand().getItem();
+		return heldItem instanceof IBuilderItemInterface ? ((IBuilderItemInterface) heldItem).getItem() : null;
+	}
+	
+	/**
 	 *  Returns the held stack.
 	 */
-	public ItemStack getHeldStack(){
-		return player.getHeldItemMainhand();
+	public WrapperItemStack getHeldStack(){
+		return new WrapperItemStack(player.inventory.getStackInSlot(getHotbarIndex()));
 	}
 	
 	/**
 	 *  Sets the held stack.  Overwrites what was in the hand before this.
 	 */
-	public void setHeldStack(ItemStack stack){
-		player.setHeldItem(EnumHand.MAIN_HAND, stack);;
+	public void setHeldStack(WrapperItemStack stack){
+		player.inventory.setInventorySlotContents(getHotbarIndex(), stack.stack);
 	}
 	
 	/**

@@ -2,8 +2,12 @@ package minecrafttransportsimulator.mcinterface;
 
 import minecrafttransportsimulator.baseclasses.IInventoryProvider;
 import net.minecraft.inventory.IInventory;
-import net.minecraft.item.ItemStack;
 
+/**Wrapper for inventories.  This is mainly for the player, but works for any inventory in the game.
+ * Say for inventories of MC crates.
+ *
+ * @author don_bruce
+ */
 public class WrapperInventory implements IInventoryProvider{
 	private final IInventory inventory;
 	
@@ -17,13 +21,13 @@ public class WrapperInventory implements IInventoryProvider{
 	}
 	
 	@Override
-	public ItemStack getStack(int slot){
-		return inventory.getStackInSlot(slot);
+	public WrapperItemStack getStack(int slot){
+		return new WrapperItemStack(inventory.getStackInSlot(slot));
 	}
 	
 	@Override
-	public void setStack(ItemStack stackToSet, int index){
-		inventory.setInventorySlotContents(index, stackToSet);
+	public void setStack(WrapperItemStack stackToSet, int index){
+		inventory.setInventorySlotContents(index, stackToSet.stack);
 		inventory.markDirty();
 	}
 }

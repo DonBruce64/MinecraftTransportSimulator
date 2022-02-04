@@ -18,6 +18,7 @@ import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
+import minecrafttransportsimulator.mcinterface.WrapperItemStack;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
@@ -25,7 +26,6 @@ import minecrafttransportsimulator.packets.instances.PacketFurnaceFuelAdd;
 import minecrafttransportsimulator.packets.instances.PacketItemInteractable;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import net.minecraft.item.ItemStack;
 
 public class ItemPartInteractable extends AItemPart implements IItemVehicleInteractable{
 	
@@ -77,8 +77,8 @@ public class ItemPartInteractable extends AItemPart implements IItemVehicleInter
 		if(definition.interactable.interactionType.equals(InteractableComponentType.JERRYCAN)){
 			if(!vehicle.world.isClient()){
 				if(rightClick){
-					ItemStack stack = player.getHeldStack();
-					WrapperNBT data = new WrapperNBT(stack);
+					WrapperItemStack stack = player.getHeldStack();
+					WrapperNBT data = stack.getData();
 					String jerrrycanFluid = data.getString("jerrycanFluid");
 					
 					//If we clicked a tank on the vehicle, attempt to pull from it rather than fill the vehicle.
@@ -89,7 +89,7 @@ public class ItemPartInteractable extends AItemPart implements IItemVehicleInter
 							if(jerrrycanFluid.isEmpty()){
 								if(tank.getFluidLevel() >= 1000){
 									data.setString("jerrycanFluid", tank.getFluid());
-									stack.setTagCompound(data.tag);
+									stack.setData(data);
 									tank.drain(tank.getFluid(), 1000, true);
 								}
 							}
@@ -107,7 +107,7 @@ public class ItemPartInteractable extends AItemPart implements IItemVehicleInter
 								 furnace.ticksAddedOfFuel = furnace.ticksLeftOfFuel;
 								 
 								 data.setString("jerrycanFluid", "");
-								 stack.setTagCompound(data.tag);
+								 stack.setData(data);
 								 player.sendPacket(new PacketPlayerChatMessage(player, "interact.jerrycan.success"));
 							 }else{
 								 player.sendPacket(new PacketPlayerChatMessage(player, "interact.jerrycan.wrongtype"));
@@ -120,7 +120,7 @@ public class ItemPartInteractable extends AItemPart implements IItemVehicleInter
 							}else{
 								vehicle.fuelTank.fill(jerrrycanFluid, 1000, true);
 								data.setString("jerrycanFluid", "");
-								stack.setTagCompound(data.tag);
+								stack.setData(data);
 								player.sendPacket(new PacketPlayerChatMessage(player, "interact.jerrycan.success"));
 							}
 						}else{
@@ -140,7 +140,7 @@ public class ItemPartInteractable extends AItemPart implements IItemVehicleInter
 	public boolean onUsed(WrapperWorld world, WrapperPlayer player){
 		if(definition.interactable.canBeOpenedInHand && definition.interactable.interactionType.equals(InteractableComponentType.CRATE)){
 			if(!world.isClient()){
-				EntityInventoryContainer inventory = new EntityInventoryContainer(world, new WrapperNBT(player.getHeldStack()).getDataOrNew("inventory"), (int) (definition.interactable.inventoryUnits*9F));
+				EntityInventoryContainer inventory = new EntityInventoryContainer(world, player.getHeldStack().getData().getDataOrNew("inventory"), (int) (definition.interactable.inventoryUnits*9F));
 				world.addEntity(inventory);
 				player.sendPacket(new PacketItemInteractable(player, inventory, definition.interactable.inventoryTexture));
 			}

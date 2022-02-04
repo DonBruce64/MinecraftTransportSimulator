@@ -20,6 +20,7 @@ import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
+import minecrafttransportsimulator.mcinterface.WrapperItemStack;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
@@ -27,7 +28,6 @@ import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpConnection;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import net.minecraft.item.ItemStack;
 
 public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityFluidTankProvider{
 	public EntityVehicleF_Physics connectedVehicle;
@@ -141,21 +141,21 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityFl
 	@Override
 	public boolean interact(WrapperPlayer player){		
 		//If we are holding an item, interact with the pump.
-		ItemStack stack = player.getHeldStack();
-		AItemBase item = player.getHeldItem();
-		if(tank.interactWith(player) > 0){
+		if(player.getHeldStack().interactWith(tank, player)){
 			return true;
 		}
 		
 		//Check if the item is a jerrycan.
+		WrapperItemStack stack = player.getHeldStack();
+		AItemBase item = stack.getItem();
 		if(item instanceof ItemPartInteractable){
 			ItemPartInteractable interactable = (ItemPartInteractable) item;
 			if(interactable.definition.interactable.interactionType.equals(InteractableComponentType.JERRYCAN)){
-				WrapperNBT data = new WrapperNBT(stack);
+				WrapperNBT data = stack.getData();
 				if(data.getString("jerrycanFluid").isEmpty()){
 					if(tank.getFluidLevel() >= 1000){
 						data.setString("jerrycanFluid", tank.getFluid());
-						stack.setTagCompound(data.tag);
+						stack.setData(data);
 						tank.drain(tank.getFluid(), 1000, true);
 					}
 				}

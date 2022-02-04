@@ -6,8 +6,6 @@ import java.util.List;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.components.ABlockBaseTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
-import minecrafttransportsimulator.packets.instances.PacketEntityCSHandshakeClient;
-import minecrafttransportsimulator.packets.instances.PacketEntityCSHandshakeServer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ITickable;
@@ -27,7 +25,7 @@ import net.minecraft.util.ITickable;
  * @author don_bruce
  */
 public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extends TileEntity implements ITickable{
-	public TileEntityType tileEntity;
+	protected TileEntityType tileEntity;
 	
 	/**This flag is true if we need to get server data for syncing.  Set on construction tick, but only used on clients.**/
 	private boolean needDataFromServer = true;
@@ -35,18 +33,17 @@ public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extend
 	 * loading entity data when this entity isn't being ticked.  Some mods love to do this by making a lot of entities
 	 * to do their funky logic.  I'm looking at YOU The One Probe!  This should be either set by NBT loaded from disk
 	 * on servers, or set by packet on clients.*/
-	//TODO make this and the other NBT bits protected when we abstract packet reg, and move packets here.
-	public NBTTagCompound lastLoadedNBT;
+	protected NBTTagCompound lastLoadedNBT;
 	/**Set to true when NBT is loaded on servers from disk, or when NBT arrives from clients on servers.  This is set on the update loop when data is
 	 * detected from server NBT loading, but for clients this is set when a data packet arrives.  This prevents loading client-based NBT before
 	 * the packet arrives, which is possible if a partial NBT load is performed by the core game or a mod.**/
-	public boolean loadFromSavedNBT;
+	protected boolean loadFromSavedNBT;
 	/**Set to true when loaded NBT is parsed and loaded.  This is done to prevent re-parsing of NBT from triggering a second load command.**/
-	public boolean loadedFromSavedNBT;
+	protected boolean loadedFromSavedNBT;
 	/**Players requesting data for this builder.  This is populated by packets sent to the server.  Each tick players in this list are
 	 * sent data about this builder, and the list cleared.  Done this way to prevent the server from trying to handle the packet before
 	 * it has created the entity, as the entity is created on the update call, but the packet might get here due to construction.**/
-	public final List<WrapperPlayer> playersRequestingData = new ArrayList<WrapperPlayer>();
+	protected final List<WrapperPlayer> playersRequestingData = new ArrayList<WrapperPlayer>();
 	
 	public BuilderTileEntity(){
 		//Blank constructor for MC.

@@ -5,10 +5,10 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityFuelP
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIFuelPump;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
+import minecrafttransportsimulator.mcinterface.WrapperItemStack;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntityInteract;
-import net.minecraft.item.ItemStack;
 
 /**Packet sent to pumps to allow dispensing of fluids to vehicles.  This will remove an item
  * from the player's inventory for the use of the pump if they have it, and will then allow
@@ -52,8 +52,8 @@ public class PacketTileEntityFuelPumpDispense extends APacketEntityInteract<Tile
 			pump.fuelAmounts.set(slotClicked, amountChangedTo);
 			return true;
 		}else{
-			ItemStack stack = pump.fuelItems.getStack(slotClicked);
-			if(player.getInventory().removeStack(stack, stack.getCount())){
+			WrapperItemStack stack = pump.fuelItems.getStack(slotClicked);
+			if(player.getInventory().removeStack(stack, stack.getSize())){
 				pump.fuelPurchasedRemaining += pump.fuelAmounts.get(slotClicked);
 				if(world.isClient() && player.equals(InterfaceClient.getClientPlayer()) && AGUIBase.activeInputGUI instanceof GUIFuelPump){
 					AGUIBase.activeInputGUI.close();

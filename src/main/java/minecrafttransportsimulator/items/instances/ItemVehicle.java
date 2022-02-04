@@ -9,11 +9,11 @@ import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.components.IItemEntityProvider;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
+import minecrafttransportsimulator.mcinterface.WrapperItemStack;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import net.minecraft.item.ItemStack;
 
 public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEntityProvider<EntityVehicleF_Physics>{
 	
@@ -24,9 +24,9 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 	@Override
 	public boolean onBlockClicked(WrapperWorld world, WrapperPlayer player, Point3d position, Axis axis){
 		if(!world.isClient()){
-			ItemStack heldStack = player.getHeldStack();
+			WrapperItemStack heldStack = player.getHeldStack();
 			//Make sure the definition is set in the NBT we will be giving to our new entity.
-			WrapperNBT data = validateData(new WrapperNBT(heldStack));
+			WrapperNBT data = heldStack.getData();
 			boolean wasSaved = !data.getString("uniqueUUID").isEmpty();
 			
 			//First construct the class.
@@ -77,7 +77,7 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 	}
 	
 	@Override
-	protected void populateDefaultData(WrapperNBT data){
+	public void populateDefaultData(WrapperNBT data){
 		super.populateDefaultData(data);
 		//Make sure we don't restore any world-based entity properties.
 		data.setPoint3d("position", new Point3d());

@@ -17,7 +17,7 @@ apply plugin: 'eclipse'
 //apply plugin: 'org.spongepowered.mixin'
 
 //Set file name.
-version = "1.12.2-20.5.3-BETA4"
+version = "1.12.2-20.6.0-BETA1"
 group= "minecrafttransportsimulator"
 archivesBaseName = "Immersive Vehicles"
 
@@ -88,7 +88,7 @@ dependencies {
 	//embed('org.spongepowered:mixin:0.8.5')
 	
 	//Apply Mixin AP ForgeGradle.
-	annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+	//annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 }
 
 //Set mixin properties.

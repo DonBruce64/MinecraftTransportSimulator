@@ -100,7 +100,11 @@ public class BuilderItem extends Item implements IBuilderItemInterface{
 	@Override
 	@SideOnly(Side.CLIENT)
 	public void addInformation(ItemStack stack, @Nullable World world, List<String> tooltipLines, ITooltipFlag flagIn){
-		item.addTooltipLines(tooltipLines, new WrapperNBT(stack));
+		if(stack.hasTagCompound()){
+			item.addTooltipLines(tooltipLines, new WrapperNBT(stack.getTagCompound()));
+		}else{
+			item.addTooltipLines(tooltipLines, new WrapperNBT());
+		}
 	}
 	
 	/**

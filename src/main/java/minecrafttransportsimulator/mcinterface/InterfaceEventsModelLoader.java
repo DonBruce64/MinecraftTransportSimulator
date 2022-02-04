@@ -47,7 +47,6 @@ import net.minecraft.client.renderer.vertex.VertexFormatElement;
 import net.minecraft.client.resources.IResourcePack;
 import net.minecraft.client.resources.data.IMetadataSection;
 import net.minecraft.client.resources.data.MetadataSerializer;
-import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
@@ -78,9 +77,9 @@ public class InterfaceEventsModelLoader{
 	 *  rendered on its own.  Also note the item is in block-coords.  This means that normally
 	 *  the model will be from 0->1 in the axial directions.
 	 */
-	public static RenderableObject getItemModel(ItemStack stack){
+	public static RenderableObject getItemModel(WrapperItemStack stackToRender){
 		//Get normal model.
-		IBakedModel itemModel = Minecraft.getMinecraft().getRenderItem().getItemModelWithOverrides(stack, null, Minecraft.getMinecraft().player);
+		IBakedModel itemModel = Minecraft.getMinecraft().getRenderItem().getItemModelWithOverrides(stackToRender.stack, null, Minecraft.getMinecraft().player);
 		
 		//Get transformation matrix, if this model has one.
 		Matrix4f matrix = itemModel.handlePerspective(ItemCameraTransforms.TransformType.GUI).getRight();

@@ -5,16 +5,15 @@ import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
-import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
+import minecrafttransportsimulator.mcinterface.WrapperItemStack;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.instances.PacketFurnaceFuelAdd;
 import minecrafttransportsimulator.packets.instances.PacketPartInteractable;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import net.minecraft.item.ItemStack;
 
 public final class PartInteractable extends APart{
 	public final EntityFurnace furnace;
@@ -61,7 +60,7 @@ public final class PartInteractable extends APart{
 				save(data);
 				world.spawnItem(getItem(), data, position);
 			}else if(tank != null){
-				tank.interactWith(player);
+				player.getHeldStack().interactWith(tank, player);
 			}	
 		}else{
 			player.sendPacket(new PacketPlayerChatMessage(player, "interact.failure.vehiclelocked"));
@@ -165,17 +164,17 @@ public final class PartInteractable extends APart{
 		//Try to fill the furnace with the appropriate fuel type, if we have it.
 		switch(furnace.definition.furnaceType){
 			case STANDARD:{
-				ItemStack currentFuel = furnace.getStack(EntityFurnace.FUEL_ITEM_SLOT);
-				if(currentFuel.isEmpty() || currentFuel.getMaxStackSize() < currentFuel.getCount()){
+				WrapperItemStack currentFuel = furnace.getStack(EntityFurnace.FUEL_ITEM_SLOT);
+				if(currentFuel.isEmpty() || currentFuel.getMaxSize() < currentFuel.getSize()){
 					//Try to find a matching burnable item from the entity.
 					for(APart part : entityOn.parts){
 						if(part instanceof PartInteractable){
 							if(part.isActive && part.definition.interactable.feedsVehicles && part.definition.interactable.interactionType.equals(InteractableComponentType.CRATE)){
 								PartInteractable crate = (PartInteractable) part;
 								for(int i=0; i<crate.inventory.getSize(); ++i){
-									ItemStack stack = crate.inventory.getStack(i);
-									if(InterfaceCore.getFuelValue(stack) != 0 && (currentFuel.isEmpty() || stack.isItemEqual(currentFuel))){
-										furnace.ticksAddedOfFuel = InterfaceCore.getFuelValue(stack);
+									WrapperItemStack stack = crate.inventory.getStack(i);
+									if(stack.getFuelValue() != 0 && (currentFuel.isEmpty() || stack.isCompleteMatch(currentFuel))){
+										furnace.ticksAddedOfFuel = stack.getFuelValue();
 										furnace.ticksLeftOfFuel = furnace.ticksAddedOfFuel;
 										crate.inventory.removeFromSlot(i, 1);
 										InterfacePacket.sendToAllClients(new PacketFurnaceFuelAdd(furnace));

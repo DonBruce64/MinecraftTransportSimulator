@@ -14,14 +14,14 @@ import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
+import minecrafttransportsimulator.mcinterface.WrapperItemStack;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.instances.PacketPartEffector;
-import net.minecraft.item.ItemStack;
 
 public class PartEffector extends APart{
 	
-	private final List<ItemStack> drops = new ArrayList<ItemStack>();
+	private final List<WrapperItemStack> drops = new ArrayList<WrapperItemStack>();
 	
 	//Variables used for drills.
 	public int blocksBroken;
@@ -50,7 +50,7 @@ public class PartEffector extends APart{
 								if(part instanceof PartInteractable && part.definition.interactable.interactionType.equals(InteractableComponentType.CRATE) && part.isActive && part.definition.interactable.feedsVehicles){
 									EntityInventoryContainer inventory = ((PartInteractable) part).inventory;
 									for(int i=0; i<inventory.getSize(); ++i){
-										ItemStack stack = inventory.getStack(i);
+										WrapperItemStack stack = inventory.getStack(i);
 										if(world.fertilizeBlock(box.globalCenter, stack)){
 											inventory.removeFromSlot(i, 1);
 											break;
@@ -71,7 +71,7 @@ public class PartEffector extends APart{
 								if(part instanceof PartInteractable && part.definition.interactable.interactionType.equals(InteractableComponentType.CRATE) && part.isActive && part.definition.interactable.feedsVehicles){
 									EntityInventoryContainer inventory = ((PartInteractable) part).inventory;
 									for(int i=0; i<inventory.getSize(); ++i){
-										ItemStack stack = inventory.getStack(i);
+										WrapperItemStack stack = inventory.getStack(i);
 										if(world.plantBlock(box.globalCenter, stack)){
 											inventory.removeFromSlot(i, 1);
 											break;
@@ -84,10 +84,10 @@ public class PartEffector extends APart{
 						case PLOW:{
 							if(world.plowBlock(box.globalCenter)){
 								//Harvest blocks on top of this block in case they need to be dropped.
-								List<ItemStack> harvestedDrops = world.harvestBlock(box.globalCenter);
+								List<WrapperItemStack> harvestedDrops = world.harvestBlock(box.globalCenter);
 								if(!harvestedDrops.isEmpty()){
-									for(ItemStack stack : harvestedDrops){
-										if(stack.getCount() > 0){
+									for(WrapperItemStack stack : harvestedDrops){
+										if(stack.getSize() > 0){
 											world.spawnItemStack(stack, position);
 										}
 									}
@@ -136,9 +136,9 @@ public class PartEffector extends APart{
 					
 					//Handle any drops we got from our effector.
 					if(!drops.isEmpty()){
-						Iterator<ItemStack> iterator = drops.iterator();
+						Iterator<WrapperItemStack> iterator = drops.iterator();
 						while(iterator.hasNext()){
-							ItemStack dropStack = iterator.next();
+							WrapperItemStack dropStack = iterator.next();
 							for(APart part : entityOn.parts){
 								if(part instanceof PartInteractable && part.isActive && part.definition.interactable.interactionType.equals(InteractableComponentType.CRATE)){
 									if(((PartInteractable) part).inventory.addStack(dropStack)){
@@ -150,7 +150,7 @@ public class PartEffector extends APart{
 						}
 						
 						//Check our drops.  If we couldn't add any of them to any inventory, drop them on the ground instead.
-						for(ItemStack dropStack : drops){
+						for(WrapperItemStack dropStack : drops){
 							world.spawnItemStack(dropStack, position);
 						}
 						drops.clear();

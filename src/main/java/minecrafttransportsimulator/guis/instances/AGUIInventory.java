@@ -8,8 +8,8 @@ import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.WrapperInventory;
+import minecrafttransportsimulator.mcinterface.WrapperItemStack;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import net.minecraft.item.ItemStack;
 
 /**Abstract GUI class used as the base for GUIs with inventory slots.  By default, it sets up slots
  * for all the player's items and populates them.
@@ -73,7 +73,7 @@ public abstract class AGUIInventory extends AGUIBase{
 		super.setStates();
 		//Set player item icons to player inventory.
 		for(int i=0; i<playerSlotButtons.size(); ++i){
-			ItemStack stack = playerInventory.getStack(i);
+			WrapperItemStack stack = playerInventory.getStack(i);
 			playerSlotButtons.get(i).enabled = !stack.isEmpty();
 			playerSlotIcons.get(i).stack = stack;
 		}

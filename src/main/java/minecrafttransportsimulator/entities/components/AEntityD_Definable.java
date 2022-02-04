@@ -29,6 +29,7 @@ import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.InterfaceSound;
+import minecrafttransportsimulator.mcinterface.WrapperItemStack;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
@@ -40,7 +41,6 @@ import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.CameraSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
-import net.minecraft.item.ItemStack;
 
 /**Base class for entities that are defined via JSON definitions and can be modeled in 3D.
  * This level adds various method for said definitions, which include rendering functions. 
@@ -282,7 +282,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 	 *  return a stack that can re-create this entity, whereas drops may or may not allow for this.
 	 *  An example is a vehicle that is broken in a crash versus picked up via a wrench.
 	 */
-	public void addDropsToList(List<ItemStack> drops){
+	public void addDropsToList(List<WrapperItemStack> drops){
 		AItemPack<JSONDefinition> packItem = getItem();
 		if(packItem != null){
 			drops.add(packItem.getNewStack(save(new WrapperNBT())));
