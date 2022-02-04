@@ -286,7 +286,13 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 									}
 									case TRANSLATION :{
 									    if(!inhibitAnimations){
-									    	modifiedValue += getAnimatedVariableValue(clock, clock.animation.axis.y, 0);
+										if(clock.animation.axis.x != 0){
+										    modifiedValue *= getAnimatedVariableValue(clock, clock.animation.axis.x, 0);
+										}else if(clock.animation.axis.y != 0){
+										    modifiedValue += getAnimatedVariableValue(clock, clock.animation.axis.y, 0);
+										}else{
+										    modifiedValue = (float) (getAnimatedVariableValue(clock, clock.animation.axis.z, 0));
+										}
 									    }
 									    break;
 									}
