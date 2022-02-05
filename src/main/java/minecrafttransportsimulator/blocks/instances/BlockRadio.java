@@ -12,6 +12,11 @@ public class BlockRadio extends ABlockBaseTileEntity{
 	public BlockRadio(){
 		super(10.0F, 5.0F);
 	}
+	
+	@Override
+    public Class<TileEntityRadio> getTileEntityClass(){
+    	return TileEntityRadio.class;
+    }
 
 	@Override
 	public TileEntityRadio createTileEntity(WrapperWorld world, Point3d position, WrapperPlayer placingPlayer, WrapperNBT data){

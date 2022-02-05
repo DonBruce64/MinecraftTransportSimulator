@@ -136,6 +136,14 @@ public class WrapperItemStack{
 	}
 	
 	/**
+	 *  Splits this stack into two.  The second with qty amount
+	 *  of items in it, and the same data.
+	 */
+	public WrapperItemStack split(int qty){
+		return new WrapperItemStack(stack.splitStack(qty));
+	}
+	
+	/**
 	 *  Returns the tooltip lines for this stack.
 	 *  ONLY call this on the client: servers can't get tooltips as it's
 	 *  rendered text and uses game and player settings.

@@ -14,6 +14,11 @@ public class BlockDecor extends ABlockBaseTileEntity{
 	}
     
     @Override
+    public Class<TileEntityDecor> getTileEntityClass(){
+    	return TileEntityDecor.class;
+    }
+    
+    @Override
 	public TileEntityDecor createTileEntity(WrapperWorld world, Point3d position, WrapperPlayer placingPlayer, WrapperNBT data){
 		return new TileEntityDecor(world, position, placingPlayer, data);
 	}

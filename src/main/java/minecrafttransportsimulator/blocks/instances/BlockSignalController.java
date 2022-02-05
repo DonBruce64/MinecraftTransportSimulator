@@ -12,6 +12,11 @@ public class BlockSignalController extends ABlockBaseTileEntity{
 	public BlockSignalController(){
 		super(10.0F, 5.0F);
 	}
+	
+	@Override
+    public Class<TileEntitySignalController> getTileEntityClass(){
+    	return TileEntitySignalController.class;
+    }
 
 	@Override
 	public TileEntitySignalController createTileEntity(WrapperWorld world, Point3d position, WrapperPlayer placingPlayer, WrapperNBT data){

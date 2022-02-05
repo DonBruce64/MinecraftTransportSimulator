@@ -51,9 +51,9 @@ public class PacketPlayerItemTransfer extends APacketEntityInteract<EntityInvent
 		WrapperInventory playerInventory = player.getInventory();
 		if(inventorySlot != -1){
 			WrapperItemStack stackToTransfer = inventory.getStack(inventorySlot);
-			int startingQty = stackToTransfer.getSize();
-			playerInventory.addStack(stackToTransfer);
-			inventory.removeFromSlot(inventorySlot, startingQty - stackToTransfer.getSize());
+			if(playerInventory.addStack(stackToTransfer)){
+				inventory.setStack(stackToTransfer, inventorySlot);
+			}
 		}else if(playerSlot != -1){
 			WrapperItemStack stackToTransfer = playerInventory.getStack(playerSlot);
 			
@@ -67,9 +67,9 @@ public class PacketPlayerItemTransfer extends APacketEntityInteract<EntityInvent
 				return false;
 			}
 			
-			int startingQty = stackToTransfer.getSize();
-			inventory.addStack(stackToTransfer);
-			playerInventory.removeFromSlot(playerSlot, startingQty - stackToTransfer.getSize());
+			if(inventory.addStack(stackToTransfer)){
+				playerInventory.setStack(stackToTransfer, playerSlot);
+			}
 		}
 		if(saveToPlayer){
 			WrapperNBT newData = new WrapperNBT();

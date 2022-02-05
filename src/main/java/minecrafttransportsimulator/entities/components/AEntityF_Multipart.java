@@ -728,7 +728,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 				String partPackID = partDef.defaultPart.substring(0, partDef.defaultPart.indexOf(':'));
 				String partSystemName = partDef.defaultPart.substring(partDef.defaultPart.indexOf(':') + 1);
 				try{
-					APart addedPart = addPartFromItem(PackParserSystem.getItem(partPackID, partSystemName), playerAdding, null, partDef.pos, addedDuringConstruction);
+					APart addedPart = addPartFromItem(PackParserSystem.getItem(partPackID, partSystemName), playerAdding, new WrapperNBT(), partDef.pos, addedDuringConstruction);
 					if(addedPart != null){
 						//Set the default tone for the part, if it requests one and we can provide one.
 						updatePartTone(addedPart);

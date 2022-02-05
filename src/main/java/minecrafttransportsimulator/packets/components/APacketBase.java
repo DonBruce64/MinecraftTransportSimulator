@@ -38,7 +38,7 @@ import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketPlayerCraftItem;
 import minecrafttransportsimulator.packets.instances.PacketPlayerItemTransfer;
 import minecrafttransportsimulator.packets.instances.PacketRadioStateChange;
-import minecrafttransportsimulator.packets.instances.PacketTileEntityFluidLoaderConnection;
+import minecrafttransportsimulator.packets.instances.PacketTileEntityLoaderConnection;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpConnection;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpDispense;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleChange;
@@ -241,7 +241,7 @@ public abstract class APacketBase{
 		InterfacePacket.registerPacket(packetIndex++, PacketRadioStateChange.class);
 		
 		//Tile entity packets.
-		InterfacePacket.registerPacket(packetIndex++, PacketTileEntityFluidLoaderConnection.class);
+		InterfacePacket.registerPacket(packetIndex++, PacketTileEntityLoaderConnection.class);
 		InterfacePacket.registerPacket(packetIndex++, PacketTileEntityFuelPumpConnection.class);
 		InterfacePacket.registerPacket(packetIndex++, PacketTileEntityFuelPumpDispense.class);
 		InterfacePacket.registerPacket(packetIndex++, PacketTileEntityRoadCollisionUpdate.class);

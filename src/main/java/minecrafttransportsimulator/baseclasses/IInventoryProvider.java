@@ -80,30 +80,48 @@ public interface IInventoryProvider{
 	public void setStack(WrapperItemStack stackToSet, int index);
 	
 	/**
-	 *  Tries to add the passed-in stack to this inventory.  Adds as many items from the
-	 *  stack as possible, but may or may not add all of them.  As such, true is returned
-	 *  if all items were added, false if not.  The passed-in stack will have its items
-	 *  removed upon calling, so this may be referenced for actual items removed.
+	 *  Tries to add the passed-in stack to this inventory. Attempts to add up to qty items
+	 *  from the stack, but may or may not add all of them.
+	 *  As such, true is returned if all items were added, false if not.  The passed-
+	 *  in stack will have its items removed upon calling, so this may be referenced 
+	 *  for actual items removed. Note that this operation may be simulated by passing 
+	 *  in false for doAdd.  This is useful if you need to check if this inventory could 
+	 *  store the stack you are wishing to add without actually adding it.
 	 */
-	public default boolean addStack(WrapperItemStack stackToAdd){
+	public default boolean addStack(WrapperItemStack stackToAdd, int qty, boolean doAdd){
 		for(int i=0; i<getSize(); ++i){
 			if(isStackValid(stackToAdd, i)){
 				WrapperItemStack stack = getStack(i);
 				if(stack.isEmpty()){
-					setStack(stackToAdd, i);
+					if(doAdd){
+						setStack(stackToAdd.split(qty), i);
+						qty = 0;
+					}
 					return true;
 				}else if(stackToAdd.isCompleteMatch(stack)){
-					int amountToAdd = Math.min(stack.getMaxSize() - stack.getSize(), stackToAdd.getSize());
+					int amountToAdd = Math.min(stack.getMaxSize() - stack.getSize(), qty);
 					if(amountToAdd > 0){
-						stack.add(amountToAdd);
-						//This will flag updates if needed.
-						setStack(stack, i);
-						stackToAdd.add(-amountToAdd);
+						if(doAdd){
+							stack.add(amountToAdd);
+							//This will flag updates if needed.
+							setStack(stack, i);
+							stackToAdd.add(-amountToAdd);
+							qty -= amountToAdd;
+						}else{
+							return true;
+						}
 					}
 				}
 			}
 		}
-		return stackToAdd.isEmpty();
+		return qty == 0;
+	}
+	
+	/**
+	 *  A pass-down method that just adds the whole stack to this inventory without the extra parameters.
+	 */
+	public default boolean addStack(WrapperItemStack stackToAdd){
+		return addStack(stackToAdd, stackToAdd.getSize(), true);
 	}
 	
 	/**
@@ -111,7 +129,7 @@ public interface IInventoryProvider{
 	 *  from this inventory.  Returns true if all the items were removed, false if
 	 *  there are not enough items to remove according to the quantity.  If there
 	 *  arenm't enough items, then the inventory is not modified.
-	 *  Note that unlike {@link #addStack(WrapperItemStack)}, the passed-in stack
+	 *  Note that unlike {@link #addStack(WrapperItemStack, int, boolean)}, the passed-in stack
 	 *  is not modified as it is assumed it's a reference variable rather than
 	 *  one that represents an actual stack.  This method also uses OreDict
 	 *  lookup, as it assumes removal it for crafting or usage where "fuzzy"

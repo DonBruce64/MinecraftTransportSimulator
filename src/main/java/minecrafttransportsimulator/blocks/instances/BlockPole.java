@@ -19,6 +19,11 @@ public class BlockPole extends ABlockBaseTileEntity{
 	}
 	
 	@Override
+    public Class<TileEntityPole> getTileEntityClass(){
+    	return TileEntityPole.class;
+    }
+	
+	@Override
 	public TileEntityPole createTileEntity(WrapperWorld world, Point3d position, WrapperPlayer placingPlayer, WrapperNBT data){
 		return new TileEntityPole(world, position, placingPlayer, data);
 	}

@@ -14,6 +14,11 @@ public class BlockRoad extends ABlockBaseTileEntity{
 	}
     
     @Override
+    public Class<TileEntityRoad> getTileEntityClass(){
+    	return TileEntityRoad.class;
+    }
+    
+    @Override
 	public TileEntityRoad createTileEntity(WrapperWorld world, Point3d position, WrapperPlayer placingPlayer, WrapperNBT data){
 		return new TileEntityRoad(world, position, placingPlayer, data);
 	}

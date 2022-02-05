@@ -14,6 +14,11 @@ public class BlockBeacon extends ABlockBaseTileEntity{
 	}
     
     @Override
+    public Class<TileEntityBeacon> getTileEntityClass(){
+    	return TileEntityBeacon.class;
+    }
+    
+    @Override
 	public TileEntityBeacon createTileEntity(WrapperWorld world, Point3d position, WrapperPlayer placingPlayer, WrapperNBT data){
 		return new TileEntityBeacon(world, position, placingPlayer, data);
 	}

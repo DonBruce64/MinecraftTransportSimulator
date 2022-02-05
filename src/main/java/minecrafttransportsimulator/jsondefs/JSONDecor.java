@@ -33,7 +33,7 @@ public class JSONDecor extends AJSONMultiModelProvider{
 		@JSONDescription("A optional crafting definition for this decor.  If this is included, the decor will open a GUI for crafting pack components when clicked.")
 		public JSONCraftingBench crafting;
 		
-		@JSONDescription("An optional number of inventory units for this decor.  If set, it will make this decor act like a chest and hold items.  This is how many rows (of 9 slots) the inventory has.")
+		@JSONDescription("An optional number of inventory units for this decor.  If set, it will make this decor act like a chest and hold items.  This is how many rows (of 9 slots) the inventory has.  Also used in item loaders/unloaders to configure their internal buffers.")
     	public float inventoryUnits;
 		
 		@JSONDescription("The texture for the GUI if the decor has an inventory.  Only used if this decor has an inventory.  If not set, the default is used.")
@@ -64,6 +64,10 @@ public class JSONDecor extends AJSONMultiModelProvider{
 		SIGNAL_CONTROLLER,
 		@JSONDescription("Will make the decor have fuel pump functionality.  Text rendering may be added by adding textObjects in the rendering section.  These are hard-coded to render the loader's internal fluid name, level, and amount dispensed, in that order.  Adding more textObject entries starts this cycle over.")
 		FUEL_PUMP,
+		@JSONDescription("Will make the decor have item loader functionality.")
+		ITEM_LOADER,
+		@JSONDescription("Will make the decor have item unloader functionality.")
+		ITEM_UNLOADER,
 		@JSONDescription("Will make the decor have fluid loader functionality.")
 		FLUID_LOADER,
 		@JSONDescription("Will make the decor have fluid unloader functionality.")

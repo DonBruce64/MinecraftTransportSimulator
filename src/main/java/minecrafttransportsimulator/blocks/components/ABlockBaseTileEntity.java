@@ -26,6 +26,15 @@ public abstract class ABlockBaseTileEntity extends ABlockBase{
 	}
 	
 	/**
+	 *  Gets the class that this block will create a TileEntity from.
+	 *  This is used during registration to figure out which TE goes
+	 *  to which block, and how to MC interface information when creating
+	 *  the MC Builder that will contain the TileEntity for this block.
+	 *  this is because the builder gets created before the main tile.
+	 */
+	public abstract Class<? extends ATileEntityBase<?>> getTileEntityClass();
+	
+	/**
 	 *  Gets a new Tile Entity for this block.
 	 *  The placingPlayer may be null if this is being loaded from NBT.
 	 */

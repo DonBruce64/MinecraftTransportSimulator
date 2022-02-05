@@ -33,7 +33,7 @@ public class BuilderTileEntityFluidTank<FluidTankTileEntity extends ATileEntityB
 		super.update();
 		if(tileEntity != null){
 			tileEntity.update();
-			if(tileEntity instanceof TileEntityFluidLoader && ((TileEntityFluidLoader) tileEntity).isUnloader){
+			if(tileEntity instanceof TileEntityFluidLoader && ((TileEntityFluidLoader) tileEntity).isUnloader()){
 				int currentFluidAmount = getFluidAmount();
 				if(currentFluidAmount > 0){
 					//Pump out fluid to handler below, if we have one.

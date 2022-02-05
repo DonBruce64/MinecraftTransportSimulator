@@ -12,6 +12,11 @@ public class BlockChest extends ABlockBaseTileEntity{
 	public BlockChest(){
 		super(10.0F, 5.0F);
 	}
+	
+	@Override
+    public Class<TileEntityChest> getTileEntityClass(){
+    	return TileEntityChest.class;
+    }
 
 	@Override
 	public TileEntityChest createTileEntity(WrapperWorld world, Point3d position, WrapperPlayer placingPlayer, WrapperNBT data){

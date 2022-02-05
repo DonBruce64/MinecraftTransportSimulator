@@ -11,10 +11,10 @@ import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.ABlockBaseTileEntity;
-import minecrafttransportsimulator.blocks.components.IBlockFluidTankProvider;
 import minecrafttransportsimulator.blocks.instances.BlockCollision;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityFluidTankProvider;
+import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityInventoryProvider;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.IItemBlock;
@@ -86,8 +86,10 @@ public class BuilderBlock extends Block{
 	@Override
     public TileEntity createTileEntity(World world, IBlockState state){
     	//Need to return a wrapper class here, not the actual TE.
-		if(block instanceof IBlockFluidTankProvider){
+		if(ITileEntityFluidTankProvider.class.isAssignableFrom(((ABlockBaseTileEntity) block).getTileEntityClass())){
 			return getTileEntityTankWrapper(block);
+		}else if(ITileEntityInventoryProvider.class.isAssignableFrom(((ABlockBaseTileEntity) block).getTileEntityClass())){
+			return getTileEntityInventoryWrapper(block);
 		}else{
 			return getTileEntityGenericWrapper(block);
 		}
@@ -99,6 +101,14 @@ public class BuilderBlock extends Block{
 	 */
 	private static <TileEntityType extends ATileEntityBase<?>> BuilderTileEntity<TileEntityType> getTileEntityGenericWrapper(ABlockBase block){
 		return new BuilderTileEntity<TileEntityType>();
+	}
+	
+	/**
+	 *  Helper method for creating new Wrapper TEs for this block.
+	 *  Far better than ? all over for generics in the createTileEntity method.
+	 */
+	private static <TileEntityType extends ATileEntityBase<?> & ITileEntityInventoryProvider> BuilderTileEntity<TileEntityType> getTileEntityInventoryWrapper(ABlockBase block){
+		return new BuilderTileEntityInventoryContainer<TileEntityType>();
 	}
 	
 	 /**
@@ -306,6 +316,7 @@ public class BuilderBlock extends Block{
 		
 		//Register the TEs.
 		GameRegistry.registerTileEntity(BuilderTileEntity.class, new ResourceLocation(MasterLoader.MODID, BuilderTileEntity.class.getSimpleName()));
+		GameRegistry.registerTileEntity(BuilderTileEntityInventoryContainer.class, new ResourceLocation(MasterLoader.MODID, BuilderTileEntityInventoryContainer.class.getSimpleName()));
 		GameRegistry.registerTileEntity(BuilderTileEntityFluidTank.class, new ResourceLocation(MasterLoader.MODID, BuilderTileEntityFluidTank.class.getSimpleName()));
 		
 		//Register the IItemBlock blocks.  We cheat here and
