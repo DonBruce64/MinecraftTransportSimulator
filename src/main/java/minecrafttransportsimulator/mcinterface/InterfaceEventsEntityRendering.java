@@ -102,8 +102,14 @@ public class InterfaceEventsEntityRendering{
      */
 	@SubscribeEvent
     public static void on(RenderGameOverlayEvent.Pre event){
-		 //If we have a custom camera overlay active, don't render the crosshairs or the hotbar.
-		 if(CameraSystem.customCameraOverlay != null && (event.getType().equals(RenderGameOverlayEvent.ElementType.CROSSHAIRS) || event.getType().equals(RenderGameOverlayEvent.ElementType.HOTBAR))){
+		//If we are rendering any GUI except the overlay (which is always rendering), don't render the hotbpar.
+		if(event.getType().equals(RenderGameOverlayEvent.ElementType.HOTBAR) && AGUIBase.activeGUIs.size() > 1){
+			event.setCanceled(true);
+			 return;
+		}
+		
+		 //If we have a custom camera overlay active, don't render the crosshairs.
+		 if(event.getType().equals(RenderGameOverlayEvent.ElementType.CROSSHAIRS) && CameraSystem.customCameraOverlay != null){
 			 event.setCanceled(true);
 			 return;
 		 }
@@ -141,8 +147,9 @@ public class InterfaceEventsEntityRendering{
 			Minecraft.getMinecraft().entityRenderer.enableLightmap();
 			InterfaceRender.setLightingState(true);
 			
-			//Translate far enough to not render behind the items.
+			//Translate far enough to render behind the chat window.
 			GL11.glPushMatrix();
+			GL11.glTranslated(0, 0, -500);
 			
 			//Render main pass, then blended pass.
 			for(AGUIBase gui : AGUIBase.activeGUIs){
