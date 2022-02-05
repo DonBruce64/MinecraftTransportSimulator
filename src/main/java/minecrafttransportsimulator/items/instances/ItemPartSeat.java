@@ -17,7 +17,7 @@ public class ItemPartSeat extends AItemPart{
 	
 	@Override
 	public PartSeat createPart(AEntityF_Multipart<?> entity, WrapperPlayer placingPlayer, JSONPartDefinition packVehicleDef, WrapperNBT partData, APart parentPart){
-		return new PartSeat(entity, placingPlayer, packVehicleDef, validateData(partData), parentPart);
+		return new PartSeat(entity, placingPlayer, packVehicleDef, partData, parentPart);
 	}
 	
 	public static final AItemPartCreator CREATOR = new AItemPartCreator(){

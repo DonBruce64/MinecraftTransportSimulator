@@ -66,19 +66,6 @@ public abstract class AItemPack<JSONDefinition extends AJSONItem> extends AItemB
 	}
 	
 	/**
-	 * This method ensures that the passed-in data contains everything required to
-	 * create whatever this item represents.  Data is added to the passed-in data
-	 * if required to ensure it contains the minimal information for the creation
-	 * of the entity.
-	 */
-	public WrapperNBT validateData(WrapperNBT data){
-		if(data.getString("packID").isEmpty()){
-			populateDefaultData(data);
-		}
-		return data;
-	}
-	
-	/**
 	 * Returns true if this item can be crafted by the passed-in bench definition.
 	 */
 	public boolean isBenchValid(JSONCraftingBench craftingDefinition){

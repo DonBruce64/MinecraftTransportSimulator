@@ -53,7 +53,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 			}else if(axis.equals(Axis.NONE)){
 				//Add our core component to the NONE axis.
 				//This is done for ease of rendering and lookup routines.
-				changeComponent(axis, PoleComponentType.createComponent(this, placingPlayer, axis, getItem().validateData(null)));
+				changeComponent(axis, PoleComponentType.createComponent(this, placingPlayer, axis, data));
 			}
 		}
 	}
@@ -110,7 +110,9 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 				}else if(heldItem instanceof ItemPoleComponent && !((ItemPoleComponent) heldItem).definition.pole.type.equals(PoleComponentType.CORE) && !pole.components.containsKey(axis)){
 					//Player is holding component that could be added.  Try and do so.
 					ItemPoleComponent componentItem = (ItemPoleComponent) heldItem;
-					ATileEntityPole_Component newComponent = PoleComponentType.createComponent(pole, player, axis, componentItem.validateData(heldStack.getData()));
+					WrapperNBT stackData = heldStack.getData();
+					componentItem.populateDefaultData(stackData);
+					ATileEntityPole_Component newComponent = PoleComponentType.createComponent(pole, player, axis, stackData);
 					changeComponent(axis, newComponent);
 					if(!player.isCreative()){
 						player.getInventory().removeFromSlot(player.getHotbarIndex(), 1);

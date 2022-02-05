@@ -27,6 +27,7 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 			WrapperItemStack heldStack = player.getHeldStack();
 			//Make sure the definition is set in the NBT we will be giving to our new entity.
 			WrapperNBT data = heldStack.getData();
+			populateDefaultData(data);
 			boolean wasSaved = !data.getString("uniqueUUID").isEmpty();
 			
 			//First construct the class.

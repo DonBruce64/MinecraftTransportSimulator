@@ -88,7 +88,7 @@ abstract class AEntityVehicleC_Colliding extends AEntityVehicleB_Rideable{
 		
 		//If we collided, so check to see if we can break some blocks or if we need to explode.
 		//Don't bother with this logic if it's impossible for us to break anything.
-		if(box.updateMovingCollisions(world, collisionMotion)){
+		if(box.updateCollidingBlocks(world, collisionMotion)){
 			float hardnessHitThisBox = 0;
 			for(Point3d blockPosition : box.collidingBlockPositions){
 				float blockHardness = world.getBlockHardness(blockPosition);
@@ -110,10 +110,7 @@ abstract class AEntityVehicleC_Colliding extends AEntityVehicleB_Rideable{
 						}
 					}else{
 						hardnessHitThisTick = 0;
-						//Invert XZ motion to make sure we bounce out of the block, and set collision depth to 0.
-						motion.x = motion.x > 0 ? -0.01 : 0.01;
-						motion.y = motion.y > 0 ? -0.01 : 0.01;
-						motion.z = motion.z > 0 ? -0.01 : 0.01;
+						motion.set(0, 0, 0);
 						return -2;
 					}
 				}

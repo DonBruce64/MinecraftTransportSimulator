@@ -451,6 +451,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 				}
 				
 				//Part is valid.  Create it.
+				partItem.populateDefaultData(partData);
 				partToAdd = partItem.createPart(this, playerAdding, newPartDef, partData, parentPart); 
 			}
 		}

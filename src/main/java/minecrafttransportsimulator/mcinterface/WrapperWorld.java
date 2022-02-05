@@ -592,7 +592,7 @@ public class WrapperWorld{
 		//If we are in the depth bounds for this collision, set it as the collision depth.
 		box.currentCollisionDepth.set(0D, 0D, 0D);
 		double boxCollisionDepth;
-		double minDelta = 0.0001;
+		double minDelta = 0.0;
 		for(AxisAlignedBB colBox : mutableCollidingAABBs){
 			if(collisionMotion.x > 0){
 				boxCollisionDepth = mcBox.maxX - colBox.minX;
@@ -640,12 +640,12 @@ public class WrapperWorld{
 	 * To reset this list, pass in clearCache.  Note that this method, unlike the more granular one for
 	 * collision depth, does not support liquid collisions.
 	 */
-	public boolean checkForCollisions(BoundingBox box, boolean clearCache){
+	public boolean checkForCollisions(BoundingBox box, Point3d offset, boolean clearCache){
 		if(clearCache){
 			knownAirBlocks.clear();
 		}
 		mutableCollidingAABBs.clear();
-		AxisAlignedBB mcBox = box.convert();
+		AxisAlignedBB mcBox = box.convertWithOffset(offset.x, offset.y, offset.z);
 		for(int i = (int) Math.floor(mcBox.minX); i < Math.ceil(mcBox.maxX); ++i){
     		for(int j = (int) Math.floor(mcBox.minY); j < Math.ceil(mcBox.maxY); ++j){
     			for(int k = (int) Math.floor(mcBox.minZ); k < Math.ceil(mcBox.maxZ); ++k){

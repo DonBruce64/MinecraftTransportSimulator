@@ -22,7 +22,7 @@ public class ItemPartGeneric extends AItemPart{
 
 	@Override
 	public PartGeneric createPart(AEntityF_Multipart<?> entity, WrapperPlayer placingPlayer, JSONPartDefinition packVehicleDef, WrapperNBT partData, APart parentPart){
-		return new PartGeneric(entity, placingPlayer, packVehicleDef, validateData(partData), parentPart);
+		return new PartGeneric(entity, placingPlayer, packVehicleDef, partData, parentPart);
 	}
 	
 	public static final AItemPartCreator CREATOR = new AItemPartCreator(){

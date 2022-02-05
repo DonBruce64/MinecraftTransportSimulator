@@ -28,7 +28,7 @@ public class ItemPartGun extends AItemPart implements IItemEntityProvider<Entity
 	
 	@Override
 	public PartGun createPart(AEntityF_Multipart<?> entity, WrapperPlayer placingPlayer, JSONPartDefinition packVehicleDef, WrapperNBT partData, APart parentPart){
-		return new PartGun(entity, placingPlayer, packVehicleDef, validateData(partData), parentPart);
+		return new PartGun(entity, placingPlayer, packVehicleDef, partData, parentPart);
 	}
 	
 	@Override

@@ -27,7 +27,7 @@ public class ItemPartEngine extends AItemPart{
 	
 	@Override
 	public PartEngine createPart(AEntityF_Multipart<?> entity, WrapperPlayer placingPlayer, JSONPartDefinition packVehicleDef, WrapperNBT partData, APart parentPart){
-		return new PartEngine(entity, placingPlayer, packVehicleDef, validateData(partData), parentPart);
+		return new PartEngine(entity, placingPlayer, packVehicleDef, partData, parentPart);
 	}
 	
 	@Override

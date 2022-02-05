@@ -825,11 +825,10 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	 */
 	private boolean isCollisionBoxCollided(){
 		if(motion.length() > 0.001){
-			tempBoxRotation.setTo(rotation);
 			boolean clearedCache = false;
 			for(BoundingBox box : allBlockCollisionBoxes){
-				tempBoxPosition.setTo(box.globalCenter).subtract(position).rotateFine(tempBoxRotation).add(position).addScaled(motion, SPEED_FACTOR);
-				if(!box.collidesWithLiquids && world.checkForCollisions(box, !clearedCache)){
+				tempBoxPosition.setTo(box.globalCenter).subtract(position).rotateFine(rotation).addScaled(motion, SPEED_FACTOR);
+				if(!box.collidesWithLiquids && world.checkForCollisions(box, tempBoxPosition, !clearedCache)){
 					return true;
 				}
 				clearedCache = true;
@@ -856,7 +855,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 				if(collisionDepth == -1){
 					return true;
 				}else if(collisionDepth == -2){
-					return false;
+					break;
 				}else{
 					if(motion.x > 0){
 						motion.x = Math.max(motion.x - collisionDepth/SPEED_FACTOR, 0);
@@ -874,7 +873,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 				if(collisionDepth == -1){
 					return true;
 				}else if(collisionDepth == -2){
-					return false;
+					break;
 				}else{
 					if(motion.z > 0){
 						motion.z = Math.max(motion.z - collisionDepth/SPEED_FACTOR, 0);
@@ -892,7 +891,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 				if(collisionDepth == -1){
 					return true;
 				}else if(collisionDepth == -2){
-					return false;
+					break;
 				}else if(collisionDepth != 0){
 					if(motion.y > 0){
 						motion.y = Math.max(motion.y - collisionDepth/SPEED_FACTOR, 0);

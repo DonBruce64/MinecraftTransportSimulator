@@ -27,7 +27,7 @@ public class ItemPartGroundDevice extends AItemPart{
 	
 	@Override
 	public PartGroundDevice createPart(AEntityF_Multipart<?> entity, WrapperPlayer placingPlayer, JSONPartDefinition packVehicleDef, WrapperNBT partData, APart parentPart){
-		return new PartGroundDevice(entity, placingPlayer, packVehicleDef, validateData(partData), parentPart);
+		return new PartGroundDevice(entity, placingPlayer, packVehicleDef, partData, parentPart);
 	}
 	
 	@Override
