@@ -553,6 +553,11 @@ public final class LegacyCompatSystem{
 		
 		//Set engine new parameters.
 		if(definition.engine != null){
+			//Add fuel type, if it is missing.
+			if(definition.engine.fuelType == null){
+				definition.engine.fuelType = "diesel";
+			}
+			
 			//If we are an engine_jet part, and our jetPowerFactor is 0, we are a legacy jet engine.
 			if(definition.generic.type.equals("engine_jet") && definition.engine.jetPowerFactor == 0){
 				definition.engine.jetPowerFactor = 1.0F;
