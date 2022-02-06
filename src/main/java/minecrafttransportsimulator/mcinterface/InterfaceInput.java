@@ -14,7 +14,6 @@ import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
 import minecrafttransportsimulator.MasterLoader;
-import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIConfig;
 import minecrafttransportsimulator.jsondefs.JSONConfig.ConfigJoystick;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -409,7 +408,7 @@ public class InterfaceInput{
     	}
     	
     	//Check if we pressed the config key.
-        if(configKey.isPressed() && AGUIBase.activeInputGUI == null){
+        if(configKey.isPressed() && !InterfaceClient.isGUIOpen()){
         	new GUIConfig();
         }
     }

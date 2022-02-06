@@ -58,6 +58,13 @@ public class InterfaceClient{
 	}
 	
 	/**
+	 *  Returns true if a GUI is open.
+	 */
+	public static boolean isGUIOpen(){
+		return Minecraft.getMinecraft().currentScreen != null;
+	}
+	
+	/**
 	 *  Returns true if the game is in first-person mode.
 	 */
 	public static boolean inFirstPerson(){

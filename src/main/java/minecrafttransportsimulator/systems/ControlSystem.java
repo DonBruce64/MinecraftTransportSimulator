@@ -153,7 +153,7 @@ public final class ControlSystem{
 		if(radio.isPressed()){
 			if(AGUIBase.activeInputGUI instanceof GUIRadio){
 				AGUIBase.activeInputGUI.close();
-			}else if(AGUIBase.activeInputGUI == null){
+			}else if(!InterfaceClient.isGUIOpen()){
 				new GUIRadio(vehicle.radio);
 			}
 		}
@@ -210,7 +210,7 @@ public final class ControlSystem{
 			if(aircraft.canPlayerStartEngines(clientPlayer)){
 				if(AGUIBase.activeInputGUI instanceof GUIPanelAircraft){
 					AGUIBase.activeInputGUI.close();
-				}else if(AGUIBase.activeInputGUI == null){
+				}else if(!InterfaceClient.isGUIOpen()){
 					new GUIPanelAircraft(aircraft);
 				}	
 			}
@@ -297,7 +297,7 @@ public final class ControlSystem{
 			if(powered.canPlayerStartEngines(clientPlayer)){
 				if(AGUIBase.activeInputGUI instanceof GUIPanelGround){
 					AGUIBase.activeInputGUI.close();
-				}else if(AGUIBase.activeInputGUI == null){
+				}else if(!InterfaceClient.isGUIOpen()){
 					new GUIPanelGround(powered);
 				}
 			}
