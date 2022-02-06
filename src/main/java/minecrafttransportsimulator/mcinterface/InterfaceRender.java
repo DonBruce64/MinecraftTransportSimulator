@@ -46,6 +46,23 @@ public class InterfaceRender{
 	private static final ResourceLocation PARTICLE_TEXTURES = new ResourceLocation("textures/particle/particles.png");
 	
 	/**
+	 *  Renders the item model for the passed-in stack.  Only
+	 *  renders the item model: does not render text for counts.
+	 */
+	public static void renderItemModel(WrapperItemStack stack){
+		GL11.glPushMatrix();
+		//Need to translate back to pre-undo the renderer offset.
+		float offset = 100.0F + Minecraft.getMinecraft().getRenderItem().zLevel;
+		GL11.glTranslated(0, 0, -offset);
+		
+		//Now invert y-axis scaling to account for GUI scaling differences.
+		GL11.glScalef(1, -1, 1);
+		
+		Minecraft.getMinecraft().getRenderItem().renderItemIntoGUI(stack.stack, 0, 0);
+		GL11.glPopMatrix();
+	}
+	
+	/**
 	 *  Renders the vertices stored in the passed-in {@link RenderableObject}.
 	 *  If the vertices should be cached per {@link RenderableObject#cacheVertices},
 	 *  then they are done so and a pointer-index is stored into {@link RenderableObject#cachedVertexIndex}.
@@ -168,7 +185,7 @@ public class InterfaceRender{
 	 *  cached in this class once created for later use, so feel free to not cache
 	 *  the string values that are passed-in.
 	 */
-	public static void bindTexture(String textureLocation){
+	private static void bindTexture(String textureLocation){
 		if(animatedGIFs.containsKey(textureLocation)){
 			//Special case for GIFs.
 			ParsedGIF parsedGIF = animatedGIFs.get(textureLocation);

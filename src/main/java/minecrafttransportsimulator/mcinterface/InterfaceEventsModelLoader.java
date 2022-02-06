@@ -6,10 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
-import java.nio.ByteBuffer;
-import java.nio.FloatBuffer;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -17,40 +14,29 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import javax.vecmath.Matrix4f;
-
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MasterLoader;
-import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.packloading.PackResourceLoader;
 import minecrafttransportsimulator.packloading.PackResourceLoader.ResourceType;
-import minecrafttransportsimulator.rendering.components.RenderableObject;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.block.model.BakedQuad;
-import net.minecraft.client.renderer.block.model.IBakedModel;
-import net.minecraft.client.renderer.block.model.ItemCameraTransforms;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.culling.ICamera;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.client.renderer.vertex.VertexFormat;
-import net.minecraft.client.renderer.vertex.VertexFormatElement;
 import net.minecraft.client.resources.IResourcePack;
 import net.minecraft.client.resources.data.IMetadataSection;
 import net.minecraft.client.resources.data.MetadataSerializer;
-import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3i;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.model.ModelLoader;
@@ -70,95 +56,6 @@ import net.minecraftforge.fml.relauncher.Side;
  */
 @EventBusSubscriber(Side.CLIENT)
 public class InterfaceEventsModelLoader{
-    
-	/**
-	 *  Returns a {@link RenderableObject} of the passed-in item model for item rendering.
-	 *  Note that this does not include the count of the items in the stack: this must be
-	 *  rendered on its own.  Also note the item is in block-coords.  This means that normally
-	 *  the model will be from 0->1 in the axial directions.
-	 */
-	public static RenderableObject getItemModel(WrapperItemStack stackToRender){
-		//Get normal model.
-		IBakedModel itemModel = Minecraft.getMinecraft().getRenderItem().getItemModelWithOverrides(stackToRender.stack, null, Minecraft.getMinecraft().player);
-		
-		//Get transformation matrix, if this model has one.
-		Matrix4f matrix = itemModel.handlePerspective(ItemCameraTransforms.TransformType.GUI).getRight();
-		
-		//Get all quads for the model. We assume that 
-		List<BakedQuad> quads = new ArrayList<BakedQuad>();
-		for(EnumFacing enumfacing : EnumFacing.values()){
-			quads.addAll(itemModel.getQuads((IBlockState)null, enumfacing, 0L));
-        }
-		quads.addAll(itemModel.getQuads((IBlockState)null, null, 0L));
-		
-		//Convert quads to floatbuffer for our rendering.
-		//Each 4-vertex quad becomes two tris, with standard rendering for normals and UVs.
-		//Note that the offsets here are the byte index, so we need to convert them when addressing the int array.
-		FloatBuffer vertexData = FloatBuffer.allocate(quads.size()*6*8);
-		for(BakedQuad quad : quads){
-			//Get a byte buffer of data to handle for conversion.
-			int[] quadArray = quad.getVertexData();
-			ByteBuffer quadData = ByteBuffer.allocate(quadArray.length*Integer.BYTES);
-			quadData.asIntBuffer().put(quadArray);
-			
-			VertexFormat format = quad.getFormat();
-			int quadDataIndexOffset = 0;
-			for(int i=0; i<6; ++i){
-				int offsetThisCycle = 0;
-				if(i==3){
-					//4th vertex is the same as 3rd vertex.
-					quadDataIndexOffset -= format.getSize();
-					offsetThisCycle = format.getSize();
-				}else if(i==5){
-					//6th vertex is the same as 1st vertex.
-					quadDataIndexOffset -= 4*format.getSize();
-				}else{
-					//Actual vertex, add to buffer at current position.
-					offsetThisCycle = format.getSize();
-				}
-				
-				//Default normal to face direction.
-				Vec3i vec3i = quad.getFace().getDirectionVec();
-				vertexData.put(vec3i.getX());
-				vertexData.put(vec3i.getY());
-				vertexData.put(vec3i.getZ());
-				
-				//Use UV data.
-				int uvOffset = format.getUvOffsetById(0);
-				vertexData.put(quadData.getFloat(quadDataIndexOffset + uvOffset));
-				vertexData.put(quadData.getFloat(quadDataIndexOffset + uvOffset + Float.BYTES));
-				
-				//For some reason, position isn't saved as an index.  Rather, it's in the general list.
-				//Loop through the elements to find it.
-				for(VertexFormatElement element : format.getElements()){
-					if(element.isPositionElement()){
-						int vertexOffset = format.getOffset(format.getElements().indexOf(element));
-						float x = quadData.getFloat(quadDataIndexOffset + vertexOffset);
-						float y = quadData.getFloat(quadDataIndexOffset + vertexOffset + Float.BYTES);
-						float z = quadData.getFloat(quadDataIndexOffset + vertexOffset + 2*Float.BYTES);
-						
-						if(matrix != null){
-							float xNew = matrix.m00*x + matrix.m01*y + matrix.m02*z + matrix.m03 + 1;
-							float yNew = matrix.m10*x + matrix.m11*y + matrix.m12*z + matrix.m13 + 0.25F;
-							float zNew = matrix.m30*x + matrix.m31*y + matrix.m32*z + matrix.m33;
-							//Don't multiply by w, we don't care about that value, and it really won't matter anyways.
-							vertexData.put(xNew);
-							vertexData.put(yNew);
-							vertexData.put(zNew);
-						}else{
-							vertexData.put(x);
-							vertexData.put(y);
-							vertexData.put(z);
-						}
-						break;
-					}
-				}
-				quadDataIndexOffset += offsetThisCycle;
-			}
-		}
-		vertexData.flip();
-		return new RenderableObject("item_generated", RenderableObject.GLOBAL_TEXTURE_NAME, ColorRGB.WHITE, vertexData, false);
-	}
 	
 	/**
 	 *  Returns a 4-float array for the block break texture at the passed-in position in the passed-in world.

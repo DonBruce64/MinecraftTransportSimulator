@@ -13,7 +13,6 @@ buildscript {
 //Apply plugins
 apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'eclipse'
-//apply plugin: 'maven-publish'
 //apply plugin: 'org.spongepowered.mixin'
 
 //Set file name.
@@ -38,22 +37,17 @@ minecraft {
 	// stable     #          Stables are built at the discretion of the MCP team.
 	// official   MCVersion  Official field/method names from Mojang mapping files
 	mappings channel: 'stable', version: '39-1.12'
-	//mappings channel: 'snapshot', version: '20171003-1.12'
 	
-	//Don't make the stupid source jar. (doesn't seem to work with gradle now?)
-	//makeObfSourceJar = false
-	
-	// Default run configurations.
-	// These can be tweaked, removed, or duplicated as needed.
+	//Run configurations.
 	runs {
-			client {
-					workingDirectory project.file('run')
-			}
-
-			server {
-					workingDirectory project.file('run')
-			}
+		client {
+				workingDirectory project.file('run')
 		}
+
+		server {
+				workingDirectory project.file('run')
+		}
+	}
 }
 
 repositories {

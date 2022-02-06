@@ -6,7 +6,7 @@ import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
-import minecrafttransportsimulator.mcinterface.InterfaceEventsModelLoader;
+import minecrafttransportsimulator.mcinterface.InterfaceRender;
 import minecrafttransportsimulator.mcinterface.WrapperItemStack;
 import minecrafttransportsimulator.rendering.instances.RenderText;
 import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
@@ -28,7 +28,6 @@ public class GUIComponentItem extends AGUIComponent{
 	public WrapperItemStack stack;
 	public List<WrapperItemStack> stacks;
 	private WrapperItemStack stackToRender;
-	private WrapperItemStack lastStackRendered;
 	
 	/**Default item constructor.**/
 	public GUIComponentItem(int x, int y, float scale){
@@ -57,39 +56,21 @@ public class GUIComponentItem extends AGUIComponent{
     		stackToRender = stacks.get((int) (System.currentTimeMillis()%(stacks.size()*500)/500));
     	}else{
     		stackToRender = null;
-    	}
-    	
-    	if(stackToRender != null && !stackToRender.isEmpty()){
-    		if(!stackToRender.equals(lastStackRendered)){
-	    		renderable = InterfaceEventsModelLoader.getItemModel(stackToRender);
-	    		lastStackRendered = stackToRender;
-	    		if(stackToRender.getSize() > 1){
-	    			text = String.valueOf(RenderText.FORMATTING_CHAR) + String.valueOf(RenderText.BOLD_FORMATTING_CHAR) + String.valueOf(stackToRender.getSize());
-	    		}
-    		}
-    	}else{
-    		renderable = null;
-    		lastStackRendered = null;
     		text = null;
     	}
     	
-    	if(renderable != null){
+    	if(stackToRender != null){
     		GL11.glPushMatrix();
-    		
-    		//Translate to position.
-    		//Items are normally rendered with origin at bottom-right like normal models.
-            //The 16 y-offset moves them to top-left orientation.
-			GL11.glTranslated(position.x, position.y - 16F*scale, position.z);
-			
-			//Apply scale, but also scale up the model by 16x.
-			//It's normally 1 unit -> 1 block, not 1px, and we want 16px default.
-			GL11.glScalef(scale*16, scale*16, scale*16);
-	        		
-    		//Render.
-			renderable.disableLighting = renderBright || ignoreGUILightingState;
-			renderable.render();
-			
+			GL11.glTranslated(position.x, position.y, position.z);
+			GL11.glScalef(scale, scale, scale);
+			InterfaceRender.renderItemModel(stackToRender);
 			GL11.glPopMatrix();
+			
+			if(stackToRender.getSize() > 1){
+    			text = String.valueOf(RenderText.FORMATTING_CHAR) + String.valueOf(RenderText.BOLD_FORMATTING_CHAR) + String.valueOf(stackToRender.getSize());
+    		}else{
+    			
+    		}
     	}
     }
     

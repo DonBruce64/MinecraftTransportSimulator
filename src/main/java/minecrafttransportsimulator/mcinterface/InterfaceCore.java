@@ -87,7 +87,7 @@ public class InterfaceCore{
 		NonNullList<ItemStack> oreDictStacks = OreDictionary.getOres(oreName, true);
 		List<WrapperItemStack> stacks = new ArrayList<WrapperItemStack>();
 		for(ItemStack stack : oreDictStacks){
-			stacks.add(new WrapperItemStack(stack));
+			stacks.add(new WrapperItemStack(stack.copy()));
 		}
 		return stacks;
 	}
