@@ -30,23 +30,47 @@ public class BuilderTileEntityInventoryContainer<InventoryTileEntity extends ATi
 		super.update();
 		if(tileEntity != null){
 			tileEntity.update();
-			if(tileEntity instanceof TileEntityItemLoader && ((TileEntityItemLoader) tileEntity).isUnloader()){
-				EntityInventoryContainer inventory = tileEntity.getInventory();
-				if(inventory.getCount() > 0){
-					//Pump out items to handler below, if we have one.
-					TileEntity teBelow = world.getTileEntity(getPos().down());
-					if(teBelow != null && teBelow.hasCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, EnumFacing.UP)){
-						IItemHandler itemHandler = teBelow.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, EnumFacing.UP);
-						for(int i=0; i<inventory.getSize(); ++i){
-							WrapperItemStack stack = inventory.getStack(i);
-							if(!stack.isEmpty()){
-								ItemStack testStack = stack.stack.copy();
-								testStack.setCount(1);
-								for(int j=0; j<itemHandler.getSlots(); ++j){									
-									if(itemHandler.insertItem(j, testStack, false).isEmpty()){
-										//Handler took item, adjust.
-										inventory.removeFromSlot(i, 1);
-										return;
+			if(tileEntity instanceof TileEntityItemLoader){
+				if(((TileEntityItemLoader) tileEntity).isUnloader()){
+					EntityInventoryContainer inventory = tileEntity.getInventory();
+					if(inventory.getCount() > 0){
+						//Pump out items to handler below, if we have one.
+						TileEntity teBelow = world.getTileEntity(getPos().down());
+						if(teBelow != null && teBelow.hasCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, EnumFacing.UP)){
+							IItemHandler itemHandler = teBelow.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, EnumFacing.UP);
+							for(int i=0; i<inventory.getSize(); ++i){
+								WrapperItemStack stack = inventory.getStack(i);
+								if(!stack.isEmpty()){
+									ItemStack testStack = stack.stack.copy();
+									testStack.setCount(1);
+									for(int j=0; j<itemHandler.getSlots(); ++j){									
+										if(itemHandler.insertItem(j, testStack, false).isEmpty()){
+											//Handler took item, adjust.
+											inventory.removeFromSlot(i, 1);
+											return;
+										}
+									}
+								}
+							}
+						}
+					}
+				}else{
+					EntityInventoryContainer inventory = tileEntity.getInventory();
+					if(inventory.getCount() < inventory.getSize()){
+						//Grab items from handler above, if we have one.
+						TileEntity teAbove = world.getTileEntity(getPos().up());
+						if(teAbove != null && teAbove.hasCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, EnumFacing.DOWN)){
+							IItemHandler itemHandler = teAbove.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, EnumFacing.DOWN);
+							for(int i=0; i<inventory.getSize(); ++i){
+								WrapperItemStack stack = inventory.getStack(i);
+								if(stack.isEmpty()){
+									for(int j=0; j<itemHandler.getSlots(); ++j){
+										ItemStack testStack = itemHandler.extractItem(j, 1, false);
+										if(!testStack.isEmpty()){
+											//Handler gave item, adjust.
+											inventory.setStack(new WrapperItemStack(testStack), j);
+											return;
+										}
 									}
 								}
 							}

@@ -10,6 +10,7 @@ import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
+import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.rendering.instances.RenderDecor;
 
@@ -20,6 +21,9 @@ import minecrafttransportsimulator.rendering.instances.RenderDecor;
  * @author don_bruce
  */
 public class TileEntityDecor extends ATileEntityBase<JSONDecor>{
+	
+	public static final String CLICKED_VARIABLE = "clicked";
+	public static final String ACTIVATED_VARIABLE = "activated";
 	
 	private static RenderDecor renderer;
 	
@@ -44,9 +48,7 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor>{
 	public boolean update(){
 		if(super.update()){
 			//Reset clicked state.
-			if(isVariableActive("clicked")){
-				setVariable("clicked", 0);
-			}
+			setVariable(CLICKED_VARIABLE, 0);
 			return true;
 		}else{
 			return false;
@@ -69,10 +71,10 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor>{
 			}
 		}
 		if(!world.isClient()){
-			setVariable("clicked", 1);
-			toggleVariable("activated");
-			InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(this, "clicked"));
-			InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(this, "activated"));
+			setVariable(CLICKED_VARIABLE, 1);
+			toggleVariable(ACTIVATED_VARIABLE);
+			InterfacePacket.sendToAllClients(new PacketEntityVariableSet(this, CLICKED_VARIABLE, 1));
+			InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(this, ACTIVATED_VARIABLE));
 		}
 		return true;
 	}
