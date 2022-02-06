@@ -227,14 +227,36 @@ public final class PackParserSystem{
      */
     private static void checkJarForPacks(File packJar){
     	try{
-	    	ZipFile jarFile = new ZipFile(packJar);
+	    	//Try to find the JSON definition.
+    		ZipFile jarFile = new ZipFile(packJar);
 			Enumeration<? extends ZipEntry> entries = jarFile.entries();
 			while(entries.hasMoreElements()){
 				ZipEntry entry = entries.nextElement();
 				if(entry.getName().endsWith("packdefinition.json")){
+					//New style, use def as-is.
 					JSONPack packDef = JSONParser.parseStream(new InputStreamReader(jarFile.getInputStream(entry), "UTF-8"), JSONPack.class, null, null);
 					packJarMap.put(packDef.packID, packJar);
 					packMap.put(packDef.packID, packDef);
+					jarFile.close();
+					return;
+				}
+			}
+			
+			//Didn't get a normal definition file, check for old loader.
+			entries = jarFile.entries();
+			while(entries.hasMoreElements()){
+				ZipEntry entry = entries.nextElement();
+				if(entry.getName().endsWith("MTSPackLoader.class")){
+					//Old pack style, auto-create a packdef.
+					//Pack ID will match the folder the packloader is in.
+					JSONPack packDef = new JSONPack();
+					String[] pathComponents = entry.getName().split("/");
+					packDef.packID = pathComponents[pathComponents.length - 2];
+					packDef.packName = "Auto-Generated: " + packDef.packID;
+					packJarMap.put(packDef.packID, packJar);
+					packMap.put(packDef.packID, packDef);
+					jarFile.close();
+					return;
 				}
 			}
 			jarFile.close();

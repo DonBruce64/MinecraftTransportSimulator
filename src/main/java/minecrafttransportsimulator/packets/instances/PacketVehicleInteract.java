@@ -73,22 +73,25 @@ public class PacketVehicleInteract extends APacketEntityInteract<EntityVehicleF_
 		//Get the part we hit, if one was specified.
 		APart part = hitPartUniqueUUID != null ? world.getEntity(hitPartUniqueUUID) : null;
 		
-		//Next, get the bounding box.  This is either from the part or the main entity.
+		//Get the bounding box hit for future operations.
 		BoundingBox hitBox = null;
-		for(BoundingBox box : (part != null ? part.interactionBoxes : vehicle.interactionBoxes)){
-			if(box.localCenter.equals(hitBoxLocalCenter)){
-				hitBox = box;
-				break;
+		
+		//First check part slots.  But don't do that if we hit a part, as obviously we didn't hit a slot.
+		if(part == null){
+			for(BoundingBox box : vehicle.allPartSlotBoxes.keySet()){
+				if(box.localCenter.equals(hitBoxLocalCenter)){
+					hitBox = box;
+					break;
+				}
 			}
 		}
+		
+		//If we didn't get the box from the part slot, get it from the main list.
 		if(hitBox == null){
-			//Try part interaction boxes, as they're not in the normal list.
-			if(part == null){
-				for(BoundingBox box : vehicle.allPartSlotBoxes.keySet()){
-					if(box.localCenter.equals(hitBoxLocalCenter)){
-						hitBox = box;
-						break;
-					}
+			for(BoundingBox box : (part != null ? part.interactionBoxes : vehicle.interactionBoxes)){
+				if(box.localCenter.equals(hitBoxLocalCenter)){
+					hitBox = box;
+					break;
 				}
 			}
 			

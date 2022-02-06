@@ -1813,7 +1813,7 @@ public final class LegacyCompatSystem{
     			animation.animationType = AnimationComponentType.ROTATION;
     	    	animation.variable = rotatable.rotationVariable;
     	    	animation.centerPoint = rotatable.rotationPoint;
-    	    	animation.axis = rotatable.rotationAxis;
+    	    	animation.axis = rotatable.rotationAxis != null ? rotatable.rotationAxis : new Point3d();
     	    	animation.clampMin = rotatable.rotationClampMin;
     	    	animation.clampMax = rotatable.rotationClampMax;
     	    	animation.absolute = rotatable.absoluteValue;
