@@ -74,6 +74,8 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
+import net.minecraftforge.items.CapabilityItemHandler;
+import net.minecraftforge.items.IItemHandler;
 
 /**Wrapper to a world instance.  This contains many common methods that 
  * MC has seen fit to change over multiple versions (such as lighting) and as such
@@ -961,6 +963,55 @@ public class WrapperWorld{
 			world.setBlockToAir(pos);
 			world.playSound(pos.getX(), pos.getY(), pos.getZ(), SoundEvents.BLOCK_SNOW_BREAK, SoundCategory.BLOCKS, 1.0F, 1.0F, false);
 		}
+	}
+	
+	/**
+	 *  Attempts to insert a stack-item into the block that is at the specified
+	 *  position-offset.  The position is of the block wanting to insert the item,
+	 *  not the block to insert the item into.  Returns true if the stack was inserted.
+	 *  Note that only one entry from the stack will be inserted for each call, even
+	 *  if the stack has multiple item in it.
+	 */
+	public boolean insertStack(Point3d position, Axis axis, WrapperItemStack stack){
+		EnumFacing facing = EnumFacing.valueOf(axis.name());
+		TileEntity tile = world.getTileEntity(new BlockPos(position.x, position.y, position.z).offset(facing));
+		if(tile != null){
+			IItemHandler itemHandler = tile.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, facing.getOpposite());
+			if(itemHandler != null){
+				for(int i=0; i<itemHandler.getSlots(); ++i){
+					ItemStack remainingStack = itemHandler.insertItem(i, stack.stack, true);
+					if(remainingStack.getCount() < stack.stack.getCount()){
+						WrapperItemStack stackToInsert = stack.split(1);
+						itemHandler.insertItem(i, stackToInsert.stack, false);
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
+	
+	/**
+	 *  Attempts to pull a single stack-item out of the block that is at the specified
+	 *  position-offset.  The position is of the block wanting to extract the item,
+	 *  not the block to extract the item from.  Returns the stack extracted, or null if
+	 *  no stack was able to be found or no block was present to extract from.
+	 */
+	public WrapperItemStack extractStack(Point3d position, Axis axis){
+		EnumFacing facing = EnumFacing.valueOf(axis.name());
+		TileEntity tile = world.getTileEntity(new BlockPos(position.x, position.y, position.z).offset(facing));
+		if(tile != null){
+			IItemHandler itemHandler = tile.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, facing.getOpposite());
+			if(itemHandler != null){
+				for(int i=0; i<itemHandler.getSlots(); ++i){
+					ItemStack extractedStack = itemHandler.extractItem(i, 1, false);
+					if(!extractedStack.isEmpty()){
+						return new WrapperItemStack(extractedStack);
+					}
+				}
+			}
+		}
+		return null;
 	}
 	
 	/**

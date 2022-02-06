@@ -32,7 +32,6 @@ public class BuilderTileEntityFluidTank<FluidTankTileEntity extends ATileEntityB
 	public void update(){
 		super.update();
 		if(tileEntity != null){
-			tileEntity.update();
 			if(tileEntity instanceof TileEntityFluidLoader && ((TileEntityFluidLoader) tileEntity).isUnloader()){
 				int currentFluidAmount = getFluidAmount();
 				if(currentFluidAmount > 0){

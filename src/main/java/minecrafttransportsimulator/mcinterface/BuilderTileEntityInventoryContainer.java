@@ -4,16 +4,12 @@ import javax.annotation.Nullable;
 
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityInventoryProvider;
-import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityItemLoader;
-import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.items.CapabilityItemHandler;
-import net.minecraftforge.items.IItemHandler;
 
 /**Builder for tile entities that contain inventories.  This builder ticks.
  *
@@ -23,62 +19,6 @@ public class BuilderTileEntityInventoryContainer<InventoryTileEntity extends ATi
 	
 	public BuilderTileEntityInventoryContainer(){
 		super();
-	}
-	
-	@Override
-	public void update(){
-		super.update();
-		if(tileEntity != null){
-			tileEntity.update();
-			if(tileEntity instanceof TileEntityItemLoader){
-				if(((TileEntityItemLoader) tileEntity).isUnloader()){
-					EntityInventoryContainer inventory = tileEntity.getInventory();
-					if(inventory.getCount() > 0){
-						//Pump out items to handler below, if we have one.
-						TileEntity teBelow = world.getTileEntity(getPos().down());
-						if(teBelow != null && teBelow.hasCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, EnumFacing.UP)){
-							IItemHandler itemHandler = teBelow.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, EnumFacing.UP);
-							for(int i=0; i<inventory.getSize(); ++i){
-								WrapperItemStack stack = inventory.getStack(i);
-								if(!stack.isEmpty()){
-									ItemStack testStack = stack.stack.copy();
-									testStack.setCount(1);
-									for(int j=0; j<itemHandler.getSlots(); ++j){									
-										if(itemHandler.insertItem(j, testStack, false).isEmpty()){
-											//Handler took item, adjust.
-											inventory.removeFromSlot(i, 1);
-											return;
-										}
-									}
-								}
-							}
-						}
-					}
-				}else{
-					EntityInventoryContainer inventory = tileEntity.getInventory();
-					if(inventory.getCount() < inventory.getSize()){
-						//Grab items from handler above, if we have one.
-						TileEntity teAbove = world.getTileEntity(getPos().up());
-						if(teAbove != null && teAbove.hasCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, EnumFacing.DOWN)){
-							IItemHandler itemHandler = teAbove.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, EnumFacing.DOWN);
-							for(int i=0; i<inventory.getSize(); ++i){
-								WrapperItemStack stack = inventory.getStack(i);
-								if(stack.isEmpty()){
-									for(int j=0; j<itemHandler.getSlots(); ++j){
-										ItemStack testStack = itemHandler.extractItem(j, 1, false);
-										if(!testStack.isEmpty()){
-											//Handler gave item, adjust.
-											inventory.setStack(new WrapperItemStack(testStack), j);
-											return;
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-		}
 	}
 
 	@Override
@@ -162,7 +102,7 @@ public class BuilderTileEntityInventoryContainer<InventoryTileEntity extends ATi
 	
     @Override
     public boolean hasCapability(Capability<?> capability, @Nullable EnumFacing facing){
-    	if(capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY && EnumFacing.DOWN.equals(facing)){
+    	if(capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY && (EnumFacing.UP.equals(facing) || EnumFacing.DOWN.equals(facing))){
     		return true;
     	}else{
     		return super.hasCapability(capability, facing);
@@ -172,7 +112,7 @@ public class BuilderTileEntityInventoryContainer<InventoryTileEntity extends ATi
     @SuppressWarnings("unchecked")
     @Override
     public <T> T getCapability(Capability<T> capability, EnumFacing facing){
-    	if(capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY && EnumFacing.DOWN.equals(facing)){
+    	if(capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY && (EnumFacing.UP.equals(facing) || EnumFacing.DOWN.equals(facing))){
     		return (T) this;
     	}else{
     		return super.getCapability(capability, facing);

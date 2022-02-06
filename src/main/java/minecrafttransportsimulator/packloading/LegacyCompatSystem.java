@@ -1315,7 +1315,7 @@ public final class LegacyCompatSystem{
 		//If we are a decor with a type of item loader, then set defaults for invalid/missing values.
 		if(definition.decor.type.equals(DecorComponentType.ITEM_LOADER) || definition.decor.type.equals(DecorComponentType.ITEM_UNLOADER)){
 			if (definition.decor.inventoryUnits == 0) {
-				definition.decor.inventoryUnits = 5F/9F;
+				definition.decor.inventoryUnits = 1F/9F;
 			}
 		}
 		

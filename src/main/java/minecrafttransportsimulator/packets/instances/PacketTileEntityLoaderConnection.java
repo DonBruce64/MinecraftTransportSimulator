@@ -49,11 +49,11 @@ public class PacketTileEntityLoaderConnection extends APacketEntity<ATileEntityL
 		if(linkedID != null){
 			buf.writeBoolean(true);
 			writeUUIDToBuffer(linkedID, buf);
-			buf.writeBoolean(connect);
+			writePoint3dToBuffer(partOffset, buf);
 		}else{
 			buf.writeBoolean(false);
 		}
-		writePoint3dToBuffer(partOffset, buf);
+		buf.writeBoolean(connect);
 	}
 	
 	@Override

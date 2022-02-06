@@ -65,8 +65,8 @@ public abstract class ATileEntityLoader extends TileEntityDecor{
 			connectToPart(nearestPart);
 			InterfacePacket.sendToAllClients(new PacketTileEntityLoaderConnection(this, true));
 		}else if(connectedPart != null){
-			connectToPart(null);
 			InterfacePacket.sendToAllClients(new PacketTileEntityLoaderConnection(this, false));
+			connectToPart(null);
 		}
 	}
 	
