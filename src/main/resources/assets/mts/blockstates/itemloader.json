@@ -1,0 +1,8 @@
+{
+    "variants": {
+        "facing=south": { "model": "mts:blank" },
+        "facing=north": { "model": "mts:blank" },
+        "facing=east":  { "model": "mts:blank" },
+        "facing=west":  { "model": "mts:blank" }
+    }
+}
