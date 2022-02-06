@@ -1,16 +1,11 @@
 package minecrafttransportsimulator.mcinterface;
 
-import java.util.List;
-
 import minecrafttransportsimulator.entities.instances.EntityFluidTank;
 import minecrafttransportsimulator.items.components.AItemBase;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.FurnaceRecipes;
 import net.minecraft.tileentity.TileEntityFurnace;
-import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
@@ -141,20 +136,6 @@ public class WrapperItemStack{
 	 */
 	public WrapperItemStack split(int qty){
 		return new WrapperItemStack(stack.splitStack(qty));
-	}
-	
-	/**
-	 *  Returns the tooltip lines for this stack.
-	 *  ONLY call this on the client: servers can't get tooltips as it's
-	 *  rendered text and uses game and player settings.
-	 */
-	public List<String> getTooltipLines(){
-		List<String> tooltipText = stack.getTooltip(Minecraft.getMinecraft().player, Minecraft.getMinecraft().gameSettings.advancedItemTooltips ? ITooltipFlag.TooltipFlags.ADVANCED : ITooltipFlag.TooltipFlags.NORMAL);
-    	//Add grey formatting text to non-first line tooltips.
-		for(int i = 1; i < tooltipText.size(); ++i){
-        	tooltipText.set(i, TextFormatting.GRAY + tooltipText.get(i));
-        }
-		return tooltipText;
 	}
 	
 	/**

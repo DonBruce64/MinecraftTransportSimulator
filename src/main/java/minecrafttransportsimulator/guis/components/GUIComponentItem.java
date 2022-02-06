@@ -5,6 +5,7 @@ import java.util.List;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
+import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.InterfaceEventsModelLoader;
 import minecrafttransportsimulator.mcinterface.WrapperItemStack;
 import minecrafttransportsimulator.rendering.instances.RenderText;
@@ -100,7 +101,7 @@ public class GUIComponentItem extends AGUIComponent{
     @Override
 	public List<String> getTooltipText(){
     	if(stackToRender != null && !stackToRender.isEmpty()){
-			return stackToRender.getTooltipLines();
+			return InterfaceClient.getTooltipLines(stackToRender);
     	}else{
     		return null;
     	}

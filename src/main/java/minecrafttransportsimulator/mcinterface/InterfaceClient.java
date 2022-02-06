@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.mcinterface;
 
+import java.util.List;
+
 import org.lwjgl.openal.AL;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
@@ -13,6 +15,7 @@ import minecrafttransportsimulator.guis.components.AGUIBase;
 import net.minecraft.block.SoundType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ActiveRenderInfo;
+import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.tileentity.TileEntity;
@@ -20,6 +23,7 @@ import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -210,6 +214,18 @@ public class InterfaceClient{
 		}
 	}
 	
+	/**
+	 *  Returns the tooltip lines for the passed-in stack.
+	 *  This isn't in the stack itself because tooltips are client-only.
+	 */
+	public static List<String> getTooltipLines(WrapperItemStack stack){
+		List<String> tooltipText = stack.stack.getTooltip(Minecraft.getMinecraft().player, Minecraft.getMinecraft().gameSettings.advancedItemTooltips ? ITooltipFlag.TooltipFlags.ADVANCED : ITooltipFlag.TooltipFlags.NORMAL);
+    	//Add grey formatting text to non-first line tooltips.
+		for(int i = 1; i < tooltipText.size(); ++i){
+        	tooltipText.set(i, TextFormatting.GRAY + tooltipText.get(i));
+        }
+		return tooltipText;
+	}
 
 	   
 	/**
