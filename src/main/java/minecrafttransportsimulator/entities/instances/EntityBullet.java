@@ -34,6 +34,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 	//Properties
 	public final PartGun gun;
 	public final int bulletNumber;
+	private final boolean isBomb;
 	private final double initialVelocity;
 	private final double anglePerTickSpeed;
 	private final Point3d velocityToAddEachTick;
@@ -52,6 +53,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
     	super(gun.world, position, motion, ZERO_FOR_CONSTRUCTOR, gun.loadedBullet);
     	this.gun = gun;
         this.bulletNumber = gun.bulletsFired;
+        this.isBomb = gun.definition.gun.muzzleVelocity == 0;
         this.boundingBox = new BoundingBox(this.position, definition.bullet.diameter/1000D/2D, definition.bullet.diameter/1000D/2D, definition.bullet.diameter/1000D/2D);
         this.initialVelocity = motion.length();
         this.anglePerTickSpeed = definition.bullet.turnFactor * 1000/definition.bullet.diameter;
@@ -61,7 +63,11 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
         }else{
         	velocityToAddEachTick = new Point3d();
         }
-        angles.setTo(motion.copy().getAngles(true));
+        if(isBomb){
+        	angles.setTo(gun.angles);
+        }else{
+        	angles.setTo(motion.copy().getAngles(true));
+        }
         prevAngles.setTo(angles);
     }
     
@@ -301,7 +307,9 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 			//Add our updated motion to the position.
 			//Then set the angles to match the motion.
 			//Doing this last lets us damage on the first update tick.
-			angles.setTo(angles.setTo(motion).copy().getAngles(true));
+			if(!isBomb){
+				angles.setTo(angles.setTo(motion)).getAngles(true);
+			}
 			position.add(motion);
 			return true;
 		}else{
