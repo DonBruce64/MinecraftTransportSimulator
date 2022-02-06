@@ -5,6 +5,7 @@ import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
+import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -47,6 +48,26 @@ public class PartEngine extends APart{
 	//Runtime calculated values.
 	public double fuelFlow;
 	public PartEngine linkedEngine;
+	
+	//Internal properties
+	@ModifiedValue
+	private float currentMaxRPM;
+	@ModifiedValue
+	private float currentMaxSafeRPM;
+	@ModifiedValue
+	private float currentRevlimitRPM;
+	@ModifiedValue
+	private float currentIdleRPM;
+	@ModifiedValue
+	private float currentFuelConsumption;
+	@ModifiedValue
+	private float currentHeatingCoefficient;
+	@ModifiedValue
+	private float currentCoolingCoefficient;
+	@ModifiedValue
+	private float currentSuperchargerFuelConsumption;
+	@ModifiedValue
+	private float currentSuperchargerEfficiency;
 	
 	//Internal variables.
 	private boolean isPropellerInLiquid;
@@ -219,7 +240,7 @@ public class PartEngine extends APart{
 				
 				//Add cooling for ambient temp.
 				ambientTemp = (25*world.getTemperature(position) + 5)*ConfigSystem.configObject.general.engineBiomeTempFactor.value;
-				coolingFactor = 0.001*definition.engine.coolingCoefficient - (definition.engine.superchargerEfficiency/1000F)*(rpm/2000F) + (vehicleOn.velocity/1000F)*definition.engine.coolingCoefficient;
+				coolingFactor = 0.001*currentCoolingCoefficient - (currentSuperchargerEfficiency/1000F)*(rpm/2000F) + (vehicleOn.velocity/1000F)*currentCoolingCoefficient;
 				temp -= (temp - ambientTemp)*coolingFactor;
 				
 				//Check to see if electric or hand starter can keep running.
@@ -266,8 +287,8 @@ public class PartEngine extends APart{
 				}
 				
 				//Add extra hours if we are running the engine too fast.
-				if(!isCreative && rpm > definition.engine.maxSafeRPM){
-					hours += (rpm - definition.engine.maxSafeRPM)/definition.engine.maxSafeRPM*getTotalWearFactor();
+				if(!isCreative && rpm > currentMaxSafeRPM){
+					hours += (rpm - currentMaxSafeRPM)/currentMaxSafeRPM*getTotalWearFactor();
 				}
 				
 				//Check for any shifting requests.
@@ -294,7 +315,7 @@ public class PartEngine extends APart{
 				//Do running logic.
 				if(running){
 					//Provide electric power to the vehicle we're in.
-					vehicleOn.electricUsage -= 0.05*rpm/definition.engine.maxRPM;
+					vehicleOn.electricUsage -= 0.05*rpm/currentMaxRPM;
 					
 					//Add hours to the engine.
 					if(!isCreative){
@@ -313,21 +334,21 @@ public class PartEngine extends APart{
 								//Clear out the fuel from this vehicle as it's the wrong type.
 								vehicleOn.fuelTank.drain(vehicleOn.fuelTank.getFluid(), vehicleOn.fuelTank.getFluidLevel(), true);
 							}else{
-								fuelFlow += vehicleOn.fuelTank.drain(vehicleOn.fuelTank.getFluid(), getTotalFuelConsumption()*ConfigSystem.configObject.general.fuelUsageFactor.value/ConfigSystem.configObject.fuel.fuels.get(definition.engine.fuelType).get(vehicleOn.fuelTank.getFluid())*rpm*(fuelLeak ? 1.5F : 1.0F)/definition.engine.maxRPM, !world.isClient());
+								fuelFlow += vehicleOn.fuelTank.drain(vehicleOn.fuelTank.getFluid(), getTotalFuelConsumption()*ConfigSystem.configObject.general.fuelUsageFactor.value/ConfigSystem.configObject.fuel.fuels.get(definition.engine.fuelType).get(vehicleOn.fuelTank.getFluid())*rpm*(fuelLeak ? 1.5F : 1.0F)/currentMaxRPM, !world.isClient());
 							}
 						}
 						
 						//Add temp based on engine speed.
-						temp += Math.max(0, (7*rpm/definition.engine.maxRPM - temp/(COLD_TEMP*2))/20)*definition.engine.heatingCoefficient*ConfigSystem.configObject.general.engineSpeedTempFactor.value;
+						temp += Math.max(0, (7*rpm/currentMaxRPM - temp/(COLD_TEMP*2))/20)*currentHeatingCoefficient*ConfigSystem.configObject.general.engineSpeedTempFactor.value;
 						
 						//Adjust oil pressure based on RPM and leak status.
 						//If this is a 0-idle RPM engine, assume it's electric and doesn't have oil.
-						if(definition.engine.idleRPM != 0){
-							pressure = Math.min(90 - temp/10, pressure + rpm/definition.engine.idleRPM - 0.5*(oilLeak ? 5F : 1F)*(pressure/LOW_OIL_PRESSURE));
+						if(currentIdleRPM != 0){
+							pressure = Math.min(90 - temp/10, pressure + rpm/currentIdleRPM - 0.5*(oilLeak ? 5F : 1F)*(pressure/LOW_OIL_PRESSURE));
 							
 							//Add extra hours and temp if we have low oil.
 							if(pressure < LOW_OIL_PRESSURE && !isCreative){
-								temp += Math.max(0, (20*rpm/definition.engine.maxRPM)/20);
+								temp += Math.max(0, (20*rpm/currentMaxRPM)/20);
 								hours += 0.01*getTotalWearFactor();
 							}
 						}
@@ -342,7 +363,7 @@ public class PartEngine extends APart{
 						
 						//If the engine has high hours, give a chance for a backfire.
 						if(hours > 250 && !world.isClient()){
-							if(Math.random() < (hours/2)/(250+(10000-hours))*(definition.engine.maxSafeRPM/(rpm+definition.engine.maxSafeRPM/1.5))){
+							if(Math.random() < (hours/2)/(250+(10000-hours))*(currentMaxSafeRPM/(rpm+currentMaxSafeRPM/1.5))){
 								backfireEngine();
 								InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.BACKFIRE));
 							}
@@ -375,7 +396,7 @@ public class PartEngine extends APart{
 						if(shiftCooldown == 0){
 							if(currentGear > 0 ? currentGear < forwardsGears : -currentGear < reverseGears){
 								//Can shift up, try to do so.
-								if(rpm > (definition.engine.upShiftRPM != null ? definition.engine.upShiftRPM.get(currentGear + reverseGears) : (definition.engine.maxSafeRPM*0.9))*0.5F*(1.0F + vehicleOn.throttle)){
+								if(rpm > (definition.engine.upShiftRPM != null ? definition.engine.upShiftRPM.get(currentGear + reverseGears) : (currentMaxSafeRPM*0.9))*0.5F*(1.0F + vehicleOn.throttle)){
 									if(currentGear > 0){
 										if(shiftUp(true)){
 											InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, GEAR_VARIABLE, 1));
@@ -389,7 +410,7 @@ public class PartEngine extends APart{
 							}
 							if(currentGear > 1 || currentGear < -1){
 								//Can shift down, try to do so.
-								if(rpm < (definition.engine.downShiftRPM != null ? definition.engine.downShiftRPM.get(currentGear + reverseGears)*0.5*(1.0F + vehicleOn.throttle) : (definition.engine.maxSafeRPM*0.9)*0.25*(1.0F + vehicleOn.throttle))){
+								if(rpm < (definition.engine.downShiftRPM != null ? definition.engine.downShiftRPM.get(currentGear + reverseGears)*0.5*(1.0F + vehicleOn.throttle) : (currentMaxSafeRPM*0.9)*0.25*(1.0F + vehicleOn.throttle))){
 									if(currentGear > 0){
 										if(shiftDown(true)){
 											InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, GEAR_VARIABLE, -1));
@@ -441,7 +462,7 @@ public class PartEngine extends APart{
 					lowestWheelVelocity = 999F;
 					desiredWheelVelocity = -999F;
 					wheelFriction = 0;
-					engineTargetRPM = !electricStarterEngaged ? vehicleOn.throttle*(definition.engine.maxRPM - definition.engine.idleRPM)/(1 + hours/1250) + definition.engine.idleRPM : definition.engine.startRPM;
+					engineTargetRPM = !electricStarterEngaged ? vehicleOn.throttle*(currentMaxRPM - currentIdleRPM)/(1 + hours/1250) + currentIdleRPM : definition.engine.startRPM;
 					
 					//Update wheel friction and velocity.
 					for(PartGroundDevice wheel : vehicleOn.groundDeviceCollective.drivenWheels){
@@ -460,8 +481,8 @@ public class PartEngine extends APart{
 						if(wheelFriction > 0){
 							double desiredRPM = lowestWheelVelocity*1200F*currentGearRatio*vehicleOn.currentAxleRatio;
 							rpm += (desiredRPM - rpm)/definition.engine.revResistance;
-							if(rpm < definition.engine.idleRPM && running && backfireCooldown <= 0){//Checks if we're backfiring and sets lugging rpm to stall rpm, otherwise sets lug rpm to idle
-								rpm = definition.engine.idleRPM;
+							if(rpm < currentIdleRPM && running && backfireCooldown <= 0){//Checks if we're backfiring and sets lugging rpm to stall rpm, otherwise sets lug rpm to idle
+								rpm = currentIdleRPM;
 							}else if(rpm < definition.engine.stallRPM && running){
 								rpm = definition.engine.stallRPM;
 								backfireCooldown -= 1;
@@ -493,7 +514,7 @@ public class PartEngine extends APart{
 						//If wheel friction is 0, and we aren't in neutral, get RPM contributions for that.
 						if(wheelFriction == 0 && currentGearRatio != 0){
 							isPropellerInLiquid = attachedPropeller.isInLiquid();
-							double propellerForcePenalty = Math.max(0, (attachedPropeller.definition.propeller.diameter - 75)/(50*(definition.engine.fuelConsumption + (definition.engine.superchargerFuelConsumption*definition.engine.superchargerEfficiency)) - 15));
+							double propellerForcePenalty = Math.max(0, (attachedPropeller.definition.propeller.diameter - 75)/(50*(currentFuelConsumption + (currentSuperchargerFuelConsumption*currentSuperchargerEfficiency)) - 15));
 							double propellerDesiredSpeed = 0.0254*attachedPropeller.currentPitch*rpm/propellerGearboxRatio/60D/20D;
 							double propellerFeedback = (propellerDesiredSpeed - propellerAxialVelocity)*(isPropellerInLiquid ? 130 : 40);
 							if(currentGear < 0 || attachedPropeller.currentPitch < 0){
@@ -502,7 +523,7 @@ public class PartEngine extends APart{
 							
 							if(running){
 								propellerFeedback += propellerForcePenalty*50;
-								engineTargetRPM = vehicleOn.throttle*(definition.engine.maxRPM - definition.engine.idleRPM)/(1 + hours/1250) + definition.engine.idleRPM;
+								engineTargetRPM = vehicleOn.throttle*(currentMaxRPM - currentIdleRPM)/(1 + hours/1250) + currentIdleRPM;
 								double engineRPMDifference = engineTargetRPM - rpm;
 								
 								//propellerFeedback can't make an engine stall, but hours can.
@@ -527,14 +548,14 @@ public class PartEngine extends APart{
 				//Or, if we are not on, just slowly spin the engine down.
 				if((wheelFriction == 0 && attachedPropeller == null) || currentGearRatio == 0){
 					if(running){
-						engineTargetRPM = vehicleOn.throttle*(definition.engine.maxRPM - definition.engine.idleRPM)/(1 + hours/1250) + definition.engine.idleRPM;
+						engineTargetRPM = vehicleOn.throttle*(currentMaxRPM - currentIdleRPM)/(1 + hours/1250) + currentIdleRPM;
 						rpm += (engineTargetRPM - rpm)/(definition.engine.revResistance*3);
-						if(definition.engine.revlimitRPM == -1){
-							if(rpm > definition.engine.maxSafeRPM){
+						if(currentRevlimitRPM == -1){
+							if(rpm > currentMaxSafeRPM){
 								rpm -= Math.abs(engineTargetRPM - rpm)/60;
 							}
 						}else{
-							if(rpm > definition.engine.revlimitRPM){
+							if(rpm > currentRevlimitRPM){
 								rpm -= Math.abs(engineTargetRPM - rpm)/definition.engine.revlimitBounce;
 							}
 						}
@@ -606,6 +627,37 @@ public class PartEngine extends APart{
 	}
 	
 	@Override
+	protected void updateVariableModifiers(){
+		currentMaxRPM = definition.engine.maxRPM;
+		currentMaxSafeRPM = definition.engine.maxSafeRPM;
+		currentRevlimitRPM = definition.engine.revlimitRPM;
+		currentIdleRPM = definition.engine.idleRPM;
+		currentFuelConsumption = definition.engine.fuelConsumption;
+		currentHeatingCoefficient = definition.engine.heatingCoefficient;
+		currentCoolingCoefficient = definition.engine.coolingCoefficient;
+		currentSuperchargerFuelConsumption = definition.engine.superchargerFuelConsumption;
+		currentSuperchargerEfficiency = definition.engine.superchargerEfficiency;
+		
+		//Adjust current variables to modifiers, if any exist.
+		if(definition.variableModifiers != null){
+			for(JSONVariableModifier modifier : definition.variableModifiers){
+				switch(modifier.variable){
+					case "maxRPM" : currentMaxRPM = adjustVariable(modifier, currentMaxRPM); break;
+					case "maxSafeRPM" : currentMaxSafeRPM = adjustVariable(modifier, currentMaxSafeRPM); break;
+					case "revlimitRPM" : currentRevlimitRPM = adjustVariable(modifier, currentRevlimitRPM); break;
+					case "idleRPM" : currentIdleRPM = adjustVariable(modifier, currentIdleRPM); break;
+					case "fuelConsumption" : currentFuelConsumption = adjustVariable(modifier, currentFuelConsumption); break;
+					case "heatingCoefficient" : currentHeatingCoefficient = adjustVariable(modifier, currentHeatingCoefficient); break;
+					case "coolingCoefficient" : currentCoolingCoefficient = adjustVariable(modifier, currentCoolingCoefficient); break;
+					case "superchargerFuelConsumption" : currentSuperchargerFuelConsumption = adjustVariable(modifier, currentSuperchargerFuelConsumption); break;
+					case "superchargerEfficiency" : currentSuperchargerEfficiency = adjustVariable(modifier, currentSuperchargerEfficiency); break;
+					default : setVariable(modifier.variable, adjustVariable(modifier, (float) getVariable(modifier.variable))); break;
+				}
+			}
+		}
+	}
+	
+	@Override
 	public boolean isInLiquid(){
 		return world.isBlockLiquid(position.copy().add(0, placementDefinition.intakeOffset, 0));
 	}
@@ -633,10 +685,10 @@ public class PartEngine extends APart{
 			case("engine_driveshaft_sin"): return Math.sin(Math.toRadians(getDriveshaftRotation(partialTicks)));
 			case("engine_driveshaft_cos"): return Math.cos(Math.toRadians(getDriveshaftRotation(partialTicks)));
 			case("engine_rpm"): return rpm;
-			case("engine_rpm_safe"): return definition.engine.maxSafeRPM;
-			case("engine_rpm_max"): return definition.engine.maxRPM;
-			case("engine_rpm_percent"): return rpm/definition.engine.maxRPM;
-			case("engine_rpm_percent_safe"): return rpm/definition.engine.maxSafeRPM;
+			case("engine_rpm_safe"): return currentMaxSafeRPM;
+			case("engine_rpm_max"): return currentMaxRPM;
+			case("engine_rpm_percent"): return rpm/currentMaxRPM;
+			case("engine_rpm_percent_safe"): return rpm/currentMaxSafeRPM;
 			case("engine_fuel_flow"): return fuelFlow*20D*60D/1000D;
 			case("engine_temp"): return temp;
 			case("engine_pressure"): return pressure;
@@ -726,7 +778,7 @@ public class PartEngine extends APart{
 	public void backfireEngine(){
 		//Decrease RPM and send off packet to have clients do the same. Also tells lug rpm to lug harder.
 		backfired = true;
-		rpm -= definition.engine.maxRPM < 15000 ? 100 : 500;
+		rpm -= currentMaxRPM < 15000 ? 100 : 500;
 		backfireCooldown = 4;
 	}
 	
@@ -873,12 +925,12 @@ public class PartEngine extends APart{
 	
 	//--------------------START OF ENGINE PROPERTY METHODS--------------------
 	public float getTotalFuelConsumption(){
-			return definition.engine.fuelConsumption + definition.engine.superchargerFuelConsumption;
+			return currentFuelConsumption + currentSuperchargerFuelConsumption;
 	}
 	
 	public double getTotalWearFactor(){
-		if(definition.engine.superchargerEfficiency > 1.0F){
-			return definition.engine.engineWearFactor*definition.engine.superchargerEfficiency*ConfigSystem.configObject.general.engineHoursFactor.value;
+		if(currentSuperchargerEfficiency > 1.0F){
+			return definition.engine.engineWearFactor*currentSuperchargerEfficiency*ConfigSystem.configObject.general.engineHoursFactor.value;
 		}else{
 			return definition.engine.engineWearFactor*ConfigSystem.configObject.general.engineHoursFactor.value;
 		}
@@ -899,10 +951,10 @@ public class PartEngine extends APart{
 			double wheelForce = 0;
 			//If running, use the friction of the wheels to determine the new speed.
 			if(running || electricStarterEngaged){
-				if(rpm > definition.engine.revlimitRPM && definition.engine.revlimitRPM != -1){
-					wheelForce = -rpm/definition.engine.maxRPM*Math.signum(currentGear)*60;
+				if(rpm > currentRevlimitRPM && currentRevlimitRPM != -1){
+					wheelForce = -rpm/currentMaxRPM*Math.signum(currentGear)*60;
 				}else{
-					wheelForce = (engineTargetRPM - rpm)/definition.engine.maxRPM*currentGearRatio*vehicleOn.currentAxleRatio*(definition.engine.fuelConsumption + (definition.engine.superchargerFuelConsumption*definition.engine.superchargerEfficiency))*0.6F*30F;
+					wheelForce = (engineTargetRPM - rpm)/currentMaxRPM*currentGearRatio*vehicleOn.currentAxleRatio*(currentFuelConsumption + (currentSuperchargerFuelConsumption*currentSuperchargerEfficiency))*0.6F*30F;
 				}
 				if(wheelForce != 0){
 					//Check to see if the wheels need to spin out.
@@ -948,7 +1000,7 @@ public class PartEngine extends APart{
 				}
 			}else{
 				//Not running, do engine braking.
-				wheelForce = -rpm/definition.engine.maxRPM*Math.signum(currentGear)*30;
+				wheelForce = -rpm/currentMaxRPM*Math.signum(currentGear)*30;
 			}
 			engineForce.z += wheelForce;
 		}
@@ -960,8 +1012,8 @@ public class PartEngine extends APart{
 			//We then multiply that by the RPM and the fuel consumption to get the raw power produced
 			//by the core of the engine.  This is speed-independent as the core will ALWAYS accelerate air.
 			//Note that due to a lack of jet physics formulas available, this is "hacky math".
-			double safeRPMFactor = rpm/definition.engine.maxSafeRPM;
-			double coreContribution = Math.max(10*airDensity*definition.engine.fuelConsumption*safeRPMFactor - definition.engine.bypassRatio, 0);
+			double safeRPMFactor = rpm/currentMaxSafeRPM;
+			double coreContribution = Math.max(10*airDensity*currentFuelConsumption*safeRPMFactor - definition.engine.bypassRatio, 0);
 			
 			//The fan portion is calculated similarly to how propellers are calculated.
 			//This takes into account the air density, and relative speed of the engine versus the fan's desired speed.

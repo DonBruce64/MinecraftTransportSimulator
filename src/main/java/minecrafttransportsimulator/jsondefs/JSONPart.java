@@ -5,6 +5,7 @@ import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.blocks.components.ABlockBase.BlockMaterial;
+import minecrafttransportsimulator.entities.components.AEntityD_Definable.ModifiableValue;
 import minecrafttransportsimulator.jsondefs.JSONConfig.ConfigFuel.FuelDefaults;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDefaults;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
@@ -132,18 +133,22 @@ public class JSONPart extends AJSONPartProvider{
 		@JSONDescription("How long it takes for the engine RPM to 'catch up', or how fast it revs. The lower the value is, the faster the engine will react to RPM changes. If ignored, MTS will set the value of this to a default of 10.")
     	public int revResistance;
 		
+		@ModifiableValue
 		@JSONDescription("The max RPM for this engine.  This is how fast the engine will try to go with no load at 100% throttle.  The red-line value (max safe RPM) is lower than and auto-caluclated from this value.")
     	public int maxRPM;
 		
+		@ModifiableValue
 		@JSONDescription("The max safe (redline) RPM for this engine.  If left out, MTS will auto-calculate this value for you.  Normally this is fine, but SOME folks may not like the math, so manually-specifiying it is an option.")
     	public int maxSafeRPM;
 		
+		@ModifiableValue
 		@JSONDescription("The RPM where this engine will idle, provided it is turned on and isn't drowned or out of fuel.")
     	public int idleRPM;
 		
 		@JSONDescription("The RPM where this engine will start, after starting the engine will try to maintain the speed set by the idleRPM and maxRPM.  May be lower than the idleRPM, as the engine will stall based on the stallRPM, not this value.")
     	public int startRPM;
     	
+		@ModifiableValue
 		@JSONDescription("The RPM at which the engine's rev limiter kicks in. If left out, MTS will auto-calculate this value for you. If set to -1, revlimiting will be disabled for this engine.")
     	public int revlimitRPM;
 		
@@ -156,15 +161,18 @@ public class JSONPart extends AJSONPartProvider{
 		@JSONDescription("The rate at which this engine's RPM winds down per tick after sputtering out or being turned off. 10 by default, and can be configured to make engines wind down quicker or slower.")
     	public int engineWinddownRate;
 		
+		@ModifiableValue
 		@JSONDescription("The rate at which this engine heats up, which gets lobbed into the math with fuel consumption, velocity... etc")
     	public float heatingCoefficient;
     	
+		@ModifiableValue
 		@JSONDescription("The rate at which this engine cools down, which gets lobbed into the math with fuel consumption, velocity... etc")
     	public float coolingCoefficient;
     	
 		@JSONDescription("The rate at which this engine accrues hours. If you make it lower, it'll be more reliable. If you make it higher, it'll collect that wearout like the infinity stones.")
     	public float engineWearFactor;
 
+		@ModifiableValue
 		@JSONDescription("How many mb/t the engine uses, and how powerful the engine is. This value is calculated at maxRPM and scaled down based on the percentage of speed the engine is at, so an engine with a maxRPM of 4000 with a fuel consumption of 1.0 running at 2000RPM is actually running at a rate of 0.5.  This value is the key to determining the raw power output of your engine, as it's directly related to how much force the engine can output.  However, even the most powerful engines won't do much if they're geared improperly, and even weak engines with low consumption can reach high speeds if they can maintain high RPMs.")
     	public float fuelConsumption;
 		
@@ -192,9 +200,11 @@ public class JSONPart extends AJSONPartProvider{
     	@JSONDescription("What type of fuel this engine uses.  This is NOT the name of the fluid this engine uses, rather it's a generic type that basically lumps it in with other engines. Gasoline and diesel are two of the most common.  This type system allows for packs to group their engines by what fuels they take to make them more uniform, and allows server owners to configure their fluids to work with specific types of engines.")
 		public String fuelType;
 		
+		@ModifiableValue
 		@JSONDescription("Same as fuelConsumption, but for the supercharger on this engine (if any). Note that vehicles will only take the base fuel consumption of the engine into account when checking min/max values. This is to allow for higher-performance engines to be added to vehicles without poking pack creators to increase their maximum values. This variable can be omitted if your engine doesn't have a supercharger.")
 		public float superchargerFuelConsumption;
 		
+		@ModifiableValue
 		@JSONDescription("The efficiency of the supercharger on this engine (if any). The supercharger fuel consumption of this engine (but not the base fuel consumption) will be multiplied by this value. A value of 1 will make the supercharger add the same amount of power for its fuel consumption as adding that number to the base fuel consumption, so make sure to set it to greater than that if you want your supercharger to have any power benefits!\nThis also affects the engine wear calculations, with a value of 1 or below leaving them the same as what it would be without a supercharger. By setting this value to significantly below 1 you can simulate inefficient, gas-guzzling engines if you have a high supercharger fuel consumption, as it won't add much power but will make the engine use a lot more fuel.\nAs a final note: supercharged engines heat up faster than non-supercharged engines. A supercharger efficiency of 0 would make the calculations the same as a non-supercharged engine in this case; setting it to 1 will not make the engine heat up twice as fast. This is intended behavior, as real supercharged engines heat up faster than naturally aspirated ones even if the supercharger itself isn't very efficient.  This variable can be omitted if your engine doesn't have a supercharger.")
 		public float superchargerEfficiency;
 		
@@ -260,9 +270,11 @@ public class JSONPart extends AJSONPartProvider{
 		@JSONDescription("If set, then this part can go 'flat', and the height of the part will be set to this.  This also reduces the friction it provides.")
     	public float flatHeight;
 		
+		@ModifiableValue
 		@JSONDescription("How much friction this part has for forwards movement. Used in cars to determine how much grip wheels have with the ground and if they should spin out, and used with all vehicles when brakes are applied to determine how much force they should be able to apply.")
     	public float motiveFriction;
 		
+		@ModifiableValue
 		@JSONDescription("How much friction this part has for sideways movement. Used during turning operations to determine how much the vehicle will skid sideways when turning at speed.")
         public float lateralFriction;
 		

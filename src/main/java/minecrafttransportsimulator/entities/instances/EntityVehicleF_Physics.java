@@ -1,16 +1,10 @@
 package minecrafttransportsimulator.entities.instances;
 
 import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.baseclasses.TrailerConnection;
-import minecrafttransportsimulator.entities.components.AEntityD_Definable;
-import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
@@ -19,7 +13,6 @@ import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
-import minecrafttransportsimulator.rendering.components.DurationDelayClock;
 import minecrafttransportsimulator.rendering.instances.RenderVehicle;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
@@ -87,13 +80,21 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	private final Set<EntityVehicleF_Physics> towedVehiclesCheckedForWeights = new HashSet<EntityVehicleF_Physics>();
 	
 	//Properties.
+	@ModifiedValue
 	public float currentWingArea;
+	@ModifiedValue
 	public float currentWingSpan;
+	@ModifiedValue
 	public float currentAileronArea;
+	@ModifiedValue
 	public float currentElevatorArea;
+	@ModifiedValue
 	public float currentRudderArea;
+	@ModifiedValue
 	public float currentDragCoefficient;
+	@ModifiedValue
 	public float currentBallastVolume;
+	@ModifiedValue
 	public float currentAxleRatio;
 	
 	//Coefficients.
@@ -138,9 +139,6 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	
 	@Override
 	public boolean update(){
-		//Need to do this before updating as these require knowledge of prior states.
-		//If we call super, then it will overwrite the prior state.
-		setPropertyVariables();
 		if(super.update()){
 			world.beginProfiling("VehicleF_Level", true);
 			//Parse out variables.
@@ -219,7 +217,8 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 		InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, RUDDER_VARIABLE, delta));
 	}
 	
-	private void setPropertyVariables(){
+	@Override
+	protected void updateVariableModifiers(){
 		currentWingArea = (float) (definition.motorized.wingArea + definition.motorized.wingArea*0.15F*flapCurrentAngle/MAX_FLAP_ANGLE_REFERENCE);
 		currentWingSpan = definition.motorized.wingSpan;
 		currentAileronArea = definition.motorized.aileronArea;
@@ -233,90 +232,23 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 		currentUnderSteer = definition.motorized.underSteer;
 		currentAxleRatio = definition.motorized.axleRatio;
 		
-		//Adjust current variables to physics modifiers, if any exist.
-		Map<AEntityD_Definable<?>, List<JSONVariableModifier>> modifyingEntities = new LinkedHashMap<AEntityD_Definable<?>, List<JSONVariableModifier>>();
+		//Adjust current variables to modifiers, if any exist.
 		if(definition.variableModifiers != null){
-			modifyingEntities.put(this, definition.variableModifiers);
-		}
-		for(APart part : parts){
-			if(part.definition.variableModifiers != null){
-				modifyingEntities.put(part, part.definition.variableModifiers);
-			}
-		}
-		if(!modifyingEntities.isEmpty()){
-			for(Entry<AEntityD_Definable<?>, List<JSONVariableModifier>> entry : modifyingEntities.entrySet()){
-				AEntityD_Definable<?> entity = entry.getKey();
-				for(JSONVariableModifier modifier : entry.getValue()){
-					boolean doModification = true;
-					float modifiedValue = modifier.value;
-					if(modifier.animations != null){
-						boolean inhibitAnimations = false;
-						for(JSONAnimationDefinition animation : modifier.animations){
-							DurationDelayClock clock = entity.animationClocks.get(animation);
-							if(clock != null){
-								switch(animation.animationType){
-									case VISIBILITY :{
-										if(!inhibitAnimations){
-											double variableValue = getAnimatedVariableValue(clock, 0);
-											if(variableValue < clock.animation.clampMin || variableValue > clock.animation.clampMax){
-												doModification = false;
-											}
-										}
-										break;
-									}
-									case INHIBITOR :{
-										if(!inhibitAnimations){
-											double variableValue = getAnimatedVariableValue(clock, 0);
-											if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
-												inhibitAnimations = true;
-											}
-										}
-										break;
-									}
-									case ACTIVATOR :{
-										if(inhibitAnimations){
-											double variableValue = getAnimatedVariableValue(clock, 0);
-											if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
-												inhibitAnimations = false;
-											}
-										}
-										break;
-									}
-									case TRANSLATION :{
-									    if(!inhibitAnimations){
-									    	modifiedValue += getAnimatedVariableValue(clock, clock.animation.axis.y, 0);
-									    }
-									    break;
-									}
-									case ROTATION :{
-										//Do nothing.
-										break;
-									}
-									case SCALING :{
-										//Do nothing.
-										break;
-									}
-								}
-							}
-						}
-					}
-					if(doModification){
-						switch(modifier.variable){
-							case "wingArea" : currentWingArea += modifiedValue; break;
-							case "wingSpan" : currentWingSpan += modifiedValue; break;
-							case "aileronArea" : currentAileronArea += modifiedValue; break;
-							case "elevatorArea" : currentElevatorArea += modifiedValue; break;
-							case "rudderArea" : currentRudderArea += modifiedValue; break;
-							case "dragCoefficient" : currentDragCoefficient += modifiedValue; break;
-							case "ballastVolume" : currentBallastVolume += modifiedValue; break;
-							case "downForce" : currentDownForce += modifiedValue; break;
-							case "brakingFactor" : currentBrakingFactor += modifiedValue; break;
-							case "overSteer" : currentOverSteer += modifiedValue; break;
-							case "underSteer" : currentUnderSteer += modifiedValue; break;
-							case "axleRatio" : currentAxleRatio += modifiedValue; break;
-							default : setVariable(modifier.variable, getVariable(modifier.variable) + modifiedValue); break;
-						}
-					}
+			for(JSONVariableModifier modifier : definition.variableModifiers){
+				switch(modifier.variable){
+					case "wingArea" : currentWingArea = adjustVariable(modifier, currentWingArea); break;
+					case "wingSpan" : currentWingSpan = adjustVariable(modifier, currentWingSpan); break;
+					case "aileronArea" : currentAileronArea = adjustVariable(modifier, currentAileronArea); break;
+					case "elevatorArea" : currentElevatorArea = adjustVariable(modifier, currentElevatorArea); break;
+					case "rudderArea" : currentRudderArea = adjustVariable(modifier, currentRudderArea); break;
+					case "dragCoefficient" : currentDragCoefficient = adjustVariable(modifier, currentDragCoefficient); break;
+					case "ballastVolume" : currentBallastVolume = adjustVariable(modifier, currentBallastVolume); break;
+					case "downForce" : currentDownForce = adjustVariable(modifier, currentDownForce); break;
+					case "brakingFactor" : currentBrakingFactor = adjustVariable(modifier, currentBrakingFactor); break;
+					case "overSteer" : currentOverSteer = adjustVariable(modifier, currentOverSteer); break;
+					case "underSteer" : currentUnderSteer = adjustVariable(modifier, currentUnderSteer); break;
+					case "axleRatio" : currentAxleRatio = adjustVariable(modifier, currentAxleRatio); break;
+					default : setVariable(modifier.variable, adjustVariable(modifier, (float) getVariable(modifier.variable))); break;
 				}
 			}
 		}

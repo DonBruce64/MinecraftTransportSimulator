@@ -253,6 +253,10 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 	
 	@Override
 	public boolean update(){
+		//Need to do this before updating as these require knowledge of prior states.
+		//If we call super, then it will overwrite the prior state.
+		updateVariableModifiers();
+				
 		//Do validity checks for towing variables.  We could do this whenever we disconnect,
 		//but there are tons of ways this could happen.  The trailer could blow up, the 
 		//part-hitch could have been blown up, the trailer could have gotten wrenched, the
@@ -524,6 +528,88 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
     	}
     	encompassingBox.updateToEntity(this, null);
     }
+    
+    /**
+	 * Called to update the variable modifiers for this entity.
+	 * By default, this will get any variables that {@link #getVariable(String)}
+	 * returns, but can be extended to do other variables specific to the entity.
+	 */
+	protected void updateVariableModifiers(){
+		if(definition.variableModifiers != null){
+			for(JSONVariableModifier modifier : definition.variableModifiers){
+				setVariable(modifier.variable, adjustVariable(modifier, (float) getVariable(modifier.variable)));
+			}
+		}
+	}
+	
+	 /**
+	 * Helper method for variable modification.
+	 */
+	protected float adjustVariable(JSONVariableModifier modifier, float currentValue){
+		float modifiedValue = modifier.setValue != 0 ? modifier.setValue : currentValue + modifier.addValue;
+		boolean doModification = true;
+		if(modifier.animations != null){
+			boolean inhibitAnimations = false;
+			for(JSONAnimationDefinition animation : modifier.animations){
+				DurationDelayClock clock = animationClocks.get(animation);
+				if(clock != null){
+					switch(animation.animationType){
+						case VISIBILITY :{
+							if(!inhibitAnimations){
+								double variableValue = getAnimatedVariableValue(clock, 0);
+								if(variableValue < clock.animation.clampMin || variableValue > clock.animation.clampMax){
+									doModification = false;
+								}
+							}
+							break;
+						}
+						case INHIBITOR :{
+							if(!inhibitAnimations){
+								double variableValue = getAnimatedVariableValue(clock, 0);
+								if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
+									inhibitAnimations = true;
+								}
+							}
+							break;
+						}
+						case ACTIVATOR :{
+							if(inhibitAnimations){
+								double variableValue = getAnimatedVariableValue(clock, 0);
+								if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
+									inhibitAnimations = false;
+								}
+							}
+							break;
+						}
+						case TRANSLATION :{
+						    if(!inhibitAnimations){
+						    	if(clock.animation.axis.x != 0){
+									modifiedValue *= getAnimatedVariableValue(clock, clock.animation.axis.x, 0);
+								}else if(clock.animation.axis.y != 0){
+									modifiedValue += getAnimatedVariableValue(clock, clock.animation.axis.y, 0);
+								}else{
+									modifiedValue = (float) getAnimatedVariableValue(clock, clock.animation.axis.z, 0);
+								} 
+						    }
+						    break;
+						}
+						case ROTATION :{
+							//Do nothing.
+							break;
+						}
+						case SCALING :{
+							//Do nothing.
+							break;
+						}
+					}
+					if(!doModification){
+						break;
+					}
+				}
+			}
+		}
+		return doModification ? modifiedValue : currentValue;
+	}
 	
     /**
 	 * Called to perform supplemental update logic on this entity.  This should be called after all movement on the

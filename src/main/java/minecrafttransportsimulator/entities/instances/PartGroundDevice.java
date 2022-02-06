@@ -5,6 +5,7 @@ import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.items.instances.ItemPartGroundDevice;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
+import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
@@ -29,6 +30,12 @@ public class PartGroundDevice extends APart{
 	public boolean skipAngularCalcs = false;
 	public double angularPosition;
 	public double angularVelocity;
+	
+	//Internal properties
+	@ModifiedValue
+	private float currentMotiveFriction;
+	@ModifiedValue
+	private float currentLateralFriction;
 	
 	//Internal states for control and physics.
 	public boolean isFlat;
@@ -143,6 +150,23 @@ public class PartGroundDevice extends APart{
 	}
 	
 	@Override
+	protected void updateVariableModifiers(){
+		currentMotiveFriction = definition.ground.motiveFriction;
+		currentLateralFriction = definition.ground.lateralFriction;
+		
+		//Adjust current variables to modifiers, if any exist.
+		if(definition.variableModifiers != null){
+			for(JSONVariableModifier modifier : definition.variableModifiers){
+				switch(modifier.variable){
+					case "motiveFriction" : currentMotiveFriction = adjustVariable(modifier, currentMotiveFriction); break;
+					case "lateralFriction" : currentLateralFriction = adjustVariable(modifier, currentLateralFriction); break;
+					default : setVariable(modifier.variable, adjustVariable(modifier, (float) getVariable(modifier.variable))); break;
+				}
+			}
+		}
+	}
+	
+	@Override
 	public void remove(){
 		super.remove();
 		if(fakePart != null){
@@ -253,11 +277,11 @@ public class PartGroundDevice extends APart{
 	}
 	
 	public float getMotiveFriction(){
-		return !isFlat ? definition.ground.motiveFriction : definition.ground.motiveFriction/10F;
+		return !isFlat ? currentMotiveFriction : currentMotiveFriction/10F;
 	}
 	
 	public float getLateralFriction(){
-		return !isFlat ? definition.ground.lateralFriction : definition.ground.lateralFriction/10F;
+		return !isFlat ? currentLateralFriction : currentLateralFriction/10F;
 	}
 		
 	public float getLongPartOffset(){

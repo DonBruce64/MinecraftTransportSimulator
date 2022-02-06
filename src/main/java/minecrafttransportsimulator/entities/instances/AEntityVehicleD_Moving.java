@@ -56,9 +56,13 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	public double weightTransfer = 0;
 	
 	//Properties
+	@ModifiedValue
 	public float currentDownForce;
+	@ModifiedValue
 	public float currentBrakingFactor;
+	@ModifiedValue
 	public float currentOverSteer;
+	@ModifiedValue
 	public float currentUnderSteer;
 	
 	//Road-following data.

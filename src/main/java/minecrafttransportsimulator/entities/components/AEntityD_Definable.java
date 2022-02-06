@@ -972,8 +972,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 	
 	/**
 	 * Indicates that this field is a derived value from
-	 * one of the variables in {@link AEntityD_Definable#variables},
-	 * or one of the states in {@link AEntityD_Definable#variablesOn},
+	 * one of the variables in {@link AEntityD_Definable#variables}.
 	 * Variables that are derived are parsed from the map every update.
 	 * To modify them you will need to update their values in the respective
 	 * variable set via 
@@ -983,5 +982,26 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 	 */
 	@Retention(RetentionPolicy.SOURCE)
     @Target({ElementType.FIELD})
-	protected static @interface DerivedValue{}
+	public static @interface DerivedValue{}
+	
+	/**
+	 * Indicates that this field is able to be modified via variable modification
+	 * by the code in {@link AEntityE_Interactable#updateVariableModifiers()},
+	 * This annotation is only for variables that are NOT derived from states
+	 * and annotated with {@link DerivedValue}, as those variables can inherently
+	 * be modified as they are derived from the variable states. 
+	 */
+	@Retention(RetentionPolicy.SOURCE)
+    @Target({ElementType.FIELD})
+	public static @interface ModifiableValue{}
+	
+	/**
+	 * Indicates that this field is a modified version of a field annotated with
+	 * {@link ModifiableValue}.  This is done to prevent modifying the parsed
+	 * definition entry that contains the value, which is why it's stored
+	 * in a new variable that gets aligned every tick before updates. 
+	 */
+	@Retention(RetentionPolicy.SOURCE)
+    @Target({ElementType.FIELD})
+	public static @interface ModifiedValue{}
 }

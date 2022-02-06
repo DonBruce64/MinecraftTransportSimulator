@@ -4,6 +4,7 @@ import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.entities.components.AEntityD_Definable.ModifiableValue;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 
@@ -87,12 +88,15 @@ public class JSONVehicle extends AJSONPartProvider{
     	@JSONDescription("This parameter is optional.  If included, and set to anything besides 0, the vehicle will be considered to have landing gear, with the transition between up and down having the passed-in duration.  Most of the time you'll be using your own animations, so this is more just to make the gear lever appear in the panel and to tell MTS how to change the light states for it.")
     	public int gearSequenceDuration;
     	
+    	@ModifiableValue
     	@JSONDescription("The amount of steering force output for cars. The value functions between 0 and 1, with 1 being full steering force at any speed and 0 being normal MTS steering force.")
         public float downForce;
 	
+    	@ModifiableValue
     	@JSONDescription("A value dictating the oversteer force of a vehicle when skidding.")
     	public float overSteer;
     	
+    	@ModifiableValue
     	@JSONDescription("A value dictating the understeer force of a vehicle when skidding.")
     	public float underSteer;
     	
@@ -102,9 +106,11 @@ public class JSONVehicle extends AJSONPartProvider{
     	@JSONDescription("Used similarly to underSteer to control the exact rate of skidding during extreme deceleration.")
     	public float overSteerDecel;
 	
+    	@ModifiableValue
     	@JSONDescription("The gear ratio present for the axle of this vehicle.  This is a constant, vehicle-specific ratio that will be multiplied with the gear ratio of the currently-selected gear of the engine to determine the rotation of the wheels.  A good many cars have a 3.55 ratio, but other of course are possible.  All depends on how much power you expect your engine to have, and how fast you want your car to go.  Note that this parameter is required if you want your engine to drive wheels and you have isFrontWheelDrive or isRearWheelDrive set.")
     	public float axleRatio;
     	
+    	@ModifiableValue
     	@JSONDescription("The factor for how effective the brakes are on this vehicle.  1.0 is default, with higher values making for more effective brakes.  Note that this doesn't affect braking in bad weather, with flat tires, or missing wheels, as should be obvious.")
     	public float brakingFactor;
     	
@@ -114,30 +120,37 @@ public class JSONVehicle extends AJSONPartProvider{
     	@JSONDescription("How fast flaps deploy, in degrees/tick.  Only used if the vehicle has flap notches set.")
         public float flapSpeed;
     	
+    	@ModifiableValue
     	@JSONDescription("How areodynamic this vehicle is.  Defaults to 0.03 for aircraft, and 2.0 for cars, but can be adjusted to other values.  For things like cars this will make a significant difference in your high-speed performance.  So do some research before you slap some random value in here!  If you don't set this parameter, one will be automatically generated.  Planes and non-planes have a different formula, as planes are more areodynamic than most other vehicles.")
     	public float dragCoefficient;
     	
     	@JSONDescription("The distance from the center of rotation of the model, to the center point of the tail, in the Z-axis, in meters.  This essentially tells MTS where the rudder and elevators are located so it knows where to apply the forces they create.")
     	public float tailDistance;
     	
+    	@ModifiableValue
     	@JSONDescription("The wingspan of this vehicle, or distance between the wingtips, in meters.")
     	public float wingSpan;
     	
+    	@ModifiableValue
     	@JSONDescription("The surface area of the wings of this vehicle, in square meters.  Make sure not to include the fuselage between the wings as that doesn't generate lift!")
         public float wingArea;
     	
+    	@ModifiableValue
     	@JSONDescription("Similar to wingArea, but for the ailerons.  Units are square meters.")
         public float aileronArea;
     	
+    	@ModifiableValue
     	@JSONDescription("Similar to wingArea, but for the elevators.  Units are square meters.")
         public float elevatorArea;
     	
+    	@ModifiableValue
     	@JSONDescription("Similar to wingArea, but for the rudder.  Units are square meters.")
         public float rudderArea;
     	
     	@JSONDescription("The cross-sectional area of this vehicle, at its thickest point.  This is used to calculate yaw-based drag on vehicles.  Auto-calculated if left blank, and not required for most vehicles (and has no effect on winged vehicles), but is pretty much required on blimps to ensure they generate enough dynamic drag to allow the rudder to change their direction.")
         public float crossSectionalArea;
     	
+    	@ModifiableValue
     	@JSONDescription("How big the ballast volume is for this vehicle.  An average value is 1/1000 of the empty weight.  Set higher or lower to your liking.  This will let your vehicle vertically ascend without power.  Used for blimps and janky elevators.")
         public float ballastVolume;
         
