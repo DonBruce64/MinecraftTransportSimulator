@@ -103,7 +103,7 @@ public class InterfaceJEI implements IModPlugin{
 			this.benchItem = benchItem;
 			this.benchRecipes = benchRecipes;
 			this.background = guiHelper.createDrawable(new ResourceLocation(MasterLoader.MODID, "textures/guis/jei_crafting.png"), 0, 0, 134, 97);
-			this.icon = guiHelper.createDrawableIngredient(benchItem.getNewStack(null));
+			this.icon = guiHelper.createDrawableIngredient(benchItem.getNewStack(null).stack);
 		}
 
 		@Override
