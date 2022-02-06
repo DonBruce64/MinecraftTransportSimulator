@@ -21,35 +21,50 @@ public class PacketTileEntityLoaderConnection extends APacketEntity<ATileEntityL
 	
 	public PacketTileEntityLoaderConnection(ATileEntityLoader loader, boolean connect){
 		super(loader);
-		this.linkedID = loader.connectedPart.entityOn.uniqueUUID;
-		this.partOffset = loader.connectedPart.placementOffset;
+		if(loader.connectedPart != null){
+			this.linkedID = loader.connectedPart.entityOn.uniqueUUID;
+			this.partOffset = loader.connectedPart.placementOffset;
+		}else{
+			this.linkedID = null;
+			this.partOffset = null;
+		}
 		this.connect = connect;
 	}
 	
 	public PacketTileEntityLoaderConnection(ByteBuf buf){
 		super(buf);
-		this.linkedID = readUUIDFromBuffer(buf);
-		this.partOffset = readPoint3dFromBuffer(buf);
+		if(buf.readBoolean()){
+			this.linkedID = readUUIDFromBuffer(buf);
+			this.partOffset = readPoint3dFromBuffer(buf);
+		}else{
+			this.linkedID = null;
+			this.partOffset = null;
+		}
 		this.connect = buf.readBoolean();
 	}
 	
 	@Override
 	public void writeToBuffer(ByteBuf buf){
 		super.writeToBuffer(buf);
-		writeUUIDToBuffer(linkedID, buf);
-		buf.writeBoolean(connect);
+		if(linkedID != null){
+			buf.writeBoolean(true);
+			writeUUIDToBuffer(linkedID, buf);
+			buf.writeBoolean(connect);
+		}else{
+			buf.writeBoolean(false);
+		}
 		writePoint3dToBuffer(partOffset, buf);
 	}
 	
 	@Override
 	protected boolean handle(WrapperWorld world, ATileEntityLoader loader){
 		AEntityF_Multipart<?> entity = world.getEntity(linkedID);
-		if(entity != null){
-			if(connect){
+		if(connect){
+			if(entity != null){
 				loader.connectToPart((PartInteractable) entity.getPartAtLocation(partOffset));
-			}else{
-				loader.connectToPart(null);
 			}
+		}else{
+			loader.connectToPart(null);
 		}
 		return true;
 	}
