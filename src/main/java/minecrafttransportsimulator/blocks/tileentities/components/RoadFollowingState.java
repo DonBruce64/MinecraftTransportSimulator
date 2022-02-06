@@ -27,6 +27,13 @@ public class RoadFollowingState{
 		this.currentSegment = currentSegment;
 	}
 	
+	public RoadFollowingState(RoadFollowingState state){
+		this.lane = state.lane;
+		this.curve = state.curve;
+		this.goingForwards = state.goingForwards;
+		this.currentSegment = state.currentSegment;
+	}
+	
 	@Override
 	public boolean equals(Object obj){
 		if(obj instanceof RoadFollowingState){

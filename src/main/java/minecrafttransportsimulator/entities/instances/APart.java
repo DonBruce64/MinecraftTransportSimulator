@@ -46,7 +46,7 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 	/**The entity this part has been placed on.*/
 	public final AEntityF_Multipart<?> entityOn;
 	/**The vehicle this part has been placed on, or null if it wasn't placed on a vehicle.*/
-	protected final EntityVehicleF_Physics vehicleOn;
+	public final EntityVehicleF_Physics vehicleOn;
 	/**The parent of this part, if this part is a sub-part of a part or an additional part for an entity.*/
 	public final APart parentPart;
 	/**Children to this part.  Can be either additional parts or sub-parts.*/

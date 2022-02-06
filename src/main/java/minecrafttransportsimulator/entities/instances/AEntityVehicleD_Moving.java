@@ -230,16 +230,16 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	
 	@Override
 	public boolean needsChunkloading(){
-		return rearFollower != null || (towedByConnection != null && towedByConnection.hitchBaseEntity instanceof AEntityVehicleD_Moving && ((AEntityVehicleD_Moving) towedByConnection.hitchBaseEntity).rearFollower != null);
+		return rearFollower != null || (towedByConnection != null && ((AEntityVehicleD_Moving) towedByConnection.hitchVehicle).rearFollower != null);
 	}
 	
 	@Override
 	public boolean canCollideWith(AEntityB_Existing entityToCollide){
-		if(towedByConnection != null && entityToCollide.equals(towedByConnection.hitchBaseEntity)){
+		if(towedByConnection != null && entityToCollide.equals(towedByConnection.hitchVehicle)){
 			return false;
 		}else if(!towingConnections.isEmpty()){
 			for(TrailerConnection connection : towingConnections){
-				if(entityToCollide.equals(connection.hookupBaseEntity)){
+				if(entityToCollide.equals(connection.hookupVehicle)){
 					return false;
 				}
 			}
@@ -254,6 +254,8 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			toggleVariable(PARKINGBRAKE_VARIABLE);
 		}
 		setVariable(BRAKE_VARIABLE, 0);
+		frontFollower = null;
+		rearFollower = null;
 	}
 	
 	@Override
@@ -394,7 +396,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 				
 				//If we are slipping while turning, set the slipping variable to let other systems know.
 				//Only do this as a main vehicle.  If we are a trailer, we don't do this unless the vehicle towing us is slipping.
-				slipping = towedByConnection == null ? (world.isClient() && motionFactor != 1 && velocity > 0.75) : (towedByConnection != null && towedByConnection.hitchBaseEntity instanceof AEntityVehicleD_Moving && ((AEntityVehicleD_Moving) towedByConnection.hitchBaseEntity).slipping);
+				slipping = towedByConnection == null ? (world.isClient() && motionFactor != 1 && velocity > 0.75) : (towedByConnection != null && towedByConnection.hitchVehicle.slipping);
 			}
 		}
 	}
@@ -545,9 +547,10 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		groundDeviceCollective.updateCollisions();
 		
 		//If we aren't on a road, try to find one.
-		//Only do this if we aren't turning, and if we aren't being towed, and we aren't an aircraft.
+		//If we are an aircraft, don't check as we shouldn't have aircraft on roads.
+		//If we are being towed, only check if the towing vehicle is on the road (since we should be on one too). 
 		world.beginProfiling("RoadChecks", false);
-		if(towedByConnection != null || definition.motorized.isAircraft){
+		if(definition.motorized.isAircraft || (towedByConnection != null && !towedByConnection.hitchVehicle.lockedOnRoad)){
 			frontFollower = null;
 			rearFollower = null;
 		}else if((frontFollower == null || rearFollower == null) && ticksExisted%20 == 0){
@@ -555,9 +558,23 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			Point3d rearContact = groundDeviceCollective.getContactPoint(false);
 			if(frontContact != null && rearContact != null){
 				rearFollower = getFollower();
+				//If we are being towed, and we got followers, adjust them to our actual position.
+				//This is because we might have connected to the vehicle this tick, but won't be aligned
+				//to our towed position as connections are exact.
 				if(rearFollower != null){
-					double pointDelta = rearContact.distanceTo(frontContact);
-					frontFollower = new RoadFollowingState(rearFollower.lane, rearFollower.curve, rearFollower.goingForwards, rearFollower.currentSegment).updateCurvePoints((float) pointDelta, LaneSelectionRequest.NONE);
+					float pointDelta = (float) rearContact.distanceTo(frontContact);
+					if(towedByConnection == null){
+						frontFollower = new RoadFollowingState(rearFollower.lane, rearFollower.curve, rearFollower.goingForwards, rearFollower.currentSegment).updateCurvePoints(pointDelta, LaneSelectionRequest.NONE);
+					}else{
+						float segmentDelta = (float) (towedByConnection.getHitchCurrentPosition().subtract(towedByConnection.hitchVehicle.position).length() + towedByConnection.getHookupCurrentPosition().subtract(towedByConnection.hookupVehicle.position).length());
+						if(towedByConnection.hitchEntity instanceof APart ? ((APart) towedByConnection.hitchEntity).localOffset.z <= 0 : towedByConnection.hitchConnection.pos.z <= 0){
+							segmentDelta = -segmentDelta;
+						}
+						rearFollower = new RoadFollowingState(((AEntityVehicleD_Moving) towedByConnection.hitchVehicle).rearFollower);
+						rearFollower.updateCurvePoints(segmentDelta, ((AEntityVehicleD_Moving) towedByConnection.hitchVehicle).selectedSegment);
+						frontFollower = new RoadFollowingState(rearFollower);
+						frontFollower.updateCurvePoints(pointDelta, ((AEntityVehicleD_Moving) towedByConnection.hitchVehicle).selectedSegment);
+					}
 				}
 			}
 		}
@@ -678,7 +695,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 					if(correctCollidingMovement()){
 						return;
 					}
-					towedByConnection.hitchBaseEntity.motion.add(motion).subtract(initalMotion);
+					towedByConnection.hitchVehicle.motion.add(motion).subtract(initalMotion);
 				}else if(correctCollidingMovement()){
 					return;
 				}
@@ -744,7 +761,15 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		world.beginProfiling("ApplyMotions", false);
 		motionApplied.setTo(motion).multiply(SPEED_FACTOR).add(roadMotion).add(collisionMotion);
 		rotationApplied.setTo(rotation).add(roadRotation).add(collisionRotation);
-		pathingApplied = lockedOnRoad ? (goingInReverse ? -velocity*SPEED_FACTOR : velocity*SPEED_FACTOR) : 0;
+		if(lockedOnRoad){
+			if(towedByConnection != null){
+				pathingApplied = ((AEntityVehicleD_Moving) towedByConnection.hitchVehicle).pathingApplied;
+			}else{
+				pathingApplied = goingInReverse ? -velocity*SPEED_FACTOR : velocity*SPEED_FACTOR;
+			}
+		}else{
+			pathingApplied = 0;
+		}
 		collisionMotion.set(0, 0, 0);
 		collisionRotation.set(0, 0, 0);
 		if(!world.isClient()){

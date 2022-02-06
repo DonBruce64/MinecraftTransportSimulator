@@ -180,17 +180,15 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 			EntityVehicleF_Physics otherVehicle = null;
 			for(TrailerConnection connection : towingConnections){
 				//Only check once per base entity.
-				if(connection.hookupBaseEntity instanceof EntityVehicleF_Physics){
-					otherVehicle = (EntityVehicleF_Physics) connection.hookupBaseEntity;
-					if(towedVehiclesCheckedForWeights.contains(otherVehicle)){
-						InterfaceCore.logError("Infinite loop detected on weight checking code!  Is a trailer towing the thing that's towing it?");
-						break;
-					}else{
-						towedVehiclesCheckedForWeights.add(otherVehicle);
-						combinedMass += otherVehicle.getMass();
-						otherVehicle = null;
-						towedVehiclesCheckedForWeights.clear();
-					}
+				otherVehicle = connection.hookupVehicle;
+				if(towedVehiclesCheckedForWeights.contains(otherVehicle)){
+					InterfaceCore.logError("Infinite loop detected on weight checking code!  Is a trailer towing the thing that's towing it?");
+					break;
+				}else{
+					towedVehiclesCheckedForWeights.add(otherVehicle);
+					combinedMass += otherVehicle.getMass();
+					otherVehicle = null;
+					towedVehiclesCheckedForWeights.clear();
 				}
 			}
 			//If we still have a vehicle reference, we didn't exit cleanly and need to disconnect it.
@@ -544,7 +542,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 			rotation.y = (sideVector.y*totalTorque.x - verticalVector.y*totalTorque.y)/momentYaw;
 			rotation.z = totalTorque.z/momentRoll;
 			rotation.add(rotorRotation);
-		}else{
+		}else if(!lockedOnRoad){
 			//If we are a trailer that is mounted, just move the vehicle to the exact position of the trailer connection.
 			//Otherwise, do movement logic  Make sure the towed vehicle is loaded, however.  It may not yet be.
 			if(towedByConnection.hitchConnection.mounted){
@@ -594,6 +592,9 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 				rotation.x = 0;
 				rotation.z = 0;
 			}
+		}else{
+			motion.setTo(towedByConnection.hitchVehicle.motion);
+			rotation.set(0, 0, 0);
 		}
 	}
 	
@@ -761,7 +762,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	public double getRawVariableValue(String variable, float partialTicks){
 		//If we are a forwarded variable and are a connected trailer, do that now.
 		if(definition.motorized.isTrailer && towedByConnection != null && definition.motorized.hookupVariables.contains(variable)){
-			return towedByConnection.hitchBaseEntity.getRawVariableValue(variable, partialTicks);
+			return towedByConnection.hitchVehicle.getRawVariableValue(variable, partialTicks);
 		}
 		
 		//Not a part of a forwarded variable.  Just return normally.

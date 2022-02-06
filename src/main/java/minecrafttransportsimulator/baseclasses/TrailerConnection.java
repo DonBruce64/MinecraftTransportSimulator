@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.instances.APart;
+import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.jsondefs.JSONConnection;
 import minecrafttransportsimulator.jsondefs.JSONConnectionGroup;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -21,9 +22,9 @@ public class TrailerConnection{
 	public final int hookupGroupIndex;
 	public final int hookupConnectionIndex;
 	public AEntityE_Interactable<?> hitchEntity;
-	public AEntityE_Interactable<?> hitchBaseEntity;
+	public EntityVehicleF_Physics hitchVehicle;
 	public AEntityE_Interactable<?> hookupEntity;
-	public AEntityE_Interactable<?> hookupBaseEntity;
+	public EntityVehicleF_Physics hookupVehicle;
 	public JSONConnectionGroup hitchConnectionGroup;
 	public JSONConnection hitchConnection;
 	public JSONConnectionGroup hookupConnectionGroup;
@@ -55,7 +56,7 @@ public class TrailerConnection{
 			hitchEntity = world.getEntity(hitchEntityUUID);
 		}
 		if(hitchEntity != null){
-			hitchBaseEntity = hitchEntity instanceof APart ? ((APart) hitchEntity).entityOn : hitchEntity;
+			hitchVehicle = hitchEntity instanceof APart ? ((APart) hitchEntity).vehicleOn : (EntityVehicleF_Physics) hitchEntity;
 			hitchConnectionGroup = hitchEntity.definition.connectionGroups.get(hitchGroupIndex);
 			hitchConnection = hitchConnectionGroup.connections.get(hitchConnectionIndex);
 		}
@@ -63,7 +64,7 @@ public class TrailerConnection{
 			hookupEntity = world.getEntity(hookupEntityUUID);
 		}
 		if(hookupEntity != null){
-			hookupBaseEntity = hookupEntity instanceof APart ? ((APart) hookupEntity).entityOn : hookupEntity;
+			hookupVehicle = hookupEntity instanceof APart ? ((APart) hookupEntity).vehicleOn : (EntityVehicleF_Physics) hookupEntity;
 			hookupConnectionGroup = hookupEntity.definition.connectionGroups.get(hookupGroupIndex);
 			hookupConnection = hookupConnectionGroup.connections.get(hookupConnectionIndex);
 		}

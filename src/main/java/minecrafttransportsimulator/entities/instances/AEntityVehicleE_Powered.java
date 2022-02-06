@@ -136,7 +136,7 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 					if(parkingBrakeOn){
 						toggleVariable(PARKINGBRAKE_VARIABLE);
 					}
-					setVariable(BRAKE_VARIABLE, ((AEntityVehicleE_Powered) towedByConnection.hitchBaseEntity).brake);
+					setVariable(BRAKE_VARIABLE, towedByConnection.hitchVehicle.brake);
 				}else{
 					if(!parkingBrakeOn){
 						toggleVariable(PARKINGBRAKE_VARIABLE);
@@ -165,7 +165,7 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 			//If we are too damaged, don't hold any charge.
 			if(definition.motorized.isTrailer){
 				if(towedByConnection != null){
-					electricPower = ((AEntityVehicleE_Powered) towedByConnection.hitchBaseEntity).electricPower;
+					electricPower = towedByConnection.hitchVehicle.electricPower;
 				}
 			}else if(damageAmount < definition.general.health){
 				if(electricPower > 2 && renderTextLit()){

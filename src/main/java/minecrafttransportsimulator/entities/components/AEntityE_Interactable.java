@@ -126,7 +126,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 	 * do this, then there may be a 1-tick de-sync between towing and towed entities if the towed entity gets
 	 * updated before the one towing it.
 	 **/
-	private boolean overrideTowingChecks;
+	protected boolean overrideTowingChecks;
 	
 	//Connection data.
 	public TrailerConnection towedByConnection;
@@ -540,9 +540,9 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 		if(!towingConnections.isEmpty()){
 			world.beginProfiling("TowedEntities", true);
 			for(TrailerConnection connection : towingConnections){
-				connection.hookupBaseEntity.overrideTowingChecks = true;
-				connection.hookupBaseEntity.update();
-				connection.hookupBaseEntity.overrideTowingChecks = false;
+				connection.hookupVehicle.overrideTowingChecks = true;
+				connection.hookupVehicle.update();
+				connection.hookupVehicle.overrideTowingChecks = false;
 			}
 			world.endProfiling();
 		}
@@ -912,7 +912,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 		}else{
 			//Check to make sure the hookupEntity isn't towing the hitchEntity.
 			for(TrailerConnection connection : hookupEntity.getTowingConnections()){
-				if(connection.hookupEntity.equals(hitchEntity) || connection.hookupBaseEntity.equals(hitchEntity)){
+				if(connection.hookupEntity.equals(hitchEntity) || connection.hookupVehicle.equals(hitchEntity)){
 					return false;
 				}
 			}
@@ -997,7 +997,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 			
 			//Also set trailer yaw.
 			for(TrailerConnection trailerConnection : towingConnections){
-				trailerConnection.hookupBaseEntity.updateAnglesToTowed();
+				trailerConnection.hookupVehicle.updateAnglesToTowed();
 			}
 		}
 	}
