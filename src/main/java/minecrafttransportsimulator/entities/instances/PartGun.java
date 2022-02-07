@@ -3,6 +3,8 @@ package minecrafttransportsimulator.entities.instances;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.vecmath.Matrix3d;
+
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
@@ -54,8 +56,9 @@ public class PartGun extends APart{
 	public int bulletsReloading;
 	public int bulletsRemovedThisRequest;
 	public int currentMuzzleGroupIndex;
-	//public final Matrix4dPlus currentInternalElevation;
-	//public final Matrix4dPlus prevInternalElevation;
+	public final Point3dPlus internalAngles;
+	public final Matrix4dPlus internalOrientation;
+	public final Matrix4dPlus prevInternalOrientation;
 	public ItemBullet loadedBullet;
 	
 	//These variables are used during firing and will be reset on loading.
@@ -73,8 +76,13 @@ public class PartGun extends APart{
 	private WrapperEntity entityTarget;
 	private long millisecondCamOffset;
 	private long lastTimeFired;
-	private Matrix4dPlus firingSpreadMatrix = new Matrix4dPlus();
+	private final Matrix4dPlus zeroReferenceOrientation;
+	private Point3dPlus controllerVector = new Point3dPlus();
+	private Point3dPlus gunVector = new Point3dPlus();
+	private Matrix3d helperRotator = new Matrix3d();
+	private Matrix4dPlus helperTransformer = new Matrix4dPlus();
 	private Point3dPlus firingSpreadAngles = new Point3dPlus();
+	private Matrix4dPlus firingSpreadMatrix = new Matrix4dPlus();
 	public final List<Integer> bulletsHitOnServer = new ArrayList<Integer>();
 	public final RenderableObject muzzleWireframe = new RenderableObject(new BoundingBox(new Point3dPlus(), 0.25, 0.25, 0.25), ColorRGB.BLUE, false);
 		
@@ -130,9 +138,11 @@ public class PartGun extends APart{
 		this.bulletsLeft = data.getInteger("bulletsLeft");
 		this.bulletsReloading = data.getInteger("bulletsReloading");
 		this.currentMuzzleGroupIndex = data.getInteger("currentMuzzleGroupIndex");
-		//FIXME fix this.
-		//this.currentInternalElevation = new Matrix4dPlus(new Point3dPlus(data.getDouble("internalElevation"), 0, 0));
-		//this.prevInternalElevation = new Matrix4dPlus(currentInternalElevation);
+		this.internalAngles = data.getPoint3d("internalAngles");
+		this.internalOrientation = new Matrix4dPlus();
+		internalOrientation.setToAngles(internalAngles);
+		this.prevInternalOrientation = new Matrix4dPlus(internalOrientation);
+		this.zeroReferenceOrientation = new Matrix4dPlus();
 		String loadedBulletPack = data.getString("loadedBulletPack");
 		String loadedBulletName = data.getString("loadedBulletName");
 		if(!loadedBulletPack.isEmpty()){
@@ -160,147 +170,160 @@ public class PartGun extends APart{
 	
 	@Override
 	public boolean update(){
-		//Set gun state and do updates.
-		firedThisCheck = false;
-		if(isActive && !placementDefinition.isSpare){
-			//Check if we have a controller.
-			//We aren't making sentry turrets here.... yet.
-			WrapperEntity controller = getController();
-			if(controller != null){
-				lastController = controller;
-				if(entityOn instanceof EntityPlayerGun){
-					state = state.promote(GunState.CONTROLLED);
-				}else{
-					//If this gun type can only have one selected at a time, check that this has the selected index.
-					PartSeat controllerSeat = (PartSeat) entityOn.getPartAtLocation(entityOn.locationRiderMap.inverse().get(controller));
-					if(controller != null && controllerSeat != null && gunItem.equals(controllerSeat.activeGun) && (!definition.gun.fireSolo || entityOn.partsByItem.get(gunItem).get(controllerSeat.gunIndex).equals(this))){
+		if(super.update()){
+			//Set gun state and do updates.
+			//First get our zero-reference.
+			if(parentPart != null && placementDefinition.isSubPart){
+				zeroReferenceOrientation.set(parentPart.orientation);
+			}else{
+				zeroReferenceOrientation.set(entityOn.orientation);
+			}
+			zeroReferenceOrientation.mul(placementDefinition.rot);
+			
+			//Now set our state.
+			firedThisCheck = false;
+			prevInternalOrientation.set(internalOrientation);
+			if(isActive && !placementDefinition.isSpare){
+				//Check if we have a controller.
+				//We aren't making sentry turrets here.... yet.
+				WrapperEntity controller = getController();
+				if(controller != null){
+					lastController = controller;
+					if(entityOn instanceof EntityPlayerGun){
 						state = state.promote(GunState.CONTROLLED);
 					}else{
-						state = state.demote(GunState.ACTIVE);
-						controller = null;
-					}
-				}
-			}
-			if(controller == null){
-				//If we aren't being controller, check if we have any coaxial guns.
-				//If we do, and they have a controller, then we use that as our controller.
-				//This allows them to control this gun without being the actual controller for firing.
-				if(!childParts.isEmpty()){
-					for(APart part : childParts){
-						if(part instanceof PartGun && part.placementDefinition.isCoAxial){
-							controller = ((PartGun) part).getController();
-							if(controller != null){
-								state = state.promote(GunState.CONTROLLED);
-								break;
-							}
+						//If this gun type can only have one selected at a time, check that this has the selected index.
+						PartSeat controllerSeat = (PartSeat) entityOn.getPartAtLocation(entityOn.locationRiderMap.inverse().get(controller));
+						if(controller != null && controllerSeat != null && gunItem.equals(controllerSeat.activeGun) && (!definition.gun.fireSolo || entityOn.partsByItem.get(gunItem).get(controllerSeat.gunIndex).equals(this))){
+							state = state.promote(GunState.CONTROLLED);
+						}else{
+							state = state.demote(GunState.ACTIVE);
+							controller = null;
 						}
 					}
 				}
 				if(controller == null){
-					state = state.demote(GunState.ACTIVE);
-				}
-			}
-			
-			//Adjust yaw and pitch to the direction of the controller.
-			if(state.isAtLeast(GunState.CONTROLLED)){
-				handleControl(controller);
-			}
-			
-			//Set final gun active state and variables.
-			boolean ableToFire = windupTimeCurrent == definition.gun.windupTime && bulletsLeft > 0 && (!definition.gun.isSemiAuto || !firedThisRequest);
-			if(ableToFire && state.isAtLeast(GunState.FIRING_REQUESTED)){
-				//Set firing to true if we aren't firing, and we've waited long enough since the last firing command.
-				//If we don't wait, we can bypass the cooldown by toggling the trigger.
-				long timeSinceFiring = System.currentTimeMillis() - lastTimeFired;
-				if(!state.isAtLeast(GunState.FIRING_CURRENTLY) && timeSinceFiring >= millisecondFiringDelay){
-					List<APart> allGuns = entityOn.partsByItem.get(gunItem);
-					//Check if we have a primary gun.  If so, we may need to adjust cams to resume the firing sequence.
-					int sequenceIndex = allGuns.indexOf(this);
-					APart lastPrimaryPart = entityOn.lastPrimaryPart.get(gunItem);
-					if(lastPrimaryPart != null){
-						sequenceIndex = sequenceIndex - 1 - allGuns.indexOf(lastPrimaryPart);
-						if(sequenceIndex < 0){
-							sequenceIndex += allGuns.size();
-						}
-					}
-
-					state = state.promote(GunState.FIRING_CURRENTLY);
-					millisecondCamOffset = definition.gun.fireSolo ? 0 : millisecondFiringDelay*sequenceIndex/allGuns.size();
-					lastTimeFired = System.currentTimeMillis() + millisecondCamOffset;
-					//For clients, we offset the time fired back one cycle, so we can spawn the first bullet.
-					//This will be set current in the particle spawning logic.
-					if(world.isClient()){
-						lastTimeFired -= millisecondFiringDelay;
-					}
-				}
-			}else if(!ableToFire){
-				state = state.demote(GunState.FIRING_REQUESTED);
-				ticksFiring = 0;
-				if(!state.isAtLeast(GunState.FIRING_REQUESTED)){
-					firedThisRequest = false;
-				}
-			}
-			
-			//If we are on the server, check if we are firing and can remove a bullet this tick.
-			//This uses a total time of firing to account for partial tick firing rates on clients.
-			if(!world.isClient()){
-				if(state.isAtLeast(GunState.FIRING_CURRENTLY)){
-					int bulletsToRemove = definition.gun.isSemiAuto ? 1 : (int) ((++ticksFiring + definition.gun.fireDelay - millisecondCamOffset/50)/definition.gun.fireDelay - bulletsRemovedThisRequest);
-					if(bulletsToRemove > 0){
-						//Need to take muzzle count into account.
-						bulletsToRemove *= definition.gun.muzzleGroups.get(currentMuzzleGroupIndex).muzzles.size();
-						firedThisRequest = true;
-						bulletsLeft -= bulletsToRemove;
-						bulletsRemovedThisRequest += bulletsToRemove;
-						bulletsFired += bulletsToRemove;
-						entityOn.lastPrimaryPart.put(gunItem, this);
-						if(definition.gun.muzzleGroups.size() == ++currentMuzzleGroupIndex){
-							currentMuzzleGroupIndex = 0;
-						}
-						if(bulletsLeft <= 0){
-							bulletsLeft = 0;
-							loadedBullet = null;
-						}
-					}
-				}else{
-					bulletsRemovedThisRequest = 0;
-				}
-			}
-			
-			//If we can accept bullets, and aren't currently loading any, re-load ourselves from any inventories.
-			//While the reload method checks for reload time, we check here to save on code processing.
-			//No sense in looking for bullets if we can't load them anyways.
-			if(!world.isClient() && bulletsLeft < definition.gun.capacity && bulletsReloading == 0){
-				if(entityOn instanceof EntityPlayerGun){
-					if(definition.gun.autoReload || bulletsLeft == 0){
-						//Check the player's inventory for bullets.
-						WrapperInventory inventory = ((WrapperPlayer) lastController).getInventory();
-						for(int i=0; i<inventory.getSize(); ++i){
-							WrapperItemStack stack = inventory.getStack(i);
-							AItemBase item = stack.getItem();
-							if(item instanceof ItemBullet){
-								if(tryToReload((ItemBullet) item)){
-									//Bullet is right type, and we can fit it.  Remove from player's inventory and add to the gun.
-									inventory.removeFromSlot(i, 1);
+					//If we aren't being controller, check if we have any coaxial guns.
+					//If we do, and they have a controller, then we use that as our controller.
+					//This allows them to control this gun without being the actual controller for firing.
+					if(!childParts.isEmpty()){
+						for(APart part : childParts){
+							if(part instanceof PartGun && part.placementDefinition.isCoAxial){
+								controller = ((PartGun) part).getController();
+								if(controller != null){
+									state = state.promote(GunState.CONTROLLED);
 									break;
 								}
 							}
 						}
 					}
-				}else{
-					if(definition.gun.autoReload){
-						//Iterate through all the inventory slots in crates to try to find matching ammo.
-						for(APart part : entityOn.parts){
-							if(part instanceof PartInteractable && part.definition.interactable.interactionType.equals(InteractableComponentType.CRATE) && part.isActive && part.definition.interactable.feedsVehicles){
-								EntityInventoryContainer inventory = ((PartInteractable) part).inventory;
-								for(int i=0; i<inventory.getSize(); ++i){
-									WrapperItemStack stack = inventory.getStack(i);
-									AItemBase item = stack.getItem();
-									if(item instanceof ItemBullet){
-										if(tryToReload((ItemBullet) item)){
-											//Bullet is right type, and we can fit it.  Remove from crate and add to the gun.
-											inventory.removeFromSlot(i, 1);
-											break;
+					if(controller == null){
+						state = state.demote(GunState.ACTIVE);
+					}
+				}
+				
+				//Adjust yaw and pitch to the direction of the controller.
+				if(state.isAtLeast(GunState.CONTROLLED)){
+					handleControl(controller);
+				}
+				
+				//Set final gun active state and variables.
+				boolean ableToFire = windupTimeCurrent == definition.gun.windupTime && bulletsLeft > 0 && (!definition.gun.isSemiAuto || !firedThisRequest);
+				if(ableToFire && state.isAtLeast(GunState.FIRING_REQUESTED)){
+					//Set firing to true if we aren't firing, and we've waited long enough since the last firing command.
+					//If we don't wait, we can bypass the cooldown by toggling the trigger.
+					long timeSinceFiring = System.currentTimeMillis() - lastTimeFired;
+					if(!state.isAtLeast(GunState.FIRING_CURRENTLY) && timeSinceFiring >= millisecondFiringDelay){
+						List<APart> allGuns = entityOn.partsByItem.get(gunItem);
+						//Check if we have a primary gun.  If so, we may need to adjust cams to resume the firing sequence.
+						int sequenceIndex = allGuns.indexOf(this);
+						APart lastPrimaryPart = entityOn.lastPrimaryPart.get(gunItem);
+						if(lastPrimaryPart != null){
+							sequenceIndex = sequenceIndex - 1 - allGuns.indexOf(lastPrimaryPart);
+							if(sequenceIndex < 0){
+								sequenceIndex += allGuns.size();
+							}
+						}
+
+						state = state.promote(GunState.FIRING_CURRENTLY);
+						millisecondCamOffset = definition.gun.fireSolo ? 0 : millisecondFiringDelay*sequenceIndex/allGuns.size();
+						lastTimeFired = System.currentTimeMillis() + millisecondCamOffset;
+						//For clients, we offset the time fired back one cycle, so we can spawn the first bullet.
+						//This will be set current in the particle spawning logic.
+						if(world.isClient()){
+							lastTimeFired -= millisecondFiringDelay;
+						}
+					}
+				}else if(!ableToFire){
+					state = state.demote(GunState.FIRING_REQUESTED);
+					ticksFiring = 0;
+					if(!state.isAtLeast(GunState.FIRING_REQUESTED)){
+						firedThisRequest = false;
+					}
+				}
+				
+				//If we are on the server, check if we are firing and can remove a bullet this tick.
+				//This uses a total time of firing to account for partial tick firing rates on clients.
+				if(!world.isClient()){
+					if(state.isAtLeast(GunState.FIRING_CURRENTLY)){
+						int bulletsToRemove = definition.gun.isSemiAuto ? 1 : (int) ((++ticksFiring + definition.gun.fireDelay - millisecondCamOffset/50)/definition.gun.fireDelay - bulletsRemovedThisRequest);
+						if(bulletsToRemove > 0){
+							//Need to take muzzle count into account.
+							bulletsToRemove *= definition.gun.muzzleGroups.get(currentMuzzleGroupIndex).muzzles.size();
+							firedThisRequest = true;
+							bulletsLeft -= bulletsToRemove;
+							bulletsRemovedThisRequest += bulletsToRemove;
+							bulletsFired += bulletsToRemove;
+							entityOn.lastPrimaryPart.put(gunItem, this);
+							if(definition.gun.muzzleGroups.size() == ++currentMuzzleGroupIndex){
+								currentMuzzleGroupIndex = 0;
+							}
+							if(bulletsLeft <= 0){
+								bulletsLeft = 0;
+								loadedBullet = null;
+							}
+						}
+					}else{
+						bulletsRemovedThisRequest = 0;
+					}
+				}
+				
+				//If we can accept bullets, and aren't currently loading any, re-load ourselves from any inventories.
+				//While the reload method checks for reload time, we check here to save on code processing.
+				//No sense in looking for bullets if we can't load them anyways.
+				if(!world.isClient() && bulletsLeft < definition.gun.capacity && bulletsReloading == 0){
+					if(entityOn instanceof EntityPlayerGun){
+						if(definition.gun.autoReload || bulletsLeft == 0){
+							//Check the player's inventory for bullets.
+							WrapperInventory inventory = ((WrapperPlayer) lastController).getInventory();
+							for(int i=0; i<inventory.getSize(); ++i){
+								WrapperItemStack stack = inventory.getStack(i);
+								AItemBase item = stack.getItem();
+								if(item instanceof ItemBullet){
+									if(tryToReload((ItemBullet) item)){
+										//Bullet is right type, and we can fit it.  Remove from player's inventory and add to the gun.
+										inventory.removeFromSlot(i, 1);
+										return true;
+									}
+								}
+							}
+						}
+					}else{
+						if(definition.gun.autoReload){
+							//Iterate through all the inventory slots in crates to try to find matching ammo.
+							for(APart part : entityOn.parts){
+								if(part instanceof PartInteractable && part.definition.interactable.interactionType.equals(InteractableComponentType.CRATE) && part.isActive && part.definition.interactable.feedsVehicles){
+									EntityInventoryContainer inventory = ((PartInteractable) part).inventory;
+									for(int i=0; i<inventory.getSize(); ++i){
+										WrapperItemStack stack = inventory.getStack(i);
+										AItemBase item = stack.getItem();
+										if(item instanceof ItemBullet){
+											if(tryToReload((ItemBullet) item)){
+												//Bullet is right type, and we can fit it.  Remove from crate and add to the gun.
+												//Return here to ensure we don't set the loadedBullet to blank since we found bullets.
+												inventory.removeFromSlot(i, 1);
+												return true;
+											}
 										}
 									}
 								}
@@ -308,46 +331,46 @@ public class PartGun extends APart{
 						}
 					}
 				}
+				
+				//If we are reloading, decrement the reloading timer.
+				//If we are done reloading, add the new bullets.
+				//This comes after the reloading block as we need a 0/1 state-change for the various animations,
+				//so at some point the reload time needs to hit 0.
+				if(reloadTimeRemaining > 0){
+					--reloadTimeRemaining;
+				}else if(bulletsReloading != 0){
+					bulletsLeft += bulletsReloading;
+					bulletsReloading = 0;
+				}
+			}else{
+				//Inactive gun, set as such and set to default position if we have one.
+				state = GunState.INACTIVE;
+				entityTarget = null;
+				if(definition.gun.resetPosition){
+					handleMovement(defaultYaw, defaultPitch);
+				}
 			}
 			
-			//If we are reloading, decrement the reloading timer.
-			//If we are done reloading, add the new bullets.
-			//This comes after the reloading block as we need a 0/1 state-change for the various animations,
-			//so at some point the reload time needs to hit 0.
-			if(reloadTimeRemaining > 0){
-				--reloadTimeRemaining;
-			}else if(bulletsReloading != 0){
-				bulletsLeft += bulletsReloading;
-				bulletsReloading = 0;
+			
+			//Increment or decrement windup.
+			//This is done outside the main active area as windup can wind-down on deactivated guns.
+			if(state.isAtLeast(GunState.FIRING_REQUESTED)){
+				if(windupTimeCurrent < definition.gun.windupTime){
+					++windupTimeCurrent;
+				}
+			}else if(windupTimeCurrent > 0){
+				--windupTimeCurrent;
 			}
+			windupRotation += windupTimeCurrent;
+			
+			//Reset fire command bit if we aren't firing.
+			if(!state.isAtLeast(GunState.FIRING_REQUESTED)){
+				firedThisRequest = false;
+			}
+			return true;
 		}else{
-			//Inactive gun, set as such and set to default position if we have one.
-			state = GunState.INACTIVE;
-			entityTarget = null;
-			if(definition.gun.resetPosition){
-				handleMovement(defaultYaw, defaultPitch);
-			}
+			return false;
 		}
-		
-		
-		//Increment or decrement windup.
-		//This is done outside the main active area as windup can wind-down on deactivated guns.
-		if(state.isAtLeast(GunState.FIRING_REQUESTED)){
-			if(windupTimeCurrent < definition.gun.windupTime){
-				++windupTimeCurrent;
-			}
-		}else if(windupTimeCurrent > 0){
-			--windupTimeCurrent;
-		}
-		windupRotation += windupTimeCurrent;
-		
-		//Reset fire command bit if we aren't firing.
-		if(!state.isAtLeast(GunState.FIRING_REQUESTED)){
-			firedThisRequest = false;
-		}
-		
-		//Now fire super updates.  We have to do these after ourselves so we have the right state.
-		return super.update();
 	}
 	
 	/**
@@ -430,22 +453,49 @@ public class PartGun extends APart{
 			}
 		}
 	
-		//Get the actual angle this gun is as.  This needs to remove all part-based animations we applied to this gun.
-		//This is because if the gun moves based on those animations, we shouldn't take them into account.
-		//For pitch, we need to find the relative angle of the player to the entity's 0-pitch plane.
-		//When the player rotates their head, they don't do so relative to the pitch of the entity the gun is on, 
-		//so a yaw change can result in a pitch change.
+		//Get the delta between our orientation and the player's orientation.
+		//This is used to determine the gun's desired rotation direction for this tick.
+		//We only care about the gun's zero-point and the player's head in this case.
+		//For both though, we inverse-transform them to put them into global coords.
+		//This allows us to get a set of euler angles to do rotation operations with.
 		if(!(entityOn instanceof EntityPlayerGun)){
-			//FIXME needs to use oreintation when we get that worked out.
-			/*
-			double partYawContribution = localAngles.y - prevGunOrientation.y;
-			double partPitchContribution = definition.gun.pitchIsInternal ? localAngles.x : localAngles.x - prevGunOrientation.x;
-			double entityPitchContribution = (entityOn.angles.x + partPitchContribution)*Math.cos(Math.toRadians(partYawContribution));
-			double entityRollContribution = (entityOn.angles.z + localAngles.z)*Math.sin(Math.toRadians(partYawContribution));
-			double targetYaw = controller.getYaw() - (entityOn.angles.y + partYawContribution);
-			double targetPitch = controller.getPitch() - (entityPitchContribution + entityRollContribution);
-			handleMovement(targetYaw, targetPitch);
-			*/
+			//Get a vector that represent's the controllers orientation.
+			controllerVector.set(0, 0, 1);
+			
+			//Do inverse rotation for the controller's orientation.
+			helperTransformer.set(controller.getOrientation());
+			helperTransformer.getRotationScale(helperRotator);
+			helperRotator.transpose();
+			helperRotator.transform(controllerVector);
+			
+			//Now do inverse rotation for the seat they are sitting in.
+			PartSeat sittingSeat = (PartSeat) entityOn.getPartAtLocation(entityOn.locationRiderMap.inverse().get(controller));
+			sittingSeat.orientation.getRotationScale(helperRotator);
+			helperRotator.transpose();
+			helperRotator.transform(controllerVector);
+			
+			//Now get one that is for our orientation.
+			gunVector.set(0, 0, 1);
+			
+			//Do inverse rotation for our internal orientation.
+			internalOrientation.getRotationScale(helperRotator);
+			helperRotator.transpose();
+			helperRotator.transform(gunVector);
+			
+			//Do inverse rotation for our zero orientation.
+			zeroReferenceOrientation.getRotationScale(helperRotator);
+			helperRotator.transpose();
+			helperRotator.transform(gunVector);
+			
+			//Now that we have two vectors in global space, get the angles between them.
+			//This will feed into our movement code as it's now relative values for the gun.
+			//FIXME fix normal-aiming.
+			System.out.println(controllerVector);
+			controllerVector.getAngles(false);
+			gunVector.getAngles(false);
+			controllerVector.sub(gunVector);
+			controllerVector.invert();
+			handleMovement(controllerVector.y, controllerVector.x);
 		}
 	}
 	
@@ -454,65 +504,69 @@ public class PartGun extends APart{
 	 * Returns true if the movement was impeded by a clamp.
 	 * Only call this ONCE per update loop as it sets prev values.
 	 */
-	private void handleMovement(double targetYaw, double targetPitch){
+	private void handleMovement(double deltaYaw, double deltaPitch){
 		//Set prev orientation now that we don't need it for the gun delta calculations.
-		/*prevInternalElevation.setTo(currentInternalElevation);
+		prevInternalOrientation.set(internalOrientation);
+		prevInternalOrientation.lastAnglesSet.set(internalOrientation.lastAnglesSet);
 		
 		//Adjust yaw.  We need to normalize the delta here as yaw can go past -180 to 180.
-		double deltaYaw = -currentInternalElevation.getClampedYDelta(targetYaw);
+		if(deltaYaw < -180)deltaYaw += 360;
+		if(deltaYaw > 180)deltaYaw -= 360;
 		if(deltaYaw < 0){
 			if(deltaYaw < -definition.gun.yawSpeed){
 				deltaYaw = -definition.gun.yawSpeed;
 			}
-			currentInternalElevation.y += deltaYaw; 
+			internalAngles.y += deltaYaw; 
 		}else if(deltaYaw > 0){
 			if(deltaYaw > definition.gun.yawSpeed){
 				deltaYaw = definition.gun.yawSpeed;
 			}
-			currentInternalElevation.y += deltaYaw;
+			internalAngles.y += deltaYaw;
 		}
 		
 		//Apply yaw clamps.
 		//If yaw is from -180 to 180, we are a gun that can spin around on its mount.
 		//We need to do special logic for this type of gun.
 		if(minYaw == -180  && maxYaw == 180){
-			if(currentInternalElevation.y > 180 ){
-				currentInternalElevation.y -= 360;
-				prevInternalElevation.y -= 360;
-			}else if(currentInternalElevation.y < -180){
-				currentInternalElevation.y += 360;
-				prevInternalElevation.y += 360;
+			if(internalAngles.y > 180 ){
+				internalAngles.y -= 360;
+				prevInternalOrientation.lastAnglesSet.y -= 360;
+			}else if(internalAngles.y < -180){
+				internalAngles.y += 360;
+				prevInternalOrientation.lastAnglesSet.y += 360;
 			}
 		}else{
-			if(currentInternalElevation.y > maxYaw){
-				currentInternalElevation.y = maxYaw;
+			if(internalAngles.y > maxYaw){
+				internalAngles.y = maxYaw;
 			}
-			if(currentInternalElevation.y < minYaw){
-				currentInternalElevation.y = minYaw;
+			if(internalAngles.y < minYaw){
+				internalAngles.y = minYaw;
 			}
 		}
 		
 		//Adjust pitch.
-		double deltaPitch = targetPitch - currentInternalElevation.x;
 		if(deltaPitch < 0){
 			if(deltaPitch < -definition.gun.pitchSpeed){
 				deltaPitch = -definition.gun.pitchSpeed;
 			}
-			currentInternalElevation.x += deltaPitch; 
+			internalAngles.x += deltaPitch; 
 		}else if(deltaPitch > 0){
 			if(deltaPitch > definition.gun.pitchSpeed){
 				deltaPitch = definition.gun.pitchSpeed;
 			}
-			currentInternalElevation.x += deltaPitch;
+			internalAngles.x += deltaPitch;
 		}
 		
 		//Apply pitch clamps.
-		if(currentInternalElevation.x > maxPitch){
-			currentInternalElevation.x = maxPitch;
+		if(internalAngles.x > maxPitch){
+			internalAngles.x = maxPitch;
 		}
-		if(currentInternalElevation.x < minPitch){
-			currentInternalElevation.x = minPitch;
-		}*/
+		if(internalAngles.x < minPitch){
+			internalAngles.x = minPitch;
+		}
+		
+		//Update internal orientation.
+		internalOrientation.setToAngles(internalAngles);
 	}
 	
 	/**
@@ -595,27 +649,24 @@ public class PartGun extends APart{
 		//Set velocity.
 		bulletVelocity.set(0, 0, definition.gun.muzzleVelocity/20D/10D);
 		if(definition.gun.bulletSpreadFactor > 0){
-			//FIXME fix this.
-			//firingSpreadAngles.set((Math.random() - 0.5F)*definition.gun.bulletSpreadFactor, (Math.random() - 0.5F)*definition.gun.bulletSpreadFactor, 0D);
-			///new Matrix4dPlus(new Point3dPlus().transform(bulletVelocity);
+			firingSpreadAngles.set((Math.random() - 0.5F)*definition.gun.bulletSpreadFactor, (Math.random() - 0.5F)*definition.gun.bulletSpreadFactor, 0D);
+			firingSpreadMatrix.setToAngles(firingSpreadAngles);
+			firingSpreadMatrix.transform(bulletVelocity);
 		}
+		
 		//Now that velocity is set, rotate it to match the gun's orientation.
-		orientation.transform(bulletVelocity);
+		//For this, we get the reference orientation, and our internal orientation.
 		muzzle.rot.transform(bulletVelocity);
-		if(definition.gun.pitchIsInternal){
-			//currentInternalElevation.transform(bulletVelocity);
-		}
+		internalOrientation.transform(bulletVelocity);
+		zeroReferenceOrientation.transform(bulletVelocity);
 		
 		//Add gun velocity to bullet to ensure we spawn with the offset.
 		bulletVelocity.scaleAdd(EntityVehicleF_Physics.SPEED_FACTOR, motion, bulletVelocity);
 
 		//Now set position.
 		bulletPosition.set(muzzle.pos);
-		if(definition.gun.pitchIsInternal){
-			//FIXME fix this.
-			//currentInternalElevation.rotateWithOffset(bulletPosition, muzzle.center);
-		}
-		orientation.transform(bulletPosition);
+		internalOrientation.transform(bulletPosition);
+		zeroReferenceOrientation.transform(bulletPosition);
 		bulletPosition.add(position);
 	}
 	
@@ -627,11 +678,10 @@ public class PartGun extends APart{
 			case("gun_firing"): return state.isAtLeast(GunState.FIRING_CURRENTLY) ? 1 : 0;
 			case("gun_fired"): return firedThisCheck ? 1 : 0;
 			case("gun_lockedon"): return entityTarget != null ? 1 : 0;
-			//FIXME fix these.
-			//case("gun_pitch"): return prevInternalElevation.x + (currentInternalElevation.x - prevInternalElevation.x)*partialTicks;
-			//case("gun_yaw"): return prevInternalElevation.y + (currentInternalElevation.y - prevInternalElevation.y)*partialTicks;
-			//case("gun_pitching"): return prevInternalElevation.x != currentInternalElevation.x ? 1 : 0;
-			//case("gun_yawing"): return prevInternalElevation.y != currentInternalElevation.y ? 1 : 0;
+			case("gun_pitch"): return prevInternalOrientation.lastAnglesSet.x + (internalOrientation.lastAnglesSet.x - prevInternalOrientation.lastAnglesSet.x)*partialTicks;
+			case("gun_yaw"): return prevInternalOrientation.lastAnglesSet.y + (internalOrientation.lastAnglesSet.y - prevInternalOrientation.lastAnglesSet.y)*partialTicks;
+			case("gun_pitching"): return prevInternalOrientation.lastAnglesSet.x != internalOrientation.lastAnglesSet.x ? 1 : 0;
+			case("gun_yawing"): return prevInternalOrientation.lastAnglesSet.y != internalOrientation.lastAnglesSet.y ? 1 : 0;
 			case("gun_cooldown"): return state.isAtLeast(GunState.FIRING_CURRENTLY) && lastTimeFired != 0 ? (System.currentTimeMillis() - lastTimeFired)/50D : 0;
 			case("gun_windup_time"): return windupTimeCurrent;
 			case("gun_windup_rotation"): return windupRotation;
@@ -718,8 +768,7 @@ public class PartGun extends APart{
 		data.setInteger("bulletsLeft", bulletsLeft);
 		data.setInteger("bulletsReloading", bulletsReloading);
 		data.setInteger("currentMuzzleGroupIndex", currentMuzzleGroupIndex);
-		//FIXME fix this.
-		//data.setDouble("internalElevation", currentInternalElevation.rotation);
+		data.setPoint3d("internalAngles", internalAngles);
 		if(loadedBullet != null){
 			data.setString("loadedBulletPack", loadedBullet.definition.packID);
 			data.setString("loadedBulletName", loadedBullet.definition.systemName);

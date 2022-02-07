@@ -327,9 +327,6 @@ public class JSONPart extends AJSONPartProvider{
 		@JSONDescription("If set, the gun will only be able to be fired once per button press.")
     	public boolean isSemiAuto;
 		
-		@JSONDescription("Normally, guns should physically move themselves when the player looks up and down.  If you want this to be a virtual movement, say for a turret, then set this to true.  This will make the pitch applied only internally.  If this is set, do NOT physically move the gun with an animation.")
-    	public boolean pitchIsInternal;
-		
 		@JSONDescription("If true, this makes it so that only one of this type of gun can be selected and fired at a time. This is useful for missiles and bombs that have different types of ammunition, as you can load different guns with different types of ammunition, and switch between the individual guns. If not used or set to false, cycling through weapons will select all weapons of the same type.")
     	public boolean fireSolo;
 		

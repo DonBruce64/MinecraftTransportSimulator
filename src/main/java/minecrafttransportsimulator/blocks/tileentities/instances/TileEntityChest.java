@@ -1,8 +1,6 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
 
-import java.util.List;
-
 import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;

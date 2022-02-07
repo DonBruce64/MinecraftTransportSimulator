@@ -147,6 +147,11 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 				angles.set(0, 0, 0);
 				motion.set(0, 0, 0);
 			}
+			if(definition.packID.contains("potat")){
+				position.y = 24;
+				angles.set(0, angles.y, 0);
+				motion.set(0, 0, 0);
+			}
 			//Parse out variables.
 			aileronAngle = getVariable(AILERON_VARIABLE);
 			aileronTrim = getVariable(AILERON_TRIM_VARIABLE);

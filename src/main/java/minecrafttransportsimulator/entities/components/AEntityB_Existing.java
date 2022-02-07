@@ -67,7 +67,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 		this.axialOrientation = new Point3dPlus(0, 0, 1);
 		orientation.transform(axialOrientation);
 		this.placingPlayer = placingPlayer;
-		this.boundingBox = new BoundingBox(shouldLinkBoundsToPosition() ? position : new Point3dPlus(position), 0.5, 0.5, 0.5);
+		this.boundingBox = new BoundingBox(shouldLinkBoundsToPosition() ? this.position : new Point3dPlus(this.position), 0.5, 0.5, 0.5);
 		if(hasRadio()){
 			this.radio = new EntityRadio(this, data.getDataOrNew("radio"));
 			world.addEntity(radio);
@@ -92,7 +92,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 		this.axialOrientation = new Point3dPlus(0, 0, 1);
 		orientation.transform(axialOrientation);
 		this.placingPlayer = null;
-		this.boundingBox = new BoundingBox(shouldLinkBoundsToPosition() ? position : new Point3dPlus(position), 0.5, 0.5, 0.5);
+		this.boundingBox = new BoundingBox(shouldLinkBoundsToPosition() ? this.position : new Point3dPlus(this.position), 0.5, 0.5, 0.5);
 		this.radio = null;
 	}
 	
