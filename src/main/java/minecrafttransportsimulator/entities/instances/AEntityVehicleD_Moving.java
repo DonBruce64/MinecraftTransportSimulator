@@ -856,7 +856,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		if(motion.length() > 0.001){
 			boolean clearedCache = false;
 			for(BoundingBox box : allBlockCollisionBoxes){
-				tempBoxPosition.setTo(box.globalCenter).subtract(position).rotateFine(rotation).addScaled(motion, SPEED_FACTOR);
+				tempBoxPosition.setTo(box.globalCenter).subtract(position).rotateFine(rotation).subtract(box.globalCenter).add(position).addScaled(motion, SPEED_FACTOR);
 				if(!box.collidesWithLiquids && world.checkForCollisions(box, tempBoxPosition, !clearedCache)){
 					return true;
 				}
