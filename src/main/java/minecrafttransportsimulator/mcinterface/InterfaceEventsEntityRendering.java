@@ -109,7 +109,7 @@ public class InterfaceEventsEntityRendering{
 		}
 		
 		 //If we have a custom camera overlay active, don't render the crosshairs.
-		 if(event.getType().equals(RenderGameOverlayEvent.ElementType.CROSSHAIRS) && CameraSystem.customCameraOverlay != null){
+		 if(event.getType().equals(RenderGameOverlayEvent.ElementType.CROSSHAIRS) && (AGUIBase.activeGUIs.size() > 1 || CameraSystem.customCameraOverlay != null)){
 			 event.setCanceled(true);
 			 return;
 		 }
