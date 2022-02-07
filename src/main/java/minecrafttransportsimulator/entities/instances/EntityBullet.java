@@ -9,6 +9,7 @@ import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3d;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.JSONBullet;
+import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.packets.instances.PacketEntityBulletHit;
@@ -66,7 +67,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
         if(isBomb){
         	angles.setTo(gun.angles);
         }else{
-        	angles.setTo(motion.copy().getAngles(true));
+        	angles.setTo(motion).getAngles(true);
         }
         prevAngles.setTo(angles);
     }
@@ -97,117 +98,9 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
     @Override
 	public boolean update(){
 		if(super.update()){
-			//Get possible damage.
-			Damage damage = new Damage("bullet", velocity*definition.bullet.diameter/5*ConfigSystem.configObject.damage.bulletDamageFactor.value, boundingBox, gun, null);
-			
-			//Check for collided external entities and attack them.
-			List<WrapperEntity> attackedEntities = world.attackEntities(damage, motion);
-			if(!attackedEntities.isEmpty()){
-				//Only attack the first entity.  Bullets don't get to attack multiple per scan.
-				WrapperEntity entity = attackedEntities.get(0);
-				InterfacePacket.sendToServer(new PacketEntityBulletHitWrapper(this, entity));
-				lastHit = HitType.ENTITY;
-				remove();
-				return false;
-			}
-			
-			//Check for collided internal entities and attack them.
-			//This is a bit more involved, as we need to check all possible types and check hitbox distance.
-			Point3d endPoint = position.copy().add(motion);
-			for(EntityVehicleF_Physics entity : world.getEntitiesOfType(EntityVehicleF_Physics.class)){
-				double armorPenetrated = 0;
-				//Don't attack the entity that has the gun that fired us.
-				if(!entity.parts.contains(gun)){
-					//Make sure that we could even possibly hit this vehicle before we try and attack it.
-					if(entity.encompassingBox.intersects(boundingBox)){
-						//Get all collision boxes on the vehicle, and check if we hit any of them.
-						//Sort them by distance for later.
-						TreeMap<Double, BoundingBox> hitBoxes = new TreeMap<Double, BoundingBox>();
-						for(BoundingBox box : entity.allInteractionBoxes){
-							Point3d delta = box.getIntersectionPoint(position, endPoint); 
-							if(delta != null){
-								hitBoxes.put(delta.distanceTo(position), box);
-							}
-						}
-						
-						//If we hit at least one hitbox, do logic.
-						if(!hitBoxes.isEmpty()){
-							//Check all boxes for armor and see if we penetrated them.
-							Iterator<BoundingBox> hitBoxIterator = hitBoxes.values().iterator();
-							while(hitBoxIterator.hasNext()){
-								BoundingBox hitBox = hitBoxIterator.next();
-								if(hitBox.definition != null && hitBox.definition.armorThickness > 0){
-									if(hitBox.definition.armorThickness < definition.bullet.armorPenetration*velocity/initialVelocity - armorPenetrated){
-										armorPenetrated += hitBox.definition.armorThickness;
-									}else{
-										//hit armor.  Don't do anything except spawn explosions.
-										InterfacePacket.sendToServer(new PacketEntityBulletHit(this, hitBox.globalCenter));
-										lastHit = HitType.ARMOR;
-										remove();
-										return false;
-									}
-								}else{
-									APart hitPart = entity.getPartWithBox(hitBox);
-									if(hitPart != null){
-										InterfacePacket.sendToServer(new PacketEntityBulletHitEntity(this, hitBox, hitPart));
-										lastHit = HitType.PART;
-										remove();
-										return false;
-									}else{
-										InterfacePacket.sendToServer(new PacketEntityBulletHitEntity(this, hitBox, entity));
-										lastHit = HitType.ENTITY;
-										remove();
-										return false;
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-			
-			//Didn't hit an entity.  Check for blocks.
-			Point3d hitPos = world.getBlockHit(position, motion);
-			if(hitPos != null){
-				InterfacePacket.sendToServer(new PacketEntityBulletHitBlock(this, hitPos));
-				lastHit = HitType.BLOCK;
-				remove();
-				return false;
-			}
-			
-			//Check proximity fuze against our target or any blocks that might be out front
-			if(definition.bullet.proximityFuze != 0){
-				if(targetPosition != null){
-					double distanceUntilImpact = position.distanceTo(targetPosition);
-					if(distanceUntilImpact <= definition.bullet.proximityFuze){
-						InterfacePacket.sendToServer(new PacketEntityBulletHit(this, position));
-						lastHit = externalEntityTargeted != null ? HitType.ENTITY : (engineTargeted != null ? HitType.PART : HitType.BLOCK);
-						remove();
-						return false;
-					}
-				}
-				
-				if(world.getBlockHit(position, motion.copy().normalize().multiply(definition.bullet.proximityFuze)) != null){
-					InterfacePacket.sendToServer(new PacketEntityBulletHitBlock(this, position));
-					lastHit = HitType.BLOCK;
-					remove();
-					return false;
-				}
-			}
-			
-			//Didn't hit a block either. Check the air-burst time, if it was used.
-			if(definition.bullet.airBurstDelay != 0) {
-				if(ticksExisted > definition.bullet.airBurstDelay){
-					InterfacePacket.sendToServer(new PacketEntityBulletHit(this, position));
-					lastHit = HitType.BURST;
-					remove();
-					return false;
-				}
-			}
-			
-			//Nothing was hit, as we haven't returned yet.  Adjust motion to compensate for bullet movement and gravity.
-			//Ignore this if the bullet has a (rocket motor) burnTime that hasn't yet expired,
-			//And if the bullet is still accelerating, increase the velocity appropriately.
+			//Set motion before checking for collisions.  Adjust motion to compensate for bullet movement and gravity.
+			//Ignore this if the bullet has a burnTime (rocket motor) that hasn't yet expired,
+			//If the bullet is still accelerating, increase the velocity appropriately.
 			if(ticksExisted > definition.bullet.burnTime){
 				if(definition.bullet.slowdownSpeed > 0){
 					motion.add(motion.copy().normalize().multiply(-definition.bullet.slowdownSpeed));
@@ -216,6 +109,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 	
 				//Check to make sure we haven't gone too many ticks.
 				if(ticksExisted > definition.bullet.burnTime + 200){
+					if(ConfigSystem.configObject.clientControls.devMode.value)InterfaceClient.getClientPlayer().displayChatMessage("TIMEOUT");
 					remove();
 					return false;
 				}
@@ -304,11 +198,131 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 				}	
 			}
 			
+			//Now that we have an accurate motion, check for collisions.
+			//First get a damage object.
+			Damage damage = new Damage("bullet", velocity*definition.bullet.diameter/5*ConfigSystem.configObject.damage.bulletDamageFactor.value, boundingBox, gun, null);
+			
+			//Check for collided external entities and attack them.
+			List<WrapperEntity> attackedEntities = world.attackEntities(damage, motion);
+			if(!attackedEntities.isEmpty()){
+				//Only attack the first entity.  Bullets don't get to attack multiple per scan.
+				WrapperEntity entity = attackedEntities.get(0);
+				InterfacePacket.sendToServer(new PacketEntityBulletHitWrapper(this, entity));
+				lastHit = HitType.ENTITY;
+				if(ConfigSystem.configObject.clientControls.devMode.value)InterfaceClient.getClientPlayer().displayChatMessage("HIT ENTITY");
+				remove();
+				return false;
+			}
+			
+			//Check for collided internal entities and attack them.
+			//This is a bit more involved, as we need to check all possible types and check hitbox distance.
+			Point3d endPoint = position.copy().add(motion);
+			BoundingBox bulletMovmenetBounds = new BoundingBox(endPoint.copy().subtract(position).multiply(0.5D).add(position), Math.abs(motion.x/2D), Math.abs(motion.y/2D), Math.abs(motion.z/2D));
+			for(EntityVehicleF_Physics entity : world.getEntitiesOfType(EntityVehicleF_Physics.class)){
+				double armorPenetrated = 0;
+				//Don't attack the entity that has the gun that fired us.
+				if(!entity.parts.contains(gun)){
+					//Make sure that we could even possibly hit this vehicle before we try and attack it.
+					if(entity.encompassingBox.intersects(bulletMovmenetBounds)){
+						//Get all collision boxes on the vehicle, and check if we hit any of them.
+						//Sort them by distance for later.
+						TreeMap<Double, BoundingBox> hitBoxes = new TreeMap<Double, BoundingBox>();
+						for(BoundingBox box : entity.allInteractionBoxes){
+							Point3d delta = box.getIntersectionPoint(position, endPoint); 
+							if(delta != null){
+								hitBoxes.put(delta.distanceTo(position), box);
+							}
+						}
+						
+						//If we hit at least one hitbox, do logic.
+						if(!hitBoxes.isEmpty()){
+							//Check all boxes for armor and see if we penetrated them.
+							Iterator<BoundingBox> hitBoxIterator = hitBoxes.values().iterator();
+							while(hitBoxIterator.hasNext()){
+								BoundingBox hitBox = hitBoxIterator.next();
+								if(hitBox.definition != null && hitBox.definition.armorThickness > 0){
+									armorPenetrated += hitBox.definition.armorThickness;
+									if(armorPenetrated > definition.bullet.armorPenetration*velocity/initialVelocity){
+										//Hit too much armor.  Don't do anything except spawn explosions.
+										InterfacePacket.sendToServer(new PacketEntityBulletHit(this, hitBox.globalCenter));
+										lastHit = HitType.ARMOR;
+										if(ConfigSystem.configObject.clientControls.devMode.value)InterfaceClient.getClientPlayer().displayChatMessage("HIT TOO MUCH ARMOR.  MAX PEN: " + (int)(definition.bullet.armorPenetration*velocity/initialVelocity));
+										remove();
+										return false;
+									}
+								}else{
+									APart hitPart = entity.getPartWithBox(hitBox);
+									if(hitPart != null){
+										InterfacePacket.sendToServer(new PacketEntityBulletHitEntity(this, hitBox, hitPart));
+										lastHit = HitType.PART;
+										if(ConfigSystem.configObject.clientControls.devMode.value)InterfaceClient.getClientPlayer().displayChatMessage("HIT PART");
+										remove();
+										return false;
+									}else{
+										InterfacePacket.sendToServer(new PacketEntityBulletHitEntity(this, hitBox, entity));
+										lastHit = HitType.ENTITY;
+										if(ConfigSystem.configObject.clientControls.devMode.value)InterfaceClient.getClientPlayer().displayChatMessage("HIT VEHICLE");
+										remove();
+										return false;
+									}
+								}
+							}
+							if(armorPenetrated != 0){
+								if(ConfigSystem.configObject.clientControls.devMode.value)InterfaceClient.getClientPlayer().displayChatMessage("PEN ARMOR: " + (int)armorPenetrated + " TOTAL UNITS OUT OF " + (int)(definition.bullet.armorPenetration*velocity/initialVelocity) + " POSSIBLE");
+							}
+						}
+					}
+				}
+			}
+			
+			//Didn't hit an entity.  Check for blocks.
+			Point3d hitPos = world.getBlockHit(position, motion);
+			if(hitPos != null){
+				InterfacePacket.sendToServer(new PacketEntityBulletHitBlock(this, hitPos));
+				lastHit = HitType.BLOCK;
+				if(ConfigSystem.configObject.clientControls.devMode.value)InterfaceClient.getClientPlayer().displayChatMessage("HIT BLOCK");
+				remove();
+				return false;
+			}
+			
+			//Check proximity fuze against our target or any blocks that might be out front
+			if(definition.bullet.proximityFuze != 0){
+				if(targetPosition != null){
+					double distanceUntilImpact = position.distanceTo(targetPosition);
+					if(distanceUntilImpact <= definition.bullet.proximityFuze){
+						InterfacePacket.sendToServer(new PacketEntityBulletHit(this, position));
+						lastHit = externalEntityTargeted != null ? HitType.ENTITY : (engineTargeted != null ? HitType.PART : HitType.BLOCK);
+						if(ConfigSystem.configObject.clientControls.devMode.value)InterfaceClient.getClientPlayer().displayChatMessage("PROX FUSE");
+						remove();
+						return false;
+					}
+				}
+				
+				if(world.getBlockHit(position, motion.copy().normalize().multiply(definition.bullet.proximityFuze)) != null){
+					InterfacePacket.sendToServer(new PacketEntityBulletHitBlock(this, position));
+					lastHit = HitType.BLOCK;
+					if(ConfigSystem.configObject.clientControls.devMode.value)InterfaceClient.getClientPlayer().displayChatMessage("HIT BLOCK");
+					remove();
+					return false;
+				}
+			}
+			
+			//Didn't hit a block either. Check the air-burst time, if it was used.
+			if(definition.bullet.airBurstDelay != 0) {
+				if(ticksExisted > definition.bullet.airBurstDelay){
+					InterfacePacket.sendToServer(new PacketEntityBulletHit(this, position));
+					lastHit = HitType.BURST;
+					if(ConfigSystem.configObject.clientControls.devMode.value)InterfaceClient.getClientPlayer().displayChatMessage("BURST");
+					remove();
+					return false;
+				}
+			}
+			
 			//Add our updated motion to the position.
 			//Then set the angles to match the motion.
 			//Doing this last lets us damage on the first update tick.
 			if(!isBomb){
-				angles.setTo(angles.setTo(motion)).getAngles(true);
+				angles.setTo(motion).getAngles(true);
 			}
 			position.add(motion);
 			return true;
