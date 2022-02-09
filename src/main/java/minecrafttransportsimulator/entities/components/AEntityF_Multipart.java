@@ -213,7 +213,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 	public boolean addRider(WrapperEntity rider, Point3dPlus riderLocation){
 		//Auto-close doors for the rider in the seat they are going in, if such doors exist.
 		if(super.addRider(rider, riderLocation)){
-			PartSeat seat = (PartSeat) getPartAtLocation(locationRiderMap.inverse().get(rider));
+			PartSeat seat = getSeatForRider(rider);
 			if(seat != null && seat.placementDefinition.linkedVariables != null){
 				for(String variable : seat.placementDefinition.linkedVariables){
 					setVariable(variable, 0);
@@ -228,13 +228,34 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 	@Override
 	public void removeRider(WrapperEntity rider, Iterator<WrapperEntity> iterator){
 		//Auto-open doors for the rider in the seat they were in, if such doors exist.
-		PartSeat seat = (PartSeat) getPartAtLocation(locationRiderMap.inverse().get(rider));
+		PartSeat seat = getSeatForRider(rider);
 		if(seat != null && seat.placementDefinition.linkedVariables != null){
 			for(String variable : seat.placementDefinition.linkedVariables){
 				setVariable(variable, 1);
 			}
 		}
 		super.removeRider(rider, iterator);
+	}
+	
+	/**
+   	 *  Helper method to get the seat of a entity.
+   	 *  This  may return null if the entity isn't riding
+   	 *  us, or if the seat isn't loaded from NBT data yet (first tick).
+   	 */
+    public PartSeat getSeatForRider(WrapperEntity rider){
+    	return (PartSeat) getPartAtLocation(locationRiderMap.inverse().get(rider));
+    }
+    
+    /**
+	 *  Helper method used to get the controlling player for this entity.
+	 */
+	public WrapperPlayer getController(){
+		for(WrapperEntity rider : locationRiderMap.inverse().keySet()){
+			if(rider instanceof WrapperPlayer && getSeatForRider(rider).placementDefinition.isController){
+				return (WrapperPlayer) rider;
+			}
+		}
+		return null;
 	}
 	
 	@Override

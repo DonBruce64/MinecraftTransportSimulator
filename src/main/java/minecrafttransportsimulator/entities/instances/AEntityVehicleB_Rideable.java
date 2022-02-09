@@ -9,7 +9,6 @@ import minecrafttransportsimulator.guis.instances.GUIHUD;
 import minecrafttransportsimulator.guis.instances.GUIPanelAircraft;
 import minecrafttransportsimulator.guis.instances.GUIPanelGround;
 import minecrafttransportsimulator.guis.instances.GUIRadio;
-import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
@@ -64,9 +63,9 @@ abstract class AEntityVehicleB_Rideable extends AEntityF_Multipart<JSONVehicle>{
 		//on how the part they are riding moves.  If we modified the rider position, then we'd
 		//allow for multiple riders at the same position.  That's Bad Stuff.
 		//Update rider positions based on the location they are set to.
-		Point3dPlus riderPositionOffset = locationRiderMap.inverse().get(rider);
-		PartSeat seat = (PartSeat) getPartAtLocation(riderPositionOffset);
-		if(rider.isValid() && seat != null){
+		if(rider.isValid()){
+			PartSeat seat = getSeatForRider(rider);
+			
 			//Add all vehicle-wide effects to the rider
 			if(this.definition.effects != null) {
 				for(JSONPotionEffect effect: this.definition.effects){
@@ -92,27 +91,6 @@ abstract class AEntityVehicleB_Rideable extends AEntityF_Multipart<JSONVehicle>{
 			seatLocationOffset.add(0D, -rider.getEyeHeight(), 0D);
 			rider.setPosition(seatLocationOffset, false);
 			rider.setVelocity(motion);
-			
-			//Rotate the player with the vehicle.
-			//This depends on camera state and what we are in.  If we are in a seat with a gun, we need to keep these changes-in sync with the server.
-			boolean controllingGun = false;
-			for(APart part : parts){
-				if(part instanceof PartGun){
-					if(rider.equals(((PartGun) part).getController())){
-						controllingGun = true;
-					}
-				}
-			}
-            if(controllingGun || !world.isClient() || InterfaceClient.inFirstPerson() || lockCameraToMovement){
-            	//Get yaw delta between entity and player from -180 to 180.
-            	double playerYawDelta = (360 + (angles.y - rider.getYaw())%360)%360;
-            	if(playerYawDelta > 180){
-            		playerYawDelta-=360;
-            	}
-            	//FIXME update this.
-            	//rider.setYaw(rider.getYaw() + angles.y - prevAngles.y);
-        		//rider.setPitch(rider.getPitch() + angles.x - prevAngles.x);
-             }
 			
 			//If we are on the client, and the rider is the main client player, check controls.
 			//If the seat is a controller, and we have mouseYoke enabled, and our view is locked disable the mouse from MC.            	
@@ -141,10 +119,11 @@ abstract class AEntityVehicleB_Rideable extends AEntityF_Multipart<JSONVehicle>{
 			//We do this to ensure we don't have 360+ rotations to deal with.
 			//Need to invert the lookup as location may be null from the builder.
 			//Rider won't be, as it's required, so we can use it to get the actual location.
-			PartSeat newSeat = (PartSeat) getPartAtLocation(locationRiderMap.inverse().get(rider));
+			PartSeat sittingSeat = getSeatForRider(rider);
 			if(!riderAlreadyInSeat){
-				//FIXME we shouldn't use angles for this.  It's not gonna work well.
-				//rider.setYaw(newSeat.orientation.getAngles().y);
+				//Set pitch and yaw to 0 as we need to align with the seat.
+				rider.setYaw(0);
+				rider.setPitch(0);
 			}else{
 				//Clear out the panel if we're not in a controller seat.
 				if(world.isClient() && InterfaceClient.getClientPlayer().equals(rider)){
@@ -159,7 +138,7 @@ abstract class AEntityVehicleB_Rideable extends AEntityF_Multipart<JSONVehicle>{
 			}
 			//Open HUD if seat is controller. 
 			if(world.isClient() && InterfaceClient.getClientPlayer().equals(rider)){
-				new GUIHUD((EntityVehicleF_Physics) this, newSeat);
+				new GUIHUD((EntityVehicleF_Physics) this, sittingSeat);
 			}
 		}
 		
@@ -171,7 +150,7 @@ abstract class AEntityVehicleB_Rideable extends AEntityF_Multipart<JSONVehicle>{
 		//We override the default rider removal behavior here as the dismount position
 		//of riders can be modified via JSON or via part placement location.
 		//Get the position the rider was sitting in before we dismount them.
-		Point3dPlus riderLocation = locationRiderMap.inverse().get(rider);
+		PartSeat seat = getSeatForRider(rider);;
 		super.removeRider(rider, iterator);
 
 		//Get rid of any potion effects that were caused by the vehicle
@@ -181,45 +160,33 @@ abstract class AEntityVehicleB_Rideable extends AEntityF_Multipart<JSONVehicle>{
 			}
 		}
 		
-		//Get the part this rider is riding on.  This might be null if the part was removed (say due to a pack change).
-		JSONPartDefinition packPart = getPackDefForLocation(riderLocation);
-		
-		if(packPart != null){
-			//Get rid of any potion effects that were caused by the seat
-			if(packPart.seatEffects != null) {
-				for(JSONPotionEffect effect: packPart.seatEffects){
-					rider.removePotionEffect(effect);
-				}
+		//Get rid of any potion effects that were caused by the seat
+		if(seat.placementDefinition.seatEffects != null) {
+			for(JSONPotionEffect effect: seat.placementDefinition.seatEffects){
+				rider.removePotionEffect(effect);
 			}
-			
-			//Set the rider dismount position.
-			//If we have a dismount position in the JSON.  Use it.
-			//Otherwise, put us to the right or left of the seat depending on x-offset.
-			//Make sure to take into the movement of the seat we were riding if it had moved.
-			//This ensures the dismount moves with the seat.
-			Point3dPlus dismountPosition;
-			APart partRiding = getPartAtLocation(riderLocation);
-			if(packPart.dismountPos != null){
-				if(partRiding != null){
-					dismountPosition = packPart.dismountPos.copy().add(partRiding.localOffset).subtract(partRiding.placementOffset).rotateFine(angles).add(position);
-				}else{
-					dismountPosition = packPart.dismountPos.copy().rotateFine(angles).add(position);
-				}
-			}else{
-				if(partRiding != null){
-					Point3dPlus partDelta = partRiding.localOffset.copy().subtract(partRiding.placementOffset);
-					if(riderLocation.x < 0){
-						partDelta.x = -partDelta.x;
-						dismountPosition = riderLocation.copy().add(-2D, 0D, 0D).add(partDelta).rotateFine(angles).add(position);
-					}else{
-						dismountPosition = riderLocation.copy().add(2D, 0D, 0D).add(partDelta).rotateFine(angles).add(position);
-					}
-				}else{
-					dismountPosition = riderLocation.copy().add(riderLocation.x > 0 ? 2D : -2D, 0D, 0D).rotateFine(angles).add(position);
-				}
-			}
-			rider.setPosition(dismountPosition, false);
 		}
+		
+		//Set the rider dismount position.
+		//If we have a dismount position in the JSON.  Use it.
+		//Otherwise, put us to the right or left of the seat depending on x-offset.
+		//Make sure to take into the movement of the seat we were riding if it had moved.
+		//This ensures the dismount moves with the seat.
+		Point3dPlus dismountPosition;
+		if(seat.placementDefinition.dismountPos != null){
+			dismountPosition = new Point3dPlus(seat.placementDefinition.dismountPos);
+		}else{
+			dismountPosition = new Point3dPlus(seat.localOffset);
+			if(seat.placementOffset.x < 0){
+				dismountPosition.add(-2D, 0D, 0D);
+			}else{
+				dismountPosition.add(2D, 0D, 0D);
+			}
+		}
+		orientation.transform(dismountPosition);
+		dismountPosition.add(position);
+		rider.setPosition(dismountPosition, false);
+		rider.setOrientation(orientation);
 		
 		//If we are on the client, disable mouse-yoke blocking.
 		if(world.isClient() && InterfaceClient.getClientPlayer().equals(rider)){
@@ -233,19 +200,5 @@ abstract class AEntityVehicleB_Rideable extends AEntityF_Multipart<JSONVehicle>{
 			AGUIBase.closeIfOpen(GUIHUD.class);
 			AGUIBase.closeIfOpen(GUIRadio.class);
 		}
-	}
-	
-	/**
-	 *  Helper method used to get the controlling player for this vehicle.
-	 */
-	public WrapperPlayer getController(){
-		for(Point3dPlus location : locationRiderMap.keySet()){
-			PartSeat seat = (PartSeat) getPartAtLocation(location);
-			WrapperEntity rider = locationRiderMap.get(location);
-			if(seat != null && seat.placementDefinition.isController && rider instanceof WrapperPlayer){
-				return (WrapperPlayer) rider;
-			}
-		}
-		return null;
 	}
 }

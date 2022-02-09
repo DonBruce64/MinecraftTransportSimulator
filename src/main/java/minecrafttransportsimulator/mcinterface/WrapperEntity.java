@@ -9,7 +9,10 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
 import minecrafttransportsimulator.baseclasses.Point3dPlus;
+import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
+import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
+import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.entity.Entity;
@@ -225,6 +228,18 @@ public class WrapperEntity{
 	private float lastYawChecked;
 	
 	/**
+	 *  Sets the entity's orientation.
+	 *  Note that this method runs off the angles inside the
+	 *  matrix object, not the actual transform, so keep this in mind
+	 *  when calling this method.
+	 */
+	//TODO make this go away or change when we only use orientation (if ever).
+	public void setOrientation(Matrix4dPlus transform){
+		entity.rotationYaw = (float) -transform.lastAnglesSet.y;
+		entity.rotationPitch = (float) transform.lastAnglesSet.x;
+	}
+	
+	/**
 	 *  Returns the entity's pitch (x-axis rotation).
 	 */
 	public float getPitch(){
@@ -260,9 +275,26 @@ public class WrapperEntity{
 	 *  However, the object itself may be re-used on the next call, so do not keep references to it.
 	 */
 	public Point3dPlus getLineOfSight(double distance){
-		mutableSightRotation.set(entity.rotationPitch, -entity.rotationYaw, 0);
-		mutableSight.set(0,  0,  distance);
-		return mutableSight.rotateFine(mutableSightRotation);
+		//Need to check if we're riding a vehicle or not.  Vehicles adjust sight vectors.
+		PartSeat seat = null;
+		if(entity.getRidingEntity() instanceof BuilderEntityExisting){
+			AEntityB_Existing riding = ((BuilderEntityExisting) entity.getRidingEntity()).entity;
+			if(riding instanceof AEntityF_Multipart){
+				AEntityF_Multipart<?> multipart = (AEntityF_Multipart<?>) riding;
+				seat = multipart.getSeatForRider(this);
+			}
+		}
+		
+		if(seat != null){
+			mutableSight.set(0, 0, distance);
+			getOrientation().transform(mutableSight);
+			seat.orientation.transform(mutableSight);
+			return mutableSight;
+		}else{
+			mutableSightRotation.set(entity.rotationPitch, -entity.rotationYaw, 0);
+			mutableSight.set(0,  0,  distance);
+			return mutableSight.rotateFine(mutableSightRotation);
+		}
 	}
 	private final Point3dPlus mutableSight = new Point3dPlus();
 	private final Point3dPlus mutableSightRotation = new Point3dPlus();

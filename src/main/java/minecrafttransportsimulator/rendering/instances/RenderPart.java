@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.rendering.instances;
 
+import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
 import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.entities.instances.APart;
@@ -22,15 +24,10 @@ public class RenderPart extends ARenderEntityDefinable<APart>{
 			//Draw the gun muzzle bounding boxes.
 			if(part instanceof PartGun){
 				PartGun gun = (PartGun) part;
-				Point3dPlus bulletPosition = new Point3dPlus();
-				Point3dPlus bulletVelocity = new Point3dPlus();
 				for(JSONMuzzle muzzle : gun.definition.gun.muzzleGroups.get(gun.currentMuzzleGroupIndex).muzzles){
-					//FIXME this is probably not right, but we need guns working to test.
-					gun.setBulletSpawn(bulletPosition, bulletVelocity, muzzle);
-					bulletPosition.subtract(gun.position);
-					gun.muzzleWireframe.transform.set(transform);
-					gun.muzzleWireframe.transform.translate(bulletPosition);
-					gun.muzzleWireframe.render();
+					Point3dPlus muzzlePos = new Point3dPlus();
+					gun.setBulletSpawn(muzzlePos, new Point3dPlus(), muzzle);
+					new BoundingBox(muzzlePos, 0.25, 0.25, 0.25).renderWireframe(part, transform, null, ColorRGB.BLUE);
 				}
 			}
 		}

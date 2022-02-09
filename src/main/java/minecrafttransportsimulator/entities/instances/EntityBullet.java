@@ -51,13 +51,13 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 	
 	/**Generic constructor for no target.**/
     public EntityBullet(Point3dPlus position, Point3dPlus motion, PartGun gun){
-    	super(gun.world, position, motion, ZERO_FOR_CONSTRUCTOR, gun.loadedBullet);
+    	super(gun.world, position, motion.multiply(0.1D), ZERO_FOR_CONSTRUCTOR, gun.loadedBullet);
     	this.gun = gun;
         this.bulletNumber = gun.bulletsFired;
         this.isBomb = gun.definition.gun.muzzleVelocity == 0;
-        this.boundingBox.widthRadius = 1000*definition.bullet.diameter/2D;
-        this.boundingBox.heightRadius = 1000*definition.bullet.diameter/2D;
-        this.boundingBox.depthRadius = 1000*definition.bullet.diameter/2D;
+        this.boundingBox.widthRadius = definition.bullet.diameter/1000D/2D;
+        this.boundingBox.heightRadius = definition.bullet.diameter/1000D/2D;
+        this.boundingBox.depthRadius = definition.bullet.diameter/1000D/2D;
         this.initialVelocity = motion.length();
         this.anglePerTickSpeed = definition.bullet.turnFactor * 1000/definition.bullet.diameter;
         if(definition.bullet.accelerationTime > 0){

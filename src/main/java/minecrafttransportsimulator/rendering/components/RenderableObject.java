@@ -143,7 +143,7 @@ public class RenderableObject{
 	
 	/*Shortened constructor used for bounding boxes.  Automatically sets lighting and translucency depending on if the box
 	 * is holgraphic or wireframe as defined by the final boolean.**/
-	public RenderableObject(BoundingBox box, ColorRGB color, boolean holgraphic){
+	public RenderableObject(ColorRGB color, boolean holgraphic){
 		this("", holgraphic ? "mts:textures/rendering/holobox.png" : null, color, FloatBuffer.allocate(holgraphic ? BUFFERS_PER_HOLGRAPHIC_BOX : BUFFERS_PER_WIREFRAME_BOX), false);
 		if(holgraphic){
 			isTranslucent = true;

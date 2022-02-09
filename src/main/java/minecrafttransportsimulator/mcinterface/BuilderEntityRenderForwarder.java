@@ -1,10 +1,10 @@
 package minecrafttransportsimulator.mcinterface;
 
 import minecrafttransportsimulator.MasterLoader;
+import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.event.RegistryEvent;
@@ -48,7 +48,7 @@ public class BuilderEntityRenderForwarder extends ABuilderEntityBase{
     		//Need to move the fake entity forwards to account for the partial ticks interpolation MC does.
     		//If we don't do this, and we move faster than 1 block per tick, we'll get flickering.
     		double playerVelocity = Math.sqrt(playerFollowing.motionX*playerFollowing.motionX + playerFollowing.motionY*playerFollowing.motionY + playerFollowing.motionZ*playerFollowing.motionZ);
-    		Vec3d playerEyesVec = playerFollowing.getLookVec().scale(Math.max(1, playerVelocity/2));
+    		Point3dPlus playerEyesVec = WrapperEntity.getWrapperFor(playerFollowing).getLineOfSight(Math.max(1, playerVelocity/2));
     		setPosition(playerFollowing.posX + playerEyesVec.x, playerFollowing.posY + playerFollowing.eyeHeight + playerEyesVec.y, playerFollowing.posZ + playerEyesVec.z);
     	}else if(!world.isRemote){
 			//Don't restore saved entities on the server.

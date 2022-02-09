@@ -95,7 +95,7 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Renderable>{
 	 *  Renders the bounding boxes for the entity, if any are present.
 	 *  At this point, the translation and rotation done for the rendering 
 	 *  will be un-done, as boxes need to be rendered according to their world state.
-	 *  The passed-in delta is the delta between the player and the entity.
+	 *  The passed-in transform is between the player and the entity.
 	 */
 	public void renderBoundingBoxes(RenderedEntity entity, Matrix4dPlus transform){
 		entity.boundingBox.renderWireframe(entity, transform, null, null);	

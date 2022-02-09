@@ -59,7 +59,7 @@ public class CameraSystem{
     	//Get variables.
 		AEntityE_Interactable<?> ridingEntity = player.getEntityRiding();
 		AEntityF_Multipart<?> multipart = ridingEntity instanceof AEntityF_Multipart ? (AEntityF_Multipart<?>) ridingEntity : null;
-		PartSeat sittingSeat = multipart != null ? (PartSeat) multipart.getPartAtLocation(multipart.locationRiderMap.inverse().get(player)) : null;
+		PartSeat sittingSeat = multipart != null ? multipart.getSeatForRider(player) : null;
 		EntityPlayerGun playerGunEntity = EntityPlayerGun.playerClientGuns.get(player.getID());
     	
     	//Reset FOV adn overlay.
@@ -193,8 +193,8 @@ public class CameraSystem{
 			}else if(sittingSeat != null){
 				sittingSeat.getInterpolatedOrientation(cameraOrientation, partialTicks);
             	cameraOrientation.mul(player.getOrientation());
-            	//FIXME disabled till ractcasting works.
-            	return false;
+            	//FIXME fix ractcasting works.
+            	return true;
 			}
     	}else if(InterfaceClient.inThirdPerson()){
     		//If we were running a custom camera, and hit the switch key, increment our camera index.

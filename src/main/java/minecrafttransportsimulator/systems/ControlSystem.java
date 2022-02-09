@@ -136,7 +136,7 @@ public final class ControlSystem{
 		for(APart part : vehicle.parts){
 			if(part instanceof PartGun){
 				PartGun gun = (PartGun) part;
-				if(InterfaceClient.getClientPlayer().equals(gun.getController())){
+				if(InterfaceClient.getClientPlayer().equals(gun.getGunController())){
 					InterfacePacket.sendToServer(new PacketPartGun(gun, gunTrigger.isPressed(), false));
 				}
 			}else if(part instanceof PartSeat){

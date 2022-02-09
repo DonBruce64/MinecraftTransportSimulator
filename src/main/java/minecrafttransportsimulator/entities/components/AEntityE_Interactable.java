@@ -828,7 +828,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 			
 			//Didn't hit a collision box or found one with no health defined 
 			damageAmount += damage.amount;
-			//FIXME this goes away when we make fake guns go away.
+			//FIXME V20 this goes away when we make fake guns go away.
 			if(definition.general != null && damageAmount > definition.general.health){
 				double amountActuallyNeeded = damage.amount - (damageAmount - definition.general.health);
 				damageAmount = definition.general.health;

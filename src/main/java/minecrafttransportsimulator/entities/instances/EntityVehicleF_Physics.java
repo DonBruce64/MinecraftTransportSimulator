@@ -640,18 +640,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 		}
 		
 		//If we don't have a controller, reset control states to 0.
-		boolean haveController = false;
-		for(Point3dPlus partPos : locationRiderMap.keySet()){
-			APart part = getPartAtLocation(partPos);
-			if(part instanceof PartSeat){
-				if(part.placementDefinition.isController){
-					haveController = true;
-					break;
-				}
-			}
-		}
-		
-		if(!haveController && !lockedOnRoad){
+		if(getController() == null && !lockedOnRoad){
 			if(aileronAngle > AILERON_DAMPEN_RATE){
 				setVariable(AILERON_VARIABLE, aileronAngle - AILERON_DAMPEN_RATE);
 				InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_VARIABLE, -AILERON_DAMPEN_RATE, 0, MAX_AILERON_ANGLE));

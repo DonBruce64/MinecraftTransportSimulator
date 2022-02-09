@@ -437,6 +437,7 @@ public class InterfaceRender{
 	 *  This method manually renders all riders on an entity.  Useful if you're rendering the entity manually
 	 *  and the entity and its riders have been culled from rendering.
 	 */
+	//FIXME see if this is needed?
 	public static void renderEntityRiders(AEntityE_Interactable<?> entity, float partialTicks){
 		for(WrapperEntity rider : entity.locationRiderMap.values()){
 			Entity riderEntity = rider.entity;

@@ -216,7 +216,7 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 	public boolean addRider(WrapperEntity rider, Point3dPlus riderLocation){
 		if(super.addRider(rider, riderLocation)){
 			if(world.isClient() && ConfigSystem.configObject.clientControls.autostartEng.value && rider.equals(InterfaceClient.getClientPlayer())){
-				if(rider instanceof WrapperPlayer && locationRiderMap.containsValue(rider) && getPartAtLocation(locationRiderMap.inverse().get(rider)).placementDefinition.isController && canPlayerStartEngines((WrapperPlayer) rider)){
+				if(rider instanceof WrapperPlayer && getSeatForRider(rider).placementDefinition.isController && canPlayerStartEngines((WrapperPlayer) rider)){
 					for(PartEngine engine : engines.values()){
 						InterfacePacket.sendToServer(new PacketPartEngine(engine, Signal.AS_ON));
 					}
@@ -234,34 +234,28 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 	@Override
 	public void removeRider(WrapperEntity rider, Iterator<WrapperEntity> iterator){
 		if(world.isClient() && ConfigSystem.configObject.clientControls.autostartEng.value && rider.equals(InterfaceClient.getClientPlayer())){
-			if(rider instanceof WrapperPlayer && locationRiderMap.containsValue(rider)){
-				APart riddenPart = getPartAtLocation(locationRiderMap.inverse().get(rider));
+			PartSeat seat = getSeatForRider(rider);
+			if(rider instanceof WrapperPlayer && seat.placementDefinition.isController){
+				//Check if another player is in a controller seat.  If so, don't stop the engines.
 				boolean otherController = false;
-				if(riddenPart.placementDefinition.isController){
-					//Check if another player is in a controller seat.  If so, don't stop the engines.
-					for(APart part : parts){
-						if(!part.equals(riddenPart)){
-							if(locationRiderMap.containsKey(part.placementOffset)){
-								if(part.placementDefinition.isController){
-									otherController = true;
-									break;
-								}
-							}
+				for(WrapperEntity otherRider : locationRiderMap.inverse().keySet()){
+					if(!rider.equals(otherRider) && otherRider instanceof WrapperPlayer && getSeatForRider(otherRider).placementDefinition.isController){
+						otherController = true;
+						break;
+					}
+				}
+				if(!otherController){
+					for(PartEngine engine : engines.values()){
+						if(engine.magnetoOn){
+							InterfacePacket.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.MAGNETO_VARIABLE));
+						}
+						if(engine.electricStarterEngaged){
+							InterfacePacket.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.ELECTRIC_STARTER_VARIABLE));
 						}
 					}
-					if(!otherController){
-						for(PartEngine engine : engines.values()){
-							if(engine.magnetoOn){
-								InterfacePacket.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.MAGNETO_VARIABLE));
-							}
-							if(engine.electricStarterEngaged){
-								InterfacePacket.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.ELECTRIC_STARTER_VARIABLE));
-							}
-						}
-						InterfacePacket.sendToServer(new PacketEntityVariableSet(this, BRAKE_VARIABLE, 0));
-						if(!parkingBrakeOn){
-							InterfacePacket.sendToServer(new PacketEntityVariableToggle(this, PARKINGBRAKE_VARIABLE));
-						}
+					InterfacePacket.sendToServer(new PacketEntityVariableSet(this, BRAKE_VARIABLE, 0));
+					if(!parkingBrakeOn){
+						InterfacePacket.sendToServer(new PacketEntityVariableToggle(this, PARKINGBRAKE_VARIABLE));
 					}
 				}
 			}

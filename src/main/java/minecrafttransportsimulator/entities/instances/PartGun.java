@@ -3,10 +3,6 @@ package minecrafttransportsimulator.entities.instances;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.vecmath.Matrix3d;
-
-import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
 import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
@@ -23,7 +19,6 @@ import minecrafttransportsimulator.mcinterface.WrapperItemStack;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.instances.PacketPartGun;
-import minecrafttransportsimulator.rendering.components.RenderableObject;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**Basic gun class class.  This class is responsible for representing a gun in the world.  This gun
@@ -51,15 +46,16 @@ public class PartGun extends APart{
 	private final AItemPart gunItem;
 	
 	//Stored variables used to determine bullet firing behavior.
-	public int bulletsFired;
-	public int bulletsLeft;
-	public int bulletsReloading;
-	public int bulletsRemovedThisRequest;
+	protected int bulletsFired;
+	private int bulletsLeft;
+	private int bulletsReloading;
+	private int bulletsRemovedThisRequest;
+	//TODO make this private when rendering goes in-class.
 	public int currentMuzzleGroupIndex;
-	public final Point3dPlus internalAngles;
-	public final Matrix4dPlus internalOrientation;
-	public final Matrix4dPlus prevInternalOrientation;
-	public ItemBullet loadedBullet;
+	private final Point3dPlus internalAngles;
+	private final Matrix4dPlus internalOrientation;
+	private final Matrix4dPlus prevInternalOrientation;
+	protected ItemBullet loadedBullet;
 	
 	//These variables are used during firing and will be reset on loading.
 	public GunState state;
@@ -72,19 +68,19 @@ public class PartGun extends APart{
 	public int windupTimeCurrent;
 	public int windupRotation;
 	public int currentMuzzle;
+	public final Point3dPlus lastMuzzlePosition;
 	public WrapperEntity lastController;
 	private WrapperEntity entityTarget;
 	private long millisecondCamOffset;
 	private long lastTimeFired;
 	private final Matrix4dPlus zeroReferenceOrientation;
-	private Point3dPlus controllerVector = new Point3dPlus();
-	private Point3dPlus gunVector = new Point3dPlus();
-	private Matrix3d helperRotator = new Matrix3d();
-	private Matrix4dPlus helperTransformer = new Matrix4dPlus();
-	private Point3dPlus firingSpreadAngles = new Point3dPlus();
-	private Matrix4dPlus firingSpreadMatrix = new Matrix4dPlus();
+	
+	//Temp helper variables for calculations
+	private final Point3dPlus firingSpreadAngles = new Point3dPlus();
+	private final Matrix4dPlus firingSpreadMatrix = new Matrix4dPlus();
+	
+	//Global data.
 	public final List<Integer> bulletsHitOnServer = new ArrayList<Integer>();
-	public final RenderableObject muzzleWireframe = new RenderableObject(new BoundingBox(new Point3dPlus(), 0.25, 0.25, 0.25), ColorRGB.BLUE, false);
 		
 	public PartGun(AEntityF_Multipart<?> entityOn, WrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, WrapperNBT data, APart parentPart){
 		super(entityOn, placingPlayer, placementDefinition, data, parentPart);
@@ -153,6 +149,11 @@ public class PartGun extends APart{
 		if(loadedBullet == null){
 			bulletsLeft = 0;
 		}
+		
+		//Create muzzle boxes.
+		
+		this.lastMuzzlePosition = new Point3dPlus();
+		
 	}
 	
 	@Override
@@ -186,15 +187,15 @@ public class PartGun extends APart{
 			if(isActive && !placementDefinition.isSpare){
 				//Check if we have a controller.
 				//We aren't making sentry turrets here.... yet.
-				WrapperEntity controller = getController();
+				WrapperEntity controller = getGunController();
 				if(controller != null){
 					lastController = controller;
 					if(entityOn instanceof EntityPlayerGun){
 						state = state.promote(GunState.CONTROLLED);
 					}else{
 						//If this gun type can only have one selected at a time, check that this has the selected index.
-						PartSeat controllerSeat = (PartSeat) entityOn.getPartAtLocation(entityOn.locationRiderMap.inverse().get(controller));
-						if(controller != null && controllerSeat != null && gunItem.equals(controllerSeat.activeGun) && (!definition.gun.fireSolo || entityOn.partsByItem.get(gunItem).get(controllerSeat.gunIndex).equals(this))){
+						PartSeat controllerSeat = entityOn.getSeatForRider(controller);
+						if(gunItem.equals(controllerSeat.activeGun) && (!definition.gun.fireSolo || entityOn.partsByItem.get(gunItem).get(controllerSeat.gunIndex).equals(this))){
 							state = state.promote(GunState.CONTROLLED);
 						}else{
 							state = state.demote(GunState.ACTIVE);
@@ -209,7 +210,7 @@ public class PartGun extends APart{
 					if(!childParts.isEmpty()){
 						for(APart part : childParts){
 							if(part instanceof PartGun && part.placementDefinition.isCoAxial){
-								controller = ((PartGun) part).getController();
+								controller = ((PartGun) part).getGunController();
 								if(controller != null){
 									state = state.promote(GunState.CONTROLLED);
 									break;
@@ -388,19 +389,16 @@ public class PartGun extends APart{
 		//We only do this 
 		if(!(controller instanceof WrapperPlayer)){
 			//FIXME fix auto-aiming.
-			Point3dPlus targetAngles = new Point3dPlus();
 			if(entityTarget != null){
 				if(entityTarget.isValid()){
 					//Check if target is still in bounds to hit.  If not, we need to find another.
-					//This could be a valid entity, but might not be.  Do raytracing to make sure we can see them.
+					//This could be a valid entity, but might not be.
+					//First check if we hit one of the stops on the gun, if so, it means the target is out of gun area.
+					//If the gun is still good on the stops, make sure there's no blocks in the way.
 					Point3dPlus positionDelta = entityTarget.getPosition().add(0D, entityTarget.getEyeHeight()/2D, 0D).subtract(position);
-					targetAngles.set(positionDelta);
-					targetAngles.getAngles(true).subtract(angles);
-					if(targetAngles.y < -180)targetAngles.y += 360;
-					if(targetAngles.y > 180)targetAngles.y -= 360;
-					if(((minYaw != -180 || maxYaw != 180) && (targetAngles.y < minYaw || targetAngles.y > maxYaw)) || targetAngles.x < minPitch || targetAngles.x > maxPitch || world.getBlockHit(position, positionDelta) != null){
+					if(((minYaw != -180 || maxYaw != 180) && (internalAngles.y == minYaw || internalAngles.y == maxYaw)) || internalAngles.x == minPitch || internalAngles.x == maxPitch || world.getBlockHit(position, positionDelta) != null){
 						entityTarget = null;
-					}
+					}					
 				}else{
 					entityTarget = null;
 				}
@@ -409,7 +407,7 @@ public class PartGun extends APart{
 				//Target is null or dead, get another one.
 				for(WrapperEntity entity : world.getEntitiesHostile(controller, 48)){
 					Point3dPlus positionDelta = entity.getPosition().add(0D, entity.getEyeHeight()/2D, 0D).subtract(position);
-					targetAngles.set(positionDelta);
+					/*targetAngles.set(positionDelta);
 					targetAngles.getAngles(true).subtract(angles);
 					if(targetAngles.y < -180)targetAngles.y += 360;
 					if(targetAngles.y > 180)targetAngles.y -= 360;
@@ -420,7 +418,7 @@ public class PartGun extends APart{
 						if(((minYaw == -180 && maxYaw == 180) || (targetAngles.y >= minYaw && targetAngles.y <= maxYaw)) && targetAngles.x >= minPitch && targetAngles.x <= maxPitch && world.getBlockHit(position, positionDelta) == null){
 							entityTarget = entity;
 						}
-					}
+					}*/
 				}
 			}
 			
@@ -428,10 +426,10 @@ public class PartGun extends APart{
 				//Have target in proper bounds, try to fire.
 				//Make the gunner account for bullet delay and movement of the hostile.
 				//This makes them track better when the target is moving.
-				double ticksToTarget = entityTarget.getPosition().distanceTo(position)/definition.gun.muzzleVelocity/20D/10D;
+				/*double ticksToTarget = entityTarget.getPosition().distanceTo(position)/definition.gun.muzzleVelocity/20D/10D;
 				targetAngles = entityTarget.getPosition().add(0D, entityTarget.getEyeHeight()/2D, 0D).add(entityTarget.getVelocity().multiply(ticksToTarget)).subtract(position).getAngles(true);
 				controller.setYaw(targetAngles.y);
-				controller.setPitch(targetAngles.x);
+				controller.setPitch(targetAngles.x);*/
 				state = state.promote(GunState.FIRING_REQUESTED);
 			}else{
 				state = state.demote(GunState.CONTROLLED);
@@ -454,48 +452,8 @@ public class PartGun extends APart{
 		}
 	
 		//Get the delta between our orientation and the player's orientation.
-		//This is used to determine the gun's desired rotation direction for this tick.
-		//We only care about the gun's zero-point and the player's head in this case.
-		//For both though, we inverse-transform them to put them into global coords.
-		//This allows us to get a set of euler angles to do rotation operations with.
 		if(!(entityOn instanceof EntityPlayerGun)){
-			//Get a vector that represent's the controllers orientation.
-			controllerVector.set(0, 0, 1);
-			
-			//Do inverse rotation for the controller's orientation.
-			helperTransformer.set(controller.getOrientation());
-			helperTransformer.getRotationScale(helperRotator);
-			helperRotator.transpose();
-			helperRotator.transform(controllerVector);
-			
-			//Now do inverse rotation for the seat they are sitting in.
-			PartSeat sittingSeat = (PartSeat) entityOn.getPartAtLocation(entityOn.locationRiderMap.inverse().get(controller));
-			sittingSeat.orientation.getRotationScale(helperRotator);
-			helperRotator.transpose();
-			helperRotator.transform(controllerVector);
-			
-			//Now get one that is for our orientation.
-			gunVector.set(0, 0, 1);
-			
-			//Do inverse rotation for our internal orientation.
-			internalOrientation.getRotationScale(helperRotator);
-			helperRotator.transpose();
-			helperRotator.transform(gunVector);
-			
-			//Do inverse rotation for our zero orientation.
-			zeroReferenceOrientation.getRotationScale(helperRotator);
-			helperRotator.transpose();
-			helperRotator.transform(gunVector);
-			
-			//Now that we have two vectors in global space, get the angles between them.
-			//This will feed into our movement code as it's now relative values for the gun.
-			//FIXME fix normal-aiming.
-			System.out.println(controllerVector);
-			controllerVector.getAngles(false);
-			gunVector.getAngles(false);
-			controllerVector.sub(gunVector);
-			controllerVector.invert();
-			handleMovement(controllerVector.y, controllerVector.x);
+			handleMovement(controller.getYaw() - internalAngles.y, controller.getPitch() - internalAngles.x);
 		}
 	}
 	
@@ -600,7 +558,7 @@ public class PartGun extends APart{
 	 *  or perhaps a player in a seat that's on this gun.  May also be the player
 	 *  hodling this gun if the gun is hand-held.
 	 */
-	public WrapperEntity getController(){
+	public WrapperEntity getGunController(){
 		//If the entity we are on is destroyed, don't allow anything to control us.
 		if(entityOn.damageAmount == entityOn.definition.general.health){
 			return null;
@@ -623,21 +581,8 @@ public class PartGun extends APart{
 			}
 		}
 		
-		//Not parent or child.  Get main vehicle controller.
-		//Check all controllers in case there's multiple controller seats.
-		for(APart vehiclePart : entityOn.parts){
-			if(vehiclePart instanceof PartSeat){
-				if(vehiclePart.placementDefinition.isController){
-					WrapperEntity controller = entityOn.locationRiderMap.get(vehiclePart.placementOffset);
-					if(controller != null){
-						return controller;
-					}
-				}
-			}
-		}
-		
-		//No controller found.
-		return null;
+		//Not parent or child.  Get main vehicle controller if we have one.
+		return entityOn.getController();
 	}
 	
 	/**
@@ -708,6 +653,7 @@ public class PartGun extends APart{
 		if(state.isAtLeast(GunState.FIRING_CURRENTLY) && bulletsLeft > 0 && (!definition.gun.isSemiAuto || !firedThisRequest) && timeSinceFiring >= millisecondFiringDelay){
 			Point3dPlus bulletPosition = new Point3dPlus();
 			Point3dPlus bulletVelocity = new Point3dPlus();
+			
 			for(JSONMuzzle muzzle : definition.gun.muzzleGroups.get(currentMuzzleGroupIndex).muzzles){
 				//Get the bullet's state.
 				setBulletSpawn(bulletPosition, bulletVelocity, muzzle);

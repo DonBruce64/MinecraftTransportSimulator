@@ -33,8 +33,8 @@ public class BoundingBox{
 	public final Point3dPlus globalCenter;
 	public final Point3dPlus currentCollisionDepth;
 	public final List<Point3dPlus> collidingBlockPositions = new ArrayList<Point3dPlus>();
-	public final RenderableObject wireframeRenderable;
-	public final RenderableObject holographicRenderable;
+	private final RenderableObject wireframeRenderable;
+	private final RenderableObject holographicRenderable;
 	private final Point3dPlus tempGlobalCenter;
 	
 	public double widthRadius;
@@ -88,8 +88,8 @@ public class BoundingBox{
 			//Not a defined collision box.  Must be an interaction box.  Yellow.
 			boxColor = ColorRGB.YELLOW;
 		}
-		this.wireframeRenderable = new RenderableObject(this, new ColorRGB(boxColor.rgbInt), false);
-		this.holographicRenderable = new RenderableObject(this, new ColorRGB(), true);
+		this.wireframeRenderable = new RenderableObject(new ColorRGB(boxColor.rgbInt), false);
+		this.holographicRenderable = new RenderableObject(new ColorRGB(), true);
 	}
 	
 	@Override

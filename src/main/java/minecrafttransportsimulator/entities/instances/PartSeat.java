@@ -66,7 +66,7 @@ public final class PartSeat extends APart{
 								for(AItemPart partItem : entityOn.partsByItem.keySet()){
 									if(partItem.definition.gun != null){
 										for(APart part : entityOn.partsByItem.get(partItem)){
-											if(player.equals(((PartGun) part).getController())){
+											if(player.equals(((PartGun) part).getGunController())){
 												if(partItem.equals(activeGun)){
 													return true;
 												}
@@ -101,7 +101,7 @@ public final class PartSeat extends APart{
 			for(AItemPart partItem : entityOn.partsByItem.keySet()){
 				if(partItem instanceof ItemPartGun){
 					for(APart part : entityOn.partsByItem.get(partItem)){
-						if(rider.equals(((PartGun) part).getController())){
+						if(rider.equals(((PartGun) part).getGunController())){
 							activeGun = (ItemPartGun) partItem;
 							gunIndex = 0;
 							return;
@@ -131,7 +131,7 @@ public final class PartSeat extends APart{
 				for(APart part : entityOn.partsByItem.get(partItem)){
 					
 					//Can the player control this gun, or is it for another seat?
-					if(rider.equals(((PartGun) part).getController())){
+					if(rider.equals(((PartGun) part).getGunController())){
 						//If we already found our active gun in our gun list, we use the next entry as our next gun.
 						if(pastActiveGun){
 							return (ItemPartGun) partItem;
@@ -199,34 +199,8 @@ public final class PartSeat extends APart{
 		switch(variable){
 			case("seat_occupied"): return riderForSeat != null ? 1 : 0;
 			case("seat_occupied_client"): return InterfaceClient.getClientPlayer().equals(riderForSeat) ? 1 : 0;
-			case("seat_rider_yaw"): {
-				if(riderForSeat != null){
-					double riderYaw = riderForSeat.getYaw() - entityOn.angles.y;
-					while(riderYaw < -180) riderYaw += 360;
-					while(riderYaw > 180) riderYaw -= 360;
-					return riderYaw;
-				}else{
-					return 0;
-				}
-			}
-			case("seat_rider_pitch"): {
-				if(riderForSeat != null) {
-					double pitch = entityOn.angles.x;
-	            	double roll = entityOn.angles.z;
-	            	double riderYaw = riderForSeat.getYaw() - entityOn.angles.y;
-	            	while(pitch > 180){pitch -= 360;}
-	    			while(pitch < -180){pitch += 360;}
-	    			while(roll > 180){roll -= 360;}
-	    			while(roll < -180){roll += 360;}
-
-	            	double rollRollComponent = -Math.sin(Math.toRadians(riderYaw))*roll;
-	            	double pitchRollComponent = Math.cos(Math.toRadians(riderYaw))*pitch;
-	            	return riderForSeat.getPitch() - (rollRollComponent + pitchRollComponent);
-            	}
-				else {
-					return 0;
-				}
-			}
+			case("seat_rider_yaw"): return riderForSeat != null ? riderForSeat.getYaw() : 0;
+			case("seat_rider_pitch"): return riderForSeat != null ? riderForSeat.getPitch() : 0;
 		}
 		
 		return Double.NaN;
