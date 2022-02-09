@@ -12,6 +12,7 @@ import minecrafttransportsimulator.entities.instances.EntityBullet;
 import minecrafttransportsimulator.entities.instances.EntityParticle;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.guis.components.AGUIBase;
+import minecrafttransportsimulator.systems.ControlSystem;
 import net.minecraft.block.SoundType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ActiveRenderInfo;
@@ -253,6 +254,11 @@ public class InterfaceClient{
 				particle.update();
 			}
 			clientWorld.endProfiling();
+			
+			WrapperPlayer player = getClientPlayer();
+			if(player != null && !player.isSpectator()){
+				ControlSystem.controlGlobal(player);
+			}
 		}
 	}
 }

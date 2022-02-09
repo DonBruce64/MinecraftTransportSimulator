@@ -193,7 +193,6 @@ public class CameraSystem{
 			}else if(sittingSeat != null){
 				sittingSeat.getInterpolatedOrientation(cameraOrientation, partialTicks);
             	cameraOrientation.mul(player.getOrientation());
-            	//FIXME fix ractcasting works.
             	return true;
 			}
     	}else if(InterfaceClient.inThirdPerson()){

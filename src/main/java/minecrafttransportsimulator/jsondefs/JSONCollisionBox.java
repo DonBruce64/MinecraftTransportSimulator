@@ -43,7 +43,9 @@ public class JSONCollisionBox{
 		@JSONDescription("Clicking this box will set the variable to the defined value.")
 		SET,
 		@JSONDescription("Clicking this box will increment the variable by the defined value.")
-		INCREMENT;
+		INCREMENT,
+		@JSONDescription("Clicking this box will set the variable to the value. When the player lets go of the mouse button, it will be set back to 0.")
+		BUTTON;
 	}
 	
 	@Deprecated

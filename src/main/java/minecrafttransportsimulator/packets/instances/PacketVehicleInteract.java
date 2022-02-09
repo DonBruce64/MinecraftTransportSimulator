@@ -30,13 +30,15 @@ import minecrafttransportsimulator.packets.components.APacketEntityInteract;
 public class PacketVehicleInteract extends APacketEntityInteract<EntityVehicleF_Physics, WrapperPlayer>{
 	private final UUID hitPartUniqueUUID;
 	private final Point3dPlus hitBoxLocalCenter;
+	private final boolean leftClick;
 	private final boolean rightClick;
 		
-	public PacketVehicleInteract(EntityVehicleF_Physics vehicle, WrapperPlayer player, BoundingBox hitBox, boolean rightClick){
+	public PacketVehicleInteract(EntityVehicleF_Physics vehicle, WrapperPlayer player, BoundingBox hitBox, boolean leftClick, boolean rightClick){
 		super(vehicle, player);
 		APart hitPart = vehicle.getPartWithBox(hitBox);
 		this.hitPartUniqueUUID = hitPart != null ? hitPart.uniqueUUID : null;
 		this.hitBoxLocalCenter = hitBox.localCenter;
+		this.leftClick = leftClick;
 		this.rightClick = rightClick;
 	}
 	
@@ -48,6 +50,7 @@ public class PacketVehicleInteract extends APacketEntityInteract<EntityVehicleF_
 			this.hitPartUniqueUUID = null;
 		}
 		this.hitBoxLocalCenter = readPoint3dFromBuffer(buf);
+		this.leftClick = buf.readBoolean();
 		this.rightClick = buf.readBoolean();
 	}
 
@@ -61,6 +64,7 @@ public class PacketVehicleInteract extends APacketEntityInteract<EntityVehicleF_
 			buf.writeBoolean(false);
 		}
 		writePoint3dToBuffer(hitBoxLocalCenter, buf);
+		buf.writeBoolean(leftClick);
 		buf.writeBoolean(rightClick);
 	}
 
@@ -103,7 +107,7 @@ public class PacketVehicleInteract extends APacketEntityInteract<EntityVehicleF_
 		
 		//Check if we clicked a part slot box.  This takes priority as part placement
 		//should always be checked before part interaction.
-		if(vehicle.allPartSlotBoxes.containsKey(hitBox)){
+		if(rightClick && vehicle.allPartSlotBoxes.containsKey(hitBox)){
 			//Only owners can add vehicle parts.
 			if(ownerState.equals(PlayerOwnerState.USER)){
 				player.sendPacket(new PacketPlayerChatMessage(player, "interact.failure.vehicleowned"));
@@ -121,7 +125,7 @@ public class PacketVehicleInteract extends APacketEntityInteract<EntityVehicleF_
 		//If we clicked with with an item that can interact with a part or vehicle, perform that interaction.
 		//If the item doesn't or couldn't interact with the vehicle, check for other interactions.
 		boolean hadAllCondition = false;
-		if(heldItem instanceof IItemVehicleInteractable){
+		if((rightClick || leftClick) && heldItem instanceof IItemVehicleInteractable){
 			switch(((IItemVehicleInteractable) heldItem).doVehicleInteraction(vehicle, part, hitBox, player, ownerState, rightClick)){
 				case ALL: return true;
 				case ALL_AND_MORE: hadAllCondition = true; break;
@@ -132,25 +136,39 @@ public class PacketVehicleInteract extends APacketEntityInteract<EntityVehicleF_
 		}
 		
 		//Check if we clicked a box with a variable attached.
-		if(hitBox.definition != null && hitBox.definition.variableName != null){
+		if(!leftClick && hitBox.definition != null && hitBox.definition.variableName != null){
 			//Can't touch locked vehicles.
 			if(vehicle.locked && !hadAllCondition){
 				player.sendPacket(new PacketPlayerChatMessage(player, "interact.failure.vehiclelocked"));
 			}else{
 				AEntityD_Definable<?> entity = part != null ? part : vehicle;
 				switch(hitBox.definition.variableType){
+					case BUTTON:{
+						if(rightClick){
+							entity.setVariable(hitBox.definition.variableName, hitBox.definition.variableValue);
+							InterfacePacket.sendToAllClients(new PacketEntityVariableSet(entity, hitBox.definition.variableName, hitBox.definition.variableValue));
+						}else{
+							entity.setVariable(hitBox.definition.variableName, 0);
+							InterfacePacket.sendToAllClients(new PacketEntityVariableSet(entity, hitBox.definition.variableName, 0));
+						}
+						break;
+					}	
 					case INCREMENT:
-						if(entity.incrementVariable(hitBox.definition.variableName, hitBox.definition.variableValue, hitBox.definition.clampMin, hitBox.definition.clampMax)){
+						if(rightClick && entity.incrementVariable(hitBox.definition.variableName, hitBox.definition.variableValue, hitBox.definition.clampMin, hitBox.definition.clampMax)){
 							InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(entity, hitBox.definition.variableName, hitBox.definition.variableValue, hitBox.definition.clampMin, hitBox.definition.clampMax));	
 						}
 						break;
 					case SET:
-						entity.setVariable(hitBox.definition.variableName, hitBox.definition.variableValue);
-						InterfacePacket.sendToAllClients(new PacketEntityVariableSet(entity, hitBox.definition.variableName, hitBox.definition.variableValue));
+						if(rightClick){
+							entity.setVariable(hitBox.definition.variableName, hitBox.definition.variableValue);
+							InterfacePacket.sendToAllClients(new PacketEntityVariableSet(entity, hitBox.definition.variableName, hitBox.definition.variableValue));
+						}
 						break;
 					case TOGGLE:{
-						entity.toggleVariable(hitBox.definition.variableName);
-						InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(entity, hitBox.definition.variableName));	
+						if(rightClick){
+							entity.toggleVariable(hitBox.definition.variableName);
+							InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(entity, hitBox.definition.variableName));
+						}
 						break;
 					}
 				}
@@ -163,7 +181,7 @@ public class PacketVehicleInteract extends APacketEntityInteract<EntityVehicleF_
 		if(part != null){
 			if(rightClick){
 				part.interact(player);
-			}else{
+			}else if(leftClick){
 				part.attack(new Damage("player", 1.0F, part.boundingBox, null, player));
 			}
 		}

@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.systems;
 
+import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.Point3dPlus;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
@@ -22,6 +24,7 @@ import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketPartGun;
 import minecrafttransportsimulator.packets.instances.PacketPartSeat;
+import minecrafttransportsimulator.packets.instances.PacketVehicleInteract;
 
 /**Class that handles all control operations.
  * 
@@ -31,6 +34,10 @@ public final class ControlSystem{
 	private static final int NULL_COMPONENT = 999;	
 	private static boolean joysticksInhibited = false;
 	private static WrapperPlayer clientPlayer;
+	private static boolean clickingLeft = false;
+	private static boolean clickingRight = false;
+	private static BoundingBox closestBox = null;
+	private static EntityVehicleF_Physics closestVehicle = null;
 	
 	/**
 	 * Static initializer for the wrapper inputs, as we need to iterate through the enums to initialize them
@@ -56,11 +63,61 @@ public final class ControlSystem{
 		ConfigSystem.saveToDisk();
 	}
 
+	public static void controlGlobal(WrapperPlayer player){
+		if(InterfaceInput.isLeftMouseButtonDown()){
+			if(!clickingLeft && !clickingRight){
+				clickingLeft = true;
+				handleClick(player);
+			}
+		}else if(clickingLeft){
+			clickingLeft = false;
+			handleClick(player);
+		}
+		if(InterfaceInput.isRightMouseButtonDown()){
+			if(!clickingLeft && !clickingRight){
+				clickingRight = true;
+				handleClick(player);
+			}
+		}else if(clickingRight){
+			clickingRight = false;
+			handleClick(player);
+		}
+	}
 	
-	public static void controlPlayerGun(EntityPlayerGun entity){
-		//Don't send state changes unless we're holding a gun.
-		if(entity.activeGun != null){
-			InterfacePacket.sendToServer(new PacketPartGun(entity.activeGun, InterfaceInput.isLeftMouseButtonDown() && !entity.player.isSpectator(), InterfaceInput.isRightMouseButtonDown()));
+	private static void handleClick(WrapperPlayer player){
+		//Either change the gun trigger state (if we are holding a gun),
+		//or try to interact with entities if we are not.
+		EntityPlayerGun playerGun = EntityPlayerGun.playerClientGuns.get(player.getID());
+		if(playerGun != null && playerGun.activeGun != null){
+			InterfacePacket.sendToServer(new PacketPartGun(playerGun.activeGun, clickingLeft, clickingRight));
+		}else if(clickingLeft || clickingRight){
+			Point3dPlus startPosition = player.getPosition();
+			startPosition.y += player.getEyeHeight();
+			Point3dPlus endPosition = player.getLineOfSight(3.5);
+			endPosition.add(startPosition);
+			BoundingBox clickBounds = new BoundingBox(startPosition, endPosition);
+			
+			closestBox = null;
+			closestVehicle = null;
+			for(EntityVehicleF_Physics vehicle : player.getWorld().getEntitiesOfType(EntityVehicleF_Physics.class)){
+				if(vehicle.encompassingBox.intersects(clickBounds)){
+					//Could have hit this vehicle, check if and what we did via raytracing.
+					for(BoundingBox box : vehicle.allInteractionBoxes){
+						if(box.intersects(clickBounds) && box.getIntersectionPoint(startPosition, endPosition) != null){
+							if(closestBox == null || closestBox.globalCenter.distance(startPosition) > box.globalCenter.distance(startPosition)){
+								closestBox = box;
+								closestVehicle = vehicle;
+							}
+						}
+					}
+				}
+			}
+			if(closestBox != null){
+				InterfacePacket.sendToServer(new PacketVehicleInteract(closestVehicle,  player, closestBox, clickingLeft, clickingRight));
+			}
+		}else if(closestBox != null){
+			//Fire off un-click to vehicle last clicked.
+			InterfacePacket.sendToServer(new PacketVehicleInteract(closestVehicle,  player, closestBox, clickingLeft, clickingRight));
 		}
 	}
 	

@@ -60,6 +60,18 @@ public class BoundingBox{
 		this(definition.pos, definition.pos.copy(), definition.width/2D, definition.height/2D, definition.width/2D, definition.collidesWithLiquids, definition, groupDef);
 	}
 	
+	/**Vector constructor.  Creates a box for a vector.  Used mainly in raytracing applications for pre-calculation.**/
+	public BoundingBox(Point3dPlus start, Point3dPlus end){
+		this(new Point3dPlus(), 0, 0, 0);
+		globalCenter.set(end);
+		globalCenter.sub(start);
+		globalCenter.scale(0.5);
+		widthRadius = Math.abs(globalCenter.x);
+		heightRadius = Math.abs(globalCenter.y);
+		depthRadius = Math.abs(globalCenter.z);
+		globalCenter.add(start);
+	}
+	
 	/**Master constructor.  Used for main creation.**/
 	private BoundingBox(Point3dPlus localCenter, Point3dPlus globalCenter, double widthRadius, double heightRadius, double depthRadius, boolean collidesWithLiquids, JSONCollisionBox definition, JSONCollisionGroup groupDef){
 		this.localCenter = localCenter;
@@ -196,21 +208,21 @@ public class BoundingBox{
 	/**
 	 *  Returns true if the passed-in point intersects this box in the YZ-plane.
 	 */
-	public boolean intersectsWithYZ(Point3dPlus point){
+	private boolean intersectsWithYZ(Point3dPlus point){
         return point.y >= globalCenter.y - heightRadius && point.y <= globalCenter.y + heightRadius && point.z >= globalCenter.z - depthRadius && point.z <= globalCenter.z + depthRadius;
     }
 	
 	/**
 	 *  Returns true if the passed-in point intersects this box in the XZ-plane.
 	 */
-	public boolean intersectsWithXZ(Point3dPlus point){
+	private boolean intersectsWithXZ(Point3dPlus point){
         return point.x >= globalCenter.x - widthRadius && point.x <= globalCenter.x + widthRadius && point.z >= globalCenter.z - depthRadius && point.z <= globalCenter.z + depthRadius;
     }
 	
 	/**
 	 *  Returns true if the passed-in point intersects this box in the XY-plane.
 	 */
-	public boolean intersectsWithXY(Point3dPlus point){
+	private boolean intersectsWithXY(Point3dPlus point){
         return point.x >= globalCenter.x - widthRadius && point.x <= globalCenter.x + widthRadius && point.y >= globalCenter.y - heightRadius && point.y <= globalCenter.y + heightRadius;
     }
 	
@@ -218,7 +230,7 @@ public class BoundingBox{
 	 *  Returns the point between the start and end points that collides with this box,
 	 *  or null if such a point does not exist.
 	 */
-	public Point3dPlus getXPlaneCollision(Point3dPlus start, Point3dPlus end, double xPoint){
+	private Point3dPlus getXPlaneCollision(Point3dPlus start, Point3dPlus end, double xPoint){
         Point3dPlus collisionPoint = start.getIntermediateWithXValue(end, xPoint);
         return collisionPoint != null && this.intersectsWithYZ(collisionPoint) ? collisionPoint : null;
     }
@@ -227,7 +239,7 @@ public class BoundingBox{
 	 *  Returns the point between the start and end points that collides with this box,
 	 *  or null if such a point does not exist.
 	 */
-    public Point3dPlus getYPlaneCollision(Point3dPlus start, Point3dPlus end, double yPoint){
+	private Point3dPlus getYPlaneCollision(Point3dPlus start, Point3dPlus end, double yPoint){
     	Point3dPlus collisionPoint = start.getIntermediateWithYValue(end, yPoint);
         return collisionPoint != null && this.intersectsWithXZ(collisionPoint) ? collisionPoint : null;
     }
@@ -236,7 +248,7 @@ public class BoundingBox{
 	 *  Returns the point between the start and end points that collides with this box,
 	 *  or null if such a point does not exist.
 	 */
-    public Point3dPlus getZPlaneCollision(Point3dPlus start, Point3dPlus end, double zPoint){
+	private Point3dPlus getZPlaneCollision(Point3dPlus start, Point3dPlus end, double zPoint){
     	Point3dPlus collisionPoint = start.getIntermediateWithZValue(end, zPoint);
         return collisionPoint != null && this.intersectsWithXY(collisionPoint) ? collisionPoint : null;
     }

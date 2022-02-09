@@ -14,27 +14,19 @@ import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
-import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.IItemEntityProvider;
-import minecrafttransportsimulator.packets.instances.PacketVehicleInteract;
 import minecrafttransportsimulator.systems.PackParserSystem;
-import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.SoundEvents;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
-import net.minecraft.util.EnumActionResult;
-import net.minecraft.util.EnumHand;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.World;
 import net.minecraftforge.event.RegistryEvent;
-import net.minecraftforge.event.entity.player.AttackEntityEvent;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.world.ExplosionEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -312,58 +304,6 @@ public class BuilderEntityExisting extends ABuilderEntityBase{
 			lastExplosionPosition = new Point3dPlus(event.getExplosion().getPosition().x, event.getExplosion().getPosition().y, event.getExplosion().getPosition().z);
 		}
 	}
-	
-    /**
-     * If a player swings and misses a large entity they may still have hit it.
-     * MC doesn't look for attacks based on AABB, rather it uses RayTracing.
-     * This works on the client where we can see the entity bounding boxes,
-     * but on the server the internal distance check nulls this out.
-     * If we click an entity, cancel the "interaction" and instead send a packet 
-     * to the server to make dang sure we register the interaction!
-     * Note that unlike the attack code, we don't want to cancel all interactions.
-     * This can lead to blocking of interactions from offhands.
-     */
-    @SubscribeEvent
-    public static void on(PlayerInteractEvent.EntityInteract event){
-    	if(event.getTarget() instanceof BuilderEntityExisting && ((BuilderEntityExisting) event.getTarget()).entity instanceof EntityVehicleF_Physics){
-    		BuilderEntityExisting builder = (BuilderEntityExisting) event.getTarget();
-    		if(event.getEntityPlayer().world.isRemote && event.getEntityPlayer().equals(Minecraft.getMinecraft().player) && event.getHand().equals(EnumHand.MAIN_HAND) && builder.interactionBoxes != null){
-	    		BoundingBox boxClicked = builder.interactionBoxes.lastBoxRayTraced;
-	    		if(boxClicked != null){
-		    		InterfacePacket.sendToServer(new PacketVehicleInteract((EntityVehicleF_Physics) builder.entity, WrapperPlayer.getWrapperFor(event.getEntityPlayer()), boxClicked, true));
-	    		}else{
-	    			InterfaceCore.logError("A entity was clicked (interacted) without doing RayTracing first, or AABBs in vehicle are corrupt!");
-	    		}
-	    		event.setCanceled(true);
-				event.setCancellationResult(EnumActionResult.SUCCESS);
-    		}
-    	}
-    }
-	
-    /**
-     * If a player swings and misses a large entity they may still have hit it.
-     * MC doesn't look for attacks based on AABB, rather it uses RayTracing.
-     * This works on the client where we can see the entity bounding boxes,
-     * but on the server the internal distance check nulls this out.
-     * If we click an entity, cancel the "attack" and instead send a packet 
-     * to the server to make dang sure we register the attack!
-     */
-    @SubscribeEvent
-    public static void on(AttackEntityEvent event){
-    	if(event.getTarget() instanceof BuilderEntityExisting && ((BuilderEntityExisting) event.getTarget()).entity instanceof EntityVehicleF_Physics){
-    		BuilderEntityExisting builder = (BuilderEntityExisting) event.getTarget();
-    		if(event.getEntityPlayer().world.isRemote && event.getEntityPlayer().equals(Minecraft.getMinecraft().player)){
-	    		BoundingBox boxClicked = builder.interactionBoxes.lastBoxRayTraced;
-    			if(boxClicked != null){
-    				InterfacePacket.sendToServer(new PacketVehicleInteract((EntityVehicleF_Physics) builder.entity,  WrapperPlayer.getWrapperFor(event.getEntityPlayer()), boxClicked, false));
-        		}else{
-        			InterfaceCore.logError("A entity was clicked (attacked) without doing RayTracing first, or AABBs in vehicle are corrupt!");
-        		}
-    			event.getEntityPlayer().playSound(SoundEvents.ENTITY_PLAYER_ATTACK_NODAMAGE, 1.0F, 1.0F);
-    		}
-	    	event.setCanceled(true);
-    	}
-    }
 	
 	/**
 	 * Registers all builder instances that build our own entities into the game.

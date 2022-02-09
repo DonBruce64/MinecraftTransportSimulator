@@ -219,7 +219,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 			//Check for collided internal entities and attack them.
 			//This is a bit more involved, as we need to check all possible types and check hitbox distance.
 			Point3dPlus endPoint = position.copy().add(motion);
-			BoundingBox bulletMovmenetBounds = new BoundingBox(endPoint.copy().subtract(position).multiply(0.5D).add(position), Math.abs(motion.x/2D), Math.abs(motion.y/2D), Math.abs(motion.z/2D));
+			BoundingBox bulletMovmenetBounds = new BoundingBox(position, endPoint);
 			for(EntityVehicleF_Physics entity : world.getEntitiesOfType(EntityVehicleF_Physics.class)){
 				double armorPenetrated = 0;
 				//Don't attack the entity that has the gun that fired us.

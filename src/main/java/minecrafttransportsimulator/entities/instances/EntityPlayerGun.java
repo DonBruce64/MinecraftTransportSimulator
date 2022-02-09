@@ -15,7 +15,6 @@ import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemPartGun;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONPlayerGun;
-import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperItemStack;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -23,7 +22,6 @@ import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.rendering.instances.RenderPlayerGun;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.systems.ControlSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**Entity class responsible for storing and syncing information about the current gun
@@ -215,11 +213,6 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun>{
 							didGunFireLastTick = true;
 						}else if(didGunFireLastTick){
 							saveGun(false);
-						}
-					}else{
-						//Check for player input.  Only do this for the main player.
-						if(player.equals(InterfaceClient.getClientPlayer())){
-							ControlSystem.controlPlayerGun(this);
 						}
 					}
 				}

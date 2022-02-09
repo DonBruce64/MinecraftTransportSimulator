@@ -49,7 +49,7 @@ public class BuilderEntityRenderForwarder extends ABuilderEntityBase{
     		//If we don't do this, and we move faster than 1 block per tick, we'll get flickering.
     		double playerVelocity = Math.sqrt(playerFollowing.motionX*playerFollowing.motionX + playerFollowing.motionY*playerFollowing.motionY + playerFollowing.motionZ*playerFollowing.motionZ);
     		Point3dPlus playerEyesVec = WrapperEntity.getWrapperFor(playerFollowing).getLineOfSight(Math.max(1, playerVelocity/2));
-    		setPosition(playerFollowing.posX + playerEyesVec.x, playerFollowing.posY + playerFollowing.eyeHeight + playerEyesVec.y, playerFollowing.posZ + playerEyesVec.z);
+    		setPosition(playerFollowing.posX + playerEyesVec.x, playerFollowing.posY + playerFollowing.getEyeHeight() + playerEyesVec.y, playerFollowing.posZ + playerEyesVec.z);
     	}else if(!world.isRemote){
 			//Don't restore saved entities on the server.
 			//These get loaded, but might not tick if they're out of chunk range.
