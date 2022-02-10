@@ -65,7 +65,7 @@ public final class ControlSystem{
 
 	public static void controlGlobal(WrapperPlayer player){
 		if(InterfaceInput.isLeftMouseButtonDown()){
-			if(!clickingLeft && !clickingRight){
+			if(!clickingLeft){
 				clickingLeft = true;
 				handleClick(player);
 			}
@@ -74,7 +74,7 @@ public final class ControlSystem{
 			handleClick(player);
 		}
 		if(InterfaceInput.isRightMouseButtonDown()){
-			if(!clickingLeft && !clickingRight){
+			if(!clickingRight){
 				clickingRight = true;
 				handleClick(player);
 			}

@@ -247,12 +247,13 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
     }
     
     /**
-	 *  Helper method used to get the controlling player for this entity.
+	 *  Helper method used to get the controlling entity for this entity.
+	 *  Is normally the player, but may be a NPC if one is in the seat.
 	 */
-	public WrapperPlayer getController(){
+	public WrapperEntity getController(){
 		for(WrapperEntity rider : locationRiderMap.inverse().keySet()){
-			if(rider instanceof WrapperPlayer && getSeatForRider(rider).placementDefinition.isController){
-				return (WrapperPlayer) rider;
+			if(getSeatForRider(rider).placementDefinition.isController){
+				return rider;
 			}
 		}
 		return null;

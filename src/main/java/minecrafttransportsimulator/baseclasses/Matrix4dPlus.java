@@ -33,6 +33,11 @@ public class Matrix4dPlus extends Matrix4d{
 		set(other);
 	}
 	
+	public Matrix4dPlus(Point3dPlus angles){
+		this();
+		setToAngles(angles);
+	}
+	
 	public void setToAngles(Point3dPlus angles){
 		//Don't bother setting angles if they are already correct.
 		if(!lastAnglesSet.equals(angles)){

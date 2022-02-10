@@ -61,8 +61,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 		this.angles = data.getPoint3d("angles");
 		this.prevAngles = angles.copy();
 		this.rotation = data.getPoint3d("rotation");
-		this.orientation = new Matrix4dPlus();
-		orientation.setToAngles(angles);
+		this.orientation = new Matrix4dPlus(angles);
 		this.prevOrientation = new Matrix4dPlus(orientation);
 		this.axialOrientation = new Point3dPlus(0, 0, 1);
 		orientation.transform(axialOrientation);
@@ -86,8 +85,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 		this.angles = angles.copy();
 		this.prevAngles = angles.copy();
 		this.rotation = new Point3dPlus();
-		this.orientation = new Matrix4dPlus();
-		orientation.setToAngles(angles);
+		this.orientation = new Matrix4dPlus(angles);
 		this.prevOrientation = new Matrix4dPlus(orientation);
 		this.axialOrientation = new Point3dPlus(0, 0, 1);
 		orientation.transform(axialOrientation);

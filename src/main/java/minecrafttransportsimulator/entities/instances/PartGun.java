@@ -19,6 +19,7 @@ import minecrafttransportsimulator.mcinterface.WrapperItemStack;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.instances.PacketPartGun;
+import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**Basic gun class class.  This class is responsible for representing a gun in the world.  This gun
@@ -68,7 +69,6 @@ public class PartGun extends APart{
 	public int windupTimeCurrent;
 	public int windupRotation;
 	public int currentMuzzle;
-	public final Point3dPlus lastMuzzlePosition;
 	public WrapperEntity lastController;
 	private WrapperEntity entityTarget;
 	private long millisecondCamOffset;
@@ -76,6 +76,9 @@ public class PartGun extends APart{
 	private final Matrix4dPlus zeroReferenceOrientation;
 	
 	//Temp helper variables for calculations
+	private final Point3dPlus targetVector = new Point3dPlus();
+	private final Point3dPlus targetAngles = new Point3dPlus();
+	private final Matrix4dPlus targetMatrix = new Matrix4dPlus();
 	private final Point3dPlus firingSpreadAngles = new Point3dPlus();
 	private final Matrix4dPlus firingSpreadMatrix = new Matrix4dPlus();
 	
@@ -149,11 +152,6 @@ public class PartGun extends APart{
 		if(loadedBullet == null){
 			bulletsLeft = 0;
 		}
-		
-		//Create muzzle boxes.
-		
-		this.lastMuzzlePosition = new Point3dPlus();
-		
 	}
 	
 	@Override
@@ -204,7 +202,7 @@ public class PartGun extends APart{
 					}
 				}
 				if(controller == null){
-					//If we aren't being controller, check if we have any coaxial guns.
+					//If we aren't being controlled, check if we have any coaxial guns.
 					//If we do, and they have a controller, then we use that as our controller.
 					//This allows them to control this gun without being the actual controller for firing.
 					if(!childParts.isEmpty()){
@@ -303,7 +301,7 @@ public class PartGun extends APart{
 								if(item instanceof ItemBullet){
 									if(tryToReload((ItemBullet) item)){
 										//Bullet is right type, and we can fit it.  Remove from player's inventory and add to the gun.
-										inventory.removeFromSlot(i, 1);
+										if(!ConfigSystem.configObject.clientControls.devMode.value)inventory.removeFromSlot(i, 1);
 										return true;
 									}
 								}
@@ -322,7 +320,7 @@ public class PartGun extends APart{
 											if(tryToReload((ItemBullet) item)){
 												//Bullet is right type, and we can fit it.  Remove from crate and add to the gun.
 												//Return here to ensure we don't set the loadedBullet to blank since we found bullets.
-												inventory.removeFromSlot(i, 1);
+												if(!ConfigSystem.configObject.clientControls.devMode.value)inventory.removeFromSlot(i, 1);
 												return true;
 											}
 										}
@@ -388,49 +386,40 @@ public class PartGun extends APart{
 		//This makes them track better when the target is moving.
 		//We only do this 
 		if(!(controller instanceof WrapperPlayer)){
-			//FIXME fix auto-aiming.
-			if(entityTarget != null){
-				if(entityTarget.isValid()){
-					//Check if target is still in bounds to hit.  If not, we need to find another.
-					//This could be a valid entity, but might not be.
-					//First check if we hit one of the stops on the gun, if so, it means the target is out of gun area.
-					//If the gun is still good on the stops, make sure there's no blocks in the way.
-					Point3dPlus positionDelta = entityTarget.getPosition().add(0D, entityTarget.getEyeHeight()/2D, 0D).subtract(position);
-					if(((minYaw != -180 || maxYaw != 180) && (internalAngles.y == minYaw || internalAngles.y == maxYaw)) || internalAngles.x == minPitch || internalAngles.x == maxPitch || world.getBlockHit(position, positionDelta) != null){
-						entityTarget = null;
-					}					
-				}else{
-					entityTarget = null;
-				}
-			}
-			if(entityTarget == null || !entityTarget.isValid()){
-				//Target is null or dead, get another one.
+			//Get new target if we don't have one, or if we've gone 1 second and we have a closer target by 5 blocks.
+			boolean checkForCloser = entityTarget != null && ticksExisted%20 == 0;
+			if(entityTarget == null || checkForCloser){
 				for(WrapperEntity entity : world.getEntitiesHostile(controller, 48)){
-					Point3dPlus positionDelta = entity.getPosition().add(0D, entity.getEyeHeight()/2D, 0D).subtract(position);
-					/*targetAngles.set(positionDelta);
-					targetAngles.getAngles(true).subtract(angles);
-					if(targetAngles.y < -180)targetAngles.y += 360;
-					if(targetAngles.y > 180)targetAngles.y -= 360;
-					//Check the distance between this target and our current one, if we have one.
-					//No sense in doing other checks if the testing target is further.
-					if(entityTarget == null || position.distanceTo(entityTarget.getPosition()) > position.distanceTo(entity.getPosition())){
-						//Check if bounds are good.  If so, set target.
-						if(((minYaw == -180 && maxYaw == 180) || (targetAngles.y >= minYaw && targetAngles.y <= maxYaw)) && targetAngles.x >= minPitch && targetAngles.x <= maxPitch && world.getBlockHit(position, positionDelta) == null){
-							entityTarget = entity;
+					if(validateTarget(entity)){
+						if(entityTarget != null){
+							double distanceToBeat = position.distanceTo(entityTarget.getPosition());
+							if(checkForCloser){
+								distanceToBeat += 5;
+							}
+							if(position.distanceTo(entity.getPosition()) > distanceToBeat){
+								continue;
+							}
 						}
-					}*/
+						entityTarget = entity;
+					}
 				}
 			}
 			
+			//If we have a target, validate it and try to hit it.
 			if(entityTarget != null){
-				//Have target in proper bounds, try to fire.
-				//Make the gunner account for bullet delay and movement of the hostile.
-				//This makes them track better when the target is moving.
-				/*double ticksToTarget = entityTarget.getPosition().distanceTo(position)/definition.gun.muzzleVelocity/20D/10D;
-				targetAngles = entityTarget.getPosition().add(0D, entityTarget.getEyeHeight()/2D, 0D).add(entityTarget.getVelocity().multiply(ticksToTarget)).subtract(position).getAngles(true);
-				controller.setYaw(targetAngles.y);
-				controller.setPitch(targetAngles.x);*/
-				state = state.promote(GunState.FIRING_REQUESTED);
+				if(validateTarget(entityTarget)){
+					controller.setYaw(targetAngles.y);
+					controller.setPitch(targetAngles.x);
+					//Only fire if we're within 1 movement increment of the target.
+					if(Math.abs(targetAngles.y - internalAngles.y) < definition.gun.yawSpeed && Math.abs(targetAngles.x - internalAngles.x) < definition.gun.pitchSpeed){
+						state = state.promote(GunState.FIRING_REQUESTED);
+					}else{
+						state = state.demote(GunState.CONTROLLED);
+					}
+				}else{
+					entityTarget = null;
+					state = state.demote(GunState.CONTROLLED);
+				}
 			}else{
 				state = state.demote(GunState.CONTROLLED);
 			}
@@ -455,6 +444,52 @@ public class PartGun extends APart{
 		if(!(entityOn instanceof EntityPlayerGun)){
 			handleMovement(controller.getYaw() - internalAngles.y, controller.getPitch() - internalAngles.x);
 		}
+	}
+	
+	/**
+	 * Helper method to validate a target as possible for this gun.
+	 * Checks entity position relative to the gun, and if the entity
+	 * is behind any blocks.  Returns true if the target is valid.
+	 * Also sets {@link #targetVector} and {@link #targetAngles}
+	 */
+	private boolean validateTarget(WrapperEntity target){
+		if(target.isValid()){
+			//Get vector from eyes of controller to target.
+			//Target we aim for the middle, as it's more accurate.
+			//We also take into account tracking for bullet speed.
+			targetVector.set(target.getPosition());
+			targetVector.y += target.getEyeHeight()/2D;
+			double ticksToTarget = target.getPosition().distanceTo(position)/definition.gun.muzzleVelocity/20D/10D;
+			targetVector.add(target.getVelocity().multiply(ticksToTarget));
+			targetVector.sub(position);
+			
+			//Transform vector to gun's coordinate system.
+			//Get the angles the gun has to rotate to match the target.
+			//If the are outside the gun's clamps, this isn't a valid target.
+			targetAngles.set(targetVector);
+			targetMatrix.set(zeroReferenceOrientation);
+			targetMatrix.transpose();
+			targetMatrix.transform(targetAngles);
+			targetAngles.getAngles(true);
+			
+			//Check yaw, if we need to.
+			if(minYaw != -180 || maxYaw != 180){
+				if(targetAngles.y < minYaw || targetAngles.y > maxYaw){
+					return false;
+				}
+			}
+			
+			//Check pitch.
+			if(targetAngles.x < minPitch || targetAngles.x > maxPitch){
+				return false;
+			}
+			
+			//Check block raytracing.
+			if(world.getBlockHit(position, targetVector) == null){
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	/**

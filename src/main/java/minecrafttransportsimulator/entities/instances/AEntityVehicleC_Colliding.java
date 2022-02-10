@@ -159,7 +159,7 @@ abstract class AEntityVehicleC_Colliding extends AEntityVehicleB_Rideable{
 		}
 		
 		//Damage all riders, including the controller.
-		WrapperPlayer controller = getController();
+		WrapperEntity controller = getController();
 		Damage controllerCrashDamage = new Damage("crash", ConfigSystem.configObject.damage.crashDamageFactor.value*velocity*20, null, this, null);
 		Damage passengerCrashDamage = new Damage("crash", ConfigSystem.configObject.damage.crashDamageFactor.value*velocity*20, null, this, controller);
 		for(WrapperEntity rider : locationRiderMap.values()){
