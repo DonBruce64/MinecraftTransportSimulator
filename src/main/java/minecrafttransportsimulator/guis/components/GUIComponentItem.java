@@ -69,7 +69,7 @@ public class GUIComponentItem extends AGUIComponent{
 			if(stackToRender.getSize() > 1){
     			text = String.valueOf(RenderText.FORMATTING_CHAR) + String.valueOf(RenderText.BOLD_FORMATTING_CHAR) + String.valueOf(stackToRender.getSize());
     		}else{
-    			
+    			text = null;
     		}
     	}
     }
