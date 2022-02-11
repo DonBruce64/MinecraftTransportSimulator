@@ -14,6 +14,7 @@ import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONInstrumentDefinition;
+import minecrafttransportsimulator.jsondefs.JSONRendering.ModelType;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.rendering.instances.RenderInstrument;
@@ -82,6 +83,12 @@ public abstract class ARenderEntityDefinable<RenderedEntity extends AEntityD_Def
 		entity.world.beginProfiling("Sounds", false);
 		entity.updateSounds(partialTicks);
 		entity.world.endProfiling();
+	}
+	
+	@Override
+	protected boolean disableRendering(RenderedEntity entity, float partialTicks){
+		//Don't render if we don't have a model.
+		return super.disableRendering(entity, partialTicks) || entity.definition.rendering.modelType.equals(ModelType.NONE);
 	}
 	
 	/**

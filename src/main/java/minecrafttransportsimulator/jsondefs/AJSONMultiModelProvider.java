@@ -25,6 +25,7 @@ public abstract class AJSONMultiModelProvider extends AJSONItem{
 				switch(rendering.modelType){
 					case OBJ : return PackResourceLoader.getPackResource(this, ResourceType.OBJ_MODEL, subDefinition.modelName != null ? subDefinition.modelName : systemName);
 					case LITTLETILES : return PackResourceLoader.getPackResource(this, ResourceType.LT_MODEL, subDefinition.modelName != null ? subDefinition.modelName : systemName);
+					case NONE : return null;
 				}
 			}
 		}
@@ -42,6 +43,7 @@ public abstract class AJSONMultiModelProvider extends AJSONItem{
 				switch(rendering.modelType){
 					case OBJ : return PackResourceLoader.getPackResource(this, ResourceType.PNG, subDefinition.textureName != null ? subDefinition.textureName : systemName + currentSubName);
 					case LITTLETILES : return RenderableObject.GLOBAL_TEXTURE_NAME;
+					case NONE : return null;
 				} 
 			}
 		}

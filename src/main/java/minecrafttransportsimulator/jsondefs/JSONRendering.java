@@ -41,7 +41,8 @@ public class JSONRendering{
 	
 	public static enum ModelType{
 		OBJ,
-		LITTLETILES;
+		LITTLETILES,
+		NONE;
 	}
 	
 
