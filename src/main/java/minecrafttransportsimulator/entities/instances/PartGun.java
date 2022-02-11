@@ -156,150 +156,147 @@ public class PartGun extends APart{
 	
 	@Override
 	public boolean update(){
-		if(super.update()){
-			//Set gun state and do updates.
-			firedThisCheck = false;
-			if(isActive && !placementDefinition.isSpare){
-				//Check if we have a controller.
-				//We aren't making sentry turrets here.... yet.
-				WrapperEntity controller = getController();
-				if(controller != null){
-					lastController = controller;
-					if(entityOn instanceof EntityPlayerGun){
+		//Set gun state and do updates.
+		firedThisCheck = false;
+		if(isActive && !placementDefinition.isSpare){
+			//Check if we have a controller.
+			//We aren't making sentry turrets here.... yet.
+			WrapperEntity controller = getController();
+			if(controller != null){
+				lastController = controller;
+				if(entityOn instanceof EntityPlayerGun){
+					state = state.promote(GunState.CONTROLLED);
+				}else{
+					//If this gun type can only have one selected at a time, check that this has the selected index.
+					PartSeat controllerSeat = (PartSeat) entityOn.getPartAtLocation(entityOn.locationRiderMap.inverse().get(controller));
+					if(controller != null && controllerSeat != null && gunItem.equals(controllerSeat.activeGun) && (!definition.gun.fireSolo || entityOn.partsByItem.get(gunItem).get(controllerSeat.gunIndex).equals(this))){
 						state = state.promote(GunState.CONTROLLED);
 					}else{
-						//If this gun type can only have one selected at a time, check that this has the selected index.
-						PartSeat controllerSeat = (PartSeat) entityOn.getPartAtLocation(entityOn.locationRiderMap.inverse().get(controller));
-						if(controller != null && controllerSeat != null && gunItem.equals(controllerSeat.activeGun) && (!definition.gun.fireSolo || entityOn.partsByItem.get(gunItem).get(controllerSeat.gunIndex).equals(this))){
-							state = state.promote(GunState.CONTROLLED);
-						}else{
-							state = state.demote(GunState.ACTIVE);
-							controller = null;
+						state = state.demote(GunState.ACTIVE);
+						controller = null;
+					}
+				}
+			}
+			if(controller == null){
+				//If we aren't being controller, check if we have any coaxial guns.
+				//If we do, and they have a controller, then we use that as our controller.
+				//This allows them to control this gun without being the actual controller for firing.
+				if(!childParts.isEmpty()){
+					for(APart part : childParts){
+						if(part instanceof PartGun && part.placementDefinition.isCoAxial){
+							controller = ((PartGun) part).getController();
+							if(controller != null){
+								state = state.promote(GunState.CONTROLLED);
+								break;
+							}
 						}
 					}
 				}
 				if(controller == null){
-					//If we aren't being controller, check if we have any coaxial guns.
-					//If we do, and they have a controller, then we use that as our controller.
-					//This allows them to control this gun without being the actual controller for firing.
-					if(!childParts.isEmpty()){
-						for(APart part : childParts){
-							if(part instanceof PartGun && part.placementDefinition.isCoAxial){
-								controller = ((PartGun) part).getController();
-								if(controller != null){
-									state = state.promote(GunState.CONTROLLED);
+					state = state.demote(GunState.ACTIVE);
+				}
+			}
+			
+			//Adjust yaw and pitch to the direction of the controller.
+			if(state.isAtLeast(GunState.CONTROLLED)){
+				handleControl(controller);
+			}
+			
+			//Set final gun active state and variables.
+			boolean ableToFire = windupTimeCurrent == definition.gun.windupTime && bulletsLeft > 0 && (!definition.gun.isSemiAuto || !firedThisRequest);
+			if(ableToFire && state.isAtLeast(GunState.FIRING_REQUESTED)){
+				//Set firing to true if we aren't firing, and we've waited long enough since the last firing command.
+				//If we don't wait, we can bypass the cooldown by toggling the trigger.
+				long timeSinceFiring = System.currentTimeMillis() - lastTimeFired;
+				if(!state.isAtLeast(GunState.FIRING_CURRENTLY) && timeSinceFiring >= millisecondFiringDelay){
+					List<APart> allGuns = entityOn.partsByItem.get(gunItem);
+					//Check if we have a primary gun.  If so, we may need to adjust cams to resume the firing sequence.
+					int sequenceIndex = allGuns.indexOf(this);
+					APart lastPrimaryPart = entityOn.lastPrimaryPart.get(gunItem);
+					if(lastPrimaryPart != null){
+						sequenceIndex = sequenceIndex - 1 - allGuns.indexOf(lastPrimaryPart);
+						if(sequenceIndex < 0){
+							sequenceIndex += allGuns.size();
+						}
+					}
+
+					state = state.promote(GunState.FIRING_CURRENTLY);
+					millisecondCamOffset = definition.gun.fireSolo ? 0 : millisecondFiringDelay*sequenceIndex/allGuns.size();
+					lastTimeFired = System.currentTimeMillis() + millisecondCamOffset;
+					//For clients, we offset the time fired back one cycle, so we can spawn the first bullet.
+					//This will be set current in the particle spawning logic.
+					if(world.isClient()){
+						lastTimeFired -= millisecondFiringDelay;
+					}
+				}
+			}else if(!ableToFire){
+				state = state.demote(GunState.FIRING_REQUESTED);
+				ticksFiring = 0;
+				if(!state.isAtLeast(GunState.FIRING_REQUESTED)){
+					firedThisRequest = false;
+				}
+			}
+			
+			//If we are on the server, check if we are firing and can remove a bullet this tick.
+			//This uses a total time of firing to account for partial tick firing rates on clients.
+			if(!world.isClient()){
+				if(state.isAtLeast(GunState.FIRING_CURRENTLY)){
+					int bulletsToRemove = definition.gun.isSemiAuto ? 1 : (int) ((++ticksFiring + definition.gun.fireDelay - millisecondCamOffset/50)/definition.gun.fireDelay - bulletsRemovedThisRequest);
+					if(bulletsToRemove > 0){
+						//Need to take muzzle count into account.
+						bulletsToRemove *= definition.gun.muzzleGroups.get(currentMuzzleGroupIndex).muzzles.size();
+						firedThisRequest = true;
+						bulletsLeft -= bulletsToRemove;
+						bulletsRemovedThisRequest += bulletsToRemove;
+						bulletsFired += bulletsToRemove;
+						entityOn.lastPrimaryPart.put(gunItem, this);
+						if(definition.gun.muzzleGroups.size() == ++currentMuzzleGroupIndex){
+							currentMuzzleGroupIndex = 0;
+						}
+						if(bulletsLeft <= 0){
+							bulletsLeft = 0;
+							loadedBullet = null;
+						}
+					}
+				}else{
+					bulletsRemovedThisRequest = 0;
+				}
+			}
+			
+			//If we can accept bullets, and aren't currently loading any, re-load ourselves from any inventories.
+			//While the reload method checks for reload time, we check here to save on code processing.
+			//No sense in looking for bullets if we can't load them anyways.
+			if(!world.isClient() && bulletsLeft < definition.gun.capacity && bulletsReloading == 0){
+				if(entityOn instanceof EntityPlayerGun){
+					if(definition.gun.autoReload || bulletsLeft == 0){
+						//Check the player's inventory for bullets.
+						WrapperInventory inventory = ((WrapperPlayer) lastController).getInventory();
+						for(int i=0; i<inventory.getSize(); ++i){
+							WrapperItemStack stack = inventory.getStack(i);
+							AItemBase item = stack.getItem();
+							if(item instanceof ItemBullet){
+								if(tryToReload((ItemBullet) item)){
+									//Bullet is right type, and we can fit it.  Remove from player's inventory and add to the gun.
+									inventory.removeFromSlot(i, 1);
 									break;
 								}
 							}
 						}
 					}
-					if(controller == null){
-						state = state.demote(GunState.ACTIVE);
-					}
-				}
-				
-				//Adjust yaw and pitch to the direction of the controller.
-				if(state.isAtLeast(GunState.CONTROLLED)){
-					handleControl(controller);
-				}
-				
-				//Set final gun active state and variables.
-				boolean ableToFire = windupTimeCurrent == definition.gun.windupTime && bulletsLeft > 0 && (!definition.gun.isSemiAuto || !firedThisRequest);
-				if(ableToFire && state.isAtLeast(GunState.FIRING_REQUESTED)){
-					//Set firing to true if we aren't firing, and we've waited long enough since the last firing command.
-					//If we don't wait, we can bypass the cooldown by toggling the trigger.
-					long timeSinceFiring = System.currentTimeMillis() - lastTimeFired;
-					if(!state.isAtLeast(GunState.FIRING_CURRENTLY) && timeSinceFiring >= millisecondFiringDelay){
-						List<APart> allGuns = entityOn.partsByItem.get(gunItem);
-						//Check if we have a primary gun.  If so, we may need to adjust cams to resume the firing sequence.
-						int sequenceIndex = allGuns.indexOf(this);
-						APart lastPrimaryPart = entityOn.lastPrimaryPart.get(gunItem);
-						if(lastPrimaryPart != null){
-							sequenceIndex = sequenceIndex - 1 - allGuns.indexOf(lastPrimaryPart);
-							if(sequenceIndex < 0){
-								sequenceIndex += allGuns.size();
-							}
-						}
-
-						state = state.promote(GunState.FIRING_CURRENTLY);
-						millisecondCamOffset = definition.gun.fireSolo ? 0 : millisecondFiringDelay*sequenceIndex/allGuns.size();
-						lastTimeFired = System.currentTimeMillis() + millisecondCamOffset;
-						//For clients, we offset the time fired back one cycle, so we can spawn the first bullet.
-						//This will be set current in the particle spawning logic.
-						if(world.isClient()){
-							lastTimeFired -= millisecondFiringDelay;
-						}
-					}
-				}else if(!ableToFire){
-					state = state.demote(GunState.FIRING_REQUESTED);
-					ticksFiring = 0;
-					if(!state.isAtLeast(GunState.FIRING_REQUESTED)){
-						firedThisRequest = false;
-					}
-				}
-				
-				//If we are on the server, check if we are firing and can remove a bullet this tick.
-				//This uses a total time of firing to account for partial tick firing rates on clients.
-				if(!world.isClient()){
-					if(state.isAtLeast(GunState.FIRING_CURRENTLY)){
-						int bulletsToRemove = definition.gun.isSemiAuto ? 1 : (int) ((++ticksFiring + definition.gun.fireDelay - millisecondCamOffset/50)/definition.gun.fireDelay - bulletsRemovedThisRequest);
-						if(bulletsToRemove > 0){
-							//Need to take muzzle count into account.
-							bulletsToRemove *= definition.gun.muzzleGroups.get(currentMuzzleGroupIndex).muzzles.size();
-							firedThisRequest = true;
-							bulletsLeft -= bulletsToRemove;
-							bulletsRemovedThisRequest += bulletsToRemove;
-							bulletsFired += bulletsToRemove;
-							entityOn.lastPrimaryPart.put(gunItem, this);
-							if(definition.gun.muzzleGroups.size() == ++currentMuzzleGroupIndex){
-								currentMuzzleGroupIndex = 0;
-							}
-							if(bulletsLeft <= 0){
-								bulletsLeft = 0;
-								loadedBullet = null;
-							}
-						}
-					}else{
-						bulletsRemovedThisRequest = 0;
-					}
-				}
-				
-				//If we can accept bullets, and aren't currently loading any, re-load ourselves from any inventories.
-				//While the reload method checks for reload time, we check here to save on code processing.
-				//No sense in looking for bullets if we can't load them anyways.
-				if(!world.isClient() && bulletsLeft < definition.gun.capacity && bulletsReloading == 0){
-					if(entityOn instanceof EntityPlayerGun){
-						if(definition.gun.autoReload || bulletsLeft == 0){
-							//Check the player's inventory for bullets.
-							WrapperInventory inventory = ((WrapperPlayer) lastController).getInventory();
-							for(int i=0; i<inventory.getSize(); ++i){
-								WrapperItemStack stack = inventory.getStack(i);
-								AItemBase item = stack.getItem();
-								if(item instanceof ItemBullet){
-									if(tryToReload((ItemBullet) item)){
-										//Bullet is right type, and we can fit it.  Remove from player's inventory and add to the gun.
-										inventory.removeFromSlot(i, 1);
-										return true;
-									}
-								}
-							}
-						}
-					}else{
-						if(definition.gun.autoReload){
-							//Iterate through all the inventory slots in crates to try to find matching ammo.
-							for(APart part : entityOn.parts){
-								if(part instanceof PartInteractable && part.definition.interactable.interactionType.equals(InteractableComponentType.CRATE) && part.isActive && part.definition.interactable.feedsVehicles){
-									EntityInventoryContainer inventory = ((PartInteractable) part).inventory;
-									for(int i=0; i<inventory.getSize(); ++i){
-										WrapperItemStack stack = inventory.getStack(i);
-										AItemBase item = stack.getItem();
-										if(item instanceof ItemBullet){
-											if(tryToReload((ItemBullet) item)){
-												//Bullet is right type, and we can fit it.  Remove from crate and add to the gun.
-												//Return here to ensure we don't set the loadedBullet to blank since we found bullets.
-												inventory.removeFromSlot(i, 1);
-												return true;
-											}
+				}else{
+					if(definition.gun.autoReload){
+						//Iterate through all the inventory slots in crates to try to find matching ammo.
+						for(APart part : entityOn.parts){
+							if(part instanceof PartInteractable && part.definition.interactable.interactionType.equals(InteractableComponentType.CRATE) && part.isActive && part.definition.interactable.feedsVehicles){
+								EntityInventoryContainer inventory = ((PartInteractable) part).inventory;
+								for(int i=0; i<inventory.getSize(); ++i){
+									WrapperItemStack stack = inventory.getStack(i);
+									AItemBase item = stack.getItem();
+									if(item instanceof ItemBullet){
+										if(tryToReload((ItemBullet) item)){
+											//Bullet is right type, and we can fit it.  Remove from crate and add to the gun.
+											inventory.removeFromSlot(i, 1);
+											break;
 										}
 									}
 								}
@@ -307,46 +304,46 @@ public class PartGun extends APart{
 						}
 					}
 				}
-				
-				//If we are reloading, decrement the reloading timer.
-				//If we are done reloading, add the new bullets.
-				//This comes after the reloading block as we need a 0/1 state-change for the various animations,
-				//so at some point the reload time needs to hit 0.
-				if(reloadTimeRemaining > 0){
-					--reloadTimeRemaining;
-				}else if(bulletsReloading != 0){
-					bulletsLeft += bulletsReloading;
-					bulletsReloading = 0;
-				}
-			}else{
-				//Inactive gun, set as such and set to default position if we have one.
-				state = GunState.INACTIVE;
-				entityTarget = null;
-				if(definition.gun.resetPosition){
-					handleMovement(defaultYaw, defaultPitch);
-				}
 			}
 			
-			
-			//Increment or decrement windup.
-			//This is done outside the main active area as windup can wind-down on deactivated guns.
-			if(state.isAtLeast(GunState.FIRING_REQUESTED)){
-				if(windupTimeCurrent < definition.gun.windupTime){
-					++windupTimeCurrent;
-				}
-			}else if(windupTimeCurrent > 0){
-				--windupTimeCurrent;
+			//If we are reloading, decrement the reloading timer.
+			//If we are done reloading, add the new bullets.
+			//This comes after the reloading block as we need a 0/1 state-change for the various animations,
+			//so at some point the reload time needs to hit 0.
+			if(reloadTimeRemaining > 0){
+				--reloadTimeRemaining;
+			}else if(bulletsReloading != 0){
+				bulletsLeft += bulletsReloading;
+				bulletsReloading = 0;
 			}
-			windupRotation += windupTimeCurrent;
-			
-			//Reset fire command bit if we aren't firing.
-			if(!state.isAtLeast(GunState.FIRING_REQUESTED)){
-				firedThisRequest = false;
-			}
-			return true;
 		}else{
-			return false;
+			//Inactive gun, set as such and set to default position if we have one.
+			state = GunState.INACTIVE;
+			entityTarget = null;
+			if(definition.gun.resetPosition){
+				handleMovement(defaultYaw, defaultPitch);
+			}
 		}
+		
+		
+		//Increment or decrement windup.
+		//This is done outside the main active area as windup can wind-down on deactivated guns.
+		if(state.isAtLeast(GunState.FIRING_REQUESTED)){
+			if(windupTimeCurrent < definition.gun.windupTime){
+				++windupTimeCurrent;
+			}
+		}else if(windupTimeCurrent > 0){
+			--windupTimeCurrent;
+		}
+		windupRotation += windupTimeCurrent;
+		
+		//Reset fire command bit if we aren't firing.
+		if(!state.isAtLeast(GunState.FIRING_REQUESTED)){
+			firedThisRequest = false;
+		}
+		
+		//Now fire super updates.  We have to do these after ourselves so we have the right state.
+		return super.update();
 	}
 	
 	/**
