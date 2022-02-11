@@ -59,6 +59,8 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 	public boolean isActive = true;
 	public final Point3dPlus localOffset;
 	public final Matrix4dPlus localOrientation;
+	protected final Matrix4dPlus zeroReferenceOrientation;
+	protected final Matrix4dPlus prevZeroReferenceOrientation;
 	private AnimationSwitchbox placementActiveSwitchbox;
 	private AnimationSwitchbox internalActiveSwitchbox;
 	private AnimationSwitchbox placementMovementSwitchbox;
@@ -76,6 +78,8 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 		
 		this.localOffset = placementOffset.copy();
 		this.localOrientation = new Matrix4dPlus(placementDefinition.rot);
+		this.zeroReferenceOrientation = new Matrix4dPlus();
+		this.prevZeroReferenceOrientation = new Matrix4dPlus();
 		
 		//If we are an additional part or sub-part, link ourselves now.
 		//If we are a fake part, don't even bother checking.
@@ -157,6 +161,15 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 				orientation.set(entityOn.orientation);
 				localOffset.set(placementOffset);
 			}
+			
+			//Update zero-reference.
+			prevZeroReferenceOrientation.set(zeroReferenceOrientation);
+			if(parentPart != null && placementDefinition.isSubPart){
+				zeroReferenceOrientation.set(parentPart.orientation);
+			}else{
+				zeroReferenceOrientation.set(entityOn.orientation);
+			}
+			zeroReferenceOrientation.mul(placementDefinition.rot);
 			
 			//Update local position, orientation, scale, and enabled state.
 			isInvisible = false;

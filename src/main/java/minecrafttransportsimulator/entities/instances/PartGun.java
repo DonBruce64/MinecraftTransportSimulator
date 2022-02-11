@@ -73,7 +73,6 @@ public class PartGun extends APart{
 	private WrapperEntity entityTarget;
 	private long millisecondCamOffset;
 	private long lastTimeFired;
-	private final Matrix4dPlus zeroReferenceOrientation;
 	
 	//Temp helper variables for calculations
 	private final Point3dPlus targetVector = new Point3dPlus();
@@ -141,7 +140,6 @@ public class PartGun extends APart{
 		this.internalOrientation = new Matrix4dPlus();
 		internalOrientation.setToAngles(internalAngles);
 		this.prevInternalOrientation = new Matrix4dPlus(internalOrientation);
-		this.zeroReferenceOrientation = new Matrix4dPlus();
 		String loadedBulletPack = data.getString("loadedBulletPack");
 		String loadedBulletName = data.getString("loadedBulletName");
 		if(!loadedBulletPack.isEmpty()){
@@ -171,15 +169,6 @@ public class PartGun extends APart{
 	public boolean update(){
 		if(super.update()){
 			//Set gun state and do updates.
-			//First get our zero-reference.
-			if(parentPart != null && placementDefinition.isSubPart){
-				zeroReferenceOrientation.set(parentPart.orientation);
-			}else{
-				zeroReferenceOrientation.set(entityOn.orientation);
-			}
-			zeroReferenceOrientation.mul(placementDefinition.rot);
-			
-			//Now set our state.
 			firedThisCheck = false;
 			prevInternalOrientation.set(internalOrientation);
 			if(isActive && !placementDefinition.isSpare){

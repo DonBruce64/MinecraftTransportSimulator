@@ -191,7 +191,7 @@ public class CameraSystem{
 				enableCustomCameras = false;
 				runningCustomCameras = false;
 			}else if(sittingSeat != null){
-				sittingSeat.getInterpolatedOrientation(cameraOrientation, partialTicks);
+				sittingSeat.getRiderInterpolatedOrientation(cameraOrientation, partialTicks);
             	cameraOrientation.mul(player.getOrientation());
             	return true;
 			}
@@ -209,7 +209,7 @@ public class CameraSystem{
         		customCameraIndex = 0;
     			
     			//Add the zoom offset for third-person view.  This takes hold if we don't have any custom cameras.
-        		sittingSeat.getInterpolatedOrientation(cameraOrientation, partialTicks);
+        		sittingSeat.getRiderInterpolatedOrientation(cameraOrientation, partialTicks);
             	cameraOffset.set(-sittingSeat.localOffset.x, 0, -zoomLevel);
             	cameraOrientation.setTranslation(cameraOffset);
         		cameraOrientation.mul(player.getOrientation());
@@ -232,7 +232,7 @@ public class CameraSystem{
 				}
 
 	        	//Add the zoom offset for third-person view.
-	        	sittingSeat.getInterpolatedOrientation(cameraOrientation, partialTicks);
+	        	sittingSeat.getRiderInterpolatedOrientation(cameraOrientation, partialTicks);
             	cameraOffset.set(-sittingSeat.localOffset.x, 0, zoomLevel);
             	cameraOrientation.setTranslation(cameraOffset);
         		cameraOrientation.mul(player.getOrientation());

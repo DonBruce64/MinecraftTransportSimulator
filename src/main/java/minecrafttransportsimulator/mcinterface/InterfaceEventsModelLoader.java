@@ -125,8 +125,6 @@ public class InterfaceEventsModelLoader{
 								world.endProfiling();
 							}
 							
-							
-							
 							//Reset states.
 							GL11.glShadeModel(GL11.GL_FLAT);
 							if(blendingEnabled){

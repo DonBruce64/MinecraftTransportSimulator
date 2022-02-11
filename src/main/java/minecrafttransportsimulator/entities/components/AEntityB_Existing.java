@@ -39,8 +39,8 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	public final Matrix4dPlus orientation;
 	public final Matrix4dPlus prevOrientation;
 	public final Point3dPlus axialOrientation;
-	private final Quat4d interpHelperQuatStart = new Quat4d();
-	private final Quat4d interpHelperQuatEnd = new Quat4d();
+	protected final Quat4d interpHelperQuatStart = new Quat4d();
+	protected final Quat4d interpHelperQuatEnd = new Quat4d();
 	
 	public double airDensity;
 	public double velocity;

@@ -79,17 +79,12 @@ abstract class AEntityVehicleB_Rideable extends AEntityF_Multipart<JSONVehicle>{
 					rider.addPotionEffect(effect);
 				}
 			}
-
-			//Now set the actual position/motion for the seat.
-			double seatYPos = rider.getEyeHeight() + rider.getSeatOffset();
-			if(seat.definition.seat.heightScale != 0){
-				seatYPos *= seat.definition.seat.heightScale;
-			}
-			Point3dPlus seatLocationOffset = new Point3dPlus(0D, seatYPos, 0D);
-			seat.orientation.transform(seatLocationOffset);
-			seatLocationOffset.add(seat.position);
-			seatLocationOffset.add(0D, -rider.getEyeHeight(), 0D);
-			rider.setPosition(seatLocationOffset, false);
+			
+			//Set rider to the Y position of the seat.
+			//This assumes their bottom is where the seat's position is.
+			//For animals, it will be their feet.  For players, their literal bottom (unless the seat is standing type).
+			//Also set motion here, as that's used in other places.
+			rider.setPosition(seat.position, false);
 			rider.setVelocity(motion);
 			
 			//If we are on the client, and the rider is the main client player, check controls.

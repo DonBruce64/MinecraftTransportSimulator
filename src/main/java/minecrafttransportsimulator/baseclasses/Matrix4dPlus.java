@@ -112,9 +112,17 @@ public class Matrix4dPlus extends Matrix4d{
 	 * in all classes that just want to scale renderables.
 	 */
 	public void scale(Point3dPlus scaling){
-		helperScalingTransform.m00 = scaling.x;
-		helperScalingTransform.m11 = scaling.y;
-		helperScalingTransform.m22 = scaling.z;
+		scale(scaling.x, scaling.y, scaling.z);
+	}
+	
+	/**Applies a scaling transform to this object.
+	 * This is here to prevent the need to create transform objects
+	 * in all classes that just want to scale renderables.
+	 */
+	public void scale(double x, double y, double z){
+		helperScalingTransform.m00 = x;
+		helperScalingTransform.m11 = y;
+		helperScalingTransform.m22 = z;
 		helperScalingTransform.m33 = 1;
 		mul(helperScalingTransform);
 	}

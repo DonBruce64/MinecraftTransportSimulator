@@ -30,6 +30,7 @@ public class AnimationSwitchbox{
 	protected final AEntityD_Definable<?> entity;
 	private final List<DurationDelayClock> clocks = new ArrayList<DurationDelayClock>();
 	private final Point3dPlus helperPoint = new Point3dPlus();
+	private final Point3dPlus helperScalingVector = new Point3dPlus();
 	private final Matrix4dPlus helperRotationMatrix = new Matrix4dPlus();
 	private final Matrix4dPlus helperOffsetOperationMatrix = new Matrix4dPlus();
 	private boolean inhibitAnimations;
@@ -153,12 +154,12 @@ public class AnimationSwitchbox{
 	public void runScaling(DurationDelayClock clock, float partialTicks){
 		//Found scaling.  Get scale that needs to be applied.
 		double variableValue = entity.getAnimatedVariableValue(clock, clock.animationAxisMagnitude, partialTicks);
-		helperPoint.set(clock.animation.axis.x, clock.animation.axis.y, clock.animation.axis.z);
-		helperPoint.scale(variableValue);
+		helperScalingVector.set(clock.animation.axis.x, clock.animation.axis.y, clock.animation.axis.z);
+		helperScalingVector.scale(variableValue);
 		//Check for 0s and remove them.
-		if(helperPoint.x == 0)helperPoint.x = 1.0;
-		if(helperPoint.y == 0)helperPoint.z = 1.0;
-		if(helperPoint.z == 0)helperPoint.z = 1.0;
+		if(helperScalingVector.x == 0)helperScalingVector.x = 1.0;
+		if(helperScalingVector.y == 0)helperScalingVector.z = 1.0;
+		if(helperScalingVector.z == 0)helperScalingVector.z = 1.0;
 		
 		//If we have a center offset, do special translation code to handle it.
 		//Otherwise, don't bother, as it'll just take cycles.
@@ -169,7 +170,7 @@ public class AnimationSwitchbox{
 			helperOffsetOperationMatrix.translate(helperPoint);
 			
 			//Now do scaling.
-			helperOffsetOperationMatrix.scale(helperPoint);
+			helperOffsetOperationMatrix.scale(helperScalingVector);
 			
 			//Translate back.  This requires inverting the translation.
 			helperPoint.negate();
@@ -178,7 +179,7 @@ public class AnimationSwitchbox{
 			//Apply that net value to our main matrix.
 			netMatrix.matrix(helperOffsetOperationMatrix);
 		}else{
-			netMatrix.scale(helperPoint);
+			netMatrix.scale(helperScalingVector);
 		}
 	}
 }
