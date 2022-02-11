@@ -59,8 +59,8 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 	public boolean isActive = true;
 	public final Point3dPlus localOffset;
 	public final Matrix4dPlus localOrientation;
-	protected final Matrix4dPlus zeroReferenceOrientation;
-	protected final Matrix4dPlus prevZeroReferenceOrientation;
+	public final Matrix4dPlus zeroReferenceOrientation;
+	public final Matrix4dPlus prevZeroReferenceOrientation;
 	private AnimationSwitchbox placementActiveSwitchbox;
 	private AnimationSwitchbox internalActiveSwitchbox;
 	private AnimationSwitchbox placementMovementSwitchbox;

@@ -62,8 +62,8 @@ public class WrapperPlayer extends WrapperEntity{
 	
 	@Override
 	public double getSeatOffset(){
-		//Player legs are 12 pixels.
-		return -12D/16D;
+		//Player legs are 10 pixels.
+		return -10D/16D;
 	}
 
 	/**

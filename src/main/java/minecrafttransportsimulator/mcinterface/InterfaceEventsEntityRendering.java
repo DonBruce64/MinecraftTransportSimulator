@@ -265,9 +265,9 @@ public class InterfaceEventsEntityRendering{
         		entity.rotationYawHead = (float) headVector.y;
         		entity.prevRotationYawHead =  entity.rotationYawHead;
             	
-            	//If we are a player, and are sitting, translate down to offset our position.
-            	if(entity instanceof EntityPlayer && renderCurrentRiderSitting){
-            		riderOrientation.translate(0, -10*(1F/16F), 0);
+            	//Adjust for seated offset.
+            	if(renderCurrentRiderSitting){
+            		riderOrientation.translate(0, entityWrapper.getSeatOffset(), 0);
             	}
             	
             	//Apply scale.

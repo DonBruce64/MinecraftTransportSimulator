@@ -143,11 +143,11 @@ public class WrapperEntity{
 	
 	/**
 	 *  Returns a Y-offset for where this entity should sit in a seat.
-	 *  This is based on how far down the axis drawn on the seat's y-axis
-	 *  the position for the entity should be set.  Required as entities
-	 *  sit where the bottoms of their bounding boxes are, even if this isn't
-	 *  where the bottoms of their models are.  Players, for example, rotate
-	 *  their legs upwards when sitting, despite their bounds being lower.
+	 *  This is used if the sitting point of the entity isn't at the base
+	 *  of the entity. For example, players, when sitting, rotate their
+	 *  legs forwards, but they don't translate down.  This parameter is the
+	 *  amount that they should be translated.  Useful in rendering and camera
+	 *  operations as this will also affect eye height.
 	 */
 	public double getSeatOffset(){
 		return 0D;
@@ -288,7 +288,7 @@ public class WrapperEntity{
 		if(seat != null){
 			mutableSight.set(0, 0, distance);
 			getOrientation().transform(mutableSight);
-			seat.orientation.transform(mutableSight);
+			seat.zeroReferenceOrientation.transform(mutableSight);
 			return mutableSight;
 		}else{
 			mutableSightRotation.set(entity.rotationPitch, -entity.rotationYaw, 0);
