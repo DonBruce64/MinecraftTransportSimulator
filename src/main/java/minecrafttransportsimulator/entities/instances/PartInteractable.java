@@ -78,11 +78,13 @@ public final class PartInteractable extends APart{
 	
 	@Override
 	public void destroy(BoundingBox box){
-		super.destroy(box);
 		double explosivePower = getExplosiveContribution();
 		if(explosivePower > 0 && isValid){
+			super.destroy(box);
 			world.spawnExplosion(position, explosivePower, true);
 			entityOn.destroy(boundingBox);
+		}else{
+			super.destroy(box);
 		}
 	}
 	

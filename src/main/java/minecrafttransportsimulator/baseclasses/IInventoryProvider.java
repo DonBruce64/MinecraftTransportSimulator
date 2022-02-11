@@ -6,7 +6,6 @@ import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemBullet;
-import minecrafttransportsimulator.mcinterface.IBuilderItemInterface;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperItemStack;
 import minecrafttransportsimulator.packloading.PackMaterialComponent;
@@ -243,8 +242,8 @@ public interface IInventoryProvider{
 		for(int i=0; i<getSize(); ++i){
 			WrapperItemStack stack = getStack(i);
 			AItemBase item = stack.getItem();
-			if(item instanceof IBuilderItemInterface && ((IBuilderItemInterface) item).getItem() instanceof ItemBullet){
-				ItemBullet bullet = (ItemBullet) ((IBuilderItemInterface) item).getItem();
+			if(item instanceof ItemBullet){
+				ItemBullet bullet = (ItemBullet) item;
 				if(bullet.definition.bullet != null){
 					double blastSize = bullet.definition.bullet.blastStrength == 0 ? bullet.definition.bullet.diameter/10D : bullet.definition.bullet.blastStrength;
 					explosivePower += stack.getSize()*blastSize/10D;
