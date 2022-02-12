@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.systems;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.Point3dPlus;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
@@ -91,9 +91,9 @@ public final class ControlSystem{
 		if(playerGun != null && playerGun.activeGun != null){
 			InterfacePacket.sendToServer(new PacketPartGun(playerGun.activeGun, clickingLeft, clickingRight));
 		}else if(clickingLeft || clickingRight){
-			Point3dPlus startPosition = player.getPosition();
-			startPosition.y += player.getEyeHeight();
-			Point3dPlus endPosition = player.getLineOfSight(3.5);
+			Point3D startPosition = player.getPosition();
+			startPosition.y += (player.getEyeHeight() + player.getSeatOffset());
+			Point3D endPosition = player.getLineOfSight(3.5);
 			endPosition.add(startPosition);
 			BoundingBox clickBounds = new BoundingBox(startPosition, endPosition);
 			
@@ -104,7 +104,7 @@ public final class ControlSystem{
 					//Could have hit this vehicle, check if and what we did via raytracing.
 					for(BoundingBox box : vehicle.allInteractionBoxes){
 						if(box.intersects(clickBounds) && box.getIntersectionPoint(startPosition, endPosition) != null){
-							if(closestBox == null || closestBox.globalCenter.distance(startPosition) > box.globalCenter.distance(startPosition)){
+							if(closestBox == null || closestBox.globalCenter.distanceTo(startPosition) > box.globalCenter.distanceTo(startPosition)){
 								closestBox = box;
 								closestVehicle = vehicle;
 							}

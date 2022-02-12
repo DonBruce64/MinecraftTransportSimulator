@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.blocks.tileentities.components;
 
-import minecrafttransportsimulator.baseclasses.Point3dPlus;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -23,14 +23,14 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 public abstract class ATileEntityBase<JSONDefinition extends AJSONMultiModelProvider> extends AEntityD_Definable<JSONDefinition>{
 	
 	private float lastLightLevel;
-	private final Point3dPlus blockPosition;
+	private final Point3D blockPosition;
 	
-	public ATileEntityBase(WrapperWorld world, Point3dPlus position, WrapperPlayer placingPlayer, WrapperNBT data){
+	public ATileEntityBase(WrapperWorld world, Point3D position, WrapperPlayer placingPlayer, WrapperNBT data){
 		super(world, placingPlayer, data);
 		//Offset the position of this tile to be centered in the blocks 0->1 space.
 		//This allows for better rotation code and simpler models.
 		//We need to save the actual position though so we don't constantly offset.
-		this.blockPosition = new Point3dPlus(position);
+		this.blockPosition = new Point3D(position);
 		this.position.set(position);
 		this.position.add(0.5, 0, 0.5);
 		boundingBox.globalCenter.set(this.position);
@@ -105,7 +105,7 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONMultiModelProv
 	 *  be a block being added or removed or just updating state.
 	 *  This is only called on the SERVER.
 	 */
-	public void onNeighborChanged(Point3dPlus otherPosition){}
+	public void onNeighborChanged(Point3D otherPosition){}
 	
 	@Override
 	public WrapperNBT save(WrapperNBT data){

@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.baseclasses.Point3dPlus;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
@@ -14,9 +14,9 @@ import minecrafttransportsimulator.packets.components.APacketEntityInteract;
  * @author don_bruce
  */
 public class PacketEntityRiderChange extends APacketEntityInteract<AEntityE_Interactable<?>, WrapperEntity>{
-	private final Point3dPlus position;
+	private final Point3D position;
 	
-	public PacketEntityRiderChange(AEntityE_Interactable<?> entity, WrapperEntity rider, Point3dPlus position){
+	public PacketEntityRiderChange(AEntityE_Interactable<?> entity, WrapperEntity rider, Point3D position){
 		super(entity, rider);
 		this.position = position;
 	}

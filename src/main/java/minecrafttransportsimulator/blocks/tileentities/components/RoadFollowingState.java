@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.blocks.tileentities.components;
 
 import minecrafttransportsimulator.baseclasses.BezierCurve;
-import minecrafttransportsimulator.baseclasses.Point3dPlus;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLane.LaneSelectionRequest;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 
@@ -104,8 +104,8 @@ public class RoadFollowingState{
 	 * This should be called AFTER {@link #updateCurvePoints(float, int)},
 	 * otherwise you may get out of the curve's bounds.
 	 */
-	public Point3dPlus getCurrentPoint(){
-		Point3dPlus currentPoint = new Point3dPlus(lane.road.position);
+	public Point3D getCurrentPoint(){
+		Point3D currentPoint = new Point3D(lane.road.position);
 		currentPoint.y += lane.road.definition.road.collisionHeight/16F;
 		curve.offsetPointByPositionAt(currentPoint, currentSegment);
 		return currentPoint;

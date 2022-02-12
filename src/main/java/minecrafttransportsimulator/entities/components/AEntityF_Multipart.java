@@ -11,7 +11,7 @@ import java.util.Map.Entry;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
-import minecrafttransportsimulator.baseclasses.Point3dPlus;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.items.components.AItemBase;
@@ -96,7 +96,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 			try{
 				WrapperNBT partData = data.getData("part_" + i);
 				AItemPart partItem = PackParserSystem.getItem(partData.getString("packID"), partData.getString("systemName"), partData.getString("subName"));
-				Point3dPlus partOffset = partData.getPoint3d("offset");
+				Point3D partOffset = partData.getPoint3d("offset");
 				addPartFromItem(partItem, placingPlayer, partData, partOffset, true);
 			}catch(Exception e){
 				InterfaceCore.logError("Could not load part from NBT.  Did you un-install a pack?");
@@ -151,8 +151,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 							for(JSONPartDefinition subPartDef : part.definition.parts){
 								if(packVehicleDef.equals(part.getPackForSubPart(subPartDef))){
 									//Need to find the delta between part 0-degree position and our current position.
-									Point3dPlus delta = subPartDef.pos.copy();
-									part.orientation.transform(delta);
+									Point3D delta = subPartDef.pos.copy().rotate(part.orientation);
 									entry.getKey().updateToEntity(part, delta);
 									break;
 								}
@@ -210,7 +209,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 	}
 	
 	@Override
-	public boolean addRider(WrapperEntity rider, Point3dPlus riderLocation){
+	public boolean addRider(WrapperEntity rider, Point3D riderLocation){
 		//Auto-close doors for the rider in the seat they are going in, if such doors exist.
 		if(super.addRider(rider, riderLocation)){
 			PartSeat seat = getSeatForRider(rider);
@@ -409,7 +408,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 	 * prevent calling the lists, maps, and other systems that aren't set up yet.
 	 * This method returns the part if it was added, null if it wasn't.
 	 */
-    public APart addPartFromItem(AItemPart partItem, WrapperPlayer playerAdding, WrapperNBT partData, Point3dPlus offset, boolean addedDuringConstruction){
+    public APart addPartFromItem(AItemPart partItem, WrapperPlayer playerAdding, WrapperNBT partData, Point3D offset, boolean addedDuringConstruction){
     	//Get the part pack to add.
 		JSONPartDefinition newPartDef = getPackDefForLocation(offset);
 		APart partToAdd = null;
@@ -599,7 +598,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 	 * This also checks NBT parts in case we are doing
 	 * this check for parent-part lookups during construction.
 	 */
-	public APart getPartAtLocation(Point3dPlus offset){
+	public APart getPartAtLocation(Point3D offset){
 		for(APart part : parts){
 			if(part.placementOffset.equals(offset)){
 				return part;
@@ -634,8 +633,8 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 	 * Note that additional parts will not be added if no part is present
 	 * in the primary location.
 	 */
-	public LinkedHashMap<Point3dPlus, JSONPartDefinition> getAllPossiblePackParts(){
-		LinkedHashMap<Point3dPlus, JSONPartDefinition> partDefs = new LinkedHashMap<Point3dPlus, JSONPartDefinition>();
+	public LinkedHashMap<Point3D, JSONPartDefinition> getAllPossiblePackParts(){
+		LinkedHashMap<Point3D, JSONPartDefinition> partDefs = new LinkedHashMap<Point3D, JSONPartDefinition>();
 		//First get all the regular part spots.
 		for(JSONPartDefinition partDef : definition.parts){
 			partDefs.put(partDef.pos, partDef);
@@ -684,7 +683,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 	/**
 	 * Gets the pack definition at the specified location.
 	 */
-	public JSONPartDefinition getPackDefForLocation(Point3dPlus offset){
+	public JSONPartDefinition getPackDefForLocation(Point3D offset){
 		//Check to see if this is a main part.
 		for(JSONPartDefinition partDef : definition.parts){
 			if(partDef.pos.equals(offset)){
@@ -806,7 +805,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 	 */
 	private void recalculatePartSlots(){
 		allPartSlotBoxes.clear();
-		for(Entry<Point3dPlus, JSONPartDefinition> packPartEntry : getAllPossiblePackParts().entrySet()){
+		for(Entry<Point3D, JSONPartDefinition> packPartEntry : getAllPossiblePackParts().entrySet()){
 			if(getPartAtLocation(packPartEntry.getKey()) == null){
 				BoundingBox newSlotBox = new BoundingBox(packPartEntry.getKey(), packPartEntry.getKey().copy().rotateFine(angles).add(position), PART_SLOT_HITBOX_WIDTH/2D, PART_SLOT_HITBOX_HEIGHT/2D, PART_SLOT_HITBOX_WIDTH/2D, false);
 				allPartSlotBoxes.put(newSlotBox, packPartEntry.getValue());

@@ -6,7 +6,7 @@ import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
-import minecrafttransportsimulator.baseclasses.Point3dPlus;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperItemStack;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -28,10 +28,10 @@ abstract class AEntityVehicleC_Colliding extends AEntityVehicleB_Rideable{
 	private float hardnessHitThisTick = 0;
 	public double currentMass;
 	public double axialVelocity;
-	public final Point3dPlus headingVector = new Point3dPlus();
-	public final Point3dPlus verticalVector = new Point3dPlus();
-	public final Point3dPlus sideVector = new Point3dPlus();
-	public final Point3dPlus normalizedVelocityVector = new Point3dPlus();
+	public final Point3D headingVector = new Point3D();
+	public final Point3D verticalVector = new Point3D();
+	public final Point3D sideVector = new Point3D();
+	public final Point3D normalizedVelocityVector = new Point3D();
 	
 	public AEntityVehicleC_Colliding(WrapperWorld world, WrapperPlayer placingPlayer, WrapperNBT data){
 		super(world, placingPlayer, data);
@@ -87,13 +87,13 @@ abstract class AEntityVehicleC_Colliding extends AEntityVehicleB_Rideable{
 	 */
 	protected double getCollisionForAxis(BoundingBox box, boolean xAxis, boolean yAxis, boolean zAxis){
 		//Get the motion the entity is trying to move, and add it to the passed-in box value.
-		Point3dPlus collisionMotion = motion.copy().multiply(SPEED_FACTOR);
+		Point3D collisionMotion = motion.copy().scale(SPEED_FACTOR);
 		
 		//If we collided, so check to see if we can break some blocks or if we need to explode.
 		//Don't bother with this logic if it's impossible for us to break anything.
 		if(box.updateCollidingBlocks(world, collisionMotion)){
 			float hardnessHitThisBox = 0;
-			for(Point3dPlus blockPosition : box.collidingBlockPositions){
+			for(Point3D blockPosition : box.collidingBlockPositions){
 				float blockHardness = world.getBlockHardness(blockPosition);
 				if(!world.isBlockLiquid(blockPosition)){
 					if(ConfigSystem.configObject.general.blockBreakage.value && blockHardness <= velocity*currentMass/250F && blockHardness >= 0){
@@ -102,7 +102,7 @@ abstract class AEntityVehicleC_Colliding extends AEntityVehicleB_Rideable{
 							//Only add hardness if we hit in XZ movement.  Don't want to blow up from falling fast, just break tons of dirt.
 							hardnessHitThisTick += blockHardness;
 						}
-						motion.multiply(Math.max(1.0F - blockHardness*0.5F/((1000F + currentMass)/1000F), 0.0F));
+						motion.scale(Math.max(1.0F - blockHardness*0.5F/((1000F + currentMass)/1000F), 0.0F));
 						if(!world.isClient()){
 							if(ticksExisted > 500){
 								world.destroyBlock(blockPosition, true);

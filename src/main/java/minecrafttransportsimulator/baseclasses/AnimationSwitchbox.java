@@ -3,8 +3,6 @@ package minecrafttransportsimulator.baseclasses;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.vecmath.Vector3d;
-
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.rendering.components.DurationDelayClock;
@@ -20,19 +18,19 @@ import minecrafttransportsimulator.rendering.components.DurationDelayClock;
  * @author don_bruce
  */
 public class AnimationSwitchbox{
-	public final Matrix4dPlus netMatrix = new Matrix4dPlus();
-	public final Matrix4dPlus rotationMatrix = new Matrix4dPlus();
-	public final Point3dPlus translation = new Point3dPlus();
-	public double animationScale;
+	public final TransformationMatrix netMatrix = new TransformationMatrix();
+	public final RotationMatrix rotation = new RotationMatrix();
+	public final Point3D translation = new Point3D();
+	public double scale;
 	public boolean anyClockMovedThisUpdate;
 	
 	//Computational variables.
 	protected final AEntityD_Definable<?> entity;
 	private final List<DurationDelayClock> clocks = new ArrayList<DurationDelayClock>();
-	private final Point3dPlus helperPoint = new Point3dPlus();
-	private final Point3dPlus helperScalingVector = new Point3dPlus();
-	private final Matrix4dPlus helperRotationMatrix = new Matrix4dPlus();
-	private final Matrix4dPlus helperOffsetOperationMatrix = new Matrix4dPlus();
+	private final Point3D helperPoint = new Point3D();
+	private final Point3D helperScalingVector = new Point3D();
+	private final RotationMatrix helperRotationMatrix = new RotationMatrix();
+	private final TransformationMatrix helperOffsetOperationMatrix = new TransformationMatrix();
 	private boolean inhibitAnimations;
 	
 	public AnimationSwitchbox(AEntityD_Definable<?> entity, List<JSONAnimationDefinition> animations){
@@ -45,10 +43,10 @@ public class AnimationSwitchbox{
 	public boolean runSwitchbox(float partialTicks){
 		inhibitAnimations = false;
 		anyClockMovedThisUpdate = false;
-		animationScale = 1.0;
-		netMatrix.setIdentity();
+		scale = 1.0;
+		netMatrix.resetTransforms();
 		translation.set(0, 0, 0);
-		rotationMatrix.setIdentity();
+		rotation.setToZero();
 		
 		for(DurationDelayClock clock : clocks){
 			switch(clock.animation.animationType){
@@ -111,7 +109,7 @@ public class AnimationSwitchbox{
 		if(variableValue != 0){
 			helperPoint.set(clock.animationAxisNormalized);
 			helperPoint.scale(variableValue);
-			netMatrix.translate(helperPoint);
+			netMatrix.applyTranslation(helperPoint);
 			translation.add(helperPoint);
 		}
 	}
@@ -120,8 +118,7 @@ public class AnimationSwitchbox{
 		//Found rotation.  Get angles that needs to be applied.
 		double variableValue = entity.getAnimatedVariableValue(clock, clock.animationAxisMagnitude, partialTicks);
 		if(variableValue != 0){
-			helperRotationMatrix.resetTransforms();
-			helperRotationMatrix.rotate(variableValue, clock.animationAxisNormalized.x, clock.animationAxisNormalized.y, clock.animationAxisNormalized.z);
+			helperRotationMatrix.setAxisAngleRotation(clock.animationAxisNormalized, variableValue);
 			
 			//If we have a center offset, do special translation code to handle it.
 			//Otherwise, don't bother, as it'll just take cycles.
@@ -129,33 +126,31 @@ public class AnimationSwitchbox{
 				//First translate to the center point.
 				helperPoint.set(clock.animation.centerPoint);
 				helperOffsetOperationMatrix.resetTransforms();
-				helperOffsetOperationMatrix.translate(helperPoint);
+				helperOffsetOperationMatrix.setTranslation(helperPoint);
 				
 				//Now do rotation.
-				helperOffsetOperationMatrix.matrix(helperRotationMatrix);
+				helperOffsetOperationMatrix.applyRotation(helperRotationMatrix);
 				
 				//Translate back.  This requires inverting the translation.
-				helperPoint.negate();
-				helperOffsetOperationMatrix.translate(helperPoint);
+				helperPoint.invert();
+				helperOffsetOperationMatrix.applyTranslation(helperPoint);
 				
 				//Apply that net value to our main matrix.
-				netMatrix.matrix(helperOffsetOperationMatrix);
+				netMatrix.multiply(helperOffsetOperationMatrix);
 				
 				//Get the translation value from the offset matrix and apply it to our net translation.
-				helperOffsetOperationMatrix.get(new Vector3d());
 				translation.add(helperOffsetOperationMatrix.m03, helperOffsetOperationMatrix.m13, helperOffsetOperationMatrix.m23);
 			}else{
-				netMatrix.matrix(helperRotationMatrix);
+				netMatrix.applyRotation(helperRotationMatrix);
 			}
 		}
-		rotationMatrix.matrix(helperRotationMatrix);
+		rotation.multiply(helperRotationMatrix);
 	}
 	
 	public void runScaling(DurationDelayClock clock, float partialTicks){
 		//Found scaling.  Get scale that needs to be applied.
 		double variableValue = entity.getAnimatedVariableValue(clock, clock.animationAxisMagnitude, partialTicks);
-		helperScalingVector.set(clock.animation.axis.x, clock.animation.axis.y, clock.animation.axis.z);
-		helperScalingVector.scale(variableValue);
+		helperScalingVector.set(clock.animation.axis).scale(variableValue);
 		//Check for 0s and remove them.
 		if(helperScalingVector.x == 0)helperScalingVector.x = 1.0;
 		if(helperScalingVector.y == 0)helperScalingVector.z = 1.0;
@@ -167,19 +162,19 @@ public class AnimationSwitchbox{
 			//First translate to the center point.
 			helperPoint.set(clock.animation.centerPoint);
 			helperOffsetOperationMatrix.resetTransforms();
-			helperOffsetOperationMatrix.translate(helperPoint);
+			helperOffsetOperationMatrix.setTranslation(helperPoint);
 			
 			//Now do scaling.
-			helperOffsetOperationMatrix.scale(helperScalingVector);
+			helperOffsetOperationMatrix.applyScaling(helperScalingVector);
 			
 			//Translate back.  This requires inverting the translation.
-			helperPoint.negate();
-			helperOffsetOperationMatrix.translate(helperPoint);
+			helperPoint.invert();
+			helperOffsetOperationMatrix.applyTranslation(helperPoint);
 			
 			//Apply that net value to our main matrix.
-			netMatrix.matrix(helperOffsetOperationMatrix);
+			netMatrix.multiply(helperOffsetOperationMatrix);
 		}else{
-			netMatrix.scale(helperScalingVector);
+			netMatrix.applyScaling(helperScalingVector);
 		}
 	}
 }

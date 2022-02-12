@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import minecrafttransportsimulator.baseclasses.BezierCurve;
-import minecrafttransportsimulator.baseclasses.Point3dPlus;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.instances.BlockCollision;
@@ -25,7 +25,7 @@ import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 
 public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implements IItemBlock{
-	private final Map<WrapperPlayer, Point3dPlus> lastPositionClicked = new HashMap<WrapperPlayer, Point3dPlus>();
+	private final Map<WrapperPlayer, Point3D> lastPositionClicked = new HashMap<WrapperPlayer, Point3D>();
 	private final Map<WrapperPlayer, Double> lastRotationClicked = new HashMap<WrapperPlayer, Double>();
 	private final Map<WrapperPlayer, RoadClickData> lastRoadClickedData = new HashMap<WrapperPlayer, RoadClickData>();
 	
@@ -43,7 +43,7 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 	}
 	
 	@Override
-	public boolean onBlockClicked(WrapperWorld world, WrapperPlayer player, Point3dPlus position, Axis axis){
+	public boolean onBlockClicked(WrapperWorld world, WrapperPlayer player, Point3D position, Axis axis){
 		//Only do logic on the server.
 		if(!world.isClient()){			
 			//If we clicked an inactive road, don't do anything.
@@ -75,7 +75,7 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 						clickedRoad = ((BlockCollision) clickedBlock).getMasterRoad(world, position);
 					}else{
 						clickedRoad = null;
-						lastPositionClicked.put(player, new Point3dPlus(position).add(0, 1, 0));
+						lastPositionClicked.put(player, new Point3D(position).add(0, 1, 0));
 					}
 					
 					//If we clicked a road, get the lane number clicked.
@@ -99,13 +99,13 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 					player.sendPacket(new PacketPlayerChatMessage(player, "interact.roadcomponent.set"));
 				}else if(!player.isSneaking() && lastPositionClicked.containsKey(player)){
 					//Clicked with the road not-sneaking with valid points.  Check end-points to make sure we aren't too long.
-					if(position.distanceTo(lastPositionClicked.get(player)) < TileEntityRoad.MAX_COLLISION_DISTANCE){
+					if(position.isDistanceToCloserThan(lastPositionClicked.get(player), TileEntityRoad.MAX_COLLISION_DISTANCE)){
 						//Get the road we clicked, if we clicked one.
 						//If we clicked a road for our starting point, then we need to auto-place the new road block.
 						//If not, we place the new road block wherever we clicked.  Find this position now, as well as
 						//the new curve starting point.  Also get the lane number and side clicked.
-						final Point3dPlus blockPlacementPoint;
-						final Point3dPlus startPosition;
+						final Point3D blockPlacementPoint;
+						final Point3D startPosition;
 						final double startRotation;
 						final RoadClickData startingRoadData;
 						
@@ -153,7 +153,7 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 								return true;
 							}
 						}else{
-							blockPlacementPoint = new Point3dPlus(position).add(0, 1, 0);
+							blockPlacementPoint = new Point3D(position).add(0, 1, 0);
 							startRotation = Math.round(player.getYaw()/15)*15;
 							startPosition = blockPlacementPoint;
 						}
@@ -161,7 +161,7 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 						
 						//Get the end point and rotation.  This depends if we clicked a road or not.
 						//If we clicked a road, we need to adjust our angle to match the road's angle.
-						final Point3dPlus endPosition;
+						final Point3D endPosition;
 						final double endRotation;
 						final RoadClickData endingRoadData = lastRoadClickedData.get(player);
 						if(endingRoadData != null){
@@ -222,7 +222,7 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 				}
 			}else if(definition.road.type.equals(RoadComponent.CORE_STATIC)){
 				//Get placement position for the segment.
-				Point3dPlus blockPlacementPoint = position.copy().add(0, 1, 0);
+				Point3D blockPlacementPoint = position.copy().add(0, 1, 0);
 				
 				//Now that we have the position for our road segment, create it.
 				//Don't override any collision blocks here for other roads, as we shouldn't replace them with static roads.

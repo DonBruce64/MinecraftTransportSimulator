@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.blocks.instances;
 
-import minecrafttransportsimulator.baseclasses.Point3dPlus;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBaseTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -24,7 +24,7 @@ public class BlockPole extends ABlockBaseTileEntity{
     }
 	
 	@Override
-	public TileEntityPole createTileEntity(WrapperWorld world, Point3dPlus position, WrapperPlayer placingPlayer, WrapperNBT data){
+	public TileEntityPole createTileEntity(WrapperWorld world, Point3D position, WrapperPlayer placingPlayer, WrapperNBT data){
 		return new TileEntityPole(world, position, placingPlayer, data);
 	}
 }

@@ -11,7 +11,7 @@ import com.google.common.collect.HashBiMap;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.NavBeacon;
-import minecrafttransportsimulator.baseclasses.Point3dPlus;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
@@ -213,7 +213,7 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 	}
 	
 	@Override
-	public boolean addRider(WrapperEntity rider, Point3dPlus riderLocation){
+	public boolean addRider(WrapperEntity rider, Point3D riderLocation){
 		if(super.addRider(rider, riderLocation)){
 			if(world.isClient() && ConfigSystem.configObject.clientControls.autostartEng.value && rider.equals(InterfaceClient.getClientPlayer())){
 				if(rider instanceof WrapperPlayer && getSeatForRider(rider).placementDefinition.isController && canPlayerStartEngines((WrapperPlayer) rider)){

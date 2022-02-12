@@ -10,8 +10,9 @@ import java.util.Set;
 import javax.imageio.ImageIO;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
-import minecrafttransportsimulator.baseclasses.Point3dPlus;
+import minecrafttransportsimulator.baseclasses.TransformationMatrix;
+import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.rendering.components.RenderableObject;
@@ -33,7 +34,7 @@ public class RenderText{
 	public static final char STRIKETHROUGH_CHAR = '-';
 	
 	private static final Map<String, FontData> fontDatas = new HashMap<String, FontData>();
-	private static final Matrix4dPlus transformHelper = new Matrix4dPlus();
+	private static final TransformationMatrix transformHelper = new TransformationMatrix();
 	
 	/**
 	 *  Draws the specified text.  This is designed for general draws where text is defined in-code, but still may
@@ -49,10 +50,10 @@ public class RenderText{
 	 *  Also note that if a scale was applied prior to rendering this text, it should be passed-in here.
 	 *  This allows for proper normal calculations to prevent needing to re-normalize the text.
 	 */
-	public static void drawText(String text, String fontName, Point3dPlus position, ColorRGB color, TextAlignment alignment, float scale, boolean autoScale, int wrapWidth, boolean renderLit){
+	public static void drawText(String text, String fontName, Point3D position, ColorRGB color, TextAlignment alignment, float scale, boolean autoScale, int wrapWidth, boolean renderLit){
 		if(!text.isEmpty()){
 			transformHelper.resetTransforms();
-			transformHelper.translate(position);
+			transformHelper.applyTranslation(position);
 			getFontData(fontName).renderText(text, transformHelper, null, alignment, scale, autoScale, wrapWidth, true, color, renderLit);
 		}
 	}
@@ -61,14 +62,14 @@ public class RenderText{
 	 *  Similar to the 2D text drawing method, except this method will render the text according to the passed-in text JSON in 3D space at the point specified.
 	 *  Essentially, this is JSON-defined rendering rather than manual entry of points.
 	 */
-	public static void draw3DText(String text, AEntityD_Definable<?> entity, Matrix4dPlus transform, JSONText definition, boolean pixelCoords){
+	public static void draw3DText(String text, AEntityD_Definable<?> entity, TransformationMatrix transform, JSONText definition, boolean pixelCoords){
 		if(!text.isEmpty()){
 			//Get the actual color we will need to render with based on JSON.
 			ColorRGB color = entity.getTextColor(definition.inheritedColorIndex, definition.color);
 			
 			//Render the text.
 			transformHelper.set(transform);
-			transformHelper.translate(definition.pos);
+			transformHelper.applyTranslation(definition.pos);
 			getFontData(definition.fontName).renderText(text, transformHelper, definition.rot, TextAlignment.values()[definition.renderPosition], definition.scale, definition.autoScale, definition.wrapWidth, pixelCoords, color, definition.lightsUp && entity.renderTextLit());
 		}
 	}
@@ -151,7 +152,7 @@ public class RenderText{
 		};
 		private static final FontRenderState[] STATES = FontRenderState.generateDefaults();
 		private static final int MAX_VERTCIES_PER_RENDER = 1000*6;
-		private static final Point3dPlus adjustmentOffset = new Point3dPlus();
+		private static final Point3D adjustmentOffset = new Point3D();
 		
 		private final boolean isDefault;
 		/*Texture locations for the font files.**/
@@ -257,7 +258,7 @@ public class RenderText{
 			}
 		}
 		
-		private void renderText(String text, Matrix4dPlus transform, Matrix4dPlus rotation, TextAlignment alignment, float scale, boolean autoScale, int wrapWidth, boolean pixelCoords, ColorRGB color, boolean renderLit){
+		private void renderText(String text, TransformationMatrix transform, RotationMatrix rotation, TextAlignment alignment, float scale, boolean autoScale, int wrapWidth, boolean pixelCoords, ColorRGB color, boolean renderLit){
 			//Clear out the active object list as it was set last pass.
 			for(RenderableObject object : activeRenderObjects){
 				object.vertices.clear();
@@ -589,10 +590,10 @@ public class RenderText{
 				object.disableLighting = renderLit;
 				object.transform.set(transform);
 				if(rotation != null){
-					object.transform.matrix(rotation);
+					object.transform.applyRotation(rotation);
 				}
-				object.transform.scale(scale);
-				object.transform.translate(adjustmentOffset);
+				object.transform.applyScaling(scale, scale, scale);
+				object.transform.applyTranslation(adjustmentOffset);
 				object.vertices.flip();
 				object.render();
 			}

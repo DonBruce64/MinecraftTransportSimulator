@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.baseclasses.Point3dPlus;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLane;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLaneConnection;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
@@ -21,7 +21,7 @@ public class PacketTileEntityRoadConnectionUpdate extends APacketEntity<TileEnti
 	private final int curveNumber;
 	private final boolean connectedToStart;
 	
-	private final Point3dPlus otherPosition;
+	private final Point3D otherPosition;
 	private final int otherLaneNumber;
 	private final int otherCurveNumber;
 	private final float otherCurveNetAngle;

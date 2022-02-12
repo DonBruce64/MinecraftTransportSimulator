@@ -5,7 +5,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.BezierCurve;
-import minecrafttransportsimulator.baseclasses.Point3dPlus;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.instances.BlockCollision;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
@@ -63,7 +63,7 @@ public class RoadLane{
 		}
 	}
 	
-	private Point3dPlus generateCurves(){
+	private Point3D generateCurves(){
 		//Curves are generated based on the definition of the road, and the points for our lane.
 		//If we are a dynamic road, then we don't use end points.  Instead, we use an
 		//end offset point.  If we were made from a dynamic road, then the road's curve will be non-null;
@@ -85,10 +85,8 @@ public class RoadLane{
 			JSONLaneSector sector = road.definition.road.sectors.get(sectorNumber);
 			JSONLaneSectorPointSet points = sector.lanes.get(offsetSectorLaneNumber);
 			for(JSONLaneSectorEndPoint endPoint : points.endPoints){
-				Point3dPlus start = new Point3dPlus(points.startPoint);
-				road.orientation.transform(start);
-				Point3dPlus end = new Point3dPlus(endPoint.pos);
-				road.orientation.transform(end);
+				Point3D start = new Point3D(points.startPoint).rotate(road.orientation);
+				Point3D end = new Point3D(endPoint.pos).rotate(road.orientation);
 				curves.add(new BezierCurve(start, end, sector.sectorStartAngle + (float) road.orientation.lastAnglesSet.y, endPoint.angle + (float) road.orientation.lastAnglesSet.y));
 			}
 			return points.startPoint;
@@ -119,13 +117,13 @@ public class RoadLane{
 		int curveNumber = curves.indexOf(curve);
 		for(int j=-1; j>=-2; --j){
 			boolean foundRoadsThisCheck = false;
-			Point3dPlus offsetPoint;
-			Point3dPlus ownCurvePoint;
+			Point3D offsetPoint;
+			Point3D ownCurvePoint;
 			if(checkingStart){
-				offsetPoint = new Point3dPlus(0, 0, j).rotateY(curve.startAngle).add(curve.startPos).add(road.position);
+				offsetPoint = new Point3D(0, 0, j).rotateY(curve.startAngle).add(curve.startPos).add(road.position);
 				ownCurvePoint = curve.startPos.copy().add(road.position);	
 			}else{
-				offsetPoint = new Point3dPlus(0, 0, j).rotateY(curve.endAngle).add(curve.endPos).add(road.position);
+				offsetPoint = new Point3D(0, 0, j).rotateY(curve.endAngle).add(curve.endPos).add(road.position);
 				ownCurvePoint = curve.endPos.copy().add(road.position);
 			}
 			
@@ -136,8 +134,8 @@ public class RoadLane{
 					foundRoadsThisCheck = true;
 					for(RoadLane otherRoadLane : otherRoad.lanes){
 						for(BezierCurve otherRoadCurve : otherRoadLane.curves){
-							Point3dPlus otherCurveStart = otherRoadCurve.startPos.copy().add(otherRoad.position);
-							Point3dPlus otherCurveEnd = otherRoadCurve.endPos.copy().add(otherRoad.position);
+							Point3D otherCurveStart = otherRoadCurve.startPos.copy().add(otherRoad.position);
+							Point3D otherCurveEnd = otherRoadCurve.endPos.copy().add(otherRoad.position);
 							int otherCurveNumber = otherRoadLane.curves.indexOf(otherRoadCurve);
 							
 							//For any connection we make here, we send the packet to the OTHER curve.
@@ -151,13 +149,13 @@ public class RoadLane{
 							if(checkingStart){
 								//For the start connections, we add these connections to all connections.
 								//This is because we call this method only once for all curves.
-								if(ownCurvePoint.distanceTo(otherCurveStart) < CURVE_CONNECTION_MAX_DISTANCE){
+								if(ownCurvePoint.isDistanceToCloserThan(otherCurveStart, CURVE_CONNECTION_MAX_DISTANCE)){
 									//Start to start connection.
 									priorConnections.get(curveNumber).add(new RoadLaneConnection(otherRoadLane, otherRoadCurve, true));
 									RoadLaneConnection ourConnection = new RoadLaneConnection(this, curve, true);
 									otherRoadLane.priorConnections.get(otherCurveNumber).add(ourConnection);
 									InterfacePacket.sendToAllClients(new PacketTileEntityRoadConnectionUpdate(otherRoadLane, otherCurveNumber, true, ourConnection));
-								}else if(ownCurvePoint.distanceTo(otherCurveEnd) < CURVE_CONNECTION_MAX_DISTANCE){
+								}else if(ownCurvePoint.isDistanceToCloserThan(otherCurveEnd, CURVE_CONNECTION_MAX_DISTANCE)){
 									//Start to end connection.
 									priorConnections.get(curveNumber).add(new RoadLaneConnection(otherRoadLane, otherRoadCurve, false));
 									RoadLaneConnection ourConnection = new RoadLaneConnection(this, curve, true);
@@ -165,13 +163,13 @@ public class RoadLane{
 									InterfacePacket.sendToAllClients(new PacketTileEntityRoadConnectionUpdate(otherRoadLane, otherCurveNumber, false, ourConnection));
 								}
 							}else{
-								if(ownCurvePoint.distanceTo(otherCurveStart) < CURVE_CONNECTION_MAX_DISTANCE){
+								if(ownCurvePoint.isDistanceToCloserThan(otherCurveStart, CURVE_CONNECTION_MAX_DISTANCE)){
 									//End to start connection.
 									nextConnections.get(curveNumber).add(new RoadLaneConnection(otherRoadLane, otherRoadCurve, true));
 									RoadLaneConnection ourConnection = new RoadLaneConnection(this, curve, false);
 									otherRoadLane.priorConnections.get(otherCurveNumber).add(ourConnection);
 									InterfacePacket.sendToAllClients(new PacketTileEntityRoadConnectionUpdate(otherRoadLane, otherCurveNumber, true, ourConnection));
-								}else if(ownCurvePoint.distanceTo(otherCurveEnd) < CURVE_CONNECTION_MAX_DISTANCE){
+								}else if(ownCurvePoint.isDistanceToCloserThan(otherCurveEnd, CURVE_CONNECTION_MAX_DISTANCE)){
 									//End to end connection.
 									nextConnections.get(curveNumber).add(new RoadLaneConnection(otherRoadLane, otherRoadCurve, false));
 									RoadLaneConnection ourConnection = new RoadLaneConnection(this, curve, false);

@@ -4,7 +4,7 @@ import java.nio.FloatBuffer;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
+import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.mcinterface.InterfaceRender;
 
 /**Class designed to represent a renderable object.  Said object has at minimum some
@@ -60,7 +60,7 @@ public class RenderableObject{
 	public BlendState blend = BlendState.SOLID;
 	public float alpha = 1.0F;
 	public float lineWidth = 0.0F;
-	public final Matrix4dPlus transform = new Matrix4dPlus();
+	public final TransformationMatrix transform = new TransformationMatrix();
 	public boolean disableLighting;
 	public boolean ignoreWorldShading;
 	public boolean enableBrightBlending;
@@ -131,7 +131,7 @@ public class RenderableObject{
 		this.cacheVertices = cacheVertices;
 		this.isTranslucent = name.toLowerCase().contains(AModelParser.TRANSLUCENT_OBJECT_NAME);
 		this.vertices = vertices;
-		transform.setIdentity();
+		transform.resetTransforms();
 	}
 	
 	/*Shortened constructor used for lines.  Automatically sets line width and lighting.**/

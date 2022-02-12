@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.blocks.tileentities.components;
 
-import minecrafttransportsimulator.baseclasses.Point3dPlus;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
 import minecrafttransportsimulator.entities.instances.PartInteractable;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
@@ -12,7 +12,7 @@ import minecrafttransportsimulator.packets.instances.PacketTileEntityLoaderConne
 public abstract class ATileEntityLoader extends TileEntityDecor{
 	public PartInteractable connectedPart;
 
-    public ATileEntityLoader(WrapperWorld world, Point3dPlus position, WrapperPlayer placingPlayer, WrapperNBT data){
+    public ATileEntityLoader(WrapperWorld world, Point3D position, WrapperPlayer placingPlayer, WrapperNBT data){
 		super(world, position, placingPlayer, data);
     }
 	
@@ -29,7 +29,7 @@ public abstract class ATileEntityLoader extends TileEntityDecor{
 				}else{
 					//Don't load parts that don't exist.
 					//Also check distance to make sure the part hasn't moved away.
-					if(!connectedPart.isValid || connectedPart.position.distanceTo(position) > 10){
+					if(!connectedPart.isValid || !connectedPart.position.isDistanceToCloserThan(position, 10)){
 						updateNearestPart();
 					}
 				}
@@ -55,7 +55,7 @@ public abstract class ATileEntityLoader extends TileEntityDecor{
 		if(canOperate()){
 			for(PartInteractable interactablePart : world.getEntitiesOfType(PartInteractable.class)){
 				if(canLoadPart(interactablePart)){
-					if(interactablePart.position.distanceTo(position) < nearestDistance){
+					if(interactablePart.position.isDistanceToCloserThan(position, nearestDistance)){
 						nearestPart = interactablePart;
 					}
 				}

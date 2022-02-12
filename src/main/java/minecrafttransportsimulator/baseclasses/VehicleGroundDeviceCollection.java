@@ -152,7 +152,7 @@ public class VehicleGroundDeviceCollection{
 	 * If there are no ground devices for the contact point, null is returned.
 	 * Note that this point is in the vehicle's local coordinates.
 	 */
-	public Point3dPlus getContactPoint(boolean front){
+	public Point3D getContactPoint(boolean front){
 		if(front){
 			if(frontLeftGDB.contactPoint.isZero()){
 				if(frontRightGDB.contactPoint.isZero()){
@@ -164,7 +164,7 @@ public class VehicleGroundDeviceCollection{
 				if(frontRightGDB.contactPoint.isZero()){
 					return frontRightGDB.contactPoint.copy().add(PartGroundDevice.groundDetectionOffset);
 				}else{
-					return frontRightGDB.contactPoint.copy().subtract(frontLeftGDB.contactPoint).multiply(0.5).add(frontLeftGDB.contactPoint).add(PartGroundDevice.groundDetectionOffset);
+					return frontRightGDB.contactPoint.copy().subtract(frontLeftGDB.contactPoint).scale(0.5).add(frontLeftGDB.contactPoint).add(PartGroundDevice.groundDetectionOffset);
 				}
 			}
 		}else{
@@ -178,7 +178,7 @@ public class VehicleGroundDeviceCollection{
 				if(rearRightGDB.contactPoint.isZero()){
 					return rearRightGDB.contactPoint.copy().add(PartGroundDevice.groundDetectionOffset);
 				}else{
-					return rearRightGDB.contactPoint.copy().subtract(rearLeftGDB.contactPoint).multiply(0.5).add(rearLeftGDB.contactPoint).add(PartGroundDevice.groundDetectionOffset);
+					return rearRightGDB.contactPoint.copy().subtract(rearLeftGDB.contactPoint).scale(0.5).add(rearLeftGDB.contactPoint).add(PartGroundDevice.groundDetectionOffset);
 				}
 			}
 		}
@@ -314,11 +314,10 @@ public class VehicleGroundDeviceCollection{
 				}
 			}
 		}else{
-			Point3dPlus hookupPoint = vehicle.towedByConnection.hookupConnection.pos.copy();
+			Point3D hookupPoint = vehicle.towedByConnection.hookupConnection.pos.copy();
 			if(vehicle.towedByConnection.hookupEntity instanceof APart){
 				APart hookupPart = (APart) vehicle.towedByConnection.hookupEntity;
-				hookupPart.localOrientation.transform(hookupPoint);
-				hookupPoint.add(hookupPart.localOffset);
+				hookupPoint.rotate(hookupPart.localOrientation).add(hookupPart.localOffset);
 			}
 			if(hookupPoint.z > 0){
 				if(!rearLeftGDB.isGrounded && !rearRightGDB.isGrounded){

@@ -2,7 +2,7 @@ package minecrafttransportsimulator.jsondefs;
 
 import java.util.List;
 
-import minecrafttransportsimulator.baseclasses.Point3dPlus;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad.RoadComponent;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
@@ -19,7 +19,7 @@ public class JSONRoadComponent extends AJSONMultiModelProvider{
     	
     	@JSONRequired(dependentField="type", dependentValues={"CORE_DYNAMIC"})
     	@JSONDescription("The offset from the center of the road to the back-right corner when placed.  This will always be negative because the back-right corner is in the -X and -Z direction.")
-    	public Point3dPlus cornerOffset;
+    	public Point3D cornerOffset;
     	
     	@JSONRequired(dependentField="type", dependentValues={"CORE_DYNAMIC"})
     	@JSONDescription("The width of the road, if this is a dynamic component.")
@@ -49,7 +49,7 @@ public class JSONRoadComponent extends AJSONMultiModelProvider{
     public class JSONLaneSector{
     	@JSONRequired
     	@JSONDescription("The start position for this sector.  This should be the right-most side.  For example, on a 4-lane intersection this would be 0,0,0 for the south-facing sector.")
-    	public Point3dPlus sectorStartPos;
+    	public Point3D sectorStartPos;
     	
     	@JSONDescription("The start angle for this sector.  Roads will normally be considered to be heading south, but this rotates them to whatever direction this sector is facing.")
     	public float sectorStartAngle;
@@ -65,7 +65,7 @@ public class JSONRoadComponent extends AJSONMultiModelProvider{
     public class JSONLaneSectorPointSet{
     	@JSONRequired
     	@JSONDescription("The starting point for this lane.  Note that vehicles arriving at junctions will only transition to the next road segment if there's a start position for it.  This allows for merge areas where two lanes go into one, as well as one-way roads.")
-    	public Point3dPlus startPoint;
+    	public Point3D startPoint;
     	
     	@JSONRequired
     	@JSONDescription("A list of end-points for this lane.  This may be, and likely will, be the same as the start points for the lanes from other sectors.")
@@ -75,7 +75,7 @@ public class JSONRoadComponent extends AJSONMultiModelProvider{
     public class JSONLaneSectorEndPoint{
     	@JSONRequired
     	@JSONDescription("The ending position for this sector-point.")
-    	public Point3dPlus pos;
+    	public Point3D pos;
     	
     	@JSONDescription("The ending rotation for this sector-point.")
     	public float angle;
@@ -84,11 +84,11 @@ public class JSONRoadComponent extends AJSONMultiModelProvider{
     public class JSONRoadCollisionArea{
     	@JSONRequired
     	@JSONDescription("The first corner point that defines this collision area.")
-    	public Point3dPlus firstCorner;
+    	public Point3D firstCorner;
     	
     	@JSONRequired
     	@JSONDescription("The second corner point that defines this collision area.  The Y-position MUST be the same as the first point!")
-    	public Point3dPlus secondCorner;
+    	public Point3D secondCorner;
     	
     	@JSONDescription("The height of the collision for this area, in pixels.  Not that this may NOT exceed 15 and go above the height of a block.  If you want collision that's over 1-block high, use another collision area with the two points at a higher Y position.")
     	public int collisionHeight;

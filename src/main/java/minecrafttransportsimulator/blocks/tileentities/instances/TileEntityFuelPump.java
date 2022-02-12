@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.UUID;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.Point3dPlus;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityFluidTankProvider;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityFluidTank;
@@ -38,7 +38,7 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityFl
     public boolean isCreative;
 	public UUID placingPlayerID;
 
-    public TileEntityFuelPump(WrapperWorld world, Point3dPlus position, WrapperPlayer placingPlayer, WrapperNBT data){
+    public TileEntityFuelPump(WrapperWorld world, Point3D position, WrapperPlayer placingPlayer, WrapperNBT data){
 		super(world, position, placingPlayer, data);
     	this.tank = new EntityFluidTank(world, data.getDataOrNew("tank"), definition.decor.fuelCapacity){
     		@Override
@@ -91,7 +91,7 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityFl
 				}
 				
 				//Check distance to make sure the vehicle hasn't moved away.
-				if(connectedVehicle.position.distanceTo(position) > 16){
+				if(!connectedVehicle.position.isDistanceToCloserThan(position, 15)){
 					InterfacePacket.sendToAllClients(new PacketTileEntityFuelPumpConnection(this, false));
 					for(WrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, 25, 25, 25))){
 						if(entity instanceof WrapperPlayer){

@@ -3,7 +3,7 @@ package minecrafttransportsimulator.entities.instances;
 import java.util.HashSet;
 import java.util.Set;
 
-import minecrafttransportsimulator.baseclasses.Point3dPlus;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.TrailerConnection;
 import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
@@ -112,11 +112,11 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	private double rudderForce;//kg*m/ticks^2
 	private double ballastForce;//kg*m/ticks^2
 	private double gravitationalForce;//kg*m/ticks^2
-	private Point3dPlus thrustForce = new Point3dPlus();//kg*m/ticks^2
-	private Point3dPlus totalAxialForce = new Point3dPlus();//kg*m/ticks^2
-	private Point3dPlus totalMotiveForce = new Point3dPlus();//kg*m/ticks^2
-	private Point3dPlus totalGlobalForce = new Point3dPlus();//kg*m/ticks^2
-	private Point3dPlus totalForce = new Point3dPlus();//kg*m/ticks^2
+	private Point3D thrustForce = new Point3D();//kg*m/ticks^2
+	private Point3D totalAxialForce = new Point3D();//kg*m/ticks^2
+	private Point3D totalMotiveForce = new Point3D();//kg*m/ticks^2
+	private Point3D totalGlobalForce = new Point3D();//kg*m/ticks^2
+	private Point3D totalForce = new Point3D();//kg*m/ticks^2
 	
 	//Torques.
 	private double momentRoll;//kg*m^2
@@ -125,9 +125,9 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	private double aileronTorque;//kg*m^2/ticks^2
 	private double elevatorTorque;//kg*m^2/ticks^2
 	private double rudderTorque;//kg*m^2/ticks^2
-	private Point3dPlus thrustTorque = new Point3dPlus();//kg*m^2/ticks^2
-	private Point3dPlus totalTorque = new Point3dPlus();//kg*m^2/ticks^2
-	private Point3dPlus rotorRotation = new Point3dPlus();//degrees
+	private Point3D thrustTorque = new Point3D();//kg*m^2/ticks^2
+	private Point3D totalTorque = new Point3D();//kg*m^2/ticks^2
+	private Point3D rotorRotation = new Point3D();//degrees
 	
 	//Animator for vehicles
 	private static RenderVehicle renderer;;
@@ -145,11 +145,6 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 			if(definition.systemName.contains("rabbit")){
 				position.y = 10;
 				angles.set(0, 0, 0);
-				motion.set(0, 0, 0);
-			}
-			if(definition.packID.contains("potat")){
-				position.y = 24;
-				angles.set(0, angles.y, 0);
 				motion.set(0, 0, 0);
 			}
 			//Parse out variables.
@@ -280,7 +275,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 			thrustTorque.set(0D, 0D, 0D);
 			rotorRotation.set(0D, 0D, 0D);
 			for(APart part : parts){
-				Point3dPlus partForce;
+				Point3D partForce;
 				boolean isPropeller = false;
 				boolean isRotor = false;
 				double jetPower = 0;
@@ -477,14 +472,14 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 			totalMotiveForce.multiply(normalizedVelocityVector);
 			totalGlobalForce.set(0D, ballastForce - gravitationalForce, 0D);
 			totalForce.set(totalAxialForce);
-			totalForce.add(totalMotiveForce).add(totalGlobalForce).multiply(1/currentMass);
+			totalForce.add(totalMotiveForce).add(totalGlobalForce).scale(1/currentMass);
 			motion.add(totalForce);
 			
 			//Add all torques to the main torque matrix and apply them.
 			pitchDirectionFactor = Math.abs(angles.z%360);
 			pitchDirectionFactor = pitchDirectionFactor < 90 || pitchDirectionFactor > 270 ? 1.0D : -1.0D;
 			totalTorque.set(elevatorTorque, rudderTorque, aileronTorque);
-			totalTorque.add(thrustTorque).multiply(180D/Math.PI);
+			totalTorque.add(thrustTorque).scale(180D/Math.PI);
 			rotation.x = (pitchDirectionFactor*(1-Math.abs(sideVector.y))*totalTorque.x + sideVector.y*totalTorque.y)/momentPitch;
 			rotation.y = (sideVector.y*totalTorque.x - verticalVector.y*totalTorque.y)/momentYaw;
 			rotation.z = totalTorque.z/momentRoll;
@@ -493,11 +488,11 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 			//If we are a trailer that is mounted, just move the vehicle to the exact position of the trailer connection.
 			//Otherwise, do movement logic  Make sure the towed vehicle is loaded, however.  It may not yet be.
 			if(towedByConnection.hitchConnection.mounted){
-				Point3dPlus hitchRotatedOffset = towedByConnection.hitchCurrentPosition;
-				Point3dPlus hookupRotatedOffset = towedByConnection.hookupCurrentPosition;
+				Point3D hitchRotatedOffset = towedByConnection.hitchCurrentPosition;
+				Point3D hookupRotatedOffset = towedByConnection.hookupCurrentPosition;
 				motion.set(hitchRotatedOffset);
 				motion.subtract(hookupRotatedOffset);
-				motion.multiply(1/SPEED_FACTOR);
+				motion.scale(1/SPEED_FACTOR);
 				//TODO whatever maths we apply to the part rendering we need to apply here.
 				//FIXME for sure do this, as it's disabled for now.
 				//rotation.setTo(towedByConnection.hitchEntity.angles).add(towedByConnection.hitchConnection.rot).subtract(angles);
@@ -506,9 +501,9 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 				//Yaw is applied based on the current and next position of the truck's hookup.
 				//Motion is applied after yaw corrections to ensure the trailer follows the truck.
 				//Start by getting the hitch offsets.  We save the current offset as we'll change it for angle calculations.
-				Point3dPlus tractorHitchPrevOffsetXZ = towedByConnection.hitchPriorPosition.subtract(prevPosition);
-				Point3dPlus tractorHitchCurrentOffsetXZ = towedByConnection.hitchCurrentPosition.subtract(position);
-				Point3dPlus tractorHitchCurrentOffset = tractorHitchCurrentOffsetXZ.copy();
+				Point3D tractorHitchPrevOffsetXZ = towedByConnection.hitchPriorPosition.subtract(prevPosition);
+				Point3D tractorHitchCurrentOffsetXZ = towedByConnection.hitchCurrentPosition.subtract(position);
+				Point3D tractorHitchCurrentOffset = tractorHitchCurrentOffsetXZ.copy();
 				
 				//Calculate how much yaw we need to apply to rotate the trailer.
 				//This is only done for the X and Z motions.
@@ -527,7 +522,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 				
 				//If the rotation is valid, add it.
 				//We need to fake-add the yaw for the motion calculation here, hence the odd temp setting of the angles.
-				Point3dPlus trailerHookupOffset;
+				Point3D trailerHookupOffset;
 				if(!Double.isNaN(rotationDelta)){
 					rotation.y = rotationDelta;
 					angles.y += rotationDelta;
@@ -538,7 +533,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 				}
 				
 				//Now move the trailer to the hitch.  Also set rotations to 0 to prevent odd math.
-				motion.set(tractorHitchCurrentOffset.subtract(trailerHookupOffset).multiply(1/SPEED_FACTOR));
+				motion.set(tractorHitchCurrentOffset.subtract(trailerHookupOffset).scale(1/SPEED_FACTOR));
 				rotation.x = 0;
 				rotation.z = 0;
 			}
@@ -757,7 +752,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 							switch(missileVariable){
 								case("distance"): return missilesIncoming.get(missileNumber).targetDistance;
 								case("direction"): {
-									Point3dPlus missilePos = missilesIncoming.get(missileNumber).position;
+									Point3D missilePos = missilesIncoming.get(missileNumber).position;
 									return Math.toDegrees(Math.atan2(-missilePos.z + position.z, -missilePos.x + position.x)) + 90 + angles.y;
 								}
 							}

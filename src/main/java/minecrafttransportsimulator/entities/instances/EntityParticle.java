@@ -3,8 +3,8 @@ package minecrafttransportsimulator.entities.instances;
 import java.nio.FloatBuffer;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
-import minecrafttransportsimulator.baseclasses.Point3dPlus;
+import minecrafttransportsimulator.baseclasses.TransformationMatrix;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.JSONParticle;
@@ -43,14 +43,11 @@ public class EntityParticle extends AEntityC_Renderable{
 	public EntityParticle(AEntityD_Definable<?> entitySpawning, JSONParticle definition){
 		super(entitySpawning.world, entitySpawning.position, ZERO_FOR_CONSTRUCTOR, ZERO_FOR_CONSTRUCTOR);
 		if(definition.pos != null){
-			Point3dPlus positionOffset = definition.pos.copy();
-			entitySpawning.orientation.transform(positionOffset);
-			position.add(positionOffset);
+			position.add(definition.pos.copy().rotate(entitySpawning.orientation));
 		}
 		if(definition.initialVelocity != null){
 			//Set initial velocity, but add some randomness so particles don't all go in a line.
-			Point3dPlus adjustedVelocity = definition.initialVelocity.copy();
-			entitySpawning.orientation.transform(adjustedVelocity);
+			Point3D adjustedVelocity = definition.initialVelocity.copy().rotate(entitySpawning.orientation);
 			motion.x += adjustedVelocity.x/10D + 0.02 - Math.random()*0.04;
 			motion.y += adjustedVelocity.y/10D + 0.02 - Math.random()*0.04;
 			motion.z += adjustedVelocity.z/10D + 0.02 - Math.random()*0.04;
@@ -126,15 +123,15 @@ public class EntityParticle extends AEntityC_Renderable{
 					}
 					case FLAME: {
 						//Flame just slowly drifts in the direction it was going.
-						motion.multiply(0.96);
+						motion.scale(0.96);
 						break;
 					}
 					case DRIP: {
 						//Keep moving until we touch a block, then stop.
 						if(!touchingBlocks){
-							motion.multiply(0.96).add(0D, -0.06D, 0D);
+							motion.scale(0.96).add(0D, -0.06D, 0D);
 						}else{
-							motion.multiply(0.0);
+							motion.scale(0.0);
 						}
 						break;
 					}
@@ -143,16 +140,16 @@ public class EntityParticle extends AEntityC_Renderable{
 						if(!world.isBlockLiquid(position)){
 							remove();
 						}else{
-							motion.multiply(0.85).add(0, 0.002D, 0);
+							motion.scale(0.85).add(0, 0.002D, 0);
 						}
 						break;
 					}
 					case BREAK: {
 						//Breaking just fall down quickly.
 						if(!touchingBlocks){
-							motion.multiply(0.98).add(0D, -0.04D, 0D);
+							motion.scale(0.98).add(0D, -0.04D, 0D);
 						}else{
-							motion.multiply(0.0);
+							motion.scale(0.0);
 						}
 						break;
 					}
@@ -181,7 +178,7 @@ public class EntityParticle extends AEntityC_Renderable{
 			boundingBox.depthRadius = boundingBox.widthRadius;
 			
 			//Update orientation to always face the player.
-			orientation.setToAngles(clientPlayer.getPosition().add(0, clientPlayer.getEyeHeight(), 0).add(InterfaceClient.getCameraPosition()).subtract(position).getAngles(true));
+			orientation.setAngleRotation(clientPlayer.getPosition().add(0, clientPlayer.getEyeHeight(), 0).add(InterfaceClient.getCameraPosition()).subtract(position).getAngles(true));
 			return true;
 		}else{
 			return false;
@@ -243,7 +240,7 @@ public class EntityParticle extends AEntityC_Renderable{
 	 *  Called to render the particle..
 	 *  Cleaner as we don't need to preface variable references.
 	 */
-	public void render(Matrix4dPlus transform, float partialTicks){
+	public void render(TransformationMatrix transform, float partialTicks){
 		if(staticColor == null){
 			renderable.color.red = startColor.red + (endColor.red - startColor.red)*(age+partialTicks)/maxAge;
 			renderable.color.green = startColor.green + (endColor.green - startColor.green)*(age+partialTicks)/maxAge;
@@ -251,7 +248,8 @@ public class EntityParticle extends AEntityC_Renderable{
 		}
 		renderable.alpha = getAlpha(partialTicks);
 		renderable.transform.set(transform);
-		renderable.transform.scale(getSize()*getScale(partialTicks));
+		double totalScale = getSize()*getScale(partialTicks);
+		renderable.transform.applyScaling(totalScale, totalScale, totalScale);
 		
 		switch(definition.type){
 			case SMOKE: setParticleTextureBounds(7 - age*8/maxAge, 0); break;//Smoke gets smaller as it ages.

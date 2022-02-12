@@ -1,8 +1,9 @@
 package minecrafttransportsimulator.rendering.instances;
 
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
-import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
-import minecrafttransportsimulator.baseclasses.Point3dPlus;
+import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
+import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.instances.APart;
@@ -22,12 +23,13 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 public final class RenderInstrument{
 	private static int partNumber = 0;
 	private static RenderableObject renderObject = null;
-	private static Matrix4dPlus textTransform = new Matrix4dPlus();
-	private static final Point3dPlus bottomLeft = new Point3dPlus();
-	private static final Point3dPlus topLeft = new Point3dPlus();
-	private static final Point3dPlus topRight = new Point3dPlus();
-	private static final Point3dPlus bottomRight = new Point3dPlus();
-	private static final Point3dPlus helperRotation = new Point3dPlus();
+	private static TransformationMatrix textTransform = new TransformationMatrix();
+	private static final Point3D bottomLeft = new Point3D();
+	private static final Point3D topLeft = new Point3D();
+	private static final Point3D topRight = new Point3D();
+	private static final Point3D bottomRight = new Point3D();
+	private static final Point3D helperRotation = new Point3D();
+	private static final RotationMatrix helperRotationMatrix = new RotationMatrix();
 	private static final float[][] instrumentSingleComponentPoints = new float[6][8];
 	
 	/**
@@ -37,7 +39,7 @@ public final class RenderInstrument{
      * Also note that the parameters in the JSON here are in png-texture space, so y is inverted.  Hence the various
      * negations in translation transforms.
      */
-	public static void drawInstrument(AEntityE_Interactable<?> entity, Matrix4dPlus transform, int slot, boolean onGUI, boolean blendingEnabled, float partialTicks){
+	public static void drawInstrument(AEntityE_Interactable<?> entity, TransformationMatrix transform, int slot, boolean onGUI, boolean blendingEnabled, float partialTicks){
 		//Get the item and slot definition here, as that's needed for future calls.
 		ItemInstrument instrument = entity.instruments.get(slot);
 		JSONInstrumentDefinition slotDefinition = entity.definition.instruments.get(slot);
@@ -61,8 +63,9 @@ public final class RenderInstrument{
 				if(component.textObject != null){
 					//Also translate slightly away from the instrument location to prevent clipping.
 					textTransform.set(transform);
-					textTransform.translate(0, 0, i*0.0001F);
-					textTransform.scale(slotScale*component.scale);
+					textTransform.applyTranslation(0, 0, i*0.0001F);
+					double totalScaling = slotScale*component.scale;
+					textTransform.applyScaling(totalScaling, totalScaling, totalScaling);
 					int variablePartNumber = AEntityD_Definable.getVariableNumber(component.textObject.variableName);
 					final boolean addSuffix = variablePartNumber == -1 && ((component.textObject.variableName.startsWith("engine_") || component.textObject.variableName.startsWith("propeller_") || component.textObject.variableName.startsWith("gun_") || component.textObject.variableName.startsWith("seat_")));
 					if(addSuffix){
@@ -78,8 +81,8 @@ public final class RenderInstrument{
 					renderObject = entity.instrumentRenderables.get(slot).get(i);
 					renderObject.texture = "/assets/" + instrument.definition.packID + "/textures/" + instrument.definition.textureName;
 					renderObject.transform.set(transform);
-					renderObject.transform.translate(0.0, 0.0, i*0.0001);
-					renderObject.transform.scale(slotScale);
+					renderObject.transform.applyTranslation(0.0, 0.0, i*0.0001);
+					renderObject.transform.applyScaling(slotScale, slotScale, slotScale);
 					bottomLeft.set(-component.textureWidth/2D, component.textureHeight/2D, 0);
 					topLeft.set(-component.textureWidth/2D, -component.textureHeight/2D, 0);
 					topRight.set(component.textureWidth/2D, -component.textureHeight/2D, 0);
@@ -96,16 +99,16 @@ public final class RenderInstrument{
 						bottomRight.add(component.textureXCenter, component.textureYCenter, 0);
 						
 						//Divide the Points by 1024.  This converts the points from pixels to the 0-1 UV values.
-						bottomLeft.multiply(1D/1024D);
-						topLeft.multiply(1D/1024D);
-						topRight.multiply(1D/1024D);
-						bottomRight.multiply(1D/1024D);
+						bottomLeft.scale(1D/1024D);
+						topLeft.scale(1D/1024D);
+						topRight.scale(1D/1024D);
+						bottomRight.scale(1D/1024D);
 						
 						//Translate to the component.
-						renderObject.transform.translate(component.xCenter, -component.yCenter, 0);
+						renderObject.transform.applyTranslation(component.xCenter, -component.yCenter, 0);
 						
 						//Scale to match definition.
-						renderObject.transform.scale(component.scale);
+						renderObject.transform.applyScaling(component.scale, component.scale, component.scale);
 						
 						//Set points to the variables here and render them.
 						//If the shape is lit, disable lighting for blending.
@@ -174,7 +177,7 @@ public final class RenderInstrument{
 				}
 			}else if(component.moveComponent){
 				//Translate the rather than adjust the window coords.
-				renderObject.transform.translate(xTranslation, yTranslation, 0);
+				renderObject.transform.applyTranslation(xTranslation, yTranslation, 0);
 			}else{
 				//Offset the window coords to the appropriate section of the texture sheet.
 				//We don't want to do an OpenGL translation here as that would move the texture's
@@ -223,9 +226,10 @@ public final class RenderInstrument{
 				topRight.subtract(clock.animation.centerPoint);
 				bottomRight.subtract(clock.animation.centerPoint);
 			}else{
-				renderObject.transform.translate((component.xCenter + clock.animation.centerPoint.x), -(component.yCenter + clock.animation.centerPoint.y), 0.0);
-				renderObject.transform.rotate(variableValue, 0, 0, 1);
-				renderObject.transform.translate(-(component.xCenter + clock.animation.centerPoint.x), (component.yCenter + clock.animation.centerPoint.y), 0.0);
+				renderObject.transform.applyTranslation((component.xCenter + clock.animation.centerPoint.x), -(component.yCenter + clock.animation.centerPoint.y), 0.0);
+				helperRotationMatrix.setAxisAngleRotation(0, 0, 1, variableValue);
+				renderObject.transform.applyRotation(helperRotationMatrix);
+				renderObject.transform.applyTranslation(-(component.xCenter + clock.animation.centerPoint.x), (component.yCenter + clock.animation.centerPoint.y), 0.0);
 			}
 		}
 	}

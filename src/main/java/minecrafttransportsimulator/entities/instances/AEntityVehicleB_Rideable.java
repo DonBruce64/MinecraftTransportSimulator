@@ -2,7 +2,7 @@ package minecrafttransportsimulator.entities.instances;
 
 import java.util.Iterator;
 
-import minecrafttransportsimulator.baseclasses.Point3dPlus;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIHUD;
@@ -42,7 +42,7 @@ abstract class AEntityVehicleB_Rideable extends AEntityF_Multipart<JSONVehicle>{
 		//Remove motion to prevent it if it was previously stored.
 		//Makes placement easier and is less likely for players to get stuck.
 		if(placingPlayer != null){
-			Point3dPlus playerSightVector = placingPlayer.getLineOfSight(3);
+			Point3D playerSightVector = placingPlayer.getLineOfSight(3);
 			position.set(placingPlayer.getPosition().add(playerSightVector.x, 0, playerSightVector.z));
 			prevPosition.set(position);
 			angles.set(0, placingPlayer.getYaw() + 90, 0);
@@ -102,7 +102,7 @@ abstract class AEntityVehicleB_Rideable extends AEntityF_Multipart<JSONVehicle>{
 	}
 	
 	@Override
-	public boolean addRider(WrapperEntity rider, Point3dPlus riderLocation){
+	public boolean addRider(WrapperEntity rider, Point3D riderLocation){
 		//We override the default rider addition behavior here as we need to rotate
 		//riders to face forwards in seats that they start riding in.
 		//Check if this rider is already riding this vehicle.
@@ -167,19 +167,18 @@ abstract class AEntityVehicleB_Rideable extends AEntityF_Multipart<JSONVehicle>{
 		//Otherwise, put us to the right or left of the seat depending on x-offset.
 		//Make sure to take into the movement of the seat we were riding if it had moved.
 		//This ensures the dismount moves with the seat.
-		Point3dPlus dismountPosition;
+		Point3D dismountPosition;
 		if(seat.placementDefinition.dismountPos != null){
-			dismountPosition = new Point3dPlus(seat.placementDefinition.dismountPos);
+			dismountPosition = new Point3D(seat.placementDefinition.dismountPos);
 		}else{
-			dismountPosition = new Point3dPlus(seat.localOffset);
+			dismountPosition = new Point3D(seat.localOffset);
 			if(seat.placementOffset.x < 0){
 				dismountPosition.add(-2D, 0D, 0D);
 			}else{
 				dismountPosition.add(2D, 0D, 0D);
 			}
 		}
-		orientation.transform(dismountPosition);
-		dismountPosition.add(position);
+		dismountPosition.rotate(orientation).add(position);
 		rider.setPosition(dismountPosition, false);
 		rider.setOrientation(orientation);
 		

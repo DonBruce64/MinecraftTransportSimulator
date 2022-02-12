@@ -1,26 +1,32 @@
 package minecrafttransportsimulator.baseclasses;
 
-import javax.vecmath.Point3d;
-
 /**Basic 3D point class.  Allows for saving of positions in a less recourse-heavy
  * format than Minecraft's vectors.  This class is mutable to allow
  * the point to change, cause we don't need to create a new point every time we
  * move a thing.  As this point can be used for vectors, methods exist for vector
  * operations such as dot product, cross product, and rotation.
+ * Note that all methods return this object for nested operations, unless otherwise
+ * specified.
  *
  * @author don_bruce
  */
-public class Point3dPlus extends Point3d{
+public class Point3D{
 	
-	public Point3dPlus(){
+	public double x;
+	public double y;
+	public double z;
+	
+	public Point3D(){
 		this(0, 0, 0);
 	}
 	
-	public Point3dPlus(Point3dPlus other){
-		super(other);
+	public Point3D(Point3D point){
+		this.x = point.x;
+		this.y = point.y;
+		this.z = point.z;
 	}
 	
-	public Point3dPlus(double x, double y, double z){
+	public Point3D(double x, double y, double z){
 		this.x = x;
 		this.y = y;
 		this.z = z;
@@ -29,8 +35,8 @@ public class Point3dPlus extends Point3d{
 	@Override
 	public boolean equals(Object object){
 		//TODO see if this is needed anymore, or if FPEs aren't a thing.
-		if(object instanceof Point3dPlus){
-			Point3dPlus otherPoint = (Point3dPlus) object;
+		if(object instanceof Point3D){
+			Point3D otherPoint = (Point3D) object;
 			return (float)x == (float)otherPoint.x && (float)y == (float)otherPoint.y && (float)z == (float)otherPoint.z;
 		}else{
 			return false;
@@ -38,11 +44,30 @@ public class Point3dPlus extends Point3d{
 	}
 	
 	/**
+	 * Sets the point to the passed-in values.
+	 */
+	public Point3D set(double x, double y, double z){
+		this.x = x;
+		this.y = y;
+		this.z = z;
+		return this;
+	}
+	
+	/**
+	 * Sets the point to the passed-in point.
+	 */
+	public Point3D set(Point3D point){
+		this.x = point.x;
+		this.y = point.y;
+		this.z = point.z;
+		return this;
+	}
+	
+	/**
 	 * Adds the passed-in values to the point.
-	 * Returns the called object for nested operations.
 	 */
 	@SuppressWarnings("hiding")
-	public Point3dPlus add(double x, double y, double z){
+	public Point3D add(double x, double y, double z){
 		this.x += x;
 		this.y += y;
 		this.z += z;
@@ -51,9 +76,8 @@ public class Point3dPlus extends Point3d{
 	
 	/**
 	 * Adds the passed-in point's values to this point.
-	 * Returns the called object for nested operations.
 	 */
-	public Point3dPlus add(Point3dPlus point){
+	public Point3D add(Point3D point){
 		this.x += point.x;
 		this.y += point.y;
 		this.z += point.z;
@@ -61,10 +85,22 @@ public class Point3dPlus extends Point3d{
 	}
 	
 	/**
-	 * Subtracts the passed-in point's values to this point.
-	 * Returns the called object for nested operations.
+	 * Adds the scaled value of the scale multiplied by the 
+	 * passed-in vector to this point.  This is useful
+	 * if you don't want to modify the vector, but want 
+	 * to translate along it's path.
 	 */
-	public Point3dPlus subtract(Point3dPlus point){
+	public Point3D addScaled(double scale, Point3D point){
+		this.x += point.x*scale;
+		this.y += point.y*scale;
+		this.z += point.z*scale;
+		return this;
+	}
+	
+	/**
+	 * Subtracts the passed-in point's values from this point.
+	 */
+	public Point3D subtract(Point3D point){
 		this.x -= point.x;
 		this.y -= point.y;
 		this.z -= point.z;
@@ -72,10 +108,9 @@ public class Point3dPlus extends Point3d{
 	}
 	
 	/**
-	 * Multiplies all values of this point by the passed-in factor.
-	 * Returns the called object for nested operations.
+	 * Scales all values of this point by the passed-in factor.
 	 */
-	public Point3dPlus multiply(double scale){
+	public Point3D scale(double scale){
 		this.x *= scale;
 		this.y *= scale;
 		this.z *= scale;
@@ -84,9 +119,8 @@ public class Point3dPlus extends Point3d{
 
 	/**
 	 * Multiplies all values of this point by the values of the passed-in point.
-	 * Returns the called object for nested operations.
 	 */
-	public Point3dPlus multiply(Point3dPlus point){
+	public Point3D multiply(Point3D point){
 		this.x *= point.x;
 		this.y *= point.y;
 		this.z *= point.z;
@@ -94,11 +128,21 @@ public class Point3dPlus extends Point3d{
 	}
 	
 	/**
+	 * Sets the point to the interpolation between itself, and the passed-in point,
+	 * with the distance passed-in.
+	 */
+	public Point3D interpolate(Point3D point, double distance){
+		this.x += (point.x - x)*distance;
+		this.y += (point.y - y)*distance;
+		this.z += (point.z - z)*distance;
+		return this;
+	}
+	
+	/**
 	 * Inverts the sign on this point.  This should be used instead of multiplying
 	 * by -1 as it's quicker and more accurate.
-	 * Returns the called object for nested operations.
 	 */
-	public Point3dPlus invert(){
+	public Point3D invert(){
 		this.x = -x;
 		this.y = -y;
 		this.z = -z;
@@ -108,7 +152,7 @@ public class Point3dPlus extends Point3d{
 	/**
 	 * Returns the distance between this point and the passed-in point.
 	 */
-	public double distanceTo(Point3dPlus point){
+	public double distanceTo(Point3D point){
 		double deltaX = point.x - this.x;
 		double deltaY = point.y - this.y;
 		double deltaZ = point.z - this.z;
@@ -116,9 +160,21 @@ public class Point3dPlus extends Point3d{
 	}
 	
 	/**
+	 * Returns true if the distance between this point and the passed-in point
+	 * is less than the distance specified.  This is an optimized method of
+	 * {@link #distanceTo(Point3D)} as it doesn't do square root calls.
+	 */
+	public boolean isDistanceToCloserThan(Point3D point, double distance){
+		double deltaX = point.x - this.x;
+		double deltaY = point.y - this.y;
+		double deltaZ = point.z - this.z;
+		return deltaX*deltaX + deltaY*deltaY + deltaZ*deltaZ < distance*distance;
+	}
+	
+	/**
 	 * Returns the dot product between this point and the passed-in point.
 	 */
-	public double dotProduct(Point3dPlus point){
+	public double dotProduct(Point3D point){
 		return this.x*point.x + this.y*point.y + this.z*point.z;
 	}
 	
@@ -128,8 +184,8 @@ public class Point3dPlus extends Point3d{
 	 * this was invoked on, and the passed-in object.  Neither object is
 	 * modified by this operation.
 	 */
-	public Point3dPlus crossProduct(Point3dPlus point){
-		return new Point3dPlus(this.y*point.z - this.z*point.y, this.z*point.x - this.x*point.z, this.x*point.y - this.y*point.x);
+	public Point3D crossProduct(Point3D point){
+		return new Point3D(this.y*point.z - this.z*point.y, this.z*point.x - this.x*point.z, this.x*point.y - this.y*point.x);
 	}
 	
 	/**
@@ -142,7 +198,7 @@ public class Point3dPlus extends Point3d{
 	/**
 	 * Normalizes this point to be a unit vector.
 	 */
-	public Point3dPlus normalize(){
+	public Point3D normalize(){
 		double length = length();
 		if(length > 1.0E-8D){
 			x /= length;
@@ -174,7 +230,7 @@ public class Point3dPlus extends Point3d{
 	 * Note that since there is no "roll" for vectors, the z-value will always be 0.
 	 * Returns the called object for nested operations.
 	 */
-	public Point3dPlus getAngles(boolean normalize){
+	public Point3D getAngles(boolean normalize){
 		if(normalize){
 			normalize();
 		}
@@ -190,8 +246,8 @@ public class Point3dPlus extends Point3d{
 	/**
 	 * Returns a copy of this point as a new object.
 	 */
-	public Point3dPlus copy(){
-		return new Point3dPlus(this.x, this.y, this.z);
+	public Point3D copy(){
+		return new Point3D(this.x, this.y, this.z);
 	}
 	
 	/**
@@ -206,15 +262,15 @@ public class Point3dPlus extends Point3d{
      * is between this point and the passed-in point, and the passed-in point's x-value is not
      * equal to this point's x-value.  If such conditions are not satisfied, null is returned.
      */
-    public Point3dPlus getIntermediateWithXValue(Point3dPlus endPoint, double targetX){
-    	Point3dPlus delta = endPoint.copy().subtract(this);
+    public Point3D getIntermediateWithXValue(Point3D endPoint, double targetX){
+    	Point3D delta = endPoint.copy().subtract(this);
         if(delta.x*delta.x < 1.0E-7D){
         	//Point delta is 0, so there's no difference here.
             return null;
         }else{
         	//Return point as a factored-percentage of total length.
         	double factor = (targetX - this.x)/delta.x;
-            return factor >= 0.0D && factor <= 1.0D ? delta.multiply(factor).add(this) : null;
+            return factor >= 0.0D && factor <= 1.0D ? delta.scale(factor).add(this) : null;
         }
     }
 
@@ -223,15 +279,15 @@ public class Point3dPlus extends Point3d{
      * is between this point and the passed-in point, and the passed-in point's y-value is not
      * equal to this point's y-value.  If such conditions are not satisfied, null is returned.
      */
-    public Point3dPlus getIntermediateWithYValue(Point3dPlus endPoint, double targetY){
-    	Point3dPlus delta = endPoint.copy().subtract(this);
+    public Point3D getIntermediateWithYValue(Point3D endPoint, double targetY){
+    	Point3D delta = endPoint.copy().subtract(this);
         if(delta.y*delta.y < 1.0E-7D){
         	//Point delta is 0, so there's no difference here.
             return null;
         }else{
         	//Return point as a factored-percentage of total length.
         	double factor = (targetY - this.y)/delta.y;
-            return factor >= 0.0D && factor <= 1.0D ? delta.multiply(factor).add(this) : null;
+            return factor >= 0.0D && factor <= 1.0D ? delta.scale(factor).add(this) : null;
         }
     }
     
@@ -240,15 +296,15 @@ public class Point3dPlus extends Point3d{
      * is between this point and the passed-in point, and the passed-in point's z-value is not
      * equal to this point's z-value.  If such conditions are not satisfied, null is returned.
      */
-    public Point3dPlus getIntermediateWithZValue(Point3dPlus endPoint, double targetZ){
-    	Point3dPlus delta = endPoint.copy().subtract(this);
+    public Point3D getIntermediateWithZValue(Point3D endPoint, double targetZ){
+    	Point3D delta = endPoint.copy().subtract(this);
         if(delta.z*delta.z < 1.0E-7D){
         	//Point delta is 0, so there's no difference here.
             return null;
         }else{
         	//Return point as a factored-percentage of total length.
         	double factor = (targetZ - this.z)/delta.z;
-            return factor >= 0.0D && factor <= 1.0D ? delta.multiply(factor).add(this) : null;
+            return factor >= 0.0D && factor <= 1.0D ? delta.scale(factor).add(this) : null;
         }
     }
 	
@@ -262,7 +318,7 @@ public class Point3dPlus extends Point3d{
      * and cos calls via a rotation matrix.  This matrix is cached in this point until the point
      * is changed, so repeated uses will be faster if you don't create new "angle" objects.
      */
-	public Point3dPlus rotateFine(Point3dPlus angles){
+	public Point3D rotateFine(Point3D angles){
 		if(!angles.isZero()){
 			//Check if we need to create the matrix for the angles.
 			if(angles.lastCalcX != angles.x || angles.lastCalcY != angles.y || angles.lastCalcZ != angles.z || !angles.calcedOnce){
@@ -300,7 +356,7 @@ public class Point3dPlus extends Point3d{
      * as the Y=axis is also the first rotation to be performed on a point in all systems.
      * Uses "fine" rotation calculations.
      */
-	public Point3dPlus rotateY(double angle){
+	public Point3D rotateY(double angle){
 		if(angle != 0){
 			double cosY = Math.cos(Math.toRadians(angle));//C
 			double sinY = Math.sin(Math.toRadians(angle));//D
@@ -319,4 +375,43 @@ public class Point3dPlus extends Point3d{
 	 * Rz=[[cos(R),-sin(R),0],[sin(R),cos(R),0],[0,0,1]]
 	 * {[C,0,-D],[0,1,0],[D,0,C]}*{[1,0,0],[0,A,-B],[0,B,A]}*{[E,-F,0],[F,E,0],[0,0,1]}
 	 */
+
+	
+	/**
+	 * Rotates the point per the passed-in matrix.
+	 */
+	public Point3D rotate(RotationMatrix matrix){
+		double tx = matrix.m00* x + matrix.m01*y + matrix.m02*z;
+		double ty = matrix.m10* x + matrix.m11*y + matrix.m12*z;
+		z = matrix.m20* x + matrix.m21*y + matrix.m22*z;
+		x = tx;
+		y = ty;
+		return this;
+	}
+	
+	/**
+	 * Aligns this point to the passed-in matrix origin.  Essentially, this leaves
+	 * the point in its current position, but changes the coordinate system
+	 * to be aligned to the coordinate system of this matrix.
+	 */
+	public Point3D reOrigin(RotationMatrix matrix){
+		double tx = matrix.m00* x + matrix.m10*y + matrix.m20*z;
+		double ty = matrix.m01* x + matrix.m11*y + matrix.m21*z;
+		z = matrix.m02* x + matrix.m12*y + matrix.m22*z;
+		x = tx;
+		y = ty;
+		return this;
+	}
+
+	/**
+	 * Transforms this point to align with the passed-in transformation matrix.
+	 */
+	public Point3D transform(TransformationMatrix matrix){
+        double tx = matrix.m00*x + matrix.m01*y + matrix.m02*z + matrix.m03;
+        double ty = matrix.m10*x + matrix.m11*y + matrix.m12*z + matrix.m13;
+        z =  matrix.m20*x + matrix.m21*y + matrix.m22*z + matrix.m23;
+        x = tx;
+        y = ty;
+		return this;
+	}
 }

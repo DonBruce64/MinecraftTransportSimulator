@@ -3,7 +3,7 @@ package minecrafttransportsimulator.jsondefs;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-import minecrafttransportsimulator.baseclasses.Point3dPlus;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase.BlockMaterial;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable.ModifiableValue;
 import minecrafttransportsimulator.jsondefs.JSONConfig.ConfigFuel.FuelDefaults;
@@ -389,11 +389,11 @@ public class JSONPart extends AJSONPartProvider{
 		
         @JSONRequired(dependentField="handHeld", dependentValues={"true"})
     	@JSONDescription("The offset where this gun will be when held normally by the player.  An offset of 0,0,0 will render the gun in the center of the player's right shoulder rotation point.  For reference, this is 0.3125 blocks to the right, and 1.375 blocks from the bottom-center of the player's feet.")
-		public Point3dPlus handHeldNormalOffset;
+		public Point3D handHeldNormalOffset;
 		
         @JSONRequired(dependentField="handHeld", dependentValues={"true"})
     	@JSONDescription("Like the normal offset, but this applies when the player starts sneaking/aiming.")
-		public Point3dPlus handHeldAimedOffset;
+		public Point3D handHeldAimedOffset;
         
         @JSONRequired
         @JSONDescription("A list of muzzle groups.  When firing this gun, the list is cycled though, and each group of muzzles takes turns firing.  If there are multiple muzzles in the group, they are all fired.  This allows for guns with muzzles that fire in sequence, or all at once.")

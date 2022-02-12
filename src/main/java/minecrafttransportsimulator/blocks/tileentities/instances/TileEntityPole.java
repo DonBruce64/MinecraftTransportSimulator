@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import minecrafttransportsimulator.baseclasses.Point3dPlus;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.instances.BlockPole;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
@@ -39,7 +39,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 	private float maxTotalLightLevel;
 	private static RenderPole renderer;
 	
-	public TileEntityPole(WrapperWorld world, Point3dPlus position, WrapperPlayer placingPlayer, WrapperNBT data){
+	public TileEntityPole(WrapperWorld world, Point3D position, WrapperPlayer placingPlayer, WrapperNBT data){
 		super(world, position, placingPlayer, data);
 		
 		//Load components back in.
@@ -170,13 +170,11 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 				//Update angles/orientation to account for axis rotation.
 				newComponent.angles.y = newAxis.yRotation;
 				newComponent.prevAngles.set(newComponent.angles);
-				newComponent.orientation.setToAngles(newComponent.angles);
+				newComponent.orientation.setAngleRotation(newComponent.angles);
 				newComponent.prevOrientation.set(newComponent.orientation);
 				
 				//Adjust position to new orientation.
-				newComponent.position.set(0, 0, definition.pole.radius + 0.001);
-				newComponent.orientation.transform(newComponent.position);
-				newComponent.position.add(position);
+				newComponent.position.set(0, 0, definition.pole.radius + 0.001).rotate(newComponent.orientation).add(position);
 				newComponent.prevPosition.set(newComponent.position);
 			}
 			world.addEntity(newComponent);
@@ -192,7 +190,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 	}
 	
 	@Override
-	public void onNeighborChanged(Point3dPlus otherPosition){
+	public void onNeighborChanged(Point3D otherPosition){
 		updateCollision(true);
 	}
 	

@@ -3,7 +3,7 @@ package minecrafttransportsimulator.items.components;
 import java.util.List;
 
 import minecrafttransportsimulator.MasterLoader;
-import minecrafttransportsimulator.baseclasses.Point3dPlus;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperItemStack;
@@ -65,7 +65,7 @@ public abstract class AItemBase{
 	 *  clicked and what axis it was hit at is passed-in for reference.  If this item did a thing
 	 *  due to this clicking, return true, as this prevents calling the block's clicked method. 
 	 */
-	public boolean onBlockClicked(WrapperWorld world, WrapperPlayer player, Point3dPlus position, Axis axis){
+	public boolean onBlockClicked(WrapperWorld world, WrapperPlayer player, Point3D position, Axis axis){
 		if(this instanceof IItemBlock){
 			return ((IItemBlock) this).placeBlock(world, player, position, axis);
 		}else{
@@ -74,7 +74,7 @@ public abstract class AItemBase{
 	}
 	
 	/**
-	 *  Called when the player right-clicks with this item.  {@link AItemBase#onBlockClicked(WrapperWorld, WrapperPlayer, Point3dPlus, Axis)}
+	 *  Called when the player right-clicks with this item.  {@link AItemBase#onBlockClicked(WrapperWorld, WrapperPlayer, Point3D, Axis)}
 	 *  is called before this method, and if and only if that method returns false will this method be called.
 	 *  If this item does something, return true.
 	 */

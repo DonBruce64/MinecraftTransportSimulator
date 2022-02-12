@@ -3,7 +3,7 @@ package minecrafttransportsimulator.packets.instances;
 import java.util.UUID;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.baseclasses.Point3dPlus;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
@@ -26,7 +26,7 @@ import minecrafttransportsimulator.packets.components.APacketEntityInteract;
  */
 public class PacketPartInteractable extends APacketEntityInteract<PartInteractable, WrapperPlayer>{
 	private final UUID linkedID;
-	private final Point3dPlus linkedOffset;
+	private final Point3D linkedOffset;
 	
 	public PacketPartInteractable(PartInteractable interactable, WrapperPlayer player){
 		super(interactable, player);

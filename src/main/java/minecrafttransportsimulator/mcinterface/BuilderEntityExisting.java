@@ -9,7 +9,7 @@ import javax.annotation.Nullable;
 import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
-import minecrafttransportsimulator.baseclasses.Point3dPlus;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
@@ -51,7 +51,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase{
 	/**Current entity we are built around.  This MAY be null if we haven't loaded NBT from the server yet.**/
 	protected AEntityB_Existing entity;
 	/**Last saved explosion position (used for damage calcs).**/
-	private static Point3dPlus lastExplosionPosition;
+	private static Point3D lastExplosionPosition;
 	/**Collective for interaction boxes.  These are used by this entity to allow players to interact with it.**/
 	private WrapperAABBCollective interactionBoxes;
 	/**Collective for collision boxes.  These are used by this entity to make things collide with it.**/
@@ -186,7 +186,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase{
 			}else if(attacker != null){
 				Damage damage = null;
 				//Check the damage at the current position of the attacker.
-				Point3dPlus attackerPosition = new Point3dPlus(attacker.posX, attacker.posY, attacker.posZ);
+				Point3D attackerPosition = new Point3D(attacker.posX, attacker.posY, attacker.posZ);
 				for(BoundingBox box : interactionBoxes.boxes){
 					if(box.isPointInside(attackerPosition)){
 						damage = new Damage(source.damageType, amount, box, null, playerSource);
@@ -256,7 +256,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase{
 		if(entity instanceof AEntityF_Multipart){
 			for(APart part : ((AEntityF_Multipart<?>) entity).parts){
 				for(BoundingBox box : part.interactionBoxes){
-					if(box.isPointInside(new Point3dPlus(target.hitVec.x, target.hitVec.y, target.hitVec.z))){
+					if(box.isPointInside(new Point3D(target.hitVec.x, target.hitVec.y, target.hitVec.z))){
 						AItemPack<?> partItem = part.getItem();
 						if(partItem != null){
 							return part.getItem().getNewStack(part.save(new WrapperNBT())).stack;
@@ -301,7 +301,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase{
 	@SubscribeEvent
 	public static void on(ExplosionEvent.Detonate event){
 		if(!event.getWorld().isRemote){
-			lastExplosionPosition = new Point3dPlus(event.getExplosion().getPosition().x, event.getExplosion().getPosition().y, event.getExplosion().getPosition().z);
+			lastExplosionPosition = new Point3D(event.getExplosion().getPosition().x, event.getExplosion().getPosition().y, event.getExplosion().getPosition().z);
 		}
 	}
 	

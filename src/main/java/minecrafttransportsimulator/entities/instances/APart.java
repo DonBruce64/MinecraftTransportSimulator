@@ -9,8 +9,8 @@ import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.Damage;
-import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
-import minecrafttransportsimulator.baseclasses.Point3dPlus;
+import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.baseclasses.TrailerConnection;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
@@ -37,7 +37,7 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 	
 	//JSON properties.
 	public final JSONPartDefinition placementDefinition;
-	public final Point3dPlus placementOffset;
+	public final Point3D placementOffset;
 	public final boolean disableMirroring;
 	
 	//Instance properties.
@@ -57,10 +57,10 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 	private final Map<JSONPartDefinition, JSONPartDefinition> subpackMappings = new HashMap<JSONPartDefinition, JSONPartDefinition>();
 	public boolean isInvisible = false;
 	public boolean isActive = true;
-	public final Point3dPlus localOffset;
-	public final Matrix4dPlus localOrientation;
-	public final Matrix4dPlus zeroReferenceOrientation;
-	public final Matrix4dPlus prevZeroReferenceOrientation;
+	public final Point3D localOffset;
+	public final RotationMatrix localOrientation;
+	public final RotationMatrix zeroReferenceOrientation;
+	public final RotationMatrix prevZeroReferenceOrientation;
 	private AnimationSwitchbox placementActiveSwitchbox;
 	private AnimationSwitchbox internalActiveSwitchbox;
 	private AnimationSwitchbox placementMovementSwitchbox;
@@ -77,9 +77,9 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 		this.placementOffset = placementDefinition.pos;
 		
 		this.localOffset = placementOffset.copy();
-		this.localOrientation = new Matrix4dPlus(placementDefinition.rot);
-		this.zeroReferenceOrientation = new Matrix4dPlus();
-		this.prevZeroReferenceOrientation = new Matrix4dPlus();
+		this.localOrientation = new RotationMatrix();
+		this.zeroReferenceOrientation = new RotationMatrix();
+		this.prevZeroReferenceOrientation = new RotationMatrix();
 		
 		//If we are an additional part or sub-part, link ourselves now.
 		//If we are a fake part, don't even bother checking.
@@ -99,13 +99,9 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 		//Set initial position and rotation.  This ensures part doesn't "warp" the first tick.
 		//Note that this isn't exact, as we can't calculate the exact locals until after the first tick.
 		//This is why it does not take into account parent part positions.
-		position.set(localOffset);
-		localOrientation.transform(position);
-		position.add(entityOn.position);
+		position.set(localOffset).add(entityOn.position);
 		prevPosition.set(position);
-		
 		orientation.set(entityOn.orientation);
-		orientation.mul(localOrientation);
 		prevOrientation.set(orientation);
 		
 		//Set mirrored state.
@@ -148,14 +144,11 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 			
 			//Set initial offsets.
 			if(parentPart != null && placementDefinition.isSubPart){
-				prevMotion.set(parentPart.prevMotion);
 				motion.set(parentPart.motion);
 				position.set(parentPart.position);
 				orientation.set(parentPart.orientation);
-				localOffset.set(placementOffset);
-				localOffset.sub(parentPart.placementOffset);
+				localOffset.set(placementOffset).subtract(parentPart.placementOffset);
 			}else{
-				prevMotion.set(entityOn.prevMotion);
 				motion.set(entityOn.motion);
 				position.set(entityOn.position);
 				orientation.set(entityOn.orientation);
@@ -169,12 +162,14 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 			}else{
 				zeroReferenceOrientation.set(entityOn.orientation);
 			}
-			zeroReferenceOrientation.mul(placementDefinition.rot);
+			if(placementDefinition.rot != null){
+				zeroReferenceOrientation.multiply(placementDefinition.rot);
+			}
 			
 			//Update local position, orientation, scale, and enabled state.
 			isInvisible = false;
 			scale = placementDefinition.isSubPart && parentPart != null ? parentPart.scale : entityOn.scale;
-			localOrientation.setIdentity();
+			localOrientation.setToZero();
 			
 			//Placement movement uses the coords of the thing we are on.
 			if(placementMovementSwitchbox != null){
@@ -182,29 +177,30 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 				//Offset needs to move according to full transform.
 				//This is because these coords are from what we are on.
 				//Orientation just needs to update according to new rotation.
-				placementMovementSwitchbox.netMatrix.transform(localOffset);
-				localOrientation.mul(placementMovementSwitchbox.rotationMatrix);
+				localOffset.transform(placementMovementSwitchbox.netMatrix);
+				localOrientation.multiply(placementMovementSwitchbox.rotation);
 			}
 			
 			//Internal movement uses local coords.
 			//First rotate orientation to face rotated state.
-			localOrientation.mul(placementDefinition.rot);
+			if(placementDefinition.rot != null){
+				localOrientation.multiply(placementDefinition.rot);
+			}
 			if(internalMovementSwitchbox != null){
 				isInvisible = !internalMovementSwitchbox.runSwitchbox(0) || isInvisible;
 				//Offset here is local and just needs translation, as it's
 				//assuming that we are the origin.
 				localOffset.add(internalMovementSwitchbox.translation);
-				localOrientation.mul(internalMovementSwitchbox.rotationMatrix);
+				localOrientation.multiply(internalMovementSwitchbox.rotation);
 			}
 			
 			//Multiply local offset by the scale to reflect the scaled offset.
-			localOffset.multiply(scale);
+			localOffset.scale(scale);
 			
 			//Now that locals are set, set globals to reflect them.
-			Point3dPlus positionHoldingArea = new Point3dPlus();
-			orientation.transform(localOffset, positionHoldingArea);
-			position.add(positionHoldingArea);
-			orientation.mul(localOrientation);
+			Point3D localPositionDelta = new Point3D().set(localOffset).rotate(orientation);
+			position.add(localPositionDelta);
+			orientation.multiply(localOrientation);
 			
 			//Update bounding box, as scale changes width/height.
 			boundingBox.widthRadius = getWidth()/2D;

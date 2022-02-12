@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.entities.instances;
 
-import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
+import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.instances.ItemPartGun;
@@ -92,17 +93,13 @@ public final class PartSeat extends APart{
     }
 	
 	/**
-	 *  Like {@link #getInterpolatedOrientation(Matrix4dPlus, double)}, just for
+	 *  Like {@link #getInterpolatedOrientation(TransformationMatrix, double)}, just for
 	 *  the rider.  This is to allow for the fact the rider won't turn in the
 	 *  seat when the seat turns via animations: only their rendered body will rotate.
 	 *  In a nutshell, this get's the riders orientation assuming a non-rotated seat.
 	 */
-	public void getRiderInterpolatedOrientation(Matrix4dPlus store, double partialTicks){
-		zeroReferenceOrientation.get(interpHelperQuatStart);
-		prevZeroReferenceOrientation.get(interpHelperQuatEnd);
-		interpHelperQuatEnd.interpolate(interpHelperQuatStart, partialTicks);
-		store.setIdentity();
-		store.set(interpHelperQuatEnd);
+	public void getRiderInterpolatedOrientation(RotationMatrix store, double partialTicks){
+		store.interploate(prevZeroReferenceOrientation, zeroReferenceOrientation, partialTicks);
 	}
 	
 	/**

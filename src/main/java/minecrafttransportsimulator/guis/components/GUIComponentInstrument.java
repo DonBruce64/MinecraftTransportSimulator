@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.guis.components;
 
-import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
+import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.jsondefs.JSONInstrumentDefinition;
 import minecrafttransportsimulator.rendering.instances.RenderInstrument;
@@ -14,7 +14,7 @@ import minecrafttransportsimulator.rendering.instances.RenderInstrument;
 public class GUIComponentInstrument extends AGUIComponent{
 	public final AEntityE_Interactable<?> entity;
 	public final int slot;
-	private static final Matrix4dPlus transform = new Matrix4dPlus();
+	private static final TransformationMatrix transform = new TransformationMatrix();
 	    	
 	public GUIComponentInstrument(int guiLeft, int guiTop, AEntityE_Interactable<?> entity, int slot){
 		super(guiLeft, guiTop, 0, 0);
@@ -28,8 +28,7 @@ public class GUIComponentInstrument extends AGUIComponent{
 
     @Override
 	public void render(AGUIBase gui, int mouseX, int mouseY, boolean renderBright, boolean renderLitTexture, boolean blendingEnabled, float partialTicks){
-    	transform.resetTransforms();
-    	transform.translate(position.x, position.y, position.z + MODEL_DEFAULT_ZOFFSET*0.5);
+    	transform.setTranslation(position.x, position.y, position.z + MODEL_DEFAULT_ZOFFSET*0.5);
     	RenderInstrument.drawInstrument(entity, transform, slot, true, blendingEnabled, partialTicks);
     }
 }

@@ -4,8 +4,8 @@ import java.util.Map.Entry;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
-import minecrafttransportsimulator.baseclasses.Point3dPlus;
+import minecrafttransportsimulator.baseclasses.TransformationMatrix;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPart;
@@ -26,7 +26,7 @@ import minecrafttransportsimulator.rendering.components.ARenderEntityDefinable;
 public class RenderVehicle extends ARenderEntityDefinable<EntityVehicleF_Physics>{	
 	
 	@Override
-	protected void renderHolographicBoxes(EntityVehicleF_Physics vehicle, Matrix4dPlus transform){
+	protected void renderHolographicBoxes(EntityVehicleF_Physics vehicle, TransformationMatrix transform){
 		//If we are holding a part, render the valid slots.
 		//If we are holding a scanner, render all slots.
 		vehicle.world.beginProfiling("PartHoloboxes", true);
@@ -40,7 +40,7 @@ public class RenderVehicle extends ARenderEntityDefinable<EntityVehicleF_Physics
 					JSONPartDefinition placementDefinition = partSlotEntry.getValue();
 					if(!vehicle.areVariablesBlocking(placementDefinition, player) && (placementDefinition.validSubNames == null || placementDefinition.validSubNames.contains(vehicle.subName))){
 						BoundingBox box = partSlotEntry.getKey();
-						Point3dPlus boxCenterDelta = box.globalCenter.copy().subtract(vehicle.position);
+						Point3D boxCenterDelta = box.globalCenter.copy().subtract(vehicle.position);
 						box.renderHolographic(transform, boxCenterDelta, ColorRGB.BLUE);
 					}
 				}
@@ -58,7 +58,7 @@ public class RenderVehicle extends ARenderEntityDefinable<EntityVehicleF_Physics
 							
 					if(isHoldingCorrectTypePart){
 						BoundingBox box = partSlotEntry.getKey();
-						Point3dPlus boxCenterDelta = box.globalCenter.copy().subtract(vehicle.position);
+						Point3D boxCenterDelta = box.globalCenter.copy().subtract(vehicle.position);
 						box.renderHolographic(transform, boxCenterDelta, isHoldingCorrectParamPart ? ColorRGB.GREEN : ColorRGB.RED);
 					}
 				}
@@ -68,7 +68,7 @@ public class RenderVehicle extends ARenderEntityDefinable<EntityVehicleF_Physics
 	}
 	
 	@Override
-	public void renderBoundingBoxes(EntityVehicleF_Physics vehicle, Matrix4dPlus transform){
+	public void renderBoundingBoxes(EntityVehicleF_Physics vehicle, TransformationMatrix transform){
 		super.renderBoundingBoxes(vehicle, transform);
 		for(BoundingBox box : vehicle.groundDeviceCollective.getGroundBounds()){
 			box.renderWireframe(vehicle, transform, null, ColorRGB.BLUE);

@@ -2,7 +2,7 @@ package minecrafttransportsimulator.entities.instances;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
-import minecrafttransportsimulator.baseclasses.Point3dPlus;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
@@ -18,7 +18,7 @@ public class PartPropeller extends APart{
 	public int currentPitch;
 	
 	private final PartEngine connectedEngine;
-	private final Point3dPlus propellerForce = new Point3dPlus();
+	private final Point3D propellerForce = new Point3D();
 	private final BoundingBox damageBounds;
 	
 	public static final int MIN_DYNAMIC_PITCH = 45;
@@ -137,7 +137,7 @@ public class PartPropeller extends APart{
 		return super.getRawVariableValue(variable, partialTicks);
 	}
 	
-	public Point3dPlus getForceOutput(){
+	public Point3D getForceOutput(){
 		propellerForce.set(0D, 0D, 0D);
 		if(connectedEngine != null && connectedEngine.running){
 			//Get the current linear velocity of the propeller, based on our axial velocity.
@@ -176,7 +176,7 @@ public class PartPropeller extends APart{
 				
 				//Add propeller force to total engine force as a vector.
 				//Depends on propeller orientation, as upward propellers provide upwards thrust.
-				propellerForce.scaleAdd(thrust, axialOrientation, propellerForce);
+				propellerForce.addScaled(thrust, axialOrientation);
 			}
 		}
 		return propellerForce;

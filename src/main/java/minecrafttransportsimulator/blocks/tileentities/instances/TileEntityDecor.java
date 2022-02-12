@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
-import minecrafttransportsimulator.baseclasses.Point3dPlus;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
@@ -26,7 +26,7 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor>{
 	
 	private static RenderDecor renderer;
 	
-	public TileEntityDecor(WrapperWorld world, Point3dPlus position, WrapperPlayer placingPlayer, WrapperNBT data){
+	public TileEntityDecor(WrapperWorld world, Point3D position, WrapperPlayer placingPlayer, WrapperNBT data){
 		super(world, position, placingPlayer, data);
 		//If we are on a slab, we go down to match it.
 		if(world.isBlockBelowBottomSlab(position)){

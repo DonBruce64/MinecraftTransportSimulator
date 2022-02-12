@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.baseclasses.Point3dPlus;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.instances.EntityBullet;
 import minecrafttransportsimulator.entities.instances.PartGun;
 import minecrafttransportsimulator.items.instances.ItemBullet;
@@ -20,10 +20,10 @@ import minecrafttransportsimulator.systems.PackParserSystem;
  */
 public class PacketEntityBulletHit extends APacketEntity<PartGun>{
 	protected final ItemBullet bulletItem;
-	protected final Point3dPlus hitPosition;
+	protected final Point3D hitPosition;
 	private final int bulletNumber;
 
-	public PacketEntityBulletHit(EntityBullet bullet, Point3dPlus hitPosition){
+	public PacketEntityBulletHit(EntityBullet bullet, Point3D hitPosition){
 		super(bullet.gun);
 		this.bulletItem = bullet.getItem();
 		this.hitPosition = hitPosition;

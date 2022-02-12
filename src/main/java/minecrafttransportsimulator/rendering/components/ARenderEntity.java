@@ -1,7 +1,8 @@
 package minecrafttransportsimulator.rendering.components;
 
-import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
-import minecrafttransportsimulator.baseclasses.Point3dPlus;
+import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
+import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.InterfaceRender;
@@ -11,9 +12,9 @@ import minecrafttransportsimulator.mcinterface.InterfaceRender;
  * @author don_bruce
  */
 public abstract class ARenderEntity<RenderedEntity extends AEntityC_Renderable>{
-	private static final Matrix4dPlus interpolatedOrientationHolder = new Matrix4dPlus();
-	private static final Matrix4dPlus translatedMatrix = new Matrix4dPlus();
-	private static final Matrix4dPlus rotatedMatrix = new Matrix4dPlus();
+	private static final RotationMatrix interpolatedOrientationHolder = new RotationMatrix();
+	private static final TransformationMatrix translatedMatrix = new TransformationMatrix();
+	private static final TransformationMatrix rotatedMatrix = new TransformationMatrix();
 	
 	/**
 	 *  Called to render this entity.  This is the setup method that sets states to the appropriate values.
@@ -25,8 +26,8 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Renderable>{
 		if(!disableRendering(entity, partialTicks)){
 			//Get the render offset.
 			//This is the interpolated movement, plus the prior position.
-			Point3dPlus entityPositionDelta = new Point3dPlus(entity.prevPosition);
-			entityPositionDelta.interpolate(entity.position, (double)partialTicks);
+			Point3D entityPositionDelta = new Point3D(entity.prevPosition);
+			entityPositionDelta.interpolate(entity.position, partialTicks);
 			
 			//Subtract the entity's position by the render entity position to get the delta for translating.
 			entityPositionDelta.subtract(InterfaceClient.getRenderViewEntity().getRenderedPosition(partialTicks));
@@ -39,10 +40,11 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Renderable>{
 	        
 	        //Set up matrixes.
 	        translatedMatrix.resetTransforms();
-	        translatedMatrix.translate(entityPositionDelta);
+	        translatedMatrix.setTranslation(entityPositionDelta);
 			rotatedMatrix.set(translatedMatrix);
-			rotatedMatrix.matrix(interpolatedOrientationHolder);
-			rotatedMatrix.scale(entity.prevScale + (entity.scale - entity.prevScale)*partialTicks);
+			rotatedMatrix.applyRotation(interpolatedOrientationHolder);
+			double scale = entity.prevScale + (entity.scale - entity.prevScale)*partialTicks;
+			rotatedMatrix.applyScaling(scale, scale, scale);
 			
 	        //Render the main model.
 	        entity.world.endProfiling();
@@ -81,7 +83,7 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Renderable>{
 	 *  Called to render the main model.  At this point the matrix state will be aligned
 	 *  to the position and rotation of the entity relative to the player-camera.
 	 */
-	protected abstract void renderModel(RenderedEntity entity, Matrix4dPlus transform, boolean blendingEnabled, float partialTicks);
+	protected abstract void renderModel(RenderedEntity entity, TransformationMatrix transform, boolean blendingEnabled, float partialTicks);
 	
 	/**
 	 *  Called to render holdgraphic boxes.  These shouldn't rotate with the model, so rotation is not present here.
@@ -89,7 +91,7 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Renderable>{
 	 *  at least be relative to it.
 	 *  Also, this method is only called when blending is enabled, because holographic stuff ain't solid.
 	 */
-	protected void renderHolographicBoxes(RenderedEntity entity, Matrix4dPlus transform){};
+	protected void renderHolographicBoxes(RenderedEntity entity, TransformationMatrix transform){};
 	
 	/**
 	 *  Renders the bounding boxes for the entity, if any are present.
@@ -97,7 +99,7 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Renderable>{
 	 *  will be un-done, as boxes need to be rendered according to their world state.
 	 *  The passed-in transform is between the player and the entity.
 	 */
-	public void renderBoundingBoxes(RenderedEntity entity, Matrix4dPlus transform){
+	public void renderBoundingBoxes(RenderedEntity entity, TransformationMatrix transform){
 		entity.boundingBox.renderWireframe(entity, transform, null, null);	
 	}
 }

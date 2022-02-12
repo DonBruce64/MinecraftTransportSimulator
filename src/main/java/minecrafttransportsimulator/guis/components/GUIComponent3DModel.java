@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.rendering.components.AModelParser;
 import minecrafttransportsimulator.rendering.components.RenderableObject;
 
@@ -26,7 +26,7 @@ public class GUIComponent3DModel extends AGUIComponent{
 	/**Parsed vertex indexes.  Keyed by model name.*/
 	private static final Map<String, RenderableObject> modelParsedObjects = new HashMap<String, RenderableObject>();
 	private static final Map<String, Float> modelScalingFactors = new HashMap<String, Float>();
-	private static final Matrix4dPlus ISOMETRIC_TRANSFORM = generateIsometricTransform();
+	private static final RotationMatrix ISOMETRIC_ROTATION = new RotationMatrix().setAxisAngleRotation(0, 1, 0, -45).multiply(new RotationMatrix().setAxisAngleRotation(0.70712, 0, -0.70712, 35.264));;
 	
 	public final float scaleFactor;
 	public final boolean isometric;
@@ -98,17 +98,18 @@ public class GUIComponent3DModel extends AGUIComponent{
 			}
 			RenderableObject object = modelParsedObjects.get(modelLocation);
 			object.transform.resetTransforms();
-			object.transform.translate(position);
+			object.transform.setTranslation(position);
 			if(isometric){
-				object.transform.matrix(ISOMETRIC_TRANSFORM);
+				object.transform.applyRotation(ISOMETRIC_ROTATION);
 			}
 			if(spin){
-				object.transform.rotate((36*System.currentTimeMillis()/1000)%360, 0, 1, 0);
+				object.transform.applyRotation(new RotationMatrix().setAxisAngleRotation(0, 1, 0, (36*System.currentTimeMillis()/1000)%360));
 			}
 			if(!staticScaling){
 				scale = modelScalingFactors.get(modelLocation);
 			}
-			object.transform.scale(scale*scaleFactor);
+			double totalScale = scale*scaleFactor;
+			object.transform.applyScaling(totalScale, totalScale, totalScale);
 			object.texture = textureLocation;
 			object.disableLighting = renderBright;
 			object.render();
@@ -121,12 +122,5 @@ public class GUIComponent3DModel extends AGUIComponent{
     public static void clearModelCaches(){
     	modelParsedObjects.values().forEach(modelParsedObject -> modelParsedObject.destroy());
     	modelParsedObjects.clear();
-    }
-    
-    private static Matrix4dPlus generateIsometricTransform(){
-    	Matrix4dPlus transform = new Matrix4dPlus();
-    	transform.rotate(-45, 0, 1, 0);
-    	transform.rotate(35.264, 1, 0, -1);
-    	return transform;
     }
 }

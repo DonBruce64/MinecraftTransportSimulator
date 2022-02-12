@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.baseclasses.Point3dPlus;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.instances.EntityBullet;
 import minecrafttransportsimulator.jsondefs.JSONBullet.BulletType;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
@@ -14,7 +14,7 @@ import minecrafttransportsimulator.systems.ConfigSystem;
  */
 public class PacketEntityBulletHitBlock extends PacketEntityBulletHit{
 
-	public PacketEntityBulletHitBlock(EntityBullet bullet, Point3dPlus blockPosition){
+	public PacketEntityBulletHitBlock(EntityBullet bullet, Point3D blockPosition){
 		super(bullet, blockPosition);
 	}
 	

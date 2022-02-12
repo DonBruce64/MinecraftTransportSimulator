@@ -4,7 +4,7 @@ import java.nio.FloatBuffer;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.Point3dPlus;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.rendering.components.RenderableObject;
 import minecrafttransportsimulator.rendering.instances.RenderText;
 import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
@@ -23,8 +23,8 @@ public abstract class AGUIComponent{
 	//Rendering variables.
 	public final int constructedX;
 	public final int constructedY;
-	public final Point3dPlus position;
-	public final Point3dPlus textPosition;
+	public final Point3D position;
+	public final Point3D textPosition;
 	public int width;
 	public int height;
 	
@@ -34,7 +34,7 @@ public abstract class AGUIComponent{
 	public String text;
 	protected RenderableObject renderable;
 	private static final RenderableObject mutableTooltipRenderable = new RenderableObject("gui_tooltip", AGUIBase.STANDARD_TEXTURE_NAME, ColorRGB.WHITE, FloatBuffer.allocate(9*6*8), false);
-	private static final Point3dPlus mutableTooltipPosition = new Point3dPlus();
+	private static final Point3D mutableTooltipPosition = new Point3D();
 	
 	protected static final int TEXT_DEFAULT_ZOFFSET = 200;
 	protected static final int MODEL_DEFAULT_ZOFFSET = 100;
@@ -51,8 +51,8 @@ public abstract class AGUIComponent{
 		this.constructedX = x;
 		this.constructedY = y;
 		//Use -y as GUI construction uses inverted Y coords.
-		this.position = new Point3dPlus(x, -y, getZOffset());
-		this.textPosition = new Point3dPlus(position.x, position.y, position.z + TEXT_DEFAULT_ZOFFSET);
+		this.position = new Point3D(x, -y, getZOffset());
+		this.textPosition = new Point3D(position.x, position.y, position.z + TEXT_DEFAULT_ZOFFSET);
 		this.width = width;
 		this.height = height;
 	}
@@ -166,8 +166,7 @@ public abstract class AGUIComponent{
     		mutableTooltipRenderable.disableLighting = true;
     		
     		//Do the actual rendering.
-    		mutableTooltipRenderable.transform.resetTransforms();
-    		mutableTooltipRenderable.transform.translate(0, 0, textPosition.z + 25);
+    		mutableTooltipRenderable.transform.setTranslation(0, 0, textPosition.z + 25);
     		mutableTooltipRenderable.render();
     		
     		//Need to move tooltip text by -y to account for inverted coords.

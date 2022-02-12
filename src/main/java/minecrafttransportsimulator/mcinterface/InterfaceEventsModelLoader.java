@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.MasterLoader;
-import minecrafttransportsimulator.baseclasses.Point3dPlus;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
@@ -60,7 +60,7 @@ public class InterfaceEventsModelLoader{
 	/**
 	 *  Returns a 4-float array for the block break texture at the passed-in position in the passed-in world.
 	 */
-	public static float[] getBlockBreakTexture(WrapperWorld world, Point3dPlus position){
+	public static float[] getBlockBreakTexture(WrapperWorld world, Point3D position){
 		//Get normal model.
 		IBlockState state = world.world.getBlockState(new BlockPos(position.x, position.y, position.z));
 		TextureAtlasSprite sprite = Minecraft.getMinecraft().getBlockRendererDispatcher().getBlockModelShapes().getTexture(state);

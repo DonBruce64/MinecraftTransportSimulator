@@ -7,7 +7,8 @@ import java.util.Map;
 
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
+import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
@@ -33,14 +34,15 @@ public abstract class ARenderEntityDefinable<RenderedEntity extends AEntityD_Def
 	private static final List<ARenderEntityDefinable<?>> createdRenderers = new ArrayList<ARenderEntityDefinable<?>>();
 	
 	/**Static helper matrix for transforming instrument positions.**/
-	private static final Matrix4dPlus instrumentTransform = new Matrix4dPlus();
+	private static final TransformationMatrix instrumentTransform = new TransformationMatrix();
+	private static final RotationMatrix INSTRUMENT_ROTATION_INVERSION = new RotationMatrix().setAxisAngleRotation(0, 1, 0, 180);
 	
 	public ARenderEntityDefinable(){
 		createdRenderers.add(this);
 	}
 	
 	@Override
-	protected void renderModel(RenderedEntity entity, Matrix4dPlus transform, boolean blendingEnabled, float partialTicks){
+	protected void renderModel(RenderedEntity entity, TransformationMatrix transform, boolean blendingEnabled, float partialTicks){
 		//Update internal lighting states.
 		entity.world.beginProfiling("LightStateUpdates", true);
         entity.updateLightBrightness(partialTicks);
@@ -94,7 +96,7 @@ public abstract class ARenderEntityDefinable<RenderedEntity extends AEntityD_Def
 	 *  Normalization is required here, as otherwise the normals get scaled with the
 	 *  scaling operations, and shading gets applied funny. 
 	 */
-	private void renderInstruments(RenderedEntity entity, Matrix4dPlus transform, boolean blendingEnabled, float partialTicks){
+	private void renderInstruments(RenderedEntity entity, TransformationMatrix transform, boolean blendingEnabled, float partialTicks){
 		if(entity instanceof AEntityE_Interactable){
 			AEntityE_Interactable<?> interactable = (AEntityE_Interactable<?>) entity;
 			if(interactable.definition.instruments != null){
@@ -107,18 +109,18 @@ public abstract class ARenderEntityDefinable<RenderedEntity extends AEntityD_Def
 						//Note that instruments with rotation of Y=0 face backwards, which is opposite of normal rendering.
 						//To compensate, we rotate them 180 here.
 						instrumentTransform.set(transform);
-						instrumentTransform.translate(packInstrument.pos);
-						instrumentTransform.matrix(packInstrument.rot);
-						instrumentTransform.rotate(180, 0, 1, 0);
+						instrumentTransform.applyTranslation(packInstrument.pos);
+						instrumentTransform.applyRotation(packInstrument.rot);
+						instrumentTransform.applyRotation(INSTRUMENT_ROTATION_INVERSION);
 						
 						//Do transforms if required and render if allowed.
 						AnimationSwitchbox switchbox = interactable.instrumentSlotSwitchboxes.get(packInstrument);
 						if(switchbox == null || switchbox.runSwitchbox(partialTicks)){
 							if(switchbox != null){
-								instrumentTransform.matrix(switchbox.netMatrix);
+								instrumentTransform.multiply(switchbox.netMatrix);
 							}
 							//Instruments render with 1 unit being 1 pixel, not 1 block, so scale by 1/16.
-							instrumentTransform.scale(1/16F);
+							instrumentTransform.applyScaling(1/16F, 1/16F, 1/16F);
 							RenderInstrument.drawInstrument(interactable, instrumentTransform, i, false, blendingEnabled, partialTicks);
 						}
 					}
@@ -128,7 +130,7 @@ public abstract class ARenderEntityDefinable<RenderedEntity extends AEntityD_Def
 	}
 	
 	@Override
-	public void renderBoundingBoxes(RenderedEntity entity, Matrix4dPlus transform){
+	public void renderBoundingBoxes(RenderedEntity entity, TransformationMatrix transform){
 		if(entity instanceof AEntityF_Multipart){
 			AEntityE_Interactable<?> interactable = (AEntityE_Interactable<?>) entity;
 			interactable.encompassingBox.renderWireframe(entity, transform, null, null);

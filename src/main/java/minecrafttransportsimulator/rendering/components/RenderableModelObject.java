@@ -9,8 +9,9 @@ import java.util.Map.Entry;
 
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
-import minecrafttransportsimulator.baseclasses.Point3dPlus;
+import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
+import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
@@ -46,7 +47,8 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 	/**Map of tread points, keyed by the model the tread is pathing about, then the spacing of the tread.
 	 * This can be shared for two different treads of the same spacing as they render the same.**/
 	private static final Map<String, Map<Float, List<Double[]>>> treadPoints = new HashMap<String, Map<Float, List<Double[]>>>();
-	private static final Matrix4dPlus treadPathBaseTransform = new Matrix4dPlus();
+	private static final TransformationMatrix treadPathBaseTransform = new TransformationMatrix();
+	private static final RotationMatrix treadRotation = new RotationMatrix();
 	private static final float COLOR_OFFSET = 0.0001F;
 	private static final float FLARE_OFFSET = 0.0002F;
 	private static final float COVER_OFFSET = 0.0003F;
@@ -92,7 +94,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 	 *  Renders this object, applying any transforms that need to happen.  This method also
 	 *  renders any objects that depend on this object's transforms after rendering.
 	 */
-	public void render(AnimationEntity entity, Matrix4dPlus transform, boolean blendingEnabled, float partialTicks){
+	public void render(AnimationEntity entity, TransformationMatrix transform, boolean blendingEnabled, float partialTicks){
 		JSONLight lightDef = entity.lightObjectDefinitions.get(object.name);
 		float lightLevel = lightDef != null ? entity.lightBrightnessValues.get(lightDef) : 0;
 		if(shouldRender(entity, lightDef, blendingEnabled)){
@@ -103,7 +105,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 			if(switchbox == null || switchbox.runSwitchbox(partialTicks)){
 				//Apply switchbox transform, if we have one.
 				if(switchbox != null){
-					object.transform.matrix(switchbox.netMatrix);
+					object.transform.multiply(switchbox.netMatrix);
 				}
 				
 				//Set mirrored statues.
@@ -270,12 +272,12 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 		//Tread rendering is done via the thing the tread is on, which will assume the part is centered at 0, 0, 0.
 		//We need to undo the offset of the tread part for this routine.
 		if(!(entityTreadAttachedTo instanceof APart)){
-			object.transform.translate(0, -tread.localOffset.y, -tread.localOffset.z);
+			object.transform.applyTranslation(0, -tread.localOffset.y, -tread.localOffset.z);
 		}
 		
 		//Add initial translation for the first point
 		point = points.get(0);
-		object.transform.translate(0, point[0], point[1]);
+		object.transform.applyTranslation(0, point[0], point[1]);
 		
 		//Now transform all points.
 		for(int i=0; i<points.size() - 1; ++i){
@@ -303,7 +305,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 			//This is determined by partial ticks and actual tread position.
 			//Once there, render the tread.  Then translate the remainder of the way to prepare
 			//to render the next tread.
-			object.transform.translate(0, yDelta*treadMovementPercentage, zDelta*treadMovementPercentage);
+			object.transform.applyTranslation(0, yDelta*treadMovementPercentage, zDelta*treadMovementPercentage);
 			
 			//If there's no rotation to the point, and no delta between points, don't do rotation.  That's just extra math.
 			//Do note that the model needs to be rotated 180 on the X-axis due to all our points
@@ -315,7 +317,8 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 				//stack and rotate prior to rendering.  This keeps us from having to do another
 				//rotation to get the old coordinate system back.
 				treadPathBaseTransform.set(object.transform);
-				object.transform.rotate(point[2] + angleDelta*treadMovementPercentage, 1, 0, 0);
+				treadRotation.setAxisAngleRotation(1, 0, 0, point[2] + angleDelta*treadMovementPercentage);
+				object.transform.applyRotation(treadRotation);
 				object.render();
 				object.transform.set(treadPathBaseTransform);
 			}else{
@@ -324,7 +327,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 			}
 			
 			//Add remaining translation.
-			object.transform.translate(0, yDelta*(1 - treadMovementPercentage), zDelta*(1 - treadMovementPercentage));
+			object.transform.applyTranslation(0, yDelta*(1 - treadMovementPercentage), zDelta*(1 - treadMovementPercentage));
 		}
 	}
 		
@@ -455,9 +458,9 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 		for(int i=0; i<flareDefs.size(); ++i){
 			JSONLightBlendableComponent flareDef = flareDefs.get(i);
 			//Get the angle that is needed to rotate points to the normalized vector.
-			Point3dPlus rotation = flareDef.axis.copy().getAngles(false);
-			Point3dPlus vertexOffset = new Point3dPlus();
-			Point3dPlus centerOffset = flareDef.axis.copy().multiply(FLARE_OFFSET).add(flareDef.pos);
+			Point3D rotation = flareDef.axis.copy().getAngles(false);
+			Point3D vertexOffset = new Point3D();
+			Point3D centerOffset = flareDef.axis.copy().scale(FLARE_OFFSET).add(flareDef.pos);
 			for(int j=0; j<6; ++j){
 				float[] newVertex = new float[8];
 				//Get the current UV points.
@@ -500,9 +503,9 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 		for(int i=0; i<beamDefs.size(); ++i){
 			JSONLightBlendableComponent beamDef = beamDefs.get(i);
 			//Get the angle that is needed to rotate points to the normalized vector.
-			Point3dPlus rotation = beamDef.axis.copy().getAngles(false);
-			Point3dPlus vertexOffset = new Point3dPlus();
-			Point3dPlus centerOffset = beamDef.axis.copy().multiply(BEAM_OFFSET).add(beamDef.pos);
+			Point3D rotation = beamDef.axis.copy().getAngles(false);
+			Point3D vertexOffset = new Point3D();
+			Point3D centerOffset = beamDef.axis.copy().scale(BEAM_OFFSET).add(beamDef.pos);
 			//Go from negative to positive to render both beam-faces in the same loop.
 			for(int j=-BEAM_SEGMENTS; j<BEAM_SEGMENTS; ++j){
 				for(int k=0; k<3; ++k){

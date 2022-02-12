@@ -19,8 +19,8 @@ import javax.imageio.stream.ImageInputStream;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
-import minecrafttransportsimulator.baseclasses.Point3dPlus;
+import minecrafttransportsimulator.baseclasses.TransformationMatrix;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.rendering.components.GIFParser;
 import minecrafttransportsimulator.rendering.components.GIFParser.ParsedGIF;
@@ -55,7 +55,7 @@ public class InterfaceRender{
 	 *  renders the item model: does not render text for counts.
 	 */
 	//FIXME make this do a batch call rather than individual.
-	public static void renderItemModel(WrapperItemStack stack, Matrix4dPlus transform){
+	public static void renderItemModel(WrapperItemStack stack, TransformationMatrix transform){
 		GL11.glPushMatrix();
 		setInternalLightingState(false);
 		
@@ -138,7 +138,7 @@ public class InterfaceRender{
 	 *  be desired.  In this case, the rotation will be transposed and the
 	 *  translation will be inverted.  Fourth-row elements will be left as-is.
 	 */
-	public static void applyTransformOpenGL(Matrix4dPlus matrix, boolean inverted){
+	public static void applyTransformOpenGL(TransformationMatrix matrix, boolean inverted){
 		buffer.clear();
 		if(inverted){
 			buffer.put(matrix.m00);
@@ -386,7 +386,7 @@ public class InterfaceRender{
 	 *  Updates the internal lightmap to be consistent with the light at the
 	 *  passed-in position.
 	 */
-	public static void setLightingToPosition(Point3dPlus position){
+	public static void setLightingToPosition(Point3D position){
 		//Get lighting 1 block above position, as actual position will result in blocked light.
 		int lightVar = Minecraft.getMinecraft().world.getCombinedLight(new BlockPos(position.x, position.y + 1, position.z), 0);
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lightVar%65536, lightVar/65536);
@@ -443,7 +443,7 @@ public class InterfaceRender{
 			Entity riderEntity = rider.entity;
 			if(!(InterfaceClient.getClientPlayer().equals(rider) && InterfaceClient.inFirstPerson()) && riderEntity.posY > riderEntity.world.getHeight()){
 				GL11.glPushMatrix();
-				Point3dPlus riderPosition = rider.getRenderedPosition(partialTicks);
+				Point3D riderPosition = rider.getRenderedPosition(partialTicks);
 				GL11.glTranslated(riderPosition.x, riderPosition.y, riderPosition.z);
 				Minecraft.getMinecraft().getRenderManager().renderEntityStatic(riderEntity, partialTicks, false);
 				GL11.glPopMatrix();

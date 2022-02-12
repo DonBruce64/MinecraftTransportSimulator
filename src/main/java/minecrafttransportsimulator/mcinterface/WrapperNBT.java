@@ -8,7 +8,7 @@ import java.util.UUID;
 
 
 import net.minecraft.inventory.ItemStackHelper;
-import minecrafttransportsimulator.baseclasses.Point3dPlus;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.NonNullList;
@@ -116,21 +116,21 @@ public class WrapperNBT{
 	
 	
 	//Point3d
-	public Point3dPlus getPoint3d(String name){
-		return new Point3dPlus(getDouble(name + "x"), getDouble(name + "y"), getDouble(name + "z"));
+	public Point3D getPoint3d(String name){
+		return new Point3D(getDouble(name + "x"), getDouble(name + "y"), getDouble(name + "z"));
 	}
 	
-	public void setPoint3d(String name, Point3dPlus value){
+	public void setPoint3d(String name, Point3D value){
 		setDouble(name + "x", value.x);
 		setDouble(name + "y", value.y);
 		setDouble(name + "z", value.z);
 	}
 	
-	public List<Point3dPlus> getPoint3ds(String name){
-		List<Point3dPlus> values = new ArrayList<Point3dPlus>();
+	public List<Point3D> getPoint3ds(String name){
+		List<Point3D> values = new ArrayList<Point3D>();
 		int count = getInteger(name + "count");
 		for(int i=0; i<count; ++i){
-			Point3dPlus point = getPoint3d(name + i);
+			Point3D point = getPoint3d(name + i);
 			if(!point.isZero()){
 				values.add(point);
 			}
@@ -138,31 +138,31 @@ public class WrapperNBT{
 		return values;
 	}
 	
-	public void setPoint3ds(String name, Collection<Point3dPlus> values){
+	public void setPoint3ds(String name, Collection<Point3D> values){
 		setInteger(name + "count", values.size());
 		int index = 0;
-		for(Point3dPlus value : values){
+		for(Point3D value : values){
 			setPoint3d(name + index++, value);
 		}
 	}
 	
 	
 	//Point3dcompact.  Casts-down doubles to ints for compact storage.
-	public Point3dPlus getPoint3dCompact(String name){
-		return new Point3dPlus(getInteger(name + "x"), getInteger(name + "y"), getInteger(name + "z"));
+	public Point3D getPoint3dCompact(String name){
+		return new Point3D(getInteger(name + "x"), getInteger(name + "y"), getInteger(name + "z"));
 	}
 	
-	public void setPoint3dCompact(String name, Point3dPlus value){
+	public void setPoint3dCompact(String name, Point3D value){
 		setInteger(name + "x", (int) Math.floor(value.x));
 		setInteger(name + "y", (int) Math.floor(value.y));
 		setInteger(name + "z", (int) Math.floor(value.z));
 	}
 	
-	public List<Point3dPlus> getPoint3dsCompact(String name){
-		List<Point3dPlus> values = new ArrayList<Point3dPlus>();
+	public List<Point3D> getPoint3dsCompact(String name){
+		List<Point3D> values = new ArrayList<Point3D>();
 		int count = getInteger(name + "count");
 		for(int i=0; i<count; ++i){
-			Point3dPlus point = getPoint3dCompact(name + i);
+			Point3D point = getPoint3dCompact(name + i);
 			if(!point.isZero()){
 				values.add(point);
 			}
@@ -170,10 +170,10 @@ public class WrapperNBT{
 		return values;
 	}
 	
-	public void setPoint3dsCompact(String name, Collection<Point3dPlus> values){
+	public void setPoint3dsCompact(String name, Collection<Point3D> values){
 		setInteger(name + "count", values.size());
 		int index = 0;
-		for(Point3dPlus value : values){
+		for(Point3D value : values){
 			setPoint3dCompact(name + index++, value);
 		}
 	}

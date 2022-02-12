@@ -7,8 +7,8 @@ package minecrafttransportsimulator.baseclasses;
  * @author don_bruce
  */
 public class BezierCurve{
-	public final Point3dPlus startPos;
-	public final Point3dPlus endPos;
+	public final Point3D startPos;
+	public final Point3D endPos;
 	public final float startAngle;
 	public final float endAngle;
 	public final float pathLength;
@@ -20,7 +20,7 @@ public class BezierCurve{
 	/**Steps between curve calculations.  This is how many intermediate calculations we do between 1-block steps.**/
 	public static final int CURVE_STEP = 16;
 	
-	public BezierCurve(Point3dPlus startPos, Point3dPlus endPos, float startAngle, float endAngle){
+	public BezierCurve(Point3D startPos, Point3D endPos, float startAngle, float endAngle){
 		this.startPos = startPos;
 		this.endPos = endPos;
 		this.startAngle = startAngle;
@@ -58,14 +58,14 @@ public class BezierCurve{
 	 * pathLength than the curve it was generated from.  Used to create parallel paths from a common curve.
 	 */
 	public BezierCurve generateOffsetCurve(float offset){
-		Point3dPlus testRotation = new Point3dPlus();
+		Point3D testRotation = new Point3D();
 		
-		Point3dPlus newStartPos = new Point3dPlus(offset, 0, 0);
+		Point3D newStartPos = new Point3D(offset, 0, 0);
 		setPointToRotationAt(testRotation, 0);
 		newStartPos.rotateFine(testRotation);
 		offsetPointByPositionAt(newStartPos, 0);
 		
-		Point3dPlus newEndPos = new Point3dPlus(offset, 0, 0);
+		Point3D newEndPos = new Point3D(offset, 0, 0);
 		setPointToRotationAt(testRotation, pathLength);
 		newEndPos.rotateFine(testRotation);
 		offsetPointByPositionAt(newEndPos, pathLength);
@@ -76,7 +76,7 @@ public class BezierCurve{
 	/**
 	 * Sets the passed-in Point3d to the cached value of the point at the passed-in segment location.
 	 */
-	public void setPointToPositionAt(Point3dPlus point, float segmentPoint){
+	public void setPointToPositionAt(Point3D point, float segmentPoint){
 		float[] cachedPoint = cachedPathPoints[Math.round(segmentPoint*CURVE_STEP)];
 		point.set(cachedPoint[0], cachedPoint[1], cachedPoint[2]);
 	}
@@ -85,7 +85,7 @@ public class BezierCurve{
 	 * Offsets the passed-in Point3d by the cached value of the point at the passed-in segment location.
 	 * Unlike the other methods, this method does interpolation to get a smooth offset transition.
 	 */
-	public void offsetPointByPositionAt(Point3dPlus point, float segmentPoint){
+	public void offsetPointByPositionAt(Point3D point, float segmentPoint){
 		float delta = segmentPoint*CURVE_STEP;
 		int lowIndex = (int) Math.floor(delta);
 		int highIndex = (int) Math.ceil(delta);
@@ -105,7 +105,7 @@ public class BezierCurve{
 	/**
 	 * Sets the passed-in Point3d to the cached value of rotation point at the passed-in segment location.
 	 */
-	public void setPointToRotationAt(Point3dPlus rotation, float segmentPoint){
+	public void setPointToRotationAt(Point3D rotation, float segmentPoint){
 		float[] cachedRotation = cachedPathRotations[Math.round(segmentPoint*CURVE_STEP)];
 		rotation.set(cachedRotation[0], cachedRotation[1], cachedRotation[2]);
 	}

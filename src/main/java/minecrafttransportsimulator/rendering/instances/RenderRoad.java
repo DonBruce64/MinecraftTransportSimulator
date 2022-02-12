@@ -7,8 +7,8 @@ import java.util.List;
 import minecrafttransportsimulator.baseclasses.BezierCurve;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
-import minecrafttransportsimulator.baseclasses.Point3dPlus;
+import minecrafttransportsimulator.baseclasses.TransformationMatrix;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.instances.BlockCollision;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLane;
@@ -25,14 +25,14 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 public class RenderRoad extends ARenderEntityDefinable<TileEntityRoad>{
 		
 	@Override
-	protected void renderModel(TileEntityRoad road, Matrix4dPlus transform, boolean blendingEnabled, float partialTicks){
+	protected void renderModel(TileEntityRoad road, TransformationMatrix transform, boolean blendingEnabled, float partialTicks){
 		//Don't call super, we don't want to render the normal way.
 		if(road.isActive() ^ blendingEnabled){
 			//Render road components.
 			for(RoadComponent component : road.components.keySet()){
 				if(!road.componentRenderables.containsKey(component)){
-					Point3dPlus position = new Point3dPlus();
-					Point3dPlus rotation = new Point3dPlus();
+					Point3D position = new Point3D();
+					Point3D rotation = new Point3D();
 					ItemRoadComponent componentItem = road.components.get(component);
 					switch(component){
 						case CORE_STATIC: {
@@ -67,14 +67,14 @@ public class RenderRoad extends ARenderEntityDefinable<TileEntityRoad>{
 								parsedVertices.flip();
 								
 								//Core components need to be transformed to wedges.
-								Point3dPlus priorPosition = new Point3dPlus();
-								Point3dPlus priorRotation = new Point3dPlus();
-								Point3dPlus testPoint1 = new Point3dPlus();
-								Point3dPlus testPoint2 = new Point3dPlus();
-								Point3dPlus vertexOffsetPriorLine = new Point3dPlus();
-								Point3dPlus vertexOffsetCurrentLine = new Point3dPlus();
-								Point3dPlus segmentVector = new Point3dPlus();
-								Point3dPlus renderedVertex = new Point3dPlus();
+								Point3D priorPosition = new Point3D();
+								Point3D priorRotation = new Point3D();
+								Point3D testPoint1 = new Point3D();
+								Point3D testPoint2 = new Point3D();
+								Point3D vertexOffsetPriorLine = new Point3D();
+								Point3D vertexOffsetCurrentLine = new Point3D();
+								Point3D segmentVector = new Point3D();
+								Point3D renderedVertex = new Point3D();
 								float indexDelta = (float) (road.dynamicCurve.pathLength/Math.floor(road.dynamicCurve.pathLength/road.definition.road.segmentLength));
 								boolean finalSegment = false;
 								float priorIndex = 0;
@@ -133,7 +133,7 @@ public class RenderRoad extends ARenderEntityDefinable<TileEntityRoad>{
 										
 										segmentVector.set(vertexOffsetCurrentLine);
 										segmentVector.subtract(vertexOffsetPriorLine);
-										segmentVector.multiply(z/road.definition.road.segmentLength);
+										segmentVector.scale(z/road.definition.road.segmentLength);
 										
 										renderedVertex.set(vertexOffsetPriorLine);
 										renderedVertex.add(segmentVector);
@@ -183,8 +183,8 @@ public class RenderRoad extends ARenderEntityDefinable<TileEntityRoad>{
 			//If we are inactive render the blocking blocks and the main block.
 			if(!road.isActive()){
 				if(road.blockingBoundingBoxes.isEmpty()){
-					road.blockingBoundingBoxes.add(new BoundingBox(new Point3dPlus(0, 0.75, 0), 0.15, 0.75, 0.15));
-					for(Point3dPlus location : road.collidingBlockOffsets){
+					road.blockingBoundingBoxes.add(new BoundingBox(new Point3D(0, 0.75, 0), 0.15, 0.75, 0.15));
+					for(Point3D location : road.collidingBlockOffsets){
 						road.blockingBoundingBoxes.add(new BoundingBox(location.copy().add(0, 0.55, 0), 0.55, 0.55, 0.55));
 					}
 				}
@@ -213,14 +213,14 @@ public class RenderRoad extends ARenderEntityDefinable<TileEntityRoad>{
 	}
 	
 	@Override
-	public void renderBoundingBoxes(TileEntityRoad road, Matrix4dPlus transform){
+	public void renderBoundingBoxes(TileEntityRoad road, TransformationMatrix transform){
 		super.renderBoundingBoxes(road, transform);
 		//Render all collision boxes too.
-		for(Point3dPlus blockOffset : road.collisionBlockOffsets){
+		for(Point3D blockOffset : road.collisionBlockOffsets){
 			ABlockBase block = road.world.getBlock(road.position.copy().add(blockOffset));
 			if(block instanceof BlockCollision){
 				BoundingBox blockBounds = ((BlockCollision) block).blockBounds;
-				Point3dPlus renderOffset = new Point3dPlus(blockOffset);
+				Point3D renderOffset = new Point3D(blockOffset);
 				//Need to offset by -0.5 as the collision box bounds is centered, but the offset isn't.
 				renderOffset.add(-0.5, 0, -0.5);
 				blockBounds.renderWireframe(road, transform, renderOffset, null);
@@ -230,8 +230,8 @@ public class RenderRoad extends ARenderEntityDefinable<TileEntityRoad>{
 	
 	private static void generateDevElements(TileEntityRoad road){
 		//Create the information hashes.
-		Point3dPlus point1 = new Point3dPlus();
-		Point3dPlus point2 = new Point3dPlus();
+		Point3D point1 = new Point3D();
+		Point3D point2 = new Point3D();
 		RenderableObject curveObject;
 		if(road.dynamicCurve != null){
 			//Render actual curve.
@@ -283,7 +283,7 @@ public class RenderRoad extends ARenderEntityDefinable<TileEntityRoad>{
 			for(BezierCurve laneCurve : lane.curves){
 				//Render the curve bearing indicator
 				curveObject = new RenderableObject(ColorRGB.RED, 2);
-				Point3dPlus bearingPos = laneCurve.endPos.copy().subtract(laneCurve.startPos).normalize().add(laneCurve.startPos);
+				Point3D bearingPos = laneCurve.endPos.copy().subtract(laneCurve.startPos).normalize().add(laneCurve.startPos);
 				curveObject.addLine((float) laneCurve.startPos.x, (float) laneCurve.startPos.y, (float) laneCurve.startPos.z, (float) laneCurve.startPos.x, (float) laneCurve.startPos.y + 3.0F, (float) laneCurve.startPos.z);
 				curveObject.addLine((float) laneCurve.startPos.x, (float) laneCurve.startPos.y + 3.0F, (float) laneCurve.startPos.z, (float) bearingPos.x, (float) bearingPos.y + 3.0F, (float) bearingPos.z);
 				curveObject.vertices.flip();

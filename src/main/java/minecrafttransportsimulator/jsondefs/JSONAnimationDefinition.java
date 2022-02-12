@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.jsondefs;
 
-import minecrafttransportsimulator.baseclasses.Point3dPlus;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 
@@ -15,11 +15,11 @@ public class JSONAnimationDefinition{
 	
 	@JSONRequired(dependentField="animationType", dependentValues={"ROTATION", "SCALING"})
 	@JSONDescription("The x, y, z position that this animation should be performed at.  If this is rotation, it is the rotation point.")
-	public Point3dPlus centerPoint;
+	public Point3D centerPoint;
 	
 	@JSONRequired(dependentField="animationType", dependentValues={"TRANSLATION", "ROTATION", "SCALING"})
 	@JSONDescription("This is the most complex part of the animation system.  In essence, it is the vector about which this part will animate.  For translations, this is simply the direction the part will translate in.  For rotations, this is the axis the rotation is performed around, in a counter-clockwise direction (Right-Hand Rule).\nNormally, the amount an object moves is fixed.  However, if you wish to scale this movement you can multiply all the points of the axis to adjust the scale. For example, using the door variable will only rotate a door by 1 degree (because the door variable goes from 0 to 1).  However, if you multiply the axis by 60, it will then rotate 60 degrees.  This can be done for any variable and on any axis.\nNote that multi-axis rotation gets a fair bit more complicated.  If you only want an object to rotate in one axis, such as a door that's perfectly vertical, you only need to put a 60 in the Y spot and this will rotate the door about the vector pointing in the +Y direction.  If you put a -1 in the Y spot, then it will rotate about the -Y direction, which simply means it will be clockwise rather than counter-clockwise.\nHowever, with multiple axis on complex models, you'll find this single-value method won't work, and you'll need to calculate the proper axis.  This is done by taking the centerPoint, and a known point along the axis of rotation, and calculating the angles between them for the X, Y, and Z directions.  For a two-axis rotation this can be done with some simple trigonometry by finding the angle and using a sine and cosine function to get the components.\nFor a three-axis rotation (a part of a model that whose rotation axis cannot be restricted to a two-dimensional plane) this gets significantly more complex and can lead to you dealing with polar coordinates.  If you chose to do this, you can, but do note that if you don't have a good grasp of geometry you will have issues telling MTS what exactly you want it to do.  If worst comes to worst, you can ask the Discord team for help, and grab one of their auto-angle calculators.  But make sure your model is done and good before you get this far!")
-	public Point3dPlus axis;
+	public Point3D axis;
 	
 	@JSONDescription("The offset for this animation.  This will add-on to the value returned by the variable.  Clamps are applied to the total value of the variable plus the offset.")
 	public float offset;

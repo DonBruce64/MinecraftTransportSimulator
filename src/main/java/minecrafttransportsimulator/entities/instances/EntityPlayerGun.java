@@ -6,8 +6,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
-import minecrafttransportsimulator.baseclasses.Point3dPlus;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.PartGun.GunState;
 import minecrafttransportsimulator.items.components.AItemBase;
@@ -101,8 +100,7 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun>{
 		defaultDefinition.general.health = 100;
 		
 		JSONPartDefinition fakeDef = new JSONPartDefinition();
-		fakeDef.pos = new Point3dPlus();
-		fakeDef.rot = new Matrix4dPlus();
+		fakeDef.pos = new Point3D();
 		fakeDef.types = new ArrayList<String>();
 		//Look though all gun types and add them.
 		for(AItemPack<?> packItem : PackParserSystem.getAllPackItems()){
@@ -166,7 +164,7 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun>{
 							ItemPartGun heldGun = (ItemPartGun) heldItem;
 							if(heldGun.definition.gun.handHeld){
 								gunStack = player.getHeldStack();
-								addPartFromItem(heldGun, player, gunStack.getData(), new Point3dPlus(), false);
+								addPartFromItem(heldGun, player, gunStack.getData(), new Point3D(), false);
 								hotbarSelected = player.getHotbarIndex();
 							}
 						}
@@ -179,7 +177,7 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun>{
 				if(activeGun != null){
 					//Set our position relative to the the player's hand.
 					//Center point is at the player's arm, with offset being where the offset is.
-					Point3dPlus heldVector;
+					Point3D heldVector;
 					if(activeGun.isHandHeldGunAimed){
 						heldVector = activeGun.definition.gun.handHeldAimedOffset;
 					}else{
@@ -190,7 +188,7 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun>{
 					//Arm center is 0.3125 blocks away in X, 1.375 blocks up in Y.
 					//Sneaking lowers arm by 0.2 blocks.
 					//First rotate point based on pitch.  This is for only the arm movement.
-					Point3dPlus armRotation = new Point3dPlus(angles.x, 0, 0);
+					Point3D armRotation = new Point3D(angles.x, 0, 0);
 					position.set(heldVector);
 					position.rotateFine(armRotation);
 					
@@ -200,12 +198,6 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun>{
 					
 					//Now add the player's position and model center point offsets.
 					position.add(player.getPosition()).add(0, player.isSneaking() ? 1.3125 - 0.2 : 1.3125, 0);
-					
-					//If the player is riding something, add to our position the vehicle's motion.
-					//This is because the player gets moved with the vehicle.
-					if(player.getEntityRiding() != null){
-						position.add(player.getEntityRiding().motion.copy().multiply(EntityVehicleF_Physics.SPEED_FACTOR));
-					}
 					
 					if(!world.isClient()){
 						//Save gun data if we stopped firing the prior tick.

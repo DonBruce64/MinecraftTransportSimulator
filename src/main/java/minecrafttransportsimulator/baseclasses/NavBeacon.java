@@ -19,7 +19,7 @@ public class NavBeacon{
 	public final String name;
 	public final double glideSlope;
 	public final double bearing;
-	public final Point3dPlus position;
+	public final Point3D position;
 	
 	public static NavBeacon getByNameFromWorld(WrapperWorld world, String name){
 		if(!cachedBeaconMaps.containsKey(world)){
@@ -59,7 +59,7 @@ public class NavBeacon{
 		this.position = data.getPoint3dCompact("location");
 	}
 	
-	public NavBeacon(WrapperWorld world, String name, double glideSlope, double bearing, Point3dPlus position){
+	public NavBeacon(WrapperWorld world, String name, double glideSlope, double bearing, Point3D position){
 		this.name = name;
 		this.glideSlope = glideSlope;
 		this.bearing = bearing;

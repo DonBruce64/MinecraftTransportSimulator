@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.entities.instances;
 
 import minecrafttransportsimulator.baseclasses.Damage;
-import minecrafttransportsimulator.baseclasses.Point3dPlus;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.items.instances.ItemPartGroundDevice;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
@@ -23,8 +23,8 @@ import minecrafttransportsimulator.systems.ConfigSystem;
  * @author don_bruce
  */
 public class PartGroundDevice extends APart{
-	public static final Point3dPlus groundDetectionOffset = new Point3dPlus(0, -0.05F, 0);
-	public static final Point3dPlus groundOperationOffset = new Point3dPlus(0, -0.25F, 0);
+	public static final Point3D groundDetectionOffset = new Point3D(0, -0.05F, 0);
+	public static final Point3D groundOperationOffset = new Point3D(0, -0.25F, 0);
 	
 	//External states for animations.
 	public boolean skipAngularCalcs = false;
@@ -44,7 +44,7 @@ public class PartGroundDevice extends APart{
 	private int ticksCalcsSkipped = 0;
 	private double prevAngularVelocity;
 	private boolean prevActive;
-	private final Point3dPlus prevLocalOffset;
+	private final Point3D prevLocalOffset;
 	private final PartGroundDeviceFake fakePart;
 	
 	public PartGroundDevice(AEntityF_Multipart<?> entityOn, WrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, WrapperNBT data, APart parentPart){
@@ -59,7 +59,7 @@ public class PartGroundDevice extends APart{
 		//Don't add the fake part until the first update loop.  This prevents save/load errors.
 		if(!isFake() && getLongPartOffset() != 0 && !placementDefinition.isSpare){
 			//Need to swap placement for fake part so it uses the offset.
-			Point3dPlus actualPlacement = placementDefinition.pos;
+			Point3D actualPlacement = placementDefinition.pos;
 			placementDefinition.pos = placementDefinition.pos.copy().add(0D, 0D, getLongPartOffset());
 			fakePart = new PartGroundDeviceFake(this, placingPlayer, placementDefinition, data, null);
 			placementDefinition.pos = actualPlacement;
@@ -108,7 +108,7 @@ public class PartGroundDevice extends APart{
 						contactThisTick = false;
 						if(Math.abs(prevAngularVelocity)/(vehicleOn.groundVelocity/(getHeight()*Math.PI)) < 0.25 && vehicleOn.velocity > 0.3){
 							//Sudden angular velocity increase.  Mark for skidding effects if the block below us is hard.
-							Point3dPlus blockPositionBelow = position.copy().add(0, -1, 0);
+							Point3D blockPositionBelow = position.copy().add(0, -1, 0);
 							if(!world.isAir(blockPositionBelow) && world.getBlockHardness(blockPositionBelow) >= 1.25){
 								contactThisTick = true;
 							}
@@ -251,7 +251,7 @@ public class PartGroundDevice extends APart{
 	}
 	
 	public float getFrictionLoss(){
-		Point3dPlus groundPosition = position.copy().add(0, -1, 0);
+		Point3D groundPosition = position.copy().add(0, -1, 0);
 		if(!world.isAir(groundPosition)){
 			Float modifier = definition.ground.frictionModifiers.get(world.getBlockMaterial(groundPosition));
 			if(modifier == null){

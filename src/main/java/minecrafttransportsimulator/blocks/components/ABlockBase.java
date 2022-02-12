@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.blocks.components;
 
-import minecrafttransportsimulator.baseclasses.Point3dPlus;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.mcinterface.BuilderBlock;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 
@@ -26,7 +26,7 @@ public abstract class ABlockBase{
 	 *  removed, as logic may be needed to be performed that requires the data from the TE.
 	 *  This is ONLY called on the server, so if you have data to sync, do it via packets. 
 	 */
-	public void onBroken(WrapperWorld world, Point3dPlus position){}
+	public void onBroken(WrapperWorld world, Point3D position){}
 	
 	/**
 	 *  Enums for side-specific stuff.
@@ -61,7 +61,7 @@ public abstract class ABlockBase{
 			this.xzPlanar = xzPlanar;
 		}
 		
-		public Point3dPlus getOffsetPoint(Point3dPlus point){
+		public Point3D getOffsetPoint(Point3D point){
 			return point.copy().add(xOffset, yOffset, zOffset);
 		}
 		

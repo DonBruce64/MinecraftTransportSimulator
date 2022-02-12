@@ -108,13 +108,13 @@ public final class PartInteractable extends APart{
 				EntityFluidTank linkedTank =  null;
 				String linkedMessage = null;
 				if(linkedVehicle != null){
-					if(linkedVehicle.position.distanceTo(position) > 16){
+					if(!linkedVehicle.position.isDistanceToCloserThan(position, 16)){
 						linkedMessage = "interact.fuelhose.linkdropped";
 					}else{
 						linkedTank = linkedVehicle.fuelTank;
 					}
 				}else if(linkedPart != null){
-					if(linkedPart.position.distanceTo(position) > 16){
+					if(linkedPart.position.isDistanceToCloserThan(position, 16)){
 						linkedMessage = "interact.fuelhose.linkdropped";
 					}else{
 						linkedTank = linkedPart.tank;

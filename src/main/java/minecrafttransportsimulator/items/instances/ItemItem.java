@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.UUID;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.Point3dPlus;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
@@ -225,7 +225,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 							PartInteractable interactable = (PartInteractable) part;
 							if(interactable.tank != null && !interactable.equals(firstPartClicked)){
 								if(interactable.linkedPart == null && interactable.linkedVehicle == null){
-									if(part.position.distanceTo(firstPartClicked.position) < 15){
+									if(part.position.isDistanceToCloserThan(firstPartClicked.position, 16)){
 										if(interactable.tank.getFluid().isEmpty() || firstPartClicked.tank.getFluid().isEmpty() || interactable.tank.getFluid().equals(firstPartClicked.tank.getFluid())){
 											firstPartClicked.linkedPart = interactable;
 											InterfacePacket.sendToAllClients(new PacketPartInteractable(firstPartClicked, player));
@@ -245,7 +245,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 								}
 							}
 						}else if(part == null){
-							if(vehicle.position.distanceTo(firstPartClicked.position) < 15){
+							if(vehicle.position.isDistanceToCloserThan(firstPartClicked.position, 16)){
 								if(vehicle.fuelTank.getFluid().isEmpty() || firstPartClicked.tank.getFluid().isEmpty() || vehicle.fuelTank.getFluid().equals(firstPartClicked.tank.getFluid())){
 									firstPartClicked.linkedVehicle = vehicle;
 									InterfacePacket.sendToAllClients(new PacketPartInteractable(firstPartClicked, player));
@@ -276,7 +276,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 								if(firstEngineClicked.entityOn.equals(engine.entityOn)){
 									firstEngineClicked = null;
 									player.sendPacket(new PacketPlayerChatMessage(player, "interact.jumpercable.samevehicle"));
-								}else if(engine.position.distanceTo(firstEngineClicked.position) < 15){
+								}else if(engine.position.isDistanceToCloserThan(firstEngineClicked.position, 15)){
 									engine.linkedEngine = firstEngineClicked;
 									firstEngineClicked.linkedEngine = engine;
 									InterfacePacket.sendToAllClients(new PacketPartEngine(engine, firstEngineClicked));
@@ -314,7 +314,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 	}
 	
 	@Override
-	public boolean onBlockClicked(WrapperWorld world, WrapperPlayer player, Point3dPlus position, Axis axis){
+	public boolean onBlockClicked(WrapperWorld world, WrapperPlayer player, Point3D position, Axis axis){
 		if(definition.item.type.equals(ItemComponentType.PAINT_GUN)){
 			if(!world.isClient()){
 				ATileEntityBase<?> tile = world.getTileEntity(position);

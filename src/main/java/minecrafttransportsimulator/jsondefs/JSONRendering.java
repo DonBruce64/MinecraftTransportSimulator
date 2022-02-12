@@ -3,8 +3,8 @@ package minecrafttransportsimulator.jsondefs;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
-import minecrafttransportsimulator.baseclasses.Point3dPlus;
+import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 
@@ -71,16 +71,16 @@ public class JSONRendering{
     
     @Deprecated
     public class VehicleDisplayText{
-    	public Point3dPlus pos;
-        public Matrix4dPlus rot;
+    	public Point3D pos;
+        public RotationMatrix rot;
         public float scale;
         public ColorRGB color;
     }
     @Deprecated
     public class VehicleRotatableModelObject{
     	public String partName;
-    	public Point3dPlus rotationPoint;
-    	public Point3dPlus rotationAxis;
+    	public Point3D rotationPoint;
+    	public Point3D rotationAxis;
     	public String rotationVariable;
     	public float rotationClampMin;
     	public float rotationClampMax;
@@ -89,7 +89,7 @@ public class JSONRendering{
     @Deprecated
     public class VehicleTranslatableModelObject{
     	public String partName;
-    	public Point3dPlus translationAxis;
+    	public Point3D translationAxis;
     	public String translationVariable;
     	public float translationClampMin;
     	public float translationClampMax;

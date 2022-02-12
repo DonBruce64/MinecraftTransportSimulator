@@ -3,11 +3,9 @@ package minecrafttransportsimulator.entities.components;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.vecmath.Quat4d;
-
 import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
-import minecrafttransportsimulator.baseclasses.Point3dPlus;
+import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.entities.instances.EntityRadio;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
@@ -22,25 +20,23 @@ import minecrafttransportsimulator.sound.SoundInstance;
  * @author don_bruce
  */
 public abstract class AEntityB_Existing extends AEntityA_Base{
-	protected static final Point3dPlus ZERO_FOR_CONSTRUCTOR = new Point3dPlus();
+	protected static final Point3D ZERO_FOR_CONSTRUCTOR = new Point3D();
 	
-	public final Point3dPlus position;
-	public final Point3dPlus prevPosition;
-	public final Point3dPlus motion;
-	public final Point3dPlus prevMotion;
+	public final Point3D position;
+	public final Point3D prevPosition;
+	public final Point3D motion;
+	public final Point3D prevMotion;
 	
-	public final Point3dPlus angles;
-	public final Point3dPlus prevAngles;
-	public final Point3dPlus rotation;
+	public final Point3D angles;
+	public final Point3D prevAngles;
+	public final Point3D rotation;
 	
 	public final BoundingBox boundingBox;
 	
 	/*The rotational component of orientation for this entity.*/
-	public final Matrix4dPlus orientation;
-	public final Matrix4dPlus prevOrientation;
-	public final Point3dPlus axialOrientation;
-	protected final Quat4d interpHelperQuatStart = new Quat4d();
-	protected final Quat4d interpHelperQuatEnd = new Quat4d();
+	public final RotationMatrix orientation;
+	public final RotationMatrix prevOrientation;
+	public final Point3D axialOrientation;
 	
 	public double airDensity;
 	public double velocity;
@@ -61,12 +57,11 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 		this.angles = data.getPoint3d("angles");
 		this.prevAngles = angles.copy();
 		this.rotation = data.getPoint3d("rotation");
-		this.orientation = new Matrix4dPlus(angles);
-		this.prevOrientation = new Matrix4dPlus(orientation);
-		this.axialOrientation = new Point3dPlus(0, 0, 1);
-		orientation.transform(axialOrientation);
+		this.orientation = new RotationMatrix().setAngleRotation(angles);
+		this.prevOrientation = new RotationMatrix().set(orientation);
+		this.axialOrientation = new Point3D(0, 0, 1).rotate(orientation);
 		this.placingPlayer = placingPlayer;
-		this.boundingBox = new BoundingBox(shouldLinkBoundsToPosition() ? this.position : new Point3dPlus(this.position), 0.5, 0.5, 0.5);
+		this.boundingBox = new BoundingBox(shouldLinkBoundsToPosition() ? this.position : new Point3D(this.position), 0.5, 0.5, 0.5);
 		if(hasRadio()){
 			this.radio = new EntityRadio(this, data.getDataOrNew("radio"));
 			world.addEntity(radio);
@@ -76,7 +71,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	}
 	
 	/**Constructor for un-synced entities.  Allows for specification of position/motion/angles.**/
-	public AEntityB_Existing(WrapperWorld world, Point3dPlus position, Point3dPlus motion, Point3dPlus angles){
+	public AEntityB_Existing(WrapperWorld world, Point3D position, Point3D motion, Point3D angles){
 		super(world, null);
 		this.position = position.copy();
 		this.prevPosition = position.copy();
@@ -84,13 +79,12 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 		this.prevMotion = motion.copy();
 		this.angles = angles.copy();
 		this.prevAngles = angles.copy();
-		this.rotation = new Point3dPlus();
-		this.orientation = new Matrix4dPlus(angles);
-		this.prevOrientation = new Matrix4dPlus(orientation);
-		this.axialOrientation = new Point3dPlus(0, 0, 1);
-		orientation.transform(axialOrientation);
+		this.rotation = new Point3D();
+		this.orientation = new RotationMatrix().setAngleRotation(angles);
+		this.prevOrientation = new RotationMatrix().set(orientation);
+		this.axialOrientation = new Point3D(0, 0, 1).rotate(orientation);
 		this.placingPlayer = null;
-		this.boundingBox = new BoundingBox(shouldLinkBoundsToPosition() ? this.position : new Point3dPlus(this.position), 0.5, 0.5, 0.5);
+		this.boundingBox = new BoundingBox(shouldLinkBoundsToPosition() ? this.position : new Point3D(this.position), 0.5, 0.5, 0.5);
 		this.radio = null;
 	}
 	
@@ -104,14 +98,12 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 			if(changesPosition()){
 				prevPosition.set(position);
 				prevMotion.set(motion);
-				
 				prevOrientation.set(orientation);
 				//FIXME this is only here as a hack to get this to work with existing rendering.  See if we can remove angles after we are done.
-				orientation.setToAngles(angles);
+				orientation.setAngleRotation(angles);
 				prevAngles.set(angles);			
 				
-				axialOrientation.set(0, 0, 1);
-				orientation.transform(axialOrientation);
+				axialOrientation.set(0, 0, 1).rotate(orientation);
 				airDensity = 1.225*Math.pow(2, -position.y/(500D*world.getMaxHeight()/256D));
 				velocity = motion.length();
 			}
@@ -189,12 +181,8 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	 *  The position is not interpolated with this as {@link #orientation}
 	 *  only contains the rotational elements of this entity. 
 	 */
-	public void getInterpolatedOrientation(Matrix4dPlus store, double partialTicks){
-		orientation.get(interpHelperQuatStart);
-		prevOrientation.get(interpHelperQuatEnd);
-		interpHelperQuatEnd.interpolate(interpHelperQuatStart, partialTicks);
-		store.setIdentity();
-		store.set(interpHelperQuatEnd);
+	public void getInterpolatedOrientation(RotationMatrix store, double partialTicks){
+		store.interploate(prevOrientation, orientation, partialTicks);
 	}
 	
 	/**

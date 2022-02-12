@@ -8,8 +8,9 @@ import java.util.Map;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
-import minecrafttransportsimulator.baseclasses.Matrix4dPlus;
-import minecrafttransportsimulator.baseclasses.Point3dPlus;
+import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
+import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
@@ -53,10 +54,11 @@ public class InterfaceEventsEntityRendering{
 	private static boolean needPlayerTweaks = false;
 	private static boolean needToPopMatrix = false;
 	private static ItemStack heldStackHolder = null;
-	private static final Point3dPlus leftArmAngles = new Point3dPlus();
-	private static final Point3dPlus rightArmAngles = new Point3dPlus();
-	private static Matrix4dPlus riderOrientation = new Matrix4dPlus();
-	private static Matrix4dPlus riderHeadOrientation = new Matrix4dPlus();
+	private static final Point3D leftArmAngles = new Point3D();
+	private static final Point3D rightArmAngles = new Point3D();
+	private static RotationMatrix riderBodyOrientation = new RotationMatrix();
+	private static RotationMatrix riderHeadOrientation = new RotationMatrix();
+	private static TransformationMatrix riderTotalTransformation = new TransformationMatrix();
 	
 	/**
 	 *  World last event.  This occurs at the end of rendering in a special pass of -1.
@@ -210,7 +212,7 @@ public class InterfaceEventsEntityRendering{
             	WrapperEntity entityWrapper = WrapperEntity.getWrapperFor(entity);
             	if(ridingEntity instanceof AEntityF_Multipart){
             		PartSeat seat = ((AEntityF_Multipart<?>) ridingEntity).getSeatForRider(entityWrapper);
-            		seat.getInterpolatedOrientation(riderOrientation, event.getPartialRenderTick());
+            		seat.getInterpolatedOrientation(riderBodyOrientation, event.getPartialRenderTick());
             		seat.getRiderInterpolatedOrientation(riderHeadOrientation, event.getPartialRenderTick());
             		
             		//Get seat scale, if we have it.
@@ -238,40 +240,34 @@ public class InterfaceEventsEntityRendering{
 						leftArmAngles.set(Math.toRadians(-75 - turningAngle), Math.toRadians(10), 0);
             		}
             	}else{
-            		ridingEntity.getInterpolatedOrientation(riderOrientation, event.getPartialRenderTick());
+            		ridingEntity.getInterpolatedOrientation(riderBodyOrientation, event.getPartialRenderTick());
             		riderHeadOrientation.set(entityWrapper.getOrientation());
             		renderCurrentRiderSitting = true;
             	}
             	
             	//Before we do further matrix transforms, get the head yaw for the entity.
-            	Point3dPlus headVector = new Point3dPlus(0, 0, 1);
-            	riderOrientation.transform(headVector);
-            	riderHeadOrientation.transpose();
-            	riderHeadOrientation.transform(headVector);
-            	Matrix4dPlus playerOrientation = entityWrapper.getOrientation();
-            	playerOrientation.transpose();
-            	playerOrientation.transform(headVector);
-            	//Transpose back, as we can't change orientation.
-            	playerOrientation.transpose();
-            	headVector.getAngles(false);
+            	Point3D headVector = new Point3D(0, 0, 1).rotate(riderBodyOrientation).reOrigin(riderHeadOrientation);
+            	headVector.reOrigin(entityWrapper.getOrientation()).getAngles(false);
+            	
+            	//Set the entity's head yaw to the delta between their yaw and their angled yaw.
+	            //This needs to be relative as we're going to render relative to the seat here, not the world.
+        		entity.rotationYawHead = (float) headVector.y;
+        		entity.prevRotationYawHead =  entity.rotationYawHead;
             	
             	//Set the entity yaw offset to 0.  This forces their body to always face the front of the seat.
 	            //This isn't the entity's normal yaw, which is the direction they are facing.
         		entity.renderYawOffset = 0;
         		entity.prevRenderYawOffset = 0;
-        		
-        		//Set the entity's head yaw to the delta between their yaw and their angled yaw.
-	            //This needs to be relative as we're going to render relative to the seat here, not the world.
-        		entity.rotationYawHead = (float) headVector.y;
-        		entity.prevRotationYawHead =  entity.rotationYawHead;
             	
-            	//Adjust for seated offset.
-            	if(renderCurrentRiderSitting){
-            		riderOrientation.translate(0, entityWrapper.getSeatOffset(), 0);
-            	}
+            	//Get total translation.
+        		riderTotalTransformation.resetTransforms();
+        		riderTotalTransformation.setRotation(riderBodyOrientation);
+        		
+        		//Adjust for seated offset.
+        		riderTotalTransformation.applyTranslation(0, entityWrapper.getSeatOffset(), 0);
             	
             	//Apply scale.
-            	riderOrientation.scale(widthScale, heightScale, widthScale);
+            	riderTotalTransformation.applyScaling(widthScale, heightScale, widthScale);
             	
             	//Push matrix and apply transform.
             	//If we aren't the rider, translate the rider to us so it rotates on the proper coordinate system.
@@ -281,10 +277,10 @@ public class InterfaceEventsEntityRendering{
 	            	double playerDistanceY = entity.lastTickPosY + - masterPlayer.lastTickPosY + (entity.posY - entity.lastTickPosY -(masterPlayer.posY - masterPlayer.lastTickPosY))*event.getPartialRenderTick();
 	            	double playerDistanceZ = entity.lastTickPosZ + - masterPlayer.lastTickPosZ + (entity.posZ - entity.lastTickPosZ -(masterPlayer.posZ - masterPlayer.lastTickPosZ))*event.getPartialRenderTick();
 	                GL11.glTranslated(playerDistanceX, playerDistanceY, playerDistanceZ);
-            		InterfaceRender.applyTransformOpenGL(riderOrientation, false);
+            		InterfaceRender.applyTransformOpenGL(riderTotalTransformation, false);
             		GL11.glTranslated(-playerDistanceX*widthScale, -playerDistanceY*heightScale, -playerDistanceZ*widthScale);
             	}else{
-            		InterfaceRender.applyTransformOpenGL(riderOrientation, false);
+            		InterfaceRender.applyTransformOpenGL(riderTotalTransformation, false);
             	}
             		
             	needToPopMatrix = true;
@@ -349,7 +345,7 @@ public class InterfaceEventsEntityRendering{
 				EntityPlayerGun gunEntity = EntityPlayerGun.playerClientGuns.get(entity.getUniqueID());
 		    	if(gunEntity != null && gunEntity.activeGun != null){	    		
 		    		//Get arm rotations.
-		    		Point3dPlus heldVector;
+		    		Point3D heldVector;
 					if(gunEntity.activeGun.isHandHeldGunAimed){
 						heldVector = gunEntity.activeGun.definition.gun.handHeldAimedOffset;
 					}else{

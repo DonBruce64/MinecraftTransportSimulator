@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.blocks.instances;
 
-import minecrafttransportsimulator.baseclasses.Point3dPlus;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBaseTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -19,7 +19,7 @@ public class BlockSignalController extends ABlockBaseTileEntity{
     }
 
 	@Override
-	public TileEntitySignalController createTileEntity(WrapperWorld world, Point3dPlus position, WrapperPlayer placingPlayer, WrapperNBT data){
+	public TileEntitySignalController createTileEntity(WrapperWorld world, Point3D position, WrapperPlayer placingPlayer, WrapperNBT data){
 		return new TileEntitySignalController(world, position, placingPlayer, data);
 	}
 }

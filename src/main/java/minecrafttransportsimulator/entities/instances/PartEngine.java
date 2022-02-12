@@ -2,7 +2,7 @@ package minecrafttransportsimulator.entities.instances;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
-import minecrafttransportsimulator.baseclasses.Point3dPlus;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
@@ -89,7 +89,7 @@ public class PartEngine extends APart{
 	private double driveshaftRotation;
 	private double prevDriveshaftRotation;
 	private PartPropeller attachedPropeller;
-	private final Point3dPlus engineForce = new Point3dPlus();
+	private final Point3D engineForce = new Point3D();
 	
 	//Constants and static variables.
 	public static final String MAGNETO_VARIABLE = "engine_magneto";
@@ -209,7 +209,7 @@ public class PartEngine extends APart{
 			if(vehicleOn != null){
 				//Check to see if we are linked and need to equalize power between us and another engine.
 				if(linkedEngine != null){
-					if(linkedEngine.position.distanceTo(this.position) > 16){
+					if(!linkedEngine.position.isDistanceToCloserThan(position, 16)){
 						linkedEngine.linkedEngine = null;
 						linkedEngine = null;
 						if(world.isClient()){
@@ -942,7 +942,7 @@ public class PartEngine extends APart{
 		return driveshaftRotation + (driveshaftRotation - prevDriveshaftRotation)*partialTicks;
 	}
 	
-	public Point3dPlus getForceOutput(){
+	public Point3D getForceOutput(){
 		engineForce.set(0D, 0D, 0D);
 		//First get wheel forces, if we have friction to do so.
 		if(definition.engine.jetPowerFactor == 0 && wheelFriction != 0){
@@ -1000,7 +1000,7 @@ public class PartEngine extends APart{
 				//Not running, do engine braking.
 				wheelForce = -rpm/currentMaxRPM*Math.signum(currentGear)*30;
 			}
-			engineForce.scaleAdd(wheelForce, vehicleOn.axialOrientation, engineForce);
+			engineForce.addScaled(wheelForce, vehicleOn.axialOrientation);
 		}
 		
 		//If we provide jet power, add it now.  This may be done with any parts or wheels on the ground.
@@ -1022,7 +1022,7 @@ public class PartEngine extends APart{
 			double thrust = (vehicleOn.reverseThrust ? -(coreContribution + fanContribution) : coreContribution + fanContribution)*definition.engine.jetPowerFactor;
 			
 			//Add the jet force to the engine.  Use the engine rotation to define the power vector.
-			engineForce.scaleAdd(thrust, vehicleOn.axialOrientation, engineForce);
+			engineForce.addScaled(thrust, vehicleOn.axialOrientation);
 		}
 		
 		//Finally, return the force we calculated.

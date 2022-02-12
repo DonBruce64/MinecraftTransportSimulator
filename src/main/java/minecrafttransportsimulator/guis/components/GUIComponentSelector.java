@@ -55,20 +55,17 @@ public abstract class GUIComponentSelector extends GUIComponentButton{
 		if(selectorState == 0){
 			renderable.disableLighting = renderBright || ignoreGUILightingState;
 			renderable.texture = renderLitTexture ? gui.getTexture().replace(".png", "_lit.png") : gui.getTexture();
-			renderable.transform.resetTransforms();
-    		renderable.transform.translate(position);
+    		renderable.transform.setTranslation(position);
 			renderable.render();
 		}else if(selectorState == 1){
 			renderable2.disableLighting = renderBright || ignoreGUILightingState;
 			renderable2.texture = renderLitTexture ? gui.getTexture().replace(".png", "_lit.png") : gui.getTexture();
-			renderable2.transform.resetTransforms();
-			renderable2.transform.translate(position);
+			renderable2.transform.setTranslation(position);
 			renderable2.render();
 		}else if(selectorState == 2){
 			renderable3.disableLighting = renderBright || ignoreGUILightingState;
 			renderable3.texture = renderLitTexture ? gui.getTexture().replace(".png", "_lit.png") : gui.getTexture();
-			renderable3.transform.resetTransforms();
-			renderable3.transform.translate(position);
+			renderable3.transform.setTranslation(position);
 			renderable3.render();
 		}else{
 			renderable4.disableLighting = renderBright || ignoreGUILightingState;

@@ -3,7 +3,7 @@ package minecrafttransportsimulator.jsondefs;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.Point3dPlus;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 
@@ -36,10 +36,10 @@ public class JSONLight{
 	
 	public class JSONLightBlendableComponent{
 		@JSONDescription("The position at which the blendable component will be rendered at.")
-		public Point3dPlus pos;
+		public Point3D pos;
 		
 		@JSONDescription("The axis that defines the 'front' of the blendable component.  This will be the 'normal' for the flare texture, or the direction of the beam.")
-		public Point3dPlus axis;
+		public Point3D axis;
 		
 		@JSONDescription("The height of the flare to render.")
 		public float flareHeight;

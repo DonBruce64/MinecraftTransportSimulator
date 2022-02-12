@@ -3,7 +3,7 @@ package minecrafttransportsimulator.jsondefs;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.Point3dPlus;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 
@@ -43,23 +43,23 @@ public class JSONParticle{
 	public ColorRGB toColor;
 	
 	@JSONDescription("The position where this particle should be spawned relative to the spawning object.  May be left out if the particle should spawn at the same position.")
-	public Point3dPlus pos;
+	public Point3D pos;
 	
 	@JSONDescription("The initial velocity of the particle, where +Z is straight ahead relative to the thing that is producing it.  May be omitted to make a particle that doesn't spawn with any initial velocity except the velocity of the object spawning it.")
-	public Point3dPlus initialVelocity;
+	public Point3D initialVelocity;
 	
 	@JSONDescription("The velocity to apply every tick to the particle.  This can be used to make smoke float up, oil drip down, etc.  If not set, the default particle velocity is used.")
-	public Point3dPlus movementVelocity;
+	public Point3D movementVelocity;
 	
 	@JSONDescription("The max velocity this particle can have in any axis.  Used to prevent particles from going to fast if they move a long way.")
-	public Point3dPlus terminalVelocity;
+	public Point3D terminalVelocity;
 	
 	@JSONRequired
 	@JSONDescription("A listing of animation objects for determining if this particle should spawn.  Particles will only spawn when they first become active, unless spawnEveryTick is set.")
 	public List<JSONAnimationDefinition> activeAnimations;
 	
 	@Deprecated
-	public Point3dPlus velocityVector;
+	public Point3D velocityVector;
 	
 	public static enum ParticleType{
 		@JSONDescription("The standard smoke particle.")
