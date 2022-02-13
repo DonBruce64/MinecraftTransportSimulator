@@ -5,7 +5,7 @@ import java.util.Iterator;
 import minecrafttransportsimulator.baseclasses.BezierCurve;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.baseclasses.TrailerConnection;
+import minecrafttransportsimulator.baseclasses.TowingConnection;
 import minecrafttransportsimulator.baseclasses.VehicleGroundDeviceCollection;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.instances.BlockCollision;
@@ -13,7 +13,6 @@ import minecrafttransportsimulator.blocks.tileentities.components.RoadFollowingS
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLane;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLane.LaneSelectionRequest;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
-import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup;
@@ -110,88 +109,84 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	}
 	
 	@Override
-	public boolean update(){
-		if(super.update()){
-			world.beginProfiling("VehicleD_Level", true);
+	public void update(){
+		super.update();
+		world.beginProfiling("VehicleD_Level", true);
+		
+		//If we were placed down, and this is our first tick, check our collision boxes to make sure we are't in the ground.
+		if(ticksExisted == 1 && placingPlayer != null && !world.isClient()){
+			//Get how far above the ground the vehicle needs to be, and move it to that position.
+			//First boost Y based on collision boxes.
+			double furthestDownPoint = 0;
+			for(JSONCollisionGroup collisionGroup : definition.collisionGroups){
+				for(JSONCollisionBox collisionBox : collisionGroup.collisions){
+					furthestDownPoint = Math.min(collisionBox.pos.y - collisionBox.height/2F, furthestDownPoint);
+				}
+			}
 			
-			//If we were placed down, and this is our first tick, check our collision boxes to make sure we are't in the ground.
-			if(ticksExisted == 1 && placingPlayer != null && !world.isClient()){
-				//Get how far above the ground the vehicle needs to be, and move it to that position.
-				//First boost Y based on collision boxes.
-				double furthestDownPoint = 0;
-				for(JSONCollisionGroup collisionGroup : definition.collisionGroups){
-					for(JSONCollisionBox collisionBox : collisionGroup.collisions){
-						furthestDownPoint = Math.min(collisionBox.pos.y - collisionBox.height/2F, furthestDownPoint);
+			//Next, boost based on parts.
+			for(APart part : parts){
+				furthestDownPoint = Math.min(part.placementOffset.y - part.getHeight()/2F, furthestDownPoint);
+			}
+			
+			//Add on -0.1 blocks for the default collision clamping.
+			//This prevents the clamping of the collision boxes from hitting the ground if they were clamped.
+			furthestDownPoint += -0.1;
+			
+			//Apply the boost, and check collisions.
+			//If the core collisions are colliding, set the vehicle as dead and abort.
+			//We need to update the boxes first, however, as they haven't been updated yet.
+			motionApplied.set(0, -furthestDownPoint, 0);
+			rotationApplied.set(0, 0, 0);
+			position.add(motionApplied);
+			for(BoundingBox coreBox : allBlockCollisionBoxes){
+				coreBox.updateToEntity(this, null);
+				if(coreBox.updateCollidingBlocks(world, new Point3D(0D, -furthestDownPoint, 0D))){
+					//New vehicle shouldn't have been spawned.  Bail out.
+					remove();
+					placingPlayer.sendPacket(new PacketPlayerChatMessage(placingPlayer, "interact.failure.nospace"));
+					//Need to add stack back as it will have been removed here.
+					if(!placingPlayer.isCreative()){
+						placingPlayer.setHeldStack(getItem().getNewStack(save(new WrapperNBT())));
 					}
-				}
-				
-				//Next, boost based on parts.
-				for(APart part : parts){
-					furthestDownPoint = Math.min(part.placementOffset.y - part.getHeight()/2F, furthestDownPoint);
-				}
-				
-				//Add on -0.1 blocks for the default collision clamping.
-				//This prevents the clamping of the collision boxes from hitting the ground if they were clamped.
-				furthestDownPoint += -0.1;
-				
-				//Apply the boost, and check collisions.
-				//If the core collisions are colliding, set the vehicle as dead and abort.
-				//We need to update the boxes first, however, as they haven't been updated yet.
-				motionApplied.set(0, -furthestDownPoint, 0);
-				rotationApplied.set(0, 0, 0);
-				position.add(motionApplied);
-				for(BoundingBox coreBox : allBlockCollisionBoxes){
-					coreBox.updateToEntity(this, null);
-					if(coreBox.updateCollidingBlocks(world, new Point3D(0D, -furthestDownPoint, 0D))){
-						//New vehicle shouldn't have been spawned.  Bail out.
-						remove();
-						placingPlayer.sendPacket(new PacketPlayerChatMessage(placingPlayer, "interact.failure.nospace"));
-						//Need to add stack back as it will have been removed here.
-						if(!placingPlayer.isCreative()){
-							placingPlayer.setHeldStack(getItem().getNewStack(save(new WrapperNBT())));
-						}
-						return false;
-					}else{
-						//Update deltas and send to clients.
-						addToServerDeltas(motionApplied, rotationApplied, pathingApplied);
-						InterfacePacket.sendToAllClients(new PacketVehicleServerMovement((EntityVehicleF_Physics) this, motionApplied, rotationApplied, pathingApplied));
-					}
+					return;
+				}else{
+					//Update deltas and send to clients.
+					addToServerDeltas(motionApplied, rotationApplied, pathingApplied);
+					InterfacePacket.sendToAllClients(new PacketVehicleServerMovement((EntityVehicleF_Physics) this, motionApplied, rotationApplied, pathingApplied));
 				}
 			}
-			
-			//Update brake status.  This is used in a lot of locations, so we don't want to query the set every time.
-			brake = getVariable(BRAKE_VARIABLE);
-			parkingBrakeOn = isVariableActive(PARKINGBRAKE_VARIABLE);
-			
-			//Update our GDB members if any of our ground devices don't have the same total offset as placement.
-			//This is required to move the GDBs if the GDs move.
-			world.beginProfiling("GroundDevices", true);
-			if(ticksExisted == 1){
-				groundDeviceCollective.updateBounds();
-			}
-			
-			//Now do update calculations and logic.
-			if(!ConfigSystem.configObject.general.noclipVehicles.value || groundDeviceCollective.isReady()){
-				world.beginProfiling("GroundForces", false);
-				getForcesAndMotions();
-				world.beginProfiling("GroundOperations", false);
-				performGroundOperations();
-				world.beginProfiling("TotalMovement", false);
-				moveVehicle();
-				if(!world.isClient()){
-					adjustControlSurfaces();
-				}
-			}
-			
-			//Update parts after all movement is done.
-			world.beginProfiling("PostMovement", false);
-			updatePostMovement();
-			world.endProfiling();
-			world.endProfiling();
-			return true;
-		}else{
-			return false;
 		}
+		
+		//Update brake status.  This is used in a lot of locations, so we don't want to query the set every time.
+		brake = getVariable(BRAKE_VARIABLE);
+		parkingBrakeOn = isVariableActive(PARKINGBRAKE_VARIABLE);
+		
+		//Update our GDB members if any of our ground devices don't have the same total offset as placement.
+		//This is required to move the GDBs if the GDs move.
+		world.beginProfiling("GroundDevices", true);
+		if(ticksExisted == 1){
+			groundDeviceCollective.updateBounds();
+		}
+		
+		//Now do update calculations and logic.
+		if(!ConfigSystem.configObject.general.noclipVehicles.value || groundDeviceCollective.isReady()){
+			world.beginProfiling("GroundForces", false);
+			getForcesAndMotions();
+			world.beginProfiling("GroundOperations", false);
+			performGroundOperations();
+			world.beginProfiling("TotalMovement", false);
+			moveVehicle();
+			if(!world.isClient()){
+				adjustControlSurfaces();
+			}
+		}
+		
+		//Update parts after all movement is done.
+		world.beginProfiling("PostMovement", false);
+		updatePostMovement();
+		world.endProfiling();
+		world.endProfiling();
 	}
 	
 	@Override
@@ -221,39 +216,26 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	
 	@Override
 	public boolean needsChunkloading(){
-		return rearFollower != null || (towedByConnection != null && ((AEntityVehicleD_Moving) towedByConnection.hitchVehicle).rearFollower != null);
+		return rearFollower != null;
 	}
 	
 	@Override
-	public boolean canCollideWith(AEntityB_Existing entityToCollide){
-		if(towedByConnection != null && entityToCollide.equals(towedByConnection.hitchVehicle)){
-			return false;
-		}else if(!towingConnections.isEmpty()){
-			for(TrailerConnection connection : towingConnections){
-				if(entityToCollide.equals(connection.hookupVehicle)){
-					return false;
-				}
-			}
+	public void connectTrailer(TowingConnection connection){
+		super.connectTrailer(connection);
+		AEntityVehicleD_Moving towedVehicle = connection.towedVehicle;
+		if(towedVehicle.parkingBrakeOn){
+			towedVehicle.setVariable(PARKINGBRAKE_VARIABLE, 0);
 		}
-		return super.canCollideWith(entityToCollide); 
+		towedVehicle.setVariable(BRAKE_VARIABLE, 0);
+		towedVehicle.frontFollower = null;
+		towedVehicle.rearFollower = null;
 	}
 	
 	@Override
-	public void connectAsTrailer(TrailerConnection connection){
-		super.connectAsTrailer(connection);
-		if(parkingBrakeOn){
-			toggleVariable(PARKINGBRAKE_VARIABLE);
-		}
-		setVariable(BRAKE_VARIABLE, 0);
-		frontFollower = null;
-		rearFollower = null;
-	}
-	
-	@Override
-	public void disconnectAsTrailer(){
-		super.disconnectAsTrailer();
-		if(definition.motorized.isTrailer){
-			parkingBrakeOn = true;
+	public void disconnectTrailer(TowingConnection connection){
+		super.disconnectTrailer(connection);
+		if(connection.towedVehicle.definition.motorized.isTrailer){
+			connection.towedVehicle.setVariable(PARKINGBRAKE_VARIABLE, 1);
 		}
 	}
 	
@@ -388,7 +370,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 				
 				//If we are slipping while turning, set the slipping variable to let other systems know.
 				//Only do this as a main vehicle.  If we are a trailer, we don't do this unless the vehicle towing us is slipping.
-				slipping = towedByConnection == null ? (world.isClient() && motionFactor != 1 && velocity > 0.75) : (towedByConnection != null && towedByConnection.hitchVehicle.slipping);
+				slipping = towedByConnection == null ? (world.isClient() && motionFactor != 1 && velocity > 0.75) : towedByConnection.towingVehicle.slipping;
 			}
 		}
 	}
@@ -542,7 +524,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		//If we are an aircraft, don't check as we shouldn't have aircraft on roads.
 		//If we are being towed, only check if the towing vehicle is on the road (since we should be on one too). 
 		world.beginProfiling("RoadChecks", false);
-		if(definition.motorized.isAircraft || (towedByConnection != null && !towedByConnection.hitchVehicle.lockedOnRoad)){
+		if(definition.motorized.isAircraft || (towedByConnection != null && !towedByConnection.towingVehicle.lockedOnRoad)){
 			frontFollower = null;
 			rearFollower = null;
 		}else if((frontFollower == null || rearFollower == null) && ticksExisted%20 == 0){
@@ -558,14 +540,16 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 					if(towedByConnection == null){
 						frontFollower = new RoadFollowingState(rearFollower.lane, rearFollower.curve, rearFollower.goingForwards, rearFollower.currentSegment).updateCurvePoints(pointDelta, LaneSelectionRequest.NONE);
 					}else{
-						float segmentDelta = (float) (towedByConnection.hitchCurrentPosition.copy().subtract(towedByConnection.hitchVehicle.position).length() + towedByConnection.hookupCurrentPosition.copy().subtract(towedByConnection.hookupVehicle.position).length());
-						if(towedByConnection.hitchEntity instanceof APart ? ((APart) towedByConnection.hitchEntity).localOffset.z <= 0 : towedByConnection.hitchConnection.pos.z <= 0){
+						//Get delta between vehicle center and hitch, and vehicle center and hookup.  This gets total distance between vehicle centers.
+						float segmentDelta = (float) (towedByConnection.hitchCurrentPosition.copy().subtract(towedByConnection.towingVehicle.position).length() + towedByConnection.hookupCurrentPosition.copy().subtract(towedByConnection.towedVehicle.position).length());
+						//If the hitch is on the back of the vehicle, we need to have our offset be negative.
+						if(towedByConnection.towingEntity instanceof APart ? ((APart) towedByConnection.towingEntity).localOffset.z <= 0 : towedByConnection.hitchConnection.pos.z <= 0){
 							segmentDelta = -segmentDelta;
 						}
-						rearFollower = new RoadFollowingState(((AEntityVehicleD_Moving) towedByConnection.hitchVehicle).rearFollower);
-						rearFollower.updateCurvePoints(segmentDelta, ((AEntityVehicleD_Moving) towedByConnection.hitchVehicle).selectedSegment);
+						rearFollower = new RoadFollowingState(((AEntityVehicleD_Moving) towedByConnection.towingVehicle).rearFollower);
+						rearFollower.updateCurvePoints(segmentDelta, ((AEntityVehicleD_Moving) towedByConnection.towingVehicle).selectedSegment);
 						frontFollower = new RoadFollowingState(rearFollower);
-						frontFollower.updateCurvePoints(pointDelta, ((AEntityVehicleD_Moving) towedByConnection.hitchVehicle).selectedSegment);
+						frontFollower.updateCurvePoints(pointDelta, ((AEntityVehicleD_Moving) towedByConnection.towingVehicle).selectedSegment);
 					}
 				}
 			}
@@ -688,7 +672,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 					if(correctCollidingMovement()){
 						return;
 					}
-					towedByConnection.hitchVehicle.motion.add(motion).subtract(initalMotion);
+					towedByConnection.towingVehicle.motion.add(motion).subtract(initalMotion);
 				}else if(correctCollidingMovement()){
 					return;
 				}
@@ -759,7 +743,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		rotationApplied.set(rotation).add(roadRotation).add(collisionRotation);
 		if(lockedOnRoad){
 			if(towedByConnection != null){
-				pathingApplied = ((AEntityVehicleD_Moving) towedByConnection.hitchVehicle).pathingApplied;
+				pathingApplied = ((AEntityVehicleD_Moving) towedByConnection.towingVehicle).pathingApplied;
 			}else{
 				pathingApplied = goingInReverse ? -velocity*SPEED_FACTOR : velocity*SPEED_FACTOR;
 			}

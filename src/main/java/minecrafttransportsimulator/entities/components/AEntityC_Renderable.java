@@ -33,13 +33,9 @@ public abstract class AEntityC_Renderable extends AEntityB_Existing{
 	}
 	
 	@Override
-	public boolean update(){
-		if(super.update()){
-			prevScale = scale;
-			return true;
-		}else{
-			return false;
-		}
+	public void update(){
+		super.update();
+		prevScale = scale;
 	}
     
     /**

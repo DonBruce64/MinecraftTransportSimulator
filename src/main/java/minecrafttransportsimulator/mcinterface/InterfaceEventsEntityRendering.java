@@ -201,92 +201,90 @@ public class InterfaceEventsEntityRendering{
     	leftArmAngles.set(0, 0, 0);
     	rightArmAngles.set(0, 0, 0);
     	EntityLivingBase entity = event.getEntity();
-    	if(entity.getRidingEntity() instanceof BuilderEntityExisting){
-        	AEntityE_Interactable<?> ridingEntity = (AEntityE_Interactable<?>) ((BuilderEntityExisting) entity.getRidingEntity()).entity;
-        	//This may be null if MC sets this player as riding before the actual entity has time to load NBT.
-        	if(ridingEntity != null){
-        		GL11.glPushMatrix();
-            	//Get orientation and scale for entity.
-            	float widthScale = 1.0F;
-            	float heightScale = 1.0F;
-            	WrapperEntity entityWrapper = WrapperEntity.getWrapperFor(entity);
-            	if(ridingEntity instanceof AEntityF_Multipart){
-            		PartSeat seat = ((AEntityF_Multipart<?>) ridingEntity).getSeatForRider(entityWrapper);
-            		seat.getInterpolatedOrientation(riderBodyOrientation, event.getPartialRenderTick());
-            		seat.getRiderInterpolatedOrientation(riderHeadOrientation, event.getPartialRenderTick());
-            		
-            		//Get seat scale, if we have it.
-            		if(seat.definition.seat.widthScale != 0){
-            			widthScale = seat.definition.seat.widthScale;
-            		}
-            		if(seat.placementDefinition.widthScale != 0){
-            			widthScale *= seat.placementDefinition.widthScale;
-            		}
-            		if(seat.definition.seat.heightScale != 0){
-            			heightScale = seat.definition.seat.heightScale; 
-            		}
-            		if(seat.placementDefinition.heightScale != 0){
-            			heightScale *= seat.placementDefinition.heightScale;
-            		}
-            		if(seat.definition.seat.standing){
-            			renderCurrentRiderStanding = true;
-            		}else{
-            			renderCurrentRiderSitting = true;
-            		}
-            		
-            		if(seat.vehicleOn != null){
-		        		double turningAngle = seat.vehicleOn.rudderAngle/2D;
-						rightArmAngles.set(Math.toRadians(-75 + turningAngle), Math.toRadians(-10), 0);
-						leftArmAngles.set(Math.toRadians(-75 - turningAngle), Math.toRadians(10), 0);
-            		}
-            	}else{
-            		ridingEntity.getInterpolatedOrientation(riderBodyOrientation, event.getPartialRenderTick());
-            		riderHeadOrientation.set(entityWrapper.getOrientation());
-            		renderCurrentRiderSitting = true;
-            	}
-            	
-            	//Before we do further matrix transforms, get the head yaw for the entity.
-            	Point3D headVector = new Point3D(0, 0, 1).rotate(riderBodyOrientation).reOrigin(riderHeadOrientation);
-            	headVector.reOrigin(entityWrapper.getOrientation()).getAngles(false);
-            	
-            	//Set the entity's head yaw to the delta between their yaw and their angled yaw.
-	            //This needs to be relative as we're going to render relative to the seat here, not the world.
-        		entity.rotationYawHead = (float) headVector.y;
-        		entity.prevRotationYawHead =  entity.rotationYawHead;
-            	
-            	//Set the entity yaw offset to 0.  This forces their body to always face the front of the seat.
-	            //This isn't the entity's normal yaw, which is the direction they are facing.
-        		entity.renderYawOffset = 0;
-        		entity.prevRenderYawOffset = 0;
-            	
-            	//Get total translation.
-        		riderTotalTransformation.resetTransforms();
-        		riderTotalTransformation.setRotation(riderBodyOrientation);
+    	WrapperEntity entityWrapper = WrapperEntity.getWrapperFor(entity);
+    	AEntityE_Interactable<?> ridingEntity = entityWrapper.getEntityRiding();
+    	//This may be null if MC sets this player as riding before the actual entity has time to load NBT.
+    	if(ridingEntity != null){
+    		GL11.glPushMatrix();
+        	//Get orientation and scale for entity.
+        	float widthScale = 1.0F;
+        	float heightScale = 1.0F;
+        	if(ridingEntity instanceof AEntityF_Multipart){
+        		PartSeat seat = ((AEntityF_Multipart<?>) ridingEntity).getSeatForRider(entityWrapper);
+        		seat.getInterpolatedOrientation(riderBodyOrientation, event.getPartialRenderTick());
+        		seat.getRiderInterpolatedOrientation(riderHeadOrientation, event.getPartialRenderTick());
         		
-        		//Adjust for seated offset.
-        		riderTotalTransformation.applyTranslation(0, entityWrapper.getSeatOffset(), 0);
-            	
-            	//Apply scale.
-            	riderTotalTransformation.applyScaling(widthScale, heightScale, widthScale);
-            	
-            	//Push matrix and apply transform.
-            	//If we aren't the rider, translate the rider to us so it rotates on the proper coordinate system.
-            	EntityPlayerSP masterPlayer = Minecraft.getMinecraft().player;
-            	if(!entity.equals(masterPlayer)){
-	            	double playerDistanceX = entity.lastTickPosX + - masterPlayer.lastTickPosX + (entity.posX - entity.lastTickPosX -(masterPlayer.posX - masterPlayer.lastTickPosX))*event.getPartialRenderTick();
-	            	double playerDistanceY = entity.lastTickPosY + - masterPlayer.lastTickPosY + (entity.posY - entity.lastTickPosY -(masterPlayer.posY - masterPlayer.lastTickPosY))*event.getPartialRenderTick();
-	            	double playerDistanceZ = entity.lastTickPosZ + - masterPlayer.lastTickPosZ + (entity.posZ - entity.lastTickPosZ -(masterPlayer.posZ - masterPlayer.lastTickPosZ))*event.getPartialRenderTick();
-	                GL11.glTranslated(playerDistanceX, playerDistanceY, playerDistanceZ);
-            		InterfaceRender.applyTransformOpenGL(riderTotalTransformation, false);
-            		GL11.glTranslated(-playerDistanceX*widthScale, -playerDistanceY*heightScale, -playerDistanceZ*widthScale);
-            	}else{
-            		InterfaceRender.applyTransformOpenGL(riderTotalTransformation, false);
-            	}
-            		
-            	needToPopMatrix = true;
-            	if(ConfigSystem.configObject.clientRendering.playerTweaks.value){
-            		needPlayerTweaks = true;
-            	}
+        		//Get seat scale, if we have it.
+        		if(seat.definition.seat.widthScale != 0){
+        			widthScale = seat.definition.seat.widthScale;
+        		}
+        		if(seat.placementDefinition.widthScale != 0){
+        			widthScale *= seat.placementDefinition.widthScale;
+        		}
+        		if(seat.definition.seat.heightScale != 0){
+        			heightScale = seat.definition.seat.heightScale; 
+        		}
+        		if(seat.placementDefinition.heightScale != 0){
+        			heightScale *= seat.placementDefinition.heightScale;
+        		}
+        		if(seat.definition.seat.standing){
+        			renderCurrentRiderStanding = true;
+        		}else{
+        			renderCurrentRiderSitting = true;
+        		}
+        		
+        		if(seat.vehicleOn != null){
+	        		double turningAngle = seat.vehicleOn.rudderAngle/2D;
+					rightArmAngles.set(Math.toRadians(-75 + turningAngle), Math.toRadians(-10), 0);
+					leftArmAngles.set(Math.toRadians(-75 - turningAngle), Math.toRadians(10), 0);
+        		}
+        	}else{
+        		ridingEntity.getInterpolatedOrientation(riderBodyOrientation, event.getPartialRenderTick());
+        		riderHeadOrientation.set(entityWrapper.getOrientation());
+        		renderCurrentRiderSitting = true;
+        	}
+        	
+        	//Before we do further matrix transforms, get the head yaw for the entity.
+        	Point3D headVector = new Point3D(0, 0, 1).rotate(riderBodyOrientation).reOrigin(riderHeadOrientation);
+        	headVector.reOrigin(entityWrapper.getOrientation()).getAngles(false);
+        	
+        	//Set the entity's head yaw to the delta between their yaw and their angled yaw.
+            //This needs to be relative as we're going to render relative to the seat here, not the world.
+    		entity.rotationYawHead = (float) headVector.y;
+    		entity.prevRotationYawHead =  entity.rotationYawHead;
+        	
+        	//Set the entity yaw offset to 0.  This forces their body to always face the front of the seat.
+            //This isn't the entity's normal yaw, which is the direction they are facing.
+    		entity.renderYawOffset = 0;
+    		entity.prevRenderYawOffset = 0;
+        	
+        	//Get total translation.
+    		riderTotalTransformation.resetTransforms();
+    		riderTotalTransformation.setRotation(riderBodyOrientation);
+    		
+    		//Adjust for seated offset.
+    		riderTotalTransformation.applyTranslation(0, entityWrapper.getSeatOffset(), 0);
+        	
+        	//Apply scale.
+        	riderTotalTransformation.applyScaling(widthScale, heightScale, widthScale);
+        	
+        	//Push matrix and apply transform.
+        	//If we aren't the rider, translate the rider to us so it rotates on the proper coordinate system.
+        	EntityPlayerSP masterPlayer = Minecraft.getMinecraft().player;
+        	if(!entity.equals(masterPlayer)){
+            	double playerDistanceX = entity.lastTickPosX + - masterPlayer.lastTickPosX + (entity.posX - entity.lastTickPosX -(masterPlayer.posX - masterPlayer.lastTickPosX))*event.getPartialRenderTick();
+            	double playerDistanceY = entity.lastTickPosY + - masterPlayer.lastTickPosY + (entity.posY - entity.lastTickPosY -(masterPlayer.posY - masterPlayer.lastTickPosY))*event.getPartialRenderTick();
+            	double playerDistanceZ = entity.lastTickPosZ + - masterPlayer.lastTickPosZ + (entity.posZ - entity.lastTickPosZ -(masterPlayer.posZ - masterPlayer.lastTickPosZ))*event.getPartialRenderTick();
+                GL11.glTranslated(playerDistanceX, playerDistanceY, playerDistanceZ);
+        		InterfaceRender.applyTransformOpenGL(riderTotalTransformation, false);
+        		GL11.glTranslated(-playerDistanceX*widthScale, -playerDistanceY*heightScale, -playerDistanceZ*widthScale);
+        	}else{
+        		InterfaceRender.applyTransformOpenGL(riderTotalTransformation, false);
+        	}
+        		
+        	needToPopMatrix = true;
+        	if(ConfigSystem.configObject.clientRendering.playerTweaks.value){
+        		needPlayerTweaks = true;
         	}
         }
     

@@ -78,12 +78,12 @@ interact.fuelhose.alreadylinked=This tank is already linked to another tank and 
 interact.fuelhose.toofar=The two tanks are too far away.  They should be no further than 16 blocks apart.
 interact.fuelhose.differentfluids=The source and destination tanks do not contain the same fluid and cannot be linked.
 
-interact.trailer.connect=Trailer connected.
-interact.trailer.disconnect=Trailer disconnected.
+interact.trailer.connected=Trailer connected.
+interact.trailer.disconnected=Trailer disconnected.
 interact.trailer.notfound=No trailers were found anywhere near this vehicle.
 interact.trailer.toofar=The trailer is too far from the vehicle.
 interact.trailer.wronghitch=This vehicle does not have the correct hitch for this trailer.
-interact.trailer.wrongplacement=A hitch was found that is close enough to connect, but was not the correct type.  Also, a matching hitch was found, but it was too far to connect.  Are you trying to use the wrong hitch?
+interact.trailer.mismatch=A hitch was found that is close enough to connect, but was not the correct type.  Also, a matching hitch was found, but it was too far to connect.  Are you trying to use the wrong hitch?
 
 input.aircraft.mod=Mod
 input.aircraft.camlock=CamLock

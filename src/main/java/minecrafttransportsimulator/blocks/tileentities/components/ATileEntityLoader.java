@@ -17,35 +17,31 @@ public abstract class ATileEntityLoader extends TileEntityDecor{
     }
 	
     @Override
-	public boolean update(){
-		if(super.update()){
-			//Do load/unload checks.  Checks only occur on servers.  Clients get packets for state changes.
-			if(!world.isClient()){
-				if(connectedPart == null){
-					//Check for a new part every second.  We don't want every tick as this would increase server loads.
-					if(ticksExisted%20 == 0){
-						updateNearestPart();
-					}
-				}else{
-					//Don't load parts that don't exist.
-					//Also check distance to make sure the part hasn't moved away.
-					if(!connectedPart.isValid || !connectedPart.position.isDistanceToCloserThan(position, 10)){
-						updateNearestPart();
-					}
+    public void update(){
+		super.update();
+		//Do load/unload checks.  Checks only occur on servers.  Clients get packets for state changes.
+		if(!world.isClient()){
+			if(connectedPart == null){
+				//Check for a new part every second.  We don't want every tick as this would increase server loads.
+				if(ticksExisted%20 == 0){
+					updateNearestPart();
 				}
-	
-				//If we have a connected part, try to load or unload from it depending on our state.
-				if(connectedPart != null){
-					if(isUnloader()){
-						doUnloading();
-					}else{
-						doLoading();
-					}
+			}else{
+				//Don't load parts that don't exist.
+				//Also check distance to make sure the part hasn't moved away.
+				if(!connectedPart.isValid || !connectedPart.position.isDistanceToCloserThan(position, 10)){
+					updateNearestPart();
 				}
 			}
-			return true;
-		}else{
-			return false;
+
+			//If we have a connected part, try to load or unload from it depending on our state.
+			if(connectedPart != null){
+				if(isUnloader()){
+					doUnloading();
+				}else{
+					doLoading();
+				}
+			}
 		}
 	}
 	

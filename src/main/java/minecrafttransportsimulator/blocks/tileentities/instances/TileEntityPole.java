@@ -57,29 +57,24 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 	}
 	
 	@Override
-	public boolean update(){
-		if(super.update()){
-			//Forward update call to components.
-			for(ATileEntityPole_Component component : components.values()){
-				component.update();
-			}
-			
-			//If this is the first tick, update collision on ourselves and others.
-			if(ticksExisted == 1){
-				updateCollision(false);
-				for(Axis axis : Axis.values()){
-					if(!axis.equals(Axis.NONE)){
-						ATileEntityBase<?> tile = world.getTileEntity(axis.getOffsetPoint(position));
-						if(tile instanceof TileEntityPole){
-							((TileEntityPole) tile).updateCollision(false);
-						}
+	public void update(){
+		super.update();
+		//Forward update call to components.
+		for(ATileEntityPole_Component component : components.values()){
+			component.update();
+		}
+		
+		//If this is the first tick, update collision on ourselves and others.
+		if(ticksExisted == 1){
+			updateCollision(false);
+			for(Axis axis : Axis.values()){
+				if(!axis.equals(Axis.NONE)){
+					ATileEntityBase<?> tile = world.getTileEntity(axis.getOffsetPoint(position));
+					if(tile instanceof TileEntityPole){
+						((TileEntityPole) tile).updateCollision(false);
 					}
 				}
 			}
-			
-			return true;
-		}else{
-			return false;
 		}
 	}
 	

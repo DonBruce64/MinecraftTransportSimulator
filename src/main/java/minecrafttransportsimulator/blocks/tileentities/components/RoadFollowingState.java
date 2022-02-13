@@ -105,7 +105,7 @@ public class RoadFollowingState{
 	 * otherwise you may get out of the curve's bounds.
 	 */
 	public Point3D getCurrentPoint(){
-		Point3D currentPoint = new Point3D(lane.road.position);
+		Point3D currentPoint = lane.road.position.copy();
 		currentPoint.y += lane.road.definition.road.collisionHeight/16F;
 		curve.offsetPointByPositionAt(currentPoint, currentSegment);
 		return currentPoint;

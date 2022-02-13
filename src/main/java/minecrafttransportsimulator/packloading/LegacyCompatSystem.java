@@ -1065,6 +1065,7 @@ public final class LegacyCompatSystem{
 				particleDef.color = ColorRGB.WHITE;
 				particleDef.quantity = 4;
 				particleDef.initialVelocity = new Point3D(0, 0.15, 0);
+				
 				particleDef.activeAnimations = new ArrayList<JSONAnimationDefinition>();
 				JSONAnimationDefinition activeAnimation = new JSONAnimationDefinition();
 				activeAnimation.animationType = AnimationComponentType.VISIBILITY;
@@ -1072,6 +1073,15 @@ public final class LegacyCompatSystem{
 				activeAnimation.clampMin = 1.0F;
 				activeAnimation.clampMax = 1.0F;
 				particleDef.activeAnimations.add(activeAnimation);
+				
+				particleDef.spawningAnimations = new ArrayList<JSONAnimationDefinition>();
+				JSONAnimationDefinition spawningAnimation = new JSONAnimationDefinition();
+				spawningAnimation.animationType = AnimationComponentType.ROTATION;
+				spawningAnimation.variable = "ground_rotation";
+				spawningAnimation.centerPoint = new Point3D();
+				spawningAnimation.axis = new Point3D(-1, 0, 0);
+				particleDef.spawningAnimations.add(spawningAnimation);
+				
 				definition.rendering.particles.add(particleDef);
 				
 				//Burnout smoke.
@@ -1082,6 +1092,7 @@ public final class LegacyCompatSystem{
 				particleDef.spawnEveryTick = true;
 				particleDef.pos = new Point3D(0, -definition.ground.height/2, 0);
 				particleDef.initialVelocity = new Point3D(0, 0.15, 0);
+				
 				particleDef.activeAnimations = new ArrayList<JSONAnimationDefinition>();
 				activeAnimation = new JSONAnimationDefinition();
 				activeAnimation.animationType = AnimationComponentType.VISIBILITY;
@@ -1089,6 +1100,15 @@ public final class LegacyCompatSystem{
 				activeAnimation.clampMin = 1.0F;
 				activeAnimation.clampMax = 1.0F;
 				particleDef.activeAnimations.add(activeAnimation);
+				
+				particleDef.spawningAnimations = new ArrayList<JSONAnimationDefinition>();
+				spawningAnimation = new JSONAnimationDefinition();
+				spawningAnimation.animationType = AnimationComponentType.ROTATION;
+				spawningAnimation.variable = "ground_rotation";
+				spawningAnimation.centerPoint = new Point3D();
+				spawningAnimation.axis = new Point3D(-1, 0, 0);
+				particleDef.spawningAnimations.add(spawningAnimation);
+				
 				definition.rendering.particles.add(particleDef);
 				
 				//Wheel dirt for skidding (burnouts).
@@ -1100,6 +1120,7 @@ public final class LegacyCompatSystem{
 				particleDef.spawnEveryTick = true;
 				particleDef.pos = new Point3D(0, -definition.ground.height/2, 0);
 				particleDef.initialVelocity = new Point3D(0, 1.5, -1.5);
+				
 				particleDef.activeAnimations = new ArrayList<JSONAnimationDefinition>();
 				activeAnimation = new JSONAnimationDefinition();
 				activeAnimation.animationType = AnimationComponentType.VISIBILITY;
@@ -1107,6 +1128,15 @@ public final class LegacyCompatSystem{
 				activeAnimation.clampMin = 1.0F;
 				activeAnimation.clampMax = 1.0F;
 				particleDef.activeAnimations.add(activeAnimation);
+				
+				particleDef.spawningAnimations = new ArrayList<JSONAnimationDefinition>();
+				spawningAnimation = new JSONAnimationDefinition();
+				spawningAnimation.animationType = AnimationComponentType.ROTATION;
+				spawningAnimation.variable = "ground_rotation";
+				spawningAnimation.centerPoint = new Point3D();
+				spawningAnimation.axis = new Point3D(-1, 0, 0);
+				particleDef.spawningAnimations.add(spawningAnimation);
+				
 				definition.rendering.particles.add(particleDef);
 				
 				//Wheel dirt for slipping (turning too fast).
@@ -1118,6 +1148,7 @@ public final class LegacyCompatSystem{
 				particleDef.spawnEveryTick = true;
 				particleDef.pos = new Point3D(0, -definition.ground.height/2, 0);
 				particleDef.initialVelocity = new Point3D(0, 1.5, 0.0);
+				
 				particleDef.activeAnimations = new ArrayList<JSONAnimationDefinition>();
 				activeAnimation = new JSONAnimationDefinition();
 				activeAnimation.animationType = AnimationComponentType.VISIBILITY;
@@ -1125,6 +1156,15 @@ public final class LegacyCompatSystem{
 				activeAnimation.clampMin = 1.0F;
 				activeAnimation.clampMax = 1.0F;
 				particleDef.activeAnimations.add(activeAnimation);
+				
+				particleDef.spawningAnimations = new ArrayList<JSONAnimationDefinition>();
+				spawningAnimation = new JSONAnimationDefinition();
+				spawningAnimation.animationType = AnimationComponentType.ROTATION;
+				spawningAnimation.variable = "ground_rotation";
+				spawningAnimation.centerPoint = new Point3D();
+				spawningAnimation.axis = new Point3D(-1, 0, 0);
+				particleDef.spawningAnimations.add(spawningAnimation);
+				
 				definition.rendering.particles.add(particleDef);
 			}
 		}
@@ -1721,6 +1761,21 @@ public final class LegacyCompatSystem{
 			}
 			interactableDef.connections = null;
 		}
+		
+		//Check for old hookup variables and distances.
+		if(interactableDef.connectionGroups != null){
+			for(JSONConnectionGroup connectionGroup : interactableDef.connectionGroups){
+				if(connectionGroup.hookup){
+					connectionGroup.isHookup = true;
+					connectionGroup.hookup = false;
+				}
+				for(JSONConnection connection : connectionGroup.connections){
+					if(connection.distance == 0){
+						connection.distance = 2;
+					}
+				}
+			}
+		}
 	}
 	
 	private static void performVehicleCollisionLegacyCompats(AJSONInteractableEntity interactableDef){
@@ -1898,6 +1953,13 @@ public final class LegacyCompatSystem{
     	    	object.animations.add(animation);
 			}
     		rendering.translatableModelObjects = null;
+    	}
+    	if(rendering.particles != null){
+    		for(JSONParticle particle : rendering.particles){
+    			if(particle.quantity == 0){
+    				particle.quantity = 1;
+    			}
+    		}
     	}
     }
     

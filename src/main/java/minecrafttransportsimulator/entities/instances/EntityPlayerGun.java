@@ -121,109 +121,105 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun>{
 	}
 	
 	@Override
-	public boolean update(){
-		if(super.update()){
-			//Make sure player is still valid and haven't left the server.
-			if(player != null && player.isValid()){
-				//Set our position to the player's position.  We may update this later if we have a gun.
-				position.set(player.getPosition());
-				motion.set(player.getVelocity());
-				
-				//Get the current gun.
-				activeGun = parts.isEmpty() ? null : (PartGun) parts.get(0);
-				
-				//If we have a gun, but the player's held stack is null, get it now.
-				//This happens if we load a gun as a saved part.
+	public void update(){
+		super.update();
+		//Make sure player is still valid and haven't left the server.
+		if(player != null && player.isValid()){
+			//Set our position to the player's position.  We may update this later if we have a gun.
+			position.set(player.getPosition());
+			motion.set(player.getVelocity());
+			
+			//Get the current gun.
+			activeGun = parts.isEmpty() ? null : (PartGun) parts.get(0);
+			
+			//If we have a gun, but the player's held stack is null, get it now.
+			//This happens if we load a gun as a saved part.
+			if(activeGun != null && gunStack == null){
+				AItemBase heldItem = player.getHeldItem();
+				if(heldItem instanceof ItemPartGun){
+					ItemPartGun heldGun = (ItemPartGun) heldItem;
+					if(heldGun.definition.gun.handHeld){
+						gunStack = player.getHeldStack();
+						hotbarSelected = player.getHotbarIndex();
+					}
+				}
 				if(activeGun != null && gunStack == null){
+					//Either the player's held item changed, or the pack did.
+					//Held gun is invalid, so don't use or save it.
+					removePart(activeGun, null);
+					activeGun = null;
+				}
+			}
+			
+			if(!world.isClient()){
+				//Check to make sure if we had a gun, that it didn't change.
+				if(activeGun != null && (!activeGun.getItem().equals(player.getHeldItem()) || hotbarSelected != player.getHotbarIndex())){
+					saveGun(true);
+				}
+				
+				//If we don't have a gun yet, try to get the current one if the player is holding one.
+				if(activeGun == null){
 					AItemBase heldItem = player.getHeldItem();
 					if(heldItem instanceof ItemPartGun){
 						ItemPartGun heldGun = (ItemPartGun) heldItem;
 						if(heldGun.definition.gun.handHeld){
 							gunStack = player.getHeldStack();
+							addPartFromItem(heldGun, player, gunStack.getData(), new Point3D(), false);
 							hotbarSelected = player.getHotbarIndex();
 						}
 					}
-					if(activeGun != null && gunStack == null){
-						//Either the player's held item changed, or the pack did.
-						//Held gun is invalid, so don't use or save it.
-						removePart(activeGun, null);
-						activeGun = null;
-					}
 				}
-				
-				if(!world.isClient()){
-					//Check to make sure if we had a gun, that it didn't change.
-					if(activeGun != null && (!activeGun.getItem().equals(player.getHeldItem()) || hotbarSelected != player.getHotbarIndex())){
-						saveGun(true);
-					}
-					
-					//If we don't have a gun yet, try to get the current one if the player is holding one.
-					if(activeGun == null){
-						AItemBase heldItem = player.getHeldItem();
-						if(heldItem instanceof ItemPartGun){
-							ItemPartGun heldGun = (ItemPartGun) heldItem;
-							if(heldGun.definition.gun.handHeld){
-								gunStack = player.getHeldStack();
-								addPartFromItem(heldGun, player, gunStack.getData(), new Point3D(), false);
-								hotbarSelected = player.getHotbarIndex();
-							}
-						}
-					}
-				}
-				
-				//If we have a gun, do updates to it.
-				//Only change firing command on servers to prevent de-syncs.
-				//Packets will get sent to clients to change them.
-				if(activeGun != null){
-					//Set our position relative to the the player's hand.
-					//Center point is at the player's arm, with offset being where the offset is.
-					Point3D heldVector;
-					if(activeGun.isHandHeldGunAimed){
-						heldVector = activeGun.definition.gun.handHeldAimedOffset;
-					}else{
-						heldVector = activeGun.definition.gun.handHeldNormalOffset;
-					}
-					angles.set(player.getPitch(), player.getYaw(), 0);
-					
-					//Arm center is 0.3125 blocks away in X, 1.375 blocks up in Y.
-					//Sneaking lowers arm by 0.2 blocks.
-					//First rotate point based on pitch.  This is for only the arm movement.
-					Point3D armRotation = new Point3D(angles.x, 0, 0);
-					position.set(heldVector);
-					position.rotateFine(armRotation);
-					
-					//Now rotate based on player yaw.  We need to take the arm offset into account here.
-					armRotation.set(0, angles.y, 0);
-					position.add(-0.3125, 0, 0).rotateFine(armRotation);
-					
-					//Now add the player's position and model center point offsets.
-					position.add(player.getPosition()).add(0, player.isSneaking() ? 1.3125 - 0.2 : 1.3125, 0);
-					
-					if(!world.isClient()){
-						//Save gun data if we stopped firing the prior tick.
-						if(activeGun.state.isAtLeast(GunState.FIRING_CURRENTLY)){
-							didGunFireLastTick = true;
-						}else if(didGunFireLastTick){
-							saveGun(false);
-						}
-					}
-				}
-			}else{
-				//Player is either null or not valid.  Remove us.
-				//Don't update post movement, as the gun will crash on update.
-				remove();
-				return false;
 			}
 			
-			//Update the gun now, if we have one.
-			updatePostMovement();
-			//If we have a gun, and the player is spectating, don't allow the gun to render.
+			//If we have a gun, do updates to it.
+			//Only change firing command on servers to prevent de-syncs.
+			//Packets will get sent to clients to change them.
 			if(activeGun != null){
-				activeGun.isInvisible = player != null && player.isSpectator();
+				//Set our position relative to the the player's hand.
+				//Center point is at the player's arm, with offset being where the offset is.
+				Point3D heldVector;
+				if(activeGun.isHandHeldGunAimed){
+					heldVector = activeGun.definition.gun.handHeldAimedOffset;
+				}else{
+					heldVector = activeGun.definition.gun.handHeldNormalOffset;
+				}
+				angles.set(player.getPitch(), player.getYaw(), 0);
+				
+				//Arm center is 0.3125 blocks away in X, 1.375 blocks up in Y.
+				//Sneaking lowers arm by 0.2 blocks.
+				//First rotate point based on pitch.  This is for only the arm movement.
+				Point3D armRotation = new Point3D(angles.x, 0, 0);
+				position.set(heldVector);
+				position.rotateFine(armRotation);
+				
+				//Now rotate based on player yaw.  We need to take the arm offset into account here.
+				armRotation.set(0, angles.y, 0);
+				position.add(-0.3125, 0, 0).rotateFine(armRotation);
+				
+				//Now add the player's position and model center point offsets.
+				position.add(player.getPosition()).add(0, player.isSneaking() ? 1.3125 - 0.2 : 1.3125, 0);
+				
+				if(!world.isClient()){
+					//Save gun data if we stopped firing the prior tick.
+					if(activeGun.state.isAtLeast(GunState.FIRING_CURRENTLY)){
+						didGunFireLastTick = true;
+					}else if(didGunFireLastTick){
+						saveGun(false);
+					}
+				}
 			}
-			return true;
 		}else{
-			return false;
+			//Player is either null or not valid.  Remove us.
+			//Don't update post movement, as the gun will crash on update.
+			remove();
+			return;
+		}
+		
+		//Update the gun now, if we have one.
+		updatePostMovement();
+		//If we have a gun, and the player is spectating, don't allow the gun to render.
+		if(activeGun != null){
+			activeGun.isInvisible = player != null && player.isSpectator();
 		}
 	}
 	

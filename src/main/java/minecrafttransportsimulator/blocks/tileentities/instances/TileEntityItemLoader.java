@@ -23,44 +23,40 @@ public class TileEntityItemLoader extends ATileEntityLoader implements ITileEnti
     }
     
     @Override
-    public boolean update(){
-    	if(super.update()){
-    		if(isUnloader()){
-    			//Push stack to inventory below to ready for unload.
-    			//Need to advance stack-grabbing by 1 tick from rate to ensure that slot is free during next unloading cycle.
-    			if((ticksExisted+1)%LOADING_RATE == 0){
-    				for(int i=0; i<inventory.getSize(); ++i){
-    					WrapperItemStack stack = inventory.getStack(i);				
-    					if(!stack.isEmpty()){
-    						if(world.insertStack(position, Axis.DOWN, stack)){
-    							inventory.setStack(stack, i);
-    							break;
-    						}
+    public void update(){
+		super.update();
+		if(isUnloader()){
+			//Push stack to inventory below to ready for unload.
+			//Need to advance stack-grabbing by 1 tick from rate to ensure that slot is free during next unloading cycle.
+			if((ticksExisted+1)%LOADING_RATE == 0){
+				for(int i=0; i<inventory.getSize(); ++i){
+					WrapperItemStack stack = inventory.getStack(i);				
+					if(!stack.isEmpty()){
+						if(world.insertStack(position, Axis.DOWN, stack)){
+							inventory.setStack(stack, i);
+							break;
+						}
+					}
+				}
+				
+			}
+		}else{
+			//Pull stack from inventory above to ready for load.
+    		//Need to retard stack-grabbing by 1 tick from rate to ensure that it's ready during next loading cycle.
+			if((ticksExisted-1)%LOADING_RATE == 0){
+				for(int i=0; i<inventory.getSize(); ++i){
+					WrapperItemStack stack = inventory.getStack(i);
+    				if(stack.isEmpty()){
+    					WrapperItemStack extractedStack = world.extractStack(position, Axis.UP);
+    					if(extractedStack != null){
+    						stack = extractedStack;
+    						inventory.setStack(stack, i);
+    						break;
     					}
     				}
-    				
-    			}
-    		}else{
-    			//Pull stack from inventory above to ready for load.
-	    		//Need to retard stack-grabbing by 1 tick from rate to ensure that it's ready during next loading cycle.
-    			if((ticksExisted-1)%LOADING_RATE == 0){
-    				for(int i=0; i<inventory.getSize(); ++i){
-    					WrapperItemStack stack = inventory.getStack(i);
-	    				if(stack.isEmpty()){
-	    					WrapperItemStack extractedStack = world.extractStack(position, Axis.UP);
-	    					if(extractedStack != null){
-	    						stack = extractedStack;
-	    						inventory.setStack(stack, i);
-	    						break;
-	    					}
-	    				}
-    				}
-    			}
-    		}
-    		return true;
-    	}else{
-    		return false;
-    	}
+				}
+			}
+		}
     }
 	
 	@Override

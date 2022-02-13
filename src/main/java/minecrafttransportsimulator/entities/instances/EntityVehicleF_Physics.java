@@ -4,7 +4,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.baseclasses.TrailerConnection;
+import minecrafttransportsimulator.baseclasses.TowingConnection;
+import minecrafttransportsimulator.entities.components.AEntityG_Towable;
 import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
@@ -77,7 +78,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	public boolean hasRotors;
 	private double pitchDirectionFactor;
 	public double trackAngle;
-	private final Set<EntityVehicleF_Physics> towedVehiclesCheckedForWeights = new HashSet<EntityVehicleF_Physics>();
+	private final Set<AEntityG_Towable<?>> towedEntitiesCheckedForWeights = new HashSet<AEntityG_Towable<?>>();
 	
 	//Properties.
 	@ModifiedValue
@@ -138,41 +139,37 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	}
 	
 	@Override
-	public boolean update(){
+	public void update(){
 		//FIXME clean up testing here before release.
-		if(super.update()){
-			world.beginProfiling("VehicleF_Level", true);
-			if(definition.systemName.contains("rabbit")){
-				position.y = 10;
-				angles.set(0, 0, 0);
-				motion.set(0, 0, 0);
-			}
-			//Parse out variables.
-			aileronAngle = getVariable(AILERON_VARIABLE);
-			aileronTrim = getVariable(AILERON_TRIM_VARIABLE);
-			elevatorAngle = getVariable(ELEVATOR_VARIABLE);
-			elevatorTrim = getVariable(ELEVATOR_TRIM_VARIABLE);
-			rudderAngle = getVariable(RUDDER_VARIABLE);
-			rudderTrim = getVariable(RUDDER_TRIM_VARIABLE);
-			autopilotSetting = getVariable(AUTOPILOT_VARIABLE);
-			flapDesiredAngle = getVariable(FLAPS_VARIABLE);
-			
-			//Adjust flaps to current setting.
-			if(definition.motorized.flapNotches != null && !definition.motorized.flapNotches.isEmpty()){
-				if(flapCurrentAngle < flapDesiredAngle){
-					flapCurrentAngle += definition.motorized.flapSpeed;
-				}else if(flapCurrentAngle > flapDesiredAngle){
-					flapCurrentAngle -= definition.motorized.flapSpeed;
-				}
-				if(Math.abs(flapCurrentAngle - flapDesiredAngle) < definition.motorized.flapSpeed){
-					flapCurrentAngle = flapDesiredAngle;
-				}
-			}
-			world.endProfiling();
-			return true;
-		}else{
-			return false;
+		super.update();
+		world.beginProfiling("VehicleF_Level", true);
+		if(definition.systemName.contains("rabbit")){
+			position.y = 10;
+			angles.set(0, 0, 0);
+			motion.set(0, 0, 0);
 		}
+		//Parse out variables.
+		aileronAngle = getVariable(AILERON_VARIABLE);
+		aileronTrim = getVariable(AILERON_TRIM_VARIABLE);
+		elevatorAngle = getVariable(ELEVATOR_VARIABLE);
+		elevatorTrim = getVariable(ELEVATOR_TRIM_VARIABLE);
+		rudderAngle = getVariable(RUDDER_VARIABLE);
+		rudderTrim = getVariable(RUDDER_TRIM_VARIABLE);
+		autopilotSetting = getVariable(AUTOPILOT_VARIABLE);
+		flapDesiredAngle = getVariable(FLAPS_VARIABLE);
+		
+		//Adjust flaps to current setting.
+		if(definition.motorized.flapNotches != null && !definition.motorized.flapNotches.isEmpty()){
+			if(flapCurrentAngle < flapDesiredAngle){
+				flapCurrentAngle += definition.motorized.flapSpeed;
+			}else if(flapCurrentAngle > flapDesiredAngle){
+				flapCurrentAngle -= definition.motorized.flapSpeed;
+			}
+			if(Math.abs(flapCurrentAngle - flapDesiredAngle) < definition.motorized.flapSpeed){
+				flapCurrentAngle = flapDesiredAngle;
+			}
+		}
+		world.endProfiling();
 	}
 	
 	@Override
@@ -181,23 +178,23 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 		//This could lock up a world if not detected!
 		double combinedMass = super.getMass();
 		if(!towingConnections.isEmpty()){
-			EntityVehicleF_Physics otherVehicle = null;
-			for(TrailerConnection connection : towingConnections){
+			AEntityG_Towable<?> towedEntity = null;
+			for(TowingConnection connection : towingConnections){
 				//Only check once per base entity.
-				otherVehicle = connection.hookupVehicle;
-				if(towedVehiclesCheckedForWeights.contains(otherVehicle)){
+				towedEntity = connection.towedVehicle;
+				if(towedEntitiesCheckedForWeights.contains(towedEntity)){
 					InterfaceCore.logError("Infinite loop detected on weight checking code!  Is a trailer towing the thing that's towing it?");
 					break;
 				}else{
-					towedVehiclesCheckedForWeights.add(otherVehicle);
-					combinedMass += otherVehicle.getMass();
-					otherVehicle = null;
-					towedVehiclesCheckedForWeights.clear();
+					towedEntitiesCheckedForWeights.add(towedEntity);
+					combinedMass += towedEntity.getMass();
+					towedEntity = null;
+					towedEntitiesCheckedForWeights.clear();
 				}
 			}
 			//If we still have a vehicle reference, we didn't exit cleanly and need to disconnect it.
-			if(otherVehicle != null){
-				disconnectTrailer(otherVehicle.towedByConnection);
+			if(towedEntity != null){
+				disconnectTrailer(towedEntity.towedByConnection);
 			}
 		}
 		return combinedMass;
@@ -514,7 +511,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 				tractorHitchCurrentOffsetXZ.normalize();
 				double rotationDelta;
 				if(towedByConnection.hitchConnection.restricted){
-					rotationDelta = towedByConnection.hitchEntity.angles.y - angles.y;
+					rotationDelta = towedByConnection.towingVehicle.angles.y - angles.y;
 				}else{
 					rotationDelta = Math.toDegrees(Math.acos(tractorHitchPrevOffsetXZ.dotProduct(tractorHitchCurrentOffsetXZ)));
 					rotationDelta *= Math.signum(tractorHitchPrevOffsetXZ.crossProduct(tractorHitchCurrentOffsetXZ).y);
@@ -538,7 +535,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 				rotation.z = 0;
 			}
 		}else{
-			motion.set(towedByConnection.hitchVehicle.motion);
+			motion.set(towedByConnection.towingVehicle.motion);
 			rotation.set(0, 0, 0);
 		}
 	}
@@ -696,7 +693,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	public double getRawVariableValue(String variable, float partialTicks){
 		//If we are a forwarded variable and are a connected trailer, do that now.
 		if(definition.motorized.isTrailer && towedByConnection != null && definition.motorized.hookupVariables.contains(variable)){
-			return towedByConnection.hitchVehicle.getRawVariableValue(variable, partialTicks);
+			return towedByConnection.towingVehicle.getRawVariableValue(variable, partialTicks);
 		}
 		
 		//Not a part of a forwarded variable.  Just return normally.

@@ -3,7 +3,7 @@ package minecrafttransportsimulator.entities.instances;
 import java.util.Iterator;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
+import minecrafttransportsimulator.entities.components.AEntityG_Towable;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIHUD;
 import minecrafttransportsimulator.guis.instances.GUIPanelAircraft;
@@ -28,7 +28,7 @@ import minecrafttransportsimulator.systems.ControlSystem;
  * 
  * @author don_bruce
  */
-abstract class AEntityVehicleB_Rideable extends AEntityF_Multipart<JSONVehicle>{
+abstract class AEntityVehicleB_Rideable extends AEntityG_Towable<JSONVehicle>{
 	public static boolean lockCameraToMovement = true;
 	
 	/**Cached value for speedFactor.  Saves us from having to use the long form all over.  Not like it'll change in-game...*/
@@ -169,9 +169,9 @@ abstract class AEntityVehicleB_Rideable extends AEntityF_Multipart<JSONVehicle>{
 		//This ensures the dismount moves with the seat.
 		Point3D dismountPosition;
 		if(seat.placementDefinition.dismountPos != null){
-			dismountPosition = new Point3D(seat.placementDefinition.dismountPos);
+			dismountPosition = seat.placementDefinition.dismountPos.copy();
 		}else{
-			dismountPosition = new Point3D(seat.localOffset);
+			dismountPosition = seat.localOffset.copy();
 			if(seat.placementOffset.x < 0){
 				dismountPosition.add(-2D, 0D, 0D);
 			}else{

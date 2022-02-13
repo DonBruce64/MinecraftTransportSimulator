@@ -47,14 +47,10 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor>{
 	}
 	
 	@Override
-	public boolean update(){
-		if(super.update()){
-			//Reset clicked state.
-			setVariable(CLICKED_VARIABLE, 0);
-			return true;
-		}else{
-			return false;
-		}
+	public void update(){
+		super.update();
+		//Reset clicked state.
+		setVariable(CLICKED_VARIABLE, 0);
 	}
 	
 	@Override

@@ -55,47 +55,43 @@ public class TileEntitySignalController extends TileEntityDecor{
 	}
 	
 	@Override
-	public boolean update(){
-		if(super.update()){
-			//Check every 1 seconds to make sure controlled components are in their correct states.
-			//This could have changed due to chunkloading or the components being destroyed.
-			//We also check if we're doing changes on the client, as that needs to happen instantly.
-			if(ticksExisted%20 == 0 || unsavedClientChangesPreset){
-				//Check for any missing components, if we are missing some.
-				if(!missingLocations.isEmpty()){
-					Iterator<Point3D> iterator = missingLocations.iterator();
-					while(iterator.hasNext()){
-						Point3D poleLocation = iterator.next();
-						TileEntityPole pole = (TileEntityPole) world.getTileEntity(poleLocation);
-						if(pole != null){
-							iterator.remove();
-							for(Axis axis : Axis.values()){
-								if(axis.xzPlanar){
-									ATileEntityPole_Component component = pole.components.get(axis);
-									if(component instanceof TileEntityPole_TrafficSignal){
-										TileEntityPole_TrafficSignal signal = (TileEntityPole_TrafficSignal) component;
-										intersectionProperties.get(axis).isActive = true;
-										signal.linkedController = this;
-										controlledSignals.add(signal);
-									}
+	public void update(){
+		super.update();
+		//Check every 1 seconds to make sure controlled components are in their correct states.
+		//This could have changed due to chunkloading or the components being destroyed.
+		//We also check if we're doing changes on the client, as that needs to happen instantly.
+		if(ticksExisted%20 == 0 || unsavedClientChangesPreset){
+			//Check for any missing components, if we are missing some.
+			if(!missingLocations.isEmpty()){
+				Iterator<Point3D> iterator = missingLocations.iterator();
+				while(iterator.hasNext()){
+					Point3D poleLocation = iterator.next();
+					TileEntityPole pole = (TileEntityPole) world.getTileEntity(poleLocation);
+					if(pole != null){
+						iterator.remove();
+						for(Axis axis : Axis.values()){
+							if(axis.xzPlanar){
+								ATileEntityPole_Component component = pole.components.get(axis);
+								if(component instanceof TileEntityPole_TrafficSignal){
+									TileEntityPole_TrafficSignal signal = (TileEntityPole_TrafficSignal) component;
+									intersectionProperties.get(axis).isActive = true;
+									signal.linkedController = this;
+									controlledSignals.add(signal);
 								}
 							}
 						}
 					}
 				}
 			}
-			
-			//All valid poles and components found.  Update signal blocks that have signals..
-			for(Set<SignalGroup> signalGroupSet : signalGroups.values()){
-	        	for(SignalGroup signalGroup : signalGroupSet){
-					if(signalGroup.laneCount != 0){
-						signalGroup.update();
-					}
-	        	}
-			}
-			return true;
-		}else{
-			return false;
+		}
+		
+		//All valid poles and components found.  Update signal blocks that have signals..
+		for(Set<SignalGroup> signalGroupSet : signalGroups.values()){
+        	for(SignalGroup signalGroup : signalGroupSet){
+				if(signalGroup.laneCount != 0){
+					signalGroup.update();
+				}
+        	}
 		}
 	}
 	

@@ -127,75 +127,71 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
     }
 	
 	@Override
-	public boolean update(){
-		if(super.update()){
-			world.beginProfiling("EntityF_Level", true);
-			
-			//If we have any NBT parts, add them now.
-			if(!partsFromNBT.isEmpty()){
-				for(APart part : partsFromNBT){
-					addPart(part, false);
-				}
-				partsFromNBT.clear();
+	public void update(){
+		super.update();
+		world.beginProfiling("EntityF_Level", true);
+		
+		//If we have any NBT parts, add them now.
+		if(!partsFromNBT.isEmpty()){
+			for(APart part : partsFromNBT){
+				addPart(part, false);
 			}
-			
-			//Update part slot box positions.
-			world.beginProfiling("PartSlotPositions", true);
-			for(Entry<BoundingBox, JSONPartDefinition> entry : allPartSlotBoxes.entrySet()){
-				JSONPartDefinition packVehicleDef = entry.getValue();
-				if(!packVehicleDef.isSubPart){
-					entry.getKey().updateToEntity(this, null);
-				}else{
-					for(APart part : parts){
-						if(part.definition.parts != null){
-							for(JSONPartDefinition subPartDef : part.definition.parts){
-								if(packVehicleDef.equals(part.getPackForSubPart(subPartDef))){
-									//Need to find the delta between part 0-degree position and our current position.
-									Point3D delta = subPartDef.pos.copy().rotate(part.orientation);
-									entry.getKey().updateToEntity(part, delta);
-									break;
-								}
-							}
-						}
-					}
-				}
-			}
-			
-			//Populate active part slot list.
-			//Only do this on clients; servers reference the main list to handle clicks.
-			//Boxes added on clients depend on what the player is holding.
-			//We add these before part boxes so the player can click them before clicking a part.
-			if(world.isClient()){
-				world.beginProfiling("PartSlotActives", false);
-				activePartSlotBoxes.clear();
-				WrapperPlayer player = InterfaceClient.getClientPlayer();
-				AItemBase heldItem = player.getHeldItem();
-				if(heldItem instanceof AItemPart){
-					for(Entry<BoundingBox, JSONPartDefinition> partSlotBoxEntry : allPartSlotBoxes.entrySet()){
-						AItemPart heldPart = (AItemPart) heldItem;
-						//Does the part held match this packPart?
-						if(heldPart.isPartValidForPackDef(partSlotBoxEntry.getValue(), subName, false)){
-							//Are there any doors blocking us from clicking this part?
-							if(!areVariablesBlocking(partSlotBoxEntry.getValue(), player)){
-								//Part matches.  Add the box.  Set the box bounds to the generic box, or the
-								//special bounds of the generic part if we're holding one.
-								BoundingBox box = partSlotBoxEntry.getKey();
-								box.widthRadius = heldPart.definition.generic.width != 0 ? heldPart.definition.generic.width/2D : PART_SLOT_HITBOX_WIDTH/2D;
-								box.heightRadius = heldPart.definition.generic.height != 0 ? heldPart.definition.generic.height/2D : PART_SLOT_HITBOX_HEIGHT/2D;
-								box.depthRadius = heldPart.definition.generic.width != 0 ? heldPart.definition.generic.width/2D : PART_SLOT_HITBOX_WIDTH/2D;
-								activePartSlotBoxes.put(partSlotBoxEntry.getKey(), partSlotBoxEntry.getValue());
-							}
-						}
-					}
-				}
-			}
-			
-			world.endProfiling();
-			world.endProfiling();
-			return true;
-		}else{
-			return false;
+			partsFromNBT.clear();
 		}
+		
+		//Update part slot box positions.
+		world.beginProfiling("PartSlotPositions", true);
+		for(Entry<BoundingBox, JSONPartDefinition> entry : allPartSlotBoxes.entrySet()){
+			JSONPartDefinition packVehicleDef = entry.getValue();
+			if(!packVehicleDef.isSubPart){
+				entry.getKey().updateToEntity(this, null);
+			}else{
+				for(APart part : parts){
+					if(part.definition.parts != null){
+						for(JSONPartDefinition subPartDef : part.definition.parts){
+							if(packVehicleDef.equals(part.getPackForSubPart(subPartDef))){
+								//Need to find the delta between part 0-degree position and our current position.
+								Point3D delta = subPartDef.pos.copy().rotate(part.orientation);
+								entry.getKey().updateToEntity(part, delta);
+								break;
+							}
+						}
+					}
+				}
+			}
+		}
+		
+		//Populate active part slot list.
+		//Only do this on clients; servers reference the main list to handle clicks.
+		//Boxes added on clients depend on what the player is holding.
+		//We add these before part boxes so the player can click them before clicking a part.
+		if(world.isClient()){
+			world.beginProfiling("PartSlotActives", false);
+			activePartSlotBoxes.clear();
+			WrapperPlayer player = InterfaceClient.getClientPlayer();
+			AItemBase heldItem = player.getHeldItem();
+			if(heldItem instanceof AItemPart){
+				for(Entry<BoundingBox, JSONPartDefinition> partSlotBoxEntry : allPartSlotBoxes.entrySet()){
+					AItemPart heldPart = (AItemPart) heldItem;
+					//Does the part held match this packPart?
+					if(heldPart.isPartValidForPackDef(partSlotBoxEntry.getValue(), subName, false)){
+						//Are there any doors blocking us from clicking this part?
+						if(!areVariablesBlocking(partSlotBoxEntry.getValue(), player)){
+							//Part matches.  Add the box.  Set the box bounds to the generic box, or the
+							//special bounds of the generic part if we're holding one.
+							BoundingBox box = partSlotBoxEntry.getKey();
+							box.widthRadius = heldPart.definition.generic.width != 0 ? heldPart.definition.generic.width/2D : PART_SLOT_HITBOX_WIDTH/2D;
+							box.heightRadius = heldPart.definition.generic.height != 0 ? heldPart.definition.generic.height/2D : PART_SLOT_HITBOX_HEIGHT/2D;
+							box.depthRadius = heldPart.definition.generic.width != 0 ? heldPart.definition.generic.width/2D : PART_SLOT_HITBOX_WIDTH/2D;
+							activePartSlotBoxes.put(partSlotBoxEntry.getKey(), partSlotBoxEntry.getValue());
+						}
+					}
+				}
+			}
+		}
+		
+		world.endProfiling();
+		world.endProfiling();
 	}
 	
 	@Override

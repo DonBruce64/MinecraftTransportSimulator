@@ -70,13 +70,9 @@ public class EntityRadio extends AEntityB_Existing{
 	}
 	
 	@Override
-	public boolean update(){
-		if(super.update()){
-			position.set(provider.position);
-			return true;
-		}else{
-			return false;
-		}
+	public void update(){
+		super.update();
+		position.set(provider.position);
 	}
 	
 	@Override

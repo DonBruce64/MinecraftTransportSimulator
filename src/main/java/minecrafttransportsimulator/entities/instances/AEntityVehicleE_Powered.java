@@ -94,122 +94,118 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 	}
 	
 	@Override
-	public boolean update(){
-		if(super.update()){
-			world.beginProfiling("VehicleE_Level", true);
-			//Get throttle and reverse state.
-			throttle = getVariable(THROTTLE_VARIABLE);
-			reverseThrust = isVariableActive(REVERSE_THRUST_VARIABLE);
-			
-			//If we have space for fuel, and we have tanks with it, transfer it.
-			if(!world.isClient() && fuelTank.getFluidLevel() < definition.motorized.fuelCapacity - 100){
-				for(APart part : parts){
-					if(part instanceof PartInteractable && part.isActive && part.definition.interactable.feedsVehicles){
-						EntityFluidTank tank = ((PartInteractable) part).tank;
-						if(tank != null){
-							double amountFilled = tank.drain(fuelTank.getFluid(), 1, true);
-							if(amountFilled > 0){
-								fuelTank.fill(fuelTank.getFluid(), amountFilled, true);
-							}
+	public void update(){
+		super.update();
+		world.beginProfiling("VehicleE_Level", true);
+		//Get throttle and reverse state.
+		throttle = getVariable(THROTTLE_VARIABLE);
+		reverseThrust = isVariableActive(REVERSE_THRUST_VARIABLE);
+		
+		//If we have space for fuel, and we have tanks with it, transfer it.
+		if(!world.isClient() && fuelTank.getFluidLevel() < definition.motorized.fuelCapacity - 100){
+			for(APart part : parts){
+				if(part instanceof PartInteractable && part.isActive && part.definition.interactable.feedsVehicles){
+					EntityFluidTank tank = ((PartInteractable) part).tank;
+					if(tank != null){
+						double amountFilled = tank.drain(fuelTank.getFluid(), 1, true);
+						if(amountFilled > 0){
+							fuelTank.fill(fuelTank.getFluid(), amountFilled, true);
 						}
 					}
 				}
 			}
-			
-			//Check to make sure the selected beacon is still correct.
-			//It might not be valid if it has been removed from the world,
-			//or one might have been placed that matches our selection.
-			if(definition.motorized.isAircraft && ticksExisted%20 == 0){
-				if(!selectedBeaconName.isEmpty()){
-					selectedBeacon = NavBeacon.getByNameFromWorld(world, selectedBeaconName);
-				}else{
-					selectedBeacon = null;
-				}
-			}
-			
-			//Do trailer-specific logic, if we are one and towed.
-			//Otherwise, do normal update logic for DRLs.
-			if(definition.motorized.isTrailer){
-				//If we are being towed set the brake state to the same as the towing vehicle.
-				//If we aren't being towed, set the parking brake.
-				if(towedByConnection != null){
-					if(parkingBrakeOn){
-						toggleVariable(PARKINGBRAKE_VARIABLE);
-					}
-					setVariable(BRAKE_VARIABLE, towedByConnection.hitchVehicle.brake);
-				}else{
-					if(!parkingBrakeOn){
-						toggleVariable(PARKINGBRAKE_VARIABLE);
-					}
-					if(brake != 0){
-						setVariable(BRAKE_VARIABLE, 0);
-					}
-				}
-			}else{
-				//Set engine state mapping variables.
-				enginesOn = false;
-				enginesRunning = false;
-				for(PartEngine engine : engines.values()){
-					if(engine.magnetoOn){
-						enginesOn = true;
-						if(engine.running){
-							enginesRunning = true;
-							break;
-						}
-					}
-				}
-			}
-			
-			//Set electric usage based on light status.
-			//Don't do this if we are a trailer.  Instead, get the towing vehicle's electric power.
-			//If we are too damaged, don't hold any charge.
-			if(definition.motorized.isTrailer){
-				if(towedByConnection != null){
-					electricPower = towedByConnection.hitchVehicle.electricPower;
-				}
-			}else if(damageAmount < definition.general.health){
-				if(electricPower > 2 && renderTextLit()){
-					electricUsage += 0.001F;
-				}
-				electricPower = Math.max(0, Math.min(13, electricPower -= electricUsage));
-				electricFlow = electricUsage;
-				electricUsage = 0;
-			}else{
-				electricPower = 0;
-				electricFlow = 0;
-				electricUsage = 0;
-			}
-			
-			//Adjust gear variables.
-			if(isVariableActive(EntityVehicleF_Physics.GEAR_VARIABLE)){
-				if(gearMovementTime < definition.motorized.gearSequenceDuration){
-					++gearMovementTime;
-				}
-			}else{
-				if(gearMovementTime > 0){
-					--gearMovementTime;
-				}
-			}
-			
-			//Check that missiles are still valid.
-			//If they are, update their distances. Otherwise, remove them.
-			Iterator<EntityBullet> iterator = missilesIncoming.iterator();
-			while(iterator.hasNext()){
-				if(!iterator.next().isValid){
-					iterator.remove();
-				}
-			}
-			missilesIncoming.sort(new Comparator<EntityBullet>(){
-				@Override
-				public int compare(EntityBullet missle1, EntityBullet missile2){
-					return missle1.targetDistance < missile2.targetDistance ? -1 : 1;
-				}
-			});
-			world.endProfiling();
-			return true;
-		}else{
-			return false;
 		}
+		
+		//Check to make sure the selected beacon is still correct.
+		//It might not be valid if it has been removed from the world,
+		//or one might have been placed that matches our selection.
+		if(definition.motorized.isAircraft && ticksExisted%20 == 0){
+			if(!selectedBeaconName.isEmpty()){
+				selectedBeacon = NavBeacon.getByNameFromWorld(world, selectedBeaconName);
+			}else{
+				selectedBeacon = null;
+			}
+		}
+		
+		//Do trailer-specific logic, if we are one and towed.
+		//Otherwise, do normal update logic for DRLs.
+		if(definition.motorized.isTrailer){
+			//If we are being towed set the brake state to the same as the towing vehicle.
+			//If we aren't being towed, set the parking brake.
+			if(towedByConnection != null){
+				if(parkingBrakeOn){
+					toggleVariable(PARKINGBRAKE_VARIABLE);
+				}
+				setVariable(BRAKE_VARIABLE, towedByConnection.towingVehicle.brake);
+			}else{
+				if(!parkingBrakeOn){
+					toggleVariable(PARKINGBRAKE_VARIABLE);
+				}
+				if(brake != 0){
+					setVariable(BRAKE_VARIABLE, 0);
+				}
+			}
+		}else{
+			//Set engine state mapping variables.
+			enginesOn = false;
+			enginesRunning = false;
+			for(PartEngine engine : engines.values()){
+				if(engine.magnetoOn){
+					enginesOn = true;
+					if(engine.running){
+						enginesRunning = true;
+						break;
+					}
+				}
+			}
+		}
+		
+		//Set electric usage based on light status.
+		//Don't do this if we are a trailer.  Instead, get the towing vehicle's electric power.
+		//If we are too damaged, don't hold any charge.
+		if(definition.motorized.isTrailer){
+			if(towedByConnection != null){
+				electricPower = towedByConnection.towingVehicle.electricPower;
+			}
+		}else if(damageAmount < definition.general.health){
+			if(electricPower > 2 && renderTextLit()){
+				electricUsage += 0.001F;
+			}
+			electricPower = Math.max(0, Math.min(13, electricPower -= electricUsage));
+			electricFlow = electricUsage;
+			electricUsage = 0;
+		}else{
+			electricPower = 0;
+			electricFlow = 0;
+			electricUsage = 0;
+		}
+		
+		//Adjust gear variables.
+		if(isVariableActive(EntityVehicleF_Physics.GEAR_VARIABLE)){
+			if(gearMovementTime < definition.motorized.gearSequenceDuration){
+				++gearMovementTime;
+			}
+		}else{
+			if(gearMovementTime > 0){
+				--gearMovementTime;
+			}
+		}
+		
+		//Check that missiles are still valid.
+		//If they are, update their distances. Otherwise, remove them.
+		Iterator<EntityBullet> iterator = missilesIncoming.iterator();
+		while(iterator.hasNext()){
+			if(!iterator.next().isValid){
+				iterator.remove();
+			}
+		}
+		missilesIncoming.sort(new Comparator<EntityBullet>(){
+			@Override
+			public int compare(EntityBullet missle1, EntityBullet missile2){
+				return missle1.targetDistance < missile2.targetDistance ? -1 : 1;
+			}
+		});
+		world.endProfiling();
 	}
 	
 	@Override

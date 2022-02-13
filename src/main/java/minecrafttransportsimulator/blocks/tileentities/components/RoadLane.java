@@ -85,8 +85,8 @@ public class RoadLane{
 			JSONLaneSector sector = road.definition.road.sectors.get(sectorNumber);
 			JSONLaneSectorPointSet points = sector.lanes.get(offsetSectorLaneNumber);
 			for(JSONLaneSectorEndPoint endPoint : points.endPoints){
-				Point3D start = new Point3D(points.startPoint).rotate(road.orientation);
-				Point3D end = new Point3D(endPoint.pos).rotate(road.orientation);
+				Point3D start = points.startPoint.copy().rotate(road.orientation);
+				Point3D end = endPoint.pos.copy().rotate(road.orientation);
 				curves.add(new BezierCurve(start, end, sector.sectorStartAngle + (float) road.orientation.lastAnglesSet.y, endPoint.angle + (float) road.orientation.lastAnglesSet.y));
 			}
 			return points.startPoint;

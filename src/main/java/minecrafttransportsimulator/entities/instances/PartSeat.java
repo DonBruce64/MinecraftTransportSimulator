@@ -180,14 +180,10 @@ public final class PartSeat extends APart{
 	}
 	
 	@Override
-	public boolean update(){
-		if(super.update()){
-			if(!canControlGuns && activeGun != null){
-				canControlGuns = true;
-			}
-			return true;
-		}else{
-			return false;
+	public void update(){
+		super.update();
+		if(!canControlGuns && activeGun != null){
+			canControlGuns = true;
 		}
 	}
 	

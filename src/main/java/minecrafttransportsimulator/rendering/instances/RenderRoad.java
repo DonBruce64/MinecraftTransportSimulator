@@ -219,11 +219,9 @@ public class RenderRoad extends ARenderEntityDefinable<TileEntityRoad>{
 		for(Point3D blockOffset : road.collisionBlockOffsets){
 			ABlockBase block = road.world.getBlock(road.position.copy().add(blockOffset));
 			if(block instanceof BlockCollision){
-				BoundingBox blockBounds = ((BlockCollision) block).blockBounds;
-				Point3D renderOffset = new Point3D(blockOffset);
 				//Need to offset by -0.5 as the collision box bounds is centered, but the offset isn't.
-				renderOffset.add(-0.5, 0, -0.5);
-				blockBounds.renderWireframe(road, transform, renderOffset, null);
+				BoundingBox blockBounds = ((BlockCollision) block).blockBounds;
+				blockBounds.renderWireframe(road, transform, blockOffset.copy().add(-0.5, 0, -0.5), null);
 			}
 		}
 	}

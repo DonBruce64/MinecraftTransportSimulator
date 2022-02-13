@@ -5,7 +5,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartGroundDevice;
 
@@ -314,11 +313,12 @@ public class VehicleGroundDeviceCollection{
 				}
 			}
 		}else{
+			//FIXME this isn't right for trailers.
 			Point3D hookupPoint = vehicle.towedByConnection.hookupConnection.pos.copy();
-			if(vehicle.towedByConnection.hookupEntity instanceof APart){
-				APart hookupPart = (APart) vehicle.towedByConnection.hookupEntity;
-				hookupPoint.rotate(hookupPart.localOrientation).add(hookupPart.localOffset);
-			}
+			//if(vehicle.towedByConnection.hookupEntity instanceof APart){
+				//APart hookupPart = (APart) vehicle.towedByConnection.hookupEntity;
+				//hookupPoint.rotate(hookupPart.localOrientation).add(hookupPart.localOffset);
+			//}
 			if(hookupPoint.z > 0){
 				if(!rearLeftGDB.isGrounded && !rearRightGDB.isGrounded){
 					side1Delta = -Math.hypot(rearLeftGDB.contactPoint.y, rearLeftGDB.contactPoint.z);

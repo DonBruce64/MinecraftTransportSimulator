@@ -75,7 +75,7 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 						clickedRoad = ((BlockCollision) clickedBlock).getMasterRoad(world, position);
 					}else{
 						clickedRoad = null;
-						lastPositionClicked.put(player, new Point3D(position).add(0, 1, 0));
+						lastPositionClicked.put(player, position.copy().add(0, 1, 0));
 					}
 					
 					//If we clicked a road, get the lane number clicked.
@@ -153,7 +153,7 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 								return true;
 							}
 						}else{
-							blockPlacementPoint = new Point3D(position).add(0, 1, 0);
+							blockPlacementPoint = position.copy().add(0, 1, 0);
 							startRotation = Math.round(player.getYaw()/15)*15;
 							startPosition = blockPlacementPoint;
 						}

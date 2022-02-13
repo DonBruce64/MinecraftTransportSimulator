@@ -72,6 +72,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 	private final Map<JSONSound, SoundSwitchbox> soundPitchSwitchboxes = new HashMap<JSONSound, SoundSwitchbox>();
 	private final Map<JSONLight, LightSwitchbox> lightBrightnessSwitchboxes = new HashMap<JSONLight, LightSwitchbox>();
 	private final Map<JSONParticle, AnimationSwitchbox> particleActiveSwitchboxes = new HashMap<JSONParticle, AnimationSwitchbox>();
+	private final Map<JSONParticle, AnimationSwitchbox> particleSpawningSwitchboxes = new HashMap<JSONParticle, AnimationSwitchbox>();
 	private final Map<JSONParticle, Long> lastTickParticleSpawned = new HashMap<JSONParticle, Long>();
 	
 	/**Maps animated (model) object names to their JSON bits for this entity.  Used for model lookups as the same model might be used on multiple JSONs,
@@ -139,28 +140,24 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 	}
 	
 	@Override
-	public boolean update(){
-		if(super.update()){
-			world.beginProfiling("EntityD_Level", true);
-			if(!animationsInitialized){
-				initializeDefinition();
-				animationsInitialized = true;
-			}
-			
-			//Update value-based text.  Only do this on clients as servers won't render this text.
-			if(world.isClient() && !text.isEmpty()){
-				for(Entry<JSONText, String> textEntry : text.entrySet()){
-					JSONText textDef = textEntry.getKey();
-					if(textDef.variableName != null){
-						textEntry.setValue(getAnimatedTextVariableValue(textDef, 0));
-					}
+	public void update(){
+		super.update();
+		world.beginProfiling("EntityD_Level", true);
+		if(!animationsInitialized){
+			initializeDefinition();
+			animationsInitialized = true;
+		}
+		
+		//Update value-based text.  Only do this on clients as servers won't render this text.
+		if(world.isClient() && !text.isEmpty()){
+			for(Entry<JSONText, String> textEntry : text.entrySet()){
+				JSONText textDef = textEntry.getKey();
+				if(textDef.variableName != null){
+					textEntry.setValue(getAnimatedTextVariableValue(textDef, 0));
 				}
 			}
-			world.endProfiling();
-			return true;
-		}else{
-			return false;
 		}
+		world.endProfiling();
 	}
 	
 	/**
@@ -205,8 +202,12 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 		
 		if(definition.rendering != null && definition.rendering.particles != null){
 			particleActiveSwitchboxes.clear();
+			particleSpawningSwitchboxes.clear();
 			for(JSONParticle particleDef : definition.rendering.particles){
 				particleActiveSwitchboxes.put(particleDef, new AnimationSwitchbox(this, particleDef.activeAnimations));
+				if(particleDef.spawningAnimations != null){
+					particleSpawningSwitchboxes.put(particleDef, new AnimationSwitchbox(this, particleDef.spawningAnimations));
+				}
 				lastTickParticleSpawned.put(particleDef, ticksExisted);
 			}
 		}
@@ -227,7 +228,9 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 		if(definition.rendering != null && definition.rendering.cameraObjects != null){
 			cameraSwitchboxes.clear();
 			for(JSONCameraObject cameraDef : definition.rendering.cameraObjects){
-				cameraSwitchboxes.put(cameraDef, new AnimationSwitchbox(this, cameraDef.animations));
+				if(cameraDef.animations != null){
+					cameraSwitchboxes.put(cameraDef, new AnimationSwitchbox(this, cameraDef.animations));
+				}
 			}
 		}
 		
@@ -353,12 +356,12 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 			//Make the particle spawn if able.
 			if(shouldParticleSpawn && (switchbox.anyClockMovedThisUpdate || (particleDef.spawnEveryTick && ticksExisted > lastTickParticleSpawned.get(particleDef)))){
 				lastTickParticleSpawned.put(particleDef, ticksExisted);
-				if(particleDef.quantity > 0){
-					for(int i=0; i<particleDef.quantity; ++i){
-						world.addEntity(new EntityParticle(this, particleDef));
+				for(int i=0; i<particleDef.quantity; ++i){
+					AnimationSwitchbox spawningSwitchbox = particleSpawningSwitchboxes.get(particleDef);
+					if(spawningSwitchbox != null){
+						spawningSwitchbox.runSwitchbox(partialTicks);
 					}
-				}else{
-					world.addEntity(new EntityParticle(this, particleDef));
+					world.addEntity(new EntityParticle(this, particleDef, spawningSwitchbox));
 				}
 			}
     	}

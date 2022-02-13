@@ -82,29 +82,18 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 									}
 								}
 								//Player can remove part, spawn item in the world and remove part.
-								//Make sure to remove the part before spawning the item.  Some parts
-								//care about this order and won't spawn items unless they've been removed.
-								part.disconnectAllConnections();
+								//Make sure to remove the part before spawning the item.
 								vehicle.removePart(part, null);
 								AItemPart droppedItem = part.getItem();
 								if(droppedItem != null){
-									WrapperNBT partData = new WrapperNBT();
-									part.save(partData);
-									vehicle.world.spawnItem(droppedItem, partData, part.position);
+									vehicle.world.spawnItem(droppedItem, part.save(new WrapperNBT()), part.position);
 								}
 							}else if(player.isSneaking()){
 								//Attacker is a sneaking player with a wrench.
 								//Remove this vehicle if possible.
 								if((!ConfigSystem.configObject.general.opPickupVehiclesOnly.value || ownerState.equals(PlayerOwnerState.ADMIN)) && (!ConfigSystem.configObject.general.creativePickupVehiclesOnly.value || player.isCreative()) && vehicle.isValid){
 									vehicle.disconnectAllConnections();
-									for(APart vehiclePart : vehicle.parts){
-										vehiclePart.disconnectAllConnections();
-									}
-									
-									ItemVehicle vehicleItem = vehicle.getItem();
-									WrapperNBT vehicleData = new WrapperNBT();
-									vehicle.save(vehicleData);
-									vehicle.world.spawnItem(vehicleItem, vehicleData, vehicle.position);
+									vehicle.world.spawnItem(vehicle.getItem(), vehicle.save(new WrapperNBT()), vehicle.position);
 									vehicle.remove();
 								}
 							}

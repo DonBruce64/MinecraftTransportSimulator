@@ -12,6 +12,7 @@ import minecrafttransportsimulator.mcinterface.InterfaceRender;
  * @author don_bruce
  */
 public abstract class ARenderEntity<RenderedEntity extends AEntityC_Renderable>{
+	private static final Point3D interpolatedPositionHolder = new Point3D();
 	private static final RotationMatrix interpolatedOrientationHolder = new RotationMatrix();
 	private static final TransformationMatrix translatedMatrix = new TransformationMatrix();
 	private static final TransformationMatrix rotatedMatrix = new TransformationMatrix();
@@ -26,11 +27,11 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Renderable>{
 		if(!disableRendering(entity, partialTicks)){
 			//Get the render offset.
 			//This is the interpolated movement, plus the prior position.
-			Point3D entityPositionDelta = new Point3D(entity.prevPosition);
-			entityPositionDelta.interpolate(entity.position, partialTicks);
+			interpolatedPositionHolder.set(entity.prevPosition);
+			interpolatedPositionHolder.interpolate(entity.position, partialTicks);
 			
 			//Subtract the entity's position by the render entity position to get the delta for translating.
-			entityPositionDelta.subtract(InterfaceClient.getRenderViewEntity().getRenderedPosition(partialTicks));
+			interpolatedPositionHolder.subtract(InterfaceClient.getRenderViewEntity().getRenderedPosition(partialTicks));
 			
 			//Get interpolated orientation.
 			entity.getInterpolatedOrientation(interpolatedOrientationHolder, partialTicks);
@@ -40,7 +41,7 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Renderable>{
 	        
 	        //Set up matrixes.
 	        translatedMatrix.resetTransforms();
-	        translatedMatrix.setTranslation(entityPositionDelta);
+	        translatedMatrix.setTranslation(interpolatedPositionHolder);
 			rotatedMatrix.set(translatedMatrix);
 			rotatedMatrix.applyRotation(interpolatedOrientationHolder);
 			double scale = entity.prevScale + (entity.scale - entity.prevScale)*partialTicks;

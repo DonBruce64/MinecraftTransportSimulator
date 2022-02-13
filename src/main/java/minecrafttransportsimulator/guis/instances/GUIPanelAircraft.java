@@ -5,12 +5,11 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.TrailerConnection;
-import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
+import minecrafttransportsimulator.entities.components.AEntityG_Towable;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartEngine;
@@ -401,7 +400,7 @@ public class GUIPanelAircraft extends AGUIPanel{
 				@Override
 				public void onClicked(boolean leftSide){
 					SwitchEntry switchDef = trailerSwitchDefs.get(0);
-					InterfacePacket.sendToServer(new PacketEntityVariableSet(switchDef.entityOn, AEntityE_Interactable.TRAILER_CONNECTION_REQUEST_VARIABLE, switchDef.connectionGroupIndex + 1));
+					InterfacePacket.sendToServer(new PacketEntityVariableSet(switchDef.connectionDefiner, AEntityG_Towable.TOWING_CONNECTION_REQUEST_VARIABLE, switchDef.connectionGroupIndex + 1));
 				}
 				
 				@Override
@@ -424,7 +423,7 @@ public class GUIPanelAircraft extends AGUIPanel{
 				@Override
 				public void onClicked(boolean leftSide){
 					SwitchEntry switchDef = trailerSwitchDefs.get(0);
-					InterfacePacket.sendToServer(new PacketEntityVariableSet(switchDef.entityOn, AEntityE_Interactable.TRAILER_CONNECTION_REQUEST_VARIABLE, switchDef.connectionGroupIndex + 1));
+					InterfacePacket.sendToServer(new PacketEntityVariableSet(switchDef.connectionDefiner, AEntityG_Towable.TOWING_CONNECTION_REQUEST_VARIABLE, switchDef.connectionGroupIndex + 1));
 				}
 				
 				@Override
@@ -522,18 +521,7 @@ public class GUIPanelAircraft extends AGUIPanel{
 		
 		//If we have a hitch, set the selector state.
 		if(trailerSelector != null){
-			SwitchEntry switchDef = trailerSwitchDefs.get(0);
-			if(switchDef.connectionGroup.hookup){
-				trailerSelector.selectorState = switchDef.entityOn.towedByConnection != null ? 0 : 1;
-			}else{
-				trailerSelector.selectorState = 1;
-				for(TrailerConnection connection : switchDef.entityOn.getTowingConnections()){
-					if(connection.hitchGroupIndex == switchDef.connectionGroupIndex){
-						trailerSelector.selectorState = 0;
-						break;
-					}
-				}
-			}
+			trailerSwitchDefs.get(0).updateSelectorState(trailerSelector);
 		}
 		
 		//Set the beaconBox text color depending on if we have an active beacon.

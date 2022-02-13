@@ -29,7 +29,7 @@ public class RenderDecor extends ARenderEntityDefinable<TileEntityDecor>{
 						if(signalGroup.signalLineWidth != 0 && controller.intersectionProperties.get(signalGroup.axis).isActive){
 							//Get relative center coord.
 							//First start with center signal line, which is distance from center of intersection to the edge of the stop line..
-							Point3D boxRelativeCenter = new Point3D(signalGroup.signalLineCenter);
+							Point3D boxRelativeCenter = signalGroup.signalLineCenter.copy();
 							//Add 8 units to center on the box which is 16 units long.
 							boxRelativeCenter.add(0, 0, 8);
 							//Rotate box based on signal orientation to proper signal.

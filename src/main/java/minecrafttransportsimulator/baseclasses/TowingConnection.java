@@ -1,0 +1,105 @@
+package minecrafttransportsimulator.baseclasses;
+
+import java.util.UUID;
+
+import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
+import minecrafttransportsimulator.entities.instances.APart;
+import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
+import minecrafttransportsimulator.jsondefs.JSONConnection;
+import minecrafttransportsimulator.jsondefs.JSONConnectionGroup;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.WrapperWorld;
+
+/**Class for easier save/load of towing connections.
+ * 
+ * @author don_bruce
+ */
+public class TowingConnection{
+	private final UUID hitchEntityUUID;
+	private final UUID hookupEntityUUID;
+	public final int hitchGroupIndex;
+	public final int hitchConnectionIndex;
+	public final int hookupGroupIndex;
+	public final int hookupConnectionIndex;
+	public EntityVehicleF_Physics towingVehicle;
+	public AEntityE_Interactable<?> towingEntity;
+	public EntityVehicleF_Physics towedVehicle;
+	public AEntityE_Interactable<?> towedEntity;
+	public JSONConnectionGroup hitchConnectionGroup;
+	public JSONConnection hitchConnection;
+	public JSONConnectionGroup hookupConnectionGroup;
+	public JSONConnection hookupConnection;
+	public final Point3D hitchPriorPosition = new Point3D();
+	public final Point3D hitchCurrentPosition = new Point3D();
+	public final Point3D hookupPriorPosition = new Point3D();
+	public final Point3D hookupCurrentPosition = new Point3D();
+	
+	public TowingConnection(AEntityE_Interactable<?> hitchEntity, int hitchGroupIndex, int hitchConnectionIndex, AEntityE_Interactable<?> hookupEntity, int hookupGroupIndex, int hookupConnectionIndex){
+		this.hitchEntityUUID = hitchEntity.uniqueUUID;
+		this.hookupEntityUUID = hookupEntity.uniqueUUID;
+		this.hitchGroupIndex = hitchGroupIndex;
+		this.hitchConnectionIndex = hitchConnectionIndex;
+		this.hookupGroupIndex = hookupGroupIndex;
+		this.hookupConnectionIndex = hookupConnectionIndex;
+		this.towingVehicle = hitchEntity instanceof APart ? ((APart) hitchEntity).vehicleOn : (EntityVehicleF_Physics) hitchEntity;
+		this.towedVehicle = hookupEntity instanceof APart ? ((APart) hookupEntity).vehicleOn : (EntityVehicleF_Physics) hookupEntity;
+		initConnection(hitchEntity.world);
+	}
+	
+	public TowingConnection(WrapperNBT data){
+		this.hitchEntityUUID = data.getUUID("hitchEntityUUID");
+		this.hookupEntityUUID = data.getUUID("hookupEntityUUID");
+		this.hitchGroupIndex = data.getInteger("hitchGroupIndex");
+		this.hitchConnectionIndex = data.getInteger("hitchConnectionIndex");
+		this.hookupGroupIndex = data.getInteger("hookupGroupIndex");
+		this.hookupConnectionIndex = data.getInteger("hookupConnectionIndex");
+	}
+	
+	/**
+	 * Tries to initialize the connection, finding all entities.  Returns true if the connection
+	 * was initialized, false if an entity could not be found.  It is likely that this method will
+	 * not return true on the first tick of the entity this connection was saved on due to differing load
+	 * times of entities in the world.  Just call it during later ticks for a few calls until you think
+	 * too much time has passed and the entities just don't exist in the world.
+	 */
+	public boolean initConnection(WrapperWorld world){		
+		if(towingEntity == null){
+			towingEntity = world.getEntity(hitchEntityUUID);
+			if(towingEntity != null){
+				towingVehicle = towingEntity instanceof APart ? ((APart) towingEntity).vehicleOn : (EntityVehicleF_Physics) towingEntity;				
+				hitchConnectionGroup = towingEntity.definition.connectionGroups.get(hitchGroupIndex);
+				hitchConnection = hitchConnectionGroup.connections.get(hitchConnectionIndex);
+			}
+		}
+		
+		if(towedEntity == null){
+			towedEntity = world.getEntity(hookupEntityUUID);
+			if(towedEntity != null){
+				towingVehicle = towedEntity instanceof APart ? ((APart) towedEntity).vehicleOn : (EntityVehicleF_Physics) towedEntity;				
+				hookupConnectionGroup = towedEntity.definition.connectionGroups.get(hookupGroupIndex);
+				hookupConnection = hookupConnectionGroup.connections.get(hookupConnectionIndex);
+			}
+		}
+		return hitchConnection != null && hookupConnection != null;
+	}
+
+	/**
+	 * Updates this connection.  This sets the hitch and hookup prior and next positions.
+	 */
+	public void update(){
+		hitchPriorPosition.set(hitchConnection.pos).rotate(towingEntity.prevOrientation).add(towingEntity.prevPosition);
+		hitchCurrentPosition.set(hitchConnection.pos).rotate(towingEntity.orientation).add(towingEntity.position);
+		hookupPriorPosition.set(hookupConnection.pos).rotate(towedEntity.prevOrientation).add(towedEntity.prevPosition);
+		hookupCurrentPosition.set(hookupConnection.pos).rotate(towedEntity.orientation).add(towedEntity.position);
+	}
+	
+	public WrapperNBT save(WrapperNBT data){
+		data.setUUID("hitchEntityUUID", hitchEntityUUID);
+		data.setUUID("hookupEntityUUID", hookupEntityUUID);
+		data.setInteger("hitchGroupIndex", hitchGroupIndex);
+		data.setInteger("hitchConnectionIndex", hitchConnectionIndex);
+		data.setInteger("hookupGroupIndex", hookupGroupIndex);
+		data.setInteger("hookupGroupIndex", hookupGroupIndex);
+		return data;
+	}
+}

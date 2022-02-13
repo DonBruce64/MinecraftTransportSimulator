@@ -1,7 +1,5 @@
 package minecrafttransportsimulator.systems;
 
-import java.util.Map.Entry;
-
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
@@ -26,6 +24,7 @@ public class CameraSystem{
 	private static boolean enableCustomCameras;
 	public static boolean runningCustomCameras;
 	private static int customCameraIndex;
+	private static int customCamerasChecked;
 	private static float currentFOV;
 	public static String customCameraOverlay;
 	
@@ -87,56 +86,32 @@ public class CameraSystem{
 		    	//Get cameras from entity or hand-held gun.
 		    	//We check active cameras until we find one that we can use.
 				runningCustomCameras = true;
-		    	int camerasChecked = 0;
+				customCamerasChecked = 0;
 		    	JSONCameraObject camera = null;
 		    	AEntityD_Definable<?> cameraProvider = null;
 		    	AnimationSwitchbox switchbox = null;
 		    	
 				if(multipart != null){
-					if(!multipart.cameraSwitchboxes.isEmpty()){
-						for(Entry<JSONCameraObject, AnimationSwitchbox> switchboxEntry : multipart.cameraSwitchboxes.entrySet()){
-							JSONCameraObject testCamera = switchboxEntry.getKey();
-							if(switchboxEntry.getValue().runSwitchbox(partialTicks)){
-								if(camerasChecked++ == customCameraIndex){
-									camera = testCamera;
-									cameraProvider = multipart;
-									switchbox = switchboxEntry.getValue();
-									break;
-								}
-							}
-						}
+					camera = checkProviderForCameras(multipart, partialTicks);
+					if(camera != null){
+						cameraProvider = multipart;
+						switchbox = multipart.cameraSwitchboxes.get(camera);
 					}
-					for(APart part : multipart.parts){
-						if(!part.cameraSwitchboxes.isEmpty()){
-							for(Entry<JSONCameraObject, AnimationSwitchbox> switchboxEntry : part.cameraSwitchboxes.entrySet()){
-								JSONCameraObject testCamera = switchboxEntry.getKey();
-								if(switchboxEntry.getValue().runSwitchbox(partialTicks)){
-									if(camerasChecked++ == customCameraIndex){
-										camera = testCamera;
-										cameraProvider = part;
-										switchbox = switchboxEntry.getValue();
-										break;
-									}
-								}
+					if(camera == null){
+						for(APart part : multipart.parts){
+							camera = checkProviderForCameras(part, partialTicks);
+							if(camera != null){
+								cameraProvider = part;
+								switchbox = part.cameraSwitchboxes.get(camera);
+								break;
 							}
-						}
-						if(camera != null){
-							break;
 						}
 					}
 				}else if(playerGunEntity != null && playerGunEntity.activeGun != null){
-					if(!playerGunEntity.activeGun.cameraSwitchboxes.isEmpty()){
-						for(Entry<JSONCameraObject, AnimationSwitchbox> switchboxEntry : playerGunEntity.activeGun.cameraSwitchboxes.entrySet()){
-							JSONCameraObject testCamera = switchboxEntry.getKey();
-							if(switchboxEntry.getValue().runSwitchbox(partialTicks)){
-								if(camerasChecked++ == customCameraIndex){
-									camera = testCamera;
-									cameraProvider = playerGunEntity.activeGun;
-									switchbox = switchboxEntry.getValue();
-									break;
-								}
-							}
-						}
+					camera = checkProviderForCameras(playerGunEntity.activeGun, partialTicks);
+					if(camera != null){
+						cameraProvider = playerGunEntity.activeGun;
+						switchbox = playerGunEntity.activeGun.cameraSwitchboxes.get(camera);
 					}
 				}
 				
@@ -157,8 +132,10 @@ public class CameraSystem{
             		cameraAdjustedPosition.set(camera.pos);
             		
             		//Now run transforms on this position to get it's proper position.
-    				switchbox.runSwitchbox(partialTicks);
-    				cameraAdjustedPosition.transform(switchbox.netMatrix);
+            		if(switchbox != null){
+	    				switchbox.runSwitchbox(partialTicks);
+	    				cameraAdjustedPosition.transform(switchbox.netMatrix);
+            		}
             		
     				//Get the rotational component of the operation.
     				//First, get the orientation of the entity we are on.
@@ -169,7 +146,9 @@ public class CameraSystem{
             		cameraAdjustedPosition.transform(cameraOrientation);
             		
             		//Now add the rotation from the animation, plus the definition rotation, if we have it.
-            		cameraOrientation.applyRotation(switchbox.rotation);
+            		if(switchbox != null){
+            			cameraOrientation.applyRotation(switchbox.rotation);
+            		}
             		if(camera.rot != null){
     					cameraOrientation.applyRotation(camera.rot);
     				}
@@ -239,5 +218,19 @@ public class CameraSystem{
         	}
 		}
 		return false;
+    }
+    
+    private static JSONCameraObject checkProviderForCameras(AEntityD_Definable<?> entity, float partialTicks){
+    	if(entity.definition.rendering != null && entity.definition.rendering.cameraObjects != null){
+			for(JSONCameraObject testCamera : entity.definition.rendering.cameraObjects){
+				AnimationSwitchbox cameraSwitchbox = entity.cameraSwitchboxes.get(testCamera);
+				if(cameraSwitchbox == null || cameraSwitchbox.runSwitchbox(partialTicks)){
+					if(customCamerasChecked++ == customCameraIndex){
+						return testCamera;
+					}
+				}
+			}
+		}
+    	return null;
     }
 }

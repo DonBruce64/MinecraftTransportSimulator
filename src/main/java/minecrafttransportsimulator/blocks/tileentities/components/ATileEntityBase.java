@@ -30,7 +30,7 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONMultiModelProv
 		//Offset the position of this tile to be centered in the blocks 0->1 space.
 		//This allows for better rotation code and simpler models.
 		//We need to save the actual position though so we don't constantly offset.
-		this.blockPosition = new Point3D(position);
+		this.blockPosition = position.copy();
 		this.position.set(position);
 		this.position.add(0.5, 0, 0.5);
 		boundingBox.globalCenter.set(this.position);
@@ -53,15 +53,11 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONMultiModelProv
 	}
 	
 	@Override
-	public boolean update(){
-		if(super.update()){
-			if(lastLightLevel != getLightProvided()){
-				lastLightLevel = getLightProvided();
-				world.updateLightBrightness(position);
-			}
-			return true;
-		}else{
-			return false;
+	public void update(){
+		super.update();
+		if(lastLightLevel != getLightProvided()){
+			lastLightLevel = getLightProvided();
+			world.updateLightBrightness(position);
 		}
 	}
 	

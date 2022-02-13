@@ -20,12 +20,6 @@ public class Point3D{
 		this(0, 0, 0);
 	}
 	
-	public Point3D(Point3D point){
-		this.x = point.x;
-		this.y = point.y;
-		this.z = point.z;
-	}
-	
 	public Point3D(double x, double y, double z){
 		this.x = x;
 		this.y = y;
@@ -41,6 +35,11 @@ public class Point3D{
 		}else{
 			return false;
 		}
+	}
+	
+	@Override
+	public String toString(){
+		return "[X:" + x + ", Y:" + y + ", Z:" + z + "]";
 	}
 	
 	/**

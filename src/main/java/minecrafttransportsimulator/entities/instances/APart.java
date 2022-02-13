@@ -5,13 +5,11 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
-import minecrafttransportsimulator.baseclasses.TrailerConnection;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
@@ -131,84 +129,80 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 	}
 	
 	@Override
-	public boolean update(){
-		if(super.update()){
-			//Update active state.
-			isActive = placementDefinition.isSubPart ? parentPart.isActive : true;
-			if(isActive && placementActiveSwitchbox != null){
-				isActive = placementActiveSwitchbox.runSwitchbox(0);
-			}
-			if(isActive && internalActiveSwitchbox != null){
-				isActive = internalActiveSwitchbox.runSwitchbox(0);
-			}
-			
-			//Set initial offsets.
-			if(parentPart != null && placementDefinition.isSubPart){
-				motion.set(parentPart.motion);
-				position.set(parentPart.position);
-				orientation.set(parentPart.orientation);
-				localOffset.set(placementOffset).subtract(parentPart.placementOffset);
-			}else{
-				motion.set(entityOn.motion);
-				position.set(entityOn.position);
-				orientation.set(entityOn.orientation);
-				localOffset.set(placementOffset);
-			}
-			
-			//Update zero-reference.
-			prevZeroReferenceOrientation.set(zeroReferenceOrientation);
-			zeroReferenceOrientation.set(entityOn.orientation);
-			if(placementDefinition.rot != null){
-				zeroReferenceOrientation.multiply(placementDefinition.rot);
-			}
-			
-			//Update local position, orientation, scale, and enabled state.
-			isInvisible = false;
-			scale = placementDefinition.isSubPart && parentPart != null ? parentPart.scale : entityOn.scale;
-			localOrientation.setToZero();
-			
-			//Placement movement uses the coords of the thing we are on.
-			if(placementMovementSwitchbox != null){
-				isInvisible = !placementMovementSwitchbox.runSwitchbox(0);
-				//Offset needs to move according to full transform.
-				//This is because these coords are from what we are on.
-				//Orientation just needs to update according to new rotation.
-				localOffset.transform(placementMovementSwitchbox.netMatrix);
-				localOrientation.multiply(placementMovementSwitchbox.rotation);
-			}
-			
-			//Internal movement uses local coords.
-			//First rotate orientation to face rotated state.
-			if(placementDefinition.rot != null){
-				localOrientation.multiply(placementDefinition.rot);
-			}
-			if(internalMovementSwitchbox != null){
-				isInvisible = !internalMovementSwitchbox.runSwitchbox(0) || isInvisible;
-				//Offset here is local and just needs translation, as it's
-				//assuming that we are the origin.
-				localOffset.add(internalMovementSwitchbox.translation);
-				localOrientation.multiply(internalMovementSwitchbox.rotation);
-			}
-			
-			//Multiply local offset by the scale to reflect the scaled offset.
-			localOffset.scale(scale);
-			
-			//Now that locals are set, set globals to reflect them.
-			Point3D localPositionDelta = new Point3D().set(localOffset).rotate(orientation);
-			position.add(localPositionDelta);
-			orientation.multiply(localOrientation);
-			
-			//Update bounding box, as scale changes width/height.
-			boundingBox.widthRadius = getWidth()/2D;
-			boundingBox.heightRadius = getHeight()/2D;
-			boundingBox.depthRadius = getWidth()/2D;
-			
-			//Update post-movement things.
-			updatePostMovement();
-			return true;
-		}else{
-			return false;
+	public void update(){
+		super.update();
+		//Update active state.
+		isActive = placementDefinition.isSubPart ? parentPart.isActive : true;
+		if(isActive && placementActiveSwitchbox != null){
+			isActive = placementActiveSwitchbox.runSwitchbox(0);
 		}
+		if(isActive && internalActiveSwitchbox != null){
+			isActive = internalActiveSwitchbox.runSwitchbox(0);
+		}
+		
+		//Set initial offsets.
+		if(parentPart != null && placementDefinition.isSubPart){
+			motion.set(parentPart.motion);
+			position.set(parentPart.position);
+			orientation.set(parentPart.orientation);
+			localOffset.set(placementOffset).subtract(parentPart.placementOffset);
+		}else{
+			motion.set(entityOn.motion);
+			position.set(entityOn.position);
+			orientation.set(entityOn.orientation);
+			localOffset.set(placementOffset);
+		}
+		
+		//Update zero-reference.
+		prevZeroReferenceOrientation.set(zeroReferenceOrientation);
+		zeroReferenceOrientation.set(entityOn.orientation);
+		if(placementDefinition.rot != null){
+			zeroReferenceOrientation.multiply(placementDefinition.rot);
+		}
+		
+		//Update local position, orientation, scale, and enabled state.
+		isInvisible = false;
+		scale = placementDefinition.isSubPart && parentPart != null ? parentPart.scale : entityOn.scale;
+		localOrientation.setToZero();
+		
+		//Placement movement uses the coords of the thing we are on.
+		if(placementMovementSwitchbox != null){
+			isInvisible = !placementMovementSwitchbox.runSwitchbox(0);
+			//Offset needs to move according to full transform.
+			//This is because these coords are from what we are on.
+			//Orientation just needs to update according to new rotation.
+			localOffset.transform(placementMovementSwitchbox.netMatrix);
+			localOrientation.multiply(placementMovementSwitchbox.rotation);
+		}
+		
+		//Internal movement uses local coords.
+		//First rotate orientation to face rotated state.
+		if(placementDefinition.rot != null){
+			localOrientation.multiply(placementDefinition.rot);
+		}
+		if(internalMovementSwitchbox != null){
+			isInvisible = !internalMovementSwitchbox.runSwitchbox(0) || isInvisible;
+			//Offset here is local and just needs translation, as it's
+			//assuming that we are the origin.
+			localOffset.add(internalMovementSwitchbox.translation);
+			localOrientation.multiply(internalMovementSwitchbox.rotation);
+		}
+		
+		//Multiply local offset by the scale to reflect the scaled offset.
+		localOffset.scale(scale);
+		
+		//Now that locals are set, set globals to reflect them.
+		Point3D localPositionDelta = new Point3D().set(localOffset).rotate(orientation);
+		position.add(localPositionDelta);
+		orientation.multiply(localOrientation);
+		
+		//Update bounding box, as scale changes width/height.
+		boundingBox.widthRadius = getWidth()/2D;
+		boundingBox.heightRadius = getHeight()/2D;
+		boundingBox.depthRadius = getWidth()/2D;
+		
+		//Update post-movement things.
+		updatePostMovement();
 	}
 	
 	@Override
@@ -231,7 +225,6 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 				player.sendPacket(new PacketPlayerChatMessage(player, "interact.failure.vehiclelocked"));
 			}else{
 				if(player.getInventory().addStack(getItem().getNewStack(save(new WrapperNBT())))){
-					disconnectAllConnections();
 					entityOn.removePart(this, null);
 				}
 			}
@@ -262,31 +255,6 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 	@Override
 	public boolean shouldSavePosition(){
 		return false;
-	}
-	
-	@Override
-	public void connectTrailer(TrailerConnection connection){
-		entityOn.connectTrailer(connection);
-	}
-	
-	@Override
-	public void disconnectTrailer(TrailerConnection connection){
-		entityOn.disconnectTrailer(connection);
-	}
-	
-	@Override
-	public void connectAsTrailer(TrailerConnection connection){
-		entityOn.connectAsTrailer(connection);
-	}
-	
-	@Override
-	public void disconnectAsTrailer(){
-		entityOn.disconnectAsTrailer();
-	}
-	
-	@Override
-	public Set<TrailerConnection> getTowingConnections(){
-		return entityOn.getTowingConnections();
 	}
 	
 	/**

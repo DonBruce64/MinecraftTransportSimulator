@@ -65,11 +65,11 @@ public class PartGun extends APart{
 	public boolean firedThisCheck;
 	public boolean playerHoldingTrigger;
 	public boolean isHandHeldGunAimed;
-	public int ticksFiring;
-	public int reloadTimeRemaining;
-	public int windupTimeCurrent;
-	public int windupRotation;
-	public int currentMuzzle;
+	private int ticksFiring;
+	private int reloadTimeRemaining;
+	private long millisecondLastTimeFired;
+	private int windupTimeCurrent;
+	private int windupRotation;
 	public WrapperEntity lastController;
 	private WrapperEntity entityTarget;
 	private long millisecondCamOffset;
@@ -166,7 +166,7 @@ public class PartGun extends APart{
     }
 	
 	@Override
-	public boolean update(){
+	public void update(){
 		//Set gun state and do updates.
 		firedThisCheck = false;
 		prevInternalAngles.set(internalAngles);
@@ -263,6 +263,7 @@ public class PartGun extends APart{
 						bulletsRemovedThisRequest += bulletsToRemove;
 						bulletsFired += bulletsToRemove;
 						entityOn.lastPrimaryPart.put(gunItem, this);
+						millisecondLastTimeFired = System.currentTimeMillis();
 						if(definition.gun.muzzleGroups.size() == ++currentMuzzleGroupIndex){
 							currentMuzzleGroupIndex = 0;
 						}
@@ -291,7 +292,7 @@ public class PartGun extends APart{
 								if(tryToReload((ItemBullet) item)){
 									//Bullet is right type, and we can fit it.  Remove from player's inventory and add to the gun.
 									if(!ConfigSystem.configObject.clientControls.devMode.value)inventory.removeFromSlot(i, 1);
-									return true;
+									break;
 								}
 							}
 						}
@@ -310,7 +311,7 @@ public class PartGun extends APart{
 											//Bullet is right type, and we can fit it.  Remove from crate and add to the gun.
 											//Return here to ensure we don't set the loadedBullet to blank since we found bullets.
 											if(!ConfigSystem.configObject.clientControls.devMode.value)inventory.removeFromSlot(i, 1);
-											return true;
+											break;
 										}
 									}
 								}
@@ -357,7 +358,7 @@ public class PartGun extends APart{
 		}
 		
 		//Now run super.
-		return super.update();
+		super.update();
 	}
 	
 	/**
@@ -635,14 +636,14 @@ public class PartGun extends APart{
 		switch(variable){
 			case("gun_inhand"): return entityOn instanceof EntityPlayerGun ? 1 : 0;	
 			case("gun_active"): return state.isAtLeast(GunState.CONTROLLED) ? 1 : 0;
-			case("gun_firing"): return state.isAtLeast(GunState.FIRING_CURRENTLY) ? 1 : 0;
+			case("gun_firing"): return state.isAtLeast(GunState.FIRING_REQUESTED) ? 1 : 0;
 			case("gun_fired"): return firedThisCheck ? 1 : 0;
 			case("gun_lockedon"): return entityTarget != null ? 1 : 0;
 			case("gun_pitch"): return prevInternalAngles.x + (internalAngles.x - prevInternalAngles.x)*partialTicks;
 			case("gun_yaw"): return prevInternalAngles.y + (internalAngles.y - prevInternalAngles.y)*partialTicks;
 			case("gun_pitching"): return prevInternalAngles.x != internalAngles.x ? 1 : 0;
 			case("gun_yawing"): return prevInternalAngles.y != internalAngles.y ? 1 : 0;
-			case("gun_cooldown"): return state.isAtLeast(GunState.FIRING_CURRENTLY) && lastTimeFired != 0 ? (System.currentTimeMillis() - lastTimeFired)/50D : 0;
+			case("gun_cooldown"): return millisecondLastTimeFired + millisecondFiringDelay > System.currentTimeMillis() ? 1 : 0;
 			case("gun_windup_time"): return windupTimeCurrent;
 			case("gun_windup_rotation"): return windupRotation;
 			case("gun_windup_complete"): return windupTimeCurrent == definition.gun.windupTime ? 1 : 0;
@@ -699,6 +700,7 @@ public class PartGun extends APart{
 				//We might have a partial volley.
 				--bulletsLeft;
 				++bulletsFired;
+				millisecondLastTimeFired = System.currentTimeMillis();
 				if(bulletsLeft == 0){
 					break;
 				}

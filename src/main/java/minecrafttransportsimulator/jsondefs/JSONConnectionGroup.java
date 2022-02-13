@@ -16,9 +16,15 @@ public class JSONConnectionGroup{
 	@JSONDescription("Normally, vehicles towing vehicle/trailers can't connect or disconnect trailers on the things they are towing.  If this is set, any buttons that would appear on the towed vehicle/trailer will also appear on the main vehicle's panel when connected via this group.  Useful for multi-trailer semi trucks.")
 	public boolean canIntiateSubConnections;
 	
-	@JSONDescription("If true, this group will be considred to contain hookups.  If false, then it will be considred to contain hitches.")
-	public boolean hookup;
+	@JSONDescription("If true, this group will be allowed to tow hookup groups.")
+	public boolean isHitch;
+	
+	@JSONDescription("If true, this group will be allowed to tow hitch groups.  Note that you can have a connection group as both a hookup and a hitch if you want connections for either.  Think train couplers.")
+	public boolean isHookup;
 	
 	@JSONDescription("A listing of connections for this group.")
     public List<JSONConnection> connections;
+
+	@Deprecated
+	public boolean hookup;
 }

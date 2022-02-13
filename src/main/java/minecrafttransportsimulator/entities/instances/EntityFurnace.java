@@ -38,74 +38,70 @@ public class EntityFurnace extends EntityInventoryContainer{
 	}
 	
 	@Override
-	public boolean update(){
-		if(super.update()){
-			if(ticksLeftToSmelt > 0){
-				//If we have no fuel, and are a standard type, get fuel from the stack in us.
-				if(!world.isClient() && ticksLeftOfFuel == 0 && definition.furnaceType.equals(FurnaceComponentType.STANDARD)){
-					WrapperItemStack fuelStack = getStack(FUEL_ITEM_SLOT);
-					if(!fuelStack.isEmpty()){
-						ticksAddedOfFuel = fuelStack.getFuelValue();
-						ticksLeftOfFuel = ticksAddedOfFuel;
-						InterfacePacket.sendToAllClients(new PacketFurnaceFuelAdd(this));
-						removeFromSlot(FUEL_ITEM_SLOT, 1);
-					}
+	public void update(){
+		super.update();
+		if(ticksLeftToSmelt > 0){
+			//If we have no fuel, and are a standard type, get fuel from the stack in us.
+			if(!world.isClient() && ticksLeftOfFuel == 0 && definition.furnaceType.equals(FurnaceComponentType.STANDARD)){
+				WrapperItemStack fuelStack = getStack(FUEL_ITEM_SLOT);
+				if(!fuelStack.isEmpty()){
+					ticksAddedOfFuel = fuelStack.getFuelValue();
+					ticksLeftOfFuel = ticksAddedOfFuel;
+					InterfacePacket.sendToAllClients(new PacketFurnaceFuelAdd(this));
+					removeFromSlot(FUEL_ITEM_SLOT, 1);
 				}
-				
-				//Make sure the smelting stack didn't get removed.
-				WrapperItemStack smeltingStack = getStack(SMELTING_ITEM_SLOT);
-				if(!world.isClient() && smeltingStack.isEmpty()){
-					ticksNeededToSmelt = 0;
-					ticksLeftToSmelt = ticksNeededToSmelt;
-					InterfacePacket.sendToAllClients(new PacketFurnaceTimeSet(this));
-				}
-				
-				//We are smelting and have fuel, continue the process.
-				if(ticksLeftOfFuel > 0){
-					--ticksLeftOfFuel;
-					if(world.isClient()){
-						if(ticksLeftToSmelt > 0){
-							--ticksLeftToSmelt;
-						}
-					}else{
-						if(--ticksLeftToSmelt == 0){
-							//Add to output, and remove from input.
-							//Need to set the stack in case the output is empty or we have multiple items.
-							WrapperItemStack smeltingResult = smeltingStack.getSmeltedItem();
-							WrapperItemStack stackInResult = getStack(SMELTED_ITEM_SLOT);
-							
-							if(stackInResult.isEmpty()){
-								stackInResult = smeltingResult; 
-							}else{
-								stackInResult.add(smeltingResult.getSize());
-							}
-							setStack(stackInResult, SMELTED_ITEM_SLOT);
-							
-							removeFromSlot(SMELTING_ITEM_SLOT, 1);
-							ticksNeededToSmelt = 0;
-						}
+			}
+			
+			//Make sure the smelting stack didn't get removed.
+			WrapperItemStack smeltingStack = getStack(SMELTING_ITEM_SLOT);
+			if(!world.isClient() && smeltingStack.isEmpty()){
+				ticksNeededToSmelt = 0;
+				ticksLeftToSmelt = ticksNeededToSmelt;
+				InterfacePacket.sendToAllClients(new PacketFurnaceTimeSet(this));
+			}
+			
+			//We are smelting and have fuel, continue the process.
+			if(ticksLeftOfFuel > 0){
+				--ticksLeftOfFuel;
+				if(world.isClient()){
+					if(ticksLeftToSmelt > 0){
+						--ticksLeftToSmelt;
 					}
 				}else{
-					ticksAddedOfFuel = 0;
-				}
-			}else{
-				//Not currently smelting, see if we can smelt anything.
-				if(!world.isClient()){
-					WrapperItemStack smeltingStack = getStack(SMELTING_ITEM_SLOT);
-					if(!smeltingStack.isEmpty()){
+					if(--ticksLeftToSmelt == 0){
+						//Add to output, and remove from input.
+						//Need to set the stack in case the output is empty or we have multiple items.
 						WrapperItemStack smeltingResult = smeltingStack.getSmeltedItem();
 						WrapperItemStack stackInResult = getStack(SMELTED_ITEM_SLOT);
-						if(stackInResult.isEmpty() || (stackInResult.isCompleteMatch(smeltingResult) && (stackInResult.getMaxSize() - stackInResult.getSize() >= smeltingResult.getSize()))){
-							ticksNeededToSmelt = (int) (smeltingStack.getSmeltingTime()*1F/definition.furnaceRate);
-							ticksLeftToSmelt = ticksNeededToSmelt;
-							InterfacePacket.sendToAllClients(new PacketFurnaceTimeSet(this));	
+						
+						if(stackInResult.isEmpty()){
+							stackInResult = smeltingResult; 
+						}else{
+							stackInResult.add(smeltingResult.getSize());
 						}
+						setStack(stackInResult, SMELTED_ITEM_SLOT);
+						
+						removeFromSlot(SMELTING_ITEM_SLOT, 1);
+						ticksNeededToSmelt = 0;
+					}
+				}
+			}else{
+				ticksAddedOfFuel = 0;
+			}
+		}else{
+			//Not currently smelting, see if we can smelt anything.
+			if(!world.isClient()){
+				WrapperItemStack smeltingStack = getStack(SMELTING_ITEM_SLOT);
+				if(!smeltingStack.isEmpty()){
+					WrapperItemStack smeltingResult = smeltingStack.getSmeltedItem();
+					WrapperItemStack stackInResult = getStack(SMELTED_ITEM_SLOT);
+					if(stackInResult.isEmpty() || (stackInResult.isCompleteMatch(smeltingResult) && (stackInResult.getMaxSize() - stackInResult.getSize() >= smeltingResult.getSize()))){
+						ticksNeededToSmelt = (int) (smeltingStack.getSmeltingTime()*1F/definition.furnaceRate);
+						ticksLeftToSmelt = ticksNeededToSmelt;
+						InterfacePacket.sendToAllClients(new PacketFurnaceTimeSet(this));	
 					}
 				}
 			}
-			return true;
-		}else{
-			return false;
 		}
 	}
 	

@@ -71,70 +71,66 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityFl
     }
 	
 	@Override
-	public boolean update(){
-		if(super.update()){
-			//Update creative status.
-			isCreative = true;
-			for(int i=0; i<fuelItems.getSize(); ++i){
-				if(!fuelItems.getStack(i).isEmpty()){
-					isCreative = false;
-				}
+	public void update(){
+		super.update();
+		//Update creative status.
+		isCreative = true;
+		for(int i=0; i<fuelItems.getSize(); ++i){
+			if(!fuelItems.getStack(i).isEmpty()){
+				isCreative = false;
+			}
+		}
+		
+		//Do fuel checks.  Fuel checks only occur on servers.  Clients get packets for state changes.
+		if(connectedVehicle != null && !world.isClient()){
+			//Don't fuel vehicles that don't exist.
+			if(!connectedVehicle.isValid){
+				connectedVehicle.beingFueled = false;
+				connectedVehicle = null;
+				return;
 			}
 			
-			//Do fuel checks.  Fuel checks only occur on servers.  Clients get packets for state changes.
-			if(connectedVehicle != null && !world.isClient()){
-				//Don't fuel vehicles that don't exist.
-				if(!connectedVehicle.isValid){
-					connectedVehicle.beingFueled = false;
-					connectedVehicle = null;
-					return false;
-				}
-				
-				//Check distance to make sure the vehicle hasn't moved away.
-				if(!connectedVehicle.position.isDistanceToCloserThan(position, 15)){
-					InterfacePacket.sendToAllClients(new PacketTileEntityFuelPumpConnection(this, false));
-					for(WrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, 25, 25, 25))){
-						if(entity instanceof WrapperPlayer){
-							((WrapperPlayer) entity).sendPacket(new PacketPlayerChatMessage((WrapperPlayer) entity, "interact.fuelpump.toofar"));
-						}
+			//Check distance to make sure the vehicle hasn't moved away.
+			if(!connectedVehicle.position.isDistanceToCloserThan(position, 15)){
+				InterfacePacket.sendToAllClients(new PacketTileEntityFuelPumpConnection(this, false));
+				for(WrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, 25, 25, 25))){
+					if(entity instanceof WrapperPlayer){
+						((WrapperPlayer) entity).sendPacket(new PacketPlayerChatMessage((WrapperPlayer) entity, "interact.fuelpump.toofar"));
 					}
-					connectedVehicle.beingFueled = false;
-					connectedVehicle = null;
-					return false;
 				}
-				//If we have room for fuel, try to add it to the vehicle.
-				if(tank.getFluidLevel() > 0){
-					double amountToFill = connectedVehicle.fuelTank.fill(tank.getFluid(), definition.decor.pumpRate, false);
-					if(amountToFill > 0){
-						double amountToDrain = tank.drain(tank.getFluid(), amountToFill, false);
-						connectedVehicle.fuelTank.fill(tank.getFluid(), amountToDrain, true);
-						tank.drain(tank.getFluid(), amountToDrain, true);
-					}else{
-						//No more room in the vehicle.  Disconnect.
-						InterfacePacket.sendToAllClients(new PacketTileEntityFuelPumpConnection(this, false));
-						connectedVehicle.beingFueled = false;
-						connectedVehicle = null;
-						for(WrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, 16, 16, 16))){
-							if(entity instanceof WrapperPlayer){
-								((WrapperPlayer) entity).sendPacket(new PacketPlayerChatMessage((WrapperPlayer) entity, "interact.fuelpump.complete"));
-							}
-						}
-					}
+				connectedVehicle.beingFueled = false;
+				connectedVehicle = null;
+				return;
+			}
+			//If we have room for fuel, try to add it to the vehicle.
+			if(tank.getFluidLevel() > 0){
+				double amountToFill = connectedVehicle.fuelTank.fill(tank.getFluid(), definition.decor.pumpRate, false);
+				if(amountToFill > 0){
+					double amountToDrain = tank.drain(tank.getFluid(), amountToFill, false);
+					connectedVehicle.fuelTank.fill(tank.getFluid(), amountToDrain, true);
+					tank.drain(tank.getFluid(), amountToDrain, true);
 				}else{
-					//No more fuel.  Disconnect vehicle.
+					//No more room in the vehicle.  Disconnect.
 					InterfacePacket.sendToAllClients(new PacketTileEntityFuelPumpConnection(this, false));
 					connectedVehicle.beingFueled = false;
 					connectedVehicle = null;
 					for(WrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, 16, 16, 16))){
 						if(entity instanceof WrapperPlayer){
-							((WrapperPlayer) entity).sendPacket(new PacketPlayerChatMessage((WrapperPlayer) entity, "interact.fuelpump.empty"));
+							((WrapperPlayer) entity).sendPacket(new PacketPlayerChatMessage((WrapperPlayer) entity, "interact.fuelpump.complete"));
 						}
 					}
 				}
+			}else{
+				//No more fuel.  Disconnect vehicle.
+				InterfacePacket.sendToAllClients(new PacketTileEntityFuelPumpConnection(this, false));
+				connectedVehicle.beingFueled = false;
+				connectedVehicle = null;
+				for(WrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, 16, 16, 16))){
+					if(entity instanceof WrapperPlayer){
+						((WrapperPlayer) entity).sendPacket(new PacketPlayerChatMessage((WrapperPlayer) entity, "interact.fuelpump.empty"));
+					}
+				}
 			}
-			return true;
-		}else{
-			return false;
 		}
 	}
 	

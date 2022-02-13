@@ -176,451 +176,447 @@ public class PartEngine extends APart{
 	}
 	
 	@Override
-	public boolean update(){
-		if(super.update()){
-			//Reset states.
-			backfired = false;
-			badShift = false;
-			magnetoOn = isVariableActive(MAGNETO_VARIABLE);
-			electricStarterEngaged = isVariableActive(ELECTRIC_STARTER_VARIABLE);
-			handStarterEngaged = isVariableActive(HAND_STARTER_VARIABLE);
-			currentGear = (byte) getVariable(GEAR_VARIABLE);
-			
-			//If the engine is running, but the magneto is off, turn the engine off.
-			if(running && !magnetoOn){
-				running = false;
-				internalFuel = 200;
-			}
-			
-			//Set fuel flow to 0 for the start of this cycle.
-			fuelFlow = 0;
-			
-			//Remove values from shifting times if applicable.
-			if(upshiftCountdown > 0){
-				--upshiftCountdown;
-			}
-			if(downshiftCountdown > 0){
-				--downshiftCountdown;
-			}
-			
-			//Set current gear ratio based on current gear.
-			currentGearRatio = definition.engine.gearRatios.get(currentGear + reverseGears);
-					
-			if(vehicleOn != null){
-				//Check to see if we are linked and need to equalize power between us and another engine.
-				if(linkedEngine != null){
-					if(!linkedEngine.position.isDistanceToCloserThan(position, 16)){
-						linkedEngine.linkedEngine = null;
-						linkedEngine = null;
-						if(world.isClient()){
-							for(WrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, 16, 16, 16))){
-								if(entity instanceof WrapperPlayer){
-									((WrapperPlayer) entity).displayChatMessage("interact.jumpercable.linkdropped");
-								}
-							}
-						}
-					}else if(vehicleOn.electricPower + 0.5 < linkedEngine.vehicleOn.electricPower){
-						linkedEngine.vehicleOn.electricPower -= 0.005F;
-						vehicleOn.electricPower += 0.005F;
-					}else if(vehicleOn.electricPower > linkedEngine.vehicleOn.electricPower + 0.5){
-						vehicleOn.electricPower -= 0.005F;
-						linkedEngine.vehicleOn.electricPower += 0.005F;
-					}else{
-						linkedEngine.linkedEngine = null;
-						linkedEngine = null;
-						if(world.isClient()){
-							for(WrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, 16, 16, 16))){
-								if(entity instanceof WrapperPlayer){
-									((WrapperPlayer) entity).displayChatMessage("interact.jumpercable.powerequal");
-								}
+	public void update(){
+		super.update();
+		//Reset states.
+		backfired = false;
+		badShift = false;
+		magnetoOn = isVariableActive(MAGNETO_VARIABLE);
+		electricStarterEngaged = isVariableActive(ELECTRIC_STARTER_VARIABLE);
+		handStarterEngaged = isVariableActive(HAND_STARTER_VARIABLE);
+		currentGear = (byte) getVariable(GEAR_VARIABLE);
+		
+		//If the engine is running, but the magneto is off, turn the engine off.
+		if(running && !magnetoOn){
+			running = false;
+			internalFuel = 200;
+		}
+		
+		//Set fuel flow to 0 for the start of this cycle.
+		fuelFlow = 0;
+		
+		//Remove values from shifting times if applicable.
+		if(upshiftCountdown > 0){
+			--upshiftCountdown;
+		}
+		if(downshiftCountdown > 0){
+			--downshiftCountdown;
+		}
+		
+		//Set current gear ratio based on current gear.
+		currentGearRatio = definition.engine.gearRatios.get(currentGear + reverseGears);
+				
+		if(vehicleOn != null){
+			//Check to see if we are linked and need to equalize power between us and another engine.
+			if(linkedEngine != null){
+				if(!linkedEngine.position.isDistanceToCloserThan(position, 16)){
+					linkedEngine.linkedEngine = null;
+					linkedEngine = null;
+					if(world.isClient()){
+						for(WrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, 16, 16, 16))){
+							if(entity instanceof WrapperPlayer){
+								((WrapperPlayer) entity).displayChatMessage("interact.jumpercable.linkdropped");
 							}
 						}
 					}
-				}
-				
-				//Add cooling for ambient temp.
-				ambientTemp = (25*world.getTemperature(position) + 5)*ConfigSystem.configObject.general.engineBiomeTempFactor.value;
-				coolingFactor = 0.001*currentCoolingCoefficient - (currentSuperchargerEfficiency/1000F)*(rpm/2000F) + (vehicleOn.velocity/1000F)*currentCoolingCoefficient;
-				temp -= (temp - ambientTemp)*coolingFactor;
-				
-				//Check to see if electric or hand starter can keep running.
-				if(electricStarterEngaged){
-					if(starterLevel == 0){
-						if(vehicleOn.electricPower > 1){
-							starterLevel += 4;
-						}else{
-							setVariable(ELECTRIC_STARTER_VARIABLE, 0);
-							InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(this, ELECTRIC_STARTER_VARIABLE));
-						}
-					}
-					if(starterLevel > 0){
-						if(!isCreative){
-							vehicleOn.electricUsage += 0.05F;
-						}
-						if(!isCreative){
-							fuelFlow += vehicleOn.fuelTank.drain(vehicleOn.fuelTank.getFluid(), getTotalFuelConsumption()*ConfigSystem.configObject.general.fuelUsageFactor.value, !world.isClient());
-						}
-					}
-					if(autoStarterEngaged){
-						if(running){
-							setVariable(ELECTRIC_STARTER_VARIABLE, 0);
-							InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(this, ELECTRIC_STARTER_VARIABLE));
-						}
-					}
-				}else if(handStarterEngaged){
-					if(starterLevel == 0){
-						setVariable(HAND_STARTER_VARIABLE, 0);
-					}
+				}else if(vehicleOn.electricPower + 0.5 < linkedEngine.vehicleOn.electricPower){
+					linkedEngine.vehicleOn.electricPower -= 0.005F;
+					vehicleOn.electricPower += 0.005F;
+				}else if(vehicleOn.electricPower > linkedEngine.vehicleOn.electricPower + 0.5){
+					vehicleOn.electricPower -= 0.005F;
+					linkedEngine.vehicleOn.electricPower += 0.005F;
 				}else{
-					starterLevel = 0;
-					autoStarterEngaged = false;
+					linkedEngine.linkedEngine = null;
+					linkedEngine = null;
+					if(world.isClient()){
+						for(WrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, 16, 16, 16))){
+							if(entity instanceof WrapperPlayer){
+								((WrapperPlayer) entity).displayChatMessage("interact.jumpercable.powerequal");
+							}
+						}
+					}
 				}
-				
-				//If the starter is running, adjust RPM.
+			}
+			
+			//Add cooling for ambient temp.
+			ambientTemp = (25*world.getTemperature(position) + 5)*ConfigSystem.configObject.general.engineBiomeTempFactor.value;
+			coolingFactor = 0.001*currentCoolingCoefficient - (currentSuperchargerEfficiency/1000F)*(rpm/2000F) + (vehicleOn.velocity/1000F)*currentCoolingCoefficient;
+			temp -= (temp - ambientTemp)*coolingFactor;
+			
+			//Check to see if electric or hand starter can keep running.
+			if(electricStarterEngaged){
+				if(starterLevel == 0){
+					if(vehicleOn.electricPower > 1){
+						starterLevel += 4;
+					}else{
+						setVariable(ELECTRIC_STARTER_VARIABLE, 0);
+						InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(this, ELECTRIC_STARTER_VARIABLE));
+					}
+				}
 				if(starterLevel > 0){
-					--starterLevel;
-					if(rpm < definition.engine.startRPM*2){
-						rpm = Math.min(rpm + definition.engine.starterPower, definition.engine.startRPM*2);
-					}else{
-						rpm = Math.max(rpm - definition.engine.starterPower, definition.engine.startRPM*2);
-					}
-				}
-				
-				//Add extra hours if we are running the engine too fast.
-				if(!isCreative && rpm > currentMaxSafeRPM){
-					hours += (rpm - currentMaxSafeRPM)/currentMaxSafeRPM*getTotalWearFactor();
-				}
-				
-				//Check for any shifting requests.
-				if(isVariableActive(UP_SHIFT_VARIABLE)){
-					shiftUp(false);
-					toggleVariable(UP_SHIFT_VARIABLE);
-				}else if(isVariableActive(DOWN_SHIFT_VARIABLE)){
-					shiftDown(false);
-					toggleVariable(DOWN_SHIFT_VARIABLE);
-				}else if(isVariableActive(NEUTRAL_SHIFT_VARIABLE)){
-					shiftNeutral();
-					toggleVariable(NEUTRAL_SHIFT_VARIABLE);
-				}
-				
-				//Check for reversing if we are on a blimp with reversed thrust.
-				if(vehicleOn != null && vehicleOn.definition.motorized.isBlimp && attachedPropeller != null){
-					if(vehicleOn.reverseThrust && currentGear > 0){
-						currentGear = -1;
-					}else if(!vehicleOn.reverseThrust && currentGear < 0){
-						currentGear = 1;
-					}
-				}
-				
-				//Do running logic.
-				if(running){
-					//Provide electric power to the vehicle we're in.
-					vehicleOn.electricUsage -= 0.05*rpm/currentMaxRPM;
-					
-					//Add hours to the engine.
 					if(!isCreative){
-						hours += 0.001*getTotalWearFactor();
+						vehicleOn.electricUsage += 0.05F;
 					}
-					
-					//Do engine-type specific update logic.
-					if(definition.engine.isSteamPowered){
-						//TODO do steam engine logic.
-					}else{
-						//Try to get fuel from the vehicle and calculate fuel flow.
-						if(!isCreative && !vehicleOn.fuelTank.getFluid().isEmpty()){
-							if(!ConfigSystem.configObject.fuel.fuels.containsKey(definition.engine.fuelType)){					
-								throw new IllegalArgumentException("Engine:" + definition.packID + ":" + definition.systemName + " wanted fuel configs for fuel of type:" + definition.engine.fuelType + ", but these do not exist in the config file.  Fuels currently in the file are:" + ConfigSystem.configObject.fuel.fuels.keySet().toString() + "If you are on a server, this means the server and client configs are not the same.  If this is a modpack, TELL THE AUTHOR IT IS BORKEN!");
-							}else if(!ConfigSystem.configObject.fuel.fuels.get(definition.engine.fuelType).containsKey(vehicleOn.fuelTank.getFluid())){
-								//Clear out the fuel from this vehicle as it's the wrong type.
-								vehicleOn.fuelTank.drain(vehicleOn.fuelTank.getFluid(), vehicleOn.fuelTank.getFluidLevel(), true);
-							}else{
-								fuelFlow += vehicleOn.fuelTank.drain(vehicleOn.fuelTank.getFluid(), getTotalFuelConsumption()*ConfigSystem.configObject.general.fuelUsageFactor.value/ConfigSystem.configObject.fuel.fuels.get(definition.engine.fuelType).get(vehicleOn.fuelTank.getFluid())*rpm*(fuelLeak ? 1.5F : 1.0F)/currentMaxRPM, !world.isClient());
-							}
-						}
-						
-						//Add temp based on engine speed.
-						temp += Math.max(0, (7*rpm/currentMaxRPM - temp/(COLD_TEMP*2))/20)*currentHeatingCoefficient*ConfigSystem.configObject.general.engineSpeedTempFactor.value;
-						
-						//Adjust oil pressure based on RPM and leak status.
-						//If this is a 0-idle RPM engine, assume it's electric and doesn't have oil.
-						if(currentIdleRPM != 0){
-							pressure = Math.min(90 - temp/10, pressure + rpm/currentIdleRPM - 0.5*(oilLeak ? 5F : 1F)*(pressure/LOW_OIL_PRESSURE));
-							
-							//Add extra hours and temp if we have low oil.
-							if(pressure < LOW_OIL_PRESSURE && !isCreative){
-								temp += Math.max(0, (20*rpm/currentMaxRPM)/20);
-								hours += 0.01*getTotalWearFactor();
-							}
-						}
-						
-						//Add extra hours, and possibly explode the engine, if its too hot.
-						if(temp > OVERHEAT_TEMP_1 && !isCreative){
-							hours += 0.001*(temp - OVERHEAT_TEMP_1)*getTotalWearFactor();
-							if(temp > FAILURE_TEMP && !world.isClient()){
-								explodeEngine();
-							}
-						}
-						
-						//If the engine has high hours, give a chance for a backfire.
-						if(hours > 250 && !world.isClient()){
-							if(Math.random() < (hours/2)/(250+(10000-hours))*(currentMaxSafeRPM/(rpm+currentMaxSafeRPM/1.5))){
-								backfireEngine();
-								InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.BACKFIRE));
-							}
-						}
-						
-						//Check if we need to stall the engine for various conditions.
-						if(!world.isClient()){
-							if(!world.isClient() && isInLiquid()){
-								stallEngine(Signal.DROWN);
-								InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.DROWN));
-							}else if(!isCreative && vehicleOn.fuelTank.getFluidLevel() == 0){
-								stallEngine(Signal.FUEL_OUT);
-								InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.FUEL_OUT));
-							}else if(rpm < definition.engine.stallRPM){
-								stallEngine(Signal.TOO_SLOW);
-								InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.TOO_SLOW));
-							}else if(!isActive){
-								stallEngine(Signal.FUEL_OUT);
-								InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.FUEL_OUT));
-							}else if(vehicleOn.damageAmount == vehicleOn.definition.general.health){
-								stallEngine(Signal.DEAD_VEHICLE);
-								InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.DEAD_VEHICLE));
-							}
-							
-						}
-					}
-					
-					//Do automatic transmission functions if needed.
-					if(definition.engine.isAutomatic && !world.isClient() && currentGear != 0){
-						if(shiftCooldown == 0){
-							if(currentGear > 0 ? currentGear < forwardsGears : -currentGear < reverseGears){
-								//Can shift up, try to do so.
-								if(rpm > (definition.engine.upShiftRPM != null ? definition.engine.upShiftRPM.get(currentGear + reverseGears) : (currentMaxSafeRPM*0.9))*0.5F*(1.0F + vehicleOn.throttle)){
-									if(currentGear > 0){
-										if(shiftUp(true)){
-											InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, GEAR_VARIABLE, 1));
-										}
-									}else{
-										if(shiftDown(true)){
-											InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, GEAR_VARIABLE, -1));
-										}
-									}
-								}
-							}
-							if(currentGear > 1 || currentGear < -1){
-								//Can shift down, try to do so.
-								if(rpm < (definition.engine.downShiftRPM != null ? definition.engine.downShiftRPM.get(currentGear + reverseGears)*0.5*(1.0F + vehicleOn.throttle) : (currentMaxSafeRPM*0.9)*0.25*(1.0F + vehicleOn.throttle))){
-									if(currentGear > 0){
-										if(shiftDown(true)){
-											InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, GEAR_VARIABLE, -1));
-										}
-									}else{
-										if(shiftUp(true)){
-											InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, GEAR_VARIABLE, 1));
-										}
-									}
-								}
-							}
-						}else{
-							--shiftCooldown;
-						}
-					}
-				}else{
-					//If we aren't a steam engine, set pressure and fuel flow to 0.
-					if(!definition.engine.isSteamPowered){
-						pressure = 0;
-						fuelFlow = 0;
-					}
-					
-					//Internal fuel is used for engine sound wind down.  NOT used for power.
-					if(internalFuel > 0){
-						--internalFuel;
-						if(rpm < 500){
-							internalFuel = 0;
-						}
-					}
-					
-					//Start engine if the RPM is high enough to cause it to start by itself.
-					//Used for drowned engines that come out of the water, or engines that don't
-					//have the ability to engage a starter.
-					if(rpm >= definition.engine.startRPM && !world.isClient() && vehicleOn.damageAmount < vehicleOn.definition.general.health){
-						if(isCreative || vehicleOn.fuelTank.getFluidLevel() > 0){
-							if(!isInLiquid() && magnetoOn){
-								startEngine();
-								InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.START));
-							}
-						}
+					if(!isCreative){
+						fuelFlow += vehicleOn.fuelTank.drain(vehicleOn.fuelTank.getFluid(), getTotalFuelConsumption()*ConfigSystem.configObject.general.fuelUsageFactor.value, !world.isClient());
 					}
 				}
-				
-				//Update engine RPM.  This depends on what is connected.
-				//First check to see if we need to check driven wheels.
-				//While doing this we also get the friction those wheels are providing.
-				//This is used later in force calculations.
-				if(definition.engine.jetPowerFactor == 0 && (vehicleOn.definition.motorized.isFrontWheelDrive || vehicleOn.definition.motorized.isRearWheelDrive)){
-					lowestWheelVelocity = 999F;
-					desiredWheelVelocity = -999F;
-					wheelFriction = 0;
-					engineTargetRPM = !electricStarterEngaged ? vehicleOn.throttle*(currentMaxRPM - currentIdleRPM)/(1 + hours/1250) + currentIdleRPM : definition.engine.startRPM;
-					
-					//Update wheel friction and velocity.
-					for(PartGroundDevice wheel : vehicleOn.groundDeviceCollective.drivenWheels){
-						//If we have grounded wheels, and this wheel is not on the ground, don't take it into account.
-						//This means the wheel is spinning in the air and can't provide force or feedback.
-						if(vehicleOn.groundDeviceCollective.groundedGroundDevices.contains(wheel)){
-							wheelFriction += Math.max(wheel.getMotiveFriction() - wheel.getFrictionLoss(), 0);
-							lowestWheelVelocity = Math.min(wheel.angularVelocity, lowestWheelVelocity);
-							desiredWheelVelocity = Math.max(wheel.getDesiredAngularVelocity(), desiredWheelVelocity);
-						}
-					}
-					
-					//Adjust RPM of the engine to wheels.
-					if(currentGearRatio != 0 && starterLevel == 0){
-						//Don't adjust it down to stall the engine, that can only be done via backfire.
-						if(wheelFriction > 0){
-							double desiredRPM = lowestWheelVelocity*1200F*currentGearRatio*vehicleOn.currentAxleRatio;
-							rpm += (desiredRPM - rpm)/definition.engine.revResistance;
-							if(rpm < currentIdleRPM && running && backfireCooldown <= 0){//Checks if we're backfiring and sets lugging rpm to stall rpm, otherwise sets lug rpm to idle
-								rpm = currentIdleRPM;
-							}else if(rpm < definition.engine.stallRPM && running){
-								rpm = definition.engine.stallRPM;
-								backfireCooldown -= 1;
-							}
-						}else{
-							//No wheel force.  Adjust wheels to engine speed.
-							for(PartGroundDevice wheel : vehicleOn.groundDeviceCollective.drivenWheels){
-								if(currentGearRatio != 0){
-									wheel.angularVelocity = rpm/currentGearRatio/vehicleOn.currentAxleRatio/1200D;
-								}else if(wheel.angularVelocity > 0){
-									wheel.angularVelocity = Math.max(0, wheel.angularVelocity - 0.01D);
-								}else{
-									wheel.angularVelocity = Math.min(0, wheel.angularVelocity + 0.01D);
-								}
-							}
-						}
-					}
-				}
-				
-				//Update propeller variables.
-				attachedPropeller = null;
-				for(APart part : childParts){
-					if(part instanceof PartPropeller){
-						attachedPropeller = (PartPropeller) part;
-						propellerAxialVelocity = vehicleOn.motion.dotProduct(attachedPropeller.axialOrientation);
-						propellerGearboxRatio = Math.signum(currentGearRatio)*(definition.engine.propellerRatio != 0 ? definition.engine.propellerRatio : Math.abs(currentGearRatio));
-						
-						//If wheel friction is 0, and we aren't in neutral, get RPM contributions for that.
-						if(wheelFriction == 0 && currentGearRatio != 0){
-							isPropellerInLiquid = attachedPropeller.isInLiquid();
-							double propellerForcePenalty = Math.max(0, (attachedPropeller.definition.propeller.diameter - 75)/(50*(currentFuelConsumption + (currentSuperchargerFuelConsumption*currentSuperchargerEfficiency)) - 15));
-							double propellerDesiredSpeed = 0.0254*attachedPropeller.currentPitch*rpm/propellerGearboxRatio/60D/20D;
-							double propellerFeedback = (propellerDesiredSpeed - propellerAxialVelocity)*(isPropellerInLiquid ? 130 : 40);
-							if(currentGear < 0 || attachedPropeller.currentPitch < 0){
-								propellerFeedback *= -1;
-							}
-							
-							if(running){
-								propellerFeedback += propellerForcePenalty*50;
-								engineTargetRPM = vehicleOn.throttle*(currentMaxRPM - currentIdleRPM)/(1 + hours/1250) + currentIdleRPM;
-								double engineRPMDifference = engineTargetRPM - rpm;
-								
-								//propellerFeedback can't make an engine stall, but hours can.
-								if(rpm + engineRPMDifference/definition.engine.revResistance > definition.engine.stallRPM && rpm + engineRPMDifference/definition.engine.revResistance - propellerFeedback < definition.engine.stallRPM){
-									rpm = definition.engine.stallRPM;
-								}else{
-									rpm += engineRPMDifference/definition.engine.revResistance - propellerFeedback;
-								}
-							}else if(!electricStarterEngaged && !handStarterEngaged){
-								rpm -= (1 + propellerFeedback)*Math.abs(propellerGearboxRatio);
-								
-								//Don't let the engine RPM go negative.  This results in physics errors.
-								if(rpm < 0){
-									rpm = 0;
-								}
-							}
-						}
-					}
-				}
-				
-				//If wheel friction is 0, and we don't have a propeller, or we're in neutral, adjust RPM to throttle position.
-				//Or, if we are not on, just slowly spin the engine down.
-				if((wheelFriction == 0 && attachedPropeller == null) || currentGearRatio == 0){
+				if(autoStarterEngaged){
 					if(running){
-						engineTargetRPM = vehicleOn.throttle*(currentMaxRPM - currentIdleRPM)/(1 + hours/1250) + currentIdleRPM;
-						rpm += (engineTargetRPM - rpm)/(definition.engine.revResistance*3);
-						if(currentRevlimitRPM == -1){
-							if(rpm > currentMaxSafeRPM){
-								rpm -= Math.abs(engineTargetRPM - rpm)/60;
-							}
-						}else{
-							if(rpm > currentRevlimitRPM){
-								rpm -= Math.abs(engineTargetRPM - rpm)/definition.engine.revlimitBounce;
-							}
-						}
-					}else if(!electricStarterEngaged && !handStarterEngaged){
-						rpm = Math.max(rpm - definition.engine.engineWinddownRate, 0); //engineWinddownRate tells us how quickly to slow down the engine, by default 10
+						setVariable(ELECTRIC_STARTER_VARIABLE, 0);
+						InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(this, ELECTRIC_STARTER_VARIABLE));
 					}
 				}
-				
-				///Update variables used for jet thrust.
-				if(definition.engine.jetPowerFactor > 0){
-					engineAxialVelocity = vehicleOn.motion.dotProduct(vehicleOn.axialOrientation);
-					
-					//Check for entities forward and aft of the engine and damage them.
-					if(!world.isClient() && rpm >= 5000){
-						boundingBox.widthRadius += 0.25;
-						boundingBox.heightRadius += 0.25;
-						boundingBox.depthRadius += 0.25;
-						boundingBox.globalCenter.add(vehicleOn.headingVector);
-						Damage jetIntake = new Damage("jet_intake", definition.engine.jetPowerFactor*ConfigSystem.configObject.damage.jetDamageFactor.value*rpm/1000F, boundingBox, this, vehicleOn.getController());
-						world.attackEntities(jetIntake, null);
-						
-						boundingBox.globalCenter.subtract(vehicleOn.headingVector);
-						boundingBox.globalCenter.subtract(vehicleOn.headingVector);
-						Damage jetExhaust = new Damage("jet_exhaust", definition.engine.jetPowerFactor*ConfigSystem.configObject.damage.jetDamageFactor.value*rpm/2000F, boundingBox, this, jetIntake.entityResponsible).setFire();
-						world.attackEntities(jetExhaust, null);
-						
-						boundingBox.globalCenter.add(vehicleOn.headingVector);
-						boundingBox.widthRadius -= 0.25;
-						boundingBox.heightRadius -= 0.25;
-						boundingBox.depthRadius -= 0.25;
-					}
+			}else if(handStarterEngaged){
+				if(starterLevel == 0){
+					setVariable(HAND_STARTER_VARIABLE, 0);
 				}
-				
-				//Update engine and driveshaft rotation.
-				//If we are linked to wheels on the ground follow the wheel rotation, not our own.
-				prevEngineRotation = engineRotation;
-				engineRotation += 360D*rpm/1200D;
-				if(engineRotation > 3600000){
-					engineRotation -= 3600000;
-					prevEngineRotation -= 3600000;
-				}else if(engineRotation < -3600000){
-					engineRotation += 3600000;
-					prevEngineRotation += 3600000;
-				}
-				
-				prevDriveshaftRotation = driveshaftRotation;
-				double driveshaftDesiredSpeed = -999;
-				for(PartGroundDevice wheel : vehicleOn.groundDeviceCollective.drivenWheels){
-					driveshaftDesiredSpeed = Math.max(wheel.angularVelocity, driveshaftDesiredSpeed);
-				}
-				if(driveshaftDesiredSpeed != -999){
-					driveshaftRotation += 360D*driveshaftDesiredSpeed*EntityVehicleF_Physics.SPEED_FACTOR;
+			}else{
+				starterLevel = 0;
+				autoStarterEngaged = false;
+			}
+			
+			//If the starter is running, adjust RPM.
+			if(starterLevel > 0){
+				--starterLevel;
+				if(rpm < definition.engine.startRPM*2){
+					rpm = Math.min(rpm + definition.engine.starterPower, definition.engine.startRPM*2);
 				}else{
-					driveshaftRotation += 360D*rpm/1200D/currentGearRatio;
-				}
-				if(driveshaftRotation > 3600000){
-					driveshaftRotation -= 3600000;
-					prevDriveshaftRotation -= 3600000;
-				}else if(driveshaftRotation < -3600000){
-					driveshaftRotation += 3600000;
-					prevDriveshaftRotation += 3600000;
+					rpm = Math.max(rpm - definition.engine.starterPower, definition.engine.startRPM*2);
 				}
 			}
-			return true;
-		}else{
-			return false;
+			
+			//Add extra hours if we are running the engine too fast.
+			if(!isCreative && rpm > currentMaxSafeRPM){
+				hours += (rpm - currentMaxSafeRPM)/currentMaxSafeRPM*getTotalWearFactor();
+			}
+			
+			//Check for any shifting requests.
+			if(isVariableActive(UP_SHIFT_VARIABLE)){
+				shiftUp(false);
+				toggleVariable(UP_SHIFT_VARIABLE);
+			}else if(isVariableActive(DOWN_SHIFT_VARIABLE)){
+				shiftDown(false);
+				toggleVariable(DOWN_SHIFT_VARIABLE);
+			}else if(isVariableActive(NEUTRAL_SHIFT_VARIABLE)){
+				shiftNeutral();
+				toggleVariable(NEUTRAL_SHIFT_VARIABLE);
+			}
+			
+			//Check for reversing if we are on a blimp with reversed thrust.
+			if(vehicleOn != null && vehicleOn.definition.motorized.isBlimp && attachedPropeller != null){
+				if(vehicleOn.reverseThrust && currentGear > 0){
+					currentGear = -1;
+				}else if(!vehicleOn.reverseThrust && currentGear < 0){
+					currentGear = 1;
+				}
+			}
+			
+			//Do running logic.
+			if(running){
+				//Provide electric power to the vehicle we're in.
+				vehicleOn.electricUsage -= 0.05*rpm/currentMaxRPM;
+				
+				//Add hours to the engine.
+				if(!isCreative){
+					hours += 0.001*getTotalWearFactor();
+				}
+				
+				//Do engine-type specific update logic.
+				if(definition.engine.isSteamPowered){
+					//TODO do steam engine logic.
+				}else{
+					//Try to get fuel from the vehicle and calculate fuel flow.
+					if(!isCreative && !vehicleOn.fuelTank.getFluid().isEmpty()){
+						if(!ConfigSystem.configObject.fuel.fuels.containsKey(definition.engine.fuelType)){					
+							throw new IllegalArgumentException("Engine:" + definition.packID + ":" + definition.systemName + " wanted fuel configs for fuel of type:" + definition.engine.fuelType + ", but these do not exist in the config file.  Fuels currently in the file are:" + ConfigSystem.configObject.fuel.fuels.keySet().toString() + "If you are on a server, this means the server and client configs are not the same.  If this is a modpack, TELL THE AUTHOR IT IS BORKEN!");
+						}else if(!ConfigSystem.configObject.fuel.fuels.get(definition.engine.fuelType).containsKey(vehicleOn.fuelTank.getFluid())){
+							//Clear out the fuel from this vehicle as it's the wrong type.
+							vehicleOn.fuelTank.drain(vehicleOn.fuelTank.getFluid(), vehicleOn.fuelTank.getFluidLevel(), true);
+						}else{
+							fuelFlow += vehicleOn.fuelTank.drain(vehicleOn.fuelTank.getFluid(), getTotalFuelConsumption()*ConfigSystem.configObject.general.fuelUsageFactor.value/ConfigSystem.configObject.fuel.fuels.get(definition.engine.fuelType).get(vehicleOn.fuelTank.getFluid())*rpm*(fuelLeak ? 1.5F : 1.0F)/currentMaxRPM, !world.isClient());
+						}
+					}
+					
+					//Add temp based on engine speed.
+					temp += Math.max(0, (7*rpm/currentMaxRPM - temp/(COLD_TEMP*2))/20)*currentHeatingCoefficient*ConfigSystem.configObject.general.engineSpeedTempFactor.value;
+					
+					//Adjust oil pressure based on RPM and leak status.
+					//If this is a 0-idle RPM engine, assume it's electric and doesn't have oil.
+					if(currentIdleRPM != 0){
+						pressure = Math.min(90 - temp/10, pressure + rpm/currentIdleRPM - 0.5*(oilLeak ? 5F : 1F)*(pressure/LOW_OIL_PRESSURE));
+						
+						//Add extra hours and temp if we have low oil.
+						if(pressure < LOW_OIL_PRESSURE && !isCreative){
+							temp += Math.max(0, (20*rpm/currentMaxRPM)/20);
+							hours += 0.01*getTotalWearFactor();
+						}
+					}
+					
+					//Add extra hours, and possibly explode the engine, if its too hot.
+					if(temp > OVERHEAT_TEMP_1 && !isCreative){
+						hours += 0.001*(temp - OVERHEAT_TEMP_1)*getTotalWearFactor();
+						if(temp > FAILURE_TEMP && !world.isClient()){
+							explodeEngine();
+						}
+					}
+					
+					//If the engine has high hours, give a chance for a backfire.
+					if(hours > 250 && !world.isClient()){
+						if(Math.random() < (hours/2)/(250+(10000-hours))*(currentMaxSafeRPM/(rpm+currentMaxSafeRPM/1.5))){
+							backfireEngine();
+							InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.BACKFIRE));
+						}
+					}
+					
+					//Check if we need to stall the engine for various conditions.
+					if(!world.isClient()){
+						if(!world.isClient() && isInLiquid()){
+							stallEngine(Signal.DROWN);
+							InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.DROWN));
+						}else if(!isCreative && vehicleOn.fuelTank.getFluidLevel() == 0){
+							stallEngine(Signal.FUEL_OUT);
+							InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.FUEL_OUT));
+						}else if(rpm < definition.engine.stallRPM){
+							stallEngine(Signal.TOO_SLOW);
+							InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.TOO_SLOW));
+						}else if(!isActive){
+							stallEngine(Signal.FUEL_OUT);
+							InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.FUEL_OUT));
+						}else if(vehicleOn.damageAmount == vehicleOn.definition.general.health){
+							stallEngine(Signal.DEAD_VEHICLE);
+							InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.DEAD_VEHICLE));
+						}
+						
+					}
+				}
+				
+				//Do automatic transmission functions if needed.
+				if(definition.engine.isAutomatic && !world.isClient() && currentGear != 0){
+					if(shiftCooldown == 0){
+						if(currentGear > 0 ? currentGear < forwardsGears : -currentGear < reverseGears){
+							//Can shift up, try to do so.
+							if(rpm > (definition.engine.upShiftRPM != null ? definition.engine.upShiftRPM.get(currentGear + reverseGears) : (currentMaxSafeRPM*0.9))*0.5F*(1.0F + vehicleOn.throttle)){
+								if(currentGear > 0){
+									if(shiftUp(true)){
+										InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, GEAR_VARIABLE, 1));
+									}
+								}else{
+									if(shiftDown(true)){
+										InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, GEAR_VARIABLE, -1));
+									}
+								}
+							}
+						}
+						if(currentGear > 1 || currentGear < -1){
+							//Can shift down, try to do so.
+							if(rpm < (definition.engine.downShiftRPM != null ? definition.engine.downShiftRPM.get(currentGear + reverseGears)*0.5*(1.0F + vehicleOn.throttle) : (currentMaxSafeRPM*0.9)*0.25*(1.0F + vehicleOn.throttle))){
+								if(currentGear > 0){
+									if(shiftDown(true)){
+										InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, GEAR_VARIABLE, -1));
+									}
+								}else{
+									if(shiftUp(true)){
+										InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, GEAR_VARIABLE, 1));
+									}
+								}
+							}
+						}
+					}else{
+						--shiftCooldown;
+					}
+				}
+			}else{
+				//If we aren't a steam engine, set pressure and fuel flow to 0.
+				if(!definition.engine.isSteamPowered){
+					pressure = 0;
+					fuelFlow = 0;
+				}
+				
+				//Internal fuel is used for engine sound wind down.  NOT used for power.
+				if(internalFuel > 0){
+					--internalFuel;
+					if(rpm < 500){
+						internalFuel = 0;
+					}
+				}
+				
+				//Start engine if the RPM is high enough to cause it to start by itself.
+				//Used for drowned engines that come out of the water, or engines that don't
+				//have the ability to engage a starter.
+				if(rpm >= definition.engine.startRPM && !world.isClient() && vehicleOn.damageAmount < vehicleOn.definition.general.health){
+					if(isCreative || vehicleOn.fuelTank.getFluidLevel() > 0){
+						if(!isInLiquid() && magnetoOn){
+							startEngine();
+							InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.START));
+						}
+					}
+				}
+			}
+			
+			//Update engine RPM.  This depends on what is connected.
+			//First check to see if we need to check driven wheels.
+			//While doing this we also get the friction those wheels are providing.
+			//This is used later in force calculations.
+			if(definition.engine.jetPowerFactor == 0 && (vehicleOn.definition.motorized.isFrontWheelDrive || vehicleOn.definition.motorized.isRearWheelDrive)){
+				lowestWheelVelocity = 999F;
+				desiredWheelVelocity = -999F;
+				wheelFriction = 0;
+				engineTargetRPM = !electricStarterEngaged ? vehicleOn.throttle*(currentMaxRPM - currentIdleRPM)/(1 + hours/1250) + currentIdleRPM : definition.engine.startRPM;
+				
+				//Update wheel friction and velocity.
+				for(PartGroundDevice wheel : vehicleOn.groundDeviceCollective.drivenWheels){
+					//If we have grounded wheels, and this wheel is not on the ground, don't take it into account.
+					//This means the wheel is spinning in the air and can't provide force or feedback.
+					if(vehicleOn.groundDeviceCollective.groundedGroundDevices.contains(wheel)){
+						wheelFriction += Math.max(wheel.getMotiveFriction() - wheel.getFrictionLoss(), 0);
+						lowestWheelVelocity = Math.min(wheel.angularVelocity, lowestWheelVelocity);
+						desiredWheelVelocity = Math.max(wheel.getDesiredAngularVelocity(), desiredWheelVelocity);
+					}
+				}
+				
+				//Adjust RPM of the engine to wheels.
+				if(currentGearRatio != 0 && starterLevel == 0){
+					//Don't adjust it down to stall the engine, that can only be done via backfire.
+					if(wheelFriction > 0){
+						double desiredRPM = lowestWheelVelocity*1200F*currentGearRatio*vehicleOn.currentAxleRatio;
+						rpm += (desiredRPM - rpm)/definition.engine.revResistance;
+						if(rpm < currentIdleRPM && running && backfireCooldown <= 0){//Checks if we're backfiring and sets lugging rpm to stall rpm, otherwise sets lug rpm to idle
+							rpm = currentIdleRPM;
+						}else if(rpm < definition.engine.stallRPM && running){
+							rpm = definition.engine.stallRPM;
+							backfireCooldown -= 1;
+						}
+					}else{
+						//No wheel force.  Adjust wheels to engine speed.
+						for(PartGroundDevice wheel : vehicleOn.groundDeviceCollective.drivenWheels){
+							if(currentGearRatio != 0){
+								wheel.angularVelocity = rpm/currentGearRatio/vehicleOn.currentAxleRatio/1200D;
+							}else if(wheel.angularVelocity > 0){
+								wheel.angularVelocity = Math.max(0, wheel.angularVelocity - 0.01D);
+							}else{
+								wheel.angularVelocity = Math.min(0, wheel.angularVelocity + 0.01D);
+							}
+						}
+					}
+				}
+			}
+			
+			//Update propeller variables.
+			attachedPropeller = null;
+			for(APart part : childParts){
+				if(part instanceof PartPropeller){
+					attachedPropeller = (PartPropeller) part;
+					propellerAxialVelocity = vehicleOn.motion.dotProduct(attachedPropeller.axialOrientation);
+					propellerGearboxRatio = Math.signum(currentGearRatio)*(definition.engine.propellerRatio != 0 ? definition.engine.propellerRatio : Math.abs(currentGearRatio));
+					
+					//If wheel friction is 0, and we aren't in neutral, get RPM contributions for that.
+					if(wheelFriction == 0 && currentGearRatio != 0){
+						isPropellerInLiquid = attachedPropeller.isInLiquid();
+						double propellerForcePenalty = Math.max(0, (attachedPropeller.definition.propeller.diameter - 75)/(50*(currentFuelConsumption + (currentSuperchargerFuelConsumption*currentSuperchargerEfficiency)) - 15));
+						double propellerDesiredSpeed = 0.0254*attachedPropeller.currentPitch*rpm/propellerGearboxRatio/60D/20D;
+						double propellerFeedback = (propellerDesiredSpeed - propellerAxialVelocity)*(isPropellerInLiquid ? 130 : 40);
+						if(currentGear < 0 || attachedPropeller.currentPitch < 0){
+							propellerFeedback *= -1;
+						}
+						
+						if(running){
+							propellerFeedback += propellerForcePenalty*50;
+							engineTargetRPM = vehicleOn.throttle*(currentMaxRPM - currentIdleRPM)/(1 + hours/1250) + currentIdleRPM;
+							double engineRPMDifference = engineTargetRPM - rpm;
+							
+							//propellerFeedback can't make an engine stall, but hours can.
+							if(rpm + engineRPMDifference/definition.engine.revResistance > definition.engine.stallRPM && rpm + engineRPMDifference/definition.engine.revResistance - propellerFeedback < definition.engine.stallRPM){
+								rpm = definition.engine.stallRPM;
+							}else{
+								rpm += engineRPMDifference/definition.engine.revResistance - propellerFeedback;
+							}
+						}else if(!electricStarterEngaged && !handStarterEngaged){
+							rpm -= (1 + propellerFeedback)*Math.abs(propellerGearboxRatio);
+							
+							//Don't let the engine RPM go negative.  This results in physics errors.
+							if(rpm < 0){
+								rpm = 0;
+							}
+						}
+					}
+				}
+			}
+			
+			//If wheel friction is 0, and we don't have a propeller, or we're in neutral, adjust RPM to throttle position.
+			//Or, if we are not on, just slowly spin the engine down.
+			if((wheelFriction == 0 && attachedPropeller == null) || currentGearRatio == 0){
+				if(running){
+					engineTargetRPM = vehicleOn.throttle*(currentMaxRPM - currentIdleRPM)/(1 + hours/1250) + currentIdleRPM;
+					rpm += (engineTargetRPM - rpm)/(definition.engine.revResistance*3);
+					if(currentRevlimitRPM == -1){
+						if(rpm > currentMaxSafeRPM){
+							rpm -= Math.abs(engineTargetRPM - rpm)/60;
+						}
+					}else{
+						if(rpm > currentRevlimitRPM){
+							rpm -= Math.abs(engineTargetRPM - rpm)/definition.engine.revlimitBounce;
+						}
+					}
+				}else if(!electricStarterEngaged && !handStarterEngaged){
+					rpm = Math.max(rpm - definition.engine.engineWinddownRate, 0); //engineWinddownRate tells us how quickly to slow down the engine, by default 10
+				}
+			}
+			
+			///Update variables used for jet thrust.
+			if(definition.engine.jetPowerFactor > 0){
+				engineAxialVelocity = vehicleOn.motion.dotProduct(vehicleOn.axialOrientation);
+				
+				//Check for entities forward and aft of the engine and damage them.
+				if(!world.isClient() && rpm >= 5000){
+					boundingBox.widthRadius += 0.25;
+					boundingBox.heightRadius += 0.25;
+					boundingBox.depthRadius += 0.25;
+					boundingBox.globalCenter.add(vehicleOn.headingVector);
+					Damage jetIntake = new Damage("jet_intake", definition.engine.jetPowerFactor*ConfigSystem.configObject.damage.jetDamageFactor.value*rpm/1000F, boundingBox, this, vehicleOn.getController());
+					world.attackEntities(jetIntake, null);
+					
+					boundingBox.globalCenter.subtract(vehicleOn.headingVector);
+					boundingBox.globalCenter.subtract(vehicleOn.headingVector);
+					Damage jetExhaust = new Damage("jet_exhaust", definition.engine.jetPowerFactor*ConfigSystem.configObject.damage.jetDamageFactor.value*rpm/2000F, boundingBox, this, jetIntake.entityResponsible).setFire();
+					world.attackEntities(jetExhaust, null);
+					
+					boundingBox.globalCenter.add(vehicleOn.headingVector);
+					boundingBox.widthRadius -= 0.25;
+					boundingBox.heightRadius -= 0.25;
+					boundingBox.depthRadius -= 0.25;
+				}
+			}
+			
+			//Update engine and driveshaft rotation.
+			//If we are linked to wheels on the ground follow the wheel rotation, not our own.
+			prevEngineRotation = engineRotation;
+			engineRotation += 360D*rpm/1200D;
+			if(engineRotation > 3600000){
+				engineRotation -= 3600000;
+				prevEngineRotation -= 3600000;
+			}else if(engineRotation < -3600000){
+				engineRotation += 3600000;
+				prevEngineRotation += 3600000;
+			}
+			
+			prevDriveshaftRotation = driveshaftRotation;
+			double driveshaftDesiredSpeed = -999;
+			for(PartGroundDevice wheel : vehicleOn.groundDeviceCollective.drivenWheels){
+				driveshaftDesiredSpeed = Math.max(wheel.angularVelocity, driveshaftDesiredSpeed);
+			}
+			if(driveshaftDesiredSpeed != -999){
+				driveshaftRotation += 360D*driveshaftDesiredSpeed*EntityVehicleF_Physics.SPEED_FACTOR;
+			}else{
+				driveshaftRotation += 360D*rpm/1200D/currentGearRatio;
+			}
+			if(driveshaftRotation > 3600000){
+				driveshaftRotation -= 3600000;
+				prevDriveshaftRotation -= 3600000;
+			}else if(driveshaftRotation < -3600000){
+				driveshaftRotation += 3600000;
+				prevDriveshaftRotation += 3600000;
+			}
 		}
 	}
 	

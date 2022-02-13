@@ -17,7 +17,7 @@ import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 import minecrafttransportsimulator.packets.instances.PacketEntityInstrumentChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityTextChange;
-import minecrafttransportsimulator.packets.instances.PacketEntityTrailerChange;
+import minecrafttransportsimulator.packets.instances.PacketEntityTowingChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
@@ -198,7 +198,7 @@ public abstract class APacketBase{
 		InterfacePacket.registerPacket(packetIndex++, PacketEntityInstrumentChange.class);
 		InterfacePacket.registerPacket(packetIndex++, PacketEntityRiderChange.class);
 		InterfacePacket.registerPacket(packetIndex++, PacketEntityTextChange.class);
-		InterfacePacket.registerPacket(packetIndex++, PacketEntityTrailerChange.class);
+		InterfacePacket.registerPacket(packetIndex++, PacketEntityTowingChange.class);
 		InterfacePacket.registerPacket(packetIndex++, PacketEntityVariableIncrement.class);
 		InterfacePacket.registerPacket(packetIndex++, PacketEntityVariableSet.class);
 		InterfacePacket.registerPacket(packetIndex++, PacketEntityVariableToggle.class);

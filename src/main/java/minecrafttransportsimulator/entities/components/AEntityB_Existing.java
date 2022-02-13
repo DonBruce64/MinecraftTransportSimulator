@@ -61,7 +61,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 		this.prevOrientation = new RotationMatrix().set(orientation);
 		this.axialOrientation = new Point3D(0, 0, 1).rotate(orientation);
 		this.placingPlayer = placingPlayer;
-		this.boundingBox = new BoundingBox(shouldLinkBoundsToPosition() ? this.position : new Point3D(this.position), 0.5, 0.5, 0.5);
+		this.boundingBox = new BoundingBox(shouldLinkBoundsToPosition() ? this.position : this.position.copy(), 0.5, 0.5, 0.5);
 		if(hasRadio()){
 			this.radio = new EntityRadio(this, data.getDataOrNew("radio"));
 			world.addEntity(radio);
@@ -84,34 +84,30 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 		this.prevOrientation = new RotationMatrix().set(orientation);
 		this.axialOrientation = new Point3D(0, 0, 1).rotate(orientation);
 		this.placingPlayer = null;
-		this.boundingBox = new BoundingBox(shouldLinkBoundsToPosition() ? this.position : new Point3D(this.position), 0.5, 0.5, 0.5);
+		this.boundingBox = new BoundingBox(shouldLinkBoundsToPosition() ? this.position : this.position.copy(), 0.5, 0.5, 0.5);
 		this.radio = null;
 	}
 	
 	@Override
-	public boolean update(){
-		if(super.update()){
-			world.beginProfiling("EntityB_Level", true);
-			if(world.isClient()){
-				updateSounds(0);
-			}
-			if(changesPosition()){
-				prevPosition.set(position);
-				prevMotion.set(motion);
-				prevOrientation.set(orientation);
-				//FIXME this is only here as a hack to get this to work with existing rendering.  See if we can remove angles after we are done.
-				orientation.setAngleRotation(angles);
-				prevAngles.set(angles);			
-				
-				axialOrientation.set(0, 0, 1).rotate(orientation);
-				airDensity = 1.225*Math.pow(2, -position.y/(500D*world.getMaxHeight()/256D));
-				velocity = motion.length();
-			}
-			world.endProfiling();
-			return true;
-		}else{
-			return false;
+	public void update(){
+		super.update();
+		world.beginProfiling("EntityB_Level", true);
+		if(world.isClient()){
+			updateSounds(0);
 		}
+		if(changesPosition()){
+			prevPosition.set(position);
+			prevMotion.set(motion);
+			prevOrientation.set(orientation);
+			//FIXME this is only here as a hack to get this to work with existing rendering.  See if we can remove angles after we are done.
+			orientation.setAngleRotation(angles);
+			prevAngles.set(angles);			
+			
+			axialOrientation.set(0, 0, 1).rotate(orientation);
+			airDensity = 1.225*Math.pow(2, -position.y/(500D*world.getMaxHeight()/256D));
+			velocity = motion.length();
+		}
+		world.endProfiling();
 	}
 	
 	@Override

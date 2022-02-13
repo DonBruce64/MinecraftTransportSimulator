@@ -118,7 +118,15 @@ public class WrapperEntity{
 	 *  a vanilla entity).
 	 */
 	public AEntityE_Interactable<?> getEntityRiding(){
-		return entity.getRidingEntity() instanceof BuilderEntityExisting ? (AEntityE_Interactable<?>) ((BuilderEntityExisting) entity.getRidingEntity()).entity : null;
+		Entity mcEntityRiding = entity.getRidingEntity();
+		if(mcEntityRiding instanceof BuilderEntityExisting){
+			AEntityE_Interactable<?> entityRiding = (AEntityE_Interactable<?>) ((BuilderEntityExisting) mcEntityRiding).entity;
+			//Need to check this as MC might have us as a rider on the builer, but we might not be a rider on the entity.
+			if(entityRiding.locationRiderMap.containsValue(this)){
+				return entityRiding;
+			}
+		}
+		return null;
 	}
 	
 	/**

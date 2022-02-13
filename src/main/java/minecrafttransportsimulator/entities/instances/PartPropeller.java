@@ -59,69 +59,65 @@ public class PartPropeller extends APart{
 	}
 	
 	@Override
-	public boolean update(){
-		if(super.update()){
-			//Maybe we aren't connected to an engine?  Not sure how this could happen, but it could.
-			if(connectedEngine == null){
-				isValid = false;
-				return false;
-			}
-			//If we are a dynamic-pitch propeller or rotor, adjust ourselves to the speed of the engine.
-			if(vehicleOn != null){
-				if(definition.propeller.isRotor){
-					double throttlePitchSetting = connectedEngine.running ? (vehicleOn.throttle*1.35 - 0.35)*definition.propeller.pitch : 0;
-					if(throttlePitchSetting < currentPitch){
-						--currentPitch;
-					}else if(throttlePitchSetting > currentPitch){
-						++currentPitch;
-					}
-				}else if(definition.propeller.isDynamicPitch){
-					if(vehicleOn.reverseThrust && currentPitch > -MIN_DYNAMIC_PITCH){
-						--currentPitch;
-					}else if(!vehicleOn.reverseThrust && currentPitch < MIN_DYNAMIC_PITCH){
-						++currentPitch;
-					}else if(connectedEngine.rpm < connectedEngine.definition.engine.maxSafeRPM*0.60 && currentPitch > MIN_DYNAMIC_PITCH){
-						--currentPitch;
-					}else if(connectedEngine.rpm > connectedEngine.definition.engine.maxSafeRPM*0.85 && currentPitch < definition.propeller.pitch){
-						++currentPitch;
-					}
+	public void update(){
+		super.update();
+		//Maybe we aren't connected to an engine?  Did a pack change and we don't have one?
+		if(connectedEngine == null){
+			isValid = false;
+			return;
+		}
+		//If we are a dynamic-pitch propeller or rotor, adjust ourselves to the speed of the engine.
+		if(vehicleOn != null){
+			if(definition.propeller.isRotor){
+				double throttlePitchSetting = connectedEngine.running ? (vehicleOn.throttle*1.35 - 0.35)*definition.propeller.pitch : 0;
+				if(throttlePitchSetting < currentPitch){
+					--currentPitch;
+				}else if(throttlePitchSetting > currentPitch){
+					++currentPitch;
+				}
+			}else if(definition.propeller.isDynamicPitch){
+				if(vehicleOn.reverseThrust && currentPitch > -MIN_DYNAMIC_PITCH){
+					--currentPitch;
+				}else if(!vehicleOn.reverseThrust && currentPitch < MIN_DYNAMIC_PITCH){
+					++currentPitch;
+				}else if(connectedEngine.rpm < connectedEngine.definition.engine.maxSafeRPM*0.60 && currentPitch > MIN_DYNAMIC_PITCH){
+					--currentPitch;
+				}else if(connectedEngine.rpm > connectedEngine.definition.engine.maxSafeRPM*0.85 && currentPitch < definition.propeller.pitch){
+					++currentPitch;
 				}
 			}
-			
-			//Adjust angular position and velocity.
-			if(connectedEngine.propellerGearboxRatio != 0){
-				angularVelocity = (float) (connectedEngine.rpm/connectedEngine.propellerGearboxRatio/60F/20F);
-			}else if(angularVelocity > .01){
-				angularVelocity -= 0.01;
-			}else if(angularVelocity < -.01){
-				angularVelocity += 0.01;
-			}else{
-				angularVelocity = 0;
-			}
-			angularPosition += angularVelocity;
-			if(angularPosition > 3600000){
-				angularPosition -= 3600000;
-				angularPosition -= 3600000;
-			}else if(angularPosition < -3600000){
-				angularPosition += 3600000;
-				angularPosition += 3600000;
-			}
-			
-			//Damage propeller or entities if required.
-			if(!world.isClient() && connectedEngine.rpm >= 100){
-				//Expand the bounding box bounds, and send off the attack.
-				boundingBox.widthRadius += 0.2;
-				boundingBox.heightRadius += 0.2;
-				boundingBox.depthRadius += 0.2;
-				Damage propellerDamage = new Damage("propellor", ConfigSystem.configObject.damage.propellerDamageFactor.value*connectedEngine.rpm*connectedEngine.propellerGearboxRatio/500F, damageBounds, this, vehicleOn != null ? vehicleOn.getController() : null);
-				world.attackEntities(propellerDamage, null);
-				boundingBox.widthRadius -= 0.2;
-				boundingBox.heightRadius -= 0.2;
-				boundingBox.depthRadius -= 0.2;
-			}
-			return true;
+		}
+		
+		//Adjust angular position and velocity.
+		if(connectedEngine.propellerGearboxRatio != 0){
+			angularVelocity = (float) (connectedEngine.rpm/connectedEngine.propellerGearboxRatio/60F/20F);
+		}else if(angularVelocity > .01){
+			angularVelocity -= 0.01;
+		}else if(angularVelocity < -.01){
+			angularVelocity += 0.01;
 		}else{
-			return false;
+			angularVelocity = 0;
+		}
+		angularPosition += angularVelocity;
+		if(angularPosition > 3600000){
+			angularPosition -= 3600000;
+			angularPosition -= 3600000;
+		}else if(angularPosition < -3600000){
+			angularPosition += 3600000;
+			angularPosition += 3600000;
+		}
+		
+		//Damage propeller or entities if required.
+		if(!world.isClient() && connectedEngine.rpm >= 100){
+			//Expand the bounding box bounds, and send off the attack.
+			boundingBox.widthRadius += 0.2;
+			boundingBox.heightRadius += 0.2;
+			boundingBox.depthRadius += 0.2;
+			Damage propellerDamage = new Damage("propellor", ConfigSystem.configObject.damage.propellerDamageFactor.value*connectedEngine.rpm*connectedEngine.propellerGearboxRatio/500F, damageBounds, this, vehicleOn != null ? vehicleOn.getController() : null);
+			world.attackEntities(propellerDamage, null);
+			boundingBox.widthRadius -= 0.2;
+			boundingBox.heightRadius -= 0.2;
+			boundingBox.depthRadius -= 0.2;
 		}
 	}
 	

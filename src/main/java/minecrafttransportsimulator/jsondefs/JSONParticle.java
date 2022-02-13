@@ -54,6 +54,9 @@ public class JSONParticle{
 	@JSONDescription("The max velocity this particle can have in any axis.  Used to prevent particles from going to fast if they move a long way.")
 	public Point3D terminalVelocity;
 	
+	@JSONDescription("This is a list of animatedObjects that can be used to move the spawn position of this particle.")
+    public List<JSONAnimationDefinition> spawningAnimations;
+	
 	@JSONRequired
 	@JSONDescription("A listing of animation objects for determining if this particle should spawn.  Particles will only spawn when they first become active, unless spawnEveryTick is set.")
 	public List<JSONAnimationDefinition> activeAnimations;

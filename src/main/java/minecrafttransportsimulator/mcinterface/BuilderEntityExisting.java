@@ -13,6 +13,7 @@ import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
+import minecrafttransportsimulator.entities.components.AEntityG_Towable;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.IItemEntityProvider;
@@ -76,7 +77,10 @@ public class BuilderEntityExisting extends ABuilderEntityBase{
     			entity.world.beginProfiling("Main_Execution", true);
     			
 	    		//Forward the update call.
-	    		entity.update();
+    			if(!(entity instanceof AEntityG_Towable) || !(((AEntityG_Towable<?>) entity).blockMainUpdateCall())){
+    				//FIXME move this somewhere else before main ticks and call post-updates.
+    				entity.update();
+    			}
 	    		
 	    		//Set the new position.
 	    		entity.world.beginProfiling("MovementOverhead", false);
