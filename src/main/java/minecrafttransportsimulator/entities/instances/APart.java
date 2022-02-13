@@ -157,11 +157,7 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 			
 			//Update zero-reference.
 			prevZeroReferenceOrientation.set(zeroReferenceOrientation);
-			if(parentPart != null && placementDefinition.isSubPart){
-				zeroReferenceOrientation.set(parentPart.orientation);
-			}else{
-				zeroReferenceOrientation.set(entityOn.orientation);
-			}
+			zeroReferenceOrientation.set(entityOn.orientation);
 			if(placementDefinition.rot != null){
 				zeroReferenceOrientation.multiply(placementDefinition.rot);
 			}
