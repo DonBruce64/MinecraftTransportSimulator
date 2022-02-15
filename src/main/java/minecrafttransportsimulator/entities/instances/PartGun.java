@@ -582,11 +582,11 @@ public class PartGun extends APart{
 	 * Used in both spawning the bullet, and in rendering where the muzzle position is.
 	 */
 	public void setBulletSpawn(Point3d bulletPosition, Point3d bulletVelocity, JSONMuzzle muzzle){
-		//If we have a gun with a muzzle velocity, set the bullet's velocity to that.  Otherwise set it to the vehicle's velocity.
+		//Set initial velocity to gun's velocity, otherwise it starts at 0.
 		if(definition.gun.muzzleVelocity > 0){
 			bulletVelocity.set(0, 0, definition.gun.muzzleVelocity/20D/10D);
 		}else{
-			bulletVelocity.setTo(motion).multiply(EntityVehicleF_Physics.SPEED_FACTOR);
+			bulletVelocity.set(0, 0, 0);
 		}
 		
 		//Velocity is based on the current gun orientation, plus a slight fudge-factor based on the spread factor.
@@ -598,6 +598,9 @@ public class PartGun extends APart{
 			bulletVelocity.rotateFine(new Point3d((Math.random() - 0.5F)*definition.gun.bulletSpreadFactor, (Math.random() - 0.5F)*definition.gun.bulletSpreadFactor, 0D));
 		}
 		bulletVelocity.rotateFine(localAngles).rotateFine(entityOn.angles);
+		
+		//Add gun velocity to bullet to ensure we spawn with the offset.
+		bulletVelocity.addScaled(motion, EntityVehicleF_Physics.SPEED_FACTOR);
 		
 		//Position is based on JSON parameters and current orientation.
 		if(definition.gun.pitchIsInternal){
