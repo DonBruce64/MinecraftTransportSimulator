@@ -166,7 +166,7 @@ public class JSONParser{
 			}else{
 				reader.beginArray();
 				RotationMatrix value = new RotationMatrix();
-				value.setAngleRotation(new Point3D(reader.nextDouble(), reader.nextDouble(), reader.nextDouble()));
+				value.setToAngles(new Point3D(reader.nextDouble(), reader.nextDouble(), reader.nextDouble()));
 				reader.endArray();
 				return value;
 			}

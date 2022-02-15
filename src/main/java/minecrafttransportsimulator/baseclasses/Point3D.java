@@ -89,7 +89,7 @@ public class Point3D{
 	 * if you don't want to modify the vector, but want 
 	 * to translate along it's path.
 	 */
-	public Point3D addScaled(double scale, Point3D point){
+	public Point3D addScaled(Point3D point, double scale){
 		this.x += point.x*scale;
 		this.y += point.y*scale;
 		this.z += point.z*scale;
@@ -392,6 +392,7 @@ public class Point3D{
 	 * Aligns this point to the passed-in matrix origin.  Essentially, this leaves
 	 * the point in its current position, but changes the coordinate system
 	 * to be aligned to the coordinate system of this matrix.
+	 * More specifically, this is an inverted rotation by the transpose of the matrix.
 	 */
 	public Point3D reOrigin(RotationMatrix matrix){
 		double tx = matrix.m00* x + matrix.m10*y + matrix.m20*z;

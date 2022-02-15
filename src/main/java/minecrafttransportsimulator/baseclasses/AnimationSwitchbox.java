@@ -118,7 +118,7 @@ public class AnimationSwitchbox{
 		//Found rotation.  Get angles that needs to be applied.
 		double variableValue = entity.getAnimatedVariableValue(clock, clock.animationAxisMagnitude, partialTicks);
 		if(variableValue != 0){
-			helperRotationMatrix.setAxisAngleRotation(clock.animationAxisNormalized, variableValue);
+			helperRotationMatrix.setToAxisAngle(clock.animationAxisNormalized, variableValue);
 			
 			//If we have a center offset, do special translation code to handle it.
 			//Otherwise, don't bother, as it'll just take cycles.

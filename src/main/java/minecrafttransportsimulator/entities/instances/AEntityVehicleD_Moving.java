@@ -53,6 +53,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	public boolean lockedOnRoad;
 	public double groundVelocity;
 	public double weightTransfer = 0;
+	public final Point3D rotation = new Point3D();
 	
 	//Properties
 	@ModifiedValue
@@ -247,7 +248,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	private RoadFollowingState getFollower(){
 		Point3D contactPoint = groundDeviceCollective.getContactPoint(false);
 		if(contactPoint != null){
-			contactPoint.rotateFine(angles).add(position);
+			contactPoint.rotate(orientation).add(position);
 			Point3D testPoint = new Point3D();
 			ABlockBase block =  world.getBlock(contactPoint);
 			if(block instanceof BlockCollision){
@@ -589,7 +590,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 				//Set our position so we're aligned with the road.
 				//To do this, we get the distance between our contact points for front and rear, and then interpolate between them.
 				//First get the rear point.  This defines the delta for the movement of the vehicle.
-				rearPoint.rotateFine(angles).add(position);
+				rearPoint.rotate(orientation).add(position);
 				Point3D rearDesiredPoint = rearFollower.getCurrentPoint();
 				
 				//Apply the motion based on the delta between the actual and desired.
@@ -700,34 +701,32 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		if(!collidedEntities.isEmpty()){
 			world.beginProfiling("EntityMoveAlong", false);
 			for(AEntityE_Interactable<?> interactable : collidedEntities){
+				//Set angluar movement delta.
 				if(interactable instanceof AEntityVehicleD_Moving){
-					AEntityVehicleD_Moving mainVehicle = (AEntityVehicleD_Moving) interactable;
-					//Set angluar movement delta.
-					collisionRotation.set(mainVehicle.angles);
-					collisionRotation.subtract(mainVehicle.prevAngles);
-					
-					//Get vector from collided box to this entity.
-					Point3D centerOffset = position.copy().subtract(mainVehicle.prevPosition);
-					
-					//Add rotation contribution to offset.
-					collisionMotion.set(centerOffset);
-					collisionMotion.rotateFine(collisionRotation);
-					collisionMotion.subtract(centerOffset);
-					
-					//Add linear contribution to offset.
-					collisionMotion.add(mainVehicle.position).subtract(mainVehicle.prevPosition);
-					
-					//If we just contacted an entity, adjust our motion to match that entity's motion.
-					//We take our motion, and then remove it so it's the delta to that entity.
-					//This ensures that if we're moving and land on an entity, we don't run off.
-					if(lastCollidedEntity == null){
-						lastCollidedEntity = interactable;
-						motion.subtract(lastCollidedEntity.motion);
-					}
-					
-					//Only check one for now.  We could do multiple, but then we'd have to do maths.
-					break;
+					collisionRotation.set(((AEntityVehicleD_Moving) interactable).rotationApplied);
 				}
+				
+				//Get vector from collided box to this entity.
+				Point3D centerOffset = position.copy().subtract(interactable.prevPosition);
+				
+				//Add rotation contribution to offset.
+				collisionMotion.set(centerOffset);
+				collisionMotion.rotateFine(collisionRotation);
+				collisionMotion.subtract(centerOffset);
+				
+				//Add linear contribution to offset.
+				collisionMotion.add(interactable.position).subtract(interactable.prevPosition);
+				
+				//If we just contacted an entity, adjust our motion to match that entity's motion.
+				//We take our motion, and then remove it so it's the delta to that entity.
+				//This ensures that if we're moving and land on an entity, we don't run off.
+				if(lastCollidedEntity == null){
+					lastCollidedEntity = interactable;
+					motion.subtract(lastCollidedEntity.motion);
+				}
+				
+				//Only check one for now.  We could do multiple, but then we'd have to do maths.
+				break;
 			}
 		}else{
 			if(lastCollidedEntity != null){
@@ -831,7 +830,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		if(motion.length() > 0.001){
 			boolean clearedCache = false;
 			for(BoundingBox box : allBlockCollisionBoxes){
-				tempBoxPosition.set(box.globalCenter).subtract(position).rotateFine(rotation).subtract(box.globalCenter).add(position).addScaled(SPEED_FACTOR, motion);
+				tempBoxPosition.set(box.globalCenter).subtract(position).rotateFine(rotation).subtract(box.globalCenter).add(position).addScaled(motion, SPEED_FACTOR);
 				if(!box.collidesWithLiquids && world.checkForCollisions(box, tempBoxPosition, !clearedCache)){
 					return true;
 				}
@@ -911,7 +910,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			tempBoxRotation.set(0D, rotation.y, 0D);
 			for(BoundingBox box : allBlockCollisionBoxes){
 				while(rotation.y != 0){
-					tempBoxPosition.set(box.globalCenter).subtract(position).rotateFine(tempBoxRotation).add(position).addScaled(SPEED_FACTOR, motion);
+					tempBoxPosition.set(box.globalCenter).subtract(position).rotateFine(tempBoxRotation).add(position).addScaled(motion, SPEED_FACTOR);
 					//Raise this box ever so slightly because Floating Point errors are a PITA.
 					tempBoxPosition.add(0D, 0.1D, 0D);
 					if(!box.updateCollidingBlocks(world, tempBoxPosition.subtract(box.globalCenter))){
@@ -932,7 +931,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			tempBoxRotation.set(rotation.x, rotation.y, 0D);
 			for(BoundingBox box : allBlockCollisionBoxes){
 				while(rotation.x != 0){
-					tempBoxPosition.set(box.globalCenter).subtract(position).rotateFine(tempBoxRotation).add(position).addScaled(SPEED_FACTOR, motion);
+					tempBoxPosition.set(box.globalCenter).subtract(position).rotateFine(tempBoxRotation).add(position).addScaled(motion, SPEED_FACTOR);
 					if(!box.updateCollidingBlocks(world, tempBoxPosition.subtract(box.globalCenter))){
 						break;
 					}
@@ -950,7 +949,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			tempBoxRotation.set(rotation);
 			for(BoundingBox box : allBlockCollisionBoxes){
 				while(rotation.z != 0){
-					tempBoxPosition.set(box.globalCenter).subtract(position).rotateFine(tempBoxRotation).add(position).addScaled(SPEED_FACTOR, motion);
+					tempBoxPosition.set(box.globalCenter).subtract(position).rotateFine(tempBoxRotation).add(position).addScaled(motion, SPEED_FACTOR);
 					if(!box.updateCollidingBlocks(world, tempBoxPosition.subtract(box.globalCenter))){
 						break;
 					}

@@ -45,9 +45,9 @@ abstract class AEntityVehicleC_Colliding extends AEntityVehicleB_Rideable{
 		//Set vectors to current velocity and orientation.
 		world.beginProfiling("SetVectors", true);
 		headingVector.set(0D, 0D, 1D);
-		headingVector.rotateFine(angles);
+		headingVector.rotate(orientation);
 		verticalVector.set(0D, 1D, 0D);
-		verticalVector.rotateFine(angles);
+		verticalVector.rotate(orientation);
 		sideVector.set(verticalVector.crossProduct(headingVector));
 		normalizedVelocityVector.set(motion);
 		normalizedVelocityVector.normalize();

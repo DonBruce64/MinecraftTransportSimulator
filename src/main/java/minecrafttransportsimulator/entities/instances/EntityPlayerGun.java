@@ -7,6 +7,7 @@ import java.util.UUID;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.PartGun.GunState;
 import minecrafttransportsimulator.items.components.AItemBase;
@@ -36,6 +37,7 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun>{
 	public static final Map<UUID, EntityPlayerGun> playerServerGuns = new HashMap<UUID, EntityPlayerGun>();
 	
 	public final WrapperPlayer player;
+	private final RotationMatrix handRotation = new RotationMatrix();
 	private int hotbarSelected = -1;
 	private WrapperItemStack gunStack;
 	private boolean didGunFireLastTick;
@@ -51,8 +53,6 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun>{
 			this.player = placingPlayer;
 			position.set(player.getPosition());
 			prevPosition.set(position);
-			angles.set(player.getPitch(), player.getYaw(), 0);
-			prevAngles.set(angles);
 		}else{
 			//Saved entity.  Either on the server or client.
 			//Get player via saved NBT.  If the player isn't found, we're not valid.
@@ -126,6 +126,7 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun>{
 		//Make sure player is still valid and haven't left the server.
 		if(player != null && player.isValid()){
 			//Set our position to the player's position.  We may update this later if we have a gun.
+			//We can't update position without the gun as it has an offset defined in it.
 			position.set(player.getPosition());
 			motion.set(player.getVelocity());
 			
@@ -175,29 +176,26 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun>{
 			//Only change firing command on servers to prevent de-syncs.
 			//Packets will get sent to clients to change them.
 			if(activeGun != null){
-				//Set our position relative to the the player's hand.
-				//Center point is at the player's arm, with offset being where the offset is.
-				Point3D heldVector;
-				if(activeGun.isHandHeldGunAimed){
-					heldVector = activeGun.definition.gun.handHeldAimedOffset;
-				}else{
-					heldVector = activeGun.definition.gun.handHeldNormalOffset;
-				}
-				angles.set(player.getPitch(), player.getYaw(), 0);
+				//First rotate transform to match the player's hand.
+				handRotation.setToZero().rotateX(player.getPitch());
 				
+				//Offset to the end of the hand with our offset and current rotation.
+				if(activeGun.isHandHeldGunAimed){
+					position.set(activeGun.definition.gun.handHeldAimedOffset);
+				}else{
+					position.set(activeGun.definition.gun.handHeldNormalOffset);
+				}
+				position.rotate(handRotation);
+				
+				//Now rotate to match the player's yaw and body orientation.
 				//Arm center is 0.3125 blocks away in X, 1.375 blocks up in Y.
 				//Sneaking lowers arm by 0.2 blocks.
-				//First rotate point based on pitch.  This is for only the arm movement.
-				Point3D armRotation = new Point3D(angles.x, 0, 0);
-				position.set(heldVector);
-				position.rotateFine(armRotation);
+				handRotation.setToZero().rotateY(player.getYaw());
+				position.add(-0.3125, player.isSneaking() ? 1.3125 - 0.2 : 1.3125, 0).rotate(handRotation);
 				
-				//Now rotate based on player yaw.  We need to take the arm offset into account here.
-				armRotation.set(0, angles.y, 0);
-				position.add(-0.3125, 0, 0).rotateFine(armRotation);
-				
-				//Now add the player's position and model center point offsets.
-				position.add(player.getPosition()).add(0, player.isSneaking() ? 1.3125 - 0.2 : 1.3125, 0);
+				//Apply global position offset and orientation.
+				position.add(player.getPosition());
+				orientation.set(player.getOrientation());
 				
 				if(!world.isClient()){
 					//Save gun data if we stopped firing the prior tick.

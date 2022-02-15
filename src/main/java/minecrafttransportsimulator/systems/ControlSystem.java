@@ -90,7 +90,8 @@ public final class ControlSystem{
 		EntityPlayerGun playerGun = EntityPlayerGun.playerClientGuns.get(player.getID());
 		if(playerGun != null && playerGun.activeGun != null){
 			InterfacePacket.sendToServer(new PacketPartGun(playerGun.activeGun, clickingLeft, clickingRight));
-		}else if(clickingLeft || clickingRight){
+		}
+		if(clickingLeft || clickingRight){
 			Point3D startPosition = player.getPosition();
 			startPosition.y += (player.getEyeHeight() + player.getSeatOffset());
 			Point3D endPosition = player.getLineOfSight(3.5);

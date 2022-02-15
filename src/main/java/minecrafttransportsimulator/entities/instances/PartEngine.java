@@ -996,7 +996,7 @@ public class PartEngine extends APart{
 				//Not running, do engine braking.
 				wheelForce = -rpm/currentMaxRPM*Math.signum(currentGear)*30;
 			}
-			engineForce.addScaled(wheelForce, vehicleOn.axialOrientation);
+			engineForce.addScaled(vehicleOn.axialOrientation, wheelForce);
 		}
 		
 		//If we provide jet power, add it now.  This may be done with any parts or wheels on the ground.
@@ -1007,18 +1007,18 @@ public class PartEngine extends APart{
 			//by the core of the engine.  This is speed-independent as the core will ALWAYS accelerate air.
 			//Note that due to a lack of jet physics formulas available, this is "hacky math".
 			double safeRPMFactor = rpm/currentMaxSafeRPM;
-			double coreContribution = Math.max(10*airDensity*currentFuelConsumption*safeRPMFactor - definition.engine.bypassRatio, 0);
+			double coreContribution = Math.max(10*vehicleOn.airDensity*currentFuelConsumption*safeRPMFactor - definition.engine.bypassRatio, 0);
 			
 			//The fan portion is calculated similarly to how propellers are calculated.
 			//This takes into account the air density, and relative speed of the engine versus the fan's desired speed.
 			//Again, this is "hacky math", as for some reason there's no data on fan pitches.
 			//In this case, however, we don't care about the fuelConsumption as that's only used by the core.
 			double fanVelocityFactor = (0.0254*250*rpm/60/20 - engineAxialVelocity)/200D;
-			double fanContribution = 10*airDensity*safeRPMFactor*fanVelocityFactor*definition.engine.bypassRatio;
+			double fanContribution = 10*vehicleOn.airDensity*safeRPMFactor*fanVelocityFactor*definition.engine.bypassRatio;
 			double thrust = (vehicleOn.reverseThrust ? -(coreContribution + fanContribution) : coreContribution + fanContribution)*definition.engine.jetPowerFactor;
 			
 			//Add the jet force to the engine.  Use the engine rotation to define the power vector.
-			engineForce.addScaled(thrust, vehicleOn.axialOrientation);
+			engineForce.addScaled(vehicleOn.axialOrientation, thrust);
 		}
 		
 		//Finally, return the force we calculated.

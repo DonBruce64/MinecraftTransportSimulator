@@ -138,7 +138,7 @@ public class PartGun extends APart{
 		this.currentMuzzleGroupIndex = data.getInteger("currentMuzzleGroupIndex");
 		this.internalAngles = data.getPoint3d("internalAngles");
 		this.prevInternalAngles = internalAngles.copy();
-		this.internalOrientation = new RotationMatrix().setAngleRotation(internalAngles);
+		this.internalOrientation = new RotationMatrix().setToAngles(internalAngles);
 		this.prevInternalOrientation = new RotationMatrix().set(internalOrientation);
 		String loadedBulletPack = data.getString("loadedBulletPack");
 		String loadedBulletName = data.getString("loadedBulletName");
@@ -168,7 +168,6 @@ public class PartGun extends APart{
 	@Override
 	public void update(){
 		//Set gun state and do updates.
-		firedThisCheck = false;
 		prevInternalAngles.set(internalAngles);
 		prevInternalOrientation.set(internalOrientation);
 		if(isActive && !placementDefinition.isSpare){
@@ -357,8 +356,10 @@ public class PartGun extends APart{
 			firedThisRequest = false;
 		}
 		
-		//Now run super.
+		//Now run super.  Firing check reset needs to happen after this call as the firing gets
+		//done by the rendering system for particle spawning and will be set true here on call.
 		super.update();
+		firedThisCheck = false;
 	}
 	
 	/**
@@ -542,7 +543,7 @@ public class PartGun extends APart{
 		}
 		
 		//Update internal orientation.
-		internalOrientation.setAngleRotation(internalAngles);
+		internalOrientation.setToAngles(internalAngles);
 	}
 	
 	/**
@@ -613,7 +614,7 @@ public class PartGun extends APart{
 		bulletVelocity.set(0, 0, definition.gun.muzzleVelocity/20D/10D);
 		if(definition.gun.bulletSpreadFactor > 0){
 			firingSpreadAngles.set((Math.random() - 0.5F)*definition.gun.bulletSpreadFactor, (Math.random() - 0.5F)*definition.gun.bulletSpreadFactor, 0D);
-			firingSpreadRotation.setAngleRotation(firingSpreadAngles);
+			firingSpreadRotation.setToAngles(firingSpreadAngles);
 			bulletVelocity.rotate(firingSpreadRotation);
 		}
 		
@@ -625,7 +626,7 @@ public class PartGun extends APart{
 		bulletVelocity.rotate(internalOrientation).rotate(zeroReferenceOrientation);
 		
 		//Add gun velocity to bullet to ensure we spawn with the offset.
-		bulletVelocity.addScaled(EntityVehicleF_Physics.SPEED_FACTOR, motion);
+		bulletVelocity.addScaled(motion, EntityVehicleF_Physics.SPEED_FACTOR);
 
 		//Now set position.
 		bulletPosition.set(muzzle.pos).rotate(internalOrientation).rotate(zeroReferenceOrientation).add(position);

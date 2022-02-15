@@ -227,7 +227,7 @@ public final class RenderInstrument{
 				bottomRight.subtract(clock.animation.centerPoint);
 			}else{
 				renderObject.transform.applyTranslation((component.xCenter + clock.animation.centerPoint.x), -(component.yCenter + clock.animation.centerPoint.y), 0.0);
-				helperRotationMatrix.setAxisAngleRotation(0, 0, 1, variableValue);
+				helperRotationMatrix.setToAxisAngle(0, 0, 1, variableValue);
 				renderObject.transform.applyRotation(helperRotationMatrix);
 				renderObject.transform.applyTranslation(-(component.xCenter + clock.animation.centerPoint.x), (component.yCenter + clock.animation.centerPoint.y), 0.0);
 			}

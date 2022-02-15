@@ -46,9 +46,10 @@ abstract class AEntityVehicleB_Rideable extends AEntityG_Towable<JSONVehicle>{
 			position.set(placingPlayer.getPosition().add(playerSightVector.x, 0, playerSightVector.z));
 			prevPosition.set(position);
 			angles.set(0, placingPlayer.getYaw() + 90, 0);
-			prevAngles.set(angles);
+			orientation.setToAngles(angles);
+			prevOrientation.set(orientation);
 			motion.set(0, 0, 0);
-			prevMotion.set(0, 0, 0);
+			prevMotion.set(motion);
 		}
 	}
 	

@@ -7,6 +7,7 @@ import java.util.Map;
 
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
@@ -35,7 +36,7 @@ public abstract class ARenderEntityDefinable<RenderedEntity extends AEntityD_Def
 	
 	/**Static helper matrix for transforming instrument positions.**/
 	private static final TransformationMatrix instrumentTransform = new TransformationMatrix();
-	private static final RotationMatrix INSTRUMENT_ROTATION_INVERSION = new RotationMatrix().setAxisAngleRotation(0, 1, 0, 180);
+	private static final RotationMatrix INSTRUMENT_ROTATION_INVERSION = new RotationMatrix().setToAxisAngle(0, 1, 0, 180);
 	
 	public ARenderEntityDefinable(){
 		createdRenderers.add(this);
@@ -131,11 +132,13 @@ public abstract class ARenderEntityDefinable<RenderedEntity extends AEntityD_Def
 	
 	@Override
 	public void renderBoundingBoxes(RenderedEntity entity, TransformationMatrix transform){
-		if(entity instanceof AEntityF_Multipart){
+		if(entity instanceof AEntityE_Interactable){
 			AEntityE_Interactable<?> interactable = (AEntityE_Interactable<?>) entity;
-			interactable.encompassingBox.renderWireframe(entity, transform, null, null);
 			for(BoundingBox box : interactable.interactionBoxes){
 				box.renderWireframe(entity, transform, null, null);
+			}
+			if(interactable instanceof AEntityF_Multipart){
+				interactable.encompassingBox.renderWireframe(entity, transform, null, ColorRGB.WHITE);
 			}
 		}else{
 			super.renderBoundingBoxes(entity, transform);

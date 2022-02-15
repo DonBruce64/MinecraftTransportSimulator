@@ -227,7 +227,7 @@ public class WrapperEntity{
 			lastPitchChecked = entity.rotationPitch;
 			lastYawChecked = entity.rotationYaw;
 			mutableAngles.set(entity.rotationPitch, -entity.rotationYaw, 0);
-			mutableOrientation.setAngleRotation(mutableAngles);
+			mutableOrientation.setToAngles(mutableAngles);
 		}
 		return mutableOrientation;
 	}

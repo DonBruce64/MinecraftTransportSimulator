@@ -466,17 +466,17 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 								if(entityVelocity.y < 0 || entityVelocity.y < entityBottomDelta){
 									//Get how much the entity moved the collision box the entity collided with so we know how much to move the entity.
 									//This lets entities "move along" with entities when touching a collision box.
-									Point3D entityPosition = entity.getPosition();
-									Point3D linearMovement = position.copy().subtract(prevPosition);
-									Point3D angularMovement = angles.copy().subtract(prevAngles);
-									Point3D entityDeltaOffset = entityPosition.copy().subtract(prevPosition);
-									Point3D vehicleBoxMovement = entityDeltaOffset.copy().rotateFine(angularMovement).subtract(entityDeltaOffset).add(linearMovement);
+									Point3D entityPositionVector = entity.getPosition().copy().subtract(position);
+									Point3D startingAngles = entityPositionVector.copy().getAngles(true);
+									Point3D entityPositionDelta = entityPositionVector.copy();
+									entityPositionDelta.rotate(orientation).reOrigin(prevOrientation);
+									Point3D entityAngleDelta = entityPositionDelta.copy().getAngles(true).subtract(startingAngles);
 									
-									//Apply motions to move entity.
-									entityPosition.add(vehicleBoxMovement).add(0, entityBottomDelta, 0);
-									entity.setPosition(entityPosition, true);
-									entity.setYaw(entity.getYaw() + angularMovement.y);
-									entity.setBodyYaw(entity.getBodyYaw() + angularMovement.y);
+									entityPositionDelta.add(position).subtract(prevPosition);
+									entityPositionDelta.subtract(entityPositionVector).add(0, entityBottomDelta, 0);
+									entity.setPosition(entityPositionDelta.add(entity.getPosition()), true);
+									entity.setYaw(entity.getYaw() + entityAngleDelta.y);
+									entity.setBodyYaw(entity.getBodyYaw() + entityAngleDelta.y);
 									break;
 								}
 							}

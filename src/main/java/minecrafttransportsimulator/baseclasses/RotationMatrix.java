@@ -11,7 +11,6 @@ import javax.vecmath.Quat4d;
  * @author don_bruce
  */
 public class RotationMatrix{
-	private static final RotationMatrix helperMatrix = new RotationMatrix();
 	private static final Quat4d interpHelperQuatStart = new Quat4d();
 	private static final Matrix4d interpHelperMatrixStart = new Matrix4d();
 	private static final Quat4d interpHelperQuatEnd = new Quat4d();
@@ -103,51 +102,148 @@ public class RotationMatrix{
 	 * object instances at the same time.  Basically, don't use
 	 * if you can avoid it.
 	 */
-	public synchronized RotationMatrix setAngleRotation(Point3D angles){
+	public synchronized RotationMatrix setToAngles(Point3D angles){
 		//Don't bother setting angles if they are already correct.
 		if(!lastAnglesSet.equals(angles)){
 			lastAnglesSet.set(angles);
+			setToZero();
+			rotateY(angles.y);
+			rotateX(angles.x);
+			rotateZ(angles.z);
+		}
+		return this;
+	}
+	
+	/**
+	 * Returns the angles that make up this matrix.  Note: these may not be the
+	 * same as the passed-in angles to {@link #setToAngles(Point3D)}. as rotation
+	 * matrix conversion has multiple solutions.  In general, these shouldn't be
+	 * used for calculations and rather should just be used to store the state of 
+	 * the matrix for later use where the orientation of the matrix matters, but
+	 * the actual angles don't. 
+	 */
+	public Point3D convertToAngles(){
+		Point3D angles = new Point3D();
+		
+		double sy = Math.sqrt(m00*m00 + m10*m10);
+		boolean singular = sy < 1e-6;
+		final double roll1,pitch1,yaw1;
+		if(!singular) {
+			pitch1 = Math.toDegrees(Math.atan2( m21,m22));
+			yaw1 =Math.toDegrees( Math.atan2(-m20,sy));
+			roll1 = Math.toDegrees(Math.atan2( m10,m00));
+		} else {
+			pitch1 = Math.toDegrees(Math.atan2(-m12, m11));
+			yaw1 = Math.toDegrees(Math.atan2(-m20, sy));
+			roll1 = 0;
+		}
+		
+		final double yaw2, pitch2, roll2;
+		yaw2 = Math.toDegrees(-Math.asin(m20));
+
+        //Gymbal lock: pitch = -90
+        if(m20 == 1 ){    
+        	roll2 = 0.0;             //yaw = 0
+        	pitch2= Math.toDegrees(Math.atan2( -m01, -m02 ));    //Roll
+            System.out.println("Gimbal lock: pitch = -90");
+        }
+
+        //Gymbal lock: pitch = 90
+        else if( m20 == -1 ){    
+        	roll2 = 0.0;             //yaw = 0
+        	pitch2 = Math.toDegrees(Math.atan2( m01, m02 ));    //Roll
+            System.out.println("Gimbal lock: pitch = 90");
+        }
+        //General solution
+        else{
+        	roll2 = Math.toDegrees(Math.atan2(  m10, m00 ));
+            pitch2 = Math.toDegrees(Math.atan2(  m21, m22 ));
+           
+        }
+        
+        
+		final double roll3,pitch3,yaw3;
+		pitch3 = Math.toDegrees(Math.asin(m21));
+		if(Math.cos(Math.toRadians(pitch3)) > 0.0001){
+			yaw3 =Math.toDegrees( Math.atan2(-m20,m22));
+			roll3 = Math.toDegrees(Math.atan2( -m01,m11));
+		} else {
+			yaw3 = 0;
+			roll3 = Math.toDegrees(-Math.atan2(-m10, m00));
+		}
+        
+        System.out.format("Pitch: %f %f, Yaw: %f %f, Roll: %f %f\n", pitch3, pitch2, yaw3, yaw2, roll3, roll2);
+        return angles;
+	}
+	
+	/**
+	 * Rotates this matrix by the specified X-angle.
+	 */
+	public RotationMatrix rotateX(double angle){
+		if(angle != 0){
+			double sin = Math.sin(Math.toRadians(angle));
+			double cos = Math.cos(Math.toRadians(angle));
+			double t01 = m01*cos + m02*sin;
+			double t02 = m01*-sin + m02*cos;
+			double t11 = m11*cos + m12*sin;
+			double t12 = m11*-sin + m12*cos;
+			double t21 = m21*cos + m22*sin;
+			double t22 = m21*-sin + m22*cos;
+	        
+			m01 = t01;
+	        m02 = t02;
+	        m11 = t11;
+	        m12 = t12;
+	        m21 = t21;
+	        m22 = t22;
+		}
+		return this;
+	}
+	
+	/**
+	 * Rotates this matrix by the specified Y-angle.
+	 */
+	public RotationMatrix rotateY(double angle){
+		if(angle != 0){
+			double sin = Math.sin(Math.toRadians(angle));
+			double cos = Math.cos(Math.toRadians(angle));
+			double t00 = m00*cos + m02*-sin;
+			double t02 = m00*sin + m02*cos;
+			double t10 = m10*cos + m12*-sin;
+			double t12 = m10*sin + m12*cos;
+			double t20 = m20*cos + m22*-sin;
+			double t22 = m20*sin + m22*cos;
 			
-			//First set rotation to y rotation.
-			double sin = Math.sin(Math.toRadians(angles.y));
-			double cos = Math.cos(Math.toRadians(angles.y));
-			m00 = cos;
-			m01 = 0.0;
-			m02 = sin;
-			m10 = 0.0;
-			m11 = 1.0;
-			m12 = 0.0;
-			m20 = -sin;
-			m21 = 0.0;
-			m22 = cos;
-			
-			//Now set helper to x rotation, and multiply.
-			sin = Math.sin(Math.toRadians(angles.x));
-			cos = Math.cos(Math.toRadians(angles.x));
-			helperMatrix.m00 = 1.0;
-			helperMatrix.m01 = 0.0;
-			helperMatrix.m02 = 0.0;
-			helperMatrix.m10 = 0.0;
-			helperMatrix.m11 = cos;
-			helperMatrix.m12 = -sin;
-			helperMatrix.m20 = 0.0;
-			helperMatrix.m21 = sin;
-			helperMatrix.m22 = cos;
-			multiply(helperMatrix);
-			
-			//Finally, set helper to z rotation, and multiply.
-			sin = Math.sin(Math.toRadians(angles.z));
-			cos = Math.cos(Math.toRadians(angles.z));
-			helperMatrix.m00 = cos;
-			helperMatrix.m01 = -sin;
-			helperMatrix.m02 = 0.0;
-			helperMatrix.m10 = sin;
-			helperMatrix.m11 = cos;
-			helperMatrix.m12 = 0.0;
-			helperMatrix.m20 = 0.0;
-			helperMatrix.m21 = 0.0;
-			helperMatrix.m22 = 1.0;
-			multiply(helperMatrix);
+	        m00 = t00;
+	        m02 = t02;
+	        m10 = t10;
+	        m12 = t12;
+	        m20 = t20;
+	        m22 = t22;
+		}
+		return this;
+	}
+	
+	/**
+	 * Rotates this matrix by the specified Z-angle.
+	 */
+	public RotationMatrix rotateZ(double angle){
+		if(angle != 0){
+			double sin = Math.sin(Math.toRadians(angle));
+			double cos = Math.cos(Math.toRadians(angle));
+			double t00 = m00*cos + m01*sin;
+			double t01 = m00*-sin + m01*cos;
+			double t10 = m10*cos + m11*sin;
+			double t11 = m10*-sin + m11*cos;
+			double t20 = m20*cos + m21*sin;
+			double t21 = m20*-sin + m21*cos;
+
+	        m00 = t00;
+	        m01 = t01;
+	        m10 = t10;
+	        m11 = t11;
+	        m20 = t20;
+	        m21 = t21;
 		}
 		return this;
 	}
@@ -156,7 +252,7 @@ public class RotationMatrix{
 	 * Sets the rotation of this matrix via an axis-angle (degrees) format.
 	 * Note that the x/y/z parameters MUST represent a normalized vector!
 	 */
-	public RotationMatrix setAxisAngleRotation(double x, double y, double z, double angle){
+	public RotationMatrix setToAxisAngle(double x, double y, double z, double angle){
 		if(angle != 0){
 			double sin = Math.sin(Math.toRadians(angle));
 			double cos = Math.cos(Math.toRadians(angle));
@@ -184,11 +280,11 @@ public class RotationMatrix{
 	}
 	
 	/**
-	 * Like {@link #setAxisAngleRotation(double, double, double, double)},
+	 * Like {@link #setToAxisAngle(double, double, double, double)},
 	 * but uses a point parameter.
 	 */
-	public RotationMatrix setAxisAngleRotation(Point3D point, double angle){
-		return setAxisAngleRotation(point.x, point.y, point.z, angle);
+	public RotationMatrix setToAxisAngle(Point3D point, double angle){
+		return setToAxisAngle(point.x, point.y, point.z, angle);
 	}
 	
 	/**

@@ -355,10 +355,10 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
 								//Iterate though connections on the groups to find two that match types and are close enough.
 								for(int hitchConnectionIndex=0; hitchConnectionIndex<hitchConnectionGroup.connections.size(); ++hitchConnectionIndex){
 									JSONConnection hitchConnection = hitchConnectionGroup.connections.get(hitchConnectionIndex);
-									Point3D hitchPos = hitchConnection.pos.copy().rotateFine(hitchConnectionDefiner.angles).add(hitchConnectionDefiner.position);
+									Point3D hitchPos = hitchConnection.pos.copy().rotate(hitchConnectionDefiner.orientation).add(hitchConnectionDefiner.position);
 									for(int hookupConnectionIndex=0; hookupConnectionIndex<hookupConnectionGroup.connections.size(); ++hookupConnectionIndex){
 										JSONConnection hookupConnection = hookupConnectionGroup.connections.get(hookupConnectionIndex);
-										Point3D hookupPos = hookupConnection.pos.copy().rotateFine(hookupConnectionDefiner.angles).add(hookupConnectionDefiner.position);
+										Point3D hookupPos = hookupConnection.pos.copy().rotate(hookupConnectionDefiner.orientation).add(hookupConnectionDefiner.position);
 										
 										//Check if we are somewhat close before we check matching type.
 										//This allows us to warn players that that hitch they are trying to connect to (close to)
@@ -457,7 +457,8 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
 			if(towedByConnection.hitchConnection.mounted){
 				angles.add(towedByConnection.hitchConnection.rot.lastAnglesSet);
 			}
-			prevAngles.set(angles);
+			orientation.setToAngles(angles);
+			prevOrientation.set(orientation);
 			
 			//Also set yaw of the trailers we are towing.
 			for(TowingConnection trailerConnection : towingConnections){

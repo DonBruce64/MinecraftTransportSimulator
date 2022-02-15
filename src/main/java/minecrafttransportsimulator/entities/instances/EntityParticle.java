@@ -191,7 +191,7 @@ public class EntityParticle extends AEntityC_Renderable{
 		boundingBox.depthRadius = boundingBox.widthRadius;
 		
 		//Update orientation to always face the player.
-		orientation.setAngleRotation(clientPlayer.getPosition().add(0, clientPlayer.getEyeHeight(), 0).add(InterfaceClient.getCameraPosition()).subtract(position).getAngles(true));
+		orientation.setToAngles(clientPlayer.getPosition().add(0, clientPlayer.getEyeHeight(), 0).add(InterfaceClient.getCameraPosition()).subtract(position).getAngles(true));
 	}
 	
 	@Override

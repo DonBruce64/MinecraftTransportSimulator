@@ -39,7 +39,8 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONMultiModelProv
 		//Set angles to placement rotation.
 		if(placingPlayer != null){
 			angles.y = getPlacementRotation(placingPlayer);
-			prevAngles.set(angles);
+			orientation.setToAngles(angles);
+			prevOrientation.set(orientation);
 		}
 	}
 	

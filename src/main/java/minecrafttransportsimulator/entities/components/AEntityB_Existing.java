@@ -28,8 +28,6 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	public final Point3D prevMotion;
 	
 	public final Point3D angles;
-	public final Point3D prevAngles;
-	public final Point3D rotation;
 	
 	public final BoundingBox boundingBox;
 	
@@ -38,7 +36,6 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	public final RotationMatrix prevOrientation;
 	public final Point3D axialOrientation;
 	
-	public double airDensity;
 	public double velocity;
 	/**The player that placed this entity.  Only valid on the server where placement occurs. Client-side will always be null.**/
 	public final WrapperPlayer placingPlayer;
@@ -55,9 +52,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 		this.motion = data.getPoint3d("motion");
 		this.prevMotion = motion.copy();
 		this.angles = data.getPoint3d("angles");
-		this.prevAngles = angles.copy();
-		this.rotation = data.getPoint3d("rotation");
-		this.orientation = new RotationMatrix().setAngleRotation(angles);
+		this.orientation = new RotationMatrix().setToAngles(angles);
 		this.prevOrientation = new RotationMatrix().set(orientation);
 		this.axialOrientation = new Point3D(0, 0, 1).rotate(orientation);
 		this.placingPlayer = placingPlayer;
@@ -78,9 +73,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 		this.motion = motion.copy();
 		this.prevMotion = motion.copy();
 		this.angles = angles.copy();
-		this.prevAngles = angles.copy();
-		this.rotation = new Point3D();
-		this.orientation = new RotationMatrix().setAngleRotation(angles);
+		this.orientation = new RotationMatrix().setToAngles(angles);
 		this.prevOrientation = new RotationMatrix().set(orientation);
 		this.axialOrientation = new Point3D(0, 0, 1).rotate(orientation);
 		this.placingPlayer = null;
@@ -100,11 +93,8 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 			prevMotion.set(motion);
 			prevOrientation.set(orientation);
 			//FIXME this is only here as a hack to get this to work with existing rendering.  See if we can remove angles after we are done.
-			orientation.setAngleRotation(angles);
-			prevAngles.set(angles);			
-			
+			orientation.setToAngles(angles);
 			axialOrientation.set(0, 0, 1).rotate(orientation);
-			airDensity = 1.225*Math.pow(2, -position.y/(500D*world.getMaxHeight()/256D));
 			velocity = motion.length();
 		}
 		world.endProfiling();
@@ -242,7 +232,6 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 			data.setPoint3d("position", position);
 			data.setPoint3d("motion", motion);
 			data.setPoint3d("angles", angles);
-			data.setPoint3d("rotation", rotation);
 		}
 		if(radio != null){
 			data.setData("radio", radio.save(new WrapperNBT()));

@@ -26,7 +26,7 @@ public class GUIComponent3DModel extends AGUIComponent{
 	/**Parsed vertex indexes.  Keyed by model name.*/
 	private static final Map<String, RenderableObject> modelParsedObjects = new HashMap<String, RenderableObject>();
 	private static final Map<String, Float> modelScalingFactors = new HashMap<String, Float>();
-	private static final RotationMatrix ISOMETRIC_ROTATION = new RotationMatrix().setAxisAngleRotation(0, 1, 0, -45).multiply(new RotationMatrix().setAxisAngleRotation(0.70712, 0, -0.70712, 35.264));;
+	private static final RotationMatrix ISOMETRIC_ROTATION = new RotationMatrix().setToAxisAngle(0, 1, 0, -45).multiply(new RotationMatrix().setToAxisAngle(0.70712, 0, -0.70712, 35.264));;
 	
 	public final float scaleFactor;
 	public final boolean isometric;
@@ -103,7 +103,7 @@ public class GUIComponent3DModel extends AGUIComponent{
 				object.transform.applyRotation(ISOMETRIC_ROTATION);
 			}
 			if(spin){
-				object.transform.applyRotation(new RotationMatrix().setAxisAngleRotation(0, 1, 0, (36*System.currentTimeMillis()/1000)%360));
+				object.transform.applyRotation(new RotationMatrix().setToAxisAngle(0, 1, 0, (36*System.currentTimeMillis()/1000)%360));
 			}
 			if(!staticScaling){
 				scale = modelScalingFactors.get(modelLocation);

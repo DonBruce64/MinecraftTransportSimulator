@@ -1431,7 +1431,7 @@ public final class LegacyCompatSystem{
 				}else{
 					object.pos = new Point3D(line.xPos, line.yPos, line.zPos - 0.0001D);
 					object.rot = new RotationMatrix();
-					object.rot.setAxisAngleRotation(0, 1, 0, 180);
+					object.rot.setToAxisAngle(0, 1, 0, 180);
 				}
 				object.fieldName = "TextLine #" + (definition.general.textObjects.size() + 1);
 				definition.general.textObjects.add(object);

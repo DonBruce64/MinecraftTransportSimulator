@@ -317,7 +317,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 				//stack and rotate prior to rendering.  This keeps us from having to do another
 				//rotation to get the old coordinate system back.
 				treadPathBaseTransform.set(object.transform);
-				treadRotation.setAxisAngleRotation(1, 0, 0, point[2] + angleDelta*treadMovementPercentage);
+				treadRotation.setToAxisAngle(1, 0, 0, point[2] + angleDelta*treadMovementPercentage);
 				object.transform.applyRotation(treadRotation);
 				object.render();
 				object.transform.set(treadPathBaseTransform);

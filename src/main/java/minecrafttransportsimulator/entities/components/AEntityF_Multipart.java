@@ -803,7 +803,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 		allPartSlotBoxes.clear();
 		for(Entry<Point3D, JSONPartDefinition> packPartEntry : getAllPossiblePackParts().entrySet()){
 			if(getPartAtLocation(packPartEntry.getKey()) == null){
-				BoundingBox newSlotBox = new BoundingBox(packPartEntry.getKey(), packPartEntry.getKey().copy().rotateFine(angles).add(position), PART_SLOT_HITBOX_WIDTH/2D, PART_SLOT_HITBOX_HEIGHT/2D, PART_SLOT_HITBOX_WIDTH/2D, false);
+				BoundingBox newSlotBox = new BoundingBox(packPartEntry.getKey(), packPartEntry.getKey().copy().rotate(orientation).add(position), PART_SLOT_HITBOX_WIDTH/2D, PART_SLOT_HITBOX_HEIGHT/2D, PART_SLOT_HITBOX_WIDTH/2D, false);
 				allPartSlotBoxes.put(newSlotBox, packPartEntry.getValue());
 			}
 		}

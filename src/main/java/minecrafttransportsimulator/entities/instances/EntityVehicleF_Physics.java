@@ -71,13 +71,14 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	public byte turningCooldown;
 	@DerivedValue
 	public double autopilotSetting;
+	public double airDensity;
 	public static final String AUTOPILOT_VARIABLE = "autopilot";
 	public static final String AUTOLEVEL_VARIABLE = "auto_level";
 	
 	//Internal states.
-	public boolean hasRotors;
+	private boolean hasRotors;
 	private double pitchDirectionFactor;
-	public double trackAngle;
+	private double trackAngle;
 	private final Set<AEntityG_Towable<?>> towedEntitiesCheckedForWeights = new HashSet<AEntityG_Towable<?>>();
 	
 	//Properties.
@@ -114,9 +115,6 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	private double ballastForce;//kg*m/ticks^2
 	private double gravitationalForce;//kg*m/ticks^2
 	private Point3D thrustForce = new Point3D();//kg*m/ticks^2
-	private Point3D totalAxialForce = new Point3D();//kg*m/ticks^2
-	private Point3D totalMotiveForce = new Point3D();//kg*m/ticks^2
-	private Point3D totalGlobalForce = new Point3D();//kg*m/ticks^2
 	private Point3D totalForce = new Point3D();//kg*m/ticks^2
 	
 	//Torques.
@@ -145,8 +143,9 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 		world.beginProfiling("VehicleF_Level", true);
 		if(definition.systemName.contains("rabbit")){
 			position.y = 10;
-			angles.set(0, 0, 0);
+			angles.set(30, 20, 50);
 			motion.set(0, 0, 0);
+			//orientation.convertToAngles();
 		}
 		//Parse out variables.
 		aileronAngle = getVariable(AILERON_VARIABLE);
@@ -262,7 +261,8 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 		//If we are free, do normal updates.  But if we are towed by a vehicle, do trailer forces instead.
 		//This prevents trailers from behaving badly and flinging themselves into the abyss.
 		if(towedByConnection == null){
-			//Set moments.
+			//Set moments and air density.
+			airDensity = 1.225*Math.pow(2, -position.y/(500D*world.getMaxHeight()/256D));
 			momentRoll = definition.motorized.emptyMass*(1.5F + fuelTank.getFluidLevel()/10000F);
 			momentPitch = 2D*currentMass;
 			momentYaw = 3D*currentMass;
@@ -463,14 +463,11 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 			}
 			
 			//Add all forces to the main force matrix and apply them.
-			totalAxialForce.set(0D, wingForce - elevatorForce, 0D);
-			totalAxialForce.rotateFine(angles).add(thrustForce);
-			totalMotiveForce.set(-dragForce, -dragForce, -dragForce);
-			totalMotiveForce.multiply(normalizedVelocityVector);
-			totalGlobalForce.set(0D, ballastForce - gravitationalForce, 0D);
-			totalForce.set(totalAxialForce);
-			totalForce.add(totalMotiveForce).add(totalGlobalForce).scale(1/currentMass);
-			motion.add(totalForce);
+			totalForce.set(0D, wingForce - elevatorForce, 0D).rotate(orientation);
+			totalForce.add(thrustForce);
+			totalForce.addScaled(normalizedVelocityVector, -dragForce);
+			totalForce.y += ballastForce - gravitationalForce;
+			motion.addScaled(totalForce, 1/currentMass);
 			
 			//Add all torques to the main torque matrix and apply them.
 			pitchDirectionFactor = Math.abs(angles.z%360);
@@ -725,8 +722,8 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 			case("flaps_moving"): return flapCurrentAngle != flapDesiredAngle ? 1 : 0;
 			case("vertical_speed"): return motion.y*EntityVehicleF_Physics.SPEED_FACTOR*20;
 			case("lift_reserve"): return -trackAngle;
-			case("turn_coordinator"): return ((angles.z - prevAngles.z)/10 + angles.y - prevAngles.y)/0.15D*25;
-			case("turn_indicator"): return (angles.y - prevAngles.y)/0.15F*25F;
+			case("turn_coordinator"): return ((rotation.z)/10 + rotation.y)/0.15D*25;
+			case("turn_indicator"): return (rotation.y)/0.15F*25F;
 			case("slip"): return 75*sideVector.dotProduct(normalizedVelocityVector);
 			case("gear_moving"): return (isVariableActive(GEAR_VARIABLE) ? gearMovementTime != definition.motorized.gearSequenceDuration : gearMovementTime != 0) ? 1 : 0;
 			case("beacon_direction"): return selectedBeacon != null ? angles.getClampedYDelta(Math.toDegrees(Math.atan2(selectedBeacon.position.x - position.x, selectedBeacon.position.z - position.z))) : 0;

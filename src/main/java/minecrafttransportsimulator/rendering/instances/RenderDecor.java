@@ -41,7 +41,7 @@ public class RenderDecor extends ARenderEntityDefinable<TileEntityDecor>{
 							
 							//Create bounding box and transform for it..
 							BoundingBox box = new BoundingBox(boxRelativeCenter, signalGroup.signalLineWidth/2D, 1, 8);
-							holoboxRotation.setAxisAngleRotation(0, 1, 0, signalGroup.axis.yRotation);
+							holoboxRotation.setToAxisAngle(0, 1, 0, signalGroup.axis.yRotation);
 							holoboxTransform.set(transform).applyTranslation(boxRelativeCenter).applyRotation(holoboxRotation);
 							box.renderHolographic(holoboxTransform, null, signalGroup.direction.equals(SignalDirection.LEFT) ? ColorRGB.BLUE : (signalGroup.direction.equals(SignalDirection.RIGHT) ? ColorRGB.YELLOW : ColorRGB.GREEN));
 						}

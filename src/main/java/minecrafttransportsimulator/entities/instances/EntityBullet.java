@@ -62,14 +62,14 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
         this.anglePerTickSpeed = definition.bullet.turnFactor * 1000/definition.bullet.diameter;
         if(definition.bullet.accelerationTime > 0){
         	double velocityDelta = definition.bullet.maxVelocity/20D/10D - motion.length();
-        	this.velocityToAddEachTick = new Point3D(0, 0, 1).rotateFine(gun.angles).scale(velocityDelta/definition.bullet.accelerationTime);
+        	this.velocityToAddEachTick = new Point3D(0, 0, 1).rotate(gun.orientation).scale(velocityDelta/definition.bullet.accelerationTime);
         }else{
         	velocityToAddEachTick = new Point3D();
         }
 		if(isBomb){
 			orientation.set(gun.orientation);
 		}else{
-			orientation.setAngleRotation(motion.copy().getAngles(true));
+			orientation.setToAngles(motion.copy().getAngles(true));
 		}
         prevOrientation.set(orientation);
     }
@@ -324,7 +324,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 		//Doing this last lets us damage on the first update tick.
 		position.add(motion);
 		if(!isBomb){
-			orientation.setAngleRotation(motion.copy().getAngles(true));
+			orientation.setToAngles(motion.copy().getAngles(true));
 		}
 	}
     
