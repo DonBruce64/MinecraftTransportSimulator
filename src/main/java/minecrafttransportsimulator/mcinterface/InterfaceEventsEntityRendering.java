@@ -102,17 +102,11 @@ public class InterfaceEventsEntityRendering{
      */
 	@SubscribeEvent
     public static void on(RenderGameOverlayEvent.Pre event){
-		//If we are rendering any GUI except the overlay (which is always rendering), don't render the hotbpar.
-		if(event.getType().equals(RenderGameOverlayEvent.ElementType.HOTBAR) && AGUIBase.activeGUIs.size() > 1){
+		//If we are rendering the custom camera overlay, block the hotbar and crosshairs.
+		if((event.getType().equals(RenderGameOverlayEvent.ElementType.HOTBAR) || event.getType().equals(RenderGameOverlayEvent.ElementType.CROSSHAIRS))  && CameraSystem.customCameraOverlay != null){
 			event.setCanceled(true);
-			 return;
+			return;
 		}
-		
-		 //If we have a custom camera overlay active, don't render the crosshairs.
-		 if(event.getType().equals(RenderGameOverlayEvent.ElementType.CROSSHAIRS) && (AGUIBase.activeGUIs.size() > 1 || CameraSystem.customCameraOverlay != null)){
-			 event.setCanceled(true);
-			 return;
-		 }
     	
     	//Do overlay rendering before the chat window is rendered.
     	//This renders them over the main hotbar, but doesn't block the chat window.
@@ -147,27 +141,39 @@ public class InterfaceEventsEntityRendering{
 			Minecraft.getMinecraft().entityRenderer.enableLightmap();
 			InterfaceRender.setLightingState(true);
 			
-			//Translate far enough to render behind the chat window.
-			GL11.glPushMatrix();
-			GL11.glTranslated(0, 0, -500);
-			
 			//Render main pass, then blended pass.
+			int displayGUIIndex = 0;
 			for(AGUIBase gui : AGUIBase.activeGUIs){
 	    		if(updateGUIs || gui.components.isEmpty()){
 	    			gui.setupComponentsInit(screenWidth, screenHeight);
 	    		}
+	    		GL11.glPushMatrix();
+	    		if(gui.capturesPlayer()){
+	    			//Translate in front of the main GUI components.
+	    			GL11.glTranslated(0, 0, 250);
+	    		}else{
+	    			//Translate far enough to render behind the chat window.
+	    			GL11.glTranslated(0, 0, -500 + 250*displayGUIIndex++);
+	    		}
 	    		gui.render(mouseX, mouseY, false, partialTicks);
-	    		GL11.glTranslated(0, 0, 250);
+	    		GL11.glPopMatrix();
 	    	}
-			GL11.glTranslated(0, 0, -250*AGUIBase.activeGUIs.size());
+			displayGUIIndex = 0;
 			InterfaceRender.setBlend(true);
 			for(AGUIBase gui : AGUIBase.activeGUIs){
-				gui.render(mouseX, mouseY, true, partialTicks);
-				GL11.glTranslated(0, 0, 250);
+				GL11.glPushMatrix();
+	    		if(gui.capturesPlayer()){
+	    			//Translate in front of the main GUI components.
+	    			GL11.glTranslated(0, 0, 250);
+	    		}else{
+	    			//Translate far enough to render behind the chat window.
+	    			GL11.glTranslated(0, 0, -500 + 250*displayGUIIndex++);
+	    		}
+	    		gui.render(mouseX, mouseY, true, partialTicks);
+	    		GL11.glPopMatrix();
 	    	}
 			
-			//Pop the matrix, and set lighting back to normal.
-    		GL11.glPopMatrix();
+			//Set lighting back to normal.
 			InterfaceRender.setLightingState(false);
 			Minecraft.getMinecraft().entityRenderer.disableLightmap();
 			RenderHelper.disableStandardItemLighting();
