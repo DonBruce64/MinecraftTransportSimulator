@@ -549,11 +549,11 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 			//We already have a rider in this location.
 			return false;
 		}else{
-			//If this rider wasn't riding this vehicle before, adjust their yaw.
-			//This prevents bad math due to 360+ degree rotations.
-			//If we are riding this vehicle, clear out the location before we change it.
+			//If this rider wasn't riding this vehicle before, adjust their yaw to 0.
+			//This ensures their orientation will be aligned with the entity when first mounting.
+			//If we are riding this entity, clear out the location before we change it.
 			if(!locationRiderMap.containsValue(rider)){
-				rider.setYaw(angles.y);
+				rider.setYaw(0);
 			}else{
 				locationRiderMap.inverse().remove(rider);
 			}

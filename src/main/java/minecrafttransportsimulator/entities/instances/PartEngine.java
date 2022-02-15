@@ -89,6 +89,7 @@ public class PartEngine extends APart{
 	private double driveshaftRotation;
 	private double prevDriveshaftRotation;
 	private PartPropeller attachedPropeller;
+	private final Point3D engineAxisVector = new Point3D();
 	private final Point3D engineForce = new Point3D();
 	
 	//Constants and static variables.
@@ -507,7 +508,7 @@ public class PartEngine extends APart{
 			for(APart part : childParts){
 				if(part instanceof PartPropeller){
 					attachedPropeller = (PartPropeller) part;
-					propellerAxialVelocity = vehicleOn.motion.dotProduct(attachedPropeller.axialOrientation);
+					propellerAxialVelocity = vehicleOn.motion.dotProduct(attachedPropeller.propellerAxisVector);
 					propellerGearboxRatio = Math.signum(currentGearRatio)*(definition.engine.propellerRatio != 0 ? definition.engine.propellerRatio : Math.abs(currentGearRatio));
 					
 					//If wheel friction is 0, and we aren't in neutral, get RPM contributions for that.
@@ -565,7 +566,8 @@ public class PartEngine extends APart{
 			
 			///Update variables used for jet thrust.
 			if(definition.engine.jetPowerFactor > 0){
-				engineAxialVelocity = vehicleOn.motion.dotProduct(vehicleOn.axialOrientation);
+				engineAxisVector.set(0, 0, 1).rotate(orientation);
+				engineAxialVelocity = vehicleOn.motion.dotProduct(engineAxisVector);
 				
 				//Check for entities forward and aft of the engine and damage them.
 				if(!world.isClient() && rpm >= 5000){
@@ -996,7 +998,7 @@ public class PartEngine extends APart{
 				//Not running, do engine braking.
 				wheelForce = -rpm/currentMaxRPM*Math.signum(currentGear)*30;
 			}
-			engineForce.addScaled(vehicleOn.axialOrientation, wheelForce);
+			engineForce.set(0, 0, wheelForce).rotate(vehicleOn.orientation);
 		}
 		
 		//If we provide jet power, add it now.  This may be done with any parts or wheels on the ground.
@@ -1018,7 +1020,7 @@ public class PartEngine extends APart{
 			double thrust = (vehicleOn.reverseThrust ? -(coreContribution + fanContribution) : coreContribution + fanContribution)*definition.engine.jetPowerFactor;
 			
 			//Add the jet force to the engine.  Use the engine rotation to define the power vector.
-			engineForce.addScaled(vehicleOn.axialOrientation, thrust);
+			engineForce.addScaled(engineAxisVector, thrust);
 		}
 		
 		//Finally, return the force we calculated.

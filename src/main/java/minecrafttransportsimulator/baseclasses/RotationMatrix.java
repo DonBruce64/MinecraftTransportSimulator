@@ -120,59 +120,59 @@ public class RotationMatrix{
 	 * matrix conversion has multiple solutions.  In general, these shouldn't be
 	 * used for calculations and rather should just be used to store the state of 
 	 * the matrix for later use where the orientation of the matrix matters, but
-	 * the actual angles don't. 
+	 * the actual angles don't.
 	 */
 	public Point3D convertToAngles(){
-		Point3D angles = new Point3D();
-		
-		double sy = Math.sqrt(m00*m00 + m10*m10);
-		boolean singular = sy < 1e-6;
-		final double roll1,pitch1,yaw1;
-		if(!singular) {
-			pitch1 = Math.toDegrees(Math.atan2( m21,m22));
-			yaw1 =Math.toDegrees( Math.atan2(-m20,sy));
-			roll1 = Math.toDegrees(Math.atan2( m10,m00));
-		} else {
-			pitch1 = Math.toDegrees(Math.atan2(-m12, m11));
-			yaw1 = Math.toDegrees(Math.atan2(-m20, sy));
-			roll1 = 0;
-		}
-		
-		final double yaw2, pitch2, roll2;
-		yaw2 = Math.toDegrees(-Math.asin(m20));
-
-        //Gymbal lock: pitch = -90
-        if(m20 == 1 ){    
-        	roll2 = 0.0;             //yaw = 0
-        	pitch2= Math.toDegrees(Math.atan2( -m01, -m02 ));    //Roll
-            System.out.println("Gimbal lock: pitch = -90");
-        }
-
-        //Gymbal lock: pitch = 90
-        else if( m20 == -1 ){    
-        	roll2 = 0.0;             //yaw = 0
-        	pitch2 = Math.toDegrees(Math.atan2( m01, m02 ));    //Roll
-            System.out.println("Gimbal lock: pitch = 90");
-        }
-        //General solution
-        else{
-        	roll2 = Math.toDegrees(Math.atan2(  m10, m00 ));
-            pitch2 = Math.toDegrees(Math.atan2(  m21, m22 ));
-           
-        }
+		Point3D angles = new Point3D();   	 
+        //Decompile the matrix based on this formula on how it is built.
+	   	//[[1,0,0],[0,cosX,-sinX],[0,sinX,cosX]] X-Rotation
+		//[[cosY,0,sinY],[0,1,0],[-sinY,0,cosY]] Y-Rotation
+	   	//[[cosZ,-sinZ,0],[sinZ,cosZ,0],[0,0,1]] Z-Rotation
         
+        //Y*X*Z Matrix result:
+        //[[sinX*sinY*sinZ+cosY*cosZ,sinX*sinY*cosZ-cosY*sinZ,cosX*sinY],
+        //[cosX*sinZ,cosX*cosZ,-sinX],
+        //[sinX*cosY*sinZ-sinY*cosZ,sinX*cosY*cosZ+sinY*sinZ,cosX*cosY]]
         
-		final double roll3,pitch3,yaw3;
-		pitch3 = Math.toDegrees(Math.asin(m21));
-		if(Math.cos(Math.toRadians(pitch3)) > 0.0001){
-			yaw3 =Math.toDegrees( Math.atan2(-m20,m22));
-			roll3 = Math.toDegrees(Math.atan2( -m01,m11));
-		} else {
-			yaw3 = 0;
-			roll3 = Math.toDegrees(-Math.atan2(-m10, m00));
-		}
+        //m00 = sinX*sinY*sinZ+cosY*cosZ;
+		//m01 = sinX*sinY*cosZ-cosY*sinZ;
+		//m02 = cosX*sinY;
+		//m10 = cosX*sinZ;
+		//m11 = cosX*cosZ;
+		//m12 = -sinX;
+		//m20 = sinX*cosY*sinZ-sinY*cosZ;
+		//m21 = sinX*cosY*cosZ+sinY*sinZ;
+		//m22 = cosX*cosY;
         
-        System.out.format("Pitch: %f %f, Yaw: %f %f, Roll: %f %f\n", pitch3, pitch2, yaw3, yaw2, roll3, roll2);
+        //By this formula, it is obvious that element m12 contains the -sin of the pitch.
+        //Therefore, we can easily obtain the pitch with an aSin function.
+        angles.x = Math.toDegrees(-Math.asin(m12));
+        
+        //We know that element m02 is cosX*sinY, and m22 is cosX*cosY.
+        //m02/m22 results in sinY/cosY, which is the tangent function.
+        //Therefore, we can do aTan on these values to get the angle of Y.
+        angles.y = Math.toDegrees(Math.atan2(m02, m22));
+        
+        //We now need to check for gimbal lock.
+        //This realistically only happens if we manually set the values.
+        //For all normal operations, exact lock will never occur.
+        //If we do get locked, just set roll to 0.  This is because
+        //locks don't normally happen except on axial rotations, and
+        //those don't normally do roll operations.  Since in both
+        //locked cases yaw would equal roll, we just take yaw to be
+        //the "true" rotation and mark roll as 0.
+        if(m12 == -1){
+        	//Gimbal lock with pitch at -90 (down).
+        	angles.z = 0;
+        }else if(m12 == 1){
+        	//Gimbal lock with pitch at 90 (up).
+        	angles.z = 0;
+        }else{
+        	//We know that element m10 is cosX*sinZ, and m11 is cosX*cosZ.
+            //m10/m11 results in sinZ/cosZ, which is the tangent function.
+            //Therefore, we can do aTan on these values to get the angle of Z.
+        	angles.z = Math.toDegrees(Math.atan2(m10, m11));
+        }
         return angles;
 	}
 	

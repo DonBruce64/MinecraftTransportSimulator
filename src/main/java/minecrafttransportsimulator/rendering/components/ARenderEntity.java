@@ -27,14 +27,22 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Renderable>{
 		if(!disableRendering(entity, partialTicks)){
 			//Get the render offset.
 			//This is the interpolated movement, plus the prior position.
-			interpolatedPositionHolder.set(entity.prevPosition);
-			interpolatedPositionHolder.interpolate(entity.position, partialTicks);
+			if(entity.changesPosition()){
+				interpolatedPositionHolder.set(entity.prevPosition);
+				interpolatedPositionHolder.interpolate(entity.position, partialTicks);
+			}else{
+				interpolatedPositionHolder.set(entity.position);
+			}
 			
 			//Subtract the entity's position by the render entity position to get the delta for translating.
 			interpolatedPositionHolder.subtract(InterfaceClient.getRenderViewEntity().getRenderedPosition(partialTicks));
 			
-			//Get interpolated orientation.
-			entity.getInterpolatedOrientation(interpolatedOrientationHolder, partialTicks);
+			//Get interpolated orientation if required.
+			if(entity.changesPosition()){
+				entity.getInterpolatedOrientation(interpolatedOrientationHolder, partialTicks);
+			}else{
+				interpolatedOrientationHolder.set(entity.orientation);
+			}
 	       
 	        //Set up lighting.
 	        InterfaceRender.setLightingToPosition(entity.position);

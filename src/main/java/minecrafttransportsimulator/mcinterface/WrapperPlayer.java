@@ -70,8 +70,8 @@ public class WrapperPlayer extends WrapperEntity{
 			if(riding instanceof AEntityF_Multipart){
 				PartSeat seat = ((AEntityF_Multipart<?>) riding).getSeatForRider(this);
 				if(!seat.definition.seat.standing){
-					//Player legs are 10 pixels.
-					return -10D/16D;
+					//Player legs are 12 pixels.
+					return -12D/16D;
 				}
 			}
 		}

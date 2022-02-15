@@ -1709,14 +1709,27 @@ public final class LegacyCompatSystem{
 			}
 			
 			//If we have ground devices that are wheels, but no animations, add those automatically.
-			if(partName.equals("ground_wheel") && partDef.turnsWithSteer && partDef.animations == null){
-				partDef.animations = new ArrayList<JSONAnimationDefinition>();
-				JSONAnimationDefinition animation = new JSONAnimationDefinition();
-				animation.centerPoint = partDef.pos.copy();
-				animation.axis = new Point3D(0, partDef.pos.z > 0 ? -1 : 1, 0);
-				animation.animationType = AnimationComponentType.ROTATION;
-				animation.variable = "rudder";
-				partDef.animations.add(animation);
+			//Also check if we do have animations, but it's a rotation at the part's position.
+			//Old format for rotations was to be local to the part, not the vehicle.
+			if(partName.equals("ground_wheel") && partDef.turnsWithSteer){
+				boolean doWheelLC = partDef.animations == null;
+				if(!doWheelLC && partDef.animations.size() == 1){
+					for(JSONAnimationDefinition animation : partDef.animations){
+						if(animation.animationType.equals(AnimationComponentType.ROTATION) && animation.centerPoint.isZero()){
+							doWheelLC = true;
+						}
+					}
+				}
+				
+				if(doWheelLC){
+					partDef.animations = new ArrayList<JSONAnimationDefinition>();
+					JSONAnimationDefinition animation = new JSONAnimationDefinition();
+					animation.centerPoint = partDef.pos.copy();
+					animation.axis = new Point3D(0, partDef.pos.z > 0 ? -1 : 1, 0);
+					animation.animationType = AnimationComponentType.ROTATION;
+					animation.variable = "rudder";
+					partDef.animations.add(animation);
+				}
 			}
 			
 			//If we have additional parts, check those too.

@@ -31,13 +31,12 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor>{
 		//If we are on a slab, we go down to match it.
 		if(world.isBlockBelowBottomSlab(position)){
 			this.position.y -= 0.5D;
-			this.prevPosition.set(this.position);
 			boundingBox.globalCenter.set(this.position);
 		}
 		//Set our bounding box based on our rotation and parameters.
 		boundingBox.heightRadius = definition.decor.height/2D;
 		this.boundingBox.globalCenter.y += boundingBox.heightRadius;
-		if(Math.abs(angles.y%180) == 0){
+		if(Math.abs(new Point3D(0, 0, 1).rotate(orientation).z) == 1){
 			boundingBox.widthRadius = definition.decor.width/2D;
 			boundingBox.depthRadius = definition.decor.depth/2D;
 		}else{

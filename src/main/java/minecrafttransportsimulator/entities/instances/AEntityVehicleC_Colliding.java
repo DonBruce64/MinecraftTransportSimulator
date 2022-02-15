@@ -29,9 +29,6 @@ abstract class AEntityVehicleC_Colliding extends AEntityVehicleB_Rideable{
 	public double currentMass;
 	public double axialVelocity;
 	public final Point3D headingVector = new Point3D();
-	public final Point3D verticalVector = new Point3D();
-	public final Point3D sideVector = new Point3D();
-	public final Point3D normalizedVelocityVector = new Point3D();
 	
 	public AEntityVehicleC_Colliding(WrapperWorld world, WrapperPlayer placingPlayer, WrapperNBT data){
 		super(world, placingPlayer, data);
@@ -46,11 +43,6 @@ abstract class AEntityVehicleC_Colliding extends AEntityVehicleB_Rideable{
 		world.beginProfiling("SetVectors", true);
 		headingVector.set(0D, 0D, 1D);
 		headingVector.rotate(orientation);
-		verticalVector.set(0D, 1D, 0D);
-		verticalVector.rotate(orientation);
-		sideVector.set(verticalVector.crossProduct(headingVector));
-		normalizedVelocityVector.set(motion);
-		normalizedVelocityVector.normalize();
 		axialVelocity = Math.abs(motion.dotProduct(headingVector));
 		
 		//Update mass.

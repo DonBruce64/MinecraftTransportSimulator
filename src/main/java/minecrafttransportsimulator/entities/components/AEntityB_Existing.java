@@ -23,22 +23,13 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	protected static final Point3D ZERO_FOR_CONSTRUCTOR = new Point3D();
 	
 	public final Point3D position;
+	public final RotationMatrix orientation;
 	public final Point3D prevPosition;
+	public final RotationMatrix prevOrientation;
 	public final Point3D motion;
 	public final Point3D prevMotion;
-	
-	public final Point3D angles;
-	
-	public final BoundingBox boundingBox;
-	
-	/*The rotational component of orientation for this entity.*/
-	public final RotationMatrix orientation;
-	public final RotationMatrix prevOrientation;
-	public final Point3D axialOrientation;
-	
 	public double velocity;
-	/**The player that placed this entity.  Only valid on the server where placement occurs. Client-side will always be null.**/
-	public final WrapperPlayer placingPlayer;
+	public final BoundingBox boundingBox;
 	
 	//Internal sound variables.
 	public final EntityRadio radio;
@@ -48,14 +39,20 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	public AEntityB_Existing(WrapperWorld world, WrapperPlayer placingPlayer, WrapperNBT data){
 		super(world, data);
 		this.position = data.getPoint3d("position");
-		this.prevPosition = position.copy();
-		this.motion = data.getPoint3d("motion");
-		this.prevMotion = motion.copy();
-		this.angles = data.getPoint3d("angles");
-		this.orientation = new RotationMatrix().setToAngles(angles);
-		this.prevOrientation = new RotationMatrix().set(orientation);
-		this.axialOrientation = new Point3D(0, 0, 1).rotate(orientation);
-		this.placingPlayer = placingPlayer;
+		this.orientation = new RotationMatrix().setToAngles(data.getPoint3d("angles"));
+		
+		if(changesPosition()){
+			this.prevPosition = position.copy();
+			this.prevOrientation = new RotationMatrix().set(orientation);
+			this.motion = data.getPoint3d("motion");
+			this.prevMotion = motion.copy();
+		}else{
+			this.prevPosition = null;
+			this.prevOrientation = null;
+			this.motion = null;
+			this.prevMotion = null;
+		}
+		
 		this.boundingBox = new BoundingBox(shouldLinkBoundsToPosition() ? this.position : this.position.copy(), 0.5, 0.5, 0.5);
 		if(hasRadio()){
 			this.radio = new EntityRadio(this, data.getDataOrNew("radio"));
@@ -69,14 +66,20 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	public AEntityB_Existing(WrapperWorld world, Point3D position, Point3D motion, Point3D angles){
 		super(world, null);
 		this.position = position.copy();
-		this.prevPosition = position.copy();
-		this.motion = motion.copy();
-		this.prevMotion = motion.copy();
-		this.angles = angles.copy();
 		this.orientation = new RotationMatrix().setToAngles(angles);
-		this.prevOrientation = new RotationMatrix().set(orientation);
-		this.axialOrientation = new Point3D(0, 0, 1).rotate(orientation);
-		this.placingPlayer = null;
+		
+		if(changesPosition()){
+			this.prevPosition = position.copy();
+			this.prevOrientation = new RotationMatrix().set(orientation);
+			this.motion = motion.copy();
+			this.prevMotion = motion.copy();
+		}else{
+			this.prevPosition = null;
+			this.prevOrientation = null;
+			this.motion = null;
+			this.prevMotion = null;
+		}
+		
 		this.boundingBox = new BoundingBox(shouldLinkBoundsToPosition() ? this.position : this.position.copy(), 0.5, 0.5, 0.5);
 		this.radio = null;
 	}
@@ -92,9 +95,6 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 			prevPosition.set(position);
 			prevMotion.set(motion);
 			prevOrientation.set(orientation);
-			//FIXME this is only here as a hack to get this to work with existing rendering.  See if we can remove angles after we are done.
-			orientation.setToAngles(angles);
-			axialOrientation.set(0, 0, 1).rotate(orientation);
 			velocity = motion.length();
 		}
 		world.endProfiling();
@@ -157,6 +157,8 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	/**
 	 *  This method returns true if this entity can change position (or if positional data is important to it).
 	 *  This is normally true, but some entities may not ever move, and so there are some calls we can skip.
+	 *  If this is set true, then {@link #prevPosition}, {@link #motion}, {@link #prevMotion}, and {@link #prevOrientation} 
+	 *  will be null and will not be used in various calls.
 	 */
 	public boolean changesPosition(){
 		return true;
@@ -230,8 +232,10 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 		super.save(data);
 		if(shouldSavePosition()){
 			data.setPoint3d("position", position);
-			data.setPoint3d("motion", motion);
-			data.setPoint3d("angles", angles);
+			if(changesPosition()){
+				data.setPoint3d("motion", motion);
+			}
+			data.setPoint3d("angles", orientation.convertToAngles());
 		}
 		if(radio != null){
 			data.setData("radio", radio.save(new WrapperNBT()));

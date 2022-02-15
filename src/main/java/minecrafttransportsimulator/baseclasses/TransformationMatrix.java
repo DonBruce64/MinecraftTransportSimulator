@@ -1,10 +1,5 @@
 package minecrafttransportsimulator.baseclasses;
 
-/**Upgraded Matrix4d class that allows for a method to convert
- * Euler angles into the matrix as the rotational component. 
- *
- * @author don_bruce
- */
 /**4D Matrix class for orientation operations.  This allows for
  * storing of a  rotational, translation, and scalar component
  * of orientation.  This is designed to be used with OpenGL

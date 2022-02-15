@@ -18,6 +18,7 @@ public class PartPropeller extends APart{
 	public int currentPitch;
 	
 	private final PartEngine connectedEngine;
+	protected final Point3D propellerAxisVector = new Point3D();
 	private final Point3D propellerForce = new Point3D();
 	private final BoundingBox damageBounds;
 	
@@ -134,11 +135,12 @@ public class PartPropeller extends APart{
 	}
 	
 	public Point3D getForceOutput(){
+		propellerAxisVector.set(0, 0, 1).rotate(orientation);
 		propellerForce.set(0D, 0D, 0D);
 		if(connectedEngine != null && connectedEngine.running){
 			//Get the current linear velocity of the propeller, based on our axial velocity.
 			//This is is meters per second.
-			double currentLinearVelocity = 20D*entityOn.motion.dotProduct(axialOrientation);
+			double currentLinearVelocity = 20D*vehicleOn.motion.dotProduct(propellerAxisVector);
 			//Get the desired linear velocity of the propeller, based on the current RPM and pitch.
 			//We add to the desired linear velocity by a small factor.  This is because the actual cruising speed of aircraft
 			//is based off of engine max RPM equating exactly to ideal linear speed of the propeller.  I'm sure there are nuances
@@ -172,7 +174,7 @@ public class PartPropeller extends APart{
 				
 				//Add propeller force to total engine force as a vector.
 				//Depends on propeller orientation, as upward propellers provide upwards thrust.
-				propellerForce.addScaled(axialOrientation, thrust);
+				propellerForce.addScaled(propellerAxisVector, thrust);
 			}
 		}
 		return propellerForce;

@@ -79,6 +79,9 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	private boolean hasRotors;
 	private double pitchDirectionFactor;
 	private double trackAngle;
+	private final Point3D normalizedVelocityVector = new Point3D();
+	private final Point3D verticalVector = new Point3D();
+	private final Point3D sideVector = new Point3D();
 	private final Set<AEntityG_Towable<?>> towedEntitiesCheckedForWeights = new HashSet<AEntityG_Towable<?>>();
 	
 	//Properties.
@@ -143,10 +146,17 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 		world.beginProfiling("VehicleF_Level", true);
 		if(definition.systemName.contains("rabbit")){
 			position.y = 10;
-			angles.set(30, 20, 50);
+			angles.set(88, 20, 50);
 			motion.set(0, 0, 0);
-			//orientation.convertToAngles();
+			orientation.convertToAngles();
 		}
+		//Set vectors.
+		verticalVector.set(0D, 1D, 0D);
+		verticalVector.rotate(orientation);
+		normalizedVelocityVector.set(motion);
+		normalizedVelocityVector.normalize();
+		sideVector.set(verticalVector.crossProduct(headingVector));
+		
 		//Parse out variables.
 		aileronAngle = getVariable(AILERON_VARIABLE);
 		aileronTrim = getVariable(AILERON_TRIM_VARIABLE);

@@ -186,9 +186,9 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
 				if(foundConnection != null){
 					switch(variableData[3]){
 						case("connected"): return 1;
-						case("pitch"): return isHookup ? foundConnection.towedVehicle.angles.x - angles.x : foundConnection.towingVehicle.angles.x - angles.x;
-						case("yaw"): return isHookup ? foundConnection.towedVehicle.angles.y - angles.y : foundConnection.towingVehicle.angles.y - angles.y;
-						case("roll"): return isHookup ? foundConnection.towedVehicle.angles.z - angles.z : foundConnection.towingVehicle.angles.z - angles.z;
+						case("pitch"): return isHookup ? new Point3D(0, 0, 1).rotate(foundConnection.towedVehicle.orientation).reOrigin(orientation).getAngles(false).x : new Point3D(0, 0, 1).rotate(foundConnection.towingVehicle.orientation).reOrigin(orientation).getAngles(false).x;
+						case("yaw"): return isHookup ? new Point3D(0, 0, 1).rotate(foundConnection.towedVehicle.orientation).reOrigin(orientation).getAngles(false).y : new Point3D(0, 0, 1).rotate(foundConnection.towingVehicle.orientation).reOrigin(orientation).getAngles(false).y;
+						case("roll"): return isHookup ? new Point3D(0, 0, 1).rotate(foundConnection.towedVehicle.orientation).reOrigin(orientation).getAngles(false).z : new Point3D(0, 0, 1).rotate(foundConnection.towingVehicle.orientation).reOrigin(orientation).getAngles(false).z;
 					}
 				}
 			}
@@ -417,7 +417,6 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
 	public void connectTrailer(TowingConnection connection){
 		towingConnections.add(connection);
 		connection.towedVehicle.towedByConnection = connection;
-		connection.towedVehicle.updateOrientationToTowed();
 		if(!world.isClient()){
 			InterfacePacket.sendToAllClients(new PacketEntityTowingChange(connection, true));
 		}
@@ -445,26 +444,6 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
 	public void disconnectAllConnections(){
 		towingConnections.clear();
 		towedByConnection = null;
-	}
-	
-	/**
-	 * Helper method for aligning trailer connections.  Used to prevent yaw mis-alignments.
-	 */
-	protected void updateOrientationToTowed(){
-		//Need to set angles for mounted/restricted connections.
-		if(towedByConnection.hitchConnection.mounted || towedByConnection.hitchConnection.restricted){
-			angles.set(towedByConnection.towingEntity.angles);
-			if(towedByConnection.hitchConnection.mounted){
-				angles.add(towedByConnection.hitchConnection.rot.lastAnglesSet);
-			}
-			orientation.setToAngles(angles);
-			prevOrientation.set(orientation);
-			
-			//Also set yaw of the trailers we are towing.
-			for(TowingConnection trailerConnection : towingConnections){
-				trailerConnection.towedVehicle.updateOrientationToTowed();
-			}
-		}
 	}
 	
 	@Override

@@ -64,7 +64,6 @@ public class EntityParticle extends AEntityC_Renderable{
 			motion.x += adjustedVelocity.x/10D + 0.02 - Math.random()*0.04;
 			motion.y += adjustedVelocity.y/10D + 0.02 - Math.random()*0.04;
 			motion.z += adjustedVelocity.z/10D + 0.02 - Math.random()*0.04;
-			this.prevMotion.set(motion);
 		}
 		
 		this.definition = definition;

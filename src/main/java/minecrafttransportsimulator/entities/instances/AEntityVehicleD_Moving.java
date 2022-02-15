@@ -53,7 +53,9 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	public boolean lockedOnRoad;
 	public double groundVelocity;
 	public double weightTransfer = 0;
+	public final Point3D angles;
 	public final Point3D rotation = new Point3D();
+	private final WrapperPlayer placingPlayer;
 	
 	//Properties
 	@ModifiedValue
@@ -107,12 +109,31 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		this.clientDeltaR = serverDeltaR.copy();
 		this.clientDeltaP = serverDeltaP;
 		this.groundDeviceCollective = new VehicleGroundDeviceCollection((EntityVehicleF_Physics) this);
+		this.placingPlayer = placingPlayer;
+		this.angles = orientation.lastAnglesSet.copy();
+		
+		//Set position to the spot that was clicked by the player.
+		//Add a -90 rotation offset so the vehicle is facing perpendicular.
+		//Remove motion to prevent it if it was previously stored.
+		//Makes placement easier and is less likely for players to get stuck.
+		if(placingPlayer != null){
+			Point3D playerSightVector = placingPlayer.getLineOfSight(3);
+			position.set(placingPlayer.getPosition().add(playerSightVector.x, 0, playerSightVector.z));
+			prevPosition.set(position);
+			angles.set(0, placingPlayer.getYaw() + 90, 0);
+			orientation.setToAngles(angles);
+			prevOrientation.set(orientation);
+			motion.set(0, 0, 0);
+			prevMotion.set(motion);
+		}
 	}
 	
 	@Override
 	public void update(){
 		super.update();
 		world.beginProfiling("VehicleD_Level", true);
+		//FIXME this is only here as a hack to get this to work with existing rendering.  See if we can remove angles after we are done.
+		orientation.setToAngles(angles);
 		
 		//If we were placed down, and this is our first tick, check our collision boxes to make sure we are't in the ground.
 		if(ticksExisted == 1 && placingPlayer != null && !world.isClient()){
@@ -230,6 +251,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		towedVehicle.setVariable(BRAKE_VARIABLE, 0);
 		towedVehicle.frontFollower = null;
 		towedVehicle.rearFollower = null;
+		towedVehicle.updateOrientationToTowed();
 	}
 	
 	@Override
@@ -237,6 +259,26 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		super.disconnectTrailer(connection);
 		if(connection.towedVehicle.definition.motorized.isTrailer){
 			connection.towedVehicle.setVariable(PARKINGBRAKE_VARIABLE, 1);
+		}
+	}
+	
+	/**
+	 * Helper method for aligning trailer connections.  Used to prevent yaw mis-alignments.
+	 */
+	private void updateOrientationToTowed(){
+		//Need to set angles for mounted/restricted connections.
+		if(towedByConnection.hitchConnection.mounted || towedByConnection.hitchConnection.restricted){
+			orientation.set(towedByConnection.towingEntity.orientation);
+			if(towedByConnection.hitchConnection.mounted){
+				angles.add(towedByConnection.hitchConnection.rot.lastAnglesSet);
+			}
+			orientation.setToAngles(angles);
+			prevOrientation.set(orientation);
+			
+			//Also set yaw of the trailers we are towing.
+			for(TowingConnection trailerConnection : towingConnections){
+				((AEntityVehicleD_Moving) trailerConnection.towedVehicle).updateOrientationToTowed();
+			}
 		}
 	}
 	

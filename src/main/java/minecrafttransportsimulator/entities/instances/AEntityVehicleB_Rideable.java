@@ -36,21 +36,6 @@ abstract class AEntityVehicleB_Rideable extends AEntityG_Towable<JSONVehicle>{
 	
 	public AEntityVehicleB_Rideable(WrapperWorld world, WrapperPlayer placingPlayer, WrapperNBT data){
 		super(world, placingPlayer, data);
-		
-		//Set position to the spot that was clicked by the player.
-		//Add a -90 rotation offset so the vehicle is facing perpendicular.
-		//Remove motion to prevent it if it was previously stored.
-		//Makes placement easier and is less likely for players to get stuck.
-		if(placingPlayer != null){
-			Point3D playerSightVector = placingPlayer.getLineOfSight(3);
-			position.set(placingPlayer.getPosition().add(playerSightVector.x, 0, playerSightVector.z));
-			prevPosition.set(position);
-			angles.set(0, placingPlayer.getYaw() + 90, 0);
-			orientation.setToAngles(angles);
-			prevOrientation.set(orientation);
-			motion.set(0, 0, 0);
-			prevMotion.set(motion);
-		}
 	}
 	
 	@Override
