@@ -379,14 +379,12 @@ public class WrapperWorld{
 					}
 				}
 				
-				//Didn't hit a rider on the damage source. Do normal raytracing.
-				if(motion != null){
-					if(mcEntityCollided.getEntityBoundingBox().calculateIntercept(start, end) == null){
-						//Raytracing doesn't intercept the box, so no hits.
-						continue;
-					}else{
-						hitEntities.add(WrapperEntity.getWrapperFor(mcEntityCollided));
-					}
+				//Didn't hit a rider on the damage source. Do normal raytracing or just add if there's no motion.
+				if(motion != null && mcEntityCollided.getEntityBoundingBox().calculateIntercept(start, end) == null){
+					//Raytracing doesn't intercept the box, so no hits.
+					continue;
+				}else{
+					hitEntities.add(WrapperEntity.getWrapperFor(mcEntityCollided));
 				}
 			}
 		}
@@ -396,8 +394,8 @@ public class WrapperWorld{
 		if(isClient()){
 			return hitEntities;
 		}else{
-			for(Entity entity : collidedEntities){
-				WrapperEntity.getWrapperFor(entity).attack(damage);
+			for(WrapperEntity entity : hitEntities){
+				entity.attack(damage);
 			}
 			return null;
 		}
