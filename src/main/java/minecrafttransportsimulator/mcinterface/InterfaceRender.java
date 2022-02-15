@@ -51,6 +51,7 @@ public class InterfaceRender{
 	 */
 	public static void renderItemModel(WrapperItemStack stack){
 		GL11.glPushMatrix();
+		setInternalLightingState(false);
 		//Need to translate back to pre-undo the renderer offset.
 		float offset = 100.0F + Minecraft.getMinecraft().getRenderItem().zLevel;
 		GL11.glTranslated(0, 0, -offset);
@@ -59,6 +60,7 @@ public class InterfaceRender{
 		GL11.glScalef(1, -1, 1);
 		
 		Minecraft.getMinecraft().getRenderItem().renderItemIntoGUI(stack.stack, 0, 0);
+		setInternalLightingState(true);
 		GL11.glPopMatrix();
 	}
 	
