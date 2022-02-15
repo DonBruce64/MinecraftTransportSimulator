@@ -68,7 +68,7 @@ public final class RenderInstrument{
 					}					
 				}else{
 					//Init variables.
-					renderObject.texture = "/assets/" + instrument.definition.packID + "/textures/instruments.png";
+					renderObject.texture = "/assets/" + instrument.definition.packID + "/textures/" + instrument.definition.textureName;
 					renderObject.scale = globalScale*component.scale;
 					bottomLeft.set(-component.textureWidth/2D, component.textureHeight/2D, 0);
 					topLeft.set(-component.textureWidth/2D, -component.textureHeight/2D, 0);

@@ -11,6 +11,10 @@ public class JSONInstrument extends AJSONItem{
 	@JSONRequired
 	@JSONDescription("Each instrument component represents a single rendering of a texture from the master instrument PNG file.  These components may be modified in multiple ways.  The standard way is for them to be rotated, translated, made invisible, have their lighting changed, or change what sections of the texture sheet they are pulling their texture from.")
 	public List<Component> components = new ArrayList<Component>();
+	
+	@JSONRequired
+	@JSONDescription("The texture sheet to pull this instrument from.  Defaults to instruments.png if not set.  You may use sub-folders here if you wish.")
+	public String textureName;
     
     public class Component{
     	@JSONDescription("The center position to render this instrument component.  By default components will be centered at the center of the instrument, but you can specify this parameter to have the component render to the left or right of the center point.")

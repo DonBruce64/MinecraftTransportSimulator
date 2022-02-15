@@ -1180,6 +1180,11 @@ public final class LegacyCompatSystem{
 				}
 			}
 		}
+		
+		//Check if we are missing a texture name.
+		if(definition.textureName == null){
+			definition.textureName = "instruments.png";
+		}
 	}
 	
 	private static void performPoleLegacyCompats(JSONPoleComponent definition){
