@@ -707,6 +707,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 			case("altitude"): return position.y;
 			case("speed"): return axialVelocity*EntityVehicleF_Physics.SPEED_FACTOR*20;
 			case("speed_scaled"): return axialVelocity*20;
+			case("speed_factor"): return SPEED_FACTOR;
 			case("acceleration"): return motion.length() - prevMotion.length();
 
 			//Vehicle state cases.
