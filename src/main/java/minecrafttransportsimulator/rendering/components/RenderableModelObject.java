@@ -457,8 +457,8 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 		RenderableObject flareObject = new RenderableObject("flares", "mts:textures/rendering/lensflare.png", new ColorRGB(), FloatBuffer.allocate(flareDefs.size()*6*8), false);
 		for(int i=0; i<flareDefs.size(); ++i){
 			JSONLightBlendableComponent flareDef = flareDefs.get(i);
-			//Get the angle that is needed to rotate points to the normalized vector.
-			Point3D rotation = flareDef.axis.copy().getAngles(false);
+			//Get the matrix  that is needed to rotate points to the normalized vector.
+			RotationMatrix rotation = new RotationMatrix().setToVector(flareDef.axis, false);
 			Point3D vertexOffset = new Point3D();
 			Point3D centerOffset = flareDef.axis.copy().scale(FLARE_OFFSET).add(flareDef.pos);
 			for(int j=0; j<6; ++j){
@@ -477,7 +477,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 				vertexOffset.x = newVertex[3] == 0.0 ? -flareDef.flareWidth/2D : flareDef.flareWidth/2D;
 				vertexOffset.y = newVertex[4] == 0.0 ? flareDef.flareHeight/2D : -flareDef.flareHeight/2D;
 				vertexOffset.z = 0;
-				vertexOffset.rotateFine(rotation).add(centerOffset);
+				vertexOffset.rotate(rotation).add(centerOffset);
 				newVertex[5] = (float) vertexOffset.x;
 				newVertex[6] = (float) vertexOffset.y;
 				newVertex[7] = (float) vertexOffset.z;
@@ -502,8 +502,8 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 		RenderableObject beamObject = new RenderableObject("beams", "mts:textures/rendering/lightbeam.png", new ColorRGB(), FloatBuffer.allocate(beamDefs.size()*2*BEAM_SEGMENTS*3*8), false);
 		for(int i=0; i<beamDefs.size(); ++i){
 			JSONLightBlendableComponent beamDef = beamDefs.get(i);
-			//Get the angle that is needed to rotate points to the normalized vector.
-			Point3D rotation = beamDef.axis.copy().getAngles(false);
+			//Get the matrix that is needed to rotate points to the normalized vector.
+			RotationMatrix rotation = new RotationMatrix().setToVector(beamDef.axis, false);
 			Point3D vertexOffset = new Point3D();
 			Point3D centerOffset = beamDef.axis.copy().scale(BEAM_OFFSET).add(beamDef.pos);
 			//Go from negative to positive to render both beam-faces in the same loop.
@@ -532,7 +532,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 						vertexOffset.y = beamDef.beamDiameter/2F*Math.sin(currentAngleRad);
 						vertexOffset.z = beamDef.beamLength;
 					}
-					vertexOffset.rotateFine(rotation).add(centerOffset);
+					vertexOffset.rotate(rotation).add(centerOffset);
 					newVertex[5] = (float) vertexOffset.x;
 					newVertex[6] = (float) vertexOffset.y;
 					newVertex[7] = (float) vertexOffset.z;

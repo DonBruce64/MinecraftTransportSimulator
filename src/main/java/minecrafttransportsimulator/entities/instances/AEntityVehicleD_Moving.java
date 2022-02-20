@@ -5,6 +5,7 @@ import java.util.Iterator;
 import minecrafttransportsimulator.baseclasses.BezierCurve;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.baseclasses.TowingConnection;
 import minecrafttransportsimulator.baseclasses.VehicleGroundDeviceCollection;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
@@ -54,7 +55,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	public double groundVelocity;
 	public double weightTransfer = 0;
 	public final Point3D angles;
-	public final Point3D rotation = new Point3D();
+	public final RotationMatrix rotation = new RotationMatrix();
 	private final WrapperPlayer placingPlayer;
 	
 	//Properties
@@ -110,7 +111,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		this.clientDeltaP = serverDeltaP;
 		this.groundDeviceCollective = new VehicleGroundDeviceCollection((EntityVehicleF_Physics) this);
 		this.placingPlayer = placingPlayer;
-		this.angles = orientation.lastAnglesSet.copy();
+		this.angles = orientation.angles.copy();
 		
 		//Set position to the spot that was clicked by the player.
 		//Add a -90 rotation offset so the vehicle is facing perpendicular.
@@ -120,8 +121,9 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			Point3D playerSightVector = placingPlayer.getLineOfSight(3);
 			position.set(placingPlayer.getPosition().add(playerSightVector.x, 0, playerSightVector.z));
 			prevPosition.set(position);
+			//FIXME move angles into orientation.
 			angles.set(0, placingPlayer.getYaw() + 90, 0);
-			orientation.setToAngles(angles);
+			orientation.angles.set(angles);
 			prevOrientation.set(orientation);
 			motion.set(0, 0, 0);
 			prevMotion.set(motion);
@@ -133,7 +135,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		super.update();
 		world.beginProfiling("VehicleD_Level", true);
 		//FIXME this is only here as a hack to get this to work with existing rendering.  See if we can remove angles after we are done.
-		orientation.setToAngles(angles);
+		orientation.angles.set(angles);
 		
 		//If we were placed down, and this is our first tick, check our collision boxes to make sure we are't in the ground.
 		if(ticksExisted == 1 && placingPlayer != null && !world.isClient()){
@@ -270,9 +272,9 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		if(towedByConnection.hitchConnection.mounted || towedByConnection.hitchConnection.restricted){
 			orientation.set(towedByConnection.towingEntity.orientation);
 			if(towedByConnection.hitchConnection.mounted){
-				angles.add(towedByConnection.hitchConnection.rot.lastAnglesSet);
+				angles.add(towedByConnection.hitchConnection.rot.angles);
 			}
-			orientation.setToAngles(angles);
+			orientation.angles.set(angles);
 			prevOrientation.set(orientation);
 			
 			//Also set yaw of the trailers we are towing.
@@ -291,22 +293,23 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		Point3D contactPoint = groundDeviceCollective.getContactPoint(false);
 		if(contactPoint != null){
 			contactPoint.rotate(orientation).add(position);
-			Point3D testPoint = new Point3D();
 			ABlockBase block =  world.getBlock(contactPoint);
 			if(block instanceof BlockCollision){
 				TileEntityRoad road = ((BlockCollision) block).getMasterRoad(world, contactPoint);
 				if(road != null){
 					//Check to see which lane we are on, if any.
+					Point3D testPoint = new Point3D();
+					Point3D testRotation = new Point3D();
 					for(RoadLane lane : road.lanes){
 						//Check path-points on the curve.  If our angles and position are close, set this as the curve.
 						for(BezierCurve curve : lane.curves){
 							for(float f=0; f<curve.pathLength; ++f){
 								curve.setPointToPositionAt(testPoint, f);
-								testPoint.add(road.position.x, road.position.y, road.position.z);
+								testPoint.add(road.position);
 								if(testPoint.isDistanceToCloserThan(contactPoint, 1)){
-									curve.setPointToRotationAt(testPoint, f);
-									boolean sameDirection = Math.abs(testPoint.getClampedYDelta(angles.y)) < 10;
-									boolean oppositeDirection = Math.abs(testPoint.getClampedYDelta(angles.y)) > 170;
+									curve.setPointToRotationAt(testRotation, f);
+									boolean sameDirection = Math.abs(testRotation.getClampedYDelta(angles.y)) < 10;
+									boolean oppositeDirection = Math.abs(testRotation.getClampedYDelta(angles.y)) > 170;
 									if(sameDirection || oppositeDirection){
 										return new RoadFollowingState(lane, curve, sameDirection, f);
 									}
@@ -333,7 +336,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			if(brakingForce > velocity){
 				motion.x = 0;
 				motion.z = 0;
-				rotation.y = 0;
+				rotation.angles.y = 0;
 			}else{
 				motion.x -= brakingForce*motion.x/velocity;
 				motion.z -= brakingForce*motion.z/velocity;
@@ -360,7 +363,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			}
 		}
 		if(turningForce != 0){
-			rotation.y += goingInReverse ? -turningForce : turningForce;
+			rotation.angles.y += goingInReverse ? -turningForce : turningForce;
 		}
 		//Check how much grip the wheels have.
 		float skiddingFactor = getSkiddingForce();
@@ -388,7 +391,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 				}else{
 					weightTransfer = currentOverSteer;
 				}
-				rotation.y += crossProduct.y * weightTransfer + (Math.abs(crossProduct.y) * -currentUnderSteer * turningForce) * overSteerForce;
+				rotation.angles.y += crossProduct.y * weightTransfer + (Math.abs(crossProduct.y) * -currentUnderSteer * turningForce) * overSteerForce;
 			}	
 			
 			//If we are offset, adjust our angle.
@@ -646,7 +649,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 				}else{
 					motion.y = 0;
 					
-					//Now get the front desired point.  We don't care about actual point here, as we set angle base on the point delta.
+					//Now get the front desired point.  We don't care about actual point here, as we set angle based on the point delta.
 					//Desired angle is the one that gives us the vector between the front and rear points.
 					Point3D desiredVector = frontFollower.getCurrentPoint().subtract(rearDesiredPoint);
 					double yawDelta = Math.toDegrees(Math.atan2(desiredVector.x, desiredVector.z));
@@ -730,9 +733,9 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 				
 				//If we are flagged as a tilting vehicle try to keep us upright, unless we are turning, in which case turn into the turn.
 				if(definition.motorized.maxTiltAngle != 0){
-					rotation.z = -angles.z - definition.motorized.maxTiltAngle*2.0*Math.min(0.5, velocity/2D)*getSteeringAngle();
-					if(Double.isNaN(rotation.z)){
-						rotation.z = 0;
+					rotation.angles.z = -angles.z - definition.motorized.maxTiltAngle*2.0*Math.min(0.5, velocity/2D)*getSteeringAngle();
+					if(Double.isNaN(rotation.angles.z)){
+						rotation.angles.z = 0;
 					}
 				}
 			}
@@ -781,7 +784,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		//Now that that the movement has been checked, move the vehicle.
 		world.beginProfiling("ApplyMotions", false);
 		motionApplied.set(motion).scale(SPEED_FACTOR).add(roadMotion).add(collisionMotion);
-		rotationApplied.set(rotation).add(roadRotation).add(collisionRotation);
+		rotationApplied.set(rotation.angles).add(roadRotation).add(collisionRotation);
 		if(lockedOnRoad){
 			if(towedByConnection != null){
 				pathingApplied = ((AEntityVehicleD_Moving) towedByConnection.towingVehicle).pathingApplied;
@@ -872,7 +875,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		if(motion.length() > 0.001){
 			boolean clearedCache = false;
 			for(BoundingBox box : allBlockCollisionBoxes){
-				tempBoxPosition.set(box.globalCenter).subtract(position).rotateFine(rotation).subtract(box.globalCenter).add(position).addScaled(motion, SPEED_FACTOR);
+				tempBoxPosition.set(box.globalCenter).subtract(position).rotate(rotation).subtract(box.globalCenter).add(position).addScaled(motion, SPEED_FACTOR);
 				if(!box.collidesWithLiquids && world.checkForCollisions(box, tempBoxPosition, !clearedCache)){
 					return true;
 				}
@@ -948,20 +951,22 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		}
 		
 		//Check the yaw.
-		if(rotation.y != 0){
-			tempBoxRotation.set(0D, rotation.y, 0D);
+		if(rotation.angles.y != 0){
+			tempBoxRotation.set(0D, rotation.angles.y, 0D);
 			for(BoundingBox box : allBlockCollisionBoxes){
-				while(rotation.y != 0){
+				while(rotation.angles.y != 0){
 					tempBoxPosition.set(box.globalCenter).subtract(position).rotateFine(tempBoxRotation).add(position).addScaled(motion, SPEED_FACTOR);
 					//Raise this box ever so slightly because Floating Point errors are a PITA.
 					tempBoxPosition.add(0D, 0.1D, 0D);
 					if(!box.updateCollidingBlocks(world, tempBoxPosition.subtract(box.globalCenter))){
 						break;
 					}
-					if(rotation.y > 0){
-						rotation.y = Math.max(rotation.y - 0.1F, 0);
+					if(rotation.angles.y > 0.1){
+						rotation.angles.y -= 0.1;
+					}else if(rotation.angles.y < -0.1){
+						rotation.angles.y += 0.1;
 					}else{
-						rotation.y = Math.min(rotation.y + 0.1F, 0);
+						rotation.angles.y = 0;
 					}
 				}
 			}
@@ -969,36 +974,40 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 
 		//Now do pitch.
 		//Make sure to take into account yaw as it's already been checked.
-		if(rotation.x != 0){
-			tempBoxRotation.set(rotation.x, rotation.y, 0D);
+		if(rotation.angles.x != 0){
+			tempBoxRotation.set(rotation.angles.x, rotation.angles.y, 0D);
 			for(BoundingBox box : allBlockCollisionBoxes){
-				while(rotation.x != 0){
+				while(rotation.angles.x != 0){
 					tempBoxPosition.set(box.globalCenter).subtract(position).rotateFine(tempBoxRotation).add(position).addScaled(motion, SPEED_FACTOR);
 					if(!box.updateCollidingBlocks(world, tempBoxPosition.subtract(box.globalCenter))){
 						break;
 					}
-					if(rotation.x > 0){
-						rotation.x = Math.max(rotation.x - 0.1F, 0);
+					if(rotation.angles.x > 0.1){
+						rotation.angles.x -= 0.1;
+					}else if(rotation.angles.x < -0.1){
+						rotation.angles.x += 0.1;
 					}else{
-						rotation.x = Math.min(rotation.x + 0.1F, 0);
+						rotation.angles.x = 0;
 					}
 				}
 			}
 		}
 		
 		//And lastly the roll.
-		if(rotation.z != 0){
-			tempBoxRotation.set(rotation);
+		if(rotation.angles.z != 0){
+			tempBoxRotation.set(rotation.angles);
 			for(BoundingBox box : allBlockCollisionBoxes){
-				while(rotation.z != 0){
+				while(rotation.angles.z != 0){
 					tempBoxPosition.set(box.globalCenter).subtract(position).rotateFine(tempBoxRotation).add(position).addScaled(motion, SPEED_FACTOR);
 					if(!box.updateCollidingBlocks(world, tempBoxPosition.subtract(box.globalCenter))){
 						break;
 					}
-					if(rotation.z > 0){
-						rotation.z = Math.max(rotation.z - 0.1F, 0);
+					if(rotation.angles.z > 0.1){
+						rotation.angles.z -= 0.1;
+					}else if(rotation.angles.z < -0.1){
+						rotation.angles.z += 0.1;
 					}else{
-						rotation.z = Math.min(rotation.z + 0.1F, 0);
+						rotation.angles.z = 0;
 					}
 				}
 			}

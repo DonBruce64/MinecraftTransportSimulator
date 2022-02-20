@@ -165,8 +165,7 @@ public class JSONParser{
 				return null;
 			}else{
 				reader.beginArray();
-				RotationMatrix value = new RotationMatrix();
-				value.setToAngles(new Point3D(reader.nextDouble(), reader.nextDouble(), reader.nextDouble()));
+				RotationMatrix value = new RotationMatrix().setToAngles(new Point3D(reader.nextDouble(), reader.nextDouble(), reader.nextDouble()));
 				reader.endArray();
 				return value;
 			}
@@ -182,9 +181,9 @@ public class JSONParser{
 				//We need to set the indent to the value afterwards though to keep pretty printing.
 				writer.beginArray();
 				writer.setIndent("");
-				writer.value(value.lastAnglesSet.x);
-				writer.value(value.lastAnglesSet.y);
-				writer.value(value.lastAnglesSet.z);
+				writer.value(value.angles.x);
+				writer.value(value.angles.y);
+				writer.value(value.angles.z);
 				writer.endArray();
 				writer.setIndent("  ");
 			}

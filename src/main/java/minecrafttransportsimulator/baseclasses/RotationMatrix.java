@@ -25,7 +25,15 @@ public class RotationMatrix{
 	public double m20;
 	public double m21;
 	public double m22;
-	public final Point3D lastAnglesSet = new Point3D();
+	/**The current Euler angles that make up this matrix.  These are used to create the rotation
+	 * matrix on the first rotation operation.  Subsequent modifications to this variable will
+	 * re-create the matrix if a rotation operation is called.  However, they will NOT be updated
+	 * when matrix multiplication operations are performed.  The idea is to use them to create the
+	 * initial matrix, then multiply/transform as applicable.  If you need to get them back out of the
+	 * matrix, call {@link #convertToAngles()} which will convert the matrix back into the angles.
+	 */
+	public final Point3D angles = new Point3D();
+	private final Point3D lastAngles = new Point3D();
 	
 	public RotationMatrix(){
 		setToZero();
@@ -35,6 +43,8 @@ public class RotationMatrix{
 	 * Sets this matrix to the passed-in matrix.
 	 */
 	public RotationMatrix set(RotationMatrix other){
+		angles.set(other.angles);
+		lastAngles.set(other.lastAngles);
         m00 = other.m00;
         m01 = other.m01;
         m02 = other.m02;
@@ -92,38 +102,54 @@ public class RotationMatrix{
 		m22 = 1.0;
 		return this;
 	}
-    
-	/**Sets the rotation of this matrix to the angles (degrees)
-	 * of the passed-in point. If {@link #lastAnglesSet} is
-	 * equal to the angles, no operations are performed.
-	 * 
-	 * Note that this function is not efficient, nor is it
-	 * safe to have it running on multiple threads or multiple
-	 * object instances at the same time.  Basically, don't use
-	 * if you can avoid it.
+	
+	/**
+	 * Sets the rotation of this matrix to the passed-in angles.
 	 */
-	public synchronized RotationMatrix setToAngles(Point3D angles){
-		//Don't bother setting angles if they are already correct.
-		if(!lastAnglesSet.equals(angles)){
-			lastAnglesSet.set(angles);
-			setToZero();
-			rotateY(angles.y);
-			rotateX(angles.x);
-			rotateZ(angles.z);
+	public RotationMatrix setToAngles(Point3D angles){
+		this.angles.set(angles);
+		updateToAngles();
+		return this;
+	}
+	
+	/**
+	 * Sets the rotation of this matrix to correspond to one that
+	 * would result in the passed-in vector being rotated to its orientation.
+	 * This also updates {@link #angles} to match the vector's angles.
+	 */
+	public RotationMatrix setToVector(Point3D vector, boolean normalize){
+		angles.set(vector);
+		if(normalize){
+			angles.normalize();
 		}
+		//X-rotation (pitch), is the -aSin of the Y coord.
+		//This is because normally the Y coord is 0.
+		//When Y coord is positive, then there is pitch upward (counter-clockwise).
+		//When Y coord is negative, then there is pitch downward (clockwise).
+		double pitch = -Math.toDegrees(Math.asin(angles.y));
+		
+		//Y-rotation (yaw), is the aTan of the planar components x and z.
+		//Normally aTan expects y, and x.  But we need to give it x and z due to our coordinate definition.
+		//We can also set x to pich, as we're done with it now.
+		angles.y = Math.toDegrees(Math.atan2(angles.x, angles.z));
+		angles.x = pitch;
+		
+		//Z-rotation (roll) is always 0.  Vectors can't represent roll.
+		angles.z = 0;
+		updateToAngles();
 		return this;
 	}
 	
 	/**
 	 * Returns the angles that make up this matrix.  Note: these may not be the
-	 * same as the passed-in angles to {@link #setToAngles(Point3D)}. as rotation
+	 * same as the value in the {@link #angles} parameter, as rotation
 	 * matrix conversion has multiple solutions.  In general, these shouldn't be
 	 * used for calculations and rather should just be used to store the state of 
 	 * the matrix for later use where the orientation of the matrix matters, but
-	 * the actual angles don't.
+	 * the actual angles don't.  Note that in addition to returning the angles,
+	 * the value of {@link #angles} is set.
 	 */
 	public Point3D convertToAngles(){
-		Point3D angles = new Point3D();   	 
         //Decompile the matrix based on this formula on how it is built.
 	   	//[[1,0,0],[0,cosX,-sinX],[0,sinX,cosX]] X-Rotation
 		//[[cosY,0,sinY],[0,1,0],[-sinY,0,cosY]] Y-Rotation
@@ -288,10 +314,59 @@ public class RotationMatrix{
 	}
 	
 	/**
-	 * Interpolates between the two passed-in matrixes, storing the result
-	 * in this matrix.
+	 * Rotates the point about this matrix.
 	 */
-	public RotationMatrix interploate(RotationMatrix start, RotationMatrix end, double delta){
+	public Point3D rotate(Point3D point){
+		if(!lastAngles.equals(angles)){
+			updateToAngles();
+		}
+		double tx = m00*point.x + m01*point.y + m02*point.z;
+		double ty = m10*point.x + m11*point.y + m12*point.z;
+		point.z = m20*point.x + m21*point.y + m22*point.z;
+		point.x = tx;
+		point.y = ty;
+		return point;
+	}
+	
+	/**
+	 * Aligns the passed-in point to the matrix origin.  Essentially, this leaves
+	 * the point in its current position, but changes the coordinate system
+	 * to be aligned to the coordinate system of this matrix.
+	 * More specifically, this is an inverted rotation by the transpose of the matrix.
+	 */
+	public Point3D reOrigin(Point3D point){
+		if(!lastAngles.equals(angles)){
+			updateToAngles();
+		}
+		double tx = m00*point.x + m10*point.y + m20*point.z;
+		double ty = m01*point.x + m11*point.y + m21*point.z;
+		point.z = m02*point.x + m12*point.y + m22*point.z;
+		point.x = tx;
+		point.y = ty;
+		return point;
+	}
+	
+	/**
+	 * Updates this rotation of this matrix to match it to the current
+	 * value of its internal {@link #angles} variable.  This is an internal
+	 * function and is only called prior to rotation operations (as needed)
+	 * as it does some rather lengthy calculations.
+	 */
+	private RotationMatrix updateToAngles(){
+		setToZero();
+		rotateY(angles.y);
+		rotateX(angles.x);
+		rotateZ(angles.z);
+		lastAngles.set(angles);
+		return this;
+	}
+	
+	/**
+	 * Interpolates between the two passed-in matrixes, storing the result
+	 * in this matrix.  Note that this function is NOT thread-safe!
+	 */
+	public synchronized RotationMatrix interploate(RotationMatrix start, RotationMatrix end, double delta){
+		
 		//TODO code this internally without all the roudabout code hacks.
 		interpHelperMatrixStart.m00 = start.m00;
 		interpHelperMatrixStart.m01 = start.m01;

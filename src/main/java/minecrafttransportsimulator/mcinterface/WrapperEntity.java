@@ -226,12 +226,11 @@ public class WrapperEntity{
 		if(lastPitchChecked != entity.rotationPitch || lastYawChecked != entity.rotationYaw){
 			lastPitchChecked = entity.rotationPitch;
 			lastYawChecked = entity.rotationYaw;
-			mutableAngles.set(entity.rotationPitch, -entity.rotationYaw, 0);
-			mutableOrientation.setToAngles(mutableAngles);
+			mutableOrientation.angles.set(entity.rotationPitch, -entity.rotationYaw, 0);
+			mutableOrientation.setToAngles(mutableOrientation.angles);
 		}
 		return mutableOrientation;
 	}
-	private final Point3D mutableAngles = new Point3D();
 	private final RotationMatrix mutableOrientation = new RotationMatrix();
 	private float lastPitchChecked;
 	private float lastYawChecked;
@@ -242,10 +241,9 @@ public class WrapperEntity{
 	 *  matrix object, not the actual transform, so keep this in mind
 	 *  when calling this method.
 	 */
-	//TODO make this go away or change when we only use orientation (if ever).
 	public void setOrientation(RotationMatrix rotation){
-		entity.rotationYaw = (float) -rotation.lastAnglesSet.y;
-		entity.rotationPitch = (float) rotation.lastAnglesSet.x;
+		entity.rotationYaw = (float) -rotation.angles.y;
+		entity.rotationPitch = (float) rotation.angles.x;
 	}
 	
 	/**
@@ -309,6 +307,7 @@ public class WrapperEntity{
 	 *  for rotations.  This is OpenGL convention, and MC doesn't
 	 *  follow it, which is why rendering is such a PITA with yaw.
 	 */
+	//TODO make this go away or change when we only use orientation (if ever).
 	public void setYaw(double yaw){
 		entity.rotationYaw = (float)-yaw;
 	}

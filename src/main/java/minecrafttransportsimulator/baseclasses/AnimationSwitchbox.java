@@ -143,8 +143,8 @@ public class AnimationSwitchbox{
 			}else{
 				netMatrix.applyRotation(helperRotationMatrix);
 			}
+			rotation.multiply(helperRotationMatrix);
 		}
-		rotation.multiply(helperRotationMatrix);
 	}
 	
 	public void runScaling(DurationDelayClock clock, float partialTicks){

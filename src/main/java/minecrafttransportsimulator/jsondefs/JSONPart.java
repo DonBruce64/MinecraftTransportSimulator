@@ -333,6 +333,9 @@ public class JSONPart extends AJSONPartProvider{
 		@JSONDescription("If true, this gun will return to its default yaw and pitch if it is not active. This is useful for anyone who likes to keep their large assortment of weapons nice and tidy.")
     	public boolean resetPosition;
 		
+		@JSONDescription("If true, then this gun will fire bullets to align with itself only, and not with the muzzle rot paramter.  However, the initial velocity will still align with the rot parameter.  This allows the muzzle to be rotated to adjust the firing direction without modifying the orientation of the spawned bullet.  Think bomb bays and rocket launchers with a jettison before burn.")
+    	public boolean disableMuzzleOrientation;
+		
 		@JSONDescription("The capacity of the gun, in number of bullets.")
     	public int capacity;
 		

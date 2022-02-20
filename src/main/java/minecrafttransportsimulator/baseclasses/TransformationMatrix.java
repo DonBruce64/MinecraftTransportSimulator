@@ -211,4 +211,16 @@ public class TransformationMatrix extends RotationMatrix{
 	public TransformationMatrix applyScaling(Point3D scaling){
 		return applyScaling(scaling.x, scaling.y, scaling.z);
 	}
+	
+	/**
+	 * Transforms the passed-in point to align with this transformation matrix.
+	 */
+	public Point3D transform(Point3D point){
+        double tx = m00*point.x + m01*point.y + m02*point.z + m03;
+        double ty = m10*point.x + m11*point.y + m12*point.z + m13;
+        point.z =  m20*point.x + m21*point.y + m22*point.z + m23;
+        point.x = tx;
+        point.y = ty;
+		return point;
+	}
 }

@@ -171,6 +171,24 @@ public class Point3D{
 	}
 	
 	/**
+	 * Returns true if the distance between this point and the first passed-in
+	 * point is less than the distance between this point and the second passed-in
+	 * point.  This is an optimized method to check which of two points are closer
+	 * versus using {@link #distanceTo(Point3D)} as it doesn't do square root calls.
+	 */
+	public boolean isFirstCloserThanSecond(Point3D first, Point3D second){
+		double deltaX = first.x - this.x;
+		double deltaY = first.y - this.y;
+		double deltaZ = first.z - this.z;
+		double firstDistance = deltaX*deltaX + deltaY*deltaY + deltaZ*deltaZ;
+		
+		deltaX = second.x - this.x;
+		deltaY = second.y - this.y;
+		deltaZ = second.z - this.z;
+		return firstDistance < deltaX*deltaX + deltaY*deltaY + deltaZ*deltaZ;
+	}
+	
+	/**
 	 * Returns the dot product between this point and the passed-in point.
 	 */
 	public double dotProduct(Point3D point){
@@ -235,9 +253,6 @@ public class Point3D{
 		}
 		double theta = Math.asin(y);
 		double phi = Math.atan2(x, z);
-		//TODO Positive acos for theta maybe?  Other code shows this.
-		//Or maybe this?
-		//-Math.toDegrees(Math.atan2(motion.y, Math.hypot(motion.x, motion.z)));
 		set(-Math.toDegrees(theta), Math.toDegrees(phi), 0);
 		return this;
 	}
@@ -377,41 +392,23 @@ public class Point3D{
 
 	
 	/**
-	 * Rotates the point per the passed-in matrix.
+	 * Forwarded function to {@link RotationMatrix#rotate(Point3D)} for nested calling.
 	 */
 	public Point3D rotate(RotationMatrix matrix){
-		double tx = matrix.m00* x + matrix.m01*y + matrix.m02*z;
-		double ty = matrix.m10* x + matrix.m11*y + matrix.m12*z;
-		z = matrix.m20* x + matrix.m21*y + matrix.m22*z;
-		x = tx;
-		y = ty;
-		return this;
+		return matrix.rotate(this);
 	}
 	
 	/**
-	 * Aligns this point to the passed-in matrix origin.  Essentially, this leaves
-	 * the point in its current position, but changes the coordinate system
-	 * to be aligned to the coordinate system of this matrix.
-	 * More specifically, this is an inverted rotation by the transpose of the matrix.
+	 * Forwarded function to {@link RotationMatrix#reOrigin(Point3D)} for nested calling.
 	 */
 	public Point3D reOrigin(RotationMatrix matrix){
-		double tx = matrix.m00* x + matrix.m10*y + matrix.m20*z;
-		double ty = matrix.m01* x + matrix.m11*y + matrix.m21*z;
-		z = matrix.m02* x + matrix.m12*y + matrix.m22*z;
-		x = tx;
-		y = ty;
-		return this;
+		return matrix.reOrigin(this);
 	}
 
 	/**
-	 * Transforms this point to align with the passed-in transformation matrix.
+	 * Forwarded function to {@link TransformationMatrix#transform(Point3D)} for nested calling.
 	 */
 	public Point3D transform(TransformationMatrix matrix){
-        double tx = matrix.m00*x + matrix.m01*y + matrix.m02*z + matrix.m03;
-        double ty = matrix.m10*x + matrix.m11*y + matrix.m12*z + matrix.m13;
-        z =  matrix.m20*x + matrix.m21*y + matrix.m22*z + matrix.m23;
-        x = tx;
-        y = ty;
-		return this;
+       return matrix.transform(this);
 	}
 }

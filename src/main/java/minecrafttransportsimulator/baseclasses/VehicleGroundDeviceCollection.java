@@ -440,13 +440,13 @@ public class VehicleGroundDeviceCollection{
 				///If so, don't apply it and bail.
 				double intialLinearMovement = Math.sin(Math.toRadians(testRotation))*groundedSideOffset;
 				if(pitch){
-					if(vehicle.rotation.x*testRotation < 0 && vehicle.velocity > 0.5){
+					if(vehicle.rotation.angles.x*testRotation < 0 && vehicle.velocity > 0.5){
 						return 0;
 					}else{
-						vehicle.rotation.x += testRotation;
+						vehicle.rotation.angles.x += testRotation;
 					}
 				}else{
-					vehicle.rotation.z += testRotation;
+					vehicle.rotation.angles.z += testRotation;
 				}
 				vehicle.motion.y += intialLinearMovement;
 				testBox1.updateCollisionStatuses(null);
@@ -469,9 +469,9 @@ public class VehicleGroundDeviceCollection{
 				//This can happen if we rotate via an angle into a block.
 				if(angularCorrection != 0 && (Math.abs(angularCorrection) > Math.abs(testRotation) || Double.isNaN(angularCorrection))){
 					if(pitch){
-						vehicle.rotation.x -= testRotation;
+						vehicle.rotation.angles.x -= testRotation;
 					}else{
-						vehicle.rotation.z -= testRotation;
+						vehicle.rotation.angles.z -= testRotation;
 					}
 					vehicle.motion.y -= intialLinearMovement;
 					return 0;
@@ -479,9 +479,9 @@ public class VehicleGroundDeviceCollection{
 					//Apply motions, rotations, re-calculate GDB states, and return applied motion.y for further processing.
 					linearCorrection = intialLinearMovement*(angularCorrection/testRotation);
 					if(pitch){
-						vehicle.rotation.x -= angularCorrection;
+						vehicle.rotation.angles.x -= angularCorrection;
 					}else{
-						vehicle.rotation.z -= angularCorrection;
+						vehicle.rotation.angles.z -= angularCorrection;
 					}
 					vehicle.motion.y -= linearCorrection;
 					updateCollisions();
@@ -491,9 +491,9 @@ public class VehicleGroundDeviceCollection{
 						double finalAngularMovement = (testRotation - angularCorrection)*0.05;
 						double finalLinearMovement = (intialLinearMovement - linearCorrection)*0.05;
 						if(pitch){
-							vehicle.rotation.x -= (testRotation - angularCorrection - finalAngularMovement);
+							vehicle.rotation.angles.x -= (testRotation - angularCorrection - finalAngularMovement);
 						}else{
-							vehicle.rotation.z -= (testRotation - angularCorrection - finalAngularMovement);
+							vehicle.rotation.angles.z -= (testRotation - angularCorrection - finalAngularMovement);
 						}
 						vehicle.motion.y -= (intialLinearMovement - linearCorrection - finalLinearMovement);
 						updateCollisions();
@@ -539,7 +539,7 @@ public class VehicleGroundDeviceCollection{
 			return 0;
 		}else{
 			//Apply motions, rotations, re-calculate GDB states, and return applied motion.y for further processing.
-			vehicle.rotation.x += angularCorrection;
+			vehicle.rotation.angles.x += angularCorrection;
 			vehicle.motion.y += linearCorrection;
 			updateCollisions();
 			return linearCorrection;

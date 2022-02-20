@@ -5,7 +5,6 @@ import java.util.Set;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController;
@@ -16,7 +15,6 @@ import minecrafttransportsimulator.rendering.components.ARenderEntityDefinable;
 
 public class RenderDecor extends ARenderEntityDefinable<TileEntityDecor>{
 	private static final TransformationMatrix holoboxTransform = new TransformationMatrix();
-	private static final RotationMatrix holoboxRotation = new RotationMatrix();
 	
 	@Override
 	protected void renderHolographicBoxes(TileEntityDecor decor, TransformationMatrix transform){
@@ -33,7 +31,7 @@ public class RenderDecor extends ARenderEntityDefinable<TileEntityDecor>{
 							//Add 8 units to center on the box which is 16 units long.
 							boxRelativeCenter.add(0, 0, 8);
 							//Rotate box based on signal orientation to proper signal.
-							boxRelativeCenter.rotateY(signalGroup.axis.yRotation);
+							boxRelativeCenter.rotate(signalGroup.axis.rotation);
 							
 							//Add delta from controller to intersection center.
 							boxRelativeCenter.add(controller.intersectionCenterPoint).subtract(controller.position);
@@ -41,8 +39,7 @@ public class RenderDecor extends ARenderEntityDefinable<TileEntityDecor>{
 							
 							//Create bounding box and transform for it..
 							BoundingBox box = new BoundingBox(boxRelativeCenter, signalGroup.signalLineWidth/2D, 1, 8);
-							holoboxRotation.setToAxisAngle(0, 1, 0, signalGroup.axis.yRotation);
-							holoboxTransform.set(transform).applyTranslation(boxRelativeCenter).applyRotation(holoboxRotation);
+							holoboxTransform.set(transform).applyTranslation(boxRelativeCenter).applyRotation(signalGroup.axis.rotation);
 							box.renderHolographic(holoboxTransform, null, signalGroup.direction.equals(SignalDirection.LEFT) ? ColorRGB.BLUE : (signalGroup.direction.equals(SignalDirection.RIGHT) ? ColorRGB.YELLOW : ColorRGB.GREEN));
 						}
 		        	}

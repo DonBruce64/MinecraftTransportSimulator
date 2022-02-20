@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.blocks.components;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.mcinterface.BuilderBlock;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 
@@ -48,7 +49,7 @@ public abstract class ABlockBase{
 		public final int xOffset;
 		public final int yOffset;
 		public final int zOffset;
-		public final int yRotation;
+		public final RotationMatrix rotation;
 		public final boolean blockBased;
 		public final boolean xzPlanar;
 		
@@ -56,7 +57,7 @@ public abstract class ABlockBase{
 			this.xOffset = xOffset;
 			this.yOffset = yOffset;
 			this.zOffset = zOffset;
-			this.yRotation = yRotation;
+			this.rotation = new RotationMatrix().setToAngles(new Point3D(0, yRotation, 0));
 			this.blockBased = blockBased;
 			this.xzPlanar = xzPlanar;
 		}
@@ -88,7 +89,7 @@ public abstract class ABlockBase{
 			}
 			int degRotation = (checkDiagonals ? (int) (Math.round(rotation/45)*45) : (int) (Math.round(rotation/90)*90))%360;
 			for(Axis axis : values()){
-				if(axis.xzPlanar && axis.yRotation == degRotation){
+				if(axis.xzPlanar && axis.rotation.angles.y == degRotation){
 					return axis;
 				}
 			}

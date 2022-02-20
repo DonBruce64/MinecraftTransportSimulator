@@ -105,7 +105,7 @@ public final class ControlSystem{
 					//Could have hit this vehicle, check if and what we did via raytracing.
 					for(BoundingBox box : vehicle.allInteractionBoxes){
 						if(box.intersects(clickBounds) && box.getIntersectionPoint(startPosition, endPosition) != null){
-							if(closestBox == null || closestBox.globalCenter.distanceTo(startPosition) > box.globalCenter.distanceTo(startPosition)){
+							if(closestBox == null || startPosition.isFirstCloserThanSecond(box.globalCenter, closestBox.globalCenter)){
 								closestBox = box;
 								closestVehicle = vehicle;
 							}

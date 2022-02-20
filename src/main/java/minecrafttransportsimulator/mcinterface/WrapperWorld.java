@@ -287,20 +287,20 @@ public class WrapperWorld{
 	 *  Returns the closest entity whose collision boxes are intercepted by the
 	 *  passed-in entity's line of sight.
 	 */
-	public WrapperEntity getEntityLookingAt(WrapperEntity entityLooking, float searchRadius){
-		double smallestDistance = searchRadius*2;
+	public WrapperEntity getEntityLookingAt(WrapperEntity entityLooking, float searchDistance){
+		double smallestDistance = searchDistance*2;
 		Entity foundEntity = null;
 		Entity mcLooker = entityLooking.entity;
-		Vec3d mcLookerPos = mcLooker.getPositionVector();
-		Point3D lookerLos = entityLooking.getLineOfSight(searchRadius).add(entityLooking.getPosition());
-		Vec3d losVector = new Vec3d(lookerLos.x, lookerLos.y, lookerLos.z);
-		for(Entity entity : world.getEntitiesWithinAABBExcludingEntity(mcLooker, mcLooker.getEntityBoundingBox().grow(searchRadius))){
-			if(!entity.equals(mcLooker.getRidingEntity()) && !(entity instanceof BuilderEntityRenderForwarder)){
+		Vec3d raytraceStart = mcLooker.getPositionVector().add(0, (entityLooking.getEyeHeight() + entityLooking.getSeatOffset()), 0);
+		Point3D lookerLos = entityLooking.getLineOfSight(searchDistance);
+		Vec3d raytraceEnd = new Vec3d(lookerLos.x, lookerLos.y, lookerLos.z).add(raytraceStart);
+		for(Entity entity : world.getEntitiesWithinAABBExcludingEntity(mcLooker, mcLooker.getEntityBoundingBox().grow(searchDistance))){
+			if(!(entity instanceof ABuilderEntityBase) && !entity.equals(mcLooker.getRidingEntity())){
 				float distance = mcLooker.getDistance(entity);
 				if(distance < smallestDistance){
-					smallestDistance = distance;
-					RayTraceResult rayTrace = entity.getEntityBoundingBox().calculateIntercept(mcLookerPos, losVector);
+					RayTraceResult rayTrace = entity.getEntityBoundingBox().calculateIntercept(raytraceStart, raytraceEnd);
 					if(rayTrace != null){
+						smallestDistance = distance;
 						foundEntity = entity;
 					}
 				}
@@ -1161,6 +1161,30 @@ public class WrapperWorld{
 		   entitiesByClass.put(entityClass, classListing);
 	   }
 	   return classListing;
+   }
+   
+   /**
+    * Returns the closest entity of the specified class that intersects the ray-traced line,
+    * or null if none does.
+    */
+   public <EntityType extends AEntityE_Interactable<?>> EntityType getRaytraced(Class<EntityType> entityClass, Point3D start, Point3D end){
+	   BoundingBox closestBox = null;
+	   EntityType closestEntity = null;
+	   BoundingBox clickBounds = new BoundingBox(start, end);
+	   for(EntityType entity : getEntitiesOfType(entityClass)){
+		   if(entity.encompassingBox.intersects(clickBounds)){
+				//Could have hit this entity, check if we did via raytracing.
+				for(BoundingBox box : entity.getInteractionBoxes()){
+					if(box.intersects(clickBounds) && box.getIntersectionPoint(start, end) != null){
+						if(closestBox == null || start.isFirstCloserThanSecond(box.globalCenter, closestBox.globalCenter)){
+							closestBox = box;
+							closestEntity = entity;
+						}
+					}
+				}
+			}
+	   }
+	   return closestEntity;
    }
    
    /**

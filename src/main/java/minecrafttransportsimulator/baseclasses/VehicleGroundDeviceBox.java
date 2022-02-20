@@ -205,7 +205,7 @@ public class VehicleGroundDeviceBox{
 			contactPoint.set(solidBox.localCenter);
 			contactPoint.add(0D, -solidBox.heightRadius, 0D);
 			solidBox.globalCenter.set(solidBox.localCenter);
-			solidBox.globalCenter.rotateFine(vehicle.angles.copy().add(vehicle.rotation)).add(vehicle.position).add(vehicleMotionOffset);
+			solidBox.globalCenter.rotate(vehicle.orientation).rotate(vehicle.rotation).add(vehicle.position).add(vehicleMotionOffset);
 			vehicle.world.updateBoundingBoxCollisions(solidBox, vehicleMotionOffset, false);
 			contactedEntity = checkEntityCollisions(vehicleMotionOffset);
 			isCollided = contactedEntity || !solidBox.collidingBlockPositions.isEmpty();
@@ -236,7 +236,7 @@ public class VehicleGroundDeviceBox{
 		if(!canRollOnGround || !isAbleToDoGroundOperations){
 			if(!liquidDevices.isEmpty() || !liquidCollisionBoxes.isEmpty()){
 				liquidBox.globalCenter.set(liquidBox.localCenter);
-				liquidBox.globalCenter.rotateFine(vehicle.angles.copy().add(vehicle.rotation)).add(vehicle.position).add(vehicleMotionOffset);
+				liquidBox.globalCenter.rotate(vehicle.orientation).rotate(vehicle.rotation).add(vehicle.position).add(vehicleMotionOffset);
 				vehicle.world.updateBoundingBoxCollisions(liquidBox, vehicleMotionOffset, false);
 				isCollidedLiquid = !liquidBox.collidingBlockPositions.isEmpty();
 				double liquidCollisionDepth = liquidBox.currentCollisionDepth.y;

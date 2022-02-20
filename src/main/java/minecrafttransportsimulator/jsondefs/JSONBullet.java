@@ -47,14 +47,14 @@ public class JSONBullet extends AJSONMultiModelProvider{
 		@JSONDescription("How long, in ticks, the bullet should take to accelerate from its initial velocity to its maxVelocity (if maxVelocity is used). Note that if this is greater than burnTime, it will not continue to accelerate once burnTime has expired.")
     	public int accelerationTime;
 		
+		@JSONDescription("How long, in ticks, to delay initial acceleration.  This can be combined with the initial velocity from the gun to make missiles that detach before igniting.")
+    	public int accelerationDelay;
+		
 		@JSONDescription("The maximum velocity of this bullet, in m/s. If this and accelerationTime are used, the bullet will be spawned with the gun's muzzleVelocity + the vehicle's motion, then it will accelerate at a constant rate and reach maxVelocity when the accelerationTime is about to expire.")
     	public int maxVelocity;
 		
-		@JSONDescription("If used and set to anything greater than 0, the bullet will have guided behavior like a missile, and turnFactor will affect how quickly it can turn. When fired, the bullet will try to find an entity or block that the player is looking at, up to 2000 blocks away. While in the air, it will constantly try to turn and fly toward the target it was given at the time of firing. A good baseline turnFactor is 1.0. Higher values will cause the bullet to turn more quickly, while values between 0 and 1 will turn more slowly.")
-    	public float turnFactor;
-		
-		@JSONDescription("If used, this defines the size of the vertical angle (in degrees), from which a guided bullet will try to approach its target. The bullet will stay level or even climb up to come down on its target on this angle. This works like a Javelin missile in Call of Duty, and it's useful for making sure that the bullet doesn't hit the ground before it reaches your target. Note that this only affects bullets where the turnFactor is > 1, and this should be a positive number.")
-    	public float angleOfAttack;
+		@JSONDescription("The rate of turn, in degrees per tick, that this bullet will be able to turn to track entities.  If set, then this bullet will lock-on to entities, and hot engines when fired.")
+    	public float turnRate;
 		
 		@JSONDescription("A optional list of effects that this bullet will impart on the entity that it hits.")
     	public List<JSONPotionEffect> effects;

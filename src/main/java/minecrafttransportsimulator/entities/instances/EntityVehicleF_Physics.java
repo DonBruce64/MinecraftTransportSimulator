@@ -150,11 +150,18 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 			motion.set(0, 0, 0);
 			orientation.convertToAngles();
 		}
+		if(definition.systemName.contains("chevron")){
+			setVariable(THROTTLE_VARIABLE, MAX_THROTTLE/2D);
+			setVariable(RUDDER_VARIABLE, 20);
+			if(ticksExisted%100 == 0){
+				motion.y += 1;
+			}
+		}
+		setVariable(DAMAGE_VARIABLE, 0);
+		this.electricPower = 12;
 		//Set vectors.
-		verticalVector.set(0D, 1D, 0D);
-		verticalVector.rotate(orientation);
-		normalizedVelocityVector.set(motion);
-		normalizedVelocityVector.normalize();
+		verticalVector.set(0D, 1D, 0D).rotate(orientation);
+		normalizedVelocityVector.set(motion).normalize();
 		sideVector.set(verticalVector.crossProduct(headingVector));
 		
 		//Parse out variables.
@@ -482,12 +489,11 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 			//Add all torques to the main torque matrix and apply them.
 			pitchDirectionFactor = Math.abs(angles.z%360);
 			pitchDirectionFactor = pitchDirectionFactor < 90 || pitchDirectionFactor > 270 ? 1.0D : -1.0D;
-			totalTorque.set(elevatorTorque, rudderTorque, aileronTorque);
-			totalTorque.add(thrustTorque).scale(180D/Math.PI);
-			rotation.x = (pitchDirectionFactor*(1-Math.abs(sideVector.y))*totalTorque.x + sideVector.y*totalTorque.y)/momentPitch;
-			rotation.y = (sideVector.y*totalTorque.x - verticalVector.y*totalTorque.y)/momentYaw;
-			rotation.z = totalTorque.z/momentRoll;
-			rotation.add(rotorRotation);
+			totalTorque.set(elevatorTorque, rudderTorque, aileronTorque).add(thrustTorque).scale(180D/Math.PI);
+			rotation.angles.x = (pitchDirectionFactor*(1-Math.abs(sideVector.y))*totalTorque.x + sideVector.y*totalTorque.y)/momentPitch;
+			rotation.angles.y = (sideVector.y*totalTorque.x - verticalVector.y*totalTorque.y)/momentYaw;
+			rotation.angles.z = totalTorque.z/momentRoll;
+			rotation.angles.add(rotorRotation);
 		}else if(!lockedOnRoad){
 			//If we are a trailer that is mounted, just move the vehicle to the exact position of the trailer connection.
 			//Otherwise, do movement logic  Make sure the towed vehicle is loaded, however.  It may not yet be.
@@ -528,7 +534,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 				//We need to fake-add the yaw for the motion calculation here, hence the odd temp setting of the angles.
 				Point3D trailerHookupOffset;
 				if(!Double.isNaN(rotationDelta)){
-					rotation.y = rotationDelta;
+					rotation.angles.y = rotationDelta;
 					angles.y += rotationDelta;
 					trailerHookupOffset = towedByConnection.hookupCurrentPosition.subtract(position);
 					angles.y -= rotationDelta;
@@ -538,12 +544,12 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 				
 				//Now move the trailer to the hitch.  Also set rotations to 0 to prevent odd math.
 				motion.set(tractorHitchCurrentOffset.subtract(trailerHookupOffset).scale(1/SPEED_FACTOR));
-				rotation.x = 0;
-				rotation.z = 0;
+				rotation.angles.x = 0;
+				rotation.angles.z = 0;
 			}
 		}else{
 			motion.set(towedByConnection.towingVehicle.motion);
-			rotation.set(0, 0, 0);
+			rotation.angles.set(0, 0, 0);
 		}
 	}
 	
@@ -732,8 +738,8 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 			case("flaps_moving"): return flapCurrentAngle != flapDesiredAngle ? 1 : 0;
 			case("vertical_speed"): return motion.y*EntityVehicleF_Physics.SPEED_FACTOR*20;
 			case("lift_reserve"): return -trackAngle;
-			case("turn_coordinator"): return ((rotation.z)/10 + rotation.y)/0.15D*25;
-			case("turn_indicator"): return (rotation.y)/0.15F*25F;
+			case("turn_coordinator"): return ((rotation.angles.z)/10 + rotation.angles.y)/0.15D*25;
+			case("turn_indicator"): return (rotation.angles.y)/0.15F*25F;
 			case("slip"): return 75*sideVector.dotProduct(normalizedVelocityVector);
 			case("gear_moving"): return (isVariableActive(GEAR_VARIABLE) ? gearMovementTime != definition.motorized.gearSequenceDuration : gearMovementTime != 0) ? 1 : 0;
 			case("beacon_direction"): return selectedBeacon != null ? angles.getClampedYDelta(Math.toDegrees(Math.atan2(selectedBeacon.position.x - position.x, selectedBeacon.position.z - position.z))) : 0;

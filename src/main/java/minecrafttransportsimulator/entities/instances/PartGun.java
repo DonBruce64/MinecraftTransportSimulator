@@ -53,8 +53,6 @@ public class PartGun extends APart{
 	private int bulletsRemovedThisRequest;
 	//TODO make this private when rendering goes in-class.
 	public int currentMuzzleGroupIndex;
-	private final Point3D internalAngles;
-	private final Point3D prevInternalAngles;
 	private final RotationMatrix internalOrientation;
 	private final RotationMatrix prevInternalOrientation;
 	protected ItemBullet loadedBullet;
@@ -72,17 +70,21 @@ public class PartGun extends APart{
 	private int windupRotation;
 	public WrapperEntity lastController;
 	private WrapperEntity entityTarget;
+	private PartEngine engineTarget;
 	private long millisecondCamOffset;
 	private long lastTimeFired;
+	private final Point3D bulletPosition = new Point3D();
+	private final Point3D bulletVelocity = new Point3D();
+	private final RotationMatrix bulletOrientation = new RotationMatrix();
 	
 	//Temp helper variables for calculations
 	private final Point3D targetVector = new Point3D();
 	private final Point3D targetAngles = new Point3D();
-	private final Point3D firingSpreadAngles = new Point3D();
 	private final RotationMatrix firingSpreadRotation = new RotationMatrix();
 	
 	//Global data.
 	public final List<Integer> bulletsHitOnServer = new ArrayList<Integer>();
+	public static final int RAYTRACE_DISTANCE = 750;
 		
 	public PartGun(AEntityF_Multipart<?> entityOn, WrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, WrapperNBT data, APart parentPart){
 		super(entityOn, placingPlayer, placementDefinition, data, parentPart);
@@ -136,9 +138,7 @@ public class PartGun extends APart{
 		this.bulletsLeft = data.getInteger("bulletsLeft");
 		this.bulletsReloading = data.getInteger("bulletsReloading");
 		this.currentMuzzleGroupIndex = data.getInteger("currentMuzzleGroupIndex");
-		this.internalAngles = data.getPoint3d("internalAngles");
-		this.prevInternalAngles = internalAngles.copy();
-		this.internalOrientation = new RotationMatrix().setToAngles(internalAngles);
+		this.internalOrientation = new RotationMatrix().setToAngles(data.getPoint3d("internalAngles"));
 		this.prevInternalOrientation = new RotationMatrix().set(internalOrientation);
 		String loadedBulletPack = data.getString("loadedBulletPack");
 		String loadedBulletName = data.getString("loadedBulletName");
@@ -168,7 +168,6 @@ public class PartGun extends APart{
 	@Override
 	public void update(){
 		//Set gun state and do updates.
-		prevInternalAngles.set(internalAngles);
 		prevInternalOrientation.set(internalOrientation);
 		if(isActive && !placementDefinition.isSpare){
 			//Check if we have a controller.
@@ -258,7 +257,7 @@ public class PartGun extends APart{
 						//Need to take muzzle count into account.
 						bulletsToRemove *= definition.gun.muzzleGroups.get(currentMuzzleGroupIndex).muzzles.size();
 						firedThisRequest = true;
-						bulletsLeft -= bulletsToRemove;
+						if(!ConfigSystem.configObject.clientControls.devMode.value)bulletsLeft -= bulletsToRemove;
 						bulletsRemovedThisRequest += bulletsToRemove;
 						bulletsFired += bulletsToRemove;
 						entityOn.lastPrimaryPart.put(gunItem, this);
@@ -335,7 +334,7 @@ public class PartGun extends APart{
 			state = GunState.INACTIVE;
 			entityTarget = null;
 			if(definition.gun.resetPosition){
-				handleMovement(defaultYaw, defaultPitch);
+				handleMovement(defaultYaw - internalOrientation.angles.y, defaultPitch - internalOrientation.angles.x);
 			}
 		}
 		
@@ -401,7 +400,7 @@ public class PartGun extends APart{
 					controller.setYaw(targetAngles.y);
 					controller.setPitch(targetAngles.x);
 					//Only fire if we're within 1 movement increment of the target.
-					if(Math.abs(targetAngles.y - internalAngles.y) < definition.gun.yawSpeed && Math.abs(targetAngles.x - internalAngles.x) < definition.gun.pitchSpeed){
+					if(Math.abs(targetAngles.y - internalOrientation.angles.y) < definition.gun.yawSpeed && Math.abs(targetAngles.x - internalOrientation.angles.x) < definition.gun.pitchSpeed){
 						state = state.promote(GunState.FIRING_REQUESTED);
 					}else{
 						state = state.demote(GunState.CONTROLLED);
@@ -417,9 +416,12 @@ public class PartGun extends APart{
 			//Player-controlled gun.
 			//If we are on a client, check for a target for this gun if we have a lock-on missile.
 			//Only do this once every 1/2 second.
-			if(world.isClient() && loadedBullet != null && loadedBullet.definition.bullet.turnFactor > 0){
+			if(world.isClient() && loadedBullet != null && loadedBullet.definition.bullet.turnRate > 0){
 				//Try to find the entity the controller is looking at.
-				entityTarget = world.getEntityLookingAt(controller, 750);
+				entityTarget = world.getEntityLookingAt(controller, RAYTRACE_DISTANCE);
+				if(entityTarget == null){
+					engineTarget = world.getRaytraced(PartEngine.class, position, position.copy().add(controller.getLineOfSight(RAYTRACE_DISTANCE)));
+				}
 			}
 			
 			//If we are holding the trigger, request to fire.
@@ -432,7 +434,7 @@ public class PartGun extends APart{
 	
 		//Get the delta between our orientation and the player's orientation.
 		if(!(entityOn instanceof EntityPlayerGun)){
-			handleMovement(controller.getYaw() - internalAngles.y, controller.getPitch() - internalAngles.x);
+			handleMovement(controller.getYaw() - internalOrientation.angles.y, controller.getPitch() - internalOrientation.angles.x);
 		}
 	}
 	
@@ -483,67 +485,67 @@ public class PartGun extends APart{
 	 * Only call this ONCE per update loop as it sets prev values.
 	 */
 	private void handleMovement(double deltaYaw, double deltaPitch){
-		//Set prev orientation now that we don't need it for the gun delta calculations.
-		prevInternalOrientation.set(internalOrientation);
-		
-		//Adjust yaw.  We need to normalize the delta here as yaw can go past -180 to 180.
-		if(deltaYaw < -180)deltaYaw += 360;
-		if(deltaYaw > 180)deltaYaw -= 360;
-		if(deltaYaw < 0){
-			if(deltaYaw < -definition.gun.yawSpeed){
-				deltaYaw = -definition.gun.yawSpeed;
+		if(deltaYaw != 0 || deltaPitch != 0){
+			if(deltaYaw != 0){
+				//Adjust yaw.  We need to normalize the delta here as yaw can go past -180 to 180.
+				if(deltaYaw < -180)deltaYaw += 360;
+				if(deltaYaw > 180)deltaYaw -= 360;
+				if(deltaYaw < 0){
+					if(deltaYaw < -definition.gun.yawSpeed){
+						deltaYaw = -definition.gun.yawSpeed;
+					}
+					internalOrientation.angles.y += deltaYaw; 
+				}else if(deltaYaw > 0){
+					if(deltaYaw > definition.gun.yawSpeed){
+						deltaYaw = definition.gun.yawSpeed;
+					}
+					internalOrientation.angles.y += deltaYaw;
+				}
+				
+				//Apply yaw clamps.
+				//If yaw is from -180 to 180, we are a gun that can spin around on its mount.
+				//We need to do special logic for this type of gun.
+				if(minYaw == -180  && maxYaw == 180){
+					if(internalOrientation.angles.y > 180 ){
+						internalOrientation.angles.y -= 360;
+						prevInternalOrientation.angles.y -= 360;
+					}else if(internalOrientation.angles.y < -180){
+						internalOrientation.angles.y += 360;
+						prevInternalOrientation.angles.y += 360;
+					}
+				}else{
+					if(internalOrientation.angles.y > maxYaw){
+						internalOrientation.angles.y = maxYaw;
+					}
+					if(internalOrientation.angles.y < minYaw){
+						internalOrientation.angles.y = minYaw;
+					}
+				}
 			}
-			internalAngles.y += deltaYaw; 
-		}else if(deltaYaw > 0){
-			if(deltaYaw > definition.gun.yawSpeed){
-				deltaYaw = definition.gun.yawSpeed;
+			
+			if(deltaPitch != 0){
+				//Adjust pitch.
+				if(deltaPitch < 0){
+					if(deltaPitch < -definition.gun.pitchSpeed){
+						deltaPitch = -definition.gun.pitchSpeed;
+					}
+					internalOrientation.angles.x += deltaPitch; 
+				}else if(deltaPitch > 0){
+					if(deltaPitch > definition.gun.pitchSpeed){
+						deltaPitch = definition.gun.pitchSpeed;
+					}
+					internalOrientation.angles.x += deltaPitch;
+				}
+				
+				//Apply pitch clamps.
+				if(internalOrientation.angles.x > maxPitch){
+					internalOrientation.angles.x = maxPitch;
+				}
+				if(internalOrientation.angles.x < minPitch){
+					internalOrientation.angles.x = minPitch;
+				}
 			}
-			internalAngles.y += deltaYaw;
 		}
-		
-		//Apply yaw clamps.
-		//If yaw is from -180 to 180, we are a gun that can spin around on its mount.
-		//We need to do special logic for this type of gun.
-		if(minYaw == -180  && maxYaw == 180){
-			if(internalAngles.y > 180 ){
-				internalAngles.y -= 360;
-				prevInternalAngles.y -= 360;
-			}else if(internalAngles.y < -180){
-				internalAngles.y += 360;
-				prevInternalAngles.y += 360;
-			}
-		}else{
-			if(internalAngles.y > maxYaw){
-				internalAngles.y = maxYaw;
-			}
-			if(internalAngles.y < minYaw){
-				internalAngles.y = minYaw;
-			}
-		}
-		
-		//Adjust pitch.
-		if(deltaPitch < 0){
-			if(deltaPitch < -definition.gun.pitchSpeed){
-				deltaPitch = -definition.gun.pitchSpeed;
-			}
-			internalAngles.x += deltaPitch; 
-		}else if(deltaPitch > 0){
-			if(deltaPitch > definition.gun.pitchSpeed){
-				deltaPitch = definition.gun.pitchSpeed;
-			}
-			internalAngles.x += deltaPitch;
-		}
-		
-		//Apply pitch clamps.
-		if(internalAngles.x > maxPitch){
-			internalAngles.x = maxPitch;
-		}
-		if(internalAngles.x < minPitch){
-			internalAngles.x = minPitch;
-		}
-		
-		//Update internal orientation.
-		internalOrientation.setToAngles(internalAngles);
 	}
 	
 	/**
@@ -609,27 +611,36 @@ public class PartGun extends APart{
 	 * This is based on the passed-in muzzle, and the parameters of that muzzle.
 	 * Used in both spawning the bullet, and in rendering where the muzzle position is.
 	 */
-	public void setBulletSpawn(Point3D bulletPosition, Point3D bulletVelocity, JSONMuzzle muzzle){
+	public void setBulletSpawn(Point3D bulletPosition, Point3D bulletVelocity, RotationMatrix bulletOrientation, JSONMuzzle muzzle){		
 		//Set velocity.
-		bulletVelocity.set(0, 0, definition.gun.muzzleVelocity/20D/10D);
-		if(definition.gun.bulletSpreadFactor > 0){
-			firingSpreadAngles.set((Math.random() - 0.5F)*definition.gun.bulletSpreadFactor, (Math.random() - 0.5F)*definition.gun.bulletSpreadFactor, 0D);
-			firingSpreadRotation.setToAngles(firingSpreadAngles);
-			bulletVelocity.rotate(firingSpreadRotation);
+		if(definition.gun.muzzleVelocity != 0){
+			bulletVelocity.set(0, 0, definition.gun.muzzleVelocity/20D/10D);
+			if(definition.gun.bulletSpreadFactor > 0){
+				firingSpreadRotation.angles.set((Math.random() - 0.5F)*definition.gun.bulletSpreadFactor, (Math.random() - 0.5F)*definition.gun.bulletSpreadFactor, 0D);
+				bulletVelocity.rotate(firingSpreadRotation);
+			}
+			
+			//Now that velocity is set, rotate it to match the gun's orientation.
+			//For this, we get the reference orientation, and our internal orientation.
+			if(muzzle.rot != null){
+				bulletVelocity.rotate(muzzle.rot);
+			}
+			bulletVelocity.rotate(internalOrientation).rotate(zeroReferenceOrientation);
+		}else{
+			bulletVelocity.set(0, 0, 0);
 		}
-		
-		//Now that velocity is set, rotate it to match the gun's orientation.
-		//For this, we get the reference orientation, and our internal orientation.
-		if(muzzle.rot != null){
-			bulletVelocity.rotate(muzzle.rot);
-		}
-		bulletVelocity.rotate(internalOrientation).rotate(zeroReferenceOrientation);
 		
 		//Add gun velocity to bullet to ensure we spawn with the offset.
 		bulletVelocity.addScaled(motion, EntityVehicleF_Physics.SPEED_FACTOR);
 
-		//Now set position.
+		//Set position.
 		bulletPosition.set(muzzle.pos).rotate(internalOrientation).rotate(zeroReferenceOrientation).add(position);
+		
+		//Set orientation.
+		bulletOrientation.set(zeroReferenceOrientation).multiply(internalOrientation);
+		if(muzzle.rot != null && !definition.gun.disableMuzzleOrientation){
+			bulletOrientation.multiply(muzzle.rot);
+		}
 	}
 	
 	@Override
@@ -640,10 +651,10 @@ public class PartGun extends APart{
 			case("gun_firing"): return state.isAtLeast(GunState.FIRING_REQUESTED) ? 1 : 0;
 			case("gun_fired"): return firedThisCheck ? 1 : 0;
 			case("gun_lockedon"): return entityTarget != null ? 1 : 0;
-			case("gun_pitch"): return prevInternalAngles.x + (internalAngles.x - prevInternalAngles.x)*partialTicks;
-			case("gun_yaw"): return prevInternalAngles.y + (internalAngles.y - prevInternalAngles.y)*partialTicks;
-			case("gun_pitching"): return prevInternalAngles.x != internalAngles.x ? 1 : 0;
-			case("gun_yawing"): return prevInternalAngles.y != internalAngles.y ? 1 : 0;
+			case("gun_pitch"): return prevInternalOrientation.angles.x + (internalOrientation.angles.x - prevInternalOrientation.angles.x)*partialTicks;
+			case("gun_yaw"): return prevInternalOrientation.angles.y + (internalOrientation.angles.y - prevInternalOrientation.angles.y)*partialTicks;
+			case("gun_pitching"): return prevInternalOrientation.angles.x != internalOrientation.angles.x ? 1 : 0;
+			case("gun_yawing"): return prevInternalOrientation.angles.y != internalOrientation.angles.y ? 1 : 0;
 			case("gun_cooldown"): return millisecondLastTimeFired + millisecondFiringDelay > System.currentTimeMillis() ? 1 : 0;
 			case("gun_windup_time"): return windupTimeCurrent;
 			case("gun_windup_rotation"): return windupRotation;
@@ -667,39 +678,38 @@ public class PartGun extends APart{
 		//easier on MC to leave clients to handle lots of bullets than the server and network systems.
 		//We still need to run the gun code on the server, however, as we need to mess with inventory.
 		long timeSinceFiring = System.currentTimeMillis() - lastTimeFired;
-		if(state.isAtLeast(GunState.FIRING_CURRENTLY) && bulletsLeft > 0 && (!definition.gun.isSemiAuto || !firedThisRequest) && timeSinceFiring >= millisecondFiringDelay){
-			Point3D bulletPosition = new Point3D();
-			Point3D bulletVelocity = new Point3D();
-			
+		if(state.isAtLeast(GunState.FIRING_CURRENTLY) && bulletsLeft > 0 && (!definition.gun.isSemiAuto || !firedThisRequest) && timeSinceFiring >= millisecondFiringDelay){			
 			for(JSONMuzzle muzzle : definition.gun.muzzleGroups.get(currentMuzzleGroupIndex).muzzles){
 				//Get the bullet's state.
-				setBulletSpawn(bulletPosition, bulletVelocity, muzzle);
+				setBulletSpawn(bulletPosition, bulletVelocity, bulletOrientation, muzzle);
 				
 				//Add the bullet as a particle.
 				//If the bullet is a missile, give it a target.
 				EntityBullet newBullet;
-				if(loadedBullet.definition.bullet.turnFactor > 0){
+				if(loadedBullet.definition.bullet.turnRate > 0){
 					if(entityTarget != null){
-						newBullet = new EntityBullet(bulletPosition, bulletVelocity, this, entityTarget);
+						newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this, entityTarget);
+					}else if(engineTarget != null){
+						newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this, engineTarget);
 					}else{
 						//No entity found, try blocks.
-						Point3D lineOfSight = lastController.getLineOfSight(2000F);
+						Point3D lineOfSight = lastController.getLineOfSight(RAYTRACE_DISTANCE);
 						Point3D blockTarget = world.getBlockHit(lastController.getPosition().add(0D, lastController.getEyeHeight(), 0D), lineOfSight);
 						if(blockTarget != null){
-							newBullet = new EntityBullet(bulletPosition, bulletVelocity, this, blockTarget);
+							newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this, blockTarget);
 						}else{
 							//No block found, just fire missile off in direction facing.
-							newBullet = new EntityBullet(bulletPosition, bulletVelocity, this);
+							newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this);
 						}
 					}
 				}else{
-					newBullet = new EntityBullet(bulletPosition, bulletVelocity, this);
+					newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this);
 				}
 				world.addEntity(newBullet);
 				
 				//Decrement bullets, but check to make sure we still have some.
 				//We might have a partial volley.
-				--bulletsLeft;
+				if(!ConfigSystem.configObject.clientControls.devMode.value)--bulletsLeft;
 				++bulletsFired;
 				millisecondLastTimeFired = System.currentTimeMillis();
 				if(bulletsLeft == 0){
@@ -732,7 +742,7 @@ public class PartGun extends APart{
 		data.setInteger("bulletsLeft", bulletsLeft);
 		data.setInteger("bulletsReloading", bulletsReloading);
 		data.setInteger("currentMuzzleGroupIndex", currentMuzzleGroupIndex);
-		data.setPoint3d("internalAngles", internalAngles);
+		data.setPoint3d("internalAngles", internalOrientation.angles);
 		if(loadedBullet != null){
 			data.setString("loadedBulletPack", loadedBullet.definition.packID);
 			data.setString("loadedBulletName", loadedBullet.definition.systemName);

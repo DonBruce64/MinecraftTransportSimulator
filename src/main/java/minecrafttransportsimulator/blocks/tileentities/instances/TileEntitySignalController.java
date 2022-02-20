@@ -347,7 +347,7 @@ public class TileEntitySignalController extends TileEntityDecor{
 									stateChangeRequested = true;
 								}else{
 									for(EntityVehicleF_Physics vehicle : world.getEntitiesOfType(EntityVehicleF_Physics.class)){
-										Point3D adjustedPos = vehicle.position.copy().subtract(intersectionCenterPoint).rotateY(-axis.yRotation);
+										Point3D adjustedPos = vehicle.position.copy().subtract(intersectionCenterPoint).reOrigin(axis.rotation);
 										if(adjustedPos.x > signalLineCenter.x - signalLineWidth/2D && adjustedPos.x < signalLineCenter.x + signalLineWidth/2D && adjustedPos.z > signalLineCenter.z && adjustedPos.z < signalLineCenter.z + 16){
 											//Vehicle present.  If we are blocked, send the respective signal states to the other signals to change them.
 											//Flag this signal as pending changes to blocked signals to avoid checking until those signals change.
@@ -447,7 +447,7 @@ public class TileEntitySignalController extends TileEntityDecor{
 		
 		@Override
 		protected boolean isSignalBlocking(SignalGroup otherSignal){
-			switch(Axis.getFromRotation(otherSignal.axis.yRotation - axis.yRotation, true)){
+			switch(Axis.getFromRotation(otherSignal.axis.rotation.angles.y - axis.rotation.angles.y, true)){
 				case SOUTH : { //Same direction.
 					return false;
 				}
@@ -516,7 +516,7 @@ public class TileEntitySignalController extends TileEntityDecor{
 		
 		@Override
 		protected boolean isSignalBlocking(SignalGroup otherSignal){
-			switch(Axis.getFromRotation(otherSignal.axis.yRotation - axis.yRotation, true)){
+			switch(Axis.getFromRotation(otherSignal.axis.rotation.angles.y - axis.rotation.angles.y, true)){
 				case SOUTH : { //Same direction.
 					return false;
 				}
@@ -585,7 +585,7 @@ public class TileEntitySignalController extends TileEntityDecor{
 		
 		@Override
 		protected boolean isSignalBlocking(SignalGroup otherSignal){
-			switch(Axis.getFromRotation(otherSignal.axis.yRotation - axis.yRotation, true)){
+			switch(Axis.getFromRotation(otherSignal.axis.rotation.angles.y - axis.rotation.angles.y, true)){
 				case SOUTH : { //Same direction.
 					return false;
 				}

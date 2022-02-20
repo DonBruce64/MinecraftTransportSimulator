@@ -157,12 +157,12 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 		//Update component map.
 		if(newComponent != null){
 			components.put(newAxis, newComponent);
+			newComponent.orientation.set(orientation);
 			if(newAxis.equals(Axis.NONE)){
 				newComponent.position.set(position);
-				newComponent.orientation.set(orientation);
 			}else{
 				//Update orientation to account for axis rotation.
-				newComponent.orientation.rotateY(newAxis.yRotation);
+				newComponent.orientation.multiply(newAxis.rotation);
 				
 				//Adjust position to new orientation.
 				newComponent.position.set(0, 0, definition.pole.radius + 0.001).rotate(newComponent.orientation).add(position);

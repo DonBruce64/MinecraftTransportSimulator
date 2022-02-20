@@ -7,6 +7,7 @@ import java.util.TreeMap;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.JSONBullet;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
@@ -37,12 +38,13 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 	public final int bulletNumber;
 	private final boolean isBomb;
 	private final double initialVelocity;
-	private final double anglePerTickSpeed;
-	private final Point3D velocityToAddEachTick;
+	private final double velocityToAddEachTick;
+	private final Point3D motionToAddEachTick;
 	
 	//States
 	private Point3D targetPosition;
 	public double targetDistance;
+	private Point3D targetVector;
 	private PartEngine engineTargeted;
 	private WrapperEntity externalEntityTargeted;
 	private HitType lastHit;
@@ -50,7 +52,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 	private static RenderBullet renderer;
 	
 	/**Generic constructor for no target.**/
-    public EntityBullet(Point3D position, Point3D motion, PartGun gun){
+    public EntityBullet(Point3D position, Point3D motion, RotationMatrix orientation, PartGun gun){
     	super(gun.world, position, motion, ZERO_FOR_CONSTRUCTOR, gun.loadedBullet);
     	this.gun = gun;
         this.bulletNumber = gun.bulletsFired;
@@ -59,50 +61,46 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
         this.boundingBox.heightRadius = definition.bullet.diameter/1000D/2D;
         this.boundingBox.depthRadius = definition.bullet.diameter/1000D/2D;
         this.initialVelocity = motion.length();
-        this.anglePerTickSpeed = definition.bullet.turnFactor * 1000/definition.bullet.diameter;
         if(definition.bullet.accelerationTime > 0){
-        	double velocityDelta = definition.bullet.maxVelocity/20D/10D - motion.length();
-        	this.velocityToAddEachTick = new Point3D(0, 0, 1).rotate(gun.orientation).scale(velocityDelta/definition.bullet.accelerationTime);
+        	velocityToAddEachTick = (definition.bullet.maxVelocity/20D/10D - motion.length())/definition.bullet.accelerationTime;
+        	this.motionToAddEachTick = new Point3D(0, 0, velocityToAddEachTick).rotate(gun.orientation);
         }else{
-        	velocityToAddEachTick = new Point3D();
+        	velocityToAddEachTick = 0;
+        	motionToAddEachTick = null;
         }
-		if(isBomb){
-			orientation.set(gun.orientation);
-		}else{
-			orientation.setToAngles(motion.copy().getAngles(true));
-		}
+        this.orientation.set(orientation);
         prevOrientation.set(orientation);
     }
     
     /**Positional target.**/
-    public EntityBullet(Point3D position, Point3D motion,  PartGun gun, Point3D blockTargetPos){
-    	this(position, motion, gun);
+    public EntityBullet(Point3D position, Point3D motion, RotationMatrix orientation, PartGun gun, Point3D blockTargetPos){
+    	this(position, motion, orientation, gun);
     	this.targetPosition = blockTargetPos;
     }
     
     /**Engine target.**/
-    public EntityBullet(Point3D position, Point3D motion, PartGun gun, PartEngine engineTargeted){
-    	this(position, motion, gun, engineTargeted.position);
+    public EntityBullet(Point3D position, Point3D motion, RotationMatrix orientation, PartGun gun, PartEngine engineTargeted){
+    	this(position, motion, orientation, gun, engineTargeted.position);
     	if(engineTargeted.entityOn instanceof EntityVehicleF_Physics){
     		((EntityVehicleF_Physics) engineTargeted.entityOn).acquireMissile(this);
     	}
-		if(externalEntityTargeted != null){
-	    	this.engineTargeted = engineTargeted;
-		}
+	    this.engineTargeted = engineTargeted;
+	    this.targetPosition = engineTargeted.position;
+	    if(ConfigSystem.configObject.clientControls.devMode.value)InterfaceClient.getClientPlayer().displayChatMessage("LOCKON ENGINE");
     }
     
     /**Wrapper target.**/
-    public EntityBullet(Point3D position, Point3D motion, PartGun gun, WrapperEntity externalEntityTargeted){
-    	this(position, motion, gun, externalEntityTargeted.getPosition().copy());
+    public EntityBullet(Point3D position, Point3D motion, RotationMatrix orientation, PartGun gun, WrapperEntity externalEntityTargeted){
+    	this(position, motion, orientation, gun, externalEntityTargeted.getPosition().copy());
 	    this.externalEntityTargeted = externalEntityTargeted;
+	    this.targetPosition = externalEntityTargeted.getPosition().copy();
+	    if(ConfigSystem.configObject.clientControls.devMode.value)InterfaceClient.getClientPlayer().displayChatMessage("LOCKON ENTITY");
     }
 	
     @Override
     public void update(){
 		super.update();
-		//Set motion before checking for collisions.  Adjust motion to compensate for bullet movement and gravity.
-		//Ignore this if the bullet has a burnTime (rocket motor) that hasn't yet expired,
-		//If the bullet is still accelerating, increase the velocity appropriately.
+		//Add gravity and slowdown forces, if we don't have a burning motor.
 		if(ticksExisted > definition.bullet.burnTime){
 			if(definition.bullet.slowdownSpeed > 0){
 				motion.add(motion.copy().normalize().scale(-definition.bullet.slowdownSpeed));
@@ -115,90 +113,61 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 				remove();
 				return;
 			}
-		}else{
-			if(ticksExisted < definition.bullet.accelerationTime){
-				//Add velocity requested watch tick we are accelerating.
-				motion.add(velocityToAddEachTick);
-			}
-			if(targetPosition != null){
-				//We have a target.  Go to it.
-				//If the target is an external entity, update target position.
-				if(externalEntityTargeted != null){
-					if(externalEntityTargeted.isValid()){
-						targetPosition.set(externalEntityTargeted.getPosition());
-					}else{
-						//Entity is dead.  Don't target it anymore.
-						externalEntityTargeted = null;
-						targetPosition = null;
-					}
-				}else if(engineTargeted != null){
-					//Don't need to update the position variable for engines, as it auto-syncs.
-					//Do need to check if the engine is still warm and valid, however.
-					if(!engineTargeted.isValid || engineTargeted.temp <= PartEngine.COLD_TEMP){
-						List<APart> vehicleParts = engineTargeted.entityOn.parts;
-						engineTargeted = null;
-						double closestEngineDistance = Double.MAX_VALUE;
-						for(APart part : vehicleParts){
-							if(part instanceof PartEngine){
-								PartEngine engine = (PartEngine) part;
-								if(engine.isValid && engine.temp > PartEngine.COLD_TEMP){
-									double engineDistance = position.distanceTo(engine.position);
-									if(engineDistance < closestEngineDistance){
-										engineTargeted = engine;
-										targetPosition = engineTargeted.position;
-										closestEngineDistance = engineDistance;
-									}
-								}
-							}
-						}
-					}
-				}
-				
-				if(targetPosition != null){
-					targetDistance = position.distanceTo(targetPosition);
-					double yawTarget = Math.toDegrees(Math.atan2(targetPosition.x - position.x, targetPosition.z - position.z));
-					double pitchTarget = -Math.toDegrees(Math.atan2(targetPosition.y - position.y, Math.hypot(targetPosition.x - position.x, targetPosition.z - position.z)));
-					//Remain flat if not yet at desired angle of attack
-					//Or climb up if needed to get above the target
-					if (pitchTarget > 0 && pitchTarget < definition.bullet.angleOfAttack){
-						if(position.y < targetPosition.y + 0.5*definition.bullet.angleOfAttack){
-							pitchTarget = -definition.bullet.angleOfAttack;
-						}else{
-							pitchTarget = 0D;
-						}
-					}
-					
-					Point3D deltas = motion.copy().getAngles(true).add(-pitchTarget, -yawTarget, 0).invert();
-					//Adjust deltaYaw as necessary, then apply it
-					while(deltas.y > 180)deltas.y -= 360;
-					while(deltas.y < -180)deltas.y += 360;
-					if(deltas.y < 0){
-						if(deltas.y < -anglePerTickSpeed){
-							deltas.y = -anglePerTickSpeed;
-						}
-						motion.rotateY(deltas.y);
-					}else if(deltas.y > 0){
-						if(deltas.y > anglePerTickSpeed){
-							deltas.y = anglePerTickSpeed;
-						}
-						motion.rotateY(deltas.y); 
-					}
-					
-					//Axis for pitch is orthogonal to the horizontal velocity vector
-					if(deltas.x < 0){
-						if(deltas.x < -anglePerTickSpeed){
-							deltas.x = -anglePerTickSpeed;
-						}
-						motion.rotateFine((new Point3D(motion.z, 0, -1*motion.x)).scale(deltas.x)); 
-					}else if(deltas.x > 0){
-						if(deltas.x > anglePerTickSpeed){
-							deltas.x = anglePerTickSpeed;
-						}
-						motion.rotateFine((new Point3D(motion.z, 0, -1*motion.x)).scale(deltas.x)); 
-					}
-				}
-			}	
 		}
+		
+		//Add motion requested watch tick we are accelerating.
+		if(velocityToAddEachTick != 0 && ticksExisted > definition.bullet.accelerationDelay && ticksExisted - definition.bullet.accelerationDelay < definition.bullet.accelerationTime){
+			motionToAddEachTick.set(0, 0, velocityToAddEachTick).rotate(orientation);
+			motion.add(motionToAddEachTick);
+		}
+		
+		//We have a target.  Go to it.
+		//If the target is an external entity, update target position.
+		if(targetPosition != null){
+			if(externalEntityTargeted != null){
+				if(externalEntityTargeted.isValid()){
+					targetPosition.set(externalEntityTargeted.getPosition());
+				}else{
+					//Entity is dead.  Don't target it anymore.
+					externalEntityTargeted = null;
+					targetPosition = null;
+				}
+			}else if(engineTargeted != null){
+				//Don't need to update the position variable for engines, as it auto-syncs.
+				//Do need to check if the engine is still warm and valid, however.
+				if(!engineTargeted.isValid){// || engineTargeted.temp <= PartEngine.COLD_TEMP){
+					engineTargeted = null;
+					targetPosition = null;
+				}
+			}
+			
+			if(targetPosition != null){
+				//Get the angular delta between us and our target, in our local orientation coordinates.
+				if(targetVector == null){
+					targetVector = new Point3D();
+				}
+				targetVector.set(targetPosition).subtract(position).reOrigin(orientation).getAngles(true);
+				
+				//Clamp angular delta to match turn rate and apply.
+				if(targetVector.y > definition.bullet.turnRate){
+					targetVector.y = definition.bullet.turnRate;
+				}else if(targetVector.y < -definition.bullet.turnRate){
+					targetVector.y = -definition.bullet.turnRate;
+				}
+				orientation.rotateY(targetVector.y);
+				
+				if(targetVector.x > definition.bullet.turnRate){
+					targetVector.x = definition.bullet.turnRate;
+				}else if(targetVector.x < -definition.bullet.turnRate){
+					targetVector.x = -definition.bullet.turnRate;
+				}
+				orientation.rotateX(targetVector.x);
+				
+				//Set motion to new orientation.
+				targetVector.set(0, 0, motion.length()).rotate(orientation);
+				motion.set(targetVector);
+			}
+		}	
 		
 		//Now that we have an accurate motion, check for collisions.
 		//First get a damage object.
@@ -207,13 +176,18 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 		//Check for collided external entities and attack them.
 		List<WrapperEntity> attackedEntities = world.attackEntities(damage, motion);
 		if(!attackedEntities.isEmpty()){
-			//Only attack the first entity.  Bullets don't get to attack multiple per scan.
-			WrapperEntity entity = attackedEntities.get(0);
-			InterfacePacket.sendToServer(new PacketEntityBulletHitWrapper(this, entity));
-			lastHit = HitType.ENTITY;
-			if(ConfigSystem.configObject.clientControls.devMode.value)InterfaceClient.getClientPlayer().displayChatMessage("HIT ENTITY");
-			remove();
-			return;
+			for(WrapperEntity entity : attackedEntities){
+				//Check to make sure we don't hit our controller.
+				//This can happen with hand-held guns at speed.
+				if(!entity.equals(gun.lastController)){
+					//Only attack the first entity.  Bullets don't get to attack multiple per scan.
+					InterfacePacket.sendToServer(new PacketEntityBulletHitWrapper(this, entity));
+					lastHit = HitType.ENTITY;
+					if(ConfigSystem.configObject.clientControls.devMode.value)InterfaceClient.getClientPlayer().displayChatMessage("HIT ENTITY");
+					remove();
+					return;
+				}
+			}
 		}
 		
 		//Check for collided internal entities and attack them.
@@ -287,24 +261,34 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 			return;
 		}
 		
-		//Check proximity fuze against our target or any blocks that might be out front
+		//Check proximity fuze against our target and blocks.
 		if(definition.bullet.proximityFuze != 0){
+			Point3D targetToHit;
 			if(targetPosition != null){
-				if(position.isDistanceToCloserThan(targetPosition, definition.bullet.proximityFuze)){
+				targetToHit = targetPosition;
+			}else{
+				targetToHit = world.getBlockHit(position, motion.copy().normalize().scale(definition.bullet.proximityFuze + velocity));
+			}
+			if(targetToHit != null){
+				double distanceToTarget = position.distanceTo(targetToHit);
+				if(distanceToTarget < definition.bullet.proximityFuze + velocity){
+					if(distanceToTarget > definition.bullet.proximityFuze){
+						position.interpolate(targetToHit, (distanceToTarget - definition.bullet.proximityFuze)/definition.bullet.proximityFuze);
+					}
 					InterfacePacket.sendToServer(new PacketEntityBulletHit(this, position));
-					lastHit = externalEntityTargeted != null ? HitType.ENTITY : (engineTargeted != null ? HitType.PART : HitType.BLOCK);
-					if(ConfigSystem.configObject.clientControls.devMode.value)InterfaceClient.getClientPlayer().displayChatMessage("PROX FUSE");
+					if(externalEntityTargeted != null){
+						lastHit =  HitType.ENTITY;
+						if(ConfigSystem.configObject.clientControls.devMode.value)InterfaceClient.getClientPlayer().displayChatMessage("PROX FUZE HIT ENTITY");	
+					}else if(engineTargeted != null){
+						lastHit = HitType.PART;
+						if(ConfigSystem.configObject.clientControls.devMode.value)InterfaceClient.getClientPlayer().displayChatMessage("PROX FUZE HIT ENGINE");
+					}else{
+						lastHit = HitType.BLOCK;
+						if(ConfigSystem.configObject.clientControls.devMode.value)InterfaceClient.getClientPlayer().displayChatMessage("PROX FUZE HIT BLOCK");
+					}
 					remove();
 					return;
 				}
-			}
-			
-			if(world.getBlockHit(position, motion.copy().normalize().scale(definition.bullet.proximityFuze)) != null){
-				InterfacePacket.sendToServer(new PacketEntityBulletHitBlock(this, position));
-				lastHit = HitType.BLOCK;
-				if(ConfigSystem.configObject.clientControls.devMode.value)InterfaceClient.getClientPlayer().displayChatMessage("HIT BLOCK");
-				remove();
-				return;
 			}
 		}
 		
@@ -323,8 +307,8 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 		//Then set the angles to match the motion.
 		//Doing this last lets us damage on the first update tick.
 		position.add(motion);
-		if(!isBomb){
-			orientation.setToAngles(motion.copy().getAngles(true));
+		if(!isBomb && (definition.bullet.accelerationDelay == 0 || ticksExisted > definition.bullet.accelerationDelay)){
+			orientation.setToVector(motion, true);
 		}
 	}
     

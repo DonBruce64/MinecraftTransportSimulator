@@ -28,7 +28,7 @@ public final class RenderInstrument{
 	private static final Point3D topLeft = new Point3D();
 	private static final Point3D topRight = new Point3D();
 	private static final Point3D bottomRight = new Point3D();
-	private static final Point3D helperRotation = new Point3D();
+	private static final RotationMatrix helperRotation = new RotationMatrix();
 	private static final RotationMatrix helperRotationMatrix = new RotationMatrix();
 	private static final float[][] instrumentSingleComponentPoints = new float[6][8];
 	
@@ -214,11 +214,11 @@ public final class RenderInstrument{
 				bottomRight.add(clock.animation.centerPoint);
 				
 				//Rotate the points by the rotation.
-				helperRotation.set(0, 0, variableValue);
-				bottomLeft.rotateFine(helperRotation);
-				topLeft.rotateFine(helperRotation);
-				topRight.rotateFine(helperRotation);
-				bottomRight.rotateFine(helperRotation);
+				helperRotation.angles.set(0, 0, variableValue);
+				bottomLeft.rotate(helperRotation);
+				topLeft.rotate(helperRotation);
+				topRight.rotate(helperRotation);
+				bottomRight.rotate(helperRotation);
 				
 				//Remove the rotation offsets.
 				bottomLeft.subtract(clock.animation.centerPoint);

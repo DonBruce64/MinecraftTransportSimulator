@@ -29,6 +29,7 @@ import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.relauncher.Side;
 
 /**Interface to the MC client instance.  This class has methods used for determining
@@ -243,21 +244,23 @@ public class InterfaceClient{
 	*/
 	@SubscribeEvent
 	public static void on(TickEvent.ClientTickEvent event){
-		WrapperWorld clientWorld = WrapperWorld.getWrapperFor(Minecraft.getMinecraft().world);
-		if(clientWorld != null){
-			clientWorld.beginProfiling("MTS_BulletUpdates", true);
-			for(EntityBullet bullet : clientWorld.getEntitiesOfType(EntityBullet.class)){
-				bullet.update();
-			}
-			clientWorld.beginProfiling("MTS_ParticleUpdates", false);
-			for(EntityParticle particle : clientWorld.getEntitiesOfType(EntityParticle.class)){
-				particle.update();
-			}
-			clientWorld.endProfiling();
-			
-			WrapperPlayer player = getClientPlayer();
-			if(player != null && !player.isSpectator()){
-				ControlSystem.controlGlobal(player);
+		if(event.phase.equals(Phase.END)){
+			WrapperWorld clientWorld = WrapperWorld.getWrapperFor(Minecraft.getMinecraft().world);
+			if(clientWorld != null){
+				clientWorld.beginProfiling("MTS_BulletUpdates", true);
+				for(EntityBullet bullet : clientWorld.getEntitiesOfType(EntityBullet.class)){
+					bullet.update();
+				}
+				clientWorld.beginProfiling("MTS_ParticleUpdates", false);
+				for(EntityParticle particle : clientWorld.getEntitiesOfType(EntityParticle.class)){
+					particle.update();
+				}
+				clientWorld.endProfiling();
+				
+				WrapperPlayer player = getClientPlayer();
+				if(player != null && !player.isSpectator()){
+					ControlSystem.controlGlobal(player);
+				}
 			}
 		}
 	}
