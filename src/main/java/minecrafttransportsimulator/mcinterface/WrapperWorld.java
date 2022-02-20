@@ -285,9 +285,10 @@ public class WrapperWorld{
 	
 	/**
 	 *  Returns the closest entity whose collision boxes are intercepted by the
-	 *  passed-in entity's line of sight.
+	 *  passed-in entity's line of sight.  This up-scales the entity Bounding Boxes to
+	 *  allow for a somewhat easier targeting scheme if generalArea is true.
 	 */
-	public WrapperEntity getEntityLookingAt(WrapperEntity entityLooking, float searchDistance){
+	public WrapperEntity getEntityLookingAt(WrapperEntity entityLooking, float searchDistance, boolean generalArea){
 		double smallestDistance = searchDistance*2;
 		Entity foundEntity = null;
 		Entity mcLooker = entityLooking.entity;
@@ -295,10 +296,11 @@ public class WrapperWorld{
 		Point3D lookerLos = entityLooking.getLineOfSight(searchDistance);
 		Vec3d raytraceEnd = new Vec3d(lookerLos.x, lookerLos.y, lookerLos.z).add(raytraceStart);
 		for(Entity entity : world.getEntitiesWithinAABBExcludingEntity(mcLooker, mcLooker.getEntityBoundingBox().grow(searchDistance))){
-			if(!(entity instanceof ABuilderEntityBase) && !entity.equals(mcLooker.getRidingEntity())){
+			if(!(entity instanceof ABuilderEntityBase) && entity.canBeCollidedWith() && !entity.equals(mcLooker.getRidingEntity())){
 				float distance = mcLooker.getDistance(entity);
 				if(distance < smallestDistance){
-					RayTraceResult rayTrace = entity.getEntityBoundingBox().calculateIntercept(raytraceStart, raytraceEnd);
+					AxisAlignedBB testBox = generalArea ? entity.getEntityBoundingBox().grow(2) : entity.getEntityBoundingBox();
+					RayTraceResult rayTrace = testBox.calculateIntercept(raytraceStart, raytraceEnd);
 					if(rayTrace != null){
 						smallestDistance = distance;
 						foundEntity = entity;
@@ -1165,17 +1167,30 @@ public class WrapperWorld{
    
    /**
     * Returns the closest entity of the specified class that intersects the ray-traced line,
-    * or null if none does.
+    * or null if none does. This up-scales the entity Bounding Boxes to
+	 * allow for a somewhat easier targeting scheme if generalArea is true.
     */
-   public <EntityType extends AEntityE_Interactable<?>> EntityType getRaytraced(Class<EntityType> entityClass, Point3D start, Point3D end){
+   public <EntityType extends AEntityE_Interactable<?>> EntityType getRaytraced(Class<EntityType> entityClass, Point3D start, Point3D end, boolean generalArea, EntityType entityToIgnore){
 	   BoundingBox closestBox = null;
 	   EntityType closestEntity = null;
 	   BoundingBox clickBounds = new BoundingBox(start, end);
 	   for(EntityType entity : getEntitiesOfType(entityClass)){
-		   if(entity.encompassingBox.intersects(clickBounds)){
+		   if(!entity.equals(entityToIgnore) && entity.encompassingBox.intersects(clickBounds)){
 				//Could have hit this entity, check if we did via raytracing.
 				for(BoundingBox box : entity.getInteractionBoxes()){
-					if(box.intersects(clickBounds) && box.getIntersectionPoint(start, end) != null){
+					boolean intersects;
+					if(generalArea){
+						box.widthRadius += 2;
+						box.heightRadius += 2;
+						box.depthRadius += 2;
+						intersects = box.intersects(clickBounds) && box.getIntersectionPoint(start, end) != null;
+						box.widthRadius -= 2;
+						box.heightRadius -= 2;
+						box.depthRadius -= 2;
+					}else{
+						intersects = box.intersects(clickBounds) && box.getIntersectionPoint(start, end) != null; 
+					}
+					if(intersects){
 						if(closestBox == null || start.isFirstCloserThanSecond(box.globalCenter, closestBox.globalCenter)){
 							closestBox = box;
 							closestEntity = entity;

@@ -106,6 +106,15 @@ public class WrapperEntity{
 	}
 	
 	/**
+	 *  Returns the name for this entity.  This is the general name for
+	 *  the entity, and may be whatever the coder who made this entity
+	 *  set it to.
+	 */
+	public String getName(){
+		return entity.getName();
+	}
+	
+	/**
 	 *  Returns the world this entity is in.
 	 */
 	public WrapperWorld getWorld(){

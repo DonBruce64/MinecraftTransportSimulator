@@ -144,21 +144,6 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 		//FIXME clean up testing here before release.
 		super.update();
 		world.beginProfiling("VehicleF_Level", true);
-		if(definition.systemName.contains("rabbit")){
-			position.y = 10;
-			angles.set(88, 20, 50);
-			motion.set(0, 0, 0);
-			orientation.convertToAngles();
-		}
-		if(definition.systemName.contains("chevron")){
-			setVariable(THROTTLE_VARIABLE, MAX_THROTTLE/2D);
-			setVariable(RUDDER_VARIABLE, 20);
-			if(ticksExisted%100 == 0){
-				motion.y += 1;
-			}
-		}
-		setVariable(DAMAGE_VARIABLE, 0);
-		this.electricPower = 12;
 		//Set vectors.
 		verticalVector.set(0D, 1D, 0D).rotate(orientation);
 		normalizedVelocityVector.set(motion).normalize();

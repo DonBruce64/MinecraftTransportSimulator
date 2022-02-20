@@ -12,6 +12,7 @@ import minecrafttransportsimulator.items.instances.ItemBullet;
 import minecrafttransportsimulator.jsondefs.JSONMuzzle;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
+import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperInventory;
@@ -185,6 +186,8 @@ public class PartGun extends APart{
 					}else{
 						state = state.demote(GunState.ACTIVE);
 						controller = null;
+						entityTarget = null;
+						engineTarget = null;
 					}
 				}
 			}
@@ -333,6 +336,7 @@ public class PartGun extends APart{
 			//Inactive gun, set as such and set to default position if we have one.
 			state = GunState.INACTIVE;
 			entityTarget = null;
+			engineTarget = null;
 			if(definition.gun.resetPosition){
 				handleMovement(defaultYaw - internalOrientation.angles.y, defaultPitch - internalOrientation.angles.x);
 			}
@@ -418,9 +422,18 @@ public class PartGun extends APart{
 			//Only do this once every 1/2 second.
 			if(world.isClient() && loadedBullet != null && loadedBullet.definition.bullet.turnRate > 0){
 				//Try to find the entity the controller is looking at.
-				entityTarget = world.getEntityLookingAt(controller, RAYTRACE_DISTANCE);
+				entityTarget = world.getEntityLookingAt(controller, RAYTRACE_DISTANCE, true);
 				if(entityTarget == null){
-					engineTarget = world.getRaytraced(PartEngine.class, position, position.copy().add(controller.getLineOfSight(RAYTRACE_DISTANCE)));
+					engineTarget = null;
+					EntityVehicleF_Physics vehicleTargeted = world.getRaytraced(EntityVehicleF_Physics.class, controller.getPosition(), controller.getPosition().copy().add(controller.getLineOfSight(RAYTRACE_DISTANCE)), true, vehicleOn);
+					if(vehicleTargeted != null){
+						for(APart part : vehicleTargeted.parts){
+							if(part instanceof PartEngine){
+								engineTarget = (PartEngine) part;
+								break;
+							}
+						}
+					}
 				}
 			}
 			
@@ -650,7 +663,10 @@ public class PartGun extends APart{
 			case("gun_active"): return state.isAtLeast(GunState.CONTROLLED) ? 1 : 0;
 			case("gun_firing"): return state.isAtLeast(GunState.FIRING_REQUESTED) ? 1 : 0;
 			case("gun_fired"): return firedThisCheck ? 1 : 0;
-			case("gun_lockedon"): return entityTarget != null ? 1 : 0;
+			case("gun_lockedon"): return entityTarget != null || engineTarget != null ? 1 : 0;
+			case("gun_lockedon_x"): return entityTarget != null ? entityTarget.getPosition().x : (engineTarget != null ? engineTarget.position.x : 0);
+			case("gun_lockedon_y"): return entityTarget != null ? entityTarget.getPosition().y : (engineTarget != null ? engineTarget.position.y : 0);
+			case("gun_lockedon_z"): return entityTarget != null ? entityTarget.getPosition().z : (engineTarget != null ? engineTarget.position.z : 0);
 			case("gun_pitch"): return prevInternalOrientation.angles.x + (internalOrientation.angles.x - prevInternalOrientation.angles.x)*partialTicks;
 			case("gun_yaw"): return prevInternalOrientation.angles.y + (internalOrientation.angles.y - prevInternalOrientation.angles.y)*partialTicks;
 			case("gun_pitching"): return prevInternalOrientation.angles.x != internalOrientation.angles.x ? 1 : 0;
@@ -666,6 +682,15 @@ public class PartGun extends APart{
 		}
 		
 		return super.getRawVariableValue(variable, partialTicks);
+	}
+	
+	@Override
+	public String getRawTextVariableValue(JSONText textDef, float partialTicks){
+		if(textDef.variableName.equals("gun_lockedon_name")){
+			 return entityTarget != null ? entityTarget.getName() : (engineTarget != null ? engineTarget.entityOn.getItem().getItemName() : "");
+		}
+		
+		return super.getRawTextVariableValue(textDef, partialTicks);
 	}
 	
 	@Override
@@ -692,15 +717,8 @@ public class PartGun extends APart{
 					}else if(engineTarget != null){
 						newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this, engineTarget);
 					}else{
-						//No entity found, try blocks.
-						Point3D lineOfSight = lastController.getLineOfSight(RAYTRACE_DISTANCE);
-						Point3D blockTarget = world.getBlockHit(lastController.getPosition().add(0D, lastController.getEyeHeight(), 0D), lineOfSight);
-						if(blockTarget != null){
-							newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this, blockTarget);
-						}else{
-							//No block found, just fire missile off in direction facing.
-							newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this);
-						}
+						//No entity found, just fire missile off in direction facing.
+						newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this);
 					}
 				}else{
 					newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this);

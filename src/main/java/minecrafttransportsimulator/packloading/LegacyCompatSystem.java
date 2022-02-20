@@ -1712,8 +1712,8 @@ public final class LegacyCompatSystem{
 			//Also check if we do have animations, but it's a rotation at the part's position.
 			//Old format for rotations was to be local to the part, not the vehicle.
 			if(partName.equals("ground_wheel") && partDef.turnsWithSteer){
-				boolean doWheelLC = partDef.animations == null;
-				if(!doWheelLC && partDef.animations.size() == 1){
+				boolean doWheelLC = partDef.animations == null && partDef.applyAfter == null;
+				if(!doWheelLC && partDef.animations != null && partDef.animations.size() == 1){
 					for(JSONAnimationDefinition animation : partDef.animations){
 						if(animation.animationType.equals(AnimationComponentType.ROTATION) && animation.centerPoint.isZero()){
 							doWheelLC = true;

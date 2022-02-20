@@ -73,9 +73,9 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
     }
     
     /**Positional target.**/
-    public EntityBullet(Point3D position, Point3D motion, RotationMatrix orientation, PartGun gun, Point3D blockTargetPos){
+  private EntityBullet(Point3D position, Point3D motion, RotationMatrix orientation, PartGun gun, Point3D targetPosition){
     	this(position, motion, orientation, gun);
-    	this.targetPosition = blockTargetPos;
+    	this.targetPosition = targetPosition;
     }
     
     /**Engine target.**/
@@ -85,16 +85,14 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
     		((EntityVehicleF_Physics) engineTargeted.entityOn).acquireMissile(this);
     	}
 	    this.engineTargeted = engineTargeted;
-	    this.targetPosition = engineTargeted.position;
-	    if(ConfigSystem.configObject.clientControls.devMode.value)InterfaceClient.getClientPlayer().displayChatMessage("LOCKON ENGINE");
+	    if(ConfigSystem.configObject.clientControls.devMode.value)InterfaceClient.getClientPlayer().displayChatMessage("LOCKON ENGINE " + engineTargeted.definition.systemName + " @ " + targetPosition);
     }
     
     /**Wrapper target.**/
     public EntityBullet(Point3D position, Point3D motion, RotationMatrix orientation, PartGun gun, WrapperEntity externalEntityTargeted){
     	this(position, motion, orientation, gun, externalEntityTargeted.getPosition().copy());
 	    this.externalEntityTargeted = externalEntityTargeted;
-	    this.targetPosition = externalEntityTargeted.getPosition().copy();
-	    if(ConfigSystem.configObject.clientControls.devMode.value)InterfaceClient.getClientPlayer().displayChatMessage("LOCKON ENTITY");
+	    if(ConfigSystem.configObject.clientControls.devMode.value)InterfaceClient.getClientPlayer().displayChatMessage("LOCKON ENTITY " + externalEntityTargeted.getName() + " @ " + externalEntityTargeted.getPosition());
     }
 	
     @Override
@@ -116,14 +114,15 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 		}
 		
 		//Add motion requested watch tick we are accelerating.
-		if(velocityToAddEachTick != 0 && ticksExisted > definition.bullet.accelerationDelay && ticksExisted - definition.bullet.accelerationDelay < definition.bullet.accelerationTime){
+		boolean notAcceleratingYet = definition.bullet.accelerationDelay != 0 && ticksExisted < definition.bullet.accelerationDelay;   
+		if(velocityToAddEachTick != 0 && !notAcceleratingYet && ticksExisted - definition.bullet.accelerationDelay < definition.bullet.accelerationTime){
 			motionToAddEachTick.set(0, 0, velocityToAddEachTick).rotate(orientation);
 			motion.add(motionToAddEachTick);
 		}
 		
-		//We have a target.  Go to it.
+		//We have a target.  Go to it, unless we are waiting for acceleration.
 		//If the target is an external entity, update target position.
-		if(targetPosition != null){
+		if(targetPosition != null && !notAcceleratingYet){
 			if(externalEntityTargeted != null){
 				if(externalEntityTargeted.isValid()){
 					targetPosition.set(externalEntityTargeted.getPosition());

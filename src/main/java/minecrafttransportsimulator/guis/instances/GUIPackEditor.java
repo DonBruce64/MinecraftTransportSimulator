@@ -15,8 +15,9 @@ import java.awt.event.FocusListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.File;
-import java.io.FileReader;
+import java.io.FileInputStream;
 import java.io.FileWriter;
+import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
@@ -130,7 +131,7 @@ public class GUIPackEditor extends JFrame{
 		        if(fileSelection.showOpenDialog(filePanel) == JFileChooser.APPROVE_OPTION){
 		        	try{
 			        	File file = fileSelection.getSelectedFile();
-			        	FileReader reader = new FileReader(file);
+			        	InputStreamReader reader = new InputStreamReader(new FileInputStream(file), "UTF-8");
 			            currentJSON = JSONParser.parseStream(reader, currentJSONClass, null, null);
 			            reader.close();
 			            lastFileAccessed = file;

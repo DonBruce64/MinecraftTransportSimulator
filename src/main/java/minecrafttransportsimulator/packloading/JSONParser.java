@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.packloading;
 
 import java.io.File;
-import java.io.FileReader;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -524,7 +524,7 @@ public class JSONParser{
 			switch(definitionToOverride.classification){
 				case VEHICLE : {
 					JSONVehicle vehicleDefinition = (JSONVehicle) definitionToOverride;
-					JSONVehicle loadedVehicleDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONVehicle.class, vehicleDefinition.packID, vehicleDefinition.systemName);
+					JSONVehicle loadedVehicleDefinition = JSONParser.parseStream(new InputStreamReader(new FileInputStream(jsonFile), "UTF-8"), JSONVehicle.class, vehicleDefinition.packID, vehicleDefinition.systemName);
 					JSONParser.validateFields(loadedVehicleDefinition, "/", 1);
 					vehicleDefinition.motorized = loadedVehicleDefinition.motorized;
 					loadedDefinition = loadedVehicleDefinition;
@@ -532,7 +532,7 @@ public class JSONParser{
 				}
 				case PART : {
 					JSONPart partDefinition = (JSONPart) definitionToOverride;
-					JSONPart loadedPartDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONPart.class, partDefinition.packID, partDefinition.systemName);
+					JSONPart loadedPartDefinition = JSONParser.parseStream(new InputStreamReader(new FileInputStream(jsonFile), "UTF-8"), JSONPart.class, partDefinition.packID, partDefinition.systemName);
 					JSONParser.validateFields(loadedPartDefinition, "/", 1);
 					partDefinition.generic = loadedPartDefinition.generic;
 					partDefinition.engine = loadedPartDefinition.engine;
@@ -547,7 +547,7 @@ public class JSONParser{
 				}
 				case INSTRUMENT : {
 					JSONInstrument instrumentDefinition = (JSONInstrument) definitionToOverride;
-					JSONInstrument loadedInstrumentDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONInstrument.class, instrumentDefinition.packID, instrumentDefinition.systemName);
+					JSONInstrument loadedInstrumentDefinition = JSONParser.parseStream(new InputStreamReader(new FileInputStream(jsonFile), "UTF-8"), JSONInstrument.class, instrumentDefinition.packID, instrumentDefinition.systemName);
 					JSONParser.validateFields(loadedInstrumentDefinition, "/", 1);
 					instrumentDefinition.components = loadedInstrumentDefinition.components;
 					loadedDefinition = loadedInstrumentDefinition;
@@ -555,7 +555,7 @@ public class JSONParser{
 				}
 				case DECOR : {
 					JSONDecor decorDefinition = (JSONDecor) definitionToOverride;
-					JSONDecor loadedDecorDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONDecor.class, decorDefinition.packID, decorDefinition.systemName);
+					JSONDecor loadedDecorDefinition = JSONParser.parseStream(new InputStreamReader(new FileInputStream(jsonFile), "UTF-8"), JSONDecor.class, decorDefinition.packID, decorDefinition.systemName);
 					JSONParser.validateFields(loadedDecorDefinition, "/", 1);
 					decorDefinition.decor = loadedDecorDefinition.decor;
 					loadedDefinition = loadedDecorDefinition;
@@ -563,7 +563,7 @@ public class JSONParser{
 				}
 				case ROAD : {
 					JSONRoadComponent roadDefinition = (JSONRoadComponent) definitionToOverride;
-					JSONRoadComponent loadedRoadDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONRoadComponent.class, roadDefinition.packID, roadDefinition.systemName);
+					JSONRoadComponent loadedRoadDefinition = JSONParser.parseStream(new InputStreamReader(new FileInputStream(jsonFile), "UTF-8"), JSONRoadComponent.class, roadDefinition.packID, roadDefinition.systemName);
 					JSONParser.validateFields(loadedRoadDefinition, "/", 1);
 					roadDefinition.road = loadedRoadDefinition.road;
 					loadedDefinition = loadedRoadDefinition;
@@ -571,14 +571,14 @@ public class JSONParser{
 				}
 				case POLE : {
 					JSONPoleComponent poleDefinition = (JSONPoleComponent) definitionToOverride;
-					JSONPoleComponent loadedPoleDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONPoleComponent.class, poleDefinition.packID, poleDefinition.systemName);
+					JSONPoleComponent loadedPoleDefinition = JSONParser.parseStream(new InputStreamReader(new FileInputStream(jsonFile), "UTF-8"), JSONPoleComponent.class, poleDefinition.packID, poleDefinition.systemName);
 					JSONParser.validateFields(loadedPoleDefinition, "/", 1);
 					loadedDefinition = loadedPoleDefinition;
 					break;
 				}
 				case BULLET : {
 					JSONBullet bulletDefinition = (JSONBullet) definitionToOverride;
-					JSONBullet loadedBulletDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONBullet.class, bulletDefinition.packID, bulletDefinition.systemName);
+					JSONBullet loadedBulletDefinition = JSONParser.parseStream(new InputStreamReader(new FileInputStream(jsonFile), "UTF-8"), JSONBullet.class, bulletDefinition.packID, bulletDefinition.systemName);
 					JSONParser.validateFields(loadedBulletDefinition, "/", 1);
 					bulletDefinition.bullet = loadedBulletDefinition.bullet;
 					loadedDefinition = loadedBulletDefinition;
@@ -586,7 +586,7 @@ public class JSONParser{
 				}
 				case ITEM : {
 					JSONItem itemDefinition = (JSONItem) definitionToOverride;
-					JSONItem loadedItemDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONItem.class, itemDefinition.packID, itemDefinition.systemName);
+					JSONItem loadedItemDefinition = JSONParser.parseStream(new InputStreamReader(new FileInputStream(jsonFile), "UTF-8"), JSONItem.class, itemDefinition.packID, itemDefinition.systemName);
 					JSONParser.validateFields(loadedItemDefinition, "/", 1);
 					itemDefinition.item = loadedItemDefinition.item;
 					itemDefinition.booklet = loadedItemDefinition.booklet;
