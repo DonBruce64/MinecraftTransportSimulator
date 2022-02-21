@@ -99,6 +99,10 @@ public class PacketTileEntityRoadConnectionUpdate extends APacketEntity<TileEnti
 			}else{
 				lane.nextConnections.get(curveNumber).add(new RoadLaneConnection(otherPosition, otherLaneNumber, otherCurveNumber, otherCurveNetAngle, otherConnectedToStart));
 			}
+			TileEntityRoad otherRoad = world.getTileEntity(otherPosition);
+			if(otherRoad != null){
+				otherRoad.devRenderables.clear();
+			}
 		}else{
 			//No other curve.  This is a connection deletion request.
 			if(connectedToStart){
@@ -107,6 +111,7 @@ public class PacketTileEntityRoadConnectionUpdate extends APacketEntity<TileEnti
 				lane.nextConnections.get(curveNumber).clear();
 			}
 		}
+		road.devRenderables.clear();
 		return true;
 	}
 }

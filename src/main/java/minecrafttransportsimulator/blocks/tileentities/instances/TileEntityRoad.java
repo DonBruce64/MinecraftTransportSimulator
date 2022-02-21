@@ -148,9 +148,6 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 		for(RenderableObject object : componentRenderables.values()){
 			object.destroy();
 		}
-		for(RenderableObject object : devRenderables){
-			object.destroy();
-		}
 	}
 	
 	@Override
@@ -180,8 +177,10 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 		//Check if we aren't active.  If not, try to spawn collision again.
     	if(!isActive){
     		spawnCollisionBlocks(player);
+    		return true;
+    	}else{
+    		return false;
     	}
-		return true;
 	}
 	
 	/**
@@ -189,7 +188,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	 *  Takes the player's rotation into account, as well as the block they clicked.
 	 */
 	public RoadClickData getClickData(Point3D blockClicked, boolean curveStart){
-		Point3D blockOffsetClicked = blockClicked.copy().subtract(position);
+		Point3D blockOffsetClicked = blockClicked.copy().add(0.5, 0, 0.5).subtract(position);
 		boolean clickedStart = blockOffsetClicked.isZero() || collisionBlockOffsets.indexOf(blockOffsetClicked) < collisionBlockOffsets.size()/2;
 		JSONLaneSector closestSector = null;
 		if(!definition.road.type.equals(RoadComponent.CORE_DYNAMIC)){
@@ -212,14 +211,17 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	 *  lanes for the first time.
 	 */
 	public void generateLanes(WrapperNBT data){
+		int totalLanes = 0;
 		if(definition.road.type.equals(RoadComponent.CORE_DYNAMIC)){
 			for(int i=0; i<definition.road.laneOffsets.length; ++i){
-				lanes.add(new RoadLane(this, 0, i, data != null ? data.getData("lane" + i) : null));
+				lanes.add(new RoadLane(this, 0, i, 0, data != null ? data.getData("lane" + totalLanes) : null));
+				++totalLanes;
 			}
 		}else{
 			for(int i=0; i<definition.road.sectors.size(); ++i){
 				for(int j=0; j<definition.road.sectors.get(i).lanes.size(); ++j){
-					lanes.add(new RoadLane(this, i, j, data != null ? data.getData("lane" + j) : null));
+					lanes.add(new RoadLane(this, i, totalLanes, j, data != null ? data.getData("lane" + totalLanes) : null));
+					++totalLanes;
 				}
 			}
 		}

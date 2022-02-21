@@ -51,120 +51,117 @@ public class RenderRoad extends ARenderEntityDefinable<TileEntityRoad>{
 							break;
 						}
 						case CORE_DYNAMIC: {
-							//Make sure our curve isn't null, we might have not yet created it.
-							if(road.dynamicCurve != null){
-								//Get model and convert to a single buffer of vertices.
-								List<RenderableObject> parsedModel = AModelParser.parseModel(componentItem.definition.getModelLocation(componentItem.subName));
-								int totalVertices = 0;
-								for(RenderableObject object : parsedModel){
-									totalVertices += object.vertices.capacity();
-								}
-								FloatBuffer parsedVertices = FloatBuffer.allocate(totalVertices);
-								for(RenderableObject object : parsedModel){
-									parsedVertices.put(object.vertices);
-								}
-								parsedVertices.flip();
-								
-								//Core components need to be transformed to wedges.
-								Point3D priorPosition = new Point3D();
-								Point3D priorRotation = new Point3D();
-								Point3D testPoint1 = new Point3D();
-								Point3D testPoint2 = new Point3D();
-								Point3D vertexOffsetPriorLine = new Point3D();
-								Point3D vertexOffsetCurrentLine = new Point3D();
-								Point3D segmentVector = new Point3D();
-								Point3D renderedVertex = new Point3D();
-								float indexDelta = (float) (road.dynamicCurve.pathLength/Math.floor(road.dynamicCurve.pathLength/road.definition.road.segmentLength));
-								boolean finalSegment = false;
-								float priorIndex = 0;
-								float currentIndex = 0;
-								List<float[]> segmentVertices = new ArrayList<float[]>();
-								while(!finalSegment){
-									//If we are at the last index, do special logic to get the very end point.
-									//We check here in case FPEs have accumulated and we won't end on the exact end segment.
-									//Otherwise, increment normally.
-									if(currentIndex != road.dynamicCurve.pathLength && currentIndex + indexDelta*1.25 > road.dynamicCurve.pathLength){
-										currentIndex = road.dynamicCurve.pathLength;
-										finalSegment = true;
-									}else{
-										currentIndex += indexDelta;
-									}
-									
-									//Get current and prior curve position and rotation.
-									//From this, we know how much to stretch the model to that point's rendering area.
-									road.dynamicCurve.setPointToPositionAt(priorPosition, priorIndex);
-									road.dynamicCurve.setPointToRotationAt(priorRotation, priorIndex);
-									priorPosition.subtract(road.dynamicCurve.startPos);
-									road.dynamicCurve.setPointToPositionAt(position, currentIndex);
-									road.dynamicCurve.setPointToRotationAt(rotation, currentIndex);
-									position.subtract(road.dynamicCurve.startPos);
-									
-									//If we are a really sharp curve, we might have inverted our model at the inner corner.
-									//Check for this, and if we have done so, skip this segment.
-									//If we detect this in the last 3 segments, skip right to the end.
-									//This prevents a missing end segment due to collision.
-									testPoint1.set(road.definition.road.roadWidth + road.definition.road.cornerOffset.x, 0, 0);
-									testPoint1.rotateFine(priorRotation).add(priorPosition);
-									testPoint2.set(road.definition.road.roadWidth + road.definition.road.cornerOffset.x, 0, 0);
-									testPoint2.rotateFine(rotation).add(position);
-									if(currentIndex != road.dynamicCurve.pathLength && ((position.x - priorPosition.x)*(testPoint2.x - testPoint1.x) < 0 || (position.z - priorPosition.z)*(testPoint2.z - testPoint1.z) < 0)){
-										if(currentIndex + 3*indexDelta > road.dynamicCurve.pathLength){
-											currentIndex = road.dynamicCurve.pathLength - indexDelta;
-										}
-										continue;
-									}
-									
-									//Depending on the vertex position in the model, transform it to match with the offset rotation.
-									//This depends on how far the vertex is from the origin of the model, and how big the delta is.
-									//For all points, their magnitude depends on how far away they are on the Z-axis.
-									for(int i=0; i<parsedVertices.capacity(); i+=8){
-										float[] convertedVertexData = new float[8];
-										
-										//Add the normals and UVs first.  These won't change.
-										parsedVertices.get(convertedVertexData, 0, 5);
-										
-										//Now convert the XYZ points.
-										float x = parsedVertices.get();
-										float y = parsedVertices.get();
-										float z = parsedVertices.get();
-										vertexOffsetPriorLine.set(x, y, 0);
-										vertexOffsetPriorLine.rotateFine(priorRotation).add(priorPosition);
-										vertexOffsetCurrentLine.set(x, y, 0);
-										vertexOffsetCurrentLine.rotateFine(rotation).add(position);
-										
-										segmentVector.set(vertexOffsetCurrentLine);
-										segmentVector.subtract(vertexOffsetPriorLine);
-										segmentVector.scale(z/road.definition.road.segmentLength);
-										
-										renderedVertex.set(vertexOffsetPriorLine);
-										renderedVertex.add(segmentVector);
-										
-										convertedVertexData[5] = (float) renderedVertex.x;
-										convertedVertexData[6] = (float) renderedVertex.y;
-										convertedVertexData[7] = (float) renderedVertex.z;
-										
-										//Add transformed vertices to the segment.
-										segmentVertices.add(convertedVertexData);
-									}
-									//Rewind for next segment.
-									parsedVertices.rewind();
-									
-									//Set the last index.
-									priorIndex = currentIndex;
-								}
-								
-								//Cache and compile the segments.
-								FloatBuffer convertedVertices = FloatBuffer.allocate(segmentVertices.size()*8);
-								for(float[] segmentVertex : segmentVertices){
-									convertedVertices.put(segmentVertex);
-								}
-								convertedVertices.flip();
-								road.componentRenderables.put(component, new RenderableObject(component.name(), componentItem.definition.getTextureLocation(componentItem.subName), new ColorRGB(), convertedVertices, true));
+							//Get model and convert to a single buffer of vertices.
+							List<RenderableObject> parsedModel = AModelParser.parseModel(componentItem.definition.getModelLocation(componentItem.subName));
+							int totalVertices = 0;
+							for(RenderableObject object : parsedModel){
+								totalVertices += object.vertices.capacity();
 							}
+							FloatBuffer parsedVertices = FloatBuffer.allocate(totalVertices);
+							for(RenderableObject object : parsedModel){
+								parsedVertices.put(object.vertices);
+							}
+							parsedVertices.flip();
+							
+							//Offset vertices to be corner-aligned, as that's how our curve aligns.
+							for(int i=0; i<parsedVertices.capacity(); i+=8){
+								parsedVertices.put(i+5, (float) (parsedVertices.get(i+5) - road.definition.road.cornerOffset.x));
+								parsedVertices.put(i+7, (float) (parsedVertices.get(i+7) - road.definition.road.cornerOffset.z));
+							}
+							
+							//Core components need to be transformed to wedges.
+							Point3D priorPosition = new Point3D();
+							Point3D priorRotation = new Point3D();
+							Point3D testPoint1 = new Point3D();
+							Point3D testPoint2 = new Point3D();
+							Point3D vertexOffsetPriorLine = new Point3D();
+							Point3D vertexOffsetCurrentLine = new Point3D();
+							Point3D segmentVector = new Point3D();
+							Point3D renderedVertex = new Point3D();
+							float indexDelta = (float) (road.dynamicCurve.pathLength/Math.floor(road.dynamicCurve.pathLength/road.definition.road.segmentLength));
+							boolean finalSegment = false;
+							float priorIndex = 0;
+							float currentIndex = 0;
+							List<float[]> segmentVertices = new ArrayList<float[]>();
+							while(!finalSegment){
+								//If we are at the last index, do special logic to get the very end point.
+								//We check here in case FPEs have accumulated and we won't end on the exact end segment.
+								//Otherwise, increment normally.
+								if(currentIndex != road.dynamicCurve.pathLength && currentIndex + indexDelta*1.25 > road.dynamicCurve.pathLength){
+									currentIndex = road.dynamicCurve.pathLength;
+									finalSegment = true;
+								}else{
+									currentIndex += indexDelta;
+								}
+								
+								//Get current and prior curve position and rotation.
+								//From this, we know how much to stretch the model to that point's rendering area.
+								road.dynamicCurve.setPointToPositionAt(priorPosition, priorIndex);
+								road.dynamicCurve.setPointToRotationAt(priorRotation, priorIndex);
+								priorPosition.subtract(road.dynamicCurve.startPos);
+								road.dynamicCurve.setPointToPositionAt(position, currentIndex);
+								road.dynamicCurve.setPointToRotationAt(rotation, currentIndex);
+								position.subtract(road.dynamicCurve.startPos);
+								
+								//If we are a really sharp curve, we might have inverted our model at the inner corner.
+								//Check for this, and if we have done so, skip this segment.
+								//If we detect this in the last 3 segments, skip right to the end.
+								//This prevents a missing end segment due to collision.
+								testPoint1.set(road.definition.road.roadWidth + road.definition.road.cornerOffset.x, 0, 0);
+								testPoint1.rotateFine(priorRotation).add(priorPosition);
+								testPoint2.set(road.definition.road.roadWidth + road.definition.road.cornerOffset.x, 0, 0);
+								testPoint2.rotateFine(rotation).add(position);
+								if(currentIndex != road.dynamicCurve.pathLength && ((position.x - priorPosition.x)*(testPoint2.x - testPoint1.x) < 0 || (position.z - priorPosition.z)*(testPoint2.z - testPoint1.z) < 0)){
+									if(currentIndex + 3*indexDelta > road.dynamicCurve.pathLength){
+										currentIndex = road.dynamicCurve.pathLength - indexDelta;
+									}
+									continue;
+								}
+								
+								//Depending on the vertex position in the model, transform it to match with the offset rotation.
+								//This depends on how far the vertex is from the origin of the model, and how big the delta is.
+								//For all points, their magnitude depends on how far away they are on the Z-axis.
+								for(int i=0; i<parsedVertices.capacity(); i+=8){
+									float[] convertedVertexData = new float[8];
+									
+									//Add the normals and UVs first.  These won't change.
+									parsedVertices.get(convertedVertexData, 0, 5);
+									
+									//Now convert the XYZ points.
+									float x = parsedVertices.get();
+									float y = parsedVertices.get();
+									float z = parsedVertices.get();
+									vertexOffsetPriorLine.set(x, y, 0);
+									vertexOffsetPriorLine.rotateFine(priorRotation).add(priorPosition);
+									vertexOffsetCurrentLine.set(x, y, 0);
+									vertexOffsetCurrentLine.rotateFine(rotation).add(position);
+									
+									segmentVector.set(vertexOffsetCurrentLine).subtract(vertexOffsetPriorLine).scale(z/road.definition.road.segmentLength);
+									renderedVertex.set(vertexOffsetPriorLine).add(segmentVector);
+									
+									convertedVertexData[5] = (float) renderedVertex.x;
+									convertedVertexData[6] = (float) renderedVertex.y;
+									convertedVertexData[7] = (float) renderedVertex.z;
+									
+									//Add transformed vertices to the segment.
+									segmentVertices.add(convertedVertexData);
+								}
+								//Rewind for next segment.
+								parsedVertices.rewind();
+								
+								//Set the last index.
+								priorIndex = currentIndex;
+							}
+							
+							//Cache and compile the segments.
+							FloatBuffer convertedVertices = FloatBuffer.allocate(segmentVertices.size()*8);
+							for(float[] segmentVertex : segmentVertices){
+								convertedVertices.put(segmentVertex);
+							}
+							convertedVertices.flip();
+							road.componentRenderables.put(component, new RenderableObject(component.name(), componentItem.definition.getTextureLocation(componentItem.subName), new ColorRGB(), convertedVertices, true));
 							break;
 						}
-						default:
-							break;
 					}
 				}
 				RenderableObject object = road.componentRenderables.get(component);
@@ -177,7 +174,12 @@ public class RenderRoad extends ARenderEntityDefinable<TileEntityRoad>{
 					object.alpha = 0.5F;
 					object.isTranslucent = true;
 				}
-				object.transform.set(transform);
+				if(road.dynamicCurve != null){
+					object.transform.setTranslation(road.dynamicCurve.startPos.copy().subtract(road.position));
+					object.transform.multiply(transform);
+				}else{
+					object.transform.set(transform);
+				}
 				object.render();
 			}
 			
