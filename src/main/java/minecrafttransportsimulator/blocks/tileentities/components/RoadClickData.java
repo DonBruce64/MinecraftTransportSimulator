@@ -4,6 +4,7 @@ import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.BezierCurve;
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad.RoadComponent;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent.JSONLaneSector;
@@ -20,7 +21,7 @@ public class RoadClickData{
 	public final boolean lanesOccupied;
 	public final boolean clickedStart;
 	public final Point3D genPosition;
-	public final double genRotation;
+	public final RotationMatrix genRotation;
 
 	public RoadClickData(TileEntityRoad roadClicked, JSONLaneSector sectorClicked, boolean clickedStart, boolean curveStart){
 		this.roadClicked = roadClicked;
@@ -36,9 +37,9 @@ public class RoadClickData{
 				//If this is for the start of a curve, we need to offset the position in the opposite direction to account for the different curve paths.
 				//If this is for the end of a curve, just use the point as-is as the end point will be the new curve's start point.
 				//Rotation here needs to be the opposite of the start rotation of the clicked curve, as our curve is going the opposite direction.
-				genRotation = roadClicked.dynamicCurve.startAngle + 180;
+				genRotation = new RotationMatrix().set(roadClicked.dynamicCurve.startRotation).rotateY(180);
 				if(curveStart){
-					genPosition = new Point3D(roadClicked.definition.road.roadWidth, 0, 0).rotateY(roadClicked.dynamicCurve.startAngle);
+					genPosition = new Point3D(roadClicked.definition.road.roadWidth, 0, 0).rotate(roadClicked.dynamicCurve.startRotation);
 				}else{
 					genPosition = new Point3D();
 				}
@@ -48,9 +49,9 @@ public class RoadClickData{
 				//If this is for the start of a curve, just use the point as-is as the end point will be the new curve's start point.
 				//If this is for the end of a curve, we need to offset the position in the opposite direction to account for the different curve paths.
 				//Rotation here needs to be the opposite of the end rotation of the clicked curve, as our curve is going the opposite direction.
-				genRotation = roadClicked.dynamicCurve.endAngle + 180;
+				genRotation = new RotationMatrix().set(roadClicked.dynamicCurve.endRotation).rotateY(180);
 				if(!curveStart){
-					genPosition = new Point3D(roadClicked.definition.road.roadWidth, 0, 0).rotateY(roadClicked.dynamicCurve.endAngle + 180);
+					genPosition = new Point3D(roadClicked.definition.road.roadWidth, 0, 0).rotate(roadClicked.dynamicCurve.endRotation).rotateY(180);
 				}else{
 					genPosition = new Point3D();
 				}
@@ -62,10 +63,10 @@ public class RoadClickData{
 			//If this is for the start of the curve, we need to offset the position in the opposite direction to account for the different curve paths.
 			//If this is for the end of a curve, just use the point as-is as the end point will be this curve's start point.
 			//Rotation here needs to be the opposite of the start rotation of the starting sector segment, as our curve is going the opposite direction.
-			genRotation = sectorClicked.sectorStartAngle + roadClicked.orientation.angles.y + 180;
+			genRotation = new RotationMatrix().set(roadClicked.orientation).multiply(sectorClicked.sectorStartAngles).rotateY(180);
 			genPosition = sectorClicked.sectorStartPos.copy().rotate(roadClicked.orientation).add(roadClicked.position);
 			if(curveStart){
-				genPosition.add(new Point3D(-sectorClicked.borderOffset, 0, 0).rotateY(genRotation));
+				genPosition.add(new Point3D(-sectorClicked.borderOffset, 0, 0).rotate(genRotation));
 			}
 			lanesOccupied = areStaticLanesOccupied();
 		}

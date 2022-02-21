@@ -24,7 +24,7 @@ public class PacketTileEntityRoadConnectionUpdate extends APacketEntity<TileEnti
 	private final Point3D otherPosition;
 	private final int otherLaneNumber;
 	private final int otherCurveNumber;
-	private final float otherCurveNetAngle;
+	private final double otherCurveNetAngle;
 	private final boolean otherConnectedToStart;
 	
 	public PacketTileEntityRoadConnectionUpdate(RoadLane lane, int curveNumber, boolean connectedToStart, RoadLaneConnection otherConnection){
@@ -60,7 +60,7 @@ public class PacketTileEntityRoadConnectionUpdate extends APacketEntity<TileEnti
 			this.otherPosition = readPoint3dFromBuffer(buf);
 			this.otherLaneNumber = buf.readInt();
 			this.otherCurveNumber = buf.readInt();
-			this.otherCurveNetAngle = buf.readFloat();
+			this.otherCurveNetAngle = buf.readDouble();
 			this.otherConnectedToStart = buf.readBoolean();
 		}else{
 			this.otherPosition = null;
@@ -82,7 +82,7 @@ public class PacketTileEntityRoadConnectionUpdate extends APacketEntity<TileEnti
 			writePoint3dToBuffer(otherPosition, buf);
 			buf.writeInt(otherLaneNumber);
 			buf.writeInt(otherCurveNumber);
-			buf.writeFloat(otherCurveNetAngle);
+			buf.writeDouble(otherCurveNetAngle);
 			buf.writeBoolean(otherConnectedToStart);
 		}else{
 			buf.writeBoolean(false);

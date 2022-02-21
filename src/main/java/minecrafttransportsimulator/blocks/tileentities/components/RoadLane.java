@@ -6,6 +6,7 @@ import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.BezierCurve;
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.instances.BlockCollision;
 import minecrafttransportsimulator.blocks.instances.BlockRoad;
@@ -82,8 +83,9 @@ public class RoadLane{
 			for(JSONLaneSectorEndPoint endPoint : points.endPoints){
 				Point3D start = points.startPoint.copy().rotate(road.orientation).add(road.position);
 				Point3D end = endPoint.pos.copy().rotate(road.orientation).add(road.position);
-				double roadYRotation = road.orientation.convertToAngles().y;
-				curves.add(new BezierCurve(start, end, sector.sectorStartAngle + (float) roadYRotation, endPoint.angle + (float) roadYRotation));
+				RotationMatrix startRotation = new RotationMatrix().set(road.orientation).multiply(sector.sectorStartAngles);
+				RotationMatrix endRotation = new RotationMatrix().set(road.orientation).multiply(endPoint.angles);
+				curves.add(new BezierCurve(start, end, startRotation, endRotation));
 			}
 		}
 	}
@@ -114,9 +116,9 @@ public class RoadLane{
 			boolean foundRoadsThisCheck = false;
 			Point3D offsetPoint;
 			if(checkingStart){
-				offsetPoint = new Point3D(0, 0, j).rotateY(curve.startAngle).add(curve.startPos);
+				offsetPoint = new Point3D(0, 0, j).rotate(curve.startRotation).add(curve.startPos);
 			}else{
-				offsetPoint = new Point3D(0, 0, j).rotateY(curve.endAngle).add(curve.endPos);
+				offsetPoint = new Point3D(0, 0, j).rotate(curve.endRotation).add(curve.endPos);
 			}
 			
 			ABlockBase block = road.world.getBlock(offsetPoint);

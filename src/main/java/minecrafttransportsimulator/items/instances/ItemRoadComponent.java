@@ -6,6 +6,7 @@ import java.util.Map;
 
 import minecrafttransportsimulator.baseclasses.BezierCurve;
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.instances.BlockCollision;
@@ -26,7 +27,7 @@ import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 
 public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implements IItemBlock{
 	private final Map<WrapperPlayer, Point3D> lastRoadGenPositionClicked = new HashMap<WrapperPlayer, Point3D>();
-	private final Map<WrapperPlayer, Double> lastRoadGenRotationClicked = new HashMap<WrapperPlayer, Double>();
+	private final Map<WrapperPlayer, RotationMatrix> lastRoadGenRotationClicked = new HashMap<WrapperPlayer, RotationMatrix>();
 	private final Map<WrapperPlayer, RoadClickData> lastRoadGenClickedData = new HashMap<WrapperPlayer, RoadClickData>();
 	
 	public ItemRoadComponent(JSONRoadComponent definition, String subName, String sourcePackID){
@@ -93,16 +94,16 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 						lastRoadGenRotationClicked.put(player, clickedRoadData.genRotation);
 						lastRoadGenClickedData.put(player, clickedRoadData);
 					}else{
-						float genRotation = Math.round(player.getYaw()/15)*15;
+						RotationMatrix genRotation = new RotationMatrix().rotateY(Math.round(player.getYaw()/15)*15);
 						//Start with rotated corner offset to local coords.
-						Point3D genPosition = definition.road.cornerOffset.copy();
-						genPosition.z += definition.road.segmentLength;
-						genPosition.rotateY(genRotation + 180);
+						Point3D genPosition = definition.road.cornerOffset.copy().invert();
+						genPosition.z -= definition.road.segmentLength;
+						genPosition.rotate(genRotation);
 						
 						//Offset position by 0.5 to be in the center of the clicked block, and up 1 to the block above, and include collision height.
 						genPosition.add(position).add(0.5, 1 + definition.road.collisionHeight/16F, 0.5);
 						lastRoadGenPositionClicked.put(player, genPosition);
-						lastRoadGenRotationClicked.put(player, (double) genRotation);
+						lastRoadGenRotationClicked.put(player, genRotation);
 					}
 					player.sendPacket(new PacketPlayerChatMessage(player, "interact.roadcomponent.set"));
 				}else if(!player.isSneaking() && lastRoadGenPositionClicked.containsKey(player)){
@@ -111,7 +112,7 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 						//If not, we place the new road block wherever we clicked.  Find this position now, as well as
 						//the new curve starting point and lane/side clicked on the road.
 						final Point3D startPosition;
-						final double startRotation;
+						final RotationMatrix startRotation;
 						final Point3D blockPlacementPoint;
 						if(clickedRoad != null){
 							//Check the road we clicked, if it exists, and make sure we aren't doing a bad connection.
@@ -151,15 +152,15 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 							}
 						}else{
 							blockPlacementPoint = position.copy().add(0, 1, 0);
-							startRotation = Math.round(player.getYaw()/15)*15;
-							startPosition = definition.road.cornerOffset.copy().rotateY(startRotation).add(0.5, definition.road.collisionHeight/16F, 0.5).add(blockPlacementPoint);
+							startRotation = new RotationMatrix().rotateY(Math.round(player.getYaw()/15)*15);
+							startPosition = definition.road.cornerOffset.copy().rotate(startRotation).add(0.5, definition.road.collisionHeight/16F, 0.5).add(blockPlacementPoint);
 						}
 						
 						
 						//Get the end point and rotation.  This depends if we clicked a road or not.
 						//If we clicked a road, we need to adjust our angle to match the road's angle.
 						final Point3D endPosition;
-						final double endRotation;
+						final RotationMatrix endRotation;
 						if(lastRoadGenClickedData.containsKey(player)){
 							RoadClickData endingRoadData = lastRoadGenClickedData.get(player);
 							endPosition = endingRoadData.genPosition;
@@ -190,7 +191,7 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 							
 							//Now that the road is placed, create the dynamic curve.
 							//These can't get set in the constructor as it can't take the curve for dynamic roads.
-							newRoad.dynamicCurve = new BezierCurve(startPosition, endPosition, (float) startRotation, (float) endRotation);
+							newRoad.dynamicCurve = new BezierCurve(startPosition, endPosition, startRotation, endRotation);
 							
 							//Try to spawn all the collision blocks for this road.
 							//If we spawn blocks, we create all collision points and join the road's connections.

@@ -3,6 +3,7 @@ package minecrafttransportsimulator.jsondefs;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad.RoadComponent;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
@@ -51,8 +52,9 @@ public class JSONRoadComponent extends AJSONMultiModelProvider{
     	@JSONDescription("The start position for this sector.  This should be the right-most side.  For example, on a 4-lane intersection this would be 0,0,0 for the south-facing sector.")
     	public Point3D sectorStartPos;
     	
-    	@JSONDescription("The start angle for this sector.  Roads will normally be considered to be heading south, but this rotates them to whatever direction this sector is facing.")
-    	public float sectorStartAngle;
+    	@JSONRequired
+    	@JSONDescription("The start angles for this sector.  Roads are normally considered to be heading south, so any angles applied will modify that orientation.  Pitch and roll are supported here, though be advised they are not considered when doing connection checks.")
+    	public RotationMatrix sectorStartAngles;
     	
     	@JSONDescription("How far from the start position the border of this sector is.  Similar to dynamic roads, this is used to calculate the total road width.")
     	public float borderOffset;
@@ -77,8 +79,9 @@ public class JSONRoadComponent extends AJSONMultiModelProvider{
     	@JSONDescription("The ending position for this sector-point.")
     	public Point3D pos;
     	
+    	@JSONRequired
     	@JSONDescription("The ending rotation for this sector-point.")
-    	public float angle;
+    	public RotationMatrix angles;
     }
     
     public class JSONRoadCollisionArea{

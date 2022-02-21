@@ -115,16 +115,6 @@ public class Point3D{
 		this.z *= scale;
 		return this;
 	}
-
-	/**
-	 * Multiplies all values of this point by the values of the passed-in point.
-	 */
-	public Point3D multiply(Point3D point){
-		this.x *= point.x;
-		this.y *= point.y;
-		this.z *= point.z;
-		return this;
-	}
 	
 	/**
 	 * Sets the point to the interpolation between itself, and the passed-in point,

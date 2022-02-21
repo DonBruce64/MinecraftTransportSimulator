@@ -9,8 +9,8 @@ package minecrafttransportsimulator.baseclasses;
 public class BezierCurve{
 	public final Point3D startPos;
 	public final Point3D endPos;
-	public final float startAngle;
-	public final float endAngle;
+	public final RotationMatrix startRotation;
+	public final RotationMatrix endRotation;
 	public final float pathLength;
 	
 	//Cached point data.
@@ -20,16 +20,18 @@ public class BezierCurve{
 	/**Steps between curve calculations.  This is how many intermediate calculations we do between 1-block steps.**/
 	public static final int CURVE_STEP = 16;
 	
-	public BezierCurve(Point3D startPos, Point3D endPos, float startAngle, float endAngle){
+	public BezierCurve(Point3D startPos, Point3D endPos, RotationMatrix startRotation, RotationMatrix endRotation){
 		this.startPos = startPos.copy();
 		this.endPos = endPos.copy();
-		this.startAngle = startAngle;
-		this.endAngle = endAngle;
+		this.startRotation = startRotation;
+		this.endRotation = endRotation;
+		Point3D startAngles = startRotation.convertToAngles();
+		Point3D endAngles = endRotation.convertToAngles();
 		final float[] startPoint = new float[]{(float)startPos.x, (float)startPos.y, (float)startPos.z};
 		final float[] endPoint = new float[]{(float)endPos.x, (float)endPos.y, (float)endPos.z};
 		float midPointDistance = (float) Math.sqrt(Math.pow(endPoint[0] - startPoint[0], 2) + Math.pow(endPoint[1] - startPoint[1], 2) + Math.pow(endPoint[2] - startPoint[2], 2))/3F;
-		final float[] startCurvePoint = new float[]{(float) (startPoint[0] + Math.sin(Math.toRadians(startAngle))*midPointDistance), startPoint[1], (float) (startPoint[2] + Math.cos(Math.toRadians(startAngle))*midPointDistance)};
-		final float[] endCurvePoint = new float[]{(float) (endPoint[0] + Math.sin(Math.toRadians(endAngle))*midPointDistance), endPoint[1], (float) (endPoint[2] + Math.cos(Math.toRadians(endAngle))*midPointDistance)};
+		final float[] startCurvePoint = new float[]{(float) (startPoint[0] + Math.sin(Math.toRadians(startAngles.y))*midPointDistance), startPoint[1], (float) (startPoint[2] + Math.cos(Math.toRadians(startAngles.y))*midPointDistance)};
+		final float[] endCurvePoint = new float[]{(float) (endPoint[0] + Math.sin(Math.toRadians(endAngles.y))*midPointDistance), endPoint[1], (float) (endPoint[2] + Math.cos(Math.toRadians(endAngles.y))*midPointDistance)};
 
 		this.pathLength = getPathLength(startPoint, endPoint, startCurvePoint, endCurvePoint);
 		float[] pathPointsX = getCachedPathPoints(startPoint[0], endPoint[0], startCurvePoint[0], endCurvePoint[0], pathLength);
@@ -45,7 +47,7 @@ public class BezierCurve{
 			if(i > 0){
 				cachedPathRotations[i][0] = (float) -Math.toDegrees(Math.atan((cachedPathPoints[i][1] - cachedPathPoints[i - 1][1])/Math.hypot(cachedPathPoints[i][0] - cachedPathPoints[i - 1][0], cachedPathPoints[i][2] - cachedPathPoints[i - 1][2])));
 				cachedPathRotations[i][1] = (float) ((360 + Math.toDegrees(Math.atan2(cachedPathPoints[i][0] - cachedPathPoints[i - 1][0], cachedPathPoints[i][2] - cachedPathPoints[i - 1][2])))%360);
-				cachedPathRotations[i][2] = 0;
+				cachedPathRotations[i][2] = (float) (startAngles.z + (endAngles.z - startAngles.z)*i/cachedPathPoints.length);
 			}
 		}
 		
@@ -70,7 +72,7 @@ public class BezierCurve{
 		newEndPos.rotateFine(testRotation);
 		offsetPointByPositionAt(newEndPos, pathLength);
 		
-		return new BezierCurve(newStartPos, newEndPos, startAngle, endAngle);
+		return new BezierCurve(newStartPos, newEndPos, startRotation, endRotation);
 	}
 	
 	/**

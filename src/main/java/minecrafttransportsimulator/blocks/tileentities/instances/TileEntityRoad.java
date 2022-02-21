@@ -9,6 +9,7 @@ import java.util.Map.Entry;
 import minecrafttransportsimulator.baseclasses.BezierCurve;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.instances.BlockCollision;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
@@ -89,7 +90,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 		Point3D startingOffset = data.getPoint3d("startingOffset");
 		Point3D endingOffset = data.getPoint3d("endingOffset");
 		if(!endingOffset.isZero()){
-			this.dynamicCurve = new BezierCurve(startingOffset, endingOffset, (float) data.getDouble("startingRotation"), (float) data.getDouble("endingRotation"));
+			this.dynamicCurve = new BezierCurve(startingOffset, endingOffset, new RotationMatrix().setToAngles(data.getPoint3d("startingAngles")), new RotationMatrix().setToAngles(data.getPoint3d("endingAngles")));
 		}
 		
 		//Don't generate lanes for inactive roads.
@@ -351,8 +352,8 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 		if(dynamicCurve != null){
 			data.setPoint3d("startingOffset", dynamicCurve.startPos);
 			data.setPoint3d("endingOffset", dynamicCurve.endPos);
-			data.setDouble("startingRotation", dynamicCurve.startAngle);
-			data.setDouble("endingRotation", dynamicCurve.endAngle);
+			data.setPoint3d("startingAngles", dynamicCurve.startRotation.angles);
+			data.setPoint3d("endingAngles", dynamicCurve.endRotation.angles);
 		}
 		
 		//Save lane data.
