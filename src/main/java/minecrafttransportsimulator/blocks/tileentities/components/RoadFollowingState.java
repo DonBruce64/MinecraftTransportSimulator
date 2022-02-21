@@ -14,10 +14,10 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
  * @author don_bruce
  */
 public class RoadFollowingState{
-	public final RoadLane lane;
-	public final BezierCurve curve;
-	public final boolean goingForwards;
-	public float currentSegment;
+	private final RoadLane lane;
+	private final BezierCurve curve;
+	private final boolean goingForwards;
+	private float currentSegment;
 	
 	
 	public RoadFollowingState(RoadLane lane, BezierCurve curve, boolean goingForwards, float currentSegment){
@@ -105,8 +105,7 @@ public class RoadFollowingState{
 	 * otherwise you may get out of the curve's bounds.
 	 */
 	public Point3D getCurrentPoint(){
-		Point3D currentPoint = lane.road.position.copy();
-		currentPoint.y += lane.road.definition.road.collisionHeight/16F;
+		Point3D currentPoint = new Point3D();
 		curve.offsetPointByPositionAt(currentPoint, currentSegment);
 		return currentPoint;
 	}

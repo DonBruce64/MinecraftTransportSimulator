@@ -305,7 +305,6 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 						for(BezierCurve curve : lane.curves){
 							for(float f=0; f<curve.pathLength; ++f){
 								curve.setPointToPositionAt(testPoint, f);
-								testPoint.add(road.position);
 								if(testPoint.isDistanceToCloserThan(contactPoint, 1)){
 									curve.setPointToRotationAt(testRotation, f);
 									boolean sameDirection = Math.abs(testRotation.getClampedYDelta(angles.y)) < 10;
@@ -584,7 +583,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 				if(rearFollower != null){
 					float pointDelta = (float) rearContact.distanceTo(frontContact);
 					if(towedByConnection == null){
-						frontFollower = new RoadFollowingState(rearFollower.lane, rearFollower.curve, rearFollower.goingForwards, rearFollower.currentSegment).updateCurvePoints(pointDelta, LaneSelectionRequest.NONE);
+						frontFollower = new RoadFollowingState(rearFollower).updateCurvePoints(pointDelta, LaneSelectionRequest.NONE);
 					}else{
 						//Get delta between vehicle center and hitch, and vehicle center and hookup.  This gets total distance between vehicle centers.
 						float segmentDelta = (float) (towedByConnection.hitchCurrentPosition.copy().subtract(towedByConnection.towingVehicle.position).length() + towedByConnection.hookupCurrentPosition.copy().subtract(towedByConnection.towedVehicle.position).length());

@@ -188,7 +188,8 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	 *  Helper method to get information on what was clicked.
 	 *  Takes the player's rotation into account, as well as the block they clicked.
 	 */
-	public RoadClickData getClickData(Point3D blockOffsetClicked, boolean curveStart){
+	public RoadClickData getClickData(Point3D blockClicked, boolean curveStart){
+		Point3D blockOffsetClicked = blockClicked.copy().subtract(position);
 		boolean clickedStart = blockOffsetClicked.isZero() || collisionBlockOffsets.indexOf(blockOffsetClicked) < collisionBlockOffsets.size()/2;
 		JSONLaneSector closestSector = null;
 		if(!definition.road.type.equals(RoadComponent.CORE_DYNAMIC)){
@@ -213,7 +214,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	public void generateLanes(WrapperNBT data){
 		if(definition.road.type.equals(RoadComponent.CORE_DYNAMIC)){
 			for(int i=0; i<definition.road.laneOffsets.length; ++i){
-				lanes.add(new RoadLane(this, 0, lanes.size(), data != null ? data.getData("lane" + i) : null));
+				lanes.add(new RoadLane(this, 0, i, data != null ? data.getData("lane" + i) : null));
 			}
 		}else{
 			for(int i=0; i<definition.road.sectors.size(); ++i){
@@ -246,10 +247,9 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 					//We only want yaw for block placement.
 					testRotation.x = 0;
 					testRotation.z = 0;
-					testOffset.set(offset, 0, 0);
-					testOffset.add(definition.road.cornerOffset);
-					testOffset.rotateFine(testRotation).add(0, definition.road.collisionHeight/16F, 0);
+					testOffset.set(offset, 0, 0).rotateFine(testRotation);
 					dynamicCurve.offsetPointByPositionAt(testOffset, f);
+					testOffset.subtract(position);
 					Point3D testPoint = new Point3D((int) testOffset.x, (int) Math.floor(testOffset.y), (int) testOffset.z);
 					
 					//If we don't have a block in this position, check if we need one.

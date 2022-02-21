@@ -7,8 +7,8 @@ import java.util.List;
 import minecrafttransportsimulator.baseclasses.BezierCurve;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.instances.BlockCollision;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLane;
@@ -16,7 +16,6 @@ import minecrafttransportsimulator.blocks.tileentities.components.RoadLaneConnec
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad.RoadComponent;
 import minecrafttransportsimulator.items.instances.ItemRoadComponent;
-import minecrafttransportsimulator.mcinterface.InterfaceRender;
 import minecrafttransportsimulator.rendering.components.AModelParser;
 import minecrafttransportsimulator.rendering.components.ARenderEntityDefinable;
 import minecrafttransportsimulator.rendering.components.RenderableObject;
@@ -95,8 +94,10 @@ public class RenderRoad extends ARenderEntityDefinable<TileEntityRoad>{
 									//From this, we know how much to stretch the model to that point's rendering area.
 									road.dynamicCurve.setPointToPositionAt(priorPosition, priorIndex);
 									road.dynamicCurve.setPointToRotationAt(priorRotation, priorIndex);
+									priorPosition.subtract(road.dynamicCurve.startPos);
 									road.dynamicCurve.setPointToPositionAt(position, currentIndex);
 									road.dynamicCurve.setPointToRotationAt(rotation, currentIndex);
+									position.subtract(road.dynamicCurve.startPos);
 									
 									//If we are a really sharp curve, we might have inverted our model at the inner corner.
 									//Check for this, and if we have done so, skip this segment.
@@ -197,17 +198,6 @@ public class RenderRoad extends ARenderEntityDefinable<TileEntityRoad>{
 						blockingBox.renderHolographic(transform, blockingBox.globalCenter, ColorRGB.RED);
 					}
 				}
-			}else{
-				//If we are in devMode and have hitboxes shown, render road bounds and colliding boxes.
-				if(ConfigSystem.configObject.clientControls.devMode.value && InterfaceRender.shouldRenderBoundingBoxes()){
-					if(road.devRenderables.isEmpty()){
-						generateDevElements(road);
-					}
-					for(RenderableObject renderable : road.devRenderables){
-						renderable.transform.set(transform);
-						renderable.render();
-					}
-				}
 			}
 		}
 	}
@@ -224,6 +214,17 @@ public class RenderRoad extends ARenderEntityDefinable<TileEntityRoad>{
 				blockBounds.renderWireframe(road, transform, blockOffset.copy().add(-0.5, 0, -0.5), null);
 			}
 		}
+		//If we are in devMode, render road bounds and colliding boxes.
+		if(ConfigSystem.configObject.clientControls.devMode.value){
+			if(road.devRenderables.isEmpty()){
+				generateDevElements(road);
+			}
+			Point3D invertedPosition = road.position.copy().invert();
+			for(RenderableObject renderable : road.devRenderables){
+				renderable.transform.setTranslation(invertedPosition).multiply(transform);
+				renderable.render();
+			}
+		}
 	}
 	
 	private static void generateDevElements(TileEntityRoad road){
@@ -233,41 +234,19 @@ public class RenderRoad extends ARenderEntityDefinable<TileEntityRoad>{
 		RenderableObject curveObject;
 		if(road.dynamicCurve != null){
 			//Render actual curve.
-			//Don't do this if the lane offset is 0, as that would interfere with the main curve.
-			boolean zeroOffsetFound = false;
-			for(float offset : road.definition.road.laneOffsets){
-				if(offset == 0.0){
-					zeroOffsetFound = true;
-					break;
-				}
-			}
-			if(!zeroOffsetFound){
-				curveObject = new RenderableObject(ColorRGB.GREEN, (int) (road.dynamicCurve.pathLength*10));
-				for(float f=0; curveObject.vertices.hasRemaining(); f+=0.1){
-					road.dynamicCurve.setPointToPositionAt(point1, f);
-					curveObject.addLine((float) point1.x, (float) point1.y, (float) point1.z, (float) point1.x, (float) point1.y + 1.0F, (float) point1.z);
-				}
-				curveObject.vertices.flip();
-				road.devRenderables.add(curveObject);
-			}
-			
-			//Render the border bounds.
-			curveObject = new RenderableObject(ColorRGB.CYAN, (int) (road.dynamicCurve.pathLength*10));
+			curveObject = new RenderableObject(ColorRGB.GREEN, (int) (road.dynamicCurve.pathLength*10));
 			for(float f=0; curveObject.vertices.hasRemaining(); f+=0.1){
-				road.dynamicCurve.setPointToRotationAt(point2, f);
-				point1.set(road.definition.road.cornerOffset);
-				point1.rotateFine(point2);
-				road.dynamicCurve.offsetPointByPositionAt(point1, f);
+				road.dynamicCurve.setPointToPositionAt(point1, f);
 				curveObject.addLine((float) point1.x, (float) point1.y, (float) point1.z, (float) point1.x, (float) point1.y + 1.0F, (float) point1.z);
 			}
 			curveObject.vertices.flip();
 			road.devRenderables.add(curveObject);
 			
+			//Render the border bounds.
 			curveObject = new RenderableObject(ColorRGB.CYAN, (int) (road.dynamicCurve.pathLength*10));
 			for(float f=0; curveObject.vertices.hasRemaining(); f+=0.1){
 				road.dynamicCurve.setPointToRotationAt(point2, f);
-				point1.set(road.definition.road.cornerOffset);
-				point1.add(road.definition.road.roadWidth, 0, 0);
+				point1.set(road.definition.road.roadWidth, 0, 0);
 				point1.rotateFine(point2);
 				road.dynamicCurve.offsetPointByPositionAt(point1, f);
 				curveObject.addLine((float) point1.x, (float) point1.y, (float) point1.z, (float) point1.x, (float) point1.y + 1.0F, (float) point1.z);
@@ -315,7 +294,6 @@ public class RenderRoad extends ARenderEntityDefinable<TileEntityRoad>{
 							//Get the other connection point.
 							BezierCurve otherCurve = otherLane.curves.get(priorConnection.curveNumber);
 							otherCurve.setPointToPositionAt(point2, priorConnection.connectedToStart ? 0.5F : otherCurve.pathLength - 0.5F);
-							point2.add(otherLane.road.position).subtract(road.position);
 							
 							//Render U-shaped joint.
 							curveObject.addLine((float) point1.x, (float) point1.y + 3.0F, (float) point1.z, (float) point1.x, (float) point1.y + 0.5F, (float) point1.z);
@@ -344,7 +322,6 @@ public class RenderRoad extends ARenderEntityDefinable<TileEntityRoad>{
 							//Get the other connection point.
 							BezierCurve otherCurve = otherLane.curves.get(nextConnection.curveNumber);
 							otherCurve.setPointToPositionAt(point2, nextConnection.connectedToStart ? 0.5F : otherCurve.pathLength - 0.5F);
-							point2.add(otherLane.road.position).subtract(road.position);
 							
 							//Render U-shaped joint.
 							curveObject.addLine((float) point1.x, (float) point1.y + 3.0F, (float) point1.z, (float) point1.x, (float) point1.y + 0.5F, (float) point1.z);

@@ -81,7 +81,7 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 					//If we clicked a road, get the lane number clicked.
 					if(clickedRoad != null){
 						//Check validity of our connection
-						RoadClickData clickedRoadData = clickedRoad.getClickData(position.copy().subtract(clickedRoad.position), false);
+						RoadClickData clickedRoadData = clickedRoad.getClickData(position, false);
 						JSONRoadGeneric roadDefinition = clickedRoadData.roadClicked.definition.road;
 						if((roadDefinition.type.equals(RoadComponent.CORE_DYNAMIC) ? roadDefinition.laneOffsets.length : clickedRoadData.sectorClicked.lanes.size()) != definition.road.laneOffsets.length){
 							player.sendPacket(new PacketPlayerChatMessage(player, "interact.roadcomponent.lanemismatchend"));
@@ -111,10 +111,10 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 						
 						if(clickedBlock instanceof BlockRoad){
 							TileEntityRoad startingRoad = world.getTileEntity(position);
-							startingRoadData = startingRoad.getClickData(position.copy().subtract(startingRoad.position), true);
+							startingRoadData = startingRoad.getClickData(position, true);
 						}else if(clickedBlock instanceof BlockCollision){
 							TileEntityRoad startingRoad = ((BlockCollision) clickedBlock).getMasterRoad(world, position);
-							startingRoadData = startingRoad.getClickData(position.copy().subtract(startingRoad.position), true);
+							startingRoadData = startingRoad.getClickData(position, true);
 						}else{
 							startingRoadData = null;
 						}
@@ -155,7 +155,7 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 						}else{
 							blockPlacementPoint = position.copy().add(0, 1, 0);
 							startRotation = Math.round(player.getYaw()/15)*15;
-							startPosition = blockPlacementPoint;
+							startPosition = definition.road.cornerOffset.copy().rotateY(startRotation).add(0, definition.road.collisionHeight/16F, 0).add(blockPlacementPoint);
 						}
 						
 						
@@ -168,12 +168,14 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 							endPosition = endingRoadData.genPosition;
 							endRotation = endingRoadData.genRotation;
 						}else{
-							endPosition = lastPositionClicked.get(player);
 							endRotation = lastRotationClicked.get(player);
+							endPosition = definition.road.cornerOffset.copy();
+							endPosition.z += definition.road.segmentLength;
+							endPosition.rotateY(endRotation + 180).add(0, definition.road.collisionHeight/16F, 0).add(lastPositionClicked.get(player));
 						}
 						
 						//Check if the start and end position are the same.
-						if(startPosition.equals(endPosition)){
+						if(startPosition.equals(lastPositionClicked.get(player))){
 							player.sendPacket(new PacketPlayerChatMessage(player, "interact.roadcomponent.sameblock"));
 							return true;
 						}
@@ -193,12 +195,12 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 						//so we would double-offset if we used the offset value.
 						blockPlacementPoint.add(-0.5, 0.0, -0.5);
 						if(world.setBlock(getBlock(), blockPlacementPoint, player, axis)){
-							blockPlacementPoint.add(0.5, 0.0, 0.5);
 							TileEntityRoad newRoad = world.getTileEntity(blockPlacementPoint);
+							blockPlacementPoint.add(0.5, 0.0, 0.5);
 							
 							//Now that the road is placed, create the dynamic curve.
 							//These can't get set in the constructor as it can't take the curve for dynamic roads.
-							newRoad.dynamicCurve = new BezierCurve(startPosition.copy().subtract(blockPlacementPoint), endPosition.copy().subtract(blockPlacementPoint), (float) startRotation, (float) endRotation);
+							newRoad.dynamicCurve = new BezierCurve(startPosition, endPosition, (float) startRotation, (float) endRotation);
 							
 							//Try to spawn all the collision blocks for this road.
 							//If we spawn blocks, we create all collision points and join the road's connections.
@@ -208,7 +210,7 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 								}
 								
 								//Set new points.
-								lastRoadClickedData.put(player, newRoad.getClickData(blockPlacementPoint, false));
+								lastRoadClickedData.put(player, newRoad.getClickData(newRoad.position, false));
 								lastPositionClicked.put(player, newRoad.position);
 								lastRotationClicked.put(player, startRotation + 180D);
 							}

@@ -64,7 +64,7 @@ public class JSONRoadComponent extends AJSONMultiModelProvider{
     
     public class JSONLaneSectorPointSet{
     	@JSONRequired
-    	@JSONDescription("The starting point for this lane.  Note that vehicles arriving at junctions will only transition to the next road segment if there's a start position for it.  This allows for merge areas where two lanes go into one, as well as one-way roads.")
+    	@JSONDescription("The starting point for this lane.  Note that vehicles arriving at junctions will only transition to the next road segment if there's a start position for it.  This allows for merge areas where two lanes go into one, as well as one-way roads.  Note that this point does not take into account the collision height of the road: you must account for this as needed.")
     	public Point3D startPoint;
     	
     	@JSONRequired

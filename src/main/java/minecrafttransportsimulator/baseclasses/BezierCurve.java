@@ -21,8 +21,8 @@ public class BezierCurve{
 	public static final int CURVE_STEP = 16;
 	
 	public BezierCurve(Point3D startPos, Point3D endPos, float startAngle, float endAngle){
-		this.startPos = startPos;
-		this.endPos = endPos;
+		this.startPos = startPos.copy();
+		this.endPos = endPos.copy();
 		this.startAngle = startAngle;
 		this.endAngle = endAngle;
 		final float[] startPoint = new float[]{(float)startPos.x, (float)startPos.y, (float)startPos.z};

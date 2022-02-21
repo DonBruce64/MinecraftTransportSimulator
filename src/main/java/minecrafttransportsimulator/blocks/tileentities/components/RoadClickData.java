@@ -33,26 +33,28 @@ public class RoadClickData{
 			//So if we are calculating curve endpoints, the angles will be flipped 180 to account for this.
 			if(clickedStart){
 				//Clicked start of the road curve segment.
-				//If this is for the start of the curve, we need to offset the position in the opposite direction to account for the different curve paths.
-				//If this is for the end of a curve, just use the point as-is as the end point will be this curve's start point.
+				//If this is for the start of a curve, we need to offset the position in the opposite direction to account for the different curve paths.
+				//If this is for the end of a curve, just use the point as-is as the end point will be the new curve's start point.
 				//Rotation here needs to be the opposite of the start rotation of the clicked curve, as our curve is going the opposite direction.
 				genRotation = roadClicked.dynamicCurve.startAngle + 180;
-				genPosition = roadClicked.definition.road.cornerOffset.copy();
 				if(curveStart){
-					genPosition.add(roadClicked.definition.road.roadWidth, 0, 0);
+					genPosition = new Point3D(roadClicked.definition.road.roadWidth, 0, 0).rotateY(roadClicked.dynamicCurve.startAngle);
+				}else{
+					genPosition = new Point3D();
 				}
-				genPosition.rotateY(roadClicked.dynamicCurve.startAngle).add(roadClicked.position);
+				genPosition.add(roadClicked.dynamicCurve.startPos);
 			}else{
 				//Clicked end of the road curve segment.
-				//If this is for the start of the curve, just use the point as-is as the end point will be this curve's start point.
+				//If this is for the start of a curve, just use the point as-is as the end point will be the new curve's start point.
 				//If this is for the end of a curve, we need to offset the position in the opposite direction to account for the different curve paths.
 				//Rotation here needs to be the opposite of the end rotation of the clicked curve, as our curve is going the opposite direction.
 				genRotation = roadClicked.dynamicCurve.endAngle + 180;
-				genPosition = roadClicked.definition.road.cornerOffset.copy();
 				if(!curveStart){
-					genPosition.add(roadClicked.definition.road.roadWidth, 0, 0);
+					genPosition = new Point3D(roadClicked.definition.road.roadWidth, 0, 0).rotateY(roadClicked.dynamicCurve.endAngle + 180);
+				}else{
+					genPosition = new Point3D();
 				}
-				genPosition.rotateY(roadClicked.dynamicCurve.startAngle).add(roadClicked.position);
+				genPosition.add(roadClicked.dynamicCurve.endPos);
 			}
 			lanesOccupied = areDynamicLanesOccupied();
 		}else{
