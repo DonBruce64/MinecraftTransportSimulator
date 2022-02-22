@@ -653,7 +653,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 					Point3D desiredVector = frontFollower.getCurrentPoint().subtract(rearDesiredPoint);
 					double yawDelta = Math.toDegrees(Math.atan2(desiredVector.x, desiredVector.z));
 					double pitchDelta = -Math.toDegrees(Math.atan2(desiredVector.y, Math.hypot(desiredVector.x, desiredVector.z)));
-					double rollDelta = 0;
+					double rollDelta = rearFollower.getCurrentRotation().z;
 					roadRotation.set(pitchDelta - angles.x, yawDelta, rollDelta - angles.z);
 					roadRotation.y = roadRotation.getClampedYDelta(angles.y);
 					if(!world.isClient()){

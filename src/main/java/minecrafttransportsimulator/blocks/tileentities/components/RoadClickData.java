@@ -37,7 +37,7 @@ public class RoadClickData{
 				//If this is for the start of a curve, we need to offset the position in the opposite direction to account for the different curve paths.
 				//If this is for the end of a curve, just use the point as-is as the end point will be the new curve's start point.
 				//Rotation here needs to be the opposite of the start rotation of the clicked curve, as our curve is going the opposite direction.
-				genRotation = new RotationMatrix().set(roadClicked.dynamicCurve.startRotation).rotateY(180);
+				genRotation = new RotationMatrix().rotateY(180).multiply(roadClicked.dynamicCurve.startRotation);
 				if(curveStart){
 					genPosition = new Point3D(roadClicked.definition.road.roadWidth, 0, 0).rotate(roadClicked.dynamicCurve.startRotation);
 				}else{
@@ -49,9 +49,9 @@ public class RoadClickData{
 				//If this is for the start of a curve, just use the point as-is as the end point will be the new curve's start point.
 				//If this is for the end of a curve, we need to offset the position in the opposite direction to account for the different curve paths.
 				//Rotation here needs to be the opposite of the end rotation of the clicked curve, as our curve is going the opposite direction.
-				genRotation = new RotationMatrix().set(roadClicked.dynamicCurve.endRotation).rotateY(180);
+				genRotation = new RotationMatrix().rotateY(180).set(roadClicked.dynamicCurve.endRotation);
 				if(!curveStart){
-					genPosition = new Point3D(roadClicked.definition.road.roadWidth, 0, 0).rotate(roadClicked.dynamicCurve.endRotation).rotateY(180);
+					genPosition = new Point3D(roadClicked.definition.road.roadWidth, 0, 0).rotateY(180).rotate(roadClicked.dynamicCurve.endRotation);
 				}else{
 					genPosition = new Point3D();
 				}
@@ -63,7 +63,7 @@ public class RoadClickData{
 			//If this is for the start of the curve, we need to offset the position in the opposite direction to account for the different curve paths.
 			//If this is for the end of a curve, just use the point as-is as the end point will be this curve's start point.
 			//Rotation here needs to be the opposite of the start rotation of the starting sector segment, as our curve is going the opposite direction.
-			genRotation = new RotationMatrix().set(roadClicked.orientation).multiply(sectorClicked.sectorStartAngles).rotateY(180);
+			genRotation = new RotationMatrix().set(roadClicked.orientation).rotateY(180).multiply(sectorClicked.sectorStartAngles);
 			genPosition = sectorClicked.sectorStartPos.copy().rotate(roadClicked.orientation).add(roadClicked.position);
 			if(curveStart){
 				genPosition.add(new Point3D(-sectorClicked.borderOffset, 0, 0).rotate(genRotation));

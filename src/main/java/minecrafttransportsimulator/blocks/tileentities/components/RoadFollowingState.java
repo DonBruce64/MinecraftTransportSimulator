@@ -109,4 +109,18 @@ public class RoadFollowingState{
 		curve.offsetPointByPositionAt(currentPoint, currentSegment);
 		return currentPoint;
 	}
+	
+	/**
+	 * Returns the current rotation on this curve we set to in the world.
+	 * This should be called AFTER {@link #updateCurvePoints(float, int)},
+	 * otherwise you may get out of the curve's bounds.
+	 */
+	public Point3D getCurrentRotation(){
+		Point3D currentRotation = new Point3D();
+		curve.setPointToRotationAt(currentRotation, currentSegment);
+		if(!goingForwards){
+			currentRotation.z = -currentRotation.z;
+		}
+		return currentRotation;
+	}
 }

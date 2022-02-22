@@ -165,6 +165,9 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 				//Set motion to new orientation.
 				targetVector.set(0, 0, motion.length()).rotate(orientation);
 				motion.set(targetVector);
+				
+				//Update target distance.
+				targetDistance = targetPosition.distanceTo(position);
 			}
 		}	
 		

@@ -196,7 +196,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 			double closestSectorDistance = Double.MAX_VALUE;
 			for(RoadLane lane : lanes){
 				//Only check start points.  End points are for other sectors.
-				double distanceToSectorStart = lane.curves.get(0).startPos.distanceTo(blockOffsetClicked);
+				double distanceToSectorStart = lane.curves.get(0).startPos.distanceTo(blockClicked);
 				if(distanceToSectorStart < closestSectorDistance){
 					closestSectorDistance = distanceToSectorStart;
 					closestSector = definition.road.sectors.get(lane.sectorNumber);
@@ -279,7 +279,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 			for(JSONRoadCollisionArea collisionArea : definition.road.collisionAreas){
 				for(double x=collisionArea.firstCorner.x+0.01; x<collisionArea.secondCorner.x+0.5; x += 0.5){
 					for(double z=collisionArea.firstCorner.z+0.01; z<collisionArea.secondCorner.z+0.5; z += 0.5){
-						Point3D testPoint = new Point3D(x, 0, z).rotate(orientation);
+						Point3D testPoint = new Point3D(x, collisionArea.firstCorner.y, z).rotate(orientation);
 						testPoint.x = (int) testPoint.x;
 						testPoint.z = (int) testPoint.z;
 						
@@ -290,7 +290,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 								//Need a collision box here.
 								testPoint.subtract(position);
 								collisionBlockOffsets.add(testPoint);
-								collisionHeightMap.put(testPoint, collisionArea.collisionHeight);
+								collisionHeightMap.put(testPoint, collisionArea.collisionHeight == 16 ? 15 : collisionArea.collisionHeight);
 							}else if(!(world.getBlock(testPoint) instanceof BlockCollision)){
 								//Some block is blocking us that's not part of a road.  Flag it.
 								testPoint.subtract(position);

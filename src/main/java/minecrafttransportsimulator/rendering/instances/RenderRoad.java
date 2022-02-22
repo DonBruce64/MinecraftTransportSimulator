@@ -233,13 +233,16 @@ public class RenderRoad extends ARenderEntityDefinable<TileEntityRoad>{
 		//Create the information hashes.
 		Point3D point1 = new Point3D();
 		Point3D point2 = new Point3D();
+		Point3D rotation = new Point3D();
 		RenderableObject curveObject;
 		if(road.dynamicCurve != null){
 			//Render actual curve.
 			curveObject = new RenderableObject(ColorRGB.GREEN, (int) (road.dynamicCurve.pathLength*10));
 			for(float f=0; curveObject.vertices.hasRemaining(); f+=0.1){
 				road.dynamicCurve.setPointToPositionAt(point1, f);
-				curveObject.addLine((float) point1.x, (float) point1.y, (float) point1.z, (float) point1.x, (float) point1.y + 1.0F, (float) point1.z);
+				road.dynamicCurve.setPointToRotationAt(rotation, f);
+				point2.set(0, 1, 0).rotateFine(rotation).add(point1);
+				curveObject.addLine(point1, point2);
 			}
 			curveObject.vertices.flip();
 			road.devRenderables.add(curveObject);
@@ -247,11 +250,16 @@ public class RenderRoad extends ARenderEntityDefinable<TileEntityRoad>{
 			//Render the border bounds.
 			curveObject = new RenderableObject(ColorRGB.CYAN, (int) (road.dynamicCurve.pathLength*10));
 			for(float f=0; curveObject.vertices.hasRemaining(); f+=0.1){
-				road.dynamicCurve.setPointToRotationAt(point2, f);
+				road.dynamicCurve.setPointToPositionAt(point1, f);
+				road.dynamicCurve.setPointToRotationAt(rotation, f);
+				
+				road.dynamicCurve.setPointToRotationAt(rotation, f);
 				point1.set(road.definition.road.roadWidth, 0, 0);
-				point1.rotateFine(point2);
+				point2.set(point1).add(0, 1, 0).rotateFine(rotation);
+				point1.rotateFine(rotation);
 				road.dynamicCurve.offsetPointByPositionAt(point1, f);
-				curveObject.addLine((float) point1.x, (float) point1.y, (float) point1.z, (float) point1.x, (float) point1.y + 1.0F, (float) point1.z);
+				road.dynamicCurve.offsetPointByPositionAt(point2, f);
+				curveObject.addLine(point1, point2);
 			}
 			curveObject.vertices.flip();
 			road.devRenderables.add(curveObject);
@@ -262,9 +270,20 @@ public class RenderRoad extends ARenderEntityDefinable<TileEntityRoad>{
 			for(BezierCurve laneCurve : lane.curves){
 				//Render the curve bearing indicator
 				curveObject = new RenderableObject(ColorRGB.RED, 2);
-				Point3D bearingPos = laneCurve.endPos.copy().subtract(laneCurve.startPos).normalize().add(laneCurve.startPos);
-				curveObject.addLine((float) laneCurve.startPos.x, (float) laneCurve.startPos.y, (float) laneCurve.startPos.z, (float) laneCurve.startPos.x, (float) laneCurve.startPos.y + 3.0F, (float) laneCurve.startPos.z);
-				curveObject.addLine((float) laneCurve.startPos.x, (float) laneCurve.startPos.y + 3.0F, (float) laneCurve.startPos.z, (float) bearingPos.x, (float) bearingPos.y + 3.0F, (float) bearingPos.z);
+				
+				//Render vertical segment.
+				laneCurve.setPointToRotationAt(rotation, 0);
+				laneCurve.setPointToPositionAt(point1, 0);
+				point2.set(0, 3, 0).rotateFine(rotation).add(point1);
+				curveObject.addLine(point1, point2);
+				
+				//Render 1-unit path delta.
+				point1.set(point2);
+				laneCurve.setPointToRotationAt(rotation, 1);
+				point1.set(0, 3, 0).rotateFine(rotation);
+				laneCurve.offsetPointByPositionAt(point1, 1);
+				curveObject.addLine(point1, point2);
+				
 				curveObject.vertices.flip();
 				road.devRenderables.add(curveObject);
 				
@@ -272,7 +291,9 @@ public class RenderRoad extends ARenderEntityDefinable<TileEntityRoad>{
 				curveObject = new RenderableObject(ColorRGB.YELLOW, (int) (laneCurve.pathLength*10));
 				for(float f=0; curveObject.vertices.hasRemaining(); f+=0.1){
 					laneCurve.setPointToPositionAt(point1, f);
-					curveObject.addLine((float) point1.x, (float) point1.y, (float) point1.z, (float) point1.x, (float) point1.y + 1.0F, (float) point1.z);
+					laneCurve.setPointToRotationAt(rotation, f);
+					point2.set(0, 1, 0).rotateFine(rotation).add(point1);
+					curveObject.addLine(point1, point2);
 				}
 				curveObject.vertices.flip();
 				road.devRenderables.add(curveObject);
@@ -290,17 +311,13 @@ public class RenderRoad extends ARenderEntityDefinable<TileEntityRoad>{
 						if(otherLane != null){
 							curveObject = new RenderableObject(ColorRGB.PINK, 3);
 							
-							//Get the first connection point.
+							//Get the connection point.
 							currentCurve.setPointToPositionAt(point1, 0.5F);
+							currentCurve.setPointToRotationAt(rotation, 0.5F);
+							point2.set(0, 2.0, 0).rotateFine(rotation).add(point1);
 							
-							//Get the other connection point.
-							BezierCurve otherCurve = otherLane.curves.get(priorConnection.curveNumber);
-							otherCurve.setPointToPositionAt(point2, priorConnection.connectedToStart ? 0.5F : otherCurve.pathLength - 0.5F);
-							
-							//Render U-shaped joint.
-							curveObject.addLine((float) point1.x, (float) point1.y + 3.0F, (float) point1.z, (float) point1.x, (float) point1.y + 0.5F, (float) point1.z);
-							curveObject.addLine((float) point1.x, (float) point1.y + 0.5F, (float) point1.z, (float) point2.x, (float) point2.y + 0.5F, (float) point2.z);
-							curveObject.addLine((float) point2.x, (float) point2.y + 0.5F, (float) point2.z, (float) point2.x, (float) point2.y + 2.0F, (float) point2.z);
+							//Render marker.
+							curveObject.addLine(point1, point2);
 							curveObject.vertices.flip();
 							road.devRenderables.add(curveObject);
 						}
@@ -318,17 +335,13 @@ public class RenderRoad extends ARenderEntityDefinable<TileEntityRoad>{
 						if(otherLane != null){
 							curveObject = new RenderableObject(ColorRGB.ORANGE, 3);
 							
-							//Get the first connection point.
+							//Get the connection point.
 							currentCurve.setPointToPositionAt(point1, currentCurve.pathLength - 0.5F);
+							currentCurve.setPointToRotationAt(rotation, currentCurve.pathLength - 0.5F);
+							point2.set(0, 2.0, 0).rotateFine(rotation).add(point1);
 							
-							//Get the other connection point.
-							BezierCurve otherCurve = otherLane.curves.get(nextConnection.curveNumber);
-							otherCurve.setPointToPositionAt(point2, nextConnection.connectedToStart ? 0.5F : otherCurve.pathLength - 0.5F);
-							
-							//Render U-shaped joint.
-							curveObject.addLine((float) point1.x, (float) point1.y + 3.0F, (float) point1.z, (float) point1.x, (float) point1.y + 0.5F, (float) point1.z);
-							curveObject.addLine((float) point1.x, (float) point1.y + 0.5F, (float) point1.z, (float) point2.x, (float) point2.y + 0.5F, (float) point2.z);
-							curveObject.addLine((float) point2.x, (float) point2.y + 0.5F, (float) point2.z, (float) point2.x, (float) point2.y + 2.0F, (float) point2.z);
+							//Render marker.
+							curveObject.addLine(point1, point2);
 							curveObject.vertices.flip();
 							road.devRenderables.add(curveObject);
 						}

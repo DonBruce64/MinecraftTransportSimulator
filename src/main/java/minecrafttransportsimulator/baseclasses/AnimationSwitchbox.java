@@ -107,8 +107,7 @@ public class AnimationSwitchbox{
 		//Found translation.  This gets applied in the translation axis direction directly.
 		double variableValue = entity.getAnimatedVariableValue(clock, clock.animationAxisMagnitude, partialTicks);
 		if(variableValue != 0){
-			helperPoint.set(clock.animationAxisNormalized);
-			helperPoint.scale(variableValue);
+			helperPoint.set(clock.animationAxisNormalized).scale(variableValue);
 			netMatrix.applyTranslation(helperPoint);
 			translation.add(helperPoint);
 		}
@@ -150,7 +149,7 @@ public class AnimationSwitchbox{
 	public void runScaling(DurationDelayClock clock, float partialTicks){
 		//Found scaling.  Get scale that needs to be applied.
 		double variableValue = entity.getAnimatedVariableValue(clock, clock.animationAxisMagnitude, partialTicks);
-		helperScalingVector.set(clock.animation.axis).scale(variableValue);
+		helperScalingVector.set(clock.animationAxisNormalized).scale(variableValue);
 		//Check for 0s and remove them.
 		if(helperScalingVector.x == 0)helperScalingVector.x = 1.0;
 		if(helperScalingVector.y == 0)helperScalingVector.z = 1.0;

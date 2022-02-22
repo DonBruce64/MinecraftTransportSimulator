@@ -143,6 +143,7 @@ public class InterfaceEventsEntityRendering{
     		//This ensures the blending state is as it will be for the main rendering pass of -1.
     		InterfaceRender.setBlend(false);
     		GL11.glEnable(GL11.GL_ALPHA_TEST);
+    		GL11.glDisable(GL11.GL_DEPTH_TEST);
 			
 			//Enable lighting.
 			RenderHelper.enableStandardItemLighting();
@@ -181,10 +182,11 @@ public class InterfaceEventsEntityRendering{
 	    		GL11.glPopMatrix();
 	    	}
 			
-			//Set lighting back to normal.
+			//Set state back to normal.
 			InterfaceRender.setLightingState(false);
 			Minecraft.getMinecraft().entityRenderer.disableLightmap();
 			RenderHelper.disableStandardItemLighting();
+			GL11.glEnable(GL11.GL_DEPTH_TEST);
 			GL11.glScalef(1.0F, -1.0F, 1.0F);
     	}
     }

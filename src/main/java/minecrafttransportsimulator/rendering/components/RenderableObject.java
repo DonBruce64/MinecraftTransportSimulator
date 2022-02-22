@@ -4,6 +4,7 @@ import java.nio.FloatBuffer;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.mcinterface.InterfaceRender;
 
@@ -175,13 +176,13 @@ public class RenderableObject{
 	
 	/**Adds a line to the {@link #vertices} of this object.
 	 */
-	public void addLine(float x1, float y1, float z1, float x2, float y2, float z2){
-		vertices.put(x1);
-		vertices.put(y1);
-		vertices.put(z1);
-		vertices.put(x2);
-		vertices.put(y2);
-		vertices.put(z2);
+	public void addLine(Point3D point1, Point3D point2){
+		vertices.put((float) point1.x);
+		vertices.put((float) point1.y);
+		vertices.put((float) point1.z);
+		vertices.put((float) point2.x);
+		vertices.put((float) point2.y);
+		vertices.put((float) point2.z);
 	}
 	
 	/**sets the holographic {@link BoundingBox} box to the {@link #vertices} of this object.
