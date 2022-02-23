@@ -212,15 +212,13 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 			}
 		}
 		
-		if(definition.rendering != null){
-			if(definition.rendering.animatedObjects != null){
-				animatedObjectDefinitions.clear();
-				animatedObjectSwitchboxes.clear();
-				for(JSONAnimatedObject animatedDef : definition.rendering.animatedObjects){
-					animatedObjectDefinitions.put(animatedDef.objectName, animatedDef);
-					if(animatedDef.animations != null){
-						animatedObjectSwitchboxes.put(animatedDef.objectName, new AnimationSwitchbox(this, animatedDef.animations));
-					}
+		if(definition.rendering != null && definition.rendering.animatedObjects != null){
+			animatedObjectDefinitions.clear();
+			animatedObjectSwitchboxes.clear();
+			for(JSONAnimatedObject animatedDef : definition.rendering.animatedObjects){
+				animatedObjectDefinitions.put(animatedDef.objectName, animatedDef);
+				if(animatedDef.animations != null){
+					animatedObjectSwitchboxes.put(animatedDef.objectName, new AnimationSwitchbox(this, animatedDef.animations));
 				}
 			}
 		}

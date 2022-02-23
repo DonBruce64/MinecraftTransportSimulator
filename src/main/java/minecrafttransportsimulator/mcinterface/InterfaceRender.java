@@ -9,8 +9,10 @@ import java.nio.DoubleBuffer;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
@@ -19,8 +21,8 @@ import javax.imageio.stream.ImageInputStream;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.rendering.components.GIFParser;
 import minecrafttransportsimulator.rendering.components.GIFParser.ParsedGIF;
@@ -44,6 +46,7 @@ public class InterfaceRender{
 	private static final Map<String, ResourceLocation> internalTextures = new HashMap<String, ResourceLocation>();
 	private static final Map<String, Integer> onlineTextures = new HashMap<String, Integer>();
 	private static final Map<String, ParsedGIF> animatedGIFs = new HashMap<String, ParsedGIF>();
+	private static final Map<WrapperItemStack, TransformationMatrix> stacksToRender = new LinkedHashMap<WrapperItemStack, TransformationMatrix>();
 	private static float lastLightmapX;
 	private static float lastLightmapY;
 	
@@ -54,24 +57,34 @@ public class InterfaceRender{
 	 *  Renders the item model for the passed-in stack.  Only
 	 *  renders the item model: does not render text for counts.
 	 */
-	//FIXME make this do a batch call rather than individual.
 	public static void renderItemModel(WrapperItemStack stack, TransformationMatrix transform){
-		GL11.glPushMatrix();
-		setInternalLightingState(false);
-		
-		//Apply existing transform.
-		applyTransformOpenGL(transform, false);
-		
-		//Need to translate back to pre-undo the renderer offset.
-		float offset = 100.0F + Minecraft.getMinecraft().getRenderItem().zLevel;
-		GL11.glTranslated(0, 0, -offset);
-		
-		//Now invert y-axis scaling to account for GUI scaling differences.
-		GL11.glScalef(1, -1, 1);
-		
-		Minecraft.getMinecraft().getRenderItem().renderItemIntoGUI(stack.stack, 0, 0);
-		setInternalLightingState(true);
-		GL11.glPopMatrix();
+		stacksToRender.put(stack, transform);
+	}
+	
+	/**
+	 *  Does the actual stack render.  Put into a batch at the end of GUI rendering as item
+	 *  stack rendering changes the OpenGL state and can muck up normal rendering.
+	 */
+	protected static void renderAllStacks(){
+		for(Entry<WrapperItemStack, TransformationMatrix> stackEntry : stacksToRender.entrySet()){
+			GL11.glPushMatrix();
+			setInternalLightingState(false);
+			
+			//Apply existing transform.
+			applyTransformOpenGL(stackEntry.getValue(), false);
+			
+			//Need to translate back to pre-undo the renderer offset.
+			float offset = 100.0F + Minecraft.getMinecraft().getRenderItem().zLevel;
+			GL11.glTranslated(0, 0, -offset);
+			
+			//Now invert y-axis scaling to account for GUI scaling differences.
+			GL11.glScalef(1, -1, 1);
+			
+			Minecraft.getMinecraft().getRenderItem().renderItemIntoGUI(stackEntry.getKey().stack, 0, 0);
+			setInternalLightingState(true);
+			GL11.glPopMatrix();
+		}
+		stacksToRender.clear();
 	}
 	
 	/**

@@ -15,7 +15,7 @@ public class BezierCurve{
 	
 	//Cached point data.
 	private final float[][] cachedPathPoints;
-	private final float[][] cachedPathRotations;
+	private final RotationMatrix[] cachedPathRotations;
 	
 	/**Steps between curve calculations.  This is how many intermediate calculations we do between 1-block steps.**/
 	public static final int CURVE_STEP = 16;
@@ -39,15 +39,17 @@ public class BezierCurve{
 		float[] pathPointsZ = getCachedPathPoints(startPoint[2], endPoint[2], startCurvePoint[2], endCurvePoint[2], pathLength);
 		
 		this.cachedPathPoints = new float[Math.round(pathLength*CURVE_STEP) + 1][3];
-		this.cachedPathRotations = new float[Math.round(pathLength*CURVE_STEP) + 1][3];
+		this.cachedPathRotations = new RotationMatrix[Math.round(pathLength*CURVE_STEP) + 1];
 		for(int i=0; i<cachedPathPoints.length; ++i){
 			cachedPathPoints[i][0] = pathPointsX[i];
 			cachedPathPoints[i][1] = pathPointsY[i];
 			cachedPathPoints[i][2] = pathPointsZ[i];
 			if(i > 0){
-				cachedPathRotations[i][0] = (float) -Math.toDegrees(Math.atan((cachedPathPoints[i][1] - cachedPathPoints[i - 1][1])/Math.hypot(cachedPathPoints[i][0] - cachedPathPoints[i - 1][0], cachedPathPoints[i][2] - cachedPathPoints[i - 1][2])));
-				cachedPathRotations[i][1] = (float) ((360 + Math.toDegrees(Math.atan2(cachedPathPoints[i][0] - cachedPathPoints[i - 1][0], cachedPathPoints[i][2] - cachedPathPoints[i - 1][2])))%360);
-				cachedPathRotations[i][2] = (float) (startAngles.z + (endAngles.z - startAngles.z)*i/cachedPathPoints.length);
+				RotationMatrix rotation = new RotationMatrix();
+				rotation.angles.x = -Math.toDegrees(Math.atan((cachedPathPoints[i][1] - cachedPathPoints[i - 1][1])/Math.hypot(cachedPathPoints[i][0] - cachedPathPoints[i - 1][0], cachedPathPoints[i][2] - cachedPathPoints[i - 1][2])));
+				rotation.angles.y = (360 + Math.toDegrees(Math.atan2(cachedPathPoints[i][0] - cachedPathPoints[i - 1][0], cachedPathPoints[i][2] - cachedPathPoints[i - 1][2])))%360;
+				rotation.angles.z = startAngles.z + (endAngles.z - startAngles.z)*i/cachedPathPoints.length;
+				cachedPathRotations[i] = rotation.setToAngles(rotation.angles);
 			}
 		}
 		
@@ -60,16 +62,12 @@ public class BezierCurve{
 	 * pathLength than the curve it was generated from.  Used to create parallel paths from a common curve.
 	 */
 	public BezierCurve generateOffsetCurve(float offset){
-		Point3D testRotation = new Point3D();
-		
 		Point3D newStartPos = new Point3D(offset, 0, 0);
-		setPointToRotationAt(testRotation, 0);
-		newStartPos.rotateFine(testRotation);
+		getRotationAt(0).rotate(newStartPos);
 		offsetPointByPositionAt(newStartPos, 0);
 		
 		Point3D newEndPos = new Point3D(offset, 0, 0);
-		setPointToRotationAt(testRotation, pathLength);
-		newEndPos.rotateFine(testRotation);
+		getRotationAt(pathLength).rotate(newEndPos);
 		offsetPointByPositionAt(newEndPos, pathLength);
 		
 		return new BezierCurve(newStartPos, newEndPos, startRotation, endRotation);
@@ -105,11 +103,10 @@ public class BezierCurve{
 	}
 	
 	/**
-	 * Sets the passed-in Point3d to the cached value of rotation point at the passed-in segment location.
+	 * Returns the cached rotation matrix value of rotation at the passed-in segment location.
 	 */
-	public void setPointToRotationAt(Point3D rotation, float segmentPoint){
-		float[] cachedRotation = cachedPathRotations[Math.round(segmentPoint*CURVE_STEP)];
-		rotation.set(cachedRotation[0], cachedRotation[1], cachedRotation[2]);
+	public RotationMatrix getRotationAt(float segmentPoint){
+		return cachedPathRotations[Math.round(segmentPoint*CURVE_STEP)];
 	}
 	
 	/**

@@ -110,10 +110,20 @@ public class InterfaceEventsEntityRendering{
      */
 	@SubscribeEvent
     public static void on(RenderGameOverlayEvent.Pre event){
-		//If we are rendering the custom camera overlay, block the hotbar and crosshairs.
-		if((event.getType().equals(RenderGameOverlayEvent.ElementType.HOTBAR) || event.getType().equals(RenderGameOverlayEvent.ElementType.CROSSHAIRS))  && CameraSystem.customCameraOverlay != null){
+		//If we are rendering the custom camera overlay, block the crosshairs and the hotbar..
+		if((event.getType().equals(RenderGameOverlayEvent.ElementType.CROSSHAIRS) || event.getType().equals(RenderGameOverlayEvent.ElementType.HOTBAR)) && CameraSystem.customCameraOverlay != null){
 			event.setCanceled(true);
 			return;
+		}
+		
+		//If we are seated in a controller seat, and are rendering GUIs, disable the hotbar.
+		if(event.getType().equals(RenderGameOverlayEvent.ElementType.HOTBAR) && (InterfaceClient.inFirstPerson() ? ConfigSystem.configObject.clientRendering.renderHUD_1P.value : ConfigSystem.configObject.clientRendering.renderHUD_3P.value)){
+			WrapperPlayer player = InterfaceClient.getClientPlayer();
+			AEntityE_Interactable<?> ridingEntity = player.getEntityRiding();
+			if(ridingEntity instanceof AEntityF_Multipart && ((AEntityF_Multipart<?>) ridingEntity).getSeatForRider(player).placementDefinition.isController){
+				event.setCanceled(true);
+				return;
+			}
 		}
     	
     	//Do overlay rendering before the chat window is rendered.
@@ -143,7 +153,6 @@ public class InterfaceEventsEntityRendering{
     		//This ensures the blending state is as it will be for the main rendering pass of -1.
     		InterfaceRender.setBlend(false);
     		GL11.glEnable(GL11.GL_ALPHA_TEST);
-    		GL11.glDisable(GL11.GL_DEPTH_TEST);
 			
 			//Enable lighting.
 			RenderHelper.enableStandardItemLighting();
@@ -165,6 +174,7 @@ public class InterfaceEventsEntityRendering{
 	    			GL11.glTranslated(0, 0, -500 + 250*displayGUIIndex++);
 	    		}
 	    		gui.render(mouseX, mouseY, false, partialTicks);
+	    		InterfaceRender.renderAllStacks();
 	    		GL11.glPopMatrix();
 	    	}
 			displayGUIIndex = 0;

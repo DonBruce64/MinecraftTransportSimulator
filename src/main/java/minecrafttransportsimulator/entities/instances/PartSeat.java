@@ -60,10 +60,13 @@ public final class PartSeat extends APart{
 							entityOn.addRider(player, placementOffset);
 							//If this seat can control a gun, and isn't controlling one, set it now.
 							//This prevents the need to select a gun when initially mounting.
+							//Only do this if we don't allow for no gun selection.
 							//If we do have an active gun, validate that it's still correct.
 							if(activeGun == null){
-								setNextActiveGun();
-								InterfacePacket.sendToAllClients(new PacketPartSeat(this));
+								if(!placementDefinition.canDisableGun){
+									setNextActiveGun();
+									InterfacePacket.sendToAllClients(new PacketPartSeat(this));
+								}
 							}else{
 								for(AItemPart partItem : entityOn.partsByItem.keySet()){
 									if(partItem.definition.gun != null){
@@ -182,7 +185,7 @@ public final class PartSeat extends APart{
 	@Override
 	public void update(){
 		super.update();
-		if(!canControlGuns && activeGun != null){
+		if(!canControlGuns && (activeGun != null || placementDefinition.canDisableGun)){
 			canControlGuns = true;
 		}
 	}

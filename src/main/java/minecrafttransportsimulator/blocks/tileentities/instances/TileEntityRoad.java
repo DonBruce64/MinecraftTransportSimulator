@@ -242,15 +242,10 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 			//Get all the points that make up our collision points for our dynamic curve.
 			//If we find any colliding points, note them.
 			Point3D testOffset = new Point3D();
-			Point3D testRotation = new Point3D();
 			float segmentDelta = (float) (definition.road.roadWidth/(Math.floor(definition.road.roadWidth) + 1));
 			for(float f=0; f<dynamicCurve.pathLength; f+=0.1){
 				for(float offset=0; offset <= definition.road.roadWidth; offset += segmentDelta){
-					dynamicCurve.setPointToRotationAt(testRotation, f);
-					//We only want yaw for block placement.
-					testRotation.x = 0;
-					testRotation.z = 0;
-					testOffset.set(offset, 0, 0).rotateFine(testRotation);
+					testOffset.set(offset, 0, 0).rotate(dynamicCurve.getRotationAt(f));
 					dynamicCurve.offsetPointByPositionAt(testOffset, f);
 					testOffset.subtract(position);
 					Point3D testPoint = new Point3D((int) testOffset.x, (int) Math.floor(testOffset.y), (int) testOffset.z);

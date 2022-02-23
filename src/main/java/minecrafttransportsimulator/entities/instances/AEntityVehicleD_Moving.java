@@ -306,7 +306,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 							for(float f=0; f<curve.pathLength; ++f){
 								curve.setPointToPositionAt(testPoint, f);
 								if(testPoint.isDistanceToCloserThan(contactPoint, 1)){
-									curve.setPointToRotationAt(testRotation, f);
+									testRotation = curve.getRotationAt(f).angles;
 									boolean sameDirection = Math.abs(testRotation.getClampedYDelta(angles.y)) < 10;
 									boolean oppositeDirection = Math.abs(testRotation.getClampedYDelta(angles.y)) > 170;
 									if(sameDirection || oppositeDirection){
@@ -653,7 +653,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 					Point3D desiredVector = frontFollower.getCurrentPoint().subtract(rearDesiredPoint);
 					double yawDelta = Math.toDegrees(Math.atan2(desiredVector.x, desiredVector.z));
 					double pitchDelta = -Math.toDegrees(Math.atan2(desiredVector.y, Math.hypot(desiredVector.x, desiredVector.z)));
-					double rollDelta = rearFollower.getCurrentRotation().z;
+					double rollDelta = rearFollower.getCurrentRotation();
 					roadRotation.set(pitchDelta - angles.x, yawDelta, rollDelta - angles.z);
 					roadRotation.y = roadRotation.getClampedYDelta(angles.y);
 					if(!world.isClient()){

@@ -226,7 +226,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 			for(int i=0; i<definition.instruments.size(); ++i){
 				instruments.add(null);
 				instrumentRenderables.add(null);
-				if(i < instruments.size()){
+				if(i < oldInstruments.size()){
 					ItemInstrument oldInstrument = oldInstruments.get(i);
 					if(oldInstrument != null){
 						addInstrument(oldInstrument, i);

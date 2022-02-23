@@ -8,6 +8,7 @@ import minecrafttransportsimulator.baseclasses.BezierCurve;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.instances.BlockCollision;
@@ -29,9 +30,7 @@ public class RenderRoad extends ARenderEntityDefinable<TileEntityRoad>{
 		if(road.isActive() ^ blendingEnabled){
 			//Render road components.
 			for(RoadComponent component : road.components.keySet()){
-				if(!road.componentRenderables.containsKey(component)){
-					Point3D position = new Point3D();
-					Point3D rotation = new Point3D();
+				if(!road.componentRenderables.containsKey(component)){;
 					ItemRoadComponent componentItem = road.components.get(component);
 					switch(component){
 						case CORE_STATIC: {
@@ -70,8 +69,10 @@ public class RenderRoad extends ARenderEntityDefinable<TileEntityRoad>{
 							}
 							
 							//Core components need to be transformed to wedges.
+							Point3D position = new Point3D();
+							RotationMatrix rotation;
 							Point3D priorPosition = new Point3D();
-							Point3D priorRotation = new Point3D();
+							RotationMatrix priorRotation;
 							Point3D testPoint1 = new Point3D();
 							Point3D testPoint2 = new Point3D();
 							Point3D vertexOffsetPriorLine = new Point3D();
@@ -97,10 +98,10 @@ public class RenderRoad extends ARenderEntityDefinable<TileEntityRoad>{
 								//Get current and prior curve position and rotation.
 								//From this, we know how much to stretch the model to that point's rendering area.
 								road.dynamicCurve.setPointToPositionAt(priorPosition, priorIndex);
-								road.dynamicCurve.setPointToRotationAt(priorRotation, priorIndex);
+								priorRotation = road.dynamicCurve.getRotationAt(priorIndex);
 								priorPosition.subtract(road.dynamicCurve.startPos);
 								road.dynamicCurve.setPointToPositionAt(position, currentIndex);
-								road.dynamicCurve.setPointToRotationAt(rotation, currentIndex);
+								rotation = road.dynamicCurve.getRotationAt(currentIndex);
 								position.subtract(road.dynamicCurve.startPos);
 								
 								//If we are a really sharp curve, we might have inverted our model at the inner corner.
@@ -108,9 +109,9 @@ public class RenderRoad extends ARenderEntityDefinable<TileEntityRoad>{
 								//If we detect this in the last 3 segments, skip right to the end.
 								//This prevents a missing end segment due to collision.
 								testPoint1.set(road.definition.road.roadWidth + road.definition.road.cornerOffset.x, 0, 0);
-								testPoint1.rotateFine(priorRotation).add(priorPosition);
+								testPoint1.rotate(priorRotation).add(priorPosition);
 								testPoint2.set(road.definition.road.roadWidth + road.definition.road.cornerOffset.x, 0, 0);
-								testPoint2.rotateFine(rotation).add(position);
+								testPoint2.rotate(rotation).add(position);
 								if(currentIndex != road.dynamicCurve.pathLength && ((position.x - priorPosition.x)*(testPoint2.x - testPoint1.x) < 0 || (position.z - priorPosition.z)*(testPoint2.z - testPoint1.z) < 0)){
 									if(currentIndex + 3*indexDelta > road.dynamicCurve.pathLength){
 										currentIndex = road.dynamicCurve.pathLength - indexDelta;
@@ -132,9 +133,9 @@ public class RenderRoad extends ARenderEntityDefinable<TileEntityRoad>{
 									float y = parsedVertices.get();
 									float z = parsedVertices.get();
 									vertexOffsetPriorLine.set(x, y, 0);
-									vertexOffsetPriorLine.rotateFine(priorRotation).add(priorPosition);
+									vertexOffsetPriorLine.rotate(priorRotation).add(priorPosition);
 									vertexOffsetCurrentLine.set(x, y, 0);
-									vertexOffsetCurrentLine.rotateFine(rotation).add(position);
+									vertexOffsetCurrentLine.rotate(rotation).add(position);
 									
 									segmentVector.set(vertexOffsetCurrentLine).subtract(vertexOffsetPriorLine).scale(z/road.definition.road.segmentLength);
 									renderedVertex.set(vertexOffsetPriorLine).add(segmentVector);
@@ -233,15 +234,15 @@ public class RenderRoad extends ARenderEntityDefinable<TileEntityRoad>{
 		//Create the information hashes.
 		Point3D point1 = new Point3D();
 		Point3D point2 = new Point3D();
-		Point3D rotation = new Point3D();
+		RotationMatrix rotation;
 		RenderableObject curveObject;
 		if(road.dynamicCurve != null){
 			//Render actual curve.
 			curveObject = new RenderableObject(ColorRGB.GREEN, (int) (road.dynamicCurve.pathLength*10));
 			for(float f=0; curveObject.vertices.hasRemaining(); f+=0.1){
 				road.dynamicCurve.setPointToPositionAt(point1, f);
-				road.dynamicCurve.setPointToRotationAt(rotation, f);
-				point2.set(0, 1, 0).rotateFine(rotation).add(point1);
+				rotation = road.dynamicCurve.getRotationAt(f);
+				point2.set(0, 1, 0).rotate(rotation).add(point1);
 				curveObject.addLine(point1, point2);
 			}
 			curveObject.vertices.flip();
@@ -251,12 +252,12 @@ public class RenderRoad extends ARenderEntityDefinable<TileEntityRoad>{
 			curveObject = new RenderableObject(ColorRGB.CYAN, (int) (road.dynamicCurve.pathLength*10));
 			for(float f=0; curveObject.vertices.hasRemaining(); f+=0.1){
 				road.dynamicCurve.setPointToPositionAt(point1, f);
-				road.dynamicCurve.setPointToRotationAt(rotation, f);
-				
-				road.dynamicCurve.setPointToRotationAt(rotation, f);
+				rotation = road.dynamicCurve.getRotationAt(f);
 				point1.set(road.definition.road.roadWidth, 0, 0);
-				point2.set(point1).add(0, 1, 0).rotateFine(rotation);
-				point1.rotateFine(rotation);
+				
+				point2.set(point1).add(0, 1, 0).rotate(rotation);
+				point1.rotate(rotation);
+				
 				road.dynamicCurve.offsetPointByPositionAt(point1, f);
 				road.dynamicCurve.offsetPointByPositionAt(point2, f);
 				curveObject.addLine(point1, point2);
@@ -272,15 +273,15 @@ public class RenderRoad extends ARenderEntityDefinable<TileEntityRoad>{
 				curveObject = new RenderableObject(ColorRGB.RED, 2);
 				
 				//Render vertical segment.
-				laneCurve.setPointToRotationAt(rotation, 0);
+				rotation = laneCurve.getRotationAt(0);
 				laneCurve.setPointToPositionAt(point1, 0);
-				point2.set(0, 3, 0).rotateFine(rotation).add(point1);
+				point2.set(0, 3, 0).rotate(rotation).add(point1);
 				curveObject.addLine(point1, point2);
 				
 				//Render 1-unit path delta.
 				point1.set(point2);
-				laneCurve.setPointToRotationAt(rotation, 1);
-				point1.set(0, 3, 0).rotateFine(rotation);
+				rotation = laneCurve.getRotationAt(1);
+				point1.set(0, 3, 0).rotate(rotation);
 				laneCurve.offsetPointByPositionAt(point1, 1);
 				curveObject.addLine(point1, point2);
 				
@@ -291,8 +292,8 @@ public class RenderRoad extends ARenderEntityDefinable<TileEntityRoad>{
 				curveObject = new RenderableObject(ColorRGB.YELLOW, (int) (laneCurve.pathLength*10));
 				for(float f=0; curveObject.vertices.hasRemaining(); f+=0.1){
 					laneCurve.setPointToPositionAt(point1, f);
-					laneCurve.setPointToRotationAt(rotation, f);
-					point2.set(0, 1, 0).rotateFine(rotation).add(point1);
+					rotation = laneCurve.getRotationAt(f);
+					point2.set(0, 1, 0).rotate(rotation).add(point1);
 					curveObject.addLine(point1, point2);
 				}
 				curveObject.vertices.flip();
@@ -313,8 +314,8 @@ public class RenderRoad extends ARenderEntityDefinable<TileEntityRoad>{
 							
 							//Get the connection point.
 							currentCurve.setPointToPositionAt(point1, 0.5F);
-							currentCurve.setPointToRotationAt(rotation, 0.5F);
-							point2.set(0, 2.0, 0).rotateFine(rotation).add(point1);
+							rotation = currentCurve.getRotationAt(0.5F);
+							point2.set(0, 2.0, 0).rotate(rotation).add(point1);
 							
 							//Render marker.
 							curveObject.addLine(point1, point2);
@@ -337,8 +338,8 @@ public class RenderRoad extends ARenderEntityDefinable<TileEntityRoad>{
 							
 							//Get the connection point.
 							currentCurve.setPointToPositionAt(point1, currentCurve.pathLength - 0.5F);
-							currentCurve.setPointToRotationAt(rotation, currentCurve.pathLength - 0.5F);
-							point2.set(0, 2.0, 0).rotateFine(rotation).add(point1);
+							rotation = currentCurve.getRotationAt(currentCurve.pathLength - 0.5F);
+							point2.set(0, 2.0, 0).rotate(rotation).add(point1);
 							
 							//Render marker.
 							curveObject.addLine(point1, point2);
