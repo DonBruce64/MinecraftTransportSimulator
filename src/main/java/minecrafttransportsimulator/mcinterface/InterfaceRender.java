@@ -114,10 +114,6 @@ public class InterfaceRender{
 		
 		GL11.glPushMatrix();
 		applyTransformOpenGL(object.transform, false);
-		if(object.isMirrored){
-			GL11.glScalef(-1.0F, 1.0F, 1.0F);
-			GL11.glCullFace(GL11.GL_FRONT);
-		}
 		if(object.cacheVertices){
 			if(object.cachedVertexIndex == -1){
 				object.cachedVertexIndex = cacheVertices(object.vertices);
@@ -128,9 +124,6 @@ public class InterfaceRender{
 			renderLines(object.vertices, object.lineWidth);
 		}else{
 			renderVertices(object.vertices);
-		}
-		if(object.isMirrored){
-			GL11.glCullFace(GL11.GL_BACK);
 		}
 		GL11.glPopMatrix();
 		

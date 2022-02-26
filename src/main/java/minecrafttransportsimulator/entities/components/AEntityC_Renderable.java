@@ -19,9 +19,6 @@ public abstract class AEntityC_Renderable extends AEntityB_Existing{
 	/**The previous scale of this entity.*/
 	public float prevScale = 1.0F;
 	
-	/**The mirrored state of this entity.  Only used for rendering to flip the model across the x-axis.*/
-	public boolean mirrored;
-	
 	/**Constructor for synced entities**/
 	public AEntityC_Renderable(WrapperWorld world, WrapperPlayer placingPlayer, WrapperNBT data){
 		super(world, placingPlayer, data);

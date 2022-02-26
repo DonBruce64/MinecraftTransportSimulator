@@ -180,6 +180,7 @@ public class Point3D{
 	
 	/**
 	 * Returns the dot product between this point and the passed-in point.
+	 * Note: this method assumes both points are normalized.
 	 */
 	public double dotProduct(Point3D point){
 		return this.x*point.x + this.y*point.y + this.z*point.z;
@@ -311,57 +312,6 @@ public class Point3D{
             return factor >= 0.0D && factor <= 1.0D ? delta.scale(factor).add(this) : null;
         }
     }
-	
-	private double lastCalcX;
-	private double lastCalcY;
-	private double lastCalcZ;
-	private boolean calcedOnce;
-	private final double[][] rotationMatrixFine = new double[3][3];
-	/**
-     * Rotates this point about the passed-in angles.  Rotation is done using actual sin
-     * and cos calls via a rotation matrix.  This matrix is cached in this point until the point
-     * is changed, so repeated uses will be faster if you don't create new "angle" objects.
-     */
-	public Point3D rotateFine(Point3D angles){
-		if(!angles.isZero()){
-			//Check if we need to create the matrix for the angles.
-			if(angles.lastCalcX != angles.x || angles.lastCalcY != angles.y || angles.lastCalcZ != angles.z || !angles.calcedOnce){
-				double cosX = Math.cos(Math.toRadians(angles.x));//A
-				double sinX = Math.sin(Math.toRadians(angles.x));//B
-				double cosY = Math.cos(Math.toRadians(angles.y));//C
-				double sinY = Math.sin(Math.toRadians(angles.y));//D
-				double cosZ = Math.cos(Math.toRadians(angles.z));//E
-				double sinZ = Math.sin(Math.toRadians(angles.z));//F
-				angles.rotationMatrixFine[0][0] = cosY*cosZ-sinX*-sinY*sinZ;
-				angles.rotationMatrixFine[0][1] = -sinX*-sinY*cosZ-cosY*sinZ;
-				angles.rotationMatrixFine[0][2] = -cosX*-sinY;
-				angles.rotationMatrixFine[1][0] = cosX*sinZ;
-				angles.rotationMatrixFine[1][1] = cosX*cosZ;
-				angles.rotationMatrixFine[1][2] = -sinX;
-				angles.rotationMatrixFine[2][0] = -sinY*cosZ+sinX*cosY*sinZ;
-				angles.rotationMatrixFine[2][1] = sinX*cosY*cosZ+sinY*sinZ;
-				angles.rotationMatrixFine[2][2] = cosX*cosY;
-				
-				angles.lastCalcX = angles.x;
-				angles.lastCalcY = angles.y;
-				angles.lastCalcZ = angles.z;
-				angles.calcedOnce = true;
-			}
-			set(	x*angles.rotationMatrixFine[0][0] + y*angles.rotationMatrixFine[0][1] + z*angles.rotationMatrixFine[0][2],
-					x*angles.rotationMatrixFine[1][0] + y*angles.rotationMatrixFine[1][1]	+ z*angles.rotationMatrixFine[1][2],
-					x*angles.rotationMatrixFine[2][0] + y*angles.rotationMatrixFine[2][1] + z*angles.rotationMatrixFine[2][2]
-			);
-		}
-		return this;
-	}
-	
-	/*For reference, here are the rotation matrixes.
-	 * Note that the resultant rotation matrix follows the Yaw*Pitch*Roll format.
-	 * Rx=[[1,0,0],[0,cos(P),-sin(P)],[0,sin(P),cos(P)]]
-	 * Ry=[[cos(Y),0,sin(Y)],[0,1,0],[-sin(Y),0,cos(Y)]]
-	 * Rz=[[cos(R),-sin(R),0],[sin(R),cos(R),0],[0,0,1]]
-	 * {[C,0,-D],[0,1,0],[D,0,C]}*{[1,0,0],[0,A,-B],[0,B,A]}*{[E,-F,0],[F,E,0],[0,0,1]}
-	 */
 
 	
 	/**

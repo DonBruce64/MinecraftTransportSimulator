@@ -87,9 +87,6 @@ public class JSONPart extends AJSONPartProvider{
     	@JSONDescription("NOTE: Using a unique 'type' name is preferred over customType parameters.  See the various part conventions ebfore using this!\n\nThis parameter is optional and should only be used for parts that you need in specific places.  This will restrict this part to only work in part definitions with customTypes defined, and only if they contain this customType.")
     	public String customType;
     	
-    	@JSONDescription("This parameter is optional.  If included and set to true, this part, and all sub-parts, will not be mirrored, no matter the settings in the vehicle JSON. Useful on things like lights and signage, where mirroring would make the lights or signs render backwards, or on turrets where you don't want seats to mirror themselves.")
-    	public boolean disableMirroring;
-    	
     	@JSONDescription("This parameter is optional.  If included and set to true, this part will use the texture of the vehicle rather than the texture that corresponds to the part.  Useful for parts that need to pull vehicle textures for their rendering, such as tank turrets and vehicle bolt-on components.")
     	public boolean useVehicleTexture;
     	

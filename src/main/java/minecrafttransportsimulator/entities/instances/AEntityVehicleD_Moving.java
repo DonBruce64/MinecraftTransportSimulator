@@ -88,12 +88,11 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	private final Point3D roadMotion = new Point3D();
 	private final Point3D roadRotation = new Point3D();
 	private final Point3D collisionMotion = new Point3D();
-	private final Point3D collisionRotation = new Point3D();
+	private final RotationMatrix collisionRotation = new RotationMatrix();
 	private final Point3D motionApplied = new Point3D();
 	private final Point3D rotationApplied = new Point3D();
 	private double pathingApplied;
 	private final Point3D tempBoxPosition = new Point3D();
-	private final Point3D tempBoxRotation = new Point3D();
 	private final Point3D normalizedGroundVelocityVector = new Point3D();
 	private final Point3D normalizedGroundHeadingVector = new Point3D();
 	private AEntityE_Interactable<?> lastCollidedEntity;
@@ -747,7 +746,8 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			for(AEntityE_Interactable<?> interactable : collidedEntities){
 				//Set angluar movement delta.
 				if(interactable instanceof AEntityVehicleD_Moving){
-					collisionRotation.set(((AEntityVehicleD_Moving) interactable).rotationApplied);
+					collisionRotation.set(interactable.orientation).multiplyTranspose(interactable.prevOrientation);
+					collisionRotation.convertToAngles();
 				}
 				
 				//Get vector from collided box to this entity.
@@ -755,7 +755,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 				
 				//Add rotation contribution to offset.
 				collisionMotion.set(centerOffset);
-				collisionMotion.rotateFine(collisionRotation);
+				collisionMotion.rotate(collisionRotation);
 				collisionMotion.subtract(centerOffset);
 				
 				//Add linear contribution to offset.
@@ -776,6 +776,9 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			if(lastCollidedEntity != null){
 				//Add-back to our motion by adding the entity's motion.
 				motion.add(lastCollidedEntity.motion);
+				collisionMotion.set(0, 0, 0);
+				collisionRotation.setToZero();
+				collisionRotation.angles.set(0, 0, 0);
 				lastCollidedEntity = null;
 			}
 		}
@@ -783,7 +786,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		//Now that that the movement has been checked, move the vehicle.
 		world.beginProfiling("ApplyMotions", false);
 		motionApplied.set(motion).scale(SPEED_FACTOR).add(roadMotion).add(collisionMotion);
-		rotationApplied.set(rotation.angles).add(roadRotation).add(collisionRotation);
+		rotationApplied.set(rotation.angles).add(roadRotation).add(collisionRotation.angles);
 		if(lockedOnRoad){
 			if(towedByConnection != null){
 				pathingApplied = ((AEntityVehicleD_Moving) towedByConnection.towingVehicle).pathingApplied;
@@ -794,8 +797,6 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			pathingApplied = 0;
 		}
 		
-		collisionMotion.set(0, 0, 0);
-		collisionRotation.set(0, 0, 0);
 		if(!world.isClient()){
 			if(!motionApplied.isZero() || !rotationApplied.isZero()){
 				addToServerDeltas(motionApplied, rotationApplied, pathingApplied);
@@ -949,65 +950,13 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			}
 		}
 		
-		//Check the yaw.
-		if(rotation.angles.y != 0){
-			tempBoxRotation.set(0D, rotation.angles.y, 0D);
+		//Check the rotation.
+		if(!rotation.angles.isZero()){
 			for(BoundingBox box : allBlockCollisionBoxes){
-				while(rotation.angles.y != 0){
-					tempBoxPosition.set(box.globalCenter).subtract(position).rotateFine(tempBoxRotation).add(position).addScaled(motion, SPEED_FACTOR);
-					//Raise this box ever so slightly because Floating Point errors are a PITA.
-					tempBoxPosition.add(0D, 0.1D, 0D);
-					if(!box.updateCollidingBlocks(world, tempBoxPosition.subtract(box.globalCenter))){
-						break;
-					}
-					if(rotation.angles.y > 0.1){
-						rotation.angles.y -= 0.1;
-					}else if(rotation.angles.y < -0.1){
-						rotation.angles.y += 0.1;
-					}else{
-						rotation.angles.y = 0;
-					}
-				}
-			}
-		}
-
-		//Now do pitch.
-		//Make sure to take into account yaw as it's already been checked.
-		if(rotation.angles.x != 0){
-			tempBoxRotation.set(rotation.angles.x, rotation.angles.y, 0D);
-			for(BoundingBox box : allBlockCollisionBoxes){
-				while(rotation.angles.x != 0){
-					tempBoxPosition.set(box.globalCenter).subtract(position).rotateFine(tempBoxRotation).add(position).addScaled(motion, SPEED_FACTOR);
-					if(!box.updateCollidingBlocks(world, tempBoxPosition.subtract(box.globalCenter))){
-						break;
-					}
-					if(rotation.angles.x > 0.1){
-						rotation.angles.x -= 0.1;
-					}else if(rotation.angles.x < -0.1){
-						rotation.angles.x += 0.1;
-					}else{
-						rotation.angles.x = 0;
-					}
-				}
-			}
-		}
-		
-		//And lastly the roll.
-		if(rotation.angles.z != 0){
-			tempBoxRotation.set(rotation.angles);
-			for(BoundingBox box : allBlockCollisionBoxes){
-				while(rotation.angles.z != 0){
-					tempBoxPosition.set(box.globalCenter).subtract(position).rotateFine(tempBoxRotation).add(position).addScaled(motion, SPEED_FACTOR);
-					if(!box.updateCollidingBlocks(world, tempBoxPosition.subtract(box.globalCenter))){
-						break;
-					}
-					if(rotation.angles.z > 0.1){
-						rotation.angles.z -= 0.1;
-					}else if(rotation.angles.z < -0.1){
-						rotation.angles.z += 0.1;
-					}else{
-						rotation.angles.z = 0;
-					}
+				tempBoxPosition.set(box.globalCenter).subtract(position).rotate(rotation).add(position).addScaled(motion, SPEED_FACTOR);
+				if(box.updateCollidingBlocks(world, tempBoxPosition.subtract(box.globalCenter))){
+					rotation.setToZero();
+					break;
 				}
 			}
 		}

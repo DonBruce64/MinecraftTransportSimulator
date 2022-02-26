@@ -426,8 +426,6 @@ public final class LegacyCompatSystem{
 			definition.general.type = null;
 			definition.generic.customType = definition.general.customType;
 			definition.general.customType = null;
-			definition.generic.disableMirroring = definition.general.disableMirroring;
-			definition.general.disableMirroring = false;
 			definition.generic.useVehicleTexture = definition.general.useVehicleTexture;
 			definition.general.useVehicleTexture = false;
 		}
@@ -715,14 +713,33 @@ public final class LegacyCompatSystem{
 		performVehicleConnectionLegacyCompats(definition);
 		performVehicleCollisionLegacyCompats(definition);
 		
-		//Do compats for wheel rotation.
+		//Do compats for wheel rotation and mirroring.
 		if(definition.ground != null && definition.ground.isWheel){
 			if(definition.generic.movementAnimations == null){
 				definition.generic.movementAnimations = new ArrayList<JSONAnimationDefinition>();
 				
 				JSONAnimationDefinition animation = new JSONAnimationDefinition();
 				animation.centerPoint = new Point3D(0, 0, 0);
+				animation.axis = new Point3D(0, 180, 0);
+				animation.animationType = AnimationComponentType.ROTATION;
+				animation.variable = "part_ismirrored";
+				definition.generic.movementAnimations.add(animation);
+				
+				animation = new JSONAnimationDefinition();
+				animation.centerPoint = new Point3D(0, 0, 0);
 				animation.axis = new Point3D(1, 0, 0);
+				animation.animationType = AnimationComponentType.ROTATION;
+				animation.variable = "ground_rotation";
+				definition.generic.movementAnimations.add(animation);
+				
+				animation = new JSONAnimationDefinition();
+				animation.animationType = AnimationComponentType.INHIBITOR;
+				animation.variable = "part_ismirrored";
+				definition.generic.movementAnimations.add(animation);
+				
+				animation = new JSONAnimationDefinition();
+				animation.centerPoint = new Point3D(0, 0, 0);
+				animation.axis = new Point3D(-2, 0, 0);
 				animation.animationType = AnimationComponentType.ROTATION;
 				animation.variable = "ground_rotation";
 				definition.generic.movementAnimations.add(animation);

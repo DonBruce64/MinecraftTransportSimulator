@@ -108,9 +108,6 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 					object.transform.multiply(switchbox.netMatrix);
 				}
 				
-				//Set mirrored statues.
-				object.isMirrored = entity.mirrored;
-				
 				//Set our standard texture, provided we're not a window.
 				if(!isWindow){
 					object.texture = entity.getTexture();
@@ -171,7 +168,6 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 						object.disableLighting = ConfigSystem.configObject.clientRendering.brightLights.value && lightDef != null && lightLevel > 0 && !lightDef.emissive && !lightDef.isBeam;
 						object.render();
 						if(interiorWindowObject != null && ConfigSystem.configObject.clientRendering.innerWindows.value){
-							interiorWindowObject.isMirrored = object.isMirrored;
 							interiorWindowObject.transform.set(object.transform);
 							interiorWindowObject.render();
 						}
@@ -346,7 +342,6 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 			colorObject.disableLighting = ConfigSystem.configObject.clientRendering.brightLights.value;
 			colorObject.color.setTo(color);
 			colorObject.alpha = lightLevel;
-			colorObject.isMirrored = object.isMirrored;
 			colorObject.transform.set(object.transform);
 			colorObject.render();
 			
@@ -383,7 +378,6 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 					flareObject.disableLighting = ConfigSystem.configObject.clientRendering.brightLights.value;
 					flareObject.color.setTo(color);
 					flareObject.alpha = blendableBrightness;
-					flareObject.isMirrored = object.isMirrored;
 					flareObject.transform.set(object.transform);
 					flareObject.render();
 				}
@@ -394,7 +388,6 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 					beamObject.enableBrightBlending = ConfigSystem.configObject.clientRendering.blendedLights.value;
 					beamObject.color.setTo(color);
 					beamObject.alpha = blendableBrightness;
-					beamObject.isMirrored = object.isMirrored;
 					beamObject.transform.set(object.transform);
 					beamObject.render();
 				}
@@ -412,7 +405,6 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 			}
 			
 			coverObject.disableLighting = ConfigSystem.configObject.clientRendering.brightLights.value && lightLevel > 0;
-			coverObject.isMirrored = object.isMirrored;
 			coverObject.transform.set(object.transform);
 			coverObject.render();
 		}

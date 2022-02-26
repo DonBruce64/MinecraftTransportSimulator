@@ -86,6 +86,35 @@ public class RotationMatrix{
     }
 	
 	/**
+	 * Multiplies this matrix by the transpose of the passed-in matrix.
+	 * Does not actually set the passed-in matrix to its transpose.
+	 */
+	public RotationMatrix multiplyTranspose(RotationMatrix other){
+        double t00 = m00*other.m00 + m01*other.m01 + m02*other.m02;
+		double t01 = m00*other.m10 + m01*other.m11 + m02*other.m12;
+		double t02 = m00*other.m20 + m01*other.m21 + m02*other.m22;
+		
+		double t10 = m10*other.m00 + m11*other.m01 + m12*other.m02;
+		double t11 = m10*other.m10 + m11*other.m11 + m12*other.m12;
+		double t12 = m10*other.m20 + m11*other.m21 + m12*other.m22;
+		
+		double t20 = m20*other.m00 + m21*other.m01 + m22*other.m02;
+		double t21 = m20*other.m10 + m21*other.m11 + m22*other.m12;
+		double t22 = m20*other.m20 + m21*other.m21 + m22*other.m22;
+
+        m00 = t00;
+        m01 = t01;
+        m02 = t02;
+        m10 = t10;
+        m11 = t11;
+        m12 = t12;
+        m20 = t20;
+        m21 = t21;
+        m22 = t22;
+        return this;
+    }
+	
+	/**
 	 * Sets the rotation of this matrix to 0 for all angles.
 	 */
 	public RotationMatrix setToZero(){

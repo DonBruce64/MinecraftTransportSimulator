@@ -36,7 +36,6 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 	//JSON properties.
 	public final JSONPartDefinition placementDefinition;
 	public final Point3D placementOffset;
-	public final boolean disableMirroring;
 	
 	//Instance properties.
 	/**The entity this part has been placed on.*/
@@ -55,6 +54,7 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 	private final Map<JSONPartDefinition, JSONPartDefinition> subpackMappings = new HashMap<JSONPartDefinition, JSONPartDefinition>();
 	public boolean isInvisible = false;
 	public boolean isActive = true;
+	public boolean isMirrored;
 	public final Point3D localOffset;
 	public final RotationMatrix localOrientation;
 	public final RotationMatrix zeroReferenceOrientation;
@@ -84,13 +84,7 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 		if(!isFake() && parentPart != null){
 			this.parentPart = parentPart;
 			parentPart.childParts.add(this);
-			if(placementDefinition.isSubPart){
-				this.disableMirroring = parentPart.disableMirroring || definition.generic.disableMirroring;
-			}else{
-				this.disableMirroring = definition.generic.disableMirroring;
-			}
 		}else{
-			this.disableMirroring = definition.generic.disableMirroring;
 			this.parentPart = null;
 		}
 		
@@ -103,7 +97,7 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 		prevOrientation.set(orientation);
 		
 		//Set mirrored state.
-		this.mirrored = ((placementOffset.x < 0 && !placementDefinition.inverseMirroring) || (placementOffset.x >= 0 && placementDefinition.inverseMirroring)) && !disableMirroring;
+		this.isMirrored = (placementOffset.x < 0 && !placementDefinition.inverseMirroring) || (placementOffset.x >= 0 && placementDefinition.inverseMirroring);
 	}
 	
 	@Override
@@ -276,11 +270,6 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 			//We don't add rotation, as we need to stay relative to the parent part, as the parent part will rotate us.
 			correctedPartDef.pos.add(placementDefinition.pos);
 			
-			//If the parent part is mirrored, we need to invert our X-position to match.
-			if(mirrored){
-				correctedPartDef.pos.x -= 2*subPartDef.pos.x;
-			}
-			
 			//Use the parent's turnsWithSteer, mirroring, and isSpare variables, as that's based on the vehicle, not the part.
 			correctedPartDef.turnsWithSteer = placementDefinition.turnsWithSteer;
 			correctedPartDef.inverseMirroring = placementDefinition.inverseMirroring;
@@ -291,6 +280,8 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 		}
 		return subpackMappings.get(subPartDef);
 	}
+	
+	
 	
 	/**
 	 * Returns true if this part is in liquid.
@@ -356,6 +347,7 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 		//Check for generic part variables.
 		switch(variable){
 			case("part_present"): return 1;
+			case("part_ismirrored"): return isMirrored ? 1 : 0;
 		}
 		
 		//No variables, check super variables before doing generic forwarding.
