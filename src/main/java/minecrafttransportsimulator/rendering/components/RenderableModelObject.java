@@ -97,7 +97,27 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 	public void render(AnimationEntity entity, TransformationMatrix transform, boolean blendingEnabled, float partialTicks){
 		JSONLight lightDef = entity.lightObjectDefinitions.get(object.name);
 		float lightLevel = lightDef != null ? entity.lightBrightnessValues.get(lightDef) : 0;
-		if(shouldRender(entity, lightDef, blendingEnabled)){
+		boolean shouldRenderObject = shouldRender(entity, lightDef, blendingEnabled);
+		boolean shouldDoTransforms = shouldRenderObject;
+		
+		//If we shouldn't render this object, and don't have any objects that applyAfter us, skip all other functions.
+		//Otherwise, we just set up the transform and forward.
+		List<RenderableModelObject<AnimationEntity>> applyAfterObjects;
+		if(!shouldRenderObject){
+			applyAfterObjects = new ArrayList<RenderableModelObject<AnimationEntity>>();
+			for(RenderableModelObject<AnimationEntity> modelObject : allObjects){
+				JSONAnimatedObject animation = entity.animatedObjectDefinitions.get(modelObject.object.name);
+				if(animation != null && object.name.equals(animation.applyAfter)){
+					applyAfterObjects.add(modelObject);
+					shouldDoTransforms = true;
+				}
+			}
+		}else{
+			applyAfterObjects = null;
+		}
+		
+		
+		if(shouldDoTransforms){
 			//Do pre-render checks based on the object we are rendering.
 			//This may block rendering if there are false visibility transforms.
 			object.transform.set(transform);
@@ -108,91 +128,101 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 					object.transform.multiply(switchbox.netMatrix);
 				}
 				
-				//Set our standard texture, provided we're not a window.
-				if(!isWindow){
-					object.texture = entity.getTexture();
-				}
-				
-				//If we are a online texture, bind that one rather than our own.
-				if(isOnlineTexture){
-					//Get the texture from the text objects of the entity.
-					//If we don't have anything set, we just use the existing texture.
-					for(Entry<JSONText, String> textEntry : entity.text.entrySet()){
-						JSONText textDef = textEntry.getKey();
-						if(object.name.contains(textDef.fieldName)){
-							String textValue = entity.text.get(textDef);
-							if(!textValue.isEmpty() && !textValue.contains(" ")){
-								String errorString = InterfaceRender.downloadURLTexture(textValue);
-								if(errorString != null){
-									textEntry.setValue(errorString);
-								}else{
-									object.texture = textValue;
+				if(shouldRenderObject){
+					//Set our standard texture, provided we're not a window.
+					if(!isWindow){
+						object.texture = entity.getTexture();
+					}
+					
+					//If we are a online texture, bind that one rather than our own.
+					if(isOnlineTexture){
+						//Get the texture from the text objects of the entity.
+						//If we don't have anything set, we just use the existing texture.
+						for(Entry<JSONText, String> textEntry : entity.text.entrySet()){
+							JSONText textDef = textEntry.getKey();
+							if(object.name.contains(textDef.fieldName)){
+								String textValue = entity.text.get(textDef);
+								if(!textValue.isEmpty() && !textValue.contains(" ")){
+									String errorString = InterfaceRender.downloadURLTexture(textValue);
+									if(errorString != null){
+										textEntry.setValue(errorString);
+									}else{
+										object.texture = textValue;
+									}
 								}
+								break;
 							}
-							break;
-						}
-					}
-				}
-				
-				//If we are a light, get the actual light level as calculated.
-				//We do this here as there's no reason to calculate this if we're not gonna render.
-				if(lightDef != null){
-					lightLevel = entity.lightBrightnessValues.get(lightDef);
-					if(lightDef.isElectric && entity instanceof EntityVehicleF_Physics){
-						//Light start dimming at 10V, then go dark at 3V.
-						double electricPower = ((EntityVehicleF_Physics) entity).electricPower;
-						if(electricPower < 3){
-							lightLevel = 0;
-						}else if(electricPower < 10){
-							lightLevel *= (electricPower - 3)/7D; 
-						}
-					}
-				}
-				
-				if(entity instanceof PartGroundDevice && ((PartGroundDevice) entity).definition.ground.isTread && !((PartGroundDevice) entity).placementDefinition.isSpare){
-					//Active tread.  Do tread-path rendering instead of normal model.
-					if(!blendingEnabled){
-						doTreadRendering((PartGroundDevice) entity, partialTicks);
-					}
-				}else{
-					//Set object states and render.
-					if(blendingEnabled && lightDef != null && lightLevel > 0 && lightDef.isBeam && entity.shouldRenderBeams()){
-						//Model that's actually a beam, render it with beam lighting/blending. 
-						object.disableLighting = ConfigSystem.configObject.clientRendering.brightLights.value;
-						object.enableBrightBlending = ConfigSystem.configObject.clientRendering.blendedLights.value;
-						object.alpha = Math.min((1 - entity.world.getLightBrightness(entity.position, false))*lightLevel, 1);
-						object.render();
-					}else if(!(blendingEnabled ^ object.isTranslucent)){
-						//Either solid texture on solid pass, or translucent texture on blended pass.
-						//Need to disable light-mapping from daylight if we are a light-up texture.
-						object.disableLighting = ConfigSystem.configObject.clientRendering.brightLights.value && lightDef != null && lightLevel > 0 && !lightDef.emissive && !lightDef.isBeam;
-						object.render();
-						if(interiorWindowObject != null && ConfigSystem.configObject.clientRendering.innerWindows.value){
-							interiorWindowObject.transform.set(object.transform);
-							interiorWindowObject.render();
 						}
 					}
 					
-					//Check if we are a light that's not a beam.  If so, do light-specific rendering.
-					if(lightDef != null && !lightDef.isBeam){
-						doLightRendering(entity, lightDef, lightLevel, entity.lightColorValues.get(lightDef), blendingEnabled);
+					//If we are a light, get the actual light level as calculated.
+					//We do this here as there's no reason to calculate this if we're not gonna render.
+					if(lightDef != null){
+						lightLevel = entity.lightBrightnessValues.get(lightDef);
+						if(lightDef.isElectric && entity instanceof EntityVehicleF_Physics){
+							//Light start dimming at 10V, then go dark at 3V.
+							double electricPower = ((EntityVehicleF_Physics) entity).electricPower;
+							if(electricPower < 3){
+								lightLevel = 0;
+							}else if(electricPower < 10){
+								lightLevel *= (electricPower - 3)/7D; 
+							}
+						}
 					}
 					
-					//Render text on this object.  Only do this on the solid pass.
-					if(!blendingEnabled){
-						for(JSONText textDef : entity.text.keySet()){
-							if(object.name.equals(textDef.attachedTo)){
-								RenderText.draw3DText(entity.text.get(textDef), entity, object.transform, textDef, false);
+					if(entity instanceof PartGroundDevice && ((PartGroundDevice) entity).definition.ground.isTread && !((PartGroundDevice) entity).placementDefinition.isSpare){
+						//Active tread.  Do tread-path rendering instead of normal model.
+						if(!blendingEnabled){
+							doTreadRendering((PartGroundDevice) entity, partialTicks);
+						}
+					}else{
+						//Set object states and render.
+						if(blendingEnabled && lightDef != null && lightLevel > 0 && lightDef.isBeam && entity.shouldRenderBeams()){
+							//Model that's actually a beam, render it with beam lighting/blending. 
+							object.disableLighting = ConfigSystem.configObject.clientRendering.brightLights.value;
+							object.enableBrightBlending = ConfigSystem.configObject.clientRendering.blendedLights.value;
+							object.alpha = Math.min((1 - entity.world.getLightBrightness(entity.position, false))*lightLevel, 1);
+							object.render();
+						}else if(!(blendingEnabled ^ object.isTranslucent)){
+							//Either solid texture on solid pass, or translucent texture on blended pass.
+							//Need to disable light-mapping from daylight if we are a light-up texture.
+							object.disableLighting = ConfigSystem.configObject.clientRendering.brightLights.value && lightDef != null && lightLevel > 0 && !lightDef.emissive && !lightDef.isBeam;
+							object.render();
+							if(interiorWindowObject != null && ConfigSystem.configObject.clientRendering.innerWindows.value){
+								interiorWindowObject.transform.set(object.transform);
+								interiorWindowObject.render();
+							}
+						}
+						
+						//Check if we are a light that's not a beam.  If so, do light-specific rendering.
+						if(lightDef != null && !lightDef.isBeam){
+							doLightRendering(entity, lightDef, lightLevel, entity.lightColorValues.get(lightDef), blendingEnabled);
+						}
+						
+						//Render text on this object.  Only do this on the solid pass.
+						if(!blendingEnabled){
+							for(Entry<JSONText, String> textEntry : entity.text.entrySet()){
+								JSONText textDef = textEntry.getKey();
+								if(object.name.equals(textDef.attachedTo)){
+									RenderText.draw3DText(textEntry.getValue(), entity, object.transform, textDef, false);
+								}
 							}
 						}
 					}
 				}
 				
 				//Render any objects that depend on us before we pop our state.
-				for(RenderableModelObject<AnimationEntity> modelObject : allObjects){
-					JSONAnimatedObject animation = entity.animatedObjectDefinitions.get(modelObject.object.name);
-					if(animation != null && object.name.equals(animation.applyAfter)){
+				//These may be ones we pre-found if we aren't doing actual rendering.
+				if(applyAfterObjects != null){
+					for(RenderableModelObject<AnimationEntity> modelObject : applyAfterObjects){
 						modelObject.render(entity, object.transform, blendingEnabled, partialTicks);
+					}
+				}else{
+					for(RenderableModelObject<AnimationEntity> modelObject : allObjects){
+						JSONAnimatedObject animation = entity.animatedObjectDefinitions.get(modelObject.object.name);
+						if(animation != null && object.name.equals(animation.applyAfter)){
+							modelObject.render(entity, object.transform, blendingEnabled, partialTicks);
+						}
 					}
 				}
 			}
