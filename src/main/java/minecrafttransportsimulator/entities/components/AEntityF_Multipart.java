@@ -128,9 +128,6 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 	
 	@Override
 	public void update(){
-		super.update();
-		world.beginProfiling("EntityF_Level", true);
-		
 		//If we have any NBT parts, add them now.
 		if(!partsFromNBT.isEmpty()){
 			for(APart part : partsFromNBT){
@@ -138,6 +135,18 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 			}
 			partsFromNBT.clear();
 		}
+		
+		//Need to do this before updating as these require knowledge of prior states.
+		//If we call super, then it will overwrite the prior state.
+		//We update both our variables and our part variables here.
+		updateVariableModifiers();
+		for(APart part : parts){
+			part.updateVariableModifiers();
+		}
+		
+		//Now call super and do the updates.
+		super.update();
+		world.beginProfiling("EntityF_Level", true);
 		
 		//Update part slot box positions.
 		world.beginProfiling("PartSlotPositions", true);

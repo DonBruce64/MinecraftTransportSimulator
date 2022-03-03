@@ -292,9 +292,6 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 	
 	@Override
 	public void update(){
-		//Need to do this before updating as these require knowledge of prior states.
-		//If we call super, then it will overwrite the prior state.
-		updateVariableModifiers();
 		super.update();
 		
 		world.beginProfiling("EntityE_Level", true);
