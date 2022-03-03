@@ -439,11 +439,25 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 		@Override
 		public void runRotation(DurationDelayClock clock, float partialTicks){
 			double colorFactor = entity.getAnimatedVariableValue(clock, 1.0, -clock.animation.offset, partialTicks);
+			double colorX;
+			double colorY;
+			double colorZ;
 			if(color == null){
-				color = new ColorRGB((float) Math.min(clock.animation.axis.x*colorFactor + clock.animation.offset, 1.0), (float) Math.min(clock.animation.axis.y*colorFactor + clock.animation.offset, 1.0), (float) Math.min(clock.animation.axis.z*colorFactor + clock.animation.offset, 1.0), false);
+				colorX = clock.animation.axis.x*colorFactor + clock.animation.offset;
+				colorY = clock.animation.axis.y*colorFactor + clock.animation.offset;
+				colorZ = clock.animation.axis.z*colorFactor + clock.animation.offset;
 			}else{
-				color = new ColorRGB((float) Math.min(clock.animation.axis.x*colorFactor + clock.animation.offset + color.red, 1.0), (float) Math.min(clock.animation.axis.y*colorFactor + clock.animation.offset + color.green, 1.0), (float) Math.min(clock.animation.axis.z*colorFactor + clock.animation.offset + color.blue, 1.0), false);
+				colorX = clock.animation.axis.x*colorFactor + clock.animation.offset + color.red;
+				colorY = clock.animation.axis.y*colorFactor + clock.animation.offset + color.green;
+				colorZ = clock.animation.axis.z*colorFactor + clock.animation.offset + color.blue;
 			}
+			if(colorX < 0) colorX = 0;
+			if(colorY < 0) colorY = 0;
+			if(colorZ < 0) colorZ = 0;
+			if(colorX > 1) colorX = 1;
+			if(colorY > 1) colorY = 1;
+			if(colorZ > 1) colorZ = 1;
+			color = new ColorRGB((float) colorX, (float) colorY, (float) colorZ, false);
 		}
 	}
     
