@@ -698,7 +698,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 		switch(variable){
 			//Vehicle world state cases.
 			case("yaw"): return angles.y;
-			case("heading"): int heading = (int)-angles.y; if(ConfigSystem.configObject.clientControls.north360.value) heading += 180; while (heading < 1) heading += 360; while (heading > 360) heading -= 360; return heading;
+			case("heading"): double heading = -angles.y; if(ConfigSystem.configObject.clientControls.north360.value) heading += 180; while (heading < 0) heading += 360; while (heading > 360) heading -= 360; return heading;
 			case("pitch"): return angles.x;
 			case("roll"): return angles.z;
 			case("altitude"): return position.y;
