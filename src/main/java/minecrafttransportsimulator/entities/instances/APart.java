@@ -195,6 +195,13 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 		boundingBox.heightRadius = getHeight()/2D;
 		boundingBox.depthRadius = getWidth()/2D;
 		
+		//Add-back parent offset to our locals if we have one.
+		//We don't use this value in any of our interim calculations as we do everything relative to the parent.
+		//However, external calls expect this to be relative to the entity we are on, which is NOT our parent.
+		if(parentPart != null && placementDefinition.isSubPart){
+			localOffset.add(parentPart.localOffset);
+		}
+		
 		//Update post-movement things.
 		updatePostMovement();
 	}
