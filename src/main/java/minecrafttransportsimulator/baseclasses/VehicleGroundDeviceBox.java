@@ -29,6 +29,7 @@ public class VehicleGroundDeviceBox{
 	
 	public boolean canRollOnGround;
 	public boolean contactedEntity;
+	public boolean isAirborne;
 	public boolean isCollided;
 	public boolean isCollidedLiquid;
 	public boolean isGrounded;
@@ -191,6 +192,7 @@ public class VehicleGroundDeviceBox{
 	 */
 	public void updateCollisionStatuses(Set<PartGroundDevice> groundedGroundDevices){
 		//Initialize all values.
+		isAirborne = true;
 		isCollided = false;
 		isGrounded = false;
 		isAbleToDoGroundOperations = false;
@@ -212,6 +214,7 @@ public class VehicleGroundDeviceBox{
 			collisionDepth = solidBox.currentCollisionDepth.y;
 			PartGroundDevice.groundOperationOffset.set(0 , -0.5, 0);
 			if(isCollided){
+				isAirborne = false;
 				isGrounded = true;
 			}else{
 				solidBox.globalCenter.add(PartGroundDevice.groundDetectionOffset);
@@ -223,6 +226,7 @@ public class VehicleGroundDeviceBox{
 			
 			if(isGrounded){
 				isAbleToDoGroundOperations = true;
+				isAirborne = false;
 			}else{
 				groundCollisionOffset = vehicleMotionOffset.copy().add(PartGroundDevice.groundOperationOffset);
 				solidBox.globalCenter.add(PartGroundDevice.groundOperationOffset);
@@ -295,9 +299,9 @@ public class VehicleGroundDeviceBox{
 	 * This transformation is a local transform to the vehicle the box is on.  Does not change any state-flags
 	 * of this box.
 	 */
-	public boolean collidedWithTransform(TransformationMatrix transform){
+	public boolean collidedWithTransform(TransformationMatrix transform, Point3D groundMotion){
 		if(!groundDevices.isEmpty()){
-			Point3D vehicleMotionOffset = solidBox.localCenter.copy().transform(transform).rotate(vehicle.orientation).rotate(vehicle.rotation).add(vehicle.position).addScaled(vehicle.motion, EntityVehicleF_Physics.SPEED_FACTOR);
+			Point3D vehicleMotionOffset = solidBox.localCenter.copy().transform(transform).rotate(vehicle.orientation).rotate(vehicle.rotation).add(vehicle.position).addScaled(vehicle.motion, EntityVehicleF_Physics.SPEED_FACTOR).add(groundMotion);
 			if(vehicle.world.checkForCollisions(solidBox, vehicleMotionOffset, false)){
 				return true;
 			}
@@ -305,7 +309,7 @@ public class VehicleGroundDeviceBox{
 		
 		if(!canRollOnGround || !isAbleToDoGroundOperations){
 			if(!liquidDevices.isEmpty() || !liquidCollisionBoxes.isEmpty()){
-				Point3D vehicleMotionOffset = liquidBox.localCenter.copy().transform(transform).rotate(vehicle.orientation).rotate(vehicle.rotation).add(vehicle.position).addScaled(vehicle.motion, EntityVehicleF_Physics.SPEED_FACTOR);
+				Point3D vehicleMotionOffset = liquidBox.localCenter.copy().transform(transform).rotate(vehicle.orientation).rotate(vehicle.rotation).add(vehicle.position).addScaled(vehicle.motion, EntityVehicleF_Physics.SPEED_FACTOR).add(groundMotion);
 				if(vehicle.world.checkForCollisions(liquidBox, vehicleMotionOffset, false)){
 					return true;
 				}

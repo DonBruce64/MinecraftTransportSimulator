@@ -101,26 +101,14 @@ public class VehicleGroundDeviceCollection{
 	 * Gets the max collision depth for all boxes.
 	 */
 	public double getMaxCollisionDepth(){
-		double highestCollision = 0;
-		if(frontLeftGDB.collisionDepth > 0){
-			highestCollision = frontLeftGDB.collisionDepth;
+		//Only get opposite-side boxes, and the lowest of the two.
+		if(frontLeftGDB.collisionDepth > 0 && rearRightGDB.collisionDepth > 0){
+			return frontLeftGDB.collisionDepth > rearRightGDB.collisionDepth ? frontLeftGDB.collisionDepth : rearRightGDB.collisionDepth;
+		}else if(rearLeftGDB.collisionDepth > 0 && frontRightGDB.collisionDepth > 0){
+			return rearLeftGDB.collisionDepth > frontRightGDB.collisionDepth ? rearLeftGDB.collisionDepth : frontRightGDB.collisionDepth;
+		}else{
+			return 0;
 		}
-		if(frontRightGDB.collisionDepth > 0){
-			if(frontRightGDB.collisionDepth > highestCollision){
-				highestCollision = frontRightGDB.collisionDepth;
-			}
-		}
-		if(rearLeftGDB.collisionDepth > 0){
-			if(rearLeftGDB.collisionDepth > highestCollision){
-				highestCollision = rearLeftGDB.collisionDepth;
-			}
-		}
-		if(rearRightGDB.collisionDepth > 0){
-			if(rearRightGDB.collisionDepth > highestCollision){
-				highestCollision = rearRightGDB.collisionDepth;
-			}
-		}
-		return highestCollision;
 	}
 	
 	/**
@@ -266,7 +254,7 @@ public class VehicleGroundDeviceCollection{
 	/**
 	 * Returns true if the passed-in device is actually on the ground.
 	 * This is different than the {@link #groundedGroundDevices}, as
-	 * this is the actual on-ground state rather than the state where phyiscs
+	 * this is the actual on-ground state rather than the state where physics
 	 * calculations can be performed.
 	 */
 	public boolean isActuallyOnGround(PartGroundDevice groundDevice){
@@ -305,65 +293,63 @@ public class VehicleGroundDeviceCollection{
 	 * Actual motion and position are not changed, despite rotation being.
 	 */
 	public void performPitchCorrection(Point3D groundMotion){
-		double side1Delta = 0;
-		double side2Delta = 0;
-		double groundedSideOffset = 0;
-		VehicleGroundDeviceBox testBox1 = null;
-		VehicleGroundDeviceBox testBox2 = null;
 		if(vehicle.towedByConnection == null){
-			//Counter-clockwise rotation if both rear wheels are free
-			if(!rearLeftGDB.isCollided && !rearLeftGDB.isGrounded && rearLeftGDB.isReady() && !rearRightGDB.isCollided && !rearRightGDB.isGrounded && rearRightGDB.isReady()){
-				//Set client states.  Required to prevent constant adjustments from syncing.
-				if(vehicle.world.isClient()){
-					if(clientPitchCycleCooldown > 0 && --clientPitchCycleCooldown > 0){
+			//Counter-clockwise rotation if both rear wheels are airborne
+			if(rearLeftGDB.isAirborne && rearLeftGDB.isReady() && rearRightGDB.isAirborne && rearRightGDB.isReady()){
+				//Make sure front is not airborne on at least one wheel before rotating.
+				if(!frontLeftGDB.isAirborne){
+					if(!frontRightGDB.isAirborne){
+						adjustAnglesMatrix(frontLeftGDB.contactPoint.z > frontRightGDB.contactPoint.x ? frontLeftGDB : frontRightGDB, rearLeftGDB, rearRightGDB, false, true, groundMotion);
 						return;
-					}
-					if(clientPitchClockwiseLast){
-						clientPitchClockwiseLast = false;
-						if(++clientPitchCycleCount == MAX_CYCLE_COUNT){
-							clientPitchCycleCount = 0;
-							clientPitchCycleCooldown = CYCLE_COOLDOWN_TIME;
-						}
-					}
-				}
-				//Make sure front is grounded or collided on at least one wheel before rotating.
-				//This prevents us from doing rotation in the air.
-				if(frontLeftGDB.isCollided || frontLeftGDB.isGrounded){
-					if(frontRightGDB.isCollided || frontRightGDB.isGrounded){
-						adjustAnglesMatrix(frontLeftGDB.contactPoint.z < frontRightGDB.contactPoint.x ? frontLeftGDB : frontRightGDB, rearLeftGDB, rearRightGDB, false, true, groundMotion);
 					}else{
 						adjustAnglesMatrix(frontLeftGDB, rearLeftGDB, rearRightGDB, false, true, groundMotion);
+						return;
 					}
-				}else if(frontRightGDB.isCollided || frontRightGDB.isGrounded){
+				}else if(!frontRightGDB.isAirborne){
 					adjustAnglesMatrix(frontRightGDB, rearLeftGDB, rearRightGDB, false, true, groundMotion);
+					return;
 				}
 			}
 			
-			//Clockwise rotation if both front wheels are free
-			if(!frontLeftGDB.isCollided && !frontLeftGDB.isGrounded && frontLeftGDB.isReady() && !frontRightGDB.isCollided && !frontRightGDB.isGrounded && frontRightGDB.isReady()){
-				//Set client states.  Required to prevent constant adjustments from syncing.
-				if(vehicle.world.isClient()){
-					if(clientPitchCycleCooldown > 0 && --clientPitchCycleCooldown > 0){
-						return;
-					}
-					if(!clientPitchClockwiseLast){
-						clientPitchClockwiseLast = true;
-						if(++clientPitchCycleCount == MAX_CYCLE_COUNT){
-							clientPitchCycleCount = 0;
-							clientPitchCycleCooldown = CYCLE_COOLDOWN_TIME;
-						}
-					}
-				}
-				//Make sure rear is grounded or collided on at least one wheel before rotating.
-				//This prevents us from doing rotation in the air.
-				if(rearLeftGDB.isCollided || rearLeftGDB.isGrounded){
-					if(rearRightGDB.isCollided || rearRightGDB.isGrounded){
+			//Clockwise rotation if both front wheels are airborne
+			if(frontLeftGDB.isAirborne && frontLeftGDB.isReady() && frontRightGDB.isAirborne && frontRightGDB.isReady()){
+				//Make sure rear is not airborne on at least one wheel before rotating.
+				if(!rearLeftGDB.isAirborne){
+					if(!rearRightGDB.isAirborne){
 						adjustAnglesMatrix(rearLeftGDB.contactPoint.z < rearRightGDB.contactPoint.x ? rearLeftGDB : rearRightGDB, frontLeftGDB, frontRightGDB, true, true, groundMotion);
+						return;
 					}else{
 						adjustAnglesMatrix(rearLeftGDB, frontLeftGDB, frontRightGDB, true, true, groundMotion);
+						return;
 					}
-				}else if(rearRightGDB.isCollided || rearRightGDB.isGrounded){
+				}else if(!rearRightGDB.isAirborne){
 					adjustAnglesMatrix(rearRightGDB, frontLeftGDB, frontRightGDB, true, true, groundMotion);
+					return;
+				}
+			}
+			
+			//Counter-clockwise rotation if a front wheel is collided.
+			//Make sure rear is grounded and not collided on both wheels before continuing.
+			//This allows roll to take over if required.
+			if(frontLeftGDB.isCollided || frontRightGDB.isCollided){
+				if(!vehicle.world.isClient() || (frontLeftGDB.collisionDepth > 0.1 || frontRightGDB.collisionDepth > 0.1)){
+					if(rearLeftGDB.isGrounded && !rearLeftGDB.isCollided && rearRightGDB.isGrounded && !rearRightGDB.isCollided){
+						adjustAnglesMatrix(rearLeftGDB.contactPoint.z < rearRightGDB.contactPoint.x ? rearLeftGDB : rearRightGDB, frontLeftGDB, frontRightGDB, false, true, groundMotion);
+						return;
+					}
+				}
+			}
+			
+			//Clockwise rotation if a rear wheel is collided.
+			//Make sure front is grounded and not collided on both wheels before continuing.
+			//Also make sure that we are on the server, or on a client with a significant enough collision to matter.
+			//This allows roll to take over if required.
+			if(rearLeftGDB.isCollided || rearRightGDB.isCollided){
+				if(!vehicle.world.isClient() || (rearLeftGDB.collisionDepth > 0.1 || rearLeftGDB.collisionDepth > 0.1)){
+					if(frontLeftGDB.isGrounded && !frontLeftGDB.isCollided && frontRightGDB.isGrounded && !frontRightGDB.isCollided){
+						adjustAnglesMatrix(frontLeftGDB.contactPoint.z > frontRightGDB.contactPoint.x ? frontLeftGDB : frontRightGDB, rearLeftGDB, rearRightGDB, true, true, groundMotion);
+						return;
+					}
 				}
 			}
 		}else{
@@ -501,7 +487,7 @@ public class VehicleGroundDeviceCollection{
 		double heightDeltaAttempted = ConfigSystem.configObject.general.climbSpeed.value;
 		double angleApplied = 0;
 		for( ; heightDeltaAttempted > PartGroundDevice.groundDetectionOffset.y; heightDeltaAttempted -= ConfigSystem.configObject.general.climbSpeed.value/4){
-			angleApplied = Math.toDegrees(Math.asin(ConfigSystem.configObject.general.climbSpeed.value/furthestDelta));
+			angleApplied = Math.toDegrees(Math.asin(heightDeltaAttempted/furthestDelta));
 			if(!clockwiseRotation){
 				angleApplied = -angleApplied;
 			}
@@ -520,7 +506,7 @@ public class VehicleGroundDeviceCollection{
 			transformApplied.applyInvertedTranslation(originBox.contactPoint);
 			
 			//Check for collisions.
-			if(!testBox1.collidedWithTransform(transformApplied) && !testBox2.collidedWithTransform(transformApplied)){
+			if(!testBox1.collidedWithTransform(transformApplied, groundMotion) && !testBox2.collidedWithTransform(transformApplied, groundMotion)){
 				break;
 			}
 		}
@@ -537,6 +523,7 @@ public class VehicleGroundDeviceCollection{
 			//This rotates the vehicle's center point locally and obtains a new point.  The delta between these points can then be taken.
 			translationApplied.set(0, 0, 0).transform(transformApplied).rotate(vehicle.orientation);
 			groundMotion.add(translationApplied);
+			System.out.println(translationApplied);
 		}
 	}
 	

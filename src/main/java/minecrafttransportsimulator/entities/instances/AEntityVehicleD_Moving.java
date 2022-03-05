@@ -696,13 +696,21 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 					//This is done as it's clear motion.y is just moving the vehicle into the ground.
 					//Having negative motion.y is okay if we don't boost above, as this just means we are falling to the ground via gravity.
 					//In this case, we use our boost, but set it to 0 as we want to just attenuate the negative motion, not remove it.
-					if(motion.y < 0 && motion.y + groundMotion.y > 0){
+					if(motion.y <= 0 && motion.y + groundMotion.y > 0){
 						groundMotion.y += motion.y;
 						motion.y = 0;
 					}else{
 						motion.y += groundMotion.y;
 						groundMotion.y = 0;
 					}
+					if(world.isClient()){
+						//System.out.format("Motion %f adju %f \n", motion.y, groundMotion.y);
+					}
+					//If we are on the client, don't actually set ground motion.  We let the server do this and gradually sync.
+					if(world.isClient()){
+						//groundMotion.y /=4;
+					}
+					//FIXME bookmark.
 					groundDeviceCollective.updateCollisions();
 				}
 			}
@@ -724,13 +732,14 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 				}else if(correctCollidingMovement()){
 					return;
 				}
+				//FIXME bookmark
 			}else if((towedByConnection == null || !towedByConnection.hitchConnection.mounted) && fallingDown){
 				world.beginProfiling("GroundHandlingPitch", false);
 				groundDeviceCollective.performPitchCorrection(groundMotion);
 				//Don't do roll correction if we don't have roll.
 				if(groundDeviceCollective.canDoRollChecks()){
 					world.beginProfiling("GroundHandlingRoll", false);
-					groundDeviceCollective.performRollCorrection(groundMotion);
+					//groundDeviceCollective.performRollCorrection(groundMotion);
 				}
 				
 				//If we are flagged as a tilting vehicle try to keep us upright, unless we are turning, in which case turn into the turn.
@@ -869,7 +878,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	 *  Checks if we have a collided collision box.  If so, true is returned.
 	 */
 	private boolean isCollisionBoxCollided(){
-		if(velocity > 0.001){
+		if(motion.length() > 0.001){
 			boolean clearedCache = false;
 			for(BoundingBox box : allBlockCollisionBoxes){
 				tempBoxPosition.set(box.globalCenter).subtract(position).rotate(rotation).subtract(box.globalCenter).add(position).addScaled(motion, SPEED_FACTOR);
