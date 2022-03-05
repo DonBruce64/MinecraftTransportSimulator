@@ -85,13 +85,16 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	private final Point3D clientDeltaMApplied = new Point3D();
 	private final Point3D clientDeltaRApplied = new Point3D();
 	private double clientDeltaPApplied;
+	
 	private final Point3D roadMotion = new Point3D();
 	private final Point3D roadRotation = new Point3D();
 	private final Point3D collisionMotion = new Point3D();
 	private final RotationMatrix collisionRotation = new RotationMatrix();
+	private final Point3D groundMotion = new Point3D();
 	private final Point3D motionApplied = new Point3D();
 	private final Point3D rotationApplied = new Point3D();
 	private double pathingApplied;
+	
 	private final Point3D tempBoxPosition = new Point3D();
 	private final Point3D normalizedGroundVelocityVector = new Point3D();
 	private final Point3D normalizedGroundHeadingVector = new Point3D();
@@ -667,8 +670,8 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			}
 		}
 		
-		double groundCollisionBoost = 0;
-		double groundRotationBoost = 0;
+		groundMotion.set(0, 0, 0);
+		boolean fallingDown = motion.y < 0;
 		lockedOnRoad = frontFollower != null && rearFollower != null; 
 		//If followers aren't valid, do normal logic.
 		if(!lockedOnRoad){
@@ -683,20 +686,22 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			//Note that this logic is not applied on trailers, as they use special checks with only rotations for movement.
 			if(towedByConnection == null){
 				world.beginProfiling("GroundBoostCheck", false);
-				groundCollisionBoost = groundDeviceCollective.getMaxCollisionDepth()/SPEED_FACTOR;
-				if(groundCollisionBoost > 0){
+				groundMotion.y = groundDeviceCollective.getMaxCollisionDepth()/SPEED_FACTOR;
+				if(groundMotion.y > 0){
 					world.beginProfiling("GroundBoostApply", false);
-					//If adding our boost would make motion.y positive, set our boost to the positive component.
-					//This will remove this component from the motion once we move the vehicle, and will prevent bad physics.
-					//If we didn't do this, the vehicle would accelerate upwards whenever we corrected ground devices.
-					//Having negative motion.y is okay, as this just means we are falling to the ground via gravity.
-					if(motion.y + groundCollisionBoost > 0){
-						groundCollisionBoost = Math.min(groundCollisionBoost, ConfigSystem.configObject.general.climbSpeed.value/SPEED_FACTOR);
-						motion.y += groundCollisionBoost;
-						groundCollisionBoost = motion.y;
+					//Make sure boost doesn't exceed the config value.
+					groundMotion.y = Math.min(groundMotion.y, ConfigSystem.configObject.general.climbSpeed.value/SPEED_FACTOR);
+					
+					//If adding our boost would make motion.y positive, set motion.y to zero and apply the remaining boost.
+					//This is done as it's clear motion.y is just moving the vehicle into the ground.
+					//Having negative motion.y is okay if we don't boost above, as this just means we are falling to the ground via gravity.
+					//In this case, we use our boost, but set it to 0 as we want to just attenuate the negative motion, not remove it.
+					if(motion.y < 0 && motion.y + groundMotion.y > 0){
+						groundMotion.y += motion.y;
+						motion.y = 0;
 					}else{
-						motion.y += groundCollisionBoost;
-						groundCollisionBoost = 0;
+						motion.y += groundMotion.y;
+						groundMotion.y = 0;
 					}
 					groundDeviceCollective.updateCollisions();
 				}
@@ -707,7 +712,6 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			//If we hit something, however, we need to inhibit the movement so we don't do that.
 			//This prevents vehicles from phasing through walls even though they are driving on the ground.
 			//If we are being towed, apply this movement to the towing vehicle, not ourselves, as this can lead to the vehicle getting stuck.
-			//If the collision box is a liquid box, don't use it, as that gets used in ground device calculations instead.
 			world.beginProfiling("CollisionCheck_" + allBlockCollisionBoxes.size(), false);
 			if(isCollisionBoxCollided()){
 				world.beginProfiling("CollisionHandling", false);
@@ -720,13 +724,13 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 				}else if(correctCollidingMovement()){
 					return;
 				}
-			}else if(towedByConnection == null || !towedByConnection.hitchConnection.mounted){
+			}else if((towedByConnection == null || !towedByConnection.hitchConnection.mounted) && fallingDown){
 				world.beginProfiling("GroundHandlingPitch", false);
-				groundRotationBoost = groundDeviceCollective.performPitchCorrection(groundCollisionBoost);
+				groundDeviceCollective.performPitchCorrection(groundMotion);
 				//Don't do roll correction if we don't have roll.
 				if(groundDeviceCollective.canDoRollChecks()){
 					world.beginProfiling("GroundHandlingRoll", false);
-					groundRotationBoost = groundDeviceCollective.performRollCorrection(groundCollisionBoost + groundRotationBoost);
+					groundDeviceCollective.performRollCorrection(groundMotion);
 				}
 				
 				//If we are flagged as a tilting vehicle try to keep us upright, unless we are turning, in which case turn into the turn.
@@ -785,7 +789,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 
 		//Now that that the movement has been checked, move the vehicle.
 		world.beginProfiling("ApplyMotions", false);
-		motionApplied.set(motion).scale(SPEED_FACTOR).add(roadMotion).add(collisionMotion);
+		motionApplied.set(motion).scale(SPEED_FACTOR).add(roadMotion).add(collisionMotion).add(groundMotion);
 		rotationApplied.set(rotation.angles).add(roadRotation).add(collisionRotation.angles);
 		if(lockedOnRoad){
 			if(towedByConnection != null){
@@ -858,13 +862,6 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		position.add(motionApplied);
 		angles.add(rotationApplied);
 		totalPathDelta += pathingApplied;
-		
-		//Before we end this tick we need to remove any motions added for ground devices.  These motions are required 
-		//only for the updating of the vehicle position due to rotation operations and should not be considered forces.
-		//Leaving them in will cause the physics system to think a force was applied, which will make it behave badly!
-		//We need to strip away any positive motion.y we gave the vehicle to get it out of the ground if it
-		//collided on its ground devices, as well as any motion.y we added when doing rotation adjustments.
-		motion.y -= (groundCollisionBoost + groundRotationBoost);
 		world.endProfiling();
 	}
 	
@@ -872,7 +869,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	 *  Checks if we have a collided collision box.  If so, true is returned.
 	 */
 	private boolean isCollisionBoxCollided(){
-		if(motion.length() > 0.001){
+		if(velocity > 0.001){
 			boolean clearedCache = false;
 			for(BoundingBox box : allBlockCollisionBoxes){
 				tempBoxPosition.set(box.globalCenter).subtract(position).rotate(rotation).subtract(box.globalCenter).add(position).addScaled(motion, SPEED_FACTOR);

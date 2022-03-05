@@ -144,6 +144,14 @@ public class TransformationMatrix extends RotationMatrix{
 	}
 	
 	/**
+	 * Like {@link #applyTranslation(double, double, double)}, just with a point object inverted.
+	 */
+	public TransformationMatrix applyInvertedTranslation(Point3D translation){
+		applyTranslation(-translation.x, -translation.y, -translation.z);
+		return this;
+	}
+	
+	/**
 	 * Sets the translation of this matrix to the passed-in coordinates.
 	 * Does not modify the rotational or scalar components.
 	 */

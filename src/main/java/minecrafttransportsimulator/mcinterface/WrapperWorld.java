@@ -636,11 +636,10 @@ public class WrapperWorld{
 	}
 	
 	/**
-	 * Checks all passed-in bounding boxes for collisions with other blocks.  Returns true if they collided,
+	 * Checks the passed-in bounding box for collisions with other blocks.  Returns true if they collided,
 	 * false if they did not.  This is a bulk method designed to handle multiple checks in a row.  As such,
 	 * it stores a listing of known air blocks.  If a block has been checked before and is air, it is ignored.
-	 * To reset this list, pass in clearCache.  Note that this method, unlike the more granular one for
-	 * collision depth, does not support liquid collisions.
+	 * To reset this list, pass in clearCache.
 	 */
 	public boolean checkForCollisions(BoundingBox box, Point3D offset, boolean clearCache){
 		if(clearCache){
@@ -664,6 +663,11 @@ public class WrapperWorld{
     	    				}else{
     	    					knownAirBlocks.add(pos);
     	    				}
+    						if(box.collidesWithLiquids && state.getMaterial().isLiquid()){
+    							if(mcBox.intersects(state.getBoundingBox(world, pos).offset(pos))){
+    								return true;
+    							}
+    						}
         				}
     				}
     			}

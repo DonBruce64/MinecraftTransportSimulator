@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
@@ -68,9 +69,10 @@ public abstract class ARenderEntityDefinable<RenderedEntity extends AEntityD_Def
 		//Render any static text.
 		entity.world.beginProfiling("MainText", false);
 		if(!blendingEnabled){
-			for(JSONText textDef : entity.text.keySet()){
+			for(Entry<JSONText, String> textEntry : entity.text.entrySet()){
+				JSONText textDef = textEntry.getKey();
 				if(textDef.attachedTo == null){
-					RenderText.draw3DText(entity.text.get(textDef), entity, transform, textDef, false);
+					RenderText.draw3DText(textEntry.getValue(), entity, transform, textDef, false);
 				}
 			}
 		}

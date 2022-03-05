@@ -123,16 +123,14 @@ public class AnimationSwitchbox{
 			//Otherwise, don't bother, as it'll just take cycles.
 			if(clock.animation.centerPoint.x != 0 || clock.animation.centerPoint.y != 0 || clock.animation.centerPoint.z != 0){
 				//First translate to the center point.
-				helperPoint.set(clock.animation.centerPoint);
 				helperOffsetOperationMatrix.resetTransforms();
-				helperOffsetOperationMatrix.setTranslation(helperPoint);
+				helperOffsetOperationMatrix.setTranslation(clock.animation.centerPoint);
 				
 				//Now do rotation.
 				helperOffsetOperationMatrix.applyRotation(helperRotationMatrix);
 				
 				//Translate back.  This requires inverting the translation.
-				helperPoint.invert();
-				helperOffsetOperationMatrix.applyTranslation(helperPoint);
+				helperOffsetOperationMatrix.applyInvertedTranslation(clock.animation.centerPoint);
 				
 				//Apply that net value to our main matrix.
 				netMatrix.multiply(helperOffsetOperationMatrix);
@@ -159,16 +157,14 @@ public class AnimationSwitchbox{
 		//Otherwise, don't bother, as it'll just take cycles.
 		if(clock.animation.centerPoint.x != 0 || clock.animation.centerPoint.y != 0 || clock.animation.centerPoint.z != 0){
 			//First translate to the center point.
-			helperPoint.set(clock.animation.centerPoint);
 			helperOffsetOperationMatrix.resetTransforms();
-			helperOffsetOperationMatrix.setTranslation(helperPoint);
+			helperOffsetOperationMatrix.setTranslation(clock.animation.centerPoint);
 			
 			//Now do scaling.
 			helperOffsetOperationMatrix.applyScaling(helperScalingVector);
 			
 			//Translate back.  This requires inverting the translation.
-			helperPoint.invert();
-			helperOffsetOperationMatrix.applyTranslation(helperPoint);
+			helperOffsetOperationMatrix.applyInvertedTranslation(clock.animation.centerPoint);
 			
 			//Apply that net value to our main matrix.
 			netMatrix.multiply(helperOffsetOperationMatrix);
