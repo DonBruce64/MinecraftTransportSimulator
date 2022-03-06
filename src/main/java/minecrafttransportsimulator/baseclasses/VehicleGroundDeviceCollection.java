@@ -27,15 +27,6 @@ public class VehicleGroundDeviceCollection{
 	public final Set<PartGroundDevice> groundedGroundDevices = new HashSet<PartGroundDevice>();
 	public final Set<PartGroundDevice> drivenWheels = new HashSet<PartGroundDevice>();
 	
-	private boolean clientPitchClockwiseLast = false;
-	private int clientPitchCycleCount = 0;
-	private int clientPitchCycleCooldown = 0;
-	private boolean clientRollClockwiseLast = false;
-	private int clientRollCycleCount = 0;
-	private int clientRollCycleCooldown = 0;
-	private static final int MAX_CYCLE_COUNT = 3;
-	private static final int CYCLE_COOLDOWN_TIME = 40;
-	
 	public VehicleGroundDeviceCollection(EntityVehicleF_Physics vehicle){
 		this.vehicle = vehicle;
 		this.frontLeftGDB = new VehicleGroundDeviceBox(vehicle, true, true);
@@ -101,14 +92,17 @@ public class VehicleGroundDeviceCollection{
 	 * Gets the max collision depth for all boxes.
 	 */
 	public double getMaxCollisionDepth(){
-		//Only get opposite-side boxes, and the lowest of the two.
-		if(frontLeftGDB.collisionDepth > 0 && rearRightGDB.collisionDepth > 0){
-			return frontLeftGDB.collisionDepth > rearRightGDB.collisionDepth ? frontLeftGDB.collisionDepth : rearRightGDB.collisionDepth;
-		}else if(rearLeftGDB.collisionDepth > 0 && frontRightGDB.collisionDepth > 0){
-			return rearLeftGDB.collisionDepth > frontRightGDB.collisionDepth ? rearLeftGDB.collisionDepth : frontRightGDB.collisionDepth;
-		}else{
-			return 0;
+		double maxDepth = frontLeftGDB.collisionDepth;
+		if(frontRightGDB.collisionDepth > maxDepth){
+			maxDepth = frontRightGDB.collisionDepth; 
 		}
+		if(rearLeftGDB.collisionDepth > maxDepth){
+			maxDepth = rearLeftGDB.collisionDepth; 
+		}
+		if(rearRightGDB.collisionDepth > maxDepth){
+			maxDepth = rearRightGDB.collisionDepth; 
+		}
+		return maxDepth;
 	}
 	
 	/**
@@ -406,19 +400,6 @@ public class VehicleGroundDeviceCollection{
 	public void performRollCorrection(Point3D groundMotion){
 		//Counter-clockwise rotation if both left wheels are free
 		if(!frontLeftGDB.isCollided && !frontLeftGDB.isGrounded && frontLeftGDB.isReady() && !rearLeftGDB.isCollided && !rearLeftGDB.isGrounded && rearLeftGDB.isReady()){
-			//Set client states.  Required to prevent constant adjustments from syncing.
-			if(vehicle.world.isClient()){
-				if(clientRollCycleCooldown > 0 && --clientRollCycleCooldown > 0){
-					return;
-				}
-				if(clientRollClockwiseLast){
-					clientRollClockwiseLast = false;
-					if(++clientRollCycleCount == MAX_CYCLE_COUNT){
-						clientRollCycleCount = 0;
-						clientRollCycleCooldown = CYCLE_COOLDOWN_TIME;
-					}
-				}
-			}
 			//Make sure right is grounded or collided on at least one wheel before rotating.
 			//This prevents us from doing rotation in the air.
 			if(frontRightGDB.isCollided || frontRightGDB.isGrounded){
@@ -434,19 +415,6 @@ public class VehicleGroundDeviceCollection{
 		
 		//Clockwise rotation if both right wheels are free
 		if(!frontRightGDB.isCollided && !frontRightGDB.isGrounded && frontRightGDB.isReady() && !rearRightGDB.isCollided && !rearRightGDB.isGrounded && rearRightGDB.isReady()){
-			//Set client states.  Required to prevent constant adjustments from syncing.
-			if(vehicle.world.isClient()){
-				if(clientRollCycleCooldown > 0 && --clientRollCycleCooldown > 0){
-					return;
-				}
-				if(!clientRollClockwiseLast){
-					clientRollClockwiseLast = true;
-					if(++clientRollCycleCount == MAX_CYCLE_COUNT){
-						clientRollCycleCount = 0;
-						clientRollCycleCooldown = CYCLE_COOLDOWN_TIME;
-					}
-				}
-			}
 			//Make sure left is grounded or collided on at least one wheel before rotating.
 			//This prevents us from doing rotation in the air.
 			if(frontLeftGDB.isCollided || frontLeftGDB.isGrounded){
@@ -523,7 +491,7 @@ public class VehicleGroundDeviceCollection{
 			//This rotates the vehicle's center point locally and obtains a new point.  The delta between these points can then be taken.
 			translationApplied.set(0, 0, 0).transform(transformApplied).rotate(vehicle.orientation);
 			groundMotion.add(translationApplied);
-			System.out.println(translationApplied);
+			if(!vehicle.world.isClient())System.out.println(translationApplied);
 		}
 	}
 	

@@ -23,6 +23,7 @@ import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement;
+import minecrafttransportsimulator.packets.instances.PacketVehicleServerSync;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**At the final basic vehicle level we add in the functionality for state-based movement.
@@ -82,6 +83,10 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	private final Point3D clientDeltaM;
 	private final Point3D clientDeltaR;
 	private double clientDeltaP;
+	private long serverLast100;
+	private final Point3D serverDeltaMLast100 = new Point3D();
+	private final Point3D serverDeltaRLast100 = new Point3D();
+	private double serverDeltaPLast100;
 	private final Point3D clientDeltaMApplied = new Point3D();
 	private final Point3D clientDeltaRApplied = new Point3D();
 	private double clientDeltaPApplied;
@@ -703,14 +708,6 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 						motion.y += groundMotion.y;
 						groundMotion.y = 0;
 					}
-					if(world.isClient()){
-						//System.out.format("Motion %f adju %f \n", motion.y, groundMotion.y);
-					}
-					//If we are on the client, don't actually set ground motion.  We let the server do this and gradually sync.
-					if(world.isClient()){
-						//groundMotion.y /=4;
-					}
-					//FIXME bookmark.
 					groundDeviceCollective.updateCollisions();
 				}
 			}
@@ -732,14 +729,14 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 				}else if(correctCollidingMovement()){
 					return;
 				}
-				//FIXME bookmark
-			}else if((towedByConnection == null || !towedByConnection.hitchConnection.mounted) && fallingDown){
+				//FIXME do we really need clients to do this?  Seems to cause more issues than it solves..
+			}else if((towedByConnection == null || !towedByConnection.hitchConnection.mounted) && fallingDown && !world.isClient()){
 				world.beginProfiling("GroundHandlingPitch", false);
 				groundDeviceCollective.performPitchCorrection(groundMotion);
 				//Don't do roll correction if we don't have roll.
 				if(groundDeviceCollective.canDoRollChecks()){
 					world.beginProfiling("GroundHandlingRoll", false);
-					//groundDeviceCollective.performRollCorrection(groundMotion);
+					groundDeviceCollective.performRollCorrection(groundMotion);
 				}
 				
 				//If we are flagged as a tilting vehicle try to keep us upright, unless we are turning, in which case turn into the turn.
@@ -867,6 +864,11 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			}
 		}
 		
+		//If this is a 100 tick duration, then set the current server delta.
+		if(ticksExisted%100 == 0){
+			syncServerDeltas(null, null, 0, ticksExisted);
+		}
+		
 		//Now add actual position and angles.
 		position.add(motionApplied);
 		angles.add(rotationApplied);
@@ -973,6 +975,50 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		serverDeltaM.add(motionAdded);
 		serverDeltaR.add(rotationAdded);
 		serverDeltaP += pathingAdded;
+	}
+	
+	public void syncServerDeltas(Point3D motionSnapshot, Point3D rotationSnapshot, double pathingSnapshot, long tickOfSnapshot){
+		if(world.isClient()){
+			if(motionSnapshot == null){
+				//Client-internal call, compare our values to last set.
+				if(serverLast100 != ticksExisted){
+					//Values don't match, we need to set and wait for a server packet.
+					serverLast100 = ticksExisted;
+					serverDeltaMLast100.set(serverDeltaM);
+					serverDeltaRLast100.set(serverDeltaR);
+					serverDeltaPLast100 = serverDeltaP;
+					return;
+				}else{
+					//Values match, we already got a server packet and should compare.
+					//Set inbound vars to our current vars to work in the following functions.
+					tickOfSnapshot = ticksExisted;
+					motionSnapshot = serverDeltaM.copy();
+					rotationSnapshot = serverDeltaR.copy();
+					pathingSnapshot = serverDeltaP;
+				}
+			}else{
+				//Packet from server, compare our values to last set.
+				if(serverLast100 != tickOfSnapshot){
+					//Values don't match, we need to set and wait for a client call.
+					serverLast100 = tickOfSnapshot;
+					serverDeltaMLast100.set(motionSnapshot);
+					serverDeltaRLast100.set(rotationSnapshot);
+					serverDeltaPLast100 = pathingSnapshot;
+					return;
+				}else{
+					//Values match, we already ticked the client and should compare.
+					//Don't need to set anything as we will just compare to the saved vars.
+				}
+			}
+			
+			//If we are down here, we must have matching values.  Adjust our server delta to match.
+			serverDeltaM.add(serverDeltaMLast100).subtract(motionSnapshot);
+			serverDeltaR.add(serverDeltaRLast100).subtract(rotationSnapshot);
+			serverDeltaP += (serverDeltaPLast100 - pathingSnapshot);
+		}else{
+			//Send deltas to clients.
+			InterfacePacket.sendToAllClients(new PacketVehicleServerSync((EntityVehicleF_Physics) this, serverDeltaM, serverDeltaR, serverDeltaP));
+		}
 	}
 	
 	/**

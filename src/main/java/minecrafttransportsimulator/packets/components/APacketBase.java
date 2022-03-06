@@ -50,6 +50,7 @@ import minecrafttransportsimulator.packets.instances.PacketTileEntitySignalContr
 import minecrafttransportsimulator.packets.instances.PacketVehicleBeaconChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleInteract;
 import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement;
+import minecrafttransportsimulator.packets.instances.PacketVehicleServerSync;
 import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataCSHandshake;
 
 /**Base packet class.  All packets must extend this class to be used with the
@@ -256,6 +257,7 @@ public abstract class APacketBase{
 		InterfacePacket.registerPacket(packetIndex++, PacketVehicleBeaconChange.class);
 		InterfacePacket.registerPacket(packetIndex++, PacketVehicleInteract.class);
 		InterfacePacket.registerPacket(packetIndex++, PacketVehicleServerMovement.class);
+		InterfacePacket.registerPacket(packetIndex++, PacketVehicleServerSync.class);
 		
 		//World packets.
 		InterfacePacket.registerPacket(packetIndex++, PacketWorldSavedDataCSHandshake.class);

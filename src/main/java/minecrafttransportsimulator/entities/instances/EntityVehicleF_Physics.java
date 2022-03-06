@@ -141,7 +141,6 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	
 	@Override
 	public void update(){
-		//FIXME clean up testing here before release.
 		super.update();
 		world.beginProfiling("VehicleF_Level", true);
 		//Set vectors.
@@ -294,7 +293,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 				//If the part is a propeller or jet engine (not a car engine), we add thrust torque.
 				//If it's a rotor, we also add control surface torque to allow the vehicle to tilt.
 				if(isPropeller || jetPower > 0){
-					thrustTorque.add(partForce.y*-part.localOffset.z, partForce.z*part.localOffset.x, partForce.y*part.localOffset.x);
+					thrustTorque.add(partForce.z*part.localOffset.y, partForce.z*part.localOffset.x, partForce.y*part.localOffset.x);
 				}
 				if(isRotor && !groundDeviceCollective.isAnythingOnGround() && partForce.length() > 1){
 					hasRotors = true;
