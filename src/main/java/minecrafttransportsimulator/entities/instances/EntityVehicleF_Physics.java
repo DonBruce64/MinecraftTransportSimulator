@@ -293,7 +293,11 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 				//If the part is a propeller or jet engine (not a car engine), we add thrust torque.
 				//If it's a rotor, we also add control surface torque to allow the vehicle to tilt.
 				if(isPropeller || jetPower > 0){
-					thrustTorque.add(partForce.z*part.localOffset.y, partForce.z*part.localOffset.x, partForce.y*part.localOffset.x);
+					thrustTorque.y += partForce.z*part.localOffset.x;
+					thrustTorque.z += partForce.y*part.localOffset.x;
+					if(!groundDeviceCollective.isAnythingOnGround()){
+						thrustTorque.x += partForce.z*part.localOffset.y;
+					}
 				}
 				if(isRotor && !groundDeviceCollective.isAnythingOnGround() && partForce.length() > 1){
 					hasRotors = true;
@@ -447,7 +451,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 			
 			//As a special case, if the vehicle is a stalled plane, add a forwards pitch to allow the plane to right itself.
 			//This is needed to prevent the plane from getting stuck in a vertical position and crashing.
-			if(currentWingArea > 0 && trackAngle > 40 && angles.x < 45 && !groundDeviceCollective.isAnythingOnGround()){
+			if(currentWingArea > 0 && trackAngle > 40 && angles.x < 45 && motion.y < -0.1 && !groundDeviceCollective.isAnythingOnGround()){
 				elevatorTorque += 100;
 			}
 			
@@ -487,9 +491,13 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 				motion.set(hitchRotatedOffset);
 				motion.subtract(hookupRotatedOffset);
 				motion.scale(1/SPEED_FACTOR);
-				//TODO whatever maths we apply to the part rendering we need to apply here.
 				//FIXME for sure do this, as it's disabled for now.
-				//rotation.setTo(towedByConnection.hitchEntity.angles).add(towedByConnection.hitchConnection.rot).subtract(angles);
+				rotation.set(towedByConnection.towingVehicle.orientation).multiply(towedByConnection.hitchConnection.rot).multiplyTranspose(orientation).convertToAngles();
+				if(!world.isClient()){
+					rotation.angles.y = 0.00;
+				}else{
+					//rotation.angles.y = 0.00;
+				}
 			}else{
 				//Need to apply both motion to move the trailer, and yaw to adjust the trailer's angle relative to the truck.
 				//Yaw is applied based on the current and next position of the truck's hookup.

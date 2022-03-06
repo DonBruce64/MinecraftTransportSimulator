@@ -491,7 +491,6 @@ public class VehicleGroundDeviceCollection{
 			//This rotates the vehicle's center point locally and obtains a new point.  The delta between these points can then be taken.
 			translationApplied.set(0, 0, 0).transform(transformApplied).rotate(vehicle.orientation);
 			groundMotion.add(translationApplied);
-			if(!vehicle.world.isClient())System.out.println(translationApplied);
 		}
 	}
 	

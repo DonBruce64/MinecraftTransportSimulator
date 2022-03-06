@@ -80,13 +80,12 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	private final Point3D serverDeltaM;
 	private final Point3D serverDeltaR;
 	private double serverDeltaP;
+	private final Point3D serverDeltaMAtSync = new Point3D();
+	private final Point3D serverDeltaRAtSync = new Point3D();
+	private double serverDeltaPAtSync;	
 	private final Point3D clientDeltaM;
 	private final Point3D clientDeltaR;
 	private double clientDeltaP;
-	private long serverLast100;
-	private final Point3D serverDeltaMLast100 = new Point3D();
-	private final Point3D serverDeltaRLast100 = new Point3D();
-	private double serverDeltaPLast100;
 	private final Point3D clientDeltaMApplied = new Point3D();
 	private final Point3D clientDeltaRApplied = new Point3D();
 	private double clientDeltaPApplied;
@@ -189,6 +188,13 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			}
 		}
 		
+		//If this is the 20th tick (1 second), and we are on the client, request a sync packet.
+		//This ensures that we have the proper deltas and didn't miss any updates from the server
+		//since we were spanwed.
+		if(ticksExisted == 20 && world.isClient()){
+			syncServerDeltas(null, null, 0);
+		}
+		
 		//Update brake status.  This is used in a lot of locations, so we don't want to query the set every time.
 		brake = getVariable(BRAKE_VARIABLE);
 		parkingBrakeOn = isVariableActive(PARKINGBRAKE_VARIABLE);
@@ -260,7 +266,6 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		towedVehicle.setVariable(BRAKE_VARIABLE, 0);
 		towedVehicle.frontFollower = null;
 		towedVehicle.rearFollower = null;
-		towedVehicle.updateOrientationToTowed();
 	}
 	
 	@Override
@@ -268,26 +273,6 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		super.disconnectTrailer(connection);
 		if(connection.towedVehicle.definition.motorized.isTrailer){
 			connection.towedVehicle.setVariable(PARKINGBRAKE_VARIABLE, 1);
-		}
-	}
-	
-	/**
-	 * Helper method for aligning trailer connections.  Used to prevent yaw mis-alignments.
-	 */
-	private void updateOrientationToTowed(){
-		//Need to set angles for mounted/restricted connections.
-		if(towedByConnection.hitchConnection.mounted || towedByConnection.hitchConnection.restricted){
-			orientation.set(towedByConnection.towingEntity.orientation);
-			if(towedByConnection.hitchConnection.mounted){
-				angles.add(towedByConnection.hitchConnection.rot.angles);
-			}
-			orientation.angles.set(angles);
-			prevOrientation.set(orientation);
-			
-			//Also set yaw of the trailers we are towing.
-			for(TowingConnection trailerConnection : towingConnections){
-				((AEntityVehicleD_Moving) trailerConnection.towedVehicle).updateOrientationToTowed();
-			}
 		}
 	}
 	
@@ -729,8 +714,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 				}else if(correctCollidingMovement()){
 					return;
 				}
-				//FIXME do we really need clients to do this?  Seems to cause more issues than it solves..
-			}else if((towedByConnection == null || !towedByConnection.hitchConnection.mounted) && fallingDown && !world.isClient()){
+			}else if((towedByConnection == null || !towedByConnection.hitchConnection.mounted) && fallingDown){
 				world.beginProfiling("GroundHandlingPitch", false);
 				groundDeviceCollective.performPitchCorrection(groundMotion);
 				//Don't do roll correction if we don't have roll.
@@ -807,66 +791,64 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			pathingApplied = 0;
 		}
 		
-		if(!world.isClient()){
-			if(!motionApplied.isZero() || !rotationApplied.isZero()){
-				addToServerDeltas(motionApplied, rotationApplied, pathingApplied);
-				InterfacePacket.sendToAllClients(new PacketVehicleServerMovement((EntityVehicleF_Physics) this, motionApplied, rotationApplied, pathingApplied));
+		//If we are being towed on a mounted connection, don't do syncing.  This will only complicate things.
+		if(towedByConnection == null || !towedByConnection.hitchConnection.mounted){
+			if(!world.isClient()){
+				if(!motionApplied.isZero() || !rotationApplied.isZero()){
+					addToServerDeltas(motionApplied, rotationApplied, pathingApplied);
+					InterfacePacket.sendToAllClients(new PacketVehicleServerMovement((EntityVehicleF_Physics) this, motionApplied, rotationApplied, pathingApplied));
+				}
+			}else{
+				//Make sure the server is sending delta packets before we try to do delta correction.
+				if(!serverDeltaM.isZero() || !serverDeltaR.isZero()){
+					//Get the delta difference, and square it.  Then divide it by 25.
+					//This gives us a good "rubberbanding correction" formula for deltas.
+					//We add this correction motion to the existing motion applied.
+					//We need to keep the sign after squaring, however, as that tells us what direction to apply the deltas in.
+					clientDeltaMApplied.set(serverDeltaM).subtract(clientDeltaM);
+					clientDeltaMApplied.x *= Math.abs(clientDeltaMApplied.x);
+					clientDeltaMApplied.y *= Math.abs(clientDeltaMApplied.y);
+					clientDeltaMApplied.z *= Math.abs(clientDeltaMApplied.z);
+					clientDeltaMApplied.scale(1D/25D);
+					if(clientDeltaMApplied.x > 5){
+						clientDeltaMApplied.x = 5;
+					}
+					if(clientDeltaMApplied.y > 5){
+						clientDeltaMApplied.y = 5;
+					}
+					if(clientDeltaMApplied.z > 5){
+						clientDeltaMApplied.z = 5;
+					}
+					motionApplied.add(clientDeltaMApplied);
+					
+					clientDeltaRApplied.set(serverDeltaR).subtract(clientDeltaR);
+					clientDeltaRApplied.x *= Math.abs(clientDeltaRApplied.x);
+					clientDeltaRApplied.y *= Math.abs(clientDeltaRApplied.y);
+					clientDeltaRApplied.z *= Math.abs(clientDeltaRApplied.z);
+					clientDeltaRApplied.scale(1D/25D);
+					//Only apply delta y if it's less than 5.
+					//If they're higher, we could have bad packets or a re-do of rotations.
+					rotationApplied.add(clientDeltaRApplied);
+					if(rotationApplied.y > 5){
+						rotationApplied.y = 5;
+					}else if(rotationApplied.y < -5){
+						rotationApplied.y = -5;
+					}
+					
+					clientDeltaPApplied = serverDeltaP - clientDeltaP;
+					clientDeltaPApplied *= Math.abs(clientDeltaPApplied);
+					clientDeltaPApplied *= 1D/25D;
+					if(clientDeltaPApplied > 5){
+						clientDeltaPApplied = 5;
+					}
+					pathingApplied += clientDeltaPApplied;
+					
+					//Add actual movement to client deltas to prevent further corrections.
+					clientDeltaM.add(motionApplied);
+					clientDeltaR.add(rotationApplied);
+					clientDeltaP += pathingApplied;
+				}
 			}
-		}else{
-			//Make sure the server is sending delta packets before we try to do delta correction.
-			if(!serverDeltaM.isZero() || !serverDeltaR.isZero()){
-				//Get the delta difference, and square it.  Then divide it by 25.
-				//This gives us a good "rubberbanding correction" formula for deltas.
-				//We add this correction motion to the existing motion applied.
-				//We need to keep the sign after squaring, however, as that tells us what direction to apply the deltas in.
-				clientDeltaMApplied.set(serverDeltaM).subtract(clientDeltaM);
-				clientDeltaMApplied.x *= Math.abs(clientDeltaMApplied.x);
-				clientDeltaMApplied.y *= Math.abs(clientDeltaMApplied.y);
-				clientDeltaMApplied.z *= Math.abs(clientDeltaMApplied.z);
-				clientDeltaMApplied.scale(1D/25D);
-				if(clientDeltaMApplied.x > 5){
-					clientDeltaMApplied.x = 5;
-				}
-				if(clientDeltaMApplied.y > 5){
-					clientDeltaMApplied.y = 5;
-				}
-				if(clientDeltaMApplied.z > 5){
-					clientDeltaMApplied.z = 5;
-				}
-				motionApplied.add(clientDeltaMApplied);
-				
-				clientDeltaRApplied.set(serverDeltaR).subtract(clientDeltaR);
-				clientDeltaRApplied.x *= Math.abs(clientDeltaRApplied.x);
-				clientDeltaRApplied.y *= Math.abs(clientDeltaRApplied.y);
-				clientDeltaRApplied.z *= Math.abs(clientDeltaRApplied.z);
-				clientDeltaRApplied.scale(1D/25D);
-				//Only apply delta y if it's less than 5.
-				//If they're higher, we could have bad packets or a re-do of rotations.
-				rotationApplied.add(clientDeltaRApplied);
-				if(rotationApplied.y > 5){
-					rotationApplied.y = 5;
-				}else if(rotationApplied.y < -5){
-					rotationApplied.y = -5;
-				}
-				
-				clientDeltaPApplied = serverDeltaP - clientDeltaP;
-				clientDeltaPApplied *= Math.abs(clientDeltaPApplied);
-				clientDeltaPApplied *= 1D/25D;
-				if(clientDeltaPApplied > 5){
-					clientDeltaPApplied = 5;
-				}
-				pathingApplied += clientDeltaPApplied;
-				
-				//Add actual movement to client deltas to prevent further corrections.
-				clientDeltaM.add(motionApplied);
-				clientDeltaR.add(rotationApplied);
-				clientDeltaP += pathingApplied;
-			}
-		}
-		
-		//If this is a 100 tick duration, then set the current server delta.
-		if(ticksExisted%100 == 0){
-			syncServerDeltas(null, null, 0, ticksExisted);
 		}
 		
 		//Now add actual position and angles.
@@ -977,47 +959,20 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		serverDeltaP += pathingAdded;
 	}
 	
-	public void syncServerDeltas(Point3D motionSnapshot, Point3D rotationSnapshot, double pathingSnapshot, long tickOfSnapshot){
-		if(world.isClient()){
-			if(motionSnapshot == null){
-				//Client-internal call, compare our values to last set.
-				if(serverLast100 != ticksExisted){
-					//Values don't match, we need to set and wait for a server packet.
-					serverLast100 = ticksExisted;
-					serverDeltaMLast100.set(serverDeltaM);
-					serverDeltaRLast100.set(serverDeltaR);
-					serverDeltaPLast100 = serverDeltaP;
-					return;
-				}else{
-					//Values match, we already got a server packet and should compare.
-					//Set inbound vars to our current vars to work in the following functions.
-					tickOfSnapshot = ticksExisted;
-					motionSnapshot = serverDeltaM.copy();
-					rotationSnapshot = serverDeltaR.copy();
-					pathingSnapshot = serverDeltaP;
-				}
-			}else{
-				//Packet from server, compare our values to last set.
-				if(serverLast100 != tickOfSnapshot){
-					//Values don't match, we need to set and wait for a client call.
-					serverLast100 = tickOfSnapshot;
-					serverDeltaMLast100.set(motionSnapshot);
-					serverDeltaRLast100.set(rotationSnapshot);
-					serverDeltaPLast100 = pathingSnapshot;
-					return;
-				}else{
-					//Values match, we already ticked the client and should compare.
-					//Don't need to set anything as we will just compare to the saved vars.
-				}
-			}
-			
-			//If we are down here, we must have matching values.  Adjust our server delta to match.
-			serverDeltaM.add(serverDeltaMLast100).subtract(motionSnapshot);
-			serverDeltaR.add(serverDeltaRLast100).subtract(rotationSnapshot);
-			serverDeltaP += (serverDeltaPLast100 - pathingSnapshot);
-		}else{
-			//Send deltas to clients.
+	public void syncServerDeltas(Point3D motionSnapshot, Point3D rotationSnapshot, double pathingSnapshot){
+		if(!world.isClient()){
 			InterfacePacket.sendToAllClients(new PacketVehicleServerSync((EntityVehicleF_Physics) this, serverDeltaM, serverDeltaR, serverDeltaP));
+		}else if(motionSnapshot != null && !serverDeltaMAtSync.isZero()){
+			serverDeltaM.add(motionSnapshot).subtract(serverDeltaMAtSync);
+			serverDeltaR.add(rotationSnapshot).subtract(serverDeltaRAtSync);
+			serverDeltaP += (pathingSnapshot - serverDeltaPAtSync);
+			//Doing this keeps us from responding to future broadcast packets that were requested by other clients.
+			serverDeltaMAtSync.set(0, 0, 0);
+		}else{
+			serverDeltaMAtSync.set(serverDeltaM);
+			serverDeltaRAtSync.set(serverDeltaR);
+			serverDeltaPAtSync = serverDeltaP;
+			InterfacePacket.sendToServer(new PacketVehicleServerSync((EntityVehicleF_Physics) this));
 		}
 	}
 	

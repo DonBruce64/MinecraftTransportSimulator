@@ -1799,6 +1799,9 @@ public final class LegacyCompatSystem{
 					connectionGroup.isHookup = true;
 					connectionGroup.hookup = false;
 				}
+				if(!connectionGroup.isHookup && !connectionGroup.isHitch){
+					connectionGroup.isHitch = true;
+				}
 				for(JSONConnection connection : connectionGroup.connections){
 					if(connection.distance == 0){
 						connection.distance = 2;

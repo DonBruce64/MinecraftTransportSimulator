@@ -300,8 +300,9 @@ public class VehicleGroundDeviceBox{
 	 * of this box.
 	 */
 	public boolean collidedWithTransform(TransformationMatrix transform, Point3D groundMotion){
+		//Transform operates off contact points, so get the world-based transform delta the transform will apply to our contact point.
+		Point3D vehicleMotionOffset = contactPoint.copy().transform(transform).subtract(contactPoint).rotate(vehicle.orientation).rotate(vehicle.rotation).addScaled(vehicle.motion, EntityVehicleF_Physics.SPEED_FACTOR).add(groundMotion);
 		if(!groundDevices.isEmpty()){
-			Point3D vehicleMotionOffset = solidBox.localCenter.copy().transform(transform).rotate(vehicle.orientation).rotate(vehicle.rotation).add(vehicle.position).addScaled(vehicle.motion, EntityVehicleF_Physics.SPEED_FACTOR).add(groundMotion);
 			if(vehicle.world.checkForCollisions(solidBox, vehicleMotionOffset, false)){
 				return true;
 			}
@@ -309,7 +310,6 @@ public class VehicleGroundDeviceBox{
 		
 		if(!canRollOnGround || !isAbleToDoGroundOperations){
 			if(!liquidDevices.isEmpty() || !liquidCollisionBoxes.isEmpty()){
-				Point3D vehicleMotionOffset = liquidBox.localCenter.copy().transform(transform).rotate(vehicle.orientation).rotate(vehicle.rotation).add(vehicle.position).addScaled(vehicle.motion, EntityVehicleF_Physics.SPEED_FACTOR).add(groundMotion);
 				if(vehicle.world.checkForCollisions(liquidBox, vehicleMotionOffset, false)){
 					return true;
 				}

@@ -22,36 +22,50 @@ public class PacketVehicleServerSync extends APacketEntity<EntityVehicleF_Physic
 	private final Point3D motion;
 	private final Point3D rotation;
 	private final double pathing;
-	private final long ticksExisted;
+	
+	public PacketVehicleServerSync(EntityVehicleF_Physics vehicle){
+		super(vehicle);
+		this.motion = null;
+		this.rotation = null;
+		this.pathing = 0;
+	}
 	
 	public PacketVehicleServerSync(EntityVehicleF_Physics vehicle, Point3D motion, Point3D rotation, double pathing){
 		super(vehicle);
 		this.motion = motion;
 		this.rotation = rotation;
 		this.pathing = pathing;
-		this.ticksExisted = vehicle.ticksExisted;
 	}
 	
 	public PacketVehicleServerSync(ByteBuf buf){
 		super(buf);
-		this.motion = readPoint3dFromBuffer(buf);
-		this.rotation = readPoint3dFromBuffer(buf);
-		this.pathing = buf.readDouble();
-		this.ticksExisted = buf.readLong();
+		if(buf.readBoolean()){
+			this.motion = readPoint3dFromBuffer(buf);
+			this.rotation = readPoint3dFromBuffer(buf);
+			this.pathing = buf.readDouble();
+		}else{
+			this.motion = null;
+			this.rotation = null;
+			this.pathing = 0;
+		}
 	}
 	
 	@Override
 	public void writeToBuffer(ByteBuf buf){
 		super.writeToBuffer(buf);
-		writePoint3dToBuffer(motion, buf);
-		writePoint3dToBuffer(rotation, buf);
-		buf.writeDouble(pathing);
-		buf.writeLong(ticksExisted);
+		if(motion != null){
+			buf.writeBoolean(true);
+			writePoint3dToBuffer(motion, buf);
+			writePoint3dToBuffer(rotation, buf);
+			buf.writeDouble(pathing);
+		}else{
+			buf.writeBoolean(false);
+		}
 	}
 	
 	@Override
 	public boolean handle(WrapperWorld world, EntityVehicleF_Physics vehicle){
-		vehicle.syncServerDeltas(motion, rotation, pathing, ticksExisted);
+		vehicle.syncServerDeltas(motion, rotation, pathing);
 		return false;
 	}
 }

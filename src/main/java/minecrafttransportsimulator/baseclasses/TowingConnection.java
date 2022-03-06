@@ -75,7 +75,7 @@ public class TowingConnection{
 		if(towedEntity == null){
 			towedEntity = world.getEntity(hookupEntityUUID);
 			if(towedEntity != null){
-				towingVehicle = towedEntity instanceof APart ? ((APart) towedEntity).vehicleOn : (EntityVehicleF_Physics) towedEntity;				
+				towedVehicle = towedEntity instanceof APart ? ((APart) towedEntity).vehicleOn : (EntityVehicleF_Physics) towedEntity;				
 				hookupConnectionGroup = towedEntity.definition.connectionGroups.get(hookupGroupIndex);
 				hookupConnection = hookupConnectionGroup.connections.get(hookupConnectionIndex);
 			}
