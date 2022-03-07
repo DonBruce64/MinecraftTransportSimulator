@@ -940,7 +940,7 @@ public class PartEngine extends APart{
 		return driveshaftRotation + (driveshaftRotation - prevDriveshaftRotation)*partialTicks;
 	}
 	
-	public Point3D getForceOutput(){
+	public void addToForceOutput(Point3D force, Point3D torque){
 		engineForce.set(0D, 0D, 0D);
 		//First get wheel forces, if we have friction to do so.
 		if(definition.engine.jetPowerFactor == 0 && wheelFriction != 0){
@@ -999,6 +999,7 @@ public class PartEngine extends APart{
 				wheelForce = -rpm/currentMaxRPM*Math.signum(currentGear)*30;
 			}
 			engineForce.set(0, 0, wheelForce).rotate(vehicleOn.orientation);
+			force.add(engineForce);
 		}
 		
 		//If we provide jet power, add it now.  This may be done with any parts or wheels on the ground.
@@ -1020,11 +1021,15 @@ public class PartEngine extends APart{
 			double thrust = (vehicleOn.reverseThrust ? -(coreContribution + fanContribution) : coreContribution + fanContribution)*definition.engine.jetPowerFactor;
 			
 			//Add the jet force to the engine.  Use the engine rotation to define the power vector.
-			engineForce.addScaled(engineAxisVector, thrust);
+			engineForce.set(engineAxisVector).scale(thrust);
+			force.add(engineForce);
+			engineForce.reOrigin(vehicleOn.orientation);
+			torque.y += engineForce.z*localOffset.x;
+			torque.z += engineForce.y*localOffset.x;
+			if(!vehicleOn.groundDeviceCollective.isAnythingOnGround()){
+				torque.x += engineForce.z*localOffset.y;
+			}
 		}
-		
-		//Finally, return the force we calculated.
-		return engineForce;
 	}
 	
 	@Override

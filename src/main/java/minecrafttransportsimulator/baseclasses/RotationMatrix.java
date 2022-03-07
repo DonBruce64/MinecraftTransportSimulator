@@ -31,6 +31,7 @@ public class RotationMatrix{
 	 * when matrix multiplication operations are performed.  The idea is to use them to create the
 	 * initial matrix, then multiply/transform as applicable.  If you need to get them back out of the
 	 * matrix, call {@link #convertToAngles()} which will convert the matrix back into the angles.
+	 * If you change these and want the matrix state to update to reflect them, call {@link #updateToAngles()}
 	 */
 	public final Point3D angles = new Point3D();
 	private final Point3D lastAngles = new Point3D();
@@ -378,10 +379,12 @@ public class RotationMatrix{
 	/**
 	 * Updates this rotation of this matrix to match it to the current
 	 * value of its internal {@link #angles} variable.  This is an internal
-	 * function and is only called prior to rotation operations (as needed)
-	 * as it does some rather lengthy calculations.
+	 * function and is normally only called prior to rotation operations 
+	 * (as needed) as it does some rather lengthy calculations.  However,
+	 * it may be called any time the angles have changed and you want
+	 * this matrix to reflect those changes.
 	 */
-	private RotationMatrix updateToAngles(){
+	public RotationMatrix updateToAngles(){
 		setToZero();
 		rotateY(angles.y);
 		rotateX(angles.x);

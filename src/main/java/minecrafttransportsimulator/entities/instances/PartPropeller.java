@@ -134,9 +134,8 @@ public class PartPropeller extends APart{
 		return super.getRawVariableValue(variable, partialTicks);
 	}
 	
-	public Point3D getForceOutput(){
+	public void addToForceOutput(Point3D force, Point3D torque){
 		propellerAxisVector.set(0, 0, 1).rotate(orientation);
-		propellerForce.set(0D, 0D, 0D);
 		if(connectedEngine != null && connectedEngine.running){
 			//Get the current linear velocity of the propeller, based on our axial velocity.
 			//This is is meters per second.
@@ -174,9 +173,15 @@ public class PartPropeller extends APart{
 				
 				//Add propeller force to total engine force as a vector.
 				//Depends on propeller orientation, as upward propellers provide upwards thrust.
-				propellerForce.addScaled(propellerAxisVector, thrust);
+				propellerForce.set(propellerAxisVector).scale(thrust);
+				force.add(propellerForce);
+				propellerForce.reOrigin(vehicleOn.orientation);
+				torque.y += propellerForce.z*localOffset.x;
+				torque.z += propellerForce.y*localOffset.x;
+				if(!vehicleOn.groundDeviceCollective.isAnythingOnGround()){
+					torque.x += propellerForce.z*localOffset.y;
+				}
 			}
 		}
-		return propellerForce;
 	}
 }

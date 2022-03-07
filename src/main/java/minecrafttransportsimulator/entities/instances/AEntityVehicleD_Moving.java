@@ -55,7 +55,6 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	public boolean lockedOnRoad;
 	public double groundVelocity;
 	public double weightTransfer = 0;
-	public final Point3D angles;
 	public final RotationMatrix rotation = new RotationMatrix();
 	private final WrapperPlayer placingPlayer;
 	
@@ -82,7 +81,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	private double serverDeltaP;
 	private final Point3D serverDeltaMAtSync = new Point3D();
 	private final Point3D serverDeltaRAtSync = new Point3D();
-	private double serverDeltaPAtSync;	
+	private double serverDeltaPAtSync;
 	private final Point3D clientDeltaM;
 	private final Point3D clientDeltaR;
 	private double clientDeltaP;
@@ -92,11 +91,11 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	
 	private final Point3D roadMotion = new Point3D();
 	private final Point3D roadRotation = new Point3D();
-	private final Point3D collisionMotion = new Point3D();
-	private final RotationMatrix collisionRotation = new RotationMatrix();
+	private final Point3D vehicleCollisionMotion = new Point3D();
+	private final RotationMatrix vehicleCollisionRotation = new RotationMatrix();
 	private final Point3D groundMotion = new Point3D();
 	private final Point3D motionApplied = new Point3D();
-	private final Point3D rotationApplied = new Point3D();
+	private final RotationMatrix rotationApplied = new RotationMatrix();
 	private double pathingApplied;
 	
 	private final Point3D tempBoxPosition = new Point3D();
@@ -117,7 +116,6 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		this.clientDeltaP = serverDeltaP;
 		this.groundDeviceCollective = new VehicleGroundDeviceCollection((EntityVehicleF_Physics) this);
 		this.placingPlayer = placingPlayer;
-		this.angles = orientation.angles.copy();
 		
 		//Set position to the spot that was clicked by the player.
 		//Add a -90 rotation offset so the vehicle is facing perpendicular.
@@ -127,9 +125,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			Point3D playerSightVector = placingPlayer.getLineOfSight(3);
 			position.set(placingPlayer.getPosition().add(playerSightVector.x, 0, playerSightVector.z));
 			prevPosition.set(position);
-			//FIXME move angles into orientation.
-			angles.set(0, placingPlayer.getYaw() + 90, 0);
-			orientation.angles.set(angles);
+			orientation.setToAngles(new Point3D(0, placingPlayer.getYaw() + 90, 0));
 			prevOrientation.set(orientation);
 			motion.set(0, 0, 0);
 			prevMotion.set(motion);
@@ -140,9 +136,6 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	public void update(){
 		super.update();
 		world.beginProfiling("VehicleD_Level", true);
-		//FIXME this is only here as a hack to get this to work with existing rendering.  See if we can remove angles after we are done.
-		orientation.angles.set(angles);
-		
 		//If we were placed down, and this is our first tick, check our collision boxes to make sure we are't in the ground.
 		if(ticksExisted == 1 && placingPlayer != null && !world.isClient()){
 			//Get how far above the ground the vehicle needs to be, and move it to that position.
@@ -167,7 +160,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			//If the core collisions are colliding, set the vehicle as dead and abort.
 			//We need to update the boxes first, however, as they haven't been updated yet.
 			motionApplied.set(0, -furthestDownPoint, 0);
-			rotationApplied.set(0, 0, 0);
+			rotationApplied.angles.set(0, 0, 0);
 			position.add(motionApplied);
 			for(BoundingBox coreBox : allBlockCollisionBoxes){
 				coreBox.updateToEntity(this, null);
@@ -181,9 +174,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 					}
 					return;
 				}else{
-					//Update deltas and send to clients.
-					addToServerDeltas(motionApplied, rotationApplied, pathingApplied);
-					InterfacePacket.sendToAllClients(new PacketVehicleServerMovement((EntityVehicleF_Physics) this, motionApplied, rotationApplied, pathingApplied));
+					addToServerDeltas(null, null, 0);
 				}
 			}
 		}
@@ -299,8 +290,8 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 								curve.setPointToPositionAt(testPoint, f);
 								if(testPoint.isDistanceToCloserThan(contactPoint, 1)){
 									testRotation = curve.getRotationAt(f).angles;
-									boolean sameDirection = Math.abs(testRotation.getClampedYDelta(angles.y)) < 10;
-									boolean oppositeDirection = Math.abs(testRotation.getClampedYDelta(angles.y)) > 170;
+									boolean sameDirection = Math.abs(testRotation.getClampedYDelta(orientation.angles.y)) < 10;
+									boolean oppositeDirection = Math.abs(testRotation.getClampedYDelta(orientation.angles.y)) > 170;
 									if(sameDirection || oppositeDirection){
 										return new RoadFollowingState(lane, curve, sameDirection, f);
 									}
@@ -596,8 +587,6 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		//This is because if we are on a road we need to follow the road's curve.
 		//If we have both followers, do road-following logic.
 		//If we don't, or we're turning off the road, do normal vehicle logic.
-		roadMotion.set(0, 0, 0);
-		roadRotation.set(0, 0, 0);
 		if(frontFollower != null && rearFollower != null){
 			world.beginProfiling("RoadOperations", false);
 			
@@ -646,8 +635,8 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 					double yawDelta = Math.toDegrees(Math.atan2(desiredVector.x, desiredVector.z));
 					double pitchDelta = -Math.toDegrees(Math.atan2(desiredVector.y, Math.hypot(desiredVector.x, desiredVector.z)));
 					double rollDelta = rearFollower.getCurrentRotation();
-					roadRotation.set(pitchDelta - angles.x, yawDelta, rollDelta - angles.z);
-					roadRotation.y = roadRotation.getClampedYDelta(angles.y);
+					roadRotation.set(pitchDelta - orientation.angles.x, yawDelta, rollDelta - orientation.angles.z);
+					roadRotation.y = roadRotation.getClampedYDelta(orientation.angles.y);
 					if(!world.isClient()){
 						addToSteeringAngle((float) (goingInReverse ? -roadRotation.y : roadRotation.y)*1.5F);
 					}
@@ -725,10 +714,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 				
 				//If we are flagged as a tilting vehicle try to keep us upright, unless we are turning, in which case turn into the turn.
 				if(definition.motorized.maxTiltAngle != 0){
-					rotation.angles.z = -angles.z - definition.motorized.maxTiltAngle*2.0*Math.min(0.5, velocity/2D)*getSteeringAngle();
-					if(Double.isNaN(rotation.angles.z)){
-						rotation.angles.z = 0;
-					}
+					rotation.angles.z = -orientation.angles.z - definition.motorized.maxTiltAngle*2.0*Math.min(0.5, velocity/2D)*getSteeringAngle();
 				}
 			}
 		}
@@ -740,20 +726,20 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			for(AEntityE_Interactable<?> interactable : collidedEntities){
 				//Set angluar movement delta.
 				if(interactable instanceof AEntityVehicleD_Moving){
-					collisionRotation.set(interactable.orientation).multiplyTranspose(interactable.prevOrientation);
-					collisionRotation.convertToAngles();
+					vehicleCollisionRotation.set(interactable.orientation).multiplyTranspose(interactable.prevOrientation);
+					vehicleCollisionRotation.convertToAngles();
 				}
 				
 				//Get vector from collided box to this entity.
 				Point3D centerOffset = position.copy().subtract(interactable.prevPosition);
 				
 				//Add rotation contribution to offset.
-				collisionMotion.set(centerOffset);
-				collisionMotion.rotate(collisionRotation);
-				collisionMotion.subtract(centerOffset);
+				vehicleCollisionMotion.set(centerOffset);
+				vehicleCollisionMotion.rotate(vehicleCollisionRotation);
+				vehicleCollisionMotion.subtract(centerOffset);
 				
 				//Add linear contribution to offset.
-				collisionMotion.add(interactable.position).subtract(interactable.prevPosition);
+				vehicleCollisionMotion.add(interactable.position).subtract(interactable.prevPosition);
 				
 				//If we just contacted an entity, adjust our motion to match that entity's motion.
 				//We take our motion, and then remove it so it's the delta to that entity.
@@ -770,18 +756,19 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			if(lastCollidedEntity != null){
 				//Add-back to our motion by adding the entity's motion.
 				motion.add(lastCollidedEntity.motion);
-				collisionMotion.set(0, 0, 0);
-				collisionRotation.setToZero();
-				collisionRotation.angles.set(0, 0, 0);
 				lastCollidedEntity = null;
 			}
 		}
 
 		//Now that that the movement has been checked, move the vehicle.
 		world.beginProfiling("ApplyMotions", false);
-		motionApplied.set(motion).scale(SPEED_FACTOR).add(roadMotion).add(collisionMotion).add(groundMotion);
-		rotationApplied.set(rotation.angles).add(roadRotation).add(collisionRotation.angles);
+		motionApplied.set(motion).scale(SPEED_FACTOR).add(groundMotion);
+		rotationApplied.angles.set(rotation.angles);
+		
+		//Add road contributions.
 		if(lockedOnRoad){
+			motionApplied.add(roadMotion);
+			rotationApplied.angles.add(roadRotation);
 			if(towedByConnection != null){
 				pathingApplied = ((AEntityVehicleD_Moving) towedByConnection.towingVehicle).pathingApplied;
 			}else{
@@ -791,70 +778,77 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			pathingApplied = 0;
 		}
 		
+		//Add colliding vehicle contributions.
+		if(lastCollidedEntity != null){
+			motionApplied.add(vehicleCollisionMotion);
+			rotationApplied.angles.add(vehicleCollisionRotation.angles);
+		}
+		
+		//All contributions done, add calculated motions.
+		position.add(motionApplied);
+		if(!rotationApplied.angles.isZero()){
+			rotationApplied.updateToAngles();
+			orientation.multiply(rotationApplied).convertToAngles();
+		}
+		totalPathDelta += pathingApplied;
+		
+		//Now adjust our movement to sync with the server.
 		//If we are being towed on a mounted connection, don't do syncing.  This will only complicate things.
 		if(towedByConnection == null || !towedByConnection.hitchConnection.mounted){
-			if(!world.isClient()){
-				if(!motionApplied.isZero() || !rotationApplied.isZero()){
-					addToServerDeltas(motionApplied, rotationApplied, pathingApplied);
-					InterfacePacket.sendToAllClients(new PacketVehicleServerMovement((EntityVehicleF_Physics) this, motionApplied, rotationApplied, pathingApplied));
-				}
-			}else{
-				//Make sure the server is sending delta packets before we try to do delta correction.
-				if(!serverDeltaM.isZero() || !serverDeltaR.isZero()){
-					//Get the delta difference, and square it.  Then divide it by 25.
-					//This gives us a good "rubberbanding correction" formula for deltas.
-					//We add this correction motion to the existing motion applied.
-					//We need to keep the sign after squaring, however, as that tells us what direction to apply the deltas in.
-					clientDeltaMApplied.set(serverDeltaM).subtract(clientDeltaM);
+			if(world.isClient()){
+				//Get the delta difference, and square it.  Then divide it by 25.
+				//This gives us a good "rubberbanding correction" formula for deltas.
+				//We add this correction motion to the existing motion applied.
+				//We need to keep the sign after squaring, however, as that tells us what direction to apply the deltas in.
+				clientDeltaM.add(motionApplied);
+				clientDeltaMApplied.set(serverDeltaM).subtract(clientDeltaM);
+				if(!clientDeltaMApplied.isZero()){
 					clientDeltaMApplied.x *= Math.abs(clientDeltaMApplied.x);
 					clientDeltaMApplied.y *= Math.abs(clientDeltaMApplied.y);
 					clientDeltaMApplied.z *= Math.abs(clientDeltaMApplied.z);
 					clientDeltaMApplied.scale(1D/25D);
-					if(clientDeltaMApplied.x > 5){
-						clientDeltaMApplied.x = 5;
-					}
-					if(clientDeltaMApplied.y > 5){
-						clientDeltaMApplied.y = 5;
-					}
-					if(clientDeltaMApplied.z > 5){
-						clientDeltaMApplied.z = 5;
-					}
-					motionApplied.add(clientDeltaMApplied);
-					
-					clientDeltaRApplied.set(serverDeltaR).subtract(clientDeltaR);
+					clientDeltaM.add(clientDeltaMApplied);
+					position.add(clientDeltaMApplied);
+				}
+				
+				//Note that orientation wasn't a direct angle-addition, as the rotation is applied relative to the current
+				//orientation.  This means that if we yaw 5 degrees, but are rolling 10 degrees, then we need to not do the
+				//yaw rotation in the XZ plane, but instead in that relative-rotated plane.
+				//To account for this, we get the angle delta between the prior and current orientation, and use that for the delta. 
+				//Though before we do this we check if those angles were non-zero, as no need to do math if they are.
+				if(!rotationApplied.angles.isZero()){
+					rotationApplied.angles.set(orientation.angles).subtract(prevOrientation.angles).clamp180();
+					clientDeltaR.add(rotationApplied.angles);
+				}
+				clientDeltaRApplied.set(serverDeltaR).subtract(clientDeltaR);
+				if(!clientDeltaRApplied.isZero()){
 					clientDeltaRApplied.x *= Math.abs(clientDeltaRApplied.x);
 					clientDeltaRApplied.y *= Math.abs(clientDeltaRApplied.y);
 					clientDeltaRApplied.z *= Math.abs(clientDeltaRApplied.z);
 					clientDeltaRApplied.scale(1D/25D);
-					//Only apply delta y if it's less than 5.
-					//If they're higher, we could have bad packets or a re-do of rotations.
-					rotationApplied.add(clientDeltaRApplied);
-					if(rotationApplied.y > 5){
-						rotationApplied.y = 5;
-					}else if(rotationApplied.y < -5){
-						rotationApplied.y = -5;
-					}
-					
-					clientDeltaPApplied = serverDeltaP - clientDeltaP;
+					if(clientDeltaRApplied.x < -5)clientDeltaRApplied.x = -5;
+					if(clientDeltaRApplied.x > 5)clientDeltaRApplied.x = 5;
+					if(clientDeltaRApplied.y < -5)clientDeltaRApplied.y = -5;
+					if(clientDeltaRApplied.y > 5)clientDeltaRApplied.y = 5;
+					if(clientDeltaRApplied.z < -5)clientDeltaRApplied.z = -5;
+					if(clientDeltaRApplied.z > 5)clientDeltaRApplied.z = 5;
+					clientDeltaR.add(clientDeltaRApplied);
+					orientation.angles.add(clientDeltaRApplied);
+					orientation.updateToAngles();
+				}
+				
+				clientDeltaP += pathingApplied;
+				clientDeltaPApplied = serverDeltaP - clientDeltaP;
+				if(clientDeltaPApplied != 0){
 					clientDeltaPApplied *= Math.abs(clientDeltaPApplied);
 					clientDeltaPApplied *= 1D/25D;
-					if(clientDeltaPApplied > 5){
-						clientDeltaPApplied = 5;
-					}
-					pathingApplied += clientDeltaPApplied;
-					
-					//Add actual movement to client deltas to prevent further corrections.
-					clientDeltaM.add(motionApplied);
-					clientDeltaR.add(rotationApplied);
-					clientDeltaP += pathingApplied;
+					clientDeltaP += clientDeltaPApplied;
+					totalPathDelta += clientDeltaPApplied;
 				}
+			}else{
+				addToServerDeltas(null, null, 0);
 			}
 		}
-		
-		//Now add actual position and angles.
-		position.add(motionApplied);
-		angles.add(rotationApplied);
-		totalPathDelta += pathingApplied;
 		world.endProfiling();
 	}
 	
@@ -954,9 +948,23 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	}
 	
 	public void addToServerDeltas(Point3D motionAdded, Point3D rotationAdded, double pathingAdded){
-		serverDeltaM.add(motionAdded);
-		serverDeltaR.add(rotationAdded);
-		serverDeltaP += pathingAdded;
+		if(rotationAdded != null){
+			//Packet call from server, add directly.
+			serverDeltaM.add(motionAdded);
+			serverDeltaR.add(rotationAdded);
+			serverDeltaP += pathingAdded;
+		}else{
+			//Internal call either from server, add normally and send packet if needed.
+			if(!motionApplied.isZero() || !rotationApplied.angles.isZero()){
+				if(!rotationApplied.angles.isZero()){
+					rotationApplied.angles.set(orientation.angles).subtract(prevOrientation.angles).clamp180();					//clientDeltaR.add(orientation.angles).subtract(prevOrientation.angles);
+				}
+				serverDeltaM.add(motionApplied);
+				serverDeltaR.add(rotationApplied.angles);
+				serverDeltaP += pathingApplied;
+				InterfacePacket.sendToAllClients(new PacketVehicleServerMovement((EntityVehicleF_Physics) this, motionApplied, rotationApplied.angles, pathingApplied));
+			}
+		}
 	}
 	
 	public void syncServerDeltas(Point3D motionSnapshot, Point3D rotationSnapshot, double pathingSnapshot){

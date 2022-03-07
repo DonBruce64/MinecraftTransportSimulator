@@ -249,6 +249,20 @@ public class Point3D{
 	}
 	
 	/**
+	 * Clamps the values to this point from -180 to 180 as if they were angles in that domain.
+	 * Returns the called object for nested operations.
+	 */
+	public Point3D clamp180(){
+		while(x > 180)x -= 360;
+		while(x < -180)x += 360;
+		while(y > 180)y -= 360;
+		while(y < -180)y += 360;
+		while(z > 180)z -= 360;
+		while(z < -180)z += 360;
+		return this;
+	}
+	
+	/**
 	 * Returns a copy of this point as a new object.
 	 */
 	public Point3D copy(){
