@@ -117,7 +117,9 @@ public class PartGun extends APart{
 		}else{
 			this.defaultYaw = definition.gun.defaultYaw;
 		}
-		if(definition.gun.yawSpeed != 0 && definition.gun.yawSpeed < placementDefinition.yawSpeed){
+		if(definition.gun.yawSpeed != 0 && placementDefinition.yawSpeed != 0){
+			this.yawSpeed = definition.gun.yawSpeed < placementDefinition.yawSpeed ? definition.gun.yawSpeed : placementDefinition.yawSpeed;
+		}else if(definition.gun.yawSpeed != 0){
 			this.yawSpeed = definition.gun.yawSpeed;
 		}else{
 			this.yawSpeed = placementDefinition.yawSpeed;
@@ -140,7 +142,9 @@ public class PartGun extends APart{
 		}else{
 			this.defaultPitch = -definition.gun.defaultPitch;
 		}
-		if(definition.gun.pitchSpeed != 0 && definition.gun.pitchSpeed < placementDefinition.pitchSpeed){
+		if(definition.gun.pitchSpeed != 0 && placementDefinition.pitchSpeed != 0){
+			this.pitchSpeed = definition.gun.pitchSpeed < placementDefinition.pitchSpeed ? definition.gun.pitchSpeed : placementDefinition.pitchSpeed;
+		}else if(definition.gun.pitchSpeed != 0){
 			this.pitchSpeed = definition.gun.pitchSpeed;
 		}else{
 			this.pitchSpeed = placementDefinition.pitchSpeed;
