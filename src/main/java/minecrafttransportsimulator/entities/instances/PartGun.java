@@ -40,10 +40,14 @@ public class PartGun extends APart{
 	//Variables based on the specific gun's properties.
 	private final double minYaw;
 	private final double maxYaw;
+	private final double defaultYaw;
+	private final double yawSpeed;
+	
 	private final double minPitch;
 	private final double maxPitch;
-	private final double defaultYaw;
 	private final double defaultPitch;
+	private final double pitchSpeed;
+	
 	private final long millisecondFiringDelay;
 	private final AItemPart gunItem;
 	
@@ -108,6 +112,17 @@ public class PartGun extends APart{
 				this.maxYaw =  placementDefinition.maxYaw;
 			}
 		}
+		if(placementDefinition.defaultYaw != 0 && placementDefinition.defaultYaw >= minYaw && placementDefinition.defaultYaw <= maxYaw){
+			this.defaultYaw = placementDefinition.defaultYaw;
+		}else{
+			this.defaultYaw = definition.gun.defaultYaw;
+		}
+		if(definition.gun.yawSpeed != 0 && definition.gun.yawSpeed < placementDefinition.yawSpeed){
+			this.yawSpeed = definition.gun.yawSpeed;
+		}else{
+			this.yawSpeed = placementDefinition.yawSpeed;
+		}
+		
 		//Swap min and max pitch.  In JSON, negative values are down and positive up.
 		//But for us, positive is down and negative is up.
 		if(definition.gun.minPitch != 0){
@@ -120,16 +135,17 @@ public class PartGun extends APart{
 		}else{
 			this.maxPitch = -placementDefinition.minPitch;
 		}
-		if(placementDefinition.defaultYaw != 0 && placementDefinition.defaultYaw >= minYaw && placementDefinition.defaultYaw <= maxYaw){
-			this.defaultYaw = placementDefinition.defaultYaw;
-		}else{
-			this.defaultYaw = definition.gun.defaultYaw;
-		}
 		if(placementDefinition.defaultPitch != 0 && -placementDefinition.defaultPitch >= minPitch && -placementDefinition.defaultPitch <= maxPitch){
 			this.defaultPitch = -placementDefinition.defaultPitch;
 		}else{
 			this.defaultPitch = -definition.gun.defaultPitch;
 		}
+		if(definition.gun.pitchSpeed != 0 && definition.gun.pitchSpeed < placementDefinition.pitchSpeed){
+			this.pitchSpeed = definition.gun.pitchSpeed;
+		}else{
+			this.pitchSpeed = placementDefinition.pitchSpeed;
+		}
+		
 		this.millisecondFiringDelay = (long) (definition.gun.fireDelay*50);
 		this.gunItem = getItem();
 		
@@ -404,7 +420,7 @@ public class PartGun extends APart{
 					controller.setYaw(targetAngles.y);
 					controller.setPitch(targetAngles.x);
 					//Only fire if we're within 1 movement increment of the target.
-					if(Math.abs(targetAngles.y - internalOrientation.angles.y) < definition.gun.yawSpeed && Math.abs(targetAngles.x - internalOrientation.angles.x) < definition.gun.pitchSpeed){
+					if(Math.abs(targetAngles.y - internalOrientation.angles.y) < yawSpeed && Math.abs(targetAngles.x - internalOrientation.angles.x) < pitchSpeed){
 						state = state.promote(GunState.FIRING_REQUESTED);
 					}else{
 						state = state.demote(GunState.CONTROLLED);
@@ -504,13 +520,13 @@ public class PartGun extends APart{
 				if(deltaYaw < -180)deltaYaw += 360;
 				if(deltaYaw > 180)deltaYaw -= 360;
 				if(deltaYaw < 0){
-					if(deltaYaw < -definition.gun.yawSpeed){
-						deltaYaw = -definition.gun.yawSpeed;
+					if(deltaYaw < -yawSpeed){
+						deltaYaw = -yawSpeed;
 					}
 					internalOrientation.angles.y += deltaYaw; 
 				}else if(deltaYaw > 0){
-					if(deltaYaw > definition.gun.yawSpeed){
-						deltaYaw = definition.gun.yawSpeed;
+					if(deltaYaw > yawSpeed){
+						deltaYaw = yawSpeed;
 					}
 					internalOrientation.angles.y += deltaYaw;
 				}
@@ -539,13 +555,13 @@ public class PartGun extends APart{
 			if(deltaPitch != 0){
 				//Adjust pitch.
 				if(deltaPitch < 0){
-					if(deltaPitch < -definition.gun.pitchSpeed){
-						deltaPitch = -definition.gun.pitchSpeed;
+					if(deltaPitch < -pitchSpeed){
+						deltaPitch = -pitchSpeed;
 					}
 					internalOrientation.angles.x += deltaPitch; 
 				}else if(deltaPitch > 0){
-					if(deltaPitch > definition.gun.pitchSpeed){
-						deltaPitch = definition.gun.pitchSpeed;
+					if(deltaPitch > pitchSpeed){
+						deltaPitch = pitchSpeed;
 					}
 					internalOrientation.angles.x += deltaPitch;
 				}

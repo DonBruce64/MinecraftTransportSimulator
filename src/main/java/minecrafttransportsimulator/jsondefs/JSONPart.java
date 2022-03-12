@@ -378,7 +378,7 @@ public class JSONPart extends AJSONPartProvider{
 		@JSONDescription("Like minCaseLength, but the maximum.")
     	public float maxCaseLength;
 		
-		@JSONDescription(" How fast, in degrees/tick, the gun can rotate in the yaw direction.  This is normally auto-calculated from the gun's length and diameter, but it may be specified here if desired.")
+		@JSONDescription("How fast, in degrees/tick, the gun can rotate in the yaw direction.  Note that if this value, and the value on the part slot are both specified, the lower of the two values will be used.")
     	public float yawSpeed;
 		
 		@JSONDescription("Like yawSpeed, but for pitch.")
