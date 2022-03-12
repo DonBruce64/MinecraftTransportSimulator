@@ -140,13 +140,6 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
 			}
 		}
 		
-		//Update towing variables.
-		if(!towingConnections.isEmpty()){
-			for(TowingConnection connection : towingConnections){
-				connection.update();
-			}
-		}
-		
 		world.endProfiling();
 	}
 	
@@ -201,11 +194,11 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
     @Override
 	public void updatePostMovement(){
     	super.updatePostMovement();
-		
 		//If we are towing entities, update them now.
 		if(!towingConnections.isEmpty()){
 			world.beginProfiling("TowedEntities", true);
 			for(TowingConnection connection : towingConnections){
+				connection.update();
 				connection.towedVehicle.update();
 			}
 			world.endProfiling();

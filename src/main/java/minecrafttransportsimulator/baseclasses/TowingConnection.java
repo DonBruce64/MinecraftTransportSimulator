@@ -87,9 +87,9 @@ public class TowingConnection{
 	 * Updates this connection.  This sets the hitch and hookup prior and next positions.
 	 */
 	public void update(){
-		hitchPriorPosition.set(hitchConnection.pos).rotate(towingEntity.prevOrientation).add(towingEntity.prevPosition);
+		hitchPriorPosition.set(hitchCurrentPosition);
 		hitchCurrentPosition.set(hitchConnection.pos).rotate(towingEntity.orientation).add(towingEntity.position);
-		hookupPriorPosition.set(hookupConnection.pos).rotate(towedEntity.prevOrientation).add(towedEntity.prevPosition);
+		hookupPriorPosition.set(hookupCurrentPosition);
 		hookupCurrentPosition.set(hookupConnection.pos).rotate(towedEntity.orientation).add(towedEntity.position);
 	}
 	

@@ -463,18 +463,14 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 		}else if(!lockedOnRoad){
 			//If we are a trailer that is mounted, just move the vehicle to the exact position of the trailer connection.
 			//Otherwise, do movement logic  Make sure the towed vehicle is loaded, however.  It may not yet be.
-			if(towedByConnection.hitchConnection.mounted){
-				Point3D hitchRotatedOffset = towedByConnection.hitchCurrentPosition;
-				Point3D hookupRotatedOffset = towedByConnection.hookupCurrentPosition;
-				motion.set(hitchRotatedOffset);
-				motion.subtract(hookupRotatedOffset);
-				motion.scale(1/SPEED_FACTOR);
+			if(towedByConnection.hitchConnection.mounted || towedByConnection.hitchConnection.restricted){
+				motion.set(towedByConnection.hitchCurrentPosition).subtract(towedByConnection.hookupCurrentPosition).scale(1/SPEED_FACTOR);
 				//FIXME for sure do this, as it's disabled for now.
-				rotation.set(towedByConnection.towingVehicle.orientation).multiply(towedByConnection.hitchConnection.rot).multiplyTranspose(orientation).convertToAngles();
-				if(!world.isClient()){
-					rotation.angles.y = 0.00;
-				}else{
-					//rotation.angles.y = 0.00;
+				rotation.set(towedByConnection.towingEntity.orientation).multiply(towedByConnection.hitchConnection.rot).multiplyTranspose(orientation);
+				if(towedByConnection.hitchConnection.restricted){
+					rotation.angles.x = 0;
+					rotation.angles.z = 0;
+					rotation.updateToAngles();
 				}
 			}else{
 				//Need to apply both motion to move the trailer, and yaw to adjust the trailer's angle relative to the truck.

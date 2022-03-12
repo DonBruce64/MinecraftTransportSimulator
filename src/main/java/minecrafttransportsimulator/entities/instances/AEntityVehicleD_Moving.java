@@ -202,7 +202,9 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			world.beginProfiling("GroundForces", false);
 			getForcesAndMotions();
 			world.beginProfiling("GroundOperations", false);
-			performGroundOperations();
+			if(towedByConnection == null || !towedByConnection.hitchConnection.mounted){
+				performGroundOperations();
+			}
 			world.beginProfiling("TotalMovement", false);
 			moveVehicle();
 			if(!world.isClient()){
@@ -543,258 +545,257 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	 * Failure to do this will result in things going badly!
 	 */
 	private void moveVehicle(){
-		//First, update the vehicle ground device boxes.
-		world.beginProfiling("GDBInit", true);
-		collidedEntities.clear();
-		groundDeviceCollective.updateCollisions();
-		
-		//If we aren't on a road, try to find one.
-		//If we are an aircraft, don't check as we shouldn't have aircraft on roads.
-		//If we are being towed, only check if the towing vehicle is on the road (since we should be on one too). 
-		world.beginProfiling("RoadChecks", false);
-		if(definition.motorized.isAircraft || (towedByConnection != null && !towedByConnection.towingVehicle.lockedOnRoad)){
-			frontFollower = null;
-			rearFollower = null;
-		}else if((frontFollower == null || rearFollower == null) && ticksExisted%20 == 0){
-			Point3D frontContact = groundDeviceCollective.getContactPoint(true);
-			Point3D rearContact = groundDeviceCollective.getContactPoint(false);
-			if(frontContact != null && rearContact != null){
-				rearFollower = getFollower();
-				//If we are being towed, and we got followers, adjust them to our actual position.
-				//This is because we might have connected to the vehicle this tick, but won't be aligned
-				//to our towed position as connections are exact.
-				if(rearFollower != null){
-					float pointDelta = (float) rearContact.distanceTo(frontContact);
-					if(towedByConnection == null){
-						frontFollower = new RoadFollowingState(rearFollower).updateCurvePoints(pointDelta, LaneSelectionRequest.NONE);
-					}else{
-						//Get delta between vehicle center and hitch, and vehicle center and hookup.  This gets total distance between vehicle centers.
-						float segmentDelta = (float) (towedByConnection.hitchCurrentPosition.copy().subtract(towedByConnection.towingVehicle.position).length() + towedByConnection.hookupCurrentPosition.copy().subtract(towedByConnection.towedVehicle.position).length());
-						//If the hitch is on the back of the vehicle, we need to have our offset be negative.
-						if(towedByConnection.towingEntity instanceof APart ? ((APart) towedByConnection.towingEntity).localOffset.z <= 0 : towedByConnection.hitchConnection.pos.z <= 0){
-							segmentDelta = -segmentDelta;
-						}
-						rearFollower = new RoadFollowingState(((AEntityVehicleD_Moving) towedByConnection.towingVehicle).rearFollower);
-						rearFollower.updateCurvePoints(segmentDelta, ((AEntityVehicleD_Moving) towedByConnection.towingVehicle).selectedSegment);
-						frontFollower = new RoadFollowingState(rearFollower);
-						frontFollower.updateCurvePoints(pointDelta, ((AEntityVehicleD_Moving) towedByConnection.towingVehicle).selectedSegment);
-					}
-				}
-			}
-		}
-		
-		//If we are on a road, we need to bypass the logic for pitch/yaw/roll checks, and GDB checks.
-		//This is because if we are on a road we need to follow the road's curve.
-		//If we have both followers, do road-following logic.
-		//If we don't, or we're turning off the road, do normal vehicle logic.
-		if(frontFollower != null && rearFollower != null){
-			world.beginProfiling("RoadOperations", false);
+		if(towedByConnection == null || !towedByConnection.hitchConnection.mounted){
+			//First, update the vehicle ground device boxes.
+			world.beginProfiling("GDBInit", true);
+			collidedEntities.clear();
+			groundDeviceCollective.updateCollisions();
 			
-			//Check for the potential to change the requested segment.
-			//We can only do this if both our followers are on the same segment.
-			LaneSelectionRequest requestedSegment;
-			if(!(isVariableActive(LEFTTURNLIGHT_VARIABLE) ^ isVariableActive(RIGHTTURNLIGHT_VARIABLE))){
-				requestedSegment = LaneSelectionRequest.NONE;
-			}else if(isVariableActive(LEFTTURNLIGHT_VARIABLE)){
-				requestedSegment = goingInReverse ? LaneSelectionRequest.RIGHT : LaneSelectionRequest.LEFT;
-			}else{
-				requestedSegment = goingInReverse ? LaneSelectionRequest.LEFT : LaneSelectionRequest.RIGHT;
-			}
-			if(frontFollower.equals(rearFollower)){
-				selectedSegment = requestedSegment;
-			}
-			
-			float segmentDelta = (float) (totalPathDelta - prevTotalPathDelta);
-			prevTotalPathDelta = totalPathDelta;
-			frontFollower = frontFollower.updateCurvePoints(segmentDelta, selectedSegment);
-			rearFollower = rearFollower.updateCurvePoints(segmentDelta, selectedSegment);
-			Point3D rearPoint = groundDeviceCollective.getContactPoint(false);
-			
-			//Check to make sure followers are still valid, and do logic.
-			if(frontFollower != null && rearFollower != null && rearPoint != null){
-				//Set our position so we're aligned with the road.
-				//To do this, we get the distance between our contact points for front and rear, and then interpolate between them.
-				//First get the rear point.  This defines the delta for the movement of the vehicle.
-				rearPoint.rotate(orientation).add(position);
-				Point3D rearDesiredPoint = rearFollower.getCurrentPoint();
-				
-				//Apply the motion based on the delta between the actual and desired.
-				//Also set motion Y to 0 in case we were doing ground device things.
-				roadMotion.set(rearDesiredPoint);
-				roadMotion.subtract(rearPoint);
-				if(roadMotion.length() > 1){
-					roadMotion.set(0, 0, 0);
-					frontFollower = null;
-					rearFollower = null;
-				}else{
-					motion.y = 0;
-					
-					//Now get the front desired point.  We don't care about actual point here, as we set angle based on the point delta.
-					//Desired angle is the one that gives us the vector between the front and rear points.
-					Point3D desiredVector = frontFollower.getCurrentPoint().subtract(rearDesiredPoint);
-					double yawDelta = Math.toDegrees(Math.atan2(desiredVector.x, desiredVector.z));
-					double pitchDelta = -Math.toDegrees(Math.atan2(desiredVector.y, Math.hypot(desiredVector.x, desiredVector.z)));
-					double rollDelta = rearFollower.getCurrentRotation();
-					roadRotation.set(pitchDelta - orientation.angles.x, yawDelta, rollDelta - orientation.angles.z);
-					roadRotation.y = roadRotation.getClampedYDelta(orientation.angles.y);
-					if(!world.isClient()){
-						addToSteeringAngle((float) (goingInReverse ? -roadRotation.y : roadRotation.y)*1.5F);
-					}
-				}
-			}else{
-				//Set followers to null, as something is invalid.
-				//InterfaceChunkloader.removeEntityTicket(this);
+			//If we aren't on a road, try to find one.
+			//If we are an aircraft, don't check as we shouldn't have aircraft on roads.
+			//If we are being towed, only check if the towing vehicle is on the road (since we should be on one too). 
+			world.beginProfiling("RoadChecks", false);
+			if(definition.motorized.isAircraft || (towedByConnection != null && !towedByConnection.towingVehicle.lockedOnRoad)){
 				frontFollower = null;
 				rearFollower = null;
-			}
-		}
-		
-		groundMotion.set(0, 0, 0);
-		boolean fallingDown = motion.y < 0;
-		lockedOnRoad = frontFollower != null && rearFollower != null; 
-		//If followers aren't valid, do normal logic.
-		if(!lockedOnRoad){
-			//If any ground devices are collided after our movement, apply corrections to prevent this.
-			//The first correction we apply is +y motion.  This counteracts gravity, and any GDBs that may
-			//have been moved into the ground by the application of our motion and rotation.  We do this before collision
-			//boxes, as we don't want gravity to cause us to move into something when we really shouldn't move down because
-			//all the GDBs prevent this.  In either case, apply +y motion to get all the GDBs out of the ground.
-			//This may not be possible, however, if the boxes are too deep into the ground.  We don't want vehicles to
-			//instantly climb mountains.  Because of this, we add only 1/8 block, or enough motionY to prevent collision,
-			//whichever is the lower of the two.  If we apply boost, update our collision boxes before the next step.
-			//Note that this logic is not applied on trailers, as they use special checks with only rotations for movement.
-			if(towedByConnection == null){
-				world.beginProfiling("GroundBoostCheck", false);
-				groundMotion.y = groundDeviceCollective.getMaxCollisionDepth()/SPEED_FACTOR;
-				if(groundMotion.y > 0){
-					world.beginProfiling("GroundBoostApply", false);
-					//Make sure boost doesn't exceed the config value.
-					groundMotion.y = Math.min(groundMotion.y, ConfigSystem.configObject.general.climbSpeed.value/SPEED_FACTOR);
-					
-					//If adding our boost would make motion.y positive, set motion.y to zero and apply the remaining boost.
-					//This is done as it's clear motion.y is just moving the vehicle into the ground.
-					//Having negative motion.y is okay if we don't boost above, as this just means we are falling to the ground via gravity.
-					//In this case, we use our boost, but set it to 0 as we want to just attenuate the negative motion, not remove it.
-					if(motion.y <= 0 && motion.y + groundMotion.y > 0){
-						groundMotion.y += motion.y;
-						motion.y = 0;
-					}else{
-						motion.y += groundMotion.y;
-						groundMotion.y = 0;
+			}else if((frontFollower == null || rearFollower == null) && ticksExisted%20 == 0){
+				Point3D frontContact = groundDeviceCollective.getContactPoint(true);
+				Point3D rearContact = groundDeviceCollective.getContactPoint(false);
+				if(frontContact != null && rearContact != null){
+					rearFollower = getFollower();
+					//If we are being towed, and we got followers, adjust them to our actual position.
+					//This is because we might have connected to the vehicle this tick, but won't be aligned
+					//to our towed position as connections are exact.
+					if(rearFollower != null){
+						float pointDelta = (float) rearContact.distanceTo(frontContact);
+						if(towedByConnection == null){
+							frontFollower = new RoadFollowingState(rearFollower).updateCurvePoints(pointDelta, LaneSelectionRequest.NONE);
+						}else{
+							//Get delta between vehicle center and hitch, and vehicle center and hookup.  This gets total distance between vehicle centers.
+							float segmentDelta = (float) (towedByConnection.hitchCurrentPosition.copy().subtract(towedByConnection.towingVehicle.position).length() + towedByConnection.hookupCurrentPosition.copy().subtract(towedByConnection.towedVehicle.position).length());
+							//If the hitch is on the back of the vehicle, we need to have our offset be negative.
+							if(towedByConnection.towingEntity instanceof APart ? ((APart) towedByConnection.towingEntity).localOffset.z <= 0 : towedByConnection.hitchConnection.pos.z <= 0){
+								segmentDelta = -segmentDelta;
+							}
+							rearFollower = new RoadFollowingState(((AEntityVehicleD_Moving) towedByConnection.towingVehicle).rearFollower);
+							rearFollower.updateCurvePoints(segmentDelta, ((AEntityVehicleD_Moving) towedByConnection.towingVehicle).selectedSegment);
+							frontFollower = new RoadFollowingState(rearFollower);
+							frontFollower.updateCurvePoints(pointDelta, ((AEntityVehicleD_Moving) towedByConnection.towingVehicle).selectedSegment);
+						}
 					}
-					groundDeviceCollective.updateCollisions();
 				}
 			}
 			
-			//After checking the ground devices to ensure we aren't shoving ourselves into the ground, we try to move the vehicle.
-			//If the vehicle can move without a collision box colliding with something, then we can move to the re-positioning of the vehicle.
-			//If we hit something, however, we need to inhibit the movement so we don't do that.
-			//This prevents vehicles from phasing through walls even though they are driving on the ground.
-			//If we are being towed, apply this movement to the towing vehicle, not ourselves, as this can lead to the vehicle getting stuck.
-			world.beginProfiling("CollisionCheck_" + allBlockCollisionBoxes.size(), false);
-			if(isCollisionBoxCollided()){
-				world.beginProfiling("CollisionHandling", false);
-				if(towedByConnection != null){
-					Point3D initalMotion = motion.copy();
-					if(correctCollidingMovement()){
+			//If we are on a road, we need to bypass the logic for pitch/yaw/roll checks, and GDB checks.
+			//This is because if we are on a road we need to follow the road's curve.
+			//If we have both followers, do road-following logic.
+			//If we don't, or we're turning off the road, do normal vehicle logic.
+			if(frontFollower != null && rearFollower != null){
+				world.beginProfiling("RoadOperations", false);
+				
+				//Check for the potential to change the requested segment.
+				//We can only do this if both our followers are on the same segment.
+				LaneSelectionRequest requestedSegment;
+				if(!(isVariableActive(LEFTTURNLIGHT_VARIABLE) ^ isVariableActive(RIGHTTURNLIGHT_VARIABLE))){
+					requestedSegment = LaneSelectionRequest.NONE;
+				}else if(isVariableActive(LEFTTURNLIGHT_VARIABLE)){
+					requestedSegment = goingInReverse ? LaneSelectionRequest.RIGHT : LaneSelectionRequest.LEFT;
+				}else{
+					requestedSegment = goingInReverse ? LaneSelectionRequest.LEFT : LaneSelectionRequest.RIGHT;
+				}
+				if(frontFollower.equals(rearFollower)){
+					selectedSegment = requestedSegment;
+				}
+				
+				float segmentDelta = (float) (totalPathDelta - prevTotalPathDelta);
+				prevTotalPathDelta = totalPathDelta;
+				frontFollower = frontFollower.updateCurvePoints(segmentDelta, selectedSegment);
+				rearFollower = rearFollower.updateCurvePoints(segmentDelta, selectedSegment);
+				Point3D rearPoint = groundDeviceCollective.getContactPoint(false);
+				
+				//Check to make sure followers are still valid, and do logic.
+				if(frontFollower != null && rearFollower != null && rearPoint != null){
+					//Set our position so we're aligned with the road.
+					//To do this, we get the distance between our contact points for front and rear, and then interpolate between them.
+					//First get the rear point.  This defines the delta for the movement of the vehicle.
+					rearPoint.rotate(orientation).add(position);
+					Point3D rearDesiredPoint = rearFollower.getCurrentPoint();
+					
+					//Apply the motion based on the delta between the actual and desired.
+					//Also set motion Y to 0 in case we were doing ground device things.
+					roadMotion.set(rearDesiredPoint);
+					roadMotion.subtract(rearPoint);
+					if(roadMotion.length() > 1){
+						roadMotion.set(0, 0, 0);
+						frontFollower = null;
+						rearFollower = null;
+					}else{
+						motion.y = 0;
+						
+						//Now get the front desired point.  We don't care about actual point here, as we set angle based on the point delta.
+						//Desired angle is the one that gives us the vector between the front and rear points.
+						Point3D desiredVector = frontFollower.getCurrentPoint().subtract(rearDesiredPoint);
+						double yawDelta = Math.toDegrees(Math.atan2(desiredVector.x, desiredVector.z));
+						double pitchDelta = -Math.toDegrees(Math.atan2(desiredVector.y, Math.hypot(desiredVector.x, desiredVector.z)));
+						double rollDelta = rearFollower.getCurrentRotation();
+						roadRotation.set(pitchDelta - orientation.angles.x, yawDelta, rollDelta - orientation.angles.z);
+						roadRotation.y = roadRotation.getClampedYDelta(orientation.angles.y);
+						if(!world.isClient()){
+							addToSteeringAngle((float) (goingInReverse ? -roadRotation.y : roadRotation.y)*1.5F);
+						}
+					}
+				}else{
+					//Set followers to null, as something is invalid.
+					//InterfaceChunkloader.removeEntityTicket(this);
+					frontFollower = null;
+					rearFollower = null;
+				}
+			}
+			
+			groundMotion.set(0, 0, 0);
+			boolean fallingDown = motion.y < 0;
+			lockedOnRoad = frontFollower != null && rearFollower != null; 
+			//If followers aren't valid, do normal logic.
+			if(!lockedOnRoad){
+				//If any ground devices are collided after our movement, apply corrections to prevent this.
+				//The first correction we apply is +y motion.  This counteracts gravity, and any GDBs that may
+				//have been moved into the ground by the application of our motion and rotation.  We do this before collision
+				//boxes, as we don't want gravity to cause us to move into something when we really shouldn't move down because
+				//all the GDBs prevent this.  In either case, apply +y motion to get all the GDBs out of the ground.
+				//This may not be possible, however, if the boxes are too deep into the ground.  We don't want vehicles to
+				//instantly climb mountains.  Because of this, we add only 1/8 block, or enough motionY to prevent collision,
+				//whichever is the lower of the two.  If we apply boost, update our collision boxes before the next step.
+				//Note that this logic is not applied on trailers, as they use special checks with only rotations for movement.
+				if(towedByConnection == null){
+					world.beginProfiling("GroundBoostCheck", false);
+					groundMotion.y = groundDeviceCollective.getMaxCollisionDepth()/SPEED_FACTOR;
+					if(groundMotion.y > 0){
+						world.beginProfiling("GroundBoostApply", false);
+						//Make sure boost doesn't exceed the config value.
+						groundMotion.y = Math.min(groundMotion.y, ConfigSystem.configObject.general.climbSpeed.value/SPEED_FACTOR);
+						
+						//If adding our boost would make motion.y positive, set motion.y to zero and apply the remaining boost.
+						//This is done as it's clear motion.y is just moving the vehicle into the ground.
+						//Having negative motion.y is okay if we don't boost above, as this just means we are falling to the ground via gravity.
+						//In this case, we use our boost, but set it to 0 as we want to just attenuate the negative motion, not remove it.
+						if(motion.y <= 0 && motion.y + groundMotion.y > 0){
+							groundMotion.y += motion.y;
+							motion.y = 0;
+						}else{
+							motion.y += groundMotion.y;
+							groundMotion.y = 0;
+						}
+						groundDeviceCollective.updateCollisions();
+					}
+				}
+				
+				//After checking the ground devices to ensure we aren't shoving ourselves into the ground, we try to move the vehicle.
+				//If the vehicle can move without a collision box colliding with something, then we can move to the re-positioning of the vehicle.
+				//If we hit something, however, we need to inhibit the movement so we don't do that.
+				//This prevents vehicles from phasing through walls even though they are driving on the ground.
+				//If we are being towed, apply this movement to the towing vehicle, not ourselves, as this can lead to the vehicle getting stuck.
+				world.beginProfiling("CollisionCheck_" + allBlockCollisionBoxes.size(), false);
+				if(isCollisionBoxCollided()){
+					world.beginProfiling("CollisionHandling", false);
+					if(towedByConnection != null){
+						Point3D initalMotion = motion.copy();
+						if(correctCollidingMovement()){
+							return;
+						}
+						towedByConnection.towingVehicle.motion.add(motion).subtract(initalMotion);
+					}else if(correctCollidingMovement()){
 						return;
 					}
-					towedByConnection.towingVehicle.motion.add(motion).subtract(initalMotion);
-				}else if(correctCollidingMovement()){
-					return;
-				}
-			}else if((towedByConnection == null || !towedByConnection.hitchConnection.mounted) && fallingDown){
-				world.beginProfiling("GroundHandlingPitch", false);
-				groundDeviceCollective.performPitchCorrection(groundMotion);
-				//Don't do roll correction if we don't have roll.
-				if(groundDeviceCollective.canDoRollChecks()){
-					world.beginProfiling("GroundHandlingRoll", false);
-					groundDeviceCollective.performRollCorrection(groundMotion);
-				}
-				
-				//If we are flagged as a tilting vehicle try to keep us upright, unless we are turning, in which case turn into the turn.
-				if(definition.motorized.maxTiltAngle != 0){
-					rotation.angles.z = -orientation.angles.z - definition.motorized.maxTiltAngle*2.0*Math.min(0.5, velocity/2D)*getSteeringAngle();
+				}else if(fallingDown){
+					world.beginProfiling("GroundHandlingPitch", false);
+					groundDeviceCollective.performPitchCorrection(groundMotion);
+					//Don't do roll correction if we don't have roll.
+					if(groundDeviceCollective.canDoRollChecks()){
+						world.beginProfiling("GroundHandlingRoll", false);
+						groundDeviceCollective.performRollCorrection(groundMotion);
+					}
+					
+					//If we are flagged as a tilting vehicle try to keep us upright, unless we are turning, in which case turn into the turn.
+					if(definition.motorized.maxTiltAngle != 0){
+						rotation.angles.z = -orientation.angles.z - definition.motorized.maxTiltAngle*2.0*Math.min(0.5, velocity/2D)*getSteeringAngle();
+					}
 				}
 			}
-		}
-		
-		//If we collided with any entities, move us with them.
-		//This allows for transports without mounting.
-		if(!collidedEntities.isEmpty()){
-			world.beginProfiling("EntityMoveAlong", false);
-			for(AEntityE_Interactable<?> interactable : collidedEntities){
-				//Set angluar movement delta.
-				if(interactable instanceof AEntityVehicleD_Moving){
-					vehicleCollisionRotation.set(interactable.orientation).multiplyTranspose(interactable.prevOrientation);
-					vehicleCollisionRotation.convertToAngles();
+			
+			//If we collided with any entities, move us with them.
+			//This allows for transports without mounting.
+			if(!collidedEntities.isEmpty()){
+				world.beginProfiling("EntityMoveAlong", false);
+				for(AEntityE_Interactable<?> interactable : collidedEntities){
+					//Set angluar movement delta.
+					if(interactable instanceof AEntityVehicleD_Moving){
+						vehicleCollisionRotation.set(interactable.orientation).multiplyTranspose(interactable.prevOrientation);
+						vehicleCollisionRotation.convertToAngles();
+					}
+					
+					//Get vector from collided box to this entity.
+					Point3D centerOffset = position.copy().subtract(interactable.prevPosition);
+					
+					//Add rotation contribution to offset.
+					vehicleCollisionMotion.set(centerOffset);
+					vehicleCollisionMotion.rotate(vehicleCollisionRotation);
+					vehicleCollisionMotion.subtract(centerOffset);
+					
+					//Add linear contribution to offset.
+					vehicleCollisionMotion.add(interactable.position).subtract(interactable.prevPosition);
+					
+					//If we just contacted an entity, adjust our motion to match that entity's motion.
+					//We take our motion, and then remove it so it's the delta to that entity.
+					//This ensures that if we're moving and land on an entity, we don't run off.
+					if(lastCollidedEntity == null){
+						lastCollidedEntity = interactable;
+						motion.subtract(lastCollidedEntity.motion);
+					}
+					
+					//Only check one for now.  We could do multiple, but then we'd have to do maths.
+					break;
 				}
-				
-				//Get vector from collided box to this entity.
-				Point3D centerOffset = position.copy().subtract(interactable.prevPosition);
-				
-				//Add rotation contribution to offset.
-				vehicleCollisionMotion.set(centerOffset);
-				vehicleCollisionMotion.rotate(vehicleCollisionRotation);
-				vehicleCollisionMotion.subtract(centerOffset);
-				
-				//Add linear contribution to offset.
-				vehicleCollisionMotion.add(interactable.position).subtract(interactable.prevPosition);
-				
-				//If we just contacted an entity, adjust our motion to match that entity's motion.
-				//We take our motion, and then remove it so it's the delta to that entity.
-				//This ensures that if we're moving and land on an entity, we don't run off.
-				if(lastCollidedEntity == null){
-					lastCollidedEntity = interactable;
-					motion.subtract(lastCollidedEntity.motion);
-				}
-				
-				//Only check one for now.  We could do multiple, but then we'd have to do maths.
-				break;
-			}
-		}else{
-			if(lastCollidedEntity != null){
-				//Add-back to our motion by adding the entity's motion.
-				motion.add(lastCollidedEntity.motion);
-				lastCollidedEntity = null;
-			}
-		}
-
-		//Now that that the movement has been checked, move the vehicle.
-		world.beginProfiling("ApplyMotions", false);
-		motionApplied.set(motion).scale(SPEED_FACTOR).add(groundMotion);
-		rotationApplied.angles.set(rotation.angles);
-		
-		//Add road contributions.
-		if(lockedOnRoad){
-			motionApplied.add(roadMotion);
-			rotationApplied.angles.add(roadRotation);
-			if(towedByConnection != null){
-				pathingApplied = ((AEntityVehicleD_Moving) towedByConnection.towingVehicle).pathingApplied;
 			}else{
-				pathingApplied = goingInReverse ? -velocity*SPEED_FACTOR : velocity*SPEED_FACTOR;
+				if(lastCollidedEntity != null){
+					//Add-back to our motion by adding the entity's motion.
+					motion.add(lastCollidedEntity.motion);
+					lastCollidedEntity = null;
+				}
 			}
-		}else{
-			pathingApplied = 0;
-		}
-		
-		//Add colliding vehicle contributions.
-		if(lastCollidedEntity != null){
-			motionApplied.add(vehicleCollisionMotion);
-			rotationApplied.angles.add(vehicleCollisionRotation.angles);
-		}
-		
-		//All contributions done, add calculated motions.
-		position.add(motionApplied);
-		if(!rotationApplied.angles.isZero()){
-			rotationApplied.updateToAngles();
-			orientation.multiply(rotationApplied).convertToAngles();
-		}
-		totalPathDelta += pathingApplied;
-		
-		//Now adjust our movement to sync with the server.
-		//If we are being towed on a mounted connection, don't do syncing.  This will only complicate things.
-		if(towedByConnection == null || !towedByConnection.hitchConnection.mounted){
+			
+			//Now that that the movement has been checked, move the vehicle.
+			world.beginProfiling("ApplyMotions", false);
+			motionApplied.set(motion).scale(SPEED_FACTOR).add(groundMotion);
+			rotationApplied.angles.set(rotation.angles);
+			
+			//Add road contributions.
+			if(lockedOnRoad){
+				motionApplied.add(roadMotion);
+				rotationApplied.angles.add(roadRotation);
+				if(towedByConnection != null){
+					pathingApplied = ((AEntityVehicleD_Moving) towedByConnection.towingVehicle).pathingApplied;
+				}else{
+					pathingApplied = goingInReverse ? -velocity*SPEED_FACTOR : velocity*SPEED_FACTOR;
+				}
+			}else{
+				pathingApplied = 0;
+			}
+			
+			//Add colliding vehicle contributions.
+			if(lastCollidedEntity != null){
+				motionApplied.add(vehicleCollisionMotion);
+				rotationApplied.angles.add(vehicleCollisionRotation.angles);
+			}
+			
+			//All contributions done, add calculated motions.
+			position.add(motionApplied);
+			if(!rotationApplied.angles.isZero()){
+				rotationApplied.updateToAngles();
+				orientation.multiply(rotationApplied).convertToAngles();
+			}
+			totalPathDelta += pathingApplied;
+			
+			//Now adjust our movement to sync with the server.
 			if(world.isClient()){
 				//Get the delta difference, and square it.  Then divide it by 25.
 				//This gives us a good "rubberbanding correction" formula for deltas.
@@ -845,6 +846,26 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 					clientDeltaP += clientDeltaPApplied;
 					totalPathDelta += clientDeltaPApplied;
 				}
+			}else{
+				addToServerDeltas(null, null, 0);
+			}
+		}else{
+			//Mounted vehicles don't do most motions, only a sub-set of them.
+			//Now that that the movement has been checked, move the vehicle.
+			world.beginProfiling("ApplyMotions", false);
+			motionApplied.set(motion).scale(SPEED_FACTOR);
+			//Rotation for mounted connections aligns using orientation, not angle-deltas.
+			rotationApplied.set(rotation);
+			
+			//All contributions done, add calculated motions.
+			position.add(motionApplied);
+			orientation.multiply(rotationApplied).convertToAngles();
+			
+			//For syncing, just add our deltas.  We don't actually do syncing operations here.
+			if(world.isClient()){
+				clientDeltaM.add(motionApplied);
+				rotationApplied.angles.set(orientation.angles).subtract(prevOrientation.angles).clamp180();
+				clientDeltaR.add(rotationApplied.angles);
 			}else{
 				addToServerDeltas(null, null, 0);
 			}
