@@ -107,6 +107,16 @@ public class Point3D{
 	}
 	
 	/**
+	 * Multiplies this point by the passed-in point, via the X/Y/Z component multiplication.
+	 */
+	public Point3D multiply(Point3D point){
+		this.x *= point.x;
+		this.y *= point.y;
+		this.z *= point.z;
+		return this;
+	}
+	
+	/**
 	 * Scales all values of this point by the passed-in factor.
 	 */
 	public Point3D scale(double scale){

@@ -167,7 +167,10 @@ public class CameraSystem{
 				runningCustomCameras = false;
 			}else if(sittingSeat != null){
 				sittingSeat.getRiderInterpolatedOrientation(cameraOrientation, partialTicks);
-				cameraAdjustedPosition.set(0, player.getEyeHeight() + player.getSeatOffset(), 0).rotate(cameraOrientation).add(0, -player.getEyeHeight(), 0);
+				double eyeHeight = player.getEyeHeight();
+				double seatOffset = player.getSeatOffset();
+				double verticalScale = player.getVerticalScale();
+				cameraAdjustedPosition.set(0, (eyeHeight + seatOffset)*verticalScale, 0).rotate(cameraOrientation).add(0, -eyeHeight, 0);
 				cameraOrientation.applyRotation(player.getOrientation());
             	return true;
 			}
@@ -186,7 +189,10 @@ public class CameraSystem{
     			
     			//Add the zoom offset for third-person view.  This takes hold if we don't have any custom cameras.
         		sittingSeat.getRiderInterpolatedOrientation(cameraOrientation, partialTicks);
-        		cameraAdjustedPosition.set(0, player.getEyeHeight() + player.getSeatOffset(), 0).rotate(cameraOrientation).add(0, -player.getEyeHeight(), 0);
+        		double eyeHeight = player.getEyeHeight();
+				double seatOffset = player.getSeatOffset();
+				double verticalScale = player.getVerticalScale();
+				cameraAdjustedPosition.set(0, (eyeHeight + seatOffset)*verticalScale, 0).rotate(cameraOrientation).add(0, -eyeHeight, 0);
         		cameraOffset.set(-sittingSeat.localOffset.x, 0, -zoomLevel);
             	cameraOrientation.setTranslation(cameraOffset);
         		cameraOrientation.applyRotation(player.getOrientation());
@@ -210,7 +216,10 @@ public class CameraSystem{
 
 	        	//Add the zoom offset for third-person view.
 	        	sittingSeat.getRiderInterpolatedOrientation(cameraOrientation, partialTicks);
-	        	cameraAdjustedPosition.set(0, player.getEyeHeight() + player.getSeatOffset(), 0).rotate(cameraOrientation).add(0, -player.getEyeHeight(), 0);
+	        	double eyeHeight = player.getEyeHeight();
+				double seatOffset = player.getSeatOffset();
+				double verticalScale = player.getVerticalScale();
+				cameraAdjustedPosition.set(0, (eyeHeight + seatOffset)*verticalScale, 0).rotate(cameraOrientation).add(0, -eyeHeight, 0);
             	cameraOffset.set(-sittingSeat.localOffset.x, 0, zoomLevel);
             	cameraOrientation.setTranslation(cameraOffset);
         		cameraOrientation.applyRotation(player.getOrientation());

@@ -159,6 +159,37 @@ public class WrapperEntity{
 	}
 	
 	/**
+	 *  Returns the vertical scaling factor for this entity.  Normally is 1,
+	 *  but can differ (usually smaller) if the entity is riding a vehicle
+	 *  and that vehicle has a scaled seat.  This should be taken into account
+	 *  for all calls that care about eye height, as seat scaling in the Y direction
+	 *  will affect eye and camera heights.
+	 */
+	public double getVerticalScale(){
+		if(entity.getRidingEntity() instanceof BuilderEntityExisting){
+			AEntityB_Existing riding = ((BuilderEntityExisting) entity.getRidingEntity()).entity;
+			if(riding instanceof AEntityF_Multipart){
+				AEntityF_Multipart<?> multipart = (AEntityF_Multipart<?>) riding;
+				PartSeat seat = multipart.getSeatForRider(this);
+				if(seat != null){
+					if(seat.placementDefinition.playerScale != null){
+						if(seat.definition.seat.playerScale != null){
+		        			return seat.scale.y*seat.placementDefinition.playerScale.y*seat.definition.seat.playerScale.y;
+						}else{
+							return seat.scale.y*seat.placementDefinition.playerScale.y;
+						}
+					}else if(seat.definition.seat.playerScale != null){
+						return seat.scale.y*seat.definition.seat.playerScale.y;
+					}else{
+						return seat.scale.y;
+					}
+				}
+			}
+		}
+		return 1.0;
+	}
+	
+	/**
 	 *  Returns a Y-offset for where this entity should sit in a seat.
 	 *  This is used if the sitting point of the entity isn't at the base
 	 *  of the entity. For example, players, when sitting, rotate their

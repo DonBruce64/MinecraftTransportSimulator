@@ -307,10 +307,13 @@ public class JSONPart extends AJSONPartProvider{
 		@JSONDescription("If true, the player will stand in this seat rather than sit.  Note that some mods may mess this up and force the player to sit, so be advised of this.")
     	public boolean standing;
 		
-		@JSONDescription("If included, the player's width will be scaled to this value when sitting in this seat.  Useful for times when you can't fit a regular seat.  You can also use this to make the player invisible with a small enough size.")
+		@JSONDescription("If included, the player will be scaled along to this X, Y, and Z value when sitting in this seat.  Useful for times when you can't fit a regular seat.  You can also use this to make the player invisible with a small enough size.")
+		public Point3D playerScale;
+		
+		@Deprecated
     	public float widthScale;
 		
-		@JSONDescription("If included, the player's height will be scaled to this value when sitting in this seat.  Similar to widthScale, but this parameter will also affect the player's eye height.  Keep this in mind, as the lower you set this the lower they sit!")
+		@Deprecated
     	public float heightScale;
     }
     

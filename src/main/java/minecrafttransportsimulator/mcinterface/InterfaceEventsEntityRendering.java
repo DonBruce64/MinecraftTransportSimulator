@@ -56,6 +56,7 @@ public class InterfaceEventsEntityRendering{
 	private static ItemStack heldStackHolder = null;
 	private static final Point3D leftArmAngles = new Point3D();
 	private static final Point3D rightArmAngles = new Point3D();
+	private static final Point3D entityScale = new Point3D();
 	private static RotationMatrix riderBodyOrientation = new RotationMatrix();
 	private static RotationMatrix riderHeadOrientation = new RotationMatrix();
 	private static TransformationMatrix riderTotalTransformation = new TransformationMatrix();
@@ -219,25 +220,18 @@ public class InterfaceEventsEntityRendering{
     	if(ridingEntity != null){
     		GL11.glPushMatrix();
         	//Get orientation and scale for entity.
-        	float widthScale = 1.0F;
-        	float heightScale = 1.0F;
+        	entityScale.set(1, 1, 1);
         	if(ridingEntity instanceof AEntityF_Multipart){
         		PartSeat seat = ((AEntityF_Multipart<?>) ridingEntity).getSeatForRider(entityWrapper);
         		seat.getInterpolatedOrientation(riderBodyOrientation, event.getPartialRenderTick());
         		seat.getRiderInterpolatedOrientation(riderHeadOrientation, event.getPartialRenderTick());
         		
         		//Get seat scale, if we have it.
-        		if(seat.definition.seat.widthScale != 0){
-        			widthScale = seat.definition.seat.widthScale;
+        		if(seat.definition.seat.playerScale != null){
+        			entityScale.multiply(seat.definition.seat.playerScale);
         		}
-        		if(seat.placementDefinition.widthScale != 0){
-        			widthScale *= seat.placementDefinition.widthScale;
-        		}
-        		if(seat.definition.seat.heightScale != 0){
-        			heightScale = seat.definition.seat.heightScale; 
-        		}
-        		if(seat.placementDefinition.heightScale != 0){
-        			heightScale *= seat.placementDefinition.heightScale;
+        		if(seat.placementDefinition.playerScale != null){
+        			entityScale.multiply(seat.placementDefinition.playerScale);
         		}
         		if(seat.definition.seat.standing){
         			renderCurrentRiderStanding = true;
@@ -278,7 +272,7 @@ public class InterfaceEventsEntityRendering{
     		riderTotalTransformation.applyTranslation(0, entityWrapper.getSeatOffset(), 0);
         	
         	//Apply scale.
-        	riderTotalTransformation.applyScaling(widthScale, heightScale, widthScale);
+        	riderTotalTransformation.applyScaling(entityScale);
         	
         	//Push matrix and apply transform.
         	//If we aren't the rider, translate the rider to us so it rotates on the proper coordinate system.
@@ -289,7 +283,7 @@ public class InterfaceEventsEntityRendering{
             	double playerDistanceZ = entity.lastTickPosZ + - masterPlayer.lastTickPosZ + (entity.posZ - entity.lastTickPosZ -(masterPlayer.posZ - masterPlayer.lastTickPosZ))*event.getPartialRenderTick();
                 GL11.glTranslated(playerDistanceX, playerDistanceY, playerDistanceZ);
         		InterfaceRender.applyTransformOpenGL(riderTotalTransformation, false);
-        		GL11.glTranslated(-playerDistanceX*widthScale, -playerDistanceY*heightScale, -playerDistanceZ*widthScale);
+        		GL11.glTranslated(-playerDistanceX, -playerDistanceY, -playerDistanceZ);
         	}else{
         		InterfaceRender.applyTransformOpenGL(riderTotalTransformation, false);
         	}

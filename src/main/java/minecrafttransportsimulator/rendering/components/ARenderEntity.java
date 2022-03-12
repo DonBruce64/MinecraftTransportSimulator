@@ -14,6 +14,7 @@ import minecrafttransportsimulator.mcinterface.InterfaceRender;
 public abstract class ARenderEntity<RenderedEntity extends AEntityC_Renderable>{
 	private static final Point3D interpolatedPositionHolder = new Point3D();
 	private static final RotationMatrix interpolatedOrientationHolder = new RotationMatrix();
+	private static final Point3D interpolatedScaleHolder = new Point3D();
 	private static final TransformationMatrix translatedMatrix = new TransformationMatrix();
 	private static final TransformationMatrix rotatedMatrix = new TransformationMatrix();
 	
@@ -52,8 +53,8 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Renderable>{
 	        translatedMatrix.setTranslation(interpolatedPositionHolder);
 			rotatedMatrix.set(translatedMatrix);
 			rotatedMatrix.applyRotation(interpolatedOrientationHolder);
-			double scale = entity.prevScale + (entity.scale - entity.prevScale)*partialTicks;
-			rotatedMatrix.applyScaling(scale, scale, scale);
+			interpolatedScaleHolder.set(entity.scale).subtract(entity.prevScale).scale(partialTicks).add(entity.prevScale);
+			rotatedMatrix.applyScaling(interpolatedScaleHolder);
 			
 	        //Render the main model.
 	        entity.world.endProfiling();

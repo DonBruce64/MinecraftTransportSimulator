@@ -21,7 +21,7 @@ public class AnimationSwitchbox{
 	public final TransformationMatrix netMatrix = new TransformationMatrix();
 	public final RotationMatrix rotation = new RotationMatrix();
 	public final Point3D translation = new Point3D();
-	public double scale;
+	public Point3D scale = new Point3D();
 	public boolean anyClockMovedThisUpdate;
 	
 	//Computational variables.
@@ -43,8 +43,8 @@ public class AnimationSwitchbox{
 	public boolean runSwitchbox(float partialTicks){
 		inhibitAnimations = false;
 		anyClockMovedThisUpdate = false;
-		scale = 1.0;
-		netMatrix.resetTransforms();
+		scale.set(entity.scale);
+		netMatrix.resetTransforms().applyScaling(scale);
 		translation.set(0, 0, 0);
 		rotation.setToZero();
 		
@@ -166,8 +166,9 @@ public class AnimationSwitchbox{
 			//Translate back.  This requires inverting the translation.
 			helperOffsetOperationMatrix.applyInvertedTranslation(clock.animation.centerPoint);
 			
-			//Apply that net value to our main matrix.
+			//Apply that net value to our main matrix and our scale.
 			netMatrix.multiply(helperOffsetOperationMatrix);
+			scale.multiply(helperScalingVector);
 		}else{
 			netMatrix.applyScaling(helperScalingVector);
 		}

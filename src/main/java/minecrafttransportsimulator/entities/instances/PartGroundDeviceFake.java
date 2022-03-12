@@ -24,12 +24,12 @@ public final class PartGroundDeviceFake extends PartGroundDevice{
 	}
 	
 	@Override
-	public float getWidth(){
+	public double getWidth(){
 		return masterPart != null ? masterPart.getWidth() : 1.0F;
 	}
 	
 	@Override
-	public float getHeight(){
+	public double getHeight(){
 		return masterPart != null ? masterPart.getHeight() : 1.0F;
 	}
 	

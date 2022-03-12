@@ -144,7 +144,7 @@ public class BoundingBox{
 		}else{
 			globalCenter.set(localCenter);
 		}
-		globalCenter.scale(entity.scale).rotate(entity.orientation).add(entity.position);
+		globalCenter.multiply(entity.scale).rotate(entity.orientation).add(entity.position);
 		if(definition != null){
 			//Need to round box to prevent floating-point errors for player and entity collision.
 			globalCenter.x = ((int) (globalCenter.x/HITBOX_CLAMP))*HITBOX_CLAMP;

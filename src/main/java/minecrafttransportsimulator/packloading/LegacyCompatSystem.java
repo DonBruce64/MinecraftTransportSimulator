@@ -661,6 +661,21 @@ public final class LegacyCompatSystem{
 			definition.seat = definition.new JSONPartSeat();
 		}
 		
+		//If the part is a seat, and has player scaling, convert it.
+		if(definition.seat != null){
+			if(definition.seat.widthScale != 0 || definition.seat.heightScale != 0){
+				if(definition.seat.widthScale == 0){
+					definition.seat.widthScale = 1;
+				}
+				if(definition.seat.heightScale == 0){
+					definition.seat.heightScale = 1;
+				}
+				definition.seat.playerScale = new Point3D(definition.seat.widthScale, definition.seat.heightScale, definition.seat.widthScale);
+				definition.seat.widthScale = 0;
+				definition.seat.heightScale = 0;
+			}
+		}
+		
 		//If the part is a gun, set yaw and pitch speed if not set.
 		//Also set muzzle position.
 		if(definition.gun != null){
@@ -1755,6 +1770,18 @@ public final class LegacyCompatSystem{
 					performVehiclePartDefLegacyCompats(additionalPartDef);
 				}
 			}
+		}
+		//If we defined a player scale, change it to new form.
+		if(partDef.widthScale != 0 || partDef.heightScale != 0){
+			if(partDef.widthScale == 0){
+				partDef.widthScale = 1;
+			}
+			if(partDef.heightScale == 0){
+				partDef.heightScale = 1;
+			}
+			partDef.playerScale = new Point3D(partDef.widthScale, partDef.heightScale, partDef.widthScale);
+			partDef.widthScale = 0;
+			partDef.heightScale = 0;
 		}
 	}
 	

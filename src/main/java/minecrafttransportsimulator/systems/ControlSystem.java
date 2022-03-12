@@ -93,7 +93,7 @@ public final class ControlSystem{
 		}
 		if(clickingLeft || clickingRight){
 			Point3D startPosition = player.getPosition();
-			startPosition.y += (player.getEyeHeight() + player.getSeatOffset());
+			startPosition.y += (player.getEyeHeight() + player.getSeatOffset())*player.getVerticalScale();
 			Point3D endPosition = player.getLineOfSight(3.5);
 			endPosition.add(startPosition);
 			BoundingBox clickBounds = new BoundingBox(startPosition, endPosition);
