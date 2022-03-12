@@ -464,7 +464,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 			//If we are a trailer that is mounted, just move the vehicle to the exact position of the trailer connection.
 			//Otherwise, do movement logic  Make sure the towed vehicle is loaded, however.  It may not yet be.
 			if(towedByConnection.hitchConnection.mounted || towedByConnection.hitchConnection.restricted){
-				motion.set(towedByConnection.hitchCurrentPosition).subtract(towedByConnection.hookupCurrentPosition).scale(1/SPEED_FACTOR);
+				motion.set(towedByConnection.hitchCurrentPosition).subtract(towedByConnection.hookupCurrentPosition).scale(1/speedFactor);
 				//FIXME for sure do this, as it's disabled for now.
 				rotation.set(towedByConnection.towingEntity.orientation).multiply(towedByConnection.hitchConnection.rot).multiplyTranspose(orientation);
 				if(towedByConnection.hitchConnection.restricted){
@@ -509,7 +509,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 				}
 				
 				//Now move the trailer to the hitch.  Also set rotations to 0 to prevent odd math.
-				motion.set(tractorHitchCurrentOffset.subtract(trailerHookupOffset).scale(1/SPEED_FACTOR));
+				motion.set(tractorHitchCurrentOffset.subtract(trailerHookupOffset).scale(1/speedFactor));
 				rotation.angles.x = 0;
 				rotation.angles.z = 0;
 			}
@@ -683,9 +683,9 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 			case("pitch"): return orientation.angles.x;
 			case("roll"): return orientation.angles.z;
 			case("altitude"): return position.y;
-			case("speed"): return axialVelocity*EntityVehicleF_Physics.SPEED_FACTOR*20;
+			case("speed"): return axialVelocity*speedFactor*20;
 			case("speed_scaled"): return axialVelocity*20;
-			case("speed_factor"): return SPEED_FACTOR;
+			case("speed_factor"): return speedFactor;
 			case("acceleration"): return motion.length() - prevMotion.length();
 
 			//Vehicle state cases.
@@ -702,7 +702,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 			//State cases generally used on aircraft.
 			case("flaps_actual"): return flapCurrentAngle;
 			case("flaps_moving"): return flapCurrentAngle != flapDesiredAngle ? 1 : 0;
-			case("vertical_speed"): return motion.y*EntityVehicleF_Physics.SPEED_FACTOR*20;
+			case("vertical_speed"): return motion.y*speedFactor*20;
 			case("lift_reserve"): return -trackAngle;
 			case("turn_coordinator"): return ((rotation.angles.z)/10 + rotation.angles.y)/0.15D*25;
 			case("turn_indicator"): return (rotation.angles.y)/0.15F*25F;

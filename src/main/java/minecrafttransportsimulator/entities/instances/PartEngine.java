@@ -608,7 +608,7 @@ public class PartEngine extends APart{
 				driveshaftDesiredSpeed = Math.max(wheel.angularVelocity, driveshaftDesiredSpeed);
 			}
 			if(driveshaftDesiredSpeed != -999){
-				driveshaftRotation += 360D*driveshaftDesiredSpeed*EntityVehicleF_Physics.SPEED_FACTOR;
+				driveshaftRotation += 360D*driveshaftDesiredSpeed*vehicleOn.speedFactor;
 			}else{
 				driveshaftRotation += 360D*rpm/1200D/currentGearRatio;
 			}

@@ -31,11 +31,12 @@ import minecrafttransportsimulator.systems.ControlSystem;
 abstract class AEntityVehicleB_Rideable extends AEntityG_Towable<JSONVehicle>{
 	public static boolean lockCameraToMovement = true;
 	
-	/**Cached value for speedFactor.  Saves us from having to use the long form all over.  Not like it'll change in-game...*/
-	public static final double SPEED_FACTOR = ConfigSystem.configObject.general.speedFactor.value;
+	/**Cached value for speedFactor.  Saves us from having to use the long form all over.*/
+	public final double speedFactor;
 	
 	public AEntityVehicleB_Rideable(WrapperWorld world, WrapperPlayer placingPlayer, WrapperNBT data){
 		super(world, placingPlayer, data);
+		this.speedFactor = (definition.motorized.isAircraft ? ConfigSystem.configObject.general.aircraftSpeedFactor.value : ConfigSystem.configObject.general.carSpeedFactor.value)*ConfigSystem.configObject.general.packSpeedFactors.value.get(definition.packID);
 	}
 	
 	@Override

@@ -198,8 +198,8 @@ public class PartGroundDevice extends APart{
 	@Override
 	public double getRawVariableValue(String variable, float partialTicks){
 		switch(variable){
-			case("ground_rotation"): return EntityVehicleF_Physics.SPEED_FACTOR*(prevAngularPosition + (angularPosition - prevAngularPosition)*partialTicks)*360D;
-			case("ground_rotation_normalized"): return (EntityVehicleF_Physics.SPEED_FACTOR*(prevAngularPosition + (angularPosition - prevAngularPosition)*partialTicks)*360D)%360D;
+			case("ground_rotation"): return vehicleOn != null ? vehicleOn.speedFactor*(prevAngularPosition + (angularPosition - prevAngularPosition)*partialTicks)*360D : 0;
+			case("ground_rotation_normalized"): return vehicleOn != null ? (vehicleOn.speedFactor*(prevAngularPosition + (angularPosition - prevAngularPosition)*partialTicks)*360D)%360D : 0;
 			case("ground_onground"): return vehicleOn != null && animateAsOnGround ? 1 : 0;
 			case("ground_inliquid"): return isInLiquid() ? 1 : 0;
 			case("ground_isflat"): return isFlat ? 1 : 0;

@@ -534,7 +534,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 				//This is because the faster we go the quicker we need to turn to keep pace with the vehicle's movement.
 				//We need to take speed-factor into account here, as that will make us move different lengths per tick.
 				//Finally, we need to reduce this by a constant to get "proper" force..
-				return turningForce*groundVelocity*(SPEED_FACTOR/0.35D)/2D;
+				return turningForce*groundVelocity*(speedFactor/0.35D)/2D;
 			}
 		}
 		return 0;
@@ -668,11 +668,11 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 				//Note that this logic is not applied on trailers, as they use special checks with only rotations for movement.
 				if(towedByConnection == null){
 					world.beginProfiling("GroundBoostCheck", false);
-					groundMotion.y = groundDeviceCollective.getMaxCollisionDepth()/SPEED_FACTOR;
+					groundMotion.y = groundDeviceCollective.getMaxCollisionDepth()/speedFactor;
 					if(groundMotion.y > 0){
 						world.beginProfiling("GroundBoostApply", false);
 						//Make sure boost doesn't exceed the config value.
-						groundMotion.y = Math.min(groundMotion.y, ConfigSystem.configObject.general.climbSpeed.value/SPEED_FACTOR);
+						groundMotion.y = Math.min(groundMotion.y, ConfigSystem.configObject.general.climbSpeed.value/speedFactor);
 						
 						//If adding our boost would make motion.y positive, set motion.y to zero and apply the remaining boost.
 						//This is done as it's clear motion.y is just moving the vehicle into the ground.
@@ -765,7 +765,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			
 			//Now that that the movement has been checked, move the vehicle.
 			world.beginProfiling("ApplyMotions", false);
-			motionApplied.set(motion).scale(SPEED_FACTOR).add(groundMotion);
+			motionApplied.set(motion).scale(speedFactor).add(groundMotion);
 			rotationApplied.angles.set(rotation.angles);
 			
 			//Add road contributions.
@@ -775,7 +775,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 				if(towedByConnection != null){
 					pathingApplied = ((AEntityVehicleD_Moving) towedByConnection.towingVehicle).pathingApplied;
 				}else{
-					pathingApplied = goingInReverse ? -velocity*SPEED_FACTOR : velocity*SPEED_FACTOR;
+					pathingApplied = goingInReverse ? -velocity*speedFactor : velocity*speedFactor;
 				}
 			}else{
 				pathingApplied = 0;
@@ -853,7 +853,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			//Mounted vehicles don't do most motions, only a sub-set of them.
 			//Now that that the movement has been checked, move the vehicle.
 			world.beginProfiling("ApplyMotions", false);
-			motionApplied.set(motion).scale(SPEED_FACTOR);
+			motionApplied.set(motion).scale(speedFactor);
 			//Rotation for mounted connections aligns using orientation, not angle-deltas.
 			rotationApplied.set(rotation);
 			
@@ -880,7 +880,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		if(motion.length() > 0.001){
 			boolean clearedCache = false;
 			for(BoundingBox box : allBlockCollisionBoxes){
-				tempBoxPosition.set(box.globalCenter).subtract(position).rotate(rotation).subtract(box.globalCenter).add(position).addScaled(motion, SPEED_FACTOR);
+				tempBoxPosition.set(box.globalCenter).subtract(position).rotate(rotation).subtract(box.globalCenter).add(position).addScaled(motion, speedFactor);
 				if(!box.collidesWithLiquids && world.checkForCollisions(box, tempBoxPosition, !clearedCache)){
 					return true;
 				}
@@ -911,9 +911,9 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 					break;
 				}else{
 					if(motion.x > 0){
-						motion.x = Math.max(motion.x - collisionDepth/SPEED_FACTOR, 0);
+						motion.x = Math.max(motion.x - collisionDepth/speedFactor, 0);
 					}else if(motion.x < 0){
-						motion.x = Math.min(motion.x + collisionDepth/SPEED_FACTOR, 0);
+						motion.x = Math.min(motion.x + collisionDepth/speedFactor, 0);
 					}
 				}
 			}
@@ -929,9 +929,9 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 					break;
 				}else{
 					if(motion.z > 0){
-						motion.z = Math.max(motion.z - collisionDepth/SPEED_FACTOR, 0);
+						motion.z = Math.max(motion.z - collisionDepth/speedFactor, 0);
 					}else if(motion.z < 0){
-						motion.z = Math.min(motion.z + collisionDepth/SPEED_FACTOR, 0);
+						motion.z = Math.min(motion.z + collisionDepth/speedFactor, 0);
 					}
 				}
 			}
@@ -947,9 +947,9 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 					break;
 				}else if(collisionDepth != 0){
 					if(motion.y > 0){
-						motion.y = Math.max(motion.y - collisionDepth/SPEED_FACTOR, 0);
+						motion.y = Math.max(motion.y - collisionDepth/speedFactor, 0);
 					}else if(motion.y < 0){
-						motion.y = Math.min(motion.y + collisionDepth/SPEED_FACTOR, 0);
+						motion.y = Math.min(motion.y + collisionDepth/speedFactor, 0);
 					}
 				}
 			}
@@ -958,7 +958,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		//Check the rotation.
 		if(!rotation.angles.isZero()){
 			for(BoundingBox box : allBlockCollisionBoxes){
-				tempBoxPosition.set(box.globalCenter).subtract(position).rotate(rotation).add(position).addScaled(motion, SPEED_FACTOR);
+				tempBoxPosition.set(box.globalCenter).subtract(position).rotate(rotation).add(position).addScaled(motion, speedFactor);
 				if(box.updateCollidingBlocks(world, tempBoxPosition.subtract(box.globalCenter))){
 					rotation.setToZero();
 					break;

@@ -75,7 +75,7 @@ abstract class AEntityVehicleC_Colliding extends AEntityVehicleB_Rideable{
 	 */
 	protected double getCollisionForAxis(BoundingBox box, boolean xAxis, boolean yAxis, boolean zAxis){
 		//Get the motion the entity is trying to move, and add it to the passed-in box value.
-		Point3D collisionMotion = motion.copy().scale(SPEED_FACTOR);
+		Point3D collisionMotion = motion.copy().scale(speedFactor);
 		
 		//If we collided, so check to see if we can break some blocks or if we need to explode.
 		//Don't bother with this logic if it's impossible for us to break anything.

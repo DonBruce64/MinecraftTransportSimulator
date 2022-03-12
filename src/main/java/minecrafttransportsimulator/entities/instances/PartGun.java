@@ -660,7 +660,7 @@ public class PartGun extends APart{
 		}
 		
 		//Add gun velocity to bullet to ensure we spawn with the offset.
-		bulletVelocity.addScaled(motion, EntityVehicleF_Physics.SPEED_FACTOR);
+		bulletVelocity.addScaled(motion, vehicleOn.speedFactor);
 
 		//Set position.
 		bulletPosition.set(muzzle.pos).rotate(internalOrientation).rotate(zeroReferenceOrientation).add(position);
