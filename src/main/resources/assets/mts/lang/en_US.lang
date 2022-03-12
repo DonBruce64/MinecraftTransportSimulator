@@ -2,7 +2,7 @@
 
 death.attack.bullet.null.null=%1$s was shot by a spy
 death.attack.bullet.null.player=%1$s got distracted while fighting %2$s and got shot by a spy
-death.attack.bullet.player.null=%2$s was shot by %1$s
+death.attack.bullet.player.null=%1$s was shot by %2$s
 death.attack.bullet.player.player=%1$s got distracted while fighting %2$s and got shot by %3$s
 
 death.attack.propellor.null.null=%1$s was shredded by a propeller
