@@ -118,7 +118,7 @@ public class InterfaceEventsEntityRendering{
 		}
 		
 		//If we are seated in a controller seat, and are rendering GUIs, disable the hotbar.
-		if(event.getType().equals(RenderGameOverlayEvent.ElementType.HOTBAR) && (InterfaceClient.inFirstPerson() ? ConfigSystem.configObject.clientRendering.renderHUD_1P.value : ConfigSystem.configObject.clientRendering.renderHUD_3P.value)){
+		if((event.getType().equals(RenderGameOverlayEvent.ElementType.HOTBAR) || event.getType().equals(RenderGameOverlayEvent.ElementType.FOOD) || event.getType().equals(RenderGameOverlayEvent.ElementType.HEALTH) || event.getType().equals(RenderGameOverlayEvent.ElementType.EXPERIENCE)) && (InterfaceClient.inFirstPerson() ? ConfigSystem.configObject.clientRendering.renderHUD_1P.value : ConfigSystem.configObject.clientRendering.renderHUD_3P.value)){
 			WrapperPlayer player = InterfaceClient.getClientPlayer();
 			AEntityE_Interactable<?> ridingEntity = player.getEntityRiding();
 			if(ridingEntity instanceof AEntityF_Multipart && ((AEntityF_Multipart<?>) ridingEntity).getSeatForRider(player).placementDefinition.isController){
