@@ -775,6 +775,7 @@ public final class ControlSystem{
 		public void setControl(String joystickName, int buttonIndex){
 			config.joystickName = joystickName;
 			config.buttonIndex = buttonIndex;
+			ConfigSystem.configObject.controls.joystick.put(systemName, config);
 			ConfigSystem.saveToDisk();
 		}
 		
