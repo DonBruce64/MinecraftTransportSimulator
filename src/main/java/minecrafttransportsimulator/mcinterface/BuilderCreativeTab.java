@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIPackMissing;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -87,13 +86,13 @@ public class BuilderCreativeTab extends CreativeTabs{
      */
     @SubscribeEvent
     public static void on(DrawScreenEvent.Post event){
-    	if(!PackParserSystem.arePacksPresent() && AGUIBase.activeInputGUI == null){
-	    	if(event.getGui() instanceof GuiContainerCreative){
-	    		GuiContainerCreative creativeScreen = (GuiContainerCreative) event.getGui();
-	    		if(createdTabs.values().contains(CreativeTabs.CREATIVE_TAB_ARRAY[creativeScreen.getSelectedTabIndex()])){
-	    			new GUIPackMissing();
-	    		}
-	    	}
+    	if(event.getGui() instanceof GuiContainerCreative){
+    		if(!PackParserSystem.arePacksPresent()){
+				new GUIPackMissing();
+			}else if(PackParserSystem.getAllPackIDs().contains("iav")){
+				InterfaceClient.getClientPlayer().displayChatMessage("IAV has been detected as installed.  This pack messes up the font for IV and MUST be removed to continue.");
+				InterfaceClient.closeGUI();
+			}
     	}
     }
 }
