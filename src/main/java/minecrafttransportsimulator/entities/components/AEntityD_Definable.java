@@ -470,24 +470,24 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 	    		//Check if the sound should be playing before we try to update state.
 	    		AEntityE_Interactable<?> entityRiding = InterfaceClient.getClientPlayer().getEntityRiding();
 	    		boolean playerRidingEntity = this.equals(entityRiding) || (this instanceof APart && ((APart) this).entityOn.equals(entityRiding));
-	    		boolean shouldSoundPlay = playerRidingEntity && InterfaceClient.inFirstPerson() && !CameraSystem.runningCustomCameras ? !soundDef.isExterior : !soundDef.isInterior;
+	    		boolean shouldSoundStartPlaying = playerRidingEntity && InterfaceClient.inFirstPerson() && !CameraSystem.runningCustomCameras ? !soundDef.isExterior : !soundDef.isInterior;
 				boolean anyClockMovedThisUpdate = false;
-				if(shouldSoundPlay){
+				if(shouldSoundStartPlaying){
 					AnimationSwitchbox activeSwitchbox = soundActiveSwitchboxes.get(soundDef);
-					shouldSoundPlay = activeSwitchbox.runSwitchbox(partialTicks);
+					shouldSoundStartPlaying = activeSwitchbox.runSwitchbox(partialTicks);
 					anyClockMovedThisUpdate = activeSwitchbox.anyClockMovedThisUpdate;
 				}
 				
 				//If we aren't a looping or repeating sound, check if we had a clock-movement to trigger us.
 				//If we didn't, then we shouldn't play, even if all states are true.
-				if(!soundDef.looping && !soundDef.forceSound && !anyClockMovedThisUpdate){
-					shouldSoundPlay = false;
+				if(shouldSoundStartPlaying && !soundDef.looping && !soundDef.forceSound && !anyClockMovedThisUpdate){
+					shouldSoundStartPlaying = false;
 				}
 				
-				if(shouldSoundPlay){
-					//Sound should play.  If it's not playing, start it.
+				if(shouldSoundStartPlaying){
+					//Sound should play.  Check if we are a looping sound that has started so we don't double-play.
 					boolean isSoundPlaying = false;
-					if(!soundDef.forceSound){
+					if(soundDef.looping){
 						for(SoundInstance sound : sounds){
 							if(sound.soundName.equals(soundDef.name)){
 								isSoundPlaying = true;

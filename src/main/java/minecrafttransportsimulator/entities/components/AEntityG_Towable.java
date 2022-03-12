@@ -331,9 +331,7 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
 		//Init variables.
 		boolean matchingConnection = false;
 		boolean trailerInRange = false;
-		if(hookupEntity.definition.systemName.contains("scout")){
-			System.out.println("ERe");
-		}
+		
 		//First make sure the entity is in-even somewhat close.
 		if(hitchConnectionDefiner.position.isDistanceToCloserThan(hookupConnectionDefiner.position, 25)){
 			//If we or the other entity don't have connection groups, don't bother checking.
