@@ -629,6 +629,17 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 			return timeInCycle > offTime && timeInCycle - offTime < onTime ? 1 : 0;
 		}
 		
+		//Check if this is a text_x_ispresent variable.
+		if(variable.startsWith("text_") && variable.endsWith("_present")){
+			if(definition.rendering != null && definition.rendering.textObjects != null){
+				int textIndex = Integer.valueOf(variable.substring("text_".length(), variable.length() - "_present".length())) - 1;
+				if(definition.rendering.textObjects.size() > textIndex){
+					return !text.get(definition.rendering.textObjects.get(textIndex)).isEmpty() ? 1 : 0;
+				}
+			}
+			return 0;
+		}
+		
 		//Check if this is a generic variable.  This contains lights in most cases.
 		Double variableValue = variables.get(variable);
 		if(variableValue != null){
