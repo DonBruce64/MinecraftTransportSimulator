@@ -484,15 +484,6 @@ public final class ControlSystem{
 				}
 			}else{
 				controlControlSurface(powered, ControlsJoystick.CAR_TURN, ControlsKeyboard.CAR_TURN_R, ControlsKeyboard.CAR_TURN_L, ConfigSystem.configObject.clientControls.steeringControlRate.value, EntityVehicleF_Physics.MAX_RUDDER_ANGLE, EntityVehicleF_Physics.RUDDER_VARIABLE, powered.rudderAngle);
-				
-				//If we have a joysick, set rumble state.
-				if(InterfaceInput.isJoystickPresent(ControlsJoystick.CAR_TURN.config.joystickName)){
-					if(powered.slipping){
-						InterfaceInput.setJoystickRumble(ControlsJoystick.CAR_TURN.config.joystickName, (float) Math.max(powered.velocity, 1));
-					}else{
-						InterfaceInput.setJoystickRumble(ControlsJoystick.CAR_TURN.config.joystickName, 0);
-					}
-				}
 			}
 		}
 		

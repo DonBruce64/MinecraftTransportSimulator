@@ -2,13 +2,11 @@ package minecrafttransportsimulator.mcinterface;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
@@ -59,7 +57,6 @@ public class InterfaceInput{
 	//Normal mode joystick variables.
 	private static final Map<String, org.lwjgl.input.Controller> joystickMap = new LinkedHashMap<String, org.lwjgl.input.Controller>();
 	private static final Map<String, Integer> joystickAxisCountMap = new LinkedHashMap<String, Integer>();
-	private static final Set<org.lwjgl.input.Controller> rumblingControllers = new HashSet<org.lwjgl.input.Controller>();
 	
 	//Classic mode joystick variables.
 	private static final Map<String, net.java.games.input.Controller> classicJoystickMap = new LinkedHashMap<String, net.java.games.input.Controller>();
@@ -318,20 +315,6 @@ public class InterfaceInput{
 			}else{
 				return false;
 			}	
-		}
-	}
-	
-	/**
-	 *  Sets rumble level.  Passed-in value should be between 0-1.
-	 */
-	public static void setJoystickRumble(String joystickName, float strength){
-		if(!runningClassicMode){
-			org.lwjgl.input.Controller joystick = joystickMap.get(joystickName);
-			if(rumblingControllers.contains(joystick) ^ strength > 0){
-				for(int i=0; i<joystick.getRumblerCount(); ++i){
-					joystick.setRumblerStrength(i, strength);
-				}
-			}
 		}
 	}
 	
