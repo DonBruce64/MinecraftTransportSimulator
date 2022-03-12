@@ -393,10 +393,15 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 		if(switchbox != null){
 			switchbox.modifiedValue = modifiedValue;
 			if(switchbox.runSwitchbox(0)){
-				return switchbox.modifiedValue;
+				modifiedValue = switchbox.modifiedValue;
 			}else{
 				return currentValue;
 			}
+		}
+		if(modifiedValue < modifier.minValue){
+			return modifier.minValue;
+		}else if(modifiedValue > modifier.maxValue){
+			return modifier.maxValue;
 		}else{
 			return modifiedValue;
 		}

@@ -17,6 +17,12 @@ public class JSONVariableModifier{
 	@JSONDescription("The value to set the specified variable to.  Overrides the current variable value and the addValue portion.  Does NOT override supplemental translation animations that may apply on top of this value.")
     public float setValue;
 	
+	@JSONDescription("The min value the variable will be assigned, after all operations are complete.")
+    public float minValue;
+	
+	@JSONDescription("Like minValue, but max.")
+    public float maxValue;
+	
 	@JSONDescription("A optional listing of animations used to decide when this modifier is active.  Visibiity animations will completely disable the modifier if they are false.  Translation transforms using the using the y-axis will add the value to the variable.  Translation transforms with the x-axis will multiply the value by the current variable value.  Translation transforms with the z-axis will set the variable to that value, overriding any prior transform operations.  Note that these values will apply on top of the existing value for the variable, PLUS the value parameter above (except z-axis set operations, of course).")
 	public List<JSONAnimationDefinition> animations;
 }
