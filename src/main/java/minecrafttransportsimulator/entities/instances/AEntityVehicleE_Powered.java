@@ -214,6 +214,9 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 			if(world.isClient() && ConfigSystem.configObject.clientControls.autostartEng.value && rider.equals(InterfaceClient.getClientPlayer())){
 				if(rider instanceof WrapperPlayer && getSeatForRider(rider).placementDefinition.isController && canPlayerStartEngines((WrapperPlayer) rider)){
 					for(PartEngine engine : engines.values()){
+						if(!definition.motorized.isAircraft){
+							InterfacePacket.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE));
+						}
 						InterfacePacket.sendToServer(new PacketPartEngine(engine, Signal.AS_ON));
 					}
 					if(parkingBrakeOn){
