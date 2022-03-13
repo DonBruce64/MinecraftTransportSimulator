@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
@@ -16,8 +16,8 @@ import minecrafttransportsimulator.packets.components.APacketEntity;
  * @author don_bruce
  */
 public class PacketTileEntityRoadCollisionUpdate extends APacketEntity<TileEntityRoad>{
-	private final List<Point3d> collisionBlockOffsets;
-	private final List<Point3d> collidingBlockOffsets;
+	private final List<Point3D> collisionBlockOffsets;
+	private final List<Point3D> collidingBlockOffsets;
 	
 	public PacketTileEntityRoadCollisionUpdate(TileEntityRoad road){
 		super(road);
@@ -27,13 +27,13 @@ public class PacketTileEntityRoadCollisionUpdate extends APacketEntity<TileEntit
 	
 	public PacketTileEntityRoadCollisionUpdate(ByteBuf buf){
 		super(buf);
-		this.collisionBlockOffsets = new ArrayList<Point3d>();
+		this.collisionBlockOffsets = new ArrayList<Point3D>();
 		int collisionBlockOffsetCount = buf.readInt();
 		for(int i=0; i<collisionBlockOffsetCount; ++i){
 			collisionBlockOffsets.add(readPoint3dCompactFromBuffer(buf));
 		}
 		
-		this.collidingBlockOffsets = new ArrayList<Point3d>();
+		this.collidingBlockOffsets = new ArrayList<Point3D>();
 		int collidingBlockOffsetCount = buf.readInt();
 		for(int i=0; i<collidingBlockOffsetCount; ++i){
 			collidingBlockOffsets.add(readPoint3dCompactFromBuffer(buf));
@@ -44,12 +44,12 @@ public class PacketTileEntityRoadCollisionUpdate extends APacketEntity<TileEntit
 	public void writeToBuffer(ByteBuf buf){
 		super.writeToBuffer(buf);
 		buf.writeInt(collisionBlockOffsets.size());
-		for(Point3d point : collisionBlockOffsets){
+		for(Point3D point : collisionBlockOffsets){
 			writePoint3dCompactToBuffer(point, buf);
 		}
 		
 		buf.writeInt(collidingBlockOffsets.size());
-		for(Point3d point : collidingBlockOffsets){
+		for(Point3D point : collidingBlockOffsets){
 			writePoint3dCompactToBuffer(point, buf);
 		}
 	}
@@ -60,7 +60,7 @@ public class PacketTileEntityRoadCollisionUpdate extends APacketEntity<TileEntit
 		road.collisionBlockOffsets.addAll(collisionBlockOffsets);
 		road.collidingBlockOffsets.clear();
 		road.collidingBlockOffsets.addAll(collidingBlockOffsets);
-		road.blockingRenderables.clear();
+		road.blockingBoundingBoxes.clear();
 		if(!road.isActive() && road.collidingBlockOffsets.isEmpty()){
 			road.setActive(true);
 		}

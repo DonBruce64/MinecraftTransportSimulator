@@ -7,29 +7,31 @@ package minecrafttransportsimulator.baseclasses;
  * @author don_bruce
  */
 public class BezierCurve{
-	public final Point3d startPos;
-	public final Point3d endPos;
-	public final float startAngle;
-	public final float endAngle;
+	public final Point3D startPos;
+	public final Point3D endPos;
+	public final RotationMatrix startRotation;
+	public final RotationMatrix endRotation;
 	public final float pathLength;
 	
 	//Cached point data.
 	private final float[][] cachedPathPoints;
-	private final float[][] cachedPathRotations;
+	private final RotationMatrix[] cachedPathRotations;
 	
 	/**Steps between curve calculations.  This is how many intermediate calculations we do between 1-block steps.**/
 	public static final int CURVE_STEP = 16;
 	
-	public BezierCurve(Point3d startPos, Point3d endPos, float startAngle, float endAngle){
-		this.startPos = startPos;
-		this.endPos = endPos;
-		this.startAngle = startAngle;
-		this.endAngle = endAngle;
+	public BezierCurve(Point3D startPos, Point3D endPos, RotationMatrix startRotation, RotationMatrix endRotation){
+		this.startPos = startPos.copy();
+		this.endPos = endPos.copy();
+		this.startRotation = startRotation;
+		this.endRotation = endRotation;
+		Point3D startAngles = startRotation.convertToAngles();
+		Point3D endAngles = endRotation.convertToAngles();
 		final float[] startPoint = new float[]{(float)startPos.x, (float)startPos.y, (float)startPos.z};
 		final float[] endPoint = new float[]{(float)endPos.x, (float)endPos.y, (float)endPos.z};
 		float midPointDistance = (float) Math.sqrt(Math.pow(endPoint[0] - startPoint[0], 2) + Math.pow(endPoint[1] - startPoint[1], 2) + Math.pow(endPoint[2] - startPoint[2], 2))/3F;
-		final float[] startCurvePoint = new float[]{(float) (startPoint[0] + Math.sin(Math.toRadians(startAngle))*midPointDistance), startPoint[1], (float) (startPoint[2] + Math.cos(Math.toRadians(startAngle))*midPointDistance)};
-		final float[] endCurvePoint = new float[]{(float) (endPoint[0] + Math.sin(Math.toRadians(endAngle))*midPointDistance), endPoint[1], (float) (endPoint[2] + Math.cos(Math.toRadians(endAngle))*midPointDistance)};
+		final float[] startCurvePoint = new float[]{(float) (startPoint[0] + Math.sin(Math.toRadians(startAngles.y))*midPointDistance), startPoint[1], (float) (startPoint[2] + Math.cos(Math.toRadians(startAngles.y))*midPointDistance)};
+		final float[] endCurvePoint = new float[]{(float) (endPoint[0] + Math.sin(Math.toRadians(endAngles.y))*midPointDistance), endPoint[1], (float) (endPoint[2] + Math.cos(Math.toRadians(endAngles.y))*midPointDistance)};
 
 		this.pathLength = getPathLength(startPoint, endPoint, startCurvePoint, endCurvePoint);
 		float[] pathPointsX = getCachedPathPoints(startPoint[0], endPoint[0], startCurvePoint[0], endCurvePoint[0], pathLength);
@@ -37,15 +39,17 @@ public class BezierCurve{
 		float[] pathPointsZ = getCachedPathPoints(startPoint[2], endPoint[2], startCurvePoint[2], endCurvePoint[2], pathLength);
 		
 		this.cachedPathPoints = new float[Math.round(pathLength*CURVE_STEP) + 1][3];
-		this.cachedPathRotations = new float[Math.round(pathLength*CURVE_STEP) + 1][3];
+		this.cachedPathRotations = new RotationMatrix[Math.round(pathLength*CURVE_STEP) + 1];
 		for(int i=0; i<cachedPathPoints.length; ++i){
 			cachedPathPoints[i][0] = pathPointsX[i];
 			cachedPathPoints[i][1] = pathPointsY[i];
 			cachedPathPoints[i][2] = pathPointsZ[i];
 			if(i > 0){
-				cachedPathRotations[i][0] = (float) -Math.toDegrees(Math.atan((cachedPathPoints[i][1] - cachedPathPoints[i - 1][1])/Math.hypot(cachedPathPoints[i][0] - cachedPathPoints[i - 1][0], cachedPathPoints[i][2] - cachedPathPoints[i - 1][2])));
-				cachedPathRotations[i][1] = (float) ((360 + Math.toDegrees(Math.atan2(cachedPathPoints[i][0] - cachedPathPoints[i - 1][0], cachedPathPoints[i][2] - cachedPathPoints[i - 1][2])))%360);
-				cachedPathRotations[i][2] = 0;
+				RotationMatrix rotation = new RotationMatrix();
+				rotation.angles.x = -Math.toDegrees(Math.atan((cachedPathPoints[i][1] - cachedPathPoints[i - 1][1])/Math.hypot(cachedPathPoints[i][0] - cachedPathPoints[i - 1][0], cachedPathPoints[i][2] - cachedPathPoints[i - 1][2])));
+				rotation.angles.y = (360 + Math.toDegrees(Math.atan2(cachedPathPoints[i][0] - cachedPathPoints[i - 1][0], cachedPathPoints[i][2] - cachedPathPoints[i - 1][2])))%360;
+				rotation.angles.z = startAngles.z + (endAngles.z - startAngles.z)*i/cachedPathPoints.length;
+				cachedPathRotations[i] = rotation.setToAngles(rotation.angles);
 			}
 		}
 		
@@ -58,25 +62,21 @@ public class BezierCurve{
 	 * pathLength than the curve it was generated from.  Used to create parallel paths from a common curve.
 	 */
 	public BezierCurve generateOffsetCurve(float offset){
-		Point3d testRotation = new Point3d();
-		
-		Point3d newStartPos = new Point3d(offset, 0, 0);
-		setPointToRotationAt(testRotation, 0);
-		newStartPos.rotateFine(testRotation);
+		Point3D newStartPos = new Point3D(offset, 0, 0);
+		getRotationAt(0).rotate(newStartPos);
 		offsetPointByPositionAt(newStartPos, 0);
 		
-		Point3d newEndPos = new Point3d(offset, 0, 0);
-		setPointToRotationAt(testRotation, pathLength);
-		newEndPos.rotateFine(testRotation);
+		Point3D newEndPos = new Point3D(offset, 0, 0);
+		getRotationAt(pathLength).rotate(newEndPos);
 		offsetPointByPositionAt(newEndPos, pathLength);
 		
-		return new BezierCurve(newStartPos, newEndPos, startAngle, endAngle);
+		return new BezierCurve(newStartPos, newEndPos, startRotation, endRotation);
 	}
 	
 	/**
 	 * Sets the passed-in Point3d to the cached value of the point at the passed-in segment location.
 	 */
-	public void setPointToPositionAt(Point3d point, float segmentPoint){
+	public void setPointToPositionAt(Point3D point, float segmentPoint){
 		float[] cachedPoint = cachedPathPoints[Math.round(segmentPoint*CURVE_STEP)];
 		point.set(cachedPoint[0], cachedPoint[1], cachedPoint[2]);
 	}
@@ -85,7 +85,7 @@ public class BezierCurve{
 	 * Offsets the passed-in Point3d by the cached value of the point at the passed-in segment location.
 	 * Unlike the other methods, this method does interpolation to get a smooth offset transition.
 	 */
-	public void offsetPointByPositionAt(Point3d point, float segmentPoint){
+	public void offsetPointByPositionAt(Point3D point, float segmentPoint){
 		float delta = segmentPoint*CURVE_STEP;
 		int lowIndex = (int) Math.floor(delta);
 		int highIndex = (int) Math.ceil(delta);
@@ -103,11 +103,10 @@ public class BezierCurve{
 	}
 	
 	/**
-	 * Sets the passed-in Point3d to the cached value of rotation point at the passed-in segment location.
+	 * Returns the cached rotation matrix value of rotation at the passed-in segment location.
 	 */
-	public void setPointToRotationAt(Point3d rotation, float segmentPoint){
-		float[] cachedRotation = cachedPathRotations[Math.round(segmentPoint*CURVE_STEP)];
-		rotation.set(cachedRotation[0], cachedRotation[1], cachedRotation[2]);
+	public RotationMatrix getRotationAt(float segmentPoint){
+		return cachedPathRotations[Math.round(segmentPoint*CURVE_STEP)];
 	}
 	
 	/**

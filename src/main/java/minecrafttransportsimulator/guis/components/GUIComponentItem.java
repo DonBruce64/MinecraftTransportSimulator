@@ -2,9 +2,8 @@ package minecrafttransportsimulator.guis.components;
 
 import java.util.List;
 
-import org.lwjgl.opengl.GL11;
-
 import minecrafttransportsimulator.baseclasses.ColorRGB;
+import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.InterfaceRender;
 import minecrafttransportsimulator.mcinterface.WrapperItemStack;
@@ -28,6 +27,7 @@ public class GUIComponentItem extends AGUIComponent{
 	public WrapperItemStack stack;
 	public List<WrapperItemStack> stacks;
 	private WrapperItemStack stackToRender;
+	private TransformationMatrix transform = new TransformationMatrix();
 	
 	/**Default item constructor.**/
 	public GUIComponentItem(int x, int y, float scale){
@@ -60,13 +60,12 @@ public class GUIComponentItem extends AGUIComponent{
     	}
     	
     	if(stackToRender != null){
-    		GL11.glPushMatrix();
-			GL11.glTranslated(position.x, position.y, position.z);
-			GL11.glScalef(scale, scale, scale);
-			InterfaceRender.renderItemModel(stackToRender);
-			GL11.glPopMatrix();
-			
-			if(stackToRender.getSize() > 1){
+    		transform.resetTransforms();
+    		transform.setTranslation(position.x, position.y, position.z);
+    		transform.applyScaling(scale, scale, scale);
+    		InterfaceRender.renderItemModel(stackToRender, transform);
+    		
+    		if(stackToRender.getSize() > 1){
     			text = String.valueOf(RenderText.FORMATTING_CHAR) + String.valueOf(RenderText.BOLD_FORMATTING_CHAR) + String.valueOf(stackToRender.getSize());
     		}else{
     			text = null;
@@ -76,7 +75,7 @@ public class GUIComponentItem extends AGUIComponent{
     
     @Override
     public void renderText(boolean renderTextLit){
-    	RenderText.drawText(text, null, textPosition, null, ColorRGB.WHITE, TextAlignment.RIGHT_ALIGNED, scale, false, 0, 1.0F, renderTextLit);
+    	RenderText.drawText(text, null, textPosition, ColorRGB.WHITE, TextAlignment.RIGHT_ALIGNED, scale, false, 0, renderTextLit);
     }
     
     @Override

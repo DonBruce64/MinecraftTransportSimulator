@@ -11,7 +11,7 @@ import com.google.common.collect.HashBiMap;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.NavBeacon;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
@@ -94,130 +94,129 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 	}
 	
 	@Override
-	public boolean update(){
-		if(super.update()){
-			world.beginProfiling("VehicleE_Level", true);
-			//Get throttle and reverse state.
-			throttle = getVariable(THROTTLE_VARIABLE);
-			reverseThrust = isVariableActive(REVERSE_THRUST_VARIABLE);
-			
-			//If we have space for fuel, and we have tanks with it, transfer it.
-			if(!world.isClient() && fuelTank.getFluidLevel() < definition.motorized.fuelCapacity - 100){
-				for(APart part : parts){
-					if(part instanceof PartInteractable && part.isActive && part.definition.interactable.feedsVehicles){
-						EntityFluidTank tank = ((PartInteractable) part).tank;
-						if(tank != null){
-							double amountFilled = tank.drain(fuelTank.getFluid(), 1, true);
-							if(amountFilled > 0){
-								fuelTank.fill(fuelTank.getFluid(), amountFilled, true);
-							}
+	public void update(){
+		super.update();
+		world.beginProfiling("VehicleE_Level", true);
+		//Get throttle and reverse state.
+		throttle = getVariable(THROTTLE_VARIABLE);
+		reverseThrust = isVariableActive(REVERSE_THRUST_VARIABLE);
+		
+		//If we have space for fuel, and we have tanks with it, transfer it.
+		if(!world.isClient() && fuelTank.getFluidLevel() < definition.motorized.fuelCapacity - 100){
+			for(APart part : parts){
+				if(part instanceof PartInteractable && part.isActive && part.definition.interactable.feedsVehicles){
+					EntityFluidTank tank = ((PartInteractable) part).tank;
+					if(tank != null){
+						double amountFilled = tank.drain(fuelTank.getFluid(), 1, true);
+						if(amountFilled > 0){
+							fuelTank.fill(fuelTank.getFluid(), amountFilled, true);
 						}
 					}
 				}
 			}
-			
-			//Check to make sure the selected beacon is still correct.
-			//It might not be valid if it has been removed from the world,
-			//or one might have been placed that matches our selection.
-			if(definition.motorized.isAircraft && ticksExisted%20 == 0){
-				if(!selectedBeaconName.isEmpty()){
-					selectedBeacon = NavBeacon.getByNameFromWorld(world, selectedBeaconName);
-				}else{
-					selectedBeacon = null;
-				}
-			}
-			
-			//Do trailer-specific logic, if we are one and towed.
-			//Otherwise, do normal update logic for DRLs.
-			if(definition.motorized.isTrailer){
-				//If we are being towed set the brake state to the same as the towing vehicle.
-				//If we aren't being towed, set the parking brake.
-				if(towedByConnection != null){
-					if(parkingBrakeOn){
-						toggleVariable(PARKINGBRAKE_VARIABLE);
-					}
-					setVariable(BRAKE_VARIABLE, towedByConnection.hitchVehicle.brake);
-				}else{
-					if(!parkingBrakeOn){
-						toggleVariable(PARKINGBRAKE_VARIABLE);
-					}
-					if(brake != 0){
-						setVariable(BRAKE_VARIABLE, 0);
-					}
-				}
-			}else{
-				//Set engine state mapping variables.
-				enginesOn = false;
-				enginesRunning = false;
-				for(PartEngine engine : engines.values()){
-					if(engine.magnetoOn){
-						enginesOn = true;
-						if(engine.running){
-							enginesRunning = true;
-							break;
-						}
-					}
-				}
-			}
-			
-			//Set electric usage based on light status.
-			//Don't do this if we are a trailer.  Instead, get the towing vehicle's electric power.
-			//If we are too damaged, don't hold any charge.
-			if(definition.motorized.isTrailer){
-				if(towedByConnection != null){
-					electricPower = towedByConnection.hitchVehicle.electricPower;
-				}
-			}else if(damageAmount < definition.general.health){
-				if(electricPower > 2 && renderTextLit()){
-					electricUsage += 0.001F;
-				}
-				electricPower = Math.max(0, Math.min(13, electricPower -= electricUsage));
-				electricFlow = electricUsage;
-				electricUsage = 0;
-			}else{
-				electricPower = 0;
-				electricFlow = 0;
-				electricUsage = 0;
-			}
-			
-			//Adjust gear variables.
-			if(isVariableActive(EntityVehicleF_Physics.GEAR_VARIABLE)){
-				if(gearMovementTime < definition.motorized.gearSequenceDuration){
-					++gearMovementTime;
-				}
-			}else{
-				if(gearMovementTime > 0){
-					--gearMovementTime;
-				}
-			}
-			
-			//Check that missiles are still valid.
-			//If they are, update their distances. Otherwise, remove them.
-			Iterator<EntityBullet> iterator = missilesIncoming.iterator();
-			while(iterator.hasNext()){
-				if(!iterator.next().isValid){
-					iterator.remove();
-				}
-			}
-			missilesIncoming.sort(new Comparator<EntityBullet>(){
-				@Override
-				public int compare(EntityBullet missle1, EntityBullet missile2){
-					return missle1.targetDistance < missile2.targetDistance ? -1 : 1;
-				}
-			});
-			world.endProfiling();
-			return true;
-		}else{
-			return false;
 		}
+		
+		//Check to make sure the selected beacon is still correct.
+		//It might not be valid if it has been removed from the world,
+		//or one might have been placed that matches our selection.
+		if(definition.motorized.isAircraft && ticksExisted%20 == 0){
+			if(!selectedBeaconName.isEmpty()){
+				selectedBeacon = NavBeacon.getByNameFromWorld(world, selectedBeaconName);
+			}else{
+				selectedBeacon = null;
+			}
+		}
+		
+		//Do trailer-specific logic, if we are one and towed.
+		//Otherwise, do normal update logic for DRLs.
+		if(definition.motorized.isTrailer){
+			//If we are being towed set the brake state to the same as the towing vehicle.
+			//If we aren't being towed, set the parking brake.
+			if(towedByConnection != null){
+				if(parkingBrakeOn){
+					toggleVariable(PARKINGBRAKE_VARIABLE);
+				}
+				setVariable(BRAKE_VARIABLE, towedByConnection.towingVehicle.brake);
+			}else{
+				if(!parkingBrakeOn){
+					toggleVariable(PARKINGBRAKE_VARIABLE);
+				}
+				if(brake != 0){
+					setVariable(BRAKE_VARIABLE, 0);
+				}
+			}
+		}else{
+			//Set engine state mapping variables.
+			enginesOn = false;
+			enginesRunning = false;
+			for(PartEngine engine : engines.values()){
+				if(engine.magnetoOn){
+					enginesOn = true;
+					if(engine.running){
+						enginesRunning = true;
+						break;
+					}
+				}
+			}
+		}
+		
+		//Set electric usage based on light status.
+		//Don't do this if we are a trailer.  Instead, get the towing vehicle's electric power.
+		//If we are too damaged, don't hold any charge.
+		if(definition.motorized.isTrailer){
+			if(towedByConnection != null){
+				electricPower = towedByConnection.towingVehicle.electricPower;
+			}
+		}else if(damageAmount < definition.general.health){
+			if(electricPower > 2 && renderTextLit()){
+				electricUsage += 0.001F;
+			}
+			electricPower = Math.max(0, Math.min(13, electricPower -= electricUsage));
+			electricFlow = electricUsage;
+			electricUsage = 0;
+		}else{
+			electricPower = 0;
+			electricFlow = 0;
+			electricUsage = 0;
+		}
+		
+		//Adjust gear variables.
+		if(isVariableActive(EntityVehicleF_Physics.GEAR_VARIABLE)){
+			if(gearMovementTime < definition.motorized.gearSequenceDuration){
+				++gearMovementTime;
+			}
+		}else{
+			if(gearMovementTime > 0){
+				--gearMovementTime;
+			}
+		}
+		
+		//Check that missiles are still valid.
+		//If they are, update their distances. Otherwise, remove them.
+		Iterator<EntityBullet> iterator = missilesIncoming.iterator();
+		while(iterator.hasNext()){
+			if(!iterator.next().isValid){
+				iterator.remove();
+			}
+		}
+		missilesIncoming.sort(new Comparator<EntityBullet>(){
+			@Override
+			public int compare(EntityBullet missle1, EntityBullet missile2){
+				return missle1.targetDistance < missile2.targetDistance ? -1 : 1;
+			}
+		});
+		world.endProfiling();
 	}
 	
 	@Override
-	public boolean addRider(WrapperEntity rider, Point3d riderLocation){
+	public boolean addRider(WrapperEntity rider, Point3D riderLocation){
 		if(super.addRider(rider, riderLocation)){
 			if(world.isClient() && ConfigSystem.configObject.clientControls.autostartEng.value && rider.equals(InterfaceClient.getClientPlayer())){
-				if(rider instanceof WrapperPlayer && locationRiderMap.containsValue(rider) && getPartAtLocation(locationRiderMap.inverse().get(rider)).placementDefinition.isController && canPlayerStartEngines((WrapperPlayer) rider)){
+				if(rider instanceof WrapperPlayer && getSeatForRider(rider).placementDefinition.isController && canPlayerStartEngines((WrapperPlayer) rider)){
 					for(PartEngine engine : engines.values()){
+						if(!definition.motorized.isAircraft){
+							InterfacePacket.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE));
+						}
 						InterfacePacket.sendToServer(new PacketPartEngine(engine, Signal.AS_ON));
 					}
 					if(parkingBrakeOn){
@@ -234,34 +233,28 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 	@Override
 	public void removeRider(WrapperEntity rider, Iterator<WrapperEntity> iterator){
 		if(world.isClient() && ConfigSystem.configObject.clientControls.autostartEng.value && rider.equals(InterfaceClient.getClientPlayer())){
-			if(rider instanceof WrapperPlayer && locationRiderMap.containsValue(rider)){
-				APart riddenPart = getPartAtLocation(locationRiderMap.inverse().get(rider));
+			PartSeat seat = getSeatForRider(rider);
+			if(rider instanceof WrapperPlayer && seat.placementDefinition.isController){
+				//Check if another player is in a controller seat.  If so, don't stop the engines.
 				boolean otherController = false;
-				if(riddenPart.placementDefinition.isController){
-					//Check if another player is in a controller seat.  If so, don't stop the engines.
-					for(APart part : parts){
-						if(!part.equals(riddenPart)){
-							if(locationRiderMap.containsKey(part.placementOffset)){
-								if(part.placementDefinition.isController){
-									otherController = true;
-									break;
-								}
-							}
+				for(WrapperEntity otherRider : locationRiderMap.inverse().keySet()){
+					if(!rider.equals(otherRider) && otherRider instanceof WrapperPlayer && getSeatForRider(otherRider).placementDefinition.isController){
+						otherController = true;
+						break;
+					}
+				}
+				if(!otherController){
+					for(PartEngine engine : engines.values()){
+						if(engine.magnetoOn){
+							InterfacePacket.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.MAGNETO_VARIABLE));
+						}
+						if(engine.electricStarterEngaged){
+							InterfacePacket.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.ELECTRIC_STARTER_VARIABLE));
 						}
 					}
-					if(!otherController){
-						for(PartEngine engine : engines.values()){
-							if(engine.magnetoOn){
-								InterfacePacket.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.MAGNETO_VARIABLE));
-							}
-							if(engine.electricStarterEngaged){
-								InterfacePacket.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.ELECTRIC_STARTER_VARIABLE));
-							}
-						}
-						InterfacePacket.sendToServer(new PacketEntityVariableSet(this, BRAKE_VARIABLE, 0));
-						if(!parkingBrakeOn){
-							InterfacePacket.sendToServer(new PacketEntityVariableToggle(this, PARKINGBRAKE_VARIABLE));
-						}
+					InterfacePacket.sendToServer(new PacketEntityVariableSet(this, BRAKE_VARIABLE, 0));
+					if(!parkingBrakeOn){
+						InterfacePacket.sendToServer(new PacketEntityVariableToggle(this, PARKINGBRAKE_VARIABLE));
 					}
 				}
 			}
@@ -273,8 +266,10 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 	public void destroy(BoundingBox box){
 		super.destroy(box);
 		//Spawn instruments in the world.
-		for(ItemInstrument instrument : instruments.values()){
-			world.spawnItem(instrument, null, box.globalCenter);
+		for(ItemInstrument instrument : instruments){
+			if(instrument != null){
+				world.spawnItem(instrument, null, box.globalCenter);
+			}
 		}
 		
 		//Oh, and add explosions.  Because those are always fun.

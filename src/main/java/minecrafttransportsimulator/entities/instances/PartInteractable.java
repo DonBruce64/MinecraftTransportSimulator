@@ -89,72 +89,68 @@ public final class PartInteractable extends APart{
 	}
 	
 	@Override
-	public boolean update(){
-		if(super.update()){
-			if(furnace != null){
-				furnace.update();
-				//Only look for fuel when we're processing and don't have any.
-				if(!world.isClient() && furnace.ticksLeftOfFuel == 0 && furnace.ticksLeftToSmelt > 0){
-					addFurnaceFuel();
+	public void update(){
+		super.update();
+		if(furnace != null){
+			furnace.update();
+			//Only look for fuel when we're processing and don't have any.
+			if(!world.isClient() && furnace.ticksLeftOfFuel == 0 && furnace.ticksLeftToSmelt > 0){
+				addFurnaceFuel();
+			}
+			if(vehicleOn != null){
+				vehicleOn.electricUsage += furnace.powerToDrawPerTick;
+			}
+		}
+		
+		//Check to see if we are linked and need to send fluid to the linked tank.
+		//Only do checks on the server.  Clients get packets.
+		if(!world.isClient()){
+			EntityFluidTank linkedTank =  null;
+			String linkedMessage = null;
+			if(linkedVehicle != null){
+				if(!linkedVehicle.position.isDistanceToCloserThan(position, 16)){
+					linkedMessage = "interact.fuelhose.linkdropped";
+				}else{
+					linkedTank = linkedVehicle.fuelTank;
 				}
-				if(vehicleOn != null){
-					vehicleOn.electricUsage += furnace.powerToDrawPerTick;
+			}else if(linkedPart != null){
+				if(linkedPart.position.isDistanceToCloserThan(position, 16)){
+					linkedMessage = "interact.fuelhose.linkdropped";
+				}else{
+					linkedTank = linkedPart.tank;
 				}
 			}
 			
-			//Check to see if we are linked and need to send fluid to the linked tank.
-			//Only do checks on the server.  Clients get packets.
-			if(!world.isClient()){
-				EntityFluidTank linkedTank =  null;
-				String linkedMessage = null;
-				if(linkedVehicle != null){
-					if(linkedVehicle.position.distanceTo(position) > 16){
-						linkedMessage = "interact.fuelhose.linkdropped";
-					}else{
-						linkedTank = linkedVehicle.fuelTank;
-					}
-				}else if(linkedPart != null){
-					if(linkedPart.position.distanceTo(position) > 16){
-						linkedMessage = "interact.fuelhose.linkdropped";
-					}else{
-						linkedTank = linkedPart.tank;
-					}
-				}
-				
-				//If we have a linked tank to transfer to, do so now.
-				if(linkedTank != null){
-					String fluidToTransfer = tank.getFluid();
-					if(!fluidToTransfer.isEmpty()){
-						double amountToTransfer = linkedTank.fill(fluidToTransfer, 10, false);
+			//If we have a linked tank to transfer to, do so now.
+			if(linkedTank != null){
+				String fluidToTransfer = tank.getFluid();
+				if(!fluidToTransfer.isEmpty()){
+					double amountToTransfer = linkedTank.fill(fluidToTransfer, 10, false);
+					if(amountToTransfer > 0){
+						amountToTransfer = tank.drain(fluidToTransfer, amountToTransfer, true);
 						if(amountToTransfer > 0){
-							amountToTransfer = tank.drain(fluidToTransfer, amountToTransfer, true);
-							if(amountToTransfer > 0){
-								linkedTank.fill(fluidToTransfer, amountToTransfer, true);
-							}else{
-								linkedMessage = "interact.fuelhose.tankempty";
-							}
+							linkedTank.fill(fluidToTransfer, amountToTransfer, true);
 						}else{
-							linkedMessage = "interact.fuelhose.tankfull";
+							linkedMessage = "interact.fuelhose.tankempty";
 						}
 					}else{
-						linkedMessage = "interact.fuelhose.tankempty";
+						linkedMessage = "interact.fuelhose.tankfull";
 					}
+				}else{
+					linkedMessage = "interact.fuelhose.tankempty";
 				}
-				
-				//If we have an error message, display it an null our our linkings.
-				if(linkedMessage != null){
-					linkedVehicle = null;
-					linkedPart = null;
-					for(WrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, 16, 16, 16))){
-						if(entity instanceof WrapperPlayer){
-							((WrapperPlayer) entity).sendPacket(new PacketPlayerChatMessage((WrapperPlayer) entity, linkedMessage));
-						}
+			}
+			
+			//If we have an error message, display it an null our our linkings.
+			if(linkedMessage != null){
+				linkedVehicle = null;
+				linkedPart = null;
+				for(WrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, 16, 16, 16))){
+					if(entity instanceof WrapperPlayer){
+						((WrapperPlayer) entity).sendPacket(new PacketPlayerChatMessage((WrapperPlayer) entity, linkedMessage));
 					}
 				}
 			}
-			return true;
-		}else{
-			return false;
 		}
 	}
 	

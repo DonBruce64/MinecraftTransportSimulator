@@ -6,7 +6,8 @@ import java.util.List;
 
 import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.components.ABlockBase.BlockMaterial;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad.RoadComponent;
@@ -194,7 +195,7 @@ public final class LegacyCompatSystem{
 				connection.type = hitchName;
 				connection.pos = definition.motorized.hitchPos;
 				if(connection.mounted){
-					connection.rot = new Point3d();
+					connection.rot = new RotationMatrix();
 				}
 				definition.connections.add(connection);
 			}
@@ -367,43 +368,43 @@ public final class LegacyCompatSystem{
 			//Do compats for particles.
 			if(definition.rendering.particles == null){
 				definition.rendering.particles = new ArrayList<JSONParticle>();
-				int engineNumber = 0;
-				for(JSONPartDefinition partDef : definition.parts){
-					if(partDef.particleObjects != null){
-						++engineNumber;
-						int pistonNumber = 0;
-						for(JSONParticle exhaustDef : partDef.particleObjects){
-							++pistonNumber;
-							exhaustDef.type = ParticleType.SMOKE;
-							exhaustDef.activeAnimations = new ArrayList<JSONAnimationDefinition>();
-							exhaustDef.initialVelocity = exhaustDef.velocityVector;
-							exhaustDef.velocityVector = null;
-							JSONAnimationDefinition activeAnimation = new JSONAnimationDefinition();
-							activeAnimation.animationType = AnimationComponentType.VISIBILITY;
-							activeAnimation.variable = "engine_piston_" + pistonNumber + "_" + partDef.particleObjects.size() + "_cam_" + engineNumber;
-							activeAnimation.clampMin = 1.0F;
-							activeAnimation.clampMax = 1.0F;
-							exhaustDef.activeAnimations.add(activeAnimation);
-							definition.rendering.particles.add(exhaustDef);
-							
-							JSONParticle backfireDef = new JSONParticle();
-							backfireDef.type = exhaustDef.type;
-							backfireDef.color = ColorRGB.BLACK;
-							backfireDef.scale = 2.5F;
-							backfireDef.quantity = 5;
-							backfireDef.pos = exhaustDef.pos;
-							backfireDef.initialVelocity = exhaustDef.initialVelocity;
-							backfireDef.activeAnimations = new ArrayList<JSONAnimationDefinition>();
-							activeAnimation = new JSONAnimationDefinition();
-							activeAnimation.animationType = AnimationComponentType.VISIBILITY;
-							activeAnimation.variable = "engine_backfired_" + engineNumber;
-							activeAnimation.clampMin = 1.0F;
-							activeAnimation.clampMax = 1.0F;
-							backfireDef.activeAnimations.add(activeAnimation);
-							definition.rendering.particles.add(backfireDef);
-						}
-						partDef.particleObjects = null;
+			}
+			int engineNumber = 0;
+			for(JSONPartDefinition partDef : definition.parts){
+				if(partDef.particleObjects != null){
+					++engineNumber;
+					int pistonNumber = 0;
+					for(JSONParticle exhaustDef : partDef.particleObjects){
+						++pistonNumber;
+						exhaustDef.type = ParticleType.SMOKE;
+						exhaustDef.activeAnimations = new ArrayList<JSONAnimationDefinition>();
+						exhaustDef.initialVelocity = exhaustDef.velocityVector;
+						exhaustDef.velocityVector = null;
+						JSONAnimationDefinition activeAnimation = new JSONAnimationDefinition();
+						activeAnimation.animationType = AnimationComponentType.VISIBILITY;
+						activeAnimation.variable = "engine_piston_" + pistonNumber + "_" + partDef.particleObjects.size() + "_cam_" + engineNumber;
+						activeAnimation.clampMin = 1.0F;
+						activeAnimation.clampMax = 1.0F;
+						exhaustDef.activeAnimations.add(activeAnimation);
+						definition.rendering.particles.add(exhaustDef);
+						
+						JSONParticle backfireDef = new JSONParticle();
+						backfireDef.type = exhaustDef.type;
+						backfireDef.color = ColorRGB.BLACK;
+						backfireDef.scale = 2.5F;
+						backfireDef.quantity = 5;
+						backfireDef.pos = exhaustDef.pos;
+						backfireDef.initialVelocity = exhaustDef.initialVelocity;
+						backfireDef.activeAnimations = new ArrayList<JSONAnimationDefinition>();
+						activeAnimation = new JSONAnimationDefinition();
+						activeAnimation.animationType = AnimationComponentType.VISIBILITY;
+						activeAnimation.variable = "engine_backfired_" + engineNumber;
+						activeAnimation.clampMin = 1.0F;
+						activeAnimation.clampMax = 1.0F;
+						backfireDef.activeAnimations.add(activeAnimation);
+						definition.rendering.particles.add(backfireDef);
 					}
+					partDef.particleObjects = null;
 				}
 			}
 			
@@ -425,8 +426,6 @@ public final class LegacyCompatSystem{
 			definition.general.type = null;
 			definition.generic.customType = definition.general.customType;
 			definition.general.customType = null;
-			definition.generic.disableMirroring = definition.general.disableMirroring;
-			definition.general.disableMirroring = false;
 			definition.generic.useVehicleTexture = definition.general.useVehicleTexture;
 			definition.general.useVehicleTexture = false;
 		}
@@ -662,6 +661,21 @@ public final class LegacyCompatSystem{
 			definition.seat = definition.new JSONPartSeat();
 		}
 		
+		//If the part is a seat, and has player scaling, convert it.
+		if(definition.seat != null){
+			if(definition.seat.widthScale != 0 || definition.seat.heightScale != 0){
+				if(definition.seat.widthScale == 0){
+					definition.seat.widthScale = 1;
+				}
+				if(definition.seat.heightScale == 0){
+					definition.seat.heightScale = 1;
+				}
+				definition.seat.playerScale = new Point3D(definition.seat.widthScale, definition.seat.heightScale, definition.seat.widthScale);
+				definition.seat.widthScale = 0;
+				definition.seat.heightScale = 0;
+			}
+		}
+		
 		//If the part is a gun, set yaw and pitch speed if not set.
 		//Also set muzzle position.
 		if(definition.gun != null){
@@ -676,9 +690,8 @@ public final class LegacyCompatSystem{
 				JSONMuzzleGroup muzzleGroup = new JSONMuzzleGroup();
 				muzzleGroup.muzzles = new ArrayList<JSONMuzzle>();
 				JSONMuzzle muzzle = new JSONMuzzle();
-				muzzle.pos = new Point3d(0, 0, definition.gun.length);
-				muzzle.rot = new Point3d();
-				muzzle.center = new Point3d();
+				muzzle.pos = new Point3D(0, 0, definition.gun.length);
+				muzzle.center = new Point3D();
 				muzzleGroup.muzzles.add(muzzle);
 				definition.gun.muzzleGroups.add(muzzleGroup);
 			}
@@ -714,6 +727,53 @@ public final class LegacyCompatSystem{
 		
 		performVehicleConnectionLegacyCompats(definition);
 		performVehicleCollisionLegacyCompats(definition);
+		
+		//Do compats for wheel rotation and mirroring.
+		if(definition.ground != null && definition.ground.isWheel){
+			if(definition.generic.movementAnimations == null){
+				definition.generic.movementAnimations = new ArrayList<JSONAnimationDefinition>();
+				
+				JSONAnimationDefinition animation = new JSONAnimationDefinition();
+				animation.centerPoint = new Point3D(0, 0, 0);
+				animation.axis = new Point3D(0, 180, 0);
+				animation.animationType = AnimationComponentType.ROTATION;
+				animation.variable = "part_ismirrored";
+				definition.generic.movementAnimations.add(animation);
+				
+				animation = new JSONAnimationDefinition();
+				animation.centerPoint = new Point3D(0, 0, 0);
+				animation.axis = new Point3D(1, 0, 0);
+				animation.animationType = AnimationComponentType.ROTATION;
+				animation.variable = "ground_rotation";
+				definition.generic.movementAnimations.add(animation);
+				
+				animation = new JSONAnimationDefinition();
+				animation.animationType = AnimationComponentType.INHIBITOR;
+				animation.variable = "part_ismirrored";
+				definition.generic.movementAnimations.add(animation);
+				
+				animation = new JSONAnimationDefinition();
+				animation.centerPoint = new Point3D(0, 0, 0);
+				animation.axis = new Point3D(-2, 0, 0);
+				animation.animationType = AnimationComponentType.ROTATION;
+				animation.variable = "ground_rotation";
+				definition.generic.movementAnimations.add(animation);
+			}
+		}
+		
+		//Do compats for propeller rotation.
+		if(definition.propeller != null){
+			if(definition.generic.movementAnimations == null){
+				definition.generic.movementAnimations = new ArrayList<JSONAnimationDefinition>();
+				
+				JSONAnimationDefinition animation = new JSONAnimationDefinition();
+				animation.centerPoint = new Point3D(0, 0, 0);
+				animation.axis = new Point3D(0, 0, 1);
+				animation.animationType = AnimationComponentType.ROTATION;
+				animation.variable = "propeller_rotation";
+				definition.generic.movementAnimations.add(animation);
+			}
+		}
 		
 		//Do compats for engine and gun sounds.
 		if(definition.rendering == null || definition.rendering.sounds == null){
@@ -792,7 +852,7 @@ public final class LegacyCompatSystem{
 				if(!definition.engine.isCrankingNotPitched){
 					crankingPitchDef.animationType = AnimationComponentType.TRANSLATION;
 					crankingPitchDef.variable = "electric_power";
-					crankingPitchDef.axis = new Point3d(0, 1D/10D, 0);
+					crankingPitchDef.axis = new Point3D(0, 1D/10D, 0);
 					crankingPitchDef.offset = 0.3F;
 					crankingPitchDef.clampMax = 1.0F;
 					definition.engine.isCrankingNotPitched = false;
@@ -800,7 +860,7 @@ public final class LegacyCompatSystem{
 					crankingPitchDef = new JSONAnimationDefinition();
 					crankingPitchDef.animationType = AnimationComponentType.TRANSLATION;
 					crankingPitchDef.variable = "engine_rpm";
-					crankingPitchDef.axis = new Point3d(0, 1D/(definition.engine.maxRPM < 15000 ? 500D : 2000D), 0);
+					crankingPitchDef.axis = new Point3D(0, 1D/(definition.engine.maxRPM < 15000 ? 500D : 2000D), 0);
 				}
 				crankingSound.pitchAnimations.add(crankingPitchDef);
 				definition.rendering.sounds.add(crankingSound);
@@ -828,13 +888,13 @@ public final class LegacyCompatSystem{
 						if(customSound.volumeAdvanced){
 							runningVolumeDef.animationType = AnimationComponentType.ROTATION;
 							runningVolumeDef.variable = "engine_rpm";
-							runningVolumeDef.centerPoint = new Point3d();
-							runningVolumeDef.axis = new Point3d(-0.000001/(customSound.volumeLength/1000), 0, customSound.volumeCenter);
+							runningVolumeDef.centerPoint = new Point3D();
+							runningVolumeDef.axis = new Point3D(-0.000001/(customSound.volumeLength/1000), 0, customSound.volumeCenter);
 							runningVolumeDef.offset = (customSound.volumeLength/20000) + 1;
 						}else{
 							runningVolumeDef.animationType = AnimationComponentType.TRANSLATION;
 							runningVolumeDef.variable = "engine_rpm_percent";
-							runningVolumeDef.axis = new Point3d(0, (customSound.volumeMax - customSound.volumeIdle), 0);
+							runningVolumeDef.axis = new Point3D(0, (customSound.volumeMax - customSound.volumeIdle), 0);
 							runningVolumeDef.offset = customSound.volumeIdle + (definition.engine.maxRPM < 15000 ? 500 : 2000)/definition.engine.maxRPM;
 						}
 						runningSound.volumeAnimations.add(runningVolumeDef);
@@ -844,13 +904,13 @@ public final class LegacyCompatSystem{
 						if(customSound.pitchAdvanced){
 							runningPitchDef.animationType = AnimationComponentType.ROTATION;
 							runningPitchDef.variable = "engine_rpm";
-							runningPitchDef.centerPoint = new Point3d();
-							runningPitchDef.axis = new Point3d(-0.000001/(customSound.pitchLength/1000), 0, customSound.pitchCenter);
+							runningPitchDef.centerPoint = new Point3D();
+							runningPitchDef.axis = new Point3D(-0.000001/(customSound.pitchLength/1000), 0, customSound.pitchCenter);
 							runningPitchDef.offset = (customSound.pitchLength/20000) + 1;
 						}else{
 							runningPitchDef.animationType = AnimationComponentType.TRANSLATION;
 							runningPitchDef.variable = "engine_rpm_percent";
-							runningPitchDef.axis = new Point3d(0, (customSound.pitchMax - customSound.pitchIdle), 0);
+							runningPitchDef.axis = new Point3D(0, (customSound.pitchMax - customSound.pitchIdle), 0);
 							runningPitchDef.offset = customSound.pitchIdle + (definition.engine.maxRPM < 15000 ? 500 : 2000)/definition.engine.maxRPM;
 						}
 						runningSound.pitchAnimations.add(runningPitchDef);
@@ -876,7 +936,7 @@ public final class LegacyCompatSystem{
 					runningPitchDef.animationType = AnimationComponentType.TRANSLATION;
 					runningPitchDef.variable = "engine_rpm";
 					//Pitch should be 0.35 at idle, with a 0.35 increase for every 2500 RPM, or every 25000 RPM for jet (high-revving) engines by default.
-					runningPitchDef.axis = new Point3d(0, 0.35/(definition.engine.maxRPM < 15000 ? 500 : 5000), 0);
+					runningPitchDef.axis = new Point3D(0, 0.35/(definition.engine.maxRPM < 15000 ? 500 : 5000), 0);
 					runningPitchDef.offset = 0.35F;
 					runningSound.pitchAnimations.add(runningPitchDef);
 					definition.rendering.sounds.add(runningSound);
@@ -1036,7 +1096,8 @@ public final class LegacyCompatSystem{
 				particleDef.type = ParticleType.SMOKE;
 				particleDef.color = ColorRGB.WHITE;
 				particleDef.quantity = 4;
-				particleDef.initialVelocity = new Point3d(0, 0.15, 0);
+				particleDef.initialVelocity = new Point3D(0, 0.15, 0);
+				
 				particleDef.activeAnimations = new ArrayList<JSONAnimationDefinition>();
 				JSONAnimationDefinition activeAnimation = new JSONAnimationDefinition();
 				activeAnimation.animationType = AnimationComponentType.VISIBILITY;
@@ -1044,6 +1105,15 @@ public final class LegacyCompatSystem{
 				activeAnimation.clampMin = 1.0F;
 				activeAnimation.clampMax = 1.0F;
 				particleDef.activeAnimations.add(activeAnimation);
+				
+				particleDef.spawningAnimations = new ArrayList<JSONAnimationDefinition>();
+				JSONAnimationDefinition spawningAnimation = new JSONAnimationDefinition();
+				spawningAnimation.animationType = AnimationComponentType.ROTATION;
+				spawningAnimation.variable = "ground_rotation";
+				spawningAnimation.centerPoint = new Point3D();
+				spawningAnimation.axis = new Point3D(-1, 0, 0);
+				particleDef.spawningAnimations.add(spawningAnimation);
+				
 				definition.rendering.particles.add(particleDef);
 				
 				//Burnout smoke.
@@ -1052,8 +1122,9 @@ public final class LegacyCompatSystem{
 				particleDef.color = ColorRGB.WHITE;
 				particleDef.quantity = 4;
 				particleDef.spawnEveryTick = true;
-				particleDef.pos = new Point3d(0, -definition.ground.height/2, 0);
-				particleDef.initialVelocity = new Point3d(0, 0.15, 0);
+				particleDef.pos = new Point3D(0, -definition.ground.height/2, 0);
+				particleDef.initialVelocity = new Point3D(0, 0.15, 0);
+				
 				particleDef.activeAnimations = new ArrayList<JSONAnimationDefinition>();
 				activeAnimation = new JSONAnimationDefinition();
 				activeAnimation.animationType = AnimationComponentType.VISIBILITY;
@@ -1061,6 +1132,15 @@ public final class LegacyCompatSystem{
 				activeAnimation.clampMin = 1.0F;
 				activeAnimation.clampMax = 1.0F;
 				particleDef.activeAnimations.add(activeAnimation);
+				
+				particleDef.spawningAnimations = new ArrayList<JSONAnimationDefinition>();
+				spawningAnimation = new JSONAnimationDefinition();
+				spawningAnimation.animationType = AnimationComponentType.ROTATION;
+				spawningAnimation.variable = "ground_rotation";
+				spawningAnimation.centerPoint = new Point3D();
+				spawningAnimation.axis = new Point3D(-1, 0, 0);
+				particleDef.spawningAnimations.add(spawningAnimation);
+				
 				definition.rendering.particles.add(particleDef);
 				
 				//Wheel dirt for skidding (burnouts).
@@ -1070,8 +1150,9 @@ public final class LegacyCompatSystem{
 				particleDef.quantity = 4;
 				particleDef.scale = 0.3F;
 				particleDef.spawnEveryTick = true;
-				particleDef.pos = new Point3d(0, -definition.ground.height/2, 0);
-				particleDef.initialVelocity = new Point3d(0, 1.5, -1.5);
+				particleDef.pos = new Point3D(0, -definition.ground.height/2, 0);
+				particleDef.initialVelocity = new Point3D(0, 1.5, -1.5);
+				
 				particleDef.activeAnimations = new ArrayList<JSONAnimationDefinition>();
 				activeAnimation = new JSONAnimationDefinition();
 				activeAnimation.animationType = AnimationComponentType.VISIBILITY;
@@ -1079,6 +1160,15 @@ public final class LegacyCompatSystem{
 				activeAnimation.clampMin = 1.0F;
 				activeAnimation.clampMax = 1.0F;
 				particleDef.activeAnimations.add(activeAnimation);
+				
+				particleDef.spawningAnimations = new ArrayList<JSONAnimationDefinition>();
+				spawningAnimation = new JSONAnimationDefinition();
+				spawningAnimation.animationType = AnimationComponentType.ROTATION;
+				spawningAnimation.variable = "ground_rotation";
+				spawningAnimation.centerPoint = new Point3D();
+				spawningAnimation.axis = new Point3D(-1, 0, 0);
+				particleDef.spawningAnimations.add(spawningAnimation);
+				
 				definition.rendering.particles.add(particleDef);
 				
 				//Wheel dirt for slipping (turning too fast).
@@ -1088,8 +1178,9 @@ public final class LegacyCompatSystem{
 				particleDef.quantity = 4;
 				particleDef.scale = 0.3F;
 				particleDef.spawnEveryTick = true;
-				particleDef.pos = new Point3d(0, -definition.ground.height/2, 0);
-				particleDef.initialVelocity = new Point3d(0, 1.5, 0.0);
+				particleDef.pos = new Point3D(0, -definition.ground.height/2, 0);
+				particleDef.initialVelocity = new Point3D(0, 1.5, 0.0);
+				
 				particleDef.activeAnimations = new ArrayList<JSONAnimationDefinition>();
 				activeAnimation = new JSONAnimationDefinition();
 				activeAnimation.animationType = AnimationComponentType.VISIBILITY;
@@ -1097,6 +1188,15 @@ public final class LegacyCompatSystem{
 				activeAnimation.clampMin = 1.0F;
 				activeAnimation.clampMax = 1.0F;
 				particleDef.activeAnimations.add(activeAnimation);
+				
+				particleDef.spawningAnimations = new ArrayList<JSONAnimationDefinition>();
+				spawningAnimation = new JSONAnimationDefinition();
+				spawningAnimation.animationType = AnimationComponentType.ROTATION;
+				spawningAnimation.variable = "ground_rotation";
+				spawningAnimation.centerPoint = new Point3D();
+				spawningAnimation.axis = new Point3D(-1, 0, 0);
+				particleDef.spawningAnimations.add(spawningAnimation);
+				
 				definition.rendering.particles.add(particleDef);
 			}
 		}
@@ -1106,13 +1206,13 @@ public final class LegacyCompatSystem{
 		//Check if we have any old component definitions.  If so, we need
 		//to make all textures light-up.
 		boolean oldDefinition = false;
-		for(JSONInstrument.Component component : definition.components){
+		for(JSONInstrument.JSONInstrumentComponent component : definition.components){
 			if(component.rotationVariable != null || component.translationVariable != null){
 				oldDefinition = true;
 			}
 		}
 		//Convert any old component definitions to the new style.
-		for(JSONInstrument.Component component : definition.components){
+		for(JSONInstrument.JSONInstrumentComponent component : definition.components){
 			if(oldDefinition){
 				component.lightUpTexture = true;
 				component.overlayTexture = component.lightOverlay;
@@ -1123,8 +1223,8 @@ public final class LegacyCompatSystem{
 				JSONAnimationDefinition animation = new JSONAnimationDefinition();
 				animation.animationType = AnimationComponentType.ROTATION;
 				animation.variable = component.rotationVariable;
-				animation.centerPoint = new Point3d();
-				animation.axis = new Point3d(0, 0, component.rotationFactor);
+				animation.centerPoint = new Point3D();
+				animation.axis = new Point3D(0, 0, component.rotationFactor);
 				animation.offset = component.rotationOffset;
 				animation.clampMin = component.rotationClampMin;
 				animation.clampMax = component.rotationClampMax;
@@ -1145,9 +1245,9 @@ public final class LegacyCompatSystem{
 				animation.animationType = AnimationComponentType.TRANSLATION;
 				animation.variable = component.translationVariable;
 				if(component.translateHorizontal){
-					animation.axis = new Point3d(component.translationFactor, 0, 0);
+					animation.axis = new Point3D(component.translationFactor, 0, 0);
 				}else{
-					animation.axis = new Point3d(0, component.translationFactor, 0);
+					animation.axis = new Point3D(0, component.translationFactor, 0);
 				}
 				animation.clampMin = component.translationClampMin;
 				animation.clampMax = component.translationClampMax;
@@ -1206,8 +1306,7 @@ public final class LegacyCompatSystem{
 				object.color = line.color;
 				object.scale = line.scale;
 				object.maxLength = line.characters;
-				object.pos = new Point3d(line.xPos, line.yPos, line.zPos + 0.01D);
-				object.rot = new Point3d();
+				object.pos = new Point3D(line.xPos, line.yPos, line.zPos + 0.01D);
 				object.fieldName = "TextLine #" + (definition.general.textObjects.size() + 1);
 				definition.general.textObjects.add(object);
 			}
@@ -1360,11 +1459,11 @@ public final class LegacyCompatSystem{
 				object.color = line.color;
 				object.scale = line.scale;
 				if(lineNumber++ < 3){
-					object.pos = new Point3d(line.xPos, line.yPos, line.zPos + 0.0001D);
-					object.rot = new Point3d();
+					object.pos = new Point3D(line.xPos, line.yPos, line.zPos + 0.0001D);
 				}else{
-					object.pos = new Point3d(line.xPos, line.yPos, line.zPos - 0.0001D);
-					object.rot = new Point3d(0, 180, 0);
+					object.pos = new Point3D(line.xPos, line.yPos, line.zPos - 0.0001D);
+					object.rot = new RotationMatrix();
+					object.rot.setToAxisAngle(0, 1, 0, 180);
 				}
 				object.fieldName = "TextLine #" + (definition.general.textObjects.size() + 1);
 				definition.general.textObjects.add(object);
@@ -1437,8 +1536,7 @@ public final class LegacyCompatSystem{
 					definition.rendering.textObjects = new ArrayList<JSONText>();
 					
 					JSONText nameTextObject = new JSONText();
-					nameTextObject.pos = new Point3d(0, -500, 0);
-					nameTextObject.rot = new Point3d();
+					nameTextObject.pos = new Point3D(0, -500, 0);
 					nameTextObject.fieldName = "Beacon Name";
 					nameTextObject.defaultText = "NONE";
 					nameTextObject.maxLength = 5;
@@ -1446,8 +1544,7 @@ public final class LegacyCompatSystem{
 					definition.rendering.textObjects.add(nameTextObject);
 					
 					JSONText glideslopeTextObject = new JSONText();
-					glideslopeTextObject.pos = new Point3d(0, -500, 0);
-					glideslopeTextObject.rot = new Point3d();
+					glideslopeTextObject.pos = new Point3D(0, -500, 0);
 					glideslopeTextObject.fieldName = "Glide Slope (Deg)";
 					glideslopeTextObject.defaultText = "10.0";
 					glideslopeTextObject.maxLength = 5;
@@ -1455,8 +1552,7 @@ public final class LegacyCompatSystem{
 					definition.rendering.textObjects.add(glideslopeTextObject);
 					
 					JSONText bearingTextObject = new JSONText();
-					bearingTextObject.pos = new Point3d(0, -500, 0);
-					bearingTextObject.rot = new Point3d();
+					bearingTextObject.pos = new Point3D(0, -500, 0);
 					bearingTextObject.fieldName = "Bearing (Deg)";
 					bearingTextObject.defaultText = "0.0";
 					bearingTextObject.maxLength = 5;
@@ -1532,8 +1628,8 @@ public final class LegacyCompatSystem{
 			particleDef.color = new ColorRGB("999999");
 			particleDef.quantity = 4;
 			particleDef.scale = 0.3F;
-			particleDef.pos = new Point3d(0, 0.5, 0);
-			particleDef.initialVelocity = new Point3d(0, 1.5, 0);
+			particleDef.pos = new Point3D(0, 0.5, 0);
+			particleDef.initialVelocity = new Point3D(0, 1.5, 0);
 			particleDef.activeAnimations = new ArrayList<JSONAnimationDefinition>();
 			JSONAnimationDefinition activeAnimation = new JSONAnimationDefinition();
 			activeAnimation.animationType = AnimationComponentType.VISIBILITY;
@@ -1565,8 +1661,8 @@ public final class LegacyCompatSystem{
 			for(int i=0; i<partDef.exhaustPos.length; i+=3){
 				JSONParticle particle = new JSONParticle();
 				particle.type = ParticleType.SMOKE;
-				particle.pos = new Point3d(partDef.exhaustPos[i], partDef.exhaustPos[i+1], partDef.exhaustPos[i+2]);
-				particle.velocityVector = new Point3d(partDef.exhaustVelocity[i], partDef.exhaustVelocity[i+1], partDef.exhaustVelocity[i+2]);
+				particle.pos = new Point3D(partDef.exhaustPos[i], partDef.exhaustPos[i+1], partDef.exhaustPos[i+2]);
+				particle.velocityVector = new Point3D(partDef.exhaustVelocity[i], partDef.exhaustVelocity[i+1], partDef.exhaustVelocity[i+2]);
 				particle.scale = 1.0F;
 				particle.color = new ColorRGB("#D9D9D9");
 				particle.transparency = 0.25F;
@@ -1645,14 +1741,35 @@ public final class LegacyCompatSystem{
 			}
 			
 			//If we have ground devices that are wheels, but no animations, add those automatically.
-			if(partName.equals("ground_wheel") && partDef.turnsWithSteer && partDef.animations == null){
-				partDef.animations = new ArrayList<JSONAnimationDefinition>();
-				JSONAnimationDefinition animation = new JSONAnimationDefinition();
-				animation.centerPoint = new Point3d();
-				animation.axis = new Point3d(0, partDef.pos.z > 0 ? -1 : 1, 0);
-				animation.animationType = AnimationComponentType.ROTATION;
-				animation.variable = "rudder";
-				partDef.animations.add(animation);
+			//Also check if we do have animations, but it's a rotation at the part's position.
+			//Old format for rotations was to be local to the part, not the vehicle.
+			if(partName.startsWith("ground_wheel") && partDef.turnsWithSteer){
+				boolean doWheelLC = partDef.animations == null && partDef.applyAfter == null;
+				if(!doWheelLC && partDef.animations != null){
+					for(JSONAnimationDefinition animation : partDef.animations){
+						if(animation.animationType.equals(AnimationComponentType.ROTATION) && animation.centerPoint.isZero()){
+							doWheelLC = true;
+						}
+					}
+				}
+				
+				if(doWheelLC){
+					if(partDef.animations == null){
+						partDef.animations = new ArrayList<JSONAnimationDefinition>();
+						JSONAnimationDefinition animation = new JSONAnimationDefinition();
+						animation.centerPoint = partDef.pos.copy();
+						animation.axis = new Point3D(0, partDef.pos.z > 0 ? -1 : 1, 0);
+						animation.animationType = AnimationComponentType.ROTATION;
+						animation.variable = "rudder";
+						partDef.animations.add(animation);
+					}else{
+						for(JSONAnimationDefinition animation : partDef.animations){
+							if(animation.animationType.equals(AnimationComponentType.ROTATION)){
+								animation.centerPoint.add(partDef.pos);
+							}
+						}
+					}
+				}
 			}
 			
 			//If we have additional parts, check those too.
@@ -1661,6 +1778,18 @@ public final class LegacyCompatSystem{
 					performVehiclePartDefLegacyCompats(additionalPartDef);
 				}
 			}
+		}
+		//If we defined a player scale, change it to new form.
+		if(partDef.widthScale != 0 || partDef.heightScale != 0){
+			if(partDef.widthScale == 0){
+				partDef.widthScale = 1;
+			}
+			if(partDef.heightScale == 0){
+				partDef.heightScale = 1;
+			}
+			partDef.playerScale = new Point3D(partDef.widthScale, partDef.heightScale, partDef.widthScale);
+			partDef.widthScale = 0;
+			partDef.heightScale = 0;
 		}
 	}
 	
@@ -1696,6 +1825,24 @@ public final class LegacyCompatSystem{
 				interactableDef.connectionGroups.add(hitchGroup);
 			}
 			interactableDef.connections = null;
+		}
+		
+		//Check for old hookup variables and distances.
+		if(interactableDef.connectionGroups != null){
+			for(JSONConnectionGroup connectionGroup : interactableDef.connectionGroups){
+				if(connectionGroup.hookup){
+					connectionGroup.isHookup = true;
+					connectionGroup.hookup = false;
+				}
+				if(!connectionGroup.isHookup && !connectionGroup.isHitch){
+					connectionGroup.isHitch = true;
+				}
+				for(JSONConnection connection : connectionGroup.connections){
+					if(connection.distance == 0){
+						connection.distance = 2;
+					}
+				}
+			}
 		}
 	}
 	
@@ -1823,13 +1970,13 @@ public final class LegacyCompatSystem{
     			animation.animationType = AnimationComponentType.ROTATION;
     	    	animation.variable = rotatable.rotationVariable;
     	    	animation.centerPoint = rotatable.rotationPoint;
-    	    	animation.axis = rotatable.rotationAxis != null ? rotatable.rotationAxis : new Point3d();
+    	    	animation.axis = rotatable.rotationAxis != null ? rotatable.rotationAxis : new Point3D();
     	    	animation.clampMin = rotatable.rotationClampMin;
     	    	animation.clampMax = rotatable.rotationClampMax;
     	    	animation.absolute = rotatable.absoluteValue;
     	    	if(rotatable.rotationVariable.equals("steering_wheel")){
     	    		animation.variable = "rudder";
-    	    		animation.axis.multiply(-1D);
+    	    		animation.axis.invert();
     	    	}
     	    	if(rotatable.rotationVariable.equals("door")){
     	    		animation.duration = 30;
@@ -1866,7 +2013,7 @@ public final class LegacyCompatSystem{
     	    	animation.absolute = translatable.absoluteValue;
     	    	if(translatable.translationVariable.equals("steering_wheel")){
     	    		animation.variable = "rudder";
-    	    		animation.axis.multiply(-1D);
+    	    		animation.axis.invert();
     	    	}
     	    	if(translatable.translationVariable.equals("door")){
     	    		animation.duration = 30;
@@ -1874,6 +2021,13 @@ public final class LegacyCompatSystem{
     	    	object.animations.add(animation);
 			}
     		rendering.translatableModelObjects = null;
+    	}
+    	if(rendering.particles != null){
+    		for(JSONParticle particle : rendering.particles){
+    			if(particle.quantity == 0){
+    				particle.quantity = 1;
+    			}
+    		}
     	}
     }
     
@@ -2054,8 +2208,8 @@ public final class LegacyCompatSystem{
 									blendable.beamDiameter = Math.max(Math.max(maxX - minX, maxZ - minZ), maxY - minY)*64F;
 									blendable.beamLength = blendable.beamDiameter*3;
 								}
-								blendable.pos = new Point3d(minX + (maxX - minX)/2D, minY + (maxY - minY)/2D, minZ + (maxZ - minZ)/2D);;
-								blendable.axis = new Point3d(masterVertex[0], masterVertex[1], masterVertex[2]);
+								blendable.pos = new Point3D(minX + (maxX - minX)/2D, minY + (maxY - minY)/2D, minZ + (maxZ - minZ)/2D);;
+								blendable.axis = new Point3D(masterVertex[0], masterVertex[1], masterVertex[2]);
 								
 								lightDef.blendableComponents.add(blendable);
 							}
@@ -2119,8 +2273,8 @@ public final class LegacyCompatSystem{
 						//Knowing this, we can calculate the linear velocity for this roller, as a roller with
 						//half the circumference needs double the factor, and vice-versa.  Basically, we get
 						//the ratio of the two circumferences of the "standard" roller and our roller.
-						animation.centerPoint = new Point3d(0, minY + (maxY - minY)/2D, minZ + (maxZ - minZ)/2D);
-						animation.axis = new Point3d((1.0D/Math.PI)/(radius*2D), 0, 0);
+						animation.centerPoint = new Point3D(0, minY + (maxY - minY)/2D, minZ + (maxZ - minZ)/2D);
+						animation.axis = new Point3D((1.0D/Math.PI)/(radius*2D), 0, 0);
 						
 						//Create animated object and save.
 						if(definition.rendering == null){

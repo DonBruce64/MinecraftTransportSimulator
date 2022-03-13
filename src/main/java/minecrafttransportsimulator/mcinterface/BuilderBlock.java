@@ -8,7 +8,7 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 import minecrafttransportsimulator.MasterLoader;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.ABlockBaseTileEntity;
 import minecrafttransportsimulator.blocks.instances.BlockCollision;
@@ -136,6 +136,23 @@ public class BuilderBlock extends Block{
 		}
 		return super.onBlockActivated(world, pos, state, player, hand, side, hitX, hitY, hitZ);
 	}
+	
+	@Override
+	@SuppressWarnings("deprecation")
+	public void neighborChanged(IBlockState state, World world, BlockPos pos, Block blockIn, BlockPos fromPos){
+		//Forward the change of state of a neighbor to the tile if we have one.
+		if(block instanceof ABlockBaseTileEntity){
+			if(!world.isRemote){
+				TileEntity tile = world.getTileEntity(pos);
+	    		if(tile instanceof BuilderTileEntity){
+	    			if(((BuilderTileEntity<?>) tile).tileEntity != null){
+	    				((BuilderTileEntity<?>) tile).tileEntity.onNeighborChanged(new Point3D(fromPos.getX(), fromPos.getY(), fromPos.getZ()));
+	    			}
+	    		}
+			}
+		}
+		super.neighborChanged(state, world, pos, blockIn, fromPos);
+	}
     
     @Override
 	public ItemStack getPickBlock(IBlockState state, RayTraceResult target, World world, BlockPos pos, EntityPlayer player){
@@ -181,7 +198,7 @@ public class BuilderBlock extends Block{
     @Override
     public void breakBlock(World world, BlockPos pos, IBlockState state){
     	//Forward the breaking call to the block to allow for breaking logic.
-    	block.onBroken(WrapperWorld.getWrapperFor(world), new Point3d(pos.getX(), pos.getY(), pos.getZ()));
+    	block.onBroken(WrapperWorld.getWrapperFor(world), new Point3D(pos.getX(), pos.getY(), pos.getZ()));
     	//This gets called before the block is broken to do logic.  Save drops to static map to be
     	//spawned during the getDrops method.  Also notify the block that it's been broken in case
     	//it needs to do operations.
@@ -217,24 +234,24 @@ public class BuilderBlock extends Block{
     	//Gets the bounding boxes. We forward this call to the tile entity to handle if we have one.
     	//Otherwise, get the bounds from the main block, or just the standard bounds.
     	//We add-on 0.5D to offset the box to the correct location, as our blocks are centered.
-    	//Bounding boxes are not offset, whereas collision are, which is what the boolean paramter is for.
+    	//Bounding boxes are not offset, whereas collision are, which is what the boolean parameter is for.
     	if(block instanceof ABlockBaseTileEntity){
     		TileEntity mcTile = access.getTileEntity(pos);
     		if(mcTile instanceof BuilderTileEntity){
     			ATileEntityBase<?> tile = ((BuilderTileEntity<?>) mcTile).tileEntity;
     			if(tile != null){
     				if(globalCoords){
-    					return tile.getCollisionBox().convertWithOffset(0.5D, 0.5D, 0.5D);
+    					return tile.boundingBox.convertWithOffset(0, 0, 0);
     				}else{
-    					return tile.getCollisionBox().convertWithOffset(-pos.getX() + 0.5D, -pos.getY() + 0.5D, -pos.getZ() + 0.5D);
+    					return tile.boundingBox.convertWithOffset(-pos.getX(), -pos.getY(), -pos.getZ());
     				}
     			}
     		}
     	}else if(block instanceof BlockCollision){
     		if(globalCoords){
-				return ((BlockCollision) block).blockBounds.convertWithOffset(pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D);
+				return ((BlockCollision) block).blockBounds.convertWithOffset(pos.getX(), pos.getY(), pos.getZ());
 			}else{
-				return ((BlockCollision) block).blockBounds.convertWithOffset(0.5D, 0.5D, 0.5D);
+				return ((BlockCollision) block).blockBounds.convertWithOffset(0, 0, 0);
 			}
     	}
     	if(globalCoords){

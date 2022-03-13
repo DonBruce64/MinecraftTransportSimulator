@@ -27,6 +27,16 @@ public abstract class ATileEntityPole_Component extends AEntityD_Definable<JSONP
 	}
 	
 	@Override
+	public boolean shouldLinkBoundsToPosition(){
+		return false;
+	}
+	
+	@Override
+	public boolean changesPosition(){
+		return false;
+	}
+	
+	@Override
 	public boolean shouldRenderBeams(){
     	return ConfigSystem.configObject.clientRendering.blockBeams.value;
     }
@@ -56,8 +66,8 @@ public abstract class ATileEntityPole_Component extends AEntityD_Definable<JSONP
 		}
 		//Check slab variables.
 		switch(variable){
-			case("slab_present_up") : return world.isBlockTopSlab(Axis.UP.getOffsetPoint(position)) ? 1 : 0;
-			case("slab_present_down") : return world.isBlockBottomSlab(Axis.DOWN.getOffsetPoint(position)) ? 1 : 0;
+			case("slab_present_up") : return world.isBlockAboveTopSlab(position) ? 1 : 0;
+			case("slab_present_down") : return world.isBlockBelowBottomSlab(position) ? 1 : 0;
 		}
 		
 		return Double.NaN;

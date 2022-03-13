@@ -2,17 +2,18 @@ package minecrafttransportsimulator.jsondefs;
 
 import java.util.List;
 
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 
 public class JSONCameraObject{
 	@JSONRequired
 	@JSONDescription("An entry of x, y, and z coordinates that define the center point of where this camera will be located on the entity.  Note that FOV means this value may not be 100% accurate, so you may need to fudge this value to make things work.")
-	public Point3d pos;
+	public Point3D pos;
 	
 	@JSONDescription("This parameter is optional.  If included, it defines the x, y, and z rotations for this camera.")
-	public Point3d rot;
+	public RotationMatrix rot;
 	
 	@JSONDescription("This parameter is optional.  If included, MTS will set the player's FOV to this value when they are in this camera mode.  Useful for simulating zoom functions on scopes and sights.")
 	public float fovOverride;

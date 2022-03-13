@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.items.instances;
 
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
@@ -22,7 +22,7 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 	}
 	
 	@Override
-	public boolean onBlockClicked(WrapperWorld world, WrapperPlayer player, Point3d position, Axis axis){
+	public boolean onBlockClicked(WrapperWorld world, WrapperPlayer player, Point3D position, Axis axis){
 		if(!world.isClient()){
 			WrapperItemStack heldStack = player.getHeldStack();
 			//Make sure the definition is set in the NBT we will be giving to our new entity.
@@ -81,10 +81,10 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 	public void populateDefaultData(WrapperNBT data){
 		super.populateDefaultData(data);
 		//Make sure we don't restore any world-based entity properties.
-		data.setPoint3d("position", new Point3d());
-		data.setPoint3d("motion", new Point3d());
-		data.setPoint3d("angles", new Point3d());
-		data.setPoint3d("rotation", new Point3d());
+		data.setPoint3d("position", new Point3D());
+		data.setPoint3d("motion", new Point3D());
+		data.setPoint3d("angles", new Point3D());
+		data.setPoint3d("rotation", new Point3D());
 	}
 
 	@Override

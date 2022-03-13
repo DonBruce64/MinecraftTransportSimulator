@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.blocks.tileentities.components;
 
 import minecrafttransportsimulator.baseclasses.BezierCurve;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLane.LaneSelectionRequest;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 
@@ -14,10 +14,10 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
  * @author don_bruce
  */
 public class RoadFollowingState{
-	public final RoadLane lane;
-	public final BezierCurve curve;
-	public final boolean goingForwards;
-	public float currentSegment;
+	private final RoadLane lane;
+	private final BezierCurve curve;
+	private final boolean goingForwards;
+	private float currentSegment;
 	
 	
 	public RoadFollowingState(RoadLane lane, BezierCurve curve, boolean goingForwards, float currentSegment){
@@ -104,9 +104,22 @@ public class RoadFollowingState{
 	 * This should be called AFTER {@link #updateCurvePoints(float, int)},
 	 * otherwise you may get out of the curve's bounds.
 	 */
-	public Point3d getCurrentPoint(){
-		Point3d currentPoint = lane.road.position.copy().add(0.5, lane.road.definition.road.collisionHeight/16F, 0.5);
+	public Point3D getCurrentPoint(){
+		Point3D currentPoint = new Point3D();
 		curve.offsetPointByPositionAt(currentPoint, currentSegment);
 		return currentPoint;
+	}
+	
+	/**
+	 * Returns the current roll-rotation on this curve we set to in the world.
+	 * This should be called AFTER {@link #updateCurvePoints(float, int)},
+	 * otherwise you may get out of the curve's bounds.
+	 */
+	public double getCurrentRotation(){
+		double rotation = curve.getRotationAt(currentSegment).angles.z;
+		if(!goingForwards){
+			rotation = -rotation;
+		}
+		return rotation;
 	}
 }

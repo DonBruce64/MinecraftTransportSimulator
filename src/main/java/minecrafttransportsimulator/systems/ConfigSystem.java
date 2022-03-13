@@ -1,14 +1,13 @@
 package minecrafttransportsimulator.systems;
 
 import java.io.File;
-import java.io.FileReader;
+import java.io.FileInputStream;
 import java.io.FileWriter;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import com.google.gson.Gson;
 
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
@@ -46,7 +45,7 @@ public final class ConfigSystem{
 		//Otherwise, make a new one.
 		if(configFile.exists()){
 			try{
-				configObject = JSONParser.parseStream(new FileReader(configFile), JSONConfig.class, null, null);
+				configObject = JSONParser.parseStream(new InputStreamReader(new FileInputStream(configFile), "UTF-8"), JSONConfig.class, null, null);
 			}catch(Exception e){
 				InterfaceCore.logError("ConfigSystem failed to parse config file JSON.  Reverting to defauts.");
 				InterfaceCore.logError(e.getMessage());
@@ -102,7 +101,7 @@ public final class ConfigSystem{
 			}
 		}else if(craftingFile.exists()){
 			try{
-				JSONCraftingOverrides craftingOverridesObject = new Gson().fromJson(new FileReader(craftingFile), JSONCraftingOverrides.class);
+				JSONCraftingOverrides craftingOverridesObject = JSONParser.parseStream(new InputStreamReader(new FileInputStream(craftingFile), "UTF-8"), JSONCraftingOverrides.class, null, null);
 				for(String craftingOverridePackID : craftingOverridesObject.overrides.keySet()){
 					for(String craftingOverrideSystemName : craftingOverridesObject.overrides.get(craftingOverridePackID).keySet()){
 						AItemPack<? extends AJSONItem> item = PackParserSystem.getItem(craftingOverridePackID, craftingOverrideSystemName);

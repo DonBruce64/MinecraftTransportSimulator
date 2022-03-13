@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.entities.instances;
 
 import minecrafttransportsimulator.baseclasses.Damage;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.items.instances.ItemPartGroundDevice;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
@@ -23,12 +23,13 @@ import minecrafttransportsimulator.systems.ConfigSystem;
  * @author don_bruce
  */
 public class PartGroundDevice extends APart{
-	public static final Point3d groundDetectionOffset = new Point3d(0, -0.05F, 0);
-	public static final Point3d groundOperationOffset = new Point3d(0, -0.25F, 0);
+	public static final Point3D groundDetectionOffset = new Point3D(0, -0.05F, 0);
+	public static final Point3D groundOperationOffset = new Point3D(0, -0.25F, 0);
 	
 	//External states for animations.
 	public boolean skipAngularCalcs = false;
 	public double angularPosition;
+	public double prevAngularPosition;
 	public double angularVelocity;
 	
 	//Internal properties
@@ -43,11 +44,14 @@ public class PartGroundDevice extends APart{
 	private boolean animateAsOnGround;
 	private int ticksCalcsSkipped = 0;
 	private double prevAngularVelocity;
+	private boolean prevActive;
+	private final Point3D prevLocalOffset;
 	private final PartGroundDeviceFake fakePart;
 	
 	public PartGroundDevice(AEntityF_Multipart<?> entityOn, WrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, WrapperNBT data, APart parentPart){
 		super(entityOn, placingPlayer, placementDefinition, data, parentPart);
 		this.isFlat = data.getBoolean("isFlat");
+		this.prevLocalOffset = localOffset.copy();
 		
 		//If we are a long ground device, add a fake ground device at the offset to make us
 		//have a better contact area.  If we are a fake part calling this as a super constructor,
@@ -56,7 +60,7 @@ public class PartGroundDevice extends APart{
 		//Don't add the fake part until the first update loop.  This prevents save/load errors.
 		if(!isFake() && getLongPartOffset() != 0 && !placementDefinition.isSpare){
 			//Need to swap placement for fake part so it uses the offset.
-			Point3d actualPlacement = placementDefinition.pos;
+			Point3D actualPlacement = placementDefinition.pos;
 			placementDefinition.pos = placementDefinition.pos.copy().add(0D, 0D, getLongPartOffset());
 			fakePart = new PartGroundDeviceFake(this, placingPlayer, placementDefinition, data, null);
 			placementDefinition.pos = actualPlacement;
@@ -76,77 +80,88 @@ public class PartGroundDevice extends APart{
 	}
 	
 	@Override
-	public boolean update(){
-		if(super.update()){
-			if(vehicleOn != null && !placementDefinition.isSpare){
-				if(vehicleOn.groundDeviceCollective.groundedGroundDevices.contains(this)){
-					animateAsOnGround = true;
-					
-					//If we aren't skipping angular calcs, change our velocity accordingly.
-					if(!skipAngularCalcs){
-						prevAngularVelocity = angularVelocity;
-						angularVelocity = getDesiredAngularVelocity();
-					}
-					
-					//Set contact for wheel skidding effects.
-					if(definition.ground.isWheel){
-						contactThisTick = false;
-						if(Math.abs(prevAngularVelocity)/(vehicleOn.groundVelocity/(getHeight()*Math.PI)) < 0.25 && vehicleOn.velocity > 0.3){
-							//Sudden angular velocity increase.  Mark for skidding effects if the block below us is hard.
-							Point3d blockPositionBelow = position.copy().add(0, -1, 0);
-							if(!world.isAir(blockPositionBelow) && world.getBlockHardness(blockPositionBelow) >= 1.25){
-								contactThisTick = true;
-							}
-						}
-						
-						//If we have a slipping wheel, count down and possibly pop it.
-						if(!vehicleOn.world.isClient() && !isFlat){
-							if(!skipAngularCalcs){
-								if(ticksCalcsSkipped > 0){
-									--ticksCalcsSkipped;
-								}
-							}else{
-								++ticksCalcsSkipped;
-								if(Math.random()*50000 < ticksCalcsSkipped){
-									setFlatState(true);
-								}
-							}
+	public void update(){
+		if(vehicleOn != null && !placementDefinition.isSpare){
+			//Change ground device collective if we changed active state or offset.
+			if(prevActive != isActive){
+				vehicleOn.groundDeviceCollective.updateMembers();
+				vehicleOn.groundDeviceCollective.updateBounds();
+				prevActive = isActive;
+			}
+			if(!localOffset.equals(prevLocalOffset)){
+				vehicleOn.groundDeviceCollective.updateBounds();
+				prevLocalOffset.set(localOffset);
+			}
+			
+			//If we are on the ground, adjust rotation.
+			if(vehicleOn.groundDeviceCollective.groundedGroundDevices.contains(this)){
+				animateAsOnGround = true;
+				
+				//If we aren't skipping angular calcs, change our velocity accordingly.
+				if(!skipAngularCalcs){
+					prevAngularVelocity = angularVelocity;
+					angularVelocity = getDesiredAngularVelocity();
+				}
+				
+				//Set contact for wheel skidding effects.
+				if(definition.ground.isWheel){
+					contactThisTick = false;
+					if(Math.abs(prevAngularVelocity)/(vehicleOn.groundVelocity/(getHeight()*Math.PI)) < 0.25 && vehicleOn.velocity > 0.3){
+						//Sudden angular velocity increase.  Mark for skidding effects if the block below us is hard.
+						Point3D blockPositionBelow = position.copy().add(0, -1, 0);
+						if(!world.isAir(blockPositionBelow) && world.getBlockHardness(blockPositionBelow) >= 1.25){
+							contactThisTick = true;
 						}
 					}
 					
-					//Check for colliding entities and damage them.
-					if(!vehicleOn.world.isClient() && vehicleOn.velocity >= ConfigSystem.configObject.damage.wheelDamageMinimumVelocity.value){
-						boundingBox.widthRadius += 0.25;
-						boundingBox.depthRadius += 0.25;
-						final double wheelDamageAmount;
-						if(!ConfigSystem.configObject.damage.wheelDamageIgnoreVelocity.value){
-							wheelDamageAmount = ConfigSystem.configObject.damage.wheelDamageFactor.value*vehicleOn.velocity*vehicleOn.currentMass/1000F;
+					//If we have a slipping wheel, count down and possibly pop it.
+					if(!vehicleOn.world.isClient() && !isFlat){
+						if(!skipAngularCalcs){
+							if(ticksCalcsSkipped > 0){
+								--ticksCalcsSkipped;
+							}
 						}else{
-							wheelDamageAmount = ConfigSystem.configObject.damage.wheelDamageFactor.value*vehicleOn.currentMass/1000F;
+							++ticksCalcsSkipped;
+							if(Math.random()*50000 < ticksCalcsSkipped){
+								setFlatState(true);
+							}
 						}
-						Damage wheelDamage = new Damage("wheel", wheelDamageAmount, boundingBox, this, vehicleOn.getController());
-						vehicleOn.world.attackEntities(wheelDamage, null);
-						boundingBox.widthRadius -= 0.25;
-						boundingBox.depthRadius -= 0.25;
-					}
-				}else{
-					if(!vehicleOn.groundDeviceCollective.drivenWheels.contains(this)){
-						if(vehicleOn.brake > 0 || vehicleOn.parkingBrakeOn){
-							angularVelocity = 0;
-						}else if(angularVelocity>0){
-							angularVelocity = (float) Math.max(angularVelocity - 0.05, 0);
-						}
-					}
-					if(animateAsOnGround && !vehicleOn.groundDeviceCollective.isActuallyOnGround(this)){
-						animateAsOnGround = false;
 					}
 				}
-				angularPosition += angularVelocity;
+				
+				//Check for colliding entities and damage them.
+				if(!vehicleOn.world.isClient() && vehicleOn.velocity >= ConfigSystem.configObject.damage.wheelDamageMinimumVelocity.value){
+					boundingBox.widthRadius += 0.25;
+					boundingBox.depthRadius += 0.25;
+					final double wheelDamageAmount;
+					if(!ConfigSystem.configObject.damage.wheelDamageIgnoreVelocity.value){
+						wheelDamageAmount = ConfigSystem.configObject.damage.wheelDamageFactor.value*vehicleOn.velocity*vehicleOn.currentMass/1000F;
+					}else{
+						wheelDamageAmount = ConfigSystem.configObject.damage.wheelDamageFactor.value*vehicleOn.currentMass/1000F;
+					}
+					Damage wheelDamage = new Damage("wheel", wheelDamageAmount, boundingBox, this, vehicleOn.getController());
+					vehicleOn.world.attackEntities(wheelDamage, null);
+					boundingBox.widthRadius -= 0.25;
+					boundingBox.depthRadius -= 0.25;
+				}
+			}else{
+				if(!vehicleOn.groundDeviceCollective.drivenWheels.contains(this)){
+					if(vehicleOn.brake > 0 || vehicleOn.parkingBrakeOn){
+						angularVelocity = 0;
+					}else if(angularVelocity>0){
+						angularVelocity = (float) Math.max(angularVelocity - 0.05, 0);
+					}
+				}
+				if(animateAsOnGround && !vehicleOn.groundDeviceCollective.isActuallyOnGround(this)){
+					animateAsOnGround = false;
+				}
 			}
-			return true;
-		}else{
-			return false;
+			prevAngularPosition = angularPosition;
+			angularPosition += angularVelocity;
 		}
+		
+		//Now that we have our wheel position, call super.
+		super.update();
 	}
 	
 	@Override
@@ -183,8 +198,8 @@ public class PartGroundDevice extends APart{
 	@Override
 	public double getRawVariableValue(String variable, float partialTicks){
 		switch(variable){
-			case("ground_rotation"): return EntityVehicleF_Physics.SPEED_FACTOR*(angularPosition + angularVelocity*partialTicks)*360D;
-			case("ground_rotation_normalized"): return (EntityVehicleF_Physics.SPEED_FACTOR*(angularPosition + angularVelocity*partialTicks)*360D)%360D;
+			case("ground_rotation"): return vehicleOn != null ? vehicleOn.speedFactor*(prevAngularPosition + (angularPosition - prevAngularPosition)*partialTicks)*360D : 0;
+			case("ground_rotation_normalized"): return vehicleOn != null ? (vehicleOn.speedFactor*(prevAngularPosition + (angularPosition - prevAngularPosition)*partialTicks)*360D)%360D : 0;
 			case("ground_onground"): return vehicleOn != null && animateAsOnGround ? 1 : 0;
 			case("ground_inliquid"): return isInLiquid() ? 1 : 0;
 			case("ground_isflat"): return isFlat ? 1 : 0;
@@ -197,18 +212,13 @@ public class PartGroundDevice extends APart{
 	}
 	
 	@Override
-	public float getWidth(){
-		return definition.ground.width*scale;
+	public double getWidth(){
+		return definition.ground.width*scale.x;
 	}
 	
 	@Override
-	public float getHeight(){
-		return (isFlat ? definition.ground.flatHeight : definition.ground.height)*scale;
-	}
-	
-	@Override
-	public Point3d getRenderingRotation(float partialTicks){
-		return new Point3d(definition.ground.isWheel ? EntityVehicleF_Physics.SPEED_FACTOR*(angularPosition + angularVelocity*partialTicks)*360D : 0, 0, 0D);
+	public double getHeight(){
+		return (isFlat ? definition.ground.flatHeight : definition.ground.height)*scale.y;
 	}
 	
 	/**
@@ -241,7 +251,7 @@ public class PartGroundDevice extends APart{
 	}
 	
 	public float getFrictionLoss(){
-		Point3d groundPosition = position.copy().add(0, -1, 0);
+		Point3D groundPosition = position.copy().add(0, -1, 0);
 		if(!world.isAir(groundPosition)){
 			Float modifier = definition.ground.frictionModifiers.get(world.getBlockMaterial(groundPosition));
 			if(modifier == null){

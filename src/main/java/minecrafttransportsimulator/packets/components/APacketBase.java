@@ -4,7 +4,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
@@ -17,7 +17,7 @@ import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 import minecrafttransportsimulator.packets.instances.PacketEntityInstrumentChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityTextChange;
-import minecrafttransportsimulator.packets.instances.PacketEntityTrailerChange;
+import minecrafttransportsimulator.packets.instances.PacketEntityTowingChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
@@ -38,10 +38,11 @@ import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketPlayerCraftItem;
 import minecrafttransportsimulator.packets.instances.PacketPlayerItemTransfer;
 import minecrafttransportsimulator.packets.instances.PacketRadioStateChange;
-import minecrafttransportsimulator.packets.instances.PacketTileEntityLoaderConnection;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpConnection;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpDispense;
+import minecrafttransportsimulator.packets.instances.PacketTileEntityLoaderConnection;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleChange;
+import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleCollisionUpdate;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityRoadChange;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityRoadCollisionUpdate;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityRoadConnectionUpdate;
@@ -49,6 +50,7 @@ import minecrafttransportsimulator.packets.instances.PacketTileEntitySignalContr
 import minecrafttransportsimulator.packets.instances.PacketVehicleBeaconChange;
 import minecrafttransportsimulator.packets.instances.PacketVehicleInteract;
 import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement;
+import minecrafttransportsimulator.packets.instances.PacketVehicleServerSync;
 import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataCSHandshake;
 
 /**Base packet class.  All packets must extend this class to be used with the
@@ -138,7 +140,7 @@ public abstract class APacketBase{
 	/**
 	 *  Helper method to write a Point3d to the buffer.
 	 */
-	protected static void writePoint3dToBuffer(Point3d point, ByteBuf buf){
+	protected static void writePoint3dToBuffer(Point3D point, ByteBuf buf){
 		buf.writeDouble(point.x);
 		buf.writeDouble(point.y);
 		buf.writeDouble(point.z);
@@ -147,8 +149,8 @@ public abstract class APacketBase{
 	/**
 	 *  Helper method to read a Point3d from the buffer.
 	 */
-	protected static Point3d readPoint3dFromBuffer(ByteBuf buf){
-		return new Point3d(buf.readDouble(), buf.readDouble(), buf.readDouble());
+	protected static Point3D readPoint3dFromBuffer(ByteBuf buf){
+		return new Point3D(buf.readDouble(), buf.readDouble(), buf.readDouble());
 	}
 	
 	/**
@@ -156,7 +158,7 @@ public abstract class APacketBase{
 	 *  Does so in a compact way by casting-down the doubles to ints.
 	 *  Useful if you don't need the floating-point and want to save on bandwidth.
 	 */
-	protected static void writePoint3dCompactToBuffer(Point3d point, ByteBuf buf){
+	protected static void writePoint3dCompactToBuffer(Point3D point, ByteBuf buf){
 		buf.writeInt((int) point.x);
 		buf.writeInt((int) point.y);
 		buf.writeInt((int) point.z);
@@ -165,8 +167,8 @@ public abstract class APacketBase{
 	/**
 	 *  Helper method to read a compact Point3d from the buffer.
 	 */
-	protected static Point3d readPoint3dCompactFromBuffer(ByteBuf buf){
-		return new Point3d(buf.readInt(), buf.readInt(), buf.readInt());
+	protected static Point3D readPoint3dCompactFromBuffer(ByteBuf buf){
+		return new Point3D(buf.readInt(), buf.readInt(), buf.readInt());
 	}
 	
 	/**
@@ -197,7 +199,7 @@ public abstract class APacketBase{
 		InterfacePacket.registerPacket(packetIndex++, PacketEntityInstrumentChange.class);
 		InterfacePacket.registerPacket(packetIndex++, PacketEntityRiderChange.class);
 		InterfacePacket.registerPacket(packetIndex++, PacketEntityTextChange.class);
-		InterfacePacket.registerPacket(packetIndex++, PacketEntityTrailerChange.class);
+		InterfacePacket.registerPacket(packetIndex++, PacketEntityTowingChange.class);
 		InterfacePacket.registerPacket(packetIndex++, PacketEntityVariableIncrement.class);
 		InterfacePacket.registerPacket(packetIndex++, PacketEntityVariableSet.class);
 		InterfacePacket.registerPacket(packetIndex++, PacketEntityVariableToggle.class);
@@ -246,6 +248,7 @@ public abstract class APacketBase{
 		InterfacePacket.registerPacket(packetIndex++, PacketTileEntityFuelPumpDispense.class);
 		InterfacePacket.registerPacket(packetIndex++, PacketTileEntityRoadCollisionUpdate.class);
 		InterfacePacket.registerPacket(packetIndex++, PacketTileEntityPoleChange.class);
+		InterfacePacket.registerPacket(packetIndex++, PacketTileEntityPoleCollisionUpdate.class);
 		InterfacePacket.registerPacket(packetIndex++, PacketTileEntityRoadChange.class);
 		InterfacePacket.registerPacket(packetIndex++, PacketTileEntityRoadConnectionUpdate.class);
 		InterfacePacket.registerPacket(packetIndex++, PacketTileEntitySignalControllerChange.class);
@@ -254,6 +257,7 @@ public abstract class APacketBase{
 		InterfacePacket.registerPacket(packetIndex++, PacketVehicleBeaconChange.class);
 		InterfacePacket.registerPacket(packetIndex++, PacketVehicleInteract.class);
 		InterfacePacket.registerPacket(packetIndex++, PacketVehicleServerMovement.class);
+		InterfacePacket.registerPacket(packetIndex++, PacketVehicleServerSync.class);
 		
 		//World packets.
 		InterfacePacket.registerPacket(packetIndex++, PacketWorldSavedDataCSHandshake.class);

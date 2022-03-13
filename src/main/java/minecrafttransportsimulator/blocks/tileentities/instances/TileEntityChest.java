@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
-import minecrafttransportsimulator.baseclasses.Point3d;
+
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
@@ -15,7 +16,7 @@ public class TileEntityChest extends TileEntityDecor{
 	
 	public final EntityInventoryContainer inventory;
 	
-	public TileEntityChest(WrapperWorld world, Point3d position, WrapperPlayer placingPlayer, WrapperNBT data){
+	public TileEntityChest(WrapperWorld world, Point3D position, WrapperPlayer placingPlayer, WrapperNBT data){
 		super(world, position, placingPlayer, data);
 		this.inventory = new EntityInventoryContainer(world, data.getDataOrNew("inventory"), (int) (definition.decor.inventoryUnits*9F));
 		world.addEntity(inventory);

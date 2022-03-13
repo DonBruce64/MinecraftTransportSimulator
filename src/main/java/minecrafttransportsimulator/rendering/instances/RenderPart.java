@@ -1,8 +1,10 @@
 package minecrafttransportsimulator.rendering.instances;
 
-import org.lwjgl.opengl.GL11;
-
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.ColorRGB;
+import minecrafttransportsimulator.baseclasses.TransformationMatrix;
+import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.PartGun;
 import minecrafttransportsimulator.jsondefs.JSONMuzzle;
@@ -10,33 +12,25 @@ import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.rendering.components.ARenderEntityDefinable;
 
 public class RenderPart extends ARenderEntityDefinable<APart>{
+	private static final Point3D bulletPosition = new Point3D();
+	private static final Point3D bulletVelocity = new Point3D();
+	private static final RotationMatrix bulletOrientation = new RotationMatrix();
 	
 	@Override
 	public boolean disableRendering(APart part, float partialTicks){
-		return super.disableRendering(part, partialTicks) || part.isFake() || part.isDisabled;
+		return super.disableRendering(part, partialTicks) || part.isFake() || part.isInvisible;
 	}
 	
 	@Override
-	public void adjustPositionRotation(APart part, Point3d entityPositionDelta, Point3d entityRotationDelta, float partialTicks){
-		//Rotate the part according to its rendering rotation if we need to do so.
-		entityRotationDelta.add(part.getRenderingRotation(partialTicks));
-	}
-	
-	@Override
-	protected void renderBoundingBoxes(APart part, Point3d entityPositionDelta){
+	public void renderBoundingBoxes(APart part, TransformationMatrix transform){
 		if(!part.entityOn.areVariablesBlocking(part.placementDefinition, InterfaceClient.getClientPlayer())){
-			super.renderBoundingBoxes(part, entityPositionDelta);
+			super.renderBoundingBoxes(part, transform);
 			//Draw the gun muzzle bounding boxes.
 			if(part instanceof PartGun){
 				PartGun gun = (PartGun) part;
-				Point3d bulletPosition = new Point3d();
-				Point3d bulletVelocity = new Point3d();
 				for(JSONMuzzle muzzle : gun.definition.gun.muzzleGroups.get(gun.currentMuzzleGroupIndex).muzzles){
-					gun.setBulletSpawn(bulletPosition, bulletVelocity, muzzle);
-					bulletPosition.subtract(gun.position).add(entityPositionDelta);
-					GL11.glTranslated(bulletPosition.x, bulletPosition.y, bulletPosition.z);
-					gun.muzzleWireframe.render();
-					GL11.glTranslated(-bulletPosition.x, -bulletPosition.y, -bulletPosition.z);
+					gun.setBulletSpawn(bulletPosition, bulletVelocity, bulletOrientation, muzzle);
+					new BoundingBox(bulletPosition, 0.25, 0.25, 0.25).renderWireframe(part, transform, null, ColorRGB.BLUE);
 				}
 			}
 		}

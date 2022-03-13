@@ -2,8 +2,6 @@ package minecrafttransportsimulator.guis.components;
 
 import java.nio.FloatBuffer;
 
-import org.lwjgl.opengl.GL11;
-
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.rendering.components.RenderableObject;
 import minecrafttransportsimulator.rendering.instances.RenderText;
@@ -54,29 +52,31 @@ public abstract class GUIComponentSelector extends GUIComponentButton{
 			}
 		}
 		
-		GL11.glTranslated(position.x, position.y, position.z);
 		if(selectorState == 0){
 			renderable.disableLighting = renderBright || ignoreGUILightingState;
 			renderable.texture = renderLitTexture ? gui.getTexture().replace(".png", "_lit.png") : gui.getTexture();
+    		renderable.transform.setTranslation(position);
 			renderable.render();
 		}else if(selectorState == 1){
 			renderable2.disableLighting = renderBright || ignoreGUILightingState;
 			renderable2.texture = renderLitTexture ? gui.getTexture().replace(".png", "_lit.png") : gui.getTexture();
+			renderable2.transform.setTranslation(position);
 			renderable2.render();
 		}else if(selectorState == 2){
 			renderable3.disableLighting = renderBright || ignoreGUILightingState;
 			renderable3.texture = renderLitTexture ? gui.getTexture().replace(".png", "_lit.png") : gui.getTexture();
+			renderable3.transform.setTranslation(position);
 			renderable3.render();
 		}else{
 			renderable4.disableLighting = renderBright || ignoreGUILightingState;
 			renderable4.texture = renderLitTexture ? gui.getTexture().replace(".png", "_lit.png") : gui.getTexture();
+			renderable4.transform.setTranslation(position);
 			renderable4.render();
 		}
-		GL11.glTranslated(-position.x, -position.y, -position.z);
     }
 	
     @Override
 	public void renderText(boolean renderTextLit){
-    	RenderText.drawText(text, null, textPosition, null, (renderTextLit || ignoreGUILightingState) ? litColor : regularColor, TextAlignment.CENTERED, 0.75F, false, 0, 1.0F, renderTextLit || ignoreGUILightingState);
+    	RenderText.drawText(text, null, textPosition, (renderTextLit || ignoreGUILightingState) ? litColor : regularColor, TextAlignment.CENTERED, 0.75F, false, 0, renderTextLit || ignoreGUILightingState);
     }
 }

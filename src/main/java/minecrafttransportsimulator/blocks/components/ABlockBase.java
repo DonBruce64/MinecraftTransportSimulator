@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.blocks.components;
 
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.mcinterface.BuilderBlock;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 
@@ -26,7 +27,7 @@ public abstract class ABlockBase{
 	 *  removed, as logic may be needed to be performed that requires the data from the TE.
 	 *  This is ONLY called on the server, so if you have data to sync, do it via packets. 
 	 */
-	public void onBroken(WrapperWorld world, Point3d position){}
+	public void onBroken(WrapperWorld world, Point3D position){}
 	
 	/**
 	 *  Enums for side-specific stuff.
@@ -48,7 +49,7 @@ public abstract class ABlockBase{
 		public final int xOffset;
 		public final int yOffset;
 		public final int zOffset;
-		public final int yRotation;
+		public final RotationMatrix rotation;
 		public final boolean blockBased;
 		public final boolean xzPlanar;
 		
@@ -56,12 +57,12 @@ public abstract class ABlockBase{
 			this.xOffset = xOffset;
 			this.yOffset = yOffset;
 			this.zOffset = zOffset;
-			this.yRotation = yRotation;
+			this.rotation = new RotationMatrix().setToAngles(new Point3D(0, yRotation, 0));
 			this.blockBased = blockBased;
 			this.xzPlanar = xzPlanar;
 		}
 		
-		public Point3d getOffsetPoint(Point3d point){
+		public Point3D getOffsetPoint(Point3D point){
 			return point.copy().add(xOffset, yOffset, zOffset);
 		}
 		
@@ -88,7 +89,7 @@ public abstract class ABlockBase{
 			}
 			int degRotation = (checkDiagonals ? (int) (Math.round(rotation/45)*45) : (int) (Math.round(rotation/90)*90))%360;
 			for(Axis axis : values()){
-				if(axis.xzPlanar && axis.yRotation == degRotation){
+				if(axis.xzPlanar && axis.rotation.angles.y == degRotation){
 					return axis;
 				}
 			}

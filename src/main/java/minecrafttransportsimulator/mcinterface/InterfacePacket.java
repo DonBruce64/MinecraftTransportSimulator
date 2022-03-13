@@ -166,10 +166,14 @@ public class InterfacePacket{
 						//We need to use side-specific getters here to avoid side-specific classes from trying to be loaded
 						//by the JVM when this method is created.  Failure to do this will result in network faults.
 						//For this, we use abstract methods that are extended in our sub-classes.
+						WrapperWorld world;
 						if(ctx.side.isServer()){
-							message.packet.handle(getServerWorld(ctx));
+							world = getServerWorld(ctx);
 						}else{
-							message.packet.handle(InterfaceClient.getClientWorld());
+							world = InterfaceClient.getClientWorld();
+						}
+						if(world != null){
+							message.packet.handle(world);
 						}
 					}
 				});

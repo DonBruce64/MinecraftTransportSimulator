@@ -2,7 +2,7 @@
 
 death.attack.bullet.null.null=%1$s was shot by a spy
 death.attack.bullet.null.player=%1$s got distracted while fighting %2$s and got shot by a spy
-death.attack.bullet.player.null=%2$s was shot by %1$s
+death.attack.bullet.player.null=%1$s was shot by %2$s
 death.attack.bullet.player.player=%1$s got distracted while fighting %2$s and got shot by %3$s
 
 death.attack.propellor.null.null=%1$s was shredded by a propeller
@@ -78,12 +78,12 @@ interact.fuelhose.alreadylinked=This tank is already linked to another tank and 
 interact.fuelhose.toofar=The two tanks are too far away.  They should be no further than 16 blocks apart.
 interact.fuelhose.differentfluids=The source and destination tanks do not contain the same fluid and cannot be linked.
 
-interact.trailer.connect=Trailer connected.
-interact.trailer.disconnect=Trailer disconnected.
+interact.trailer.connected=Trailer connected.
+interact.trailer.disconnected=Trailer disconnected.
 interact.trailer.notfound=No trailers were found anywhere near this vehicle.
 interact.trailer.toofar=The trailer is too far from the vehicle.
 interact.trailer.wronghitch=This vehicle does not have the correct hitch for this trailer.
-interact.trailer.wrongplacement=A hitch was found that is close enough to connect, but was not the correct type.  Also, a matching hitch was found, but it was too far to connect.  Are you trying to use the wrong hitch?
+interact.trailer.mismatch=A hitch was found that is close enough to connect, but was not the correct type.  Also, a matching hitch was found, but it was too far to connect.  Are you trying to use the wrong hitch?
 
 input.aircraft.mod=Mod
 input.aircraft.camlock=CamLock
@@ -229,12 +229,8 @@ gui.config.joystick.normal=Normal
 gui.config.joystick.invert=Inverted
 gui.config.joystick.confirm=Confirm
 
-gui.packmissing.title=!WARNING!
-gui.packmissing.reason=MTS has detected that it has been started without a content pack.  This will result in NO vehicles being present!
-gui.packmissing.nomod=If you do NOT have a content pack yet installed, please see the Curse page for this mod (located below) for a link to one.
-gui.packmissing.modlink=https://minecraft.curseforge.com/projects/minecraft-transport-simulator
-gui.packmissing.misplaced=If you DID download a pack ensure that it is the same place as all your other mods.  It should NOT be in the mts folder, in fact that folder can be deleted as it's no longer used for packs.
-gui.packmissing.versionerror=If the pack is in that location, and you are still seeing this message, ensure you are running the correct pack version.  Older packs don't have a version-checker built in and will just fail to load with current versions of MTS.
+gui.error.title=!ERROR!
+gui.error.packmissing=MTS has detected that it has been started without a content pack.  This will result in NO vehicles being present!  If you do NOT have a content pack yet installed, please see the Curse page for this mod for a link to one.  If you DID download a pack ensure that it is the same place as all your other mods.  If the pack is in that location, and you are still seeing this message, ensure you are running the correct pack version.
 
 info.item.engine.automatic=Transmission: Automatic
 info.item.engine.manual=Transmission: Manual

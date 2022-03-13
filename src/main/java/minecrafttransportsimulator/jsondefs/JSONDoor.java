@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.jsondefs;
 
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 
 @Deprecated
@@ -11,11 +11,11 @@ public class JSONDoor{
 	
     @JSONRequired
     @Deprecated
-    public Point3d closedPos;
+    public Point3D closedPos;
     
 	@JSONRequired
 	@Deprecated
-	public Point3d openPos;
+	public Point3D openPos;
 	
 	@Deprecated
     public float width;

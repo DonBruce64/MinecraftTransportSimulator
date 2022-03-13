@@ -161,12 +161,12 @@ public class GUIComponentTextBox extends GUIComponentCutout{
 		//Otherwise, render it at the top aligned.
 		if(enabled){
 			if(focused && AGUIBase.inClockPeriod(20, 10)){
-				RenderText.drawText(flashText, null, textPosition, null, fontColor, TextAlignment.LEFT_ALIGNED, 1.0F, false, width, 1.0F, renderTextLit || ignoreGUILightingState);
+				RenderText.drawText(flashText, null, textPosition, fontColor, TextAlignment.LEFT_ALIGNED, 1.0F, false, width, renderTextLit || ignoreGUILightingState);
 			}else{
-				RenderText.drawText(text, null, textPosition, null, fontColor, TextAlignment.LEFT_ALIGNED, 1.0F, false, width, 1.0F, renderTextLit || ignoreGUILightingState);
+				RenderText.drawText(text, null, textPosition, fontColor, TextAlignment.LEFT_ALIGNED, 1.0F, false, width, renderTextLit || ignoreGUILightingState);
 			}
 		}else{
-			RenderText.drawText(text, null, textPosition, null, ColorRGB.GRAY, TextAlignment.LEFT_ALIGNED, 1.0F, false, width, 1.0F, renderTextLit || ignoreGUILightingState);
+			RenderText.drawText(text, null, textPosition, ColorRGB.GRAY, TextAlignment.LEFT_ALIGNED, 1.0F, false, width, renderTextLit || ignoreGUILightingState);
 		}
     }
     

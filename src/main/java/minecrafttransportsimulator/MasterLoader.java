@@ -39,8 +39,7 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 public class MasterLoader{
 	public static final String MODID = "mts";
 	public static final String MODNAME = "Minecraft Transport Simulator";
-	public static final String MODVER = "20.6.2";
-	
+	public static final String MODVER = "21.0.0";
 	public static Logger logger;
 	public static String resourceDomain;
 	public static String gameDirectory;
@@ -52,7 +51,7 @@ public class MasterLoader{
 		//Enable universal bucket so we can use buckets on fuel pumps.
 		FluidRegistry.enableUniversalBucket();
 		
-		//Set main resource domain location..
+		//Set main resource domain location.
 		resourceDomain = MODID;
 		
     	//Add part constructors to the part map.

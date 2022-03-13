@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityLoader;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityInventoryProvider;
@@ -16,51 +16,47 @@ public class TileEntityItemLoader extends ATileEntityLoader implements ITileEnti
     private EntityInventoryContainer inventory;
     private static final int LOADING_RATE = 10;
 
-    public TileEntityItemLoader(WrapperWorld world, Point3d position, WrapperPlayer placingPlayer, WrapperNBT data){
+    public TileEntityItemLoader(WrapperWorld world, Point3D position, WrapperPlayer placingPlayer, WrapperNBT data){
 		super(world, position, placingPlayer, data);
     	this.inventory = new EntityInventoryContainer(world, data.getDataOrNew("inventory"), (int) (definition.decor.inventoryUnits*9));
 		world.addEntity(inventory);
     }
     
     @Override
-    public boolean update(){
-    	if(super.update()){
-    		if(isUnloader()){
-    			//Push stack to inventory below to ready for unload.
-    			//Need to advance stack-grabbing by 1 tick from rate to ensure that slot is free during next unloading cycle.
-    			if((ticksExisted+1)%LOADING_RATE == 0){
-    				for(int i=0; i<inventory.getSize(); ++i){
-    					WrapperItemStack stack = inventory.getStack(i);				
-    					if(!stack.isEmpty()){
-    						if(world.insertStack(position, Axis.DOWN, stack)){
-    							inventory.setStack(stack, i);
-    							break;
-    						}
+    public void update(){
+		super.update();
+		if(isUnloader()){
+			//Push stack to inventory below to ready for unload.
+			//Need to advance stack-grabbing by 1 tick from rate to ensure that slot is free during next unloading cycle.
+			if((ticksExisted+1)%LOADING_RATE == 0){
+				for(int i=0; i<inventory.getSize(); ++i){
+					WrapperItemStack stack = inventory.getStack(i);				
+					if(!stack.isEmpty()){
+						if(world.insertStack(position, Axis.DOWN, stack)){
+							inventory.setStack(stack, i);
+							break;
+						}
+					}
+				}
+				
+			}
+		}else{
+			//Pull stack from inventory above to ready for load.
+    		//Need to retard stack-grabbing by 1 tick from rate to ensure that it's ready during next loading cycle.
+			if((ticksExisted-1)%LOADING_RATE == 0){
+				for(int i=0; i<inventory.getSize(); ++i){
+					WrapperItemStack stack = inventory.getStack(i);
+    				if(stack.isEmpty()){
+    					WrapperItemStack extractedStack = world.extractStack(position, Axis.UP);
+    					if(extractedStack != null){
+    						stack = extractedStack;
+    						inventory.setStack(stack, i);
+    						break;
     					}
     				}
-    				
-    			}
-    		}else{
-    			//Pull stack from inventory above to ready for load.
-	    		//Need to retard stack-grabbing by 1 tick from rate to ensure that it's ready during next loading cycle.
-    			if((ticksExisted-1)%LOADING_RATE == 0){
-    				for(int i=0; i<inventory.getSize(); ++i){
-    					WrapperItemStack stack = inventory.getStack(i);
-	    				if(stack.isEmpty()){
-	    					WrapperItemStack extractedStack = world.extractStack(position, Axis.UP);
-	    					if(extractedStack != null){
-	    						stack = extractedStack;
-	    						inventory.setStack(stack, i);
-	    						break;
-	    					}
-	    				}
-    				}
-    			}
-    		}
-    		return true;
-    	}else{
-    		return false;
-    	}
+				}
+			}
+		}
     }
 	
 	@Override

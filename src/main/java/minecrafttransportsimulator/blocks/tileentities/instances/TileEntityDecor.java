@@ -1,7 +1,6 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
-import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
@@ -27,15 +26,17 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor>{
 	
 	private static RenderDecor renderer;
 	
-	public TileEntityDecor(WrapperWorld world, Point3d position, WrapperPlayer placingPlayer, WrapperNBT data){
+	public TileEntityDecor(WrapperWorld world, Point3D position, WrapperPlayer placingPlayer, WrapperNBT data){
 		super(world, position, placingPlayer, data);
-		//Set our bounding box based on our rotation and parameters.
-		if(definition.decor.height != 1.0){
-			//Need custom bounding box.  Default assumes centered to position.
-			this.boundingBox = new BoundingBox(position.copy().add(0, definition.decor.height/2D - 0.5D, 0), 0, 0, 0);
+		//If we are on a slab, we go down to match it.
+		if(world.isBlockBelowBottomSlab(position)){
+			this.position.y -= 0.5D;
+			boundingBox.globalCenter.set(this.position);
 		}
+		//Set our bounding box based on our rotation and parameters.
 		boundingBox.heightRadius = definition.decor.height/2D;
-		if(Math.abs(angles.y%180) == 0){
+		this.boundingBox.globalCenter.y += boundingBox.heightRadius;
+		if(Math.abs(new Point3D(0, 0, 1).rotate(orientation).z) == 1){
 			boundingBox.widthRadius = definition.decor.width/2D;
 			boundingBox.depthRadius = definition.decor.depth/2D;
 		}else{
@@ -45,14 +46,10 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor>{
 	}
 	
 	@Override
-	public boolean update(){
-		if(super.update()){
-			//Reset clicked state.
-			setVariable(CLICKED_VARIABLE, 0);
-			return true;
-		}else{
-			return false;
-		}
+	public void update(){
+		super.update();
+		//Reset clicked state.
+		setVariable(CLICKED_VARIABLE, 0);
 	}
 	
 	@Override

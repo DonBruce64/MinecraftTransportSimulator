@@ -3,10 +3,8 @@ package minecrafttransportsimulator.guis.components;
 import java.nio.FloatBuffer;
 import java.util.List;
 
-import org.lwjgl.opengl.GL11;
-
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.rendering.components.RenderableObject;
 import minecrafttransportsimulator.rendering.instances.RenderText;
 import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
@@ -25,8 +23,8 @@ public abstract class AGUIComponent{
 	//Rendering variables.
 	public final int constructedX;
 	public final int constructedY;
-	public final Point3d position;
-	public final Point3d textPosition;
+	public final Point3D position;
+	public final Point3D textPosition;
 	public int width;
 	public int height;
 	
@@ -36,7 +34,7 @@ public abstract class AGUIComponent{
 	public String text;
 	protected RenderableObject renderable;
 	private static final RenderableObject mutableTooltipRenderable = new RenderableObject("gui_tooltip", AGUIBase.STANDARD_TEXTURE_NAME, ColorRGB.WHITE, FloatBuffer.allocate(9*6*8), false);
-	private static final Point3d mutableTooltipPosition = new Point3d();
+	private static final Point3D mutableTooltipPosition = new Point3D();
 	
 	protected static final int TEXT_DEFAULT_ZOFFSET = 200;
 	protected static final int MODEL_DEFAULT_ZOFFSET = 100;
@@ -53,8 +51,8 @@ public abstract class AGUIComponent{
 		this.constructedX = x;
 		this.constructedY = y;
 		//Use -y as GUI construction uses inverted Y coords.
-		this.position = new Point3d(x, -y, getZOffset());
-		this.textPosition = new Point3d(position.x, position.y, position.z + TEXT_DEFAULT_ZOFFSET);
+		this.position = new Point3D(x, -y, getZOffset());
+		this.textPosition = new Point3D(position.x, position.y, position.z + TEXT_DEFAULT_ZOFFSET);
 		this.width = width;
 		this.height = height;
 	}
@@ -168,13 +166,12 @@ public abstract class AGUIComponent{
     		mutableTooltipRenderable.disableLighting = true;
     		
     		//Do the actual rendering.
-    		GL11.glTranslated(0, 0, textPosition.z + 25);
+    		mutableTooltipRenderable.transform.setTranslation(0, 0, textPosition.z + 25);
     		mutableTooltipRenderable.render();
-    		GL11.glTranslated(0, 0, -textPosition.z - 25);
     		
     		//Need to move tooltip text by -y to account for inverted coords.
     		mutableTooltipPosition.set(xOffset + TOOLTIP_BORDER_PADDING, -(yOffset + TOOLTIP_BORDER_PADDING), textPosition.z + 50);
-    		RenderText.drawText(tooltipCombinedText, null, mutableTooltipPosition, null, ColorRGB.WHITE, TextAlignment.LEFT_ALIGNED, 1.0F, false, wrapWidth, 1.0F, true);
+    		RenderText.drawText(tooltipCombinedText, null, mutableTooltipPosition, ColorRGB.WHITE, TextAlignment.LEFT_ALIGNED, 1.0F, false, wrapWidth, true);
     	}
     }
     

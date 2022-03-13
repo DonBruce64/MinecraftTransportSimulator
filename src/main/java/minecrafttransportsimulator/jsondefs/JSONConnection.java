@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.jsondefs;
 
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 
@@ -11,11 +12,11 @@ public class JSONConnection{
 	
 	@JSONRequired
 	@JSONDescription("The position of this connection on the vehicle.")
-	public Point3d pos;
+	public Point3D pos;
 	
 	@JSONRequired(dependentField="mounted", dependentValues={"true"})
 	@JSONDescription("The rotation of this connection.  Required when using mounted connections.  Has no effect on other connections.")
-	public Point3d rot;
+	public RotationMatrix rot;
 	
 	@JSONDescription("If true, then connecting vehicles will be mounted to this point rather than dragged.  Useful for things like flat-bed trailers, where you want the vehicle to stay in one place.")
 	public boolean mounted;

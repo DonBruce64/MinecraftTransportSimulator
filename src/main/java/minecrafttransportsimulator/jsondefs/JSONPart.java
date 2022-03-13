@@ -3,7 +3,7 @@ package minecrafttransportsimulator.jsondefs;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase.BlockMaterial;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable.ModifiableValue;
 import minecrafttransportsimulator.jsondefs.JSONConfig.ConfigFuel.FuelDefaults;
@@ -86,9 +86,6 @@ public class JSONPart extends AJSONPartProvider{
     	
     	@JSONDescription("NOTE: Using a unique 'type' name is preferred over customType parameters.  See the various part conventions ebfore using this!\n\nThis parameter is optional and should only be used for parts that you need in specific places.  This will restrict this part to only work in part definitions with customTypes defined, and only if they contain this customType.")
     	public String customType;
-    	
-    	@JSONDescription("This parameter is optional.  If included and set to true, this part, and all sub-parts, will not be mirrored, no matter the settings in the vehicle JSON. Useful on things like lights and signage, where mirroring would make the lights or signs render backwards, or on turrets where you don't want seats to mirror themselves.")
-    	public boolean disableMirroring;
     	
     	@JSONDescription("This parameter is optional.  If included and set to true, this part will use the texture of the vehicle rather than the texture that corresponds to the part.  Useful for parts that need to pull vehicle textures for their rendering, such as tank turrets and vehicle bolt-on components.")
     	public boolean useVehicleTexture;
@@ -310,10 +307,13 @@ public class JSONPart extends AJSONPartProvider{
 		@JSONDescription("If true, the player will stand in this seat rather than sit.  Note that some mods may mess this up and force the player to sit, so be advised of this.")
     	public boolean standing;
 		
-		@JSONDescription("If included, the player's width will be scaled to this value when sitting in this seat.  Useful for times when you can't fit a regular seat.  You can also use this to make the player invisible with a small enough size.")
+		@JSONDescription("If included, the player will be scaled along to this X, Y, and Z value when sitting in this seat.  Useful for times when you can't fit a regular seat.  You can also use this to make the player invisible with a small enough size.")
+		public Point3D playerScale;
+		
+		@Deprecated
     	public float widthScale;
 		
-		@JSONDescription("If included, the player's height will be scaled to this value when sitting in this seat.  Similar to widthScale, but this parameter will also affect the player's eye height.  Keep this in mind, as the lower you set this the lower they sit!")
+		@Deprecated
     	public float heightScale;
     }
     
@@ -327,14 +327,14 @@ public class JSONPart extends AJSONPartProvider{
 		@JSONDescription("If set, the gun will only be able to be fired once per button press.")
     	public boolean isSemiAuto;
 		
-		@JSONDescription("Normally, guns should physically move themselves when the player looks up and down.  If you want this to be a virtual movement, say for a turret, then set this to true.  This will make the pitch applied only internally.  If this is set, do NOT physically move the gun with an animation.")
-    	public boolean pitchIsInternal;
-		
 		@JSONDescription("If true, this makes it so that only one of this type of gun can be selected and fired at a time. This is useful for missiles and bombs that have different types of ammunition, as you can load different guns with different types of ammunition, and switch between the individual guns. If not used or set to false, cycling through weapons will select all weapons of the same type.")
     	public boolean fireSolo;
 		
 		@JSONDescription("If true, this gun will return to its default yaw and pitch if it is not active. This is useful for anyone who likes to keep their large assortment of weapons nice and tidy.")
     	public boolean resetPosition;
+		
+		@JSONDescription("If true, then this gun will fire bullets to align with itself only, and not with the muzzle rot paramter.  However, the initial velocity will still align with the rot parameter.  This allows the muzzle to be rotated to adjust the firing direction without modifying the orientation of the spawned bullet.  Think bomb bays and rocket launchers with a jettison before burn.")
+    	public boolean disableMuzzleOrientation;
 		
 		@JSONDescription("The capacity of the gun, in number of bullets.")
     	public int capacity;
@@ -378,7 +378,7 @@ public class JSONPart extends AJSONPartProvider{
 		@JSONDescription("Like minCaseLength, but the maximum.")
     	public float maxCaseLength;
 		
-		@JSONDescription(" How fast, in degrees/tick, the gun can rotate in the yaw direction.  This is normally auto-calculated from the gun's length and diameter, but it may be specified here if desired.")
+		@JSONDescription("How fast, in degrees/tick, the gun can rotate in the yaw direction.  Note that if this value, and the value on the part slot are both specified, the lower of the two values will be used.")
     	public float yawSpeed;
 		
 		@JSONDescription("Like yawSpeed, but for pitch.")
@@ -392,11 +392,11 @@ public class JSONPart extends AJSONPartProvider{
 		
         @JSONRequired(dependentField="handHeld", dependentValues={"true"})
     	@JSONDescription("The offset where this gun will be when held normally by the player.  An offset of 0,0,0 will render the gun in the center of the player's right shoulder rotation point.  For reference, this is 0.3125 blocks to the right, and 1.375 blocks from the bottom-center of the player's feet.")
-		public Point3d handHeldNormalOffset;
+		public Point3D handHeldNormalOffset;
 		
         @JSONRequired(dependentField="handHeld", dependentValues={"true"})
     	@JSONDescription("Like the normal offset, but this applies when the player starts sneaking/aiming.")
-		public Point3d handHeldAimedOffset;
+		public Point3D handHeldAimedOffset;
         
         @JSONRequired
         @JSONDescription("A list of muzzle groups.  When firing this gun, the list is cycled though, and each group of muzzles takes turns firing.  If there are multiple muzzles in the group, they are all fired.  This allows for guns with muzzles that fire in sequence, or all at once.")

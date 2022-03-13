@@ -70,9 +70,9 @@ public abstract class AModelParser{
 		for(RenderableObject parsedObject : parsedModelObjects){
 			//If we are a tread roller, make a roller rather than a standard object.
 			if(parsedObject.name.toLowerCase().contains(ROLLER_OBJECT_NAME)){
-				modelObjects.add(new RenderableTreadRoller<AnimationEntity>(modelLocation, parsedObject, modelObjects));
+				modelObjects.add(new RenderableTreadRoller<AnimationEntity>(modelLocation, parsedObject));
 			}else{
-				modelObjects.add(new RenderableModelObject<AnimationEntity>(modelLocation, parsedObject, modelObjects));
+				modelObjects.add(new RenderableModelObject<AnimationEntity>(modelLocation, parsedObject));
 			}
 		}
 		return modelObjects;

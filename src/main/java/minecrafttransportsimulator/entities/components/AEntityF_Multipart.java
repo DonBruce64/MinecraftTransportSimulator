@@ -10,9 +10,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Damage;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.items.components.AItemBase;
@@ -30,7 +29,6 @@ import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.instances.PacketPartChange;
-import minecrafttransportsimulator.rendering.components.RenderableObject;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**Base class for multipart entities.  These entities hold other, part-based entities.  These part
@@ -83,9 +81,6 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 	/**Map of active part slot boxes.  Contains {@link #allPartSlotBoxes}, though may not contain all of them due to them not being active.**/
 	public final Map<BoundingBox, JSONPartDefinition> activePartSlotBoxes = new HashMap<BoundingBox, JSONPartDefinition>();
 	
-	/**Map of part slot renderables.  Contains {@link #allPartSlotBoxes} boxes.  Rendering is left up to calling functions.**/
-	public final Map<BoundingBox, RenderableObject> allPartSlotRenderables = new HashMap<BoundingBox, RenderableObject>();
-	
 	//Constants
 	private final float PART_SLOT_HITBOX_WIDTH = 0.75F;
 	private final float PART_SLOT_HITBOX_HEIGHT = 2.25F;
@@ -101,7 +96,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 			try{
 				WrapperNBT partData = data.getData("part_" + i);
 				AItemPart partItem = PackParserSystem.getItem(partData.getString("packID"), partData.getString("systemName"), partData.getString("subName"));
-				Point3d partOffset = partData.getPoint3d("offset");
+				Point3D partOffset = partData.getPoint3d("offset");
 				addPartFromItem(partItem, placingPlayer, partData, partOffset, true);
 			}catch(Exception e){
 				InterfaceCore.logError("Could not load part from NBT.  Did you un-install a pack?");
@@ -132,76 +127,80 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
     }
 	
 	@Override
-	public boolean update(){
-		if(super.update()){
-			world.beginProfiling("EntityF_Level", true);
-			
-			//If we have any NBT parts, add them now.
-			if(!partsFromNBT.isEmpty()){
-				for(APart part : partsFromNBT){
-					addPart(part, false);
-				}
-				partsFromNBT.clear();
+	public void update(){
+		//If we have any NBT parts, add them now.
+		if(!partsFromNBT.isEmpty()){
+			for(APart part : partsFromNBT){
+				addPart(part, false);
 			}
-			
-			//Update part slot box positions.
-			world.beginProfiling("PartSlotPositions", true);
-			for(BoundingBox box : allPartSlotBoxes.keySet()){
-				JSONPartDefinition packVehicleDef = allPartSlotBoxes.get(box);
-				boolean updatedToSubPart = false;
+			partsFromNBT.clear();
+		}
+		
+		//Need to do this before updating as these require knowledge of prior states.
+		//If we call super, then it will overwrite the prior state.
+		//We update both our variables and our part variables here.
+		updateVariableModifiers();
+		for(APart part : parts){
+			part.updateVariableModifiers();
+		}
+		
+		//Now call super and do the updates.
+		super.update();
+		world.beginProfiling("EntityF_Level", true);
+		
+		//Update part slot box positions.
+		world.beginProfiling("PartSlotPositions", true);
+		for(Entry<BoundingBox, JSONPartDefinition> entry : allPartSlotBoxes.entrySet()){
+			JSONPartDefinition packVehicleDef = entry.getValue();
+			if(!packVehicleDef.isSubPart){
+				entry.getKey().updateToEntity(this, null);
+			}else{
 				for(APart part : parts){
 					if(part.definition.parts != null){
 						for(JSONPartDefinition subPartDef : part.definition.parts){
 							if(packVehicleDef.equals(part.getPackForSubPart(subPartDef))){
-								//Need to find the delta between our 0-degree position and our current position.
-								Point3d delta = subPartDef.pos.copy().rotateFine(part.localAngles).subtract(subPartDef.pos);
-								box.updateToEntity(this, delta);
-								updatedToSubPart = true;
+								//Need to find the delta between part 0-degree position and our current position.
+								Point3D delta = subPartDef.pos.copy().rotate(part.orientation).reOrigin(orientation);
+								entry.getKey().updateToEntity(part, delta);
 								break;
 							}
 						}
 					}
 				}
-				if(!updatedToSubPart){
-					box.updateToEntity(this, null);
-				}
 			}
-			
-			//Populate active part slot list.
-			//Only do this on clients; servers reference the main list to handle clicks.
-			//Boxes added on clients depend on what the player is holding.
-			//We add these before part boxes so the player can click them before clicking a part.
-			if(world.isClient()){
-				world.beginProfiling("PartSlotActives", false);
-				activePartSlotBoxes.clear();
-				WrapperPlayer player = InterfaceClient.getClientPlayer();
-				AItemBase heldItem = player.getHeldItem();
-				if(heldItem instanceof AItemPart){
-					for(Entry<BoundingBox, JSONPartDefinition> partSlotBoxEntry : allPartSlotBoxes.entrySet()){
-						AItemPart heldPart = (AItemPart) heldItem;
-						//Does the part held match this packPart?
-						if(heldPart.isPartValidForPackDef(partSlotBoxEntry.getValue(), subName, false)){
-							//Are there any doors blocking us from clicking this part?
-							if(!areVariablesBlocking(partSlotBoxEntry.getValue(), player)){
-								//Part matches.  Add the box.  Set the box bounds to the generic box, or the
-								//special bounds of the generic part if we're holding one.
-								BoundingBox box = partSlotBoxEntry.getKey();
-								box.widthRadius = heldPart.definition.generic.width != 0 ? heldPart.definition.generic.width/2D : PART_SLOT_HITBOX_WIDTH/2D;
-								box.heightRadius = heldPart.definition.generic.height != 0 ? heldPart.definition.generic.height/2D : PART_SLOT_HITBOX_HEIGHT/2D;
-								box.depthRadius = heldPart.definition.generic.width != 0 ? heldPart.definition.generic.width/2D : PART_SLOT_HITBOX_WIDTH/2D;
-								activePartSlotBoxes.put(partSlotBoxEntry.getKey(), partSlotBoxEntry.getValue());
-							}
+		}
+		
+		//Populate active part slot list.
+		//Only do this on clients; servers reference the main list to handle clicks.
+		//Boxes added on clients depend on what the player is holding.
+		//We add these before part boxes so the player can click them before clicking a part.
+		if(world.isClient()){
+			world.beginProfiling("PartSlotActives", false);
+			activePartSlotBoxes.clear();
+			WrapperPlayer player = InterfaceClient.getClientPlayer();
+			AItemBase heldItem = player.getHeldItem();
+			if(heldItem instanceof AItemPart){
+				for(Entry<BoundingBox, JSONPartDefinition> partSlotBoxEntry : allPartSlotBoxes.entrySet()){
+					AItemPart heldPart = (AItemPart) heldItem;
+					//Does the part held match this packPart?
+					if(heldPart.isPartValidForPackDef(partSlotBoxEntry.getValue(), subName, false)){
+						//Are there any doors blocking us from clicking this part?
+						if(!areVariablesBlocking(partSlotBoxEntry.getValue(), player)){
+							//Part matches.  Add the box.  Set the box bounds to the generic box, or the
+							//special bounds of the generic part if we're holding one.
+							BoundingBox box = partSlotBoxEntry.getKey();
+							box.widthRadius = heldPart.definition.generic.width != 0 ? heldPart.definition.generic.width/2D : PART_SLOT_HITBOX_WIDTH/2D;
+							box.heightRadius = heldPart.definition.generic.height != 0 ? heldPart.definition.generic.height/2D : PART_SLOT_HITBOX_HEIGHT/2D;
+							box.depthRadius = heldPart.definition.generic.width != 0 ? heldPart.definition.generic.width/2D : PART_SLOT_HITBOX_WIDTH/2D;
+							activePartSlotBoxes.put(partSlotBoxEntry.getKey(), partSlotBoxEntry.getValue());
 						}
 					}
 				}
 			}
-			
-			world.endProfiling();
-			world.endProfiling();
-			return true;
-		}else{
-			return false;
 		}
+		
+		world.endProfiling();
+		world.endProfiling();
 	}
 	
 	@Override
@@ -215,10 +214,10 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 	}
 	
 	@Override
-	public boolean addRider(WrapperEntity rider, Point3d riderLocation){
+	public boolean addRider(WrapperEntity rider, Point3D riderLocation){
 		//Auto-close doors for the rider in the seat they are going in, if such doors exist.
 		if(super.addRider(rider, riderLocation)){
-			PartSeat seat = (PartSeat) getPartAtLocation(locationRiderMap.inverse().get(rider));
+			PartSeat seat = getSeatForRider(rider);
 			if(seat != null && seat.placementDefinition.linkedVariables != null){
 				for(String variable : seat.placementDefinition.linkedVariables){
 					setVariable(variable, 0);
@@ -233,13 +232,35 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 	@Override
 	public void removeRider(WrapperEntity rider, Iterator<WrapperEntity> iterator){
 		//Auto-open doors for the rider in the seat they were in, if such doors exist.
-		PartSeat seat = (PartSeat) getPartAtLocation(locationRiderMap.inverse().get(rider));
+		PartSeat seat = getSeatForRider(rider);
 		if(seat != null && seat.placementDefinition.linkedVariables != null){
 			for(String variable : seat.placementDefinition.linkedVariables){
 				setVariable(variable, 1);
 			}
 		}
 		super.removeRider(rider, iterator);
+	}
+	
+	/**
+   	 *  Helper method to get the seat of a entity.
+   	 *  This  may return null if the entity isn't riding
+   	 *  us, or if the seat isn't loaded from NBT data yet (first tick).
+   	 */
+    public PartSeat getSeatForRider(WrapperEntity rider){
+    	return (PartSeat) getPartAtLocation(locationRiderMap.inverse().get(rider));
+    }
+    
+    /**
+	 *  Helper method used to get the controlling entity for this entity.
+	 *  Is normally the player, but may be a NPC if one is in the seat.
+	 */
+	public WrapperEntity getController(){
+		for(WrapperEntity rider : locationRiderMap.inverse().keySet()){
+			if(getSeatForRider(rider).placementDefinition.isController){
+				return rider;
+			}
+		}
+		return null;
 	}
 	
 	@Override
@@ -392,7 +413,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 	 * prevent calling the lists, maps, and other systems that aren't set up yet.
 	 * This method returns the part if it was added, null if it wasn't.
 	 */
-    public APart addPartFromItem(AItemPart partItem, WrapperPlayer playerAdding, WrapperNBT partData, Point3d offset, boolean addedDuringConstruction){
+    public APart addPartFromItem(AItemPart partItem, WrapperPlayer playerAdding, WrapperNBT partData, Point3D offset, boolean addedDuringConstruction){
     	//Get the part pack to add.
 		JSONPartDefinition newPartDef = getPackDefForLocation(offset);
 		APart partToAdd = null;
@@ -582,7 +603,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 	 * This also checks NBT parts in case we are doing
 	 * this check for parent-part lookups during construction.
 	 */
-	public APart getPartAtLocation(Point3d offset){
+	public APart getPartAtLocation(Point3D offset){
 		for(APart part : parts){
 			if(part.placementOffset.equals(offset)){
 				return part;
@@ -617,8 +638,8 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 	 * Note that additional parts will not be added if no part is present
 	 * in the primary location.
 	 */
-	public LinkedHashMap<Point3d, JSONPartDefinition> getAllPossiblePackParts(){
-		LinkedHashMap<Point3d, JSONPartDefinition> partDefs = new LinkedHashMap<Point3d, JSONPartDefinition>();
+	public LinkedHashMap<Point3D, JSONPartDefinition> getAllPossiblePackParts(){
+		LinkedHashMap<Point3D, JSONPartDefinition> partDefs = new LinkedHashMap<Point3D, JSONPartDefinition>();
 		//First get all the regular part spots.
 		for(JSONPartDefinition partDef : definition.parts){
 			partDefs.put(partDef.pos, partDef);
@@ -667,7 +688,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 	/**
 	 * Gets the pack definition at the specified location.
 	 */
-	public JSONPartDefinition getPackDefForLocation(Point3d offset){
+	public JSONPartDefinition getPackDefForLocation(Point3D offset){
 		//Check to see if this is a main part.
 		for(JSONPartDefinition partDef : definition.parts){
 			if(partDef.pos.equals(offset)){
@@ -789,12 +810,10 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 	 */
 	private void recalculatePartSlots(){
 		allPartSlotBoxes.clear();
-		allPartSlotRenderables.clear();
-		for(Entry<Point3d, JSONPartDefinition> packPartEntry : getAllPossiblePackParts().entrySet()){
+		for(Entry<Point3D, JSONPartDefinition> packPartEntry : getAllPossiblePackParts().entrySet()){
 			if(getPartAtLocation(packPartEntry.getKey()) == null){
-				BoundingBox newSlotBox = new BoundingBox(packPartEntry.getKey(), packPartEntry.getKey().copy().rotateFine(angles).add(position), PART_SLOT_HITBOX_WIDTH/2D, PART_SLOT_HITBOX_HEIGHT/2D, PART_SLOT_HITBOX_WIDTH/2D, false);
+				BoundingBox newSlotBox = new BoundingBox(packPartEntry.getKey(), packPartEntry.getKey().copy().rotate(orientation).add(position), PART_SLOT_HITBOX_WIDTH/2D, PART_SLOT_HITBOX_HEIGHT/2D, PART_SLOT_HITBOX_WIDTH/2D, false);
 				allPartSlotBoxes.put(newSlotBox, packPartEntry.getValue());
-				allPartSlotRenderables.put(newSlotBox, new RenderableObject(newSlotBox, new ColorRGB(), true));
 			}
 		}
 	}

@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.UUID;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
@@ -82,29 +82,18 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 									}
 								}
 								//Player can remove part, spawn item in the world and remove part.
-								//Make sure to remove the part before spawning the item.  Some parts
-								//care about this order and won't spawn items unless they've been removed.
-								part.disconnectAllConnections();
+								//Make sure to remove the part before spawning the item.
 								vehicle.removePart(part, null);
 								AItemPart droppedItem = part.getItem();
 								if(droppedItem != null){
-									WrapperNBT partData = new WrapperNBT();
-									part.save(partData);
-									vehicle.world.spawnItem(droppedItem, partData, part.position);
+									vehicle.world.spawnItem(droppedItem, part.save(new WrapperNBT()), part.position);
 								}
 							}else if(player.isSneaking()){
 								//Attacker is a sneaking player with a wrench.
 								//Remove this vehicle if possible.
 								if((!ConfigSystem.configObject.general.opPickupVehiclesOnly.value || ownerState.equals(PlayerOwnerState.ADMIN)) && (!ConfigSystem.configObject.general.creativePickupVehiclesOnly.value || player.isCreative()) && vehicle.isValid){
 									vehicle.disconnectAllConnections();
-									for(APart vehiclePart : vehicle.parts){
-										vehiclePart.disconnectAllConnections();
-									}
-									
-									ItemVehicle vehicleItem = vehicle.getItem();
-									WrapperNBT vehicleData = new WrapperNBT();
-									vehicle.save(vehicleData);
-									vehicle.world.spawnItem(vehicleItem, vehicleData, vehicle.position);
+									vehicle.world.spawnItem(vehicle.getItem(), vehicle.save(new WrapperNBT()), vehicle.position);
 									vehicle.remove();
 								}
 							}
@@ -225,7 +214,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 							PartInteractable interactable = (PartInteractable) part;
 							if(interactable.tank != null && !interactable.equals(firstPartClicked)){
 								if(interactable.linkedPart == null && interactable.linkedVehicle == null){
-									if(part.position.distanceTo(firstPartClicked.position) < 15){
+									if(part.position.isDistanceToCloserThan(firstPartClicked.position, 16)){
 										if(interactable.tank.getFluid().isEmpty() || firstPartClicked.tank.getFluid().isEmpty() || interactable.tank.getFluid().equals(firstPartClicked.tank.getFluid())){
 											firstPartClicked.linkedPart = interactable;
 											InterfacePacket.sendToAllClients(new PacketPartInteractable(firstPartClicked, player));
@@ -245,7 +234,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 								}
 							}
 						}else if(part == null){
-							if(vehicle.position.distanceTo(firstPartClicked.position) < 15){
+							if(vehicle.position.isDistanceToCloserThan(firstPartClicked.position, 16)){
 								if(vehicle.fuelTank.getFluid().isEmpty() || firstPartClicked.tank.getFluid().isEmpty() || vehicle.fuelTank.getFluid().equals(firstPartClicked.tank.getFluid())){
 									firstPartClicked.linkedVehicle = vehicle;
 									InterfacePacket.sendToAllClients(new PacketPartInteractable(firstPartClicked, player));
@@ -276,7 +265,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 								if(firstEngineClicked.entityOn.equals(engine.entityOn)){
 									firstEngineClicked = null;
 									player.sendPacket(new PacketPlayerChatMessage(player, "interact.jumpercable.samevehicle"));
-								}else if(engine.position.distanceTo(firstEngineClicked.position) < 15){
+								}else if(engine.position.isDistanceToCloserThan(firstEngineClicked.position, 15)){
 									engine.linkedEngine = firstEngineClicked;
 									firstEngineClicked.linkedEngine = engine;
 									InterfacePacket.sendToAllClients(new PacketPartEngine(engine, firstEngineClicked));
@@ -314,7 +303,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 	}
 	
 	@Override
-	public boolean onBlockClicked(WrapperWorld world, WrapperPlayer player, Point3d position, Axis axis){
+	public boolean onBlockClicked(WrapperWorld world, WrapperPlayer player, Point3D position, Axis axis){
 		if(definition.item.type.equals(ItemComponentType.PAINT_GUN)){
 			if(!world.isClient()){
 				ATileEntityBase<?> tile = world.getTileEntity(position);

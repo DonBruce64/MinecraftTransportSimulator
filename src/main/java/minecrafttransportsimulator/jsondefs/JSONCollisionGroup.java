@@ -13,6 +13,9 @@ public class JSONCollisionGroup{
 	@JSONDescription("How much health this collision group has.  When the health reaches 0, this collision group will be disabled.  Useful for armor that can only take so many hits, or parts of models that you want to break off when hit.  If this value is 0, then the collision group will always be present, and damage inflicted will be charged to the entity rather than this collision group.")
     public int health;
 	
+	@JSONDescription("If this is set, then this collision group will first use the animations for this object from the rendering section instead of the animations in this one.  If the specified object has applyAfter on it itself, then the animations will be gotten recursively until an applyAfter is not found.")
+    public String applyAfter;
+	
 	@JSONRequired
 	@JSONDescription("A listing of collisions for this group.")
     public List<JSONCollisionBox> collisions;

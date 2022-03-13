@@ -6,7 +6,7 @@ import java.util.List;
 import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityFluidLoader;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.instances.APart;
@@ -76,8 +76,8 @@ public class GUIOverlay extends AGUIBase{
 			}
 			if(mousedOverEntity instanceof EntityVehicleF_Physics){
 				EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) mousedOverEntity;
-				Point3d playerEyesStartVector = player.getPosition().add(0, player.getEyeHeight(), 0);
-				Point3d playerEyesEndVector = playerEyesStartVector.copy().add(player.getLineOfSight(10));
+				Point3D playerEyesStartVector = player.getPosition().add(0, player.getEyeHeight(), 0);
+				Point3D playerEyesEndVector = playerEyesStartVector.copy().add(player.getLineOfSight(10));
 				
 				BoundingBox mousedOverBox = null;
 				for(BoundingBox box : vehicle.allPartSlotBoxes.keySet()){

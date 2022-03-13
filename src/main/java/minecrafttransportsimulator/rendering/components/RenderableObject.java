@@ -4,6 +4,8 @@ import java.nio.FloatBuffer;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
+import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.mcinterface.InterfaceRender;
 
 /**Class designed to represent a renderable object.  Said object has at minimum some
@@ -54,12 +56,11 @@ public class RenderableObject{
 	public final boolean cacheVertices;
 	
 	public boolean isTranslucent;
-	public boolean isMirrored;
 	public int cachedVertexIndex = -1;
 	public BlendState blend = BlendState.SOLID;
 	public float alpha = 1.0F;
 	public float lineWidth = 0.0F;
-	public float scale = 1.0F;
+	public final TransformationMatrix transform = new TransformationMatrix();
 	public boolean disableLighting;
 	public boolean ignoreWorldShading;
 	public boolean enableBrightBlending;
@@ -130,6 +131,7 @@ public class RenderableObject{
 		this.cacheVertices = cacheVertices;
 		this.isTranslucent = name.toLowerCase().contains(AModelParser.TRANSLUCENT_OBJECT_NAME);
 		this.vertices = vertices;
+		transform.resetTransforms();
 	}
 	
 	/*Shortened constructor used for lines.  Automatically sets line width and lighting.**/
@@ -141,15 +143,13 @@ public class RenderableObject{
 	
 	/*Shortened constructor used for bounding boxes.  Automatically sets lighting and translucency depending on if the box
 	 * is holgraphic or wireframe as defined by the final boolean.**/
-	public RenderableObject(BoundingBox box, ColorRGB color, boolean holgraphic){
+	public RenderableObject(ColorRGB color, boolean holgraphic){
 		this("", holgraphic ? "mts:textures/rendering/holobox.png" : null, color, FloatBuffer.allocate(holgraphic ? BUFFERS_PER_HOLGRAPHIC_BOX : BUFFERS_PER_WIREFRAME_BOX), false);
 		if(holgraphic){
 			isTranslucent = true;
 			alpha = 0.5F;
-			setHolographicBoundingBox(box);
 		}else{
 			lineWidth = 2.0F;
-			setWireframeBoundingBox(box);
 		}
 		disableLighting = true;
 	}
@@ -175,13 +175,13 @@ public class RenderableObject{
 	
 	/**Adds a line to the {@link #vertices} of this object.
 	 */
-	public void addLine(float x1, float y1, float z1, float x2, float y2, float z2){
-		vertices.put(x1);
-		vertices.put(y1);
-		vertices.put(z1);
-		vertices.put(x2);
-		vertices.put(y2);
-		vertices.put(z2);
+	public void addLine(Point3D point1, Point3D point2){
+		vertices.put((float) point1.x);
+		vertices.put((float) point1.y);
+		vertices.put((float) point1.z);
+		vertices.put((float) point2.x);
+		vertices.put((float) point2.y);
+		vertices.put((float) point2.z);
 	}
 	
 	/**sets the holographic {@link BoundingBox} box to the {@link #vertices} of this object.

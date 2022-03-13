@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.packloading;
 
 import java.io.File;
-import java.io.FileReader;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -26,8 +26,9 @@ import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.entities.components.AEntityA_Base;
+import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
+import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.AJSONInteractableEntity;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
@@ -123,22 +124,22 @@ public class JSONParser{
 		}
 	};
 	
-	private static final TypeAdapter<Point3d> point3dAdapter = new TypeAdapter<Point3d>(){
+	private static final TypeAdapter<Point3D> point3DAdapter = new TypeAdapter<Point3D>(){
 		@Override
-		public Point3d read(JsonReader reader) throws IOException{
+		public Point3D read(JsonReader reader) throws IOException{
 			if(reader.peek() == JsonToken.NULL){
 				reader.nextNull();
 				return null;
 			}else{
 				reader.beginArray();
-				Point3d value = new Point3d(reader.nextDouble(), reader.nextDouble(), reader.nextDouble());
+				Point3D value = new Point3D(reader.nextDouble(), reader.nextDouble(), reader.nextDouble());
 				reader.endArray();
 				return value;
 			}
 		}
 		
 		@Override
-		public void write(JsonWriter writer, Point3d value) throws IOException{
+		public void write(JsonWriter writer, Point3D value) throws IOException{
 			if(value == null){
 				writer.nullValue();
 				return;
@@ -150,6 +151,39 @@ public class JSONParser{
 				writer.value(value.x);
 				writer.value(value.y);
 				writer.value(value.z);
+				writer.endArray();
+				writer.setIndent("  ");
+			}
+		}
+	};
+	
+	private static final TypeAdapter<RotationMatrix> rotationMatrixAdapter = new TypeAdapter<RotationMatrix>(){
+		@Override
+		public RotationMatrix read(JsonReader reader) throws IOException{
+			if(reader.peek() == JsonToken.NULL){
+				reader.nextNull();
+				return null;
+			}else{
+				reader.beginArray();
+				RotationMatrix value = new RotationMatrix().setToAngles(new Point3D(reader.nextDouble(), reader.nextDouble(), reader.nextDouble()));
+				reader.endArray();
+				return value;
+			}
+		}
+		
+		@Override
+		public void write(JsonWriter writer, RotationMatrix value) throws IOException{
+			if(value == null){
+				writer.nullValue();
+				return;
+			}else{
+				//Setting the indent to nothing prevents GSON from applying newlines to Point3ds.
+				//We need to set the indent to the value afterwards though to keep pretty printing.
+				writer.beginArray();
+				writer.setIndent("");
+				writer.value(value.angles.x);
+				writer.value(value.angles.y);
+				writer.value(value.angles.z);
 				writer.endArray();
 				writer.setIndent("  ");
 			}
@@ -425,7 +459,8 @@ public class JSONParser{
 				.registerTypeAdapter(Boolean.class, booleanAdapter)
 				.registerTypeAdapter(Integer.class, integerAdapter)
 				.registerTypeAdapter(Float.class, floatAdapter)
-				.registerTypeAdapter(Point3d.class, point3dAdapter)
+				.registerTypeAdapter(Point3D.class, point3DAdapter)
+				.registerTypeAdapter(RotationMatrix.class, rotationMatrixAdapter)
 				.registerTypeAdapter(ColorRGB.class, colorAdapter)
 				.registerTypeAdapter(LTBox.class, ltBoxAdapter)
 				.registerTypeAdapter(new TypeToken<List<Integer>>(){}.getType(), intListAdapter)
@@ -489,7 +524,7 @@ public class JSONParser{
 			switch(definitionToOverride.classification){
 				case VEHICLE : {
 					JSONVehicle vehicleDefinition = (JSONVehicle) definitionToOverride;
-					JSONVehicle loadedVehicleDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONVehicle.class, vehicleDefinition.packID, vehicleDefinition.systemName);
+					JSONVehicle loadedVehicleDefinition = JSONParser.parseStream(new InputStreamReader(new FileInputStream(jsonFile), "UTF-8"), JSONVehicle.class, vehicleDefinition.packID, vehicleDefinition.systemName);
 					JSONParser.validateFields(loadedVehicleDefinition, "/", 1);
 					vehicleDefinition.motorized = loadedVehicleDefinition.motorized;
 					loadedDefinition = loadedVehicleDefinition;
@@ -497,7 +532,7 @@ public class JSONParser{
 				}
 				case PART : {
 					JSONPart partDefinition = (JSONPart) definitionToOverride;
-					JSONPart loadedPartDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONPart.class, partDefinition.packID, partDefinition.systemName);
+					JSONPart loadedPartDefinition = JSONParser.parseStream(new InputStreamReader(new FileInputStream(jsonFile), "UTF-8"), JSONPart.class, partDefinition.packID, partDefinition.systemName);
 					JSONParser.validateFields(loadedPartDefinition, "/", 1);
 					partDefinition.generic = loadedPartDefinition.generic;
 					partDefinition.engine = loadedPartDefinition.engine;
@@ -512,7 +547,7 @@ public class JSONParser{
 				}
 				case INSTRUMENT : {
 					JSONInstrument instrumentDefinition = (JSONInstrument) definitionToOverride;
-					JSONInstrument loadedInstrumentDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONInstrument.class, instrumentDefinition.packID, instrumentDefinition.systemName);
+					JSONInstrument loadedInstrumentDefinition = JSONParser.parseStream(new InputStreamReader(new FileInputStream(jsonFile), "UTF-8"), JSONInstrument.class, instrumentDefinition.packID, instrumentDefinition.systemName);
 					JSONParser.validateFields(loadedInstrumentDefinition, "/", 1);
 					instrumentDefinition.components = loadedInstrumentDefinition.components;
 					loadedDefinition = loadedInstrumentDefinition;
@@ -520,7 +555,7 @@ public class JSONParser{
 				}
 				case DECOR : {
 					JSONDecor decorDefinition = (JSONDecor) definitionToOverride;
-					JSONDecor loadedDecorDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONDecor.class, decorDefinition.packID, decorDefinition.systemName);
+					JSONDecor loadedDecorDefinition = JSONParser.parseStream(new InputStreamReader(new FileInputStream(jsonFile), "UTF-8"), JSONDecor.class, decorDefinition.packID, decorDefinition.systemName);
 					JSONParser.validateFields(loadedDecorDefinition, "/", 1);
 					decorDefinition.decor = loadedDecorDefinition.decor;
 					loadedDefinition = loadedDecorDefinition;
@@ -528,7 +563,7 @@ public class JSONParser{
 				}
 				case ROAD : {
 					JSONRoadComponent roadDefinition = (JSONRoadComponent) definitionToOverride;
-					JSONRoadComponent loadedRoadDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONRoadComponent.class, roadDefinition.packID, roadDefinition.systemName);
+					JSONRoadComponent loadedRoadDefinition = JSONParser.parseStream(new InputStreamReader(new FileInputStream(jsonFile), "UTF-8"), JSONRoadComponent.class, roadDefinition.packID, roadDefinition.systemName);
 					JSONParser.validateFields(loadedRoadDefinition, "/", 1);
 					roadDefinition.road = loadedRoadDefinition.road;
 					loadedDefinition = loadedRoadDefinition;
@@ -536,14 +571,14 @@ public class JSONParser{
 				}
 				case POLE : {
 					JSONPoleComponent poleDefinition = (JSONPoleComponent) definitionToOverride;
-					JSONPoleComponent loadedPoleDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONPoleComponent.class, poleDefinition.packID, poleDefinition.systemName);
+					JSONPoleComponent loadedPoleDefinition = JSONParser.parseStream(new InputStreamReader(new FileInputStream(jsonFile), "UTF-8"), JSONPoleComponent.class, poleDefinition.packID, poleDefinition.systemName);
 					JSONParser.validateFields(loadedPoleDefinition, "/", 1);
 					loadedDefinition = loadedPoleDefinition;
 					break;
 				}
 				case BULLET : {
 					JSONBullet bulletDefinition = (JSONBullet) definitionToOverride;
-					JSONBullet loadedBulletDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONBullet.class, bulletDefinition.packID, bulletDefinition.systemName);
+					JSONBullet loadedBulletDefinition = JSONParser.parseStream(new InputStreamReader(new FileInputStream(jsonFile), "UTF-8"), JSONBullet.class, bulletDefinition.packID, bulletDefinition.systemName);
 					JSONParser.validateFields(loadedBulletDefinition, "/", 1);
 					bulletDefinition.bullet = loadedBulletDefinition.bullet;
 					loadedDefinition = loadedBulletDefinition;
@@ -551,7 +586,7 @@ public class JSONParser{
 				}
 				case ITEM : {
 					JSONItem itemDefinition = (JSONItem) definitionToOverride;
-					JSONItem loadedItemDefinition = JSONParser.parseStream(new FileReader(jsonFile), JSONItem.class, itemDefinition.packID, itemDefinition.systemName);
+					JSONItem loadedItemDefinition = JSONParser.parseStream(new InputStreamReader(new FileInputStream(jsonFile), "UTF-8"), JSONItem.class, itemDefinition.packID, itemDefinition.systemName);
 					JSONParser.validateFields(loadedItemDefinition, "/", 1);
 					itemDefinition.item = loadedItemDefinition.item;
 					itemDefinition.booklet = loadedItemDefinition.booklet;
@@ -584,17 +619,16 @@ public class JSONParser{
 			if(definitionToOverride instanceof AJSONMultiModelProvider){
 				ARenderEntityDefinable.clearObjectCaches((AJSONMultiModelProvider) definitionToOverride);
 			}
-			for(AEntityA_Base entity : InterfaceClient.getClientWorld().renderableEntities){
+			for(AEntityC_Renderable entity : InterfaceClient.getClientWorld().renderableEntities){
 				if(entity instanceof AEntityD_Definable){
-					AEntityD_Definable<?> definableEntity = (AEntityD_Definable<?>) entity;
-					if(definitionToOverride.packID.equals(definableEntity.definition.packID) && definitionToOverride.systemName.equals(definableEntity.definition.systemName)){
-						((AEntityD_Definable<?>) entity).animationsInitialized = false;
-					}
+					//Reset animations for all entities, as we don't know part linking or instrument placement or whatnot.
+					((AEntityD_Definable<?>) entity).animationsInitialized = false;
 				}
 			}
 			
 			return "\nImported file: " + definitionToOverride.packID + ":" + definitionToOverride.systemName;
 		}catch(Exception e){
+			e.printStackTrace();
 			return "\nCould not import: " + definitionToOverride.packID + ":" + definitionToOverride.systemName + "\nERROR: " + e.getMessage();
 		}
 	}

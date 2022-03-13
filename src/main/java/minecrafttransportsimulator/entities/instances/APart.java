@@ -5,12 +5,11 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.Damage;
-import minecrafttransportsimulator.baseclasses.Point3d;
-import minecrafttransportsimulator.baseclasses.TrailerConnection;
+import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
@@ -20,7 +19,6 @@ import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packloading.JSONParser;
-import minecrafttransportsimulator.rendering.components.DurationDelayClock;
 import minecrafttransportsimulator.rendering.instances.RenderPart;
 
 /**This class is the base for all parts and should be extended for any entity-compatible parts.
@@ -33,14 +31,11 @@ import minecrafttransportsimulator.rendering.instances.RenderPart;
  * @author don_bruce
  */
 public abstract class APart extends AEntityE_Interactable<JSONPart>{
-	private static final Point3d ZERO_POINT = new Point3d();
 	private static RenderPart renderer;
 	
 	//JSON properties.
 	public final JSONPartDefinition placementDefinition;
-	public final Point3d placementOffset;
-	public final Point3d placementAngles;
-	public final boolean disableMirroring;
+	public final Point3D placementOffset;
 	
 	//Instance properties.
 	/**The entity this part has been placed on.*/
@@ -52,186 +47,166 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 	/**Children to this part.  Can be either additional parts or sub-parts.*/
 	public final List<APart> childParts = new ArrayList<APart>();
 	
-	//Runtime variables.	
-	private final List<DurationDelayClock> activeClocks = new ArrayList<DurationDelayClock>();
-	private final List<DurationDelayClock> movementClocks = new ArrayList<DurationDelayClock>();;
-	
 	/**Cached pack definition mappings for sub-part packs.  First key is the parent part definition, which links to a map.
 	 * This second map is keyed by a part definition, with the value equal to a corrected definition.  This means that
 	 * in total, this object contains all sub-packs created on any entity for any part with sub-packs.  This is done as parts with
 	 * sub-parts use relative locations, and thus we need to ensure we have the correct position for them on any entity part location.*/
 	private final Map<JSONPartDefinition, JSONPartDefinition> subpackMappings = new HashMap<JSONPartDefinition, JSONPartDefinition>();
-	public boolean isDisabled;
+	public boolean isInvisible = false;
 	public boolean isActive = true;
-	public boolean prevActive = true;
-	public final Point3d localOffset;
-	public final Point3d prevLocalOffset;
-	public final Point3d localAngles;
+	public boolean isMirrored;
+	public final Point3D localOffset;
+	public final RotationMatrix localOrientation;
+	public final RotationMatrix zeroReferenceOrientation;
+	public final RotationMatrix prevZeroReferenceOrientation;
+	private AnimationSwitchbox placementActiveSwitchbox;
+	private AnimationSwitchbox internalActiveSwitchbox;
+	private AnimationSwitchbox placementMovementSwitchbox;
+	private AnimationSwitchbox internalMovementSwitchbox;
 		
 	public APart(AEntityF_Multipart<?> entityOn, WrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, WrapperNBT data, APart parentPart){
 		super(entityOn.world, placingPlayer, data);
+		boundingBox.widthRadius = getWidth()/2D;
+		boundingBox.heightRadius = getHeight()/2D;
+		boundingBox.depthRadius = getWidth()/2D;
 		this.entityOn = entityOn;
 		this.vehicleOn = entityOn instanceof EntityVehicleF_Physics ? (EntityVehicleF_Physics) entityOn : null;
-		this.placementOffset = placementDefinition.pos;
-		this.localOffset = placementOffset.copy();
-		this.prevLocalOffset = localOffset.copy();
 		this.placementDefinition = placementDefinition;
-		this.boundingBox = new BoundingBox(placementOffset, position, getWidth()/2D, getHeight()/2D, getWidth()/2D, definition.ground != null ? definition.ground.canFloat : false);
-		this.placementAngles = placementDefinition.rot != null ? placementDefinition.rot : new Point3d();
-		this.localAngles = placementAngles.copy();
+		this.placementOffset = placementDefinition.pos;
+		
+		this.localOffset = placementOffset.copy();
+		this.localOrientation = new RotationMatrix();
+		this.zeroReferenceOrientation = new RotationMatrix();
+		this.prevZeroReferenceOrientation = new RotationMatrix();
 		
 		//If we are an additional part or sub-part, link ourselves now.
 		//If we are a fake part, don't even bother checking.
 		if(!isFake() && parentPart != null){
 			this.parentPart = parentPart;
 			parentPart.childParts.add(this);
-			if(placementDefinition.isSubPart){
-				this.disableMirroring = parentPart.disableMirroring || definition.generic.disableMirroring;
-			}else{
-				this.disableMirroring = definition.generic.disableMirroring;
-			}
 		}else{
-			this.disableMirroring = definition.generic.disableMirroring;
 			this.parentPart = null;
 		}
 		
 		//Set initial position and rotation.  This ensures part doesn't "warp" the first tick.
 		//Note that this isn't exact, as we can't calculate the exact locals until after the first tick.
-		position.setTo(localOffset).rotateFine(entityOn.angles).add(entityOn.position);
-		angles.setTo(localAngles).add(entityOn.angles);
-		angles.setTo(placementAngles);
-		prevAngles.setTo(angles);
+		//This is why it does not take into account parent part positions.
+		position.set(localOffset).add(entityOn.position);
+		prevPosition.set(position);
+		orientation.set(entityOn.orientation);
+		prevOrientation.set(orientation);
 		
 		//Set mirrored state.
-		this.mirrored = ((placementOffset.x < 0 && !placementDefinition.inverseMirroring) || (placementOffset.x >= 0 && placementDefinition.inverseMirroring)) && !disableMirroring;
+		this.isMirrored = (placementOffset.x < 0 && !placementDefinition.inverseMirroring) || (placementOffset.x >= 0 && placementDefinition.inverseMirroring);
 	}
 	
 	@Override
 	protected void initializeDefinition(){
 		super.initializeDefinition();
-		movementClocks.clear();
+		if(placementDefinition.animations != null || placementDefinition.applyAfter != null){
+			List<JSONAnimationDefinition> animations = new ArrayList<JSONAnimationDefinition>();
+			if(placementDefinition.animations != null){
+				animations.addAll(placementDefinition.animations);
+			}
+			placementMovementSwitchbox = new AnimationSwitchbox(entityOn, animations, placementDefinition.applyAfter);
+		}
 		if(definition.generic.movementAnimations != null){
-			for(JSONAnimationDefinition animation : definition.generic.movementAnimations){
-				movementClocks.add(new DurationDelayClock(animation));
-			}
-		}
-		if(placementDefinition.animations != null){
-			for(JSONAnimationDefinition animation : placementDefinition.animations){
-				movementClocks.add(new DurationDelayClock(animation));
-			}
-		}
-		activeClocks.clear();
-		if(definition.generic.activeAnimations != null){
-			for(JSONAnimationDefinition animation : definition.generic.activeAnimations){
-				activeClocks.add(new DurationDelayClock(animation));
-			}
+			internalMovementSwitchbox = new AnimationSwitchbox(this, definition.generic.movementAnimations, null);
 		}
 		if(placementDefinition.activeAnimations != null){
-			for(JSONAnimationDefinition animation : placementDefinition.activeAnimations){
-				activeClocks.add(new DurationDelayClock(animation));
-			}
+			placementActiveSwitchbox = new AnimationSwitchbox(entityOn, placementDefinition.activeAnimations, null);
+		}
+		if(definition.generic.activeAnimations != null){
+			internalActiveSwitchbox = new AnimationSwitchbox(this, definition.generic.activeAnimations, null);
 		}
 	}
 	
 	@Override
-	public boolean update(){
-		if(super.update()){
-			//Update active state.
-			prevActive = isActive;
-			isActive = placementDefinition.isSubPart ? parentPart.isActive : true;
-			if(isActive && !activeClocks.isEmpty()){
-				boolean inhibitAnimations = false;
-				for(DurationDelayClock clock : activeClocks){
-					switch(clock.animation.animationType){
-						case VISIBILITY :{
-							if(!inhibitAnimations){
-								double variableValue = getAnimatedVariableValue(clock, 0);
-								if(variableValue < clock.animation.clampMin || variableValue > clock.animation.clampMax){
-									isActive = false;
-								}
-							}
-							break;
-						}
-						case INHIBITOR :{
-							if(!inhibitAnimations){
-								double variableValue = getAnimatedVariableValue(clock, 0);
-								if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
-									inhibitAnimations = true;
-								}
-							}
-							break;
-						}
-						case ACTIVATOR :{
-							if(inhibitAnimations){
-								double variableValue = getAnimatedVariableValue(clock, 0);
-								if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
-									inhibitAnimations = false;
-								}
-							}
-							break;
-						}
-						case TRANSLATION :{
-							//Do nothing.
-							break;
-						}
-						case ROTATION :{
-							//Do nothing.
-							break;
-						}
-						case SCALING :{
-							//Do nothing.
-							break;
-						}
-					}
-				
-					if(!isActive){
-						//Don't need to process any further as we can't play.
-						break;
-					}
-				}
-			}
-			
-			prevMotion.setTo(entityOn.prevMotion);
-			motion.setTo(entityOn.motion);
-			prevLocalOffset.setTo(localOffset);
-			isDisabled = updateLocals();
-			//If we have a parent part, we need to change our offsets to be relative to it.
-			if(parentPart != null && placementDefinition.isSubPart){
-				//Get parent offset and rotation.  The parent will have been updated already as it has
-				//to be placed on the vehicle before us, and as such will be before us in the parts list.
-				//Our initial offset needs to be relative to the position of the part on the parent, so 
-				//we need to start with that delta.
-				localOffset.subtract(parentPart.placementOffset);
-				
-				//Rotate our current relative offset by the rotation of the parent to get the correct
-				//offset between us and our parent's position in our parent's coordinate system.
-				localOffset.rotateFine(parentPart.localAngles);
-				
-				//Add our parent's angles to our own so we have a cumulative rotation.
-				//This has the potential for funny rotations if we're both rotated, as we should
-				//apply this rotation about our parent's rotated axis, not our own, but for most situations,
-				//it's close enough.
-				localAngles.add(parentPart.localAngles);
-				
-				//Now that we have the proper relative offset, add our parent's offset to get our net offset.
-				//This is our final offset point.
-				localOffset.add(parentPart.localOffset);
-			}
-			
-			//Set position and rotation to our net offset pos on the entity.
-			position.setTo(localOffset).rotateFine(entityOn.angles).add(entityOn.position);
-			//orientation.axis.set(0, 0, 1).rotateFine(localAngles);
-			//orientation.updateQuaternion(false);
-			//orientation.rotateByOrientation(entityOn.orientation);
-			//angles.set(orientation.rotationX, orientation.rotationY, orientation.rotation);
-			angles.setTo(localAngles).add(entityOn.angles);
-			
-			//Update post-movement things.
-			updatePostMovement();
-			return true;
-		}else{
-			return false;
+	public void update(){
+		super.update();
+		//Update active state.
+		isActive = placementDefinition.isSubPart ? parentPart.isActive : true;
+		if(isActive && placementActiveSwitchbox != null){
+			isActive = placementActiveSwitchbox.runSwitchbox(0, false);
 		}
+		if(isActive && internalActiveSwitchbox != null){
+			isActive = internalActiveSwitchbox.runSwitchbox(0, false);
+		}
+		
+		//Set initial offsets.
+		if(parentPart != null && placementDefinition.isSubPart){
+			motion.set(parentPart.motion);
+			position.set(parentPart.position);
+			orientation.set(parentPart.orientation);
+			localOffset.set(placementOffset).subtract(parentPart.placementOffset);
+		}else{
+			motion.set(entityOn.motion);
+			position.set(entityOn.position);
+			orientation.set(entityOn.orientation);
+			localOffset.set(placementOffset);
+		}
+		
+		//Update zero-reference.
+		prevZeroReferenceOrientation.set(zeroReferenceOrientation);
+		zeroReferenceOrientation.set(entityOn.orientation);
+		if(placementDefinition.rot != null){
+			zeroReferenceOrientation.multiply(placementDefinition.rot);
+		}
+		
+		//Update local position, orientation, scale, and enabled state.
+		isInvisible = false;
+		scale = placementDefinition.isSubPart && parentPart != null ? parentPart.scale : entityOn.scale;
+		localOrientation.setToZero();
+		
+		//Placement movement uses the coords of the thing we are on.
+		if(placementMovementSwitchbox != null){
+			isInvisible = !placementMovementSwitchbox.runSwitchbox(0, false);
+			//Offset needs to move according to full transform.
+			//This is because these coords are from what we are on.
+			//Orientation just needs to update according to new rotation.
+			localOffset.transform(placementMovementSwitchbox.netMatrix);
+			localOrientation.multiply(placementMovementSwitchbox.rotation);
+		}
+		
+		//Internal movement uses local coords.
+		//First rotate orientation to face rotated state.
+		if(placementDefinition.rot != null){
+			localOrientation.multiply(placementDefinition.rot);
+		}
+		//Also apply part scale, so everything stays local.
+		if(placementDefinition.partScale != null){
+			scale.multiply(placementDefinition.partScale);
+		}
+		if(internalMovementSwitchbox != null){
+			isInvisible = !internalMovementSwitchbox.runSwitchbox(0, false) || isInvisible;
+			//Offset here is local and just needs translation, as it's
+			//assuming that we are the origin.
+			localOffset.add(internalMovementSwitchbox.translation);
+			localOrientation.multiply(internalMovementSwitchbox.rotation);
+		}
+		
+		//Multiply local offset by the scale to reflect the scaled offset.
+		localOffset.multiply(scale);
+		
+		//Now that locals are set, set globals to reflect them.
+		Point3D localPositionDelta = new Point3D().set(localOffset).rotate(orientation);
+		position.add(localPositionDelta);
+		orientation.multiply(localOrientation);
+		
+		//Update bounding box, as scale changes width/height.
+		boundingBox.widthRadius = getWidth()/2D;
+		boundingBox.heightRadius = getHeight()/2D;
+		boundingBox.depthRadius = getWidth()/2D;
+		
+		//Add-back parent offset to our locals if we have one.
+		//We don't use this value in any of our interim calculations as we do everything relative to the parent.
+		//However, external calls expect this to be relative to the entity we are on, which is NOT our parent.
+		if(parentPart != null && placementDefinition.isSubPart){
+			localOffset.add(parentPart.localOffset);
+		}
+		
+		//Update post-movement things.
+		updatePostMovement();
 	}
 	
 	@Override
@@ -254,7 +229,6 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 				player.sendPacket(new PacketPlayerChatMessage(player, "interact.failure.vehiclelocked"));
 			}else{
 				if(player.getInventory().addStack(getItem().getNewStack(save(new WrapperNBT())))){
-					disconnectAllConnections();
 					entityOn.removePart(this, null);
 				}
 			}
@@ -287,130 +261,6 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 		return false;
 	}
 	
-	@Override
-	public void connectTrailer(TrailerConnection connection){
-		entityOn.connectTrailer(connection);
-	}
-	
-	@Override
-	public void disconnectTrailer(TrailerConnection connection){
-		entityOn.disconnectTrailer(connection);
-	}
-	
-	@Override
-	public void connectAsTrailer(TrailerConnection connection){
-		entityOn.connectAsTrailer(connection);
-	}
-	
-	@Override
-	public void disconnectAsTrailer(){
-		entityOn.disconnectAsTrailer();
-	}
-	
-	@Override
-	public Set<TrailerConnection> getTowingConnections(){
-		return entityOn.getTowingConnections();
-	}
-	
-	/**
-	 * Updates the passed-in position and angles to the current position and rotation, 
-	 * as defined by the various animations and offsets defined in the passed-in JSON.
-	 * This is a local offset, and should be used to get the part's position and angles relative
-	 * to the parent entity.  If the part should be invisible, given the animations, true is returned.
-	 * This can be used to disable both the part and the hitbox, if desired.
-	 */
-	private boolean updateLocals(){
-		boolean inhibitAnimations = false;
-		boolean disablePart = false;
-		scale = placementDefinition.isSubPart && parentPart != null ? parentPart.scale : 1.0F;
-		localOffset.set(0D, 0D, 0D);
-		localAngles.set(0D, 0D, 0D);
-		if(!movementClocks.isEmpty()){
-			for(DurationDelayClock clock : movementClocks){
-				switch(clock.animation.animationType){
-					case TRANSLATION :{
-						if(!inhibitAnimations){
-							//Found translation.  This gets applied in the translation axis direction directly.
-							double variableValue = getAnimatedVariableValue(clock, clock.animationAxisMagnitude, 0);
-							Point3d appliedTranslation = clock.animationAxisNormalized.copy().multiply(variableValue);
-							localOffset.add(appliedTranslation.rotateFine(localAngles));
-						}
-						break;
-					}
-					case ROTATION :{
-						if(!inhibitAnimations){
-							//Found rotation.  Get angles that needs to be applied.
-							double variableValue = getAnimatedVariableValue(clock, clock.animationAxisMagnitude, 0);
-							Point3d appliedRotation = clock.animationAxisNormalized.copy().multiply(variableValue);
-							
-							//Check if we need to apply a translation based on this rotation.
-							if(!clock.animation.centerPoint.isZero()){
-								//Use the center point as a vector we rotate to get the applied offset.
-								//We need to take into account the current offset here, as we might have rotated on a prior call.
-								localOffset.add(clock.animation.centerPoint.copy().multiply(-1D).rotateFine(appliedRotation).add(clock.animation.centerPoint).rotateFine(localAngles));
-							}
-							
-							//Apply rotation.  We need to do this after translation operations to ensure proper offsets.
-							localAngles.add(appliedRotation);
-						}
-						break;
-					}
-					case SCALING :{
-						if(!inhibitAnimations){
-							//Found scaling.  This gets applied during rendering, so we don't directly use the value here.
-							//Instead, we save it and use it later.
-							scale *= getAnimatedVariableValue(clock, clock.animationAxisMagnitude, 0);
-							//Update bounding box, as scale changes width/height.
-							boundingBox.widthRadius = getWidth()/2D;
-							boundingBox.heightRadius = getHeight()/2D;
-							boundingBox.depthRadius = getWidth()/2D;
-						}
-						break;
-					}
-					case VISIBILITY :{
-						if(!inhibitAnimations){
-							double variableValue = getAnimatedVariableValue(clock, 0);
-							if(variableValue < clock.animation.clampMin || variableValue > clock.animation.clampMax){
-								disablePart = true;
-							}
-						}
-						break;
-					}
-					case INHIBITOR :{
-						if(!inhibitAnimations){
-							double variableValue = getAnimatedVariableValue(clock, 0);
-							if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
-								inhibitAnimations = true;
-							}
-						}
-						break;
-					}
-					case ACTIVATOR :{
-						if(inhibitAnimations){
-							double variableValue = getAnimatedVariableValue(clock, 0);
-							if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
-								inhibitAnimations = false;
-							}
-						}
-						break;
-					}
-				}
-				if(disablePart){
-					break;
-				}
-			}
-		}
-		
-		//Add on the placement offset and angles now that we have our dynamic values.
-		if(placementDefinition.isSubPart && parentPart != null && parentPart.scale != 1){
-			localOffset.add(placementOffset.copy().multiply(parentPart.scale));
-		}else{
-			localOffset.add(placementOffset);
-		}
-		localAngles.add(placementAngles);
-		return disablePart;
-	}
-	
 	/**
 	 * Returns a definition with the correct properties for a SubPart.  This is because
 	 * subParts inherit some properties from their parent parts.  All created sub-part
@@ -428,12 +278,7 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 			//Now set parent-specific properties.  These pertain to position, rotation, mirroring, and the like.
 			//First add the parent pack's position to the sub-pack.
 			//We don't add rotation, as we need to stay relative to the parent part, as the parent part will rotate us.
-			correctedPartDef.pos.add(placementOffset);
-			
-			//If the parent part is mirrored, we need to invert our X-position to match.
-			if(mirrored){
-				correctedPartDef.pos.x -= 2*subPartDef.pos.x;
-			}
+			correctedPartDef.pos.add(placementDefinition.pos);
 			
 			//Use the parent's turnsWithSteer, mirroring, and isSpare variables, as that's based on the vehicle, not the part.
 			correctedPartDef.turnsWithSteer = placementDefinition.turnsWithSteer;
@@ -446,14 +291,7 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 		return subpackMappings.get(subPartDef);
 	}
 	
-	/**
-	 * Gets the rotation angles for the part as a vector.
-	 * This rotation is only for custom rendering operations, and cannot be modified via JSON.
-	 * If we have a parent part and this part is on it, use its rotation.
-	 */
-	public Point3d getRenderingRotation(float partialTicks){
-		return parentPart != null ? parentPart.getRenderingRotation(partialTicks) : ZERO_POINT;
-	}
+	
 	
 	/**
 	 * Returns true if this part is in liquid.
@@ -473,11 +311,11 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 		return false;
 	}
 	
-	public float getWidth(){
+	public double getWidth(){
 		return definition.generic.width != 0 ? definition.generic.width : 0.75F;
 	}
 	
-	public float getHeight(){
+	public double getHeight(){
 		return definition.generic.height != 0 ? definition.generic.height : 0.75F;
 	}
 
@@ -519,6 +357,7 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 		//Check for generic part variables.
 		switch(variable){
 			case("part_present"): return 1;
+			case("part_ismirrored"): return isMirrored ? 1 : 0;
 		}
 		
 		//No variables, check super variables before doing generic forwarding.

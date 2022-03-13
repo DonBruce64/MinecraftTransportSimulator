@@ -6,7 +6,7 @@ import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperItemStack;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -28,52 +28,43 @@ abstract class AEntityVehicleC_Colliding extends AEntityVehicleB_Rideable{
 	private float hardnessHitThisTick = 0;
 	public double currentMass;
 	public double axialVelocity;
-	public final Point3d headingVector = new Point3d();
-	public final Point3d verticalVector = new Point3d();
-	public final Point3d sideVector = new Point3d();
-	public final Point3d normalizedVelocityVector = new Point3d();
+	public final Point3D headingVector = new Point3D();
 	
 	public AEntityVehicleC_Colliding(WrapperWorld world, WrapperPlayer placingPlayer, WrapperNBT data){
 		super(world, placingPlayer, data);
 	}
 	
 	@Override
-	public boolean update(){
-		if(super.update()){
-			world.beginProfiling("VehicleC_Level", true);
-			
-			//Set vectors to current velocity and orientation.
-			world.beginProfiling("SetVectors", true);
-			headingVector.set(0D, 0D, 1D).rotateFine(angles);
-			verticalVector.set(0D, 1D, 0D).rotateFine(angles);
-			sideVector.setTo(verticalVector.crossProduct(headingVector));
-			normalizedVelocityVector.setTo(motion).normalize();
-			axialVelocity = Math.abs(motion.dotProduct(headingVector));
-			
-			//Update mass.
-			world.beginProfiling("SetMass", false);
-			currentMass = getMass();
-			
-			//Auto-close any open doors that should be closed.
-			//Only do this once a second to prevent lag.
-			if(velocity > 0.5 && ticksExisted%20 == 0){
-				world.beginProfiling("CloseDoors", false);
-				Iterator<String> variableIterator = variables.keySet().iterator();
-				while(variableIterator.hasNext()){
-					if(variableIterator.next().startsWith("door")){
-						variableIterator.remove();
-					}
+	public void update(){
+		super.update();
+		world.beginProfiling("VehicleC_Level", true);
+		
+		//Set vectors to current velocity and orientation.
+		world.beginProfiling("SetVectors", true);
+		headingVector.set(0D, 0D, 1D);
+		headingVector.rotate(orientation);
+		axialVelocity = Math.abs(motion.dotProduct(headingVector));
+		
+		//Update mass.
+		world.beginProfiling("SetMass", false);
+		currentMass = getMass();
+		
+		//Auto-close any open doors that should be closed.
+		//Only do this once a second to prevent lag.
+		if(velocity > 0.5 && ticksExisted%20 == 0){
+			world.beginProfiling("CloseDoors", false);
+			Iterator<String> variableIterator = variables.keySet().iterator();
+			while(variableIterator.hasNext()){
+				if(variableIterator.next().startsWith("door")){
+					variableIterator.remove();
 				}
 			}
-			
-			//Set hardness hit this tick to 0 to reset collision force calculations.
-			hardnessHitThisTick = 0;
-			world.endProfiling();
-			world.endProfiling();
-			return true;
-		}else{
-			return false;
 		}
+		
+		//Set hardness hit this tick to 0 to reset collision force calculations.
+		hardnessHitThisTick = 0;
+		world.endProfiling();
+		world.endProfiling();
 	}
 	
 	/**
@@ -84,13 +75,13 @@ abstract class AEntityVehicleC_Colliding extends AEntityVehicleB_Rideable{
 	 */
 	protected double getCollisionForAxis(BoundingBox box, boolean xAxis, boolean yAxis, boolean zAxis){
 		//Get the motion the entity is trying to move, and add it to the passed-in box value.
-		Point3d collisionMotion = motion.copy().multiply(SPEED_FACTOR);
+		Point3D collisionMotion = motion.copy().scale(speedFactor);
 		
 		//If we collided, so check to see if we can break some blocks or if we need to explode.
 		//Don't bother with this logic if it's impossible for us to break anything.
 		if(box.updateCollidingBlocks(world, collisionMotion)){
 			float hardnessHitThisBox = 0;
-			for(Point3d blockPosition : box.collidingBlockPositions){
+			for(Point3D blockPosition : box.collidingBlockPositions){
 				float blockHardness = world.getBlockHardness(blockPosition);
 				if(!world.isBlockLiquid(blockPosition)){
 					if(ConfigSystem.configObject.general.blockBreakage.value && blockHardness <= velocity*currentMass/250F && blockHardness >= 0){
@@ -99,7 +90,7 @@ abstract class AEntityVehicleC_Colliding extends AEntityVehicleB_Rideable{
 							//Only add hardness if we hit in XZ movement.  Don't want to blow up from falling fast, just break tons of dirt.
 							hardnessHitThisTick += blockHardness;
 						}
-						motion.multiply(Math.max(1.0F - blockHardness*0.5F/((1000F + currentMass)/1000F), 0.0F));
+						motion.scale(Math.max(1.0F - blockHardness*0.5F/((1000F + currentMass)/1000F), 0.0F));
 						if(!world.isClient()){
 							if(ticksExisted > 500){
 								world.destroyBlock(blockPosition, true);
@@ -156,7 +147,7 @@ abstract class AEntityVehicleC_Colliding extends AEntityVehicleB_Rideable{
 		}
 		
 		//Damage all riders, including the controller.
-		WrapperPlayer controller = getController();
+		WrapperEntity controller = getController();
 		Damage controllerCrashDamage = new Damage("crash", ConfigSystem.configObject.damage.crashDamageFactor.value*velocity*20, null, this, null);
 		Damage passengerCrashDamage = new Damage("crash", ConfigSystem.configObject.damage.crashDamageFactor.value*velocity*20, null, this, controller);
 		for(WrapperEntity rider : locationRiderMap.values()){

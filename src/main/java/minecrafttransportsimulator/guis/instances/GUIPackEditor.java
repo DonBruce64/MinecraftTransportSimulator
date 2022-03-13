@@ -15,8 +15,9 @@ import java.awt.event.FocusListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.File;
-import java.io.FileReader;
+import java.io.FileInputStream;
 import java.io.FileWriter;
+import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
@@ -43,7 +44,7 @@ import javax.swing.ToolTipManager;
 import javax.swing.border.TitledBorder;
 
 import minecrafttransportsimulator.MasterLoader;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
@@ -130,7 +131,7 @@ public class GUIPackEditor extends JFrame{
 		        if(fileSelection.showOpenDialog(filePanel) == JFileChooser.APPROVE_OPTION){
 		        	try{
 			        	File file = fileSelection.getSelectedFile();
-			        	FileReader reader = new FileReader(file);
+			        	InputStreamReader reader = new InputStreamReader(new FileInputStream(file), "UTF-8");
 			            currentJSON = JSONParser.parseStream(reader, currentJSONClass, null, null);
 			            reader.close();
 			            lastFileAccessed = file;
@@ -392,7 +393,7 @@ public class GUIPackEditor extends JFrame{
 			}
 			textBox.addFocusListener(focusListener);
 			return textBox;
-		}else if(objectClass.equals(Point3d.class)){
+		}else if(objectClass.equals(Point3D.class)){
 			JPanel pointPanel = new JPanel();
 			pointPanel.setLayout(new FlowLayout());
 			pointPanel.setBorder(BorderFactory.createLoweredBevelBorder());
@@ -417,7 +418,7 @@ public class GUIPackEditor extends JFrame{
 			zText.addFocusListener(new FocusForwarder(focusListener));
 			
 			if(obj != null){
-				Point3d point = ((Point3d) obj);
+				Point3D point = ((Point3D) obj);
 				xText.setText(String.valueOf(point.x));
 				yText.setText(String.valueOf(point.y));
 				zText.setText(String.valueOf(point.z));
@@ -634,7 +635,7 @@ public class GUIPackEditor extends JFrame{
 					list.set(index, Float.valueOf(((JTextField) component).getText()));
 				}else if(objectClass.equals(String.class)){
 					list.set(index, ((JTextField) component).getText());
-				}else if(objectClass.equals(Point3d.class)){
+				}else if(objectClass.equals(Point3D.class)){
 					//Don't want to change the color of the whole panel.  Just the box we are in.
 					int fieldChecking = 1;
 					try{
@@ -647,7 +648,7 @@ public class GUIPackEditor extends JFrame{
 						double z = Float.valueOf(((JTextField) component.getComponent(fieldChecking)).getText());
 						component.getComponent(fieldChecking).setBackground(Color.WHITE);
 						
-						Point3d newPoint = new Point3d(x, y, z);
+						Point3D newPoint = new Point3D(x, y, z);
 						list.set(index, newPoint);
 						return;
 					}catch(Exception e){
@@ -696,7 +697,7 @@ public class GUIPackEditor extends JFrame{
 					}else{
 						objectField.set(declaringObject, text);
 					}
-				}else if(objectClass.equals(Point3d.class)){
+				}else if(objectClass.equals(Point3D.class)){
 					//Don't want to change the color of the whole panel.  Just the box we are in.
 					int fieldChecking = 1;
 					try{
@@ -709,7 +710,7 @@ public class GUIPackEditor extends JFrame{
 						double z = Float.valueOf(((JTextField) component.getComponent(fieldChecking)).getText());
 						component.getComponent(fieldChecking).setBackground(Color.WHITE);
 						
-						Point3d newPoint = new Point3d(x, y, z);
+						Point3D newPoint = new Point3D(x, y, z);
 						if(newPoint.isZero()){
 							objectField.set(declaringObject, null);
 						}else{

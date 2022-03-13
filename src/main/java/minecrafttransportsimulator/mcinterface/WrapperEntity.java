@@ -7,8 +7,12 @@ import java.util.UUID;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
+import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
+import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
+import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.entity.Entity;
@@ -102,6 +106,15 @@ public class WrapperEntity{
 	}
 	
 	/**
+	 *  Returns the name for this entity.  This is the general name for
+	 *  the entity, and may be whatever the coder who made this entity
+	 *  set it to.
+	 */
+	public String getName(){
+		return entity.getName();
+	}
+	
+	/**
 	 *  Returns the world this entity is in.
 	 */
 	public WrapperWorld getWorld(){
@@ -114,7 +127,15 @@ public class WrapperEntity{
 	 *  a vanilla entity).
 	 */
 	public AEntityE_Interactable<?> getEntityRiding(){
-		return entity.getRidingEntity() instanceof BuilderEntityExisting ? (AEntityE_Interactable<?>) ((BuilderEntityExisting) entity.getRidingEntity()).entity : null;
+		Entity mcEntityRiding = entity.getRidingEntity();
+		if(mcEntityRiding instanceof BuilderEntityExisting){
+			AEntityE_Interactable<?> entityRiding = (AEntityE_Interactable<?>) ((BuilderEntityExisting) mcEntityRiding).entity;
+			//Need to check this as MC might have us as a rider on the builer, but we might not be a rider on the entity.
+			if(entityRiding != null && entityRiding.locationRiderMap.containsValue(this)){
+				return entityRiding;
+			}
+		}
+		return null;
 	}
 	
 	/**
@@ -138,12 +159,44 @@ public class WrapperEntity{
 	}
 	
 	/**
+	 *  Returns the vertical scaling factor for this entity.  Normally is 1,
+	 *  but can differ (usually smaller) if the entity is riding a vehicle
+	 *  and that vehicle has a scaled seat.  This should be taken into account
+	 *  for all calls that care about eye height, as seat scaling in the Y direction
+	 *  will affect eye and camera heights.
+	 */
+	public double getVerticalScale(){
+		if(entity.getRidingEntity() instanceof BuilderEntityExisting){
+			AEntityB_Existing riding = ((BuilderEntityExisting) entity.getRidingEntity()).entity;
+			if(riding instanceof AEntityF_Multipart){
+				AEntityF_Multipart<?> multipart = (AEntityF_Multipart<?>) riding;
+				PartSeat seat = multipart.getSeatForRider(this);
+				if(seat != null){
+					if(seat.placementDefinition.playerScale != null){
+						if(seat.definition.seat.playerScale != null){
+		        			return seat.scale.y*seat.placementDefinition.playerScale.y*seat.definition.seat.playerScale.y;
+						}else{
+							return seat.scale.y*seat.placementDefinition.playerScale.y;
+						}
+					}else if(seat.definition.seat.playerScale != null){
+						return seat.scale.y*seat.definition.seat.playerScale.y;
+					}else{
+						return seat.scale.y;
+					}
+				}
+			}
+		}
+		return 1.0;
+	}
+	
+	/**
 	 *  Returns a Y-offset for where this entity should sit in a seat.
-	 *  This is based on how far down the axis drawn on the seat's y-axis
-	 *  the position for the entity should be set.  Required as entities
-	 *  sit where the bottoms of their bounding boxes are, even if this isn't
-	 *  where the bottoms of their models are.  Players, for example, rotate
-	 *  their legs upwards when sitting, despite their bounds being lower.
+	 *  This is used if the sitting point of the entity isn't at the base
+	 *  of the entity. For example, players, when sitting, rotate their
+	 *  legs forwards, but they don't translate down.  This parameter is the
+	 *  amount that they should be translated, and takes into account whether
+	 *  or not the entity is actually sitting.  Useful in rendering and camera
+	 *  operations as this will also affect eye height.
 	 */
 	public double getSeatOffset(){
 		return 0D;
@@ -163,11 +216,11 @@ public class WrapperEntity{
 	 *  The returned position may by modified without affecting the entity's actual position.
 	 *  However, the object itself may be re-used on the next call, so do not keep reference to it.
 	 */
-	public Point3d getPosition(){
+	public Point3D getPosition(){
 		mutablePosition.set(entity.posX, entity.posY, entity.posZ);
 		return mutablePosition;
 	}
-	private final Point3d mutablePosition = new Point3d();
+	private final Point3D mutablePosition = new Point3D();
 	
 	/**
 	 *  Sets the entity's position to the passed-in point.
@@ -175,7 +228,7 @@ public class WrapperEntity{
 	 *  be set if the entity is on another entity collision box,
 	 *  but not if they are riding an entity.
 	 */
-	public void setPosition(Point3d position, boolean onGround){
+	public void setPosition(Point3D position, boolean onGround){
 		entity.setPosition(position.x, position.y, position.z);
 		//Set fallDistance to 0 to prevent damage.
 		entity.fallDistance = 0;
@@ -187,19 +240,50 @@ public class WrapperEntity{
 	 *  The returned velocity may by modified without affecting the entity's actual velocity.
 	 *  However, the object itself may be re-used on the next call, so do not keep reference to it.
 	 */
-	public Point3d getVelocity(){
+	public Point3D getVelocity(){
 		mutableVelocity.set(entity.motionX, entity.motionY, entity.motionZ);
 		return mutableVelocity;
 	}
-	private final Point3d mutableVelocity = new Point3d();
+	private final Point3D mutableVelocity = new Point3D();
 	
 	/**
 	 *  Sets the entity's velocity to the passed-in vector.
 	 */
-	public void setVelocity(Point3d motion){
+	public void setVelocity(Point3D motion){
 		entity.motionX = motion.x;
 		entity.motionY = motion.y;
 		entity.motionZ = motion.z;
+	}
+	
+	/**
+	 *  Returns the entity's orientation.
+	 *  Do NOT modify the returned object.  This object is cached on
+	 *  calculation to avoid the need to re-calculate it every tick/frame.
+	 *  If you modify the object and the entity does not change, you will get
+	 *  invalid results.
+	 */
+	public RotationMatrix getOrientation(){
+		if(lastPitchChecked != entity.rotationPitch || lastYawChecked != entity.rotationYaw){
+			lastPitchChecked = entity.rotationPitch;
+			lastYawChecked = entity.rotationYaw;
+			mutableOrientation.angles.set(entity.rotationPitch, -entity.rotationYaw, 0);
+			mutableOrientation.setToAngles(mutableOrientation.angles);
+		}
+		return mutableOrientation;
+	}
+	private final RotationMatrix mutableOrientation = new RotationMatrix();
+	private float lastPitchChecked;
+	private float lastYawChecked;
+	
+	/**
+	 *  Sets the entity's orientation.
+	 *  Note that this method runs off the angles inside the
+	 *  matrix object, not the actual transform, so keep this in mind
+	 *  when calling this method.
+	 */
+	public void setOrientation(RotationMatrix rotation){
+		entity.rotationYaw = (float) -rotation.angles.y;
+		entity.rotationPitch = (float) rotation.angles.x;
 	}
 	
 	/**
@@ -237,12 +321,24 @@ public class WrapperEntity{
 	 *  The returned vector  may by modified without affecting the entity's actual line of sight.
 	 *  However, the object itself may be re-used on the next call, so do not keep references to it.
 	 */
-	public Point3d getLineOfSight(double distance){
-		mutableSightRotation.set(entity.rotationPitch, -entity.rotationYaw, 0);
-		return mutableSight.set(0,  0,  distance).rotateFine(mutableSightRotation);
+	public Point3D getLineOfSight(double distance){
+		//Need to check if we're riding a vehicle or not.  Vehicles adjust sight vectors.
+		PartSeat seat = null;
+		if(entity.getRidingEntity() instanceof BuilderEntityExisting){
+			AEntityB_Existing riding = ((BuilderEntityExisting) entity.getRidingEntity()).entity;
+			if(riding instanceof AEntityF_Multipart){
+				AEntityF_Multipart<?> multipart = (AEntityF_Multipart<?>) riding;
+				seat = multipart.getSeatForRider(this);
+			}
+		}
+		
+		mutableSight.set(0, 0, distance).rotate(getOrientation());
+		if(seat != null){
+			mutableSight.rotate(seat.zeroReferenceOrientation);
+		}
+		return mutableSight;
 	}
-	private final Point3d mutableSight = new Point3d();
-	private final Point3d mutableSightRotation = new Point3d();
+	private final Point3D mutableSight = new Point3D();
 	
 	/**
 	 *  Sets the entity's yaw to the passed-in yaw.
@@ -251,6 +347,7 @@ public class WrapperEntity{
 	 *  for rotations.  This is OpenGL convention, and MC doesn't
 	 *  follow it, which is why rendering is such a PITA with yaw.
 	 */
+	//TODO make this go away or change when we only use orientation (if ever).
 	public void setYaw(double yaw){
 		entity.rotationYaw = (float)-yaw;
 	}
@@ -287,7 +384,7 @@ public class WrapperEntity{
 		mutableBounds.globalCenter.set(entity.posX, entity.posY + mutableBounds.heightRadius, entity.posZ);
 		return mutableBounds;
 	}
-	private final BoundingBox mutableBounds = new BoundingBox(new Point3d(), 0, 0, 0);
+	private final BoundingBox mutableBounds = new BoundingBox(new Point3D(), 0, 0, 0);
 	
 	/**
 	 *  Returns the entity's NBT data.
@@ -392,13 +489,13 @@ public class WrapperEntity{
 	 *  The returned position may by modified without affecting the actual rendered position.
 	 *  However, the object itself may be re-used on the next call, so do not keep reference to it.
 	 */
-	public Point3d getRenderedPosition(float partialTicks){
+	public Point3D getRenderedPosition(float partialTicks){
 		mutableRenderPosition.x = entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * partialTicks;
 		mutableRenderPosition.y = entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * partialTicks;
 		mutableRenderPosition.z = entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * partialTicks;
 		return mutableRenderPosition;
 	}
-	private final Point3d mutableRenderPosition = new Point3d();
+	private final Point3D mutableRenderPosition = new Point3D();
 	
 	/**
 	 * Adds the potion effect with the specified name to the entity.  Only valid for living entities that

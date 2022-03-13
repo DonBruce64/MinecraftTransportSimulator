@@ -5,7 +5,8 @@ import java.util.List;
 import java.util.Map;
 
 import minecrafttransportsimulator.baseclasses.BezierCurve;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.instances.BlockCollision;
@@ -25,9 +26,9 @@ import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 
 public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implements IItemBlock{
-	private final Map<WrapperPlayer, Point3d> lastPositionClicked = new HashMap<WrapperPlayer, Point3d>();
-	private final Map<WrapperPlayer, Double> lastRotationClicked = new HashMap<WrapperPlayer, Double>();
-	private final Map<WrapperPlayer, RoadClickData> lastRoadClickedData = new HashMap<WrapperPlayer, RoadClickData>();
+	private final Map<WrapperPlayer, Point3D> lastRoadGenPositionClicked = new HashMap<WrapperPlayer, Point3D>();
+	private final Map<WrapperPlayer, RotationMatrix> lastRoadGenRotationClicked = new HashMap<WrapperPlayer, RotationMatrix>();
+	private final Map<WrapperPlayer, RoadClickData> lastRoadGenClickedData = new HashMap<WrapperPlayer, RoadClickData>();
 	
 	public ItemRoadComponent(JSONRoadComponent definition, String subName, String sourcePackID){
 		super(definition, subName, sourcePackID);
@@ -43,9 +44,9 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 	}
 	
 	@Override
-	public boolean onBlockClicked(WrapperWorld world, WrapperPlayer player, Point3d position, Axis axis){
+	public boolean onBlockClicked(WrapperWorld world, WrapperPlayer player, Point3D position, Axis axis){
 		//Only do logic on the server.
-		if(!world.isClient()){
+		if(!world.isClient()){			
 			//If we clicked an inactive road, don't do anything.
 			//The road block will handle this operation.
 			ABlockBase clickedBlock = world.getBlock(position);
@@ -62,23 +63,25 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 			//If we click a road, we need to figure out what lane number we will connect to.
 			//If we are a static road, just try to place us down as-is.
 			if(definition.road.type.equals(RoadComponent.CORE_DYNAMIC)){
+				//Get the road we clicked, if we clicked one.
+				TileEntityRoad clickedRoad;
+				if(clickedBlock instanceof BlockRoad){
+					clickedRoad = world.getTileEntity(position);
+				}else if(clickedBlock instanceof BlockCollision){
+					clickedRoad = ((BlockCollision) clickedBlock).getMasterRoad(world, position);
+				}else{
+					clickedRoad = null;
+				}
+				
 				//If we don't have a click position or are sneaking, set the starting position.
-				if(player.isSneaking() || !lastPositionClicked.containsKey(player)){
-					lastRotationClicked.put(player, (double) Math.round(player.getYaw()/15)*15);
-					TileEntityRoad clickedRoad;
-					if(clickedBlock instanceof BlockRoad){
-						clickedRoad = world.getTileEntity(position);
-					}else if(clickedBlock instanceof BlockCollision){
-						clickedRoad = ((BlockCollision) clickedBlock).getMasterRoad(world, position);
-					}else{
-						clickedRoad = null;
-						lastPositionClicked.put(player, position.copy().add(0, 1, 0));
-					}
+				if(player.isSneaking() || !lastRoadGenPositionClicked.containsKey(player)){
+					lastRoadGenPositionClicked.remove(player);
+					lastRoadGenRotationClicked.remove(player);
+					lastRoadGenClickedData.remove(player);
 					
-					//If we clicked a road, get the lane number clicked.
+					//If we clicked a road, get the data for it.  Otherwise, generate it.
 					if(clickedRoad != null){
-						//Check validity of our connection
-						RoadClickData clickedRoadData = clickedRoad.getClickData(position.copy().subtract(clickedRoad.position), false);
+						RoadClickData clickedRoadData = clickedRoad.getClickData(position, false);
 						JSONRoadGeneric roadDefinition = clickedRoadData.roadClicked.definition.road;
 						if((roadDefinition.type.equals(RoadComponent.CORE_DYNAMIC) ? roadDefinition.laneOffsets.length : clickedRoadData.sectorClicked.lanes.size()) != definition.road.laneOffsets.length){
 							player.sendPacket(new PacketPlayerChatMessage(player, "interact.roadcomponent.lanemismatchend"));
@@ -87,37 +90,33 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 							player.sendPacket(new PacketPlayerChatMessage(player, "interact.roadcomponent.alreadyconnected"));
 							return true;
 						}
-						
-						lastPositionClicked.put(player, position);
-						lastRoadClickedData.put(player, clickedRoad.getClickData(position.copy().subtract(clickedRoad.position), false));
+						lastRoadGenPositionClicked.put(player, clickedRoadData.genPosition);
+						lastRoadGenRotationClicked.put(player, clickedRoadData.genRotation);
+						lastRoadGenClickedData.put(player, clickedRoadData);
 					}else{
-						lastRoadClickedData.remove(player);
+						RotationMatrix genRotation = new RotationMatrix().rotateY(Math.round(player.getYaw()/15)*15);
+						//Start with rotated corner offset to local coords.
+						Point3D genPosition = definition.road.cornerOffset.copy().invert();
+						genPosition.z -= definition.road.segmentLength;
+						genPosition.rotate(genRotation);
+						
+						//Offset position by 0.5 to be in the center of the clicked block, and up 1 to the block above, and include collision height.
+						genPosition.add(position).add(0.5, 1 + definition.road.collisionHeight/16F, 0.5);
+						lastRoadGenPositionClicked.put(player, genPosition);
+						lastRoadGenRotationClicked.put(player, genRotation);
 					}
 					player.sendPacket(new PacketPlayerChatMessage(player, "interact.roadcomponent.set"));
-				}else if(!player.isSneaking() && lastPositionClicked.containsKey(player)){
-					//Clicked with the road not-sneaking with valid points.  Check end-points to make sure we aren't too long.
-					if(position.distanceTo(lastPositionClicked.get(player)) < TileEntityRoad.MAX_COLLISION_DISTANCE){
-						//Get the road we clicked, if we clicked one.
+				}else if(!player.isSneaking() && lastRoadGenPositionClicked.containsKey(player)){
+					if(position.isDistanceToCloserThan(lastRoadGenPositionClicked.get(player), TileEntityRoad.MAX_COLLISION_DISTANCE)){
 						//If we clicked a road for our starting point, then we need to auto-place the new road block.
 						//If not, we place the new road block wherever we clicked.  Find this position now, as well as
-						//the new curve starting point.  Also get the lane number and side clicked.
-						final Point3d blockPlacementPoint;
-						final Point3d startPosition;
-						final double startRotation;
-						final RoadClickData startingRoadData;
-						
-						if(clickedBlock instanceof BlockRoad){
-							TileEntityRoad startingRoad = world.getTileEntity(position);
-							startingRoadData = startingRoad.getClickData(position.copy().subtract(startingRoad.position), true);
-						}else if(clickedBlock instanceof BlockCollision){
-							TileEntityRoad startingRoad = ((BlockCollision) clickedBlock).getMasterRoad(world, position);
-							startingRoadData = startingRoad.getClickData(position.copy().subtract(startingRoad.position), true);
-						}else{
-							startingRoadData = null;
-						}
-						
-						if(startingRoadData != null){
+						//the new curve starting point and lane/side clicked on the road.
+						final Point3D startPosition;
+						final RotationMatrix startRotation;
+						final Point3D blockPlacementPoint;
+						if(clickedRoad != null){
 							//Check the road we clicked, if it exists, and make sure we aren't doing a bad connection.
+							final RoadClickData startingRoadData = clickedRoad.getClickData(position, true);
 							JSONRoadGeneric roadDefinition = startingRoadData.roadClicked.definition.road;
 							if((roadDefinition.type.equals(RoadComponent.CORE_DYNAMIC) ? roadDefinition.laneOffsets.length : startingRoadData.sectorClicked.lanes.size()) != definition.road.laneOffsets.length){
 								player.sendPacket(new PacketPlayerChatMessage(player, "interact.roadcomponent.lanemismatch"));
@@ -133,6 +132,8 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 							
 							//Set the block position to be close to the start of the curve, but not on it.
 							blockPlacementPoint = startPosition.copy();
+							blockPlacementPoint.x = Math.floor(blockPlacementPoint.x);
+							blockPlacementPoint.z = Math.floor(blockPlacementPoint.z);
 							boolean foundSpot = false;
 							for(int i=-1; i<1 && !foundSpot; ++i){
 								for(int j=-1; j<1 && !foundSpot; ++j){
@@ -151,30 +152,26 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 							}
 						}else{
 							blockPlacementPoint = position.copy().add(0, 1, 0);
-							startRotation = Math.round(player.getYaw()/15)*15;
-							//Need to offset startPosition to the corner of the block we clicked.
-							startPosition = blockPlacementPoint.copy().add(new Point3d(-0.5, 0.0, -0.5).rotateFine(new Point3d(0, startRotation, 0)));
+							startRotation = new RotationMatrix().rotateY(Math.round(player.getYaw()/15)*15);
+							startPosition = definition.road.cornerOffset.copy().rotate(startRotation).add(0.5, definition.road.collisionHeight/16F, 0.5).add(blockPlacementPoint);
 						}
 						
 						
 						//Get the end point and rotation.  This depends if we clicked a road or not.
 						//If we clicked a road, we need to adjust our angle to match the road's angle.
-						final Point3d endPosition;
-						final double endRotation;
-						final RoadClickData endingRoadData = lastRoadClickedData.get(player);
-						if(endingRoadData != null){
+						final Point3D endPosition;
+						final RotationMatrix endRotation;
+						if(lastRoadGenClickedData.containsKey(player)){
+							RoadClickData endingRoadData = lastRoadGenClickedData.get(player);
 							endPosition = endingRoadData.genPosition;
 							endRotation = endingRoadData.genRotation;
 						}else{
-							endPosition = lastPositionClicked.get(player).copy();
-							endRotation = lastRotationClicked.get(player);
-							//Need to offset endPosition to the corner of the block we clicked.
-							//However, this needs to be on the back of the curve, so we need inverted rotation.
-							endPosition.add(new Point3d(-0.5, 0.0, 0.5).rotateFine(new Point3d(0, endRotation + 180, 0)));
+							endPosition = lastRoadGenPositionClicked.get(player);
+							endRotation = lastRoadGenRotationClicked.get(player);
 						}
 						
 						//Check if the start and end position are the same.
-						if(startPosition.equals(endPosition)){
+						if(startPosition.equals(lastRoadGenPositionClicked.get(player))){
 							player.sendPacket(new PacketPlayerChatMessage(player, "interact.roadcomponent.sameblock"));
 							return true;
 						}
@@ -194,7 +191,7 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 							
 							//Now that the road is placed, create the dynamic curve.
 							//These can't get set in the constructor as it can't take the curve for dynamic roads.
-							newRoad.dynamicCurve = new BezierCurve(startPosition.copy().subtract(blockPlacementPoint), endPosition.copy().subtract(blockPlacementPoint), (float) startRotation, (float) endRotation);
+							newRoad.dynamicCurve = new BezierCurve(startPosition, endPosition, startRotation, endRotation);
 							
 							//Try to spawn all the collision blocks for this road.
 							//If we spawn blocks, we create all collision points and join the road's connections.
@@ -204,9 +201,10 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 								}
 								
 								//Set new points.
-								lastRoadClickedData.put(player, newRoad.getClickData(blockPlacementPoint, false));
-								lastPositionClicked.put(player, newRoad.position);
-								lastRotationClicked.put(player, startRotation + 180D);
+								RoadClickData clickData = newRoad.getClickData(newRoad.position, false);
+								lastRoadGenClickedData.put(player, clickData);
+								lastRoadGenPositionClicked.put(player, clickData.genPosition);
+								lastRoadGenRotationClicked.put(player, clickData.genRotation);
 							}
 						}else{
 							player.sendPacket(new PacketPlayerChatMessage(player, "interact.roadcomponent.blockedplacement"));
@@ -218,7 +216,7 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 				}
 			}else if(definition.road.type.equals(RoadComponent.CORE_STATIC)){
 				//Get placement position for the segment.
-				Point3d blockPlacementPoint = position.copy().add(0, 1, 0);
+				Point3D blockPlacementPoint = position.copy().add(0, 1, 0);
 				
 				//Now that we have the position for our road segment, create it.
 				//Don't override any collision blocks here for other roads, as we shouldn't replace them with static roads.
@@ -231,10 +229,6 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 						for(RoadLane lane : newRoad.lanes){
 							lane.generateConnections();
 						}
-						
-						lastRoadClickedData.put(player, newRoad.getClickData(blockPlacementPoint, false));
-						lastPositionClicked.put(player, newRoad.position);
-						lastRotationClicked.put(player, Math.round(player.getYaw()/15)*15 + 180D);
 					}
 				}else{
 					player.sendPacket(new PacketPlayerChatMessage(player, "interact.roadcomponent.blockedplacement"));

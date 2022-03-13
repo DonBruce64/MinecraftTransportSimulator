@@ -2,9 +2,10 @@ package minecrafttransportsimulator.entities.instances;
 
 import java.nio.FloatBuffer;
 
-import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.JSONParticle;
@@ -23,10 +24,13 @@ import minecrafttransportsimulator.rendering.instances.RenderParticle;
 public class EntityParticle extends AEntityC_Renderable{
 	private static final FloatBuffer STANDARD_RENDER_BUFFER = generateStandardBuffer();
 	private static final int PARTICLES_PER_ROWCOL = 16;
+	private static final TransformationMatrix helperTransform = new TransformationMatrix();
+	private static final Point3D helperOffset = new Point3D();
 	
 	//Constant properties.
 	private final JSONParticle definition;
 	private final int maxAge;
+	private final WrapperPlayer clientPlayer = InterfaceClient.getClientPlayer();
 	
 	private final ColorRGB startColor;
 	private final ColorRGB endColor;
@@ -34,27 +38,38 @@ public class EntityParticle extends AEntityC_Renderable{
 	private final RenderableObject renderable;
 
 	//Runtime variables.
-	public boolean touchingBlocks;
-	public int age;
+	private boolean touchingBlocks;
+	private int age;
 	
 	private static RenderParticle renderer;
 
-	public EntityParticle(AEntityD_Definable<?> entitySpawning, JSONParticle definition){
+	public EntityParticle(AEntityD_Definable<?> entitySpawning, JSONParticle definition, AnimationSwitchbox switchbox){
 		super(entitySpawning.world, entitySpawning.position, ZERO_FOR_CONSTRUCTOR, ZERO_FOR_CONSTRUCTOR);
-		if(definition.pos != null){
-			position.add(definition.pos.copy().rotateFine(entitySpawning.angles));
+		
+		helperTransform.resetTransforms().set(entitySpawning.orientation);
+		if(switchbox != null){
+			helperTransform.multiply(switchbox.netMatrix);
 		}
+		if(definition.pos != null){
+			helperOffset.set(definition.pos);
+		}else{
+			helperOffset.set(0, 0, 0);
+		}
+		helperOffset.transform(helperTransform);
+		position.add(helperOffset);
+		
 		if(definition.initialVelocity != null){
 			//Set initial velocity, but add some randomness so particles don't all go in a line.
-			Point3d adjustedVelocity = definition.initialVelocity.copy().rotateFine(entitySpawning.angles);
+			Point3D adjustedVelocity = definition.initialVelocity.copy().rotate(helperTransform);
 			motion.x += adjustedVelocity.x/10D + 0.02 - Math.random()*0.04;
 			motion.y += adjustedVelocity.y/10D + 0.02 - Math.random()*0.04;
 			motion.z += adjustedVelocity.z/10D + 0.02 - Math.random()*0.04;
-			this.prevMotion.setTo(motion);
 		}
 		
 		this.definition = definition;
-		this.boundingBox = new BoundingBox(position, getSize()/2D, getSize()/2D, getSize()/2D);
+		boundingBox.widthRadius = getSize()/2D;
+		boundingBox.heightRadius = boundingBox.widthRadius;
+		boundingBox.depthRadius = boundingBox.widthRadius;
 		this.maxAge = generateMaxAge();
 		if(definition.color != null){
 			if(definition.toColor != null){
@@ -86,98 +101,96 @@ public class EntityParticle extends AEntityC_Renderable{
 	}
 	
 	@Override
-	public boolean update(){
-		if(super.update()){
-			//Set movement.
-			if(definition.movementVelocity != null){
-				motion.add(definition.movementVelocity);
-				if(motion.x > definition.terminalVelocity.x){
-					motion.x = definition.terminalVelocity.x;
-				}
-				if(motion.x < -definition.terminalVelocity.x){
-					motion.x = -definition.terminalVelocity.x;
-				}
-				if(motion.y > definition.terminalVelocity.y){
-					motion.y = definition.terminalVelocity.y;
-				}
-				if(motion.y < -definition.terminalVelocity.y){
-					motion.y = -definition.terminalVelocity.y;
-				}
-				if(motion.z > definition.terminalVelocity.z){
-					motion.z = definition.terminalVelocity.z;
-				}
-				if(motion.z < -definition.terminalVelocity.z){
-					motion.z = -definition.terminalVelocity.z;
-				}
-			}else{
-				switch(definition.type){
-					case SMOKE: {
-						//Update the motions to make the smoke float up.
-						motion.x *= 0.9;
-						motion.y += 0.004;
-						motion.z *= 0.9;
-						break;
-					}
-					case FLAME: {
-						//Flame just slowly drifts in the direction it was going.
-						motion.multiply(0.96);
-						break;
-					}
-					case DRIP: {
-						//Keep moving until we touch a block, then stop.
-						if(!touchingBlocks){
-							motion.multiply(0.96).add(0D, -0.06D, 0D);
-						}else{
-							motion.multiply(0.0);
-						}
-						break;
-					}
-					case BUBBLE: {
-						//Bubbles float up until they break the surface of the water, then they pop.
-						if(!world.isBlockLiquid(position)){
-							remove();
-						}else{
-							motion.multiply(0.85).add(0, 0.002D, 0);
-						}
-						break;
-					}
-					case BREAK: {
-						//Breaking just fall down quickly.
-						if(!touchingBlocks){
-							motion.multiply(0.98).add(0D, -0.04D, 0D);
-						}else{
-							motion.multiply(0.0);
-						}
-						break;
-					}
-					case GENERIC: {
-						//Generic particles don't do any movement by default.
-						break;
-					}
-				}
+	public void update(){
+		super.update();
+		//Set movement.
+		if(definition.movementVelocity != null){
+			motion.add(definition.movementVelocity);
+			if(motion.x > definition.terminalVelocity.x){
+				motion.x = definition.terminalVelocity.x;
 			}
-			
-			//Check collision movement.  If we hit a block, don't move.
-			touchingBlocks = boundingBox.updateMovingCollisions(world, motion);
-			if(touchingBlocks){
-				motion.add(-boundingBox.currentCollisionDepth.x*Math.signum(motion.x), -boundingBox.currentCollisionDepth.y*Math.signum(motion.y), -boundingBox.currentCollisionDepth.z*Math.signum(motion.z));
+			if(motion.x < -definition.terminalVelocity.x){
+				motion.x = -definition.terminalVelocity.x;
 			}
-			position.add(motion);
-			
-			//Check age to see if we are on our last tick.
-			if(++age == maxAge){
-				remove();
+			if(motion.y > definition.terminalVelocity.y){
+				motion.y = definition.terminalVelocity.y;
 			}
-			
-			//Update rotation to always face the player.
-			WrapperPlayer clientPlayer = InterfaceClient.getClientPlayer();
-			angles.setTo(position).subtract(clientPlayer.getPosition()).add(0, -clientPlayer.getEyeHeight(), 0).subtract(InterfaceClient.getCameraPosition()).getAngles(true);
-			angles.y += 180;
-			angles.x = -angles.x;
-			return true;
+			if(motion.y < -definition.terminalVelocity.y){
+				motion.y = -definition.terminalVelocity.y;
+			}
+			if(motion.z > definition.terminalVelocity.z){
+				motion.z = definition.terminalVelocity.z;
+			}
+			if(motion.z < -definition.terminalVelocity.z){
+				motion.z = -definition.terminalVelocity.z;
+			}
 		}else{
-			return false;
+			switch(definition.type){
+				case SMOKE: {
+					//Update the motions to make the smoke float up.
+					motion.x *= 0.9;
+					motion.y += 0.004;
+					motion.z *= 0.9;
+					break;
+				}
+				case FLAME: {
+					//Flame just slowly drifts in the direction it was going.
+					motion.scale(0.96);
+					break;
+				}
+				case DRIP: {
+					//Keep moving until we touch a block, then stop.
+					if(!touchingBlocks){
+						motion.scale(0.96).add(0D, -0.06D, 0D);
+					}else{
+						motion.scale(0.0);
+					}
+					break;
+				}
+				case BUBBLE: {
+					//Bubbles float up until they break the surface of the water, then they pop.
+					if(!world.isBlockLiquid(position)){
+						remove();
+					}else{
+						motion.scale(0.85).add(0, 0.002D, 0);
+					}
+					break;
+				}
+				case BREAK: {
+					//Breaking just fall down quickly.
+					if(!touchingBlocks){
+						motion.scale(0.98).add(0D, -0.04D, 0D);
+					}else{
+						motion.scale(0.0);
+					}
+					break;
+				}
+				case GENERIC: {
+					//Generic particles don't do any movement by default.
+					break;
+				}
+			}
 		}
+		
+		//Check collision movement.  If we hit a block, don't move.
+		touchingBlocks = boundingBox.updateMovingCollisions(world, motion);
+		if(touchingBlocks){
+			motion.add(-boundingBox.currentCollisionDepth.x*Math.signum(motion.x), -boundingBox.currentCollisionDepth.y*Math.signum(motion.y), -boundingBox.currentCollisionDepth.z*Math.signum(motion.z));
+		}
+		position.add(motion);
+		
+		//Check age to see if we are on our last tick.
+		if(++age == maxAge){
+			remove();
+		}
+		
+		//Update bounds as we might have changed size.
+		boundingBox.widthRadius = getSize()/2D;
+		boundingBox.heightRadius = boundingBox.widthRadius;
+		boundingBox.depthRadius = boundingBox.widthRadius;
+		
+		//Update orientation to always face the player.
+		orientation.setToVector(clientPlayer.getPosition().add(0, clientPlayer.getEyeHeight(), 0).add(InterfaceClient.getCameraPosition()).subtract(position), true);
 	}
 	
 	@Override
@@ -233,16 +246,18 @@ public class EntityParticle extends AEntityC_Renderable{
 	
 	/**
 	 *  Called to render the particle..
-	 *  Clearner as we don't need to preface variable references.
+	 *  Cleaner as we don't need to preface variable references.
 	 */
-	public void render(float partialTicks){
+	public void render(TransformationMatrix transform, float partialTicks){
 		if(staticColor == null){
 			renderable.color.red = startColor.red + (endColor.red - startColor.red)*(age+partialTicks)/maxAge;
 			renderable.color.green = startColor.green + (endColor.green - startColor.green)*(age+partialTicks)/maxAge;
 			renderable.color.blue = startColor.blue + (endColor.blue - startColor.blue)*(age+partialTicks)/maxAge;
 		}
 		renderable.alpha = getAlpha(partialTicks);
-		renderable.scale = getSize()*getScale(partialTicks);
+		renderable.transform.set(transform);
+		double totalScale = getSize()*getScale(partialTicks);
+		renderable.transform.applyScaling(totalScale, totalScale, totalScale);
 		
 		switch(definition.type){
 			case SMOKE: setParticleTextureBounds(7 - age*8/maxAge, 0); break;//Smoke gets smaller as it ages.

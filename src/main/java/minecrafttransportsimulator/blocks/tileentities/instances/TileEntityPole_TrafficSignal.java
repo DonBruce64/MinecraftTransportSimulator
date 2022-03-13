@@ -20,8 +20,9 @@ public class TileEntityPole_TrafficSignal extends ATileEntityPole_Component{
 	}
 	
 	@Override
-	public boolean update(){
-		if(super.update() && linkedController != null){
+	public void update(){
+		super.update();
+		if(linkedController != null){
 			//Remove all old lights, then add our new one.
 			for(LightType light : LightType.values()){
 				setVariable(light.lowercaseName, 0);
@@ -35,9 +36,6 @@ public class TileEntityPole_TrafficSignal extends ATileEntityPole_Component{
 			}else{
 				linkedController = null;
 			}
-			return true;
-		}else{
-			return false;
 		}
 	}
 	

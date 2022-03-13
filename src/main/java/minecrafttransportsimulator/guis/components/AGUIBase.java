@@ -3,6 +3,7 @@ package minecrafttransportsimulator.guis.components;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.guis.instances.GUIOverlay;
@@ -31,7 +32,7 @@ public abstract class AGUIBase{
 	private GUIComponentCutout background;
 	public final List<AGUIComponent> components = new ArrayList<AGUIComponent>();
 	
-	public static final List<AGUIBase> activeGUIs = new ArrayList<AGUIBase>();
+	public static final ConcurrentLinkedQueue<AGUIBase> activeGUIs = new ConcurrentLinkedQueue<AGUIBase>();
 	public static AGUIBase activeInputGUI;
 	
 	protected int screenWidth;
@@ -211,7 +212,7 @@ public abstract class AGUIBase{
 		
 		//Render instruments.  These need both normal and blended passes.
 		for(AGUIComponent component : components){
-			if(component instanceof GUIComponentInstrument){
+			if(component.visible && component instanceof GUIComponentInstrument){
 				component.render(this, mouseX, mouseY, false, false, blendingEnabled, partialTicks);
 			}
 		}

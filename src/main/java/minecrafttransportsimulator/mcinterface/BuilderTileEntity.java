@@ -3,7 +3,7 @@ package minecrafttransportsimulator.mcinterface;
 import java.util.ArrayList;
 import java.util.List;
 
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBaseTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import net.minecraft.nbt.NBTTagCompound;
@@ -68,7 +68,7 @@ public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extend
 					try{
 						//Get the block that makes this TE and restore it from saved state.
 						WrapperWorld worldWrapper = WrapperWorld.getWrapperFor(world);
-						Point3d position = new Point3d(pos.getX(), pos.getY(), pos.getZ());
+						Point3D position = new Point3D(pos.getX(), pos.getY(), pos.getZ());
 						ABlockBaseTileEntity block = (ABlockBaseTileEntity) worldWrapper.getBlock(position);
 						tileEntity = (TileEntityType) block.createTileEntity(worldWrapper, position, null, new WrapperNBT(lastLoadedNBT));
 						tileEntity.world.addEntity(tileEntity);

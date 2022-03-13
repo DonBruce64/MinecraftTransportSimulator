@@ -5,18 +5,17 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.TrailerConnection;
-import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartEngine;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentSelector;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
+import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
@@ -400,8 +399,10 @@ public class GUIPanelAircraft extends AGUIPanel{
 			trailerSelector = new GUIComponentSelector(guiLeft + xOffset + SELECTOR_SIZE, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, trailerSwitchDefs.get(0).connectionGroup.groupName, vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, TRAILER_TEXTURE_WIDTH_OFFSET, TRAILER_TEXTURE_HEIGHT_OFFSET, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE){
 				@Override
 				public void onClicked(boolean leftSide){
-					SwitchEntry switchDef = trailerSwitchDefs.get(0);
-					InterfacePacket.sendToServer(new PacketEntityVariableSet(switchDef.entityOn, AEntityE_Interactable.TRAILER_CONNECTION_REQUEST_VARIABLE, switchDef.connectionGroupIndex + 1));
+					//SwitchEntry switchDef = trailerSwitchDefs.get(0);
+					//InterfacePacket.sendToServer(new PacketEntityVariableSet(switchDef.connectionDefiner, AEntityG_Towable.TOWING_CONNECTION_REQUEST_VARIABLE, switchDef.connectionGroupIndex + 1));
+					//FIXME enable when trailers work.
+					InterfaceClient.getClientPlayer().displayChatMessage("Due to crashes, trailers have been disabled in this release.  Please check back in a later version.");
 				}
 				
 				@Override
@@ -423,8 +424,10 @@ public class GUIPanelAircraft extends AGUIPanel{
 			trailerSelector = new GUIComponentSelector(guiLeft + xOffset + SELECTOR_SIZE/2, guiTop + GAP_BETWEEN_SELECTORS + 3*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, trailerSwitchDefs.get(0).connectionGroup.groupName, vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, TRAILER_TEXTURE_WIDTH_OFFSET, TRAILER_TEXTURE_HEIGHT_OFFSET, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE){
 				@Override
 				public void onClicked(boolean leftSide){
-					SwitchEntry switchDef = trailerSwitchDefs.get(0);
-					InterfacePacket.sendToServer(new PacketEntityVariableSet(switchDef.entityOn, AEntityE_Interactable.TRAILER_CONNECTION_REQUEST_VARIABLE, switchDef.connectionGroupIndex + 1));
+					//SwitchEntry switchDef = trailerSwitchDefs.get(0);
+					//InterfacePacket.sendToServer(new PacketEntityVariableSet(switchDef.connectionDefiner, AEntityG_Towable.TOWING_CONNECTION_REQUEST_VARIABLE, switchDef.connectionGroupIndex + 1));
+					//FIXME enable when trailers work.
+					InterfaceClient.getClientPlayer().displayChatMessage("Due to crashes, trailers have been disabled in this release.  Please check back in a later version.");
 				}
 				
 				@Override
@@ -522,18 +525,7 @@ public class GUIPanelAircraft extends AGUIPanel{
 		
 		//If we have a hitch, set the selector state.
 		if(trailerSelector != null){
-			SwitchEntry switchDef = trailerSwitchDefs.get(0);
-			if(switchDef.connectionGroup.hookup){
-				trailerSelector.selectorState = switchDef.entityOn.towedByConnection != null ? 0 : 1;
-			}else{
-				trailerSelector.selectorState = 1;
-				for(TrailerConnection connection : switchDef.entityOn.getTowingConnections()){
-					if(connection.hitchGroupIndex == switchDef.connectionGroupIndex){
-						trailerSelector.selectorState = 0;
-						break;
-					}
-				}
-			}
+			trailerSwitchDefs.get(0).updateSelectorState(trailerSelector);
 		}
 		
 		//Set the beaconBox text color depending on if we have an active beacon.

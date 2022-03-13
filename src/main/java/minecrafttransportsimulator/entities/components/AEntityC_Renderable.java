@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.entities.components;
 
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
@@ -13,11 +13,11 @@ import minecrafttransportsimulator.rendering.components.ARenderEntity;
  */
 public abstract class AEntityC_Renderable extends AEntityB_Existing{
 	
-	/**The scale of this entity.  Is not used to move bounding boxes.  More for rendering, but does some physics.*/
-	public float scale = 1.0F;
+	/**The scale of this entity, in X/Y/Z components.*/
+	public Point3D scale = new Point3D(1, 1, 1);
 	
-	/**The mirrored state of this entity.  Only used for rendering to flip the model across the x-axis.*/
-	public boolean mirrored;
+	/**The previous scale of this entity.*/
+	public Point3D prevScale = new Point3D(1, 1, 1);
 	
 	/**Constructor for synced entities**/
 	public AEntityC_Renderable(WrapperWorld world, WrapperPlayer placingPlayer, WrapperNBT data){
@@ -25,8 +25,14 @@ public abstract class AEntityC_Renderable extends AEntityB_Existing{
 	}
 	
 	/**Constructor for un-synced entities.  Allows for specification of position/motion/angles.**/
-	public AEntityC_Renderable(WrapperWorld world, Point3d position, Point3d motion, Point3d angles){
+	public AEntityC_Renderable(WrapperWorld world, Point3D position, Point3D motion, Point3D angles){
 		super(world, position, motion, angles);
+	}
+	
+	@Override
+	public void update(){
+		super.update();
+		prevScale = scale;
 	}
     
     /**

@@ -3,11 +3,16 @@ package minecrafttransportsimulator.mcinterface;
 import java.awt.image.BufferedImage;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.DoubleBuffer;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
@@ -16,7 +21,8 @@ import javax.imageio.stream.ImageInputStream;
 import org.lwjgl.opengl.GL11;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.rendering.components.GIFParser;
 import minecrafttransportsimulator.rendering.components.GIFParser.ParsedGIF;
@@ -36,9 +42,11 @@ import net.minecraft.util.math.BlockPos;
  * @author don_bruce
  */
 public class InterfaceRender{
+	private static final DoubleBuffer buffer = ByteBuffer.allocateDirect(16*Double.BYTES).order(ByteOrder.nativeOrder()).asDoubleBuffer();
 	private static final Map<String, ResourceLocation> internalTextures = new HashMap<String, ResourceLocation>();
 	private static final Map<String, Integer> onlineTextures = new HashMap<String, Integer>();
 	private static final Map<String, ParsedGIF> animatedGIFs = new HashMap<String, ParsedGIF>();
+	private static final Map<WrapperItemStack, TransformationMatrix> stacksToRender = new LinkedHashMap<WrapperItemStack, TransformationMatrix>();
 	private static float lastLightmapX;
 	private static float lastLightmapY;
 	
@@ -49,19 +57,34 @@ public class InterfaceRender{
 	 *  Renders the item model for the passed-in stack.  Only
 	 *  renders the item model: does not render text for counts.
 	 */
-	public static void renderItemModel(WrapperItemStack stack){
-		GL11.glPushMatrix();
-		setInternalLightingState(false);
-		//Need to translate back to pre-undo the renderer offset.
-		float offset = 100.0F + Minecraft.getMinecraft().getRenderItem().zLevel;
-		GL11.glTranslated(0, 0, -offset);
-		
-		//Now invert y-axis scaling to account for GUI scaling differences.
-		GL11.glScalef(1, -1, 1);
-		
-		Minecraft.getMinecraft().getRenderItem().renderItemIntoGUI(stack.stack, 0, 0);
-		setInternalLightingState(true);
-		GL11.glPopMatrix();
+	public static void renderItemModel(WrapperItemStack stack, TransformationMatrix transform){
+		stacksToRender.put(stack, transform);
+	}
+	
+	/**
+	 *  Does the actual stack render.  Put into a batch at the end of GUI rendering as item
+	 *  stack rendering changes the OpenGL state and can muck up normal rendering.
+	 */
+	protected static void renderAllStacks(){
+		for(Entry<WrapperItemStack, TransformationMatrix> stackEntry : stacksToRender.entrySet()){
+			GL11.glPushMatrix();
+			setInternalLightingState(false);
+			
+			//Apply existing transform.
+			applyTransformOpenGL(stackEntry.getValue(), false);
+			
+			//Need to translate back to pre-undo the renderer offset.
+			float offset = 100.0F + Minecraft.getMinecraft().getRenderItem().zLevel;
+			GL11.glTranslated(0, 0, -offset);
+			
+			//Now invert y-axis scaling to account for GUI scaling differences.
+			GL11.glScalef(1, -1, 1);
+			
+			Minecraft.getMinecraft().getRenderItem().renderItemIntoGUI(stackEntry.getKey().stack, 0, 0);
+			setInternalLightingState(true);
+			GL11.glPopMatrix();
+		}
+		stacksToRender.clear();
 	}
 	
 	/**
@@ -90,12 +113,7 @@ public class InterfaceRender{
 		setColorState(object.color, object.alpha);
 		
 		GL11.glPushMatrix();
-		if(object.isMirrored){
-			GL11.glScalef(-object.scale, object.scale, object.scale);
-			GL11.glCullFace(GL11.GL_FRONT);
-		}else{
-			GL11.glScalef(object.scale, object.scale, object.scale);
-		}
+		applyTransformOpenGL(object.transform, false);
 		if(object.cacheVertices){
 			if(object.cachedVertexIndex == -1){
 				object.cachedVertexIndex = cacheVertices(object.vertices);
@@ -106,9 +124,6 @@ public class InterfaceRender{
 			renderLines(object.vertices, object.lineWidth);
 		}else{
 			renderVertices(object.vertices);
-		}
-		if(object.isMirrored){
-			GL11.glCullFace(GL11.GL_BACK);
 		}
 		GL11.glPopMatrix();
 		
@@ -121,6 +136,53 @@ public class InterfaceRender{
 		if(object.enableBrightBlending){
 			setBlendBright(false);
 		}
+	}
+	
+	/**
+	 *  Applies an OpenGL transform to the current pipeline based on the
+	 *  passed-in matrix.  Allows for inverted transformation, should this
+	 *  be desired.  In this case, the rotation will be transposed and the
+	 *  translation will be inverted.  Fourth-row elements will be left as-is.
+	 */
+	public static void applyTransformOpenGL(TransformationMatrix matrix, boolean inverted){
+		buffer.clear();
+		if(inverted){
+			buffer.put(matrix.m00);
+			buffer.put(matrix.m01);
+			buffer.put(matrix.m02);
+			buffer.put(matrix.m30);
+			buffer.put(matrix.m10);
+			buffer.put(matrix.m11);
+			buffer.put(matrix.m12);
+			buffer.put(matrix.m31);
+			buffer.put(matrix.m20);
+			buffer.put(matrix.m21);
+			buffer.put(matrix.m22);
+			buffer.put(matrix.m32);
+			buffer.put(-matrix.m03);
+			buffer.put(-matrix.m13);
+			buffer.put(-matrix.m23);
+			buffer.put(matrix.m33);
+		}else{
+			buffer.put(matrix.m00);
+			buffer.put(matrix.m10);
+			buffer.put(matrix.m20);
+			buffer.put(matrix.m30);
+			buffer.put(matrix.m01);
+			buffer.put(matrix.m11);
+			buffer.put(matrix.m21);
+			buffer.put(matrix.m31);
+			buffer.put(matrix.m02);
+			buffer.put(matrix.m12);
+			buffer.put(matrix.m22);
+			buffer.put(matrix.m32);
+			buffer.put(matrix.m03);
+			buffer.put(matrix.m13);
+			buffer.put(matrix.m23);
+			buffer.put(matrix.m33);
+		}
+		buffer.flip();
+		GL11.glMultMatrix(buffer);
 	}
 	
 	/**
@@ -330,7 +392,7 @@ public class InterfaceRender{
 	 *  Updates the internal lightmap to be consistent with the light at the
 	 *  passed-in position.
 	 */
-	public static void setLightingToPosition(Point3d position){
+	public static void setLightingToPosition(Point3D position){
 		//Get lighting 1 block above position, as actual position will result in blocked light.
 		int lightVar = Minecraft.getMinecraft().world.getCombinedLight(new BlockPos(position.x, position.y + 1, position.z), 0);
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lightVar%65536, lightVar/65536);
@@ -381,12 +443,13 @@ public class InterfaceRender{
 	 *  This method manually renders all riders on an entity.  Useful if you're rendering the entity manually
 	 *  and the entity and its riders have been culled from rendering.
 	 */
+	//FIXME see if this is needed?
 	public static void renderEntityRiders(AEntityE_Interactable<?> entity, float partialTicks){
 		for(WrapperEntity rider : entity.locationRiderMap.values()){
 			Entity riderEntity = rider.entity;
 			if(!(InterfaceClient.getClientPlayer().equals(rider) && InterfaceClient.inFirstPerson()) && riderEntity.posY > riderEntity.world.getHeight()){
 				GL11.glPushMatrix();
-				Point3d riderPosition = rider.getRenderedPosition(partialTicks);
+				Point3D riderPosition = rider.getRenderedPosition(partialTicks);
 				GL11.glTranslated(riderPosition.x, riderPosition.y, riderPosition.z);
 				Minecraft.getMinecraft().getRenderManager().renderEntityStatic(riderEntity, partialTicks, false);
 				GL11.glPopMatrix();

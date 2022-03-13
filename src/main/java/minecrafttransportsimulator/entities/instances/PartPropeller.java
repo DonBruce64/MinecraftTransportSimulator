@@ -2,7 +2,7 @@ package minecrafttransportsimulator.entities.instances;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
@@ -18,7 +18,8 @@ public class PartPropeller extends APart{
 	public int currentPitch;
 	
 	private final PartEngine connectedEngine;
-	private final Point3d propellerForce = new Point3d();
+	protected final Point3D propellerAxisVector = new Point3D();
+	private final Point3D propellerForce = new Point3D();
 	private final BoundingBox damageBounds;
 	
 	public static final int MIN_DYNAMIC_PITCH = 45;
@@ -59,69 +60,65 @@ public class PartPropeller extends APart{
 	}
 	
 	@Override
-	public boolean update(){
-		if(super.update()){
-			//Maybe we aren't connected to an engine?  Not sure how this could happen, but it could.
-			if(connectedEngine == null){
-				isValid = false;
-				return false;
-			}
-			//If we are a dynamic-pitch propeller or rotor, adjust ourselves to the speed of the engine.
-			if(vehicleOn != null){
-				if(definition.propeller.isRotor){
-					double throttlePitchSetting = connectedEngine.running ? (vehicleOn.throttle*1.35 - 0.35)*definition.propeller.pitch : 0;
-					if(throttlePitchSetting < currentPitch){
-						--currentPitch;
-					}else if(throttlePitchSetting > currentPitch){
-						++currentPitch;
-					}
-				}else if(definition.propeller.isDynamicPitch){
-					if(vehicleOn.reverseThrust && currentPitch > -MIN_DYNAMIC_PITCH){
-						--currentPitch;
-					}else if(!vehicleOn.reverseThrust && currentPitch < MIN_DYNAMIC_PITCH){
-						++currentPitch;
-					}else if(connectedEngine.rpm < connectedEngine.definition.engine.maxSafeRPM*0.60 && currentPitch > MIN_DYNAMIC_PITCH){
-						--currentPitch;
-					}else if(connectedEngine.rpm > connectedEngine.definition.engine.maxSafeRPM*0.85 && currentPitch < definition.propeller.pitch){
-						++currentPitch;
-					}
+	public void update(){
+		super.update();
+		//Maybe we aren't connected to an engine?  Did a pack change and we don't have one?
+		if(connectedEngine == null){
+			isValid = false;
+			return;
+		}
+		//If we are a dynamic-pitch propeller or rotor, adjust ourselves to the speed of the engine.
+		if(vehicleOn != null){
+			if(definition.propeller.isRotor){
+				double throttlePitchSetting = connectedEngine.running ? (vehicleOn.throttle*1.35 - 0.35)*definition.propeller.pitch : 0;
+				if(throttlePitchSetting < currentPitch){
+					--currentPitch;
+				}else if(throttlePitchSetting > currentPitch){
+					++currentPitch;
+				}
+			}else if(definition.propeller.isDynamicPitch){
+				if(vehicleOn.reverseThrust && currentPitch > -MIN_DYNAMIC_PITCH){
+					--currentPitch;
+				}else if(!vehicleOn.reverseThrust && currentPitch < MIN_DYNAMIC_PITCH){
+					++currentPitch;
+				}else if(connectedEngine.rpm < connectedEngine.definition.engine.maxSafeRPM*0.60 && currentPitch > MIN_DYNAMIC_PITCH){
+					--currentPitch;
+				}else if(connectedEngine.rpm > connectedEngine.definition.engine.maxSafeRPM*0.85 && currentPitch < definition.propeller.pitch){
+					++currentPitch;
 				}
 			}
-			
-			//Adjust angular position and velocity.
-			if(connectedEngine.propellerGearboxRatio != 0){
-				angularVelocity = (float) (connectedEngine.rpm/connectedEngine.propellerGearboxRatio/60F/20F);
-			}else if(angularVelocity > .01){
-				angularVelocity -= 0.01;
-			}else if(angularVelocity < -.01){
-				angularVelocity += 0.01;
-			}else{
-				angularVelocity = 0;
-			}
-			angularPosition += angularVelocity;
-			if(angularPosition > 3600000){
-				angularPosition -= 3600000;
-				angularPosition -= 3600000;
-			}else if(angularPosition < -3600000){
-				angularPosition += 3600000;
-				angularPosition += 3600000;
-			}
-			
-			//Damage propeller or entities if required.
-			if(!world.isClient() && connectedEngine.rpm >= 100){
-				//Expand the bounding box bounds, and send off the attack.
-				boundingBox.widthRadius += 0.2;
-				boundingBox.heightRadius += 0.2;
-				boundingBox.depthRadius += 0.2;
-				Damage propellerDamage = new Damage("propellor", ConfigSystem.configObject.damage.propellerDamageFactor.value*connectedEngine.rpm*connectedEngine.propellerGearboxRatio/500F, damageBounds, this, vehicleOn != null ? vehicleOn.getController() : null);
-				world.attackEntities(propellerDamage, null);
-				boundingBox.widthRadius -= 0.2;
-				boundingBox.heightRadius -= 0.2;
-				boundingBox.depthRadius -= 0.2;
-			}
-			return true;
+		}
+		
+		//Adjust angular position and velocity.
+		if(connectedEngine.propellerGearboxRatio != 0){
+			angularVelocity = (float) (connectedEngine.rpm/connectedEngine.propellerGearboxRatio/60F/20F);
+		}else if(angularVelocity > .01){
+			angularVelocity -= 0.01;
+		}else if(angularVelocity < -.01){
+			angularVelocity += 0.01;
 		}else{
-			return false;
+			angularVelocity = 0;
+		}
+		angularPosition += angularVelocity;
+		if(angularPosition > 3600000){
+			angularPosition -= 3600000;
+			angularPosition -= 3600000;
+		}else if(angularPosition < -3600000){
+			angularPosition += 3600000;
+			angularPosition += 3600000;
+		}
+		
+		//Damage propeller or entities if required.
+		if(!world.isClient() && connectedEngine.rpm >= 100){
+			//Expand the bounding box bounds, and send off the attack.
+			boundingBox.widthRadius += 0.2;
+			boundingBox.heightRadius += 0.2;
+			boundingBox.depthRadius += 0.2;
+			Damage propellerDamage = new Damage("propellor", ConfigSystem.configObject.damage.propellerDamageFactor.value*connectedEngine.rpm*connectedEngine.propellerGearboxRatio/500F, damageBounds, this, vehicleOn != null ? vehicleOn.getController() : null);
+			world.attackEntities(propellerDamage, null);
+			boundingBox.widthRadius -= 0.2;
+			boundingBox.heightRadius -= 0.2;
+			boundingBox.depthRadius -= 0.2;
 		}
 	}
 	
@@ -136,19 +133,13 @@ public class PartPropeller extends APart{
 		
 		return super.getRawVariableValue(variable, partialTicks);
 	}
-
-	@Override
-	public Point3d getRenderingRotation(float partialTicks){
-		return new Point3d(0, 0, (angularPosition + angularVelocity*partialTicks)*360D);
-	}
 	
-	public Point3d getForceOutput(){
-		propellerForce.set(0D, 0D, 0D);
+	public void addToForceOutput(Point3D force, Point3D torque){
+		propellerAxisVector.set(0, 0, 1).rotate(orientation);
 		if(connectedEngine != null && connectedEngine.running){
 			//Get the current linear velocity of the propeller, based on our axial velocity.
 			//This is is meters per second.
-			Point3d propellerThrustAxis = new Point3d(0D, 0D, 1D).rotateFine(localAngles.copy().add(entityOn.angles));
-			double currentLinearVelocity = 20D*entityOn.motion.dotProduct(propellerThrustAxis);
+			double currentLinearVelocity = 20D*vehicleOn.motion.dotProduct(propellerAxisVector);
 			//Get the desired linear velocity of the propeller, based on the current RPM and pitch.
 			//We add to the desired linear velocity by a small factor.  This is because the actual cruising speed of aircraft
 			//is based off of engine max RPM equating exactly to ideal linear speed of the propeller.  I'm sure there are nuances
@@ -163,7 +154,7 @@ public class PartPropeller extends APart{
 				//Multiply the thrust difference by the area of the propeller.  This accounts for the force-area defined by it.
 				thrust *= Math.PI*Math.pow(0.0254*definition.propeller.diameter/2D, 2);
 				//Finally, multiply by the air density, and a constant.  Less dense air causes less thrust force.
-				thrust *= airDensity/25D*1.5D;
+				thrust *= vehicleOn.airDensity/25D*1.5D;
 
 				//Get the angle of attack of the propeller.
 				//Note pitch velocity is in linear in meters per second, 
@@ -182,9 +173,15 @@ public class PartPropeller extends APart{
 				
 				//Add propeller force to total engine force as a vector.
 				//Depends on propeller orientation, as upward propellers provide upwards thrust.
-				propellerForce.add(new Point3d(0D, 0D, thrust).rotateFine(localAngles));
+				propellerForce.set(propellerAxisVector).scale(thrust);
+				force.add(propellerForce);
+				propellerForce.reOrigin(vehicleOn.orientation);
+				torque.y += propellerForce.z*localOffset.x;
+				torque.z += propellerForce.y*localOffset.x;
+				if(!vehicleOn.groundDeviceCollective.isAnythingOnGround()){
+					torque.x += propellerForce.z*localOffset.y;
+				}
 			}
 		}
-		return propellerForce;
 	}
 }

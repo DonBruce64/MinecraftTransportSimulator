@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.blocks.tileentities.components;
 
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
 import minecrafttransportsimulator.entities.instances.PartInteractable;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
@@ -12,40 +12,36 @@ import minecrafttransportsimulator.packets.instances.PacketTileEntityLoaderConne
 public abstract class ATileEntityLoader extends TileEntityDecor{
 	public PartInteractable connectedPart;
 
-    public ATileEntityLoader(WrapperWorld world, Point3d position, WrapperPlayer placingPlayer, WrapperNBT data){
+    public ATileEntityLoader(WrapperWorld world, Point3D position, WrapperPlayer placingPlayer, WrapperNBT data){
 		super(world, position, placingPlayer, data);
     }
 	
     @Override
-	public boolean update(){
-		if(super.update()){
-			//Do load/unload checks.  Checks only occur on servers.  Clients get packets for state changes.
-			if(!world.isClient()){
-				if(connectedPart == null){
-					//Check for a new part every second.  We don't want every tick as this would increase server loads.
-					if(ticksExisted%20 == 0){
-						updateNearestPart();
-					}
-				}else{
-					//Don't load parts that don't exist.
-					//Also check distance to make sure the part hasn't moved away.
-					if(!connectedPart.isValid || connectedPart.position.distanceTo(position) > 10){
-						updateNearestPart();
-					}
+    public void update(){
+		super.update();
+		//Do load/unload checks.  Checks only occur on servers.  Clients get packets for state changes.
+		if(!world.isClient()){
+			if(connectedPart == null){
+				//Check for a new part every second.  We don't want every tick as this would increase server loads.
+				if(ticksExisted%20 == 0){
+					updateNearestPart();
 				}
-	
-				//If we have a connected part, try to load or unload from it depending on our state.
-				if(connectedPart != null){
-					if(isUnloader()){
-						doUnloading();
-					}else{
-						doLoading();
-					}
+			}else{
+				//Don't load parts that don't exist.
+				//Also check distance to make sure the part hasn't moved away.
+				if(!connectedPart.isValid || !connectedPart.position.isDistanceToCloserThan(position, 10)){
+					updateNearestPart();
 				}
 			}
-			return true;
-		}else{
-			return false;
+
+			//If we have a connected part, try to load or unload from it depending on our state.
+			if(connectedPart != null){
+				if(isUnloader()){
+					doUnloading();
+				}else{
+					doLoading();
+				}
+			}
 		}
 	}
 	
@@ -55,7 +51,7 @@ public abstract class ATileEntityLoader extends TileEntityDecor{
 		if(canOperate()){
 			for(PartInteractable interactablePart : world.getEntitiesOfType(PartInteractable.class)){
 				if(canLoadPart(interactablePart)){
-					if(interactablePart.position.distanceTo(position) < nearestDistance){
+					if(interactablePart.position.isDistanceToCloserThan(position, nearestDistance)){
 						nearestPart = interactablePart;
 					}
 				}

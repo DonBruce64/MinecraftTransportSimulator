@@ -9,10 +9,10 @@ import java.util.Set;
 
 import javax.imageio.ImageIO;
 
-import org.lwjgl.opengl.GL11;
-
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.TransformationMatrix;
+import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.rendering.components.RenderableObject;
@@ -34,6 +34,7 @@ public class RenderText{
 	public static final char STRIKETHROUGH_CHAR = '-';
 	
 	private static final Map<String, FontData> fontDatas = new HashMap<String, FontData>();
+	private static final TransformationMatrix transformHelper = new TransformationMatrix();
 	
 	/**
 	 *  Draws the specified text.  This is designed for general draws where text is defined in-code, but still may
@@ -49,9 +50,11 @@ public class RenderText{
 	 *  Also note that if a scale was applied prior to rendering this text, it should be passed-in here.
 	 *  This allows for proper normal calculations to prevent needing to re-normalize the text.
 	 */
-	public static void drawText(String text, String fontName, Point3d position, Point3d rotation, ColorRGB color, TextAlignment alignment, float scale, boolean autoScale, int wrapWidth, float prevScaleFactor, boolean renderLit){
+	public static void drawText(String text, String fontName, Point3D position, ColorRGB color, TextAlignment alignment, float scale, boolean autoScale, int wrapWidth, boolean renderLit){
 		if(!text.isEmpty()){
-			getFontData(fontName).renderText(text, position, rotation, alignment, scale, autoScale, wrapWidth, 1.0F, true, color, renderLit);
+			transformHelper.resetTransforms();
+			transformHelper.applyTranslation(position);
+			getFontData(fontName).renderText(text, transformHelper, null, alignment, scale, autoScale, wrapWidth, true, color, renderLit);
 		}
 	}
 	
@@ -59,16 +62,15 @@ public class RenderText{
 	 *  Similar to the 2D text drawing method, except this method will render the text according to the passed-in text JSON in 3D space at the point specified.
 	 *  Essentially, this is JSON-defined rendering rather than manual entry of points.
 	 */
-	public static void draw3DText(String text, AEntityD_Definable<?> entity, JSONText definition, float preScaledFactor, boolean pixelCoords){
+	public static void draw3DText(String text, AEntityD_Definable<?> entity, TransformationMatrix transform, JSONText definition, boolean pixelCoords){
 		if(!text.isEmpty()){
 			//Get the actual color we will need to render with based on JSON.
 			ColorRGB color = entity.getTextColor(definition.inheritedColorIndex, definition.color);
 			
-			//Reduce scale by 1/16 if we're not using pixel coords.  Entity JSON assumes 1 unit is 1 block, not 1px.
-			float scale = pixelCoords ? definition.scale : definition.scale/16F;
-			
 			//Render the text.
-			getFontData(definition.fontName).renderText(text, definition.pos, definition.rot, TextAlignment.values()[definition.renderPosition], scale, definition.autoScale, definition.wrapWidth, preScaledFactor, pixelCoords, color, definition.lightsUp && entity.renderTextLit());
+			transformHelper.set(transform);
+			transformHelper.applyTranslation(definition.pos);
+			getFontData(definition.fontName).renderText(text, transformHelper, definition.rot, TextAlignment.values()[definition.renderPosition], definition.scale, definition.autoScale, definition.wrapWidth, pixelCoords, color, definition.lightsUp && entity.renderTextLit());
 		}
 	}
 	
@@ -150,8 +152,7 @@ public class RenderText{
 		};
 		private static final FontRenderState[] STATES = FontRenderState.generateDefaults();
 		private static final int MAX_VERTCIES_PER_RENDER = 1000*6;
-		private static final Point3d DEFAULT_ADJ = new Point3d();
-		private static final Point3d MUTABLE_POSITION = new Point3d();
+		private static final Point3D adjustmentOffset = new Point3D();
 		
 		private final boolean isDefault;
 		/*Texture locations for the font files.**/
@@ -184,8 +185,6 @@ public class RenderText{
 		private final float[] charUV = new float[2];
 		/**Mutable helper for doing uv-building operations for font effects like bold and underline.**/
 		private final float[] supplementalUV = new float[2];
-		/**Mutable helper for rotating vertices.**/
-		private final Point3d rotatedVertex = new Point3d();
 		
 		
 		private FontData(String fontName){
@@ -259,24 +258,21 @@ public class RenderText{
 			}
 		}
 		
-		private void renderText(String text, Point3d position, Point3d rotation, TextAlignment alignment, float scale, boolean autoScale, int wrapWidth, float preScaledFactor, boolean pixelCoords, ColorRGB color, boolean renderLit){
-			//Use mutable position here as we need to modify it and don't want to modify the actual variable.
-			MUTABLE_POSITION.setTo(position);
+		private void renderText(String text, TransformationMatrix transform, RotationMatrix rotation, TextAlignment alignment, float scale, boolean autoScale, int wrapWidth, boolean pixelCoords, ColorRGB color, boolean renderLit){
+			//Clear out the active object list as it was set last pass.
+			for(RenderableObject object : activeRenderObjects){
+				object.vertices.clear();
+			}
+			activeRenderObjects.clear();
 			
 			//Cull text to total chars.
 			//This is all we can render in one pass.
 			if(text.length() > MAX_VERTCIES_PER_RENDER/6){
 				text = text.substring(0, MAX_VERTCIES_PER_RENDER/6);
 			}
-			//Pre-calculate rotation of normals, as these won't change.
-			boolean doRotation = rotation != null && !rotation.isZero();
+			
+			//Pre-calculate normals, as these won't change.
 			float[] normals = new float[]{0.0F, 0.0F, 1.0F};
-			if(doRotation){
-				Point3d rotatedNormals = new Point3d(normals[0], normals[1], normals[2]).rotateFine(rotation);
-				normals[0] = (float) rotatedNormals.x;
-				normals[1] = (float) rotatedNormals.y;
-				normals[2] = (float) rotatedNormals.z;
-			}
 			
 			//Check the string for a random font code char.  If we have one, we need to substitute chars.
 			//Do this prior to rendering operations as this will affect string length and blocks.
@@ -300,21 +296,29 @@ public class RenderText{
 				text = String.valueOf(textArray);
 			}
 			
-			//If we are the default font, multiply scale by (7/8)/(10/16) = 1.4.
-			//This is because normally the font height is 7px of the 8 total.
-			//But unicode uses 10px of the 16.  This makes it slightly smaller if we don't do this.
-			//Because we did this, and fonts are centered top-left, we need to offset it 0.4 as well.
-			//If we don't, then the font will be too low for the line it is on.  Unicode fonts have 2px on the
-			//bottom whereas ASCII has 1, so they are bottom-aligned in the texture, but top-aligned in the render.
+			//Standard ASCII font is 7px tall out of 8.
+			//Unicode font is 10pz tall out of 16, or 5 out of 8.
+			//To compensate, we scale the font by (7/8)/(5/8) = 1.4.
+			//However, this will move the font down, as it's top-left centered.
+			//To compensate, we move the font 2px up, which would get the unicode
+			//to the same top-char position as ASCII without scale.  We do this
+			//movement post-scaling, as if we did it pre-scaling it wouldn't work
+			//since scaled fonts have different top-alignments.
+			//We only do this on the default font, however, which is replacing ASCII.
+			//This ensures the same font size as ASCII was.
 			if(isDefault){
-				DEFAULT_ADJ.set(0, DEFAULT_PIXELS_PER_CHAR*scale*0.4, 0);
-				if(doRotation){
-					DEFAULT_ADJ.rotateFine(rotation);
-				}
+				adjustmentOffset.set(0, 2, 0);
 				scale *= 1.4;
 			}else{
-				DEFAULT_ADJ.set(0, 0, 0);
+				adjustmentOffset.set(0, 0, 0);
 			}
+			
+			//Reduce scale by 16 if we're not using pixel coords.
+			//Entity JSON assumes 1 unit is 1 block (16px), not 1px.
+			if(!pixelCoords){
+				scale /= 16;
+			}
+			
 			
 			//Get the text width.
 			float stringWidth = getStringWidth(text);
@@ -322,31 +326,25 @@ public class RenderText{
 			
 			//Check for auto-scaling.
 			if(autoScale && wrapWidth > 0){
-				//Get the string width.  This is in text-pixels.
-				//We scale this to the actual pixel-width by multiplying it by the incoming scale.
-				//If the string width in pixels is greater than the wrap width, adjust scale.
-				//We also need to cancel wrapping if our scaled value is within bounds.
-				float adjustedStringWidthFactor = scale*stringWidth;
+				//Need to get the actual string width we would render at.
+				//This takes scale into account, as string upscaling would
+				//cause the width to go up.
+				float scaledStringWidth = scale*stringWidth;
 				if(!pixelCoords){
-					adjustedStringWidthFactor *= 16;
+					//Need to increase width by x16 scale as blocks scale to make 1 unit 1 block, not 1px.
+					scaledStringWidth *= 16;
 				}
-				if(adjustedStringWidthFactor > wrapWidth){
-					double scaleFactor = wrapWidth/adjustedStringWidthFactor;
-					if(pixelCoords){
-						DEFAULT_ADJ.add(0, -DEFAULT_PIXELS_PER_CHAR*(scale*scaleFactor - scale)/2D, 0);
-					}else{
-						DEFAULT_ADJ.add(0, DEFAULT_PIXELS_PER_CHAR*(scale*scaleFactor - scale)/2D, 0);
-					}
+				if(scaledStringWidth > wrapWidth){
+					double scaleFactor = wrapWidth/scaledStringWidth;
 					scale *= scaleFactor;
+					//Adjust text down based on how much we changed scale.
+					//Adjust based on 1/2 the height of the text, times how much we adjusted scale.
+					//So 1/2 reduction in scale will move the text 1/4 down.
+					adjustmentOffset.add(0, DEFAULT_PIXELS_PER_CHAR/2D*(scaleFactor - 1), 0);
 				}
 				//Don't use wrap width if we already adjusted scale for it.
 				wrapWidth = 0;
 			}
-			
-			//Add the adjustment and multiply position by prev scale.
-			//This moves the position to the appropriate one for the scale the entire text segment is rendered at.
-			MUTABLE_POSITION.add(DEFAULT_ADJ);
-			MUTABLE_POSITION.multiply(preScaledFactor);
 			
 			
 			//Check if we need to adjust our offset for our alignment.
@@ -466,7 +464,8 @@ public class RenderText{
 					for(int j=0; j<charSteps; ++j){
 						//Set vertex properties.
 						switch(j){
-							case(0):{//Bottom-right
+							case(0)://Bottom-right
+							case(3):{
 								charVertex[0] = alignmentOffset + currentOffset + charWidth;
 								charVertex[1] = currentLineOffset - DEFAULT_PIXELS_PER_CHAR;
 								charUV[0] = offsetsMaxU[textChar];
@@ -483,23 +482,7 @@ public class RenderText{
 								charUV[1] = offsetsMaxV[textChar];
 								break;
 							}
-							case(2):{//Top-left
-								charVertex[0] = alignmentOffset + currentOffset;
-								if(currentState.italic){
-									charVertex[0] += 1;
-								}
-								charVertex[1] = currentLineOffset;
-								charUV[0] = offsetsMinU[textChar];
-								charUV[1] = offsetsMaxV[textChar];
-								break;
-							}
-							case(3):{//Bottom-right
-								charVertex[0] = alignmentOffset + currentOffset + charWidth;
-								charVertex[1] = currentLineOffset - DEFAULT_PIXELS_PER_CHAR;
-								charUV[0] = offsetsMaxU[textChar];
-								charUV[1] = offsetsMinV[textChar];
-								break;
-							}
+							case(2):
 							case(4):{//Top-left
 								charVertex[0] = alignmentOffset + currentOffset;
 								if(currentState.italic){
@@ -550,7 +533,8 @@ public class RenderText{
 									//Set position to master and set custom char.
 									supplementalVertex[1] += CHAR_SPACING;
 									switch(j%6){
-										case(0):{//Bottom-right
+										case(0):
+										case(3):{//Bottom-right
 											supplementalVertex[0] += CHAR_SPACING;
 											supplementalUV[0] = offsetsMaxU[customChar];
 											supplementalUV[1] = offsetsMinV[customChar];
@@ -562,18 +546,7 @@ public class RenderText{
 											supplementalUV[1] = offsetsMaxV[customChar];
 											break;
 										}
-										case(2):{//Top-left
-											supplementalVertex[0] -= CHAR_SPACING;
-											supplementalUV[0] = offsetsMinU[customChar];
-											supplementalUV[1] = offsetsMaxV[customChar];
-											break;
-										}
-										case(3):{//Bottom-right
-											supplementalVertex[0] += CHAR_SPACING;
-											supplementalUV[0] = offsetsMaxU[customChar];
-											supplementalUV[1] = offsetsMinV[customChar];
-											break;
-										}
+										case(2):
 										case(4):{//Top-left
 											supplementalVertex[0] -= CHAR_SPACING;
 											supplementalUV[0] = offsetsMinU[customChar];
@@ -598,16 +571,8 @@ public class RenderText{
 						
 						//Only do these calcs for the first 6 vertices for the main char.
 						if(j < 6){
-							//Z is always 0 initially.  We rotate it to match the actual rotation.
+							//Z is always 0.
 							charVertex[2] = 0.0F;
-							
-							//Rotate vertices if required.
-							if(doRotation){
-								rotatedVertex.set(charVertex[0], charVertex[1], charVertex[2]).rotateFine(rotation);
-								charVertex[0] = (float) rotatedVertex.x;
-								charVertex[1] = (float) rotatedVertex.y;
-								charVertex[2] = (float) rotatedVertex.z;
-							}
 							
 							//Add char vertex to render block.
 							currentRenderObject.vertices.put(normals).put(charUV).put(charVertex);
@@ -621,18 +586,17 @@ public class RenderText{
 			}
 			
 			//All points obtained, render.
-			GL11.glPushMatrix();
-			GL11.glTranslated(MUTABLE_POSITION.x, MUTABLE_POSITION.y, MUTABLE_POSITION.z);
 			for(RenderableObject object : activeRenderObjects){
 				object.disableLighting = renderLit;
-				object.scale = scale*preScaledFactor;
+				object.transform.set(transform);
+				if(rotation != null){
+					object.transform.applyRotation(rotation);
+				}
+				object.transform.applyScaling(scale, scale, scale);
+				object.transform.applyTranslation(adjustmentOffset);
 				object.vertices.flip();
 				object.render();
-				object.vertices.clear();
 			}
-			//Clear out the active object list to prep for next pass, then pop state.
-			activeRenderObjects.clear();
-			GL11.glPopMatrix();
 		}
 		
 		private RenderableObject getObjectFor(char textChar, ColorRGB color){

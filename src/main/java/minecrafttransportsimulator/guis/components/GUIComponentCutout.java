@@ -2,8 +2,6 @@ package minecrafttransportsimulator.guis.components;
 
 import java.nio.FloatBuffer;
 
-import org.lwjgl.opengl.GL11;
-
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.rendering.components.RenderableObject;
 
@@ -55,10 +53,9 @@ public class GUIComponentCutout extends AGUIComponent{
 			}
 			renderable.vertices.flip();
 		}
-		GL11.glTranslated(position.x, position.y, position.z);
+		renderable.transform.setTranslation(position);
 		renderable.disableLighting = renderBright || ignoreGUILightingState;
 		renderable.texture = renderLitTexture ? gui.getTexture().replace(".png", "_lit.png") : gui.getTexture();
 		renderable.render();
-		GL11.glTranslated(-position.x, -position.y, -position.z);
     }
 }

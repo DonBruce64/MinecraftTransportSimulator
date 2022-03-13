@@ -1,7 +1,6 @@
 package minecrafttransportsimulator.blocks.tileentities.components;
 
-import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -24,28 +23,50 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 public abstract class ATileEntityBase<JSONDefinition extends AJSONMultiModelProvider> extends AEntityD_Definable<JSONDefinition>{
 	
 	private float lastLightLevel;
+	private final Point3D blockPosition;
 	
-	public ATileEntityBase(WrapperWorld world, Point3d position, WrapperPlayer placingPlayer, WrapperNBT data){
+	public ATileEntityBase(WrapperWorld world, Point3D position, WrapperPlayer placingPlayer, WrapperNBT data){
 		super(world, placingPlayer, data);
-		this.position.setTo(position);
+		//Offset the position of this tile to be centered in the blocks 0->1 space.
+		//This allows for better rotation code and simpler models.
+		//We need to save the actual position though so we don't constantly offset.
+		this.blockPosition = position.copy();
+		this.position.set(position);
+		this.position.add(0.5, 0, 0.5);
+		boundingBox.globalCenter.set(this.position);
+		
+		//Set angles to placement rotation.
 		if(placingPlayer != null){
-			int clampAngle = getRotationIncrement();
-			//Need to set the angles so the TE is facing the player, not the direction the player was facing.
-			angles.y = Math.round((placingPlayer.getYaw()+180)/clampAngle)*clampAngle%360;
+			orientation.rotateY(getPlacementRotation(placingPlayer));
+		}
+	}
+	
+	/**
+	 *  Returns the rotation, in the Y-direction, that should be applied to newly-placed instances of this entity.
+	 *  The player is passed-in as it is expected the rotation will depend on the player's rotation.
+	 */
+	public double getPlacementRotation(WrapperPlayer player){
+		int clampAngle = getRotationIncrement();
+		return Math.round((player.getYaw()+180)/clampAngle)*clampAngle%360;
+	}
+	
+	@Override
+	public void update(){
+		super.update();
+		if(lastLightLevel != getLightProvided()){
+			lastLightLevel = getLightProvided();
+			world.updateLightBrightness(position);
 		}
 	}
 	
 	@Override
-	public boolean update(){
-		if(super.update()){
-			if(lastLightLevel != getLightProvided()){
-				lastLightLevel = getLightProvided();
-				world.updateLightBrightness(position);
-			}
-			return true;
-		}else{
-			return false;
-		}
+	public boolean shouldLinkBoundsToPosition(){
+		return false;
+	}
+	
+	@Override
+	public boolean changesPosition(){
+		return false;
 	}
 	
 	@Override
@@ -74,10 +95,19 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONMultiModelProv
     }
 	
 	/**
-	 *  Returns the collision box for this TE.  Returns it in the global space, offset to the
-	 *  TE's center.
+	 *  Called when the neighboring block of this TE changes.  This can either
+	 *  be a block being added or removed or just updating state.
+	 *  This is only called on the SERVER.
 	 */
-	public BoundingBox getCollisionBox(){
-		return boundingBox;
-    }
+	public void onNeighborChanged(Point3D otherPosition){}
+	
+	@Override
+	public WrapperNBT save(WrapperNBT data){
+		super.save(data);
+		if(shouldSavePosition()){
+			//Overwrite the position with the actual block position.
+			data.setPoint3d("position", blockPosition);
+		}
+		return data;
+	}
 }

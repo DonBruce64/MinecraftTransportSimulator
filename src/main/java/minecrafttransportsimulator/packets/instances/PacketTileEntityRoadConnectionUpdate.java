@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLane;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLaneConnection;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
@@ -21,10 +21,10 @@ public class PacketTileEntityRoadConnectionUpdate extends APacketEntity<TileEnti
 	private final int curveNumber;
 	private final boolean connectedToStart;
 	
-	private final Point3d otherPosition;
+	private final Point3D otherPosition;
 	private final int otherLaneNumber;
 	private final int otherCurveNumber;
-	private final float otherCurveNetAngle;
+	private final double otherCurveNetAngle;
 	private final boolean otherConnectedToStart;
 	
 	public PacketTileEntityRoadConnectionUpdate(RoadLane lane, int curveNumber, boolean connectedToStart, RoadLaneConnection otherConnection){
@@ -60,7 +60,7 @@ public class PacketTileEntityRoadConnectionUpdate extends APacketEntity<TileEnti
 			this.otherPosition = readPoint3dFromBuffer(buf);
 			this.otherLaneNumber = buf.readInt();
 			this.otherCurveNumber = buf.readInt();
-			this.otherCurveNetAngle = buf.readFloat();
+			this.otherCurveNetAngle = buf.readDouble();
 			this.otherConnectedToStart = buf.readBoolean();
 		}else{
 			this.otherPosition = null;
@@ -82,7 +82,7 @@ public class PacketTileEntityRoadConnectionUpdate extends APacketEntity<TileEnti
 			writePoint3dToBuffer(otherPosition, buf);
 			buf.writeInt(otherLaneNumber);
 			buf.writeInt(otherCurveNumber);
-			buf.writeFloat(otherCurveNetAngle);
+			buf.writeDouble(otherCurveNetAngle);
 			buf.writeBoolean(otherConnectedToStart);
 		}else{
 			buf.writeBoolean(false);
@@ -99,6 +99,10 @@ public class PacketTileEntityRoadConnectionUpdate extends APacketEntity<TileEnti
 			}else{
 				lane.nextConnections.get(curveNumber).add(new RoadLaneConnection(otherPosition, otherLaneNumber, otherCurveNumber, otherCurveNetAngle, otherConnectedToStart));
 			}
+			TileEntityRoad otherRoad = world.getTileEntity(otherPosition);
+			if(otherRoad != null){
+				otherRoad.devRenderables.clear();
+			}
 		}else{
 			//No other curve.  This is a connection deletion request.
 			if(connectedToStart){
@@ -107,6 +111,7 @@ public class PacketTileEntityRoadConnectionUpdate extends APacketEntity<TileEnti
 				lane.nextConnections.get(curveNumber).clear();
 			}
 		}
+		road.devRenderables.clear();
 		return true;
 	}
 }

@@ -1,8 +1,8 @@
 package minecrafttransportsimulator.rendering.components;
 
-import org.lwjgl.opengl.GL11;
-
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
+import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.InterfaceRender;
@@ -12,6 +12,11 @@ import minecrafttransportsimulator.mcinterface.InterfaceRender;
  * @author don_bruce
  */
 public abstract class ARenderEntity<RenderedEntity extends AEntityC_Renderable>{
+	private static final Point3D interpolatedPositionHolder = new Point3D();
+	private static final RotationMatrix interpolatedOrientationHolder = new RotationMatrix();
+	private static final Point3D interpolatedScaleHolder = new Point3D();
+	private static final TransformationMatrix translatedMatrix = new TransformationMatrix();
+	private static final TransformationMatrix rotatedMatrix = new TransformationMatrix();
 	
 	/**
 	 *  Called to render this entity.  This is the setup method that sets states to the appropriate values.
@@ -23,37 +28,49 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Renderable>{
 		if(!disableRendering(entity, partialTicks)){
 			//Get the render offset.
 			//This is the interpolated movement, plus the prior position.
-			Point3d entityPositionDelta = entity.prevPosition.getInterpolatedPoint(entity.position, partialTicks);
+			if(entity.changesPosition()){
+				interpolatedPositionHolder.set(entity.prevPosition);
+				interpolatedPositionHolder.interpolate(entity.position, partialTicks);
+			}else{
+				interpolatedPositionHolder.set(entity.position);
+			}
 			
 			//Subtract the entity's position by the render entity position to get the delta for translating.
-			entityPositionDelta.subtract(InterfaceClient.getRenderViewEntity().getRenderedPosition(partialTicks));
+			interpolatedPositionHolder.subtract(InterfaceClient.getRenderViewEntity().getRenderedPosition(partialTicks));
 			
-			//Get the entity rotation.
-			Point3d entityRotation = entity.prevAngles.getInterpolatedPoint(entity.angles, partialTicks);
+			//Get interpolated orientation if required.
+			if(entity.changesPosition()){
+				entity.getInterpolatedOrientation(interpolatedOrientationHolder, partialTicks);
+			}else{
+				interpolatedOrientationHolder.set(entity.orientation);
+			}
 	       
 	        //Set up lighting.
 	        InterfaceRender.setLightingToPosition(entity.position);
 	        
-	        //Push the matrix on the stack and translate and rotate to the enitty's position.
-			adjustPositionRotation(entity, entityPositionDelta, entityRotation, partialTicks);
-			GL11.glPushMatrix();
-	        GL11.glTranslated(entityPositionDelta.x, entityPositionDelta.y, entityPositionDelta.z);
-	        GL11.glRotated(entityRotation.y, 0, 1, 0);
-	        GL11.glRotated(entityRotation.x, 1, 0, 0);
-	        GL11.glRotated(entityRotation.z, 0, 0, 1);
+	        //Set up matrixes.
+	        translatedMatrix.resetTransforms();
+	        translatedMatrix.setTranslation(interpolatedPositionHolder);
+			rotatedMatrix.set(translatedMatrix);
+			rotatedMatrix.applyRotation(interpolatedOrientationHolder);
+			interpolatedScaleHolder.set(entity.scale).subtract(entity.prevScale).scale(partialTicks).add(entity.prevScale);
+			rotatedMatrix.applyScaling(interpolatedScaleHolder);
 			
 	        //Render the main model.
 	        entity.world.endProfiling();
-	        renderModel(entity, blendingEnabled, partialTicks);
+	        renderModel(entity, rotatedMatrix, blendingEnabled, partialTicks);
 			
 			//End rotation render matrix.
-			GL11.glPopMatrix();
+			//Render holoboxes.
+			if(blendingEnabled){
+				renderHolographicBoxes(entity, translatedMatrix);
+			}
 			
 			//Render bounding boxes.
 			if(!blendingEnabled && InterfaceRender.shouldRenderBoundingBoxes()){
 				entity.world.beginProfiling("BoundingBoxes", true);
-				renderBoundingBoxes(entity, entityPositionDelta);
-				 entity.world.endProfiling();
+				renderBoundingBoxes(entity, translatedMatrix);
+				entity.world.endProfiling();
 			}
 			
 			//Handle sounds.  These will be partial-tick only ones.
@@ -73,23 +90,26 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Renderable>{
 	}
 	
 	/**
-	 *  Called to do supplemental modifications to the position and rotation of the entity prior to rendering.
-	 *  The passed-in position and rotation are where the code thinks the entity is: where you want to render
-	 *  it may not be at this position/rotation.  Hence the ability to modify these parameters.
-	 */
-	protected void adjustPositionRotation(RenderedEntity entity, Point3d entityPositionDelta, Point3d entityRotationDelta, float partialTicks){}
-	
-	/**
 	 *  Called to render the main model.  At this point the matrix state will be aligned
 	 *  to the position and rotation of the entity relative to the player-camera.
 	 */
-	protected abstract void renderModel(RenderedEntity entity, boolean blendingEnabled, float partialTicks);
+	protected abstract void renderModel(RenderedEntity entity, TransformationMatrix transform, boolean blendingEnabled, float partialTicks);
+	
+	/**
+	 *  Called to render holdgraphic boxes.  These shouldn't rotate with the model, so rotation is not present here.
+	 *  However, at this point the transforms will be set to the entity position, as it is assumed everything will
+	 *  at least be relative to it.
+	 *  Also, this method is only called when blending is enabled, because holographic stuff ain't solid.
+	 */
+	protected void renderHolographicBoxes(RenderedEntity entity, TransformationMatrix transform){};
 	
 	/**
 	 *  Renders the bounding boxes for the entity, if any are present.
 	 *  At this point, the translation and rotation done for the rendering 
 	 *  will be un-done, as boxes need to be rendered according to their world state.
-	 *  The passed-in delta is the delta between the player and the entity.
+	 *  The passed-in transform is between the player and the entity.
 	 */
-	protected abstract void renderBoundingBoxes(RenderedEntity entity, Point3d entityPositionDelta);
+	public void renderBoundingBoxes(RenderedEntity entity, TransformationMatrix transform){
+		entity.boundingBox.renderWireframe(entity, transform, null, null);	
+	}
 }

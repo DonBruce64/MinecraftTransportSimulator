@@ -3,15 +3,16 @@ package minecrafttransportsimulator.guis.instances;
 import java.util.ArrayList;
 import java.util.List;
 
-import minecrafttransportsimulator.baseclasses.TrailerConnection;
+import minecrafttransportsimulator.baseclasses.TowingConnection;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
-import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
+import minecrafttransportsimulator.entities.components.AEntityG_Towable;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartEngine;
 import minecrafttransportsimulator.entities.instances.PartPropeller;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentInstrument;
+import minecrafttransportsimulator.guis.components.GUIComponentSelector;
 import minecrafttransportsimulator.jsondefs.JSONConnectionGroup;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
@@ -62,7 +63,7 @@ public abstract class AGUIPanel extends AGUIBase{
 		setupTowingButtons(vehicle);
 	}
 	
-	private void setupTowingButtons(AEntityE_Interactable<?> entity){
+	private void setupTowingButtons(AEntityG_Towable<?> entity){
 		//Add trailer switch defs to allow switches to be displayed.
 		//These depend on our connections, and our part's connections.
 		//This method allows for recursion for connected trailers.
@@ -74,23 +75,19 @@ public abstract class AGUIPanel extends AGUIBase{
 			}
 			
 			//Also check things we are towing, if we are set to do so.
-			if(!(entity instanceof APart)){
-				for(TrailerConnection connection : entity.getTowingConnections()){
-					if(connection.hookupConnectionGroup.canIntiateSubConnections){
-						setupTowingButtons(connection.hookupVehicle);
-					}
+			for(TowingConnection connection : entity.towingConnections){
+				if(connection.hookupConnectionGroup.canIntiateSubConnections){
+					setupTowingButtons(connection.towingVehicle);
 				}
 			}
 		}
 		
 		//Check parts, if we have any.
-		if(entity instanceof AEntityF_Multipart){
-			for(APart part : ((AEntityF_Multipart<?>) entity).parts){
-				if(part.definition.connectionGroups != null){
-					for(JSONConnectionGroup connectionGroup : part.definition.connectionGroups){
-						if(connectionGroup.canIntiateConnections){
-							trailerSwitchDefs.add(new SwitchEntry(part, connectionGroup));
-						}
+		for(APart part : entity.parts){
+			if(part.definition.connectionGroups != null){
+				for(JSONConnectionGroup connectionGroup : part.definition.connectionGroups){
+					if(connectionGroup.canIntiateConnections){
+						trailerSwitchDefs.add(new SwitchEntry(part, connectionGroup));
 					}
 				}
 			}
@@ -101,10 +98,10 @@ public abstract class AGUIPanel extends AGUIBase{
 	 *  Call this if this GUI is open and a trailer connection changes.  This allows this GUI to
 	 *  reset its states on a trailer change, if the trailer that state was changed was one of our switches.
 	 */
-	public void handleConnectionChange(AEntityE_Interactable<?> hitchEntity, AEntityE_Interactable<?> hookupEntity){
+	public void handleConnectionChange(TowingConnection connection){
 		boolean recreatePanel = false;
 		for(SwitchEntry entry : trailerSwitchDefs){
-			if(entry.entityOn.equals(hitchEntity) || entry.entityOn.equals(hookupEntity)){
+			if(entry.vehicleOn.equals(connection.towingVehicle) || entry.vehicleOn.equals(connection.towedVehicle)){
 				recreatePanel = true;
 				break;
 			}
@@ -141,16 +138,16 @@ public abstract class AGUIPanel extends AGUIBase{
 		setupCustomComponents(guiLeft, guiTop);
 		
 		//Add instruments.  These go wherever they are specified in the JSON.
-		for(Integer instrumentNumber : vehicle.instruments.keySet()){
-			if(vehicle.definition.instruments.get(instrumentNumber).placeOnPanel){
-				addComponent(new GUIComponentInstrument(guiLeft, guiTop, instrumentNumber, vehicle));
+		for(int i=0; i<vehicle.instruments.size(); ++i){
+			if(vehicle.instruments.get(i) != null && vehicle.definition.instruments.get(i).placeOnPanel){
+				addComponent(new GUIComponentInstrument(guiLeft, guiTop, vehicle, i));
 			}
 		}
 		//Now add part instruments.
 		for(APart part : vehicle.parts){
-			for(Integer instrumentNumber : part.instruments.keySet()){
-				if(part.definition.instruments.get(instrumentNumber).placeOnPanel){
-					addComponent(new GUIComponentInstrument(guiLeft, guiTop, instrumentNumber, part));
+			for(int i=0; i<part.instruments.size(); ++i){
+				if(part.instruments.get(i) != null && part.definition.instruments.get(i).placeOnPanel){
+					addComponent(new GUIComponentInstrument(guiLeft, guiTop, part, i));
 				}
 			}
 		}
@@ -210,15 +207,36 @@ public abstract class AGUIPanel extends AGUIBase{
 		}
 	}
 	
-	protected static class SwitchEntry{
-		protected final AEntityE_Interactable<?> entityOn;
+	protected class SwitchEntry{
+		protected final AEntityE_Interactable<?> connectionDefiner;
+		protected final EntityVehicleF_Physics vehicleOn;
 		protected final JSONConnectionGroup connectionGroup;
 		protected final int connectionGroupIndex;
 		
-		private SwitchEntry(AEntityE_Interactable<?> entityOn, JSONConnectionGroup connectionGroup){
-			this.entityOn = entityOn;
+		private SwitchEntry(AEntityE_Interactable<?> connectionDefiner, JSONConnectionGroup connectionGroup){
+			this.connectionDefiner = connectionDefiner;
+			this.vehicleOn = connectionDefiner instanceof APart ? ((APart) connectionDefiner).vehicleOn : (EntityVehicleF_Physics) connectionDefiner;
 			this.connectionGroup = connectionGroup;
-			this.connectionGroupIndex = entityOn.definition.connectionGroups.indexOf(connectionGroup);
+			this.connectionGroupIndex = connectionDefiner.definition.connectionGroups.indexOf(connectionGroup);
+		}
+		
+		protected void updateSelectorState(GUIComponentSelector trailerSelector){
+			trailerSelector.selectorState = 1;
+			SwitchEntry switchDef = trailerSwitchDefs.get(0);
+			if(switchDef.connectionGroup.isHookup){
+				if(switchDef.vehicleOn.towedByConnection != null){
+					trailerSelector.selectorState = 0;
+					return;
+				}
+			}
+			if(switchDef.connectionGroup.isHitch){
+				for(TowingConnection connection : switchDef.vehicleOn.towingConnections){
+					if(connection.towedEntity.equals(switchDef.connectionDefiner)){
+						trailerSelector.selectorState = 0;
+						return;
+					}
+				}
+			}
 		}
 	}
 }

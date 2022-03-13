@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.Orientation3d;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.entities.instances.EntityRadio;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
@@ -20,26 +20,16 @@ import minecrafttransportsimulator.sound.SoundInstance;
  * @author don_bruce
  */
 public abstract class AEntityB_Existing extends AEntityA_Base{
-	protected static final Point3d ZERO_FOR_CONSTRUCTOR = new Point3d();
+	protected static final Point3D ZERO_FOR_CONSTRUCTOR = new Point3D();
 	
-	public final Point3d position;
-	public final Point3d prevPosition;
-	public final Point3d motion;
-	public final Point3d prevMotion;
-	
-	public final Point3d angles;
-	public final Point3d prevAngles;
-	public final Point3d rotation;
-	public final Point3d prevRotation;
-	
-	public final Orientation3d orientation;
-	public final Orientation3d prevOrientation;
-	
-	public BoundingBox boundingBox;
-	public double airDensity;
+	public final Point3D position;
+	public final RotationMatrix orientation;
+	public final Point3D prevPosition;
+	public final RotationMatrix prevOrientation;
+	public final Point3D motion;
+	public final Point3D prevMotion;
 	public double velocity;
-	/**The player that placed this entity.  Only valid on the server where placement occurs. Client-side will always be null.**/
-	public final WrapperPlayer placingPlayer;
+	public final BoundingBox boundingBox;
 	
 	//Internal sound variables.
 	public final EntityRadio radio;
@@ -49,17 +39,21 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	public AEntityB_Existing(WrapperWorld world, WrapperPlayer placingPlayer, WrapperNBT data){
 		super(world, data);
 		this.position = data.getPoint3d("position");
-		this.prevPosition = position.copy();
-		this.motion = data.getPoint3d("motion");
-		this.prevMotion = motion.copy();
-		this.angles = data.getPoint3d("angles");
-		this.prevAngles = angles.copy();
-		this.rotation = data.getPoint3d("rotation");
-		this.prevRotation = rotation.copy();
-		this.orientation = data.getOrientation3d("orientation");
-		this.prevOrientation = orientation.copy();
-		this.placingPlayer = placingPlayer;
-		this.boundingBox = new BoundingBox(new Point3d(), position, 0.5, 0.5, 0.5, false);
+		this.orientation = new RotationMatrix().setToAngles(data.getPoint3d("angles"));
+		
+		if(changesPosition()){
+			this.prevPosition = position.copy();
+			this.prevOrientation = new RotationMatrix().set(orientation);
+			this.motion = data.getPoint3d("motion");
+			this.prevMotion = motion.copy();
+		}else{
+			this.prevPosition = null;
+			this.prevOrientation = null;
+			this.motion = null;
+			this.prevMotion = null;
+		}
+		
+		this.boundingBox = new BoundingBox(shouldLinkBoundsToPosition() ? this.position : this.position.copy(), 0.5, 0.5, 0.5);
 		if(hasRadio()){
 			this.radio = new EntityRadio(this, data.getDataOrNew("radio"));
 			world.addEntity(radio);
@@ -69,42 +63,41 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	}
 	
 	/**Constructor for un-synced entities.  Allows for specification of position/motion/angles.**/
-	public AEntityB_Existing(WrapperWorld world, Point3d position, Point3d motion, Point3d angles){
+	public AEntityB_Existing(WrapperWorld world, Point3D position, Point3D motion, Point3D angles){
 		super(world, null);
 		this.position = position.copy();
-		this.prevPosition = position.copy();
-		this.motion = motion.copy();
-		this.prevMotion = motion.copy();
-		this.angles = angles.copy();
-		this.prevAngles = angles.copy();
-		this.rotation = new Point3d();
-		this.prevRotation = rotation.copy();
-		this.orientation = new Orientation3d();
-		this.prevOrientation = orientation.copy();
-		this.placingPlayer = null;
-		this.boundingBox = new BoundingBox(new Point3d(), position, 0.5, 0.5, 0.5, false);
+		this.orientation = new RotationMatrix().setToAngles(angles);
+		
+		if(changesPosition()){
+			this.prevPosition = position.copy();
+			this.prevOrientation = new RotationMatrix().set(orientation);
+			this.motion = motion.copy();
+			this.prevMotion = motion.copy();
+		}else{
+			this.prevPosition = null;
+			this.prevOrientation = null;
+			this.motion = null;
+			this.prevMotion = null;
+		}
+		
+		this.boundingBox = new BoundingBox(shouldLinkBoundsToPosition() ? this.position : this.position.copy(), 0.5, 0.5, 0.5);
 		this.radio = null;
 	}
 	
 	@Override
-	public boolean update(){
-		if(super.update()){
-			world.beginProfiling("EntityB_Level", true);
-			if(world.isClient()){
-				updateSounds(0);
-			}
-			prevPosition.setTo(position);
-			prevMotion.setTo(motion);
-			prevAngles.setTo(angles);
-			prevRotation.setTo(rotation);
-			prevOrientation.setTo(orientation);
-			airDensity = 1.225*Math.pow(2, -position.y/(500D*world.getMaxHeight()/256D));
-			velocity = motion.length();
-			world.endProfiling();
-			return true;
-		}else{
-			return false;
+	public void update(){
+		super.update();
+		world.beginProfiling("EntityB_Level", true);
+		if(world.isClient()){
+			updateSounds(0);
 		}
+		if(changesPosition()){
+			prevPosition.set(position);
+			prevMotion.set(motion);
+			prevOrientation.set(orientation);
+			velocity = motion.length();
+		}
+		world.endProfiling();
 	}
 	
 	@Override
@@ -149,6 +142,35 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	 */
 	public boolean shouldSavePosition(){
 		return true;
+	}
+	
+	/**
+	 *  This method returns true if this entity should link its bounding box to its position.  This will
+	 *  result in the box always being centered on the entity.  This is normally true, but may be made
+	 *  false for entities that need their collision offset from their position.  This will require manual bounding
+	 *  box syncing, though the initial location of the box will be the position of the entity.
+	 */
+	public boolean shouldLinkBoundsToPosition(){
+		return true;
+	}
+	
+	/**
+	 *  This method returns true if this entity can change position (or if positional data is important to it).
+	 *  This is normally true, but some entities may not ever move, and so there are some calls we can skip.
+	 *  If this is set true, then {@link #prevPosition}, {@link #motion}, {@link #prevMotion}, and {@link #prevOrientation} 
+	 *  will be null and will not be used in various calls.
+	 */
+	public boolean changesPosition(){
+		return true;
+	}
+	
+	/**
+	 *  Sets the interpolated orientation into the passed-in Matrix4d.
+	 *  The position is not interpolated with this as {@link #orientation}
+	 *  only contains the rotational elements of this entity. 
+	 */
+	public void getInterpolatedOrientation(RotationMatrix store, double partialTicks){
+		store.interploate(prevOrientation, orientation, partialTicks);
 	}
 	
 	/**
@@ -210,9 +232,10 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 		super.save(data);
 		if(shouldSavePosition()){
 			data.setPoint3d("position", position);
-			data.setPoint3d("motion", motion);
-			data.setPoint3d("angles", angles);
-			data.setPoint3d("rotation", rotation);
+			if(changesPosition()){
+				data.setPoint3d("motion", motion);
+			}
+			data.setPoint3d("angles", orientation.convertToAngles());
 		}
 		if(radio != null){
 			data.setData("radio", radio.save(new WrapperNBT()));

@@ -85,8 +85,6 @@ public abstract class AJSONItem{
     	@Deprecated
     	public String customType;
     	@Deprecated
-    	public boolean disableMirroring;
-    	@Deprecated
     	public boolean useVehicleTexture;
     	
     	//Moved from Decor during common JSON overhauling.

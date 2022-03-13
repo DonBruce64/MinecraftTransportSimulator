@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
@@ -81,16 +81,16 @@ public class GUISignalController extends AGUIBase{
 				for(double i=controller.position.x-scanDistance; i<=controller.position.x+scanDistance; ++i){
 					for(double j=controller.position.y-scanDistance; j<=controller.position.y+scanDistance; ++j){
 						for(double k=controller.position.z-scanDistance; k<=controller.position.z+scanDistance; ++k){
-							Point3d checkPosition = new Point3d(i, j, k);
+							Point3D checkPosition = new Point3D(i, j, k);
 							ATileEntityBase<?> tile = controller.world.getTileEntity(checkPosition);
 							if(tile instanceof TileEntityPole){
 								for(ATileEntityPole_Component component : ((TileEntityPole) tile).components.values()){
 									if(component instanceof TileEntityPole_TrafficSignal){
-										controller.componentLocations.add(checkPosition);
-										minX = Math.min(minX, checkPosition.x);
-										maxX = Math.max(maxX, checkPosition.x);
-										minZ = Math.min(minZ, checkPosition.z);
-										maxZ = Math.max(maxZ, checkPosition.z);
+										controller.componentLocations.add(tile.position);
+										minX = Math.min(minX, tile.position.x);
+										maxX = Math.max(maxX, tile.position.x);
+										minZ = Math.min(minZ, tile.position.z);
+										maxZ = Math.max(maxZ, tile.position.z);
 										break;
 									}
 								}
@@ -98,6 +98,7 @@ public class GUISignalController extends AGUIBase{
 						}
 					}
 				}
+				//Offset intersection center by 0.5 to account for the fact we're checking block bounds and blocks are entered.
 				controller.intersectionCenterPoint.set(minX + (maxX-minX)/2, controller.position.y, minZ + (maxZ - minZ)/2);
 				scanCenterXText.setText(String.valueOf(controller.intersectionCenterPoint.x));
 				scanCenterZText.setText(String.valueOf(controller.intersectionCenterPoint.z));

@@ -1,6 +1,6 @@
 package minecrafttransportsimulator.sound;
 
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.instances.EntityRadio;
 import minecrafttransportsimulator.jsondefs.JSONSound;
@@ -19,7 +19,7 @@ public class SoundInstance{
 	public final String soundName;
 	public final JSONSound soundDef;
 	public final EntityRadio radio;
-	public final Point3d position;
+	public final Point3D position;
 	
 	//Runtime variables.
 	public int sourceIndex;
@@ -45,9 +45,9 @@ public class SoundInstance{
 	
 	public void updatePosition(){
 		if(soundDef != null && soundDef.pos != null){
-			position.setTo(soundDef.pos).rotateFine(entity.angles).add(entity.position);
+			position.set(soundDef.pos).rotate(entity.orientation).add(entity.position);
 		}else{
-			position.setTo(entity.position);
+			position.set(entity.position);
 		}
 	}
 }

@@ -5,13 +5,14 @@ import java.util.List;
 import org.lwjgl.openal.AL;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityBullet;
 import minecrafttransportsimulator.entities.instances.EntityParticle;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.guis.components.AGUIBase;
+import minecrafttransportsimulator.systems.ControlSystem;
 import net.minecraft.block.SoundType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ActiveRenderInfo;
@@ -28,6 +29,7 @@ import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.relauncher.Side;
 
 /**Interface to the MC client instance.  This class has methods used for determining
@@ -119,7 +121,7 @@ public class InterfaceClient{
 		//See what we are hitting.
 		RayTraceResult lastHit = Minecraft.getMinecraft().objectMouseOver;
 		if(lastHit != null){
-			Point3d mousedOverPoint = new Point3d(lastHit.hitVec.x, lastHit.hitVec.y, lastHit.hitVec.z);
+			Point3D mousedOverPoint = new Point3D(lastHit.hitVec.x, lastHit.hitVec.y, lastHit.hitVec.z);
 			if(lastHit.entityHit != null){
 				if(lastHit.entityHit instanceof BuilderEntityExisting){
 					AEntityB_Existing mousedOverEntity = ((BuilderEntityExisting) lastHit.entityHit).entity;
@@ -195,12 +197,12 @@ public class InterfaceClient{
 	 *  Returns the current camera position.
 	 *  The returned position may by modified without affecting the entity's actual position.
 	 */
-	public static Point3d getCameraPosition(){
+	public static Point3D getCameraPosition(){
 		Vec3d position = ActiveRenderInfo.getCameraPosition();
 		mutablePosition.set(position.x, position.y, position.z);
 		return mutablePosition;
 	}
-	private static final Point3d mutablePosition = new Point3d();
+	private static final Point3D mutablePosition = new Point3D();
 	
 	/**
 	 *  Returns true OpenAL is ready to play sounds.  This may be changed by mods, so
@@ -213,7 +215,7 @@ public class InterfaceClient{
 	/**
 	 *  Plays the block breaking sound for the block at the passed-in position.
 	 */
-	public static void playBlockBreakSound(Point3d position){
+	public static void playBlockBreakSound(Point3D position){
 		BlockPos pos = new BlockPos(position.x, position.y, position.z);
 		if(!Minecraft.getMinecraft().world.isAirBlock(pos)){
 			SoundType soundType = Minecraft.getMinecraft().world.getBlockState(pos).getBlock().getSoundType(Minecraft.getMinecraft().world.getBlockState(pos), Minecraft.getMinecraft().player.world, pos, null);
@@ -242,17 +244,24 @@ public class InterfaceClient{
 	*/
 	@SubscribeEvent
 	public static void on(TickEvent.ClientTickEvent event){
-		WrapperWorld clientWorld = WrapperWorld.getWrapperFor(Minecraft.getMinecraft().world);
-		if(clientWorld != null){
-			clientWorld.beginProfiling("MTS_BulletUpdates", true);
-			for(EntityBullet bullet : clientWorld.getEntitiesOfType(EntityBullet.class)){
-				bullet.update();
+		if(event.phase.equals(Phase.END)){
+			WrapperWorld clientWorld = WrapperWorld.getWrapperFor(Minecraft.getMinecraft().world);
+			if(clientWorld != null){
+				clientWorld.beginProfiling("MTS_BulletUpdates", true);
+				for(EntityBullet bullet : clientWorld.getEntitiesOfType(EntityBullet.class)){
+					bullet.update();
+				}
+				clientWorld.beginProfiling("MTS_ParticleUpdates", false);
+				for(EntityParticle particle : clientWorld.getEntitiesOfType(EntityParticle.class)){
+					particle.update();
+				}
+				clientWorld.endProfiling();
+				
+				WrapperPlayer player = getClientPlayer();
+				if(player != null && !player.isSpectator()){
+					ControlSystem.controlGlobal(player);
+				}
 			}
-			clientWorld.beginProfiling("MTS_ParticleUpdates", false);
-			for(EntityParticle particle : clientWorld.getEntitiesOfType(EntityParticle.class)){
-				particle.update();
-			}
-			clientWorld.endProfiling();
 		}
 	}
 }

@@ -1,13 +1,17 @@
 package minecrafttransportsimulator.rendering.instances;
 
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.TransformationMatrix;
+import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
 import minecrafttransportsimulator.rendering.components.ARenderEntityDefinable;
 
 public class RenderPoleComponent extends ARenderEntityDefinable<ATileEntityPole_Component>{
 	
 	@Override
-	public void adjustPositionRotation(ATileEntityPole_Component component, Point3d entityPositionDelta, Point3d entityRotationDelta, float partialTicks){
-		component.core.getRenderer().adjustPositionRotation(component.core, entityPositionDelta, entityRotationDelta, partialTicks);
+	public void renderBoundingBoxes(ATileEntityPole_Component component, TransformationMatrix transform){
+		//Only render the bounding box for the core component.
+		if(component.axis.equals(Axis.NONE)){
+			component.core.getRenderer().renderBoundingBoxes(component.core, transform);
+		}
 	}
 }

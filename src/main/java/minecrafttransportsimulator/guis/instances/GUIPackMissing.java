@@ -7,17 +7,13 @@ import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
 
 public class GUIPackMissing extends AGUIBase{
-	GUIComponentLabel noticeLabel;
+	private GUIComponentLabel noticeLabel;
 	
 	@Override
 	public void setupComponents(){
 		super.setupComponents();
-		addComponent(noticeLabel = new GUIComponentLabel(guiLeft + 130, guiTop + 10, ColorRGB.RED, InterfaceCore.translate("gui.packmissing.title"), TextAlignment.CENTERED, 3.0F));
-		addComponent(new GUIComponentLabel(guiLeft + 10, guiTop + 40, ColorRGB.BLACK, InterfaceCore.translate("gui.packmissing.reason"), TextAlignment.LEFT_ALIGNED, 0.75F, 240));
-		addComponent(new GUIComponentLabel(guiLeft + 10, guiTop + 65, ColorRGB.BLACK, InterfaceCore.translate("gui.packmissing.nomod"), TextAlignment.LEFT_ALIGNED, 0.75F, 240));
-		addComponent(new GUIComponentLabel(guiLeft + 10, guiTop + 90, ColorRGB.BLACK, InterfaceCore.translate("gui.packmissing.modlink"), TextAlignment.LEFT_ALIGNED, 0.75F, 240));
-		addComponent(new GUIComponentLabel(guiLeft + 10, guiTop + 115, ColorRGB.BLACK, InterfaceCore.translate("gui.packmissing.misplaced"), TextAlignment.LEFT_ALIGNED, 0.75F, 240));
-		addComponent(new GUIComponentLabel(guiLeft + 10, guiTop + 150, ColorRGB.BLACK, InterfaceCore.translate("gui.packmissing.versionerror"), TextAlignment.LEFT_ALIGNED, 0.75F, 240));
+		addComponent(noticeLabel = new GUIComponentLabel(guiLeft + 130, guiTop + 10, ColorRGB.RED, InterfaceCore.translate("gui.error.title"), TextAlignment.CENTERED, 3.0F));
+		addComponent(new GUIComponentLabel(guiLeft + 10, guiTop + 40, ColorRGB.BLACK, InterfaceCore.translate("gui.error.packmissing"), TextAlignment.LEFT_ALIGNED, 1.0F, 240));
 	}
 
 	@Override

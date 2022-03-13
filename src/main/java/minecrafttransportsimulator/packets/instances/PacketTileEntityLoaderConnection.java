@@ -3,7 +3,7 @@ package minecrafttransportsimulator.packets.instances;
 import java.util.UUID;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityLoader;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.PartInteractable;
@@ -16,7 +16,7 @@ import minecrafttransportsimulator.packets.components.APacketEntity;
  */
 public class PacketTileEntityLoaderConnection extends APacketEntity<ATileEntityLoader>{
 	private final UUID linkedID;
-	private final Point3d partOffset;
+	private final Point3D partOffset;
 	private final boolean connect;
 	
 	public PacketTileEntityLoaderConnection(ATileEntityLoader loader, boolean connect){

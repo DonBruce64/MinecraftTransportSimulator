@@ -5,9 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.lwjgl.opengl.GL11;
-
 import minecrafttransportsimulator.baseclasses.ColorRGB;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.rendering.components.AModelParser;
 import minecrafttransportsimulator.rendering.components.RenderableObject;
 
@@ -27,6 +26,7 @@ public class GUIComponent3DModel extends AGUIComponent{
 	/**Parsed vertex indexes.  Keyed by model name.*/
 	private static final Map<String, RenderableObject> modelParsedObjects = new HashMap<String, RenderableObject>();
 	private static final Map<String, Float> modelScalingFactors = new HashMap<String, Float>();
+	private static final RotationMatrix ISOMETRIC_ROTATION = new RotationMatrix().setToAxisAngle(0, 1, 0, -45).multiply(new RotationMatrix().setToAxisAngle(0.70712, 0, -0.70712, 35.264));;
 	
 	public final float scaleFactor;
 	public final boolean isometric;
@@ -96,30 +96,23 @@ public class GUIComponent3DModel extends AGUIComponent{
 				RenderableObject combinedObject = new RenderableObject("model", textureLocation, ColorRGB.WHITE, totalModel, true);
 				modelParsedObjects.put(modelLocation, combinedObject);
 			}
-			GL11.glPushMatrix();
-			//Translate to position and rotate to isometric view if required.
-			//Need to translate -y due to different model position.
-			GL11.glTranslated(position.x, position.y, position.z);
+			RenderableObject object = modelParsedObjects.get(modelLocation);
+			object.transform.resetTransforms();
+			object.transform.setTranslation(position);
 			if(isometric){
-				GL11.glRotatef(-45, 0, 1, 0);
-				GL11.glRotatef(35.264F, 1, 0, -1);
+				object.transform.applyRotation(ISOMETRIC_ROTATION);
 			}
-			
-			//If set to rotate, do so now based on time.
 			if(spin){
-				GL11.glRotatef((36*System.currentTimeMillis()/1000)%360, 0, 1, 0);
+				object.transform.applyRotation(new RotationMatrix().setToAxisAngle(0, 1, 0, (36*System.currentTimeMillis()/1000)%360));
 			}
-
-			//Scale based on our scaling factor and render.
 			if(!staticScaling){
 				scale = modelScalingFactors.get(modelLocation);
 			}
-			RenderableObject object = modelParsedObjects.get(modelLocation);
-			object.scale = scale*scaleFactor;
+			double totalScale = scale*scaleFactor;
+			object.transform.applyScaling(totalScale, totalScale, totalScale);
 			object.texture = textureLocation;
 			object.disableLighting = renderBright;
 			object.render();
-			GL11.glPopMatrix();
 		}
     }
     

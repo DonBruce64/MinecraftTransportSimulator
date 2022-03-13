@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.baseclasses.Point3d;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
@@ -18,11 +18,11 @@ import minecrafttransportsimulator.packets.components.APacketEntity;
  * @author don_bruce
  */
 public class PacketVehicleServerMovement extends APacketEntity<EntityVehicleF_Physics>{
-	private final Point3d motion;
-	private final Point3d rotation;
+	private final Point3D motion;
+	private final Point3D rotation;
 	private final double pathing;
 	
-	public PacketVehicleServerMovement(EntityVehicleF_Physics vehicle, Point3d motion, Point3d rotation, double pathing){
+	public PacketVehicleServerMovement(EntityVehicleF_Physics vehicle, Point3D motion, Point3D rotation, double pathing){
 		super(vehicle);
 		this.motion = motion;
 		this.rotation = rotation;

@@ -143,6 +143,13 @@ public final class PackParserSystem{
 				ConfigSystem.saveToDisk();
 			}
 		}
+		//Also check for new packs for pack-specific speed factors.
+		for(String packID : packMap.keySet()){
+			if(!ConfigSystem.configObject.general.packSpeedFactors.value.containsKey(packID)){
+				ConfigSystem.configObject.general.packSpeedFactors.value.put(packID, 1.0);
+				ConfigSystem.saveToDisk();
+			}
+		}
     	
     	//Have the config system dump the crafting, if so required.
     	ConfigSystem.initCraftingOverrides();
