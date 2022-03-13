@@ -234,7 +234,16 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 							}
 							break;
 						}
-						case UP: 
+						case UP: {
+							if(boundingBox.heightRadius == definition.pole.radius){
+								boundingBox.heightRadius = (0.5 + definition.pole.radius)/2D;
+								boundingBox.globalCenter.y = position.y + 1.0 - boundingBox.heightRadius;
+							}else{
+								boundingBox.heightRadius = 0.5;
+								boundingBox.globalCenter.y = position.y + 0.5;
+							}
+							break;
+						}
 						case DOWN: {
 							if(boundingBox.heightRadius == definition.pole.radius){
 								boundingBox.heightRadius = (0.5 + definition.pole.radius)/2D;
