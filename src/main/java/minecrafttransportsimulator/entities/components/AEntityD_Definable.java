@@ -779,10 +779,12 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 	public boolean incrementVariable(String variable, double incrementValue, double minValue, double maxValue){
 		double currentValue = getVariable(variable);
 		double newValue = currentValue + incrementValue;
-		if(newValue < minValue){
-			newValue = minValue;
-		}else if(newValue > maxValue){
-			newValue = maxValue;
+		if(minValue != 0 || maxValue != 0){
+			if(newValue < minValue){
+				newValue = minValue;
+			}else if(newValue > maxValue){
+				newValue = maxValue;
+			}
 		}
 		if(newValue != currentValue){
 			setVariable(variable, newValue);

@@ -364,13 +364,14 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 				return currentValue;
 			}
 		}
-		if(modifiedValue < modifier.minValue){
-			return modifier.minValue;
-		}else if(modifiedValue > modifier.maxValue){
-			return modifier.maxValue;
-		}else{
-			return modifiedValue;
+		if(modifier.minValue != 0 || modifier.maxValue != 0){
+			if(modifiedValue < modifier.minValue){
+				return modifier.minValue;
+			}else if(modifiedValue > modifier.maxValue){
+				return modifier.maxValue;
+			}
 		}
+		return modifiedValue;
 	}
 	
 	/**
