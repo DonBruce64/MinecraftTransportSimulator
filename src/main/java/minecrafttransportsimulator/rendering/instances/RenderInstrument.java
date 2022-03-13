@@ -90,7 +90,7 @@ public final class RenderInstrument{
 					
 					//Render if we don't have transforms, or of those transforms said we were good.
 					InstrumentSwitchbox switchbox = entity.instrumentComponentSwitchboxes.get(component);
-					if(switchbox == null || switchbox.runSwitchbox(partialTicks)){
+					if(switchbox == null || switchbox.runSwitchbox(partialTicks, true)){
 						//Add the instrument UV-map offsets.
 						//These don't get added to the initial points to allow for rotation.
 						bottomLeft.add(component.textureXCenter, component.textureYCenter, 0);

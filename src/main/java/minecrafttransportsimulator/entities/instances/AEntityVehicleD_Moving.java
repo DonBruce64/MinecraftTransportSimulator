@@ -179,13 +179,6 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			}
 		}
 		
-		//If this is the 20th tick (1 second), and we are on the client, request a sync packet.
-		//This ensures that we have the proper deltas and didn't miss any updates from the server
-		//since we were spanwed.
-		if(ticksExisted == 20 && world.isClient()){
-			syncServerDeltas(null, null, 0);
-		}
-		
 		//Update brake status.  This is used in a lot of locations, so we don't want to query the set every time.
 		brake = getVariable(BRAKE_VARIABLE);
 		parkingBrakeOn = isVariableActive(PARKINGBRAKE_VARIABLE);
@@ -845,6 +838,15 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 					clientDeltaPApplied *= 1D/25D;
 					clientDeltaP += clientDeltaPApplied;
 					totalPathDelta += clientDeltaPApplied;
+				}
+				
+				//If this is the 20th tick (1 second), and we are on the client, request a sync packet.
+				//This ensures that we have the proper deltas and didn't miss any updates from the server
+				//since we were spanwed.
+				if(ticksExisted == 100 && world.isClient()){
+					//TODO this seems to cause more issues than it fixes, because it can come any time during server packets.
+					//This results in incorrect delta application and the system doesn't know if it missed a sync packet or not.
+					//syncServerDeltas(null, null, 0);
 				}
 			}else{
 				addToServerDeltas(null, null, 0);

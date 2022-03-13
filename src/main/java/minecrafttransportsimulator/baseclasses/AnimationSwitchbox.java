@@ -45,8 +45,8 @@ public class AnimationSwitchbox{
 		}
 	}
 	
-	public boolean runSwitchbox(float partialTicks){
-		if(lastTickRun != entity.ticksExisted || lastPartialTickRun != partialTicks){
+	public boolean runSwitchbox(float partialTicks, boolean forceSameTick){
+		if(forceSameTick || lastTickRun != entity.ticksExisted || lastPartialTickRun != partialTicks){
 			lastTickRun = entity.ticksExisted;
 			lastPartialTickRun = partialTicks;
 			
@@ -55,7 +55,7 @@ public class AnimationSwitchbox{
 				if(switchbox == null){
 					throw new IllegalArgumentException("Was told to applyAfter the object " + applyAfter + " on " + entity.definition.packID + ":" + entity.definition.systemName + ", but there aren't any animations to applyAfter!");
 				}
-				if(switchbox.runSwitchbox(partialTicks)){
+				if(switchbox.runSwitchbox(partialTicks, forceSameTick)){
 					translation.set(switchbox.translation);
 					rotation.set(switchbox.rotation);
 					scale.set(switchbox.scale);

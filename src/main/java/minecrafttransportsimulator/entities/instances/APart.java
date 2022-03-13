@@ -127,10 +127,10 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 		//Update active state.
 		isActive = placementDefinition.isSubPart ? parentPart.isActive : true;
 		if(isActive && placementActiveSwitchbox != null){
-			isActive = placementActiveSwitchbox.runSwitchbox(0);
+			isActive = placementActiveSwitchbox.runSwitchbox(0, false);
 		}
 		if(isActive && internalActiveSwitchbox != null){
-			isActive = internalActiveSwitchbox.runSwitchbox(0);
+			isActive = internalActiveSwitchbox.runSwitchbox(0, false);
 		}
 		
 		//Set initial offsets.
@@ -160,7 +160,7 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 		
 		//Placement movement uses the coords of the thing we are on.
 		if(placementMovementSwitchbox != null){
-			isInvisible = !placementMovementSwitchbox.runSwitchbox(0);
+			isInvisible = !placementMovementSwitchbox.runSwitchbox(0, false);
 			//Offset needs to move according to full transform.
 			//This is because these coords are from what we are on.
 			//Orientation just needs to update according to new rotation.
@@ -178,7 +178,7 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 			scale.multiply(placementDefinition.partScale);
 		}
 		if(internalMovementSwitchbox != null){
-			isInvisible = !internalMovementSwitchbox.runSwitchbox(0) || isInvisible;
+			isInvisible = !internalMovementSwitchbox.runSwitchbox(0, false) || isInvisible;
 			//Offset here is local and just needs translation, as it's
 			//assuming that we are the origin.
 			localOffset.add(internalMovementSwitchbox.translation);

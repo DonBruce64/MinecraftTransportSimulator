@@ -98,7 +98,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 		JSONLight lightDef = entity.lightObjectDefinitions.get(object.name);
 		if(shouldRender(entity, lightDef, blendingEnabled, partialTicks)){
 			AnimationSwitchbox switchbox = entity.animatedObjectSwitchboxes.get(object.name);
-			if(switchbox == null || switchbox.runSwitchbox(partialTicks)){
+			if(switchbox == null || switchbox.runSwitchbox(partialTicks, false)){
 				float lightLevel = lightDef != null ? entity.lightBrightnessValues.get(lightDef) : 0;
 				object.transform.set(transform);
 				
@@ -232,7 +232,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 				if(switchbox == null){
 					throw new IllegalArgumentException("Was told to applyAfter the object " + objectDef.applyAfter + " on " + entity.definition.packID + ":" + entity.definition.systemName + " for the object " + object.name + ", but there aren't any animations to applyAfter!");
 				}
-				return switchbox.runSwitchbox(partialTicks);
+				return switchbox.runSwitchbox(partialTicks, false);
 			}
 		}
 		

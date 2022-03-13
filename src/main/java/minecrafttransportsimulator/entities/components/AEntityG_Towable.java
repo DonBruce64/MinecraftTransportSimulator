@@ -124,7 +124,8 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
 		if(connectionRequestIndex != 0){
 			if(!world.isClient()){
 				//Don't handle requests on the client.  These get packets.
-				handleConnectionRequest(this, connectionRequestIndex - 1);
+				//FIXME re-nenable when towing is fixed.
+				//handleConnectionRequest(this, connectionRequestIndex - 1);
 			}
 			setVariable(TOWING_CONNECTION_REQUEST_VARIABLE, 0);
 		}

@@ -133,7 +133,7 @@ public class CameraSystem{
             		
             		//Now run transforms on this position to get it's proper position.
             		if(switchbox != null){
-	    				switchbox.runSwitchbox(partialTicks);
+	    				switchbox.runSwitchbox(partialTicks, false);
 	    				cameraAdjustedPosition.transform(switchbox.netMatrix);
             		}
             		
@@ -233,7 +233,7 @@ public class CameraSystem{
     	if(entity.definition.rendering != null && entity.definition.rendering.cameraObjects != null){
 			for(JSONCameraObject testCamera : entity.definition.rendering.cameraObjects){
 				AnimationSwitchbox cameraSwitchbox = entity.cameraSwitchboxes.get(testCamera);
-				if(cameraSwitchbox == null || cameraSwitchbox.runSwitchbox(partialTicks)){
+				if(cameraSwitchbox == null || cameraSwitchbox.runSwitchbox(partialTicks, false)){
 					if(customCamerasChecked++ == customCameraIndex){
 						return testCamera;
 					}

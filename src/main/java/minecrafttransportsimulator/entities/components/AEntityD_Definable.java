@@ -350,7 +350,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     		//Check if the particle should be spawned this tick.
     		JSONParticle particleDef = particleEntry.getKey();
     		AnimationSwitchbox switchbox = particleEntry.getValue();
-    		boolean shouldParticleSpawn = switchbox.runSwitchbox(partialTicks);
+    		boolean shouldParticleSpawn = switchbox.runSwitchbox(partialTicks, false);
 			
 			//Make the particle spawn if able.
 			if(shouldParticleSpawn && (switchbox.anyClockMovedThisUpdate || (particleDef.spawnEveryTick && ticksExisted > lastTickParticleSpawned.get(particleDef)))){
@@ -358,7 +358,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 				for(int i=0; i<particleDef.quantity; ++i){
 					AnimationSwitchbox spawningSwitchbox = particleSpawningSwitchboxes.get(particleDef);
 					if(spawningSwitchbox != null){
-						spawningSwitchbox.runSwitchbox(partialTicks);
+						spawningSwitchbox.runSwitchbox(partialTicks, false);
 					}
 					world.addEntity(new EntityParticle(this, particleDef, spawningSwitchbox));
 				}
@@ -379,7 +379,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 				ColorRGB lightColor = null;
 				LightSwitchbox switchbox = lightBrightnessSwitchboxes.get(lightDef);
 				if(switchbox != null){
-					if(!switchbox.runSwitchbox(partialTicks)){
+					if(!switchbox.runLight(partialTicks)){
 						lightBrightness = 0;
 					}else if(switchbox.definedBrightness){
 						lightBrightness = switchbox.brightness;
@@ -417,12 +417,11 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 			super(entity, animations, null);
 		}
 		
-		@Override
-		public boolean runSwitchbox(float partialTicks){
+		public boolean runLight(float partialTicks){
 			definedBrightness = false;
 			brightness = 0;
 			color = null;
-			return super.runSwitchbox(partialTicks);
+			return runSwitchbox(partialTicks, true);
 		}
 		
 		@Override
@@ -475,7 +474,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 				boolean anyClockMovedThisUpdate = false;
 				if(shouldSoundStartPlaying){
 					AnimationSwitchbox activeSwitchbox = soundActiveSwitchboxes.get(soundDef);
-					shouldSoundStartPlaying = activeSwitchbox.runSwitchbox(partialTicks);
+					shouldSoundStartPlaying = activeSwitchbox.runSwitchbox(partialTicks, true);
 					anyClockMovedThisUpdate = activeSwitchbox.anyClockMovedThisUpdate;
 				}
 				
@@ -524,7 +523,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 							SoundSwitchbox volumeSwitchbox = soundVolumeSwitchboxes.get(soundDef);
 							boolean definedVolume = false;
 							if(volumeSwitchbox != null){
-								volumeSwitchbox.runSwitchbox(partialTicks);
+								volumeSwitchbox.runSound(partialTicks);
 								sound.volume = volumeSwitchbox.value;
 								definedVolume = volumeSwitchbox.definedValue;
 							}
@@ -544,7 +543,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 							SoundSwitchbox pitchSwitchbox = soundPitchSwitchboxes.get(soundDef);
 							boolean definedPitch = false;
 							if(pitchSwitchbox != null){
-								pitchSwitchbox.runSwitchbox(partialTicks);
+								pitchSwitchbox.runSound(partialTicks);
 								sound.pitch = pitchSwitchbox.value;
 								definedPitch = pitchSwitchbox.definedValue;
 							}
@@ -571,11 +570,10 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 			super(entity, animations, null);
 		}
 		
-		@Override
-		public boolean runSwitchbox(float partialTicks){
+		public boolean runSound(float partialTicks){
 			value = 0;
 			definedValue = false;
-			return super.runSwitchbox(partialTicks);
+			return runSwitchbox(partialTicks, false);
 		}
 		
 		@Override

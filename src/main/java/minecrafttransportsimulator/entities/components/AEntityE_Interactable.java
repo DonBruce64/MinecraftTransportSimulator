@@ -302,7 +302,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 				if(groupDef.health == 0 || getVariable("collision_" + (definition.collisionGroups.indexOf(groupDef) + 1) + "_damage") < groupDef.health){
 					AnimationSwitchbox switchBox = this.collisionSwitchboxes.get(groupDef);
 					if(switchBox != null){
-						if(switchBox.runSwitchbox(0)){
+						if(switchBox.runSwitchbox(0, false)){
 							for(BoundingBox box : collisionBoxes){
 								box.globalCenter.set(box.localCenter).transform(switchBox.netMatrix);
 								box.updateToEntity(this, box.globalCenter);
@@ -358,7 +358,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 		VariableModifierSwitchbox switchbox = variableModiferSwitchboxes.get(modifier);
 		if(switchbox != null){
 			switchbox.modifiedValue = modifiedValue;
-			if(switchbox.runSwitchbox(0)){
+			if(switchbox.runSwitchbox(0, true)){
 				modifiedValue = switchbox.modifiedValue;
 			}else{
 				return currentValue;
@@ -381,11 +381,6 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 		
 		private VariableModifierSwitchbox(AEntityD_Definable<?> entity, List<JSONAnimationDefinition> animations){
 			super(entity, animations, null);
-		}
-		
-		@Override
-		public boolean runSwitchbox(float partialTicks){
-			return super.runSwitchbox(partialTicks);
 		}
 		
 		@Override

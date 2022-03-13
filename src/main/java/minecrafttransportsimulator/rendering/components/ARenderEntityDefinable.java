@@ -113,7 +113,7 @@ public abstract class ARenderEntityDefinable<RenderedEntity extends AEntityD_Def
 						
 						//Do transforms if required and render if allowed.
 						AnimationSwitchbox switchbox = interactable.instrumentSlotSwitchboxes.get(packInstrument);
-						if(switchbox == null || switchbox.runSwitchbox(partialTicks)){
+						if(switchbox == null || switchbox.runSwitchbox(partialTicks, false)){
 							if(switchbox != null){
 								instrumentTransform.multiply(switchbox.netMatrix);
 							}
