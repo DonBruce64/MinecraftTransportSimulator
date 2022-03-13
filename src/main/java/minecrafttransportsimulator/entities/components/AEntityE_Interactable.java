@@ -22,7 +22,6 @@ import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.AJSONInteractableEntity;
-import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup;
@@ -207,8 +206,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 					if(groupDef.animations != null){
 						animations.addAll(groupDef.animations);
 					}
-					populateApplyAfters(groupDef.applyAfter, animations, "collision boxes");
-					collisionSwitchboxes.put(groupDef, new AnimationSwitchbox(this, animations));
+					collisionSwitchboxes.put(groupDef, new AnimationSwitchbox(this, animations, groupDef.applyAfter));
 				}
 			}
 		}
@@ -241,8 +239,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 					if(packInstrument.animations != null){
 						animations.addAll(packInstrument.animations);
 					}
-					populateApplyAfters(packInstrument.applyAfter, animations, "instrument slots");
-					instrumentSlotSwitchboxes.put(packInstrument, new AnimationSwitchbox(this, animations));
+					instrumentSlotSwitchboxes.put(packInstrument, new AnimationSwitchbox(this, animations, packInstrument.applyAfter));
 				}
 			}
 		}
@@ -256,37 +253,6 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 				}
 			}
 			
-		}
-	}
-	
-	/**
-   	 *  Helper method to populate applyAfter things for JSONs. 
-   	 */
-	public void populateApplyAfters(String applyAfter, List<JSONAnimationDefinition> animations, String debugName){
-		if(applyAfter != null){
-			if(definition.rendering != null && definition.rendering.animatedObjects != null){
-				String objectSought = applyAfter;
-				while(objectSought != null){
-					boolean objectFound = false;
-					for(JSONAnimatedObject animatedObject : definition.rendering.animatedObjects){
-						if(animatedObject.objectName.equals(objectSought)){
-							objectFound = true;
-							if(animations.isEmpty()){
-								animations.addAll(animatedObject.animations);
-							}else{
-								animations.addAll(0, animatedObject.animations);
-							}
-							objectSought = animatedObject.applyAfter;
-							break;
-						}
-					}
-					if(!objectFound){
-						throw new IllegalArgumentException("Was told to applyAfter the object " + objectSought + " on " + debugName + " for " + definition.packID + ":" + definition.systemName + ", but there's no animations that have that object!");
-					}
-				}
-			}else{
-				throw new IllegalArgumentException("Was told to applyAfter on " + debugName + ", but there's no animations to applyAfter!");
-			}
 		}
 	}
 	
@@ -414,7 +380,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 		private float modifiedValue = 0;
 		
 		private VariableModifierSwitchbox(AEntityD_Definable<?> entity, List<JSONAnimationDefinition> animations){
-			super(entity, animations);
+			super(entity, animations, null);
 		}
 		
 		@Override

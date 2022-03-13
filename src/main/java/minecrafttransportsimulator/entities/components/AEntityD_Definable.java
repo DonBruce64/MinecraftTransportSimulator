@@ -143,6 +143,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 	public void update(){
 		super.update();
 		world.beginProfiling("EntityD_Level", true);
+		//Create animations if we haven't done so already.
 		if(!animationsInitialized){
 			initializeDefinition();
 			animationsInitialized = true;
@@ -172,7 +173,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 			soundPitchSwitchboxes.clear();
 			for(JSONSound soundDef : definition.rendering.sounds){
 				allSoundDefs.add(soundDef);
-				soundActiveSwitchboxes.put(soundDef, new AnimationSwitchbox(this, soundDef.activeAnimations));
+				soundActiveSwitchboxes.put(soundDef, new AnimationSwitchbox(this, soundDef.activeAnimations, null));
 				
 				if(soundDef.volumeAnimations !=  null){
 					soundVolumeSwitchboxes.put(soundDef, new SoundSwitchbox(this, soundDef.volumeAnimations));
@@ -204,9 +205,9 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 			particleActiveSwitchboxes.clear();
 			particleSpawningSwitchboxes.clear();
 			for(JSONParticle particleDef : definition.rendering.particles){
-				particleActiveSwitchboxes.put(particleDef, new AnimationSwitchbox(this, particleDef.activeAnimations));
+				particleActiveSwitchboxes.put(particleDef, new AnimationSwitchbox(this, particleDef.activeAnimations, null));
 				if(particleDef.spawningAnimations != null){
-					particleSpawningSwitchboxes.put(particleDef, new AnimationSwitchbox(this, particleDef.spawningAnimations));
+					particleSpawningSwitchboxes.put(particleDef, new AnimationSwitchbox(this, particleDef.spawningAnimations, null));
 				}
 				lastTickParticleSpawned.put(particleDef, ticksExisted);
 			}
@@ -218,7 +219,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 			for(JSONAnimatedObject animatedDef : definition.rendering.animatedObjects){
 				animatedObjectDefinitions.put(animatedDef.objectName, animatedDef);
 				if(animatedDef.animations != null){
-					animatedObjectSwitchboxes.put(animatedDef.objectName, new AnimationSwitchbox(this, animatedDef.animations));
+					animatedObjectSwitchboxes.put(animatedDef.objectName, new AnimationSwitchbox(this, animatedDef.animations, animatedDef.applyAfter));
 				}
 			}
 		}
@@ -227,7 +228,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 			cameraSwitchboxes.clear();
 			for(JSONCameraObject cameraDef : definition.rendering.cameraObjects){
 				if(cameraDef.animations != null){
-					cameraSwitchboxes.put(cameraDef, new AnimationSwitchbox(this, cameraDef.animations));
+					cameraSwitchboxes.put(cameraDef, new AnimationSwitchbox(this, cameraDef.animations, null));
 				}
 			}
 		}
@@ -413,7 +414,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 		private ColorRGB color = null;
 		
 		private LightSwitchbox(AEntityD_Definable<?> entity, List<JSONAnimationDefinition> animations){
-			super(entity, animations);
+			super(entity, animations, null);
 		}
 		
 		@Override
@@ -567,7 +568,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 		private float value = 0;
 		
 		private SoundSwitchbox(AEntityD_Definable<?> entity, List<JSONAnimationDefinition> animations){
-			super(entity, animations);
+			super(entity, animations, null);
 		}
 		
 		@Override

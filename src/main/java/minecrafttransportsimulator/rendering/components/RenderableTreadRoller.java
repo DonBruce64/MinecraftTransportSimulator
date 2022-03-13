@@ -1,7 +1,5 @@
 package minecrafttransportsimulator.rendering.components;
 
-import java.util.List;
-
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 
@@ -26,8 +24,8 @@ public class RenderableTreadRoller<AnimationEntity extends AEntityD_Definable<?>
 	public double endZ;
 	public double endAngle;
 	
-	public RenderableTreadRoller(String modelLocation, RenderableObject object, List<RenderableModelObject<AnimationEntity>> allObjects){
-		super(modelLocation, object, allObjects);
+	public RenderableTreadRoller(String modelLocation, RenderableObject object){
+		super(modelLocation, object);
 		this.isLeft = object.name.toLowerCase().startsWith("l");
 		this.rollerNumber = Integer.valueOf(object.name.substring(object.name.lastIndexOf('_') + 1));
 		

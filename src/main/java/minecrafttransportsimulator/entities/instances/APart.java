@@ -108,17 +108,16 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 			if(placementDefinition.animations != null){
 				animations.addAll(placementDefinition.animations);
 			}
-			entityOn.populateApplyAfters(placementDefinition.applyAfter, animations, "part slot");
-			placementMovementSwitchbox = new AnimationSwitchbox(this, animations);
+			placementMovementSwitchbox = new AnimationSwitchbox(entityOn, animations, placementDefinition.applyAfter);
 		}
 		if(definition.generic.movementAnimations != null){
-			internalMovementSwitchbox = new AnimationSwitchbox(this, definition.generic.movementAnimations);
+			internalMovementSwitchbox = new AnimationSwitchbox(this, definition.generic.movementAnimations, null);
 		}
 		if(placementDefinition.activeAnimations != null){
-			placementActiveSwitchbox = new AnimationSwitchbox(this, placementDefinition.activeAnimations);
+			placementActiveSwitchbox = new AnimationSwitchbox(entityOn, placementDefinition.activeAnimations, null);
 		}
 		if(definition.generic.activeAnimations != null){
-			internalActiveSwitchbox = new AnimationSwitchbox(this, definition.generic.activeAnimations);
+			internalActiveSwitchbox = new AnimationSwitchbox(this, definition.generic.activeAnimations, null);
 		}
 	}
 	

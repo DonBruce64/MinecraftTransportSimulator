@@ -16,7 +16,6 @@ import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
-import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONInstrumentDefinition;
 import minecrafttransportsimulator.jsondefs.JSONRendering.ModelType;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
@@ -56,14 +55,10 @@ public abstract class ARenderEntityDefinable<RenderedEntity extends AEntityD_Def
         	objectLists.put(modelLocation, AModelParser.generateRenderables(entity));
         }
         
-        //Render model.
+        //Render model object individually.
         entity.world.beginProfiling("RenderingMainModel", false);
-        List<RenderableModelObject<RenderedEntity>> map = objectLists.get(modelLocation);
-		for(RenderableModelObject<RenderedEntity> modelObject : map){
-			JSONAnimatedObject animation = entity.animatedObjectDefinitions.get(modelObject.object.name);
-			if(animation == null || animation.applyAfter == null){
-				modelObject.render(entity, transform, blendingEnabled, partialTicks);
-			}
+		for(RenderableModelObject<RenderedEntity> modelObject : objectLists.get(modelLocation)){
+			modelObject.render(entity, transform, blendingEnabled, partialTicks);
 		}
 		
 		//Render any static text.

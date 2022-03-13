@@ -26,81 +26,111 @@ public class AnimationSwitchbox{
 	
 	//Computational variables.
 	protected final AEntityD_Definable<?> entity;
+	private final String applyAfter;
 	private final List<DurationDelayClock> clocks = new ArrayList<DurationDelayClock>();
 	private final Point3D helperPoint = new Point3D();
 	private final Point3D helperScalingVector = new Point3D();
 	private final RotationMatrix helperRotationMatrix = new RotationMatrix();
 	private final TransformationMatrix helperOffsetOperationMatrix = new TransformationMatrix();
 	private boolean inhibitAnimations;
+	private boolean switchboxEnabled;
+	private long lastTickRun;
+	private float lastPartialTickRun;
 	
-	public AnimationSwitchbox(AEntityD_Definable<?> entity, List<JSONAnimationDefinition> animations){
+	public AnimationSwitchbox(AEntityD_Definable<?> entity, List<JSONAnimationDefinition> animations, String applyAfter){
 		this.entity = entity;
+		this.applyAfter = applyAfter;
 		for(JSONAnimationDefinition animation : animations){
 			clocks.add(new DurationDelayClock(animation));
 		}
 	}
 	
 	public boolean runSwitchbox(float partialTicks){
-		inhibitAnimations = false;
-		anyClockMovedThisUpdate = false;
-		scale.set(entity.scale);
-		netMatrix.resetTransforms().applyScaling(scale);
-		translation.set(0, 0, 0);
-		rotation.setToZero();
-		
-		for(DurationDelayClock clock : clocks){
-			switch(clock.animation.animationType){
-				case TRANSLATION :{
-					if(!inhibitAnimations){
-						runTranslation(clock, partialTicks);
-					}
-					break;
+		if(lastTickRun != entity.ticksExisted || lastPartialTickRun != partialTicks){
+			lastTickRun = entity.ticksExisted;
+			lastPartialTickRun = partialTicks;
+			
+			if(applyAfter != null){
+				AnimationSwitchbox switchbox = entity.animatedObjectSwitchboxes.get(applyAfter);
+				if(switchbox == null){
+					throw new IllegalArgumentException("Was told to applyAfter the object " + applyAfter + " on " + entity.definition.packID + ":" + entity.definition.systemName + ", but there aren't any animations to applyAfter!");
 				}
-				case ROTATION :{
-					if(!inhibitAnimations){
-						runRotation(clock, partialTicks);
-					}
-					break;
+				if(switchbox.runSwitchbox(partialTicks)){
+					translation.set(switchbox.translation);
+					rotation.set(switchbox.rotation);
+					scale.set(switchbox.scale);
+					netMatrix.set(switchbox.netMatrix);
+				}else{
+					switchboxEnabled = false;
+					return false;
 				}
-				case VISIBILITY :{
-					if(!inhibitAnimations){
-						double variableValue = entity.getAnimatedVariableValue(clock, partialTicks);
-						if(!anyClockMovedThisUpdate){
-							anyClockMovedThisUpdate = clock.movedThisUpdate;
+			}else{
+				translation.set(0, 0, 0);
+				rotation.setToZero();
+				scale.set(entity.scale);
+				netMatrix.resetTransforms().applyScaling(scale);
+			}
+			
+			inhibitAnimations = false;
+			switchboxEnabled = true;
+			anyClockMovedThisUpdate = false;
+			for(DurationDelayClock clock : clocks){
+				switch(clock.animation.animationType){
+					case TRANSLATION :{
+						if(!inhibitAnimations){
+							runTranslation(clock, partialTicks);
 						}
-						if(variableValue < clock.animation.clampMin || variableValue > clock.animation.clampMax){
-							return false;
+						break;
+					}
+					case ROTATION :{
+						if(!inhibitAnimations){
+							runRotation(clock, partialTicks);
 						}
+						break;
 					}
-					break;
-				}
-				case INHIBITOR :{
-					if(!inhibitAnimations){
-						double variableValue = entity.getAnimatedVariableValue(clock, partialTicks);
-						if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
-							inhibitAnimations = true;
+					case VISIBILITY :{
+						if(!inhibitAnimations){
+							double variableValue = entity.getAnimatedVariableValue(clock, partialTicks);
+							if(!anyClockMovedThisUpdate){
+								anyClockMovedThisUpdate = clock.movedThisUpdate;
+							}
+							if(variableValue < clock.animation.clampMin || variableValue > clock.animation.clampMax){
+								switchboxEnabled = false;
+								return false;
+							}
 						}
+						break;
 					}
-					break;
-				}
-				case ACTIVATOR :{
-					if(inhibitAnimations){
-						double variableValue = entity.getAnimatedVariableValue(clock, partialTicks);
-						if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
-							inhibitAnimations = false;
+					case INHIBITOR :{
+						if(!inhibitAnimations){
+							double variableValue = entity.getAnimatedVariableValue(clock, partialTicks);
+							if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
+								inhibitAnimations = true;
+							}
 						}
+						break;
 					}
-					break;
-				}
-				case SCALING :{
-					if(!inhibitAnimations){
-						runScaling(clock, partialTicks);
+					case ACTIVATOR :{
+						if(inhibitAnimations){
+							double variableValue = entity.getAnimatedVariableValue(clock, partialTicks);
+							if(variableValue >= clock.animation.clampMin && variableValue <= clock.animation.clampMax){
+								inhibitAnimations = false;
+							}
+						}
+						break;
 					}
-					break;
+					case SCALING :{
+						if(!inhibitAnimations){
+							runScaling(clock, partialTicks);
+						}
+						break;
+					}
 				}
 			}
+			return true;
+		}else{
+			return switchboxEnabled;
 		}
-		return true;
 	}
 	
 	public void runTranslation(DurationDelayClock clock, float partialTicks){

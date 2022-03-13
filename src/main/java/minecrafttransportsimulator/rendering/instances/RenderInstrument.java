@@ -127,7 +127,7 @@ public final class RenderInstrument{
 		private final JSONInstrumentComponent component;
 
 		public InstrumentSwitchbox(AEntityD_Definable<?> entity, JSONInstrumentComponent component){
-			super(entity, component.animations);
+			super(entity, component.animations, null);
 			this.component = component;
 		}
 		
