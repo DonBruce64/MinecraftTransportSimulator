@@ -196,7 +196,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 					switch(axis){
 						case NORTH: {
 							if(boundingBox.depthRadius == definition.pole.radius){
-								boundingBox.depthRadius = definition.pole.radius + 0.25;
+								boundingBox.depthRadius = (0.5 + definition.pole.radius)/2D;
 								boundingBox.globalCenter.z = position.z - (0.5 - definition.pole.radius)/2D;
 							}else{
 								boundingBox.depthRadius = 0.5;
@@ -206,7 +206,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 						}
 						case SOUTH: {
 							if(boundingBox.depthRadius == definition.pole.radius){
-								boundingBox.depthRadius = definition.pole.radius + 0.25;
+								boundingBox.depthRadius = (0.5 + definition.pole.radius)/2D;
 								boundingBox.globalCenter.z = position.z + (0.5 - definition.pole.radius)/2D;
 							}else{
 								boundingBox.depthRadius = 0.5;
@@ -216,7 +216,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 						}
 						case EAST: {
 							if(boundingBox.widthRadius == definition.pole.radius){
-								boundingBox.widthRadius = definition.pole.radius + 0.25;
+								boundingBox.widthRadius = (0.5 + definition.pole.radius)/2D;
 								boundingBox.globalCenter.x = position.x + (0.5 - definition.pole.radius)/2D;
 							}else{
 								boundingBox.widthRadius = 0.5;
@@ -226,7 +226,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 						}
 						case WEST: {
 							if(boundingBox.widthRadius == definition.pole.radius){
-								boundingBox.widthRadius = definition.pole.radius + 0.25;
+								boundingBox.widthRadius = (0.5 + definition.pole.radius)/2D;
 								boundingBox.globalCenter.x = position.x - (0.5 - definition.pole.radius)/2D;
 							}else{
 								boundingBox.widthRadius = 0.5;
@@ -234,20 +234,11 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 							}
 							break;
 						}
-						case UP: {
-							if(boundingBox.heightRadius == definition.pole.radius){
-								boundingBox.heightRadius = definition.pole.radius + 0.25;
-								boundingBox.globalCenter.y = position.y + 0.5 + (0.5 - definition.pole.radius)/2D;
-							}else{
-								boundingBox.heightRadius = 0.5;
-								boundingBox.globalCenter.y = position.y + 0.5;
-							}
-							break;
-						}
+						case UP: 
 						case DOWN: {
 							if(boundingBox.heightRadius == definition.pole.radius){
-								boundingBox.heightRadius = definition.pole.radius + 0.25;
-								boundingBox.globalCenter.y = position.y + 0.5 - (0.5 - definition.pole.radius)/2D;
+								boundingBox.heightRadius = (0.5 + definition.pole.radius)/2D;
+								boundingBox.globalCenter.y = position.y + boundingBox.heightRadius;
 							}else{
 								boundingBox.heightRadius = 0.5;
 								boundingBox.globalCenter.y = position.y + 0.5;
