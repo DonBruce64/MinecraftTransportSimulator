@@ -1,10 +1,5 @@
 #Translated by don_bruce
 
-death.attack.bullet.null.null=%s was shot by a spy
-death.attack.bullet.null.player=%s got distracted while fighting %s and got shot by a spy
-death.attack.bullet.player.null=%s was shot by %s
-death.attack.bullet.player.player=%s got distracted while fighting %s and got shot by %s
-
 advancements.mts.root.title=Immersive Vehicles (MTS)
 advancements.mts.root.description=Start your journey into powered transport!
 advancements.mts.rtfm.title=RTFM
