@@ -36,7 +36,7 @@ abstract class AEntityVehicleB_Rideable extends AEntityG_Towable<JSONVehicle>{
 	
 	public AEntityVehicleB_Rideable(WrapperWorld world, WrapperPlayer placingPlayer, WrapperNBT data){
 		super(world, placingPlayer, data);
-		this.speedFactor = (definition.motorized.isAircraft ? ConfigSystem.configObject.general.aircraftSpeedFactor.value : ConfigSystem.configObject.general.carSpeedFactor.value)*ConfigSystem.configObject.general.packSpeedFactors.value.get(definition.packID);
+		this.speedFactor = (definition.motorized.isAircraft ? ConfigSystem.settings.general.aircraftSpeedFactor.value : ConfigSystem.settings.general.carSpeedFactor.value)*ConfigSystem.settings.general.packSpeedFactors.value.get(definition.packID);
 	}
 	
 	@Override
@@ -80,7 +80,7 @@ abstract class AEntityVehicleB_Rideable extends AEntityG_Towable<JSONVehicle>{
             //another player could be getting us to this logic point and thus we'd be making their inputs in the vehicle.
 			if(world.isClient() && !InterfaceClient.isChatOpen() && rider.equals(InterfaceClient.getClientPlayer())){
     			ControlSystem.controlVehicle((EntityVehicleF_Physics) this, seat.placementDefinition.isController);
-    			InterfaceInput.setMouseEnabled(!(seat.placementDefinition.isController && ConfigSystem.configObject.clientControls.mouseYoke.value && lockCameraToMovement));
+    			InterfaceInput.setMouseEnabled(!(seat.placementDefinition.isController && ConfigSystem.client.controlSettings.mouseYoke.value && lockCameraToMovement));
     		}
 		}else{
 			//Remove invalid rider.

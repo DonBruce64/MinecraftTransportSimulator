@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.jsondefs;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -8,27 +7,20 @@ import java.util.Map;
 import java.util.UUID;
 
 import minecrafttransportsimulator.entities.instances.EntityFurnace;
-import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemPartEngine;
-import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
-/**Custom Config class.  This contains all fields used in config operation,
- * and should be assigned to a saved object when {@link ConfigSystem#loadFromDisk(File)}
- * is called.  Default values are assigned in the field declaration, while
- * comments are simply fields of their own.  Note that sub-classes MUST 
- * be static to use their default values!
+/**Config class for game settings.  This is for internal code logic and is used on both
+ * the server and client.  While this can be modified in-game, it needs to be done so
+ * on both the client and server at the same time.
  * 
  * @author don_bruce
  */
-public class JSONConfig{
+public class JSONConfigSettings{
 	public ConfigGeneral general = new ConfigGeneral();
 	public ConfigDamage damage = new ConfigDamage();
 	public ConfigFuel fuel = new ConfigFuel();
-	public ConfigClientRendering clientRendering = new ConfigClientRendering();
-	public ConfigClientControls clientControls = new ConfigClientControls();
-	public ConfigControls controls = new ConfigControls();
 	
 	public static class ConfigGeneral{
 		public JSONConfigEntry<Boolean> dumpCraftingConfig = new JSONConfigEntry<Boolean>(false, "If true, then all recipes for all items in packs will be dumped into the config file at boot.  WARNING: this will overwrite your existing crafting overrides file!");
@@ -44,6 +36,7 @@ public class JSONConfig{
 		public JSONConfigEntry<Boolean> doLegacyLightCompats = new JSONConfigEntry<Boolean>(true, "If true, legacy compatibility code will be performed on all models to make their lights work with newer versions.  This code will significantly slow down boot times due to needing to parse all models on boot, however, packs may not have functional lights without it.  Choose wisely if you want speed or features.");
 		public JSONConfigEntry<Boolean> useHSV = new JSONConfigEntry<Boolean>(false, "If enabled, the MTS dev mode will export color values as HSV instead of hex.");
 		public JSONConfigEntry<Boolean> allPlanesWithNav = new JSONConfigEntry<Boolean>(false, "If true, all planes will have the ability to use beacons for navigation.  This is false to allow pack authors to define new/old planes that have this capability, but can be turned on if you don't care about realism.");
+		public JSONConfigEntry<Integer> roadMaxLength = new JSONConfigEntry<Integer>(32, "How long a single segment of road can be, in blocks.  While you can have longer segements, be aware they have more collision boxes and will generate more lag when broken or interacted with, and may not render if outside the chunk they are in.  Must be a whole number.");
 		public JSONConfigEntry<Double> aircraftSpeedFactor = new JSONConfigEntry<Double>(0.35D, "Factor to apply to aircraft movement.  1 is the realistic value, but this makes vehicles move too fast for Minecraft. Adjust with caution.");
 		public JSONConfigEntry<Double> carSpeedFactor = new JSONConfigEntry<Double>(0.35D, "Factor to apply to car movement.  1 is the realistic value, but this makes vehicles move too fast for Minecraft. Adjust with caution.");
 		public JSONConfigEntry<Double> fuelUsageFactor = new JSONConfigEntry<Double>(1.0D, "Factor times which engines use fuel.  Change this if you think engines use fuel too fast or slow.");
@@ -170,78 +163,5 @@ public class JSONConfig{
 			AVGAS,
 			REDSTONE;
 		}
-	}
-	
-	public static class ConfigClientRendering{
-		public JSONConfigEntry<Boolean> renderHUD_1P = new JSONConfigEntry<Boolean>(true, "If false, the HUD in vehicles will not render in 1st-person mode.");
-		public JSONConfigEntry<Boolean> renderHUD_3P = new JSONConfigEntry<Boolean>(true, "If false, the HUD in vehicles will not render in 3rd-person mode.");
-		
-		public JSONConfigEntry<Boolean> fullHUD_1P = new JSONConfigEntry<Boolean>(false, "If true, the full-size HUD will render in 1st-person rather than the half-size HUD.");
-		public JSONConfigEntry<Boolean> fullHUD_3P = new JSONConfigEntry<Boolean>(false, "If true, the full-size HUD will render in 3rd-person rather than the half-size HUD.");
-		
-		public JSONConfigEntry<Boolean> transpHUD_1P = new JSONConfigEntry<Boolean>(false, "If true, the background textures for the HUD will not be rendered in 1st-person.");
-		public JSONConfigEntry<Boolean> transpHUD_3P = new JSONConfigEntry<Boolean>(false, "If true, the background textures for the HUD will not be rendered in 1st-person.");
-		
-		public JSONConfigEntry<Boolean> renderWindows = new JSONConfigEntry<Boolean>(true, "Should the glass on windows be rendered on vehicles?");
-		public JSONConfigEntry<Boolean> innerWindows = new JSONConfigEntry<Boolean>(false, "Should the glass on windows be rendered on the inside of the vehicle?  Note: if renderWindows is false, this config has no effect.");
-		
-		public JSONConfigEntry<Boolean> vehicleBeams = new JSONConfigEntry<Boolean>(true, "If false, beams on vehicles will not render.");
-		public JSONConfigEntry<Boolean> blockBeams = new JSONConfigEntry<Boolean>(true, "If false, beams on blocks will not render.");
-		
-		public JSONConfigEntry<Boolean> brightLights = new JSONConfigEntry<Boolean>(true, "If false, lights from vehicles and blocks will not do brightness blending and will render as if they were part of the model at that same brightness.  Useful if you have shaders and this is causing troubles.");
-		public JSONConfigEntry<Boolean> blendedLights = new JSONConfigEntry<Boolean>(true, "If false, beam-based lights from vehicles and blocks will not do brightness blending.  This is different from the general brightness setting as this will do OpenGL blending on the world to make it brighter, not just the beams themselves.");
-		
-		public JSONConfigEntry<Boolean> playerTweaks = new JSONConfigEntry<Boolean>(true, "If true, player hands will be modified when holding guns, and hands and legs will be modified when riding in vehicles.  Set this to false if mods cause issues, like two-hand rendering or player model issues.");
-		
-	}
-	
-	public static class ConfigClientControls{
-		public JSONConfigEntry<Boolean> mouseYoke = new JSONConfigEntry<Boolean>(false, "Enable mouse yoke for vehicles? Prevents looking around unless unlocked.  Think MCHeli controls.");
-		public JSONConfigEntry<Boolean> kbOverride = new JSONConfigEntry<Boolean>(true, "Should keyboard controls be ignored when a joystick control is mapped?  Leave true to free up the keyboard while using a joysick.");
-		
-		public JSONConfigEntry<Boolean> simpleThrottle = new JSONConfigEntry<Boolean>(true, "If true, then vehicles will automatically go into reverse after stopped with the brake rather than staying stopped and waiting for you to shift.  When going in reverse, the opposite is true: the vehicle will shift into forwards when pressing forwards when stopped.  Additionally, the parking brake will automatically be set when leaving the vehicle.");
-		public JSONConfigEntry<Boolean> halfThrottle = new JSONConfigEntry<Boolean>(false, "If true, then the gas key will only be a half-throttle, with the MOD+Throttle key becoming the full-speed control.  Useful if you want a more controlled vehicle experience.  Only valid on car/boat types with on-off throttles, and does not work in conjunction with simpleThrottle as that changes how the MOD key works with gas and brake keys.");
-		
-		public JSONConfigEntry<Boolean> autostartEng = new JSONConfigEntry<Boolean>(true, "If true, engines will automatically start when a driver enters a vehicle, and will turn off when they leave.  The parking brake will also be applied when leaving the vehicle.  Note: this does not bypass the fuel or electrical system.");
-		public JSONConfigEntry<Boolean> autoTrnSignals = new JSONConfigEntry<Boolean>(true, "If true, turns signals will come on automatically when you start a turn, and will turn off when the turn completes.  If this is false, then they will only be able to be activated with the keybinds or via the panel.");
-		
-		public JSONConfigEntry<Boolean> heliAutoLevel = new JSONConfigEntry<Boolean>(true, "If true, helicopters will automatically return to level flight when you let off the control stick.  However, this will prevent them from doing loops.  The realistic value for this config is false, but the one that's more player-freindly is true.  Hence it being the default.");
-		public JSONConfigEntry<Boolean> classicJystk = new JSONConfigEntry<Boolean>(false, "If true, the classic controller code will be used.  Note: THIS CODE MAY CRASH MOBILE DEVICES!  Also note that switching will probably mess up your keybinds.  Only do this if you are having issues with a joystick or controller not being recognized.  After changing this setting, reboot the game to make it take effect.");
-		
-		public JSONConfigEntry<Boolean> north360 = new JSONConfigEntry<Boolean>(false, "If true, instruments will represent North as 360 degrees, instead of the Minecraft default of 180. Allows using the heading system that real-world pilots and militaries do.");
-		public JSONConfigEntry<Boolean> devMode = new JSONConfigEntry<Boolean>(false, "If enabled, MTS will allow access to the dev mode GUI while sitting in vehicles.  The GUI allows editing JSONs in-game without the need to restart.");
-
-		public JSONConfigEntry<Double> steeringControlRate = new JSONConfigEntry<Double>(EntityVehicleF_Physics.RUDDER_DAMPEN_RATE, "How many degrees to turn the wheels on vehicles for every tick the button is held down.  This is not used when using a joystick.");
-		public JSONConfigEntry<Double> flightControlRate = new JSONConfigEntry<Double>(EntityVehicleF_Physics.AILERON_DAMPEN_RATE, "How many degrees to move the elevators and ailerons on aircraft for every tick the button is held down.  This is not used when using a joystick.");
-		public JSONConfigEntry<Double> mouseYokeRate = new JSONConfigEntry<Double>(0.1D, "How many degrees to move control surfaces for every 1 mouse unit change.  Used for mouse yoke controls.");
-		public JSONConfigEntry<Double> joystickDeadZone = new JSONConfigEntry<Double>(0.03D, "Dead zone for joystick axis.  This is NOT joystick specific.");
-	}
-	
-	public static class ConfigControls{
-		public Map<String, ConfigKeyboard> keyboard = new HashMap<String, ConfigKeyboard>();
-		public Map<String, ConfigJoystick>  joystick = new HashMap<String, ConfigJoystick>();
-	}
-	
-	
-	public static class JSONConfigEntry<ConfigType>{
-		public ConfigType value;
-		public String comment;
-		
-		public JSONConfigEntry(ConfigType defaultValue, String comment){
-			this.value = defaultValue;
-			this.comment = comment;
-		}
-	}
-	
-	public static class ConfigKeyboard{
-		public int keyCode;
-	}
-	
-	public static class ConfigJoystick{
-		public String joystickName;
-		public int buttonIndex;
-		public boolean invertedAxis;
-		public double axisMinTravel;
-		public double axisMaxTravel;
 	}
 }

@@ -3,7 +3,9 @@ package minecrafttransportsimulator.packloading;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -35,7 +37,6 @@ import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 import minecrafttransportsimulator.jsondefs.AJSONPartProvider;
 import minecrafttransportsimulator.jsondefs.JSONBullet;
-import minecrafttransportsimulator.jsondefs.JSONConfig;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONInstrument;
 import minecrafttransportsimulator.jsondefs.JSONItem;
@@ -221,7 +222,7 @@ public class JSONParser{
 		public void write(JsonWriter writer, ColorRGB value) throws IOException{
 			if(value == null){
 				writer.nullValue();
-			}else if(ConfigSystem.configObject != null && ConfigSystem.configObject.general.useHSV.value){
+			}else if(ConfigSystem.settings != null && ConfigSystem.settings.general.useHSV.value){
 				writer.beginArray();
 				writer.setIndent("");
 				for(Integer item : value.hsv){
@@ -486,24 +487,33 @@ public class JSONParser{
 	
 	/**
 	 *  Parses the passed in stream to the passed-in JSON type.
+	 * @throws IOException 
 	 */
-	public static <JSONClass extends Object> JSONClass parseStream(InputStreamReader jsonReader, Class<JSONClass> retClass, String packID, String systemName){
-		if(retClass.equals(JSONConfig.class)){
-			return configParser.fromJson(jsonReader, retClass);
+	public static <JSONClass extends Object> JSONClass parseStream(InputStream stream, Class<JSONClass> retClass, String packID, String systemName) throws IOException{
+		InputStreamReader jsonReader = new InputStreamReader(stream, "UTF-8");
+		JSONClass json;
+		if(AJSONItem.class.isAssignableFrom(retClass)){
+			json = packParser.fromJson(jsonReader, retClass);
 		}else{
-			return packParser.fromJson(jsonReader, retClass);
+			json = configParser.fromJson(jsonReader, retClass);
 		}
+		jsonReader.close();
+		return json;
 	}
 	
 	/**
 	 *  Exports the passed-JSON to the passed-in stream.
+	 * @throws IOException 
 	 */
-	public static void exportStream(Object jsonObject, OutputStreamWriter jsonWriter){
-		if(jsonObject.getClass().equals(JSONConfig.class)){
-			configParser.toJson(jsonObject, jsonObject.getClass(), jsonWriter);
-		}else{
+	public static void exportStream(Object jsonObject, OutputStream stream) throws IOException{
+		OutputStreamWriter jsonWriter = new OutputStreamWriter(stream, "UTF-8");
+		if(AJSONItem.class.isAssignableFrom(jsonObject.getClass())){
 			packParser.toJson(jsonObject, jsonObject.getClass(), jsonWriter);
+		}else{
+			configParser.toJson(jsonObject, jsonObject.getClass(), jsonWriter);
 		}
+		jsonWriter.flush();
+		jsonWriter.close();
 	}
 	
 	/**
@@ -524,7 +534,7 @@ public class JSONParser{
 			switch(definitionToOverride.classification){
 				case VEHICLE : {
 					JSONVehicle vehicleDefinition = (JSONVehicle) definitionToOverride;
-					JSONVehicle loadedVehicleDefinition = JSONParser.parseStream(new InputStreamReader(new FileInputStream(jsonFile), "UTF-8"), JSONVehicle.class, vehicleDefinition.packID, vehicleDefinition.systemName);
+					JSONVehicle loadedVehicleDefinition = JSONParser.parseStream(new FileInputStream(jsonFile), JSONVehicle.class, vehicleDefinition.packID, vehicleDefinition.systemName);
 					JSONParser.validateFields(loadedVehicleDefinition, "/", 1);
 					vehicleDefinition.motorized = loadedVehicleDefinition.motorized;
 					loadedDefinition = loadedVehicleDefinition;
@@ -532,7 +542,7 @@ public class JSONParser{
 				}
 				case PART : {
 					JSONPart partDefinition = (JSONPart) definitionToOverride;
-					JSONPart loadedPartDefinition = JSONParser.parseStream(new InputStreamReader(new FileInputStream(jsonFile), "UTF-8"), JSONPart.class, partDefinition.packID, partDefinition.systemName);
+					JSONPart loadedPartDefinition = JSONParser.parseStream(new FileInputStream(jsonFile), JSONPart.class, partDefinition.packID, partDefinition.systemName);
 					JSONParser.validateFields(loadedPartDefinition, "/", 1);
 					partDefinition.generic = loadedPartDefinition.generic;
 					partDefinition.engine = loadedPartDefinition.engine;
@@ -547,7 +557,7 @@ public class JSONParser{
 				}
 				case INSTRUMENT : {
 					JSONInstrument instrumentDefinition = (JSONInstrument) definitionToOverride;
-					JSONInstrument loadedInstrumentDefinition = JSONParser.parseStream(new InputStreamReader(new FileInputStream(jsonFile), "UTF-8"), JSONInstrument.class, instrumentDefinition.packID, instrumentDefinition.systemName);
+					JSONInstrument loadedInstrumentDefinition = JSONParser.parseStream(new FileInputStream(jsonFile), JSONInstrument.class, instrumentDefinition.packID, instrumentDefinition.systemName);
 					JSONParser.validateFields(loadedInstrumentDefinition, "/", 1);
 					instrumentDefinition.components = loadedInstrumentDefinition.components;
 					loadedDefinition = loadedInstrumentDefinition;
@@ -555,7 +565,7 @@ public class JSONParser{
 				}
 				case DECOR : {
 					JSONDecor decorDefinition = (JSONDecor) definitionToOverride;
-					JSONDecor loadedDecorDefinition = JSONParser.parseStream(new InputStreamReader(new FileInputStream(jsonFile), "UTF-8"), JSONDecor.class, decorDefinition.packID, decorDefinition.systemName);
+					JSONDecor loadedDecorDefinition = JSONParser.parseStream(new FileInputStream(jsonFile), JSONDecor.class, decorDefinition.packID, decorDefinition.systemName);
 					JSONParser.validateFields(loadedDecorDefinition, "/", 1);
 					decorDefinition.decor = loadedDecorDefinition.decor;
 					loadedDefinition = loadedDecorDefinition;
@@ -563,7 +573,7 @@ public class JSONParser{
 				}
 				case ROAD : {
 					JSONRoadComponent roadDefinition = (JSONRoadComponent) definitionToOverride;
-					JSONRoadComponent loadedRoadDefinition = JSONParser.parseStream(new InputStreamReader(new FileInputStream(jsonFile), "UTF-8"), JSONRoadComponent.class, roadDefinition.packID, roadDefinition.systemName);
+					JSONRoadComponent loadedRoadDefinition = JSONParser.parseStream(new FileInputStream(jsonFile), JSONRoadComponent.class, roadDefinition.packID, roadDefinition.systemName);
 					JSONParser.validateFields(loadedRoadDefinition, "/", 1);
 					roadDefinition.road = loadedRoadDefinition.road;
 					loadedDefinition = loadedRoadDefinition;
@@ -571,14 +581,14 @@ public class JSONParser{
 				}
 				case POLE : {
 					JSONPoleComponent poleDefinition = (JSONPoleComponent) definitionToOverride;
-					JSONPoleComponent loadedPoleDefinition = JSONParser.parseStream(new InputStreamReader(new FileInputStream(jsonFile), "UTF-8"), JSONPoleComponent.class, poleDefinition.packID, poleDefinition.systemName);
+					JSONPoleComponent loadedPoleDefinition = JSONParser.parseStream(new FileInputStream(jsonFile), JSONPoleComponent.class, poleDefinition.packID, poleDefinition.systemName);
 					JSONParser.validateFields(loadedPoleDefinition, "/", 1);
 					loadedDefinition = loadedPoleDefinition;
 					break;
 				}
 				case BULLET : {
 					JSONBullet bulletDefinition = (JSONBullet) definitionToOverride;
-					JSONBullet loadedBulletDefinition = JSONParser.parseStream(new InputStreamReader(new FileInputStream(jsonFile), "UTF-8"), JSONBullet.class, bulletDefinition.packID, bulletDefinition.systemName);
+					JSONBullet loadedBulletDefinition = JSONParser.parseStream(new FileInputStream(jsonFile), JSONBullet.class, bulletDefinition.packID, bulletDefinition.systemName);
 					JSONParser.validateFields(loadedBulletDefinition, "/", 1);
 					bulletDefinition.bullet = loadedBulletDefinition.bullet;
 					loadedDefinition = loadedBulletDefinition;
@@ -586,7 +596,7 @@ public class JSONParser{
 				}
 				case ITEM : {
 					JSONItem itemDefinition = (JSONItem) definitionToOverride;
-					JSONItem loadedItemDefinition = JSONParser.parseStream(new InputStreamReader(new FileInputStream(jsonFile), "UTF-8"), JSONItem.class, itemDefinition.packID, itemDefinition.systemName);
+					JSONItem loadedItemDefinition = JSONParser.parseStream(new FileInputStream(jsonFile), JSONItem.class, itemDefinition.packID, itemDefinition.systemName);
 					JSONParser.validateFields(loadedItemDefinition, "/", 1);
 					itemDefinition.item = loadedItemDefinition.item;
 					itemDefinition.booklet = loadedItemDefinition.booklet;

@@ -13,6 +13,7 @@ import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartInteractable;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.components.IItemVehicleInteractable;
+import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
@@ -48,21 +49,21 @@ public class ItemPartInteractable extends AItemPart implements IItemVehicleInter
 		super.addTooltipLines(tooltipLines, data);
 		switch(definition.interactable.interactionType){
 			case CRATE : {
-				tooltipLines.add(InterfaceCore.translate("info.item.interactable.capacity") + definition.interactable.inventoryUnits*9);
+				tooltipLines.add(JSONConfigLanguage.ITEMINFO_INTERACTABLE_CAPACITY.value + definition.interactable.inventoryUnits*9);
 				break;
 			}
 			case BARREL : {
-				tooltipLines.add(InterfaceCore.translate("info.item.interactable.capacity") + definition.interactable.inventoryUnits*10000 + "mb");
+				tooltipLines.add(JSONConfigLanguage.ITEMINFO_INTERACTABLE_CAPACITY.value + definition.interactable.inventoryUnits*10000 + "mb");
 				break;
 			}
 			case JERRYCAN : {
-				tooltipLines.add(InterfaceCore.translate("info.item.jerrycan.fill"));
-				tooltipLines.add(InterfaceCore.translate("info.item.jerrycan.drain"));
+				tooltipLines.add(JSONConfigLanguage.ITEMINFO_JERRYCAN_FILL.value);
+				tooltipLines.add(JSONConfigLanguage.ITEMINFO_JERRYCAN_DRAIN.value);
 				String jerrycanFluid = data.getString("jerrycanFluid");
 				if(jerrycanFluid.isEmpty()){
-					tooltipLines.add(InterfaceCore.translate("info.item.jerrycan.empty"));
+					tooltipLines.add(JSONConfigLanguage.ITEMINFO_JERRYCAN_EMPTY.value);
 				}else{
-					tooltipLines.add(InterfaceCore.translate("info.item.jerrycan.contains") + InterfaceCore.getFluidName(jerrycanFluid));
+					tooltipLines.add(JSONConfigLanguage.ITEMINFO_JERRYCAN_CONTAINS.value + InterfaceCore.getFluidName(jerrycanFluid));
 				}
 				break;
 			}
@@ -97,9 +98,9 @@ public class ItemPartInteractable extends AItemPart implements IItemVehicleInter
 						
 						EntityFurnace furnace = ((PartInteractable) part).furnace;
 						if(furnace != null && !jerrrycanFluid.isEmpty()){
-							 if(ConfigSystem.configObject.fuel.fuels.get(EntityFurnace.FURNACE_FUEL_NAME).containsKey(jerrrycanFluid)){
+							 if(ConfigSystem.settings.fuel.fuels.get(EntityFurnace.FURNACE_FUEL_NAME).containsKey(jerrrycanFluid)){
 								 //Packet assumes we add at 0, need to "fool" it.
-								 int addedFuel = (int) (ConfigSystem.configObject.fuel.fuels.get(EntityFurnace.FURNACE_FUEL_NAME).get(jerrrycanFluid)*1000*20*furnace.definition.furnaceEfficiency);
+								 int addedFuel = (int) (ConfigSystem.settings.fuel.fuels.get(EntityFurnace.FURNACE_FUEL_NAME).get(jerrrycanFluid)*1000*20*furnace.definition.furnaceEfficiency);
 								 int priorFuel = furnace.ticksLeftOfFuel; 
 								 furnace.ticksLeftOfFuel = addedFuel;
 								 InterfacePacket.sendToAllClients(new PacketFurnaceFuelAdd(furnace));
@@ -108,26 +109,26 @@ public class ItemPartInteractable extends AItemPart implements IItemVehicleInter
 								 
 								 data.setString("jerrycanFluid", "");
 								 stack.setData(data);
-								 player.sendPacket(new PacketPlayerChatMessage(player, "interact.jerrycan.success"));
+								 player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_JERRYCAN_SUCCESS));
 							 }else{
-								 player.sendPacket(new PacketPlayerChatMessage(player, "interact.jerrycan.wrongtype"));
+								 player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_JERRYCAN_WRONGTYPE));
 							 }
 						}
 					}else if(!jerrrycanFluid.isEmpty()){
 						if(vehicle.fuelTank.getFluid().isEmpty() || vehicle.fuelTank.getFluid().equals(jerrrycanFluid)){
 							if(vehicle.fuelTank.getFluidLevel() + 1000 > vehicle.fuelTank.getMaxLevel()){
-								player.sendPacket(new PacketPlayerChatMessage(player, "interact.jerrycan.toofull"));
+								player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_JERRYCAN_TOOFULL));
 							}else{
 								vehicle.fuelTank.fill(jerrrycanFluid, 1000, true);
 								data.setString("jerrycanFluid", "");
 								stack.setData(data);
-								player.sendPacket(new PacketPlayerChatMessage(player, "interact.jerrycan.success"));
+								player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_JERRYCAN_SUCCESS));
 							}
 						}else{
-							player.sendPacket(new PacketPlayerChatMessage(player, "interact.jerrycan.wrongtype"));
+							player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_JERRYCAN_WRONGTYPE));
 						}
 					}else{
-						player.sendPacket(new PacketPlayerChatMessage(player, "interact.jerrycan.empty"));
+						player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_JERRYCAN_EMPTY));
 					}
 				}
 			}

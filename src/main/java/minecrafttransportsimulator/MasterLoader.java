@@ -38,7 +38,7 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 @Mod(modid = MasterLoader.MODID, name = MasterLoader.MODNAME, version = MasterLoader.MODVER)
 public class MasterLoader{
 	public static final String MODID = "mts";
-	public static final String MODNAME = "Minecraft Transport Simulator";
+	public static final String MODNAME = "Immersive Vehicles (MTS)";
 	public static final String MODVER = "21.0.0";
 	public static Logger logger;
 	public static String resourceDomain;
@@ -74,7 +74,7 @@ public class MasterLoader{
 		
 		//Set main mod directory and parse packs.
 		gameDirectory = event.getModConfigurationDirectory().getParent();
-		ConfigSystem.loadFromDisk(new File(gameDirectory, "config"));
+		ConfigSystem.loadFromDisk(new File(gameDirectory, "config"), event.getSide().isClient());
 		List<File> packDirectories = new ArrayList<File>();
 		File modDirectory = new File(gameDirectory, "mods");
 		if(modDirectory.exists()){
@@ -100,7 +100,7 @@ public class MasterLoader{
 		InterfacePacket.init();
 		
 		//Put all liquids into the config file for use by modpack makers.
-		ConfigSystem.configObject.fuel.lastLoadedFluids = InterfaceCore.getAllFluids();
+		ConfigSystem.settings.fuel.lastLoadedFluids = InterfaceCore.getAllFluids();
 		ConfigSystem.saveToDisk();
 		
 		//Init chunkloader system.

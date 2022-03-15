@@ -157,16 +157,16 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 					//Set object states and render.
 					if(blendingEnabled && lightDef != null && lightLevel > 0 && lightDef.isBeam && entity.shouldRenderBeams()){
 						//Model that's actually a beam, render it with beam lighting/blending. 
-						object.disableLighting = ConfigSystem.configObject.clientRendering.brightLights.value;
-						object.enableBrightBlending = ConfigSystem.configObject.clientRendering.blendedLights.value;
+						object.disableLighting = ConfigSystem.client.renderingSettings.brightLights.value;
+						object.enableBrightBlending = ConfigSystem.client.renderingSettings.blendedLights.value;
 						object.alpha = Math.min((1 - entity.world.getLightBrightness(entity.position, false))*lightLevel, 1);
 						object.render();
 					}else if(!(blendingEnabled ^ object.isTranslucent)){
 						//Either solid texture on solid pass, or translucent texture on blended pass.
 						//Need to disable light-mapping from daylight if we are a light-up texture.
-						object.disableLighting = ConfigSystem.configObject.clientRendering.brightLights.value && lightDef != null && lightLevel > 0 && !lightDef.emissive && !lightDef.isBeam;
+						object.disableLighting = ConfigSystem.client.renderingSettings.brightLights.value && lightDef != null && lightLevel > 0 && !lightDef.emissive && !lightDef.isBeam;
 						object.render();
-						if(interiorWindowObject != null && ConfigSystem.configObject.clientRendering.innerWindows.value){
+						if(interiorWindowObject != null && ConfigSystem.client.renderingSettings.innerWindows.value){
 							interiorWindowObject.transform.set(object.transform);
 							interiorWindowObject.render();
 						}
@@ -206,7 +206,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 			return false;
 		}
 		//Block windows if we have them disabled.
-		if(isWindow && !ConfigSystem.configObject.clientRendering.renderWindows.value){
+		if(isWindow && !ConfigSystem.client.renderingSettings.renderWindows.value){
 			return false;
 		}
 		//Online textures only render if the field has text.
@@ -343,7 +343,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 				}
 			}
 			
-			colorObject.disableLighting = ConfigSystem.configObject.clientRendering.brightLights.value;
+			colorObject.disableLighting = ConfigSystem.client.renderingSettings.brightLights.value;
 			colorObject.color.setTo(color);
 			colorObject.alpha = lightLevel;
 			colorObject.transform.set(object.transform);
@@ -379,7 +379,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 				
 				//Render all flares.
 				if(flareObject != null){
-					flareObject.disableLighting = ConfigSystem.configObject.clientRendering.brightLights.value;
+					flareObject.disableLighting = ConfigSystem.client.renderingSettings.brightLights.value;
 					flareObject.color.setTo(color);
 					flareObject.alpha = blendableBrightness;
 					flareObject.transform.set(object.transform);
@@ -388,8 +388,8 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 				
 				//Render all beams.
 				if(beamObject != null && entity.shouldRenderBeams()){
-					beamObject.disableLighting = ConfigSystem.configObject.clientRendering.brightLights.value;
-					beamObject.enableBrightBlending = ConfigSystem.configObject.clientRendering.blendedLights.value;
+					beamObject.disableLighting = ConfigSystem.client.renderingSettings.brightLights.value;
+					beamObject.enableBrightBlending = ConfigSystem.client.renderingSettings.blendedLights.value;
 					beamObject.color.setTo(color);
 					beamObject.alpha = blendableBrightness;
 					beamObject.transform.set(object.transform);
@@ -408,7 +408,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 				}
 			}
 			
-			coverObject.disableLighting = ConfigSystem.configObject.clientRendering.brightLights.value && lightLevel > 0;
+			coverObject.disableLighting = ConfigSystem.client.renderingSettings.brightLights.value && lightLevel > 0;
 			coverObject.transform.set(object.transform);
 			coverObject.render();
 		}

@@ -1038,7 +1038,7 @@ public class WrapperWorld{
 	 *  Spawns an explosion of the specified strength at the passed-in point.
 	 */
 	public void spawnExplosion(Point3D location, double strength, boolean flames){
-		world.newExplosion(null, location.x, location.y, location.z, (float) strength, flames, ConfigSystem.configObject.general.blockBreakage.value);
+		world.newExplosion(null, location.x, location.y, location.z, (float) strength, flames, ConfigSystem.settings.general.blockBreakage.value);
 	}
 	
    
@@ -1089,10 +1089,10 @@ public class WrapperWorld{
 					   spawnEntity(entity);
 					   
 					   //If the player is new, also add handbooks.
-					   if(!ConfigSystem.configObject.general.joinedPlayers.value.contains(playerWrapper.getID())){
+					   if(!ConfigSystem.settings.general.joinedPlayers.value.contains(playerWrapper.getID())){
 						   player.addItemStackToInventory(PackParserSystem.getItem("mts", "handbook_car").getNewStack(null).stack);
 						   player.addItemStackToInventory(PackParserSystem.getItem("mts", "handbook_plane").getNewStack(null).stack);
-						   ConfigSystem.configObject.general.joinedPlayers.value.add(playerWrapper.getID());
+						   ConfigSystem.settings.general.joinedPlayers.value.add(playerWrapper.getID());
 						   ConfigSystem.saveToDisk();
 					   }
 				   }else{

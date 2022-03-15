@@ -8,6 +8,7 @@ import minecrafttransportsimulator.jsondefs.JSONPack;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**Base item class for all pack-created items.  Stores information such as the
@@ -33,15 +34,13 @@ public abstract class AItemPack<JSONDefinition extends AJSONItem> extends AItemB
 	
 	@Override
 	public String getItemName(){
-        return definition.general.name != null ? definition.general.name : definition.systemName;
+        return ConfigSystem.language.packs.get(definition.packID).get(getRegistrationName()).name;
 	}
 	
 	@Override
 	public void addTooltipLines(List<String> tooltipLines, WrapperNBT data){
-		if(definition.general.description != null){
-			for(String tooltipLine : definition.general.description.split("\n")){
-				tooltipLines.add(tooltipLine);
-			}
+		for(String tooltipLine : ConfigSystem.language.packs.get(definition.packID).get(getRegistrationName()).description.split("\n")){
+			tooltipLines.add(tooltipLine);
 		}
 	}
 	

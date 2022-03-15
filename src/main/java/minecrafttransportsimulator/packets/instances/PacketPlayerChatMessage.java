@@ -1,6 +1,8 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
+import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
+import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketPlayer;
@@ -12,26 +14,26 @@ import minecrafttransportsimulator.packets.components.APacketPlayer;
  * @author don_bruce
  */
 public class PacketPlayerChatMessage extends APacketPlayer{
-	private final String chatMessage;
+	private final LanguageEntry language;
 	
-	public PacketPlayerChatMessage(WrapperPlayer player, String chatMessage){
+	public PacketPlayerChatMessage(WrapperPlayer player, LanguageEntry language){
 		super(player);
-		this.chatMessage = chatMessage;
+		this.language = language;
 	}
 	
 	public PacketPlayerChatMessage(ByteBuf buf){
 		super(buf);
-		this.chatMessage = readStringFromBuffer(buf);
+		this.language = JSONConfigLanguage.coreEntries.get(readStringFromBuffer(buf));
 	}
 	
 	@Override
 	public void writeToBuffer(ByteBuf buf){
 		super.writeToBuffer(buf);
-		writeStringToBuffer(chatMessage, buf);
+		writeStringToBuffer(language.key, buf);
 	}
 	
 	@Override
 	public void handle(WrapperWorld world, WrapperPlayer player){
-		player.displayChatMessage(chatMessage);
+		player.displayChatMessage(language);
 	}
 }

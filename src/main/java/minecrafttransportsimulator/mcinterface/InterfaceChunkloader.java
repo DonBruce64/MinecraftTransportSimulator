@@ -27,7 +27,7 @@ public class InterfaceChunkloader implements LoadingCallback{
 	@Override
 	public void ticketsLoaded(List<Ticket> tickets, World world){
 		for(Ticket modTicket : tickets){
-			if(modTicket.getModId().equals(MasterLoader.MODID) && ConfigSystem.configObject.general.chunkloadVehicles.value){
+			if(modTicket.getModId().equals(MasterLoader.MODID) && ConfigSystem.settings.general.chunkloadVehicles.value){
 				modTicket.setChunkListDepth(1);
 				if(modTicket.getType().equals(Type.ENTITY)){
 					entityTickets.put((BuilderEntityExisting) modTicket.getEntity(), modTicket);
@@ -67,7 +67,7 @@ public class InterfaceChunkloader implements LoadingCallback{
 		//Need to tick event this, as entities in unloaded chunks don't get update calls, so we need
 		//to ensure when they do move into one, they force the update.
 		//To prevent CMEs here, we use an indexed checker.
-		if(!event.world.isRemote && ConfigSystem.configObject.general.chunkloadVehicles.value){
+		if(!event.world.isRemote && ConfigSystem.settings.general.chunkloadVehicles.value){
 			for(int i=0; i<event.world.loadedEntityList.size(); ++i){
 				Entity entity = event.world.loadedEntityList.get(i);
 				if(entity instanceof BuilderEntityExisting){

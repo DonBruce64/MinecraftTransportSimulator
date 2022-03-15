@@ -13,6 +13,7 @@ import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.components.IItemVehicleInteractable;
+import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.mcinterface.WrapperItemStack;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
@@ -110,7 +111,7 @@ public class PacketVehicleInteract extends APacketEntityInteract<EntityVehicleF_
 		if(rightClick && vehicle.allPartSlotBoxes.containsKey(hitBox)){
 			//Only owners can add vehicle parts.
 			if(ownerState.equals(PlayerOwnerState.USER)){
-				player.sendPacket(new PacketPlayerChatMessage(player, "interact.failure.vehicleowned"));
+				player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_VEHICLE_OWNED));
 			}else{
 				//Attempt to add a part.  Vehicle is responsible for callback packet here.
 				if(heldItem instanceof AItemPart){
@@ -139,7 +140,7 @@ public class PacketVehicleInteract extends APacketEntityInteract<EntityVehicleF_
 		if(!leftClick && hitBox.definition != null && hitBox.definition.variableName != null){
 			//Can't touch locked vehicles.
 			if(vehicle.locked && !hadAllCondition){
-				player.sendPacket(new PacketPlayerChatMessage(player, "interact.failure.vehiclelocked"));
+				player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_VEHICLE_LOCKED));
 			}else{
 				AEntityD_Definable<?> entity = part != null ? part : vehicle;
 				switch(hitBox.definition.variableType){
@@ -182,7 +183,7 @@ public class PacketVehicleInteract extends APacketEntityInteract<EntityVehicleF_
 			if(rightClick){
 				part.interact(player);
 			}else if(leftClick){
-				part.attack(new Damage("player", 1.0F, part.boundingBox, null, player));
+				part.attack(new Damage(1.0F, part.boundingBox, null, player, null));
 			}
 		}
 		return hadAllCondition;

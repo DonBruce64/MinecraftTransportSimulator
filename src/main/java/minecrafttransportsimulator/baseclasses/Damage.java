@@ -6,6 +6,7 @@ import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.items.instances.ItemBullet;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
 import minecrafttransportsimulator.jsondefs.JSONBullet.BulletType;
+import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 
 /**Basic damage class.  Used to make instances of damage to apply to entities.  Allows for quick addition
@@ -24,11 +25,11 @@ import minecrafttransportsimulator.mcinterface.WrapperEntity;
  * @author don_bruce
  */
 public class Damage{
-	public final String name;
 	public final double amount;
 	public final BoundingBox box;
 	public final AEntityB_Existing damgeSource;
 	public final WrapperEntity entityResponsible;
+	public final LanguageEntry language;
 	
 	public boolean isFire;
 	public boolean isWater;
@@ -37,12 +38,12 @@ public class Damage{
 	public boolean ignoreCooldown;
 	public List<JSONPotionEffect> effects;
 	
-	public Damage(String name, double amount, BoundingBox box, AEntityB_Existing damgeSource, WrapperEntity entityResponsible){
-		this.name = name;
+	public Damage(double amount, BoundingBox box, AEntityB_Existing damgeSource, WrapperEntity entityResponsible, LanguageEntry language){
 		this.amount = amount;
 		this.box = box;
 		this.damgeSource = damgeSource;
 		this.entityResponsible = entityResponsible;
+		this.language = language;
 	}
 	
 	/**

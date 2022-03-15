@@ -4,8 +4,10 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
+import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
+import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -154,20 +156,20 @@ public class PartEngine extends APart{
 			}
 			if(!isCreative){
 				if(damage.isExplosion){
-					hours += damage.amount*20*ConfigSystem.configObject.general.engineHoursFactor.value;
+					hours += damage.amount*20*ConfigSystem.settings.general.engineHoursFactor.value;
 					if(!definition.engine.isSteamPowered){
-						if(!oilLeak)oilLeak = Math.random() < ConfigSystem.configObject.damage.engineLeakProbability.value*10;
-						if(!fuelLeak)fuelLeak = Math.random() < ConfigSystem.configObject.damage.engineLeakProbability.value*10;
+						if(!oilLeak)oilLeak = Math.random() < ConfigSystem.settings.damage.engineLeakProbability.value*10;
+						if(!fuelLeak)fuelLeak = Math.random() < ConfigSystem.settings.damage.engineLeakProbability.value*10;
 						if(!brokenStarter)brokenStarter = Math.random() < 0.05;
 					}
-					InterfacePacket.sendToAllClients(new PacketPartEngine(this, damage.amount*10*ConfigSystem.configObject.general.engineHoursFactor.value, oilLeak, fuelLeak, brokenStarter));
+					InterfacePacket.sendToAllClients(new PacketPartEngine(this, damage.amount*10*ConfigSystem.settings.general.engineHoursFactor.value, oilLeak, fuelLeak, brokenStarter));
 				}else{
-					hours += damage.amount*2*ConfigSystem.configObject.general.engineHoursFactor.value;
+					hours += damage.amount*2*ConfigSystem.settings.general.engineHoursFactor.value;
 					if(!definition.engine.isSteamPowered){
-						if(!oilLeak)oilLeak = Math.random() < ConfigSystem.configObject.damage.engineLeakProbability.value;
-						if(!fuelLeak)fuelLeak = Math.random() < ConfigSystem.configObject.damage.engineLeakProbability.value;
+						if(!oilLeak)oilLeak = Math.random() < ConfigSystem.settings.damage.engineLeakProbability.value;
+						if(!fuelLeak)fuelLeak = Math.random() < ConfigSystem.settings.damage.engineLeakProbability.value;
 					}
-					InterfacePacket.sendToAllClients(new PacketPartEngine(this, damage.amount*ConfigSystem.configObject.general.engineHoursFactor.value, oilLeak, fuelLeak, brokenStarter));
+					InterfacePacket.sendToAllClients(new PacketPartEngine(this, damage.amount*ConfigSystem.settings.general.engineHoursFactor.value, oilLeak, fuelLeak, brokenStarter));
 				}
 			}
 		}else{
@@ -216,7 +218,7 @@ public class PartEngine extends APart{
 					if(world.isClient()){
 						for(WrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, 16, 16, 16))){
 							if(entity instanceof WrapperPlayer){
-								((WrapperPlayer) entity).displayChatMessage("interact.jumpercable.linkdropped");
+								((WrapperPlayer) entity).displayChatMessage(JSONConfigLanguage.INTERACT_JUMPERCABLE_LINKDROPPED);
 							}
 						}
 					}
@@ -232,7 +234,7 @@ public class PartEngine extends APart{
 					if(world.isClient()){
 						for(WrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, 16, 16, 16))){
 							if(entity instanceof WrapperPlayer){
-								((WrapperPlayer) entity).displayChatMessage("interact.jumpercable.powerequal");
+								((WrapperPlayer) entity).displayChatMessage(JSONConfigLanguage.INTERACT_JUMPERCABLE_POWEREQUAL);
 							}
 						}
 					}
@@ -240,7 +242,7 @@ public class PartEngine extends APart{
 			}
 			
 			//Add cooling for ambient temp.
-			ambientTemp = (25*world.getTemperature(position) + 5)*ConfigSystem.configObject.general.engineBiomeTempFactor.value;
+			ambientTemp = (25*world.getTemperature(position) + 5)*ConfigSystem.settings.general.engineBiomeTempFactor.value;
 			coolingFactor = 0.001*currentCoolingCoefficient - (currentSuperchargerEfficiency/1000F)*(rpm/2000F) + (vehicleOn.velocity/1000F)*currentCoolingCoefficient;
 			temp -= (temp - ambientTemp)*coolingFactor;
 			
@@ -259,7 +261,7 @@ public class PartEngine extends APart{
 						vehicleOn.electricUsage += 0.05F;
 					}
 					if(!isCreative){
-						fuelFlow += vehicleOn.fuelTank.drain(vehicleOn.fuelTank.getFluid(), getTotalFuelConsumption()*ConfigSystem.configObject.general.fuelUsageFactor.value, !world.isClient());
+						fuelFlow += vehicleOn.fuelTank.drain(vehicleOn.fuelTank.getFluid(), getTotalFuelConsumption()*ConfigSystem.settings.general.fuelUsageFactor.value, !world.isClient());
 					}
 				}
 				if(autoStarterEngaged){
@@ -329,18 +331,18 @@ public class PartEngine extends APart{
 				}else{
 					//Try to get fuel from the vehicle and calculate fuel flow.
 					if(!isCreative && !vehicleOn.fuelTank.getFluid().isEmpty()){
-						if(!ConfigSystem.configObject.fuel.fuels.containsKey(definition.engine.fuelType)){					
-							throw new IllegalArgumentException("Engine:" + definition.packID + ":" + definition.systemName + " wanted fuel configs for fuel of type:" + definition.engine.fuelType + ", but these do not exist in the config file.  Fuels currently in the file are:" + ConfigSystem.configObject.fuel.fuels.keySet().toString() + "If you are on a server, this means the server and client configs are not the same.  If this is a modpack, TELL THE AUTHOR IT IS BORKEN!");
-						}else if(!ConfigSystem.configObject.fuel.fuels.get(definition.engine.fuelType).containsKey(vehicleOn.fuelTank.getFluid())){
+						if(!ConfigSystem.settings.fuel.fuels.containsKey(definition.engine.fuelType)){					
+							throw new IllegalArgumentException("Engine:" + definition.packID + ":" + definition.systemName + " wanted fuel configs for fuel of type:" + definition.engine.fuelType + ", but these do not exist in the config file.  Fuels currently in the file are:" + ConfigSystem.settings.fuel.fuels.keySet().toString() + "If you are on a server, this means the server and client configs are not the same.  If this is a modpack, TELL THE AUTHOR IT IS BORKEN!");
+						}else if(!ConfigSystem.settings.fuel.fuels.get(definition.engine.fuelType).containsKey(vehicleOn.fuelTank.getFluid())){
 							//Clear out the fuel from this vehicle as it's the wrong type.
 							vehicleOn.fuelTank.drain(vehicleOn.fuelTank.getFluid(), vehicleOn.fuelTank.getFluidLevel(), true);
 						}else{
-							fuelFlow += vehicleOn.fuelTank.drain(vehicleOn.fuelTank.getFluid(), getTotalFuelConsumption()*ConfigSystem.configObject.general.fuelUsageFactor.value/ConfigSystem.configObject.fuel.fuels.get(definition.engine.fuelType).get(vehicleOn.fuelTank.getFluid())*rpm*(fuelLeak ? 1.5F : 1.0F)/currentMaxRPM, !world.isClient());
+							fuelFlow += vehicleOn.fuelTank.drain(vehicleOn.fuelTank.getFluid(), getTotalFuelConsumption()*ConfigSystem.settings.general.fuelUsageFactor.value/ConfigSystem.settings.fuel.fuels.get(definition.engine.fuelType).get(vehicleOn.fuelTank.getFluid())*rpm*(fuelLeak ? 1.5F : 1.0F)/currentMaxRPM, !world.isClient());
 						}
 					}
 					
 					//Add temp based on engine speed.
-					temp += Math.max(0, (7*rpm/currentMaxRPM - temp/(COLD_TEMP*2))/20)*currentHeatingCoefficient*ConfigSystem.configObject.general.engineSpeedTempFactor.value;
+					temp += Math.max(0, (7*rpm/currentMaxRPM - temp/(COLD_TEMP*2))/20)*currentHeatingCoefficient*ConfigSystem.settings.general.engineSpeedTempFactor.value;
 					
 					//Adjust oil pressure based on RPM and leak status.
 					//If this is a 0-idle RPM engine, assume it's electric and doesn't have oil.
@@ -575,12 +577,15 @@ public class PartEngine extends APart{
 					boundingBox.heightRadius += 0.25;
 					boundingBox.depthRadius += 0.25;
 					boundingBox.globalCenter.add(vehicleOn.headingVector);
-					Damage jetIntake = new Damage("jet_intake", definition.engine.jetPowerFactor*ConfigSystem.configObject.damage.jetDamageFactor.value*rpm/1000F, boundingBox, this, vehicleOn.getController());
+					WrapperEntity controller = vehicleOn.getController();
+					LanguageEntry language = controller != null ? JSONConfigLanguage.DEATH_JETINTAKE_PLAYER : JSONConfigLanguage.DEATH_JETINTAKE_NULL;
+					Damage jetIntake = new Damage(definition.engine.jetPowerFactor*ConfigSystem.settings.damage.jetDamageFactor.value*rpm/1000F, boundingBox, this, controller, language);
 					world.attackEntities(jetIntake, null);
 					
 					boundingBox.globalCenter.subtract(vehicleOn.headingVector);
 					boundingBox.globalCenter.subtract(vehicleOn.headingVector);
-					Damage jetExhaust = new Damage("jet_exhaust", definition.engine.jetPowerFactor*ConfigSystem.configObject.damage.jetDamageFactor.value*rpm/2000F, boundingBox, this, jetIntake.entityResponsible).setFire();
+					language = controller != null ? JSONConfigLanguage.DEATH_JETEXHAUST_PLAYER : JSONConfigLanguage.DEATH_JETEXHAUST_NULL;
+					Damage jetExhaust = new Damage(definition.engine.jetPowerFactor*ConfigSystem.settings.damage.jetDamageFactor.value*rpm/2000F, boundingBox, this, controller, language).setFire();
 					world.attackEntities(jetExhaust, null);
 					
 					boundingBox.globalCenter.add(vehicleOn.headingVector);
@@ -784,7 +789,7 @@ public class PartEngine extends APart{
 	}
 	
 	protected void explodeEngine(){
-		if(ConfigSystem.configObject.damage.explosions.value){
+		if(ConfigSystem.settings.damage.explosions.value){
 			world.spawnExplosion(position, 1F, true);
 		}else{
 			world.spawnExplosion(position, 0F, false);
@@ -926,9 +931,9 @@ public class PartEngine extends APart{
 	
 	public double getTotalWearFactor(){
 		if(currentSuperchargerEfficiency > 1.0F){
-			return definition.engine.engineWearFactor*currentSuperchargerEfficiency*ConfigSystem.configObject.general.engineHoursFactor.value;
+			return definition.engine.engineWearFactor*currentSuperchargerEfficiency*ConfigSystem.settings.general.engineHoursFactor.value;
 		}else{
-			return definition.engine.engineWearFactor*ConfigSystem.configObject.general.engineHoursFactor.value;
+			return definition.engine.engineWearFactor*ConfigSystem.settings.general.engineHoursFactor.value;
 		}
 	}
 	

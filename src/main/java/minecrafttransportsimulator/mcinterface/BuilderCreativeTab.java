@@ -7,6 +7,7 @@ import java.util.Map;
 
 import minecrafttransportsimulator.guis.instances.GUIPackMissing;
 import minecrafttransportsimulator.items.components.AItemBase;
+import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.client.gui.inventory.GuiContainerCreative;
 import net.minecraft.creativetab.CreativeTabs;
@@ -90,7 +91,7 @@ public class BuilderCreativeTab extends CreativeTabs{
     		if(!PackParserSystem.arePacksPresent()){
 				new GUIPackMissing();
 			}else if(PackParserSystem.getAllPackIDs().contains("iav")){
-				InterfaceClient.getClientPlayer().displayChatMessage("IAV has been detected as installed.  This pack messes up the font for IV and MUST be removed to continue.");
+				InterfaceClient.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_IAV);
 				InterfaceClient.closeGUI();
 			}
     	}

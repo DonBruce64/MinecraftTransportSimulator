@@ -112,7 +112,7 @@ public final class RenderInstrument{
 						
 						//Set points to the variables here and render them.
 						//If the shape is lit, disable lighting for blending.
-						renderObject.disableLighting = component.lightUpTexture && lightsOn && ConfigSystem.configObject.clientRendering.brightLights.value;
+						renderObject.disableLighting = component.lightUpTexture && lightsOn && ConfigSystem.client.renderingSettings.brightLights.value;
 						renderComponentFromState(component);
 					}
 				}

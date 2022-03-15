@@ -1,7 +1,7 @@
 package minecrafttransportsimulator.rendering.instances;
 
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.InputStream;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,16 +28,15 @@ public final class ModelParserLT extends AModelParser{
 	@Override
 	protected List<RenderableObject> parseModelInternal(String modelLocation){
 		List<RenderableObject> objectList = new ArrayList<RenderableObject>();
-		InputStreamReader reader;
+		InputStream stream;
 		try{
-			reader = new InputStreamReader(ModelParserLT.class.getResourceAsStream(modelLocation));
+			stream = ModelParserLT.class.getResourceAsStream(modelLocation);
 		}catch(Exception e){
 			throw new NullPointerException("Attempted to parse the Little Tiles model at: " + modelLocation + " but could not find it.  Check the path and try again.");
 		}
 		
 		try{
-			LTMainModel model = JSONParser.parseStream(reader, LTMainModel.class, null, null);
-			reader.close();
+			LTMainModel model = JSONParser.parseStream(stream, LTMainModel.class, null, null);
 			
 			//Parse through model boxes and create objects.
 			float scale = 1F/model.grid;

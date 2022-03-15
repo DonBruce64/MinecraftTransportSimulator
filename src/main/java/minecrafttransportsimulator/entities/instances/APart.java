@@ -13,6 +13,7 @@ import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
+import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -226,7 +227,7 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 			//If the inventory can't fit us, don't remove us.
 			WrapperPlayer player = (WrapperPlayer) damage.entityResponsible;
 			if(entityOn.locked){
-				player.sendPacket(new PacketPlayerChatMessage(player, "interact.failure.vehiclelocked"));
+				player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_VEHICLE_LOCKED));
 			}else{
 				if(player.getInventory().addStack(getItem().getNewStack(save(new WrapperNBT())))){
 					entityOn.removePart(this, null);

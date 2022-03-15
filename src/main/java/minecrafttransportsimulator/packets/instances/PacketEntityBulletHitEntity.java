@@ -8,6 +8,8 @@ import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.instances.EntityBullet;
+import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
+import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -58,8 +60,9 @@ public class PacketEntityBulletHitEntity extends PacketEntityBulletHit{
 				//Create damage object and attack the entity.
 				BoundingBox hitBox = new BoundingBox(localCenter, hitPosition, bulletItem.definition.bullet.diameter*1000, bulletItem.definition.bullet.diameter*1000, bulletItem.definition.bullet.diameter*1000, false);
 				WrapperEntity attacker = controllerEntityID != null ? world.getExternalEntity(controllerEntityID) : null;
-				double damageAmount = bulletVelocity*bulletItem.definition.bullet.diameter/5D*ConfigSystem.configObject.damage.bulletDamageFactor.value;
-				Damage damage = new Damage("bullet", damageAmount, hitBox, null, attacker);
+				LanguageEntry language = attacker != null ? JSONConfigLanguage.DEATH_BULLET_PLAYER : JSONConfigLanguage.DEATH_BULLET_NULL;
+				double damageAmount = bulletVelocity*bulletItem.definition.bullet.diameter/5D*ConfigSystem.settings.damage.bulletDamageFactor.value;
+				Damage damage = new Damage(damageAmount, hitBox, null, attacker, language);
 				damage.setBullet(bulletItem);
 				entityHit.attack(damage);
 			}

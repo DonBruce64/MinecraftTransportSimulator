@@ -8,9 +8,9 @@ import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.PartGun;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.components.IItemEntityProvider;
+import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
-import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
@@ -34,16 +34,16 @@ public class ItemPartGun extends AItemPart implements IItemEntityProvider<Entity
 	@Override
 	public void addTooltipLines(List<String> tooltipLines, WrapperNBT data){
 		super.addTooltipLines(tooltipLines, data);
-		tooltipLines.add(InterfaceCore.translate("info.item.gun.diameter") + definition.gun.diameter);
-		tooltipLines.add(InterfaceCore.translate("info.item.gun.caseRange") + definition.gun.minCaseLength + "-" + definition.gun.maxCaseLength);
-		tooltipLines.add(InterfaceCore.translate("info.item.gun.fireDelay") + definition.gun.fireDelay);
-		tooltipLines.add(InterfaceCore.translate("info.item.gun.muzzleVelocity") + definition.gun.muzzleVelocity);
-		tooltipLines.add(InterfaceCore.translate("info.item.gun.capacity") + definition.gun.capacity);
+		tooltipLines.add(JSONConfigLanguage.ITEMINFO_GUN_DIAMETER.value + definition.gun.diameter);
+		tooltipLines.add(JSONConfigLanguage.ITEMINFO_GUN_CASERANGE.value + definition.gun.minCaseLength + "-" + definition.gun.maxCaseLength);
+		tooltipLines.add(JSONConfigLanguage.ITEMINFO_GUN_FIREDELAY.value + definition.gun.fireDelay);
+		tooltipLines.add(JSONConfigLanguage.ITEMINFO_GUN_MUZZLEVELOCITY.value + definition.gun.muzzleVelocity);
+		tooltipLines.add(JSONConfigLanguage.ITEMINFO_GUN_CAPACITY.value + definition.gun.capacity);
 		if(definition.gun.autoReload){
-			tooltipLines.add(InterfaceCore.translate("info.item.gun.autoReload"));
+			tooltipLines.add(JSONConfigLanguage.ITEMINFO_GUN_AUTORELOAD.value);
 		}
-		tooltipLines.add(InterfaceCore.translate("info.item.gun.yawRange") + definition.gun.minYaw + "-" + definition.gun.maxYaw);
-		tooltipLines.add(InterfaceCore.translate("info.item.gun.pitchRange") + definition.gun.minPitch + "-" + definition.gun.maxPitch);
+		tooltipLines.add(JSONConfigLanguage.ITEMINFO_GUN_YAWRANGE.value + definition.gun.minYaw + "-" + definition.gun.maxYaw);
+		tooltipLines.add(JSONConfigLanguage.ITEMINFO_GUN_PITCHRANGE.value + definition.gun.minPitch + "-" + definition.gun.maxPitch);
 	}
 	
 	@Override

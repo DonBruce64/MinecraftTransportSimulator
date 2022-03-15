@@ -20,10 +20,10 @@ import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.components.IItemFood;
 import minecrafttransportsimulator.items.components.IItemVehicleInteractable;
+import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONItem;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
-import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperItemStack;
@@ -64,7 +64,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 					//If the player isn't the owner of the vehicle, they can't interact with it.
 					if(!ownerState.equals(PlayerOwnerState.USER)){
 						if(rightClick){
-							if(ConfigSystem.configObject.clientControls.devMode.value && vehicle.equals(player.getEntityRiding())){
+							if(ConfigSystem.client.controlSettings.devMode.value && vehicle.equals(player.getEntityRiding())){
 								player.sendPacket(new PacketEntityGUIRequest(vehicle, player, PacketEntityGUIRequest.EntityGUIType.PACK_EXPORTER));
 							}else if(player.isSneaking()){
 								player.sendPacket(new PacketEntityGUIRequest(vehicle, player, PacketEntityGUIRequest.EntityGUIType.TEXT_EDITOR));
@@ -77,7 +77,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 								if(part instanceof PartInteractable){
 									PartInteractable interactable = (PartInteractable) part;
 									if(!interactable.definition.interactable.canBeOpenedInHand && interactable.getMass() > interactable.definition.generic.mass){
-										player.sendPacket(new PacketPlayerChatMessage(player, InterfaceCore.translate("interact.failure.cantremoveinventory")));
+										player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_VEHICLE_CANTREMOVEINVENTORY));
 										return CallbackType.NONE;
 									}
 								}
@@ -91,7 +91,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 							}else if(player.isSneaking()){
 								//Attacker is a sneaking player with a wrench.
 								//Remove this vehicle if possible.
-								if((!ConfigSystem.configObject.general.opPickupVehiclesOnly.value || ownerState.equals(PlayerOwnerState.ADMIN)) && (!ConfigSystem.configObject.general.creativePickupVehiclesOnly.value || player.isCreative()) && vehicle.isValid){
+								if((!ConfigSystem.settings.general.opPickupVehiclesOnly.value || ownerState.equals(PlayerOwnerState.ADMIN)) && (!ConfigSystem.settings.general.creativePickupVehiclesOnly.value || player.isCreative()) && vehicle.isValid){
 									vehicle.disconnectAllConnections();
 									vehicle.world.spawnItem(vehicle.getItem(), vehicle.save(new WrapperNBT()), vehicle.position);
 									vehicle.remove();
@@ -99,7 +99,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 							}
 						}
 					}else{
-						player.sendPacket(new PacketPlayerChatMessage(player, "interact.failure.vehicleowned"));
+						player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_VEHICLE_OWNED));
 					}
 				}
 				return CallbackType.NONE;
@@ -114,7 +114,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 							player.sendPacket(new PacketEntityGUIRequest(vehicle, player, PacketEntityGUIRequest.EntityGUIType.PAINT_GUN));
 						}
 					}else{
-						player.sendPacket(new PacketPlayerChatMessage(player, "interact.failure.vehicleowned"));
+						player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_VEHICLE_OWNED));
 					}
 				}
 				return CallbackType.NONE;
@@ -129,19 +129,21 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 					if(keyVehicleUUID == null){
 						//Check if we are the owner before making this a valid key.
 						if(vehicle.ownerUUID != null && ownerState.equals(PlayerOwnerState.USER)){
-							player.sendPacket(new PacketPlayerChatMessage(player, "interact.key.failure.notowner"));
+							player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_KEY_NOTOWNER));
+							return CallbackType.NONE;
+						}else{
+							keyVehicleUUID = vehicle.uniqueUUID;
+							data.setUUID("vehicle", keyVehicleUUID);
+							stack.setData(data);
+							player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_KEY_BIND));
 							return CallbackType.NONE;
 						}
-						
-						keyVehicleUUID = vehicle.uniqueUUID;
-						data.setUUID("vehicle", keyVehicleUUID);
-						stack.setData(data);
 					}
 					
 					//Try to lock or unlock this vehicle.
 					//If we succeed, send callback to clients to change locked state.
 					if(!keyVehicleUUID.equals(vehicle.uniqueUUID)){
-						player.sendPacket(new PacketPlayerChatMessage(player, "interact.key.failure.wrongkey"));
+						player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_KEY_WRONGKEY));
 					}else{
 						if(part instanceof PartSeat){
 							//Part is a seat, don't do locking changes, instead, change seat.
@@ -149,7 +151,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 							return CallbackType.SKIP;
 						}else if(vehicle.locked){
 							vehicle.locked = false;
-							player.sendPacket(new PacketPlayerChatMessage(player, "interact.key.info.unlock"));
+							player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_KEY_UNLOCK));
 							
 							//Also check collision boxes that block seats, in case we clicked one of those.
 							if(hitBox.definition != null){
@@ -161,7 +163,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 							}
 						}else{
 							vehicle.locked = true;
-							player.sendPacket(new PacketPlayerChatMessage(player, "interact.key.info.lock"));
+							player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_KEY_LOCK));
 							
 							//Also check collision boxes that block seats, in case we clicked one of those.
 							if(hitBox.definition != null){
@@ -203,9 +205,9 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 							if(interactable.tank != null){
 								if(interactable.linkedPart == null && interactable.linkedVehicle == null){
 									firstPartClicked = interactable;
-									player.sendPacket(new PacketPlayerChatMessage(player, "interact.fuelhose.firstlink"));
+									player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELHOSE_FIRSTLINK));
 								}else{
-									player.sendPacket(new PacketPlayerChatMessage(player, "interact.fuelhose.alreadylinked"));
+									player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELHOSE_ALREADYLINKED));
 								}
 							}
 						}
@@ -218,19 +220,19 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 										if(interactable.tank.getFluid().isEmpty() || firstPartClicked.tank.getFluid().isEmpty() || interactable.tank.getFluid().equals(firstPartClicked.tank.getFluid())){
 											firstPartClicked.linkedPart = interactable;
 											InterfacePacket.sendToAllClients(new PacketPartInteractable(firstPartClicked, player));
-											player.sendPacket(new PacketPlayerChatMessage(player, "interact.fuelhose.secondlink"));
+											player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELHOSE_SECONDLINK));
 											firstPartClicked = null;
 										}else{
 											firstPartClicked = null;
-											player.sendPacket(new PacketPlayerChatMessage(player, "interact.fuelhose.differentfluids"));
+											player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELHOSE_DIFFERENTFLUIDS));
 										}
 									}else{
 										firstPartClicked = null;
-										player.sendPacket(new PacketPlayerChatMessage(player, "interact.fuelhose.toofar"));
+										player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELHOSE_TOOFAR));
 									}
 								}else{
 									firstPartClicked = null;
-									player.sendPacket(new PacketPlayerChatMessage(player, "interact.fuelhose.alreadylinked"));
+									player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELHOSE_ALREADYLINKED));
 								}
 							}
 						}else if(part == null){
@@ -238,15 +240,15 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 								if(vehicle.fuelTank.getFluid().isEmpty() || firstPartClicked.tank.getFluid().isEmpty() || vehicle.fuelTank.getFluid().equals(firstPartClicked.tank.getFluid())){
 									firstPartClicked.linkedVehicle = vehicle;
 									InterfacePacket.sendToAllClients(new PacketPartInteractable(firstPartClicked, player));
-									player.sendPacket(new PacketPlayerChatMessage(player, "interact.fuelhose.secondlink"));
+									player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELHOSE_SECONDLINK));
 									firstPartClicked = null;
 								}else{
 									firstPartClicked = null;
-									player.sendPacket(new PacketPlayerChatMessage(player, "interact.fuelhose.differentfluids"));
+									player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELHOSE_DIFFERENTFLUIDS));
 								}
 							}else{
 								firstPartClicked = null;
-								player.sendPacket(new PacketPlayerChatMessage(player, "interact.fuelhose.toofar"));
+								player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELHOSE_TOOFAR));
 							}
 						}
 					}
@@ -260,25 +262,25 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 						if(engine.linkedEngine == null){
 							if(firstEngineClicked == null){
 								firstEngineClicked = engine;
-								player.sendPacket(new PacketPlayerChatMessage(player, "interact.jumpercable.firstlink"));
+								player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_JUMPERCABLE_FIRSTLINK));
 							}else if(!firstEngineClicked.equals(engine)){
 								if(firstEngineClicked.entityOn.equals(engine.entityOn)){
 									firstEngineClicked = null;
-									player.sendPacket(new PacketPlayerChatMessage(player, "interact.jumpercable.samevehicle"));
+									player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_JUMPERCABLE_SAMEVEHICLE));
 								}else if(engine.position.isDistanceToCloserThan(firstEngineClicked.position, 15)){
 									engine.linkedEngine = firstEngineClicked;
 									firstEngineClicked.linkedEngine = engine;
 									InterfacePacket.sendToAllClients(new PacketPartEngine(engine, firstEngineClicked));
 									InterfacePacket.sendToAllClients(new PacketPartEngine(firstEngineClicked, engine));
 									firstEngineClicked = null;
-									player.sendPacket(new PacketPlayerChatMessage(player, "interact.jumpercable.secondlink"));
+									player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_JUMPERCABLE_SECONDLINK));
 								}else{
 									firstEngineClicked = null;
-									player.sendPacket(new PacketPlayerChatMessage(player, "interact.jumpercable.toofar"));
+									player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_JUMPERCABLE_TOOFAR));
 								}
 							}
 						}else{
-							player.sendPacket(new PacketPlayerChatMessage(player, "interact.jumpercable.alreadylinked"));
+							player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_JUMPERCABLE_ALREADYLINKED));
 						}
 					}
 				}
@@ -289,7 +291,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 					//Use jumper on vehicle.
 					vehicle.electricPower = 12;
 					if(!vehicle.world.isClient()){
-						InterfacePacket.sendToPlayer(new PacketPlayerChatMessage(player, "interact.jumperpack.success"), player);
+						InterfacePacket.sendToPlayer(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_VEHICLE_JUMPERPACK), player);
 						if(!player.isCreative()){
 							player.getInventory().removeFromSlot(player.getHotbarIndex(), 1);
 						}

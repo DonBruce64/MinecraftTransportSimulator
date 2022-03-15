@@ -96,7 +96,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 		WrapperItemStack heldStack = player.getHeldStack();
 		AItemBase heldItem = heldStack.getItem();
 		ATileEntityPole_Component clickedComponent = components.get(axis);
-		if(!ConfigSystem.configObject.general.opSignEditingOnly.value || player.isOP()){
+		if(!ConfigSystem.settings.general.opSignEditingOnly.value || player.isOP()){
 			if(player.isHoldingItemType(ItemComponentType.WRENCH)){
 				//Holding a wrench, try to remove the component.
 				//Need to check if it will fit in the player's inventory.

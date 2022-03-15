@@ -303,7 +303,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
    	 *  author doesn't want it to be.
    	 */
     public boolean renderTextLit(){
-    	return ConfigSystem.configObject.clientRendering.brightLights.value;
+    	return ConfigSystem.client.renderingSettings.brightLights.value;
     }
     
     /**

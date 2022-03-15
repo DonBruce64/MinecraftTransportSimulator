@@ -13,7 +13,8 @@ import org.lwjgl.input.Mouse;
 
 import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.guis.instances.GUIConfig;
-import minecrafttransportsimulator.jsondefs.JSONConfig.ConfigJoystick;
+import minecrafttransportsimulator.jsondefs.JSONConfigClient.ConfigJoystick;
+import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ControlSystem;
 import minecrafttransportsimulator.systems.ControlSystem.ControlsJoystick;
@@ -67,7 +68,7 @@ public class InterfaceInput{
 	 *  cause them to open the config menu for the actual control configuration.
 	 */
 	public static void initConfigKey(){
-		configKey = new KeyBinding("key.mts.config", Keyboard.KEY_P, "key.categories." + MasterLoader.MODID);
+		configKey = new KeyBinding(JSONConfigLanguage.GUI_MASTERCONFIG.value, Keyboard.KEY_P, MasterLoader.MODNAME);
 		ClientRegistry.registerKeyBinding(configKey);
 	}
 	
@@ -88,16 +89,16 @@ public class InterfaceInput{
 				public void run(){
 					try{
 						joystickNameCounters.clear();
-						if(ConfigSystem.configObject.clientControls.devMode.value)InterfaceCore.logError("Starting controller init.");
+						if(ConfigSystem.client.controlSettings.devMode.value)InterfaceCore.logError("Starting controller init.");
 						if(runningClassicMode){
-							if(ConfigSystem.configObject.clientControls.devMode.value)InterfaceCore.logError("Running classic mode.");
+							if(ConfigSystem.client.controlSettings.devMode.value)InterfaceCore.logError("Running classic mode.");
 							classicJoystickMap.clear();
-							if(ConfigSystem.configObject.clientControls.devMode.value)InterfaceCore.logError("Found this many controllers: " + net.java.games.input.ControllerEnvironment.getDefaultEnvironment().getControllers().length);
+							if(ConfigSystem.client.controlSettings.devMode.value)InterfaceCore.logError("Found this many controllers: " + net.java.games.input.ControllerEnvironment.getDefaultEnvironment().getControllers().length);
 							for(net.java.games.input.Controller joystick : net.java.games.input.ControllerEnvironment.getDefaultEnvironment().getControllers()){
 								joystickEnabled = true;
 								if(joystick.getType() != null && !joystick.getType().equals(net.java.games.input.Controller.Type.MOUSE) && !joystick.getType().equals(net.java.games.input.Controller.Type.KEYBOARD) && joystick.getName() != null && joystick.getComponents().length != 0){
 									String joystickName = joystick.getName();
-									if(ConfigSystem.configObject.clientControls.devMode.value)InterfaceCore.logError("Found valid controller: " + joystickName);
+									if(ConfigSystem.client.controlSettings.devMode.value)InterfaceCore.logError("Found valid controller: " + joystickName);
 									
 									//Add an index on this joystick to be sure we don't override multi-component units.
 									if(!joystickNameCounters.containsKey(joystickName)){
@@ -108,20 +109,20 @@ public class InterfaceInput{
 								}
 							}
 						}else{
-							if(ConfigSystem.configObject.clientControls.devMode.value)InterfaceCore.logError("Running modern mode.");
+							if(ConfigSystem.client.controlSettings.devMode.value)InterfaceCore.logError("Running modern mode.");
 							if(!org.lwjgl.input.Controllers.isCreated()){
-								if(ConfigSystem.configObject.clientControls.devMode.value)InterfaceCore.logError("Creating controller object.");
+								if(ConfigSystem.client.controlSettings.devMode.value)InterfaceCore.logError("Creating controller object.");
 								org.lwjgl.input.Controllers.create();
 							}
 							joystickMap.clear();
 							joystickAxisCountMap.clear();
-							if(ConfigSystem.configObject.clientControls.devMode.value)InterfaceCore.logError("Found this many controllers: " + org.lwjgl.input.Controllers.getControllerCount());
+							if(ConfigSystem.client.controlSettings.devMode.value)InterfaceCore.logError("Found this many controllers: " + org.lwjgl.input.Controllers.getControllerCount());
 							for(int i=0; i<org.lwjgl.input.Controllers.getControllerCount(); ++i){
 								joystickEnabled = true;
 								org.lwjgl.input.Controller joystick = org.lwjgl.input.Controllers.getController(i);
 								if(joystick.getAxisCount() > 0 && joystick.getButtonCount() > 0 && joystick.getName() != null){
 									String joystickName = joystick.getName();
-									if(ConfigSystem.configObject.clientControls.devMode.value)InterfaceCore.logError("Found valid controller: " + joystickName);
+									if(ConfigSystem.client.controlSettings.devMode.value)InterfaceCore.logError("Found valid controller: " + joystickName);
 									
 									//Add an index on this joystick to be sure we don't override multi-component units.
 									if(!joystickNameCounters.containsKey(joystickName)){
@@ -135,8 +136,8 @@ public class InterfaceInput{
 						}
 						
 						//Validate joysticks are valid for this setup by making sure indexes aren't out of bounds.
-						Iterator<Entry<String, ConfigJoystick>> iterator = ConfigSystem.configObject.controls.joystick.entrySet().iterator();
-						if(ConfigSystem.configObject.clientControls.devMode.value)InterfaceCore.logError("Performing button validity checks.");
+						Iterator<Entry<String, ConfigJoystick>> iterator = ConfigSystem.client.controls.joystick.entrySet().iterator();
+						if(ConfigSystem.client.controlSettings.devMode.value)InterfaceCore.logError("Performing button validity checks.");
 						while(iterator.hasNext()){
 							try{
 								Entry<String, ConfigJoystick> controllerEntry = iterator.next();
@@ -379,8 +380,8 @@ public class InterfaceInput{
     @SubscribeEvent
     public static void on(InputEvent.KeyInputEvent event){
     	//Check if we switched joystick modes.
-    	if(runningClassicMode ^ ConfigSystem.configObject.clientControls.classicJystk.value){
-    		runningClassicMode = ConfigSystem.configObject.clientControls.classicJystk.value;
+    	if(runningClassicMode ^ ConfigSystem.client.controlSettings.classicJystk.value){
+    		runningClassicMode = ConfigSystem.client.controlSettings.classicJystk.value;
     		joystickLoadingAttempted = false;
     	}
     	

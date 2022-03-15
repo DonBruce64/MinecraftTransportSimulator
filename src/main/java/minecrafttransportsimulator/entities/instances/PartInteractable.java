@@ -3,6 +3,8 @@ package minecrafttransportsimulator.entities.instances;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
+import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
+import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
@@ -63,7 +65,7 @@ public final class PartInteractable extends APart{
 				player.getHeldStack().interactWith(tank, player);
 			}	
 		}else{
-			player.sendPacket(new PacketPlayerChatMessage(player, "interact.failure.vehiclelocked"));
+			player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_VEHICLE_LOCKED));
 		}
 		return true;
     }
@@ -106,16 +108,16 @@ public final class PartInteractable extends APart{
 		//Only do checks on the server.  Clients get packets.
 		if(!world.isClient()){
 			EntityFluidTank linkedTank =  null;
-			String linkedMessage = null;
+			LanguageEntry linkedMessage = null;
 			if(linkedVehicle != null){
 				if(!linkedVehicle.position.isDistanceToCloserThan(position, 16)){
-					linkedMessage = "interact.fuelhose.linkdropped";
+					linkedMessage = JSONConfigLanguage.INTERACT_FUELHOSE_LINKDROPPED;
 				}else{
 					linkedTank = linkedVehicle.fuelTank;
 				}
 			}else if(linkedPart != null){
 				if(linkedPart.position.isDistanceToCloserThan(position, 16)){
-					linkedMessage = "interact.fuelhose.linkdropped";
+					linkedMessage = JSONConfigLanguage.INTERACT_FUELHOSE_LINKDROPPED;
 				}else{
 					linkedTank = linkedPart.tank;
 				}
@@ -131,13 +133,13 @@ public final class PartInteractable extends APart{
 						if(amountToTransfer > 0){
 							linkedTank.fill(fluidToTransfer, amountToTransfer, true);
 						}else{
-							linkedMessage = "interact.fuelhose.tankempty";
+							linkedMessage = JSONConfigLanguage.INTERACT_FUELHOSE_TANKEMPTY;
 						}
 					}else{
-						linkedMessage = "interact.fuelhose.tankfull";
+						linkedMessage = JSONConfigLanguage.INTERACT_FUELHOSE_TANKFULL;
 					}
 				}else{
-					linkedMessage = "interact.fuelhose.tankempty";
+					linkedMessage = JSONConfigLanguage.INTERACT_FUELHOSE_TANKEMPTY;
 				}
 			}
 			
@@ -191,8 +193,8 @@ public final class PartInteractable extends APart{
 					if(part instanceof PartInteractable){
 						if(part.isActive && part.definition.interactable.feedsVehicles && part.definition.interactable.interactionType.equals(InteractableComponentType.BARREL)){
 							PartInteractable barrel = (PartInteractable) part;
-							if(barrel.tank.getFluidLevel() > 0 && ConfigSystem.configObject.fuel.fuels.get(EntityFurnace.FURNACE_FUEL_NAME).containsKey(barrel.tank.getFluid())){
-								furnace.ticksAddedOfFuel = (int) (ConfigSystem.configObject.fuel.fuels.get(EntityFurnace.FURNACE_FUEL_NAME).get(barrel.tank.getFluid())*20*furnace.definition.furnaceEfficiency);
+							if(barrel.tank.getFluidLevel() > 0 && ConfigSystem.settings.fuel.fuels.get(EntityFurnace.FURNACE_FUEL_NAME).containsKey(barrel.tank.getFluid())){
+								furnace.ticksAddedOfFuel = (int) (ConfigSystem.settings.fuel.fuels.get(EntityFurnace.FURNACE_FUEL_NAME).get(barrel.tank.getFluid())*20*furnace.definition.furnaceEfficiency);
 								furnace.ticksLeftOfFuel = furnace.ticksAddedOfFuel;
 								barrel.tank.drain(barrel.tank.getFluid(), 1, true);
 								InterfacePacket.sendToAllClients(new PacketFurnaceFuelAdd(furnace));

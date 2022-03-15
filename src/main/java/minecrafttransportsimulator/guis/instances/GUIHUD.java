@@ -38,7 +38,7 @@ public class GUIHUD extends AGUIBase{
 		super();
 		this.vehicle = vehicle;
 		this.seat = seat;
-		this.halfHUDActive = InterfaceClient.inFirstPerson() ? !ConfigSystem.configObject.clientRendering.fullHUD_1P.value : !ConfigSystem.configObject.clientRendering.fullHUD_3P.value;
+		this.halfHUDActive = InterfaceClient.inFirstPerson() ? !ConfigSystem.client.renderingSettings.fullHUD_1P.value : !ConfigSystem.client.renderingSettings.fullHUD_3P.value;
 	}
 	
 	@Override
@@ -83,7 +83,7 @@ public class GUIHUD extends AGUIBase{
 	public void setStates(){
 		//Check to see if HUD setting changed.  If so, we need to re-create our components.
 		//Do this before doing anything else.
-		if(halfHUDActive ^ (InterfaceClient.inFirstPerson() ? !ConfigSystem.configObject.clientRendering.fullHUD_1P.value : !ConfigSystem.configObject.clientRendering.fullHUD_3P.value)){
+		if(halfHUDActive ^ (InterfaceClient.inFirstPerson() ? !ConfigSystem.client.renderingSettings.fullHUD_1P.value : !ConfigSystem.client.renderingSettings.fullHUD_3P.value)){
 			halfHUDActive = !halfHUDActive;
 			setupComponents();
 		}
@@ -92,7 +92,7 @@ public class GUIHUD extends AGUIBase{
 		//Set all instrument invisible if we're not rendering the main HUD.
 		//Otherwise, set them all visible.
 		for(GUIComponentInstrument instrument : instruments){
-			instrument.visible = CameraSystem.customCameraOverlay == null && seat.placementDefinition.isController && (InterfaceClient.inFirstPerson() ? ConfigSystem.configObject.clientRendering.renderHUD_1P.value : ConfigSystem.configObject.clientRendering.renderHUD_3P.value);
+			instrument.visible = CameraSystem.customCameraOverlay == null && seat.placementDefinition.isController && (InterfaceClient.inFirstPerson() ? ConfigSystem.client.renderingSettings.renderHUD_1P.value : ConfigSystem.client.renderingSettings.renderHUD_3P.value);
 		}
 		
 		//Set health label text and visibility.
@@ -116,7 +116,7 @@ public class GUIHUD extends AGUIBase{
 	
 	@Override
 	protected boolean renderBackground(){
-		return CameraSystem.customCameraOverlay == null && seat.placementDefinition.isController && (InterfaceClient.inFirstPerson() ? (ConfigSystem.configObject.clientRendering.renderHUD_1P.value && !ConfigSystem.configObject.clientRendering.transpHUD_1P.value) : (ConfigSystem.configObject.clientRendering.renderHUD_3P.value && !ConfigSystem.configObject.clientRendering.transpHUD_3P.value));
+		return CameraSystem.customCameraOverlay == null && seat.placementDefinition.isController && (InterfaceClient.inFirstPerson() ? (ConfigSystem.client.renderingSettings.renderHUD_1P.value && !ConfigSystem.client.renderingSettings.transpHUD_1P.value) : (ConfigSystem.client.renderingSettings.renderHUD_3P.value && !ConfigSystem.client.renderingSettings.transpHUD_3P.value));
 	}
 	
 	@Override

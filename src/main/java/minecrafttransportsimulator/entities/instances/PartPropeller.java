@@ -4,8 +4,11 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
+import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
+import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
+import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine;
@@ -49,7 +52,7 @@ public class PartPropeller extends APart{
 				}
 				return;
 			}else if(damageAmount == definition.general.health){
-				if(ConfigSystem.configObject.damage.explosions.value){
+				if(ConfigSystem.settings.damage.explosions.value){
 					world.spawnExplosion(position, 1F, true);
 				}else{
 					world.spawnExplosion(position, 0F, false);
@@ -114,7 +117,9 @@ public class PartPropeller extends APart{
 			boundingBox.widthRadius += 0.2;
 			boundingBox.heightRadius += 0.2;
 			boundingBox.depthRadius += 0.2;
-			Damage propellerDamage = new Damage("propellor", ConfigSystem.configObject.damage.propellerDamageFactor.value*connectedEngine.rpm*connectedEngine.propellerGearboxRatio/500F, damageBounds, this, vehicleOn != null ? vehicleOn.getController() : null);
+			WrapperEntity controller = vehicleOn.getController();
+			LanguageEntry language = controller != null ? JSONConfigLanguage.DEATH_PROPELLOR_PLAYER : JSONConfigLanguage.DEATH_PROPELLOR_NULL;
+			Damage propellerDamage = new Damage(ConfigSystem.settings.damage.propellerDamageFactor.value*connectedEngine.rpm*connectedEngine.propellerGearboxRatio/500F, damageBounds, this, controller, language);
 			world.attackEntities(propellerDamage, null);
 			boundingBox.widthRadius -= 0.2;
 			boundingBox.heightRadius -= 0.2;

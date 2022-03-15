@@ -28,7 +28,7 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TextComponentTranslation;
+import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
@@ -426,26 +426,16 @@ public class WrapperEntity{
 	 *  Attacks the entity.
 	 */
 	public void attack(Damage damage){
-		DamageSource newSource = new DamageSource(damage.name){
+		if(damage.language == null){
+			throw new IllegalArgumentException("ERROR: Cannot attack an entity with a damage of no type and language component!");
+		}
+		DamageSource newSource = new DamageSource(damage.language.value){
 			@Override
 			public ITextComponent getDeathMessage(EntityLivingBase player){
-				EntityLivingBase recentEntity = player.getAttackingEntity();
-				if(recentEntity != null){//Player engaged with another player...
-					if(damage.entityResponsible != null){//and then was killed by another player.
-						return new TextComponentTranslation("death.attack." + this.damageType + ".player.player", 
-								new Object[] {player.getDisplayName(), damage.entityResponsible.entity.getDisplayName(), recentEntity.getDisplayName()});
-					}else{//and then was killed by something.
-						return new TextComponentTranslation("death.attack." + this.damageType + ".null.player", 
-								new Object[] {player.getDisplayName(), recentEntity.getDisplayName()});
-					}
-				}else{//Player was minding their own business...
-					if(damage.entityResponsible != null){//and was killed by another player.
-						return new TextComponentTranslation("death.attack." + this.damageType + ".player.null", 
-								new Object[] {player.getDisplayName(), damage.entityResponsible.entity.getDisplayName()});
-					}else{//and then was killed by something.
-						return new TextComponentTranslation("death.attack." + this.damageType + ".null.null", 
-								new Object[] {player.getDisplayName()});
-					}
+				if(damage.entityResponsible != null){
+					return new TextComponentString(String.format(damage.language.value, player.getDisplayName().getFormattedText(), damage.entityResponsible.entity.getDisplayName().getFormattedText()));
+				}else{
+					return new TextComponentString(String.format(damage.language.value, player.getDisplayName().getFormattedText()));
 				}
 			}
 		};
@@ -467,7 +457,7 @@ public class WrapperEntity{
 		if(damage.ignoreCooldown && entity instanceof EntityLivingBase){
 			((EntityLivingBase) entity).hurtResistantTime = 0;
 		}
-		if(ConfigSystem.configObject.general.creativeDamage.value){
+		if(ConfigSystem.settings.general.creativeDamage.value){
 			newSource.setDamageAllowedInCreativeMode();
 		}
 		entity.attackEntityFrom(newSource, (float) damage.amount);

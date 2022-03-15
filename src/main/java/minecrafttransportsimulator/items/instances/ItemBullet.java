@@ -5,7 +5,7 @@ import java.util.List;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.jsondefs.JSONBullet;
 import minecrafttransportsimulator.jsondefs.JSONBullet.BulletType;
-import minecrafttransportsimulator.mcinterface.InterfaceCore;
+import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 
 public class ItemBullet extends AItemSubTyped<JSONBullet>{
@@ -18,11 +18,17 @@ public class ItemBullet extends AItemSubTyped<JSONBullet>{
 	public void addTooltipLines(List<String> tooltipLines, WrapperNBT data){
 		super.addTooltipLines(tooltipLines, data);
 		for(BulletType type : definition.bullet.types){
-				tooltipLines.add(InterfaceCore.translate("info.item.bullet.type." + type.name().toLowerCase()));
+			switch(type){
+				case ARMOR_PIERCING: tooltipLines.add(JSONConfigLanguage.ITEMINFO_BULLET_TYPE_ARMOR_PIERCING.value); break;
+				case EXPLOSIVE: tooltipLines.add(JSONConfigLanguage.ITEMINFO_BULLET_TYPE_EXPLOSIVE.value); break;
+				case INCENDIARY: tooltipLines.add(JSONConfigLanguage.ITEMINFO_BULLET_TYPE_INCENDIARY.value); break;
+				case WATER: tooltipLines.add(JSONConfigLanguage.ITEMINFO_BULLET_TYPE_WATER.value); break;
+			}
+				
 		}
-		tooltipLines.add(InterfaceCore.translate("info.item.bullet.diameter") + definition.bullet.diameter);
-		tooltipLines.add(InterfaceCore.translate("info.item.bullet.caseLength") + definition.bullet.caseLength);
-		tooltipLines.add(InterfaceCore.translate("info.item.bullet.penetration") + definition.bullet.armorPenetration);
-		tooltipLines.add(InterfaceCore.translate("info.item.bullet.quantity") + definition.bullet.quantity);
+		tooltipLines.add(JSONConfigLanguage.ITEMINFO_BULLET_DIAMETER.value + definition.bullet.diameter);
+		tooltipLines.add(JSONConfigLanguage.ITEMINFO_BULLET_CASELENGTH.value + definition.bullet.caseLength);
+		tooltipLines.add(JSONConfigLanguage.ITEMINFO_BULLET_PENETRATION.value + definition.bullet.armorPenetration);
+		tooltipLines.add(JSONConfigLanguage.ITEMINFO_BULLET_QUANTITY.value + definition.bullet.quantity);
 	}
 }

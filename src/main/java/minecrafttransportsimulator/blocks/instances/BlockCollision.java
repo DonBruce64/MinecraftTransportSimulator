@@ -9,6 +9,7 @@ import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**Slightly-less basic block class.  This class is used for collision operations where a non-standard collision is required.
  * Mainly used on roads, but could be used on other things in the future.
@@ -52,9 +53,9 @@ public class BlockCollision extends ABlockBase{
     	Point3D blockOffset = new Point3D();
     	Point3D testPoint = new Point3D();
     	//Search XZ before Y, as most master roads are on the same Y-level as the collision block.
-    	for(int j=-TileEntityRoad.MAX_COLLISION_DISTANCE; j<2*TileEntityRoad.MAX_COLLISION_DISTANCE; ++j){
-    		for(int i=-TileEntityRoad.MAX_COLLISION_DISTANCE; i<2*TileEntityRoad.MAX_COLLISION_DISTANCE; ++i){
-    			for(int k=-TileEntityRoad.MAX_COLLISION_DISTANCE; k<2*TileEntityRoad.MAX_COLLISION_DISTANCE; ++k){
+    	for(int j=-ConfigSystem.settings.general.roadMaxLength.value; j<2*ConfigSystem.settings.general.roadMaxLength.value; ++j){
+    		for(int i=-ConfigSystem.settings.general.roadMaxLength.value; i<2*ConfigSystem.settings.general.roadMaxLength.value; ++i){
+    			for(int k=-ConfigSystem.settings.general.roadMaxLength.value; k<2*ConfigSystem.settings.general.roadMaxLength.value; ++k){
     				blockOffset.set(i, j, k);
     				testPoint.set(position);
     				testPoint.subtract(blockOffset);

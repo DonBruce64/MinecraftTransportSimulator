@@ -142,7 +142,7 @@ public class EntityFluidTank extends AEntityA_Base{
 	 *  by the fuel potency, so water won't blow up, but high-octane avgas will do nicely.
 	 */
 	public double getExplosiveness(){
-		for(Map<String, Double> fuelEntry : ConfigSystem.configObject.fuel.fuels.values()){
+		for(Map<String, Double> fuelEntry : ConfigSystem.settings.fuel.fuels.values()){
 			if(fuelEntry.containsKey(currentFluid)){
 				return fluidLevel*fuelEntry.get(currentFluid)/10000D;
 			}

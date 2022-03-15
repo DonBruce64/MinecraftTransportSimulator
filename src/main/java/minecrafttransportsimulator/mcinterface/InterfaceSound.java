@@ -15,6 +15,7 @@ import org.lwjgl.openal.AL10;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.instances.EntityRadio;
+import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.sound.DecodedFile;
 import minecrafttransportsimulator.sound.IStreamDecoder;
 import minecrafttransportsimulator.sound.OGGDecoder;
@@ -209,7 +210,7 @@ public class InterfaceSound{
 				if(AL10.alGetError() != AL10.AL_NO_ERROR){
 					++sourceGetFailures;
 					AL10.alDeleteBuffers(dataBufferPointer);
-					InterfaceClient.getClientPlayer().displayChatMessage("IMMERSIVE VEHICLES ERROR: Tried to play a sound, but was told no sound slots were available.  Some mod is taking up all the slots.  Probabaly Immersive Railroading or Dynamic Surroundings.  If you have those installed, complain to the mod author or check the mod configs.  Sound will not play.");
+					InterfaceClient.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_SOUNDSLOT);
 					return;
 				}
 				sound.sourceIndex = sourceBuffer.get(0);
@@ -248,7 +249,7 @@ public class InterfaceSound{
 			AL10.alGenSources(sourceBuffer);
 			if(AL10.alGetError() != AL10.AL_NO_ERROR){
 				++sourceGetFailures;
-				InterfaceClient.getClientPlayer().displayChatMessage("IMMERSIVE VEHICLES ERROR: Tried to play a sound, but was told no sound slots were available.  Some mod is taking up all the slots.  Probabaly Immersive Railroading or Dynamic Surroundings.  If you have those installed, complain to the mod author or check the mod configs.  Sound will not play.");
+				InterfaceClient.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_SOUNDSLOT);
 				return;
 			}
 			sound.sourceIndex = sourceBuffer.get(0);

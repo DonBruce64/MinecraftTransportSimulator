@@ -24,7 +24,7 @@ public interface IInventoryProvider{
 	 * and extend that class.
 	 */
 	public default double getInventoryMass(){
-		Map<String, Double> heavyItems = ConfigSystem.configObject.general.itemWeights.weights;
+		Map<String, Double> heavyItems = ConfigSystem.settings.general.itemWeights.weights;
 		double currentMass = 0;
 		for(int i=0; i<getSize(); ++i){
 			WrapperItemStack stack = getStack(i);

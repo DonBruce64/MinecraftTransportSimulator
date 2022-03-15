@@ -118,7 +118,7 @@ public class InterfaceEventsEntityRendering{
 		}
 		
 		//If we are seated in a controller seat, and are rendering GUIs, disable the hotbar.
-		if((event.getType().equals(RenderGameOverlayEvent.ElementType.HOTBAR) || event.getType().equals(RenderGameOverlayEvent.ElementType.FOOD) || event.getType().equals(RenderGameOverlayEvent.ElementType.HEALTH) || event.getType().equals(RenderGameOverlayEvent.ElementType.EXPERIENCE)) && (InterfaceClient.inFirstPerson() ? ConfigSystem.configObject.clientRendering.renderHUD_1P.value : ConfigSystem.configObject.clientRendering.renderHUD_3P.value)){
+		if((event.getType().equals(RenderGameOverlayEvent.ElementType.HOTBAR) || event.getType().equals(RenderGameOverlayEvent.ElementType.FOOD) || event.getType().equals(RenderGameOverlayEvent.ElementType.HEALTH) || event.getType().equals(RenderGameOverlayEvent.ElementType.EXPERIENCE)) && (InterfaceClient.inFirstPerson() ? ConfigSystem.client.renderingSettings.renderHUD_1P.value : ConfigSystem.client.renderingSettings.renderHUD_3P.value)){
 			WrapperPlayer player = InterfaceClient.getClientPlayer();
 			AEntityE_Interactable<?> ridingEntity = player.getEntityRiding();
 			if(ridingEntity instanceof AEntityF_Multipart && ((AEntityF_Multipart<?>) ridingEntity).getSeatForRider(player).placementDefinition.isController){
@@ -289,7 +289,7 @@ public class InterfaceEventsEntityRendering{
         	}
         		
         	needToPopMatrix = true;
-        	if(ConfigSystem.configObject.clientRendering.playerTweaks.value){
+        	if(ConfigSystem.client.renderingSettings.playerTweaks.value){
         		needPlayerTweaks = true;
         	}
         }
@@ -297,8 +297,8 @@ public class InterfaceEventsEntityRendering{
     	//Check for player model tweaks and changes.
 		if(entity instanceof EntityPlayer){
 			//Check if we modified the player model to allow us to change angles.
-			boolean setModelToCustom = ConfigSystem.configObject.clientRendering.playerTweaks.value && !overwrotePlayerModel;
-			boolean setModelToDefault = !ConfigSystem.configObject.clientRendering.playerTweaks.value && overwrotePlayerModel;
+			boolean setModelToCustom = ConfigSystem.client.renderingSettings.playerTweaks.value && !overwrotePlayerModel;
+			boolean setModelToDefault = !ConfigSystem.client.renderingSettings.playerTweaks.value && overwrotePlayerModel;
 			if(setModelToCustom || setModelToDefault){
 				for(Field renderManagerField : RenderManager.class.getDeclaredFields()){
 					if(renderManagerField.getName().equals("skinMap") || renderManagerField.getName().equals("field_178636_l")){
@@ -329,14 +329,14 @@ public class InterfaceEventsEntityRendering{
 	                							field.set(render, ((ModelPlayerCustom) field.get(render)).base);
 	                						}
 	                					}catch(Exception e){
-	                						ConfigSystem.configObject.clientRendering.playerTweaks.value = false;
+	                						ConfigSystem.client.renderingSettings.playerTweaks.value = false;
 	                						e.printStackTrace();
 	                					}
 	    							}
 								}
 							}
 						}catch(Exception e){
-							ConfigSystem.configObject.clientRendering.playerTweaks.value = false;
+							ConfigSystem.client.renderingSettings.playerTweaks.value = false;
 							e.printStackTrace();
 						}
 					}
@@ -345,7 +345,7 @@ public class InterfaceEventsEntityRendering{
 			
 			//Check if we are holding a gun.  This is the only other time
 			//we apply player tweaks besides riding in a vehicle.
-			if(ConfigSystem.configObject.clientRendering.playerTweaks.value){
+			if(ConfigSystem.client.renderingSettings.playerTweaks.value){
 				EntityPlayerGun gunEntity = EntityPlayerGun.playerClientGuns.get(entity.getUniqueID());
 		    	if(gunEntity != null && gunEntity.activeGun != null){	    		
 		    		//Get arm rotations.

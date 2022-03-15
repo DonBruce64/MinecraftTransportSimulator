@@ -53,6 +53,13 @@ public class InterfaceClient{
 	}
 	
 	/**
+	 *  Returns the current language name.
+	 */
+	public static String getLanguageName(){
+		return Minecraft.getMinecraft().gameSettings.language;
+	}
+	
+	/**
 	 *  Returns true if the chat window is open.
 	 */
 	public static boolean isChatOpen(){

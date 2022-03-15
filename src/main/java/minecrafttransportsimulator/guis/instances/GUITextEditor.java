@@ -13,8 +13,8 @@ import minecrafttransportsimulator.guis.components.GUIComponent3DModel;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
+import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONText;
-import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketEntityTextChange;
 import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
@@ -102,7 +102,7 @@ public class GUITextEditor extends AGUIBase{
 		}
 		
 		//Add the confirm button.
-		addComponent(confirmButton = new GUIComponentButton(guiLeft + 150, guiTop + 15, 80, 20, InterfaceCore.translate("gui.trafficsignalcontroller.confirm")){
+		addComponent(confirmButton = new GUIComponentButton(guiLeft + 150, guiTop + 15, 80, 20, JSONConfigLanguage.GUI_CONFIRM.value){
 			@Override
 			public void onClicked(boolean leftSide){
 				List<String> packetTextLines = new ArrayList<String>();

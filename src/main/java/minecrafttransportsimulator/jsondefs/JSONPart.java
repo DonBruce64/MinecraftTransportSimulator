@@ -6,7 +6,7 @@ import java.util.List;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase.BlockMaterial;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable.ModifiableValue;
-import minecrafttransportsimulator.jsondefs.JSONConfig.ConfigFuel.FuelDefaults;
+import minecrafttransportsimulator.jsondefs.JSONConfigSettings.ConfigFuel.FuelDefaults;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDefaults;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;

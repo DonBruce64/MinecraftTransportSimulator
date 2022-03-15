@@ -313,7 +313,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 			//First get gravity.
 			gravitationalForce = currentBallastVolume == 0 ? currentMass*(9.8/400) : 0;
 			if(!definition.motorized.isAircraft){
-				gravitationalForce *= ConfigSystem.configObject.general.gravityFactor.value;
+				gravitationalForce *= ConfigSystem.settings.general.gravityFactor.value;
 			}
 			
 			//Get the track angle.  This is used for control surfaces.
@@ -665,7 +665,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	
 	@Override
 	public boolean shouldRenderBeams(){
-    	return ConfigSystem.configObject.clientRendering.vehicleBeams.value;
+    	return ConfigSystem.client.renderingSettings.vehicleBeams.value;
     }
 	
 	@Override
@@ -679,7 +679,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 		switch(variable){
 			//Vehicle world state cases.
 			case("yaw"): return orientation.angles.y;
-			case("heading"): double heading = -orientation.angles.y; if(ConfigSystem.configObject.clientControls.north360.value) heading += 180; while (heading < 0) heading += 360; while (heading > 360) heading -= 360; return heading;
+			case("heading"): double heading = -orientation.angles.y; if(ConfigSystem.client.controlSettings.north360.value) heading += 180; while (heading < 0) heading += 360; while (heading > 360) heading -= 360; return heading;
 			case("pitch"): return orientation.angles.x;
 			case("roll"): return orientation.angles.z;
 			case("altitude"): return position.y;

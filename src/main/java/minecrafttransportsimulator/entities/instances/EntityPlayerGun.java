@@ -235,7 +235,7 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun>{
 	
 	@Override
 	public boolean shouldRenderBeams(){
-    	return ConfigSystem.configObject.clientRendering.vehicleBeams.value;
+    	return ConfigSystem.client.renderingSettings.vehicleBeams.value;
     }
 	
 	@Override

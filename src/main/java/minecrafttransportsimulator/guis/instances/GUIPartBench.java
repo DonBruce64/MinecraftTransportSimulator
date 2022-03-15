@@ -18,12 +18,12 @@ import minecrafttransportsimulator.items.instances.ItemPoleComponent.PoleCompone
 import minecrafttransportsimulator.items.instances.ItemVehicle;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
+import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONCraftingBench;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
-import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.InterfaceInput;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -171,7 +171,7 @@ public class GUIPartBench extends AGUIBase{
 				updateNames();
 			}
 		});
-		addComponent(new GUIComponentLabel(prevColorButton.constructedX + prevColorButton.width + (nextColorButton.constructedX - (prevColorButton.constructedX + prevColorButton.width))/2, guiTop + 136, ColorRGB.WHITE, InterfaceCore.translate("gui.vehicle_bench.color"), TextAlignment.CENTERED, 1.0F).setButton(nextColorButton));
+		addComponent(new GUIComponentLabel(prevColorButton.constructedX + prevColorButton.width + (nextColorButton.constructedX - (prevColorButton.constructedX + prevColorButton.width))/2, guiTop + 136, ColorRGB.WHITE, JSONConfigLanguage.GUI_PART_BENCH_COLOR.value, TextAlignment.CENTERED, 1.0F).setButton(nextColorButton));
 		
 		
 		//Create the crafting item slots.  14 16X16 slots (7X2) need to be made here.
@@ -517,17 +517,17 @@ public class GUIPartBench extends AGUIBase{
 		
 		//Combine translated header and info text together into a single string and return.
 		String totalInformation = "";
-		totalInformation += InterfaceCore.translate("gui.vehicle_bench.weight") + ": " + String.valueOf(vehicleDefinition.motorized.emptyMass) + "\n";
-		totalInformation += InterfaceCore.translate("gui.vehicle_bench.fuel") + ": " + String.valueOf(vehicleDefinition.motorized.fuelCapacity) + "\n";
-		totalInformation += InterfaceCore.translate("gui.vehicle_bench.controllers") + ": " + String.valueOf(controllers) + "\n";
-		totalInformation += InterfaceCore.translate("gui.vehicle_bench.passengers") + ": " + String.valueOf(passengers) + "\n";
-		totalInformation += InterfaceCore.translate("gui.vehicle_bench.cargo") + ": " + String.valueOf(cargo) + "\n";
-		totalInformation += InterfaceCore.translate("gui.vehicle_bench.mixed") + ": " + String.valueOf(mixed) + "\n";
+		totalInformation += JSONConfigLanguage.GUI_PART_BENCH_WEIGHT.value + String.valueOf(vehicleDefinition.motorized.emptyMass) + "\n";
+		totalInformation += JSONConfigLanguage.GUI_PART_BENCH_FUEL.value + String.valueOf(vehicleDefinition.motorized.fuelCapacity) + "\n";
+		totalInformation += JSONConfigLanguage.GUI_PART_BENCH_CONTROLLERS.value + String.valueOf(controllers) + "\n";
+		totalInformation += JSONConfigLanguage.GUI_PART_BENCH_PASSENGERS.value + String.valueOf(passengers) + "\n";
+		totalInformation += JSONConfigLanguage.GUI_PART_BENCH_CARGO.value + String.valueOf(cargo) + "\n";
+		totalInformation += JSONConfigLanguage.GUI_PART_BENCH_MIXED.value + String.valueOf(mixed) + "\n";
 		if(minFuelConsumption != 99){
-			totalInformation += InterfaceCore.translate("gui.vehicle_bench.engine") + ": " + String.valueOf(minFuelConsumption) + "-" + String.valueOf(maxFuelConsumption) + "\n";
+			totalInformation += JSONConfigLanguage.GUI_PART_BENCH_ENGINE.value + String.valueOf(minFuelConsumption) + "-" + String.valueOf(maxFuelConsumption) + "\n";
 		}
 		if(minWheelSize != 99){
-			totalInformation += InterfaceCore.translate("gui.vehicle_bench.wheel") + ": " + String.valueOf(minWheelSize) + "-" + String.valueOf(maxWheelSize) + "\n";
+			totalInformation += JSONConfigLanguage.GUI_PART_BENCH_WHEEL.value + String.valueOf(minWheelSize) + "-" + String.valueOf(maxWheelSize) + "\n";
 		}
 		return totalInformation;
 	}

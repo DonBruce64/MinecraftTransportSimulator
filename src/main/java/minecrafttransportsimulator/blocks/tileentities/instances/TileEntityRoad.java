@@ -16,6 +16,7 @@ import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBas
 import minecrafttransportsimulator.blocks.tileentities.components.RoadClickData;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLane;
 import minecrafttransportsimulator.items.instances.ItemRoadComponent;
+import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent.JSONLaneSector;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent.JSONRoadCollisionArea;
@@ -61,7 +62,6 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	public final List<Point3D> collisionBlockOffsets;
 	public final List<Point3D> collidingBlockOffsets;
 	
-	public static final int MAX_COLLISION_DISTANCE = 32;
 	private static RenderRoad renderer;
 	
 	public TileEntityRoad(WrapperWorld world, Point3D position, WrapperPlayer placingPlayer, WrapperNBT data){
@@ -316,7 +316,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 			return true;
 		}else{
 			collisionBlockOffsets.clear();
-			player.sendPacket(new PacketPlayerChatMessage(player, "interact.roadcomponent.blockingblocks"));
+			player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_ROAD_BLOCKINGBLOCKS));
 			InterfacePacket.sendToAllClients(new PacketTileEntityRoadCollisionUpdate(this));
 			return false;
 		}

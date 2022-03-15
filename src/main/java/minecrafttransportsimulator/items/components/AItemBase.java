@@ -28,13 +28,10 @@ public abstract class AItemBase{
 	
 	/**
 	 *  Returns the name of this item.  Will be displayed to the player in-game, but is NOT used
-	 *  for item registration, so may change depending on item state.  By default this gets the 
-	 *  registration name, with item. applied at the front, and .name applied at the end. 
-	 *  This is then translated by the language system.  While this is the default, is by no means
-	 *  set in stone, so feel free to modify it as you see fit.
+	 *  for item registration, so may change depending on item state or language.
 	 */
 	public String getItemName(){
-		return InterfaceCore.translate("item." + getRegistrationName() + ".name");
+		return getRegistrationName();
 	}
 	
 	/**

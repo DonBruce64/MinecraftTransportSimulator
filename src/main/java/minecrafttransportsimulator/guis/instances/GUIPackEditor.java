@@ -16,8 +16,7 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileWriter;
-import java.io.InputStreamReader;
+import java.io.FileOutputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
@@ -131,9 +130,7 @@ public class GUIPackEditor extends JFrame{
 		        if(fileSelection.showOpenDialog(filePanel) == JFileChooser.APPROVE_OPTION){
 		        	try{
 			        	File file = fileSelection.getSelectedFile();
-			        	InputStreamReader reader = new InputStreamReader(new FileInputStream(file), "UTF-8");
-			            currentJSON = JSONParser.parseStream(reader, currentJSONClass, null, null);
-			            reader.close();
+			            currentJSON = JSONParser.parseStream(new FileInputStream(file), currentJSONClass, null, null);
 			            lastFileAccessed = file;
 			            if(currentJSON != null){
 			            	initEditor();
@@ -164,9 +161,7 @@ public class GUIPackEditor extends JFrame{
 		        if(fileSelection.showOpenDialog(filePanel) == JFileChooser.APPROVE_OPTION){
 		        	try{
 			        	File file = fileSelection.getSelectedFile();
-			        	FileWriter writer = new FileWriter(file);
-			        	JSONParser.exportStream(currentJSON, writer);
-			            writer.close();
+			        	JSONParser.exportStream(currentJSON, new FileOutputStream(file));
 			            lastFileAccessed = file;
 			            try{
 			            	if(currentJSON instanceof AJSONItem){

@@ -112,7 +112,7 @@ public final class LegacyCompatSystem{
 			}
 			
 			//Parse the model and do LCs on it if we need to do so.
-			if(ConfigSystem.configObject != null && ConfigSystem.configObject.general.doLegacyLightCompats.value && !(definition instanceof JSONSkin) && provider.rendering.modelType.equals(ModelType.OBJ)){
+			if(ConfigSystem.settings != null && ConfigSystem.settings.general.doLegacyLightCompats.value && !(definition instanceof JSONSkin) && provider.rendering.modelType.equals(ModelType.OBJ)){
 				performModelLegacyCompats((AJSONMultiModelProvider) definition);
 			}
 		}

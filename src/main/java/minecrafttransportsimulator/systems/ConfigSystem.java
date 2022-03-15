@@ -2,8 +2,7 @@ package minecrafttransportsimulator.systems;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileWriter;
-import java.io.InputStreamReader;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -12,14 +11,17 @@ import java.util.Map;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
-import minecrafttransportsimulator.jsondefs.JSONConfig;
+import minecrafttransportsimulator.jsondefs.JSONConfigClient;
+import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
+import minecrafttransportsimulator.jsondefs.JSONConfigSettings;
 import minecrafttransportsimulator.jsondefs.JSONCraftingOverrides;
+import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.packloading.JSONParser;
 
 
 /**Class that handles all configuration settings. This file is responsible for saving and loading
- * the config, and representing that config as an instance object of type {@link JSONConfig} for access in the code.
+ * the config, and representing that config as an instance object of type {@link JSONConfigSettings} for access in the code.
  * This class is NOT responsible for detecting config changes.  It is up to the code that calls this class to ensure the 
  * changes made are valid and can be saved to the disk.  This also cuts down on saves in some instances where configs
  * cam be saved/modified in a batch rather than as single values.
@@ -27,39 +29,65 @@ import minecrafttransportsimulator.packloading.JSONParser;
  * @author don_bruce
  */
 public final class ConfigSystem{
-	private static File configFile;
+	private static File settingsFile;
+	private static File clientFile;
+	private static File languageFile;
 	private static File craftingFile;
-	public static JSONConfig configObject;
+	public static JSONConfigSettings settings;
+	public static JSONConfigClient client;
+	public static JSONConfigLanguage language;
 	
-	/**Called to load this class from the passed-in config file.
-	 * File should be a valid path where the config file resides,
-	 * or should reside if no file is present.  If no file is present,
-	 * one will be created at the end of the loading phase.
+	/**Called to load this class from the files in the passed-in folder.
+	 * If a require file is not present, one will be created at the end of the loading phase.
 	 */
-	public static void loadFromDisk(File configDirectory){
-		//Set the current config file location to the passed-in file.
-		configFile = new File(configDirectory, "mtsconfig.json");
-		craftingFile = new File(configFile.getParentFile(), "mtscraftingoverrides.json");
-				
-	    //If we have a config file already, parse it into Java.
+	public static void loadFromDisk(File configDirectory, boolean onClient){
+		//If we have a settings file already, parse it into Java.
 		//Otherwise, make a new one.
-		if(configFile.exists()){
+		//After parsing the settings file, save it.  This allows new entries to be populated.
+		settingsFile = new File(configDirectory, "mtsconfig.json");
+		if(settingsFile.exists()){
 			try{
-				configObject = JSONParser.parseStream(new InputStreamReader(new FileInputStream(configFile), "UTF-8"), JSONConfig.class, null, null);
+				settings = JSONParser.parseStream(new FileInputStream(settingsFile), JSONConfigSettings.class, null, null);
 			}catch(Exception e){
-				InterfaceCore.logError("ConfigSystem failed to parse config file JSON.  Reverting to defauts.");
+				InterfaceCore.logError("ConfigSystem failed to parse settings file JSON.  Reverting to defauts.");
 				InterfaceCore.logError(e.getMessage());
 			}
 		}
-		
-		//If we don't have a valid configObject, we must not have a file or have a corrupted file.
-		//In either case, make a fresh object now.
-		if(configObject == null){
-			configObject = new JSONConfig();
+		if(settings == null){
+			settings = new JSONConfigSettings();
 		}
 		
-		//After parsing the config save it.  This allows new entries to be populated.
-		saveToDisk();
+		//Do the same for the client and language file, but only on clients.
+		if(onClient){
+			clientFile = new File(configDirectory, "mtsconfigclient.json");
+			if(clientFile.exists()){
+				try{
+					client = JSONParser.parseStream(new FileInputStream(settingsFile), JSONConfigClient.class, null, null);
+				}catch(Exception e){
+					InterfaceCore.logError("ConfigSystem failed to parse client file JSON.  Reverting to defauts.");
+					InterfaceCore.logError(e.getMessage());
+				}
+			}
+			if(client == null){
+				client = new JSONConfigClient();
+			}
+			
+			languageFile = new File(configDirectory, "mtslanguage_" + InterfaceClient.getLanguageName() + ".json");
+			if(languageFile.exists()){
+				try{
+					language = JSONParser.parseStream(new FileInputStream(languageFile), JSONConfigLanguage.class, null, null);
+				}catch(Exception e){
+					InterfaceCore.logError("ConfigSystem failed to parse language file JSON.  Reverting to defauts.");
+					InterfaceCore.logError(e.getMessage());
+				}
+			}
+			if(language == null){
+				language = new JSONConfigLanguage();
+			}
+		}
+		
+		//Get crafting overrides file location.  This is used later when packs are parsed.
+		craftingFile = new File(settingsFile.getParentFile(), "mtscraftingoverrides.json");
 		
 		//If we have the old config file, delete it.
 		File oldConfigFile = new File(configDirectory, "mts.cfg");
@@ -71,10 +99,9 @@ public final class ConfigSystem{
 	/**Called to do crafting overrides.  Must be called after all packs are loaded.
 	 */
 	public static void initCraftingOverrides(){
-		if(configObject.general.dumpCraftingConfig.value){
+		if(settings.general.dumpCraftingConfig.value){
 			//Make the default override file and save it.
 			try{
-				FileWriter writer = new FileWriter(craftingFile);
 				JSONCraftingOverrides craftingOverridesObject = new JSONCraftingOverrides();
 				craftingOverridesObject.overrides = new LinkedHashMap<String, Map<String, List<String>>>();
 				for(AItemPack<?> packItem : PackParserSystem.getAllPackItems()){
@@ -93,15 +120,13 @@ public final class ConfigSystem{
 						craftingOverridesObject.overrides.get(packItem.definition.packID).put(packItem.definition.systemName + "_repair", packItem.definition.general.repairMaterials);
 					}
 				}
-				JSONParser.exportStream(craftingOverridesObject, writer);
-				writer.flush();
-				writer.close();
+				JSONParser.exportStream(craftingOverridesObject, new FileOutputStream(craftingFile));
 			}catch(Exception e){
 				InterfaceCore.logError("ConfigSystem failed to create fresh crafting overrides file.  Report to the mod author!");
 			}
 		}else if(craftingFile.exists()){
 			try{
-				JSONCraftingOverrides craftingOverridesObject = JSONParser.parseStream(new InputStreamReader(new FileInputStream(craftingFile), "UTF-8"), JSONCraftingOverrides.class, null, null);
+				JSONCraftingOverrides craftingOverridesObject = JSONParser.parseStream(new FileInputStream(craftingFile), JSONCraftingOverrides.class, null, null);
 				for(String craftingOverridePackID : craftingOverridesObject.overrides.keySet()){
 					for(String craftingOverrideSystemName : craftingOverridesObject.overrides.get(craftingOverridePackID).keySet()){
 						AItemPack<? extends AJSONItem> item = PackParserSystem.getItem(craftingOverridePackID, craftingOverrideSystemName);
@@ -123,20 +148,16 @@ public final class ConfigSystem{
 		}
 	}
 	
-	/**Called to save this class as a config File.  File
-	 * the class is saved to is the same one passed in
-	 * during {@link #loadFromDisk(File)}.  Call this whenever
-	 * configs are edited to ensure they are saved, as
-	 * the system does not do this automatically.
+	/**Called to save changes to the various configs to disk. Call this whenever
+	 * configs are edited to ensure they are saved, as the system does not do this automatically.
 	 */
 	public static void saveToDisk(){
 		try{
-			FileWriter writer = new FileWriter(configFile);
-			JSONParser.exportStream(configObject, writer);
-			writer.flush();
-			writer.close();
+			JSONParser.exportStream(settings, new FileOutputStream(settingsFile));
+			JSONParser.exportStream(client, new FileOutputStream(clientFile));
+			JSONParser.exportStream(language, new FileOutputStream(languageFile));
 		}catch(Exception e){
-			InterfaceCore.logError("ConfigSystem failed to save modified config file.  Report to the mod author!");
+			InterfaceCore.logError("ConfigSystem failed to save modified config files.  Report to the mod author!");
 		}
 	}
 }

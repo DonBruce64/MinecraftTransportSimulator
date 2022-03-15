@@ -280,7 +280,7 @@ public class PartGun extends APart{
 						//Need to take muzzle count into account.
 						bulletsToRemove *= definition.gun.muzzleGroups.get(currentMuzzleGroupIndex).muzzles.size();
 						firedThisRequest = true;
-						if(!ConfigSystem.configObject.clientControls.devMode.value)bulletsLeft -= bulletsToRemove;
+						if(!ConfigSystem.client.controlSettings.devMode.value)bulletsLeft -= bulletsToRemove;
 						bulletsRemovedThisRequest += bulletsToRemove;
 						bulletsFired += bulletsToRemove;
 						entityOn.lastPrimaryPart.put(gunItem, this);
@@ -312,7 +312,7 @@ public class PartGun extends APart{
 							if(item instanceof ItemBullet){
 								if(tryToReload((ItemBullet) item)){
 									//Bullet is right type, and we can fit it.  Remove from player's inventory and add to the gun.
-									if(!ConfigSystem.configObject.clientControls.devMode.value)inventory.removeFromSlot(i, 1);
+									if(!ConfigSystem.client.controlSettings.devMode.value)inventory.removeFromSlot(i, 1);
 									break;
 								}
 							}
@@ -331,7 +331,7 @@ public class PartGun extends APart{
 										if(tryToReload((ItemBullet) item)){
 											//Bullet is right type, and we can fit it.  Remove from crate and add to the gun.
 											//Return here to ensure we don't set the loadedBullet to blank since we found bullets.
-											if(!ConfigSystem.configObject.clientControls.devMode.value)inventory.removeFromSlot(i, 1);
+											if(!ConfigSystem.client.controlSettings.devMode.value)inventory.removeFromSlot(i, 1);
 											break;
 										}
 									}
@@ -747,7 +747,7 @@ public class PartGun extends APart{
 				
 				//Decrement bullets, but check to make sure we still have some.
 				//We might have a partial volley.
-				if(!ConfigSystem.configObject.clientControls.devMode.value)--bulletsLeft;
+				if(!ConfigSystem.client.controlSettings.devMode.value)--bulletsLeft;
 				++bulletsFired;
 				millisecondLastTimeFired = System.currentTimeMillis();
 				if(bulletsLeft == 0){

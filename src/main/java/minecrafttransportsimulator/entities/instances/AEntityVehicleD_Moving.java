@@ -17,6 +17,7 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup;
+import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
@@ -167,7 +168,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 				if(coreBox.updateCollidingBlocks(world, new Point3D(0D, -furthestDownPoint, 0D))){
 					//New vehicle shouldn't have been spawned.  Bail out.
 					remove();
-					placingPlayer.sendPacket(new PacketPlayerChatMessage(placingPlayer, "interact.failure.nospace"));
+					placingPlayer.sendPacket(new PacketPlayerChatMessage(placingPlayer, JSONConfigLanguage.INTERACT_VEHICLE_NOSPACE));
 					//Need to add stack back as it will have been removed here.
 					if(!placingPlayer.isCreative()){
 						placingPlayer.setHeldStack(getItem().getNewStack(save(new WrapperNBT())));
@@ -191,7 +192,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		}
 		
 		//Now do update calculations and logic.
-		if(!ConfigSystem.configObject.general.noclipVehicles.value || groundDeviceCollective.isReady()){
+		if(!ConfigSystem.settings.general.noclipVehicles.value || groundDeviceCollective.isReady()){
 			world.beginProfiling("GroundForces", false);
 			getForcesAndMotions();
 			world.beginProfiling("GroundOperations", false);
@@ -665,7 +666,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 					if(groundMotion.y > 0){
 						world.beginProfiling("GroundBoostApply", false);
 						//Make sure boost doesn't exceed the config value.
-						groundMotion.y = Math.min(groundMotion.y, ConfigSystem.configObject.general.climbSpeed.value/speedFactor);
+						groundMotion.y = Math.min(groundMotion.y, ConfigSystem.settings.general.climbSpeed.value/speedFactor);
 						
 						//If adding our boost would make motion.y positive, set motion.y to zero and apply the remaining boost.
 						//This is done as it's clear motion.y is just moving the vehicle into the ground.

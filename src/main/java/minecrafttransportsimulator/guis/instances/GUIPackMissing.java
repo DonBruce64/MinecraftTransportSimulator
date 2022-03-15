@@ -3,7 +3,7 @@ package minecrafttransportsimulator.guis.instances;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
-import minecrafttransportsimulator.mcinterface.InterfaceCore;
+import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
 
 public class GUIPackMissing extends AGUIBase{
@@ -12,8 +12,8 @@ public class GUIPackMissing extends AGUIBase{
 	@Override
 	public void setupComponents(){
 		super.setupComponents();
-		addComponent(noticeLabel = new GUIComponentLabel(guiLeft + 130, guiTop + 10, ColorRGB.RED, InterfaceCore.translate("gui.error.title"), TextAlignment.CENTERED, 3.0F));
-		addComponent(new GUIComponentLabel(guiLeft + 10, guiTop + 40, ColorRGB.BLACK, InterfaceCore.translate("gui.error.packmissing"), TextAlignment.LEFT_ALIGNED, 1.0F, 240));
+		addComponent(noticeLabel = new GUIComponentLabel(guiLeft + 130, guiTop + 10, ColorRGB.RED, JSONConfigLanguage.GUI_PACKMISSING_TITLE.value, TextAlignment.CENTERED, 3.0F));
+		addComponent(new GUIComponentLabel(guiLeft + 10, guiTop + 40, ColorRGB.BLACK, JSONConfigLanguage.GUI_PACKMISSING_TEXT.value, TextAlignment.LEFT_ALIGNED, 1.0F, 240));
 	}
 
 	@Override

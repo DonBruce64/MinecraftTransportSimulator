@@ -10,7 +10,6 @@ import minecrafttransportsimulator.items.components.AItemBase;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
-import net.minecraft.util.text.translation.I18n;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.common.Loader;
@@ -23,7 +22,6 @@ import net.minecraftforge.oredict.OreDictionary;
  *
  * @author don_bruce
  */
-@SuppressWarnings("deprecation")
 public class InterfaceCore{
 	private static final List<String> queuedLogs = new ArrayList<String>();
 	
@@ -109,15 +107,6 @@ public class InterfaceCore{
 			fluidIDsToNames.put(fluidID, new FluidStack(FluidRegistry.getFluid(fluidID), 1).getLocalizedName());
 		}
 		return fluidIDsToNames;
-	}
-
-	/**
-	 *  Returns the translation of the passed-in text from the lang file.
-	 *  Put here to prevent the need for referencing the MC class directly, which
-	 *  will change during updates.
-	 */
-	public static String translate(String text){
-		return  I18n.translateToLocal(text);
 	}
 	
 	/**

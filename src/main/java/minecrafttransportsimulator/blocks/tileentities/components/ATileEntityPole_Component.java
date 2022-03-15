@@ -38,7 +38,7 @@ public abstract class ATileEntityPole_Component extends AEntityD_Definable<JSONP
 	
 	@Override
 	public boolean shouldRenderBeams(){
-    	return ConfigSystem.configObject.clientRendering.blockBeams.value;
+    	return ConfigSystem.client.renderingSettings.blockBeams.value;
     }
 	
 	@Override

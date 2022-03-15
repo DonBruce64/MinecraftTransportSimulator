@@ -36,7 +36,7 @@ public class PacketEntityBulletHitBlock extends PacketEntityBulletHit{
 				//This block may be null in the case of air bursts or proximity fuses
 				//If we can break the block we hit, do so now.
 				float hardnessHit = world.getBlockHardness(hitPosition);
-				if(ConfigSystem.configObject.general.blockBreakage.value && !world.isAir(hitPosition) && hardnessHit > 0 && hardnessHit <= (Math.random()*0.3F + 0.3F*bulletItem.definition.bullet.diameter/20F)){
+				if(ConfigSystem.settings.general.blockBreakage.value && !world.isAir(hitPosition) && hardnessHit > 0 && hardnessHit <= (Math.random()*0.3F + 0.3F*bulletItem.definition.bullet.diameter/20F)){
 					world.destroyBlock(hitPosition, true);
 				}else if(bulletItem.definition.bullet.types.contains(BulletType.INCENDIARY)){
 					//Couldn't break block, but we might be able to set it on fire.

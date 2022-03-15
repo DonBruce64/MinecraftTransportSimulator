@@ -7,6 +7,8 @@ import java.util.List;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
+import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperItemStack;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -84,7 +86,7 @@ abstract class AEntityVehicleC_Colliding extends AEntityVehicleB_Rideable{
 			for(Point3D blockPosition : box.collidingBlockPositions){
 				float blockHardness = world.getBlockHardness(blockPosition);
 				if(!world.isBlockLiquid(blockPosition)){
-					if(ConfigSystem.configObject.general.blockBreakage.value && blockHardness <= velocity*currentMass/250F && blockHardness >= 0){
+					if(ConfigSystem.settings.general.blockBreakage.value && blockHardness <= velocity*currentMass/250F && blockHardness >= 0){
 						hardnessHitThisBox += blockHardness;
 						if(!yAxis){
 							//Only add hardness if we hit in XZ movement.  Don't want to blow up from falling fast, just break tons of dirt.
@@ -107,7 +109,7 @@ abstract class AEntityVehicleC_Colliding extends AEntityVehicleB_Rideable{
 				}
 			}
 			
-			if(ConfigSystem.configObject.general.vehicleDestruction.value && hardnessHitThisTick > currentMass/(0.75 + velocity)/250F){
+			if(ConfigSystem.settings.general.vehicleDestruction.value && hardnessHitThisTick > currentMass/(0.75 + velocity)/250F){
 				if(!world.isClient()){
 					APart partHit = getPartWithBox(box);
 					if(partHit != null){
@@ -148,8 +150,9 @@ abstract class AEntityVehicleC_Colliding extends AEntityVehicleB_Rideable{
 		
 		//Damage all riders, including the controller.
 		WrapperEntity controller = getController();
-		Damage controllerCrashDamage = new Damage("crash", ConfigSystem.configObject.damage.crashDamageFactor.value*velocity*20, null, this, null);
-		Damage passengerCrashDamage = new Damage("crash", ConfigSystem.configObject.damage.crashDamageFactor.value*velocity*20, null, this, controller);
+		LanguageEntry language = controller != null ? JSONConfigLanguage.DEATH_CRASH_PLAYER : JSONConfigLanguage.DEATH_CRASH_NULL;
+		Damage controllerCrashDamage = new Damage(ConfigSystem.settings.damage.crashDamageFactor.value*velocity*20, null, this, null, null);
+		Damage passengerCrashDamage = new Damage(ConfigSystem.settings.damage.crashDamageFactor.value*velocity*20, null, this, controller, language);
 		for(WrapperEntity rider : locationRiderMap.values()){
 			if(rider.equals(controller)){
 				rider.attack(controllerCrashDamage);

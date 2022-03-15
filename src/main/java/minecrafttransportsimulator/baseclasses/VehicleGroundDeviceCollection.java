@@ -445,15 +445,15 @@ public class VehicleGroundDeviceCollection{
 		
 		//Get the angle to rotate by based on the farthest points and collision depth.
 		double furthestDelta = box1Delta > box2Delta ? box1Delta : box2Delta;
-		if(furthestDelta < ConfigSystem.configObject.general.climbSpeed.value){
+		if(furthestDelta < ConfigSystem.settings.general.climbSpeed.value){
 			//This is too short of a wheelbase to do this function.
 			return; 
 		}
 		
 		//Run though this loop until we have no collisions, or until we get a small enough delta.
-		double heightDeltaAttempted = ConfigSystem.configObject.general.climbSpeed.value;
+		double heightDeltaAttempted = ConfigSystem.settings.general.climbSpeed.value;
 		double angleApplied = 0;
-		for( ; heightDeltaAttempted > PartGroundDevice.groundDetectionOffset.y; heightDeltaAttempted -= ConfigSystem.configObject.general.climbSpeed.value/4){
+		for( ; heightDeltaAttempted > PartGroundDevice.groundDetectionOffset.y; heightDeltaAttempted -= ConfigSystem.settings.general.climbSpeed.value/4){
 			angleApplied = Math.toDegrees(Math.asin(heightDeltaAttempted/furthestDelta));
 			if(!clockwiseRotation){
 				angleApplied = -angleApplied;

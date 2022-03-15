@@ -9,6 +9,7 @@ import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemItem;
+import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.packets.components.APacketBase;
 import net.minecraft.block.BlockWorkbench;
@@ -86,12 +87,11 @@ public class WrapperPlayer extends WrapperEntity{
 	}
 	
 	/**
-	 *  Displays the passed-in chat message to the player.  This interface assumes that the message is
-	 *  untranslated and will attempt to translate it prior to display.  Should this fail, the
-	 *  raw message will be displayed.
+	 *  Displays the passed-in chat message to the player.
+	 *  Arguments will be substituted into the string as applicable.
 	 */
-	public void displayChatMessage(String message){
-		Minecraft.getMinecraft().ingameGUI.getChatGUI().printChatMessage(new TextComponentString(InterfaceCore.translate(message)));
+	public void displayChatMessage(LanguageEntry language, Object... args){
+		Minecraft.getMinecraft().ingameGUI.getChatGUI().printChatMessage(new TextComponentString(String.format(language.value, args)));
 	}
 	
 	/**

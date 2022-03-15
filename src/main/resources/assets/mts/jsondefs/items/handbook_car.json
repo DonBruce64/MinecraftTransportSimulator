@@ -162,7 +162,7 @@
             "rot": [0.0,0.0,0.0],
             "scale": 0.85,
             "fieldName": "",
-            "defaultText": "If you want to remove a part, simply attack it with a wrench.  This may only be done on parts that don't have other parts on them.  i.e. you can remove a tire, but if it has a hubcap on it, you need to remove the hubcap first before you can remove the tire itself.  Note that some parts, such as those that come with the vehicle, maye be permanent and cannot be removed.  If you want to remove the vehicle itself from the world, sneak-attack it with the wrench.",
+            "defaultText": "If you want to remove a part, simply attack it with a wrench.  This may only be done on parts that don't have other parts on them.  i.e. you can remove a tire, but if it has a hubcap on it, you need to remove the hubcap first before you can remove the tire itself.  Note that some parts, such as those that come with the vehicle, may be permanent and cannot be removed.  If you want to remove the vehicle itself from the world, sneak-attack it with the wrench.",
             "color": "000000",
             "wrapWidth": 180,
             "renderPosition": 1
@@ -220,7 +220,7 @@
             "rot": [0.0,0.0,0.0],
             "scale": 0.85,
             "fieldName": "",
-            "defaultText": "Normally, a good driver doesn't crash.  Should you not be a good driver and hit something, one of a few things may happen.  Normally, the block you hit will break and you will slow down.  However, this may not happen if the block is very hard (obsidian, bedrock, etc.), or if block breaking is disabled in the config.",
+            "defaultText": "Normally, a good driver doesn't crash.  Should you not be a good driver, one of a few things may happen.  Normally, the block you hit will break and you will slow down.  However, this may not happen if the block is very hard (obsidian, bedrock, etc.), or if block breaking is disabled in the config.",
             "color": "000000",
             "wrapWidth": 180,
             "renderPosition": 1
@@ -254,7 +254,7 @@
             "rot": [0.0,0.0,0.0],
             "scale": 0.85,
             "fieldName": "",
-            "defaultText": "Vehicles are fueled from the fuel pump block.  Just click the fuel pump and it will automatically connect to the nearest vehicle.  The pump will then transfer fuel at a rate of 10 mb/t.  The pump itself has a 15000mb reservoir and can be filled directly from liquid-holding containers, or by connecting a pipe to the bottom from pipe systems compatible with Forge fluids.",
+            "defaultText": "Vehicles require fuel (though some come pre-fueled), and are fueled from a fuel pump.  Just click the fuel pump and it will automatically connect to the nearest vehicle.  The pump will then transfer fuel at a rate of 10 mb/t.  The pump itself has a 15000mb reservoir and can be filled directly from liquid-holding containers, or by connecting a pipe to the bottom from pipe systems compatible with Forge fluids.",
             "color": "000000",
             "wrapWidth": 180,
             "renderPosition": 1
@@ -288,7 +288,7 @@
             "rot": [0.0,0.0,0.0],
             "scale": 0.85,
             "fieldName": "",
-            "defaultText": "Each engine has a fuel type that is associated with it.  Fuel types can be served by multiple fluids, but each fluid's potency will likely differ.  Potency is how much energy that fluid has, with higher-potency fluids lasting longer in vehicles.  Valid fluids for each engine and the potencies are displayed in the item tooltip.",
+            "defaultText": "Each engine has a fuel type that is associated with it.  Fuel types can be served by multiple fluids, but each fluid's potency will likely differ.  Potency is how much energy that fluid has, with higher-potency fluids lasting longer in vehicles.  Valid fluids for each engine and the potencies are displayed in the engine item tooltip.",
             "color": "000000",
             "wrapWidth": 180,
             "renderPosition": 1
@@ -299,6 +299,75 @@
             "scale": 0.85,
             "fieldName": "",
             "defaultText": "The potency values, as well as what fluids work with what engine fuel types, are all configurable in the config file.  In addition, there exists a config option called fuelUsageFactor that globally sets the fuel consumption for all engines.  If you find engines to be thirstier than you'd like, you can adjust that rather than adjusting each fuel individually.",
+            "color": "000000",
+            "wrapWidth": 180,
+            "renderPosition": 1
+          }
+        ]
+      },
+			
+      {
+        "pageTexture": "mts:textures/guis/manual_car_pages.png",
+        "title": "Engine Care",
+        "pageText": [
+          {
+            "pos": [111.0,25.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 1.0,
+            "fieldName": "",
+            "defaultText": "Engine Care",
+            "color": "000000"
+          },
+          {
+            "pos": [27.0,40.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 0.85,
+            "fieldName": "",
+            "defaultText": "No matter what they are in, engines form the heart of your vehicle.  Engines come in a variety of fuel consumptions and max RPMs, so chose carefully based on your application.  Fuel-less versions of engines are avaliable in the creative tab, should you not wish to mess with fuel.",
+            "color": "000000",
+            "wrapWidth": 180,
+            "renderPosition": 1
+          },
+          {
+            "pos": [261.0,25.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 0.85,
+            "fieldName": "",
+            "defaultText": "Beware: engines will gradually accumulate hours and lose their power, going so far as to start backfiring when really worn out.  Over-revving, over-heating, and running the engine too fast before it has warmed up will quickly add hours to an otherwise new engine.  Engines may also accumulate hours from damage, going so far as to spring leaks or lose their electric starters.",
+            "color": "000000",
+            "wrapWidth": 180,
+            "renderPosition": 1
+          }
+        ]
+      },
+      {
+        "pageTexture": "mts:textures/guis/manual_car_pages.png",
+        "title": "Instruments",
+        "pageText": [
+          {
+            "pos": [111.0,25.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 1.0,
+            "fieldName": "",
+            "defaultText": "Instruments",
+            "color": "000000"
+          },
+          {
+            "pos": [27.0,40.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 0.85,
+            "fieldName": "",
+            "defaultText": "Instruments make piloting a plane and driving a car much more immersive.  They are also useful for monitoring key properties like fuel levels, RPM, and engine temps, and make flying in the dark much less hazardous.  While some vehicles come with instruments when first placed down, most do not.",
+            "color": "000000",
+            "wrapWidth": 180,
+            "renderPosition": 1
+          },
+          {
+            "pos": [261.0,25.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 0.85,
+            "fieldName": "",
+            "defaultText": "Instruments are added to vehicles by right-clicking with the wrench on them.  The resulting GUI shows a view of the HUD and all instruments in your possession that work on that vehicle.  Simply click the slot you want to put the instrument in, and click that instrument.",
             "color": "000000",
             "wrapWidth": 180,
             "renderPosition": 1
@@ -322,7 +391,7 @@
             "rot": [0.0,0.0,0.0],
             "scale": 0.85,
             "fieldName": "",
-            "defaultText": "The only thing worse than getting your nice car blown up by a creeper is having it (or parts of it) stolen by other players.  Normally, vehicles may only be modfiied by their owners, but can be driven by anyone.  But by using a key you can lock them, ensuring nobody can drive off with, or take things out of, your vehicle.",
+            "defaultText": "The only thing worse than getting your nice car blown up by a creeper is having it (or parts of it) stolen by other players.  Normally, vehicles may only be modfiied by their owners (the person who last placed them), but can be driven by anyone.  By using a key you can lock vehicles, ensuring nobody can drive off with, or take things out of them.",
             "color": "000000",
             "wrapWidth": 180,
             "renderPosition": 1
@@ -333,6 +402,40 @@
             "scale": 0.85,
             "fieldName": "",
             "defaultText": "Locked vehicles may not be entered, and their inventories may not be accessed, except by players inside them.  This allows you to lock yourself into vehicles to prevent random passengers.  If a player that isn't the vehicle's owner has a key, they may enter and drive it, but they still cannot modity it.  Note that OPs bypass these restrictions to allow server admins to move/remove abandoned vehicles.  You can also tow vehicles you're not the owner of.  Wink wink.",
+            "color": "000000",
+            "wrapWidth": 180,
+            "renderPosition": 1
+          }
+        ]
+      },
+			{
+        "pageTexture": "mts:textures/guis/manual_car_pages.png",
+        "title": "Roads",
+        "pageText": [
+          {
+            "pos": [111.0,25.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 1.0,
+            "fieldName": "",
+            "defaultText": "Roads",
+            "color": "000000"
+          },
+          {
+            "pos": [27.0,40.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 0.85,
+            "fieldName": "",
+            "defaultText": "While roads aren't vehicles, they are something all vehicles will interact with.  There are two types of roads in the mod: static and dynamic.  Static roads are pre-built sections that you place down like a Lego road plate.  Dynamic roads are the opposite: flexible connections you can put anywhere.",
+            "color": "000000",
+            "wrapWidth": 180,
+            "renderPosition": 1
+          },
+          {
+            "pos": [261.0,25.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 0.85,
+            "fieldName": "",
+            "defaultText": "For dynamic roads, you need to define two points to make a road path.  The first is done by sneak-clicking a block in the direction for the road to go. The second is done by moving to the other end of where you want the road, and face in the direction towards the first point.  You can also click an existing road segment rather than a block, and the road will auto-connect to that segment.  This includes static sections, which are how you make road junctions.",
             "color": "000000",
             "wrapWidth": 180,
             "renderPosition": 1
@@ -409,142 +512,6 @@
       },
       {
         "pageTexture": "mts:textures/guis/manual_car_pages.png",
-        "title": "Seats/Cargo",
-        "pageText": [
-          {
-            "pos": [111.0,25.0,0.0],
-            "rot": [0.0,0.0,0.0],
-            "scale": 1.0,
-            "fieldName": "",
-            "defaultText": "Seats/Cargo",
-            "color": "000000"
-          },
-          {
-            "pos": [27.0,40.0,0.0],
-            "rot": [0.0,0.0,0.0],
-            "scale": 0.85,
-            "fieldName": "",
-            "defaultText": "Seats and cargo may all be placed in vehicles, however exactly where they may be placed depends on the vehicle itself.  The number of these items a vehicle can contain is shown in the Drafting Table, so use this to determine if the vehicle meets your needs or not.  Some vehicles allow for either seats or cargo in some spots, which means you can add or remove them as you see fit.",
-            "color": "000000",
-            "wrapWidth": 180,
-            "renderPosition": 1
-          },
-          {
-            "pos": [261.0,25.0,0.0],
-            "rot": [0.0,0.0,0.0],
-            "scale": 0.85,
-            "fieldName": "",
-            "defaultText": "Note that crates and barrels hold their inventory when in item form and will still have that inventory if placed in another vehicle or if the vehicle they are in is destroyed.  This allows for quick transfer of items from one vehicle to another.",
-            "color": "000000",
-            "wrapWidth": 180,
-            "renderPosition": 1
-          }
-        ]
-      },
-      {
-        "pageTexture": "mts:textures/guis/manual_car_pages.png",
-        "title": "Instruments",
-        "pageText": [
-          {
-            "pos": [111.0,25.0,0.0],
-            "rot": [0.0,0.0,0.0],
-            "scale": 1.0,
-            "fieldName": "",
-            "defaultText": "Instruments",
-            "color": "000000"
-          },
-          {
-            "pos": [27.0,40.0,0.0],
-            "rot": [0.0,0.0,0.0],
-            "scale": 0.85,
-            "fieldName": "",
-            "defaultText": "Instruments make piloting a plane and driving a car much more immersive.  They are also useful for monitoring key properties like fuel levels, RPM, and engine temps, and make flying in the dark much less hazardous.  While some vehicles come with instruments when first placed down, most do not.",
-            "color": "000000",
-            "wrapWidth": 180,
-            "renderPosition": 1
-          },
-          {
-            "pos": [261.0,25.0,0.0],
-            "rot": [0.0,0.0,0.0],
-            "scale": 0.85,
-            "fieldName": "",
-            "defaultText": "Instruments are added to vehicles by right-clicking with the wrench on them.  The resulting GUI shows a view of the HUD and all instruments in your possession that work on that vehicle.  Simply click the slot you want to put the instrument in, and click that instrument.",
-            "color": "000000",
-            "wrapWidth": 180,
-            "renderPosition": 1
-          }
-        ]
-      },
-      {
-        "pageTexture": "mts:textures/guis/manual_car_pages.png",
-        "title": "Engine Care",
-        "pageText": [
-          {
-            "pos": [111.0,25.0,0.0],
-            "rot": [0.0,0.0,0.0],
-            "scale": 1.0,
-            "fieldName": "",
-            "defaultText": "Engine Care",
-            "color": "000000"
-          },
-          {
-            "pos": [27.0,40.0,0.0],
-            "rot": [0.0,0.0,0.0],
-            "scale": 0.85,
-            "fieldName": "",
-            "defaultText": "No matter what they are in, engines form the heart of your vehicle.  Engines come in a variety of fuel consumptions and max RPMs, so chose carefully based on your application.  Fuel-less versions of engines are avaliable in the creative tab, should you not wish to mess with fuel.",
-            "color": "000000",
-            "wrapWidth": 180,
-            "renderPosition": 1
-          },
-          {
-            "pos": [261.0,25.0,0.0],
-            "rot": [0.0,0.0,0.0],
-            "scale": 0.85,
-            "fieldName": "",
-            "defaultText": "Beware: engines will gradually accumulate hours and lose their power, going so far as to start backfiring when really worn out.  Over-revving, over-heating, and running the engine too fast before it has warmed up will quickly add hours to an otherwise new engine.  Engines may also accumulate hours from damage, going so far as to spring leaks or lose their electric starters.",
-            "color": "000000",
-            "wrapWidth": 180,
-            "renderPosition": 1
-          }
-        ]
-      },
-      {
-        "pageTexture": "mts:textures/guis/manual_car_pages.png",
-        "title": "Starting Engines",
-        "pageText": [
-          {
-            "pos": [111.0,25.0,0.0],
-            "rot": [0.0,0.0,0.0],
-            "scale": 1.0,
-            "fieldName": "",
-            "defaultText": "Starting Engines",
-            "color": "000000"
-          },
-          {
-            "pos": [27.0,40.0,0.0],
-            "rot": [0.0,0.0,0.0],
-            "scale": 0.85,
-            "fieldName": "",
-            "defaultText": "While most things on vehicles can be controled from your keyboard or joystick, a few functions are in the vehicle panel.  To open this panel, press the U key when in a vehicle.  This brings up the switches for the engines, as well as the lights, trailers, airplane trim, reverse thrust, and a few other things.  Make sure you have fueled your vehicle before you try to start them!",
-            "color": "000000",
-            "wrapWidth": 180,
-            "renderPosition": 1
-          },
-          {
-            "pos": [261.0,25.0,0.0],
-            "rot": [0.0,0.0,0.0],
-            "scale": 0.85,
-            "fieldName": "",
-            "defaultText": "To start the engines of a vehicle, either turn on the MAG and hold START (aircraft), or click the right of the engine switch to rotate it to the ON position and click and hold again to engage the starter.  You should hear the stater wind up, and once the engine is going fast enough it will start.  Note: starting enignes without fuel will simply drain your battery, resulting in you needing to use either Jumper Cables or a Jumper Pack to re-charge it.",
-            "color": "000000",
-            "wrapWidth": 180,
-            "renderPosition": 1
-          }
-        ]
-      },
-      {
-        "pageTexture": "mts:textures/guis/manual_car_pages.png",
         "title": "Driver's Ed",
         "pageText": [
           {
@@ -560,7 +527,7 @@
             "rot": [0.0,0.0,0.0],
             "scale": 0.85,
             "fieldName": "",
-            "defaultText": "Driving a car (or a boat) is so simple, even a villager could do it.  The default controls use the simple throttle setup, where W makes the vehicle move forwards, and S stops it and then makes it move backwards.  A and D steer left and right.  Some vehicles are equipped with lights, horns, sirens, etc., so check your controls and the panel for details.",
+            "defaultText": "Driving a car (or a boat) is so simple, even a villager could do it.  The default controls use the simple throttle setup, where W makes the vehicle move forwards, and S stops it and then makes it move backwards.  A and D steer left and right.  Some vehicles are equipped with lights, horns, sirens, etc., so check your controls and the panel (U key) for details.",
             "color": "000000",
             "wrapWidth": 180,
             "renderPosition": 1

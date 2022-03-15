@@ -50,8 +50,8 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 						if(part instanceof PartEngine){
 							//Get the most potent fuel for the vehicle from the fuel configs.
 							String mostPotentFluid = "";
-							for(String fluidName : ConfigSystem.configObject.fuel.fuels.get(part.definition.engine.fuelType).keySet()){
-								if(mostPotentFluid.isEmpty() || ConfigSystem.configObject.fuel.fuels.get(part.definition.engine.fuelType).get(mostPotentFluid) < ConfigSystem.configObject.fuel.fuels.get(part.definition.engine.fuelType).get(fluidName)){
+							for(String fluidName : ConfigSystem.settings.fuel.fuels.get(part.definition.engine.fuelType).keySet()){
+								if(mostPotentFluid.isEmpty() || ConfigSystem.settings.fuel.fuels.get(part.definition.engine.fuelType).get(mostPotentFluid) < ConfigSystem.settings.fuel.fuels.get(part.definition.engine.fuelType).get(fluidName)){
 									mostPotentFluid = fluidName;
 								}
 							}

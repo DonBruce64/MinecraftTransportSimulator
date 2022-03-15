@@ -20,16 +20,6 @@ public abstract class AItemSubTyped<JSONDefinition extends AJSONMultiModelProvid
 	}
 	
 	@Override
-	public String getItemName(){
-		for(JSONSubDefinition subDefinition : definition.definitions){
-			if(subDefinition.subName.equals(subName)){
-				return subDefinition.name != null ? subDefinition.name : super.getItemName();
-			}
-		}
-		return "";
-	}
-	
-	@Override
 	public void addTooltipLines(List<String> tooltipLines, WrapperNBT data){
 		super.addTooltipLines(tooltipLines, data);
 		for(JSONSubDefinition subDefinition : definition.definitions){

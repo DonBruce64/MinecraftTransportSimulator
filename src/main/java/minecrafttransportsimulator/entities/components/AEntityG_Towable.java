@@ -12,6 +12,8 @@ import minecrafttransportsimulator.baseclasses.TowingConnection;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.jsondefs.AJSONPartProvider;
+import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
+import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.jsondefs.JSONConnection;
 import minecrafttransportsimulator.jsondefs.JSONConnectionGroup;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
@@ -461,26 +463,27 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
 	 * Emum for easier functions for trailer connections.
 	 */
 	private static enum TrailerConnectionResult{
-		FEEDBACK_LOOP(true),
-		ALREADY_TOWED(true),
-		NOTFOUND(true),
-		TOOFAR(false),
-		WRONGHITCH(false),
-		MISMATCH(false),
-		CONNECTED(false),
-		DISCONNECTED(false);
+		FEEDBACK_LOOP(true, JSONConfigLanguage.INTERACT_TRAILER_FEEDBACKLOOP),
+		ALREADY_TOWED(true, JSONConfigLanguage.INTERACT_TRAILER_ALREADYTOWED),
+		NOTFOUND(true, JSONConfigLanguage.INTERACT_TRAILER_NOTFOUND),
+		TOOFAR(false, JSONConfigLanguage.INTERACT_TRAILER_TOOFAR),
+		WRONGHITCH(false, JSONConfigLanguage.INTERACT_TRAILER_WRONGHITCH),
+		MISMATCH(false, JSONConfigLanguage.INTERACT_TRAILER_MISMATCH),
+		CONNECTED(false, JSONConfigLanguage.INTERACT_TRAILER_CONNECTED),
+		DISCONNECTED(false, JSONConfigLanguage.INTERACT_TRAILER_DISCONNECTED);
 		
 		private boolean skip;
+		private LanguageEntry language;
 		
-		private TrailerConnectionResult(boolean skip){
+		private TrailerConnectionResult(boolean skip, LanguageEntry language){
 			this.skip = skip;
+			this.language = language;
 		}
 		
 		private void handlePacket(AEntityG_Towable<?> messageSource){
-			String packetMessage = InterfaceCore.translate("interact.trailer." + name().toLowerCase());
 			for(WrapperEntity entity : messageSource.world.getEntitiesWithin(new BoundingBox(messageSource.position, 16, 16, 16))){
 				if(entity instanceof WrapperPlayer){
-					((WrapperPlayer) entity).sendPacket(new PacketPlayerChatMessage((WrapperPlayer) entity, packetMessage));
+					((WrapperPlayer) entity).sendPacket(new PacketPlayerChatMessage((WrapperPlayer) entity, language));
 				}
 			}
 		}

@@ -183,7 +183,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase{
 				BoundingBox explosiveBounds = new BoundingBox(lastExplosionPosition, amount, amount, amount);
 				for(BoundingBox box : interactionBoxes.boxes){
 					if(box.intersects(explosiveBounds)){
-						interactable.attack(new Damage(source.damageType, amount, box, null, playerSource).setExplosive());
+						interactable.attack(new Damage(amount, box, null, playerSource, null).setExplosive());
 					}
 				}
 				lastExplosionPosition = null;
@@ -193,7 +193,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase{
 				Point3D attackerPosition = new Point3D(attacker.posX, attacker.posY, attacker.posZ);
 				for(BoundingBox box : interactionBoxes.boxes){
 					if(box.isPointInside(attackerPosition)){
-						damage = new Damage(source.damageType, amount, box, null, playerSource);
+						damage = new Damage(amount, box, null, playerSource, null);
 						break;
 					}
 				}
@@ -204,7 +204,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase{
 					//We do raytracing here to catch this movement.
 					RayTraceResult hitRaytrace = interactionBoxes.calculateIntercept(attacker.getPositionVector(), attacker.getPositionVector().add(attacker.motionX, attacker.motionY, attacker.motionZ));
 					if(hitRaytrace != null){
-						damage = new Damage(source.damageType, amount, interactionBoxes.lastBoxRayTraced, null, playerSource);
+						damage = new Damage(amount, interactionBoxes.lastBoxRayTraced, null, playerSource, null);
 					}
 				}
 				

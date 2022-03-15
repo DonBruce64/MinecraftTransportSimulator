@@ -4,9 +4,12 @@ import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.items.instances.ItemPartGroundDevice;
+import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
+import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
+import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.instances.PacketPartGroundDevice;
@@ -130,16 +133,18 @@ public class PartGroundDevice extends APart{
 				}
 				
 				//Check for colliding entities and damage them.
-				if(!vehicleOn.world.isClient() && vehicleOn.velocity >= ConfigSystem.configObject.damage.wheelDamageMinimumVelocity.value){
+				if(!vehicleOn.world.isClient() && vehicleOn.velocity >= ConfigSystem.settings.damage.wheelDamageMinimumVelocity.value){
 					boundingBox.widthRadius += 0.25;
 					boundingBox.depthRadius += 0.25;
 					final double wheelDamageAmount;
-					if(!ConfigSystem.configObject.damage.wheelDamageIgnoreVelocity.value){
-						wheelDamageAmount = ConfigSystem.configObject.damage.wheelDamageFactor.value*vehicleOn.velocity*vehicleOn.currentMass/1000F;
+					if(!ConfigSystem.settings.damage.wheelDamageIgnoreVelocity.value){
+						wheelDamageAmount = ConfigSystem.settings.damage.wheelDamageFactor.value*vehicleOn.velocity*vehicleOn.currentMass/1000F;
 					}else{
-						wheelDamageAmount = ConfigSystem.configObject.damage.wheelDamageFactor.value*vehicleOn.currentMass/1000F;
+						wheelDamageAmount = ConfigSystem.settings.damage.wheelDamageFactor.value*vehicleOn.currentMass/1000F;
 					}
-					Damage wheelDamage = new Damage("wheel", wheelDamageAmount, boundingBox, this, vehicleOn.getController());
+					WrapperEntity controller = vehicleOn.getController();
+					LanguageEntry language = controller != null ? JSONConfigLanguage.DEATH_WHEEL_PLAYER : JSONConfigLanguage.DEATH_WHEEL_NULL;
+					Damage wheelDamage = new Damage(wheelDamageAmount, boundingBox, this, controller, language);
 					vehicleOn.world.attackEntities(wheelDamage, null);
 					boundingBox.widthRadius -= 0.25;
 					boundingBox.depthRadius -= 0.25;
@@ -230,7 +235,7 @@ public class PartGroundDevice extends APart{
 			//On the server, can we go flat and does the config let us?
 			//Or if we are repairing, are we flat in the first place?
 			if(setFlat){
-				if(isFlat || definition.ground.flatHeight == 0 || !ConfigSystem.configObject.damage.wheelBreakage.value){
+				if(isFlat || definition.ground.flatHeight == 0 || !ConfigSystem.settings.damage.wheelBreakage.value){
 					return;
 				}
 			}else{

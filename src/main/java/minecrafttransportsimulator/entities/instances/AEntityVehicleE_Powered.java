@@ -13,10 +13,10 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.NavBeacon;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
+import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
-import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -211,7 +211,7 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 	@Override
 	public boolean addRider(WrapperEntity rider, Point3D riderLocation){
 		if(super.addRider(rider, riderLocation)){
-			if(world.isClient() && ConfigSystem.configObject.clientControls.autostartEng.value && rider.equals(InterfaceClient.getClientPlayer())){
+			if(world.isClient() && ConfigSystem.client.controlSettings.autostartEng.value && rider.equals(InterfaceClient.getClientPlayer())){
 				if(rider instanceof WrapperPlayer && getSeatForRider(rider).placementDefinition.isController && canPlayerStartEngines((WrapperPlayer) rider)){
 					for(PartEngine engine : engines.values()){
 						if(!definition.motorized.isAircraft){
@@ -232,7 +232,7 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 	
 	@Override
 	public void removeRider(WrapperEntity rider, Iterator<WrapperEntity> iterator){
-		if(world.isClient() && ConfigSystem.configObject.clientControls.autostartEng.value && rider.equals(InterfaceClient.getClientPlayer())){
+		if(world.isClient() && ConfigSystem.client.controlSettings.autostartEng.value && rider.equals(InterfaceClient.getClientPlayer())){
 			PartSeat seat = getSeatForRider(rider);
 			if(rider instanceof WrapperPlayer && seat.placementDefinition.isController){
 				//Check if another player is in a controller seat.  If so, don't stop the engines.
@@ -275,7 +275,7 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 		//Oh, and add explosions.  Because those are always fun.
 		//Note that this is done after spawning all parts here and in the super call,
 		//so although all parts are DROPPED, not all parts may actually survive the explosion.
-		if(ConfigSystem.configObject.damage.explosions.value){
+		if(ConfigSystem.settings.damage.explosions.value){
 			double explosivePower = 0;
 			for(APart part : parts){
 				if(part instanceof PartInteractable){
@@ -333,7 +333,7 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 	}
 	
 	public boolean canPlayerStartEngines(WrapperPlayer player){
-		if(!ConfigSystem.configObject.general.keyRequiredToStartVehicles.value){
+		if(!ConfigSystem.settings.general.keyRequiredToStartVehicles.value){
 			return true;
 		}else{
 			if(player.isHoldingItemType(ItemComponentType.KEY)){
@@ -343,7 +343,7 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 				}
 			}
 			if(world.isClient()){
-				player.displayChatMessage(InterfaceCore.translate("interact.key.failure.needvehiclekey"));
+				player.displayChatMessage(JSONConfigLanguage.INTERACT_VEHICLE_NEEDKEY);
 			}
 			return false;
 		}

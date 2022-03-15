@@ -12,10 +12,11 @@ import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIPanelAircraft;
 import minecrafttransportsimulator.guis.instances.GUIPanelGround;
 import minecrafttransportsimulator.guis.instances.GUIRadio;
-import minecrafttransportsimulator.jsondefs.JSONConfig.ConfigJoystick;
-import minecrafttransportsimulator.jsondefs.JSONConfig.ConfigKeyboard;
+import minecrafttransportsimulator.jsondefs.JSONConfigClient.ConfigJoystick;
+import minecrafttransportsimulator.jsondefs.JSONConfigClient.ConfigKeyboard;
+import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
+import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
-import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.InterfaceInput;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
@@ -50,10 +51,10 @@ public final class ControlSystem{
 	 */
 	static{
 		for(ControlsJoystick control : ControlsJoystick.values()){
-			ConfigSystem.configObject.controls.joystick.put(control.systemName, control.config);
+			ConfigSystem.client.controls.joystick.put(control.systemName, control.config);
 		}
 		for(ControlsKeyboard control : ControlsKeyboard.values()){
-			ConfigSystem.configObject.controls.keyboard.put(control.systemName, control.config);
+			ConfigSystem.client.controls.keyboard.put(control.systemName, control.config);
 		}
 		for(ControlsKeyboard control : ControlsKeyboard.values()){
 			if(control.config.keyCode == 0){
@@ -310,33 +311,33 @@ public final class ControlSystem{
 		}
 		
 		//Check yaw.
-		controlControlSurface(aircraft, ControlsJoystick.AIRCRAFT_YAW, ControlsKeyboard.AIRCRAFT_YAW_R, ControlsKeyboard.AIRCRAFT_YAW_L, ConfigSystem.configObject.clientControls.steeringControlRate.value, EntityVehicleF_Physics.MAX_RUDDER_ANGLE, EntityVehicleF_Physics.RUDDER_VARIABLE, aircraft.rudderAngle);
+		controlControlSurface(aircraft, ControlsJoystick.AIRCRAFT_YAW, ControlsKeyboard.AIRCRAFT_YAW_R, ControlsKeyboard.AIRCRAFT_YAW_L, ConfigSystem.client.controlSettings.steeringControlRate.value, EntityVehicleF_Physics.MAX_RUDDER_ANGLE, EntityVehicleF_Physics.RUDDER_VARIABLE, aircraft.rudderAngle);
 		controlControlTrim(aircraft, ControlsJoystick.AIRCRAFT_TRIM_YAW_R, ControlsJoystick.AIRCRAFT_TRIM_YAW_L, EntityVehicleF_Physics.MAX_RUDDER_TRIM, EntityVehicleF_Physics.RUDDER_TRIM_VARIABLE);
 		
 		//Check is mouse yoke is enabled.  If so do controls by mouse rather than buttons.
-		if(ConfigSystem.configObject.clientControls.mouseYoke.value){
+		if(ConfigSystem.client.controlSettings.mouseYoke.value){
 			if(EntityVehicleF_Physics.lockCameraToMovement && AGUIBase.activeInputGUI == null){
 				long mouseDelta = InterfaceInput.getMouseDelta();
-				double deltaAileron = ConfigSystem.configObject.clientControls.flightControlRate.value*((short) (mouseDelta >> Integer.SIZE));
-				double deltaElevator = ConfigSystem.configObject.clientControls.flightControlRate.value*((short) ((int) -mouseDelta));
+				double deltaAileron = ConfigSystem.client.controlSettings.flightControlRate.value*((short) (mouseDelta >> Integer.SIZE));
+				double deltaElevator = ConfigSystem.client.controlSettings.flightControlRate.value*((short) ((int) -mouseDelta));
 				InterfacePacket.sendToServer(new PacketEntityVariableIncrement(aircraft, EntityVehicleF_Physics.AILERON_VARIABLE, deltaAileron, -EntityVehicleF_Physics.MAX_AILERON_ANGLE, EntityVehicleF_Physics.MAX_AILERON_ANGLE));
 				InterfacePacket.sendToServer(new PacketEntityVariableIncrement(aircraft, EntityVehicleF_Physics.ELEVATOR_VARIABLE, deltaElevator, -EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE, EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE));
 				
 			}
 		}else{
 			//Check pitch.
-			controlControlSurface(aircraft, ControlsJoystick.AIRCRAFT_PITCH, ControlsKeyboard.AIRCRAFT_PITCH_U, ControlsKeyboard.AIRCRAFT_PITCH_D, ConfigSystem.configObject.clientControls.flightControlRate.value, EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE, EntityVehicleF_Physics.ELEVATOR_VARIABLE, aircraft.elevatorAngle);
+			controlControlSurface(aircraft, ControlsJoystick.AIRCRAFT_PITCH, ControlsKeyboard.AIRCRAFT_PITCH_U, ControlsKeyboard.AIRCRAFT_PITCH_D, ConfigSystem.client.controlSettings.flightControlRate.value, EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE, EntityVehicleF_Physics.ELEVATOR_VARIABLE, aircraft.elevatorAngle);
 			controlControlTrim(aircraft, ControlsJoystick.AIRCRAFT_TRIM_PITCH_U, ControlsJoystick.AIRCRAFT_TRIM_PITCH_D, EntityVehicleF_Physics.MAX_ELEVATOR_TRIM, EntityVehicleF_Physics.ELEVATOR_TRIM_VARIABLE);
 			
 			//Check roll.
-			controlControlSurface(aircraft, ControlsJoystick.AIRCRAFT_ROLL, ControlsKeyboard.AIRCRAFT_ROLL_R, ControlsKeyboard.AIRCRAFT_ROLL_L, ConfigSystem.configObject.clientControls.flightControlRate.value, EntityVehicleF_Physics.MAX_AILERON_ANGLE, EntityVehicleF_Physics.AILERON_VARIABLE, aircraft.aileronAngle);
+			controlControlSurface(aircraft, ControlsJoystick.AIRCRAFT_ROLL, ControlsKeyboard.AIRCRAFT_ROLL_R, ControlsKeyboard.AIRCRAFT_ROLL_L, ConfigSystem.client.controlSettings.flightControlRate.value, EntityVehicleF_Physics.MAX_AILERON_ANGLE, EntityVehicleF_Physics.AILERON_VARIABLE, aircraft.aileronAngle);
 			controlControlTrim(aircraft, ControlsJoystick.AIRCRAFT_TRIM_ROLL_R, ControlsJoystick.AIRCRAFT_TRIM_ROLL_L, EntityVehicleF_Physics.MAX_AILERON_TRIM, EntityVehicleF_Physics.AILERON_TRIM_VARIABLE);
 		}
 		
 		//Check to see if we request a different auto-level state.
 		boolean aircraftIsAutolevel = aircraft.getVariable(EntityVehicleF_Physics.AUTOLEVEL_VARIABLE) != 0;
-		if(ConfigSystem.configObject.clientControls.heliAutoLevel.value ^ aircraftIsAutolevel){
-			InterfacePacket.sendToServer(new PacketEntityVariableSet(aircraft, EntityVehicleF_Physics.AUTOLEVEL_VARIABLE, ConfigSystem.configObject.clientControls.heliAutoLevel.value ? 1 : 0));
+		if(ConfigSystem.client.controlSettings.heliAutoLevel.value ^ aircraftIsAutolevel){
+			InterfacePacket.sendToServer(new PacketEntityVariableSet(aircraft, EntityVehicleF_Physics.AUTOLEVEL_VARIABLE, ConfigSystem.client.controlSettings.heliAutoLevel.value ? 1 : 0));
 		}
 	}
 	
@@ -380,7 +381,7 @@ public final class ControlSystem{
 				}
 			}
 		}else{
-			if(ConfigSystem.configObject.clientControls.simpleThrottle.value){
+			if(ConfigSystem.client.controlSettings.simpleThrottle.value){
 				if(!powered.engines.values().isEmpty()){
 					//Get the current gear.
 					byte currentGear = 0;
@@ -401,9 +402,9 @@ public final class ControlSystem{
 					if(InterfaceInput.isJoystickPresent(ControlsJoystick.CAR_GAS.config.joystickName)){
 						throttleValue = ControlsJoystick.CAR_GAS.getAxisState(true)*EntityVehicleF_Physics.MAX_THROTTLE;
 					}else if(ControlsKeyboardDynamic.CAR_SLOW.isPressed()){
-						throttleValue = ConfigSystem.configObject.clientControls.halfThrottle.value ? EntityVehicleF_Physics.MAX_THROTTLE : EntityVehicleF_Physics.MAX_THROTTLE/2D; 
+						throttleValue = ConfigSystem.client.controlSettings.halfThrottle.value ? EntityVehicleF_Physics.MAX_THROTTLE : EntityVehicleF_Physics.MAX_THROTTLE/2D; 
 					}else if(ControlsKeyboard.CAR_GAS.isPressed()){
-						throttleValue = ConfigSystem.configObject.clientControls.halfThrottle.value ? EntityVehicleF_Physics.MAX_THROTTLE/2D : EntityVehicleF_Physics.MAX_THROTTLE;
+						throttleValue = ConfigSystem.client.controlSettings.halfThrottle.value ? EntityVehicleF_Physics.MAX_THROTTLE/2D : EntityVehicleF_Physics.MAX_THROTTLE;
 					}
 					
 					//If we don't have velocity, and we have the appropriate control, shift.
@@ -453,13 +454,13 @@ public final class ControlSystem{
 					}
 				}else{
 					if(ControlsKeyboardDynamic.CAR_SLOW.isPressed()){
-						if(!ConfigSystem.configObject.clientControls.halfThrottle.value){
+						if(!ConfigSystem.client.controlSettings.halfThrottle.value){
 							InterfacePacket.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, EntityVehicleF_Physics.MAX_THROTTLE/2D));
 						}else{
 							InterfacePacket.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, EntityVehicleF_Physics.MAX_THROTTLE));
 						}
 					}else if(ControlsKeyboard.CAR_GAS.isPressed()){
-						if(!ConfigSystem.configObject.clientControls.halfThrottle.value){
+						if(!ConfigSystem.client.controlSettings.halfThrottle.value){
 							InterfacePacket.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, EntityVehicleF_Physics.MAX_THROTTLE));
 						}else{
 							InterfacePacket.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, EntityVehicleF_Physics.MAX_THROTTLE/2D));
@@ -476,14 +477,14 @@ public final class ControlSystem{
 		
 		//Check steering.  If mouse yoke is enabled, we do controls by mouse rather than buttons.
 		if(!powered.lockedOnRoad){
-			if(ConfigSystem.configObject.clientControls.mouseYoke.value){
+			if(ConfigSystem.client.controlSettings.mouseYoke.value){
 				if(EntityVehicleF_Physics.lockCameraToMovement && AGUIBase.activeInputGUI == null){
 					long mouseDelta = InterfaceInput.getMouseDelta();
-					double deltaRudder = ConfigSystem.configObject.clientControls.flightControlRate.value*((short) (mouseDelta >> Integer.SIZE));
+					double deltaRudder = ConfigSystem.client.controlSettings.flightControlRate.value*((short) (mouseDelta >> Integer.SIZE));
 					InterfacePacket.sendToServer(new PacketEntityVariableIncrement(powered, EntityVehicleF_Physics.RUDDER_VARIABLE, deltaRudder, -EntityVehicleF_Physics.MAX_RUDDER_ANGLE, EntityVehicleF_Physics.MAX_RUDDER_ANGLE));
 				}
 			}else{
-				controlControlSurface(powered, ControlsJoystick.CAR_TURN, ControlsKeyboard.CAR_TURN_R, ControlsKeyboard.CAR_TURN_L, ConfigSystem.configObject.clientControls.steeringControlRate.value, EntityVehicleF_Physics.MAX_RUDDER_ANGLE, EntityVehicleF_Physics.RUDDER_VARIABLE, powered.rudderAngle);
+				controlControlSurface(powered, ControlsJoystick.CAR_TURN, ControlsKeyboard.CAR_TURN_R, ControlsKeyboard.CAR_TURN_L, ConfigSystem.client.controlSettings.steeringControlRate.value, EntityVehicleF_Physics.MAX_RUDDER_ANGLE, EntityVehicleF_Physics.RUDDER_VARIABLE, powered.rudderAngle);
 			}
 		}
 		
@@ -528,7 +529,7 @@ public final class ControlSystem{
 		//Keep signals on until we have been moving without turning in the
 		//pressed direction for 2 seconds, or if we turn in the other direction.
 		//This only happens if the signals are set to automatic.  For manual signals, we let the player control them.
-		if(ConfigSystem.configObject.clientControls.autoTrnSignals.value){
+		if(ConfigSystem.client.controlSettings.autoTrnSignals.value){
 			if(!powered.turningLeft && powered.rudderAngle < -20){
 				powered.turningLeft = true;
 				powered.turningCooldown = 40;
@@ -558,65 +559,65 @@ public final class ControlSystem{
 	 * @author don_bruce
 	 */
 	public static enum ControlsKeyboard{
-		AIRCRAFT_MOD(ControlsJoystick.AIRCRAFT_MOD, false, "RSHIFT"),
-		AIRCRAFT_CAMLOCK(ControlsJoystick.AIRCRAFT_CAMLOCK, true, "RCONTROL"),
-		AIRCRAFT_YAW_R(ControlsJoystick.AIRCRAFT_YAW, false, "L"),
-		AIRCRAFT_YAW_L(ControlsJoystick.AIRCRAFT_YAW, false, "J"),
-		AIRCRAFT_PITCH_U(ControlsJoystick.AIRCRAFT_PITCH, false, "S"),
-		AIRCRAFT_PITCH_D(ControlsJoystick.AIRCRAFT_PITCH, false, "W"),
-		AIRCRAFT_ROLL_R( ControlsJoystick.AIRCRAFT_ROLL, false, "D"),
-		AIRCRAFT_ROLL_L(ControlsJoystick.AIRCRAFT_ROLL, false, "A"),
-		AIRCRAFT_THROTTLE_U(ControlsJoystick.AIRCRAFT_THROTTLE, false, "I"),
-		AIRCRAFT_THROTTLE_D(ControlsJoystick.AIRCRAFT_THROTTLE, false, "K"),
-		AIRCRAFT_FLAPS_U(ControlsJoystick.AIRCRAFT_FLAPS_U, true, "Y"),
-		AIRCRAFT_FLAPS_D(ControlsJoystick.AIRCRAFT_FLAPS_D, true, "H"),
-		AIRCRAFT_BRAKE(ControlsJoystick.AIRCRAFT_BRAKE, false, "B"),
-		AIRCRAFT_PANEL(ControlsJoystick.AIRCRAFT_PANEL, true, "U"),
-		AIRCRAFT_RADIO(ControlsJoystick.AIRCRAFT_RADIO, true, "MINUS"),
-		AIRCRAFT_GUN_FIRE(ControlsJoystick.AIRCRAFT_GUN_FIRE, false, "SPACE"),
-		AIRCRAFT_GUN_SWITCH(ControlsJoystick.AIRCRAFT_GUN_SWITCH, true, "V"),
-		AIRCRAFT_ZOOM_I(ControlsJoystick.AIRCRAFT_ZOOM_I, true, "PRIOR"),
-		AIRCRAFT_ZOOM_O(ControlsJoystick.AIRCRAFT_ZOOM_O, true, "NEXT"),
-		AIRCRAFT_JS_INHIBIT(ControlsJoystick.AIRCRAFT_JS_INHIBIT, true, "SCROLL"),
+		AIRCRAFT_MOD(ControlsJoystick.AIRCRAFT_MOD, false, "RSHIFT", JSONConfigLanguage.INPUT_MOD),
+		AIRCRAFT_CAMLOCK(ControlsJoystick.AIRCRAFT_CAMLOCK, true, "RCONTROL", JSONConfigLanguage.INPUT_CAMLOCK),
+		AIRCRAFT_YAW_R(ControlsJoystick.AIRCRAFT_YAW, false, "L", JSONConfigLanguage.INPUT_YAW_R),
+		AIRCRAFT_YAW_L(ControlsJoystick.AIRCRAFT_YAW, false, "J", JSONConfigLanguage.INPUT_YAW_L),
+		AIRCRAFT_PITCH_U(ControlsJoystick.AIRCRAFT_PITCH, false, "S", JSONConfigLanguage.INPUT_PITCH_U),
+		AIRCRAFT_PITCH_D(ControlsJoystick.AIRCRAFT_PITCH, false, "W", JSONConfigLanguage.INPUT_PITCH_D),
+		AIRCRAFT_ROLL_R( ControlsJoystick.AIRCRAFT_ROLL, false, "D", JSONConfigLanguage.INPUT_ROLL_R),
+		AIRCRAFT_ROLL_L(ControlsJoystick.AIRCRAFT_ROLL, false, "A", JSONConfigLanguage.INPUT_ROLL_L),
+		AIRCRAFT_THROTTLE_U(ControlsJoystick.AIRCRAFT_THROTTLE, false, "I", JSONConfigLanguage.INPUT_THROTTLE_U),
+		AIRCRAFT_THROTTLE_D(ControlsJoystick.AIRCRAFT_THROTTLE, false, "K", JSONConfigLanguage.INPUT_THROTTLE_D),
+		AIRCRAFT_FLAPS_U(ControlsJoystick.AIRCRAFT_FLAPS_U, true, "Y", JSONConfigLanguage.INPUT_FLAPS_U),
+		AIRCRAFT_FLAPS_D(ControlsJoystick.AIRCRAFT_FLAPS_D, true, "H", JSONConfigLanguage.INPUT_FLAPS_D),
+		AIRCRAFT_BRAKE(ControlsJoystick.AIRCRAFT_BRAKE, false, "B", JSONConfigLanguage.INPUT_BRAKE),
+		AIRCRAFT_PANEL(ControlsJoystick.AIRCRAFT_PANEL, true, "U", JSONConfigLanguage.INPUT_PANEL),
+		AIRCRAFT_RADIO(ControlsJoystick.AIRCRAFT_RADIO, true, "MINUS", JSONConfigLanguage.INPUT_RADIO),
+		AIRCRAFT_GUN_FIRE(ControlsJoystick.AIRCRAFT_GUN_FIRE, false, "SPACE", JSONConfigLanguage.INPUT_GUN_FIRE),
+		AIRCRAFT_GUN_SWITCH(ControlsJoystick.AIRCRAFT_GUN_SWITCH, true, "V", JSONConfigLanguage.INPUT_GUN_SWITCH),
+		AIRCRAFT_ZOOM_I(ControlsJoystick.AIRCRAFT_ZOOM_I, true, "PRIOR", JSONConfigLanguage.INPUT_ZOOM_I),
+		AIRCRAFT_ZOOM_O(ControlsJoystick.AIRCRAFT_ZOOM_O, true, "NEXT", JSONConfigLanguage.INPUT_ZOOM_O),
+		AIRCRAFT_JS_INHIBIT(ControlsJoystick.AIRCRAFT_JS_INHIBIT, true, "SCROLL", JSONConfigLanguage.INPUT_JS_INHIBIT),
 		
-		CAR_MOD(ControlsJoystick.CAR_MOD, false, "RSHIFT"),
-		CAR_CAMLOCK(ControlsJoystick.CAR_CAMLOCK, true, "RCONTROL"),
-		CAR_TURN_R(ControlsJoystick.CAR_TURN, false, "D"),
-		CAR_TURN_L(ControlsJoystick.CAR_TURN, false, "A"),
-		CAR_GAS(ControlsJoystick.CAR_GAS, false, "W"),
-		CAR_BRAKE(ControlsJoystick.CAR_BRAKE, false, "S"),
-		CAR_PANEL(ControlsJoystick.CAR_PANEL, true, "U"),
-		CAR_SHIFT_U(ControlsJoystick.CAR_SHIFT_U, true, "R"),
-		CAR_SHIFT_D(ControlsJoystick.CAR_SHIFT_D, true, "F"),
-		CAR_HORN(ControlsJoystick.CAR_HORN, false, "C"),
-		CAR_RADIO(ControlsJoystick.CAR_RADIO, true, "MINUS"),
-		CAR_GUN_FIRE(ControlsJoystick.CAR_GUN_FIRE, false, "SPACE"),
-		CAR_GUN_SWITCH(ControlsJoystick.CAR_GUN_SWITCH, true, "V"),
-		CAR_ZOOM_I(ControlsJoystick.CAR_ZOOM_I, true, "PRIOR"),
-		CAR_ZOOM_O(ControlsJoystick.CAR_ZOOM_O, true, "NEXT"),
-		CAR_LIGHTS(ControlsJoystick.CAR_LIGHTS, true, "NUMPAD5"),
-		CAR_TURNSIGNAL_L(ControlsJoystick.CAR_TURNSIGNAL_L, true, "NUMPAD4"),
-		CAR_TURNSIGNAL_R(ControlsJoystick.CAR_TURNSIGNAL_R, true, "NUMPAD6"),
-		CAR_JS_INHIBIT(ControlsJoystick.CAR_JS_INHIBIT, true, "SCROLL");
+		CAR_MOD(ControlsJoystick.CAR_MOD, false, "RSHIFT", JSONConfigLanguage.INPUT_MOD),
+		CAR_CAMLOCK(ControlsJoystick.CAR_CAMLOCK, true, "RCONTROL", JSONConfigLanguage.INPUT_CAMLOCK),
+		CAR_TURN_R(ControlsJoystick.CAR_TURN, false, "D", JSONConfigLanguage.INPUT_TURN_R),
+		CAR_TURN_L(ControlsJoystick.CAR_TURN, false, "A", JSONConfigLanguage.INPUT_TURN_L),
+		CAR_GAS(ControlsJoystick.CAR_GAS, false, "W", JSONConfigLanguage.INPUT_GAS),
+		CAR_BRAKE(ControlsJoystick.CAR_BRAKE, false, "S", JSONConfigLanguage.INPUT_BRAKE),
+		CAR_PANEL(ControlsJoystick.CAR_PANEL, true, "U", JSONConfigLanguage.INPUT_PANEL),
+		CAR_SHIFT_U(ControlsJoystick.CAR_SHIFT_U, true, "R", JSONConfigLanguage.INPUT_SHIFT_U),
+		CAR_SHIFT_D(ControlsJoystick.CAR_SHIFT_D, true, "F", JSONConfigLanguage.INPUT_SHIFT_D),
+		CAR_HORN(ControlsJoystick.CAR_HORN, false, "C", JSONConfigLanguage.INPUT_HORN),
+		CAR_RADIO(ControlsJoystick.CAR_RADIO, true, "MINUS", JSONConfigLanguage.INPUT_RADIO),
+		CAR_GUN_FIRE(ControlsJoystick.CAR_GUN_FIRE, false, "SPACE", JSONConfigLanguage.INPUT_GUN_FIRE),
+		CAR_GUN_SWITCH(ControlsJoystick.CAR_GUN_SWITCH, true, "V", JSONConfigLanguage.INPUT_GUN_SWITCH),
+		CAR_ZOOM_I(ControlsJoystick.CAR_ZOOM_I, true, "PRIOR", JSONConfigLanguage.INPUT_ZOOM_I),
+		CAR_ZOOM_O(ControlsJoystick.CAR_ZOOM_O, true, "NEXT", JSONConfigLanguage.INPUT_ZOOM_O),
+		CAR_LIGHTS(ControlsJoystick.CAR_LIGHTS, true, "NUMPAD5", JSONConfigLanguage.INPUT_LIGHTS),
+		CAR_TURNSIGNAL_L(ControlsJoystick.CAR_TURNSIGNAL_L, true, "NUMPAD4", JSONConfigLanguage.INPUT_TURNSIGNAL_L),
+		CAR_TURNSIGNAL_R(ControlsJoystick.CAR_TURNSIGNAL_R, true, "NUMPAD6", JSONConfigLanguage.INPUT_TURNSIGNAL_R),
+		CAR_JS_INHIBIT(ControlsJoystick.CAR_JS_INHIBIT, true, "SCROLL", JSONConfigLanguage.INPUT_JS_INHIBIT);
 		
 		
 		public final boolean isMomentary;
 		public final String systemName;
-		public final String translatedName;
+		public final LanguageEntry language;
 		public final String defaultKeyName;
 		public final ConfigKeyboard config;
 		private final ControlsJoystick linkedJoystick;
 		
 		private boolean wasPressedLastCall;
 		
-		private ControlsKeyboard(ControlsJoystick linkedJoystick, boolean isMomentary, String defaultKeyName){
+		private ControlsKeyboard(ControlsJoystick linkedJoystick, boolean isMomentary, String defaultKeyName, LanguageEntry language){
 			this.linkedJoystick = linkedJoystick;
 			this.isMomentary = isMomentary;
 			this.systemName = this.name().toLowerCase().replaceFirst("_", ".");
-			this.translatedName = InterfaceCore.translate("input." + systemName);
+			this.language = language;
 			this.defaultKeyName = defaultKeyName;
-			if(ConfigSystem.configObject.controls.keyboard.containsKey(systemName)){
-				this.config = ConfigSystem.configObject.controls.keyboard.get(systemName);
+			if(ConfigSystem.client.controls.keyboard.containsKey(systemName)){
+				this.config = ConfigSystem.client.controls.keyboard.get(systemName);
 			}else{
 				this.config = new ConfigKeyboard();
 			}
@@ -631,7 +632,7 @@ public final class ControlSystem{
 		public boolean isPressed(){
 			if(linkedJoystick.isPressed()){
 				return true;
-			}else if(InterfaceInput.isJoystickPresent(linkedJoystick.config.joystickName) && ConfigSystem.configObject.clientControls.kbOverride.value){
+			}else if(InterfaceInput.isJoystickPresent(linkedJoystick.config.joystickName) && ConfigSystem.client.controlSettings.kbOverride.value){
 				return false;
 			}else{
 				if(isMomentary){
@@ -650,83 +651,83 @@ public final class ControlSystem{
 	}
 	
 	public static enum ControlsJoystick{
-		AIRCRAFT_MOD(false, false),
-		AIRCRAFT_CAMLOCK(false, true),
-		AIRCRAFT_YAW(true, false),
-		AIRCRAFT_PITCH(true, false),
-		AIRCRAFT_ROLL(true, false),
-		AIRCRAFT_THROTTLE(true, false),
-		AIRCRAFT_BRAKE(true, false),
-		AIRCRAFT_BRAKE_DIGITAL(false, false),
-		AIRCRAFT_GEAR(false, true),
-		AIRCRAFT_FLAPS_U(false, true),
-		AIRCRAFT_FLAPS_D(false, true),
-		AIRCRAFT_PANEL(false, true),
-		AIRCRAFT_PARK(false, true),
-		AIRCRAFT_RADIO(false, true),
-		AIRCRAFT_GUN_FIRE(false, false),
-		AIRCRAFT_GUN_SWITCH(false, true),
-		AIRCRAFT_ZOOM_I(false, true),
-		AIRCRAFT_ZOOM_O(false, true),
-		AIRCRAFT_CHANGEVIEW(false, true),
-		AIRCRAFT_LOOK_L(false, false),
-		AIRCRAFT_LOOK_R(false, false),
-		AIRCRAFT_LOOK_U(false, false),
-		AIRCRAFT_LOOK_D(false, false),
-		AIRCRAFT_LOOK_A(false, false),
-		AIRCRAFT_TRIM_YAW_R(false, false),
-		AIRCRAFT_TRIM_YAW_L(false, false),
-		AIRCRAFT_TRIM_PITCH_U(false, false),
-		AIRCRAFT_TRIM_PITCH_D(false, false),
-		AIRCRAFT_TRIM_ROLL_R(false, false),
-		AIRCRAFT_TRIM_ROLL_L(false, false),
-		AIRCRAFT_REVERSE(false, true),
-		AIRCRAFT_JS_INHIBIT(false, true),
+		AIRCRAFT_MOD(false, false, JSONConfigLanguage.INPUT_MOD),
+		AIRCRAFT_CAMLOCK(false, true, JSONConfigLanguage.INPUT_CAMLOCK),
+		AIRCRAFT_YAW(true, false, JSONConfigLanguage.INPUT_YAW),
+		AIRCRAFT_PITCH(true, false, JSONConfigLanguage.INPUT_PITCH),
+		AIRCRAFT_ROLL(true, false, JSONConfigLanguage.INPUT_ROLL),
+		AIRCRAFT_THROTTLE(true, false, JSONConfigLanguage.INPUT_THROTTLE),
+		AIRCRAFT_BRAKE(true, false, JSONConfigLanguage.INPUT_BRAKE),
+		AIRCRAFT_BRAKE_DIGITAL(false, false, JSONConfigLanguage.INPUT_BRAKE),
+		AIRCRAFT_GEAR(false, true, JSONConfigLanguage.INPUT_GEAR),
+		AIRCRAFT_FLAPS_U(false, true, JSONConfigLanguage.INPUT_FLAPS_U),
+		AIRCRAFT_FLAPS_D(false, true, JSONConfigLanguage.INPUT_FLAPS_D),
+		AIRCRAFT_PANEL(false, true, JSONConfigLanguage.INPUT_PANEL),
+		AIRCRAFT_PARK(false, true, JSONConfigLanguage.INPUT_PARK),
+		AIRCRAFT_RADIO(false, true, JSONConfigLanguage.INPUT_RADIO),
+		AIRCRAFT_GUN_FIRE(false, false, JSONConfigLanguage.INPUT_GUN_FIRE),
+		AIRCRAFT_GUN_SWITCH(false, true, JSONConfigLanguage.INPUT_GUN_SWITCH),
+		AIRCRAFT_ZOOM_I(false, true, JSONConfigLanguage.INPUT_ZOOM_I),
+		AIRCRAFT_ZOOM_O(false, true, JSONConfigLanguage.INPUT_ZOOM_O),
+		AIRCRAFT_CHANGEVIEW(false, true, JSONConfigLanguage.INPUT_CHANGEVIEW),
+		AIRCRAFT_LOOK_L(false, false, JSONConfigLanguage.INPUT_LOOK_L),
+		AIRCRAFT_LOOK_R(false, false, JSONConfigLanguage.INPUT_LOOK_R),
+		AIRCRAFT_LOOK_U(false, false, JSONConfigLanguage.INPUT_LOOK_U),
+		AIRCRAFT_LOOK_D(false, false, JSONConfigLanguage.INPUT_LOOK_D),
+		AIRCRAFT_LOOK_A(false, false, JSONConfigLanguage.INPUT_LOOK_A),
+		AIRCRAFT_TRIM_YAW_R(false, false, JSONConfigLanguage.INPUT_TRIM_YAW_R),
+		AIRCRAFT_TRIM_YAW_L(false, false, JSONConfigLanguage.INPUT_TRIM_YAW_L),
+		AIRCRAFT_TRIM_PITCH_U(false, false, JSONConfigLanguage.INPUT_TRIM_PITCH_U),
+		AIRCRAFT_TRIM_PITCH_D(false, false, JSONConfigLanguage.INPUT_TRIM_PITCH_D),
+		AIRCRAFT_TRIM_ROLL_R(false, false, JSONConfigLanguage.INPUT_TRIM_ROLL_R),
+		AIRCRAFT_TRIM_ROLL_L(false, false, JSONConfigLanguage.INPUT_TRIM_ROLL_L),
+		AIRCRAFT_REVERSE(false, true, JSONConfigLanguage.INPUT_REVERSE),
+		AIRCRAFT_JS_INHIBIT(false, true, JSONConfigLanguage.INPUT_JS_INHIBIT),
 		
 		
-		CAR_MOD(false, false),
-		CAR_CAMLOCK(false, true),
-		CAR_TURN(true, false),
-		CAR_GAS(true, false),
-		CAR_BRAKE(true, false),
-		CAR_BRAKE_DIGITAL(false, false),
-		CAR_PANEL(false, true),
-		CAR_SHIFT_U(false, true),
-		CAR_SHIFT_D(false, true),
-		CAR_HORN(false, false),
-		CAR_PARK(false, true),
-		CAR_RADIO(false, true),
-		CAR_GUN_FIRE(false, false),
-		CAR_GUN_SWITCH(false, true),
-		CAR_ZOOM_I(false, true),
-		CAR_ZOOM_O(false, true),
-		CAR_CHANGEVIEW(false, true),
-		CAR_LOOK_L(false, false),
-		CAR_LOOK_R(false, false),
-		CAR_LOOK_U(false, false),
-		CAR_LOOK_D(false, false),
-		CAR_LOOK_A(false, false),
-		CAR_LIGHTS(false, true),
-		CAR_TURNSIGNAL_L(false, true),
-		CAR_TURNSIGNAL_R(false, true),
-		CAR_JS_INHIBIT(false, true);
+		CAR_MOD(false, false, JSONConfigLanguage.INPUT_MOD),
+		CAR_CAMLOCK(false, true, JSONConfigLanguage.INPUT_CAMLOCK),
+		CAR_TURN(true, false, JSONConfigLanguage.INPUT_TURN),
+		CAR_GAS(true, false, JSONConfigLanguage.INPUT_GAS),
+		CAR_BRAKE(true, false, JSONConfigLanguage.INPUT_BRAKE),
+		CAR_BRAKE_DIGITAL(false, false, JSONConfigLanguage.INPUT_BRAKE),
+		CAR_PANEL(false, true, JSONConfigLanguage.INPUT_PANEL),
+		CAR_SHIFT_U(false, true, JSONConfigLanguage.INPUT_SHIFT_U),
+		CAR_SHIFT_D(false, true, JSONConfigLanguage.INPUT_SHIFT_D),
+		CAR_HORN(false, false, JSONConfigLanguage.INPUT_HORN),
+		CAR_PARK(false, true, JSONConfigLanguage.INPUT_PARK),
+		CAR_RADIO(false, true, JSONConfigLanguage.INPUT_RADIO),
+		CAR_GUN_FIRE(false, false, JSONConfigLanguage.INPUT_GUN_FIRE),
+		CAR_GUN_SWITCH(false, true, JSONConfigLanguage.INPUT_GUN_SWITCH),
+		CAR_ZOOM_I(false, true, JSONConfigLanguage.INPUT_ZOOM_I),
+		CAR_ZOOM_O(false, true, JSONConfigLanguage.INPUT_ZOOM_O),
+		CAR_CHANGEVIEW(false, true, JSONConfigLanguage.INPUT_CHANGEVIEW),
+		CAR_LOOK_L(false, false, JSONConfigLanguage.INPUT_LOOK_L),
+		CAR_LOOK_R(false, false, JSONConfigLanguage.INPUT_LOOK_R),
+		CAR_LOOK_U(false, false, JSONConfigLanguage.INPUT_LOOK_U),
+		CAR_LOOK_D(false, false, JSONConfigLanguage.INPUT_LOOK_D),
+		CAR_LOOK_A(false, false, JSONConfigLanguage.INPUT_LOOK_A),
+		CAR_LIGHTS(false, true, JSONConfigLanguage.INPUT_LIGHTS),
+		CAR_TURNSIGNAL_L(false, true, JSONConfigLanguage.INPUT_TURNSIGNAL_L),
+		CAR_TURNSIGNAL_R(false, true, JSONConfigLanguage.INPUT_TURNSIGNAL_R),
+		CAR_JS_INHIBIT(false, true, JSONConfigLanguage.INPUT_JS_INHIBIT);
 		
 		
 		public final boolean isAxis;
 		public final boolean isMomentary;
 		public final String systemName;
-		public final String translatedName;
+		public final LanguageEntry language;
 		public final ConfigJoystick config;
 		
 		private boolean wasPressedLastCall;
 		
-		private ControlsJoystick(boolean isAxis, boolean isMomentary){
+		private ControlsJoystick(boolean isAxis, boolean isMomentary, LanguageEntry language){
 			this.isAxis=isAxis;
 			this.isMomentary=isMomentary;
 			this.systemName = this.name().toLowerCase().replaceFirst("_", ".");
-			this.translatedName = InterfaceCore.translate("input." + systemName);
-			if(ConfigSystem.configObject.controls.joystick.containsKey(systemName)){
-				this.config = ConfigSystem.configObject.controls.joystick.get(systemName);
+			this.language = language;
+			if(ConfigSystem.client.controls.joystick.containsKey(systemName)){
+				this.config = ConfigSystem.client.controls.joystick.get(systemName);
 			}else{
 				this.config = new ConfigJoystick();
 			}
@@ -752,7 +753,7 @@ public final class ControlSystem{
 		
 		private double getAxisState(boolean ignoreDeadzone){
 			double pollValue = getMultistateValue();
-			if(ignoreDeadzone || Math.abs(pollValue) > ConfigSystem.configObject.clientControls.joystickDeadZone.value){
+			if(ignoreDeadzone || Math.abs(pollValue) > ConfigSystem.client.controlSettings.joystickDeadZone.value){
 				//Clamp the poll value to the defined axis bounds set during config to prevent over and under-runs.
 				pollValue = Math.max(config.axisMinTravel, pollValue);
 				pollValue = Math.min(config.axisMaxTravel, pollValue);
@@ -775,7 +776,7 @@ public final class ControlSystem{
 		public void setControl(String joystickName, int buttonIndex){
 			config.joystickName = joystickName;
 			config.buttonIndex = buttonIndex;
-			ConfigSystem.configObject.controls.joystick.put(systemName, config);
+			ConfigSystem.client.controls.joystick.put(systemName, config);
 			ConfigSystem.saveToDisk();
 		}
 		
@@ -792,19 +793,19 @@ public final class ControlSystem{
 	}
 	
 	public static enum ControlsKeyboardDynamic{
-		AIRCRAFT_PARK(ControlsKeyboard.AIRCRAFT_BRAKE, ControlsKeyboard.AIRCRAFT_MOD),
+		AIRCRAFT_PARK(ControlsKeyboard.AIRCRAFT_BRAKE, ControlsKeyboard.AIRCRAFT_MOD, JSONConfigLanguage.INPUT_PARK),
 		
-		CAR_PARK(ControlsKeyboard.CAR_BRAKE, ControlsKeyboard.CAR_MOD),
-		CAR_SLOW(ControlsKeyboard.CAR_GAS, ControlsKeyboard.CAR_MOD),
-		CAR_SHIFT_NU(ControlsKeyboard.CAR_SHIFT_U, ControlsKeyboard.CAR_MOD),
-		CAR_SHIFT_ND(ControlsKeyboard.CAR_SHIFT_D, ControlsKeyboard.CAR_MOD);
+		CAR_PARK(ControlsKeyboard.CAR_BRAKE, ControlsKeyboard.CAR_MOD, JSONConfigLanguage.INPUT_PARK),
+		CAR_SLOW(ControlsKeyboard.CAR_GAS, ControlsKeyboard.CAR_MOD, JSONConfigLanguage.INPUT_SLOW),
+		CAR_SHIFT_NU(ControlsKeyboard.CAR_SHIFT_U, ControlsKeyboard.CAR_MOD, JSONConfigLanguage.INPUT_SHIFT_N),
+		CAR_SHIFT_ND(ControlsKeyboard.CAR_SHIFT_D, ControlsKeyboard.CAR_MOD, JSONConfigLanguage.INPUT_SHIFT_N);
 		
-		public final String translatedName;
+		public final LanguageEntry language;
 		public final ControlsKeyboard mainControl;
 		public final ControlsKeyboard modControl;
 		
-		private ControlsKeyboardDynamic(ControlsKeyboard mainControl, ControlsKeyboard modControl){
-			this.translatedName = InterfaceCore.translate("input." + name().toLowerCase().replaceFirst("_", "."));
+		private ControlsKeyboardDynamic(ControlsKeyboard mainControl, ControlsKeyboard modControl, LanguageEntry language){
+			this.language = language;
 			this.mainControl = mainControl;
 			this.modControl = modControl;
 		}

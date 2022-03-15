@@ -1,7 +1,6 @@
 package minecrafttransportsimulator.systems;
 
 import java.io.File;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Enumeration;
@@ -30,7 +29,7 @@ import minecrafttransportsimulator.items.instances.ItemVehicle;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 import minecrafttransportsimulator.jsondefs.JSONBullet;
-import minecrafttransportsimulator.jsondefs.JSONConfig;
+import minecrafttransportsimulator.jsondefs.JSONConfigSettings;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONInstrument;
 import minecrafttransportsimulator.jsondefs.JSONItem;
@@ -134,24 +133,30 @@ public final class PackParserSystem{
     	parseAllSkins();
     	
     	//Check to make sure we have all our fuels.  We may have loaded a new engine type this launch.
-    	if(ConfigSystem.configObject.fuel.fuels == null){
-    		ConfigSystem.configObject.fuel.fuels = new HashMap<String, Map<String, Double>>();
+    	if(ConfigSystem.settings.fuel.fuels == null){
+    		ConfigSystem.settings.fuel.fuels = new HashMap<String, Map<String, Double>>();
     	}
-		for(Entry<String, Map<String, Double>> fuelValues : JSONConfig.ConfigFuel.getDefaultFuels().entrySet()){
-			if(!ConfigSystem.configObject.fuel.fuels.containsKey(fuelValues.getKey())){
-				ConfigSystem.configObject.fuel.fuels.put(fuelValues.getKey(), fuelValues.getValue());
-				ConfigSystem.saveToDisk();
+		for(Entry<String, Map<String, Double>> fuelValues : JSONConfigSettings.ConfigFuel.getDefaultFuels().entrySet()){
+			if(!ConfigSystem.settings.fuel.fuels.containsKey(fuelValues.getKey())){
+				ConfigSystem.settings.fuel.fuels.put(fuelValues.getKey(), fuelValues.getValue());
 			}
 		}
+		
+		//Check to make sure we populated the current language file.  If we are missing entries for packs, add them.
+		if(ConfigSystem.language != null){
+			ConfigSystem.language.populateEntries();
+		}
+		
 		//Also check for new packs for pack-specific speed factors.
 		for(String packID : packMap.keySet()){
-			if(!ConfigSystem.configObject.general.packSpeedFactors.value.containsKey(packID)){
-				ConfigSystem.configObject.general.packSpeedFactors.value.put(packID, 1.0);
-				ConfigSystem.saveToDisk();
+			if(!ConfigSystem.settings.general.packSpeedFactors.value.containsKey(packID)){
+				ConfigSystem.settings.general.packSpeedFactors.value.put(packID, 1.0);
 			}
 		}
-    	
-    	//Have the config system dump the crafting, if so required.
+		
+		//Flag a save operation, as we probably changed a few things.
+    	//Also handle crafting overrides, now that we have all packs.
+		ConfigSystem.saveToDisk();
     	ConfigSystem.initCraftingOverrides();
     }
     
@@ -203,8 +208,7 @@ public final class PackParserSystem{
 			for(Entry<String, ItemClassification> defaultItem : defaultItems.entrySet()){
 				String systemName = defaultItem.getKey();
 				ItemClassification classification = defaultItem.getValue();
-				InputStreamReader reader = new InputStreamReader(MasterLoader.class.getResourceAsStream(prefixFolders + classification.toDirectory() + systemName + ".json"), "UTF-8");
-				AJSONItem itemDef = JSONParser.parseStream(reader, classification.representingClass, packDef.packID, systemName);
+				AJSONItem itemDef = JSONParser.parseStream(MasterLoader.class.getResourceAsStream(prefixFolders + classification.toDirectory() + systemName + ".json"), classification.representingClass, packDef.packID, systemName);
 				itemDef.packID = packDef.packID;
 				itemDef.systemName = systemName;
 				itemDef.classification = classification;
@@ -242,7 +246,7 @@ public final class PackParserSystem{
 				ZipEntry entry = entries.nextElement();
 				if(entry.getName().endsWith("packdefinition.json")){
 					//New style, use def as-is.
-					JSONPack packDef = JSONParser.parseStream(new InputStreamReader(jarFile.getInputStream(entry), "UTF-8"), JSONPack.class, null, null);
+					JSONPack packDef = JSONParser.parseStream(jarFile.getInputStream(entry), JSONPack.class, null, null);
 					packJarMap.put(packDef.packID, packJar);
 					packMap.put(packDef.packID, packDef);
 					foundJSON = true;
@@ -384,7 +388,7 @@ public final class PackParserSystem{
 								String systemName = fileName.substring(0, fileName.length() - ".json".length());
 								AJSONItem definition;
 								try{
-									definition = JSONParser.parseStream(new InputStreamReader(jarFile.getInputStream(entry), "UTF-8"), classification.representingClass, packDef.packID, systemName);
+									definition = JSONParser.parseStream(jarFile.getInputStream(entry), classification.representingClass, packDef.packID, systemName);
 								}catch(Exception e){
 									InterfaceCore.logError("Could not parse: " + packDef.packID + ":" + fileName);
 						    		InterfaceCore.logError(e.getMessage());

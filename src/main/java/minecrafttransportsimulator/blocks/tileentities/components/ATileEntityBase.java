@@ -71,7 +71,7 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONMultiModelProv
 	
 	@Override
 	public boolean shouldRenderBeams(){
-    	return ConfigSystem.configObject.clientRendering.blockBeams.value;
+    	return ConfigSystem.client.renderingSettings.blockBeams.value;
     }
 	
 	@Override

@@ -2,6 +2,7 @@ package minecrafttransportsimulator.guis.instances;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -88,11 +89,8 @@ public class GUIPackExporter extends AGUIBase{
 							File jsonFile = new File(packDir, packItem.definition.classification.toDirectory() + packItem.definition.prefixFolders);
 							jsonFile.mkdirs();
 							jsonFile = new File(jsonFile, packItem.definition.systemName + ".json");
-							FileWriter writer = new FileWriter(jsonFile);
-							JSONParser.exportStream(packItem.definition, writer);
+							JSONParser.exportStream(packItem.definition, new FileOutputStream(jsonFile));
 							lastTimeModified = jsonFile.lastModified();
-							writer.flush();
-							writer.close();
 						}catch (IOException e){
 							e.printStackTrace();
 							debug.setText("ERROR: Could not save pack definition to disk.  Error is:\n" + e.getMessage());
