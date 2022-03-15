@@ -220,13 +220,12 @@ public class InterfaceEventsEntityRendering{
     	if(ridingEntity != null){
     		GL11.glPushMatrix();
         	//Get orientation and scale for entity.
-        	entityScale.set(1, 1, 1);
         	if(ridingEntity instanceof AEntityF_Multipart){
         		PartSeat seat = ((AEntityF_Multipart<?>) ridingEntity).getSeatForRider(entityWrapper);
         		seat.getInterpolatedOrientation(riderBodyOrientation, event.getPartialRenderTick());
         		seat.getRiderInterpolatedOrientation(riderHeadOrientation, event.getPartialRenderTick());
         		
-        		//Get seat scale, if we have it.
+        		entityScale.set(seat.scale);
         		if(seat.definition.seat.playerScale != null){
         			entityScale.multiply(seat.definition.seat.playerScale);
         		}
@@ -248,6 +247,7 @@ public class InterfaceEventsEntityRendering{
         		ridingEntity.getInterpolatedOrientation(riderBodyOrientation, event.getPartialRenderTick());
         		riderHeadOrientation.set(entityWrapper.getOrientation());
         		renderCurrentRiderSitting = true;
+        		entityScale.set(1, 1, 1);
         	}
         	
         	//Before we do further matrix transforms, get the head yaw for the entity.
@@ -268,11 +268,11 @@ public class InterfaceEventsEntityRendering{
     		riderTotalTransformation.resetTransforms();
     		riderTotalTransformation.setRotation(riderBodyOrientation);
     		
-    		//Adjust for seated offset.
-    		riderTotalTransformation.applyTranslation(0, entityWrapper.getSeatOffset(), 0);
-        	
         	//Apply scale.
         	riderTotalTransformation.applyScaling(entityScale);
+    		
+    		//Adjust for seated offset.
+    		riderTotalTransformation.applyTranslation(0, entityWrapper.getSeatOffset(), 0);
         	
         	//Push matrix and apply transform.
         	//If we aren't the rider, translate the rider to us so it rotates on the proper coordinate system.

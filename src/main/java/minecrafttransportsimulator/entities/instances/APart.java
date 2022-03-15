@@ -67,9 +67,6 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 		
 	public APart(AEntityF_Multipart<?> entityOn, WrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, WrapperNBT data, APart parentPart){
 		super(entityOn.world, placingPlayer, data);
-		boundingBox.widthRadius = getWidth()/2D;
-		boundingBox.heightRadius = getHeight()/2D;
-		boundingBox.depthRadius = getWidth()/2D;
 		this.entityOn = entityOn;
 		this.vehicleOn = entityOn instanceof EntityVehicleF_Physics ? (EntityVehicleF_Physics) entityOn : null;
 		this.placementDefinition = placementDefinition;
@@ -195,9 +192,9 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 		orientation.multiply(localOrientation);
 		
 		//Update bounding box, as scale changes width/height.
-		boundingBox.widthRadius = getWidth()/2D;
-		boundingBox.heightRadius = getHeight()/2D;
-		boundingBox.depthRadius = getWidth()/2D;
+		boundingBox.widthRadius = getWidth()/2D*scale.x;
+		boundingBox.heightRadius = getHeight()/2D*scale.y;
+		boundingBox.depthRadius = getWidth()/2D*scale.z;
 		
 		//Add-back parent offset to our locals if we have one.
 		//We don't use this value in any of our interim calculations as we do everything relative to the parent.

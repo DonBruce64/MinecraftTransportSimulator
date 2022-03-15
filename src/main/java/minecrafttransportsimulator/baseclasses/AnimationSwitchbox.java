@@ -67,8 +67,8 @@ public class AnimationSwitchbox{
 			}else{
 				translation.set(0, 0, 0);
 				rotation.setToZero();
-				scale.set(entity.scale);
-				netMatrix.resetTransforms().applyScaling(scale);
+				scale.set(1, 1, 1);
+				netMatrix.resetTransforms();
 			}
 			
 			inhibitAnimations = false;

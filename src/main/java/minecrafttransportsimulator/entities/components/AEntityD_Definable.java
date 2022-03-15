@@ -148,7 +148,15 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 			initializeDefinition();
 			animationsInitialized = true;
 		}
-		
+		world.endProfiling();
+	}
+	
+	/**
+	 * Called to perform supplemental update logic on this entity.  This should be called after all movement on the
+	 * entity has been performed, and is used to do updates that require the new positional logic to be ready.
+	 * Calling this before the entity finishes moving will lead to things "lagging" behind the entity.
+	 */
+	public void updatePostMovement(){
 		//Update value-based text.  Only do this on clients as servers won't render this text.
 		if(world.isClient() && !text.isEmpty()){
 			for(Entry<JSONText, String> textEntry : text.entrySet()){
@@ -158,7 +166,6 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 				}
 			}
 		}
-		world.endProfiling();
 	}
 	
 	/**

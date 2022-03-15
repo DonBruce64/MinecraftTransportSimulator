@@ -51,7 +51,7 @@ public class EntityParticle extends AEntityC_Renderable{
 			helperTransform.multiply(switchbox.netMatrix);
 		}
 		if(definition.pos != null){
-			helperOffset.set(definition.pos);
+			helperOffset.set(definition.pos).multiply(entitySpawning.scale);
 		}else{
 			helperOffset.set(0, 0, 0);
 		}

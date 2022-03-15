@@ -151,6 +151,11 @@ public class BoundingBox{
 			globalCenter.y = ((int) (globalCenter.y/HITBOX_CLAMP))*HITBOX_CLAMP;
 			globalCenter.z = ((int) (globalCenter.z/HITBOX_CLAMP))*HITBOX_CLAMP;
 		}
+		if(definition != null){
+			widthRadius = entity.scale.x*definition.width/2D;
+			heightRadius = entity.scale.y*definition.height/2D;
+			depthRadius = entity.scale.z*definition.width/2D;
+		}
 	}
 	
 	/**

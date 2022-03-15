@@ -189,9 +189,9 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 							//Part matches.  Add the box.  Set the box bounds to the generic box, or the
 							//special bounds of the generic part if we're holding one.
 							BoundingBox box = partSlotBoxEntry.getKey();
-							box.widthRadius = heldPart.definition.generic.width != 0 ? heldPart.definition.generic.width/2D : PART_SLOT_HITBOX_WIDTH/2D;
-							box.heightRadius = heldPart.definition.generic.height != 0 ? heldPart.definition.generic.height/2D : PART_SLOT_HITBOX_HEIGHT/2D;
-							box.depthRadius = heldPart.definition.generic.width != 0 ? heldPart.definition.generic.width/2D : PART_SLOT_HITBOX_WIDTH/2D;
+							box.widthRadius = (heldPart.definition.generic.width != 0 ? heldPart.definition.generic.width/2D : PART_SLOT_HITBOX_WIDTH/2D)*scale.x;
+							box.heightRadius = (heldPart.definition.generic.height != 0 ? heldPart.definition.generic.height/2D : PART_SLOT_HITBOX_HEIGHT/2D)*scale.y;
+							box.depthRadius = (heldPart.definition.generic.width != 0 ? heldPart.definition.generic.width/2D : PART_SLOT_HITBOX_WIDTH/2D)*scale.z;
 							activePartSlotBoxes.put(partSlotBoxEntry.getKey(), partSlotBoxEntry.getValue());
 						}
 					}
@@ -895,6 +895,15 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 	    		encompassingBox.depthRadius = (float) Math.max(encompassingBox.depthRadius, Math.abs(part.encompassingBox.globalCenter.z - position.z + part.encompassingBox.depthRadius));
 			}
     	}
+		//Also check active part slots, but only on the client.
+		//Servers will just get packets to the box, but clients need to raytrace the slots.
+		if(world.isClient()){
+			for(BoundingBox box : activePartSlotBoxes.keySet()){
+	    		encompassingBox.widthRadius = (float) Math.max(encompassingBox.widthRadius, Math.abs(box.globalCenter.x - position.x + box.widthRadius));
+	    		encompassingBox.heightRadius = (float) Math.max(encompassingBox.heightRadius, Math.abs(box.globalCenter.y - position.y + box.heightRadius));
+	    		encompassingBox.depthRadius = (float) Math.max(encompassingBox.depthRadius, Math.abs(box.globalCenter.z - position.z + box.depthRadius));
+	    	}
+		}
 		encompassingBox.updateToEntity(this, null);
 	}
 	
