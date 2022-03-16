@@ -62,7 +62,7 @@ public final class ConfigSystem{
 			clientFile = new File(configDirectory, "mtsconfigclient.json");
 			if(clientFile.exists()){
 				try{
-					client = JSONParser.parseStream(new FileInputStream(settingsFile), JSONConfigClient.class, null, null);
+					client = JSONParser.parseStream(new FileInputStream(clientFile), JSONConfigClient.class, null, null);
 				}catch(Exception e){
 					InterfaceCore.logError("ConfigSystem failed to parse client file JSON.  Reverting to defauts.");
 					InterfaceCore.logError(e.getMessage());
