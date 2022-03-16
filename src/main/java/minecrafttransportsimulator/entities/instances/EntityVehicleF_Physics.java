@@ -168,6 +168,12 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 				flapCurrentAngle = flapDesiredAngle;
 			}
 		}
+		
+		//Adjust scale.
+		if(ConfigSystem.settings.general.vehicleScale.value != 1.0){
+			scale.set(ConfigSystem.settings.general.vehicleScale.value, ConfigSystem.settings.general.vehicleScale.value, ConfigSystem.settings.general.vehicleScale.value);
+		}
+		
 		world.endProfiling();
 	}
 	
@@ -686,10 +692,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 			case("speed"): return axialVelocity*speedFactor*20;
 			case("speed_scaled"): return axialVelocity*20;
 			case("speed_factor"): return speedFactor;
-			case("acceleration"): {
-				if(world.isClient())System.out.println(motion.length() - prevMotion.length());
-				return motion.length() - prevMotion.length();
-			}
+			case("acceleration"): return motion.length() - prevMotion.length();
 
 			//Vehicle state cases.
 			case("fuel"): return fuelTank.getFluidLevel()/fuelTank.getMaxLevel();
