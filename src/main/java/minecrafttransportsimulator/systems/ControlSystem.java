@@ -36,7 +36,9 @@ public final class ControlSystem{
 	private static boolean joysticksInhibited = false;
 	private static WrapperPlayer clientPlayer;
 	private static boolean clickingLeft = false;
+	private static byte ticksLeftHeld = 0;
 	private static boolean clickingRight = false;
+	private static byte ticksRightHeld = 0;
 	private static BoundingBox closestBox = null;
 	private static EntityVehicleF_Physics closestVehicle = null;
 	
@@ -66,6 +68,10 @@ public final class ControlSystem{
 
 	public static void controlGlobal(WrapperPlayer player){
 		if(InterfaceInput.isLeftMouseButtonDown()){
+			if(ticksLeftHeld++ == 5){
+				ticksLeftHeld = 0;
+				clickingLeft = false;
+			}
 			if(!clickingLeft){
 				clickingLeft = true;
 				handleClick(player);
@@ -75,6 +81,10 @@ public final class ControlSystem{
 			handleClick(player);
 		}
 		if(InterfaceInput.isRightMouseButtonDown()){
+			if(ticksRightHeld++ == 5){
+				ticksRightHeld = 0;
+				clickingRight = false;
+			}
 			if(!clickingRight){
 				clickingRight = true;
 				handleClick(player);
