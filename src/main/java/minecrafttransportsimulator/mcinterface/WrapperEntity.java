@@ -527,7 +527,7 @@ public class WrapperEntity{
     public static void on(WorldEvent.Unload event){
     	Iterator<Entity> iterator = entityWrappers.keySet().iterator();
     	while(iterator.hasNext()){
-    		if(iterator.next().world.equals(event.getWorld())){
+    		if(event.getWorld().equals(iterator.next())){
     			iterator.remove();
     		}
     	}
