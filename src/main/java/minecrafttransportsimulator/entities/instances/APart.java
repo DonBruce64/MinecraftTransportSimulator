@@ -10,6 +10,7 @@ import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
+import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
@@ -101,18 +102,19 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 	@Override
 	protected void initializeDefinition(){
 		super.initializeDefinition();
+		AEntityD_Definable<?> entityPlacedOn = parentPart != null && placementDefinition.isSubPart ? parentPart : entityOn;
 		if(placementDefinition.animations != null || placementDefinition.applyAfter != null){
 			List<JSONAnimationDefinition> animations = new ArrayList<JSONAnimationDefinition>();
 			if(placementDefinition.animations != null){
 				animations.addAll(placementDefinition.animations);
 			}
-			placementMovementSwitchbox = new AnimationSwitchbox(entityOn, animations, placementDefinition.applyAfter);
+			placementMovementSwitchbox = new AnimationSwitchbox(entityPlacedOn, animations, placementDefinition.applyAfter);
 		}
 		if(definition.generic.movementAnimations != null){
 			internalMovementSwitchbox = new AnimationSwitchbox(this, definition.generic.movementAnimations, null);
 		}
 		if(placementDefinition.activeAnimations != null){
-			placementActiveSwitchbox = new AnimationSwitchbox(entityOn, placementDefinition.activeAnimations, null);
+			placementActiveSwitchbox = new AnimationSwitchbox(entityPlacedOn, placementDefinition.activeAnimations, null);
 		}
 		if(definition.generic.activeAnimations != null){
 			internalActiveSwitchbox = new AnimationSwitchbox(this, definition.generic.activeAnimations, null);

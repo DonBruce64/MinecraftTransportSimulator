@@ -30,12 +30,12 @@ import minecrafttransportsimulator.packloading.JSONParser;
  */
 public final class ConfigSystem{
 	private static File settingsFile;
-	private static File clientFile;
 	private static File languageFile;
+	private static File clientFile;
 	private static File craftingFile;
 	public static JSONConfigSettings settings;
-	public static JSONConfigClient client;
 	public static JSONConfigLanguage language;
+	public static JSONConfigClient client;
 	
 	/**Called to load this class from the files in the passed-in folder.
 	 * If a require file is not present, one will be created at the end of the loading phase.
@@ -57,7 +57,21 @@ public final class ConfigSystem{
 			settings = new JSONConfigSettings();
 		}
 		
-		//Do the same for the client and language file, but only on clients.
+		//Do the same for the client and language file, normally only displayed on clients, but names may be used on servers for debug messages.
+		languageFile = new File(configDirectory, "mtslanguage_" + (onClient ? InterfaceClient.getLanguageName() : "en_us") + ".json");
+		if(languageFile.exists()){
+			try{
+				language = JSONParser.parseStream(new FileInputStream(languageFile), JSONConfigLanguage.class, null, null);
+			}catch(Exception e){
+				InterfaceCore.logError("ConfigSystem failed to parse language file JSON.  Reverting to defauts.");
+				InterfaceCore.logError(e.getMessage());
+			}
+		}
+		if(language == null){
+			language = new JSONConfigLanguage();
+		}
+		
+		//Now parse the client config file for clients only.
 		if(onClient){
 			clientFile = new File(configDirectory, "mtsconfigclient.json");
 			if(clientFile.exists()){
@@ -70,19 +84,6 @@ public final class ConfigSystem{
 			}
 			if(client == null){
 				client = new JSONConfigClient();
-			}
-			
-			languageFile = new File(configDirectory, "mtslanguage_" + InterfaceClient.getLanguageName() + ".json");
-			if(languageFile.exists()){
-				try{
-					language = JSONParser.parseStream(new FileInputStream(languageFile), JSONConfigLanguage.class, null, null);
-				}catch(Exception e){
-					InterfaceCore.logError("ConfigSystem failed to parse language file JSON.  Reverting to defauts.");
-					InterfaceCore.logError(e.getMessage());
-				}
-			}
-			if(language == null){
-				language = new JSONConfigLanguage();
 			}
 		}
 		
@@ -154,8 +155,8 @@ public final class ConfigSystem{
 	public static void saveToDisk(){
 		try{
 			JSONParser.exportStream(settings, new FileOutputStream(settingsFile));
-			JSONParser.exportStream(client, new FileOutputStream(clientFile));
 			JSONParser.exportStream(language, new FileOutputStream(languageFile));
+			JSONParser.exportStream(client, new FileOutputStream(clientFile));
 		}catch(Exception e){
 			InterfaceCore.logError("ConfigSystem failed to save modified config files.  Report to the mod author!");
 		}
