@@ -60,7 +60,12 @@ public class InterfaceCore{
 	 *  Returns a new stack for the item properties.  Or an empty stack if the name is invalid.
 	 */
 	public static WrapperItemStack getStackForProperties(String name, int meta, int qty){
-		return new WrapperItemStack(new ItemStack(Item.getByNameOrId(name), qty, meta));
+		Item item = Item.getByNameOrId(name);
+		if(item != null){
+			return new WrapperItemStack(new ItemStack(Item.getByNameOrId(name), qty, meta));
+		}else{
+			return new WrapperItemStack(ItemStack.EMPTY.copy());
+		}
 	}
 	
 	/**

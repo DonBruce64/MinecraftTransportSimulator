@@ -41,7 +41,10 @@ public class PackMaterialComponent{
 			itemText = itemText.substring(0, itemText.lastIndexOf(':'));
 			meta = Integer.valueOf(itemText.substring(itemText.lastIndexOf(':') + 1));
 			itemText = itemText.substring(0, itemText.lastIndexOf(':'));
-			possibleItems.add(InterfaceCore.getStackForProperties(itemText, meta, qty));
+			WrapperItemStack stack = InterfaceCore.getStackForProperties(itemText, meta, qty);
+			if(!stack.isEmpty()){
+				possibleItems.add(stack);
+			}
 		}
 	}
 	
