@@ -28,6 +28,7 @@ public class EntityParticle extends AEntityC_Renderable{
 	private static final Point3D helperOffset = new Point3D();
 	
 	//Constant properties.
+	private final AEntityD_Definable<?> entitySpawning;
 	private final JSONParticle definition;
 	private final int maxAge;
 	private final WrapperPlayer clientPlayer = InterfaceClient.getClientPlayer();
@@ -66,6 +67,7 @@ public class EntityParticle extends AEntityC_Renderable{
 			motion.z += adjustedVelocity.z/10D + 0.02 - Math.random()*0.04;
 		}
 		
+		this.entitySpawning = entitySpawning;
 		this.definition = definition;
 		boundingBox.widthRadius = getSize()/2D;
 		boundingBox.heightRadius = boundingBox.widthRadius;
@@ -257,7 +259,7 @@ public class EntityParticle extends AEntityC_Renderable{
 		renderable.alpha = getAlpha(partialTicks);
 		renderable.transform.set(transform);
 		double totalScale = getSize()*getScale(partialTicks);
-		renderable.transform.applyScaling(totalScale, totalScale, totalScale);
+		renderable.transform.applyScaling(totalScale*entitySpawning.scale.x, totalScale*entitySpawning.scale.y, totalScale*entitySpawning.scale.z);
 		
 		switch(definition.type){
 			case SMOKE: setParticleTextureBounds(7 - age*8/maxAge, 0); break;//Smoke gets smaller as it ages.

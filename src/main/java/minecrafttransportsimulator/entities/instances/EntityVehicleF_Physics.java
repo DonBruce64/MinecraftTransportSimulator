@@ -170,12 +170,6 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 				flapCurrentAngle = flapDesiredAngle;
 			}
 		}
-		
-		//Adjust scale.
-		if(ConfigSystem.settings.general.vehicleScale.value != 1.0){
-			scale.set(ConfigSystem.settings.general.vehicleScale.value, ConfigSystem.settings.general.vehicleScale.value, ConfigSystem.settings.general.vehicleScale.value);
-		}
-		
 		world.endProfiling();
 	}
 	

@@ -50,7 +50,7 @@ public class InterfaceCore{
 	 *  Returns a new NBT wrapper instance with no data.
 	 */
 	public static WrapperNBT getNewNBTWrapper(){
-		return InterfaceCore.getNewNBTWrapper();
+		return new WrapperNBT();
 	}
 	
 	/**

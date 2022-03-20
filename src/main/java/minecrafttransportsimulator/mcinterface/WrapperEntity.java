@@ -347,7 +347,6 @@ public class WrapperEntity{
 	 *  for rotations.  This is OpenGL convention, and MC doesn't
 	 *  follow it, which is why rendering is such a PITA with yaw.
 	 */
-	//TODO make this go away or change when we only use orientation (if ever).
 	public void setYaw(double yaw){
 		entity.rotationYaw = (float)-yaw;
 	}

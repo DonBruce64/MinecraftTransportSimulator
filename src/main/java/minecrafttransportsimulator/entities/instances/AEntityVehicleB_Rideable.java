@@ -37,6 +37,8 @@ abstract class AEntityVehicleB_Rideable extends AEntityG_Towable<JSONVehicle>{
 	public AEntityVehicleB_Rideable(WrapperWorld world, WrapperPlayer placingPlayer, WrapperNBT data){
 		super(world, placingPlayer, data);
 		this.speedFactor = (definition.motorized.isAircraft ? ConfigSystem.settings.general.aircraftSpeedFactor.value : ConfigSystem.settings.general.carSpeedFactor.value)*ConfigSystem.settings.general.packSpeedFactors.value.get(definition.packID);
+		double vehicleScale = ConfigSystem.settings.general.packVehicleScales.value.get(definition.packID);
+		scale.set(vehicleScale, vehicleScale, vehicleScale);
 	}
 	
 	@Override

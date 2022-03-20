@@ -147,10 +147,13 @@ public final class PackParserSystem{
 			ConfigSystem.language.populateEntries();
 		}
 		
-		//Also check for new packs for pack-specific speed factors.
+		//Also check for new packs for pack-specific speed factors and scales.
 		for(String packID : packMap.keySet()){
 			if(!ConfigSystem.settings.general.packSpeedFactors.value.containsKey(packID)){
 				ConfigSystem.settings.general.packSpeedFactors.value.put(packID, 1.0);
+			}
+			if(!ConfigSystem.settings.general.packVehicleScales.value.containsKey(packID)){
+				ConfigSystem.settings.general.packVehicleScales.value.put(packID, 1.0);
 			}
 		}
 		
