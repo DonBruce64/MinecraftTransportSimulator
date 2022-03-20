@@ -6,6 +6,7 @@ import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
+import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
@@ -34,7 +35,7 @@ public class PacketPartChange extends APacketEntity<AEntityF_Multipart<?>>{
 		super(entity);
 		this.partOffset = partAdded.placementOffset;
 		this.partItem = partAdded.getItem();
-		this.partData = new WrapperNBT();
+		this.partData = InterfaceCore.getNewNBTWrapper();
 		partAdded.save(partData);
 		this.parentPartOffset = partAdded.parentPart != null ? partAdded.parentPart.placementOffset : null;
 	}

@@ -5,6 +5,7 @@ import java.util.UUID;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
 import minecrafttransportsimulator.guis.instances.GUIInventoryContainer;
+import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
@@ -29,7 +30,7 @@ public class PacketItemInteractable extends APacketPlayer{
 	public PacketItemInteractable(WrapperPlayer player, EntityInventoryContainer inventory, String texture){
 		super(player);
 		this.uniqueUUID = inventory.uniqueUUID;
-		this.data = inventory.save(new WrapperNBT());
+		this.data = inventory.save(InterfaceCore.getNewNBTWrapper());
 		this.units = inventory.getSize();
 		this.texture = texture;
 	}

@@ -24,6 +24,7 @@ import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONItem;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
+import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperItemStack;
@@ -86,14 +87,14 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 								vehicle.removePart(part, null);
 								AItemPart droppedItem = part.getItem();
 								if(droppedItem != null){
-									vehicle.world.spawnItem(droppedItem, part.save(new WrapperNBT()), part.position);
+									vehicle.world.spawnItem(droppedItem, part.save(InterfaceCore.getNewNBTWrapper()), part.position);
 								}
 							}else if(player.isSneaking()){
 								//Attacker is a sneaking player with a wrench.
 								//Remove this vehicle if possible.
 								if((!ConfigSystem.settings.general.opPickupVehiclesOnly.value || ownerState.equals(PlayerOwnerState.ADMIN)) && (!ConfigSystem.settings.general.creativePickupVehiclesOnly.value || player.isCreative()) && vehicle.isValid){
 									vehicle.disconnectAllConnections();
-									vehicle.world.spawnItem(vehicle.getItem(), vehicle.save(new WrapperNBT()), vehicle.position);
+									vehicle.world.spawnItem(vehicle.getItem(), vehicle.save(InterfaceCore.getNewNBTWrapper()), vehicle.position);
 									vehicle.remove();
 								}
 							}

@@ -3,6 +3,7 @@ package minecrafttransportsimulator.blocks.tileentities.instances;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
+import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
@@ -61,7 +62,7 @@ public class TileEntityChest extends TileEntityDecor{
 	public WrapperNBT save(WrapperNBT data){
 		super.save(data);
 		if(inventory != null){
-			data.setData("inventory", inventory.save(new WrapperNBT()));
+			data.setData("inventory", inventory.save(InterfaceCore.getNewNBTWrapper()));
 		}
 		return data;
 	}

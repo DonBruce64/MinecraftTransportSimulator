@@ -258,21 +258,21 @@ public class RoadLane{
 	}
 	
 	public WrapperNBT getData(){
-		WrapperNBT data = new WrapperNBT();
+		WrapperNBT data = InterfaceCore.getNewNBTWrapper();
 		data.setInteger("sectorNumber", sectorNumber);
 		data.setInteger("laneNumber", laneNumber);
 		for(int i=0; i<curves.size(); ++i){
 			List<RoadLaneConnection> priorCurveConnections = priorConnections.get(i);
 			List<RoadLaneConnection> nextCurveConnections = nextConnections.get(i);
 			for(int j=0; j<priorCurveConnections.size(); ++j){
-				WrapperNBT connectionData = new WrapperNBT();
+				WrapperNBT connectionData = InterfaceCore.getNewNBTWrapper();
 				priorCurveConnections.get(j).save(connectionData);
 				data.setData("priorConnection" + i + "_" + j, connectionData);
 			}
 			data.setInteger("numberPriorConnections" + i, priorCurveConnections.size());
 			
 			for(int j=0; j<nextCurveConnections.size(); ++j){
-				WrapperNBT connectionData = new WrapperNBT();
+				WrapperNBT connectionData = InterfaceCore.getNewNBTWrapper();
 				nextCurveConnections.get(j).save(connectionData);
 				data.setData("nextConnection" + i + "_" + j, connectionData);
 			}

@@ -15,6 +15,7 @@ import minecrafttransportsimulator.items.instances.ItemPoleComponent;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent.PoleComponentType;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
+import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.mcinterface.WrapperItemStack;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -102,7 +103,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 				//Need to check if it will fit in the player's inventory.
 				if(components.containsKey(axis)){
 					ATileEntityPole_Component component = components.get(axis);
-					if(player.isCreative() || player.getInventory().addStack(component.getItem().getNewStack(component.save(new WrapperNBT())))){
+					if(player.isCreative() || player.getInventory().addStack(component.getItem().getNewStack(component.save(InterfaceCore.getNewNBTWrapper())))){
 						changeComponent(axis, null);
 						InterfacePacket.sendToAllClients(new PacketTileEntityPoleChange(this, player, axis, null));
 					}
@@ -122,7 +123,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 				if(!player.isCreative()){
 					player.getInventory().removeStack(player.getHeldStack(), 1);
 				}
-				InterfacePacket.sendToAllClients(new PacketTileEntityPoleChange(this, player, axis, newComponent.save(new WrapperNBT())));
+				InterfacePacket.sendToAllClients(new PacketTileEntityPoleChange(this, player, axis, newComponent.save(InterfaceCore.getNewNBTWrapper())));
 				return true;
 			}
 		}
@@ -144,7 +145,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 		for(Axis axis : Axis.values()){
 			ATileEntityPole_Component component = components.get(axis);
 			if(component != null){
-				drops.add(component.getItem().getNewStack(component.save(new WrapperNBT())));
+				drops.add(component.getItem().getNewStack(component.save(InterfaceCore.getNewNBTWrapper())));
 			}
 		}
 	}
@@ -280,7 +281,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 		super.save(data);
 		//Save all components.
 		for(Entry<Axis, ATileEntityPole_Component> connectedObjectEntry : components.entrySet()){
-			data.setData(connectedObjectEntry.getKey().name(), connectedObjectEntry.getValue().save(new WrapperNBT()));
+			data.setData(connectedObjectEntry.getKey().name(), connectedObjectEntry.getValue().save(InterfaceCore.getNewNBTWrapper()));
 		}
 		return data;
 	}

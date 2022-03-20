@@ -170,7 +170,7 @@ public class BuilderBlock extends Block{
     			if(tile != null){
     				AItemPack<?> item = tile.getItem();
     				if(item != null){
-    					return item.getNewStack(((BuilderTileEntity<?>) mcTile).tileEntity.save(new WrapperNBT())).stack;
+    					return item.getNewStack(((BuilderTileEntity<?>) mcTile).tileEntity.save(InterfaceCore.getNewNBTWrapper())).stack;
     				}
     			}
     		}

@@ -96,7 +96,7 @@ public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extend
 	    		//Send any packets to clients that requested them.
 	    		if(!playersRequestingData.isEmpty()){
 		    		for(WrapperPlayer player : playersRequestingData){
-		    			WrapperNBT data = new WrapperNBT();
+		    			WrapperNBT data = InterfaceCore.getNewNBTWrapper();
 		    			writeToNBT(data.tag);
 		    			player.sendPacket(new PacketEntityCSHandshakeServer(this, data));
 		    		}

@@ -7,6 +7,7 @@ import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityInv
 import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
 import minecrafttransportsimulator.entities.instances.PartInteractable;
 import minecrafttransportsimulator.jsondefs.JSONDecor.DecorComponentType;
+import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperItemStack;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
@@ -140,7 +141,7 @@ public class TileEntityItemLoader extends ATileEntityLoader implements ITileEnti
 	@Override
 	public WrapperNBT save(WrapperNBT data){
 		super.save(data);
-		data.setData("inventory", inventory.save(new WrapperNBT()));
+		data.setData("inventory", inventory.save(InterfaceCore.getNewNBTWrapper()));
 		return data;
 	}
 }

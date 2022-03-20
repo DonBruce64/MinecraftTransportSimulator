@@ -10,6 +10,7 @@ import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
+import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
@@ -116,7 +117,7 @@ public class TileEntitySignalController extends TileEntityDecor{
 	 */
 	public void initializeController(WrapperNBT data){
 		if(data == null){
-			data = save(new WrapperNBT());
+			data = save(InterfaceCore.getNewNBTWrapper());
 		}
 		
 		//Load state data.
@@ -239,7 +240,7 @@ public class TileEntitySignalController extends TileEntityDecor{
 		}
 		
 		public WrapperNBT getData(){
-			WrapperNBT data = new WrapperNBT();
+			WrapperNBT data = InterfaceCore.getNewNBTWrapper();
 			data.setInteger("centerLaneCount", centerLaneCount);
 			data.setInteger("leftLaneCount", leftLaneCount);
 			data.setInteger("rightLaneCount", rightLaneCount);
@@ -398,7 +399,7 @@ public class TileEntitySignalController extends TileEntityDecor{
 		protected abstract boolean isSignalBlocking(SignalGroup otherSignal);
 		
 		protected WrapperNBT getData(){
-			WrapperNBT data = new WrapperNBT();
+			WrapperNBT data = InterfaceCore.getNewNBTWrapper();
 			data.setString("currentLight", currentLight.name());
 			if(requestedLight != null){
 				data.setString("requestedLight", requestedLight.name());

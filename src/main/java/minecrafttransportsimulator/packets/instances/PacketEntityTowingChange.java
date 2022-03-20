@@ -5,6 +5,7 @@ import minecrafttransportsimulator.baseclasses.TowingConnection;
 import minecrafttransportsimulator.entities.components.AEntityG_Towable;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIPanelGround;
+import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
@@ -20,7 +21,7 @@ public class PacketEntityTowingChange extends APacketEntity<AEntityG_Towable<?>>
 	
 	public PacketEntityTowingChange(TowingConnection connection, boolean connect){
 		super(connection.towingVehicle);
-		this.connectionData = connection.save(new WrapperNBT());
+		this.connectionData = connection.save(InterfaceCore.getNewNBTWrapper());
 		this.connect = connect;
 	}
 	

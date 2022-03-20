@@ -5,6 +5,7 @@ import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemDecor;
 import minecrafttransportsimulator.items.instances.ItemPartInteractable;
+import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperInventory;
 import minecrafttransportsimulator.mcinterface.WrapperItemStack;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -72,8 +73,8 @@ public class PacketPlayerItemTransfer extends APacketEntityInteract<EntityInvent
 			}
 		}
 		if(saveToPlayer){
-			WrapperNBT newData = new WrapperNBT();
-			newData.setData("inventory", inventory.save(new WrapperNBT()));
+			WrapperNBT newData = InterfaceCore.getNewNBTWrapper();
+			newData.setData("inventory", inventory.save(InterfaceCore.getNewNBTWrapper()));
 			player.getHeldStack().setData(newData);
 		}
 		return false;

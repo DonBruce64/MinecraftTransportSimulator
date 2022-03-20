@@ -187,7 +187,7 @@ public class WrapperItemStack{
 	 *  interfacing with modded items.
 	 */
 	public WrapperNBT getData(){
-		return stack.hasTagCompound() ? new WrapperNBT(stack.getTagCompound().copy()) : new WrapperNBT();
+		return stack.hasTagCompound() ? new WrapperNBT(stack.getTagCompound().copy()) : InterfaceCore.getNewNBTWrapper();
 	}
 	
 	/**

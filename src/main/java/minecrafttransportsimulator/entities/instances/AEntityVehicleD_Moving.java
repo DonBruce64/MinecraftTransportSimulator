@@ -18,6 +18,7 @@ import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
+import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
@@ -171,7 +172,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 					placingPlayer.sendPacket(new PacketPlayerChatMessage(placingPlayer, JSONConfigLanguage.INTERACT_VEHICLE_NOSPACE));
 					//Need to add stack back as it will have been removed here.
 					if(!placingPlayer.isCreative()){
-						placingPlayer.setHeldStack(getItem().getNewStack(save(new WrapperNBT())));
+						placingPlayer.setHeldStack(getItem().getNewStack(save(InterfaceCore.getNewNBTWrapper())));
 					}
 					return;
 				}else{

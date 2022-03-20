@@ -451,12 +451,12 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
 		super.save(data);
 		//Save towing data.
 		if(towedByConnection != null){
-			data.setData("towedByConnection", towedByConnection.save(new WrapperNBT()));
+			data.setData("towedByConnection", towedByConnection.save(InterfaceCore.getNewNBTWrapper()));
 		}
 		
 		int towingConnectionIndex = 0;
 		for(TowingConnection towingEntry : towingConnections){
-			data.setData("towingConnection" + (towingConnectionIndex++), towingEntry.save(new WrapperNBT()));
+			data.setData("towingConnection" + (towingConnectionIndex++), towingEntry.save(InterfaceCore.getNewNBTWrapper()));
 		}
 		data.setInteger("towingConnectionCount", towingConnectionIndex);
 		return data;

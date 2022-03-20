@@ -7,6 +7,7 @@ import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
+import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperItemStack;
@@ -58,7 +59,7 @@ public final class PartInteractable extends APart{
 				player.openCraftingGUI();
 			}else if(definition.interactable.interactionType.equals(InteractableComponentType.JERRYCAN)){
 				entityOn.removePart(this, null);
-				WrapperNBT data = new WrapperNBT();
+				WrapperNBT data = InterfaceCore.getNewNBTWrapper();
 				save(data);
 				world.spawnItem(getItem(), data, position);
 			}else if(tank != null){
@@ -283,11 +284,11 @@ public final class PartInteractable extends APart{
 	public WrapperNBT save(WrapperNBT data){
 		super.save(data);
 		if(furnace != null){
-			data.setData("furnace", furnace.save(new WrapperNBT()));
+			data.setData("furnace", furnace.save(InterfaceCore.getNewNBTWrapper()));
 		}else if(inventory != null){
-			data.setData("inventory", inventory.save(new WrapperNBT()));
+			data.setData("inventory", inventory.save(InterfaceCore.getNewNBTWrapper()));
 		}else if(tank != null){
-			data.setData("tank", tank.save(new WrapperNBT()));
+			data.setData("tank", tank.save(InterfaceCore.getNewNBTWrapper()));
 		}else if(definition.interactable.interactionType.equals(InteractableComponentType.JERRYCAN)){
 			data.setString("jerrycanFluid", jerrycanFluid);
 		}

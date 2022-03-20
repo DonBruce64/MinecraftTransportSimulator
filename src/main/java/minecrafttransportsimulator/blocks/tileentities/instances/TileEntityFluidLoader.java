@@ -6,6 +6,7 @@ import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityFlu
 import minecrafttransportsimulator.entities.instances.EntityFluidTank;
 import minecrafttransportsimulator.entities.instances.PartInteractable;
 import minecrafttransportsimulator.jsondefs.JSONDecor.DecorComponentType;
+import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
@@ -79,7 +80,7 @@ public class TileEntityFluidLoader extends ATileEntityLoader implements ITileEnt
 	@Override
 	public WrapperNBT save(WrapperNBT data){
 		super.save(data);
-		data.setData("tank", tank.save(new WrapperNBT()));
+		data.setData("tank", tank.save(InterfaceCore.getNewNBTWrapper()));
 		return data;
 	}
 }

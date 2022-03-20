@@ -749,7 +749,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 				String partPackID = partDef.defaultPart.substring(0, partDef.defaultPart.indexOf(':'));
 				String partSystemName = partDef.defaultPart.substring(partDef.defaultPart.indexOf(':') + 1);
 				try{
-					APart addedPart = addPartFromItem(PackParserSystem.getItem(partPackID, partSystemName), playerAdding, new WrapperNBT(), partDef.pos, addedDuringConstruction);
+					APart addedPart = addPartFromItem(PackParserSystem.getItem(partPackID, partSystemName), playerAdding, InterfaceCore.getNewNBTWrapper(), partDef.pos, addedDuringConstruction);
 					if(addedPart != null){
 						//Set the default tone for the part, if it requests one and we can provide one.
 						updatePartTone(addedPart);
@@ -989,7 +989,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 		for(APart part : allParts){
 			//Don't save the part if it's not valid or a fake part.
 			if(part.isValid && !part.isFake()){
-				WrapperNBT partData = part.save(new WrapperNBT());
+				WrapperNBT partData = part.save(InterfaceCore.getNewNBTWrapper());
 				//We need to set some extra data here for the part to allow this entity to know where it went.
 				//This only gets set here during saving/loading, and is NOT returned in the item that comes from the part.
 				partData.setPoint3d("offset", part.placementOffset);

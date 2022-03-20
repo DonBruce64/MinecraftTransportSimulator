@@ -103,7 +103,7 @@ public class BuilderItem extends Item implements IBuilderItemInterface{
 		if(stack.hasTagCompound()){
 			item.addTooltipLines(tooltipLines, new WrapperNBT(stack.getTagCompound()));
 		}else{
-			item.addTooltipLines(tooltipLines, new WrapperNBT());
+			item.addTooltipLines(tooltipLines, InterfaceCore.getNewNBTWrapper());
 		}
 	}
 	

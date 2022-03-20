@@ -7,8 +7,8 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityFuelP
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
-import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.EntityRadio;
+import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.guis.instances.GUIFuelPump;
 import minecrafttransportsimulator.guis.instances.GUIInstruments;
 import minecrafttransportsimulator.guis.instances.GUIInventoryContainer;

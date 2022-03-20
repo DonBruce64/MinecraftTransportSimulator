@@ -17,6 +17,7 @@ import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
+import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
@@ -228,7 +229,7 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 			if(entityOn.locked){
 				player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_VEHICLE_LOCKED));
 			}else{
-				if(player.getInventory().addStack(getItem().getNewStack(save(new WrapperNBT())))){
+				if(player.getInventory().addStack(getItem().getNewStack(save(InterfaceCore.getNewNBTWrapper())))){
 					entityOn.removePart(this, null);
 				}
 			}

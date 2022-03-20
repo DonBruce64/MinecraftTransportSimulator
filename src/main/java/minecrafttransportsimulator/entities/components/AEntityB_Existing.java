@@ -7,6 +7,7 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.entities.instances.EntityRadio;
+import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
@@ -238,7 +239,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 			data.setPoint3d("angles", orientation.convertToAngles());
 		}
 		if(radio != null){
-			data.setData("radio", radio.save(new WrapperNBT()));
+			data.setData("radio", radio.save(InterfaceCore.getNewNBTWrapper()));
 		}
 		return data;
 	}

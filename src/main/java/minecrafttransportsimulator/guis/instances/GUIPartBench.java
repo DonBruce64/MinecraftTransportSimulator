@@ -24,9 +24,9 @@ import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
+import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.InterfaceInput;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.packets.instances.PacketPlayerCraftItem;
 import minecrafttransportsimulator.packloading.PackMaterialComponent;
@@ -432,7 +432,7 @@ public class GUIPartBench extends AGUIBase{
 		
 		//Create part description text.
 		List<String> descriptiveLines = new ArrayList<String>();
-		currentItem.addTooltipLines(descriptiveLines, new WrapperNBT());
+		currentItem.addTooltipLines(descriptiveLines, InterfaceCore.getNewNBTWrapper());
 		partInfo.text = "";
 		for(String line : descriptiveLines){
 			partInfo.text += line + "\n";

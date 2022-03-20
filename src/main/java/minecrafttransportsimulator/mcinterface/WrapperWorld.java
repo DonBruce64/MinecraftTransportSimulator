@@ -124,7 +124,7 @@ public class WrapperWorld{
 		this.world = world;
 		if(world.isRemote){
 			//Send packet to server to request data for this world.
-			this.savedData = new WrapperNBT();
+			this.savedData = InterfaceCore.getNewNBTWrapper();
 			InterfacePacket.sendToServer(new PacketWorldSavedDataCSHandshake(InterfaceClient.getClientPlayer(), "", null));
 		}else{
 			//Load data from disk.
@@ -132,7 +132,7 @@ public class WrapperWorld{
 				if(getDataFile().exists()){
 					this.savedData = new WrapperNBT(CompressedStreamTools.readCompressed(new FileInputStream(getDataFile())));
 				}else{
-					this.savedData = new WrapperNBT();
+					this.savedData = InterfaceCore.getNewNBTWrapper();
 				}
 			}catch(Exception e){
 				e.printStackTrace();
@@ -1085,7 +1085,7 @@ public class WrapperWorld{
 					   event.world.spawnEntity(follower);
 					   activePlayerFollowers.put(playerWrapper, follower);
 					   
-					   EntityPlayerGun entity = new EntityPlayerGun(this, playerWrapper, new WrapperNBT());
+					   EntityPlayerGun entity = new EntityPlayerGun(this, playerWrapper, InterfaceCore.getNewNBTWrapper());
 					   spawnEntity(entity);
 					   
 					   //If the player is new, also add handbooks.

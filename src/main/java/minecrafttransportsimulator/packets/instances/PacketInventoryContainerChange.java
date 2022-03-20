@@ -5,6 +5,7 @@ import java.util.List;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
+import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperItemStack;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
@@ -34,7 +35,7 @@ public class PacketInventoryContainerChange extends APacketEntity<EntityInventor
 	public void writeToBuffer(ByteBuf buf){
 		super.writeToBuffer(buf);
 		buf.writeInt(index);
-		WrapperNBT stackData = new WrapperNBT();
+		WrapperNBT stackData = InterfaceCore.getNewNBTWrapper();
 		List<WrapperItemStack> stackList = new ArrayList<WrapperItemStack>();
 		stackList.add(stackToChangeTo);
 		stackData.setStacks(stackList);

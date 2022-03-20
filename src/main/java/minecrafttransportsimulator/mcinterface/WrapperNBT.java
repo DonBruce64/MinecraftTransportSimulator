@@ -6,9 +6,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-
-import net.minecraft.inventory.ItemStackHelper;
 import minecrafttransportsimulator.baseclasses.Point3D;
+import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.NonNullList;
@@ -23,8 +22,7 @@ import net.minecraft.util.NonNullList;
 public class WrapperNBT{
 	protected final NBTTagCompound tag;
 	
-	//TODO this needs to be protected and get out of the main code.
-	public WrapperNBT(){
+	protected WrapperNBT(){
 		this.tag = new NBTTagCompound();
 	}
 	
@@ -183,7 +181,7 @@ public class WrapperNBT{
 	}
 	
 	public WrapperNBT getDataOrNew(String name){
-		return tag.hasKey(name) ? new WrapperNBT(tag.getCompoundTag(name)) : new WrapperNBT();
+		return tag.hasKey(name) ? new WrapperNBT(tag.getCompoundTag(name)) : InterfaceCore.getNewNBTWrapper();
 	}
 	
 	public void setData(String name, WrapperNBT value){

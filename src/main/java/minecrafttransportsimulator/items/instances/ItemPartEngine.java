@@ -93,7 +93,7 @@ public class ItemPartEngine extends AItemPart{
 	@Override
 	public void getDataBlocks(List<WrapperNBT> dataBlocks){
 		//Add a creative variant.
-		WrapperNBT data = new WrapperNBT();
+		WrapperNBT data = InterfaceCore.getNewNBTWrapper();
 		data.setBoolean("isCreative", true);
 		dataBlocks.add(data);
 	}

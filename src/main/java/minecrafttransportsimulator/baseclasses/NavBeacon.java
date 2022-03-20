@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
+import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 
@@ -66,9 +67,9 @@ public class NavBeacon{
 		this.position = position;
 		WrapperNBT beaconListing = world.getData(BEACON_LISTING_KEY);
 		if(beaconListing == null){
-			beaconListing = new WrapperNBT();
+			beaconListing = InterfaceCore.getNewNBTWrapper();
 		}
-		beaconListing.setData(name, save(new WrapperNBT()));
+		beaconListing.setData(name, save(InterfaceCore.getNewNBTWrapper()));
 		world.setData(BEACON_LISTING_KEY, beaconListing);	
 	}
 	

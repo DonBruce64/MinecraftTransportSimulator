@@ -2,6 +2,7 @@ package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController;
+import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
@@ -18,7 +19,7 @@ public class PacketTileEntitySignalControllerChange extends APacketEntity<TileEn
 	
 	public PacketTileEntitySignalControllerChange(TileEntitySignalController controller){
 		super(controller);
-		this.controllerData = new WrapperNBT();
+		this.controllerData = InterfaceCore.getNewNBTWrapper();
 		controller.save(controllerData);
 	}
 	

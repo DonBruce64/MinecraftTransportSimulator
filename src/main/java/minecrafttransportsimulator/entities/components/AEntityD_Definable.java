@@ -29,6 +29,7 @@ import minecrafttransportsimulator.jsondefs.JSONSound;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
+import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.InterfaceSound;
 import minecrafttransportsimulator.mcinterface.WrapperItemStack;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -282,7 +283,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 	public void addDropsToList(List<WrapperItemStack> drops){
 		AItemPack<JSONDefinition> packItem = getItem();
 		if(packItem != null){
-			drops.add(packItem.getNewStack(save(new WrapperNBT())));
+			drops.add(packItem.getNewStack(save(InterfaceCore.getNewNBTWrapper())));
 		}
 	}
 	

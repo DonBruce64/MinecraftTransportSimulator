@@ -47,6 +47,13 @@ public class InterfaceCore{
 	}
 	
 	/**
+	 *  Returns a new NBT wrapper instance with no data.
+	 */
+	public static WrapperNBT getNewNBTWrapper(){
+		return InterfaceCore.getNewNBTWrapper();
+	}
+	
+	/**
 	 *  Returns a new stack for the passed-in item.  Note that this is only valid for items
 	 *  that have {@link AItemBase#autoGenerate()} as true.
 	 */

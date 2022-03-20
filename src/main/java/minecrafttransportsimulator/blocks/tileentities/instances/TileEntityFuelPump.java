@@ -257,8 +257,8 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityFl
 	@Override
 	public WrapperNBT save(WrapperNBT data){
 		super.save(data);
-		data.setData("tank", tank.save(new WrapperNBT()));
-		data.setData("inventory", fuelItems.save(new WrapperNBT()));
+		data.setData("tank", tank.save(InterfaceCore.getNewNBTWrapper()));
+		data.setData("inventory", fuelItems.save(InterfaceCore.getNewNBTWrapper()));
 		for(int i=0; i<fuelItems.getSize(); ++i){
     		data.setInteger("fuelAmount" + i, fuelAmounts.get(i));
     	}

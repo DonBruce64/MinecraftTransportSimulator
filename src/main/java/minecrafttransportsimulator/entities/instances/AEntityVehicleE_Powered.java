@@ -17,6 +17,7 @@ import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
+import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
@@ -371,7 +372,7 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 		super.save(data);
 		data.setDouble("electricPower", electricPower);
 		data.setString("selectedBeaconName", selectedBeaconName);
-		data.setData("fuelTank", fuelTank.save(new WrapperNBT()));
+		data.setData("fuelTank", fuelTank.save(InterfaceCore.getNewNBTWrapper()));
 		return data;
 	}
 }
