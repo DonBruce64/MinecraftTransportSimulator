@@ -88,8 +88,8 @@ import net.minecraftforge.items.IItemHandler;
 @EventBusSubscriber
 public class WrapperWorld{
 	private static final Map<World, WrapperWorld> worldWrappers = new HashMap<World, WrapperWorld>();
-	private final Map<WrapperPlayer, Integer> ticksSincePlayerJoin = new HashMap<WrapperPlayer, Integer>();
-	private final Map<WrapperPlayer, BuilderEntityRenderForwarder> activePlayerFollowers = new HashMap<WrapperPlayer, BuilderEntityRenderForwarder>();
+	private final Map<EntityPlayerGun, BuilderEntityExisting> playerServerGunBuilders = new HashMap<EntityPlayerGun, BuilderEntityExisting>();
+	private final Map<UUID, Integer> ticksSincePlayerJoin = new HashMap<UUID, Integer>();
 	private final List<AxisAlignedBB> mutableCollidingAABBs = new ArrayList<AxisAlignedBB>();
 	private final Set<BlockPos> knownAirBlocks = new HashSet<BlockPos>();
 	
@@ -315,12 +315,20 @@ public class WrapperWorld{
 	 *  Spawns the brand-new entity into the world.
 	 */
 	public void spawnEntity(AEntityB_Existing entity){
+		spawnEntityInternal(entity);
+    }
+	
+	/**
+	 *  Internal method to spawn entities and return their builders.
+	 */
+	protected BuilderEntityExisting spawnEntityInternal(AEntityB_Existing entity){
 		BuilderEntityExisting builder = new BuilderEntityExisting(entity.world.world);
 		builder.loadedFromSavedNBT = true;
 		builder.setPositionAndRotation(entity.position.x, entity.position.y, entity.position.z, 0, 0);
 		builder.entity = entity;
 		world.spawnEntity(builder);
 		addEntity(entity);
+		return builder;
     }
 	
 	/**
@@ -1054,49 +1062,45 @@ public class WrapperWorld{
 	   //Need to check if it's our world, because Forge is stupid like that.
 	   if(event.world.equals(world) && event.phase.equals(Phase.END) && !event.world.isRemote){
 		   for(EntityPlayer player : event.world.playerEntities){
+			   UUID playerUUID = player.getUniqueID();
 			   //Need to use wrapper here as the player equality tests don't work if there are two players with the same ID.
-			   WrapperPlayer playerWrapper = WrapperPlayer.getWrapperFor(player);
-			   if(activePlayerFollowers.containsKey(playerWrapper)){
-				   //Follower exists, check if world is the same and it is actually updating.
+			   EntityPlayerGun playerGun = EntityPlayerGun.playerServerGuns.get(playerUUID);
+			   if(playerGun != null){
+				   //Gun exists, check if world is the same and it is actually updating.
 				   //We check basic states, and then the watchdog bit that gets reset every tick.
 				   //This way if we're in the world, but not valid we will know.
-				   BuilderEntityRenderForwarder follower = activePlayerFollowers.get(playerWrapper);
-				   if(follower.world != player.world || follower.playerFollowing != player || player.isDead || follower.isDead || follower.idleTickCounter == 20){
+				   BuilderEntityExisting gunBuilder = playerServerGunBuilders.get(playerGun);
+				   if(playerGun.world.world != player.world || playerGun.player.player != player || player.isDead || !playerGun.isValid || gunBuilder == null || gunBuilder.idleTickCounter == 20){
 					   //Follower is not linked.  Remove it and re-create in code below.
-					   follower.setDead();
-					   activePlayerFollowers.remove(playerWrapper);
-					   ticksSincePlayerJoin.remove(playerWrapper);
+					   if(gunBuilder != null){
+						   gunBuilder.setDead();
+						   playerServerGunBuilders.remove(playerGun);
+					   }
+					   ticksSincePlayerJoin.remove(playerUUID);
 				   }else{
-					   ++follower.idleTickCounter;
+					   ++gunBuilder.idleTickCounter;
 					   continue;
 				   }
-			   }
-			   
-			   if(!activePlayerFollowers.containsKey(playerWrapper)){
-				   //Follower does not exist, check if player has been present for 3 seconds and spawn it.
+			   }else{
+				   //Gun does not exist, check if player has been present for 3 seconds and spawn it.
 				   int totalTicksWaited = 0;
-				   if(ticksSincePlayerJoin.containsKey(playerWrapper)){
-					   totalTicksWaited = ticksSincePlayerJoin.get(playerWrapper); 
+				   if(ticksSincePlayerJoin.containsKey(playerUUID)){
+					   totalTicksWaited = ticksSincePlayerJoin.get(playerUUID); 
 				   }
 				   if(++totalTicksWaited == 60){
-					   //Spawn fowarder and gun.
-					   BuilderEntityRenderForwarder follower = new BuilderEntityRenderForwarder(player);
-					   follower.loadedFromSavedNBT = true;
-					   event.world.spawnEntity(follower);
-					   activePlayerFollowers.put(playerWrapper, follower);
-					   
-					   EntityPlayerGun entity = new EntityPlayerGun(this, playerWrapper, InterfaceCore.getNewNBTWrapper());
-					   spawnEntity(entity);
+					   //Spawn gun.
+					   EntityPlayerGun entity = new EntityPlayerGun(this, WrapperPlayer.getWrapperFor(player), InterfaceCore.getNewNBTWrapper());
+					   playerServerGunBuilders.put(entity, spawnEntityInternal(entity));
 					   
 					   //If the player is new, also add handbooks.
-					   if(!ConfigSystem.settings.general.joinedPlayers.value.contains(playerWrapper.getID())){
+					   if(!ConfigSystem.settings.general.joinedPlayers.value.contains(playerUUID)){
 						   player.addItemStackToInventory(PackParserSystem.getItem("mts", "handbook_car").getNewStack(null).stack);
 						   player.addItemStackToInventory(PackParserSystem.getItem("mts", "handbook_plane").getNewStack(null).stack);
-						   ConfigSystem.settings.general.joinedPlayers.value.add(playerWrapper.getID());
+						   ConfigSystem.settings.general.joinedPlayers.value.add(playerUUID);
 						   ConfigSystem.saveToDisk();
 					   }
 				   }else{
-					   ticksSincePlayerJoin.put(playerWrapper, totalTicksWaited);
+					   ticksSincePlayerJoin.put(playerUUID, totalTicksWaited);
 				   }
 			   }
 		   }

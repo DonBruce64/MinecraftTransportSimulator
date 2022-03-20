@@ -23,7 +23,6 @@ import net.minecraftforge.fml.common.registry.EntityEntryBuilder;
 public class BuilderEntityRenderForwarder extends ABuilderEntityBase{
 	
 	protected EntityPlayer playerFollowing;
-	protected int idleTickCounter;
 	private long[] lastTickRendered = new long[]{0L, 0L, 0L};
 	private float[] lastPartialTickRendered = new float[]{0F, 0F, 0F};
 	private boolean doneRenderingShaders;
@@ -61,7 +60,6 @@ public class BuilderEntityRenderForwarder extends ABuilderEntityBase{
 			loadedFromSavedNBT = true;
 			lastLoadedNBT = null;
 		}
-    	idleTickCounter = 0;
     }
     
     @Override
@@ -139,6 +137,6 @@ public class BuilderEntityRenderForwarder extends ABuilderEntityBase{
 	 */
 	@SubscribeEvent
 	public static void registerEntities(RegistryEvent.Register<EntityEntry> event){
-		event.getRegistry().register(EntityEntryBuilder.create().entity(BuilderEntityRenderForwarder.class).id(new ResourceLocation(MasterLoader.MODID, "mts_entity_renderer"), 1).name("mts_entity_renderer").tracker(32*16, 5, false).build());
+		event.getRegistry().register(EntityEntryBuilder.create().entity(BuilderEntityRenderForwarder.class).id(new ResourceLocation(MasterLoader.MODID, "mts_entity_renderer"), 1).tracker(32*16, 5, false).name("mts_entity_renderer").build());
 	}
 }

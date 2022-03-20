@@ -44,6 +44,8 @@ import net.minecraftforge.fml.relauncher.Side;
 @EventBusSubscriber(Side.CLIENT)
 public class InterfaceClient{
 	private static boolean lastPassFirstPerson;
+	private static BuilderEntityRenderForwarder activeFollower;
+	private static int ticksSincePlayerJoin;
 
 	/**
 	 *  Returns true if the game is paused.
@@ -268,6 +270,27 @@ public class InterfaceClient{
 				if(player != null && !player.isSpectator()){
 					ControlSystem.controlGlobal(player);
 				}
+				
+			   if(activeFollower != null){
+				   //Follower exists, check if world is the same and it is actually updating.
+				   //We check basic states, and then the watchdog bit that gets reset every tick.
+				   //This way if we're in the world, but not valid we will know.
+				   if(activeFollower.world != player.player.world || activeFollower.playerFollowing != player.player || player.player.isDead || activeFollower.isDead || activeFollower.idleTickCounter == 20){
+					   //Follower is not linked.  Remove it and re-create in code below.
+					   activeFollower.setDead();
+					   activeFollower = null;
+					   ticksSincePlayerJoin = 0;
+				   }else{
+					   ++activeFollower.idleTickCounter;
+				   }
+			   }else{
+				   //Follower does not exist, check if player has been present for 3 seconds and spawn it.
+				   if(++ticksSincePlayerJoin == 60){
+					   activeFollower = new BuilderEntityRenderForwarder(player.player);
+					   activeFollower.loadedFromSavedNBT = true;
+					   clientWorld.world.spawnEntity(activeFollower);
+				   }
+			   }
 			}
 		}
 	}

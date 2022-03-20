@@ -32,6 +32,9 @@ public abstract class ABuilderEntityBase extends Entity{
 	 * sent data about this builder, and the list cleared.  Done this way to prevent the server from trying to handle the packet before
 	 * it has created the entity, as the entity is created on the update call, but the packet might get here due to construction.**/
 	public final List<WrapperPlayer> playersRequestingData = new ArrayList<WrapperPlayer>();
+	/**An idle tick counter.  This is set to 0 each time the update method is called, but is incremented each game tick.
+	 * This allows us to track how long this entity has been idle, and do logic if it's been idle too long.**/
+	public int idleTickCounter;
 	
 	public ABuilderEntityBase(World world){
 		super(world);
@@ -42,7 +45,7 @@ public abstract class ABuilderEntityBase extends Entity{
 		//Don't call the super, because some mods muck with our logic here.
     	//Said mods are Sponge plugins, but I'm sure there are others.
 		//super.onUpdate();
-		
+		idleTickCounter = 0;
 		onEntityUpdate();
 	}
 	
