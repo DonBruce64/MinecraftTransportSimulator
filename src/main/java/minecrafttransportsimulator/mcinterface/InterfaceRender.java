@@ -25,6 +25,7 @@ import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.rendering.components.GIFParser;
+import minecrafttransportsimulator.rendering.components.GIFParser.GIFImageFrame;
 import minecrafttransportsimulator.rendering.components.GIFParser.ParsedGIF;
 import minecrafttransportsimulator.rendering.components.RenderableObject;
 import net.minecraft.client.Minecraft;
@@ -46,6 +47,7 @@ public class InterfaceRender{
 	private static final Map<String, ResourceLocation> internalTextures = new HashMap<String, ResourceLocation>();
 	private static final Map<String, Integer> onlineTextures = new HashMap<String, Integer>();
 	private static final Map<String, ParsedGIF> animatedGIFs = new HashMap<String, ParsedGIF>();
+	private static final Map<ParsedGIF, Map<GIFImageFrame, Integer>> animatedGIFFrames = new LinkedHashMap<ParsedGIF, Map<GIFImageFrame, Integer>>();
 	private static final Map<WrapperItemStack, TransformationMatrix> stacksToRender = new LinkedHashMap<WrapperItemStack, TransformationMatrix>();
 	private static float lastLightmapX;
 	private static float lastLightmapY;
@@ -253,7 +255,7 @@ public class InterfaceRender{
 		if(animatedGIFs.containsKey(textureLocation)){
 			//Special case for GIFs.
 			ParsedGIF parsedGIF = animatedGIFs.get(textureLocation);
-			GlStateManager.bindTexture(parsedGIF.getCurrentTextureIndex());
+			GlStateManager.bindTexture(animatedGIFFrames.get(parsedGIF).get(parsedGIF.getCurrentFrame()));
 		}else if(onlineTextures.containsKey(textureLocation)){
 			//Online texture.
 			GlStateManager.bindTexture(onlineTextures.get(textureLocation));
@@ -316,6 +318,13 @@ public class InterfaceRender{
 						    ParsedGIF gif = GIFParser.parseGIF(reader);
 						    if(gif != null){
 						    	animatedGIFs.put(textureURL, gif);
+						    	Map<GIFImageFrame, Integer> gifFrameIndexes = new HashMap<GIFImageFrame, Integer>();
+						    	for(GIFImageFrame frame : gif.frames.values()){
+						    		int glTexturePointer = TextureUtil.glGenTextures();
+							        TextureUtil.uploadTextureImageAllocate(glTexturePointer, frame.getImage(), false, false);
+							        gifFrameIndexes.put(frame, glTexturePointer);
+						    	}
+						    	animatedGIFFrames.put(gif, gifFrameIndexes);
 						    }else{
 						    	return "Could not parse GIF due to no frames being present.  Is this a real direct link or a fake one?";
 						    }

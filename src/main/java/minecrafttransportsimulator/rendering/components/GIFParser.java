@@ -17,8 +17,6 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import net.minecraft.client.renderer.texture.TextureUtil;
-
 /**Class responsible for parsing GIF images into their rendered form.  No clue how this works.  This should
  * really be a built-in function of the built-in libraries...
  * 
@@ -126,7 +124,7 @@ public class GIFParser{
 			this.totalDuration = cumulativeDuration;
 		}
 		
-		public int getCurrentTextureIndex(){
+		public GIFImageFrame getCurrentFrame(){
 			//Get current delta since last pass.
 			long currentTime = System.currentTimeMillis()/10;
 			currentCycleTime += (currentTime - lastCycleCheck);
@@ -145,39 +143,36 @@ public class GIFParser{
 			int lastDelayChecked = 0;
 			for(Integer totalDelay : frames.keySet()){
 				if(totalDelay > currentCycleTime){
-					return frames.get(lastDelayChecked).glTexturePointer;
+					return frames.get(lastDelayChecked);
 				}else{
 					lastDelayChecked = totalDelay;
 				}
 			}
-			return frames.get(lastDelayChecked).glTexturePointer;
+			return frames.get(lastDelayChecked);
 		}
 	}
 	
 	
-	private static class GIFImageFrame{
+	public static class GIFImageFrame{
 	    private final int delay;
 	    private final BufferedImage image;
 	    private final String disposal;
-	    private final int glTexturePointer;
 
 	    private GIFImageFrame(BufferedImage image, int delay, String disposal){
 	        this.image = image;
 	        this.delay = delay;
 	        this.disposal = disposal;
-	        this.glTexturePointer = TextureUtil.glGenTextures();
-	        TextureUtil.uploadTextureImageAllocate(glTexturePointer, image, false, false);
 	    }
 
-	    private BufferedImage getImage(){
+	    public BufferedImage getImage(){
 	        return image;
 	    }
 
-	    private int getDelay(){
+	    public int getDelay(){
 	        return delay;
 	    }
 
-	    private String getDisposal(){
+	    public String getDisposal(){
 	        return disposal;
 	    }
 	}

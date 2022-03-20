@@ -20,7 +20,6 @@ import minecrafttransportsimulator.systems.CameraSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
-import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.model.ModelPlayer;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.RenderHelper;
@@ -131,9 +130,9 @@ public class InterfaceEventsEntityRendering{
     	//This renders them over the main hotbar, but doesn't block the chat window.
     	if(event.getType().equals(RenderGameOverlayEvent.ElementType.CHAT)){
 			//Set up variables.
-	    	ScaledResolution screenResolution = new ScaledResolution(Minecraft.getMinecraft());
-	    	int screenWidth = screenResolution.getScaledWidth();
-	    	int screenHeight = screenResolution.getScaledHeight();
+	    	long displaySize = InterfaceClient.getPackedDisplaySize();
+	    	int screenWidth = (int) (displaySize >>  Integer.SIZE);
+	    	int screenHeight = (int) displaySize;
 	    	int mouseX = Mouse.getX() * screenWidth / Minecraft.getMinecraft().displayWidth;
 	        int mouseY = screenHeight - Mouse.getY() * screenHeight / Minecraft.getMinecraft().displayHeight - 1;
 	    	

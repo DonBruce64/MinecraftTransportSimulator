@@ -6,9 +6,8 @@ import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.vecmath.Point3f;
-
 import minecrafttransportsimulator.baseclasses.ColorRGB;
+import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.mcinterface.InterfaceEventsModelLoader;
 import minecrafttransportsimulator.packloading.JSONParser;
 import minecrafttransportsimulator.rendering.components.AModelParser;
@@ -49,9 +48,9 @@ public final class ModelParserLT extends AModelParser{
 				
 				//8 floats per vert, 6 verts per side, 6 sides per box.
 				FloatBuffer buffer = FloatBuffer.allocate(tile.boxes.size()*6*6*8);
-				Point3f normal = new Point3f();
-				Point3f min = new Point3f();
-				Point3f max = new Point3f();
+				Point3D normal = new Point3D();
+				Point3D min = new Point3D();
+				Point3D max = new Point3D();
 				
 				float[] uvPoints = InterfaceEventsModelLoader.getDefaultBlockTexture(tile.tile.block);
 				
@@ -125,12 +124,12 @@ public final class ModelParserLT extends AModelParser{
 		}
 	}
 	
-	private static void addFaceToBuffer(Point3f min, Point3f max, Point3f normal, float u, float U, float v, float V, boolean horzontalFace, FloatBuffer buffer){
+	private static void addFaceToBuffer(Point3D min, Point3D max, Point3D normal, float u, float U, float v, float V, boolean horzontalFace, FloatBuffer buffer){
 		for(int i=0; i<6; ++i){
 			//Normals are just what the point has.
-			buffer.put(normal.x);
-			buffer.put(normal.y);
-			buffer.put(normal.z);
+			buffer.put((float) normal.x);
+			buffer.put((float) normal.y);
+			buffer.put((float) normal.z);
 			
 			//Texture and vertex X/Y/Z are based on vertex index.
 			switch(i){
@@ -139,13 +138,13 @@ public final class ModelParserLT extends AModelParser{
 					buffer.put(U);
 					buffer.put(V);
 					if(horzontalFace){
-						buffer.put(max.x);
-						buffer.put(min.y);
-						buffer.put(max.z);
+						buffer.put((float) max.x);
+						buffer.put((float) min.y);
+						buffer.put((float) max.z);
 					}else{
-						buffer.put(max.x);
-						buffer.put(max.y);
-						buffer.put(max.z);
+						buffer.put((float) max.x);
+						buffer.put((float) max.y);
+						buffer.put((float) max.z);
 					}
 					break;
 				}
@@ -153,13 +152,13 @@ public final class ModelParserLT extends AModelParser{
 					buffer.put(U);
 					buffer.put(v);
 					if(horzontalFace){
-						buffer.put(max.x);
-						buffer.put(max.y);
-						buffer.put(max.z);
+						buffer.put((float) max.x);
+						buffer.put((float) max.y);
+						buffer.put((float) max.z);
 					}else{
-						buffer.put(max.x);
-						buffer.put(max.y);
-						buffer.put(min.z);
+						buffer.put((float) max.x);
+						buffer.put((float) max.y);
+						buffer.put((float) min.z);
 					}
 					break;
 				}
@@ -168,13 +167,13 @@ public final class ModelParserLT extends AModelParser{
 					buffer.put(u);
 					buffer.put(v);
 					if(horzontalFace){
-						buffer.put(min.x);
-						buffer.put(max.y);
-						buffer.put(min.z);
+						buffer.put((float) min.x);
+						buffer.put((float) max.y);
+						buffer.put((float) min.z);
 					}else{
-						buffer.put(min.x);
-						buffer.put(max.y);
-						buffer.put(min.z);
+						buffer.put((float) min.x);
+						buffer.put((float) max.y);
+						buffer.put((float) min.z);
 					}
 					break;
 				}
@@ -182,13 +181,13 @@ public final class ModelParserLT extends AModelParser{
 					buffer.put(u);
 					buffer.put(V);
 					if(horzontalFace){
-						buffer.put(min.x);
-						buffer.put(min.y);
-						buffer.put(min.z);
+						buffer.put((float) min.x);
+						buffer.put((float) min.y);
+						buffer.put((float) min.z);
 					}else{
-						buffer.put(min.x);
-						buffer.put(min.y);
-						buffer.put(max.z);
+						buffer.put((float) min.x);
+						buffer.put((float) min.y);
+						buffer.put((float) max.z);
 					}					
 					break;
 				}

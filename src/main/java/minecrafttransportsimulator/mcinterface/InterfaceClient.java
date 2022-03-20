@@ -15,6 +15,7 @@ import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.systems.ControlSystem;
 import net.minecraft.block.SoundType;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.ActiveRenderInfo;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.Entity;
@@ -107,6 +108,15 @@ public class InterfaceClient{
 		}else{
 			Minecraft.getMinecraft().gameSettings.thirdPersonView = 0;
 		}
+	}
+	
+	/**
+	 *  Returns the screen width and height as a long comprised of two ints.  The
+	 *  first half being the width, and the second half being the height.
+	 */
+	public static long getPackedDisplaySize(){
+		ScaledResolution screenResolution = new ScaledResolution(Minecraft.getMinecraft());
+		return (((long) screenResolution.getScaledWidth()) << Integer.SIZE) | (screenResolution.getScaledHeight() & 0xffffffffL);
 	}
 	
 	/**

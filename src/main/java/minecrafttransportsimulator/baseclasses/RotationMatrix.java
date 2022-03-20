@@ -1,8 +1,5 @@
 package minecrafttransportsimulator.baseclasses;
 
-import javax.vecmath.Matrix4d;
-import javax.vecmath.Quat4d;
-
 /**3D Matrix class for rotation operations.  This should be used
  * instead of Euler angles for all things in the code.
  * All methods return this object for nested operations, unless
@@ -11,11 +8,6 @@ import javax.vecmath.Quat4d;
  * @author don_bruce
  */
 public class RotationMatrix{
-	private static final Quat4d interpHelperQuatStart = new Quat4d();
-	private static final Matrix4d interpHelperMatrixStart = new Matrix4d();
-	private static final Quat4d interpHelperQuatEnd = new Quat4d();
-	private static final Matrix4d interpHelperMatrixEnd = new Matrix4d();
-	
 	public double m00;
 	public double m01;
 	public double m02;
@@ -398,44 +390,57 @@ public class RotationMatrix{
 	 * in this matrix.  Note that this function is NOT thread-safe!
 	 */
 	public synchronized RotationMatrix interploate(RotationMatrix start, RotationMatrix end, double delta){
+		//Convert start and end matrix to quaternions.
+		double quatStartw = Math.sqrt(1 + start.m00 + start.m11 + start.m22)/2D; 
+		double quatStarti = 1/(4*quatStartw)*(start.m21 - start.m12);
+		double quatStartj = 1/(4*quatStartw)*(start.m02 - start.m20);
+		double quatStartk = 1/(4*quatStartw)*(start.m10 - start.m01);
 		
-		//TODO code this internally without all the roudabout code hacks.
-		interpHelperMatrixStart.m00 = start.m00;
-		interpHelperMatrixStart.m01 = start.m01;
-		interpHelperMatrixStart.m02 = start.m02;
-		interpHelperMatrixStart.m10 = start.m10;
-		interpHelperMatrixStart.m11 = start.m11;
-		interpHelperMatrixStart.m12 = start.m12;
-		interpHelperMatrixStart.m20 = start.m20;
-		interpHelperMatrixStart.m21 = start.m21;
-		interpHelperMatrixStart.m22 = start.m22;
-		interpHelperMatrixStart.m33 = 1;
-		interpHelperMatrixStart.get(interpHelperQuatStart);
+		double quatEndw = Math.sqrt(1 + end.m00 + end.m11 + end.m22)/2D; 
+		double quatEndi = 1/(4*quatEndw)*(end.m21 - end.m12);
+		double quatEndj = 1/(4*quatEndw)*(end.m02 - end.m20);
+		double quatEndk = 1/(4*quatEndw)*(end.m10 - end.m01);
 		
-		interpHelperMatrixEnd.m00 = end.m00;
-		interpHelperMatrixEnd.m01 = end.m01;
-		interpHelperMatrixEnd.m02 = end.m02;
-		interpHelperMatrixEnd.m10 = end.m10;
-		interpHelperMatrixEnd.m11 = end.m11;
-		interpHelperMatrixEnd.m12 = end.m12;
-		interpHelperMatrixEnd.m20 = end.m20;
-		interpHelperMatrixEnd.m21 = end.m21;
-		interpHelperMatrixEnd.m22 = end.m22;
-		interpHelperMatrixEnd.m33 = 1;
-		interpHelperMatrixEnd.get(interpHelperQuatEnd);
+		//Use quternion SLERP to get interpolated quaternion.
+		//Copied from javax.vecmath.Quat4d
+		double dotProduct = quatStarti*quatEndi + quatStartj*quatEndj + quatStartk*quatEndk + quatStartw*quatEndw;
+		if(dotProduct < 0){
+			dotProduct = -dotProduct;
+			quatEndi = -quatEndi;
+			quatEndj = -quatEndj;
+			quatEndk = -quatEndk;
+			quatEndw = -quatEndw;
+		}
 		
-		interpHelperQuatStart.interpolate(interpHelperQuatEnd, delta);
-		interpHelperMatrixEnd.set(interpHelperQuatStart);
+		double segment1;
+		double segment2;
+		//Need to not do interpolation at really small values, as it leads to issues.
+		if(1.0 - dotProduct > 1.0e-8){
+			double angle = Math.acos(dotProduct);
+	        double sinAngle = Math.sin(angle);
+	        segment1 = Math.sin((1.0 - delta)*angle)/sinAngle;
+	        segment2 = Math.sin(delta*angle)/sinAngle;
+		}else{
+			segment1 = 1.0 - delta;
+			segment2 = delta;
+		}
+		double quatNetr = segment1*quatStartw + segment2*quatEndw;
+		double quatNeti = segment1*quatStarti + segment2*quatEndi;
+		double quatNetj = segment1*quatStartj + segment2*quatEndj;
+		double quatNetk = segment1*quatStartk + segment2*quatEndk;
 		
-		m00 = interpHelperMatrixEnd.m00;
-		m01 = interpHelperMatrixEnd.m01;
-		m02 = interpHelperMatrixEnd.m02;
-		m10 = interpHelperMatrixEnd.m10;
-		m11 = interpHelperMatrixEnd.m11;
-		m12 = interpHelperMatrixEnd.m12;
-		m20 = interpHelperMatrixEnd.m20;
-		m21 = interpHelperMatrixEnd.m21;
-		m22 = interpHelperMatrixEnd.m22;
+		//Now convert this quaternion back into this matrix.
+		m00 = (1.0 - 2.0*quatNetj*quatNetj - 2.0*quatNetk*quatNetk);
+		m10 = (2.0*(quatNeti*quatNetj + quatNetr*quatNetk));
+		m20 = (2.0*(quatNeti*quatNetk - quatNetr*quatNetj));
+
+		m01 = (2.0*(quatNeti*quatNetj - quatNetr*quatNetk));
+		m11 = (1.0 - 2.0*quatNeti*quatNeti - 2.0*quatNetk*quatNetk);
+		m21 = (2.0*(quatNetj*quatNetk + quatNetr*quatNeti));
+
+		m02 = (2.0*(quatNeti*quatNetk + quatNetr*quatNetj));
+		m12 = (2.0*(quatNetj*quatNetk - quatNetr*quatNeti));
+		m22 = (1.0 - 2.0*quatNeti*quatNeti - 2.0*quatNetj*quatNetj);
 		return this;
 	}
 }

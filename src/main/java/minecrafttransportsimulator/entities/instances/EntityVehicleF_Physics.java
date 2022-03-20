@@ -670,10 +670,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 			case("pitch"): return orientation.angles.x;
 			case("roll"): return orientation.angles.z;
 			case("altitude"): return position.y;
-			case("speed"): {
-				System.out.println(axialVelocity);
-				return axialVelocity*speedFactor*20;
-			}
+			case("speed"): return axialVelocity*speedFactor*20;
 			case("speed_scaled"): return axialVelocity*20;
 			case("speed_factor"): return speedFactor;
 			case("acceleration"): return motion.length() - prevMotion.length();

@@ -53,12 +53,12 @@ import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONSkin;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
+import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.packloading.JSONParser;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDefaults;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 import minecrafttransportsimulator.systems.PackParserSystem;
-import net.minecraft.client.Minecraft;
 
 /**This is a special GUI that doesn't use the normal GUI code.  Instead, it uses the Swing
  * libraries to allow for an interactive JSON editor.  This allows pack authors to edit
@@ -68,6 +68,7 @@ import net.minecraft.client.Minecraft;
  */
 public class GUIPackEditor extends JFrame{
 
+	private static final long serialVersionUID = 1L;
 	//Static variables for parameters.
 	private static final Font MAIN_BUTTON_FONT = new Font("Arial", Font.BOLD, 30);
 	private static final Font NORMAL_FONT = new Font("Arial", Font.PLAIN, 15);
@@ -87,7 +88,8 @@ public class GUIPackEditor extends JFrame{
 		setTitle("MTS Pack Edtior");  
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
-        setMaximumSize(new Dimension(Minecraft.getMinecraft().displayWidth, Minecraft.getMinecraft().displayHeight));
+        long displaySize = InterfaceClient.getPackedDisplaySize();
+        setMaximumSize(new Dimension((int) (displaySize >>  Integer.SIZE), (int) displaySize));
         ToolTipManager.sharedInstance().setInitialDelay(0);
         ToolTipManager.sharedInstance().setDismissDelay(Integer.MAX_VALUE);
         
@@ -467,7 +469,9 @@ public class GUIPackEditor extends JFrame{
 	
 	private static <EnumType> DefaultListCellRenderer generateEnumTooltipRenderer(EnumType[] enumConstants){
 		return new DefaultListCellRenderer(){
-		    @Override
+			private static final long serialVersionUID = 1L;
+
+			@Override
 		    public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus){
 		        JComponent component = (JComponent) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
 		        if(index > -1 && index < enumConstants.length){
@@ -488,7 +492,9 @@ public class GUIPackEditor extends JFrame{
 	
 	private static DefaultListCellRenderer generateClassTooltipRenderer(Class<?>[] classes){
 		return new DefaultListCellRenderer(){
-		    @Override
+			private static final long serialVersionUID = 1L;
+
+			@Override
 		    public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus){
 		        JComponent component = (JComponent) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
 		        if(index > -1 && index < classes.length){
@@ -548,7 +554,8 @@ public class GUIPackEditor extends JFrame{
 	}
 	
 	private static class ListElementPanel extends JPanel{
-		
+		private static final long serialVersionUID = 1L;
+
 		private ListElementPanel(JPanel parentPanel, List<Object> list, Object listEntry){
 			//Create new box container for holding buttons.
 			JPanel buttonPanel = new JPanel();
