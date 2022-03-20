@@ -263,7 +263,7 @@ public class InterfaceClient{
 	*/
 	@SubscribeEvent
 	public static void on(TickEvent.ClientTickEvent event){
-		if(event.phase.equals(Phase.END)){
+		if(!isGamePaused() && event.phase.equals(Phase.END)){
 			WrapperWorld clientWorld = WrapperWorld.getWrapperFor(Minecraft.getMinecraft().world);
 			if(clientWorld != null){
 				clientWorld.beginProfiling("MTS_BulletUpdates", true);
