@@ -126,8 +126,7 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
 		if(connectionRequestIndex != 0){
 			if(!world.isClient()){
 				//Don't handle requests on the client.  These get packets.
-				//FIXME re-nenable when towing is fixed.
-				//handleConnectionRequest(this, connectionRequestIndex - 1);
+				handleConnectionRequest(this, connectionRequestIndex - 1);
 			}
 			setVariable(TOWING_CONNECTION_REQUEST_VARIABLE, 0);
 		}
@@ -201,7 +200,8 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
 		if(!towingConnections.isEmpty()){
 			world.beginProfiling("TowedEntities", true);
 			for(TowingConnection connection : towingConnections){
-				connection.update();
+				connection.hitchPriorPosition.set(connection.hitchCurrentPosition);
+				connection.hitchCurrentPosition.set(connection.hitchConnection.pos).rotate(connection.towingEntity.orientation).add(connection.towingEntity.position);
 				connection.towedVehicle.update();
 			}
 			world.endProfiling();
@@ -414,6 +414,9 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
 	public void connectTrailer(TowingConnection connection){
 		towingConnections.add(connection);
 		connection.towedVehicle.towedByConnection = connection;
+		//Need to set initial values to avoid bad-syncing.
+		connection.hitchCurrentPosition.set(connection.hitchConnection.pos).rotate(connection.towingEntity.orientation).add(connection.towingEntity.position);
+		connection.hookupCurrentPosition.set(connection.hookupConnection.pos).rotate(connection.towedEntity.orientation).add(connection.towedEntity.position);
 		if(!world.isClient()){
 			InterfacePacket.sendToAllClients(new PacketEntityTowingChange(connection, true));
 		}

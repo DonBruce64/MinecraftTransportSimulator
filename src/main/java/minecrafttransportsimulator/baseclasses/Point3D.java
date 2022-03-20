@@ -190,10 +190,19 @@ public class Point3D{
 	
 	/**
 	 * Returns the dot product between this point and the passed-in point.
-	 * Note: this method assumes both points are normalized.
+	 * Note: this method assumes both points are normalized and clamps between
+	 * -1.0 and 1.0 to prevent out-of-bounds errors when the return value is used
+	 * in trigonometric functions, even if the math doesn't strictly result in that value.
 	 */
 	public double dotProduct(Point3D point){
-		return this.x*point.x + this.y*point.y + this.z*point.z;
+		double dotProduct = this.x*point.x + this.y*point.y + this.z*point.z;
+		if(dotProduct > 1){
+			return 1;
+		}else if(dotProduct < -1){
+			return -1;
+		}else{
+			return dotProduct;
+		}
 	}
 	
 	/**

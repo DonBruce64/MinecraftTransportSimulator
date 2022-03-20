@@ -292,14 +292,14 @@ public class VehicleGroundDeviceCollection{
 				//Make sure front is not airborne on at least one wheel before rotating.
 				if(!frontLeftGDB.isAirborne){
 					if(!frontRightGDB.isAirborne){
-						adjustAnglesMatrix(frontLeftGDB.contactPoint.z > frontRightGDB.contactPoint.x ? frontLeftGDB : frontRightGDB, rearLeftGDB, rearRightGDB, false, true, groundMotion);
+						adjustAnglesMatrix(frontLeftGDB.contactPoint.z > frontRightGDB.contactPoint.z ? frontLeftGDB.contactPoint : frontRightGDB.contactPoint, rearLeftGDB, rearRightGDB, false, true, true, groundMotion);
 						return;
 					}else{
-						adjustAnglesMatrix(frontLeftGDB, rearLeftGDB, rearRightGDB, false, true, groundMotion);
+						adjustAnglesMatrix(frontLeftGDB.contactPoint, rearLeftGDB, rearRightGDB, false, true, true, groundMotion);
 						return;
 					}
 				}else if(!frontRightGDB.isAirborne){
-					adjustAnglesMatrix(frontRightGDB, rearLeftGDB, rearRightGDB, false, true, groundMotion);
+					adjustAnglesMatrix(frontRightGDB.contactPoint, rearLeftGDB, rearRightGDB, false, true, true, groundMotion);
 					return;
 				}
 			}
@@ -309,14 +309,14 @@ public class VehicleGroundDeviceCollection{
 				//Make sure rear is not airborne on at least one wheel before rotating.
 				if(!rearLeftGDB.isAirborne){
 					if(!rearRightGDB.isAirborne){
-						adjustAnglesMatrix(rearLeftGDB.contactPoint.z < rearRightGDB.contactPoint.x ? rearLeftGDB : rearRightGDB, frontLeftGDB, frontRightGDB, true, true, groundMotion);
+						adjustAnglesMatrix(rearLeftGDB.contactPoint.z < rearRightGDB.contactPoint.z ? rearLeftGDB.contactPoint : rearRightGDB.contactPoint, frontLeftGDB, frontRightGDB, true, true, true, groundMotion);
 						return;
 					}else{
-						adjustAnglesMatrix(rearLeftGDB, frontLeftGDB, frontRightGDB, true, true, groundMotion);
+						adjustAnglesMatrix(rearLeftGDB.contactPoint, frontLeftGDB, frontRightGDB, true, true, true, groundMotion);
 						return;
 					}
 				}else if(!rearRightGDB.isAirborne){
-					adjustAnglesMatrix(rearRightGDB, frontLeftGDB, frontRightGDB, true, true, groundMotion);
+					adjustAnglesMatrix(rearRightGDB.contactPoint, frontLeftGDB, frontRightGDB, true, true, true, groundMotion);
 					return;
 				}
 			}
@@ -327,7 +327,7 @@ public class VehicleGroundDeviceCollection{
 			if(frontLeftGDB.isCollided || frontRightGDB.isCollided){
 				if(!vehicle.world.isClient() || (frontLeftGDB.collisionDepth > 0.1 || frontRightGDB.collisionDepth > 0.1)){
 					if(rearLeftGDB.isGrounded && !rearLeftGDB.isCollided && rearRightGDB.isGrounded && !rearRightGDB.isCollided){
-						adjustAnglesMatrix(rearLeftGDB.contactPoint.z < rearRightGDB.contactPoint.x ? rearLeftGDB : rearRightGDB, frontLeftGDB, frontRightGDB, false, true, groundMotion);
+						adjustAnglesMatrix(rearLeftGDB.contactPoint.z < rearRightGDB.contactPoint.z ? rearLeftGDB.contactPoint : rearRightGDB.contactPoint, frontLeftGDB, frontRightGDB, false, true, true, groundMotion);
 						return;
 					}
 				}
@@ -340,53 +340,49 @@ public class VehicleGroundDeviceCollection{
 			if(rearLeftGDB.isCollided || rearRightGDB.isCollided){
 				if(!vehicle.world.isClient() || (rearLeftGDB.collisionDepth > 0.1 || rearLeftGDB.collisionDepth > 0.1)){
 					if(frontLeftGDB.isGrounded && !frontLeftGDB.isCollided && frontRightGDB.isGrounded && !frontRightGDB.isCollided){
-						adjustAnglesMatrix(frontLeftGDB.contactPoint.z > frontRightGDB.contactPoint.x ? frontLeftGDB : frontRightGDB, rearLeftGDB, rearRightGDB, true, true, groundMotion);
+						adjustAnglesMatrix(frontLeftGDB.contactPoint.z > frontRightGDB.contactPoint.z ? frontLeftGDB.contactPoint : frontRightGDB.contactPoint, rearLeftGDB, rearRightGDB, true, true, true, groundMotion);
 						return;
 					}
 				}
 			}
 		}else{
-			//FIXME this isn't right for trailers.
-			Point3D hookupPoint = vehicle.towedByConnection.hookupConnection.pos.copy();
-			//if(vehicle.towedByConnection.hookupEntity instanceof APart){
-				//APart hookupPart = (APart) vehicle.towedByConnection.hookupEntity;
-				//hookupPoint.rotate(hookupPart.localOrientation).add(hookupPart.localOffset);
-			//}
-			/*if(hookupPoint.z > 0){
-				if(!rearLeftGDB.isGrounded && !rearRightGDB.isGrounded){
-					side1Delta = -Math.hypot(rearLeftGDB.contactPoint.y, rearLeftGDB.contactPoint.z);
-					side2Delta = -Math.hypot(rearRightGDB.contactPoint.y, rearRightGDB.contactPoint.z);
-					groundedSideOffset = Math.hypot(hookupPoint.y, hookupPoint.z);
-					testBox1 = rearLeftGDB;
-					testBox2 = rearRightGDB;
-				}else if(rearLeftGDB.isCollided || rearRightGDB.isCollided){
-					side1Delta = Math.hypot(rearLeftGDB.contactPoint.y, rearLeftGDB.contactPoint.z);
-					side2Delta = Math.hypot(rearRightGDB.contactPoint.y, rearRightGDB.contactPoint.z);
-					groundedSideOffset = -Math.hypot(hookupPoint.y, hookupPoint.z);
-					side1Delta -= groundedSideOffset;
-					side2Delta -= groundedSideOffset;
-					testBox1 = rearLeftGDB;
-					testBox2 = rearRightGDB;
-					return adjustTrailerAngles(testBox1, testBox2, side1Delta, side2Delta, groundedSideOffset, groundBoost);
+			//Check if we are connected on the front or back.
+			Point3D hookupRelativePosition = vehicle.towedByConnection.hookupCurrentPosition.copy().subtract(vehicle.position).reOrigin(vehicle.orientation);
+			if(hookupRelativePosition.z > 0){
+				//Hookup is in front of the vehicle, need to rotate clockwise if wheels are collided, counter-clockwise if free.
+				if((rearLeftGDB.isAirborne || !rearLeftGDB.isReady()) && (rearRightGDB.isAirborne || !rearRightGDB.isReady()) && (rearLeftGDB.isAirborne || !rearLeftGDB.isReady()) && (rearRightGDB.isAirborne || !rearRightGDB.isReady())){
+					//Ground devices are all free (or just don't exist).  Do rotation to put them on the ground.
+					if(rearLeftGDB.isReady() && rearRightGDB.isReady()){
+						adjustAnglesMatrix(hookupRelativePosition, rearLeftGDB, rearRightGDB, false, true, true, groundMotion);
+					}else if(frontLeftGDB.isReady() && frontRightGDB.isReady()){
+						adjustAnglesMatrix(hookupRelativePosition, frontLeftGDB, frontRightGDB, false, true, true, groundMotion);
+					}
+				}else{
+					//Ground devices are either collided, or just don't exist.  Do rotation to un-collide them.
+					if((rearLeftGDB.isCollided || rearRightGDB.isCollided) && rearLeftGDB.isReady() && rearRightGDB.isReady()){
+						adjustAnglesMatrix(hookupRelativePosition, rearLeftGDB, rearRightGDB, true, true, false, groundMotion);
+					}else if((frontLeftGDB.isCollided || frontRightGDB.isCollided) && frontLeftGDB.isReady() && frontRightGDB.isReady()){
+						adjustAnglesMatrix(hookupRelativePosition, frontLeftGDB, frontRightGDB, true, true, false, groundMotion);
+					}
 				}
 			}else{
-				if(!frontLeftGDB.isGrounded && !frontRightGDB.isGrounded){
-					side1Delta = Math.hypot(frontLeftGDB.contactPoint.y, frontLeftGDB.contactPoint.z);
-					side2Delta = Math.hypot(frontRightGDB.contactPoint.y, frontRightGDB.contactPoint.z);
-					groundedSideOffset = -Math.hypot(hookupPoint.y, hookupPoint.z);
-					testBox1 = frontLeftGDB;
-					testBox2 = frontRightGDB;
-				}else if(frontLeftGDB.isCollided || frontRightGDB.isCollided){
-					side1Delta = -Math.hypot(frontLeftGDB.contactPoint.y, frontLeftGDB.contactPoint.z);
-					side2Delta = -Math.hypot(frontRightGDB.contactPoint.y, frontRightGDB.contactPoint.z);
-					groundedSideOffset = Math.hypot(hookupPoint.y, hookupPoint.z);
-					side1Delta -= groundedSideOffset;
-					side2Delta -= groundedSideOffset;
-					testBox1 = frontLeftGDB;
-					testBox2 = frontRightGDB;
-					return adjustTrailerAngles(testBox1, testBox2, side1Delta, side2Delta, groundedSideOffset, groundBoost);
+				//Hookup is in rear of the vehicle, need to rotate counter-clockwise if wheels are collided, clockwise if free.
+				if((rearLeftGDB.isAirborne || !rearLeftGDB.isReady()) && (rearRightGDB.isAirborne || !rearRightGDB.isReady()) && (rearLeftGDB.isAirborne || !rearLeftGDB.isReady()) && (rearRightGDB.isAirborne || !rearRightGDB.isReady())){
+					//Ground devices are all free (or just don't exist).  Do rotation to put them on the ground.
+					if(frontLeftGDB.isReady() && frontRightGDB.isReady()){
+						adjustAnglesMatrix(hookupRelativePosition, frontLeftGDB, frontRightGDB, true, true, true, groundMotion);
+					}else if(rearLeftGDB.isReady() && rearRightGDB.isReady()){
+						adjustAnglesMatrix(hookupRelativePosition, rearLeftGDB, rearRightGDB, true, true, true, groundMotion);
+					}
+				}else{
+					//Ground devices are either collided, or just don't exist.  Do rotation to un-collide them.
+					if((frontLeftGDB.isCollided || frontRightGDB.isCollided) && frontLeftGDB.isReady() && frontRightGDB.isReady()){
+						adjustAnglesMatrix(hookupRelativePosition, frontLeftGDB, frontRightGDB, false, true, false, groundMotion);
+					}else if((rearLeftGDB.isCollided || rearRightGDB.isCollided) && rearLeftGDB.isReady() && rearRightGDB.isReady()){
+						adjustAnglesMatrix(hookupRelativePosition, rearLeftGDB, rearRightGDB, false, true, false, groundMotion);
+					}
 				}
-			}*/
+			}
 		}
 	}
 	
@@ -403,12 +399,12 @@ public class VehicleGroundDeviceCollection{
 			//This prevents us from doing rotation in the air.
 			if(frontRightGDB.isCollided || frontRightGDB.isGrounded){
 				if(rearRightGDB.isCollided || rearRightGDB.isGrounded){
-					adjustAnglesMatrix(frontRightGDB.contactPoint.z < rearRightGDB.contactPoint.x ? frontRightGDB : rearRightGDB, frontLeftGDB, rearLeftGDB, false, false, groundMotion);
+					adjustAnglesMatrix(frontRightGDB.contactPoint.x < rearRightGDB.contactPoint.x ? frontRightGDB.contactPoint : rearRightGDB.contactPoint, frontLeftGDB, rearLeftGDB, false, false, true, groundMotion);
 				}else{
-					adjustAnglesMatrix(frontRightGDB, frontLeftGDB, rearLeftGDB, false, false, groundMotion);
+					adjustAnglesMatrix(frontRightGDB.contactPoint, frontLeftGDB, rearLeftGDB, false, false, true, groundMotion);
 				}
 			}else if(rearRightGDB.isCollided || rearRightGDB.isGrounded){
-				adjustAnglesMatrix(rearRightGDB, frontLeftGDB, rearLeftGDB, false, false, groundMotion);
+				adjustAnglesMatrix(rearRightGDB.contactPoint, frontLeftGDB, rearLeftGDB, false, false, true, groundMotion);
 			}
 		}
 		
@@ -418,12 +414,12 @@ public class VehicleGroundDeviceCollection{
 			//This prevents us from doing rotation in the air.
 			if(frontLeftGDB.isCollided || frontLeftGDB.isGrounded){
 				if(rearLeftGDB.isCollided || rearLeftGDB.isGrounded){
-					adjustAnglesMatrix(frontLeftGDB.contactPoint.z < rearLeftGDB.contactPoint.x ? frontLeftGDB : rearLeftGDB, frontRightGDB, rearRightGDB, true, false, groundMotion);
+					adjustAnglesMatrix(frontLeftGDB.contactPoint.x < rearLeftGDB.contactPoint.x ? frontLeftGDB.contactPoint : rearLeftGDB.contactPoint, frontRightGDB, rearRightGDB, true, false, true, groundMotion);
 				}else{
-					adjustAnglesMatrix(frontLeftGDB, frontRightGDB, rearRightGDB, true, false, groundMotion);
+					adjustAnglesMatrix(frontLeftGDB.contactPoint, frontRightGDB, rearRightGDB, true, false, true, groundMotion);
 				}
 			}else if(rearLeftGDB.isCollided || rearLeftGDB.isGrounded){
-				adjustAnglesMatrix(rearLeftGDB, frontRightGDB, rearRightGDB, true, false, groundMotion);
+				adjustAnglesMatrix(rearLeftGDB.contactPoint, frontRightGDB, rearRightGDB, true, false, true, groundMotion);
 			}
 		}
 	}
@@ -431,16 +427,16 @@ public class VehicleGroundDeviceCollection{
 	/**
 	 * Helper function to adjust angles in a common manner for pitch and roll calculations.
 	 */
-	private void adjustAnglesMatrix(VehicleGroundDeviceBox originBox, VehicleGroundDeviceBox testBox1, VehicleGroundDeviceBox testBox2, boolean clockwiseRotation, boolean pitch, Point3D groundMotion){
+	private void adjustAnglesMatrix(Point3D originPoint, VehicleGroundDeviceBox testBox1, VehicleGroundDeviceBox testBox2, boolean clockwiseRotation, boolean pitch, boolean checkCollisions, Point3D groundMotion){
 		//Get the two box deltas.
 		double box1Delta;
 		double box2Delta;
 		if(pitch){
-			box1Delta = Math.hypot(originBox.contactPoint.z - testBox1.contactPoint.z, originBox.contactPoint.y - testBox1.contactPoint.y);
-			box2Delta = Math.hypot(originBox.contactPoint.z - testBox2.contactPoint.z, originBox.contactPoint.y - testBox2.contactPoint.y);
+			box1Delta = Math.hypot(originPoint.z - testBox1.contactPoint.z, originPoint.y - testBox1.contactPoint.y);
+			box2Delta = Math.hypot(originPoint.z - testBox2.contactPoint.z, originPoint.y - testBox2.contactPoint.y);
 		}else{
-			box1Delta = Math.hypot(originBox.contactPoint.x - testBox1.contactPoint.x, originBox.contactPoint.y - testBox1.contactPoint.y);
-			box2Delta = Math.hypot(originBox.contactPoint.x - testBox2.contactPoint.x, originBox.contactPoint.y - testBox2.contactPoint.y);
+			box1Delta = Math.hypot(originPoint.x - testBox1.contactPoint.x, originPoint.y - testBox1.contactPoint.y);
+			box2Delta = Math.hypot(originPoint.x - testBox2.contactPoint.x, originPoint.y - testBox2.contactPoint.y);
 		}
 		
 		//Get the angle to rotate by based on the farthest points and collision depth.
@@ -463,17 +459,17 @@ public class VehicleGroundDeviceCollection{
 			//This is how the box will move given the rotation we are rotating the box about.
 			//This is done in the vehicle's local coordinates and applied to the box prior to vehicle offset.
 			transformApplied.resetTransforms();
-			transformApplied.setTranslation(originBox.contactPoint);
+			transformApplied.setTranslation(originPoint);
 			if(pitch){
 				rotationApplied.setToZero().rotateX(angleApplied);
 			}else{
 				rotationApplied.setToZero().rotateZ(angleApplied);
 			}
 			transformApplied.multiply(rotationApplied);
-			transformApplied.applyInvertedTranslation(originBox.contactPoint);
+			transformApplied.applyInvertedTranslation(originPoint);
 			
 			//Check for collisions.
-			if(!testBox1.collidedWithTransform(transformApplied, groundMotion) && !testBox2.collidedWithTransform(transformApplied, groundMotion)){
+			if(!checkCollisions || (!testBox1.collidedWithTransform(transformApplied, groundMotion) && !testBox2.collidedWithTransform(transformApplied, groundMotion))){
 				break;
 			}
 		}

@@ -203,12 +203,19 @@ public class VehicleGroundDeviceBox{
 		collisionDepth = 0;
 		
 		Point3D vehicleMotionOffset = vehicle.motion.copy().scale(vehicle.speedFactor);
+		if(vehicleMotionOffset.y == 0 && vehicle.towedByConnection != null && !vehicle.towedByConnection.hookupConnection.mounted){
+			//Need to add a super-small amount of -y motion here.
+			//If we don't, then we won't do trailer physics right as those always need to check for blocks below them.
+			vehicleMotionOffset.y = -0.00001;
+		}
 		Point3D groundCollisionOffset = vehicleMotionOffset.copy().add(PartGroundDevice.groundDetectionOffset);
 		if(!groundDevices.isEmpty()){
 			contactPoint.set(solidBox.localCenter);
 			contactPoint.add(0D, -solidBox.heightRadius, 0D);
 			solidBox.globalCenter.set(solidBox.localCenter).rotate(vehicle.orientation).rotate(vehicle.rotation).add(vehicle.position).add(vehicleMotionOffset);
 			vehicle.world.updateBoundingBoxCollisions(solidBox, vehicleMotionOffset, false);
+			//[X:-585.5483856782763, Y:67.33360349844983, Z:-1180.7988879242168]
+			
 			contactedEntity = checkEntityCollisions(vehicleMotionOffset);
 			isCollided = contactedEntity || !solidBox.collidingBlockPositions.isEmpty();
 			collisionDepth = solidBox.currentCollisionDepth.y;

@@ -660,27 +660,25 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 				//instantly climb mountains.  Because of this, we add only 1/8 block, or enough motionY to prevent collision,
 				//whichever is the lower of the two.  If we apply boost, update our collision boxes before the next step.
 				//Note that this logic is not applied on trailers, as they use special checks with only rotations for movement.
-				if(towedByConnection == null){
-					world.beginProfiling("GroundBoostCheck", false);
-					groundMotion.y = groundDeviceCollective.getMaxCollisionDepth()/speedFactor;
-					if(groundMotion.y > 0){
-						world.beginProfiling("GroundBoostApply", false);
-						//Make sure boost doesn't exceed the config value.
-						groundMotion.y = Math.min(groundMotion.y, ConfigSystem.settings.general.climbSpeed.value/speedFactor);
-						
-						//If adding our boost would make motion.y positive, set motion.y to zero and apply the remaining boost.
-						//This is done as it's clear motion.y is just moving the vehicle into the ground.
-						//Having negative motion.y is okay if we don't boost above, as this just means we are falling to the ground via gravity.
-						//In this case, we use our boost, but set it to 0 as we want to just attenuate the negative motion, not remove it.
-						if(motion.y <= 0 && motion.y + groundMotion.y > 0){
-							groundMotion.y += motion.y;
-							motion.y = 0;
-						}else{
-							motion.y += groundMotion.y;
-							groundMotion.y = 0;
-						}
-						groundDeviceCollective.updateCollisions();
+				world.beginProfiling("GroundBoostCheck", false);
+				groundMotion.y = groundDeviceCollective.getMaxCollisionDepth()/speedFactor;
+				if(groundMotion.y > 0){
+					world.beginProfiling("GroundBoostApply", false);
+					//Make sure boost doesn't exceed the config value.
+					groundMotion.y = Math.min(groundMotion.y, ConfigSystem.settings.general.climbSpeed.value/speedFactor);
+					
+					//If adding our boost would make motion.y positive, set motion.y to zero and apply the remaining boost.
+					//This is done as it's clear motion.y is just moving the vehicle into the ground.
+					//Having negative motion.y is okay if we don't boost above, as this just means we are falling to the ground via gravity.
+					//In this case, we use our boost, but set it to 0 as we want to just attenuate the negative motion, not remove it.
+					if(motion.y <= 0 && motion.y + groundMotion.y > 0){
+						groundMotion.y += motion.y;
+						motion.y = 0;
+					}else{
+						motion.y += groundMotion.y;
+						groundMotion.y = 0;
 					}
+					groundDeviceCollective.updateCollisions();
 				}
 				
 				//After checking the ground devices to ensure we aren't shoving ourselves into the ground, we try to move the vehicle.
@@ -700,7 +698,9 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 					}else if(correctCollidingMovement()){
 						return;
 					}
-				}else if(fallingDown){
+					groundDeviceCollective.updateCollisions();
+				}
+				if(fallingDown || towedByConnection != null){
 					world.beginProfiling("GroundHandlingPitch", false);
 					groundDeviceCollective.performPitchCorrection(groundMotion);
 					//Don't do roll correction if we don't have roll.
@@ -854,15 +854,12 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			}
 		}else{
 			//Mounted vehicles don't do most motions, only a sub-set of them.
-			//Now that that the movement has been checked, move the vehicle.
 			world.beginProfiling("ApplyMotions", false);
 			motionApplied.set(motion).scale(speedFactor);
-			//Rotation for mounted connections aligns using orientation, not angle-deltas.
-			rotationApplied.set(rotation);
-			
-			//All contributions done, add calculated motions.
 			position.add(motionApplied);
-			orientation.multiply(rotationApplied).convertToAngles();
+			
+			//Rotation for mounted connections aligns using orientation, not angle-deltas.
+			orientation.set(rotation).convertToAngles();
 			
 			//For syncing, just add our deltas.  We don't actually do syncing operations here.
 			if(world.isClient()){
@@ -981,7 +978,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			//Internal call either from server, add normally and send packet if needed.
 			if(!motionApplied.isZero() || !rotationApplied.angles.isZero()){
 				if(!rotationApplied.angles.isZero()){
-					rotationApplied.angles.set(orientation.angles).subtract(prevOrientation.angles).clamp180();					//clientDeltaR.add(orientation.angles).subtract(prevOrientation.angles);
+					rotationApplied.angles.set(orientation.angles).subtract(prevOrientation.angles).clamp180();
 				}
 				serverDeltaM.add(motionApplied);
 				serverDeltaR.add(rotationApplied.angles);

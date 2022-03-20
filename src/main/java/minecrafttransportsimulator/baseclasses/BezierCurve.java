@@ -49,7 +49,7 @@ public class BezierCurve{
 				rotation.angles.x = -Math.toDegrees(Math.atan((cachedPathPoints[i][1] - cachedPathPoints[i - 1][1])/Math.hypot(cachedPathPoints[i][0] - cachedPathPoints[i - 1][0], cachedPathPoints[i][2] - cachedPathPoints[i - 1][2])));
 				rotation.angles.y = (360 + Math.toDegrees(Math.atan2(cachedPathPoints[i][0] - cachedPathPoints[i - 1][0], cachedPathPoints[i][2] - cachedPathPoints[i - 1][2])))%360;
 				rotation.angles.z = startAngles.z + (endAngles.z - startAngles.z)*i/cachedPathPoints.length;
-				cachedPathRotations[i] = rotation.setToAngles(rotation.angles);
+				cachedPathRotations[i] = rotation.updateToAngles();
 			}
 		}
 		

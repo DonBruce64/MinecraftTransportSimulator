@@ -375,8 +375,6 @@ public class JSONConfigLanguage{
 	
 	
 	public static final LanguageEntry SYSTEM_IAV = new LanguageEntry("system.iav", "IAV has been detected as installed.  This pack messes up the font for IV and MUST be removed to continue.");
-	//FIXME remove when trailers are fixed.
-	public static final LanguageEntry SYSTEM_TRAILER = new LanguageEntry("sytstem.trailer", "Due to crashes, trailers have been disabled in this release.  Please check back in a later version.");
 	public static final LanguageEntry SYSTEM_SOUNDSLOT = new LanguageEntry("sytstem.soundslot", "IMMERSIVE VEHICLES ERROR: Tried to play a sound, but was told no sound slots were available.  Some mod is taking up all the slots.  Probabaly Immersive Railroading or Dynamic Surroundings.  If you have those installed, complain to the mod author or check the mod configs.  Sound will not play.");
 	public static final LanguageEntry SYSTEM_DEBUG = new LanguageEntry("sytstem.debug", "%s"); 
 }

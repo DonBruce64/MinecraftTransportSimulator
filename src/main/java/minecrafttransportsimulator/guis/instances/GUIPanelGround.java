@@ -9,6 +9,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
+import minecrafttransportsimulator.entities.components.AEntityG_Towable;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartEngine;
@@ -16,7 +17,6 @@ import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentSelector;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
-import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
@@ -277,9 +277,7 @@ public class GUIPanelGround extends AGUIPanel{
 				GUIComponentSelector trailerSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + (i%4)*(SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, switchDef.connectionGroup.groupName, vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, TRAILER_TEXTURE_WIDTH_OFFSET, TRAILER_TEXTURE_HEIGHT_OFFSET, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE){
 					@Override
 					public void onClicked(boolean leftSide){
-						//InterfacePacket.sendToServer(new PacketEntityVariableSet(switchDef.connectionDefiner, AEntityG_Towable.TOWING_CONNECTION_REQUEST_VARIABLE, switchDef.connectionGroupIndex + 1));
-						//FIXME enable when trailers work.
-						InterfaceClient.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_TRAILER);
+						InterfacePacket.sendToServer(new PacketEntityVariableSet(switchDef.connectionDefiner, AEntityG_Towable.TOWING_CONNECTION_REQUEST_VARIABLE, switchDef.connectionGroupIndex + 1));
 					}
 					
 					@Override

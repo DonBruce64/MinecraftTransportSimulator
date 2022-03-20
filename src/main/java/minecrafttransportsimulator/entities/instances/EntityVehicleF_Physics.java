@@ -81,6 +81,8 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	private final Point3D normalizedVelocityVector = new Point3D();
 	private final Point3D verticalVector = new Point3D();
 	private final Point3D sideVector = new Point3D();
+	private final Point3D hitchPrevOffset = new Point3D();
+	private final Point3D hitchCurrentOffset = new Point3D();
 	private final Set<AEntityG_Towable<?>> towedEntitiesCheckedForWeights = new HashSet<AEntityG_Towable<?>>();
 	
 	//Properties.
@@ -467,59 +469,44 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 			totalTorque.z /= momentRoll;
 			rotation.angles.set(totalTorque).add(rotorRotation);
 		}else if(!lockedOnRoad){
-			//If we are a trailer that is mounted, just move the vehicle to the exact position of the trailer connection.
-			//Otherwise, do movement logic  Make sure the towed vehicle is loaded, however.  It may not yet be.
+			towedByConnection.hookupPriorPosition.set(towedByConnection.hookupCurrentPosition);
+			
+			//If we are a trailer that is mounted, just orient the vehicle to the exact position of the trailer connection.
+			//Otherwise, do is relative to the vehicle orientations.
 			if(towedByConnection.hitchConnection.mounted || towedByConnection.hitchConnection.restricted){
-				motion.set(towedByConnection.hitchCurrentPosition).subtract(towedByConnection.hookupCurrentPosition).scale(1/speedFactor);
-				//FIXME for sure do this, as it's disabled for now.
-				rotation.set(towedByConnection.towingEntity.orientation).multiply(towedByConnection.hitchConnection.rot).multiplyTranspose(orientation);
+				rotation.set(towedByConnection.towingEntity.orientation).multiply(towedByConnection.hitchConnection.rot);
 				if(towedByConnection.hitchConnection.restricted){
-					rotation.angles.x = 0;
-					rotation.angles.z = 0;
+					rotation.angles.x = orientation.angles.x;
+					rotation.angles.z = orientation.angles.z;
 					rotation.updateToAngles();
 				}
+				towedByConnection.hookupCurrentPosition.set(towedByConnection.hookupConnection.pos).rotate(rotation).add(towedByConnection.towedEntity.position);
 			}else{
 				//Need to apply both motion to move the trailer, and yaw to adjust the trailer's angle relative to the truck.
 				//Yaw is applied based on the current and next position of the truck's hookup.
 				//Motion is applied after yaw corrections to ensure the trailer follows the truck.
 				//Start by getting the hitch offsets.  We save the current offset as we'll change it for angle calculations.
-				Point3D tractorHitchPrevOffsetXZ = towedByConnection.hitchPriorPosition.subtract(prevPosition);
-				Point3D tractorHitchCurrentOffsetXZ = towedByConnection.hitchCurrentPosition.subtract(position);
-				Point3D tractorHitchCurrentOffset = tractorHitchCurrentOffsetXZ.copy();
+				//For these offsets, we want them to be local to our coordinates, as that is what system we will need to apply yaw in.
+				hitchPrevOffset.set(towedByConnection.hitchPriorPosition).subtract(prevPosition).reOrigin(orientation);
+				hitchCurrentOffset.set(towedByConnection.hitchCurrentPosition).subtract(position).reOrigin(orientation);
 				
-				//Calculate how much yaw we need to apply to rotate the trailer.
-				//This is only done for the X and Z motions.
-				//If we are restricted, make yaw match the hookup.
-				tractorHitchPrevOffsetXZ.y = 0;
-				tractorHitchCurrentOffsetXZ.y = 0;
-				tractorHitchPrevOffsetXZ.normalize();
-				tractorHitchCurrentOffsetXZ.normalize();
-				double rotationDelta;
-				if(towedByConnection.hitchConnection.restricted){
-					rotationDelta = towedByConnection.towingVehicle.orientation.angles.y - orientation.angles.y;
-				}else{
-					rotationDelta = Math.toDegrees(Math.acos(tractorHitchPrevOffsetXZ.dotProduct(tractorHitchCurrentOffsetXZ)));
-					rotationDelta *= Math.signum(tractorHitchPrevOffsetXZ.crossProduct(tractorHitchCurrentOffsetXZ).y);
+				//Calculate how much yaw we need to apply to rotate ourselves to match the hitch point.
+				hitchPrevOffset.y = 0;
+				hitchCurrentOffset.y = 0;
+				hitchPrevOffset.normalize();
+				hitchCurrentOffset.normalize();
+				double rotationDelta = Math.toDegrees(Math.acos(hitchPrevOffset.dotProduct(hitchCurrentOffset)));
+				if(hitchPrevOffset.crossProduct(hitchCurrentOffset).y < 0){
+					rotationDelta = -rotationDelta;
 				}
-				
-				//If the rotation is valid, add it.
-				//We need to fake-add the yaw for the motion calculation here, hence the odd temp setting of the angles.
-				Point3D trailerHookupOffset;
-				if(!Double.isNaN(rotationDelta)){
-					rotation.angles.y = rotationDelta;
-					orientation.angles.y += rotationDelta;
-					trailerHookupOffset = towedByConnection.hookupCurrentPosition.subtract(position);
-					orientation.angles.y -= rotationDelta;
-				}else{
-					trailerHookupOffset = towedByConnection.hookupCurrentPosition.subtract(position);
-				}
-				
-				//Now move the trailer to the hitch.  Also set rotations to 0 to prevent odd math.
-				motion.set(tractorHitchCurrentOffset.subtract(trailerHookupOffset).scale(1/speedFactor));
-				rotation.angles.x = 0;
-				rotation.angles.z = 0;
+				rotation.angles.set(0, rotationDelta, 0);
+				rotation.updateToAngles();
+				towedByConnection.hookupCurrentPosition.set(towedByConnection.hookupConnection.pos).rotate(towedByConnection.towedEntity.orientation).rotate(rotation).add(towedByConnection.towedEntity.position);
 			}
+			//Now get positional delta.  This assumes perfectly-aligned orientation.				
+			motion.set(towedByConnection.hitchCurrentPosition).subtract(towedByConnection.hookupCurrentPosition).scale(1/speedFactor);
 		}else{
+			//Towed vehicle on a road with towing vehicle.  Just use same deltas.
 			motion.set(towedByConnection.towingVehicle.motion);
 			rotation.angles.set(0, 0, 0);
 		}

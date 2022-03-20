@@ -82,16 +82,6 @@ public class TowingConnection{
 		}
 		return hitchConnection != null && hookupConnection != null;
 	}
-
-	/**
-	 * Updates this connection.  This sets the hitch and hookup prior and next positions.
-	 */
-	public void update(){
-		hitchPriorPosition.set(hitchCurrentPosition);
-		hitchCurrentPosition.set(hitchConnection.pos).rotate(towingEntity.orientation).add(towingEntity.position);
-		hookupPriorPosition.set(hookupCurrentPosition);
-		hookupCurrentPosition.set(hookupConnection.pos).rotate(towedEntity.orientation).add(towedEntity.position);
-	}
 	
 	public WrapperNBT save(WrapperNBT data){
 		data.setUUID("hitchEntityUUID", hitchEntityUUID);
