@@ -330,7 +330,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		normalizedGroundHeadingVector.set(headingVector.x, 0D, headingVector.z);
 		normalizedGroundHeadingVector.normalize();
 		double turningForce = getTurningForce();
-		double dotProduct = normalizedGroundVelocityVector.dotProduct(normalizedGroundHeadingVector);
+		double dotProduct = normalizedGroundVelocityVector.dotProduct(normalizedGroundHeadingVector, true);
 		//TODO having velocity in the formula here has the potential to lead to hang-ups. Use packets perhaps?
 		if(skidSteerActive){
 			goingInReverse = false;
@@ -361,7 +361,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			if (this.towedByConnection == null){
 				double overSteerForce = Math.max(velocity / 4, 1);
 				if (definition.motorized.overSteerAccel != 0){
-					weightTransfer += ((motion.dotProduct(motion) - prevMotion.dotProduct(prevMotion)) * weightTransfer) * currentOverSteer;
+					weightTransfer += ((motion.dotProduct(motion, false) - prevMotion.dotProduct(prevMotion, false)) * weightTransfer) * currentOverSteer;
 					if (Math.abs(weightTransfer) > Math.abs(definition.motorized.overSteerAccel) && Math.abs(weightTransfer) > Math.abs(definition.motorized.overSteerDecel)){
 			    			weightTransfer = definition.motorized.overSteerAccel;
 					}else if(Math.abs(weightTransfer) < Math.abs(definition.motorized.overSteerDecel) && weightTransfer < Math.abs(definition.motorized.overSteerAccel)){

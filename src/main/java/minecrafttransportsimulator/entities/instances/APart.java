@@ -156,7 +156,7 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 		
 		//Update local position, orientation, scale, and enabled state.
 		isInvisible = false;
-		scale = placementDefinition.isSubPart && parentPart != null ? parentPart.scale : entityOn.scale;
+		scale.set(placementDefinition.isSubPart && parentPart != null ? parentPart.scale : entityOn.scale);
 		localOrientation.setToZero();
 		
 		//Placement movement uses the coords of the thing we are on.

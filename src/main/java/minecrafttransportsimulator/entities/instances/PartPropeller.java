@@ -144,7 +144,7 @@ public class PartPropeller extends APart{
 		if(connectedEngine != null && connectedEngine.running){
 			//Get the current linear velocity of the propeller, based on our axial velocity.
 			//This is is meters per second.
-			double currentLinearVelocity = 20D*vehicleOn.motion.dotProduct(propellerAxisVector);
+			double currentLinearVelocity = 20D*vehicleOn.motion.dotProduct(propellerAxisVector, false);
 			//Get the desired linear velocity of the propeller, based on the current RPM and pitch.
 			//We add to the desired linear velocity by a small factor.  This is because the actual cruising speed of aircraft
 			//is based off of engine max RPM equating exactly to ideal linear speed of the propeller.  I'm sure there are nuances

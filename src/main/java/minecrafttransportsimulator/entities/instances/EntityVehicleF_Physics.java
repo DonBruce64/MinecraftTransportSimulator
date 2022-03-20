@@ -319,7 +319,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 			}
 			
 			//Get the track angle.  This is used for control surfaces.
-			trackAngle = -Math.toDegrees(Math.asin(verticalVector.dotProduct(normalizedVelocityVector)));
+			trackAngle = -Math.toDegrees(Math.asin(verticalVector.dotProduct(normalizedVelocityVector, true)));
 			
 			//Set blimp-specific states before calculating forces.
 			if(definition.motorized.isBlimp){
@@ -341,7 +341,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 			}
 			
 			//Get the lift coefficients and states for control surfaces.
-			double yawAngleDelta = Math.toDegrees(Math.asin(sideVector.dotProduct(normalizedVelocityVector)));
+			double yawAngleDelta = Math.toDegrees(Math.asin(sideVector.dotProduct(normalizedVelocityVector, true)));
 			wingLiftCoeff = getLiftCoeff(trackAngle, 2 + flapCurrentAngle/MAX_FLAP_ANGLE_REFERENCE);
 			aileronLiftCoeff = getLiftCoeff((aileronAngle + aileronTrim), 2);
 			elevatorLiftCoeff = getLiftCoeff(-2.5 + trackAngle - (elevatorAngle + elevatorTrim), 2);
@@ -489,7 +489,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 				hitchCurrentOffset.y = 0;
 				hitchPrevOffset.normalize();
 				hitchCurrentOffset.normalize();
-				double rotationDelta = Math.toDegrees(Math.acos(hitchPrevOffset.dotProduct(hitchCurrentOffset)));
+				double rotationDelta = Math.toDegrees(Math.acos(hitchPrevOffset.dotProduct(hitchCurrentOffset, true)));
 				if(hitchPrevOffset.crossProduct(hitchCurrentOffset).y < 0){
 					rotationDelta = -rotationDelta;
 				}
@@ -542,10 +542,10 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 					}
 				}
 				//Change pitch/roll based on movement.
-				double forwardsVelocity = motion.dotProduct(headingVector);
-				double sidewaysVelocity = motion.dotProduct(sideVector);
-				double forwardsDelta = forwardsVelocity - prevMotion.dotProduct(headingVector);
-				double sidewaysDelta = sidewaysVelocity - prevMotion.dotProduct(sideVector);
+				double forwardsVelocity = motion.dotProduct(headingVector, false);
+				double sidewaysVelocity = motion.dotProduct(sideVector, false);
+				double forwardsDelta = forwardsVelocity - prevMotion.dotProduct(headingVector, false);
+				double sidewaysDelta = sidewaysVelocity - prevMotion.dotProduct(sideVector, false);
 				if(forwardsDelta > 0 && forwardsVelocity > 0 && elevatorTrim < MAX_ELEVATOR_TRIM){
 					setVariable(ELEVATOR_TRIM_VARIABLE, elevatorTrim + 1);
 					InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_TRIM_VARIABLE, 1));
@@ -670,7 +670,10 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 			case("pitch"): return orientation.angles.x;
 			case("roll"): return orientation.angles.z;
 			case("altitude"): return position.y;
-			case("speed"): return axialVelocity*speedFactor*20;
+			case("speed"): {
+				System.out.println(axialVelocity);
+				return axialVelocity*speedFactor*20;
+			}
 			case("speed_scaled"): return axialVelocity*20;
 			case("speed_factor"): return speedFactor;
 			case("acceleration"): return motion.length() - prevMotion.length();
@@ -693,7 +696,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 			case("lift_reserve"): return -trackAngle;
 			case("turn_coordinator"): return ((rotation.angles.z)/10 + rotation.angles.y)/0.15D*25;
 			case("turn_indicator"): return (rotation.angles.y)/0.15F*25F;
-			case("slip"): return 75*sideVector.dotProduct(normalizedVelocityVector);
+			case("slip"): return 75*sideVector.dotProduct(normalizedVelocityVector, true);
 			case("gear_moving"): return (isVariableActive(GEAR_VARIABLE) ? gearMovementTime != definition.motorized.gearSequenceDuration : gearMovementTime != 0) ? 1 : 0;
 			case("beacon_direction"): return selectedBeacon != null ? orientation.angles.getClampedYDelta(Math.toDegrees(Math.atan2(selectedBeacon.position.x - position.x, selectedBeacon.position.z - position.z))) : 0;
 			case("beacon_bearing_setpoint"): return selectedBeacon != null ? selectedBeacon.bearing : 0;

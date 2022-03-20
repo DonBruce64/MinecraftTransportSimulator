@@ -45,7 +45,7 @@ abstract class AEntityVehicleC_Colliding extends AEntityVehicleB_Rideable{
 		world.beginProfiling("SetVectors", true);
 		headingVector.set(0D, 0D, 1D);
 		headingVector.rotate(orientation);
-		axialVelocity = Math.abs(motion.dotProduct(headingVector));
+		axialVelocity = Math.abs(motion.dotProduct(headingVector, false));
 		
 		//Update mass.
 		world.beginProfiling("SetMass", false);

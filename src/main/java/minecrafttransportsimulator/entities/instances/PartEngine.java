@@ -510,7 +510,7 @@ public class PartEngine extends APart{
 			for(APart part : childParts){
 				if(part instanceof PartPropeller){
 					attachedPropeller = (PartPropeller) part;
-					propellerAxialVelocity = vehicleOn.motion.dotProduct(attachedPropeller.propellerAxisVector);
+					propellerAxialVelocity = vehicleOn.motion.dotProduct(attachedPropeller.propellerAxisVector, false);
 					propellerGearboxRatio = Math.signum(currentGearRatio)*(definition.engine.propellerRatio != 0 ? definition.engine.propellerRatio : Math.abs(currentGearRatio));
 					
 					//If wheel friction is 0, and we aren't in neutral, get RPM contributions for that.
@@ -569,7 +569,7 @@ public class PartEngine extends APart{
 			///Update variables used for jet thrust.
 			if(definition.engine.jetPowerFactor > 0){
 				engineAxisVector.set(0, 0, 1).rotate(orientation);
-				engineAxialVelocity = vehicleOn.motion.dotProduct(engineAxisVector);
+				engineAxialVelocity = vehicleOn.motion.dotProduct(engineAxisVector, false);
 				
 				//Check for entities forward and aft of the engine and damage them.
 				if(!world.isClient() && rpm >= 5000){
