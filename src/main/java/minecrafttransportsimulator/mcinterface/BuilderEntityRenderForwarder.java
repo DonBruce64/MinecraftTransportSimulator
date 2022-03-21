@@ -49,7 +49,8 @@ public class BuilderEntityRenderForwarder extends ABuilderEntityBase{
     		WrapperPlayer playerWrapper = WrapperPlayer.getWrapperFor(playerFollowing);
     		double playerVelocity = Math.sqrt(playerFollowing.motionX*playerFollowing.motionX + playerFollowing.motionY*playerFollowing.motionY + playerFollowing.motionZ*playerFollowing.motionZ);
     		Point3D playerEyesVec = playerWrapper.getLineOfSight(Math.max(1, playerVelocity/2));
-    		setPosition(playerFollowing.posX + playerEyesVec.x, playerFollowing.posY + (playerWrapper.getEyeHeight() + playerWrapper.getSeatOffset())*playerWrapper.getVerticalScale() + playerEyesVec.y, playerFollowing.posZ + playerEyesVec.z);
+    		Point3D playerEyeOffset = new Point3D(0, 0.5, 0).rotate(playerWrapper.getOrientation()).add(playerWrapper.getPosition()).add(playerEyesVec);
+    		setPosition(playerEyeOffset.x, playerEyeOffset.y + (playerWrapper.getEyeHeight() + playerWrapper.getSeatOffset())*playerWrapper.getVerticalScale(), playerEyeOffset.z);
     	}else if(!world.isRemote){
 			//Don't restore saved entities on the server.
 			//These get loaded, but might not tick if they're out of chunk range.
