@@ -168,7 +168,7 @@ public class GUIPaintGun extends AGUIBase{
 		//Parse crafting items and set icon items.
 		List<PackMaterialComponent> materials = PackMaterialComponent.parseFromJSON(currentItem, false, true, false, false);
 		for(byte i=0; i<craftingItemIcons.size(); ++i){
-			if(i < materials.size()){
+			if(materials != null && i < materials.size()){
 				craftingItemIcons.get(i).stacks = materials.get(i).possibleItems;
 	    	}else{
 	    		craftingItemIcons.get(i).stacks = null;
