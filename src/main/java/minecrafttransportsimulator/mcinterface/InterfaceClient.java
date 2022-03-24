@@ -12,7 +12,10 @@ import minecrafttransportsimulator.entities.instances.EntityBullet;
 import minecrafttransportsimulator.entities.instances.EntityParticle;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.guis.components.AGUIBase;
+import minecrafttransportsimulator.guis.instances.GUIPackMissing;
+import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.systems.ControlSystem;
+import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.block.SoundType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
@@ -279,6 +282,15 @@ public class InterfaceClient{
 				WrapperPlayer player = getClientPlayer();
 				if(player != null && !player.isSpectator()){
 					ControlSystem.controlGlobal(player);
+					if(player.player.ticksExisted%100 == 0){
+						if(PackParserSystem.getAllPackIDs().contains("iav")){
+							InterfaceClient.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_IAV);
+						}
+					}else{
+						if(!InterfaceClient.isGUIOpen() && !PackParserSystem.arePacksPresent()){
+							new GUIPackMissing();
+				    	}
+					}
 				}
 				
 			   if(activeFollower != null){
