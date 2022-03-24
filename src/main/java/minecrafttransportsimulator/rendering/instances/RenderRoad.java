@@ -218,7 +218,7 @@ public class RenderRoad extends ARenderEntityDefinable<TileEntityRoad>{
 			}
 		}
 		//If we are in devMode, render road bounds and colliding boxes.
-		if(ConfigSystem.client.controlSettings.devMode.value){
+		if(ConfigSystem.settings.general.devMode.value){
 			if(road.devRenderables.isEmpty()){
 				generateDevElements(road);
 			}

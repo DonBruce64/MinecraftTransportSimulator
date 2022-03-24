@@ -53,7 +53,6 @@ public class JSONConfigClient{
 		public JSONConfigEntry<Boolean> classicJystk = new JSONConfigEntry<Boolean>(false, "If true, the classic controller code will be used.  Note: THIS CODE MAY CRASH MOBILE DEVICES!  Also note that switching will probably mess up your keybinds.  Only do this if you are having issues with a joystick or controller not being recognized.  After changing this setting, reboot the game to make it take effect.");
 		
 		public JSONConfigEntry<Boolean> north360 = new JSONConfigEntry<Boolean>(false, "If true, instruments will represent North as 360 degrees, instead of the Minecraft default of 180. Allows using the heading system that real-world pilots and militaries do.");
-		public JSONConfigEntry<Boolean> devMode = new JSONConfigEntry<Boolean>(false, "If enabled, MTS will allow access to the dev mode GUI while sitting in vehicles.  The GUI allows editing JSONs in-game without the need to restart.");
 
 		public JSONConfigEntry<Double> steeringControlRate = new JSONConfigEntry<Double>(EntityVehicleF_Physics.RUDDER_DAMPEN_RATE, "How many degrees to turn the wheels on vehicles for every tick the button is held down.  This is not used when using a joystick.");
 		public JSONConfigEntry<Double> flightControlRate = new JSONConfigEntry<Double>(EntityVehicleF_Physics.AILERON_DAMPEN_RATE, "How many degrees to move the elevators and ailerons on aircraft for every tick the button is held down.  This is not used when using a joystick.");

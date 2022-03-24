@@ -89,16 +89,16 @@ public class InterfaceInput{
 				public void run(){
 					try{
 						joystickNameCounters.clear();
-						if(ConfigSystem.client.controlSettings.devMode.value)InterfaceCore.logError("Starting controller init.");
+						if(ConfigSystem.settings.general.devMode.value)InterfaceCore.logError("Starting controller init.");
 						if(runningClassicMode){
-							if(ConfigSystem.client.controlSettings.devMode.value)InterfaceCore.logError("Running classic mode.");
+							if(ConfigSystem.settings.general.devMode.value)InterfaceCore.logError("Running classic mode.");
 							classicJoystickMap.clear();
-							if(ConfigSystem.client.controlSettings.devMode.value)InterfaceCore.logError("Found this many controllers: " + net.java.games.input.ControllerEnvironment.getDefaultEnvironment().getControllers().length);
+							if(ConfigSystem.settings.general.devMode.value)InterfaceCore.logError("Found this many controllers: " + net.java.games.input.ControllerEnvironment.getDefaultEnvironment().getControllers().length);
 							for(net.java.games.input.Controller joystick : net.java.games.input.ControllerEnvironment.getDefaultEnvironment().getControllers()){
 								joystickEnabled = true;
 								if(joystick.getType() != null && !joystick.getType().equals(net.java.games.input.Controller.Type.MOUSE) && !joystick.getType().equals(net.java.games.input.Controller.Type.KEYBOARD) && joystick.getName() != null && joystick.getComponents().length != 0){
 									String joystickName = joystick.getName();
-									if(ConfigSystem.client.controlSettings.devMode.value)InterfaceCore.logError("Found valid controller: " + joystickName);
+									if(ConfigSystem.settings.general.devMode.value)InterfaceCore.logError("Found valid controller: " + joystickName);
 									
 									//Add an index on this joystick to be sure we don't override multi-component units.
 									if(!joystickNameCounters.containsKey(joystickName)){
@@ -109,20 +109,20 @@ public class InterfaceInput{
 								}
 							}
 						}else{
-							if(ConfigSystem.client.controlSettings.devMode.value)InterfaceCore.logError("Running modern mode.");
+							if(ConfigSystem.settings.general.devMode.value)InterfaceCore.logError("Running modern mode.");
 							if(!org.lwjgl.input.Controllers.isCreated()){
-								if(ConfigSystem.client.controlSettings.devMode.value)InterfaceCore.logError("Creating controller object.");
+								if(ConfigSystem.settings.general.devMode.value)InterfaceCore.logError("Creating controller object.");
 								org.lwjgl.input.Controllers.create();
 							}
 							joystickMap.clear();
 							joystickAxisCountMap.clear();
-							if(ConfigSystem.client.controlSettings.devMode.value)InterfaceCore.logError("Found this many controllers: " + org.lwjgl.input.Controllers.getControllerCount());
+							if(ConfigSystem.settings.general.devMode.value)InterfaceCore.logError("Found this many controllers: " + org.lwjgl.input.Controllers.getControllerCount());
 							for(int i=0; i<org.lwjgl.input.Controllers.getControllerCount(); ++i){
 								joystickEnabled = true;
 								org.lwjgl.input.Controller joystick = org.lwjgl.input.Controllers.getController(i);
 								if(joystick.getAxisCount() > 0 && joystick.getButtonCount() > 0 && joystick.getName() != null){
 									String joystickName = joystick.getName();
-									if(ConfigSystem.client.controlSettings.devMode.value)InterfaceCore.logError("Found valid controller: " + joystickName);
+									if(ConfigSystem.settings.general.devMode.value)InterfaceCore.logError("Found valid controller: " + joystickName);
 									
 									//Add an index on this joystick to be sure we don't override multi-component units.
 									if(!joystickNameCounters.containsKey(joystickName)){
@@ -137,7 +137,7 @@ public class InterfaceInput{
 						
 						//Validate joysticks are valid for this setup by making sure indexes aren't out of bounds.
 						Iterator<Entry<String, ConfigJoystick>> iterator = ConfigSystem.client.controls.joystick.entrySet().iterator();
-						if(ConfigSystem.client.controlSettings.devMode.value)InterfaceCore.logError("Performing button validity checks.");
+						if(ConfigSystem.settings.general.devMode.value)InterfaceCore.logError("Performing button validity checks.");
 						while(iterator.hasNext()){
 							try{
 								Entry<String, ConfigJoystick> controllerEntry = iterator.next();

@@ -65,7 +65,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 					//If the player isn't the owner of the vehicle, they can't interact with it.
 					if(!ownerState.equals(PlayerOwnerState.USER)){
 						if(rightClick){
-							if(ConfigSystem.client.controlSettings.devMode.value && vehicle.equals(player.getEntityRiding())){
+							if(ConfigSystem.settings.general.devMode.value && vehicle.equals(player.getEntityRiding())){
 								player.sendPacket(new PacketEntityGUIRequest(vehicle, player, PacketEntityGUIRequest.EntityGUIType.PACK_EXPORTER));
 							}else if(player.isSneaking()){
 								player.sendPacket(new PacketEntityGUIRequest(vehicle, player, PacketEntityGUIRequest.EntityGUIType.TEXT_EDITOR));
