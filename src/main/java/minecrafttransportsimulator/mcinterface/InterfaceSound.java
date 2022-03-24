@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.mcinterface;
 
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
@@ -16,7 +17,6 @@ import org.lwjgl.openal.AL10;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.instances.EntityRadio;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
-import minecrafttransportsimulator.sound.DecodedFile;
 import minecrafttransportsimulator.sound.IStreamDecoder;
 import minecrafttransportsimulator.sound.OGGDecoder;
 import minecrafttransportsimulator.sound.RadioStation;
@@ -267,9 +267,6 @@ public class InterfaceSound{
 	 *  Returns the index of the integer to where this buffer is stored.
 	 */
 	public static int createBuffer(ByteBuffer buffer, IStreamDecoder decoder){
-		if(decoder.isStereo()){
-			buffer = stereoToMono(buffer);
-		}
 		IntBuffer newDataBuffer = BufferUtils.createIntBuffer(1);
 		AL10.alGenBuffers(newDataBuffer);
 		AL10.alBufferData(newDataBuffer.get(0),  AL10.AL_FORMAT_MONO16, buffer, decoder.getSampleRate());
@@ -342,25 +339,6 @@ public class InterfaceSound{
 	}
 	
 	/**
-	 *  Combines a stereo-sampled ByteBufer into a mono-sampled one.
-	 *  This allows us to use mono-only sounds that support attenuation.
-	 */
-	private static ByteBuffer stereoToMono(ByteBuffer stereoBuffer){
-		ByteBuffer monoBuffer = ByteBuffer.allocateDirect(stereoBuffer.limit()/2);
-		while(stereoBuffer.hasRemaining()){
-			//Combine samples using little-endian ordering.
-			byte[] sampleSet = new byte[4];
-			stereoBuffer.get(sampleSet);
-			int leftSample = (sampleSet[1] << 8) | (sampleSet[0] & 0xFF);
-			int rightSample = (sampleSet[3] << 8) | (sampleSet[2] & 0xFF);
-			int combinedSample = (leftSample + rightSample)/2;
-			monoBuffer.put((byte) (combinedSample & 0xFF));
-			monoBuffer.put((byte) (combinedSample >> 8));
-		}
-		return (ByteBuffer) monoBuffer.flip();
-	}
-	
-	/**
 	 *  Loads an OGG file in its entirety using the {@link InterfaceOGGDecoder}. 
 	 *  The sound is then stored in a dataBuffer keyed by soundName located in {@link #dataSourceBuffers}.
 	 *  The pointer to the dataBuffer is returned for convenience as it allows for transparent sound caching.
@@ -368,21 +346,30 @@ public class InterfaceSound{
 	 *  than re-parse the sound the system will simply return the same pointer index to be bound.
 	 */
 	private static Integer loadOGGJarSound(String soundName){
-		if(dataSourceBuffers.containsKey(soundName)){
+		if(dataSourceBuffers.containsKey(soundName) && !dataSourceBuffers.containsKey(soundName)){
 			//Already parsed the data.  Return the buffer.
 			return dataSourceBuffers.get(soundName);
 		}else{
 			//Need to parse the data.  Do so now.
-			DecodedFile decoderOutput = OGGDecoder.parseInternalFile(soundName);
-			if(decoderOutput != null){
+			String soundDomain = soundName.substring(0, soundName.indexOf(':'));
+			String soundPath = soundName.substring(soundDomain.length() + 1);
+			InputStream soundStream = InterfaceSound.class.getResourceAsStream("/assets/" +  soundDomain + "/sounds/" + soundPath + ".ogg");
+			if(soundStream != null){
+				//Create decoder and decode whole file.
+				OGGDecoder decoder = new OGGDecoder(soundStream);
+				ByteBuffer decodedData = ByteBuffer.allocateDirect(0);
+				ByteBuffer blockRead;
+				while((blockRead = decoder.readBlock()) != null){
+					decodedData = ByteBuffer.allocateDirect(decodedData.capacity() + blockRead.limit()).put(decodedData).put(blockRead);
+					decodedData.rewind();
+				}
+				
 				//Generate an IntBuffer to store a pointer to the data buffer.
 				IntBuffer dataBufferPointers = BufferUtils.createIntBuffer(1);
 		    	AL10.alGenBuffers(dataBufferPointers);
 		    	
 		    	//Bind the decoder output buffer to the data buffer pointer.
-		    	//If we are stereo, convert the data before binding.
-		    	ByteBuffer decoderData = decoderOutput.isStereo ? stereoToMono(decoderOutput.decodedData) : decoderOutput.decodedData;
-		    	AL10.alBufferData(dataBufferPointers.get(0), AL10.AL_FORMAT_MONO16, decoderData, decoderOutput.sampleRate);
+		    	AL10.alBufferData(dataBufferPointers.get(0), AL10.AL_FORMAT_MONO16, decodedData, decoder.getSampleRate());
 				
 		    	//Done parsing.  Map the dataBuffer(s) to the soundName and return the index.
 		    	dataSourceBuffers.put(soundName, dataBufferPointers.get(0));

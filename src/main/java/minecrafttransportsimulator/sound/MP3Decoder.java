@@ -17,9 +17,6 @@ import javazoom.jl.decoder.SampleBuffer;
  * @author don_bruce
  */
 public class MP3Decoder implements IStreamDecoder{
-	private final static int MAX_READ_SIZE = 96*1024/2;
-	private final static int MP3_BUFFER_SIZE = 128*1024;
-	
     /**Raw input stream for data.**/
     private final InputStream dataSourceStream;
     /**Bitstream for the internal parser.**/
@@ -55,7 +52,7 @@ public class MP3Decoder implements IStreamDecoder{
 		this.isStereo = currentFrameHeader.mode() != Header.SINGLE_CHANNEL;
 		this.sampleRate = currentFrameHeader.frequency();
 		this.decoderOutputBuffer = new SampleBuffer(sampleRate, isStereo ? 2 : 1);
-		this.decodedDataBuffer = ByteBuffer.allocateDirect(MP3_BUFFER_SIZE).order(ByteOrder.nativeOrder());
+		this.decodedDataBuffer = ByteBuffer.allocateDirect(BUFFER_SIZE).order(ByteOrder.nativeOrder());
 		this.decoder.setOutputBuffer(decoderOutputBuffer);
     }
 
@@ -105,7 +102,7 @@ public class MP3Decoder implements IStreamDecoder{
         //Rewind the decoded data buffer, set the limit based on the samples read, and return.
         decodedDataBuffer.rewind();
         decodedDataBuffer.limit(totalSamplesRead*2);
-        return decodedDataBuffer;
+        return isStereo ? IStreamDecoder.stereoToMono(decodedDataBuffer) : decodedDataBuffer;
     }
     
     @Override
@@ -116,11 +113,6 @@ public class MP3Decoder implements IStreamDecoder{
     	}catch(Exception e){
             e.printStackTrace();
         }
-    }
-
-    @Override
-    public boolean isStereo(){
-        return isStereo;
     }
 
     @Override
