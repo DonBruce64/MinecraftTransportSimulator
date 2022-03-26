@@ -60,7 +60,6 @@ public abstract class AGUIPanel extends AGUIBase{
 			}
 			haveReverseThrustOption = foundReversingPart;
 		}
-		setupTowingButtons(vehicle);
 	}
 	
 	private void setupTowingButtons(AEntityG_Towable<?> entity){
@@ -112,9 +111,11 @@ public abstract class AGUIPanel extends AGUIBase{
 	}
 	
 	@Override
-	public
-	final void setupComponents(){
+	public final void setupComponents(){
 		super.setupComponents();
+		trailerSwitchDefs.clear();
+		setupTowingButtons(vehicle);
+		
 		//Tracking variable for how far to the left we are rendering things.
 		//This allows for things to be on different columns depending on vehicle configuration.
 		//We make this method final and create an abstract method to use instead of this one for

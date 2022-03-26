@@ -346,7 +346,7 @@ public class InterfaceSound{
 	 *  than re-parse the sound the system will simply return the same pointer index to be bound.
 	 */
 	private static Integer loadOGGJarSound(String soundName){
-		if(dataSourceBuffers.containsKey(soundName) && !dataSourceBuffers.containsKey(soundName)){
+		if(dataSourceBuffers.containsKey(soundName)){
 			//Already parsed the data.  Return the buffer.
 			return dataSourceBuffers.get(soundName);
 		}else{

@@ -257,11 +257,12 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	}
 	
 	@Override
-	public void disconnectTrailer(TowingConnection connection){
-		super.disconnectTrailer(connection);
+	public void disconnectTrailer(int connectionIndex){
+		TowingConnection connection = towingConnections.get(connectionIndex);
 		if(connection.towedVehicle.definition.motorized.isTrailer){
 			connection.towedVehicle.setVariable(PARKINGBRAKE_VARIABLE, 1);
 		}
+		super.disconnectTrailer(connectionIndex);
 	}
 	
 	/**

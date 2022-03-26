@@ -3,8 +3,6 @@ package minecrafttransportsimulator.packets.instances;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.TowingConnection;
 import minecrafttransportsimulator.entities.components.AEntityG_Towable;
-import minecrafttransportsimulator.guis.components.AGUIBase;
-import minecrafttransportsimulator.guis.instances.GUIPanelGround;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
@@ -16,43 +14,52 @@ import minecrafttransportsimulator.packets.components.APacketEntity;
  * @author don_bruce
  */
 public class PacketEntityTowingChange extends APacketEntity<AEntityG_Towable<?>>{
+	private final int connectionIndex;
 	private final WrapperNBT connectionData;
-	private final boolean connect;
 	
-	public PacketEntityTowingChange(TowingConnection connection, boolean connect){
-		super(connection.towingVehicle);
+	public PacketEntityTowingChange(AEntityG_Towable<?> hitchEntity, TowingConnection connection){
+		super(hitchEntity);
+		this.connectionIndex = -1;
 		this.connectionData = connection.save(InterfaceCore.getNewNBTWrapper());
-		this.connect = connect;
+	}
+	
+	public PacketEntityTowingChange(AEntityG_Towable<?> hitchEntity, int connectionIndex){
+		super(hitchEntity);
+		this.connectionIndex = connectionIndex;
+		this.connectionData = null;
 	}
 	
 	public PacketEntityTowingChange(ByteBuf buf){
 		super(buf);
-		this.connectionData = readDataFromBuffer(buf);
-		this.connect = buf.readBoolean();
+		this.connectionIndex = buf.readInt();
+		if(connectionIndex == -1){
+			this.connectionData = readDataFromBuffer(buf);
+		}else{
+			this.connectionData = null;
+		}
 	}
 	
 	@Override
 	public void writeToBuffer(ByteBuf buf){
 		super.writeToBuffer(buf);
-		writeDataToBuffer(connectionData, buf);
-		buf.writeBoolean(connect);
+		buf.writeInt(connectionIndex);
+		if(connectionData != null){
+			writeDataToBuffer(connectionData, buf);
+		}
 	}
 	
 	@Override
 	public boolean handle(WrapperWorld world, AEntityG_Towable<?> hitchEntity){
-		TowingConnection connection = new TowingConnection(connectionData);
-		if(connection.initConnection(world)){
-			if(connect){
+		if(connectionIndex == -1){
+			TowingConnection connection = new TowingConnection(connectionData);
+			if(connection.initConnection(world)){
 				hitchEntity.connectTrailer(connection);
 			}else{
-				hitchEntity.disconnectTrailer(connection);
+				return false;
 			}
-			if(AGUIBase.activeInputGUI instanceof GUIPanelGround){
-				((GUIPanelGround) AGUIBase.activeInputGUI).handleConnectionChange(connection);
-			}
-			return true;
 		}else{
-			return false;
+			hitchEntity.disconnectTrailer(connectionIndex);
 		}
+		return true;
 	}
 }

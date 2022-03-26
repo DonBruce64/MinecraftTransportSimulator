@@ -1,16 +1,16 @@
 package minecrafttransportsimulator.entities.components;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.TowingConnection;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
+import minecrafttransportsimulator.guis.components.AGUIBase;
+import minecrafttransportsimulator.guis.instances.AGUIPanel;
 import minecrafttransportsimulator.jsondefs.AJSONPartProvider;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
@@ -33,9 +33,9 @@ import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider> extends AEntityF_Multipart<JSONDefinition>{
 	//Connection data.
 	public TowingConnection towedByConnection;
-	public final Set<TowingConnection> towingConnections = new HashSet<TowingConnection>();
+	public final List<TowingConnection> towingConnections = new ArrayList<TowingConnection>();
 	private TowingConnection savedTowedByConnection;
-	private final Set<TowingConnection> savedTowingConnections = new HashSet<TowingConnection>();
+	private final List<TowingConnection> savedTowingConnections = new ArrayList<TowingConnection>();
 	public static final String TOWING_CONNECTION_REQUEST_VARIABLE = "connection_requested";
 	
 	public AEntityG_Towable(WrapperWorld world, WrapperPlayer placingPlayer, WrapperNBT data){
@@ -303,10 +303,10 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
 			TrailerConnectionResult.NOTFOUND.handlePacket(this);
 		}else{
 			if(connectionToDisconnect.equals(towedByConnection)){
-				towedByConnection.towingVehicle.disconnectTrailer(towedByConnection);
+				towedByConnection.towingVehicle.disconnectTrailer(towedByConnection.towingVehicle.towingConnections.indexOf(towedByConnection));
 				TrailerConnectionResult.DISCONNECTED.handlePacket(this);
 			}else{
-				disconnectTrailer(connectionToDisconnect);
+				disconnectTrailer(towingConnections.indexOf(connectionToDisconnect));
 				TrailerConnectionResult.DISCONNECTED.handlePacket(this);
 			}
 		}
@@ -362,7 +362,7 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
 										//is the wrong type.
 										if(hitchPos.isDistanceToCloserThan(hookupPos, hitchConnection.distance + 10)){
 											boolean validType = hitchConnection.type.equals(hookupConnection.type);
-											boolean validDistance = hitchPos.isDistanceToCloserThan(hookupPos,  hitchConnection.distance + 5);
+											boolean validDistance = hitchPos.isDistanceToCloserThan(hookupPos,  hitchConnection.distance);
 											if(validType && validDistance){
 												connectTrailer(new TowingConnection(hitchConnectionDefiner, hitchGroupIndex, hitchConnectionIndex, hookupConnectionDefiner, hookupGroupIndex, hookupConnectionIndex));
 												return TrailerConnectionResult.CONNECTED;
@@ -418,18 +418,22 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
 		connection.hitchCurrentPosition.set(connection.hitchConnection.pos).rotate(connection.towingEntity.orientation).add(connection.towingEntity.position);
 		connection.hookupCurrentPosition.set(connection.hookupConnection.pos).rotate(connection.towedEntity.orientation).add(connection.towedEntity.position);
 		if(!world.isClient()){
-			InterfacePacket.sendToAllClients(new PacketEntityTowingChange(connection, true));
+			InterfacePacket.sendToAllClients(new PacketEntityTowingChange(this, connection));
+		}else if(AGUIBase.activeInputGUI instanceof AGUIPanel){
+			((AGUIPanel) AGUIBase.activeInputGUI).handleConnectionChange(connection);
 		}
 	}
 	
 	/**
-	 * Method block for disconnecting the trailer with the passed-in connection from this entity.
+	 * Method block for disconnecting the specified trailer connection index from this entity.
 	 */
-	public void disconnectTrailer(TowingConnection connection){
-		towingConnections.remove(connection);
+	public void disconnectTrailer(int connectionIndex){
+		TowingConnection connection = towingConnections.remove(connectionIndex);
 		connection.towedVehicle.towedByConnection = null;
 		if(!world.isClient()){
-			InterfacePacket.sendToAllClients(new PacketEntityTowingChange(connection, false));
+			InterfacePacket.sendToAllClients(new PacketEntityTowingChange(this, connectionIndex));
+		}else if(AGUIBase.activeInputGUI instanceof AGUIPanel){
+			((AGUIPanel) AGUIBase.activeInputGUI).handleConnectionChange(connection);
 		}
 	}
 	
@@ -469,9 +473,9 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
 		FEEDBACK_LOOP(true, JSONConfigLanguage.INTERACT_TRAILER_FEEDBACKLOOP),
 		ALREADY_TOWED(true, JSONConfigLanguage.INTERACT_TRAILER_ALREADYTOWED),
 		NOTFOUND(true, JSONConfigLanguage.INTERACT_TRAILER_NOTFOUND),
-		TOOFAR(false, JSONConfigLanguage.INTERACT_TRAILER_TOOFAR),
-		WRONGHITCH(false, JSONConfigLanguage.INTERACT_TRAILER_WRONGHITCH),
-		MISMATCH(false, JSONConfigLanguage.INTERACT_TRAILER_MISMATCH),
+		TOOFAR(true, JSONConfigLanguage.INTERACT_TRAILER_TOOFAR),
+		WRONGHITCH(true, JSONConfigLanguage.INTERACT_TRAILER_WRONGHITCH),
+		MISMATCH(true, JSONConfigLanguage.INTERACT_TRAILER_MISMATCH),
 		CONNECTED(false, JSONConfigLanguage.INTERACT_TRAILER_CONNECTED),
 		DISCONNECTED(false, JSONConfigLanguage.INTERACT_TRAILER_DISCONNECTED);
 		

@@ -193,10 +193,6 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 					towedEntitiesCheckedForWeights.clear();
 				}
 			}
-			//If we still have a vehicle reference, we didn't exit cleanly and need to disconnect it.
-			if(towedEntity != null){
-				disconnectTrailer(towedEntity.towedByConnection);
-			}
 		}
 		return combinedMass;
 	}

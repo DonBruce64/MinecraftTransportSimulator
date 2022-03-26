@@ -89,7 +89,7 @@ public class TowingConnection{
 		data.setInteger("hitchGroupIndex", hitchGroupIndex);
 		data.setInteger("hitchConnectionIndex", hitchConnectionIndex);
 		data.setInteger("hookupGroupIndex", hookupGroupIndex);
-		data.setInteger("hookupGroupIndex", hookupGroupIndex);
+		data.setInteger("hookupConnectionIndex", hookupConnectionIndex);
 		return data;
 	}
 }
