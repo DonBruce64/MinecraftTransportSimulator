@@ -18,6 +18,7 @@ import minecrafttransportsimulator.entities.components.AEntityG_Towable;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.IItemEntityProvider;
+import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -174,7 +175,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase{
     
     @Override
     public boolean attackEntityFrom(DamageSource source, float amount){
-		if(!world.isRemote && entity instanceof AEntityE_Interactable){
+		if(ConfigSystem.settings.damage.allowExternalDamage.value && !world.isRemote && entity instanceof AEntityE_Interactable){
 			AEntityE_Interactable<?> interactable = ((AEntityE_Interactable<?>) entity);
 			Entity attacker = source.getImmediateSource();
 			Entity trueSource = source.getTrueSource();
