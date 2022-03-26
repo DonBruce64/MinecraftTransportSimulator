@@ -8,6 +8,7 @@ import java.util.UUID;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
+import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.PartGun.GunState;
 import minecrafttransportsimulator.items.components.AItemBase;
@@ -187,15 +188,33 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun>{
 				}
 				position.rotate(handRotation);
 				
-				//Now rotate to match the player's yaw and body orientation.
 				//Arm center is 0.3125 blocks away in X, 1.375 blocks up in Y.
 				//Sneaking lowers arm by 0.2 blocks.
-				handRotation.setToZero().rotateY(player.getYaw());
-				position.add(-0.3125, player.isSneaking() ? 1.3125 - 0.2 : 1.3125, 0).rotate(handRotation);
+				//We adjust this by the seated offset and scale to get the actual position.
+				position.add(-0.3125, ((player.isSneaking() ? 1.3125 - 0.2 : 1.3125) + player.getSeatOffset())*player.getVerticalScale(), 0);
 				
-				//Apply global position offset and orientation.
-				position.add(player.getPosition());
-				orientation.set(player.getOrientation());
+				//Rotate to player's yaw to match facing direction.
+				handRotation.setToZero().rotateY(player.getYaw());
+				position.rotate(handRotation);
+				
+				//If we are riding an entity, we need to orient to the seated position.
+				//If not, then we just orient to the player.
+				AEntityE_Interactable<?> ridingEntity = player.getEntityRiding();
+				if(ridingEntity != null){
+					orientation.set(((AEntityF_Multipart<?>) ridingEntity).getSeatForRider(player).zeroReferenceOrientation);
+					position.rotate(orientation);
+					orientation.multiply(player.getOrientation());
+					position.add(player.getPosition());
+					//Also need to add the player's motion.  While riding an entity, the player will always be updated
+					//after this entity, as the player always updates first, and will be "lagging" in their actual position.
+					position.add(ridingEntity.position).subtract(ridingEntity.prevPosition);
+				}else{
+					orientation.set(player.getOrientation());
+					position.add(player.getPosition());
+				}
+				
+				//Now add player's position offset.
+				
 				
 				if(!world.isClient()){
 					//Save gun data if we stopped firing the prior tick.
@@ -213,8 +232,6 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun>{
 			return;
 		}
 		
-		//Update the gun now, if we have one.
-		doPostUpdateLogic();
 		//If we have a gun, and the player is spectating, don't allow the gun to render.
 		if(activeGun != null){
 			activeGun.isInvisible = player != null && player.isSpectator();
