@@ -6,6 +6,7 @@ import java.util.List;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.entities.instances.EntityRadio;
 import minecrafttransportsimulator.guis.components.AGUIBase;
+import minecrafttransportsimulator.guis.components.AGUIComponent;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentCutout;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
@@ -50,8 +51,8 @@ public class GUIRadio extends AGUIBase{
 	private final int bandsToSkip;
 	private final int bandsToShow;
 	private final int bandButtonSize;
-	private static boolean equalizerMode = false;
-	private static boolean teachMode = false;
+	private boolean equalizerMode = false;
+	private boolean teachMode = false;
 	
 	public GUIRadio(EntityRadio radio){
 		super();
@@ -187,12 +188,12 @@ public class GUIRadio extends AGUIBase{
 	@Override
 	public void setStates(){
 		super.setStates();
-		//Set visibility based on if we are in equalizer mode or not.
-		equalizerButton.visible = !equalizerMode;
-		equalizerBackButton.visible = equalizerMode;
-		equalizerResetButton.visible = equalizerMode;
-		volumeDisplay.visible = !equalizerMode;
-		stationDisplay.visible = !equalizerMode;
+		//Set all components invisible if we running EQ mode.
+		//We then manually enable or disable the EQ components.
+		for(AGUIComponent component : components){
+			component.visible = !equalizerMode;
+		}
+		background.visible = true;
 		
 		//Off button is enabled when radio is playing.
 		offButton.enabled = radio.currentStation != null;
@@ -203,12 +204,12 @@ public class GUIRadio extends AGUIBase{
 		serverButton.visible = false;//serverButton.enabled = !radio.getSource().equals(RadioSources.SERVER);
 		
 		//Equalizer button isn't available for internet streams.
-		equalizerButton.enabled = !radio.getSource().equals(RadioSources.INTERNET) && radio.currentStation != null && radio.currentStation.equalizer != null;
+		equalizerButton.enabled = !equalizerMode && !radio.getSource().equals(RadioSources.INTERNET) && radio.currentStation != null && radio.currentStation.equalizer != null;
 		
 		//Set button only works if in Internet mode (playing from radio URL).
 		//Once button is pressed, teach mode activates and stationDisplay becomes a station entry box.
 		//Otherwise, it's just a box that displays what's playing.
-		setButton.enabled = radio.getSource().equals(RadioSources.INTERNET);
+		setButton.enabled = !equalizerMode && radio.getSource().equals(RadioSources.INTERNET);
 		stationDisplay.enabled = teachMode;
 		if(!teachMode){
 			if(radio.currentStation == null){
@@ -230,6 +231,8 @@ public class GUIRadio extends AGUIBase{
 		}
 		
 		//Adjust equalizer buttons, sliders, and bands.
+		equalizerBackButton.visible = equalizerMode;
+		equalizerResetButton.visible = equalizerMode;
 		for(GUIComponentButton button : equalizerButtons){
 			button.visible = equalizerMode;
 		}

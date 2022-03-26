@@ -29,7 +29,7 @@ public abstract class AGUIBase{
 	protected static final int STANDARD_YELLOW_HEIGHT_OFFSET = 216;
 	protected static final int STANDARD_BLACK_HEIGHT_OFFSET = 236;
 
-	private GUIComponentCutout background;
+	protected GUIComponentCutout background;
 	public final List<AGUIComponent> components = new ArrayList<AGUIComponent>();
 	
 	public static final ConcurrentLinkedQueue<AGUIBase> activeGUIs = new ConcurrentLinkedQueue<AGUIBase>();
