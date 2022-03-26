@@ -11,6 +11,7 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
+import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.components.AEntityG_Towable;
@@ -79,6 +80,9 @@ public class BuilderEntityExisting extends ABuilderEntityBase{
 	    		//Forward the update call.
     			if(!(entity instanceof AEntityG_Towable) || !(((AEntityG_Towable<?>) entity).blockMainUpdateCall())){
     				entity.update();
+    				if(entity instanceof AEntityD_Definable){
+    					((AEntityD_Definable<?>) entity).doPostUpdateLogic();
+    				}
     			}
 	    		
 	    		//Set the new position.

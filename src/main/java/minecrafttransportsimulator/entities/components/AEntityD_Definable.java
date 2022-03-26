@@ -153,11 +153,12 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 	}
 	
 	/**
-	 * Called to perform supplemental update logic on this entity.  This should be called after all movement on the
-	 * entity has been performed, and is used to do updates that require the new positional logic to be ready.
-	 * Calling this before the entity finishes moving will lead to things "lagging" behind the entity.
+	 * Called to perform supplemental update logic on this entity.  This should be called after all logic on the
+	 * entity has been performed, and is used to do updates that require the new state to be ready.
+	 * Calling this before the entity finishes moving will lead to things "lagging" behind the entity, and calling
+	 * this before all states are set will lead to Bad Stuff.
 	 */
-	public void updatePostMovement(){
+	public void doPostUpdateLogic(){
 		//Update value-based text.  Only do this on clients as servers won't render this text.
 		if(world.isClient() && !text.isEmpty()){
 			for(Entry<JSONText, String> textEntry : text.entrySet()){

@@ -316,8 +316,8 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 	}
 	
 	@Override
-	public void updatePostMovement(){
-		//Update parts prior to doing our post-movements.
+	public void doPostUpdateLogic(){
+		//Update parts prior to doing our post-updates.
 		//This is required for trailers, as they may attached to parts.
 		world.beginProfiling("PartUpdates_" + parts.size(), true);
 		Iterator<APart> iterator = parts.iterator();
@@ -326,16 +326,19 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 			part.update();
 			if(!part.isValid){
 				removePart(part, iterator);
+			}else{
+				part.doPostUpdateLogic();
 			}
 		}
 		world.endProfiling();
-		super.updatePostMovement();
-		
-		//Update all-box lists now that all parts are updated.
-		//If we don't do this, then the box size might get de-synced.
-		world.beginProfiling("BoxAlignment_" + allInteractionBoxes.size(), true);
-		sortBoxes();
-		world.endProfiling();
+		super.doPostUpdateLogic();
+		if(changesPosition()){
+			//Update all-box lists now that all parts are updated.
+			//If we don't do this, then the box size might get de-synced.
+			world.beginProfiling("BoxAlignment_" + allInteractionBoxes.size(), true);
+			sortBoxes();
+			world.endProfiling();
+		}
 	}
 	
 	@Override

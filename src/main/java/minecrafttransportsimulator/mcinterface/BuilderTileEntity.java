@@ -56,6 +56,7 @@ public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extend
 		if(world != null && pos != null){
 			if(tileEntity != null){
 				tileEntity.update();
+				tileEntity.doPostUpdateLogic();
 			}else if(!loadedFromSavedNBT){			
 				//If we are on the server, set the NBT flag.
 				if(lastLoadedNBT != null && !world.isRemote){

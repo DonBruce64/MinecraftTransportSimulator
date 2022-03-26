@@ -206,10 +206,6 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 				adjustControlSurfaces();
 			}
 		}
-		
-		//Update parts after all movement is done.
-		world.beginProfiling("PostMovement", false);
-		updatePostMovement();
 		world.endProfiling();
 		world.endProfiling();
 	}

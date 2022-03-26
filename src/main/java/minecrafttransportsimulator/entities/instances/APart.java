@@ -205,9 +205,6 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 		if(parentPart != null && placementDefinition.isSubPart){
 			localOffset.add(parentPart.localOffset);
 		}
-		
-		//Update post-movement things.
-		updatePostMovement();
 	}
 	
 	@Override

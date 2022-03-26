@@ -214,7 +214,7 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun>{
 		}
 		
 		//Update the gun now, if we have one.
-		updatePostMovement();
+		doPostUpdateLogic();
 		//If we have a gun, and the player is spectating, don't allow the gun to render.
 		if(activeGun != null){
 			activeGun.isInvisible = player != null && player.isSpectator();

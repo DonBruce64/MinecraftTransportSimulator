@@ -397,55 +397,57 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 	}
 	
 	@Override
-	public void updatePostMovement(){
-		super.updatePostMovement();
-		//Update collision boxes to new position.
-		world.beginProfiling("CollisionBoxUpdates", true);
-		updateCollisionBoxes();
-		world.endProfiling();
-		
-		//Move all entities that are touching this entity.
-		if(!entityCollisionBoxes.isEmpty()){
-			world.beginProfiling("MoveAlongEntities", true);
-			encompassingBox.heightRadius += 1.0;
-			List<WrapperEntity> nearbyEntities = world.getEntitiesWithin(encompassingBox);
-			encompassingBox.heightRadius -= 1.0;
-    		for(WrapperEntity entity : nearbyEntities){
-    			//Only move Vanilla entities not riding things.  We don't want to move other things as we handle our inter-entity movement in each class.
-    			if(entity.getEntityRiding() == null && (!(entity instanceof WrapperPlayer) || !((WrapperPlayer) entity).isSpectator())){
-    				//Check each box individually.  Need to do this to know which delta to apply.
-    				BoundingBox entityBounds = entity.getBounds();
-    				entityBounds.heightRadius += 0.25;
-    				for(BoundingBox box : entityCollisionBoxes){
-        				if(entityBounds.intersects(box)){
-							//If the entity is within 0.5 units of the top of the box, we can move them.
-							//If not, they are just colliding and not on top of the entity and we should leave them be.
-							double entityBottomDelta = box.globalCenter.y + box.heightRadius - (entityBounds.globalCenter.y - entityBounds.heightRadius + 0.25F);
-							if(entityBottomDelta >= -0.5 && entityBottomDelta <= 0.5){
-								//Only move the entity if it's going slow or in the delta.  Don't move if it's going fast as they might have jumped.
-								Point3D entityVelocity = entity.getVelocity();
-								if(entityVelocity.y < 0 || entityVelocity.y < entityBottomDelta){
-									//Get how much the entity moved the collision box the entity collided with so we know how much to move the entity.
-									//This lets entities "move along" with entities when touching a collision box.
-									Point3D entityPositionVector = entity.getPosition().copy().subtract(position);
-									Point3D startingAngles = entityPositionVector.copy().getAngles(true);
-									Point3D entityPositionDelta = entityPositionVector.copy();
-									entityPositionDelta.rotate(orientation).reOrigin(prevOrientation);
-									Point3D entityAngleDelta = entityPositionDelta.copy().getAngles(true).subtract(startingAngles);
-									
-									entityPositionDelta.add(position).subtract(prevPosition);
-									entityPositionDelta.subtract(entityPositionVector).add(0, entityBottomDelta, 0);
-									entity.setPosition(entityPositionDelta.add(entity.getPosition()), true);
-									entity.setYaw(entity.getYaw() + entityAngleDelta.y);
-									entity.setBodyYaw(entity.getBodyYaw() + entityAngleDelta.y);
-									break;
+	public void doPostUpdateLogic(){
+		super.doPostUpdateLogic();
+		if(changesPosition()){
+			//Update collision boxes to new position.
+			world.beginProfiling("CollisionBoxUpdates", true);
+			updateCollisionBoxes();
+			world.endProfiling();
+			
+			//Move all entities that are touching this entity.
+			if(!entityCollisionBoxes.isEmpty()){
+				world.beginProfiling("MoveAlongEntities", true);
+				encompassingBox.heightRadius += 1.0;
+				List<WrapperEntity> nearbyEntities = world.getEntitiesWithin(encompassingBox);
+				encompassingBox.heightRadius -= 1.0;
+	    		for(WrapperEntity entity : nearbyEntities){
+	    			//Only move Vanilla entities not riding things.  We don't want to move other things as we handle our inter-entity movement in each class.
+	    			if(entity.getEntityRiding() == null && (!(entity instanceof WrapperPlayer) || !((WrapperPlayer) entity).isSpectator())){
+	    				//Check each box individually.  Need to do this to know which delta to apply.
+	    				BoundingBox entityBounds = entity.getBounds();
+	    				entityBounds.heightRadius += 0.25;
+	    				for(BoundingBox box : entityCollisionBoxes){
+	        				if(entityBounds.intersects(box)){
+								//If the entity is within 0.5 units of the top of the box, we can move them.
+								//If not, they are just colliding and not on top of the entity and we should leave them be.
+								double entityBottomDelta = box.globalCenter.y + box.heightRadius - (entityBounds.globalCenter.y - entityBounds.heightRadius + 0.25F);
+								if(entityBottomDelta >= -0.5 && entityBottomDelta <= 0.5){
+									//Only move the entity if it's going slow or in the delta.  Don't move if it's going fast as they might have jumped.
+									Point3D entityVelocity = entity.getVelocity();
+									if(entityVelocity.y < 0 || entityVelocity.y < entityBottomDelta){
+										//Get how much the entity moved the collision box the entity collided with so we know how much to move the entity.
+										//This lets entities "move along" with entities when touching a collision box.
+										Point3D entityPositionVector = entity.getPosition().copy().subtract(position);
+										Point3D startingAngles = entityPositionVector.copy().getAngles(true);
+										Point3D entityPositionDelta = entityPositionVector.copy();
+										entityPositionDelta.rotate(orientation).reOrigin(prevOrientation);
+										Point3D entityAngleDelta = entityPositionDelta.copy().getAngles(true).subtract(startingAngles);
+										
+										entityPositionDelta.add(position).subtract(prevPosition);
+										entityPositionDelta.subtract(entityPositionVector).add(0, entityBottomDelta, 0);
+										entity.setPosition(entityPositionDelta.add(entity.getPosition()), true);
+										entity.setYaw(entity.getYaw() + entityAngleDelta.y);
+										entity.setBodyYaw(entity.getBodyYaw() + entityAngleDelta.y);
+										break;
+									}
 								}
-							}
-        				}
-    				}
-    			}
-    		}
-    		world.endProfiling();
+	        				}
+	    				}
+	    			}
+	    		}
+	    		world.endProfiling();
+			}
 		}
 	}
 	

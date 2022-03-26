@@ -194,8 +194,8 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
 	}
 	
     @Override
-	public void updatePostMovement(){
-    	super.updatePostMovement();
+	public void doPostUpdateLogic(){
+    	super.doPostUpdateLogic();
 		//If we are towing entities, update them now.
 		if(!towingConnections.isEmpty()){
 			world.beginProfiling("TowedEntities", true);
@@ -203,6 +203,7 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
 				connection.hitchPriorPosition.set(connection.hitchCurrentPosition);
 				connection.hitchCurrentPosition.set(connection.hitchConnection.pos).rotate(connection.towingEntity.orientation).add(connection.towingEntity.position);
 				connection.towedVehicle.update();
+				connection.towedVehicle.doPostUpdateLogic();
 			}
 			world.endProfiling();
 		}
