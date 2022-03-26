@@ -1744,17 +1744,8 @@ public final class LegacyCompatSystem{
 			//Also check if we do have animations, but it's a rotation at the part's position.
 			//Old format for rotations was to be local to the part, not the vehicle.
 			if(partName.startsWith("ground_wheel") && partDef.turnsWithSteer){
-				boolean doWheelLC = partDef.animations == null && partDef.applyAfter == null;
-				if(!doWheelLC && partDef.animations != null){
-					for(JSONAnimationDefinition animation : partDef.animations){
-						if(animation.animationType.equals(AnimationComponentType.ROTATION) && animation.centerPoint.isZero()){
-							doWheelLC = true;
-						}
-					}
-				}
-				
-				if(doWheelLC){
-					if(partDef.animations == null){
+				if(partDef.animations == null){
+					if(partDef.applyAfter == null){
 						partDef.animations = new ArrayList<JSONAnimationDefinition>();
 						JSONAnimationDefinition animation = new JSONAnimationDefinition();
 						animation.centerPoint = partDef.pos.copy();
@@ -1762,11 +1753,11 @@ public final class LegacyCompatSystem{
 						animation.animationType = AnimationComponentType.ROTATION;
 						animation.variable = "rudder";
 						partDef.animations.add(animation);
-					}else{
-						for(JSONAnimationDefinition animation : partDef.animations){
-							if(animation.animationType.equals(AnimationComponentType.ROTATION)){
-								animation.centerPoint.add(partDef.pos);
-							}
+					}
+				}else{
+					for(JSONAnimationDefinition animation : partDef.animations){
+						if(animation.animationType.equals(AnimationComponentType.ROTATION) && animation.variable.equals("rudder") && animation.centerPoint.isZero()){
+							animation.centerPoint.set(partDef.pos);
 						}
 					}
 				}
