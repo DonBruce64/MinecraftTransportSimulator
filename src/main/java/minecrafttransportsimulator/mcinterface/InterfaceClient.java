@@ -283,10 +283,6 @@ public class InterfaceClient{
 				if(player != null && !player.isSpectator()){
 					ControlSystem.controlGlobal(player);
 					if(player.player.ticksExisted%100 == 0){
-						if(PackParserSystem.getAllPackIDs().contains("iav")){
-							InterfaceClient.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_IAV);
-						}
-					}else{
 						if(!InterfaceClient.isGUIOpen() && !PackParserSystem.arePacksPresent()){
 							new GUIPackMissing();
 				    	}
