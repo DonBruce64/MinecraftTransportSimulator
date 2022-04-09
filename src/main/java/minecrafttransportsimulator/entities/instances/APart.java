@@ -169,6 +169,9 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 			localOffset.transform(placementMovementSwitchbox.netMatrix);
 			localOrientation.multiply(placementMovementSwitchbox.rotation);
 		}
+		//Offset now needs to be multiplied by the scale, as that's the scale of what we are on.
+		//This ensures that we're offset relative the proper amount.
+		localOffset.multiply(scale);
 		
 		//Internal movement uses local coords.
 		//First rotate orientation to face rotated state.
@@ -176,6 +179,7 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 			localOrientation.multiply(placementDefinition.rot);
 		}
 		//Also apply part scale, so everything stays local.
+		//We will still have to multiply the translation by this scale though.
 		if(placementDefinition.partScale != null){
 			scale.multiply(placementDefinition.partScale);
 		}
@@ -183,12 +187,9 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 			isInvisible = !internalMovementSwitchbox.runSwitchbox(0, false) || isInvisible;
 			//Offset here is local and just needs translation, as it's
 			//assuming that we are the origin.
-			localOffset.add(internalMovementSwitchbox.translation);
+			localOffset.add(internalMovementSwitchbox.translation.multiply(scale));
 			localOrientation.multiply(internalMovementSwitchbox.rotation);
 		}
-		
-		//Multiply local offset by the scale to reflect the scaled offset.
-		localOffset.multiply(scale);
 		
 		//Now that locals are set, set globals to reflect them.
 		Point3D localPositionDelta = new Point3D().set(localOffset).rotate(orientation);

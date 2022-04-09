@@ -373,8 +373,6 @@ public class JSONConfigLanguage{
 	public static final LanguageEntry INPUT_TURNSIGNAL_R = new LanguageEntry("input.turnsignal_r", "RightSignal");
 	public static final LanguageEntry INPUT_TURNSIGNAL_L = new LanguageEntry("input.turnsignal_l", "LeftSignal");
 	
-	
-	public static final LanguageEntry SYSTEM_IAV = new LanguageEntry("system.iav", "IAV has been detected as installed.  This pack messes up the font for IV and MUST be removed to continue.");
 	public static final LanguageEntry SYSTEM_SOUNDSLOT = new LanguageEntry("sytstem.soundslot", "IMMERSIVE VEHICLES ERROR: Tried to play a sound, but was told no sound slots were available.  Some mod is taking up all the slots.  Probabaly Immersive Railroading or Dynamic Surroundings.  If you have those installed, complain to the mod author or check the mod configs.  Sound will not play.");
 	public static final LanguageEntry SYSTEM_DEBUG = new LanguageEntry("sytstem.debug", "%s"); 
 }
