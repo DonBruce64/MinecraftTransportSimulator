@@ -220,7 +220,7 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 	@Override
 	public void attack(Damage damage){
 		//Check if we can be removed by this attack.
-		if(definition.generic.canBeRemovedByHand && !placementDefinition.isPermanent && damage.entityResponsible instanceof WrapperPlayer){
+		if(!placementDefinition.isPermanent && definition.generic.canBeRemovedByHand && damage.isHand){
 			//Attacked a removable part, remove us to the player's inventory.
 			//If the inventory can't fit us, don't remove us.
 			WrapperPlayer player = (WrapperPlayer) damage.entityResponsible;

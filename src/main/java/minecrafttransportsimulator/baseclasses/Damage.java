@@ -31,6 +31,7 @@ public class Damage{
 	public final WrapperEntity entityResponsible;
 	public final LanguageEntry language;
 	
+	public boolean isHand;
 	public boolean isFire;
 	public boolean isWater;
 	public boolean isExplosion;
@@ -61,6 +62,15 @@ public class Damage{
 			ignoreArmor = true;
 		}
 		effects = bulletItem.definition.bullet.effects;
+	}
+	
+	/**
+	 * Sets this damage as directly from a player's hand (not a gun or ranged weapon).
+	 * Returns object for construction simplicity.
+	 */
+	public Damage setHand(){
+		this.isHand = true;
+		return this;
 	}
 	
 	/**

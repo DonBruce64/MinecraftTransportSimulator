@@ -183,7 +183,7 @@ public class PacketVehicleInteract extends APacketEntityInteract<EntityVehicleF_
 			if(rightClick){
 				part.interact(player);
 			}else if(leftClick){
-				part.attack(new Damage(1.0F, part.boundingBox, null, player, null));
+				part.attack(new Damage(1.0F, part.boundingBox, null, player, null).setHand());
 			}
 		}
 		return hadAllCondition;
