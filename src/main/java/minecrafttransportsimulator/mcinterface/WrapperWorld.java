@@ -422,7 +422,7 @@ public class WrapperWorld{
 					if(!entityToLoad.locationRiderMap.containsKey(ridableLocation)){
 						if(entityToLoad instanceof EntityVehicleF_Physics){
 							if(((EntityVehicleF_Physics) entityToLoad).getPartAtLocation(ridableLocation).placementDefinition.isController){
-								//continue;
+								continue;
 							}
 						}
 						entityToLoad.addRider(new WrapperEntity(entity), ridableLocation);
