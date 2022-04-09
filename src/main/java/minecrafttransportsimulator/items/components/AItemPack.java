@@ -2,6 +2,7 @@ package minecrafttransportsimulator.items.components;
 
 import java.util.List;
 
+import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.JSONCraftingBench;
 import minecrafttransportsimulator.jsondefs.JSONPack;
@@ -102,5 +103,14 @@ public abstract class AItemPack<JSONDefinition extends AJSONItem> extends AItemB
 	public void populateDefaultData(WrapperNBT data){
 		data.setString("packID", definition.packID);
 		data.setString("systemName", definition.systemName);
+	}
+	
+	/**
+	 * Repairs the item.  What happens during repair differs from item to item.
+	 */
+	public void repair(WrapperNBT data){
+		if(this instanceof IItemEntityProvider && AEntityE_Interactable.class.isAssignableFrom(((IItemEntityProvider<?>) this).getEntityClass())){
+			data.setDouble(AEntityE_Interactable.DAMAGE_VARIABLE, 0);
+		}
 	}
 }

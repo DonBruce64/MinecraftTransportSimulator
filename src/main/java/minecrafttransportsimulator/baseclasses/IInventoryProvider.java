@@ -235,6 +235,26 @@ public interface IInventoryProvider{
 	}
 	
 	/**
+	 *  Returns the index in the inventory of the item to repair that matches the passed-in item.
+	 */
+	public default int getRepairIndex(AItemPack<?> item){
+		for(PackMaterialComponent material : PackMaterialComponent.parseFromJSON(item, false, false, true, true)){
+			for(WrapperItemStack materialStack : material.possibleItems){
+				if(materialStack.getItem().equals(item)){
+					//Repair item in recipe found, find it in our inventory.
+					for(int i=0; i<getSize(); ++i){
+						WrapperItemStack testStack = getStack(i);
+						if(InterfaceCore.isOredictMatch(testStack, materialStack)){
+							return i;
+						}
+					}
+				}
+			}
+		}
+		return -1;
+	}
+	
+	/**
 	 *  Gets the explosive power of this inventory.  Used when this inventory is blown up.
 	 */
 	public default double getExplosiveness(){

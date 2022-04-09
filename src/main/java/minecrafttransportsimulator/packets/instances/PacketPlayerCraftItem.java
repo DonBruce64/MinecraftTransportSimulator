@@ -4,6 +4,8 @@ import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.mcinterface.WrapperInventory;
+import minecrafttransportsimulator.mcinterface.WrapperItemStack;
+import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketPlayer;
@@ -48,10 +50,26 @@ public class PacketPlayerCraftItem extends APacketPlayer{
 	public void handle(WrapperWorld world, WrapperPlayer player){
 		WrapperInventory inventory = player.getInventory();
 		if(player.isCreative() || inventory.hasMaterials(itemToCraft, true, true, forRepair)){
-			//Check we can add the stack before removing materials.
-			if(inventory.addStack(itemToCraft.getNewStack(null))){
+			//If this is for repair, we don't make a new stack, we just use the old stack and a method call.
+			if(forRepair){
+				//Find the repair item and repair it.
+				int repairIndex = inventory.getRepairIndex(itemToCraft);
+				WrapperItemStack stack = inventory.getStack(repairIndex);
+				AItemPack<?> item = (AItemPack<?>) stack.getItem();
+				WrapperNBT stackData = stack.getData();
+				item.repair(stackData);
+				stack.setData(stackData);
 				if(!player.isCreative()){ 
 					inventory.removeMaterials(itemToCraft, true, true, forRepair);
+				}
+				//Need to set stack after item removal, as removal code removes this item.
+				inventory.setStack(stack, repairIndex);
+			}else{
+				//Check we can add the stack before removing materials.
+				if(inventory.addStack(itemToCraft.getNewStack(null))){
+					if(!player.isCreative()){ 
+						inventory.removeMaterials(itemToCraft, true, true, forRepair);
+					}
 				}
 			}
 		}

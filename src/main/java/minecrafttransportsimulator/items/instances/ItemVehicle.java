@@ -86,6 +86,12 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 		data.setPoint3d("angles", new Point3D());
 		data.setPoint3d("rotation", new Point3D());
 	}
+	
+	@Override
+	public void repair(WrapperNBT data){
+		super.repair(data);
+		data.setDouble("electricPower", 12);
+	}
 
 	@Override
 	public EntityVehicleF_Physics createEntity(WrapperWorld world, WrapperPlayer placingPlayer, WrapperNBT data){
