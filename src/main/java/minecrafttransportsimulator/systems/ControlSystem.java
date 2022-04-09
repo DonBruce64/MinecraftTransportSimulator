@@ -508,12 +508,28 @@ public final class ControlSystem{
 		}else{
 			if(ControlsKeyboard.CAR_SHIFT_U.isPressed()){
 				for(PartEngine engine : powered.engines.values()){
-					InterfacePacket.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.UP_SHIFT_VARIABLE));
+					if(engine.definition.engine.isAutomatic){
+						if(engine.currentGear < 0){
+							InterfacePacket.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE));
+						}else if(engine.currentGear == 0){
+							InterfacePacket.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.UP_SHIFT_VARIABLE));
+						}
+					}else{
+						InterfacePacket.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.UP_SHIFT_VARIABLE));
+					}
 				}
 			}
 			if(ControlsKeyboard.CAR_SHIFT_D.isPressed()){
 				for(PartEngine engine : powered.engines.values()){
-					InterfacePacket.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.DOWN_SHIFT_VARIABLE));
+					if(engine.definition.engine.isAutomatic){
+						if(engine.currentGear > 0){
+							InterfacePacket.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE));
+						}else if(engine.currentGear == 0){
+							InterfacePacket.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.DOWN_SHIFT_VARIABLE));
+						}
+					}else{
+						InterfacePacket.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.DOWN_SHIFT_VARIABLE));
+					}
 				}
 			}
 		}

@@ -12,7 +12,7 @@ import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
 import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
+import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine.Signal;
@@ -296,10 +296,10 @@ public class PartEngine extends APart{
 			
 			//Check for any shifting requests.
 			if(isVariableActive(UP_SHIFT_VARIABLE)){
-				shiftUp(false);
+				shiftUp();
 				toggleVariable(UP_SHIFT_VARIABLE);
 			}else if(isVariableActive(DOWN_SHIFT_VARIABLE)){
-				shiftDown(false);
+				shiftDown();
 				toggleVariable(DOWN_SHIFT_VARIABLE);
 			}else if(isVariableActive(NEUTRAL_SHIFT_VARIABLE)){
 				shiftNeutral();
@@ -401,13 +401,9 @@ public class PartEngine extends APart{
 							//Can shift up, try to do so.
 							if(rpm > (definition.engine.upShiftRPM != null ? definition.engine.upShiftRPM.get(currentGear + reverseGears) : (currentMaxSafeRPM*0.9))*0.5F*(1.0F + vehicleOn.throttle)){
 								if(currentGear > 0){
-									if(shiftUp(true)){
-										InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, GEAR_VARIABLE, 1));
-									}
+									shiftUp();
 								}else{
-									if(shiftDown(true)){
-										InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, GEAR_VARIABLE, -1));
-									}
+									shiftDown();
 								}
 							}
 						}
@@ -415,13 +411,9 @@ public class PartEngine extends APart{
 							//Can shift down, try to do so.
 							if(rpm < (definition.engine.downShiftRPM != null ? definition.engine.downShiftRPM.get(currentGear + reverseGears)*0.5*(1.0F + vehicleOn.throttle) : (currentMaxSafeRPM*0.9)*0.25*(1.0F + vehicleOn.throttle))){
 								if(currentGear > 0){
-									if(shiftDown(true)){
-										InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, GEAR_VARIABLE, -1));
-									}
+									shiftDown();
 								}else{
-									if(shiftUp(true)){
-										InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, GEAR_VARIABLE, 1));
-									}
+									shiftUp();
 								}
 							}
 						}
@@ -831,7 +823,7 @@ public class PartEngine extends APart{
 		}
 	}
 	
-	private boolean shiftUp(boolean autoTransRequest){
+	private boolean shiftUp(){
 		byte nextGear = 0;
 		boolean doShift = false;
 		if(definition.engine.jetPowerFactor == 0 ){
@@ -843,15 +835,6 @@ public class PartEngine extends APart{
 				//Neutral to 1st.
 				nextGear = 1;
 				doShift = vehicleOn.axialVelocity < MAX_SHIFT_SPEED || wheelFriction == 0 || !vehicleOn.goingInReverse;
-			}else if(!autoTransRequest && definition.engine.isAutomatic){
-				//Automatic transmission with manual shift up requested.
-				//Either go to neutral if in reverse, or ignore shift.
-				if(currentGear < 0){
-					nextGear = 0;
-					doShift = true;
-				}else{
-					return false;
-				}
 			}else{//Gear to next gear.
 				nextGear = (byte) (currentGear + 1);
 				doShift = true;
@@ -862,6 +845,9 @@ public class PartEngine extends APart{
 				setVariable(GEAR_VARIABLE, currentGear);
 				shiftCooldown = definition.engine.shiftSpeed;
 				upshiftCountdown = definition.engine.clutchTime;
+				if(!world.isClient()){
+					InterfacePacket.sendToAllClients(new PacketEntityVariableSet(this, UP_SHIFT_VARIABLE, 1));
+				}
 			}else if(!world.isClient()){
 				InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.BAD_SHIFT));
 			}
@@ -869,7 +855,7 @@ public class PartEngine extends APart{
 		return doShift;
 	}
 	
-	private boolean shiftDown(boolean autoTransRequest){
+	private boolean shiftDown(){
 		byte nextGear = 0;
 		boolean doShift = false;
 		if(definition.engine.jetPowerFactor == 0){
@@ -881,15 +867,6 @@ public class PartEngine extends APart{
 				//Neutral to 1st reverse.
 				nextGear = -1;
 				doShift = vehicleOn.axialVelocity < MAX_SHIFT_SPEED || wheelFriction == 0 || vehicleOn.goingInReverse;
-			}else if(!autoTransRequest && definition.engine.isAutomatic){
-				//Automatic transmission with manual shift down requested.
-				//Either go to neutral if in forwards, or ignore shift.
-				if(currentGear > 0){
-					nextGear = 0;
-					doShift = true;
-				}else{
-					return false;
-				}
 			}else{//Gear to next gear.
 				nextGear = (byte) (currentGear - 1);
 				doShift = true;
@@ -900,6 +877,9 @@ public class PartEngine extends APart{
 				setVariable(GEAR_VARIABLE, currentGear);
 				shiftCooldown = definition.engine.shiftSpeed;
 				downshiftCountdown = definition.engine.clutchTime;
+				if(!world.isClient()){
+					InterfacePacket.sendToAllClients(new PacketEntityVariableSet(this, DOWN_SHIFT_VARIABLE, 1));
+				}
 			}else if(!world.isClient()){
 				InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.BAD_SHIFT));
 			}
@@ -918,6 +898,9 @@ public class PartEngine extends APart{
 				shiftCooldown = definition.engine.shiftSpeed;
 				currentGear = 0;
 				setVariable(GEAR_VARIABLE, currentGear);
+				if(!world.isClient()){
+					InterfacePacket.sendToAllClients(new PacketEntityVariableSet(this, NEUTRAL_SHIFT_VARIABLE, 1));
+				}
 			}
 		}
 	}
