@@ -161,17 +161,13 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 			}
 		}
 		
-		//Set electric usage based on light status.
-		//Don't do this if we are a trailer.  Instead, get the towing vehicle's electric power.
+		//If we are a trailer, get the towing vehicle's electric power.
 		//If we are too damaged, don't hold any charge.
 		if(definition.motorized.isTrailer){
 			if(towedByConnection != null){
 				electricPower = towedByConnection.towingVehicle.electricPower;
 			}
 		}else if(damageAmount < definition.general.health){
-			if(electricPower > 2){
-				electricUsage += 0.001F;
-			}
 			electricPower = Math.max(0, Math.min(13, electricPower -= electricUsage));
 			electricFlow = electricUsage;
 			electricUsage = 0;
