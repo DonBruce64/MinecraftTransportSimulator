@@ -78,6 +78,7 @@ public final class ControlSystem{
 			}
 		}else if(clickingLeft){
 			clickingLeft = false;
+			ticksLeftHeld = 0;
 			handleClick(player);
 		}
 		if(InterfaceInput.isRightMouseButtonDown()){
@@ -91,6 +92,7 @@ public final class ControlSystem{
 			}
 		}else if(clickingRight){
 			clickingRight = false;
+			ticksRightHeld = 0;
 			handleClick(player);
 		}
 	}
