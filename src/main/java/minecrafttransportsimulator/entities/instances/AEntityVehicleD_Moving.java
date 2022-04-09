@@ -630,6 +630,9 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 						double yawDelta = Math.toDegrees(Math.atan2(desiredVector.x, desiredVector.z));
 						double pitchDelta = -Math.toDegrees(Math.atan2(desiredVector.y, Math.hypot(desiredVector.x, desiredVector.z)));
 						double rollDelta = rearFollower.getCurrentRotation();
+						if(definition.motorized.maxTiltAngle != 0){
+							rollDelta -= definition.motorized.maxTiltAngle*2.0*Math.min(0.5, velocity/2D)*getSteeringAngle();
+						}
 						roadRotation.set(pitchDelta - orientation.angles.x, yawDelta, rollDelta - orientation.angles.z);
 						roadRotation.y = roadRotation.getClampedYDelta(orientation.angles.y);
 						if(!world.isClient()){
