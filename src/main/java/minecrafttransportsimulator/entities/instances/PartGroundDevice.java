@@ -48,6 +48,7 @@ public class PartGroundDevice extends APart{
 	private int ticksCalcsSkipped = 0;
 	private double prevAngularVelocity;
 	private boolean prevActive;
+	private final Point3D zeroReferencePosition;
 	private final Point3D prevLocalOffset;
 	private final PartGroundDeviceFake fakePart;
 	
@@ -55,6 +56,7 @@ public class PartGroundDevice extends APart{
 		super(entityOn, placingPlayer, placementDefinition, data, parentPart);
 		this.isFlat = data.getBoolean("isFlat");
 		this.prevLocalOffset = localOffset.copy();
+		this.zeroReferencePosition = position.copy();
 		
 		//If we are a long ground device, add a fake ground device at the offset to make us
 		//have a better contact area.  If we are a fake part calling this as a super constructor,
@@ -94,6 +96,13 @@ public class PartGroundDevice extends APart{
 			if(!localOffset.equals(prevLocalOffset)){
 				vehicleOn.groundDeviceCollective.updateBounds();
 				prevLocalOffset.set(localOffset);
+			}
+			
+			//Set reference position for animation vars if we call them later.
+			if(parentPart != null && placementDefinition.isSubPart){
+				zeroReferencePosition.set(placementOffset).subtract(parentPart.placementOffset).rotate(parentPart.orientation).add(parentPart.position);
+			}else{
+				zeroReferencePosition.set(placementOffset).rotate(entityOn.orientation).add(entityOn.position);
 			}
 			
 			//If we are on the ground, adjust rotation.
@@ -164,7 +173,6 @@ public class PartGroundDevice extends APart{
 			prevAngularPosition = angularPosition;
 			angularPosition += angularVelocity;
 		}
-		
 		//Now that we have our wheel position, call super.
 		super.update();
 	}
@@ -211,6 +219,7 @@ public class PartGroundDevice extends APart{
 			case("ground_contacted"): return contactThisTick ? 1 : 0;
 			case("ground_skidding"): return skipAngularCalcs ? 1 : 0;
 			case("ground_slipping"): return vehicleOn != null && vehicleOn.slipping && animateAsOnGround ? 1 : 0;
+			case("ground_distance"): return world.getHeight(zeroReferencePosition);
 		}
 		
 		return super.getRawVariableValue(variable, partialTicks);

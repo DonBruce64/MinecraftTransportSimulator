@@ -624,7 +624,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 			}	
 			case("light_sunlight"): return world.getLightBrightness(position, false);
 			case("light_total"): return world.getLightBrightness(position, true);
-			case("ground_distance"): return world.getHeight(position);
+			case("terrain_distance"): return world.getHeight(position);
 		}
 		
 		//Check if this is a cycle variable.

@@ -561,7 +561,7 @@ public class WrapperWorld{
 	 *  Returns the distance from the passed-in position to the top block in the world, at the position's X/Z coords.
 	 */
 	public double getHeight(Point3D position){
-		return position.y - world.getHeight((int) position.x, (int) position.z);
+		return position.y - world.getHeight(new BlockPos(position.x, 0, position.z)).getY();
 	}
 	
 	/**
