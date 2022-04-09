@@ -223,16 +223,15 @@ public abstract class AGUIPanel extends AGUIBase{
 		
 		protected void updateSelectorState(GUIComponentSelector trailerSelector){
 			trailerSelector.selectorState = 1;
-			SwitchEntry switchDef = trailerSwitchDefs.get(0);
-			if(switchDef.connectionGroup.isHookup){
-				if(switchDef.vehicleOn.towedByConnection != null){
+			if(connectionGroup.isHookup){
+				if(vehicleOn.towedByConnection != null){
 					trailerSelector.selectorState = 0;
 					return;
 				}
 			}
-			if(switchDef.connectionGroup.isHitch){
-				for(TowingConnection connection : switchDef.vehicleOn.towingConnections){
-					if(connection.towedEntity.equals(switchDef.connectionDefiner)){
+			if(connectionGroup.isHitch){
+				for(TowingConnection connection : vehicleOn.towingConnections){
+					if(connection.towingEntity.equals(connectionDefiner)){
 						trailerSelector.selectorState = 0;
 						return;
 					}
