@@ -14,26 +14,36 @@ import minecrafttransportsimulator.packets.components.APacketPlayer;
  * @author don_bruce
  */
 public class PacketPlayerChatMessage extends APacketPlayer{
-	private final LanguageEntry language;
+	private final String message;
 	
 	public PacketPlayerChatMessage(WrapperPlayer player, LanguageEntry language){
 		super(player);
-		this.language = language;
+		this.message = language.key;
+	}
+	
+	public PacketPlayerChatMessage(WrapperPlayer player, String message){
+		super(player);
+		this.message = message;
 	}
 	
 	public PacketPlayerChatMessage(ByteBuf buf){
 		super(buf);
-		this.language = JSONConfigLanguage.coreEntries.get(readStringFromBuffer(buf));
+		this.message = readStringFromBuffer(buf);;
 	}
 	
 	@Override
 	public void writeToBuffer(ByteBuf buf){
 		super.writeToBuffer(buf);
-		writeStringToBuffer(language.key, buf);
+		writeStringToBuffer(message, buf);
 	}
 	
 	@Override
 	public void handle(WrapperWorld world, WrapperPlayer player){
-		player.displayChatMessage(language);
+		LanguageEntry language = JSONConfigLanguage.coreEntries.get(message);
+		if(language != null){
+			player.displayChatMessage(language);
+		}else{
+			player.displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, message);
+		}
 	}
 }

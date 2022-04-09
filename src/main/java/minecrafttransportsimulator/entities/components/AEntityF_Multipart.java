@@ -29,6 +29,7 @@ import minecrafttransportsimulator.mcinterface.WrapperNBT;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 import minecrafttransportsimulator.mcinterface.WrapperWorld;
 import minecrafttransportsimulator.packets.instances.PacketPartChange;
+import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**Base class for multipart entities.  These entities hold other, part-based entities.  These part
@@ -774,10 +775,10 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 						}
 					}
 				}catch(NullPointerException e){
-					throw new IllegalArgumentException("Attempted to add defaultPart: " + partPackID + ":" + partSystemName + " to: " + providingDef.packID + ":" + providingDef.systemName + " but that part doesn't exist in the pack item registry.");
+					playerAdding.sendPacket(new PacketPlayerChatMessage(playerAdding, "Attempted to add defaultPart: " + partPackID + ":" + partSystemName + " to: " + providingDef.packID + ":" + providingDef.systemName + " but that part doesn't exist in the pack item registry."));
 				}
 			}catch(IndexOutOfBoundsException e){
-				throw new IllegalArgumentException("Could not parse defaultPart definition: " + partDef.defaultPart + ".  Format should be \"packId:partName\"");
+				playerAdding.sendPacket(new PacketPlayerChatMessage(playerAdding, "Could not parse defaultPart definition: " + partDef.defaultPart + ".  Format should be \"packId:partName\""));
 			}
 		}
 	}
