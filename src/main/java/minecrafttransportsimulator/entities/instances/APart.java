@@ -15,6 +15,7 @@ import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
+import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.InterfaceCore;
@@ -296,6 +297,15 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 	 */
 	public boolean isInLiquid(){
 		return world.isBlockLiquid(position);
+	}
+	
+	/**
+	 * Checks if this part can be removed with a wrench.  If so, then null is returned.
+	 * If not, a {@link LanguageEntry} is returned with the message of why it cannot be.
+	 * 
+	 */
+	public LanguageEntry checkForRemoval(){
+		return null;
 	}
 
 	

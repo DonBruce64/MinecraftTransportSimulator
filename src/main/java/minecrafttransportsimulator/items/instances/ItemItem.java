@@ -21,6 +21,7 @@ import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.components.IItemFood;
 import minecrafttransportsimulator.items.components.IItemVehicleInteractable;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
+import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.jsondefs.JSONItem;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
@@ -74,20 +75,18 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 							}
 						}else if(!vehicle.world.isClient()){
 							if(part != null && !player.isSneaking() && !part.placementDefinition.isPermanent && part.isValid){
-								//Double-check the part isn't an inventory container with inventory.
-								if(part instanceof PartInteractable){
-									PartInteractable interactable = (PartInteractable) part;
-									if(!interactable.definition.interactable.canBeOpenedInHand && interactable.getMass() > interactable.definition.generic.mass){
-										player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_VEHICLE_CANTREMOVEINVENTORY));
-										return CallbackType.NONE;
+								LanguageEntry partResult = part.checkForRemoval();
+								if(partResult != null){
+									player.sendPacket(new PacketPlayerChatMessage(player, partResult));
+									return CallbackType.NONE;
+								}else{
+									//Player can remove part, spawn item in the world and remove part.
+									//Make sure to remove the part before spawning the item.
+									vehicle.removePart(part, null);
+									AItemPart droppedItem = part.getItem();
+									if(droppedItem != null){
+										vehicle.world.spawnItem(droppedItem, part.save(InterfaceCore.getNewNBTWrapper()), part.position);
 									}
-								}
-								//Player can remove part, spawn item in the world and remove part.
-								//Make sure to remove the part before spawning the item.
-								vehicle.removePart(part, null);
-								AItemPart droppedItem = part.getItem();
-								if(droppedItem != null){
-									vehicle.world.spawnItem(droppedItem, part.save(InterfaceCore.getNewNBTWrapper()), part.position);
 								}
 							}else if(player.isSneaking()){
 								//Attacker is a sneaking player with a wrench.

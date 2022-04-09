@@ -7,6 +7,7 @@ import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.instances.ItemPartGun;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
+import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.InterfacePacket;
 import minecrafttransportsimulator.mcinterface.WrapperEntity;
@@ -95,6 +96,15 @@ public final class PartSeat extends APart{
 		}
 		return true;
     }
+	
+	@Override
+	public LanguageEntry checkForRemoval(){
+		if(entityOn.locationRiderMap.get(placementOffset) != null){
+			return JSONConfigLanguage.INTERACT_VEHICLE_SEATTAKEN;
+		}else{
+			return super.checkForRemoval();
+		}
+	}
 	
 	/**
 	 *  Like {@link #getInterpolatedOrientation(TransformationMatrix, double)}, just for

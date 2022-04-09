@@ -72,6 +72,15 @@ public final class PartInteractable extends APart{
     }
 	
 	@Override
+	public LanguageEntry checkForRemoval(){
+		if(!definition.interactable.canBeOpenedInHand && getMass() > definition.generic.mass){
+			return JSONConfigLanguage.INTERACT_VEHICLE_CANTREMOVEINVENTORY;
+		}else{
+			return super.checkForRemoval();
+		}
+	}
+	
+	@Override
 	public void attack(Damage damage){
 		super.attack(damage);
 		if(!damage.isWater && (damage.amount > 25 || damageAmount > definition.general.health)){
