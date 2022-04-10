@@ -231,7 +231,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 	}
 	
 	@Override
-	public void removeRider(WrapperEntity rider, Iterator<WrapperEntity> iterator){
+	public void removeRider(WrapperEntity rider){
 		//Auto-open doors for the rider in the seat they were in, if such doors exist.
 		PartSeat seat = getSeatForRider(rider);
 		if(seat != null && seat.placementDefinition.linkedVariables != null){
@@ -239,7 +239,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 				setVariable(variable, 1);
 			}
 		}
-		super.removeRider(rider, iterator);
+		super.removeRider(rider);
 	}
 	
 	/**
@@ -581,7 +581,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 			
 			//Remove any riders riding this part from the riding map.
 			if(locationRiderMap.containsKey(part.placementOffset)){
-				removeRider(locationRiderMap.get(part.placementOffset), null);
+				removeRider(locationRiderMap.get(part.placementOffset));
 			}
 			//Call the part's removal code for it to process.
 			part.remove();

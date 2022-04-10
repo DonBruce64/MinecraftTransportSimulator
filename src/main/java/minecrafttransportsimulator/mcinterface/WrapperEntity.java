@@ -9,7 +9,6 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
-import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.PartSeat;
@@ -25,11 +24,8 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.DamageSource;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentString;
-import net.minecraft.world.World;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -128,8 +124,8 @@ public class WrapperEntity{
 	 */
 	public AEntityE_Interactable<?> getEntityRiding(){
 		Entity mcEntityRiding = entity.getRidingEntity();
-		if(mcEntityRiding instanceof BuilderEntityExisting){
-			AEntityE_Interactable<?> entityRiding = (AEntityE_Interactable<?>) ((BuilderEntityExisting) mcEntityRiding).entity;
+		if(mcEntityRiding instanceof BuilderEntityLinkedSeat){
+			AEntityE_Interactable<?> entityRiding = ((BuilderEntityLinkedSeat) mcEntityRiding).entity;
 			//Need to check this as MC might have us as a rider on the builer, but we might not be a rider on the entity.
 			if(entityRiding != null && entityRiding.locationRiderMap.containsValue(this)){
 				return entityRiding;
@@ -145,13 +141,19 @@ public class WrapperEntity{
 	 */
 	public void setRiding(AEntityE_Interactable<?> entityToRide){
 		if(entityToRide != null){
-			//Get the builder for this entity and set the player to riding it.
-			AxisAlignedBB searchBounds = new AxisAlignedBB(new BlockPos(entityToRide.position.x, entityToRide.position.y, entityToRide.position.z)).grow(World.MAX_ENTITY_RADIUS);
-			for(BuilderEntityExisting builder : getWorld().world.getEntitiesWithinAABB(BuilderEntityExisting.class, searchBounds)){
-				if(entityToRide.equals(builder.entity)){
-					entity.startRiding(builder, true);
-					return;
-				}
+			//Don't re-add a seat entity if we are just changing seats.
+			//This just causes extra execution logic.
+			AEntityE_Interactable<?> entityRiding = getEntityRiding();
+			if(entityRiding == null){
+				BuilderEntityLinkedSeat seat = new BuilderEntityLinkedSeat(entityToRide.world.world);
+				seat.loadedFromSavedNBT = true;
+				seat.setPositionAndRotation(entityToRide.position.x, entityToRide.position.y, entityToRide.position.z, 0, 0);
+				seat.entity = entityToRide;
+				entity.world.spawnEntity(seat);
+				entity.startRiding(seat, true);
+			}else{
+				//Just change entity reference, we will already be a rider on the entity at this point.
+				((BuilderEntityLinkedSeat) entity.getRidingEntity()).entity = entityToRide;
 			}
 		}else{
 			entity.dismountRidingEntity();
@@ -166,23 +168,21 @@ public class WrapperEntity{
 	 *  will affect eye and camera heights.
 	 */
 	public double getVerticalScale(){
-		if(entity.getRidingEntity() instanceof BuilderEntityExisting){
-			AEntityB_Existing riding = ((BuilderEntityExisting) entity.getRidingEntity()).entity;
-			if(riding instanceof AEntityF_Multipart){
-				AEntityF_Multipart<?> multipart = (AEntityF_Multipart<?>) riding;
-				PartSeat seat = multipart.getSeatForRider(this);
-				if(seat != null){
-					if(seat.placementDefinition.playerScale != null){
-						if(seat.definition.seat.playerScale != null){
-		        			return seat.scale.y*seat.placementDefinition.playerScale.y*seat.definition.seat.playerScale.y;
-						}else{
-							return seat.scale.y*seat.placementDefinition.playerScale.y;
-						}
-					}else if(seat.definition.seat.playerScale != null){
-						return seat.scale.y*seat.definition.seat.playerScale.y;
+		AEntityE_Interactable<?> riding = getEntityRiding();
+		if(riding instanceof AEntityF_Multipart){
+			AEntityF_Multipart<?> multipart = (AEntityF_Multipart<?>) riding;
+			PartSeat seat = multipart.getSeatForRider(this);
+			if(seat != null){
+				if(seat.placementDefinition.playerScale != null){
+					if(seat.definition.seat.playerScale != null){
+	        			return seat.scale.y*seat.placementDefinition.playerScale.y*seat.definition.seat.playerScale.y;
 					}else{
-						return seat.scale.y;
+						return seat.scale.y*seat.placementDefinition.playerScale.y;
 					}
+				}else if(seat.definition.seat.playerScale != null){
+					return seat.scale.y*seat.definition.seat.playerScale.y;
+				}else{
+					return seat.scale.y;
 				}
 			}
 		}
@@ -324,12 +324,9 @@ public class WrapperEntity{
 	public Point3D getLineOfSight(double distance){
 		//Need to check if we're riding a vehicle or not.  Vehicles adjust sight vectors.
 		PartSeat seat = null;
-		if(entity.getRidingEntity() instanceof BuilderEntityExisting){
-			AEntityB_Existing riding = ((BuilderEntityExisting) entity.getRidingEntity()).entity;
-			if(riding instanceof AEntityF_Multipart){
-				AEntityF_Multipart<?> multipart = (AEntityF_Multipart<?>) riding;
-				seat = multipart.getSeatForRider(this);
-			}
+		AEntityE_Interactable<?> riding = getEntityRiding();
+		if(riding instanceof AEntityF_Multipart){
+			seat = ((AEntityF_Multipart<?>) riding).getSeatForRider(this);
 		}
 		
 		mutableSight.set(0, 0, distance).rotate(getOrientation());

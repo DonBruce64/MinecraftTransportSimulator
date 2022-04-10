@@ -228,7 +228,7 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 	}
 	
 	@Override
-	public void removeRider(WrapperEntity rider, Iterator<WrapperEntity> iterator){
+	public void removeRider(WrapperEntity rider){
 		if(world.isClient() && ConfigSystem.client.controlSettings.autostartEng.value && rider.equals(InterfaceClient.getClientPlayer())){
 			PartSeat seat = getSeatForRider(rider);
 			if(rider instanceof WrapperPlayer && seat.placementDefinition.isController){
@@ -256,7 +256,7 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 				}
 			}
 		}
-		super.removeRider(rider, iterator);
+		super.removeRider(rider);
 	}
 	
 	@Override

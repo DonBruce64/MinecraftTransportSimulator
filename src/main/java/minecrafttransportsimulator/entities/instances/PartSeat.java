@@ -57,7 +57,7 @@ public final class PartSeat extends APart{
 							//Check if the rider is riding something before adding them.
 							//If they aren't riding us our the entity we are on, we need to remove them.
 							if(player.getEntityRiding() != null && !entityOn.equals(player.getEntityRiding())){
-								player.getEntityRiding().removeRider(player, null);
+								player.getEntityRiding().removeRider(player);
 							}
 							entityOn.addRider(player, placementOffset);
 							//If this seat can control a gun, and isn't controlling one, set it now.
@@ -206,7 +206,7 @@ public final class PartSeat extends APart{
 		super.remove();
 		WrapperEntity rider = entityOn.locationRiderMap.get(placementOffset);
 		if(rider != null){
-			entityOn.removeRider(rider, null);
+			entityOn.removeRider(rider);
 		}
 	}
 	

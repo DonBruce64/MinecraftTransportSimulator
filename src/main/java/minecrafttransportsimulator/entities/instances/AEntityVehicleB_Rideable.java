@@ -1,7 +1,5 @@
 package minecrafttransportsimulator.entities.instances;
 
-import java.util.Iterator;
-
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityG_Towable;
 import minecrafttransportsimulator.guis.components.AGUIBase;
@@ -47,7 +45,7 @@ abstract class AEntityVehicleB_Rideable extends AEntityG_Towable<JSONVehicle>{
 	}
 	
 	@Override
-	public void updateRider(WrapperEntity rider, Iterator<WrapperEntity> iterator){
+	public void updateRider(WrapperEntity rider){
 		//We override the default rider update behavior here as the riders can move depending
 		//on how the part they are riding moves.  If we modified the rider position, then we'd
 		//allow for multiple riders at the same position.  That's Bad Stuff.
@@ -86,7 +84,7 @@ abstract class AEntityVehicleB_Rideable extends AEntityG_Towable<JSONVehicle>{
     		}
 		}else{
 			//Remove invalid rider.
-			removeRider(rider, iterator);
+			removeRider(rider);
 		}
 	}
 	
@@ -130,12 +128,12 @@ abstract class AEntityVehicleB_Rideable extends AEntityG_Towable<JSONVehicle>{
 	}
 	
 	@Override
-	public void removeRider(WrapperEntity rider, Iterator<WrapperEntity> iterator){
+	public void removeRider(WrapperEntity rider){
 		//We override the default rider removal behavior here as the dismount position
 		//of riders can be modified via JSON or via part placement location.
 		//Get the position the rider was sitting in before we dismount them.
 		PartSeat seat = getSeatForRider(rider);;
-		super.removeRider(rider, iterator);
+		super.removeRider(rider);
 
 		//Get rid of any potion effects that were caused by the vehicle
 		if(this.definition.effects != null) {

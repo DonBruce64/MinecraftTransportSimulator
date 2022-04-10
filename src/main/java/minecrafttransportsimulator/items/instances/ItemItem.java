@@ -188,7 +188,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 						while(iterator.hasNext()){
 							WrapperEntity entity = iterator.next();
 							if(!(entity instanceof WrapperPlayer)){
-								vehicle.removeRider(entity, iterator);
+								vehicle.removeRider(entity);
 							}
 						}
 					}else{

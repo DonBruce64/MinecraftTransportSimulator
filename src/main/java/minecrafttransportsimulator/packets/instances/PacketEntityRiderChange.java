@@ -40,7 +40,7 @@ public class PacketEntityRiderChange extends APacketEntityInteract<AEntityE_Inte
 		if(position != null){
 			entity.addRider(rider, position);
 		}else{
-			entity.removeRider(rider, null);
+			entity.removeRider(rider);
 		}
 		return true;
 	}

@@ -164,7 +164,7 @@ abstract class AEntityVehicleC_Colliding extends AEntityVehicleB_Rideable{
 		//Now remove all riders from the vehicle.
 		Iterator<WrapperEntity> riderIterator = locationRiderMap.inverse().keySet().iterator();
 		while(riderIterator.hasNext()){
-			removeRider(riderIterator.next(), riderIterator);
+			removeRider(riderIterator.next());
 		}
 	}
 }

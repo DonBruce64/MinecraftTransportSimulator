@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -469,14 +468,14 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 	 *  as the entity needs to move to its new position before we can know where the
 	 *  riders of said entity will be.
 	 */
-	public void updateRider(WrapperEntity rider, Iterator<WrapperEntity> iterator){
+	public void updateRider(WrapperEntity rider){
 		//Update entity position and motion.
 		if(rider.isValid()){
 			rider.setPosition(locationRiderMap.inverse().get(rider), false);
 			rider.setVelocity(motion);
 		}else{
 			//Remove invalid rider.
-			removeRider(rider, iterator);
+			removeRider(rider);
 		}
 	}
 	
@@ -535,13 +534,9 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 	 *  Passed-in iterator is optional, but MUST be included if this is called inside a loop
 	 *  that's iterating over {@link #ridersToLocations} or you will get a CME!
 	 */
-	public void removeRider(WrapperEntity rider, Iterator<WrapperEntity> iterator){
+	public void removeRider(WrapperEntity rider){
 		if(locationRiderMap.containsValue(rider)){
-			if(iterator != null){
-				iterator.remove();
-			}else{
-				locationRiderMap.inverse().remove(rider);
-			}
+			locationRiderMap.inverse().remove(rider);
 			if(!world.isClient()){
 				rider.setRiding(null);
 				InterfacePacket.sendToAllClients(new PacketEntityRiderChange(this, rider, null));

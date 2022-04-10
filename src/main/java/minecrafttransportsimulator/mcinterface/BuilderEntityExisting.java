@@ -1,7 +1,6 @@
 package minecrafttransportsimulator.mcinterface;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import javax.annotation.Nullable;
@@ -116,20 +115,6 @@ public class BuilderEntityExisting extends ABuilderEntityBase{
 	    					World.MAX_ENTITY_RADIUS = Math.max(Math.max(interactable.encompassingBox.widthRadius, interactable.encompassingBox.depthRadius), interactable.encompassingBox.heightRadius);
 	    				}
 	        		}
-	        		
-	        		//Check that riders are still present prior to updating them.
-	        		//This handles dismounting of riders from entities in a non-event-driven way.
-	        		//We do this because other mods and Sponge like to screw up the events...
-	        		entity.world.beginProfiling("RiderOverhead", false);
-	        		if(!world.isRemote){
-	    	    		Iterator<WrapperEntity> riderIterator = interactable.locationRiderMap.inverse().keySet().iterator();
-	    	    		while(riderIterator.hasNext()){
-	    	    			WrapperEntity rider = riderIterator.next();
-	    	    			if(!this.equals(rider.entity.getRidingEntity())){
-	    	    				interactable.removeRider(rider, riderIterator);
-	    	    			}
-	    	    		}
-	        		}
 	    		}
 	    		entity.world.endProfiling();
     			entity.world.endProfiling();
@@ -161,15 +146,6 @@ public class BuilderEntityExisting extends ABuilderEntityBase{
 		//Notify internal entity of it being invalid.
 		if(entity != null){
 			entity.remove();
-		}
-	}
-	
-	@Override
-	public void onRemovedFromWorld(){
-		super.onRemovedFromWorld();
-		//Catch unloaded entities from when the chunk goes away.
-		if(!isDead){
-			setDead();
 		}
 	}
     
@@ -222,29 +198,6 @@ public class BuilderEntityExisting extends ABuilderEntityBase{
     }
     
     @Override
-    public void updatePassenger(Entity passenger){
-    	//Forward passenger updates to the entity, if it exists.
-    	if(entity instanceof AEntityE_Interactable){
-    		AEntityE_Interactable<?> interactable = ((AEntityE_Interactable<?>) entity);
-    		Iterator<WrapperEntity> iterator = interactable.locationRiderMap.inverse().keySet().iterator();
-    		while(iterator.hasNext()){
-    			WrapperEntity rider = iterator.next();
-    			if(rider.entity.equals(passenger)){
-    				interactable.updateRider(rider, iterator);
-    				return;
-    			}
-    		}
-    		//Couldn't find rider in entity list.  Add them as a passenger.
-    		interactable.addRider(WrapperEntity.getWrapperFor(passenger), null);
-    	}
-    }
-    
-    @Override
-    public boolean shouldRiderSit(){
-    	return entity != null ? InterfaceEventsEntityRendering.renderCurrentRiderSitting : super.shouldRiderSit();
-    }
-    
-    @Override
 	public AxisAlignedBB getEntityBoundingBox(){
 		//Override this to make interaction checks work with the multiple collision points.
 		//We return the collision and interaction boxes here as we need a bounding box large enough to encompass both.
@@ -281,12 +234,6 @@ public class BuilderEntityExisting extends ABuilderEntityBase{
 		//This gets overridden to allow players to interact with this entity.
 		return collisionBoxes != null && !collisionBoxes.boxes.isEmpty();
 	}
-	
-	@Override
-	public boolean canRiderInteract(){
-		//Return true here to allow player to interact with this entity while riding.
-        return true;
-    }
     
 	@Override
 	public NBTTagCompound writeToNBT(NBTTagCompound tag){
@@ -326,6 +273,6 @@ public class BuilderEntityExisting extends ABuilderEntityBase{
 		}
 		
 		//Now register our own classes.
-		event.getRegistry().register(EntityEntryBuilder.create().entity(BuilderEntityExisting.class).id(new ResourceLocation(MasterLoader.MODID, "mts_entity"), 0).name("mts_entity").tracker(32*16, 5, false).build());
+		event.getRegistry().register(EntityEntryBuilder.create().entity(BuilderEntityExisting.class).id(new ResourceLocation(MasterLoader.MODID, "mts_entity"), entityRegistrationIDCounter++).name("mts_entity").tracker(32*16, 5, false).build());
 	}
 }
