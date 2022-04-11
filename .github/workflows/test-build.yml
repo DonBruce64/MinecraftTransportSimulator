@@ -1,0 +1,36 @@
+name: Build
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - run: |
+          git checkout ${{ github.event.inputs.ref }}
+# Idiot github don't know how to design a pipeline at all. 
+# Why not learn from gitlab? 
+###################### Real pipeline BEGIN ####################
+      - name: Do actual things
+        run: |
+          sudo apt update ; DEBIAN_FRONTEND=noninteractive sudo apt install -y openjdk-8-jdk
+          PULL_DEPS=1 ./buildscript.sh
+      - name: Publish Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          path: build/libs/*.jar
+          name: Build_Result
+###################### Read pipeline END ######################
+
+
