@@ -124,6 +124,6 @@ public class BuilderEntityLinkedSeat extends ABuilderEntityBase{
 	 */
 	@SubscribeEvent
 	public static void registerEntities(RegistryEvent.Register<EntityEntry> event){
-		event.getRegistry().register(EntityEntryBuilder.create().entity(BuilderEntityLinkedSeat.class).id(new ResourceLocation(MasterLoader.MODID, "mts_entity_seat"), entityRegistrationIDCounter++).tracker(32*16, 5, false).name("mts_entity_seat").build());
+		event.getRegistry().register(EntityEntryBuilder.create().entity(BuilderEntityLinkedSeat.class).id(new ResourceLocation(MasterLoader.MODID, "mts_entity_seat"), 1).tracker(32*16, 5, false).name("mts_entity_seat").build());
 	}
 }

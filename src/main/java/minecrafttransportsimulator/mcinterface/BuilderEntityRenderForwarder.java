@@ -138,6 +138,6 @@ public class BuilderEntityRenderForwarder extends ABuilderEntityBase{
 	 */
 	@SubscribeEvent
 	public static void registerEntities(RegistryEvent.Register<EntityEntry> event){
-		event.getRegistry().register(EntityEntryBuilder.create().entity(BuilderEntityRenderForwarder.class).id(new ResourceLocation(MasterLoader.MODID, "mts_entity_renderer"), entityRegistrationIDCounter++).tracker(32*16, 5, false).name("mts_entity_renderer").build());
+		event.getRegistry().register(EntityEntryBuilder.create().entity(BuilderEntityRenderForwarder.class).id(new ResourceLocation(MasterLoader.MODID, "mts_entity_renderer"), 2).tracker(32*16, 5, false).name("mts_entity_renderer").build());
 	}
 }

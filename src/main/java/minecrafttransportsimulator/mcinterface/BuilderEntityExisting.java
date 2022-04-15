@@ -273,6 +273,6 @@ public class BuilderEntityExisting extends ABuilderEntityBase{
 		}
 		
 		//Now register our own classes.
-		event.getRegistry().register(EntityEntryBuilder.create().entity(BuilderEntityExisting.class).id(new ResourceLocation(MasterLoader.MODID, "mts_entity"), entityRegistrationIDCounter++).name("mts_entity").tracker(32*16, 5, false).build());
+		event.getRegistry().register(EntityEntryBuilder.create().entity(BuilderEntityExisting.class).id(new ResourceLocation(MasterLoader.MODID, "mts_entity"), 0).name("mts_entity").tracker(32*16, 5, false).build());
 	}
 }
