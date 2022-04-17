@@ -13,8 +13,6 @@ import net.minecraft.world.World;
  * @author don_bruce
  */
 public abstract class ABuilderEntityBase extends Entity{
-	/**ID counter used for registration of entity classes.**/
-	protected static int entityRegistrationIDCounter;
 	/**This flag is true if we need to get server data for syncing.  Set on construction tick, but only used on clients.**/
 	private boolean needDataFromServer = true;
 	/**Data loaded on last NBT call.  Saved here to prevent loading of things until the update method.  This prevents
