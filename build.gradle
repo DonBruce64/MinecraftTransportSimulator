@@ -1,22 +1,22 @@
 buildscript {
     repositories {
         maven { url = 'https://maven.minecraftforge.net' }
-				//maven { url = "https://repo.spongepowered.org/maven" }
+				maven { url = "https://repo.spongepowered.org/maven" }
         mavenCentral()
     }
     dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
-				//classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '4.1.+', changing: true
+				classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
     }
 }
 
 //Apply plugins
 apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'eclipse'
-//apply plugin: 'org.spongepowered.mixin'
+apply plugin: 'org.spongepowered.mixin'
 
 //Set file name.
-version = "1.12.2-21.2.0-BETA10"
+version = "1.12.2-21.2.0-BETA9"
 group= "minecrafttransportsimulator"
 archivesBaseName = "Immersive Vehicles"
 
@@ -77,12 +77,23 @@ dependencies {
 	//Disabled as Access Transformers don't work on FG 3.0 runtimes despite them saying they do.
 	//Not a huge issue, as it just prevents using JEI in-dev, and we already have it working so don't really need to test.
   //runtimeOnly fg.deobf("mezz.jei:jei_1.12.2:4.16.1.302")
-	
+
+
+
+    // Mixin
+
 	//Embed mixins into the code.
 	//embed('org.spongepowered:mixin:0.8.5')
-	
+    // Idk about this but I always use a MixinBootstrap mod. @edeka
+
+    implementation('org.spongepowered:mixin:0.8.4') {
+        exclude module: 'guava'
+        exclude module: 'commons-io'
+        exclude module: 'gson'
+    }
+
 	//Apply Mixin AP ForgeGradle.
-	//annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+    annotationProcessor 'org.spongepowered:mixin:0.8.4:processor'
 }
 
 //Set mixin properties.
@@ -92,10 +103,29 @@ dependencies {
 	//config "mts.mixins.json"
 //}
 
+
+// Add mixin refmap
+mixin {
+    add sourceSets.main, "immersive_vehicles.mixin-refmap.json"
+}
+
+
+
 //Here is where we zip up all embeds and add them to our jar.
 jar {
     from {
         configurations.embed.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+
+    // Mixin
+    manifest {
+        attributes "TweakClass": "org.spongepowered.asm.launch.MixinTweaker"
+        attributes "TweakOrder": "0"
+        attributes "MixinConfigs": "immersive_vehicles.mixin.json"
+
+        // Do this so that the actual mod content gets loaded too and not only the mixins.
+        attributes "FMLCorePluginContainsFMLMod": true
+        attributes "ForceLoadAsMod": true
     }
 }
 
