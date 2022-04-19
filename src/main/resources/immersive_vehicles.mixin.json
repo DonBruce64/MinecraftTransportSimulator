@@ -1,0 +1,16 @@
+{
+  "required": true,
+  "package": "minecrafttransportsimulator.core.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "client": [
+    "MinecraftMixin",
+    "SplashMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "refmap": "immersive_vehicles.mixin-refmap.json",
+  "minVersion": "0.8"
+}
+
+
