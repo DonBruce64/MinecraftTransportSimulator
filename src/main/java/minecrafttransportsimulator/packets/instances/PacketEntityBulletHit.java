@@ -56,10 +56,8 @@ public class PacketEntityBulletHit extends APacketEntity<PartGun>{
 				if(bulletItem.definition.bullet.types.contains(BulletType.EXPLOSIVE)){
 					float blastSize = bulletItem.definition.bullet.blastStrength == 0 ? bulletItem.definition.bullet.diameter/10F : bulletItem.definition.bullet.blastStrength;
 					world.spawnExplosion(hitPosition, blastSize, bulletItem.definition.bullet.types.contains(BulletType.INCENDIARY));
-					return false;
-				}else{
-					return handleBulletHit(world);
 				}
+				return handleBulletHit(world);
 			}
 		}else{
 			handleBulletHit(world);
