@@ -12,6 +12,7 @@ import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.jsondefs.JSONCameraObject;
 import minecrafttransportsimulator.mcinterface.InterfaceClient;
 import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import net.minecraft.client.Minecraft;
 
 /**System for handling camera zoom, position, and overlays.  Note that actual overlay
  * rendering is left up to the interface: this class only maintains which overlay
@@ -65,7 +66,7 @@ public class CameraSystem{
 			currentFOV = 0; 
 		}
 		customCameraOverlay = null;
-		
+		if(!InterfaceClient.isGamePaused())System.out.println(Minecraft.getMinecraft().gameSettings.thirdPersonView);
 		//Do camera operations.
     	if(InterfaceClient.inFirstPerson()){
     		//Force custom cameras for some states.
@@ -180,8 +181,10 @@ public class CameraSystem{
     		//If we weren't running a custom camera, try running one.  This will become active when we
     		//go back into first-person mode.  This only has an effect if we are riding an entity.
     		if(runningCustomCameras){
-    			++customCameraIndex;
-    			InterfaceClient.toggleFirstPerson();
+    			if(InterfaceClient.changedCameraState()){
+	    			++customCameraIndex;
+	    			InterfaceClient.toggleFirstPerson();
+    			}
     		}else if(sittingSeat != null){
     			//Try to enable custom cameras.
     			enableCustomCameras = true;
@@ -203,17 +206,19 @@ public class CameraSystem{
         	//If we get here, and don't have any custom cameras, stay here.
         	//If we do have custom cameras, use them instead.
         	if(sittingSeat != null){
-	        	if(multipart.definition.rendering.cameraObjects != null){
-	        		InterfaceClient.toggleFirstPerson();
-				}else{
-					for(APart part : multipart.parts){
-						if(part.definition.rendering != null && part.definition.rendering.cameraObjects != null){
-							InterfaceClient.toggleFirstPerson();
-							break;
+        		if(InterfaceClient.changedCameraState()){
+		        	if(multipart.definition.rendering.cameraObjects != null){
+		        		InterfaceClient.toggleFirstPerson();
+					}else{
+						for(APart part : multipart.parts){
+							if(part.definition.rendering != null && part.definition.rendering.cameraObjects != null){
+								InterfaceClient.toggleFirstPerson();
+								break;
+							}
 						}
 					}
-				}
-
+        		}
+	        	
 	        	//Add the zoom offset for third-person view.
 	        	sittingSeat.getRiderInterpolatedOrientation(cameraOrientation, partialTicks);
 	        	double eyeHeight = player.getEyeHeight();

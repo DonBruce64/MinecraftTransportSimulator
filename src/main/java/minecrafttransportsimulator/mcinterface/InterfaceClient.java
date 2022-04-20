@@ -46,7 +46,10 @@ import net.minecraftforge.fml.relauncher.Side;
  */
 @EventBusSubscriber(Side.CLIENT)
 public class InterfaceClient{
-	private static boolean lastPassFirstPerson;
+	private static boolean actuallyFirstPerson;
+	private static boolean actuallyThirdPerson;
+	private static boolean changedCameraState;
+	private static boolean changeCameraRequest;
 	private static BuilderEntityRenderForwarder activeFollower;
 	private static int ticksSincePlayerJoin;
 
@@ -82,15 +85,7 @@ public class InterfaceClient{
 	 *  Returns true if the game is in first-person mode.
 	 */
 	public static boolean inFirstPerson(){
-		//Need to check if we are really in third-person or not.
-		//Shaders cause a fake third-person render pass.
-		boolean inFirstPerson = Minecraft.getMinecraft().gameSettings.thirdPersonView == 0;
-		if(inFirstPerson || lastPassFirstPerson){
-			lastPassFirstPerson = inFirstPerson;
-			return true;
-		}else{
-			return false;
-		}
+		return actuallyFirstPerson;
 	}
 	
 	/**
@@ -98,18 +93,23 @@ public class InterfaceClient{
 	 *  Does not return true for inverted third-person mode.
 	 */
 	public static boolean inThirdPerson(){
-		return Minecraft.getMinecraft().gameSettings.thirdPersonView == 1;
+		return actuallyThirdPerson;
+	}
+	
+	/**
+	 *  Returns true if the camera mode was switched from last render.
+	 *  This is here because some mods will change the camera for rendering,
+	 *  and we need to know if the state-change is a switch, or an internal one.
+	 */
+	public static boolean changedCameraState(){
+		return changedCameraState && !changeCameraRequest;
 	}
 	
 	/**
 	 *  Toggles first-person mode.  This is essentially the same operation as the F5 key.
 	 */
 	public static void toggleFirstPerson(){
-		if(inFirstPerson()){
-			Minecraft.getMinecraft().gameSettings.thirdPersonView = 1;
-		}else{
-			Minecraft.getMinecraft().gameSettings.thirdPersonView = 0;
-		}
+		changeCameraRequest = true;
 	}
 	
 	/**
@@ -266,6 +266,28 @@ public class InterfaceClient{
 	@SubscribeEvent
 	public static void on(TickEvent.ClientTickEvent event){
 		if(!isGamePaused() && event.phase.equals(Phase.END)){
+			changedCameraState = false;
+			if(actuallyFirstPerson ^ Minecraft.getMinecraft().gameSettings.thirdPersonView == 0){
+				changedCameraState = true;
+				actuallyFirstPerson = Minecraft.getMinecraft().gameSettings.thirdPersonView == 0;
+			}
+			if(actuallyThirdPerson ^ Minecraft.getMinecraft().gameSettings.thirdPersonView == 1){
+				changedCameraState = true;
+				actuallyThirdPerson = Minecraft.getMinecraft().gameSettings.thirdPersonView == 1;
+			}
+			if(changeCameraRequest){
+				if(actuallyFirstPerson){
+					Minecraft.getMinecraft().gameSettings.thirdPersonView = 1;
+					actuallyFirstPerson = false;
+					actuallyThirdPerson = true;
+				}else{
+					Minecraft.getMinecraft().gameSettings.thirdPersonView = 0;
+					actuallyFirstPerson = true;
+					actuallyThirdPerson = false;
+				}
+				changeCameraRequest = false;
+			}
+			
 			WrapperWorld clientWorld = WrapperWorld.getWrapperFor(Minecraft.getMinecraft().world);
 			if(clientWorld != null){
 				clientWorld.beginProfiling("MTS_BulletUpdates", true);
