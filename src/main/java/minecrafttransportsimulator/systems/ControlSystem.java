@@ -35,10 +35,14 @@ public final class ControlSystem{
 	private static final int NULL_COMPONENT = 999;	
 	private static boolean joysticksInhibited = false;
 	private static WrapperPlayer clientPlayer;
+	
 	private static boolean clickingLeft = false;
 	private static byte ticksLeftHeld = 0;
 	private static boolean clickingRight = false;
 	private static byte ticksRightHeld = 0;
+	
+	private static boolean parkingBrakePressedLastCheck = false;
+	
 	private static BoundingBox closestBox = null;
 	private static EntityVehicleF_Physics closestVehicle = null;
 	
@@ -195,11 +199,16 @@ public final class ControlSystem{
 	private static void controlBrake(EntityVehicleF_Physics vehicle, ControlsKeyboardDynamic brakeMod, ControlsJoystick brakeJoystick, ControlsJoystick brakeButton, ControlsJoystick pBrake){
 		//If the analog brake is set, do brake state based on that rather than the keyboard.
 		boolean isParkingBrakePressed = InterfaceInput.isJoystickPresent(brakeJoystick.config.joystickName) ? pBrake.isPressed() : brakeMod.isPressed() || pBrake.isPressed();
-		double brakeValue = InterfaceInput.isJoystickPresent(brakeJoystick.config.joystickName) ? brakeJoystick.getAxisState(true) : (brakeMod.mainControl.isPressed() || brakeButton.isPressed() ? EntityVehicleF_Physics.MAX_BRAKE : 0);
-		if(isParkingBrakePressed ? !vehicle.parkingBrakeOn :  (brakeValue > 0 && vehicle.parkingBrakeOn)){
-			InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.PARKINGBRAKE_VARIABLE));
+		if(isParkingBrakePressed){
+			if(!parkingBrakePressedLastCheck){
+				InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.PARKINGBRAKE_VARIABLE));
+				parkingBrakePressedLastCheck = true;
+			}
+		}else{
+			parkingBrakePressedLastCheck = false;
+			double brakeValue = InterfaceInput.isJoystickPresent(brakeJoystick.config.joystickName) ? brakeJoystick.getAxisState(true) : (brakeMod.mainControl.isPressed() || brakeButton.isPressed() ? EntityVehicleF_Physics.MAX_BRAKE : 0);
+			InterfacePacket.sendToServer(new PacketEntityVariableSet(vehicle, EntityVehicleF_Physics.BRAKE_VARIABLE, brakeValue));
 		}
-		InterfacePacket.sendToServer(new PacketEntityVariableSet(vehicle, EntityVehicleF_Physics.BRAKE_VARIABLE, brakeValue));
 	}
 	
 	private static void controlGun(EntityVehicleF_Physics vehicle, ControlsKeyboard gunTrigger, ControlsKeyboard gunSwitch){
