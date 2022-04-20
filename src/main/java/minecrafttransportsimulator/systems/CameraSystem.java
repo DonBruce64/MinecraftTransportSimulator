@@ -66,7 +66,6 @@ public class CameraSystem{
 			currentFOV = 0; 
 		}
 		customCameraOverlay = null;
-		if(!InterfaceClient.isGamePaused())System.out.println(Minecraft.getMinecraft().gameSettings.thirdPersonView);
 		//Do camera operations.
     	if(InterfaceClient.inFirstPerson()){
     		//Force custom cameras for some states.

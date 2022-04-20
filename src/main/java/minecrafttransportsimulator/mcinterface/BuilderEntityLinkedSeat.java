@@ -28,6 +28,8 @@ public class BuilderEntityLinkedSeat extends ABuilderEntityBase{
 	protected AEntityE_Interactable<?> entity;
 	/**Current rider for this seat.  This MAY be null if we haven't loaded NBT from the server yet.**/
 	protected WrapperEntity rider;
+	/**Set to true when the rider dismounts.  We set their position the next tick to override it.**/
+	private boolean dismountedRider;
 	
 	public BuilderEntityLinkedSeat(World world){
 		super(world);
@@ -50,6 +52,8 @@ public class BuilderEntityLinkedSeat extends ABuilderEntityBase{
 	    		List<Entity> riders = getPassengers();
     			if(!riders.isEmpty()){
     				rider = WrapperEntity.getWrapperFor(riders.get(0));
+    			}else if(dismountedRider){
+    				setDead();
     			}
     		}
     	}else{
@@ -100,8 +104,7 @@ public class BuilderEntityLinkedSeat extends ABuilderEntityBase{
     @Override
     protected void removePassenger(Entity passenger){
     	super.removePassenger(passenger);
-    	//If we remove our only rider, it means we're not a seat anymore.
-    	setDead();
+    	dismountedRider = true;
     }
     
     @Override
