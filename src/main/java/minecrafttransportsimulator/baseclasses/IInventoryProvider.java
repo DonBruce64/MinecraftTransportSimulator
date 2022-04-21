@@ -221,6 +221,23 @@ public interface IInventoryProvider{
 	}
 	
 	/**
+	 *  Returns true if this inventory has the specified material index to make the pack-based item.
+	 */
+	public default boolean hasSpecificMaterial(AItemPack<?> item, int index, boolean includeMain, boolean includeSub, boolean forRepair){
+		PackMaterialComponent material = PackMaterialComponent.parseFromJSON(item, includeMain, includeSub, true, forRepair).get(index);
+		int requiredMaterialCount = material.qty;
+		for(WrapperItemStack materialStack : material.possibleItems){
+			for(int i=0; i<getSize(); ++i){
+				WrapperItemStack testStack = getStack(i);
+				if(InterfaceCore.isOredictMatch(testStack, materialStack)){
+					requiredMaterialCount -= testStack.getSize();
+				}
+			}
+		}
+		return requiredMaterialCount <= 0;
+	}
+	
+	/**
 	 *  Removes all materials from the inventory required to craft the passed-in item.
 	 *  {@link #hasMaterials(AItemPack, boolean, boolean)} MUST be called before this method to ensure
 	 *  the the inventory actually has the required materials.  Failure to do so will

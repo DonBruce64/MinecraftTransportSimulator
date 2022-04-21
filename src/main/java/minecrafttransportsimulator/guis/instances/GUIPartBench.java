@@ -9,6 +9,7 @@ import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponent3DModel;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
+import minecrafttransportsimulator.guis.components.GUIComponentCutout;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.items.components.AItemPack;
@@ -70,6 +71,7 @@ public class GUIPartBench extends AGUIBase{
 	
 	//Crafting components.
 	private final List<GUIComponentItem> craftingItemIcons = new ArrayList<GUIComponentItem>();
+	private final List<GUIComponentCutout> craftingItemBackgrounds = new ArrayList<GUIComponentCutout>();
 	private List<PackMaterialComponent> normalMaterials;
 	private List<PackMaterialComponent> repairMaterials;
 	
@@ -176,10 +178,15 @@ public class GUIPartBench extends AGUIBase{
 		
 		//Create the crafting item slots.  14 16X16 slots (7X2) need to be made here.
 		craftingItemIcons.clear();
+		craftingItemBackgrounds.clear();
 		for(byte i=0; i<7*2; ++i){				
 			GUIComponentItem craftingItem = new GUIComponentItem(guiLeft + 276 + GUIComponentButton.ITEM_BUTTON_SIZE*(i/7), guiTop + 20 + GUIComponentButton.ITEM_BUTTON_SIZE*(i%7), 1.0F);
+			GUIComponentCutout itemBackground = new GUIComponentCutout(craftingItem.constructedX, craftingItem.constructedY, craftingItem.width, craftingItem.height, 160, 236, 20, 20);
+			itemBackground.visible = false;
 			addComponent(craftingItem);
+			addComponent(itemBackground);
 			craftingItemIcons.add(craftingItem);
+			craftingItemBackgrounds.add(itemBackground);
 		}
 		
 		
@@ -264,8 +271,10 @@ public class GUIPartBench extends AGUIBase{
 				int materialIndex = i + materialOffset;
 				if(materialIndex < materials.size()){
 					craftingItemIcons.get(i).stacks = materials.get(materialIndex).possibleItems;
+					craftingItemBackgrounds.get(i).visible = !player.isCreative() && inClockPeriod(20, 10) && (viewingRepair ? !player.getInventory().hasSpecificMaterial(currentItem, i, true, true, true) : !player.getInventory().hasSpecificMaterial(currentItem, i, true, true, false));
 		    	}else{
 		    		craftingItemIcons.get(i).stacks = null;
+		    		craftingItemBackgrounds.get(i).visible = false;
 		    	}			
 			}
 		}else{
