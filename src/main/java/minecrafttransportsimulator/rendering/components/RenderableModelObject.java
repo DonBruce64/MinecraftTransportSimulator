@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.lwjgl.input.Keyboard;
+
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -625,7 +627,8 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 			RenderableTreadRoller<?> nextRoller = i == rollers.size() - 1 ? rollers.get(0) : rollers.get(i + 1);
 			double straightPathLength = Math.hypot(nextRoller.startY - roller.endY, nextRoller.startZ - roller.endZ);
 			if(tread.placementDefinition.treadDroopConstant > 0 && (roller.endAngle%360 < 10 || roller.endAngle%360 > 350) && (nextRoller.startAngle%360 < 10 || nextRoller.startAngle%360 > 350)){
-				totalPathLength += 2D*tread.placementDefinition.treadDroopConstant*Math.sinh(straightPathLength/2D/tread.placementDefinition.treadDroopConstant);
+				//Catenary path length is a*singh(x/a), a is droop constant, x will be 1/2 total catenary distance due to symmetry, multiply this distance by 2 for total droop.
+				totalPathLength += 2D*tread.placementDefinition.treadDroopConstant*Math.sinh((straightPathLength/2D)/tread.placementDefinition.treadDroopConstant);
 			}else{
 				totalPathLength += straightPathLength;
 			}
@@ -662,20 +665,13 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 			//If not, we should just skip this roller as we can't put any points on it.
 			if(deltaDist - leftoverPathLength < rollerPathLength){
 				if(leftoverPathLength > 0){
-					//Make a new point that's along a line from the last point and the start of this roller.
+					//Go backwards on the roller so when we do our next operation, we align with a new point.
+					//This ensures the new point will be closer to the start of the roller than normal.
+					//Make a new point that's a specific amount of path-movement along this roller.
 					//Then increment currentAngle to account for the new point made.
-					//Add an angle relative to the point on the roller.
-					Double[] lastPoint = points.get(points.size() - 1);
-					yPoint = roller.centerPoint.y + roller.radius*Math.cos(Math.toRadians(currentAngle));
-					zPoint = roller.centerPoint.z + roller.radius*Math.sin(Math.toRadians(currentAngle));
-					double pointDist = Math.hypot(yPoint - lastPoint[0], zPoint - lastPoint[1]);
-					double normalizedY = (yPoint - lastPoint[0])/pointDist;
-					double normalizedZ = (zPoint - lastPoint[1])/pointDist;
-					double rollerAngleSpan = 360D*((deltaDist - leftoverPathLength)/roller.circumference);
-					
-					points.add(new Double[]{lastPoint[0] + deltaDist*normalizedY, lastPoint[1] + deltaDist*normalizedZ, lastPoint[2] + rollerAngleSpan});
-					currentAngle += rollerAngleSpan;
-					rollerPathLength -= (deltaDist - leftoverPathLength);
+					//We use the circumference of the roller and the remaining path to find out the amount to adjust.
+					currentAngle -= 360D*leftoverPathLength/roller.circumference;
+					rollerPathLength += leftoverPathLength;
 					leftoverPathLength = 0;
 				}
 				
@@ -698,31 +694,41 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 			//If we don't do this, the line won't start at the end of the prior roller.
 			//If we are on the last roller, we need to get the first roller to complete the loop.
 			//For points that start and end at an angle of around 0 (top of rollers) we add droop.
-			//This is a hyperbolic function, so we need to calculate the integral value to account for the path,
-			//as well as model the function for the actual points.  This requires formula-driven points rather than normalization.
 			RenderableTreadRoller<?> nextRoller = i == rollers.size() - 1 ? rollers.get(0) : rollers.get(i + 1);
 			double straightPathLength = Math.hypot(nextRoller.startY - roller.endY, nextRoller.startZ - roller.endZ);
 			double extraPathLength = rollerPathLength + leftoverPathLength;
 			double normalizedY = (nextRoller.startY - roller.endY)/straightPathLength;
 			double normalizedZ = (nextRoller.startZ - roller.endZ)/straightPathLength;
 			if(tread.placementDefinition.treadDroopConstant > 0 && (roller.endAngle%360 < 10 || roller.endAngle%360 > 350) && (nextRoller.startAngle%360 < 10 || nextRoller.startAngle%360 > 350)){
-				double hyperbolicPathLength = 2D*tread.placementDefinition.treadDroopConstant*Math.sinh(straightPathLength/2D/tread.placementDefinition.treadDroopConstant);
-				double hyperbolicFunctionStep = deltaDist*straightPathLength/hyperbolicPathLength;
-				double hyperbolicPathMaxY = tread.placementDefinition.treadDroopConstant*Math.cosh((-straightPathLength/2D)/tread.placementDefinition.treadDroopConstant);
-				double hyperbolicFunctionCurrent = 0;
-				while(straightPathLength + extraPathLength - hyperbolicFunctionCurrent > hyperbolicFunctionStep){
-					//Go to and add the next point on the hyperbolic path.
+				//Catenary path length is a*singh(x/a), a is droop constant, x will be 1/2 total catenary distance due to symmetry, multiply this distance by 2 for total droop.
+				double catenaryPathLength = 2D*tread.placementDefinition.treadDroopConstant*Math.sinh((straightPathLength/2D)/tread.placementDefinition.treadDroopConstant);
+				
+				//Get the top point in Y for the tips of the catenary (1/2 the span).  We will translate the droop path down this far to make the ends line up at Y=0.
+				//We then offset this value to the rollers for the actual point position.
+				final double catenaryPathEdgeY = tread.placementDefinition.treadDroopConstant*Math.cosh((straightPathLength/2D)/tread.placementDefinition.treadDroopConstant);
+				
+				double catenaryFunctionCurrent = -catenaryPathLength/2F;
+				double catenaryPointZ;
+				double catenaryPointY;
+				while(catenaryPathLength + extraPathLength > deltaDist){
+					//Go to and add the next point on the catenary path.
 					if(extraPathLength > 0){
-						hyperbolicFunctionCurrent += extraPathLength*hyperbolicFunctionStep;
+						catenaryFunctionCurrent += (deltaDist - extraPathLength);
+						catenaryPathLength -= (deltaDist - extraPathLength);
 						extraPathLength = 0;
 					}else{
-						hyperbolicFunctionCurrent += hyperbolicFunctionStep;
+						catenaryFunctionCurrent += deltaDist;
+						catenaryPathLength -= deltaDist;
 					}
-					yPoint = roller.endY + normalizedY*hyperbolicFunctionCurrent + tread.placementDefinition.treadDroopConstant*Math.cosh((hyperbolicFunctionCurrent - straightPathLength/2D)/tread.placementDefinition.treadDroopConstant) - hyperbolicPathMaxY;
-					zPoint = roller.endZ + normalizedZ*hyperbolicFunctionCurrent;
-					points.add(new Double[]{yPoint, zPoint, roller.endAngle + 180 - Math.toDegrees(Math.asin((hyperbolicFunctionCurrent - straightPathLength/2D)/tread.placementDefinition.treadDroopConstant))});
+					double value = catenaryFunctionCurrent/tread.placementDefinition.treadDroopConstant;
+					double arcSin = catenaryFunctionCurrent == 0.0 ? 0 : Math.log(value + Math.sqrt(value*value + 1.0));;
+					catenaryPointZ = tread.placementDefinition.treadDroopConstant*arcSin;
+					catenaryPointY = tread.placementDefinition.treadDroopConstant*Math.cosh(catenaryPointZ/tread.placementDefinition.treadDroopConstant);
+					yPoint = roller.endY + catenaryPointY - catenaryPathEdgeY;
+					zPoint = roller.endZ + catenaryPointZ + straightPathLength/2D;
+					points.add(new Double[]{yPoint, zPoint, roller.endAngle + 180 - Math.toDegrees(Math.asin(catenaryFunctionCurrent/tread.placementDefinition.treadDroopConstant))});
 				}
-				leftoverPathLength = (straightPathLength - hyperbolicFunctionCurrent)/(straightPathLength/hyperbolicPathLength);
+				leftoverPathLength = catenaryPathLength;
 			}else{
 				while(straightPathLength + extraPathLength > deltaDist){
 					//Go to and add the next point on the straight path.
