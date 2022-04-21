@@ -683,7 +683,8 @@ public class PartGun extends APart{
 	@Override
 	public double getRawVariableValue(String variable, float partialTicks){
 		switch(variable){
-			case("gun_inhand"): return entityOn instanceof EntityPlayerGun ? 1 : 0;	
+			case("gun_inhand"): return entityOn instanceof EntityPlayerGun ? 1 : 0;
+			case("gun_inhand_sneaking"): return entityOn instanceof EntityPlayerGun && ((EntityPlayerGun) entityOn).player != null && ((EntityPlayerGun) entityOn).player.isSneaking() ? 1 : 0;	
 			case("gun_active"): return state.isAtLeast(GunState.CONTROLLED) ? 1 : 0;
 			case("gun_firing"): return state.isAtLeast(GunState.FIRING_REQUESTED) ? 1 : 0;
 			case("gun_fired"): return firedThisCheck ? 1 : 0;
