@@ -23,6 +23,9 @@ public class JSONBullet extends AJSONMultiModelProvider{
 		@JSONDescription("The diameter of the bullet.  This determines what guns can fire it, as well as the damage it inflicts.  Units are in mm.")
     	public float diameter;
 		
+		@JSONDescription("How much damage this bullet does.  Is set to 1/5 the diameter if left out.  Note that 'water' type bullets don't damage things, no matter this value.")
+		public float damage;
+		
 		@JSONDescription("The case length of the bullet.  This determines what guns can fire it, but does not affect damage.  Units are in mm.")
     	public float caseLength;
 		

@@ -38,7 +38,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 	public final PartGun gun;
 	public final int bulletNumber;
 	private final boolean isBomb;
-	private final double initialVelocity;
+	public final double initialVelocity;
 	private final double velocityToAddEachTick;
 	private final Point3D motionToAddEachTick;
 	
@@ -174,7 +174,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 		
 		//Now that we have an accurate motion, check for collisions.
 		//First get a damage object.
-		Damage damage = new Damage(velocity*definition.bullet.diameter/5*ConfigSystem.settings.damage.bulletDamageFactor.value, boundingBox, gun, null, null);
+		Damage damage = new Damage((velocity/initialVelocity)*definition.bullet.damage*ConfigSystem.settings.damage.bulletDamageFactor.value, boundingBox, gun, null, null);
 		
 		//Check for collided external entities and attack them.
 		List<WrapperEntity> attackedEntities = world.attackEntities(damage, motion);

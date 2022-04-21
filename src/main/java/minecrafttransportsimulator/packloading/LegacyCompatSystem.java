@@ -1612,6 +1612,11 @@ public final class LegacyCompatSystem{
 	}
 	
 	private static void performBulletLegacyCompats(JSONBullet definition){
+		//Add damage value.
+		if(definition.bullet.damage == 0){
+			definition.bullet.damage = definition.bullet.diameter/5F;
+		}
+		
 		//Make rendering particle section for bullets for block hitting if it doesn't exist.
 		if(definition.rendering == null || definition.rendering.particles == null){
 			if(definition.rendering == null){
