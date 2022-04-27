@@ -8,7 +8,7 @@ import minecrafttransportsimulator.jsondefs.JSONCraftingBench;
 import minecrafttransportsimulator.jsondefs.JSONPack;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
@@ -39,7 +39,7 @@ public abstract class AItemPack<JSONDefinition extends AJSONItem> extends AItemB
 	}
 	
 	@Override
-	public void addTooltipLines(List<String> tooltipLines, WrapperNBT data){
+	public void addTooltipLines(List<String> tooltipLines, IWrapperNBT data){
 		for(String tooltipLine : ConfigSystem.language.packs.get(definition.packID).get(getRegistrationName()).description.split("\n")){
 			tooltipLines.add(tooltipLine);
 		}
@@ -100,7 +100,7 @@ public abstract class AItemPack<JSONDefinition extends AJSONItem> extends AItemB
 	/**
 	 * Helper method to populate default data.
 	 */
-	public void populateDefaultData(WrapperNBT data){
+	public void populateDefaultData(IWrapperNBT data){
 		data.setString("packID", definition.packID);
 		data.setString("systemName", definition.systemName);
 	}
@@ -108,7 +108,7 @@ public abstract class AItemPack<JSONDefinition extends AJSONItem> extends AItemB
 	/**
 	 * Repairs the item.  What happens during repair differs from item to item.
 	 */
-	public void repair(WrapperNBT data){
+	public void repair(IWrapperNBT data){
 		if(this instanceof IItemEntityProvider && AEntityE_Interactable.class.isAssignableFrom(((IItemEntityProvider<?>) this).getEntityClass())){
 			data.setDouble(AEntityE_Interactable.DAMAGE_VARIABLE, 0);
 		}

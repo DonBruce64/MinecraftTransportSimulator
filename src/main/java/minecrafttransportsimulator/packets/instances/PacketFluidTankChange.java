@@ -2,7 +2,7 @@ package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.entities.instances.EntityFluidTank;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
 /**Packet sent to fluid tanks on clients to update the fluid they have in their tank.
@@ -33,7 +33,7 @@ public class PacketFluidTankChange extends APacketEntity<EntityFluidTank>{
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, EntityFluidTank tank){
+	public boolean handle(AWrapperWorld world, EntityFluidTank tank){
 		if(fluidDelta < 0){
 			tank.drain(fluidName, -fluidDelta, true);
 		}else{

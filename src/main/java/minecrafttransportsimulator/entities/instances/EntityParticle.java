@@ -10,9 +10,8 @@ import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.JSONParticle;
 import minecrafttransportsimulator.jsondefs.JSONParticle.ParticleType;
-import minecrafttransportsimulator.mcinterface.InterfaceClient;
-import minecrafttransportsimulator.mcinterface.InterfaceEventsModelLoader;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.components.RenderableObject;
 import minecrafttransportsimulator.rendering.instances.RenderParticle;
 
@@ -31,7 +30,7 @@ public class EntityParticle extends AEntityC_Renderable{
 	private final AEntityD_Definable<?> entitySpawning;
 	private final JSONParticle definition;
 	private final int maxAge;
-	private final WrapperPlayer clientPlayer = InterfaceClient.getClientPlayer();
+	private final IWrapperPlayer clientPlayer = InterfaceManager.clientInterface.getClientPlayer();
 	
 	private final ColorRGB startColor;
 	private final ColorRGB endColor;
@@ -192,7 +191,7 @@ public class EntityParticle extends AEntityC_Renderable{
 		boundingBox.depthRadius = boundingBox.widthRadius;
 		
 		//Update orientation to always face the player.
-		orientation.setToVector(clientPlayer.getPosition().add(0, clientPlayer.getEyeHeight(), 0).add(InterfaceClient.getCameraPosition()).subtract(position), true);
+		orientation.setToVector(clientPlayer.getPosition().add(0, clientPlayer.getEyeHeight(), 0).add(InterfaceManager.clientInterface.getCameraPosition()).subtract(position), true);
 	}
 	
 	@Override
@@ -315,7 +314,7 @@ public class EntityParticle extends AEntityC_Renderable{
 		float V;
 		if(definition.type.equals(ParticleType.BREAK)){
 			--position.y;
-			float[] uvPoints = InterfaceEventsModelLoader.getBlockBreakTexture(world, position);
+			float[] uvPoints = InterfaceManager.renderingInterface.getBlockBreakTexture(world, position);
 			++position.y;
 			u = uvPoints[0];
 			U = uvPoints[1];

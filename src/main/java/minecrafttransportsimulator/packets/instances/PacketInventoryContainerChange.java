@@ -5,10 +5,10 @@ import java.util.List;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
-import minecrafttransportsimulator.mcinterface.InterfaceCore;
-import minecrafttransportsimulator.mcinterface.WrapperItemStack;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
 /**Packet sent to inventory containers to update the inventory in them.
@@ -17,9 +17,9 @@ import minecrafttransportsimulator.packets.components.APacketEntity;
  */
 public class PacketInventoryContainerChange extends APacketEntity<EntityInventoryContainer>{
 	private final int index;
-	private final WrapperItemStack stackToChangeTo;
+	private final IWrapperItemStack stackToChangeTo;
 	
-	public PacketInventoryContainerChange(EntityInventoryContainer inventory, int index, WrapperItemStack stackToChangeTo){
+	public PacketInventoryContainerChange(EntityInventoryContainer inventory, int index, IWrapperItemStack stackToChangeTo){
 		super(inventory);
 		this.index = index;
 		this.stackToChangeTo = stackToChangeTo;
@@ -35,15 +35,15 @@ public class PacketInventoryContainerChange extends APacketEntity<EntityInventor
 	public void writeToBuffer(ByteBuf buf){
 		super.writeToBuffer(buf);
 		buf.writeInt(index);
-		WrapperNBT stackData = InterfaceCore.getNewNBTWrapper();
-		List<WrapperItemStack> stackList = new ArrayList<WrapperItemStack>();
+		IWrapperNBT stackData = InterfaceManager.coreInterface.getNewNBTWrapper();
+		List<IWrapperItemStack> stackList = new ArrayList<IWrapperItemStack>();
 		stackList.add(stackToChangeTo);
 		stackData.setStacks(stackList);
 		writeDataToBuffer(stackData, buf);
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, EntityInventoryContainer inventory){
+	public boolean handle(AWrapperWorld world, EntityInventoryContainer inventory){
 		inventory.setStack(stackToChangeTo, index);
 		return true;
 	}

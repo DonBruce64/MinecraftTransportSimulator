@@ -6,15 +6,15 @@ import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityFlu
 import minecrafttransportsimulator.entities.instances.EntityFluidTank;
 import minecrafttransportsimulator.entities.instances.PartInteractable;
 import minecrafttransportsimulator.jsondefs.JSONDecor.DecorComponentType;
-import minecrafttransportsimulator.mcinterface.InterfaceCore;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 
 public class TileEntityFluidLoader extends ATileEntityLoader implements ITileEntityFluidTankProvider{
     private EntityFluidTank tank;
 
-    public TileEntityFluidLoader(WrapperWorld world, Point3D position, WrapperPlayer placingPlayer, WrapperNBT data){
+    public TileEntityFluidLoader(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, IWrapperNBT data){
 		super(world, position, placingPlayer, data);
     	this.tank = new EntityFluidTank(world, data.getDataOrNew("tank"), definition.decor.fuelCapacity);
 		world.addEntity(tank);
@@ -78,9 +78,9 @@ public class TileEntityFluidLoader extends ATileEntityLoader implements ITileEnt
 	}
 	
 	@Override
-	public WrapperNBT save(WrapperNBT data){
+	public IWrapperNBT save(IWrapperNBT data){
 		super.save(data);
-		data.setData("tank", tank.save(InterfaceCore.getNewNBTWrapper()));
+		data.setData("tank", tank.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
 		return data;
 	}
 }

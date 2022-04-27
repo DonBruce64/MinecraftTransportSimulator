@@ -24,25 +24,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
-import javax.swing.DefaultListCellRenderer;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
-import javax.swing.JComponent;
-import javax.swing.JFileChooser;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JList;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextField;
-import javax.swing.ToolTipManager;
+import javax.swing.*;
 import javax.swing.border.TitledBorder;
 
-import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
@@ -53,7 +37,7 @@ import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONSkin;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
-import minecrafttransportsimulator.mcinterface.InterfaceClient;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.JSONParser;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDefaults;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
@@ -78,7 +62,7 @@ public class GUIPackEditor extends JFrame{
 	private static final GridBagConstraints FIELD_CONSTRAINTS = new GridBagConstraints();
 	
 	//Run-time variables.
-	private static File lastFileAccessed = new File(MasterLoader.gameDirectory);
+	private static File lastFileAccessed = new File(InterfaceManager.gameDirectory);
 	private Class<?> currentJSONClass = null;
 	private Object currentJSON = null;
 	private final JPanel editingPanel;
@@ -88,7 +72,7 @@ public class GUIPackEditor extends JFrame{
 		setTitle("MTS Pack Edtior");  
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
-        long displaySize = InterfaceClient.getPackedDisplaySize();
+        long displaySize = InterfaceManager.clientInterface.getPackedDisplaySize();
         setMaximumSize(new Dimension((int) (displaySize >>  Integer.SIZE), (int) displaySize));
         ToolTipManager.sharedInstance().setInitialDelay(0);
         ToolTipManager.sharedInstance().setDismissDelay(Integer.MAX_VALUE);
@@ -519,9 +503,9 @@ public class GUIPackEditor extends JFrame{
 				}
 				return null;
 			}else if(fieldClass.equals(Integer.class)){
-				return new Integer(0);
+				return Integer.valueOf(0);
 			}else if(fieldClass.equals(Float.class)){
-				return new Float(0);
+				return Float.valueOf(0);
 			}else{
 				try{
 					return fieldClass.getConstructor().newInstance(); 

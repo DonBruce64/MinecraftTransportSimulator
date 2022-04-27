@@ -2,7 +2,7 @@
 VERPREFIX="1.12.2-"
 
 #Get the string of line with the mod version number.
-VERSTRING=$(cat src/main/java/minecrafttransportsimulator/MasterLoader.java | grep "MODVER")
+VERSTRING=$(cat src/main/java/mcinterface1122/InterfaceLoader.java | grep "MODVER")
 
 #Now parse out the part right after the first qote.
 VERSTRING=${VERSTRING#*\"}

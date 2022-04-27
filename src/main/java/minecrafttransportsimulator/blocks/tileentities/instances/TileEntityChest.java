@@ -3,10 +3,10 @@ package minecrafttransportsimulator.blocks.tileentities.instances;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
-import minecrafttransportsimulator.mcinterface.InterfaceCore;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 
 /**Chest tile entity.
@@ -17,14 +17,14 @@ public class TileEntityChest extends TileEntityDecor{
 	
 	public final EntityInventoryContainer inventory;
 	
-	public TileEntityChest(WrapperWorld world, Point3D position, WrapperPlayer placingPlayer, WrapperNBT data){
+	public TileEntityChest(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, IWrapperNBT data){
 		super(world, position, placingPlayer, data);
 		this.inventory = new EntityInventoryContainer(world, data.getDataOrNew("inventory"), (int) (definition.decor.inventoryUnits*9F));
 		world.addEntity(inventory);
 	}
 	
 	@Override
-	public boolean interact(WrapperPlayer player){
+	public boolean interact(IWrapperPlayer player){
 		player.sendPacket(new PacketEntityGUIRequest(this, player, PacketEntityGUIRequest.EntityGUIType.INVENTORY_CHEST));
 		return true;
 	}
@@ -59,10 +59,10 @@ public class TileEntityChest extends TileEntityDecor{
 	}
 	
 	@Override
-	public WrapperNBT save(WrapperNBT data){
+	public IWrapperNBT save(IWrapperNBT data){
 		super.save(data);
 		if(inventory != null){
-			data.setData("inventory", inventory.save(InterfaceCore.getNewNBTWrapper()));
+			data.setData("inventory", inventory.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
 		}
 		return data;
 	}

@@ -6,7 +6,7 @@ import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.jsondefs.JSONBullet;
 import minecrafttransportsimulator.jsondefs.JSONBullet.BulletType;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 
 public class ItemBullet extends AItemSubTyped<JSONBullet>{
 	
@@ -15,7 +15,7 @@ public class ItemBullet extends AItemSubTyped<JSONBullet>{
 	}
 	
 	@Override
-	public void addTooltipLines(List<String> tooltipLines, WrapperNBT data){
+	public void addTooltipLines(List<String> tooltipLines, IWrapperNBT data){
 		super.addTooltipLines(tooltipLines, data);
 		for(BulletType type : definition.bullet.types){
 			switch(type){

@@ -4,8 +4,8 @@ import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad.RoadComponent;
 import minecrafttransportsimulator.items.instances.ItemRoadComponent;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.packets.components.APacketEntityInteract;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
@@ -15,11 +15,11 @@ import minecrafttransportsimulator.systems.PackParserSystem;
  * 
  * @author don_bruce
  */
-public class PacketTileEntityRoadChange extends APacketEntityInteract<TileEntityRoad, WrapperPlayer>{
+public class PacketTileEntityRoadChange extends APacketEntityInteract<TileEntityRoad, IWrapperPlayer>{
 	private final RoadComponent componentType;
 	private final ItemRoadComponent componentItem;
 	
-	public PacketTileEntityRoadChange(TileEntityRoad road, WrapperPlayer player, RoadComponent componentType, ItemRoadComponent componentItem){
+	public PacketTileEntityRoadChange(TileEntityRoad road, IWrapperPlayer player, RoadComponent componentType, ItemRoadComponent componentItem){
 		super(road, player);
 		this.componentType = componentType;
 		this.componentItem = componentItem;
@@ -49,7 +49,7 @@ public class PacketTileEntityRoadChange extends APacketEntityInteract<TileEntity
 	}
 	
 	@Override
-	protected boolean handle(WrapperWorld world, TileEntityRoad road, WrapperPlayer player){
+	protected boolean handle(AWrapperWorld world, TileEntityRoad road, IWrapperPlayer player){
 		if(componentItem != null){
 			//Player clicked with a component.  Add/change it.
 			road.components.put(componentType, componentItem);

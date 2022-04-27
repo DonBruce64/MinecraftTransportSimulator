@@ -1,9 +1,9 @@
 package minecrafttransportsimulator.blocks.components;
 
+import mcinterface1122.BuilderBlock;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
-import minecrafttransportsimulator.mcinterface.BuilderBlock;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 
 /**Base Block class.  This type is used in the constructor of {@link BuilderBlock} to allow us to use
  * completely custom code that is not associated with MC's standard block code that changes EVERY FREAKING VERSION.
@@ -27,7 +27,7 @@ public abstract class ABlockBase{
 	 *  removed, as logic may be needed to be performed that requires the data from the TE.
 	 *  This is ONLY called on the server, so if you have data to sync, do it via packets. 
 	 */
-	public void onBroken(WrapperWorld world, Point3D position){}
+	public void onBroken(AWrapperWorld world, Point3D position){}
 	
 	/**
 	 *  Enums for side-specific stuff.

@@ -1,9 +1,9 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.packets.components.APacketPlayer;
 
 /**Packet used to request world NBT data from the server, and to send that data back to clients.
@@ -14,9 +14,9 @@ import minecrafttransportsimulator.packets.components.APacketPlayer;
  */
 public class PacketWorldSavedDataCSHandshake extends APacketPlayer{
 	private final String name;
-	private final WrapperNBT data;
+	private final IWrapperNBT data;
 	
-	public PacketWorldSavedDataCSHandshake(WrapperPlayer player, String name, WrapperNBT data){
+	public PacketWorldSavedDataCSHandshake(IWrapperPlayer player, String name, IWrapperNBT data){
 		super(player);
 		this.name = name;
 		this.data = data;
@@ -45,13 +45,13 @@ public class PacketWorldSavedDataCSHandshake extends APacketPlayer{
 	}
 	
 	@Override
-	public void handle(WrapperWorld world, WrapperPlayer player){
+	public void handle(AWrapperWorld world, IWrapperPlayer player){
 		if(world.isClient()){
 			//Set the world saved data.
 			world.setData(name, data);
 		}else{
 			//Send back a packet to the player who requested it.
-			WrapperNBT savedData = world.getData(name);
+			IWrapperNBT savedData = world.getData(name);
 			if(name.isEmpty()){
 				//Full data block, break up and send back in batches.
 				for(String dataName : savedData.getAllNames()){

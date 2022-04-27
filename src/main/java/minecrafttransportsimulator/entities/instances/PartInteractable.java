@@ -7,12 +7,11 @@ import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
-import minecrafttransportsimulator.mcinterface.InterfaceCore;
-import minecrafttransportsimulator.mcinterface.InterfacePacket;
-import minecrafttransportsimulator.mcinterface.WrapperEntity;
-import minecrafttransportsimulator.mcinterface.WrapperItemStack;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketFurnaceFuelAdd;
 import minecrafttransportsimulator.packets.instances.PacketPartInteractable;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
@@ -26,7 +25,7 @@ public final class PartInteractable extends APart{
 	public PartInteractable linkedPart;
 	public EntityVehicleF_Physics linkedVehicle;
 	
-	public PartInteractable(AEntityF_Multipart<?> entityOn, WrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, WrapperNBT data, APart parentPart){
+	public PartInteractable(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, IWrapperNBT data, APart parentPart){
 		super(entityOn, placingPlayer, placementDefinition, data, parentPart);
 		if(definition.interactable.interactionType.equals(InteractableComponentType.FURNACE)){
 			this.furnace = new EntityFurnace(world, data.getDataOrNew("furnace"), definition.interactable);
@@ -51,7 +50,7 @@ public final class PartInteractable extends APart{
 	}
 	
 	@Override
-	public boolean interact(WrapperPlayer player){
+	public boolean interact(IWrapperPlayer player){
 		if(!entityOn.locked){
 			if(definition.interactable.interactionType.equals(InteractableComponentType.CRATE) || definition.interactable.interactionType.equals(InteractableComponentType.CRAFTING_BENCH) || definition.interactable.interactionType.equals(InteractableComponentType.FURNACE)){
 				player.sendPacket(new PacketPartInteractable(this, player));
@@ -59,7 +58,7 @@ public final class PartInteractable extends APart{
 				player.openCraftingGUI();
 			}else if(definition.interactable.interactionType.equals(InteractableComponentType.JERRYCAN)){
 				entityOn.removePart(this, null);
-				WrapperNBT data = InterfaceCore.getNewNBTWrapper();
+				IWrapperNBT data = InterfaceManager.coreInterface.getNewNBTWrapper();
 				save(data);
 				world.spawnItem(getItem(), data, position);
 			}else if(tank != null){
@@ -157,9 +156,9 @@ public final class PartInteractable extends APart{
 			if(linkedMessage != null){
 				linkedVehicle = null;
 				linkedPart = null;
-				for(WrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, 16, 16, 16))){
-					if(entity instanceof WrapperPlayer){
-						((WrapperPlayer) entity).sendPacket(new PacketPlayerChatMessage((WrapperPlayer) entity, linkedMessage));
+				for(IWrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, 16, 16, 16))){
+					if(entity instanceof IWrapperPlayer){
+						((IWrapperPlayer) entity).sendPacket(new PacketPlayerChatMessage((IWrapperPlayer) entity, linkedMessage));
 					}
 				}
 			}
@@ -174,7 +173,7 @@ public final class PartInteractable extends APart{
 		//Try to fill the furnace with the appropriate fuel type, if we have it.
 		switch(furnace.definition.furnaceType){
 			case STANDARD:{
-				WrapperItemStack currentFuel = furnace.getStack(EntityFurnace.FUEL_ITEM_SLOT);
+				IWrapperItemStack currentFuel = furnace.getStack(EntityFurnace.FUEL_ITEM_SLOT);
 				if(currentFuel.isEmpty() || currentFuel.getMaxSize() < currentFuel.getSize()){
 					//Try to find a matching burnable item from the entity.
 					for(APart part : entityOn.parts){
@@ -182,12 +181,12 @@ public final class PartInteractable extends APart{
 							if(part.isActive && part.definition.interactable.feedsVehicles && part.definition.interactable.interactionType.equals(InteractableComponentType.CRATE)){
 								PartInteractable crate = (PartInteractable) part;
 								for(int i=0; i<crate.inventory.getSize(); ++i){
-									WrapperItemStack stack = crate.inventory.getStack(i);
+									IWrapperItemStack stack = crate.inventory.getStack(i);
 									if(stack.getFuelValue() != 0 && (currentFuel.isEmpty() || stack.isCompleteMatch(currentFuel))){
 										furnace.ticksAddedOfFuel = stack.getFuelValue();
 										furnace.ticksLeftOfFuel = furnace.ticksAddedOfFuel;
 										crate.inventory.removeFromSlot(i, 1);
-										InterfacePacket.sendToAllClients(new PacketFurnaceFuelAdd(furnace));
+										InterfaceManager.packetInterface.sendToAllClients(new PacketFurnaceFuelAdd(furnace));
 										return;
 									}
 								}
@@ -207,7 +206,7 @@ public final class PartInteractable extends APart{
 								furnace.ticksAddedOfFuel = (int) (ConfigSystem.settings.fuel.fuels.get(EntityFurnace.FURNACE_FUEL_NAME).get(barrel.tank.getFluid())*20*furnace.definition.furnaceEfficiency);
 								furnace.ticksLeftOfFuel = furnace.ticksAddedOfFuel;
 								barrel.tank.drain(barrel.tank.getFluid(), 1, true);
-								InterfacePacket.sendToAllClients(new PacketFurnaceFuelAdd(furnace));
+								InterfaceManager.packetInterface.sendToAllClients(new PacketFurnaceFuelAdd(furnace));
 							}
 						}
 					}
@@ -222,7 +221,7 @@ public final class PartInteractable extends APart{
 					furnace.powerToDrawPerTick = 1D/ticksToDrawPower;
 					furnace.ticksAddedOfFuel = ticksToDrawPower;
 					furnace.ticksLeftOfFuel = furnace.ticksAddedOfFuel;
-					InterfacePacket.sendToAllClients(new PacketFurnaceFuelAdd(furnace));
+					InterfaceManager.packetInterface.sendToAllClients(new PacketFurnaceFuelAdd(furnace));
 				}
 				break;
 			}
@@ -290,14 +289,14 @@ public final class PartInteractable extends APart{
 	}
 	
 	@Override
-	public WrapperNBT save(WrapperNBT data){
+	public IWrapperNBT save(IWrapperNBT data){
 		super.save(data);
 		if(furnace != null){
-			data.setData("furnace", furnace.save(InterfaceCore.getNewNBTWrapper()));
+			data.setData("furnace", furnace.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
 		}else if(inventory != null){
-			data.setData("inventory", inventory.save(InterfaceCore.getNewNBTWrapper()));
+			data.setData("inventory", inventory.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
 		}else if(tank != null){
-			data.setData("tank", tank.save(InterfaceCore.getNewNBTWrapper()));
+			data.setData("tank", tank.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
 		}else if(definition.interactable.interactionType.equals(InteractableComponentType.JERRYCAN)){
 			data.setString("jerrycanFluid", jerrycanFluid);
 		}

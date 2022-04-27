@@ -7,14 +7,12 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.guis.instances.GUIOverlay;
-import minecrafttransportsimulator.mcinterface.InterfaceClient;
-import minecrafttransportsimulator.mcinterface.InterfaceInput;
-import minecrafttransportsimulator.mcinterface.InterfaceRender;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 
 /**Base GUI class.  This type is used in lieu of the MC GUI class to allow us to use
  * completely custom GUI code that is not associated with MC's standard GUI code.  Allows us to only
- * update the wrapper rather than the whole GUI. In essence, this class holds the data and state of the
- * GUI, while the wrapper chooses how to interpret and render said state.
+ * update the IWrapper rather than the whole GUI. In essence, this class holds the data and state of the
+ * GUI, while the IWrapper chooses how to interpret and render said state.
  *
  * @author don_bruce
  */
@@ -49,8 +47,8 @@ public abstract class AGUIBase{
 		activeGUIs.add(this);
 		if(capturesPlayer()){
 			activeInputGUI = this;
-			InterfaceClient.setActiveGUI(this);
-			InterfaceInput.setKeyboardRepeat(true);
+			InterfaceManager.clientInterface.setActiveGUI(this);
+			InterfaceManager.inputInterface.setKeyboardRepeat(true);
 		}
 	}
 	
@@ -175,7 +173,7 @@ public abstract class AGUIBase{
 		//If we are light-sensitive, set lighting to our position.
 		boolean ignoreLightState = getGUILightMode().equals(GUILightingMode.NONE); 
 		if(!ignoreLightState){
-			InterfaceRender.setLightingToPosition(getGUILightSource().position);
+			InterfaceManager.renderingInterface.setLightingToPosition(getGUILightSource().position);
 		}
 		
 		//Render main components once, but only based on translucent state.
@@ -236,8 +234,8 @@ public abstract class AGUIBase{
 			activeGUIs.remove(this);
 			if(capturesPlayer()){
 				activeInputGUI = null;
-				InterfaceClient.closeGUI();
-				InterfaceInput.setKeyboardRepeat(false);
+				InterfaceManager.clientInterface.closeGUI();
+				InterfaceManager.inputInterface.setKeyboardRepeat(false);
 			}
 			GUIComponent3DModel.clearModelCaches();
 		}

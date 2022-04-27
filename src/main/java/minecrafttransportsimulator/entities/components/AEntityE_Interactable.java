@@ -27,11 +27,11 @@ import minecrafttransportsimulator.jsondefs.JSONCollisionGroup;
 import minecrafttransportsimulator.jsondefs.JSONInstrument.JSONInstrumentComponent;
 import minecrafttransportsimulator.jsondefs.JSONInstrumentDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
-import minecrafttransportsimulator.mcinterface.InterfacePacket;
-import minecrafttransportsimulator.mcinterface.WrapperEntity;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
@@ -96,7 +96,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 	 * mounting/dismounting this entity and we don't want to track them anymore.
 	 * While you are free to read this map, all modifications should be through the method calls in this class.
 	 **/
-	public final BiMap<Point3D, WrapperEntity> locationRiderMap = HashBiMap.create();
+	public final BiMap<Point3D, IWrapperEntity> locationRiderMap = HashBiMap.create();
 	
 	/**List of instruments based on their slot in the JSON.  Note that this list is created on first construction
 	 * and will contain null elements for any instrument that isn't present in that slot.
@@ -135,7 +135,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 	public double damageAmount;
 	public static final String DAMAGE_VARIABLE = "damage";
 	
-	public AEntityE_Interactable(WrapperWorld world, WrapperPlayer placingPlayer, WrapperNBT data){
+	public AEntityE_Interactable(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data){
 		super(world, placingPlayer, data);
 		//Load saved rider positions.  We don't have riders here yet (as those get created later), 
 		//so just make the locations for the moment so they are ready when riders are created.
@@ -407,11 +407,11 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 			if(!entityCollisionBoxes.isEmpty()){
 				world.beginProfiling("MoveAlongEntities", true);
 				encompassingBox.heightRadius += 1.0;
-				List<WrapperEntity> nearbyEntities = world.getEntitiesWithin(encompassingBox);
+				List<IWrapperEntity> nearbyEntities = world.getEntitiesWithin(encompassingBox);
 				encompassingBox.heightRadius -= 1.0;
-	    		for(WrapperEntity entity : nearbyEntities){
+	    		for(IWrapperEntity entity : nearbyEntities){
 	    			//Only move Vanilla entities not riding things.  We don't want to move other things as we handle our inter-entity movement in each class.
-	    			if(entity.getEntityRiding() == null && (!(entity instanceof WrapperPlayer) || !((WrapperPlayer) entity).isSpectator())){
+	    			if(entity.getEntityRiding() == null && (!(entity instanceof IWrapperPlayer) || !((IWrapperPlayer) entity).isSpectator())){
 	    				//Check each box individually.  Need to do this to know which delta to apply.
 	    				BoundingBox entityBounds = entity.getBounds();
 	    				entityBounds.heightRadius += 0.25;
@@ -468,7 +468,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 	 *  as the entity needs to move to its new position before we can know where the
 	 *  riders of said entity will be.
 	 */
-	public void updateRider(WrapperEntity rider){
+	public void updateRider(IWrapperEntity rider){
 		//Update entity position and motion.
 		if(rider.isValid()){
 			rider.setPosition(locationRiderMap.inverse().get(rider), false);
@@ -487,7 +487,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 	 *  If we are re-loading a rider from saved data, pass-in null as the position
 	 *  
 	 */
-	public boolean addRider(WrapperEntity rider, Point3D riderLocation){
+	public boolean addRider(IWrapperEntity rider, Point3D riderLocation){
 		if(riderLocation == null){
 			if(savedRiderLocations.isEmpty()){
 				return false;
@@ -523,7 +523,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 			locationRiderMap.put(riderLocation, rider);
 			if(!world.isClient()){
 				rider.setRiding(this);
-				InterfacePacket.sendToAllClients(new PacketEntityRiderChange(this, rider, riderLocation));
+				InterfaceManager.packetInterface.sendToAllClients(new PacketEntityRiderChange(this, rider, riderLocation));
 			}
 			return true;
 		}
@@ -534,12 +534,12 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 	 *  Passed-in iterator is optional, but MUST be included if this is called inside a loop
 	 *  that's iterating over {@link #ridersToLocations} or you will get a CME!
 	 */
-	public void removeRider(WrapperEntity rider){
+	public void removeRider(IWrapperEntity rider){
 		if(locationRiderMap.containsValue(rider)){
 			locationRiderMap.inverse().remove(rider);
 			if(!world.isClient()){
 				rider.setRiding(null);
-				InterfacePacket.sendToAllClients(new PacketEntityRiderChange(this, rider, null));
+				InterfaceManager.packetInterface.sendToAllClients(new PacketEntityRiderChange(this, rider, null));
 			}
 		}
 	}
@@ -580,7 +580,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 	 *  Returns the owner state of the passed-in player, relative to this entity.
 	 *  Takes into account player OP status and {@link #ownerUUID}, if set.
 	 */
-	public PlayerOwnerState getOwnerState(WrapperPlayer player){
+	public PlayerOwnerState getOwnerState(IWrapperPlayer player){
 		boolean canPlayerEdit = player.isOP() || ownerUUID == null || player.getID().equals(ownerUUID);
 		return player.isOP() ? PlayerOwnerState.ADMIN : (canPlayerEdit ? PlayerOwnerState.OWNER : PlayerOwnerState.USER);
 	}
@@ -604,9 +604,9 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 							if(currentDamage > groupDef.health){
 								double amountActuallyNeeded = damage.amount - (currentDamage - groupDef.health);
 								currentDamage = groupDef.health;
-								InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, variableName, amountActuallyNeeded));
+								InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, variableName, amountActuallyNeeded));
 							}else{
-								InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, variableName, damage.amount));
+								InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, variableName, damage.amount));
 							}
 							setVariable(variableName, currentDamage);
 							return;
@@ -620,16 +620,16 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 			if(damageAmount > definition.general.health){
 				double amountActuallyNeeded = damage.amount - (damageAmount - definition.general.health);
 				damageAmount = definition.general.health;
-				InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, DAMAGE_VARIABLE, amountActuallyNeeded));
+				InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, DAMAGE_VARIABLE, amountActuallyNeeded));
 			}else{
-				InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, DAMAGE_VARIABLE, damage.amount));
+				InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, DAMAGE_VARIABLE, damage.amount));
 			}
 			setVariable(DAMAGE_VARIABLE, damageAmount);
 		}
 	}
 	
 	@Override
-	public WrapperNBT save(WrapperNBT data){
+	public IWrapperNBT save(IWrapperNBT data){
 		super.save(data);
 		data.setPoint3ds("savedRiderLocations", locationRiderMap.keySet());
 		data.setBoolean("locked", locked);

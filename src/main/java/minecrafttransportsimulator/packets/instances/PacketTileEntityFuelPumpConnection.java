@@ -5,7 +5,7 @@ import java.util.UUID;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityFuelPump;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
 /**Packet sent to pumps on clients to change what vehicle they are connected to.
@@ -36,7 +36,7 @@ public class PacketTileEntityFuelPumpConnection extends APacketEntity<TileEntity
 	}
 	
 	@Override
-	protected boolean handle(WrapperWorld world, TileEntityFuelPump pump){
+	protected boolean handle(AWrapperWorld world, TileEntityFuelPump pump){
 		EntityVehicleF_Physics vehicle = world.getEntity(linkedID);
 		if(vehicle != null){
 			if(connect){

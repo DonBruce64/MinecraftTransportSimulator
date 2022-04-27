@@ -2,9 +2,9 @@ package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController;
-import minecrafttransportsimulator.mcinterface.InterfaceCore;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
 /**Packet sent to signal controllers when the confirm button is clicked in the controller GUI to update their state.
@@ -15,11 +15,11 @@ import minecrafttransportsimulator.packets.components.APacketEntity;
  * @author don_bruce
  */
 public class PacketTileEntitySignalControllerChange extends APacketEntity<TileEntitySignalController>{
-	private final WrapperNBT controllerData;
+	private final IWrapperNBT controllerData;
 	
 	public PacketTileEntitySignalControllerChange(TileEntitySignalController controller){
 		super(controller);
-		this.controllerData = InterfaceCore.getNewNBTWrapper();
+		this.controllerData = InterfaceManager.coreInterface.getNewNBTWrapper();
 		controller.save(controllerData);
 	}
 	
@@ -35,7 +35,7 @@ public class PacketTileEntitySignalControllerChange extends APacketEntity<TileEn
 	}
 	
 	@Override
-	protected boolean handle(WrapperWorld world, TileEntitySignalController controller){
+	protected boolean handle(AWrapperWorld world, TileEntitySignalController controller){
 		controller.initializeController(controllerData);
 		return true;
 	}

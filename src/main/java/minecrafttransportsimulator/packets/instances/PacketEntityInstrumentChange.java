@@ -5,8 +5,8 @@ import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.guis.instances.GUIInstruments;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.items.instances.ItemItem;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.packets.components.APacketEntityInteract;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
@@ -18,12 +18,12 @@ import minecrafttransportsimulator.systems.PackParserSystem;
  * 
  * @author don_bruce
  */
-public class PacketEntityInstrumentChange extends APacketEntityInteract<AEntityE_Interactable<?>, WrapperPlayer>{
+public class PacketEntityInstrumentChange extends APacketEntityInteract<AEntityE_Interactable<?>, IWrapperPlayer>{
 	private final int slot;
 	private final String instrumentPackID;
 	private final String instrumentSystemName;
 	
-	public PacketEntityInstrumentChange(AEntityE_Interactable<?> entity, WrapperPlayer player, int slot, ItemInstrument instrument){
+	public PacketEntityInstrumentChange(AEntityE_Interactable<?> entity, IWrapperPlayer player, int slot, ItemInstrument instrument){
 		super(entity, player);
 		this.slot = slot;
 		if(instrument != null){
@@ -51,7 +51,7 @@ public class PacketEntityInstrumentChange extends APacketEntityInteract<AEntityE
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, AEntityE_Interactable<?> entity, WrapperPlayer player){
+	public boolean handle(AWrapperWorld world, AEntityE_Interactable<?> entity, IWrapperPlayer player){
 		//Check to make sure the instrument can fit in survival player's inventories.
 		//Only check this on the server, as adding things to the client doesn't do us any good.
 		if(!world.isClient() && !player.isCreative() && entity.instruments.get(slot) != null){

@@ -10,9 +10,9 @@ import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
-import minecrafttransportsimulator.mcinterface.InterfaceCore;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 public class ItemPartEngine extends AItemPart{
@@ -27,12 +27,12 @@ public class ItemPartEngine extends AItemPart{
 	}
 	
 	@Override
-	public PartEngine createPart(AEntityF_Multipart<?> entity, WrapperPlayer placingPlayer, JSONPartDefinition packVehicleDef, WrapperNBT partData, APart parentPart){
+	public PartEngine createPart(AEntityF_Multipart<?> entity, IWrapperPlayer placingPlayer, JSONPartDefinition packVehicleDef, IWrapperNBT partData, APart parentPart){
 		return new PartEngine(entity, placingPlayer, packVehicleDef, partData, parentPart);
 	}
 	
 	@Override
-	public void addTooltipLines(List<String> tooltipLines, WrapperNBT data){
+	public void addTooltipLines(List<String> tooltipLines, IWrapperNBT data){
 		super.addTooltipLines(tooltipLines, data);
 		if(data.getBoolean("isCreative")){
 			tooltipLines.add(JSONConfigLanguage.ITEMINFO_ENGINE_CREATIVE.value);
@@ -52,9 +52,9 @@ public class ItemPartEngine extends AItemPart{
 		if(ConfigSystem.settings.fuel.fuels.containsKey(definition.engine.fuelType)){
 			String line = JSONConfigLanguage.ITEMINFO_ENGINE_FLUIDS.value;
 			for(Entry<String, Double> fuelEntry : ConfigSystem.settings.fuel.fuels.get(definition.engine.fuelType).entrySet()){
-				String fluidName = InterfaceCore.getFluidName(fuelEntry.getKey());
+				String fluidName = InterfaceManager.coreInterface.getFluidName(fuelEntry.getKey());
 				if(!fluidName.equals("INVALID")){
-					line += InterfaceCore.getFluidName(fuelEntry.getKey()) + "@" + fuelEntry.getValue() + ", ";
+					line += InterfaceManager.coreInterface.getFluidName(fuelEntry.getKey()) + "@" + fuelEntry.getValue() + ", ";
 				}
 			}
 			tooltipLines.add(line.substring(0, line.length() - 2));
@@ -91,9 +91,9 @@ public class ItemPartEngine extends AItemPart{
 	}
 	
 	@Override
-	public void getDataBlocks(List<WrapperNBT> dataBlocks){
+	public void getDataBlocks(List<IWrapperNBT> dataBlocks){
 		//Add a creative variant.
-		WrapperNBT data = InterfaceCore.getNewNBTWrapper();
+		IWrapperNBT data = InterfaceManager.coreInterface.getNewNBTWrapper();
 		data.setBoolean("isCreative", true);
 		dataBlocks.add(data);
 	}

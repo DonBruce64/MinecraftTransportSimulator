@@ -3,8 +3,8 @@ package minecrafttransportsimulator.packets.instances;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.guis.instances.GUIBooklet;
 import minecrafttransportsimulator.items.instances.ItemItem;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.packets.components.APacketPlayer;
 
 /**Packet sent to the server to open generic GUIs.  The GUI to be sent is an enum and is used to open 
@@ -17,7 +17,7 @@ import minecrafttransportsimulator.packets.components.APacketPlayer;
 public class PacketGUIRequest extends APacketPlayer{
 	private final GUIType guiRequested;
 	
-	public PacketGUIRequest(WrapperPlayer player, GUIType guiRequested){
+	public PacketGUIRequest(IWrapperPlayer player, GUIType guiRequested){
 		super(player);
 		this.guiRequested = guiRequested;
 	}
@@ -34,7 +34,7 @@ public class PacketGUIRequest extends APacketPlayer{
 	}
 	
 	@Override
-	public void handle(WrapperWorld world, WrapperPlayer player){
+	public void handle(AWrapperWorld world, IWrapperPlayer player){
 		switch(guiRequested){
 			case BOOKELET: new GUIBooklet((ItemItem) player.getHeldItem()); break;
 		}

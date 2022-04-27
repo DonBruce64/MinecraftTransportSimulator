@@ -13,9 +13,9 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.components.IItemBlock;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
@@ -26,7 +26,7 @@ public class ItemPoleComponent extends AItemSubTyped<JSONPoleComponent> implemen
 	}
 	
 	@Override
-	public boolean onBlockClicked(WrapperWorld world, WrapperPlayer player, Point3D position, Axis axis){
+	public boolean onBlockClicked(AWrapperWorld world, IWrapperPlayer player, Point3D position, Axis axis){
 		if(definition.pole.type.equals(PoleComponentType.CORE)){
 			return ((IItemBlock) this).placeBlock(world, player, position, axis);
 		}else{
@@ -53,7 +53,7 @@ public class ItemPoleComponent extends AItemSubTyped<JSONPoleComponent> implemen
 		 *  Helper method to create a component for the passed-in pole.  Does not add the component
 		 *  to the pole, only creates it.
 		 */
-		public static ATileEntityPole_Component createComponent(TileEntityPole pole, WrapperPlayer placingPlayer, Axis axis, WrapperNBT data){
+		public static ATileEntityPole_Component createComponent(TileEntityPole pole, IWrapperPlayer placingPlayer, Axis axis, IWrapperNBT data){
 			ItemPoleComponent item = PackParserSystem.getItem(data.getString("packID"), data.getString("systemName"), data.getString("subName"));
 			switch(item.definition.pole.type){
 				case CORE : return new TileEntityPole_Core(pole, placingPlayer, axis, data);	

@@ -24,11 +24,8 @@ import minecrafttransportsimulator.jsondefs.JSONCraftingBench;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
-import minecrafttransportsimulator.mcinterface.InterfaceClient;
-import minecrafttransportsimulator.mcinterface.InterfaceCore;
-import minecrafttransportsimulator.mcinterface.InterfaceInput;
-import minecrafttransportsimulator.mcinterface.InterfacePacket;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPlayerCraftItem;
 import minecrafttransportsimulator.packloading.PackMaterialComponent;
 import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
@@ -47,7 +44,7 @@ public class GUIPartBench extends AGUIBase{
 	
 	//Init variables.
 	private final JSONCraftingBench definition;
-	private final WrapperPlayer player;
+	private final IWrapperPlayer player;
 	
 	//Buttons and labels.
 	private GUIComponentButton prevPackButton;
@@ -98,7 +95,7 @@ public class GUIPartBench extends AGUIBase{
 	public GUIPartBench(JSONCraftingBench definition){
 		super();
 		this.definition = definition;
-		this.player = InterfaceClient.getClientPlayer();
+		this.player = InterfaceManager.clientInterface.getClientPlayer();
 		if(lastOpenedItem.containsKey(definition)){
 			currentItem = lastOpenedItem.get(definition);
 			currentPack = currentItem.definition.packID;
@@ -229,7 +226,7 @@ public class GUIPartBench extends AGUIBase{
 		addComponent(confirmButton = new GUIComponentButton(guiLeft + 211, guiTop + 156, 20, 20, 20, 196, 20, 20){
 			@Override
 			public void onClicked(boolean leftSide){
-				InterfacePacket.sendToServer(new PacketPlayerCraftItem(player, currentItem, viewingRepair));
+				InterfaceManager.packetInterface.sendToServer(new PacketPlayerCraftItem(player, currentItem, viewingRepair));
 			}
 		});
 	}
@@ -287,7 +284,7 @@ public class GUIPartBench extends AGUIBase{
 		confirmButton.enabled = currentItem != null && (player.isCreative() || (viewingRepair ? (repairMaterials != null && player.getInventory().hasMaterials(currentItem, true, true, true)) : (normalMaterials != null && player.getInventory().hasMaterials(currentItem, true, true, false))));
 		
 		//Check the mouse to see if it updated and we need to change items.
-		int wheelMovement = InterfaceInput.getTrackedMouseWheel();
+		int wheelMovement = InterfaceManager.inputInterface.getTrackedMouseWheel();
 		if(wheelMovement < 0 && nextPartButton.enabled){
 			nextPartButton.onClicked(false);
 		}else if(wheelMovement > 0 && prevPartButton.enabled){
@@ -441,7 +438,7 @@ public class GUIPartBench extends AGUIBase{
 		
 		//Create part description text.
 		List<String> descriptiveLines = new ArrayList<String>();
-		currentItem.addTooltipLines(descriptiveLines, InterfaceCore.getNewNBTWrapper());
+		currentItem.addTooltipLines(descriptiveLines, InterfaceManager.coreInterface.getNewNBTWrapper());
 		partInfo.text = "";
 		for(String line : descriptiveLines){
 			partInfo.text += line + "\n";

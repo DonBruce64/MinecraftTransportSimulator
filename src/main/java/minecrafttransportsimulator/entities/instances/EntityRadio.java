@@ -1,8 +1,8 @@
 package minecrafttransportsimulator.entities.instances;
 
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 import minecrafttransportsimulator.sound.RadioManager;
 import minecrafttransportsimulator.sound.RadioManager.RadioSources;
@@ -31,7 +31,7 @@ public class EntityRadio extends AEntityB_Existing{
 	private RadioSources currentSource;
 	private SoundInstance currentSound;
 	
-	public EntityRadio(AEntityB_Existing provider, WrapperNBT data){
+	public EntityRadio(AEntityB_Existing provider, IWrapperNBT data){
 		super(provider.world, null, data);
 		this.provider = provider;
 		if(world.isClient()){
@@ -76,7 +76,7 @@ public class EntityRadio extends AEntityB_Existing{
 	}
 	
 	@Override
-	public boolean interact(WrapperPlayer player){
+	public boolean interact(IWrapperPlayer player){
 		player.sendPacket(new PacketEntityGUIRequest(this, player, PacketEntityGUIRequest.EntityGUIType.RADIO));
 		return true;
 	}
@@ -198,7 +198,7 @@ public class EntityRadio extends AEntityB_Existing{
 	
 	
 	@Override
-	public WrapperNBT save(WrapperNBT data){
+	public IWrapperNBT save(IWrapperNBT data){
 		super.save(data);
 		data.setInteger("currentSource", currentSource.ordinal());
 		data.setInteger("volume", volume);

@@ -106,11 +106,9 @@ public abstract class AJSONItem{
     	public float radius;
     	
     	//Moved from Skin during common JSON overhauling.
-    	@SuppressWarnings("hiding")
-		@Deprecated
+    	@Deprecated
     	public String packID;
-    	@SuppressWarnings("hiding")
-		@Deprecated
+    	@Deprecated
     	public String systemName;
     	
     	//These came from both Decor and Pole.

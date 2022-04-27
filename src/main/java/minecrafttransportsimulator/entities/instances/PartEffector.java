@@ -13,15 +13,15 @@ import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
-import minecrafttransportsimulator.mcinterface.InterfacePacket;
-import minecrafttransportsimulator.mcinterface.WrapperItemStack;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPartEffector;
 
 public class PartEffector extends APart{
 	
-	private final List<WrapperItemStack> drops = new ArrayList<WrapperItemStack>();
+	private final List<IWrapperItemStack> drops = new ArrayList<IWrapperItemStack>();
 	
 	//Variables used for drills.
 	public int blocksBroken;
@@ -30,7 +30,7 @@ public class PartEffector extends APart{
 	private final Map<BoundingBox, Integer> boxTimeSpentAtPosition = new HashMap<BoundingBox, Integer>();
 	private final Set<Point3D> blockFlooredPositionsBrokeThisTick = new HashSet<Point3D>();
 	
-	public PartEffector(AEntityF_Multipart<?> entityOn, WrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, WrapperNBT data, APart parentPart){
+	public PartEffector(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, IWrapperNBT data, APart parentPart){
 		super(entityOn, placingPlayer, placementDefinition, data, parentPart);
 		this.blocksBroken = data.getInteger("blocksBroken");
 	}
@@ -50,7 +50,7 @@ public class PartEffector extends APart{
 							if(part instanceof PartInteractable && part.definition.interactable.interactionType.equals(InteractableComponentType.CRATE) && part.isActive && part.definition.interactable.feedsVehicles){
 								EntityInventoryContainer inventory = ((PartInteractable) part).inventory;
 								for(int i=0; i<inventory.getSize(); ++i){
-									WrapperItemStack stack = inventory.getStack(i);
+									IWrapperItemStack stack = inventory.getStack(i);
 									if(world.fertilizeBlock(box.globalCenter, stack)){
 										inventory.removeFromSlot(i, 1);
 										break;
@@ -71,7 +71,7 @@ public class PartEffector extends APart{
 							if(part instanceof PartInteractable && part.definition.interactable.interactionType.equals(InteractableComponentType.CRATE) && part.isActive && part.definition.interactable.feedsVehicles){
 								EntityInventoryContainer inventory = ((PartInteractable) part).inventory;
 								for(int i=0; i<inventory.getSize(); ++i){
-									WrapperItemStack stack = inventory.getStack(i);
+									IWrapperItemStack stack = inventory.getStack(i);
 									if(world.plantBlock(box.globalCenter, stack)){
 										inventory.removeFromSlot(i, 1);
 										break;
@@ -84,9 +84,9 @@ public class PartEffector extends APart{
 					case PLOW:{
 						if(world.plowBlock(box.globalCenter)){
 							//Harvest blocks on top of this block in case they need to be dropped.
-							List<WrapperItemStack> harvestedDrops = world.harvestBlock(box.globalCenter);
+							List<IWrapperItemStack> harvestedDrops = world.harvestBlock(box.globalCenter);
 							if(!harvestedDrops.isEmpty()){
-								for(WrapperItemStack stack : harvestedDrops){
+								for(IWrapperItemStack stack : harvestedDrops){
 									if(stack.getSize() > 0){
 										world.spawnItemStack(stack, position);
 									}
@@ -119,7 +119,7 @@ public class PartEffector extends APart{
 										if(++blocksBroken == definition.effector.drillDurability){
 											this.isValid = false;
 										}else{
-											InterfacePacket.sendToAllClients(new PacketPartEffector(this));
+											InterfaceManager.packetInterface.sendToAllClients(new PacketPartEffector(this));
 										}
 									}else{
 										boxTimeSpentAtPosition.put(box, timeSpentBreaking + 1);
@@ -136,9 +136,9 @@ public class PartEffector extends APart{
 				
 				//Handle any drops we got from our effector.
 				if(!drops.isEmpty()){
-					Iterator<WrapperItemStack> iterator = drops.iterator();
+					Iterator<IWrapperItemStack> iterator = drops.iterator();
 					while(iterator.hasNext()){
-						WrapperItemStack dropStack = iterator.next();
+						IWrapperItemStack dropStack = iterator.next();
 						for(APart part : entityOn.parts){
 							if(part instanceof PartInteractable && part.isActive && part.definition.interactable.interactionType.equals(InteractableComponentType.CRATE)){
 								if(((PartInteractable) part).inventory.addStack(dropStack)){
@@ -150,7 +150,7 @@ public class PartEffector extends APart{
 					}
 					
 					//Check our drops.  If we couldn't add any of them to any inventory, drop them on the ground instead.
-					for(WrapperItemStack dropStack : drops){
+					for(IWrapperItemStack dropStack : drops){
 						world.spawnItemStack(dropStack, position);
 					}
 					drops.clear();
@@ -172,7 +172,7 @@ public class PartEffector extends APart{
 	}
 	
 	@Override
-    public WrapperNBT save(WrapperNBT data){
+    public IWrapperNBT save(IWrapperNBT data){
 		super.save(data);
 		data.setInteger("blocksBroken", blocksBroken);
     	return data;

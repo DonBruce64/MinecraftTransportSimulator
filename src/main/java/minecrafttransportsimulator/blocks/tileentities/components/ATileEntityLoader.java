@@ -3,16 +3,16 @@ package minecrafttransportsimulator.blocks.tileentities.components;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
 import minecrafttransportsimulator.entities.instances.PartInteractable;
-import minecrafttransportsimulator.mcinterface.InterfacePacket;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityLoaderConnection;
 
 public abstract class ATileEntityLoader extends TileEntityDecor{
 	public PartInteractable connectedPart;
 
-    public ATileEntityLoader(WrapperWorld world, Point3D position, WrapperPlayer placingPlayer, WrapperNBT data){
+    public ATileEntityLoader(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, IWrapperNBT data){
 		super(world, position, placingPlayer, data);
     }
 	
@@ -59,9 +59,9 @@ public abstract class ATileEntityLoader extends TileEntityDecor{
 		}
 		if(nearestPart != null){
 			connectToPart(nearestPart);
-			InterfacePacket.sendToAllClients(new PacketTileEntityLoaderConnection(this, true));
+			InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityLoaderConnection(this, true));
 		}else if(connectedPart != null){
-			InterfacePacket.sendToAllClients(new PacketTileEntityLoaderConnection(this, false));
+			InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityLoaderConnection(this, false));
 			connectToPart(null);
 		}
 	}

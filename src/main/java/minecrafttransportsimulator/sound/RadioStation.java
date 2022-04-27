@@ -13,7 +13,7 @@ import java.util.Set;
 
 import javazoom.jl.decoder.Equalizer;
 import minecrafttransportsimulator.entities.instances.EntityRadio;
-import minecrafttransportsimulator.mcinterface.InterfaceSound;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.sound.RadioManager.RadioSources;
 
 /**Radio stations are sources that radios can hook into to provide sound.  All radios share the
@@ -50,7 +50,7 @@ public class RadioStation{
 		if(musicFiles.isEmpty()){
 			displayText = "Fewer than " + (index + 1) + " folders in mts_music.\nGo add some!";
 		}
-		InterfaceSound.addRadioStation(this);
+		InterfaceManager.soundInterface.addRadioStation(this);
 	}
 	
 	public RadioStation(String url){
@@ -63,7 +63,7 @@ public class RadioStation{
 			displayText =  "No station set for this preset.  Press SET to teach a station.";
 		}
 		musicFiles = new ArrayList<File>();
-		InterfaceSound.addRadioStation(this);
+		InterfaceManager.soundInterface.addRadioStation(this);
 	}
 	
 	/**
@@ -76,7 +76,7 @@ public class RadioStation{
 		ByteBuffer buffer = decoder.readBlock();
 		if(buffer != null){
 			//Get new buffer index from the audio system and add it to our radios.
-			int bufferIndex = InterfaceSound.createBuffer(buffer, decoder);
+			int bufferIndex = InterfaceManager.soundInterface.createBuffer(buffer, decoder);
 			activeBuffers.add(bufferIndex);
 			
 			//Update station buffer counts and return buffer index.
@@ -124,10 +124,10 @@ public class RadioStation{
 				//If we have any playing radios, do buffer logic.
 				if(!playingRadios.isEmpty()){
 					//First check if we have any buffers that are done playing that we can re-claim.
-					freeBufferIndex = InterfaceSound.getFreeStationBuffer(playingRadios);
+					freeBufferIndex = InterfaceManager.soundInterface.getFreeStationBuffer(playingRadios);
 					if(freeBufferIndex != 0){
 						activeBuffers.remove(activeBuffers.indexOf(freeBufferIndex));
-						InterfaceSound.deleteBuffer(freeBufferIndex);
+						InterfaceManager.soundInterface.deleteBuffer(freeBufferIndex);
 					}
 				}
 				
@@ -136,7 +136,7 @@ public class RadioStation{
 				if((freeBufferIndex != 0 || playingRadios.isEmpty()) && !queuedRadios.isEmpty()){
 					for(EntityRadio radio : queuedRadios){
 						radio.start();
-						InterfaceSound.addRadioSound(radio.getPlayingSound(), activeBuffers);
+						InterfaceManager.soundInterface.addRadioSound(radio.getPlayingSound(), activeBuffers);
 						playingRadios.add(radio);
 					}
 					queuedRadios.clear();
@@ -147,7 +147,7 @@ public class RadioStation{
 					int newIndex = generateBufferIndex();
 					if(newIndex != 0){
 						for(EntityRadio radio : playingRadios){
-							InterfaceSound.bindBuffer(radio.getPlayingSound(), newIndex);
+							InterfaceManager.soundInterface.bindBuffer(radio.getPlayingSound(), newIndex);
 						}
 					}
 				}
@@ -177,7 +177,7 @@ public class RadioStation{
 	private void startPlayback(){
 		//Delete any buffers we might still have.
 		for(int buffer : activeBuffers){
-			InterfaceSound.deleteBuffer(buffer);
+			InterfaceManager.soundInterface.deleteBuffer(buffer);
 		}
 		activeBuffers.clear();
 		

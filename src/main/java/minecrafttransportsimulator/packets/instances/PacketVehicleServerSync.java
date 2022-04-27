@@ -3,7 +3,7 @@ package minecrafttransportsimulator.packets.instances;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
 /**Packet used to send server vehicle movement to clients.  This packet doesn't directly
@@ -64,7 +64,7 @@ public class PacketVehicleServerSync extends APacketEntity<EntityVehicleF_Physic
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, EntityVehicleF_Physics vehicle){
+	public boolean handle(AWrapperWorld world, EntityVehicleF_Physics vehicle){
 		vehicle.syncServerDeltas(motion, rotation, pathing);
 		return false;
 	}

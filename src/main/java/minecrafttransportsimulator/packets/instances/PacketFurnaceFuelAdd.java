@@ -3,7 +3,7 @@ package minecrafttransportsimulator.packets.instances;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.entities.instances.EntityFurnace;
 import minecrafttransportsimulator.jsondefs.JSONPart.FurnaceComponentType;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
 /**Packet sent to furnaces to add fuel to them.
@@ -30,7 +30,7 @@ public class PacketFurnaceFuelAdd extends APacketEntity<EntityFurnace>{
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, EntityFurnace furnace){
+	public boolean handle(AWrapperWorld world, EntityFurnace furnace){
 		furnace.ticksAddedOfFuel = fuelAmount;
 		furnace.ticksLeftOfFuel += furnace.ticksAddedOfFuel;
 		if(furnace.definition.furnaceType.equals(FurnaceComponentType.ELECTRIC)){

@@ -10,7 +10,7 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController.SignalDirection;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySignalController.SignalGroup;
-import minecrafttransportsimulator.mcinterface.InterfaceRender;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.components.ARenderEntityDefinable;
 
 public class RenderDecor extends ARenderEntityDefinable<TileEntityDecor>{
@@ -21,7 +21,7 @@ public class RenderDecor extends ARenderEntityDefinable<TileEntityDecor>{
 		//Render lane holo-boxes if we are a signal controller that's being edited.
 		if(decor instanceof TileEntitySignalController){
 			TileEntitySignalController controller = (TileEntitySignalController) decor;
-			if(controller.unsavedClientChangesPreset || InterfaceRender.shouldRenderBoundingBoxes()){
+			if(controller.unsavedClientChangesPreset || InterfaceManager.renderingInterface.shouldRenderBoundingBoxes()){
 				for(Set<SignalGroup> signalGroupSet : controller.signalGroups.values()){
 		        	for(SignalGroup signalGroup : signalGroupSet){ 
 						if(signalGroup.signalLineWidth != 0 && controller.intersectionProperties.get(signalGroup.axis).isActive){

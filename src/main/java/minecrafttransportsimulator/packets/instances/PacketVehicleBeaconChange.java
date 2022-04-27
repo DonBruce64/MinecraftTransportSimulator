@@ -3,7 +3,7 @@ package minecrafttransportsimulator.packets.instances;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.NavBeacon;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
 /**Packet sent to vehicles to update their selected beacons.  This is sent from clients when they
@@ -32,7 +32,7 @@ public class PacketVehicleBeaconChange extends APacketEntity<EntityVehicleF_Phys
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, EntityVehicleF_Physics vehicle){
+	public boolean handle(AWrapperWorld world, EntityVehicleF_Physics vehicle){
 		vehicle.selectedBeaconName = beaconName;
 		vehicle.selectedBeacon = NavBeacon.getByNameFromWorld(world, beaconName);
 		return true;

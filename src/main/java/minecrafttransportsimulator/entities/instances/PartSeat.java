@@ -6,13 +6,12 @@ import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.instances.ItemPartGun;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
-import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
-import minecrafttransportsimulator.mcinterface.InterfaceClient;
-import minecrafttransportsimulator.mcinterface.InterfacePacket;
-import minecrafttransportsimulator.mcinterface.WrapperEntity;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPartSeat;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -22,22 +21,22 @@ public final class PartSeat extends APart{
 	public ItemPartGun activeGun;
 	public int gunIndex;
 	
-	public PartSeat(AEntityF_Multipart<?> entityOn, WrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, WrapperNBT data, APart parentPart){
+	public PartSeat(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, IWrapperNBT data, APart parentPart){
 		super(entityOn, placingPlayer, placementDefinition, data, parentPart);
 		this.activeGun = PackParserSystem.getItem(data.getString("activeGunPackID"), data.getString("activeGunSystemName"), data.getString("activeGunSubName"));
 	}
 	
 	@Override
-	public boolean interact(WrapperPlayer player){
+	public boolean interact(IWrapperPlayer player){
 		//See if we can interact with the seats of this vehicle.
 		//This can happen if the vehicle is not locked, or we're already inside a locked vehicle.
 		if(isActive){
 			if(!entityOn.locked || entityOn.equals(player.getEntityRiding())){
-				WrapperEntity riderForSeat = entityOn.locationRiderMap.get(placementOffset);
+				IWrapperEntity riderForSeat = entityOn.locationRiderMap.get(placementOffset);
 				if(riderForSeat != null){
 					//We already have a rider for this seat.  If it's not us, mark the seat as taken.
 					//If it's an entity that can be leashed, dismount the entity and leash it.
-					if(riderForSeat instanceof WrapperPlayer){
+					if(riderForSeat instanceof IWrapperPlayer){
 						if(!player.equals(riderForSeat)){
 							player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_VEHICLE_SEATTAKEN));
 						}
@@ -47,7 +46,7 @@ public final class PartSeat extends APart{
 					}
 				}else{
 					//Seat is free.  Either mount this seat, or if we have a leashed animal, set it in that seat.
-					WrapperEntity leashedEntity = player.getLeashedEntity();
+					IWrapperEntity leashedEntity = player.getLeashedEntity();
 					if(leashedEntity != null){
 						entityOn.addRider(leashedEntity, placementOffset);
 					}else{
@@ -67,7 +66,7 @@ public final class PartSeat extends APart{
 							if(activeGun == null){
 								if(!placementDefinition.canDisableGun){
 									setNextActiveGun();
-									InterfacePacket.sendToAllClients(new PacketPartSeat(this));
+									InterfaceManager.packetInterface.sendToAllClients(new PacketPartSeat(this));
 								}
 							}else{
 								for(AItemPart partItem : entityOn.partsByItem.keySet()){
@@ -85,7 +84,7 @@ public final class PartSeat extends APart{
 								//Invalid active gun detected.  Select a new one.
 								activeGun = null;
 								setNextActiveGun();
-								InterfacePacket.sendToAllClients(new PacketPartSeat(this));
+								InterfaceManager.packetInterface.sendToAllClients(new PacketPartSeat(this));
 							}
 						}
 					}
@@ -123,7 +122,7 @@ public final class PartSeat extends APart{
 	public void setNextActiveGun(){
 		//If we don't have an active gun, just get the next possible unit.
 		if(activeGun == null){
-			WrapperEntity rider = entityOn.locationRiderMap.get(placementOffset);
+			IWrapperEntity rider = entityOn.locationRiderMap.get(placementOffset);
 			for(AItemPart partItem : entityOn.partsByItem.keySet()){
 				if(partItem instanceof ItemPartGun){
 					for(APart part : entityOn.partsByItem.get(partItem)){
@@ -147,7 +146,7 @@ public final class PartSeat extends APart{
 	 * Helper method to get the next active gun in the gun listings.
 	 */
 	private ItemPartGun getNextActiveGun(){
-		WrapperEntity rider = entityOn.locationRiderMap.get(placementOffset);
+		IWrapperEntity rider = entityOn.locationRiderMap.get(placementOffset);
 		boolean pastActiveGun = false;
 		ItemPartGun firstPossibleGun = null;
 		
@@ -204,7 +203,7 @@ public final class PartSeat extends APart{
 	@Override
 	public void remove(){
 		super.remove();
-		WrapperEntity rider = entityOn.locationRiderMap.get(placementOffset);
+		IWrapperEntity rider = entityOn.locationRiderMap.get(placementOffset);
 		if(rider != null){
 			entityOn.removeRider(rider);
 		}
@@ -217,10 +216,10 @@ public final class PartSeat extends APart{
 			return value;
 		}
 		
-		WrapperEntity riderForSeat = entityOn.locationRiderMap.get(placementOffset);
+		IWrapperEntity riderForSeat = entityOn.locationRiderMap.get(placementOffset);
 		switch(variable){
 			case("seat_occupied"): return riderForSeat != null ? 1 : 0;
-			case("seat_occupied_client"): return InterfaceClient.getClientPlayer().equals(riderForSeat) ? 1 : 0;
+			case("seat_occupied_client"): return InterfaceManager.clientInterface.getClientPlayer().equals(riderForSeat) ? 1 : 0;
 			case("seat_rider_yaw"): return riderForSeat != null ? riderForSeat.getYaw() : 0;
 			case("seat_rider_pitch"): return riderForSeat != null ? riderForSeat.getPitch() : 0;
 		}
@@ -229,7 +228,7 @@ public final class PartSeat extends APart{
 	}
 	
 	@Override
-	public WrapperNBT save(WrapperNBT data){
+	public IWrapperNBT save(IWrapperNBT data){
 		super.save(data);
 		if(activeGun != null){
 			data.setString("activeGunPackID", activeGun.definition.packID);

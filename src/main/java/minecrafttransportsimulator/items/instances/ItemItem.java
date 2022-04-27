@@ -25,13 +25,12 @@ import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.jsondefs.JSONItem;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
-import minecrafttransportsimulator.mcinterface.InterfaceCore;
-import minecrafttransportsimulator.mcinterface.InterfacePacket;
-import minecrafttransportsimulator.mcinterface.WrapperEntity;
-import minecrafttransportsimulator.mcinterface.WrapperItemStack;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
@@ -59,7 +58,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 	}
 	
 	@Override
-	public CallbackType doVehicleInteraction(EntityVehicleF_Physics vehicle, APart part, BoundingBox hitBox, WrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick){
+	public CallbackType doVehicleInteraction(EntityVehicleF_Physics vehicle, APart part, BoundingBox hitBox, IWrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick){
 		switch(definition.item.type){
 			case WRENCH : {
 				if(!vehicle.world.isClient()){
@@ -85,7 +84,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 									vehicle.removePart(part, null);
 									AItemPart droppedItem = part.getItem();
 									if(droppedItem != null){
-										vehicle.world.spawnItem(droppedItem, part.save(InterfaceCore.getNewNBTWrapper()), part.position);
+										vehicle.world.spawnItem(droppedItem, part.save(InterfaceManager.coreInterface.getNewNBTWrapper()), part.position);
 									}
 								}
 							}else if(player.isSneaking()){
@@ -93,7 +92,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 								//Remove this vehicle if possible.
 								if((!ConfigSystem.settings.general.opPickupVehiclesOnly.value || ownerState.equals(PlayerOwnerState.ADMIN)) && (!ConfigSystem.settings.general.creativePickupVehiclesOnly.value || player.isCreative()) && vehicle.isValid){
 									vehicle.disconnectAllConnections();
-									vehicle.world.spawnItem(vehicle.getItem(), vehicle.save(InterfaceCore.getNewNBTWrapper()), vehicle.position);
+									vehicle.world.spawnItem(vehicle.getItem(), vehicle.save(InterfaceManager.coreInterface.getNewNBTWrapper()), vehicle.position);
 									vehicle.remove();
 								}
 							}
@@ -123,8 +122,8 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 				if(!vehicle.world.isClient() && rightClick){
 					//Try to lock the vehicle.
 					//First check to see if we need to set this key's vehicle.
-					WrapperItemStack stack = player.getHeldStack();
-					WrapperNBT data = stack.getData();
+					IWrapperItemStack stack = player.getHeldStack();
+					IWrapperNBT data = stack.getData();
 					UUID keyVehicleUUID = data.getUUID("vehicle");
 					if(keyVehicleUUID == null){
 						//Check if we are the owner before making this a valid key.
@@ -184,10 +183,10 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 			case TICKET : {
 				if(!vehicle.world.isClient() && rightClick){
 					if(player.isSneaking()){
-						Iterator<WrapperEntity> iterator = vehicle.locationRiderMap.inverse().keySet().iterator();
+						Iterator<IWrapperEntity> iterator = vehicle.locationRiderMap.inverse().keySet().iterator();
 						while(iterator.hasNext()){
-							WrapperEntity entity = iterator.next();
-							if(!(entity instanceof WrapperPlayer)){
+							IWrapperEntity entity = iterator.next();
+							if(!(entity instanceof IWrapperPlayer)){
 								vehicle.removeRider(entity);
 							}
 						}
@@ -219,7 +218,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 									if(part.position.isDistanceToCloserThan(firstPartClicked.position, 16)){
 										if(interactable.tank.getFluid().isEmpty() || firstPartClicked.tank.getFluid().isEmpty() || interactable.tank.getFluid().equals(firstPartClicked.tank.getFluid())){
 											firstPartClicked.linkedPart = interactable;
-											InterfacePacket.sendToAllClients(new PacketPartInteractable(firstPartClicked, player));
+											InterfaceManager.packetInterface.sendToAllClients(new PacketPartInteractable(firstPartClicked, player));
 											player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELHOSE_SECONDLINK));
 											firstPartClicked = null;
 										}else{
@@ -239,7 +238,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 							if(vehicle.position.isDistanceToCloserThan(firstPartClicked.position, 16)){
 								if(vehicle.fuelTank.getFluid().isEmpty() || firstPartClicked.tank.getFluid().isEmpty() || vehicle.fuelTank.getFluid().equals(firstPartClicked.tank.getFluid())){
 									firstPartClicked.linkedVehicle = vehicle;
-									InterfacePacket.sendToAllClients(new PacketPartInteractable(firstPartClicked, player));
+									InterfaceManager.packetInterface.sendToAllClients(new PacketPartInteractable(firstPartClicked, player));
 									player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELHOSE_SECONDLINK));
 									firstPartClicked = null;
 								}else{
@@ -270,8 +269,8 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 								}else if(engine.position.isDistanceToCloserThan(firstEngineClicked.position, 15)){
 									engine.linkedEngine = firstEngineClicked;
 									firstEngineClicked.linkedEngine = engine;
-									InterfacePacket.sendToAllClients(new PacketPartEngine(engine, firstEngineClicked));
-									InterfacePacket.sendToAllClients(new PacketPartEngine(firstEngineClicked, engine));
+									InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(engine, firstEngineClicked));
+									InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(firstEngineClicked, engine));
 									firstEngineClicked = null;
 									player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_JUMPERCABLE_SECONDLINK));
 								}else{
@@ -291,7 +290,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 					//Use jumper on vehicle.
 					vehicle.electricPower = 12;
 					if(!vehicle.world.isClient()){
-						InterfacePacket.sendToPlayer(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_VEHICLE_JUMPERPACK), player);
+						InterfaceManager.packetInterface.sendToPlayer(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_VEHICLE_JUMPERPACK), player);
 						if(!player.isCreative()){
 							player.getInventory().removeFromSlot(player.getHotbarIndex(), 1);
 						}
@@ -305,7 +304,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 	}
 	
 	@Override
-	public boolean onBlockClicked(WrapperWorld world, WrapperPlayer player, Point3D position, Axis axis){
+	public boolean onBlockClicked(AWrapperWorld world, IWrapperPlayer player, Point3D position, Axis axis){
 		if(definition.item.type.equals(ItemComponentType.PAINT_GUN)){
 			if(!world.isClient()){
 				ATileEntityBase<?> tile = world.getTileEntity(position);
@@ -327,7 +326,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 	}
 	
 	@Override
-	public boolean onUsed(WrapperWorld world, WrapperPlayer player){
+	public boolean onUsed(AWrapperWorld world, IWrapperPlayer player){
 		if(definition.item.type.equals(ItemComponentType.BOOKLET)){
 			if(!world.isClient()){
 				player.sendPacket(new PacketGUIRequest(player, PacketGUIRequest.GUIType.BOOKELET));
@@ -336,15 +335,15 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 			if(!world.isClient() && player.isOP()){
 				for(EntityVehicleF_Physics vehicle : world.getEntitiesOfType(EntityVehicleF_Physics.class)){
 					vehicle.setVariable(EntityVehicleF_Physics.THROTTLE_VARIABLE, 0);
-					InterfacePacket.sendToAllClients(new PacketEntityVariableSet(vehicle, EntityVehicleF_Physics.THROTTLE_VARIABLE, 0));
+					InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(vehicle, EntityVehicleF_Physics.THROTTLE_VARIABLE, 0));
 					if(!vehicle.isVariableActive(EntityVehicleF_Physics.PARKINGBRAKE_VARIABLE)){
 						vehicle.setVariable(EntityVehicleF_Physics.PARKINGBRAKE_VARIABLE, 1);
-						InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.PARKINGBRAKE_VARIABLE));
+						InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.PARKINGBRAKE_VARIABLE));
 					}
 					for(PartEngine engine : vehicle.engines.values()){
 						if(engine.isVariableActive(PartEngine.MAGNETO_VARIABLE)){
 							engine.setVariable(PartEngine.MAGNETO_VARIABLE, 0);
-							InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(engine, PartEngine.MAGNETO_VARIABLE));
+							InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableToggle(engine, PartEngine.MAGNETO_VARIABLE));
 						}
 					}
 				}

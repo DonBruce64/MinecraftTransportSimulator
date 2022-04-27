@@ -8,10 +8,10 @@ import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
-import minecrafttransportsimulator.mcinterface.InterfacePacket;
-import minecrafttransportsimulator.mcinterface.WrapperEntity;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPartGroundDevice;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
@@ -52,7 +52,7 @@ public class PartGroundDevice extends APart{
 	private final Point3D prevLocalOffset;
 	private final PartGroundDeviceFake fakePart;
 	
-	public PartGroundDevice(AEntityF_Multipart<?> entityOn, WrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, WrapperNBT data, APart parentPart){
+	public PartGroundDevice(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, IWrapperNBT data, APart parentPart){
 		super(entityOn, placingPlayer, placementDefinition, data, parentPart);
 		this.isFlat = data.getBoolean("isFlat");
 		this.prevLocalOffset = localOffset.copy();
@@ -151,7 +151,7 @@ public class PartGroundDevice extends APart{
 					}else{
 						wheelDamageAmount = ConfigSystem.settings.damage.wheelDamageFactor.value*vehicleOn.currentMass/1000F;
 					}
-					WrapperEntity controller = vehicleOn.getController();
+					IWrapperEntity controller = vehicleOn.getController();
 					LanguageEntry language = controller != null ? JSONConfigLanguage.DEATH_WHEEL_PLAYER : JSONConfigLanguage.DEATH_WHEEL_NULL;
 					Damage wheelDamage = new Damage(wheelDamageAmount, boundingBox, this, controller, language);
 					vehicleOn.world.attackEntities(wheelDamage, null);
@@ -253,7 +253,7 @@ public class PartGroundDevice extends APart{
 				}
 			}
 			//Valid conditions, send packet before continuing.
-			InterfacePacket.sendToAllClients(new PacketPartGroundDevice(this, setFlat));
+			InterfaceManager.packetInterface.sendToAllClients(new PacketPartGroundDevice(this, setFlat));
 		}
 		
 		//Set flat state and new bounding box.
@@ -313,7 +313,7 @@ public class PartGroundDevice extends APart{
 	}
 	
 	@Override
-	public WrapperNBT save(WrapperNBT data){
+	public IWrapperNBT save(IWrapperNBT data){
 		super.save(data);
 		data.setBoolean("isFlat", isFlat);
 		return data;

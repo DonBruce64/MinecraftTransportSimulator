@@ -16,11 +16,11 @@ import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemPartGun;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONPlayerGun;
-import minecrafttransportsimulator.mcinterface.WrapperEntity;
-import minecrafttransportsimulator.mcinterface.WrapperItemStack;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.rendering.instances.RenderPlayerGun;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -37,16 +37,16 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun>{
 	public static final Map<UUID, EntityPlayerGun> playerClientGuns = new HashMap<UUID, EntityPlayerGun>();
 	public static final Map<UUID, EntityPlayerGun> playerServerGuns = new HashMap<UUID, EntityPlayerGun>();
 	
-	public final WrapperPlayer player;
+	public final IWrapperPlayer player;
 	private final RotationMatrix handRotation = new RotationMatrix();
 	private int hotbarSelected = -1;
-	private WrapperItemStack gunStack;
+	private IWrapperItemStack gunStack;
 	private boolean didGunFireLastTick;
 	public PartGun activeGun;
 	
 	private static RenderPlayerGun renderer;
 	
-	public EntityPlayerGun(WrapperWorld world, WrapperPlayer placingPlayer, WrapperNBT data){
+	public EntityPlayerGun(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data){
 		super(world, placingPlayer, data);
 		//Get the player spawning us.
 		if(placingPlayer != null){
@@ -58,11 +58,11 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun>{
 			//Saved entity.  Either on the server or client.
 			//Get player via saved NBT.  If the player isn't found, we're not valid.
 			UUID playerUUID = data.getUUID("playerUUID");
-			WrapperPlayer foundPlayer = null;
-			for(WrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, 16, 16, 16))){
-				if(entity instanceof WrapperPlayer){
-					if(((WrapperPlayer) entity).getID().equals(playerUUID)){
-						foundPlayer = (WrapperPlayer) entity;
+			IWrapperPlayer foundPlayer = null;
+			for(IWrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, 16, 16, 16))){
+				if(entity instanceof IWrapperPlayer){
+					if(((IWrapperPlayer) entity).getID().equals(playerUUID)){
+						foundPlayer = (IWrapperPlayer) entity;
 						break;
 					}
 				}
@@ -279,7 +279,7 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun>{
 	}
 	
 	@Override
-	public WrapperNBT save(WrapperNBT data){
+	public IWrapperNBT save(IWrapperNBT data){
 		super.save(data);
 		if(player != null){
 			data.setUUID("playerUUID", player.getID());

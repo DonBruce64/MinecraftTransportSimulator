@@ -2,7 +2,7 @@ package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
 /**Packet used to increment variable states.  Sent from clients to servers to
@@ -48,7 +48,7 @@ public class PacketEntityVariableIncrement extends APacketEntity<AEntityD_Defina
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, AEntityD_Definable<?> entity){
+	public boolean handle(AWrapperWorld world, AEntityD_Definable<?> entity){
 		return entity.incrementVariable(variableName, incrementValue, minValue, maxValue);
 	}
 }

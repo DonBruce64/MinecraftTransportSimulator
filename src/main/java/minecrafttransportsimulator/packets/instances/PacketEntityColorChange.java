@@ -5,9 +5,9 @@ import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
-import minecrafttransportsimulator.mcinterface.WrapperInventory;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperInventory;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.packets.components.APacketEntityInteract;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
@@ -17,10 +17,10 @@ import minecrafttransportsimulator.systems.PackParserSystem;
  * 
  * @author don_bruce
  */
-public class PacketEntityColorChange extends APacketEntityInteract<AEntityD_Definable<?>, WrapperPlayer>{
+public class PacketEntityColorChange extends APacketEntityInteract<AEntityD_Definable<?>, IWrapperPlayer>{
 	private final AItemSubTyped<?> newItem;
 	
-	public PacketEntityColorChange(AEntityD_Definable<?> entity, WrapperPlayer player, AItemSubTyped<?> newItem){
+	public PacketEntityColorChange(AEntityD_Definable<?> entity, IWrapperPlayer player, AItemSubTyped<?> newItem){
 		super(entity, player);
 		this.newItem = newItem;
 	}
@@ -39,8 +39,8 @@ public class PacketEntityColorChange extends APacketEntityInteract<AEntityD_Defi
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, AEntityD_Definable<?> entity, WrapperPlayer player){
-		WrapperInventory inventory = player.getInventory();
+	public boolean handle(AWrapperWorld world, AEntityD_Definable<?> entity, IWrapperPlayer player){
+		IWrapperInventory inventory = player.getInventory();
 		if(player.isCreative() || inventory.hasMaterials(newItem, false, true, false)){
 			//Remove livery materials (if required) and set new subName.
 			if(!player.isCreative()){

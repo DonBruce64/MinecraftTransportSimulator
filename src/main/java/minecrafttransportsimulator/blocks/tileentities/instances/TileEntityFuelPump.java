@@ -18,13 +18,12 @@ import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONText;
-import minecrafttransportsimulator.mcinterface.InterfaceCore;
-import minecrafttransportsimulator.mcinterface.InterfacePacket;
-import minecrafttransportsimulator.mcinterface.WrapperEntity;
-import minecrafttransportsimulator.mcinterface.WrapperItemStack;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpConnection;
@@ -39,7 +38,7 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityFl
     public boolean isCreative;
 	public UUID placingPlayerID;
 
-    public TileEntityFuelPump(WrapperWorld world, Point3D position, WrapperPlayer placingPlayer, WrapperNBT data){
+    public TileEntityFuelPump(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, IWrapperNBT data){
 		super(world, position, placingPlayer, data);
     	this.tank = new EntityFluidTank(world, data.getDataOrNew("tank"), definition.decor.fuelCapacity){
     		@Override
@@ -93,10 +92,10 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityFl
 			
 			//Check distance to make sure the vehicle hasn't moved away.
 			if(!connectedVehicle.position.isDistanceToCloserThan(position, 15)){
-				InterfacePacket.sendToAllClients(new PacketTileEntityFuelPumpConnection(this, false));
-				for(WrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, 25, 25, 25))){
-					if(entity instanceof WrapperPlayer){
-						((WrapperPlayer) entity).sendPacket(new PacketPlayerChatMessage((WrapperPlayer) entity, JSONConfigLanguage.INTERACT_FUELPUMP_TOOFAR));
+				InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityFuelPumpConnection(this, false));
+				for(IWrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, 25, 25, 25))){
+					if(entity instanceof IWrapperPlayer){
+						((IWrapperPlayer) entity).sendPacket(new PacketPlayerChatMessage((IWrapperPlayer) entity, JSONConfigLanguage.INTERACT_FUELPUMP_TOOFAR));
 					}
 				}
 				connectedVehicle.beingFueled = false;
@@ -112,23 +111,23 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityFl
 					tank.drain(tank.getFluid(), amountToDrain, true);
 				}else{
 					//No more room in the vehicle.  Disconnect.
-					InterfacePacket.sendToAllClients(new PacketTileEntityFuelPumpConnection(this, false));
+					InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityFuelPumpConnection(this, false));
 					connectedVehicle.beingFueled = false;
 					connectedVehicle = null;
-					for(WrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, 16, 16, 16))){
-						if(entity instanceof WrapperPlayer){
-							((WrapperPlayer) entity).sendPacket(new PacketPlayerChatMessage((WrapperPlayer) entity, JSONConfigLanguage.INTERACT_FUELPUMP_COMPLETE));
+					for(IWrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, 16, 16, 16))){
+						if(entity instanceof IWrapperPlayer){
+							((IWrapperPlayer) entity).sendPacket(new PacketPlayerChatMessage((IWrapperPlayer) entity, JSONConfigLanguage.INTERACT_FUELPUMP_COMPLETE));
 						}
 					}
 				}
 			}else{
 				//No more fuel.  Disconnect vehicle.
-				InterfacePacket.sendToAllClients(new PacketTileEntityFuelPumpConnection(this, false));
+				InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityFuelPumpConnection(this, false));
 				connectedVehicle.beingFueled = false;
 				connectedVehicle = null;
-				for(WrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, 16, 16, 16))){
-					if(entity instanceof WrapperPlayer){
-						((WrapperPlayer) entity).sendPacket(new PacketPlayerChatMessage((WrapperPlayer) entity, JSONConfigLanguage.INTERACT_FUELPUMP_EMPTY));
+				for(IWrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, 16, 16, 16))){
+					if(entity instanceof IWrapperPlayer){
+						((IWrapperPlayer) entity).sendPacket(new PacketPlayerChatMessage((IWrapperPlayer) entity, JSONConfigLanguage.INTERACT_FUELPUMP_EMPTY));
 					}
 				}
 			}
@@ -136,19 +135,19 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityFl
 	}
 	
 	@Override
-	public boolean interact(WrapperPlayer player){		
+	public boolean interact(IWrapperPlayer player){		
 		//If we are holding an item, interact with the pump.
 		if(player.getHeldStack().interactWith(tank, player)){
 			return true;
 		}
 		
 		//Check if the item is a jerrycan.
-		WrapperItemStack stack = player.getHeldStack();
+		IWrapperItemStack stack = player.getHeldStack();
 		AItemBase item = stack.getItem();
 		if(item instanceof ItemPartInteractable){
 			ItemPartInteractable interactable = (ItemPartInteractable) item;
 			if(interactable.definition.interactable.interactionType.equals(InteractableComponentType.JERRYCAN)){
-				WrapperNBT data = stack.getData();
+				IWrapperNBT data = stack.getData();
 				if(data.getString("jerrycanFluid").isEmpty()){
 					if(tank.getFluidLevel() >= 1000){
 						data.setString("jerrycanFluid", tank.getFluid());
@@ -206,7 +205,7 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityFl
 								connectedVehicle = nearestVehicle;
 								connectedVehicle.beingFueled = true;
 								tank.resetAmountDispensed();
-								InterfacePacket.sendToAllClients(new PacketTileEntityFuelPumpConnection(this, true));
+								InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityFuelPumpConnection(this, true));
 								player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELPUMP_CONNECT));
 	    						return true;
 							}
@@ -219,7 +218,7 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityFl
 			}
 		}else{
 			//Connected vehicle exists, disconnect it.
-			InterfacePacket.sendToAllClients(new PacketTileEntityFuelPumpConnection(this, false));
+			InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityFuelPumpConnection(this, false));
 			connectedVehicle.beingFueled = false;
 			connectedVehicle = null;
 			player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELPUMP_DISCONNECT));
@@ -248,17 +247,17 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityFl
 	@Override
 	public String getRawTextVariableValue(JSONText textDef, float partialTicks){
 		if(textDef.variableName.equals("fuelpump_fluid")){
-			return tank.getFluidLevel() > 0 ? InterfaceCore.getFluidName(tank.getFluid()) : "";
+			return tank.getFluidLevel() > 0 ? InterfaceManager.coreInterface.getFluidName(tank.getFluid()) : "";
 		}
 		
 		return super.getRawTextVariableValue(textDef, partialTicks);
 	}
 	
 	@Override
-	public WrapperNBT save(WrapperNBT data){
+	public IWrapperNBT save(IWrapperNBT data){
 		super.save(data);
-		data.setData("tank", tank.save(InterfaceCore.getNewNBTWrapper()));
-		data.setData("inventory", fuelItems.save(InterfaceCore.getNewNBTWrapper()));
+		data.setData("tank", tank.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
+		data.setData("inventory", fuelItems.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
 		for(int i=0; i<fuelItems.getSize(); ++i){
     		data.setInteger("fuelAmount" + i, fuelAmounts.get(i));
     	}

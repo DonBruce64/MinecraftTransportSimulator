@@ -6,8 +6,8 @@ import java.util.Map;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 
 /**Interface that allows for this item to spawn an instance of {@link ABlockBase} into the world.
  * This interface doesn't actually spawn the item; rather, it allows such an item to be obtained.
@@ -60,7 +60,7 @@ public interface IItemBlock{
 	 *  Tries to let this player place the block for this IItemBlock into the world.
 	 *  Returns true if the block was placed.
 	 */
-	public default boolean placeBlock(WrapperWorld world, WrapperPlayer player, Point3D position, Axis axis){
+	public default boolean placeBlock(AWrapperWorld world, IWrapperPlayer player, Point3D position, Axis axis){
 		return world.setBlock(getBlock(), position, player, axis);
 	}
 }

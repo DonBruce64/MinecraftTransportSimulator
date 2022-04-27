@@ -17,12 +17,11 @@ import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
-import minecrafttransportsimulator.mcinterface.InterfaceCore;
-import minecrafttransportsimulator.mcinterface.InterfacePacket;
-import minecrafttransportsimulator.mcinterface.WrapperItemStack;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketFurnaceFuelAdd;
 import minecrafttransportsimulator.packets.instances.PacketItemInteractable;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
@@ -40,12 +39,12 @@ public class ItemPartInteractable extends AItemPart implements IItemVehicleInter
 	}
 	
 	@Override
-	public PartInteractable createPart(AEntityF_Multipart<?> entity, WrapperPlayer placingPlayer, JSONPartDefinition packVehicleDef, WrapperNBT partData, APart parentPart){
+	public PartInteractable createPart(AEntityF_Multipart<?> entity, IWrapperPlayer placingPlayer, JSONPartDefinition packVehicleDef, IWrapperNBT partData, APart parentPart){
 		return new PartInteractable(entity, placingPlayer, packVehicleDef, partData, parentPart);
 	}
 	
 	@Override
-	public void addTooltipLines(List<String> tooltipLines, WrapperNBT data){
+	public void addTooltipLines(List<String> tooltipLines, IWrapperNBT data){
 		super.addTooltipLines(tooltipLines, data);
 		switch(definition.interactable.interactionType){
 			case CRATE : {
@@ -63,7 +62,7 @@ public class ItemPartInteractable extends AItemPart implements IItemVehicleInter
 				if(jerrycanFluid.isEmpty()){
 					tooltipLines.add(JSONConfigLanguage.ITEMINFO_JERRYCAN_EMPTY.value);
 				}else{
-					tooltipLines.add(JSONConfigLanguage.ITEMINFO_JERRYCAN_CONTAINS.value + InterfaceCore.getFluidName(jerrycanFluid));
+					tooltipLines.add(JSONConfigLanguage.ITEMINFO_JERRYCAN_CONTAINS.value + InterfaceManager.coreInterface.getFluidName(jerrycanFluid));
 				}
 				break;
 			}
@@ -74,12 +73,12 @@ public class ItemPartInteractable extends AItemPart implements IItemVehicleInter
 	}
 	
 	@Override
-	public CallbackType doVehicleInteraction(EntityVehicleF_Physics vehicle, APart part, BoundingBox hitBox, WrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick){
+	public CallbackType doVehicleInteraction(EntityVehicleF_Physics vehicle, APart part, BoundingBox hitBox, IWrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick){
 		if(definition.interactable.interactionType.equals(InteractableComponentType.JERRYCAN)){
 			if(!vehicle.world.isClient()){
 				if(rightClick){
-					WrapperItemStack stack = player.getHeldStack();
-					WrapperNBT data = stack.getData();
+					IWrapperItemStack stack = player.getHeldStack();
+					IWrapperNBT data = stack.getData();
 					String jerrrycanFluid = data.getString("jerrycanFluid");
 					
 					//If we clicked a tank on the vehicle, attempt to pull from it rather than fill the vehicle.
@@ -103,7 +102,7 @@ public class ItemPartInteractable extends AItemPart implements IItemVehicleInter
 								 int addedFuel = (int) (ConfigSystem.settings.fuel.fuels.get(EntityFurnace.FURNACE_FUEL_NAME).get(jerrrycanFluid)*1000*20*furnace.definition.furnaceEfficiency);
 								 int priorFuel = furnace.ticksLeftOfFuel; 
 								 furnace.ticksLeftOfFuel = addedFuel;
-								 InterfacePacket.sendToAllClients(new PacketFurnaceFuelAdd(furnace));
+								 InterfaceManager.packetInterface.sendToAllClients(new PacketFurnaceFuelAdd(furnace));
 								 furnace.ticksLeftOfFuel += priorFuel;
 								 furnace.ticksAddedOfFuel = furnace.ticksLeftOfFuel;
 								 
@@ -138,7 +137,7 @@ public class ItemPartInteractable extends AItemPart implements IItemVehicleInter
 	}
 	
 	@Override
-	public boolean onUsed(WrapperWorld world, WrapperPlayer player){
+	public boolean onUsed(AWrapperWorld world, IWrapperPlayer player){
 		if(definition.interactable.canBeOpenedInHand && definition.interactable.interactionType.equals(InteractableComponentType.CRATE)){
 			if(!world.isClient()){
 				EntityInventoryContainer inventory = new EntityInventoryContainer(world, player.getHeldStack().getData().getDataOrNew("inventory"), (int) (definition.interactable.inventoryUnits*9F));

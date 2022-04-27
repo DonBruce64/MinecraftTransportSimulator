@@ -7,7 +7,7 @@ import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.PartEngine;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
 /**Packet used to send signals to engines.  This can be a state change or damage from an attack.
@@ -99,7 +99,7 @@ public class PacketPartEngine extends APacketEntity<PartEngine>{
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, PartEngine engine){
+	public boolean handle(AWrapperWorld world, PartEngine engine){
 		switch(packetType){
 			case HS_ON: engine.handStartEngine(); break;
 			case AS_ON: engine.autoStartEngine(); break;

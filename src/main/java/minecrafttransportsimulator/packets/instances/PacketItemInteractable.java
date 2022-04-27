@@ -5,11 +5,10 @@ import java.util.UUID;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
 import minecrafttransportsimulator.guis.instances.GUIInventoryContainer;
-import minecrafttransportsimulator.mcinterface.InterfaceCore;
-import minecrafttransportsimulator.mcinterface.InterfacePacket;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.components.APacketPlayer;
 
 /**Packet used to sync hand-held interactable crate inventory.  This is first sent by the server to the client
@@ -23,19 +22,19 @@ import minecrafttransportsimulator.packets.components.APacketPlayer;
  */
 public class PacketItemInteractable extends APacketPlayer{
 	private final UUID uniqueUUID;
-	private final WrapperNBT data;
+	private final IWrapperNBT data;
 	private final int units;
 	private final String texture;
 	
-	public PacketItemInteractable(WrapperPlayer player, EntityInventoryContainer inventory, String texture){
+	public PacketItemInteractable(IWrapperPlayer player, EntityInventoryContainer inventory, String texture){
 		super(player);
 		this.uniqueUUID = inventory.uniqueUUID;
-		this.data = inventory.save(InterfaceCore.getNewNBTWrapper());
+		this.data = inventory.save(InterfaceManager.coreInterface.getNewNBTWrapper());
 		this.units = inventory.getSize();
 		this.texture = texture;
 	}
 	
-	private PacketItemInteractable(WrapperPlayer player, UUID uniqueUUID){
+	private PacketItemInteractable(IWrapperPlayer player, UUID uniqueUUID){
 		super(player);
 		this.uniqueUUID = uniqueUUID;
 		this.data = null;
@@ -81,7 +80,7 @@ public class PacketItemInteractable extends APacketPlayer{
 	}
 	
 	@Override
-	public void handle(WrapperWorld world, WrapperPlayer player){
+	public void handle(AWrapperWorld world, IWrapperPlayer player){
 		if(world.isClient()){
 			//Create new inventory container ad-hoc to match server's data.
 			//We then delete this container, and the one on the server, when the GUI is closed.
@@ -90,7 +89,7 @@ public class PacketItemInteractable extends APacketPlayer{
 				@Override
 				public void close(){
 					super.close();
-					InterfacePacket.sendToServer(new PacketItemInteractable(player, uniqueUUID));
+					InterfaceManager.packetInterface.sendToServer(new PacketItemInteractable(player, uniqueUUID));
 					inventory.remove();
 				}
 			};

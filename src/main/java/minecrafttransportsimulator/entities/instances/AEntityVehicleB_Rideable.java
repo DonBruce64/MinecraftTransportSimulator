@@ -9,12 +9,11 @@ import minecrafttransportsimulator.guis.instances.GUIPanelGround;
 import minecrafttransportsimulator.guis.instances.GUIRadio;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
-import minecrafttransportsimulator.mcinterface.InterfaceClient;
-import minecrafttransportsimulator.mcinterface.InterfaceInput;
-import minecrafttransportsimulator.mcinterface.WrapperEntity;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ControlSystem;
 
@@ -32,7 +31,7 @@ abstract class AEntityVehicleB_Rideable extends AEntityG_Towable<JSONVehicle>{
 	/**Cached value for speedFactor.  Saves us from having to use the long form all over.*/
 	public final double speedFactor;
 	
-	public AEntityVehicleB_Rideable(WrapperWorld world, WrapperPlayer placingPlayer, WrapperNBT data){
+	public AEntityVehicleB_Rideable(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data){
 		super(world, placingPlayer, data);
 		this.speedFactor = (definition.motorized.isAircraft ? ConfigSystem.settings.general.aircraftSpeedFactor.value : ConfigSystem.settings.general.carSpeedFactor.value)*ConfigSystem.settings.general.packSpeedFactors.value.get(definition.packID);
 		double vehicleScale = ConfigSystem.settings.general.packVehicleScales.value.get(definition.packID);
@@ -45,7 +44,7 @@ abstract class AEntityVehicleB_Rideable extends AEntityG_Towable<JSONVehicle>{
 	}
 	
 	@Override
-	public void updateRider(WrapperEntity rider){
+	public void updateRider(IWrapperEntity rider){
 		//We override the default rider update behavior here as the riders can move depending
 		//on how the part they are riding moves.  If we modified the rider position, then we'd
 		//allow for multiple riders at the same position.  That's Bad Stuff.
@@ -78,9 +77,9 @@ abstract class AEntityVehicleB_Rideable extends AEntityG_Towable<JSONVehicle>{
 			//If the seat is a controller, and we have mouseYoke enabled, and our view is locked disable the mouse from MC.            	
             //We also need to make sure the player in this event is the actual client player.  If we are on a server,
             //another player could be getting us to this logic point and thus we'd be making their inputs in the vehicle.
-			if(world.isClient() && !InterfaceClient.isChatOpen() && rider.equals(InterfaceClient.getClientPlayer())){
+			if(world.isClient() && !InterfaceManager.clientInterface.isChatOpen() && rider.equals(InterfaceManager.clientInterface.getClientPlayer())){
     			ControlSystem.controlVehicle((EntityVehicleF_Physics) this, seat.placementDefinition.isController);
-    			InterfaceInput.setMouseEnabled(!(seat.placementDefinition.isController && ConfigSystem.client.controlSettings.mouseYoke.value && lockCameraToMovement));
+    			InterfaceManager.inputInterface.setMouseEnabled(!(seat.placementDefinition.isController && ConfigSystem.client.controlSettings.mouseYoke.value && lockCameraToMovement));
     		}
 		}else{
 			//Remove invalid rider.
@@ -89,7 +88,7 @@ abstract class AEntityVehicleB_Rideable extends AEntityG_Towable<JSONVehicle>{
 	}
 	
 	@Override
-	public boolean addRider(WrapperEntity rider, Point3D riderLocation){
+	public boolean addRider(IWrapperEntity rider, Point3D riderLocation){
 		//We override the default rider addition behavior here as we need to rotate
 		//riders to face forwards in seats that they start riding in.
 		//Check if this rider is already riding this vehicle.
@@ -108,7 +107,7 @@ abstract class AEntityVehicleB_Rideable extends AEntityG_Towable<JSONVehicle>{
 				rider.setPitch(0);
 			}else{
 				//Clear out the panel if we're not in a controller seat.
-				if(world.isClient() && InterfaceClient.getClientPlayer().equals(rider)){
+				if(world.isClient() && InterfaceManager.clientInterface.getClientPlayer().equals(rider)){
 					if(definition.motorized.isAircraft){
 						AGUIBase.closeIfOpen(GUIPanelAircraft.class);
 					}else{
@@ -119,7 +118,7 @@ abstract class AEntityVehicleB_Rideable extends AEntityG_Towable<JSONVehicle>{
 				AGUIBase.closeIfOpen(GUIHUD.class);
 			}
 			//Open HUD if seat is controller. 
-			if(world.isClient() && InterfaceClient.getClientPlayer().equals(rider)){
+			if(world.isClient() && InterfaceManager.clientInterface.getClientPlayer().equals(rider)){
 				new GUIHUD((EntityVehicleF_Physics) this, sittingSeat);
 			}
 		}
@@ -128,7 +127,7 @@ abstract class AEntityVehicleB_Rideable extends AEntityG_Towable<JSONVehicle>{
 	}
 	
 	@Override
-	public void removeRider(WrapperEntity rider){
+	public void removeRider(IWrapperEntity rider){
 		//We override the default rider removal behavior here as the dismount position
 		//of riders can be modified via JSON or via part placement location.
 		//Get the position the rider was sitting in before we dismount them.
@@ -170,9 +169,9 @@ abstract class AEntityVehicleB_Rideable extends AEntityG_Towable<JSONVehicle>{
 		rider.setOrientation(orientation);
 		
 		//If we are on the client, disable mouse-yoke blocking.
-		if(world.isClient() && InterfaceClient.getClientPlayer().equals(rider)){
+		if(world.isClient() && InterfaceManager.clientInterface.getClientPlayer().equals(rider)){
 			//Client player is the one that left the vehicle.  Make sure they don't have their mouse locked or a GUI open.
-			InterfaceInput.setMouseEnabled(true);
+			InterfaceManager.inputInterface.setMouseEnabled(true);
 			if(definition.motorized.isAircraft){
 				AGUIBase.closeIfOpen(GUIPanelAircraft.class);
 			}else{

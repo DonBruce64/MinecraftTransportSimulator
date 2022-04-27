@@ -8,7 +8,7 @@ import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartGroundDevice;
 
-/**This class is a wrapper for vehicle ground device collision points.  It's used to get a point
+/**This class is a IWrapper for vehicle ground device collision points.  It's used to get a point
  * to reference for ground collisions, and contains helper methods for doing calculations of those
  * points.  Four of these can be used in a set to get four ground device points to use in
  * ground device operations on a vehicle.  Note that this class differentiates between floating

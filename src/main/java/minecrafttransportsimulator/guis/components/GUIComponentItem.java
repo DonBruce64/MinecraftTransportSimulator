@@ -4,13 +4,12 @@ import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
-import minecrafttransportsimulator.mcinterface.InterfaceClient;
-import minecrafttransportsimulator.mcinterface.InterfaceRender;
-import minecrafttransportsimulator.mcinterface.WrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.instances.RenderText;
 import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
 
-/**Custom item render class.  This class is designed to render a {@link WrapperItemStack} 
+/**Custom item render class.  This class is designed to render a {@link IWrapperItemStack} 
  * or list of stacks into the GUI.  This allows us to use a simple string 
  * name for the render rather than a bunch of MC calls.
  * Note that this component does not get a stack assigned during construction: you must
@@ -24,9 +23,9 @@ import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
  */
 public class GUIComponentItem extends AGUIComponent{		
 	public final float scale;
-	public WrapperItemStack stack;
-	public List<WrapperItemStack> stacks;
-	private WrapperItemStack stackToRender;
+	public IWrapperItemStack stack;
+	public List<IWrapperItemStack> stacks;
+	private IWrapperItemStack stackToRender;
 	private TransformationMatrix transform = new TransformationMatrix();
 	
 	/**Default item constructor.**/
@@ -63,7 +62,7 @@ public class GUIComponentItem extends AGUIComponent{
     		transform.resetTransforms();
     		transform.setTranslation(position.x, position.y, position.z);
     		transform.applyScaling(scale, scale, scale);
-    		InterfaceRender.renderItemModel(stackToRender, transform);
+    		InterfaceManager.renderingInterface.renderItemModel(stackToRender, transform);
     		
     		if(stackToRender.getSize() > 1){
     			text = String.valueOf(RenderText.FORMATTING_CHAR) + String.valueOf(RenderText.BOLD_FORMATTING_CHAR) + String.valueOf(stackToRender.getSize());
@@ -81,7 +80,7 @@ public class GUIComponentItem extends AGUIComponent{
     @Override
 	public List<String> getTooltipText(){
     	if(stackToRender != null && !stackToRender.isEmpty()){
-			return InterfaceClient.getTooltipLines(stackToRender);
+			return InterfaceManager.clientInterface.getTooltipLines(stackToRender);
     	}else{
     		return null;
     	}

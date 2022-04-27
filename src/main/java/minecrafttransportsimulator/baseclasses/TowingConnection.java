@@ -7,8 +7,8 @@ import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.jsondefs.JSONConnection;
 import minecrafttransportsimulator.jsondefs.JSONConnectionGroup;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 
 /**Class for easier save/load of towing connections.
  * 
@@ -46,7 +46,7 @@ public class TowingConnection{
 		initConnection(hitchEntity.world);
 	}
 	
-	public TowingConnection(WrapperNBT data){
+	public TowingConnection(IWrapperNBT data){
 		this.hitchEntityUUID = data.getUUID("hitchEntityUUID");
 		this.hookupEntityUUID = data.getUUID("hookupEntityUUID");
 		this.hitchGroupIndex = data.getInteger("hitchGroupIndex");
@@ -62,7 +62,7 @@ public class TowingConnection{
 	 * times of entities in the world.  Just call it during later ticks for a few calls until you think
 	 * too much time has passed and the entities just don't exist in the world.
 	 */
-	public boolean initConnection(WrapperWorld world){		
+	public boolean initConnection(AWrapperWorld world){		
 		if(towingEntity == null){
 			towingEntity = world.getEntity(hitchEntityUUID);
 			if(towingEntity != null){
@@ -83,7 +83,7 @@ public class TowingConnection{
 		return hitchConnection != null && hookupConnection != null;
 	}
 	
-	public WrapperNBT save(WrapperNBT data){
+	public IWrapperNBT save(IWrapperNBT data){
 		data.setUUID("hitchEntityUUID", hitchEntityUUID);
 		data.setUUID("hookupEntityUUID", hookupEntityUUID);
 		data.setInteger("hitchGroupIndex", hitchGroupIndex);

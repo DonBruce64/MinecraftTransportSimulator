@@ -191,8 +191,7 @@ public class JSONVehicle extends AJSONPartProvider{
         public Point3D hookupPos;
     	@Deprecated
         public String hookupType;
-    	@SuppressWarnings("hiding")
-		@Deprecated
+    	@Deprecated
         public List<JSONInstrumentDefinition> instruments;
     }
     

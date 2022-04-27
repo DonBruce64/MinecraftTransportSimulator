@@ -2,7 +2,7 @@ package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.entities.instances.PartGroundDevice;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
 /**Packet used to send signals to ground devices.  Currently only used to make wheel-typed
@@ -30,7 +30,7 @@ public class PacketPartGroundDevice extends APacketEntity<PartGroundDevice>{
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, PartGroundDevice groundDevice){
+	public boolean handle(AWrapperWorld world, PartGroundDevice groundDevice){
 		groundDevice.setFlatState(flat);
 		return true;
 	}

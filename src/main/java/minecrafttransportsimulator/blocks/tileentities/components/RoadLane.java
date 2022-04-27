@@ -15,9 +15,8 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad.
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent.JSONLaneSector;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent.JSONLaneSectorEndPoint;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent.JSONLaneSectorPointSet;
-import minecrafttransportsimulator.mcinterface.InterfaceCore;
-import minecrafttransportsimulator.mcinterface.InterfacePacket;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityRoadConnectionUpdate;
 
 /**Helper class for containing lane data.  Lanes contain a reference to the road
@@ -38,7 +37,7 @@ public class RoadLane{
 	
 	private static final double CURVE_CONNECTION_MAX_DISTANCE = 0.20;
 	
-	public RoadLane(TileEntityRoad road, int sectorNumber, int laneNumber, int sectorLaneNumber, WrapperNBT data){
+	public RoadLane(TileEntityRoad road, int sectorNumber, int laneNumber, int sectorLaneNumber, IWrapperNBT data){
 		this.road = road;
 		this.sectorNumber = sectorNumber;
 		this.sectorLaneNumber = sectorLaneNumber;
@@ -57,11 +56,11 @@ public class RoadLane{
 				int numberNextConnections = data.getInteger("numberNextConnections" + i);
 				
 				for(int j=0; j<numberPriorConnections; ++j){
-					WrapperNBT connectionData = data.getData("priorConnection" + i + "_" + j);
+					IWrapperNBT connectionData = data.getData("priorConnection" + i + "_" + j);
 					priorConnections.get(i).add(new RoadLaneConnection(connectionData));
 				}
 				for(int j=0; j<numberNextConnections; ++j){
-					WrapperNBT connectionData = data.getData("nextConnection" + i + "_" + j);
+					IWrapperNBT connectionData = data.getData("nextConnection" + i + "_" + j);
 					nextConnections.get(i).add(new RoadLaneConnection(connectionData));
 				}
 			}
@@ -145,13 +144,13 @@ public class RoadLane{
 									priorConnections.get(curveNumber).add(new RoadLaneConnection(otherRoadLane, otherRoadCurve, true));
 									RoadLaneConnection ourConnection = new RoadLaneConnection(this, curve, true);
 									otherRoadLane.priorConnections.get(otherCurveNumber).add(ourConnection);
-									InterfacePacket.sendToAllClients(new PacketTileEntityRoadConnectionUpdate(otherRoadLane, otherCurveNumber, true, ourConnection));
+									InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityRoadConnectionUpdate(otherRoadLane, otherCurveNumber, true, ourConnection));
 								}else if(curve.startPos.isDistanceToCloserThan(otherRoadCurve.endPos, CURVE_CONNECTION_MAX_DISTANCE)){
 									//Start to end connection.
 									priorConnections.get(curveNumber).add(new RoadLaneConnection(otherRoadLane, otherRoadCurve, false));
 									RoadLaneConnection ourConnection = new RoadLaneConnection(this, curve, true);
 									otherRoadLane.nextConnections.get(otherCurveNumber).add(ourConnection);
-									InterfacePacket.sendToAllClients(new PacketTileEntityRoadConnectionUpdate(otherRoadLane, otherCurveNumber, false, ourConnection));
+									InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityRoadConnectionUpdate(otherRoadLane, otherCurveNumber, false, ourConnection));
 								}
 							}else{
 								if(curve.endPos.isDistanceToCloserThan(otherRoadCurve.startPos, CURVE_CONNECTION_MAX_DISTANCE)){
@@ -159,13 +158,13 @@ public class RoadLane{
 									nextConnections.get(curveNumber).add(new RoadLaneConnection(otherRoadLane, otherRoadCurve, true));
 									RoadLaneConnection ourConnection = new RoadLaneConnection(this, curve, false);
 									otherRoadLane.priorConnections.get(otherCurveNumber).add(ourConnection);
-									InterfacePacket.sendToAllClients(new PacketTileEntityRoadConnectionUpdate(otherRoadLane, otherCurveNumber, true, ourConnection));
+									InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityRoadConnectionUpdate(otherRoadLane, otherCurveNumber, true, ourConnection));
 								}else if(!disableSameSideConnections && curve.endPos.isDistanceToCloserThan(otherRoadCurve.endPos, CURVE_CONNECTION_MAX_DISTANCE)){
 									//End to end connection.
 									nextConnections.get(curveNumber).add(new RoadLaneConnection(otherRoadLane, otherRoadCurve, false));
 									RoadLaneConnection ourConnection = new RoadLaneConnection(this, curve, false);
 									otherRoadLane.nextConnections.get(otherCurveNumber).add(ourConnection);
-									InterfacePacket.sendToAllClients(new PacketTileEntityRoadConnectionUpdate(otherRoadLane, otherCurveNumber, false, ourConnection));
+									InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityRoadConnectionUpdate(otherRoadLane, otherCurveNumber, false, ourConnection));
 								}
 							}
 						}
@@ -198,13 +197,13 @@ public class RoadLane{
 					//If it's connected to the end, remove the next connections.
 					if(curvePriorConnection.connectedToStart){
 						otherLane.priorConnections.get(curvePriorConnection.curveNumber).clear();
-						InterfacePacket.sendToAllClients(new PacketTileEntityRoadConnectionUpdate(otherLane, curvePriorConnection.curveNumber, true, null));
+						InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityRoadConnectionUpdate(otherLane, curvePriorConnection.curveNumber, true, null));
 					}else{
 						otherLane.nextConnections.get(curvePriorConnection.curveNumber).clear();
-						InterfacePacket.sendToAllClients(new PacketTileEntityRoadConnectionUpdate(otherLane, curvePriorConnection.curveNumber, false, null));
+						InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityRoadConnectionUpdate(otherLane, curvePriorConnection.curveNumber, false, null));
 					}
 				}catch(Exception e){
-					InterfaceCore.logError("Couldn't get TE at position " + curvePriorConnection.tileLocation + " to break prior road connection.  Was it changed?");
+					InterfaceManager.coreInterface.logError("Couldn't get TE at position " + curvePriorConnection.tileLocation + " to break prior road connection.  Was it changed?");
 				}
 			}
 		}
@@ -221,13 +220,13 @@ public class RoadLane{
 					//If it's connected to the end, remove the next connections.
 					if(curveNextConnection.connectedToStart){
 						otherLane.priorConnections.get(curveNextConnection.curveNumber).clear();
-						InterfacePacket.sendToAllClients(new PacketTileEntityRoadConnectionUpdate(otherLane, curveNextConnection.curveNumber, true, null));
+						InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityRoadConnectionUpdate(otherLane, curveNextConnection.curveNumber, true, null));
 					}else{
 						otherLane.nextConnections.get(curveNextConnection.curveNumber).clear();
-						InterfacePacket.sendToAllClients(new PacketTileEntityRoadConnectionUpdate(otherLane, curveNextConnection.curveNumber, false, null));
+						InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityRoadConnectionUpdate(otherLane, curveNextConnection.curveNumber, false, null));
 					}
 				}catch(Exception e){
-					InterfaceCore.logError("Couldn't get TE at position " + curveNextConnection.tileLocation + " to break next road connection.  Was it changed?");
+					InterfaceManager.coreInterface.logError("Couldn't get TE at position " + curveNextConnection.tileLocation + " to break next road connection.  Was it changed?");
 				}
 			}
 		}
@@ -257,22 +256,22 @@ public class RoadLane{
 		return null;
 	}
 	
-	public WrapperNBT getData(){
-		WrapperNBT data = InterfaceCore.getNewNBTWrapper();
+	public IWrapperNBT getData(){
+		IWrapperNBT data = InterfaceManager.coreInterface.getNewNBTWrapper();
 		data.setInteger("sectorNumber", sectorNumber);
 		data.setInteger("laneNumber", laneNumber);
 		for(int i=0; i<curves.size(); ++i){
 			List<RoadLaneConnection> priorCurveConnections = priorConnections.get(i);
 			List<RoadLaneConnection> nextCurveConnections = nextConnections.get(i);
 			for(int j=0; j<priorCurveConnections.size(); ++j){
-				WrapperNBT connectionData = InterfaceCore.getNewNBTWrapper();
+				IWrapperNBT connectionData = InterfaceManager.coreInterface.getNewNBTWrapper();
 				priorCurveConnections.get(j).save(connectionData);
 				data.setData("priorConnection" + i + "_" + j, connectionData);
 			}
 			data.setInteger("numberPriorConnections" + i, priorCurveConnections.size());
 			
 			for(int j=0; j<nextCurveConnections.size(); ++j){
-				WrapperNBT connectionData = InterfaceCore.getNewNBTWrapper();
+				IWrapperNBT connectionData = InterfaceManager.coreInterface.getNewNBTWrapper();
 				nextCurveConnections.get(j).save(connectionData);
 				data.setData("nextConnection" + i + "_" + j, connectionData);
 			}

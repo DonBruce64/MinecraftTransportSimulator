@@ -7,8 +7,8 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityFuelP
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
-import minecrafttransportsimulator.mcinterface.InterfacePacket;
-import minecrafttransportsimulator.mcinterface.WrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketInventoryContainerChange;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpDispense;
 
@@ -38,18 +38,18 @@ public class GUIFuelPump extends AGUIInventory{
 		interactableSlotBoxes.clear();
 		int xOffset = 8;
 		for(int i=0; i<pump.fuelItems.getSize(); ++i){
-			WrapperItemStack stack = pump.fuelItems.getStack(i);
+			IWrapperItemStack stack = pump.fuelItems.getStack(i);
 			GUIComponentButton itemButton = new GUIComponentButton(guiLeft + xOffset, guiTop + 12 + 22*(i%5), true){
 				@Override
 				public void onClicked(boolean leftSide){
 					if(configuring){
 						//Remove stack from slot as we don't want this item available.
-						WrapperItemStack changedStack = pump.fuelItems.getStack(interactableSlotButtons.indexOf(this));
+						IWrapperItemStack changedStack = pump.fuelItems.getStack(interactableSlotButtons.indexOf(this));
 						changedStack.add(-changedStack.getSize());
-						InterfacePacket.sendToServer(new PacketInventoryContainerChange(pump.fuelItems, interactableSlotButtons.indexOf(this), changedStack));
+						InterfaceManager.packetInterface.sendToServer(new PacketInventoryContainerChange(pump.fuelItems, interactableSlotButtons.indexOf(this), changedStack));
 					}else{
 						//Send off packet to see if we need to remove stack count from player to pay for fuel.
-						InterfacePacket.sendToServer(new PacketTileEntityFuelPumpDispense(pump, player, interactableSlotButtons.indexOf(this)));
+						InterfaceManager.packetInterface.sendToServer(new PacketTileEntityFuelPumpDispense(pump, player, interactableSlotButtons.indexOf(this)));
 					}
 				}
 			};
@@ -72,7 +72,7 @@ public class GUIFuelPump extends AGUIInventory{
 				@Override
 				public void handleTextChange(){
 					//Set new values on the pump.
-					InterfacePacket.sendToServer(new PacketTileEntityFuelPumpDispense(pump, player, interactableSlotBoxes.indexOf(this), Integer.valueOf(this.getText())));
+					InterfaceManager.packetInterface.sendToServer(new PacketTileEntityFuelPumpDispense(pump, player, interactableSlotBoxes.indexOf(this), Integer.valueOf(this.getText())));
 				}
 			};
 			fuelAmount.visible = !stack.isEmpty() || configuring;
@@ -102,9 +102,9 @@ public class GUIFuelPump extends AGUIInventory{
 		if(configuring){
 			//player clicked on item during config.  Set stack in next free slot.
 			for(int i=0; i<pump.fuelItems.getSize(); ++i){
-				WrapperItemStack stack = pump.fuelItems.getStack(i);
+				IWrapperItemStack stack = pump.fuelItems.getStack(i);
 				if(stack.isEmpty()){
-					InterfacePacket.sendToServer(new PacketInventoryContainerChange(pump.fuelItems, i, playerInventory.getStack(slotClicked)));
+					InterfaceManager.packetInterface.sendToServer(new PacketInventoryContainerChange(pump.fuelItems, i, playerInventory.getStack(slotClicked)));
 					return;
 				}
 			}

@@ -9,10 +9,10 @@ import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.components.IItemEntityProvider;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
-import minecrafttransportsimulator.mcinterface.WrapperItemStack;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
@@ -23,11 +23,11 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 	}
 	
 	@Override
-	public boolean onBlockClicked(WrapperWorld world, WrapperPlayer player, Point3D position, Axis axis){
+	public boolean onBlockClicked(AWrapperWorld world, IWrapperPlayer player, Point3D position, Axis axis){
 		if(!world.isClient()){
-			WrapperItemStack heldStack = player.getHeldStack();
+			IWrapperItemStack heldStack = player.getHeldStack();
 			//Make sure the definition is set in the NBT we will be giving to our new entity.
-			WrapperNBT data = heldStack.getData();
+			IWrapperNBT data = heldStack.getData();
 			populateDefaultData(data);
 			boolean wasSaved = !data.getString("uniqueUUID").isEmpty();
 			
@@ -78,7 +78,7 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 	}
 	
 	@Override
-	public void populateDefaultData(WrapperNBT data){
+	public void populateDefaultData(IWrapperNBT data){
 		super.populateDefaultData(data);
 		//Make sure we don't restore any world-based entity properties.
 		data.setPoint3d("position", new Point3D());
@@ -88,13 +88,13 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 	}
 	
 	@Override
-	public void repair(WrapperNBT data){
+	public void repair(IWrapperNBT data){
 		super.repair(data);
 		data.setDouble("electricPower", 12);
 	}
 
 	@Override
-	public EntityVehicleF_Physics createEntity(WrapperWorld world, WrapperPlayer placingPlayer, WrapperNBT data){
+	public EntityVehicleF_Physics createEntity(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data){
 		return new EntityVehicleF_Physics(world, placingPlayer, data);
 	}
 

@@ -9,11 +9,11 @@ import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
-import minecrafttransportsimulator.mcinterface.WrapperEntity;
-import minecrafttransportsimulator.mcinterface.WrapperItemStack;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**Now that we have an existing vehicle its time to add the ability to collide with it,
@@ -32,7 +32,7 @@ abstract class AEntityVehicleC_Colliding extends AEntityVehicleB_Rideable{
 	public double axialVelocity;
 	public final Point3D headingVector = new Point3D();
 	
-	public AEntityVehicleC_Colliding(WrapperWorld world, WrapperPlayer placingPlayer, WrapperNBT data){
+	public AEntityVehicleC_Colliding(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data){
 		super(world, placingPlayer, data);
 	}
 	
@@ -139,21 +139,21 @@ abstract class AEntityVehicleC_Colliding extends AEntityVehicleB_Rideable{
 		super.destroy(box);
 		
 		//Spawn drops from us and our parts.
-		List<WrapperItemStack> drops = new ArrayList<WrapperItemStack>();
+		List<IWrapperItemStack> drops = new ArrayList<IWrapperItemStack>();
 		addDropsToList(drops);
 		for(APart part : parts){
 			part.addDropsToList(drops);
 		}
-		for(WrapperItemStack stack : drops){
+		for(IWrapperItemStack stack : drops){
 			world.spawnItemStack(stack, box.globalCenter);
 		}
 		
 		//Damage all riders, including the controller.
-		WrapperEntity controller = getController();
+		IWrapperEntity controller = getController();
 		LanguageEntry language = controller != null ? JSONConfigLanguage.DEATH_CRASH_PLAYER : JSONConfigLanguage.DEATH_CRASH_NULL;
 		Damage controllerCrashDamage = new Damage(ConfigSystem.settings.damage.crashDamageFactor.value*velocity*20, null, this, null, null);
 		Damage passengerCrashDamage = new Damage(ConfigSystem.settings.damage.crashDamageFactor.value*velocity*20, null, this, controller, language);
-		for(WrapperEntity rider : locationRiderMap.values()){
+		for(IWrapperEntity rider : locationRiderMap.values()){
 			if(rider.equals(controller)){
 				rider.attack(controllerCrashDamage);
 			}else{
@@ -162,7 +162,7 @@ abstract class AEntityVehicleC_Colliding extends AEntityVehicleB_Rideable{
 		}
 		
 		//Now remove all riders from the vehicle.
-		Iterator<WrapperEntity> riderIterator = locationRiderMap.inverse().keySet().iterator();
+		Iterator<IWrapperEntity> riderIterator = locationRiderMap.inverse().keySet().iterator();
 		while(riderIterator.hasNext()){
 			removeRider(riderIterator.next());
 		}

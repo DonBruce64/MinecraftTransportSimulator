@@ -7,7 +7,7 @@ import minecrafttransportsimulator.items.instances.ItemBullet;
 import minecrafttransportsimulator.jsondefs.JSONBullet.BulletType;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
-import minecrafttransportsimulator.mcinterface.WrapperEntity;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 
 /**Basic damage class.  Used to make instances of damage to apply to entities.  Allows for quick addition
  * of new damage types that prevents the need to change constructors.  The boundingBox hit is required for
@@ -16,7 +16,7 @@ import minecrafttransportsimulator.mcinterface.WrapperEntity;
  * a specific box.  This is mainly for attacks that hurt all entities within the area, but don't target a
  * specific box or part on the entity.
  * <br><br>
- * The passed-in wrapper here represents the entity that is responsible for the damage.  The player responsible
+ * The passed-in IWrapper here represents the entity that is responsible for the damage.  The player responsible
  * may not be the actual entity that attacked.  For example, a player that fires a gun on a car will spawn bullet,
  * and the bullet may hit another player, but it's the player who shot the gun that is responsible, not the bullet.
  * Conversely, if a player starts a jet engine and walks away, and then another player gets sucked into the jet engine,
@@ -28,7 +28,7 @@ public class Damage{
 	public final double amount;
 	public final BoundingBox box;
 	public final AEntityB_Existing damgeSource;
-	public final WrapperEntity entityResponsible;
+	public final IWrapperEntity entityResponsible;
 	public final LanguageEntry language;
 	
 	public boolean isHand;
@@ -39,7 +39,7 @@ public class Damage{
 	public boolean ignoreCooldown;
 	public List<JSONPotionEffect> effects;
 	
-	public Damage(double amount, BoundingBox box, AEntityB_Existing damgeSource, WrapperEntity entityResponsible, LanguageEntry language){
+	public Damage(double amount, BoundingBox box, AEntityB_Existing damgeSource, IWrapperEntity entityResponsible, LanguageEntry language){
 		this.amount = amount;
 		this.box = box;
 		this.damgeSource = damgeSource;

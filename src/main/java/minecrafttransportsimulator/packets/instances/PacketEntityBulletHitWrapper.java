@@ -8,8 +8,8 @@ import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.entities.instances.EntityBullet;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
-import minecrafttransportsimulator.mcinterface.WrapperEntity;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**Packet sent when a bullet hits a wrapped (external) entity.
@@ -21,7 +21,7 @@ public class PacketEntityBulletHitWrapper extends PacketEntityBulletHit{
 	private final UUID hitEntityID;
 	private final UUID controllerEntityID;
 
-	public PacketEntityBulletHitWrapper(EntityBullet bullet, WrapperEntity hitEntity){
+	public PacketEntityBulletHitWrapper(EntityBullet bullet, IWrapperEntity hitEntity){
 		super(bullet, hitEntity.getPosition());
 		this.bulletVelocityFactor = bullet.velocity/bullet.initialVelocity;
 		this.hitEntityID = hitEntity.getID();
@@ -47,13 +47,13 @@ public class PacketEntityBulletHitWrapper extends PacketEntityBulletHit{
 	}
 	
 	@Override
-	public boolean handleBulletHit(WrapperWorld world){
+	public boolean handleBulletHit(AWrapperWorld world){
 		if(!world.isClient()){
-			WrapperEntity entityHit = world.getExternalEntity(hitEntityID);
+			IWrapperEntity entityHit = world.getExternalEntity(hitEntityID);
 			if(entityHit != null){	
 				//Create damage object and attack the entity.
 				BoundingBox hitBox = new BoundingBox(hitPosition, bulletItem.definition.bullet.diameter*1000, bulletItem.definition.bullet.diameter*1000, bulletItem.definition.bullet.diameter*1000);
-				WrapperEntity attacker = controllerEntityID != null ? world.getExternalEntity(controllerEntityID) : null;
+				IWrapperEntity attacker = controllerEntityID != null ? world.getExternalEntity(controllerEntityID) : null;
 				LanguageEntry language = attacker != null ? JSONConfigLanguage.DEATH_BULLET_PLAYER : JSONConfigLanguage.DEATH_BULLET_NULL;
 				double damageAmount = bulletVelocityFactor*bulletItem.definition.bullet.damage*ConfigSystem.settings.damage.bulletDamageFactor.value;
 				Damage damage = new Damage(damageAmount, hitBox, null, attacker, language);

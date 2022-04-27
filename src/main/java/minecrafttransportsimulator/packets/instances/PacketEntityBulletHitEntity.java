@@ -10,8 +10,8 @@ import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.instances.EntityBullet;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
-import minecrafttransportsimulator.mcinterface.WrapperEntity;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**Packet sent when a bullet hits a normal entity.
@@ -53,13 +53,13 @@ public class PacketEntityBulletHitEntity extends PacketEntityBulletHit{
 	}
 	
 	@Override
-	public boolean handleBulletHit(WrapperWorld world){
+	public boolean handleBulletHit(AWrapperWorld world){
 		if(!world.isClient()){
 			AEntityE_Interactable<?> entityHit = world.getEntity(hitEntityID);
 			if(entityHit != null){
 				//Create damage object and attack the entity.
 				BoundingBox hitBox = new BoundingBox(localCenter, hitPosition, bulletItem.definition.bullet.diameter*1000, bulletItem.definition.bullet.diameter*1000, bulletItem.definition.bullet.diameter*1000, false);
-				WrapperEntity attacker = controllerEntityID != null ? world.getExternalEntity(controllerEntityID) : null;
+				IWrapperEntity attacker = controllerEntityID != null ? world.getExternalEntity(controllerEntityID) : null;
 				LanguageEntry language = attacker != null ? JSONConfigLanguage.DEATH_BULLET_PLAYER : JSONConfigLanguage.DEATH_BULLET_NULL;
 				double damageAmount = bulletVelocityFactor*bulletItem.definition.bullet.damage*ConfigSystem.settings.damage.bulletDamageFactor.value;
 				Damage damage = new Damage(damageAmount, hitBox, null, attacker, language);

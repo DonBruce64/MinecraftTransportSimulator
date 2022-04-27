@@ -4,8 +4,8 @@ import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.instances.EntityBullet;
 import minecrafttransportsimulator.jsondefs.JSONBullet.BulletType;
-import minecrafttransportsimulator.mcinterface.InterfaceClient;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**Packet sent when a bullet hits a block.
@@ -23,7 +23,7 @@ public class PacketEntityBulletHitBlock extends PacketEntityBulletHit{
 	}
 	
 	@Override
-	public boolean handleBulletHit(WrapperWorld world){
+	public boolean handleBulletHit(AWrapperWorld world){
 		if(!world.isClient()){
 			//If the bullet is big, and the block is soft, then break the block.
 			//If we are an incendiary bullet, set the block on fire.
@@ -53,7 +53,7 @@ public class PacketEntityBulletHitBlock extends PacketEntityBulletHit{
 		}else{
 			//We only get a packet back if we hit a block and didn't break it.
 			//If this is the case, play the block break sound.
-			InterfaceClient.playBlockBreakSound(hitPosition);
+			InterfaceManager.clientInterface.playBlockBreakSound(hitPosition);
 		}
 		return false;
 	}

@@ -65,7 +65,6 @@ public class Point3D{
 	/**
 	 * Adds the passed-in values to the point.
 	 */
-	@SuppressWarnings("hiding")
 	public Point3D add(double x, double y, double z){
 		this.x += x;
 		this.y += y;

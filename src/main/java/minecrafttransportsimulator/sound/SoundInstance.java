@@ -4,10 +4,10 @@ import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.instances.EntityRadio;
 import minecrafttransportsimulator.jsondefs.JSONSound;
-import minecrafttransportsimulator.mcinterface.InterfaceSound;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 
 /**Class that holds sound information.  One class is created for each sound that's playing
- * in the {@link InterfaceSound}.  This class holds data such as the current
+ * in the {@link InterfaceManager.soundInterface}.  This class holds data such as the current
  * source the sound is playing from, whether the sound is supposed to be looping or not, etc.  
  * Setting {@link #stopSound} will stop this sound immediately, while {@link #streaming} tells
  * the audio system that this sound needs to be read in via chunks rather than all at once.

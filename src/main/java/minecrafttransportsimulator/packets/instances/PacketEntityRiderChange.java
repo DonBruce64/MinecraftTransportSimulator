@@ -3,8 +3,8 @@ package minecrafttransportsimulator.packets.instances;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
-import minecrafttransportsimulator.mcinterface.WrapperEntity;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.packets.components.APacketEntityInteract;
 
 /**Packet used to add/remove riders from an entity.  This packet only appears on clients after the
@@ -13,10 +13,10 @@ import minecrafttransportsimulator.packets.components.APacketEntityInteract;
  * 
  * @author don_bruce
  */
-public class PacketEntityRiderChange extends APacketEntityInteract<AEntityE_Interactable<?>, WrapperEntity>{
+public class PacketEntityRiderChange extends APacketEntityInteract<AEntityE_Interactable<?>, IWrapperEntity>{
 	private final Point3D position;
 	
-	public PacketEntityRiderChange(AEntityE_Interactable<?> entity, WrapperEntity rider, Point3D position){
+	public PacketEntityRiderChange(AEntityE_Interactable<?> entity, IWrapperEntity rider, Point3D position){
 		super(entity, rider);
 		this.position = position;
 	}
@@ -36,7 +36,7 @@ public class PacketEntityRiderChange extends APacketEntityInteract<AEntityE_Inte
 	}
 	
 	@Override
-	protected boolean handle(WrapperWorld world, AEntityE_Interactable<?> entity, WrapperEntity rider){
+	protected boolean handle(AWrapperWorld world, AEntityE_Interactable<?> entity, IWrapperEntity rider){
 		if(position != null){
 			entity.addRider(rider, position);
 		}else{

@@ -8,10 +8,10 @@ import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
-import minecrafttransportsimulator.mcinterface.InterfacePacket;
-import minecrafttransportsimulator.mcinterface.WrapperEntity;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine;
@@ -110,7 +110,7 @@ public class PartEngine extends APart{
 	public static final float MAX_SHIFT_SPEED = 0.35F;
 	
 	
-	public PartEngine(AEntityF_Multipart<?> entityOn, WrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, WrapperNBT data, APart parentPart){
+	public PartEngine(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, IWrapperNBT data, APart parentPart){
 		super(entityOn, placingPlayer, placementDefinition, data, parentPart);
 		this.isCreative = data.getBoolean("isCreative");
 		this.oilLeak = data.getBoolean("oilLeak");
@@ -142,14 +142,14 @@ public class PartEngine extends APart{
 		if(!damage.isWater){
 			if(definition.engine.disableAutomaticStarter){
 				//Check if this is a hand-start command.
-				if(damage.entityResponsible instanceof WrapperPlayer && ((WrapperPlayer) damage.entityResponsible).getHeldStack().isEmpty()){
+				if(damage.entityResponsible instanceof IWrapperPlayer && ((IWrapperPlayer) damage.entityResponsible).getHeldStack().isEmpty()){
 					if(!entityOn.equals(damage.entityResponsible.getEntityRiding())){
 						if(!magnetoOn){
 							setVariable(MAGNETO_VARIABLE, 1);
-							InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(this, MAGNETO_VARIABLE));
+							InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableToggle(this, MAGNETO_VARIABLE));
 						}
 						handStartEngine();
-						InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.HS_ON));
+						InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.HS_ON));
 						return;
 					}
 				}
@@ -162,19 +162,19 @@ public class PartEngine extends APart{
 						if(!fuelLeak)fuelLeak = Math.random() < ConfigSystem.settings.damage.engineLeakProbability.value*10;
 						if(!brokenStarter)brokenStarter = Math.random() < 0.05;
 					}
-					InterfacePacket.sendToAllClients(new PacketPartEngine(this, damage.amount*10*ConfigSystem.settings.general.engineHoursFactor.value, oilLeak, fuelLeak, brokenStarter));
+					InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, damage.amount*10*ConfigSystem.settings.general.engineHoursFactor.value, oilLeak, fuelLeak, brokenStarter));
 				}else{
 					hours += damage.amount*2*ConfigSystem.settings.general.engineHoursFactor.value;
 					if(!definition.engine.isSteamPowered){
 						if(!oilLeak)oilLeak = Math.random() < ConfigSystem.settings.damage.engineLeakProbability.value;
 						if(!fuelLeak)fuelLeak = Math.random() < ConfigSystem.settings.damage.engineLeakProbability.value;
 					}
-					InterfacePacket.sendToAllClients(new PacketPartEngine(this, damage.amount*ConfigSystem.settings.general.engineHoursFactor.value, oilLeak, fuelLeak, brokenStarter));
+					InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, damage.amount*ConfigSystem.settings.general.engineHoursFactor.value, oilLeak, fuelLeak, brokenStarter));
 				}
 			}
 		}else{
 			stallEngine(Signal.DROWN);
-			InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.DROWN));
+			InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.DROWN));
 		}
 	}
 	
@@ -216,9 +216,9 @@ public class PartEngine extends APart{
 					linkedEngine.linkedEngine = null;
 					linkedEngine = null;
 					if(world.isClient()){
-						for(WrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, 16, 16, 16))){
-							if(entity instanceof WrapperPlayer){
-								((WrapperPlayer) entity).displayChatMessage(JSONConfigLanguage.INTERACT_JUMPERCABLE_LINKDROPPED);
+						for(IWrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, 16, 16, 16))){
+							if(entity instanceof IWrapperPlayer){
+								((IWrapperPlayer) entity).displayChatMessage(JSONConfigLanguage.INTERACT_JUMPERCABLE_LINKDROPPED);
 							}
 						}
 					}
@@ -232,9 +232,9 @@ public class PartEngine extends APart{
 					linkedEngine.linkedEngine = null;
 					linkedEngine = null;
 					if(world.isClient()){
-						for(WrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, 16, 16, 16))){
-							if(entity instanceof WrapperPlayer){
-								((WrapperPlayer) entity).displayChatMessage(JSONConfigLanguage.INTERACT_JUMPERCABLE_POWEREQUAL);
+						for(IWrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, 16, 16, 16))){
+							if(entity instanceof IWrapperPlayer){
+								((IWrapperPlayer) entity).displayChatMessage(JSONConfigLanguage.INTERACT_JUMPERCABLE_POWEREQUAL);
 							}
 						}
 					}
@@ -253,7 +253,7 @@ public class PartEngine extends APart{
 						starterLevel += 4;
 					}else{
 						setVariable(ELECTRIC_STARTER_VARIABLE, 0);
-						InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(this, ELECTRIC_STARTER_VARIABLE));
+						InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableToggle(this, ELECTRIC_STARTER_VARIABLE));
 					}
 				}
 				if(starterLevel > 0){
@@ -267,7 +267,7 @@ public class PartEngine extends APart{
 				if(autoStarterEngaged){
 					if(running){
 						setVariable(ELECTRIC_STARTER_VARIABLE, 0);
-						InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(this, ELECTRIC_STARTER_VARIABLE));
+						InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableToggle(this, ELECTRIC_STARTER_VARIABLE));
 					}
 				}
 			}else if(handStarterEngaged){
@@ -368,7 +368,7 @@ public class PartEngine extends APart{
 					if(hours > 250 && !world.isClient()){
 						if(Math.random() < (hours/2)/(250+(10000-hours))*(currentMaxSafeRPM/(rpm+currentMaxSafeRPM/1.5))){
 							backfireEngine();
-							InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.BACKFIRE));
+							InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.BACKFIRE));
 						}
 					}
 					
@@ -376,19 +376,19 @@ public class PartEngine extends APart{
 					if(!world.isClient()){
 						if(!world.isClient() && isInLiquid()){
 							stallEngine(Signal.DROWN);
-							InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.DROWN));
+							InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.DROWN));
 						}else if(!isCreative && vehicleOn.fuelTank.getFluidLevel() == 0){
 							stallEngine(Signal.FUEL_OUT);
-							InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.FUEL_OUT));
+							InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.FUEL_OUT));
 						}else if(rpm < definition.engine.stallRPM){
 							stallEngine(Signal.TOO_SLOW);
-							InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.TOO_SLOW));
+							InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.TOO_SLOW));
 						}else if(!isActive){
 							stallEngine(Signal.FUEL_OUT);
-							InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.FUEL_OUT));
+							InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.FUEL_OUT));
 						}else if(vehicleOn.damageAmount == vehicleOn.definition.general.health){
 							stallEngine(Signal.DEAD_VEHICLE);
-							InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.DEAD_VEHICLE));
+							InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.DEAD_VEHICLE));
 						}
 						
 					}
@@ -443,7 +443,7 @@ public class PartEngine extends APart{
 					if(isCreative || vehicleOn.fuelTank.getFluidLevel() > 0){
 						if(!isInLiquid() && magnetoOn){
 							startEngine();
-							InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.START));
+							InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.START));
 						}
 					}
 				}
@@ -569,7 +569,7 @@ public class PartEngine extends APart{
 					boundingBox.heightRadius += 0.25;
 					boundingBox.depthRadius += 0.25;
 					boundingBox.globalCenter.add(vehicleOn.headingVector);
-					WrapperEntity controller = vehicleOn.getController();
+					IWrapperEntity controller = vehicleOn.getController();
 					LanguageEntry language = controller != null ? JSONConfigLanguage.DEATH_JETINTAKE_PLAYER : JSONConfigLanguage.DEATH_JETINTAKE_NULL;
 					Damage jetIntake = new Damage(definition.engine.jetPowerFactor*ConfigSystem.settings.damage.jetDamageFactor.value*rpm/1000F, boundingBox, this, controller, language);
 					world.attackEntities(jetIntake, null);
@@ -846,10 +846,10 @@ public class PartEngine extends APart{
 				shiftCooldown = definition.engine.shiftSpeed;
 				upshiftCountdown = definition.engine.clutchTime;
 				if(!world.isClient()){
-					InterfacePacket.sendToAllClients(new PacketEntityVariableSet(this, UP_SHIFT_VARIABLE, 1));
+					InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, UP_SHIFT_VARIABLE, 1));
 				}
 			}else if(!world.isClient()){
-				InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.BAD_SHIFT));
+				InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.BAD_SHIFT));
 			}
 		}
 		return doShift;
@@ -878,10 +878,10 @@ public class PartEngine extends APart{
 				shiftCooldown = definition.engine.shiftSpeed;
 				downshiftCountdown = definition.engine.clutchTime;
 				if(!world.isClient()){
-					InterfacePacket.sendToAllClients(new PacketEntityVariableSet(this, DOWN_SHIFT_VARIABLE, 1));
+					InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, DOWN_SHIFT_VARIABLE, 1));
 				}
 			}else if(!world.isClient()){
-				InterfacePacket.sendToAllClients(new PacketPartEngine(this, Signal.BAD_SHIFT));
+				InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.BAD_SHIFT));
 			}
 		}
 		return doShift;
@@ -899,7 +899,7 @@ public class PartEngine extends APart{
 				currentGear = 0;
 				setVariable(GEAR_VARIABLE, currentGear);
 				if(!world.isClient()){
-					InterfacePacket.sendToAllClients(new PacketEntityVariableSet(this, NEUTRAL_SHIFT_VARIABLE, 1));
+					InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, NEUTRAL_SHIFT_VARIABLE, 1));
 				}
 			}
 		}
@@ -1021,7 +1021,7 @@ public class PartEngine extends APart{
 	}
 	
 	@Override
-	public WrapperNBT save(WrapperNBT data){
+	public IWrapperNBT save(IWrapperNBT data){
 		super.save(data);
 		data.setBoolean("isCreative", isCreative);
 		data.setBoolean("oilLeak", oilLeak);

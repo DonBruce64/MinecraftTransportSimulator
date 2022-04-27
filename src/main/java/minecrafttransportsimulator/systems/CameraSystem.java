@@ -10,9 +10,8 @@ import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.jsondefs.JSONCameraObject;
-import minecrafttransportsimulator.mcinterface.InterfaceClient;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import net.minecraft.client.Minecraft;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 
 /**System for handling camera zoom, position, and overlays.  Note that actual overlay
  * rendering is left up to the interface: this class only maintains which overlay
@@ -53,7 +52,7 @@ public class CameraSystem{
 	 * transforms for the camera, return true.  If we only offset the camera and want to keep its 
 	 * frame of reference and use local transformations rather than global, return false.
 	 */
-    public static boolean adjustCamera(WrapperPlayer player, Point3D cameraAdjustedPosition, TransformationMatrix cameraOrientation, float partialTicks){
+    public static boolean adjustCamera(IWrapperPlayer player, Point3D cameraAdjustedPosition, TransformationMatrix cameraOrientation, float partialTicks){
     	//Get variables.
 		AEntityE_Interactable<?> ridingEntity = player.getEntityRiding();
 		AEntityF_Multipart<?> multipart = ridingEntity instanceof AEntityF_Multipart ? (AEntityF_Multipart<?>) ridingEntity : null;
@@ -62,12 +61,12 @@ public class CameraSystem{
     	
     	//Reset FOV adn overlay.
     	if(!enableCustomCameras && currentFOV != 0){
-			InterfaceClient.setFOV(currentFOV);
+			InterfaceManager.clientInterface.setFOV(currentFOV);
 			currentFOV = 0; 
 		}
 		customCameraOverlay = null;
 		//Do camera operations.
-    	if(InterfaceClient.inFirstPerson()){
+    	if(InterfaceManager.clientInterface.inFirstPerson()){
     		//Force custom cameras for some states.
     		//If we are sneaking and holding a gun, enable custom cameras.
     		if(playerGunEntity != null && playerGunEntity.activeGun != null && sittingSeat == null){
@@ -123,9 +122,9 @@ public class CameraSystem{
 					//If the camera has an FOV override, apply it.
             		if(camera.fovOverride != 0){
             			if(currentFOV == 0){
-            				currentFOV = InterfaceClient.getFOV();
+            				currentFOV = InterfaceManager.clientInterface.getFOV();
             			}
-            			InterfaceClient.setFOV(camera.fovOverride);
+            			InterfaceManager.clientInterface.setFOV(camera.fovOverride);
             		}
             		
             		//First set the position of the camera to the defined position.
@@ -174,15 +173,15 @@ public class CameraSystem{
 				cameraOrientation.applyRotation(player.getOrientation());
             	return true;
 			}
-    	}else if(InterfaceClient.inThirdPerson()){
+    	}else if(InterfaceManager.clientInterface.inThirdPerson()){
     		//If we were running a custom camera, and hit the switch key, increment our camera index.
     		//We then go back to first-person to render the proper camera.
     		//If we weren't running a custom camera, try running one.  This will become active when we
     		//go back into first-person mode.  This only has an effect if we are riding an entity.
     		if(runningCustomCameras){
-    			if(InterfaceClient.changedCameraState()){
+    			if(InterfaceManager.clientInterface.changedCameraState()){
 	    			++customCameraIndex;
-	    			InterfaceClient.toggleFirstPerson();
+	    			InterfaceManager.clientInterface.toggleFirstPerson();
     			}
     		}else if(sittingSeat != null){
     			//Try to enable custom cameras.
@@ -205,13 +204,13 @@ public class CameraSystem{
         	//If we get here, and don't have any custom cameras, stay here.
         	//If we do have custom cameras, use them instead.
         	if(sittingSeat != null){
-        		if(InterfaceClient.changedCameraState()){
+        		if(InterfaceManager.clientInterface.changedCameraState()){
 		        	if(multipart.definition.rendering.cameraObjects != null){
-		        		InterfaceClient.toggleFirstPerson();
+		        		InterfaceManager.clientInterface.toggleFirstPerson();
 					}else{
 						for(APart part : multipart.parts){
 							if(part.definition.rendering != null && part.definition.rendering.cameraObjects != null){
-								InterfaceClient.toggleFirstPerson();
+								InterfaceManager.clientInterface.toggleFirstPerson();
 								break;
 							}
 						}

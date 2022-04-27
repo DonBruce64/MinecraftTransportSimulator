@@ -11,7 +11,7 @@ import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentCutout;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
-import minecrafttransportsimulator.mcinterface.InterfacePacket;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketRadioStateChange;
 import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
 import minecrafttransportsimulator.sound.RadioManager;
@@ -69,7 +69,7 @@ public class GUIRadio extends AGUIBase{
 		addComponent(offButton = new GUIComponentButton(guiLeft + 20, guiTop + 25, 55, 15, "OFF"){
 			@Override
 			public void onClicked(boolean leftSide){
-				InterfacePacket.sendToServer(new PacketRadioStateChange(radio));
+				InterfaceManager.packetInterface.sendToServer(new PacketRadioStateChange(radio));
 				teachMode = false;
 			}
 		});
@@ -77,21 +77,21 @@ public class GUIRadio extends AGUIBase{
 		addComponent(localButton = new GUIComponentButton(offButton.constructedX, offButton.constructedY + offButton.height, offButton.width, offButton.height, "PC"){
 			@Override
 			public void onClicked(boolean leftSide){				
-				InterfacePacket.sendToServer(new PacketRadioStateChange(radio, RadioSources.LOCAL));
+				InterfaceManager.packetInterface.sendToServer(new PacketRadioStateChange(radio, RadioSources.LOCAL));
 				teachMode = false;
 			}
 		});
 		addComponent(remoteButton = new GUIComponentButton(offButton.constructedX, localButton.constructedY + localButton.height, offButton.width, offButton.height, "INTERNET"){
 			@Override
 			public void onClicked(boolean leftSide){
-				InterfacePacket.sendToServer(new PacketRadioStateChange(radio, RadioSources.INTERNET));
+				InterfaceManager.packetInterface.sendToServer(new PacketRadioStateChange(radio, RadioSources.INTERNET));
 				teachMode = false;
 			}
 		});
 		addComponent(serverButton = new GUIComponentButton(offButton.constructedX, remoteButton.constructedY + remoteButton.height, offButton.width, offButton.height, "SERVER"){
 			@Override
 			public void onClicked(boolean leftSide){
-				InterfacePacket.sendToServer(new PacketRadioStateChange(radio, RadioSources.SERVER));
+				InterfaceManager.packetInterface.sendToServer(new PacketRadioStateChange(radio, RadioSources.SERVER));
 				teachMode = false;
 			}
 		});
@@ -121,7 +121,7 @@ public class GUIRadio extends AGUIBase{
 					teachMode = false;
 					stationDisplay.setText("");
 				}else{
-					InterfacePacket.sendToServer(new PacketRadioStateChange(radio));
+					InterfaceManager.packetInterface.sendToServer(new PacketRadioStateChange(radio));
 					teachMode = true;
 					stationDisplay.setText("Type or paste a URL (CTRL+V).\nThen press press a preset button.");
 					stationDisplay.focused = true;
@@ -130,8 +130,8 @@ public class GUIRadio extends AGUIBase{
 		});
 		
 		//Volume controls.
-		addComponent(volUpButton = new GUIComponentButton(guiLeft + 205, offButton.constructedY, 30, 20, "UP"){@Override public void onClicked(boolean leftSide){InterfacePacket.sendToServer(new PacketRadioStateChange(radio, radio.volume + 1));}});
-		addComponent(volDnButton = new GUIComponentButton(volUpButton.constructedX, volUpButton.constructedY + volUpButton.height, volUpButton.width, 20, "DN"){@Override public void onClicked(boolean leftSide){InterfacePacket.sendToServer(new PacketRadioStateChange(radio, radio.volume - 1));}});
+		addComponent(volUpButton = new GUIComponentButton(guiLeft + 205, offButton.constructedY, 30, 20, "UP"){@Override public void onClicked(boolean leftSide){InterfaceManager.packetInterface.sendToServer(new PacketRadioStateChange(radio, radio.volume + 1));}});
+		addComponent(volDnButton = new GUIComponentButton(volUpButton.constructedX, volUpButton.constructedY + volUpButton.height, volUpButton.width, 20, "DN"){@Override public void onClicked(boolean leftSide){InterfaceManager.packetInterface.sendToServer(new PacketRadioStateChange(radio, radio.volume - 1));}});
 		addComponent(volumeDisplay = new GUIComponentTextBox(guiLeft + 180, volUpButton.constructedY, 25, 40, "", ColorRGB.WHITE, 32));
 		addComponent(equalizerButton = new GUIComponentButton(volumeDisplay.constructedX, volumeDisplay.constructedY + volumeDisplay.height, volumeDisplay.width + volDnButton.width, volUpButton.height, "EQ"){@Override public void onClicked(boolean leftSide){equalizerMode = true;}});
 		addComponent(new GUIComponentLabel(volumeDisplay.constructedX + volumeDisplay.width, volumeDisplay.constructedY - 10, ColorRGB.BLACK, "VOLUME", TextAlignment.CENTERED, 1.0F).setButton(volUpButton));
@@ -257,9 +257,9 @@ public class GUIRadio extends AGUIBase{
 		}else{
 			//Do preset press logic.
 			if(radio.getSource().equals(RadioSources.LOCAL)){
-				InterfacePacket.sendToServer(new PacketRadioStateChange(radio, presetClicked + 1, orderedButton.enabled));
+				InterfaceManager.packetInterface.sendToServer(new PacketRadioStateChange(radio, presetClicked + 1, orderedButton.enabled));
 			}else{
-				InterfacePacket.sendToServer(new PacketRadioStateChange(radio, presetClicked + 1, RadioManager.getLocalStationURL(presetClicked + 1)));
+				InterfaceManager.packetInterface.sendToServer(new PacketRadioStateChange(radio, presetClicked + 1, RadioManager.getLocalStationURL(presetClicked + 1)));
 			}
 		}
 	}

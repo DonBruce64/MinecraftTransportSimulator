@@ -20,9 +20,8 @@ import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONInstrumentDefinition;
-import minecrafttransportsimulator.mcinterface.InterfaceClient;
-import minecrafttransportsimulator.mcinterface.InterfacePacket;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityInstrumentChange;
 import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -39,7 +38,7 @@ public class GUIInstruments extends AGUIBase{
 	
 	//GUIs components created at opening.
 	private final EntityVehicleF_Physics vehicle;
-	private final WrapperPlayer player;
+	private final IWrapperPlayer player;
 	private final TreeMap<String, List<ItemInstrument>> playerInstruments = new TreeMap<String, List<ItemInstrument>>();
 	
 	//Runtime variables.
@@ -63,7 +62,7 @@ public class GUIInstruments extends AGUIBase{
 	public GUIInstruments(EntityVehicleF_Physics vehicle){
 		super();
 		this.vehicle = vehicle;
-		this.player = InterfaceClient.getClientPlayer();
+		this.player = InterfaceManager.clientInterface.getClientPlayer();
 	}
 
 	@Override
@@ -92,7 +91,7 @@ public class GUIInstruments extends AGUIBase{
 			GUIComponentButton instrumentButton = new GUIComponentButton(guiLeft + 23 + GUIComponentButton.ITEM_BUTTON_SIZE*(i/2), guiTop - 75 + GUIComponentButton.ITEM_BUTTON_SIZE*(i%2), false){
 				@Override
 				public void onClicked(boolean leftSide){
-					InterfacePacket.sendToServer(new PacketEntityInstrumentChange(selectedEntity, player, selectedEntity.definition.instruments.indexOf(selectedInstrumentDefinition), playerInstruments.get(currentPack).get(instrumentSlots.indexOf(this))));
+					InterfaceManager.packetInterface.sendToServer(new PacketEntityInstrumentChange(selectedEntity, player, selectedEntity.definition.instruments.indexOf(selectedInstrumentDefinition), playerInstruments.get(currentPack).get(instrumentSlots.indexOf(this))));
 					selectedEntity = null;
 					selectedInstrumentDefinition = null;
 				}
@@ -112,7 +111,7 @@ public class GUIInstruments extends AGUIBase{
 		addComponent(clearButton = new GUIComponentButton(guiLeft + getWidth() - 2*GUIComponentButton.ITEM_BUTTON_SIZE, guiTop - 75, 2*GUIComponentButton.ITEM_BUTTON_SIZE, 2*GUIComponentButton.ITEM_BUTTON_SIZE, JSONConfigLanguage.GUI_INSTRUMENTS_CLEAR.value, true, ColorRGB.WHITE, false){
 			@Override
 			public void onClicked(boolean leftSide){
-				InterfacePacket.sendToServer(new PacketEntityInstrumentChange(selectedEntity, player, selectedEntity.definition.instruments.indexOf(selectedInstrumentDefinition), null));
+				InterfaceManager.packetInterface.sendToServer(new PacketEntityInstrumentChange(selectedEntity, player, selectedEntity.definition.instruments.indexOf(selectedInstrumentDefinition), null));
 				selectedEntity = null;
 				selectedInstrumentDefinition = null;
 			}

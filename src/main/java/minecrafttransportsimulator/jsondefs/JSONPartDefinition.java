@@ -169,8 +169,7 @@ public class JSONPartDefinition{
     
     @Deprecated
 	public class ExhaustObject{
-    	@SuppressWarnings("hiding")
-		public Point3D pos;
+    	public Point3D pos;
     	public Point3D velocity;
     	public float scale;
     }

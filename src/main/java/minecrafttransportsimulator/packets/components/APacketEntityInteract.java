@@ -4,8 +4,8 @@ import java.util.UUID;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
-import minecrafttransportsimulator.mcinterface.WrapperEntity;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 
 /**Packet class that includes a default implementation for transmitting a secondary
  * entity along with a primary entity.  Used for packets where said secondary entity interacts
@@ -15,7 +15,7 @@ import minecrafttransportsimulator.mcinterface.WrapperWorld;
  *
  * @author don_bruce
  */
-public abstract class APacketEntityInteract<MainEntityType extends AEntityA_Base, InteractingEntityType extends WrapperEntity> extends APacketEntity<MainEntityType>{
+public abstract class APacketEntityInteract<MainEntityType extends AEntityA_Base, InteractingEntityType extends IWrapperEntity> extends APacketEntity<MainEntityType>{
 	private final UUID entityID;
 	
 	public APacketEntityInteract(MainEntityType entity, InteractingEntityType interactor){
@@ -35,7 +35,7 @@ public abstract class APacketEntityInteract<MainEntityType extends AEntityA_Base
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, MainEntityType entity){
+	public boolean handle(AWrapperWorld world, MainEntityType entity){
 		@SuppressWarnings("unchecked")
 		InteractingEntityType interactor = (InteractingEntityType) world.getExternalEntity(entityID);
 		return interactor != null && handle(world, entity, interactor);
@@ -49,5 +49,5 @@ public abstract class APacketEntityInteract<MainEntityType extends AEntityA_Base
 	 *  to an issue) return false.  Otherwise, return true to send this packet on to all clients.  
 	 *  Return method has no function on clients.
 	 */
-	protected abstract boolean handle(WrapperWorld world, MainEntityType entity, InteractingEntityType interactor);
+	protected abstract boolean handle(AWrapperWorld world, MainEntityType entity, InteractingEntityType interactor);
 }

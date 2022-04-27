@@ -4,8 +4,8 @@ import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentCutout;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
-import minecrafttransportsimulator.mcinterface.InterfacePacket;
-import minecrafttransportsimulator.mcinterface.WrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPlayerItemTransfer;
 
 /**A GUI that is used to interface with inventory containers.   Displays the player's items on the bottom,
@@ -71,7 +71,7 @@ public class GUIInventoryContainer extends AGUIInventory{
 			GUIComponentButton itemButton = new GUIComponentButton(guiLeft + 8 + GUIComponentButton.ITEM_BUTTON_SIZE*(i%9), guiTop + 12 + inventoryRowOffset + GUIComponentButton.ITEM_BUTTON_SIZE*(i/9), true){
 				@Override
 				public void onClicked(boolean leftSide){
-					InterfacePacket.sendToServer(new PacketPlayerItemTransfer(inventory, player, interactableSlotButtons.indexOf(this), -1, isPlayerHolding));
+					InterfaceManager.packetInterface.sendToServer(new PacketPlayerItemTransfer(inventory, player, interactableSlotButtons.indexOf(this), -1, isPlayerHolding));
 				}
 			};
 			addComponent(itemButton);
@@ -97,7 +97,7 @@ public class GUIInventoryContainer extends AGUIInventory{
 		for(int i=0; i<interactableSlotButtons.size(); ++i){
 			int index = i + 9*rowOffset;
 			if(inventory.getSize() > index){
-				WrapperItemStack stack = inventory.getStack(index);
+				IWrapperItemStack stack = inventory.getStack(index);
 				interactableSlotButtons.get(i).visible = true;
 				interactableSlotButtons.get(i).enabled = !stack.isEmpty();
 				interactableSlotIcons.get(i).stack = stack;
@@ -110,6 +110,6 @@ public class GUIInventoryContainer extends AGUIInventory{
 	
 	@Override
 	protected void handlePlayerItemClick(int slotClicked){
-		InterfacePacket.sendToServer(new PacketPlayerItemTransfer(inventory, player, -1, slotClicked, isPlayerHolding));
+		InterfaceManager.packetInterface.sendToServer(new PacketPlayerItemTransfer(inventory, player, -1, slotClicked, isPlayerHolding));
 	}
 }

@@ -3,11 +3,10 @@ package minecrafttransportsimulator.packloading;
 import java.util.ArrayList;
 import java.util.List;
 
-import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
-import minecrafttransportsimulator.mcinterface.InterfaceCore;
-import minecrafttransportsimulator.mcinterface.WrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 
 /**
  * Class that contains information about one set of materials for a pack item.
@@ -19,20 +18,20 @@ import minecrafttransportsimulator.mcinterface.WrapperItemStack;
 public class PackMaterialComponent{
 	public final int qty;
 	public final int meta;
-	public final List<WrapperItemStack> possibleItems;
+	public final List<IWrapperItemStack> possibleItems;
 	public static String lastErrorMessage;
 	
 	private PackMaterialComponent(String itemText){
-		possibleItems = new ArrayList<WrapperItemStack>();
+		possibleItems = new ArrayList<IWrapperItemStack>();
 		if(itemText.startsWith("oredict:")){
 			qty = Integer.valueOf(itemText.substring(itemText.lastIndexOf(':') + 1));
 			itemText = itemText.substring(0, itemText.lastIndexOf(':'));
 			meta = 0;
 			String oreName = itemText.substring("oredict:".length());
-			List<WrapperItemStack> oreDictMaterials = InterfaceCore.getOredictMaterials(oreName);
+			List<IWrapperItemStack> oreDictMaterials = InterfaceManager.coreInterface.getOredictMaterials(oreName);
 			
 			//Set stack qty.
-			for(WrapperItemStack stack : oreDictMaterials){
+			for(IWrapperItemStack stack : oreDictMaterials){
 				stack.add(qty-1);
 			}
 			possibleItems.addAll(oreDictMaterials);
@@ -41,7 +40,7 @@ public class PackMaterialComponent{
 			itemText = itemText.substring(0, itemText.lastIndexOf(':'));
 			meta = Integer.valueOf(itemText.substring(itemText.lastIndexOf(':') + 1));
 			itemText = itemText.substring(0, itemText.lastIndexOf(':'));
-			WrapperItemStack stack = InterfaceCore.getStackForProperties(itemText, meta, qty);
+			IWrapperItemStack stack = InterfaceManager.coreInterface.getStackForProperties(itemText, meta, qty);
 			if(!stack.isEmpty()){
 				possibleItems.add(stack);
 			}
@@ -63,7 +62,7 @@ public class PackMaterialComponent{
 		if(forRepair){
 			if(item.definition.general.repairMaterials != null){
 				//Get repair materials. Make sure to add actual item into the list too.
-				itemTexts.add(MasterLoader.MODID + ":" + item.getRegistrationName() + ":0:1");
+				itemTexts.add(InterfaceManager.coreModID + ":" + item.getRegistrationName() + ":0:1");
 				itemTexts.addAll(item.definition.general.repairMaterials);
 			}
 		}else{

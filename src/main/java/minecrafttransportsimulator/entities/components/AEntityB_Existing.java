@@ -7,10 +7,10 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.entities.instances.EntityRadio;
-import minecrafttransportsimulator.mcinterface.InterfaceCore;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.sound.SoundInstance;
 
 /**Base class for entities that exist in the world. In addition to the normal functions
@@ -37,7 +37,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	public List<SoundInstance> sounds = new ArrayList<SoundInstance>();
 	
 	/**Constructor for synced entities**/
-	public AEntityB_Existing(WrapperWorld world, WrapperPlayer placingPlayer, WrapperNBT data){
+	public AEntityB_Existing(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data){
 		super(world, data);
 		this.position = data.getPoint3d("position");
 		this.orientation = new RotationMatrix().setToAngles(data.getPoint3d("angles"));
@@ -64,7 +64,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	}
 	
 	/**Constructor for un-synced entities.  Allows for specification of position/motion/angles.**/
-	public AEntityB_Existing(WrapperWorld world, Point3D position, Point3D motion, Point3D angles){
+	public AEntityB_Existing(AWrapperWorld world, Point3D position, Point3D motion, Point3D angles){
 		super(world, null);
 		this.position = position.copy();
 		this.orientation = new RotationMatrix().setToAngles(angles);
@@ -187,7 +187,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 	 * If it does interactions it should do them and then return true.
 	 * This is only called on the server: client modifications will be done via packets.
 	 */
-	public boolean interact(WrapperPlayer player){
+	public boolean interact(IWrapperPlayer player){
 		return false;
 	}
 	
@@ -229,7 +229,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
     }
 	
 	@Override
-	public WrapperNBT save(WrapperNBT data){
+	public IWrapperNBT save(IWrapperNBT data){
 		super.save(data);
 		if(shouldSavePosition()){
 			data.setPoint3d("position", position);
@@ -239,7 +239,7 @@ public abstract class AEntityB_Existing extends AEntityA_Base{
 			data.setPoint3d("angles", orientation.convertToAngles());
 		}
 		if(radio != null){
-			data.setData("radio", radio.save(InterfaceCore.getNewNBTWrapper()));
+			data.setData("radio", radio.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
 		}
 		return data;
 	}

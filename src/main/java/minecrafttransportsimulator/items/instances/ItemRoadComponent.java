@@ -19,22 +19,22 @@ import minecrafttransportsimulator.items.components.IItemBlock;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent.JSONRoadGeneric;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implements IItemBlock{
-	private final Map<WrapperPlayer, Point3D> lastRoadGenPositionClicked = new HashMap<WrapperPlayer, Point3D>();
-	private final Map<WrapperPlayer, RotationMatrix> lastRoadGenRotationClicked = new HashMap<WrapperPlayer, RotationMatrix>();
-	private final Map<WrapperPlayer, RoadClickData> lastRoadGenClickedData = new HashMap<WrapperPlayer, RoadClickData>();
+	private final Map<IWrapperPlayer, Point3D> lastRoadGenPositionClicked = new HashMap<IWrapperPlayer, Point3D>();
+	private final Map<IWrapperPlayer, RotationMatrix> lastRoadGenRotationClicked = new HashMap<IWrapperPlayer, RotationMatrix>();
+	private final Map<IWrapperPlayer, RoadClickData> lastRoadGenClickedData = new HashMap<IWrapperPlayer, RoadClickData>();
 	
 	public ItemRoadComponent(JSONRoadComponent definition, String subName, String sourcePackID){
 		super(definition, subName, sourcePackID);
 	}
 	
 	@Override
-	public boolean onBlockClicked(WrapperWorld world, WrapperPlayer player, Point3D position, Axis axis){
+	public boolean onBlockClicked(AWrapperWorld world, IWrapperPlayer player, Point3D position, Axis axis){
 		//Only do logic on the server.
 		if(!world.isClient()){			
 			//If we clicked an inactive road, don't do anything.

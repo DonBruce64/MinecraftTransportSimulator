@@ -3,7 +3,7 @@ package minecrafttransportsimulator.blocks.tileentities.components;
 import minecrafttransportsimulator.baseclasses.BezierCurve;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 
 /**Helper class for containing connection data.
  * Contains location of connected road, as well
@@ -46,7 +46,7 @@ public class RoadLaneConnection{
 		this.connectedToStart = connectedToStart;
 	}
 	
-	public RoadLaneConnection(WrapperNBT data){
+	public RoadLaneConnection(IWrapperNBT data){
 		this.tileLocation = data.getPoint3dCompact("tileLocation");
 		this.laneNumber = data.getInteger("laneNumber");
 		this.curveNumber = data.getInteger("curveNumber");
@@ -54,7 +54,7 @@ public class RoadLaneConnection{
 		this.connectedToStart = data.getBoolean("connectedToStart");
 	}
 	
-	public void save(WrapperNBT data){
+	public void save(IWrapperNBT data){
 		data.setPoint3dCompact("tileLocation",tileLocation);
 		data.setInteger("laneNumber", laneNumber);
 		data.setInteger("curveNumber", curveNumber);

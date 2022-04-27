@@ -4,7 +4,7 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable.PlayerOwnerState;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.packets.instances.PacketVehicleInteract;
 
 /**Interface that performs an action on vehicles.  The methods in here will be called 
@@ -33,7 +33,7 @@ public interface IItemVehicleInteractable{
 	 *  this, any client-side interactions that need to know something about the player who initially interacted 
 	 *  with this vehicle should NOT use {@link CallbackType#ALL}, as this will not give the "correct" player instance.
 	 */
-	public CallbackType doVehicleInteraction(EntityVehicleF_Physics vehicle, APart part, BoundingBox hitBox, WrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick);
+	public CallbackType doVehicleInteraction(EntityVehicleF_Physics vehicle, APart part, BoundingBox hitBox, IWrapperPlayer player, PlayerOwnerState ownerState, boolean rightClick);
 	
 	public static enum CallbackType{
 		NONE,

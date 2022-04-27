@@ -6,7 +6,7 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
-import minecrafttransportsimulator.mcinterface.InterfaceRender;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 
 /**Class designed to represent a renderable object.  Said object has at minimum some
  * geometry, though this can be a cached set of vertices or a hard-coded saved set.
@@ -170,7 +170,7 @@ public class RenderableObject{
 	 * after model parsing is ideal, so it's not destroyed until render.
 	 */
 	public void render(){
-		InterfaceRender.renderVertices(this);
+		InterfaceManager.renderingInterface.renderVertices(this);
 	}
 	
 	/**Adds a line to the {@link #vertices} of this object.
@@ -260,7 +260,7 @@ public class RenderableObject{
 	 * references will be kept in that mode.*/
 	public void destroy(){
 		vertices = null;
-		InterfaceRender.deleteVertices(this);
+		InterfaceManager.renderingInterface.deleteVertices(this);
 	}
 	
 	public enum BlendState{

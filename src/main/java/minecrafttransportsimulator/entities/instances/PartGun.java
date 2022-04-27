@@ -13,12 +13,12 @@ import minecrafttransportsimulator.jsondefs.JSONMuzzle;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONText;
-import minecrafttransportsimulator.mcinterface.InterfacePacket;
-import minecrafttransportsimulator.mcinterface.WrapperEntity;
-import minecrafttransportsimulator.mcinterface.WrapperInventory;
-import minecrafttransportsimulator.mcinterface.WrapperItemStack;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.mcinterface.IWrapperInventory;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPartGun;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -73,8 +73,8 @@ public class PartGun extends APart{
 	private long millisecondLastTimeFired;
 	private int windupTimeCurrent;
 	private int windupRotation;
-	public WrapperEntity lastController;
-	private WrapperEntity entityTarget;
+	public IWrapperEntity lastController;
+	private IWrapperEntity entityTarget;
 	private PartEngine engineTarget;
 	private long millisecondCamOffset;
 	private long lastTimeFired;
@@ -91,7 +91,7 @@ public class PartGun extends APart{
 	public final List<Integer> bulletsHitOnServer = new ArrayList<Integer>();
 	public static final int RAYTRACE_DISTANCE = 750;
 		
-	public PartGun(AEntityF_Multipart<?> entityOn, WrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, WrapperNBT data, APart parentPart){
+	public PartGun(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, IWrapperNBT data, APart parentPart){
 		super(entityOn, placingPlayer, placementDefinition, data, parentPart);
 		
 		//Set min/max yaw/pitch angles based on our definition and the entity definition.
@@ -174,7 +174,7 @@ public class PartGun extends APart{
 	}
 	
 	@Override
-	public boolean interact(WrapperPlayer player){
+	public boolean interact(IWrapperPlayer player){
 		//Check to see if we have any bullets in our hands.
 		//If so, try to re-load this gun with them.
 		AItemBase heldItem = player.getHeldItem();
@@ -193,7 +193,7 @@ public class PartGun extends APart{
 		if(isActive && !placementDefinition.isSpare){
 			//Check if we have a controller.
 			//We aren't making sentry turrets here.... yet.
-			WrapperEntity controller = getGunController();
+			IWrapperEntity controller = getGunController();
 			if(controller != null){
 				lastController = controller;
 				if(entityOn instanceof EntityPlayerGun){
@@ -305,9 +305,9 @@ public class PartGun extends APart{
 				if(entityOn instanceof EntityPlayerGun){
 					if(definition.gun.autoReload || bulletsLeft == 0){
 						//Check the player's inventory for bullets.
-						WrapperInventory inventory = ((WrapperPlayer) lastController).getInventory();
+						IWrapperInventory inventory = ((IWrapperPlayer) lastController).getInventory();
 						for(int i=0; i<inventory.getSize(); ++i){
-							WrapperItemStack stack = inventory.getStack(i);
+							IWrapperItemStack stack = inventory.getStack(i);
 							AItemBase item = stack.getItem();
 							if(item instanceof ItemBullet){
 								if(tryToReload((ItemBullet) item)){
@@ -325,7 +325,7 @@ public class PartGun extends APart{
 							if(part instanceof PartInteractable && part.definition.interactable.interactionType.equals(InteractableComponentType.CRATE) && part.isActive && part.definition.interactable.feedsVehicles){
 								EntityInventoryContainer inventory = ((PartInteractable) part).inventory;
 								for(int i=0; i<inventory.getSize(); ++i){
-									WrapperItemStack stack = inventory.getStack(i);
+									IWrapperItemStack stack = inventory.getStack(i);
 									AItemBase item = stack.getItem();
 									if(item instanceof ItemBullet){
 										if(tryToReload((ItemBullet) item)){
@@ -390,7 +390,7 @@ public class PartGun extends APart{
 	 * look vector into account, as well as gun position.  Does not take
 	 * gun clamping into account as that's done in {@link #handleMovement(double, double)} 
 	 */
-	private void handleControl(WrapperEntity controller){
+	private void handleControl(IWrapperEntity controller){
 		//If the controller isn't a player, but is a NPC, make them look at the nearest hostile mob.
 		//We also get a flag to see if the gun is currently pointed to the hostile mob.
 		//If not, then we don't fire the gun, as that'd waste ammo.
@@ -398,11 +398,11 @@ public class PartGun extends APart{
 		//Also make the gunner account for bullet delay and movement of the hostile.
 		//This makes them track better when the target is moving.
 		//We only do this 
-		if(!(controller instanceof WrapperPlayer)){
+		if(!(controller instanceof IWrapperPlayer)){
 			//Get new target if we don't have one, or if we've gone 1 second and we have a closer target by 5 blocks.
 			boolean checkForCloser = entityTarget != null && ticksExisted%20 == 0;
 			if(entityTarget == null || checkForCloser){
-				for(WrapperEntity entity : world.getEntitiesHostile(controller, 48)){
+				for(IWrapperEntity entity : world.getEntitiesHostile(controller, 48)){
 					if(validateTarget(entity)){
 						if(entityTarget != null){
 							double distanceToBeat = position.distanceTo(entityTarget.getPosition());
@@ -477,7 +477,7 @@ public class PartGun extends APart{
 	 * is behind any blocks.  Returns true if the target is valid.
 	 * Also sets {@link #targetVector} and {@link #targetAngles}
 	 */
-	private boolean validateTarget(WrapperEntity target){
+	private boolean validateTarget(IWrapperEntity target){
 		if(target.isValid()){
 			//Get vector from eyes of controller to target.
 			//Target we aim for the middle, as it's more accurate.
@@ -597,7 +597,7 @@ public class PartGun extends APart{
 					bulletsReloading = item.definition.bullet.quantity;
 					reloadTimeRemaining = definition.gun.reloadTime;
 					if(!world.isClient()){
-						InterfacePacket.sendToAllClients(new PacketPartGun(this, loadedBullet));
+						InterfaceManager.packetInterface.sendToAllClients(new PacketPartGun(this, loadedBullet));
 					}
 					return true;
 				}
@@ -612,7 +612,7 @@ public class PartGun extends APart{
 	 *  or perhaps a player in a seat that's on this gun.  May also be the player
 	 *  hodling this gun if the gun is hand-held.
 	 */
-	public WrapperEntity getGunController(){
+	public IWrapperEntity getGunController(){
 		//If the entity we are on is destroyed, don't allow anything to control us.
 		if(entityOn.damageAmount == entityOn.definition.general.health){
 			return null;
@@ -778,7 +778,7 @@ public class PartGun extends APart{
 	}
 	
 	@Override
-	public WrapperNBT save(WrapperNBT data){
+	public IWrapperNBT save(IWrapperNBT data){
 		super.save(data);
 		data.setInteger("state", (byte) state.ordinal());
 		data.setInteger("shotsFired", bulletsFired);

@@ -3,11 +3,11 @@ package minecrafttransportsimulator.packets.instances;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
-import minecrafttransportsimulator.mcinterface.WrapperInventory;
-import minecrafttransportsimulator.mcinterface.WrapperItemStack;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperInventory;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.packets.components.APacketPlayer;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
@@ -22,7 +22,7 @@ public class PacketPlayerCraftItem extends APacketPlayer{
 	private final AItemPack<?> itemToCraft;
 	private final boolean forRepair;
 	
-	public PacketPlayerCraftItem(WrapperPlayer player, AItemPack<?> itemToCraft, boolean forRepair){
+	public PacketPlayerCraftItem(IWrapperPlayer player, AItemPack<?> itemToCraft, boolean forRepair){
 		super(player);
 		this.itemToCraft = itemToCraft;
 		this.forRepair = forRepair;
@@ -47,16 +47,16 @@ public class PacketPlayerCraftItem extends APacketPlayer{
 	}
 	
 	@Override
-	public void handle(WrapperWorld world, WrapperPlayer player){
-		WrapperInventory inventory = player.getInventory();
+	public void handle(AWrapperWorld world, IWrapperPlayer player){
+		IWrapperInventory inventory = player.getInventory();
 		if(player.isCreative() || inventory.hasMaterials(itemToCraft, true, true, forRepair)){
 			//If this is for repair, we don't make a new stack, we just use the old stack and a method call.
 			if(forRepair){
 				//Find the repair item and repair it.
 				int repairIndex = inventory.getRepairIndex(itemToCraft);
-				WrapperItemStack stack = inventory.getStack(repairIndex);
+				IWrapperItemStack stack = inventory.getStack(repairIndex);
 				AItemPack<?> item = (AItemPack<?>) stack.getItem();
-				WrapperNBT stackData = stack.getData();
+				IWrapperNBT stackData = stack.getData();
 				item.repair(stackData);
 				stack.setData(stackData);
 				if(!player.isCreative()){ 

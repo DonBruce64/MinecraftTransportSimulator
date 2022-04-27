@@ -14,27 +14,27 @@ import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.components.IItemVehicleInteractable;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
-import minecrafttransportsimulator.mcinterface.InterfacePacket;
-import minecrafttransportsimulator.mcinterface.WrapperItemStack;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.components.APacketEntityInteract;
 
 /**Packet used to interact with vehicles.  Initially sent from clients to the server
  * to handle players clicking on the vehicle.  Actions (if any) are performed on the server.
  * A corresponding interaction packet may be sent to all players tracking the vehicle if the
  * action requires updates on clients.  This can be driven by the logic in this packet, or
- * the logic in {@link IItemVehicleInteractable#doVehicleInteraction(WrapperItemStack, EntityVehicleF_Physics, APart, WrapperPlayer, PlayerOwnerState, boolean)}
+ * the logic in {@link IItemVehicleInteractable#doVehicleInteraction(IWrapperItemStack, EntityVehicleF_Physics, APart, IWrapperPlayer, PlayerOwnerState, boolean)}
  * 
  * @author don_bruce
  */
-public class PacketVehicleInteract extends APacketEntityInteract<EntityVehicleF_Physics, WrapperPlayer>{
+public class PacketVehicleInteract extends APacketEntityInteract<EntityVehicleF_Physics, IWrapperPlayer>{
 	private final UUID hitPartUniqueUUID;
 	private final Point3D hitBoxLocalCenter;
 	private final boolean leftClick;
 	private final boolean rightClick;
 		
-	public PacketVehicleInteract(EntityVehicleF_Physics vehicle, WrapperPlayer player, BoundingBox hitBox, boolean leftClick, boolean rightClick){
+	public PacketVehicleInteract(EntityVehicleF_Physics vehicle, IWrapperPlayer player, BoundingBox hitBox, boolean leftClick, boolean rightClick){
 		super(vehicle, player);
 		APart hitPart = vehicle.getPartWithBox(hitBox);
 		this.hitPartUniqueUUID = hitPart != null ? hitPart.uniqueUUID : null;
@@ -70,9 +70,9 @@ public class PacketVehicleInteract extends APacketEntityInteract<EntityVehicleF_
 	}
 
 	@Override
-	public boolean handle(WrapperWorld world, EntityVehicleF_Physics vehicle, WrapperPlayer player){
+	public boolean handle(AWrapperWorld world, EntityVehicleF_Physics vehicle, IWrapperPlayer player){
 		PlayerOwnerState ownerState = vehicle.getOwnerState(player);
-		WrapperItemStack heldStack = player.getHeldStack();
+		IWrapperItemStack heldStack = player.getHeldStack();
 		AItemBase heldItem = heldStack.getItem();
 		
 		//Get the part we hit, if one was specified.
@@ -147,28 +147,28 @@ public class PacketVehicleInteract extends APacketEntityInteract<EntityVehicleF_
 					case BUTTON:{
 						if(rightClick){
 							entity.setVariable(hitBox.definition.variableName, hitBox.definition.variableValue);
-							InterfacePacket.sendToAllClients(new PacketEntityVariableSet(entity, hitBox.definition.variableName, hitBox.definition.variableValue));
+							InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(entity, hitBox.definition.variableName, hitBox.definition.variableValue));
 						}else{
 							entity.setVariable(hitBox.definition.variableName, 0);
-							InterfacePacket.sendToAllClients(new PacketEntityVariableSet(entity, hitBox.definition.variableName, 0));
+							InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(entity, hitBox.definition.variableName, 0));
 						}
 						break;
 					}	
 					case INCREMENT:
 						if(rightClick && entity.incrementVariable(hitBox.definition.variableName, hitBox.definition.variableValue, hitBox.definition.clampMin, hitBox.definition.clampMax)){
-							InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(entity, hitBox.definition.variableName, hitBox.definition.variableValue, hitBox.definition.clampMin, hitBox.definition.clampMax));	
+							InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(entity, hitBox.definition.variableName, hitBox.definition.variableValue, hitBox.definition.clampMin, hitBox.definition.clampMax));	
 						}
 						break;
 					case SET:
 						if(rightClick){
 							entity.setVariable(hitBox.definition.variableName, hitBox.definition.variableValue);
-							InterfacePacket.sendToAllClients(new PacketEntityVariableSet(entity, hitBox.definition.variableName, hitBox.definition.variableValue));
+							InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(entity, hitBox.definition.variableName, hitBox.definition.variableValue));
 						}
 						break;
 					case TOGGLE:{
 						if(rightClick){
 							entity.toggleVariable(hitBox.definition.variableName);
-							InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(entity, hitBox.definition.variableName));
+							InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableToggle(entity, hitBox.definition.variableName));
 						}
 						break;
 					}

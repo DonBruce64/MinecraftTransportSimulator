@@ -9,8 +9,8 @@ import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 
 public class ItemPartPropeller extends AItemPart{
 	
@@ -24,12 +24,12 @@ public class ItemPartPropeller extends AItemPart{
 	}
 	
 	@Override
-	public PartPropeller createPart(AEntityF_Multipart<?> entity, WrapperPlayer placingPlayer, JSONPartDefinition packVehicleDef, WrapperNBT partData, APart parentPart){
+	public PartPropeller createPart(AEntityF_Multipart<?> entity, IWrapperPlayer placingPlayer, JSONPartDefinition packVehicleDef, IWrapperNBT partData, APart parentPart){
 		return new PartPropeller(entity, placingPlayer, packVehicleDef, partData, parentPart);
 	}
 	
 	@Override
-	public void addTooltipLines(List<String> tooltipLines, WrapperNBT data){
+	public void addTooltipLines(List<String> tooltipLines, IWrapperNBT data){
 		super.addTooltipLines(tooltipLines, data);
 		tooltipLines.add(definition.propeller.isDynamicPitch ? JSONConfigLanguage.ITEMINFO_PROPELLER_DYNAMICPITCH.value : JSONConfigLanguage.ITEMINFO_PROPELLER_STATICPITCH.value);
 		tooltipLines.add(JSONConfigLanguage.ITEMINFO_PROPELLER_PITCH.value + definition.propeller.pitch);

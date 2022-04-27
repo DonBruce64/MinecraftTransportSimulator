@@ -4,9 +4,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
-import minecrafttransportsimulator.mcinterface.InterfaceCore;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 
 /**Beacon class.  Responsible for containing the state of a beacon, which includes
  * the beacon's position, and other properties.
@@ -15,16 +15,16 @@ import minecrafttransportsimulator.mcinterface.WrapperWorld;
  */
 public class NavBeacon{
 	private static final String BEACON_LISTING_KEY = "beacons";
-	private static final Map<WrapperWorld, Map<String, NavBeacon>> cachedBeaconMaps = new HashMap<WrapperWorld, Map<String, NavBeacon>>();
+	private static final Map<AWrapperWorld, Map<String, NavBeacon>> cachedBeaconMaps = new HashMap<AWrapperWorld, Map<String, NavBeacon>>();
 	
 	public final String name;
 	public final double glideSlope;
 	public final double bearing;
 	public final Point3D position;
 	
-	public static NavBeacon getByNameFromWorld(WrapperWorld world, String name){
+	public static NavBeacon getByNameFromWorld(AWrapperWorld world, String name){
 		if(!cachedBeaconMaps.containsKey(world)){
-			WrapperNBT beaconListing = world.getData(BEACON_LISTING_KEY);
+			IWrapperNBT beaconListing = world.getData(BEACON_LISTING_KEY);
 			if(beaconListing != null){
 				Map<String, NavBeacon> beaconMap = new HashMap<String, NavBeacon>();
 				for(String beaconName : beaconListing.getAllNames()){
@@ -39,13 +39,13 @@ public class NavBeacon{
 		return cachedBeaconMaps.get(world).get(name);
 	}
 	
-	public static void removeFromWorld(WrapperWorld world, String name){
+	public static void removeFromWorld(AWrapperWorld world, String name){
 		if(name != null){
 			if(cachedBeaconMaps.containsKey(world)){
 				cachedBeaconMaps.get(world).remove(name);
 			}
 			
-			WrapperNBT beaconListing = world.getData(BEACON_LISTING_KEY);
+			IWrapperNBT beaconListing = world.getData(BEACON_LISTING_KEY);
 			if(beaconListing != null){
 				beaconListing.deleteData(name);
 				world.setData(BEACON_LISTING_KEY, beaconListing);
@@ -53,23 +53,23 @@ public class NavBeacon{
 		}
 	}
 	
-	private NavBeacon(WrapperNBT data){
+	private NavBeacon(IWrapperNBT data){
 		this.name = data.getString("name");
 		this.glideSlope = data.getDouble("glideSlope");
 		this.bearing = data.getDouble("bearing");
 		this.position = data.getPoint3dCompact("location");
 	}
 	
-	public NavBeacon(WrapperWorld world, String name, double glideSlope, double bearing, Point3D position){
+	public NavBeacon(AWrapperWorld world, String name, double glideSlope, double bearing, Point3D position){
 		this.name = name;
 		this.glideSlope = glideSlope;
 		this.bearing = bearing;
 		this.position = position;
-		WrapperNBT beaconListing = world.getData(BEACON_LISTING_KEY);
+		IWrapperNBT beaconListing = world.getData(BEACON_LISTING_KEY);
 		if(beaconListing == null){
-			beaconListing = InterfaceCore.getNewNBTWrapper();
+			beaconListing = InterfaceManager.coreInterface.getNewNBTWrapper();
 		}
-		beaconListing.setData(name, save(InterfaceCore.getNewNBTWrapper()));
+		beaconListing.setData(name, save(InterfaceManager.coreInterface.getNewNBTWrapper()));
 		world.setData(BEACON_LISTING_KEY, beaconListing);	
 	}
 	
@@ -83,7 +83,7 @@ public class NavBeacon{
 		return delta;
 	}
 	
-	public WrapperNBT save(WrapperNBT data){
+	public IWrapperNBT save(IWrapperNBT data){
 		data.setString("name", name);
 		data.setDouble("glideSlope", glideSlope);
 		data.setDouble("bearing", bearing);

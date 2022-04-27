@@ -16,10 +16,8 @@ import minecrafttransportsimulator.jsondefs.JSONConfigClient.ConfigJoystick;
 import minecrafttransportsimulator.jsondefs.JSONConfigClient.ConfigKeyboard;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
-import minecrafttransportsimulator.mcinterface.InterfaceClient;
-import minecrafttransportsimulator.mcinterface.InterfaceInput;
-import minecrafttransportsimulator.mcinterface.InterfacePacket;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
@@ -34,7 +32,7 @@ import minecrafttransportsimulator.packets.instances.PacketVehicleInteract;
 public final class ControlSystem{	
 	private static final int NULL_COMPONENT = 999;	
 	private static boolean joysticksInhibited = false;
-	private static WrapperPlayer clientPlayer;
+	private static IWrapperPlayer clientPlayer;
 	
 	private static boolean clickingLeft = false;
 	private static byte ticksLeftHeld = 0;
@@ -47,8 +45,8 @@ public final class ControlSystem{
 	private static EntityVehicleF_Physics closestVehicle = null;
 	
 	/**
-	 * Static initializer for the wrapper inputs, as we need to iterate through the enums to initialize them
-	 * prior to using them in any of the methods contained in this wrapper (cause they'll be null).
+	 * Static initializer for the IWrapper inputs, as we need to iterate through the enums to initialize them
+	 * prior to using them in any of the methods contained in this IWrapper (cause they'll be null).
 	 * Joystick enums need to come first, as the Keyboard enums take them as constructor args.
 	 * After we initialize the keboard enums, we set their default values.
 	 * Once all this is done, save the results back to the disk to ensure the systems are synced.
@@ -64,14 +62,14 @@ public final class ControlSystem{
 		}
 		for(ControlsKeyboard control : ControlsKeyboard.values()){
 			if(control.config.keyCode == 0){
-				control.config.keyCode = InterfaceInput.getKeyCodeForName(control.defaultKeyName);
+				control.config.keyCode = InterfaceManager.inputInterface.getKeyCodeForName(control.defaultKeyName);
 			}
 		}
 		ConfigSystem.saveToDisk();
 	}
 
-	public static void controlGlobal(WrapperPlayer player){
-		if(InterfaceInput.isLeftMouseButtonDown()){
+	public static void controlGlobal(IWrapperPlayer player){
+		if(InterfaceManager.inputInterface.isLeftMouseButtonDown()){
 			if(ticksLeftHeld++ == 5){
 				ticksLeftHeld = 0;
 				clickingLeft = false;
@@ -85,7 +83,7 @@ public final class ControlSystem{
 			ticksLeftHeld = 0;
 			handleClick(player);
 		}
-		if(InterfaceInput.isRightMouseButtonDown()){
+		if(InterfaceManager.inputInterface.isRightMouseButtonDown()){
 			if(ticksRightHeld++ == 5){
 				ticksRightHeld = 0;
 				clickingRight = false;
@@ -101,12 +99,12 @@ public final class ControlSystem{
 		}
 	}
 	
-	private static void handleClick(WrapperPlayer player){
+	private static void handleClick(IWrapperPlayer player){
 		//Either change the gun trigger state (if we are holding a gun),
 		//or try to interact with entities if we are not.
 		EntityPlayerGun playerGun = EntityPlayerGun.playerClientGuns.get(player.getID());
 		if(playerGun != null && playerGun.activeGun != null){
-			InterfacePacket.sendToServer(new PacketPartGun(playerGun.activeGun, clickingLeft, clickingRight));
+			InterfaceManager.packetInterface.sendToServer(new PacketPartGun(playerGun.activeGun, clickingLeft, clickingRight));
 		}
 		if(clickingLeft || clickingRight){
 			Point3D startPosition = player.getPosition();
@@ -131,16 +129,16 @@ public final class ControlSystem{
 				}
 			}
 			if(closestBox != null){
-				InterfacePacket.sendToServer(new PacketVehicleInteract(closestVehicle,  player, closestBox, clickingLeft, clickingRight));
+				InterfaceManager.packetInterface.sendToServer(new PacketVehicleInteract(closestVehicle,  player, closestBox, clickingLeft, clickingRight));
 			}
 		}else if(closestBox != null){
 			//Fire off un-click to vehicle last clicked.
-			InterfacePacket.sendToServer(new PacketVehicleInteract(closestVehicle,  player, closestBox, clickingLeft, clickingRight));
+			InterfaceManager.packetInterface.sendToServer(new PacketVehicleInteract(closestVehicle,  player, closestBox, clickingLeft, clickingRight));
 		}
 	}
 	
 	public static void controlVehicle(EntityVehicleF_Physics vehicle, boolean isPlayerController){
-		clientPlayer = InterfaceClient.getClientPlayer();
+		clientPlayer = InterfaceManager.clientInterface.getClientPlayer();
 		if(vehicle.definition.motorized.isAircraft){
 			controlAircraft(vehicle, isPlayerController);
 		}else{
@@ -161,7 +159,7 @@ public final class ControlSystem{
 		}
 		
 		if(changeView.isPressed()){
-			InterfaceClient.toggleFirstPerson();
+			InterfaceManager.clientInterface.toggleFirstPerson();
 		}
 	}
 	
@@ -198,16 +196,16 @@ public final class ControlSystem{
 	
 	private static void controlBrake(EntityVehicleF_Physics vehicle, ControlsKeyboardDynamic brakeMod, ControlsJoystick brakeJoystick, ControlsJoystick brakeButton, ControlsJoystick pBrake){
 		//If the analog brake is set, do brake state based on that rather than the keyboard.
-		boolean isParkingBrakePressed = InterfaceInput.isJoystickPresent(brakeJoystick.config.joystickName) ? pBrake.isPressed() : brakeMod.isPressed() || pBrake.isPressed();
+		boolean isParkingBrakePressed = InterfaceManager.inputInterface.isJoystickPresent(brakeJoystick.config.joystickName) ? pBrake.isPressed() : brakeMod.isPressed() || pBrake.isPressed();
 		if(isParkingBrakePressed){
 			if(!parkingBrakePressedLastCheck){
-				InterfacePacket.sendToServer(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.PARKINGBRAKE_VARIABLE));
+				InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.PARKINGBRAKE_VARIABLE));
 				parkingBrakePressedLastCheck = true;
 			}
 		}else{
 			parkingBrakePressedLastCheck = false;
-			double brakeValue = InterfaceInput.isJoystickPresent(brakeJoystick.config.joystickName) ? brakeJoystick.getAxisState(true) : (brakeMod.mainControl.isPressed() || brakeButton.isPressed() ? EntityVehicleF_Physics.MAX_BRAKE : 0);
-			InterfacePacket.sendToServer(new PacketEntityVariableSet(vehicle, EntityVehicleF_Physics.BRAKE_VARIABLE, brakeValue));
+			double brakeValue = InterfaceManager.inputInterface.isJoystickPresent(brakeJoystick.config.joystickName) ? brakeJoystick.getAxisState(true) : (brakeMod.mainControl.isPressed() || brakeButton.isPressed() ? EntityVehicleF_Physics.MAX_BRAKE : 0);
+			InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(vehicle, EntityVehicleF_Physics.BRAKE_VARIABLE, brakeValue));
 		}
 	}
 	
@@ -216,13 +214,13 @@ public final class ControlSystem{
 		for(APart part : vehicle.parts){
 			if(part instanceof PartGun){
 				PartGun gun = (PartGun) part;
-				if(InterfaceClient.getClientPlayer().equals(gun.getGunController())){
-					InterfacePacket.sendToServer(new PacketPartGun(gun, gunTrigger.isPressed(), false));
+				if(InterfaceManager.clientInterface.getClientPlayer().equals(gun.getGunController())){
+					InterfaceManager.packetInterface.sendToServer(new PacketPartGun(gun, gunTrigger.isPressed(), false));
 				}
 			}else if(part instanceof PartSeat){
 				if(gunSwitchPressedThisScan){
-					if(InterfaceClient.getClientPlayer().equals(vehicle.locationRiderMap.get(part.placementOffset))){
-						InterfacePacket.sendToServer(new PacketPartSeat((PartSeat) part));
+					if(InterfaceManager.clientInterface.getClientPlayer().equals(vehicle.locationRiderMap.get(part.placementOffset))){
+						InterfaceManager.packetInterface.sendToServer(new PacketPartSeat((PartSeat) part));
 					}
 				}
 			}
@@ -233,7 +231,7 @@ public final class ControlSystem{
 		if(radio.isPressed()){
 			if(AGUIBase.activeInputGUI instanceof GUIRadio){
 				AGUIBase.activeInputGUI.close();
-			}else if(!InterfaceClient.isGUIOpen()){
+			}else if(!InterfaceManager.clientInterface.isGUIOpen()){
 				new GUIRadio(vehicle.radio);
 			}
 		}
@@ -242,36 +240,36 @@ public final class ControlSystem{
 	private static void controlJoystick(EntityVehicleF_Physics vehicle, ControlsKeyboard joystickInhibit){
 		if(joystickInhibit.isPressed()){
 			joysticksInhibited = !joysticksInhibited;
-			InterfaceInput.inhibitJoysticks(joysticksInhibited);
+			InterfaceManager.inputInterface.inhibitJoysticks(joysticksInhibited);
 		}
 	}
 	
 	private static void controlControlSurface(EntityVehicleF_Physics vehicle, ControlsJoystick axis, ControlsKeyboard increment, ControlsKeyboard decrement, double rate, double bounds, String variable, double currentValue){
-		if(InterfaceInput.isJoystickPresent(axis.config.joystickName)){
+		if(InterfaceManager.inputInterface.isJoystickPresent(axis.config.joystickName)){
 			double axisValue = axis.getAxisState(false);
 			if(Double.isNaN(axisValue)){
-				InterfacePacket.sendToServer(new PacketEntityVariableSet(vehicle, variable, 0));
+				InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(vehicle, variable, 0));
 			}else{
-				InterfacePacket.sendToServer(new PacketEntityVariableSet(vehicle, variable, bounds*(-1 + 2*axisValue)));
+				InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(vehicle, variable, bounds*(-1 + 2*axisValue)));
 			}
 		}else{
 			if(increment.isPressed()){
-				InterfacePacket.sendToServer(new PacketEntityVariableIncrement(vehicle, variable, rate*(currentValue < 0 ? 2 : 1), -bounds, bounds));
+				InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableIncrement(vehicle, variable, rate*(currentValue < 0 ? 2 : 1), -bounds, bounds));
 			}else if(decrement.isPressed()){
-				InterfacePacket.sendToServer(new PacketEntityVariableIncrement(vehicle, variable, -rate*(currentValue > 0 ? 2 : 1), -bounds, bounds));
+				InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableIncrement(vehicle, variable, -rate*(currentValue > 0 ? 2 : 1), -bounds, bounds));
 			}else if(currentValue > 0){
-				InterfacePacket.sendToServer(new PacketEntityVariableIncrement(vehicle, variable, -rate, 0, bounds));
+				InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableIncrement(vehicle, variable, -rate, 0, bounds));
 			}else if(currentValue < 0){
-				InterfacePacket.sendToServer(new PacketEntityVariableIncrement(vehicle, variable, rate, -bounds, 0));
+				InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableIncrement(vehicle, variable, rate, -bounds, 0));
 			}
 		}
 	}
 	
 	private static void controlControlTrim(EntityVehicleF_Physics vehicle, ControlsJoystick increment, ControlsJoystick decrement, double bounds, String variable){
 		if(increment.isPressed()){
-			InterfacePacket.sendToServer(new PacketEntityVariableIncrement(vehicle, variable, 0.1, -bounds, bounds));
+			InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableIncrement(vehicle, variable, 0.1, -bounds, bounds));
 		}else if(decrement.isPressed()){
-			InterfacePacket.sendToServer(new PacketEntityVariableIncrement(vehicle, variable, -0.1, -bounds, bounds));
+			InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableIncrement(vehicle, variable, -0.1, -bounds, bounds));
 		}
 	}
 	
@@ -290,7 +288,7 @@ public final class ControlSystem{
 			if(aircraft.canPlayerStartEngines(clientPlayer)){
 				if(AGUIBase.activeInputGUI instanceof GUIPanelAircraft){
 					AGUIBase.activeInputGUI.close();
-				}else if(!InterfaceClient.isGUIOpen()){
+				}else if(!InterfaceManager.clientInterface.isGUIOpen()){
 					new GUIPanelAircraft(aircraft);
 				}	
 			}
@@ -301,23 +299,23 @@ public final class ControlSystem{
 		
 		//Check for thrust reverse button.
 		if(ControlsJoystick.AIRCRAFT_REVERSE.isPressed()){
-			InterfacePacket.sendToServer(new PacketEntityVariableToggle(aircraft, EntityVehicleF_Physics.REVERSE_THRUST_VARIABLE));
+			InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(aircraft, EntityVehicleF_Physics.REVERSE_THRUST_VARIABLE));
 		}
 		
 		//Check for gear button.
 		if(ControlsJoystick.AIRCRAFT_GEAR.isPressed()){
-			InterfacePacket.sendToServer(new PacketEntityVariableToggle(aircraft, EntityVehicleF_Physics.GEAR_VARIABLE));
+			InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(aircraft, EntityVehicleF_Physics.GEAR_VARIABLE));
 		}
 		
 		//Increment or decrement throttle.
-		if(InterfaceInput.isJoystickPresent(ControlsJoystick.AIRCRAFT_THROTTLE.config.joystickName)){
-			InterfacePacket.sendToServer(new PacketEntityVariableSet(aircraft, EntityVehicleF_Physics.THROTTLE_VARIABLE, ControlsJoystick.AIRCRAFT_THROTTLE.getAxisState(true)*EntityVehicleF_Physics.MAX_THROTTLE));
+		if(InterfaceManager.inputInterface.isJoystickPresent(ControlsJoystick.AIRCRAFT_THROTTLE.config.joystickName)){
+			InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(aircraft, EntityVehicleF_Physics.THROTTLE_VARIABLE, ControlsJoystick.AIRCRAFT_THROTTLE.getAxisState(true)*EntityVehicleF_Physics.MAX_THROTTLE));
 		}else{
 			if(ControlsKeyboard.AIRCRAFT_THROTTLE_U.isPressed()){
-				InterfacePacket.sendToServer(new PacketEntityVariableIncrement(aircraft, EntityVehicleF_Physics.THROTTLE_VARIABLE, EntityVehicleF_Physics.MAX_THROTTLE/100D, 0, EntityVehicleF_Physics.MAX_THROTTLE));
+				InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableIncrement(aircraft, EntityVehicleF_Physics.THROTTLE_VARIABLE, EntityVehicleF_Physics.MAX_THROTTLE/100D, 0, EntityVehicleF_Physics.MAX_THROTTLE));
 			}
 			if(ControlsKeyboard.AIRCRAFT_THROTTLE_D.isPressed()){
-				InterfacePacket.sendToServer(new PacketEntityVariableIncrement(aircraft, EntityVehicleF_Physics.THROTTLE_VARIABLE, -EntityVehicleF_Physics.MAX_THROTTLE/100D, 0, EntityVehicleF_Physics.MAX_THROTTLE));
+				InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableIncrement(aircraft, EntityVehicleF_Physics.THROTTLE_VARIABLE, -EntityVehicleF_Physics.MAX_THROTTLE/100D, 0, EntityVehicleF_Physics.MAX_THROTTLE));
 			}
 		}		
 		
@@ -325,9 +323,9 @@ public final class ControlSystem{
 		if(aircraft.definition.motorized.flapNotches != null && !aircraft.definition.motorized.flapNotches.isEmpty()){
 			int currentFlapSetting = aircraft.definition.motorized.flapNotches.indexOf((float)aircraft.flapDesiredAngle);
 			if(ControlsKeyboard.AIRCRAFT_FLAPS_D.isPressed() && currentFlapSetting + 1 < aircraft.definition.motorized.flapNotches.size()){
-				InterfacePacket.sendToServer(new PacketEntityVariableSet(aircraft, EntityVehicleF_Physics.FLAPS_VARIABLE, aircraft.definition.motorized.flapNotches.get(currentFlapSetting + 1)));
+				InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(aircraft, EntityVehicleF_Physics.FLAPS_VARIABLE, aircraft.definition.motorized.flapNotches.get(currentFlapSetting + 1)));
 			}else if(ControlsKeyboard.AIRCRAFT_FLAPS_U.isPressed() && currentFlapSetting > 0){
-				InterfacePacket.sendToServer(new PacketEntityVariableSet(aircraft, EntityVehicleF_Physics.FLAPS_VARIABLE, aircraft.definition.motorized.flapNotches.get(currentFlapSetting - 1)));
+				InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(aircraft, EntityVehicleF_Physics.FLAPS_VARIABLE, aircraft.definition.motorized.flapNotches.get(currentFlapSetting - 1)));
 			}
 		}
 		
@@ -338,11 +336,11 @@ public final class ControlSystem{
 		//Check is mouse yoke is enabled.  If so do controls by mouse rather than buttons.
 		if(ConfigSystem.client.controlSettings.mouseYoke.value){
 			if(EntityVehicleF_Physics.lockCameraToMovement && AGUIBase.activeInputGUI == null){
-				long mouseDelta = InterfaceInput.getMouseDelta();
+				long mouseDelta = InterfaceManager.inputInterface.getMouseDelta();
 				double deltaAileron = ConfigSystem.client.controlSettings.flightControlRate.value*((short) (mouseDelta >> Integer.SIZE));
 				double deltaElevator = ConfigSystem.client.controlSettings.flightControlRate.value*((short) ((int) -mouseDelta));
-				InterfacePacket.sendToServer(new PacketEntityVariableIncrement(aircraft, EntityVehicleF_Physics.AILERON_VARIABLE, deltaAileron, -EntityVehicleF_Physics.MAX_AILERON_ANGLE, EntityVehicleF_Physics.MAX_AILERON_ANGLE));
-				InterfacePacket.sendToServer(new PacketEntityVariableIncrement(aircraft, EntityVehicleF_Physics.ELEVATOR_VARIABLE, deltaElevator, -EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE, EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE));
+				InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableIncrement(aircraft, EntityVehicleF_Physics.AILERON_VARIABLE, deltaAileron, -EntityVehicleF_Physics.MAX_AILERON_ANGLE, EntityVehicleF_Physics.MAX_AILERON_ANGLE));
+				InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableIncrement(aircraft, EntityVehicleF_Physics.ELEVATOR_VARIABLE, deltaElevator, -EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE, EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE));
 				
 			}
 		}else{
@@ -358,7 +356,7 @@ public final class ControlSystem{
 		//Check to see if we request a different auto-level state.
 		boolean aircraftIsAutolevel = aircraft.getVariable(EntityVehicleF_Physics.AUTOLEVEL_VARIABLE) != 0;
 		if(ConfigSystem.client.controlSettings.heliAutoLevel.value ^ aircraftIsAutolevel){
-			InterfacePacket.sendToServer(new PacketEntityVariableSet(aircraft, EntityVehicleF_Physics.AUTOLEVEL_VARIABLE, ConfigSystem.client.controlSettings.heliAutoLevel.value ? 1 : 0));
+			InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(aircraft, EntityVehicleF_Physics.AUTOLEVEL_VARIABLE, ConfigSystem.client.controlSettings.heliAutoLevel.value ? 1 : 0));
 		}
 	}
 	
@@ -377,7 +375,7 @@ public final class ControlSystem{
 			if(powered.canPlayerStartEngines(clientPlayer)){
 				if(AGUIBase.activeInputGUI instanceof GUIPanelGround){
 					AGUIBase.activeInputGUI.close();
-				}else if(!InterfaceClient.isGUIOpen()){
+				}else if(!InterfaceManager.clientInterface.isGUIOpen()){
 					new GUIPanelGround(powered);
 				}
 			}
@@ -387,18 +385,18 @@ public final class ControlSystem{
 		if(powered.definition.motorized.hasIncrementalThrottle){
 			//Check brake and gas.  Brake always changes, gas goes up-down.
 			controlBrake(powered, ControlsKeyboardDynamic.CAR_PARK, ControlsJoystick.CAR_BRAKE, ControlsJoystick.CAR_BRAKE_DIGITAL, ControlsJoystick.CAR_PARK);
-			if(InterfaceInput.isJoystickPresent(ControlsJoystick.CAR_GAS.config.joystickName)){
+			if(InterfaceManager.inputInterface.isJoystickPresent(ControlsJoystick.CAR_GAS.config.joystickName)){
 				//Send throttle over if throttle if cruise control is off, or if throttle is less than the axis level.
 				double throttleLevel = ControlsJoystick.CAR_GAS.getAxisState(true)*EntityVehicleF_Physics.MAX_THROTTLE;
 				if(powered.autopilotSetting == 0 || powered.throttle < throttleLevel){
-					InterfacePacket.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, throttleLevel));
+					InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, throttleLevel));
 				}
 			}else{
 				if(ControlsKeyboard.CAR_GAS.isPressed()){
-					InterfacePacket.sendToServer(new PacketEntityVariableIncrement(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, EntityVehicleF_Physics.MAX_THROTTLE/100D, 0, EntityVehicleF_Physics.MAX_THROTTLE));
+					InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableIncrement(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, EntityVehicleF_Physics.MAX_THROTTLE/100D, 0, EntityVehicleF_Physics.MAX_THROTTLE));
 				}
 				if(ControlsKeyboard.CAR_BRAKE.isPressed() || ControlsJoystick.CAR_BRAKE_DIGITAL.isPressed()){
-					InterfacePacket.sendToServer(new PacketEntityVariableIncrement(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, -EntityVehicleF_Physics.MAX_THROTTLE/100D, 0, EntityVehicleF_Physics.MAX_THROTTLE));
+					InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableIncrement(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, -EntityVehicleF_Physics.MAX_THROTTLE/100D, 0, EntityVehicleF_Physics.MAX_THROTTLE));
 				}
 			}
 		}else{
@@ -412,7 +410,7 @@ public final class ControlSystem{
 					
 					//Get the brake value.
 					double brakeValue = 0;
-					if(InterfaceInput.isJoystickPresent(ControlsJoystick.CAR_BRAKE.config.joystickName)){
+					if(InterfaceManager.inputInterface.isJoystickPresent(ControlsJoystick.CAR_BRAKE.config.joystickName)){
 						brakeValue = ControlsJoystick.CAR_BRAKE.getAxisState(true);
 					}else if(ControlsKeyboard.CAR_BRAKE.isPressed() || ControlsJoystick.CAR_BRAKE_DIGITAL.isPressed()){
 						 brakeValue = EntityVehicleF_Physics.MAX_BRAKE;
@@ -420,7 +418,7 @@ public final class ControlSystem{
 					
 					//Get the throttle value.
 					double throttleValue = 0;
-					if(InterfaceInput.isJoystickPresent(ControlsJoystick.CAR_GAS.config.joystickName)){
+					if(InterfaceManager.inputInterface.isJoystickPresent(ControlsJoystick.CAR_GAS.config.joystickName)){
 						throttleValue = ControlsJoystick.CAR_GAS.getAxisState(true)*EntityVehicleF_Physics.MAX_THROTTLE;
 					}else if(ControlsKeyboardDynamic.CAR_SLOW.isPressed()){
 						throttleValue = ConfigSystem.client.controlSettings.halfThrottle.value ? EntityVehicleF_Physics.MAX_THROTTLE : EntityVehicleF_Physics.MAX_THROTTLE/2D; 
@@ -432,21 +430,21 @@ public final class ControlSystem{
 					if(brakeValue > EntityVehicleF_Physics.MAX_BRAKE/4F && currentGear >= 0 && powered.axialVelocity < 0.01F){
 						if(currentGear > 0){
 							for(PartEngine engine : powered.engines.values()){
-								InterfacePacket.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE));
+								InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE));
 							}
 						}else{
 							for(PartEngine engine : powered.engines.values()){
-								InterfacePacket.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.DOWN_SHIFT_VARIABLE));
+								InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.DOWN_SHIFT_VARIABLE));
 							}
 						}
 					}else if(throttleValue > EntityVehicleF_Physics.MAX_THROTTLE/4F && currentGear <= 0 && powered.axialVelocity < 0.01F){
 						if(currentGear < 0){
 							for(PartEngine engine : powered.engines.values()){
-								InterfacePacket.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE));
+								InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE));
 							}
 						}else{
 							for(PartEngine engine : powered.engines.values()){
-								InterfacePacket.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.UP_SHIFT_VARIABLE));
+								InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.UP_SHIFT_VARIABLE));
 							}
 						}
 					}
@@ -455,41 +453,41 @@ public final class ControlSystem{
 					//Otherwise send normal values if we are in neutral or forwards,
 					//and invert controls if we are in a reverse gear.
 					if(throttleValue == 0 && brakeValue == 0 && powered.axialVelocity < PartEngine.MAX_SHIFT_SPEED){
-						InterfacePacket.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.BRAKE_VARIABLE, EntityVehicleF_Physics.MAX_BRAKE));
+						InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.BRAKE_VARIABLE, EntityVehicleF_Physics.MAX_BRAKE));
 					}else if(currentGear >= 0){
-						InterfacePacket.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.BRAKE_VARIABLE, brakeValue));
-						InterfacePacket.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, throttleValue));
+						InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.BRAKE_VARIABLE, brakeValue));
+						InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, throttleValue));
 					}else{
-						InterfacePacket.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.BRAKE_VARIABLE, throttleValue));
-						InterfacePacket.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, brakeValue));
+						InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.BRAKE_VARIABLE, throttleValue));
+						InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, brakeValue));
 					}
 				}
 			}else{
 				//Check brake and gas and set to on or off.
 				controlBrake(powered, ControlsKeyboardDynamic.CAR_PARK, ControlsJoystick.CAR_BRAKE, ControlsJoystick.CAR_BRAKE_DIGITAL, ControlsJoystick.CAR_PARK);
-				if(InterfaceInput.isJoystickPresent(ControlsJoystick.CAR_GAS.config.joystickName)){
+				if(InterfaceManager.inputInterface.isJoystickPresent(ControlsJoystick.CAR_GAS.config.joystickName)){
 					//Send throttle over if throttle if cruise control is off, or if throttle is less than the axis level.
 					double throttleLevel = ControlsJoystick.CAR_GAS.getAxisState(true);
 					if(powered.autopilotSetting == 0 || powered.throttle < throttleLevel){
-						InterfacePacket.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, throttleLevel));
+						InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, throttleLevel));
 					}
 				}else{
 					if(ControlsKeyboardDynamic.CAR_SLOW.isPressed()){
 						if(!ConfigSystem.client.controlSettings.halfThrottle.value){
-							InterfacePacket.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, EntityVehicleF_Physics.MAX_THROTTLE/2D));
+							InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, EntityVehicleF_Physics.MAX_THROTTLE/2D));
 						}else{
-							InterfacePacket.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, EntityVehicleF_Physics.MAX_THROTTLE));
+							InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, EntityVehicleF_Physics.MAX_THROTTLE));
 						}
 					}else if(ControlsKeyboard.CAR_GAS.isPressed()){
 						if(!ConfigSystem.client.controlSettings.halfThrottle.value){
-							InterfacePacket.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, EntityVehicleF_Physics.MAX_THROTTLE));
+							InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, EntityVehicleF_Physics.MAX_THROTTLE));
 						}else{
-							InterfacePacket.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, EntityVehicleF_Physics.MAX_THROTTLE/2D));
+							InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, EntityVehicleF_Physics.MAX_THROTTLE/2D));
 						}
 					}else{
 						//Send gas off packet if we don't have cruise on.
 						if(powered.autopilotSetting == 0){
-							InterfacePacket.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, 0D));
+							InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, 0D));
 						}
 					}
 				}
@@ -500,9 +498,9 @@ public final class ControlSystem{
 		if(!powered.lockedOnRoad){
 			if(ConfigSystem.client.controlSettings.mouseYoke.value){
 				if(EntityVehicleF_Physics.lockCameraToMovement && AGUIBase.activeInputGUI == null){
-					long mouseDelta = InterfaceInput.getMouseDelta();
+					long mouseDelta = InterfaceManager.inputInterface.getMouseDelta();
 					double deltaRudder = ConfigSystem.client.controlSettings.flightControlRate.value*((short) (mouseDelta >> Integer.SIZE));
-					InterfacePacket.sendToServer(new PacketEntityVariableIncrement(powered, EntityVehicleF_Physics.RUDDER_VARIABLE, deltaRudder, -EntityVehicleF_Physics.MAX_RUDDER_ANGLE, EntityVehicleF_Physics.MAX_RUDDER_ANGLE));
+					InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableIncrement(powered, EntityVehicleF_Physics.RUDDER_VARIABLE, deltaRudder, -EntityVehicleF_Physics.MAX_RUDDER_ANGLE, EntityVehicleF_Physics.MAX_RUDDER_ANGLE));
 				}
 			}else{
 				controlControlSurface(powered, ControlsJoystick.CAR_TURN, ControlsKeyboard.CAR_TURN_R, ControlsKeyboard.CAR_TURN_L, ConfigSystem.client.controlSettings.steeringControlRate.value, EntityVehicleF_Physics.MAX_RUDDER_ANGLE, EntityVehicleF_Physics.RUDDER_VARIABLE, powered.rudderAngle);
@@ -512,19 +510,19 @@ public final class ControlSystem{
 		//Check if we are shifting.
 		if(ControlsKeyboardDynamic.CAR_SHIFT_NU.isPressed() || ControlsKeyboardDynamic.CAR_SHIFT_ND.isPressed()){
 			for(PartEngine engine : powered.engines.values()){
-				InterfacePacket.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE));
+				InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE));
 			}
 		}else{
 			if(ControlsKeyboard.CAR_SHIFT_U.isPressed()){
 				for(PartEngine engine : powered.engines.values()){
 					if(engine.definition.engine.isAutomatic){
 						if(engine.currentGear < 0){
-							InterfacePacket.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE));
+							InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE));
 						}else if(engine.currentGear == 0){
-							InterfacePacket.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.UP_SHIFT_VARIABLE));
+							InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.UP_SHIFT_VARIABLE));
 						}
 					}else{
-						InterfacePacket.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.UP_SHIFT_VARIABLE));
+						InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.UP_SHIFT_VARIABLE));
 					}
 				}
 			}
@@ -532,12 +530,12 @@ public final class ControlSystem{
 				for(PartEngine engine : powered.engines.values()){
 					if(engine.definition.engine.isAutomatic){
 						if(engine.currentGear > 0){
-							InterfacePacket.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE));
+							InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE));
 						}else if(engine.currentGear == 0){
-							InterfacePacket.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.DOWN_SHIFT_VARIABLE));
+							InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.DOWN_SHIFT_VARIABLE));
 						}
 					}else{
-						InterfacePacket.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.DOWN_SHIFT_VARIABLE));
+						InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.DOWN_SHIFT_VARIABLE));
 					}
 				}
 			}
@@ -545,21 +543,21 @@ public final class ControlSystem{
 		
 		//Check if horn button is pressed.
 		if(ControlsKeyboard.CAR_HORN.isPressed() && !powered.isVariableActive(EntityVehicleF_Physics.HORN_VARIABLE)){
-			InterfacePacket.sendToServer(new PacketEntityVariableToggle(powered, EntityVehicleF_Physics.HORN_VARIABLE));
+			InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(powered, EntityVehicleF_Physics.HORN_VARIABLE));
 		}else if(!ControlsKeyboard.CAR_HORN.isPressed() && powered.isVariableActive(EntityVehicleF_Physics.HORN_VARIABLE)){
-			InterfacePacket.sendToServer(new PacketEntityVariableToggle(powered, EntityVehicleF_Physics.HORN_VARIABLE));
+			InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(powered, EntityVehicleF_Physics.HORN_VARIABLE));
 		}
 		
 		//Check for lights.
 		if(ControlsKeyboard.CAR_LIGHTS.isPressed()){
-			InterfacePacket.sendToServer(new PacketEntityVariableToggle(powered, EntityVehicleF_Physics.RUNNINGLIGHT_VARIABLE));
-			InterfacePacket.sendToServer(new PacketEntityVariableToggle(powered, EntityVehicleF_Physics.HEADLIGHT_VARIABLE));
+			InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(powered, EntityVehicleF_Physics.RUNNINGLIGHT_VARIABLE));
+			InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(powered, EntityVehicleF_Physics.HEADLIGHT_VARIABLE));
 		}
 		if(ControlsKeyboard.CAR_TURNSIGNAL_L.isPressed()){
-			InterfacePacket.sendToServer(new PacketEntityVariableToggle(powered, EntityVehicleF_Physics.LEFTTURNLIGHT_VARIABLE));
+			InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(powered, EntityVehicleF_Physics.LEFTTURNLIGHT_VARIABLE));
 		}
 		if(ControlsKeyboard.CAR_TURNSIGNAL_R.isPressed()){
-			InterfacePacket.sendToServer(new PacketEntityVariableToggle(powered, EntityVehicleF_Physics.RIGHTTURNLIGHT_VARIABLE));
+			InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(powered, EntityVehicleF_Physics.RIGHTTURNLIGHT_VARIABLE));
 		}
 
 		//Change turn signal status depending on turning status.
@@ -570,20 +568,20 @@ public final class ControlSystem{
 			if(!powered.turningLeft && powered.rudderAngle < -20){
 				powered.turningLeft = true;
 				powered.turningCooldown = 40;
-				InterfacePacket.sendToServer(new PacketEntityVariableToggle(powered, EntityVehicleF_Physics.LEFTTURNLIGHT_VARIABLE));
+				InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(powered, EntityVehicleF_Physics.LEFTTURNLIGHT_VARIABLE));
 			}
 			if(!powered.turningRight && powered.rudderAngle > 20){
 				powered.turningRight = true;
 				powered.turningCooldown = 40;
-				InterfacePacket.sendToServer(new PacketEntityVariableToggle(powered, EntityVehicleF_Physics.RIGHTTURNLIGHT_VARIABLE));
+				InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(powered, EntityVehicleF_Physics.RIGHTTURNLIGHT_VARIABLE));
 			}
 			if(powered.turningLeft && (powered.rudderAngle > 0 || powered.turningCooldown == 0)){
 				powered.turningLeft = false;
-				InterfacePacket.sendToServer(new PacketEntityVariableToggle(powered, EntityVehicleF_Physics.LEFTTURNLIGHT_VARIABLE));
+				InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(powered, EntityVehicleF_Physics.LEFTTURNLIGHT_VARIABLE));
 			}
 			if(powered.turningRight && (powered.rudderAngle < 0 || powered.turningCooldown == 0)){
 				powered.turningRight = false;
-				InterfacePacket.sendToServer(new PacketEntityVariableToggle(powered, EntityVehicleF_Physics.RIGHTTURNLIGHT_VARIABLE));
+				InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(powered, EntityVehicleF_Physics.RIGHTTURNLIGHT_VARIABLE));
 			}
 			if(powered.velocity != 0 && powered.turningCooldown > 0 && powered.rudderAngle == 0){
 				--powered.turningCooldown;
@@ -669,19 +667,19 @@ public final class ControlSystem{
 		public boolean isPressed(){
 			if(linkedJoystick.isPressed()){
 				return true;
-			}else if(InterfaceInput.isJoystickPresent(linkedJoystick.config.joystickName) && ConfigSystem.client.controlSettings.kbOverride.value){
+			}else if(InterfaceManager.inputInterface.isJoystickPresent(linkedJoystick.config.joystickName) && ConfigSystem.client.controlSettings.kbOverride.value){
 				return false;
 			}else{
 				if(isMomentary){
 					if(wasPressedLastCall){
-						wasPressedLastCall = InterfaceInput.isKeyPressed(config.keyCode); 
+						wasPressedLastCall = InterfaceManager.inputInterface.isKeyPressed(config.keyCode); 
 						return false;
 					}else{
-						wasPressedLastCall = InterfaceInput.isKeyPressed(config.keyCode);
+						wasPressedLastCall = InterfaceManager.inputInterface.isKeyPressed(config.keyCode);
 						return wasPressedLastCall;
 					}
 				}else{
-					return InterfaceInput.isKeyPressed(config.keyCode);
+					return InterfaceManager.inputInterface.isKeyPressed(config.keyCode);
 				}
 			}
 		}
@@ -773,19 +771,19 @@ public final class ControlSystem{
 		public boolean isPressed(){
 			if(isMomentary){
 				if(wasPressedLastCall){
-					wasPressedLastCall = InterfaceInput.getJoystickButtonValue(config.joystickName, config.buttonIndex); 
+					wasPressedLastCall = InterfaceManager.inputInterface.getJoystickButtonValue(config.joystickName, config.buttonIndex); 
 					return false;
 				}else{
-					wasPressedLastCall = InterfaceInput.getJoystickButtonValue(config.joystickName, config.buttonIndex);
+					wasPressedLastCall = InterfaceManager.inputInterface.getJoystickButtonValue(config.joystickName, config.buttonIndex);
 					return wasPressedLastCall;
 				}
 			}else{
-				return InterfaceInput.getJoystickButtonValue(config.joystickName, config.buttonIndex);
+				return InterfaceManager.inputInterface.getJoystickButtonValue(config.joystickName, config.buttonIndex);
 			}
 		}
 		
 		private float getMultistateValue(){
-			return InterfaceInput.getJoystickAxisValue(config.joystickName, config.buttonIndex);
+			return InterfaceManager.inputInterface.getJoystickAxisValue(config.joystickName, config.buttonIndex);
 		}
 		
 		private double getAxisState(boolean ignoreDeadzone){

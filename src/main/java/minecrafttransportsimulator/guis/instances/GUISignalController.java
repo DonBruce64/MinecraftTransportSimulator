@@ -19,7 +19,7 @@ import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
-import minecrafttransportsimulator.mcinterface.InterfacePacket;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketTileEntitySignalControllerChange;
 import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
 
@@ -278,7 +278,7 @@ public class GUISignalController extends AGUIBase{
 		addComponent(new GUIComponentButton(guiLeft + getWidth() - 100, topOffset, 80, 20, JSONConfigLanguage.GUI_CONFIRM.value){
 			@Override
 			public void onClicked(boolean leftSide){
-				InterfacePacket.sendToServer(new PacketTileEntitySignalControllerChange(controller));
+				InterfaceManager.packetInterface.sendToServer(new PacketTileEntitySignalControllerChange(controller));
 				controller.unsavedClientChangesPreset = false;
 				close();
 			}

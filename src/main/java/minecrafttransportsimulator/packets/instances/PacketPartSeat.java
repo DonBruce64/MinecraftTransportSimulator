@@ -2,7 +2,7 @@ package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.entities.instances.PartSeat;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
 /**Packet used to send signals to seats.  Currently, this is only used to change the currently-selected
@@ -22,7 +22,7 @@ public class PacketPartSeat extends APacketEntity<PartSeat>{
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, PartSeat seat){
+	public boolean handle(AWrapperWorld world, PartSeat seat){
 		seat.setNextActiveGun();
 		return true;
 	}

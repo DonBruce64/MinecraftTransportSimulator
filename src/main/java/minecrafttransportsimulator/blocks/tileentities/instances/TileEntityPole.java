@@ -15,12 +15,11 @@ import minecrafttransportsimulator.items.instances.ItemPoleComponent;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent.PoleComponentType;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
-import minecrafttransportsimulator.mcinterface.InterfaceCore;
-import minecrafttransportsimulator.mcinterface.InterfacePacket;
-import minecrafttransportsimulator.mcinterface.WrapperItemStack;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest.EntityGUIType;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleChange;
@@ -40,12 +39,12 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 	private float maxTotalLightLevel;
 	private static RenderPole renderer;
 	
-	public TileEntityPole(WrapperWorld world, Point3D position, WrapperPlayer placingPlayer, WrapperNBT data){
+	public TileEntityPole(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, IWrapperNBT data){
 		super(world, position, placingPlayer, data);
 		
 		//Load components back in.
 		for(Axis axis : Axis.values()){
-			WrapperNBT componentData = data.getData(axis.name());
+			IWrapperNBT componentData = data.getData(axis.name());
 			if(componentData != null){
 				ATileEntityPole_Component newComponent = PoleComponentType.createComponent(this, placingPlayer, axis, componentData);
 				changeComponent(axis, newComponent);
@@ -89,12 +88,12 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 	}
 	
 	@Override
-	public boolean interact(WrapperPlayer player){
+	public boolean interact(IWrapperPlayer player){
 		//Fire a packet to interact with this pole.  Will either add, remove, or allow editing of the pole.
 		//Only fire packet if player is holding a pole component that's not an actual pole, a wrench,
 		//or is clicking a sign with text.
 		Axis axis = Axis.getFromRotation(player.getYaw(), definition.pole.allowsDiagonals).getOpposite();
-		WrapperItemStack heldStack = player.getHeldStack();
+		IWrapperItemStack heldStack = player.getHeldStack();
 		AItemBase heldItem = heldStack.getItem();
 		ATileEntityPole_Component clickedComponent = components.get(axis);
 		if(!ConfigSystem.settings.general.opSignEditingOnly.value || player.isOP()){
@@ -103,9 +102,9 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 				//Need to check if it will fit in the player's inventory.
 				if(components.containsKey(axis)){
 					ATileEntityPole_Component component = components.get(axis);
-					if(player.isCreative() || player.getInventory().addStack(component.getItem().getNewStack(component.save(InterfaceCore.getNewNBTWrapper())))){
+					if(player.isCreative() || player.getInventory().addStack(component.getItem().getNewStack(component.save(InterfaceManager.coreInterface.getNewNBTWrapper())))){
 						changeComponent(axis, null);
-						InterfacePacket.sendToAllClients(new PacketTileEntityPoleChange(this, player, axis, null));
+						InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityPoleChange(this, player, axis, null));
 					}
 					return true;
 				}
@@ -116,14 +115,14 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 			}else if(heldItem instanceof ItemPoleComponent && !((ItemPoleComponent) heldItem).definition.pole.type.equals(PoleComponentType.CORE) && !components.containsKey(axis)){
 				//Player is holding component that could be added.  Try and do so.
 				ItemPoleComponent componentItem = (ItemPoleComponent) heldItem;
-				WrapperNBT stackData = heldStack.getData();
+				IWrapperNBT stackData = heldStack.getData();
 				componentItem.populateDefaultData(stackData);
 				ATileEntityPole_Component newComponent = PoleComponentType.createComponent(this, player, axis, stackData);
 				changeComponent(axis, newComponent);
 				if(!player.isCreative()){
 					player.getInventory().removeStack(player.getHeldStack(), 1);
 				}
-				InterfacePacket.sendToAllClients(new PacketTileEntityPoleChange(this, player, axis, newComponent.save(InterfaceCore.getNewNBTWrapper())));
+				InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityPoleChange(this, player, axis, newComponent.save(InterfaceManager.coreInterface.getNewNBTWrapper())));
 				return true;
 			}
 		}
@@ -141,11 +140,11 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 	}
 	
 	@Override
-	public void addDropsToList(List<WrapperItemStack> drops){
+	public void addDropsToList(List<IWrapperItemStack> drops){
 		for(Axis axis : Axis.values()){
 			ATileEntityPole_Component component = components.get(axis);
 			if(component != null){
-				drops.add(component.getItem().getNewStack(component.save(InterfaceCore.getNewNBTWrapper())));
+				drops.add(component.getItem().getNewStack(component.save(InterfaceManager.coreInterface.getNewNBTWrapper())));
 			}
 		}
 	}
@@ -263,7 +262,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 		
 		//Send packet to clients to update them.
 		if(sendToClient && !world.isClient()){
-			InterfacePacket.sendToAllClients(new PacketTileEntityPoleCollisionUpdate(this));
+			InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityPoleCollisionUpdate(this));
 		}
 	}
 	
@@ -277,11 +276,11 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 	}
 	
 	@Override
-    public WrapperNBT save(WrapperNBT data){
+    public IWrapperNBT save(IWrapperNBT data){
 		super.save(data);
 		//Save all components.
 		for(Entry<Axis, ATileEntityPole_Component> connectedObjectEntry : components.entrySet()){
-			data.setData(connectedObjectEntry.getKey().name(), connectedObjectEntry.getValue().save(InterfaceCore.getNewNBTWrapper()));
+			data.setData(connectedObjectEntry.getKey().name(), connectedObjectEntry.getValue().save(InterfaceManager.coreInterface.getNewNBTWrapper()));
 		}
 		return data;
 	}

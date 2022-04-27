@@ -52,7 +52,8 @@ public interface IStreamDecoder{
 			monoBuffer.put((byte) (combinedSample & 0xFF));
 			monoBuffer.put((byte) (combinedSample >> 8));
 		}
-		return (ByteBuffer) monoBuffer.flip();
+		monoBuffer.flip();
+		return monoBuffer;
 	}
 
     public int getSampleRate();

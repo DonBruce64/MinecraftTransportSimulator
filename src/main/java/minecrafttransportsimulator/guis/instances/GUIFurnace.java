@@ -5,8 +5,8 @@ import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentCutout;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.jsondefs.JSONPart.FurnaceComponentType;
-import minecrafttransportsimulator.mcinterface.InterfacePacket;
-import minecrafttransportsimulator.mcinterface.WrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPlayerItemTransfer;
 
 /**A GUI that is used to interface with furnaces.   Displays the player's items on the bottom,
@@ -39,7 +39,7 @@ public class GUIFurnace extends AGUIInventory{
 		GUIComponentButton smeltingItemButton = new GUIComponentButton(guiLeft + 51, guiTop + 20, false){
 			@Override
 			public void onClicked(boolean leftSide){
-				InterfacePacket.sendToServer(new PacketPlayerItemTransfer(furnace, player, interactableSlotButtons.indexOf(this), -1, false));
+				InterfaceManager.packetInterface.sendToServer(new PacketPlayerItemTransfer(furnace, player, interactableSlotButtons.indexOf(this), -1, false));
 			}
 		};
 		addComponent(smeltingItemButton);
@@ -54,7 +54,7 @@ public class GUIFurnace extends AGUIInventory{
 		GUIComponentButton smeltedItemButton = new GUIComponentButton(guiLeft + 110, guiTop + 21, false){
 			@Override
 			public void onClicked(boolean leftSide){
-				InterfacePacket.sendToServer(new PacketPlayerItemTransfer(furnace, player, interactableSlotButtons.indexOf(this), -1, false));
+				InterfaceManager.packetInterface.sendToServer(new PacketPlayerItemTransfer(furnace, player, interactableSlotButtons.indexOf(this), -1, false));
 			}
 		};
 		addComponent(smeltedItemButton);
@@ -68,7 +68,7 @@ public class GUIFurnace extends AGUIInventory{
 			GUIComponentButton fuelItemButton = new GUIComponentButton(guiLeft + 79, guiTop + 53, false){
 				@Override
 				public void onClicked(boolean leftSide){
-					InterfacePacket.sendToServer(new PacketPlayerItemTransfer(furnace, player, interactableSlotButtons.indexOf(this), -1, false));
+					InterfaceManager.packetInterface.sendToServer(new PacketPlayerItemTransfer(furnace, player, interactableSlotButtons.indexOf(this), -1, false));
 				}
 			};
 			addComponent(fuelItemButton);
@@ -100,7 +100,7 @@ public class GUIFurnace extends AGUIInventory{
 		super.setStates();
 		//Set other item icons to other inventory.
 		for(int i=0; i<interactableSlotButtons.size(); ++i){
-			WrapperItemStack stack = furnace.getStack(i);
+			IWrapperItemStack stack = furnace.getStack(i);
 			interactableSlotButtons.get(i).enabled = !stack.isEmpty();
 			interactableSlotIcons.get(i).stack = stack;
 		}
@@ -131,7 +131,7 @@ public class GUIFurnace extends AGUIInventory{
 	
 	@Override
 	protected void handlePlayerItemClick(int slotClicked){
-		InterfacePacket.sendToServer(new PacketPlayerItemTransfer(furnace, player, -1, slotClicked, false));
+		InterfaceManager.packetInterface.sendToServer(new PacketPlayerItemTransfer(furnace, player, -1, slotClicked, false));
 	}
 	
 	@Override

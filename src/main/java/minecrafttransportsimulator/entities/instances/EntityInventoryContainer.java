@@ -4,10 +4,10 @@ import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.IInventoryProvider;
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
-import minecrafttransportsimulator.mcinterface.InterfacePacket;
-import minecrafttransportsimulator.mcinterface.WrapperItemStack;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketInventoryContainerChange;
 
 /**Basic inventory class.  Class contains methods for adding and removing items from the inventory, as well as automatic
@@ -17,9 +17,9 @@ import minecrafttransportsimulator.packets.instances.PacketInventoryContainerCha
  * @author don_bruce
  */
 public class EntityInventoryContainer extends AEntityA_Base implements IInventoryProvider{
-	private final List<WrapperItemStack> inventory;
+	private final List<IWrapperItemStack> inventory;
 	
-	public EntityInventoryContainer(WrapperWorld world, WrapperNBT data, int maxSlots){
+	public EntityInventoryContainer(AWrapperWorld world, IWrapperNBT data, int maxSlots){
 		super(world, data);
 		this.inventory = data.getStacks(maxSlots);
 	}
@@ -35,15 +35,15 @@ public class EntityInventoryContainer extends AEntityA_Base implements IInventor
 	}
 	
 	@Override
-	public WrapperItemStack getStack(int index){
+	public IWrapperItemStack getStack(int index){
 		return inventory.get(index);
 	}
 	
 	@Override
-	public void setStack(WrapperItemStack stackToSet, int index){
+	public void setStack(IWrapperItemStack stackToSet, int index){
 		inventory.set(index, stackToSet);
 		if(!world.isClient()){
-			InterfacePacket.sendToAllClients(new PacketInventoryContainerChange(this, index, stackToSet));
+			InterfaceManager.packetInterface.sendToAllClients(new PacketInventoryContainerChange(this, index, stackToSet));
 		}
 	}
 	
@@ -51,7 +51,7 @@ public class EntityInventoryContainer extends AEntityA_Base implements IInventor
 	 *  Saves inventory data to the passed-in NBT.
 	 */
 	@Override
-	public WrapperNBT save(WrapperNBT data){
+	public IWrapperNBT save(IWrapperNBT data){
 		super.save(data);
 		data.setStacks(inventory);
 		return data;

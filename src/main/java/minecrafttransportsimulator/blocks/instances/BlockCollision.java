@@ -8,7 +8,7 @@ import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**Slightly-less basic block class.  This class is used for collision operations where a non-standard collision is required.
@@ -31,7 +31,7 @@ public class BlockCollision extends ABlockBase{
 	}
     
     @Override
-    public void onBroken(WrapperWorld world, Point3D position){
+    public void onBroken(AWrapperWorld world, Point3D position){
     	TileEntityRoad masterBlock = getMasterRoad(world, position);
     	if(masterBlock != null && masterBlock.isActive()){
     		//We belong to this TE.  Destroy the block.  This will end up
@@ -49,7 +49,7 @@ public class BlockCollision extends ABlockBase{
 	 *  prior to trying to call this method, as there aren't any bound-able checks we can do on the two
 	 *  input variables.
 	 */
-    public TileEntityRoad getMasterRoad(WrapperWorld world, Point3D position){
+    public TileEntityRoad getMasterRoad(AWrapperWorld world, Point3D position){
     	Point3D blockOffset = new Point3D();
     	Point3D testPoint = new Point3D();
     	//Search XZ before Y, as most master roads are on the same Y-level as the collision block.

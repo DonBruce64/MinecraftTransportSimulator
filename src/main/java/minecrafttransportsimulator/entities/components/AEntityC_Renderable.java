@@ -1,9 +1,9 @@
 package minecrafttransportsimulator.entities.components;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.rendering.components.ARenderEntity;
 
 /**Base class for entities that are rendered in the world in 3D.
@@ -20,12 +20,12 @@ public abstract class AEntityC_Renderable extends AEntityB_Existing{
 	public final Point3D prevScale = new Point3D(1, 1, 1);
 	
 	/**Constructor for synced entities**/
-	public AEntityC_Renderable(WrapperWorld world, WrapperPlayer placingPlayer, WrapperNBT data){
+	public AEntityC_Renderable(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data){
 		super(world, placingPlayer, data);
 	}
 	
 	/**Constructor for un-synced entities.  Allows for specification of position/motion/angles.**/
-	public AEntityC_Renderable(WrapperWorld world, Point3D position, Point3D motion, Point3D angles){
+	public AEntityC_Renderable(AWrapperWorld world, Point3D position, Point3D motion, Point3D angles){
 		super(world, position, motion, angles);
 	}
 	

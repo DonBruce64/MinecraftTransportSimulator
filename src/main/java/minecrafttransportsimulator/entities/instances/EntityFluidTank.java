@@ -3,9 +3,9 @@ package minecrafttransportsimulator.entities.instances;
 import java.util.Map;
 
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
-import minecrafttransportsimulator.mcinterface.InterfacePacket;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketFluidTankChange;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
@@ -21,7 +21,7 @@ public class EntityFluidTank extends AEntityA_Base{
 	private double fluidLevel;
 	private double fluidDispensed;
 	
-	public EntityFluidTank(WrapperWorld world, WrapperNBT data, int maxLevel){
+	public EntityFluidTank(AWrapperWorld world, IWrapperNBT data, int maxLevel){
 		super(world, data);
 		this.maxLevel = maxLevel;
 		this.currentFluid = data.getString("currentFluid");
@@ -98,7 +98,7 @@ public class EntityFluidTank extends AEntityA_Base{
 				}
 				//Send off packet now that we know what fluid we will have on this tank.
 				if(!world.isClient()){
-					InterfacePacket.sendToAllClients(new PacketFluidTankChange(this, maxAmount));
+					InterfaceManager.packetInterface.sendToAllClients(new PacketFluidTankChange(this, maxAmount));
 				}
 			}
 			return maxAmount;
@@ -122,7 +122,7 @@ public class EntityFluidTank extends AEntityA_Base{
 			if(doDrain){
 				//Need to send off packet before we remove fluid due to empty tank.
 				if(!world.isClient()){
-					InterfacePacket.sendToAllClients(new PacketFluidTankChange(this, -maxAmount));
+					InterfaceManager.packetInterface.sendToAllClients(new PacketFluidTankChange(this, -maxAmount));
 				}
 				fluidLevel -= maxAmount;
 				fluidDispensed += maxAmount;
@@ -154,7 +154,7 @@ public class EntityFluidTank extends AEntityA_Base{
 	 *  Saves tank data to the passed-in NBT.
 	 */
 	@Override
-	public WrapperNBT save(WrapperNBT data){
+	public IWrapperNBT save(IWrapperNBT data){
 		super.save(data);
 		data.setString("currentFluid", currentFluid);
 		data.setDouble("fluidLevel", fluidLevel);

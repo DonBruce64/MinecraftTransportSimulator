@@ -11,9 +11,8 @@ import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.JSONBullet;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
-import minecrafttransportsimulator.mcinterface.InterfaceClient;
-import minecrafttransportsimulator.mcinterface.InterfacePacket;
-import minecrafttransportsimulator.mcinterface.WrapperEntity;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityBulletHit;
 import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitBlock;
 import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitEntity;
@@ -47,7 +46,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 	public double targetDistance;
 	private Point3D targetVector;
 	private PartEngine engineTargeted;
-	private WrapperEntity externalEntityTargeted;
+	private IWrapperEntity externalEntityTargeted;
 	private HitType lastHit;
 	
 	private static RenderBullet renderer;
@@ -86,14 +85,14 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
     		((EntityVehicleF_Physics) engineTargeted.entityOn).acquireMissile(this);
     	}
 	    this.engineTargeted = engineTargeted;
-	    if(ConfigSystem.settings.general.devMode.value)InterfaceClient.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "LOCKON ENGINE " + engineTargeted.definition.systemName + " @ " + targetPosition);
+	    if(ConfigSystem.settings.general.devMode.value)InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "LOCKON ENGINE " + engineTargeted.definition.systemName + " @ " + targetPosition);
     }
     
-    /**Wrapper target.**/
-    public EntityBullet(Point3D position, Point3D motion, RotationMatrix orientation, PartGun gun, WrapperEntity externalEntityTargeted){
+    /**IWrapper target.**/
+    public EntityBullet(Point3D position, Point3D motion, RotationMatrix orientation, PartGun gun, IWrapperEntity externalEntityTargeted){
     	this(position, motion, orientation, gun, externalEntityTargeted.getPosition().copy());
 	    this.externalEntityTargeted = externalEntityTargeted;
-	    if(ConfigSystem.settings.general.devMode.value)InterfaceClient.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "LOCKON ENTITY " + externalEntityTargeted.getName() + " @ " + externalEntityTargeted.getPosition());
+	    if(ConfigSystem.settings.general.devMode.value)InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "LOCKON ENTITY " + externalEntityTargeted.getName() + " @ " + externalEntityTargeted.getPosition());
     }
 	
     @Override
@@ -108,7 +107,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 
 			//Check to make sure we haven't gone too many ticks.
 			if(ticksExisted > definition.bullet.burnTime + 200){
-				if(ConfigSystem.settings.general.devMode.value)InterfaceClient.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "TIMEOUT");
+				if(ConfigSystem.settings.general.devMode.value)InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "TIMEOUT");
 				remove();
 				return;
 			}
@@ -177,16 +176,16 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 		Damage damage = new Damage((velocity/initialVelocity)*definition.bullet.damage*ConfigSystem.settings.damage.bulletDamageFactor.value, boundingBox, gun, null, null);
 		
 		//Check for collided external entities and attack them.
-		List<WrapperEntity> attackedEntities = world.attackEntities(damage, motion);
+		List<IWrapperEntity> attackedEntities = world.attackEntities(damage, motion);
 		if(!attackedEntities.isEmpty()){
-			for(WrapperEntity entity : attackedEntities){
+			for(IWrapperEntity entity : attackedEntities){
 				//Check to make sure we don't hit our controller.
 				//This can happen with hand-held guns at speed.
 				if(!entity.equals(gun.lastController)){
 					//Only attack the first entity.  Bullets don't get to attack multiple per scan.
-					InterfacePacket.sendToServer(new PacketEntityBulletHitWrapper(this, entity));
+					InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitWrapper(this, entity));
 					lastHit = HitType.ENTITY;
-					if(ConfigSystem.settings.general.devMode.value)InterfaceClient.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "HIT ENTITY");
+					if(ConfigSystem.settings.general.devMode.value)InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "HIT ENTITY");
 					remove();
 					return;
 				}
@@ -223,31 +222,31 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 								armorPenetrated += hitBox.definition.armorThickness;
 								if(armorPenetrated > definition.bullet.armorPenetration*velocity/initialVelocity){
 									//Hit too much armor.  Don't do anything except spawn explosions.
-									InterfacePacket.sendToServer(new PacketEntityBulletHit(this, hitBox.globalCenter));
+									InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHit(this, hitBox.globalCenter));
 									lastHit = HitType.ARMOR;
-									if(ConfigSystem.settings.general.devMode.value)InterfaceClient.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "HIT TOO MUCH ARMOR.  MAX PEN: " + (int)(definition.bullet.armorPenetration*velocity/initialVelocity));
+									if(ConfigSystem.settings.general.devMode.value)InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "HIT TOO MUCH ARMOR.  MAX PEN: " + (int)(definition.bullet.armorPenetration*velocity/initialVelocity));
 									remove();
 									return;
 								}
 							}else{
 								APart hitPart = entity.getPartWithBox(hitBox);
 								if(hitPart != null){
-									InterfacePacket.sendToServer(new PacketEntityBulletHitEntity(this, hitBox, hitPart));
+									InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitEntity(this, hitBox, hitPart));
 									lastHit = HitType.PART;
-									if(ConfigSystem.settings.general.devMode.value)InterfaceClient.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "HIT PART");
+									if(ConfigSystem.settings.general.devMode.value)InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "HIT PART");
 									remove();
 									return;
 								}else{
-									InterfacePacket.sendToServer(new PacketEntityBulletHitEntity(this, hitBox, entity));
+									InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitEntity(this, hitBox, entity));
 									lastHit = HitType.ENTITY;
-									if(ConfigSystem.settings.general.devMode.value)InterfaceClient.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "HIT VEHICLE");
+									if(ConfigSystem.settings.general.devMode.value)InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "HIT VEHICLE");
 									remove();
 									return;
 								}
 							}
 						}
 						if(armorPenetrated != 0){
-							if(ConfigSystem.settings.general.devMode.value)InterfaceClient.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "PEN ARMOR: " + (int)armorPenetrated + " TOTAL UNITS OUT OF " + (int)(definition.bullet.armorPenetration*velocity/initialVelocity) + " POSSIBLE");
+							if(ConfigSystem.settings.general.devMode.value)InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "PEN ARMOR: " + (int)armorPenetrated + " TOTAL UNITS OUT OF " + (int)(definition.bullet.armorPenetration*velocity/initialVelocity) + " POSSIBLE");
 						}
 					}
 				}
@@ -257,9 +256,9 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 		//Didn't hit an entity.  Check for blocks.
 		Point3D hitPos = world.getBlockHit(position, motion);
 		if(hitPos != null){
-			InterfacePacket.sendToServer(new PacketEntityBulletHitBlock(this, hitPos));
+			InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitBlock(this, hitPos));
 			lastHit = HitType.BLOCK;
-			if(ConfigSystem.settings.general.devMode.value)InterfaceClient.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "HIT BLOCK");
+			if(ConfigSystem.settings.general.devMode.value)InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "HIT BLOCK");
 			remove();
 			return;
 		}
@@ -278,16 +277,16 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 					if(distanceToTarget > definition.bullet.proximityFuze){
 						position.interpolate(targetToHit, (distanceToTarget - definition.bullet.proximityFuze)/definition.bullet.proximityFuze);
 					}
-					InterfacePacket.sendToServer(new PacketEntityBulletHit(this, position));
+					InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHit(this, position));
 					if(externalEntityTargeted != null){
 						lastHit =  HitType.ENTITY;
-						if(ConfigSystem.settings.general.devMode.value)InterfaceClient.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "PROX FUZE HIT ENTITY");	
+						if(ConfigSystem.settings.general.devMode.value)InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "PROX FUZE HIT ENTITY");	
 					}else if(engineTargeted != null){
 						lastHit = HitType.PART;
-						if(ConfigSystem.settings.general.devMode.value)InterfaceClient.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "PROX FUZE HIT ENGINE");
+						if(ConfigSystem.settings.general.devMode.value)InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "PROX FUZE HIT ENGINE");
 					}else{
 						lastHit = HitType.BLOCK;
-						if(ConfigSystem.settings.general.devMode.value)InterfaceClient.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "PROX FUZE HIT BLOCK");
+						if(ConfigSystem.settings.general.devMode.value)InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "PROX FUZE HIT BLOCK");
 					}
 					remove();
 					return;
@@ -298,9 +297,9 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 		//Didn't hit a block either. Check the air-burst time, if it was used.
 		if(definition.bullet.airBurstDelay != 0) {
 			if(ticksExisted > definition.bullet.airBurstDelay){
-				InterfacePacket.sendToServer(new PacketEntityBulletHit(this, position));
+				InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHit(this, position));
 				lastHit = HitType.BURST;
-				if(ConfigSystem.settings.general.devMode.value)InterfaceClient.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "BURST");
+				if(ConfigSystem.settings.general.devMode.value)InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "BURST");
 				remove();
 				return;
 			}

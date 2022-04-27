@@ -16,13 +16,11 @@ import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
-import minecrafttransportsimulator.mcinterface.InterfaceClient;
-import minecrafttransportsimulator.mcinterface.InterfaceCore;
-import minecrafttransportsimulator.mcinterface.InterfacePacket;
-import minecrafttransportsimulator.mcinterface.WrapperEntity;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine;
@@ -78,7 +76,7 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 	//Map containing incoming missiles, sorted by distance, which is the value for this map.
 	public final List<EntityBullet> missilesIncoming = new ArrayList<EntityBullet>();
 	
-	public AEntityVehicleE_Powered(WrapperWorld world, WrapperPlayer placingPlayer, WrapperNBT data){
+	public AEntityVehicleE_Powered(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data){
 		super(world, placingPlayer, data);
 		
 		//Load simple variables.
@@ -206,18 +204,18 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 	}
 	
 	@Override
-	public boolean addRider(WrapperEntity rider, Point3D riderLocation){
+	public boolean addRider(IWrapperEntity rider, Point3D riderLocation){
 		if(super.addRider(rider, riderLocation)){
-			if(world.isClient() && ConfigSystem.client.controlSettings.autostartEng.value && rider.equals(InterfaceClient.getClientPlayer())){
-				if(rider instanceof WrapperPlayer && getSeatForRider(rider).placementDefinition.isController && canPlayerStartEngines((WrapperPlayer) rider)){
+			if(world.isClient() && ConfigSystem.client.controlSettings.autostartEng.value && rider.equals(InterfaceManager.clientInterface.getClientPlayer())){
+				if(rider instanceof IWrapperPlayer && getSeatForRider(rider).placementDefinition.isController && canPlayerStartEngines((IWrapperPlayer) rider)){
 					for(PartEngine engine : engines.values()){
 						if(!definition.motorized.isAircraft){
-							InterfacePacket.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE));
+							InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE));
 						}
-						InterfacePacket.sendToServer(new PacketPartEngine(engine, Signal.AS_ON));
+						InterfaceManager.packetInterface.sendToServer(new PacketPartEngine(engine, Signal.AS_ON));
 					}
 					if(parkingBrakeOn){
-						InterfacePacket.sendToServer(new PacketEntityVariableToggle(this, PARKINGBRAKE_VARIABLE));
+						InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(this, PARKINGBRAKE_VARIABLE));
 					}
 				}
 			}
@@ -228,14 +226,14 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 	}
 	
 	@Override
-	public void removeRider(WrapperEntity rider){
-		if(world.isClient() && ConfigSystem.client.controlSettings.autostartEng.value && rider.equals(InterfaceClient.getClientPlayer())){
+	public void removeRider(IWrapperEntity rider){
+		if(world.isClient() && ConfigSystem.client.controlSettings.autostartEng.value && rider.equals(InterfaceManager.clientInterface.getClientPlayer())){
 			PartSeat seat = getSeatForRider(rider);
-			if(rider instanceof WrapperPlayer && seat.placementDefinition.isController){
+			if(rider instanceof IWrapperPlayer && seat.placementDefinition.isController){
 				//Check if another player is in a controller seat.  If so, don't stop the engines.
 				boolean otherController = false;
-				for(WrapperEntity otherRider : locationRiderMap.inverse().keySet()){
-					if(!rider.equals(otherRider) && otherRider instanceof WrapperPlayer && getSeatForRider(otherRider).placementDefinition.isController){
+				for(IWrapperEntity otherRider : locationRiderMap.inverse().keySet()){
+					if(!rider.equals(otherRider) && otherRider instanceof IWrapperPlayer && getSeatForRider(otherRider).placementDefinition.isController){
 						otherController = true;
 						break;
 					}
@@ -243,15 +241,15 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 				if(!otherController){
 					for(PartEngine engine : engines.values()){
 						if(engine.magnetoOn){
-							InterfacePacket.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.MAGNETO_VARIABLE));
+							InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.MAGNETO_VARIABLE));
 						}
 						if(engine.electricStarterEngaged){
-							InterfacePacket.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.ELECTRIC_STARTER_VARIABLE));
+							InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.ELECTRIC_STARTER_VARIABLE));
 						}
 					}
-					InterfacePacket.sendToServer(new PacketEntityVariableSet(this, BRAKE_VARIABLE, 0));
+					InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(this, BRAKE_VARIABLE, 0));
 					if(!parkingBrakeOn){
-						InterfacePacket.sendToServer(new PacketEntityVariableToggle(this, PARKINGBRAKE_VARIABLE));
+						InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(this, PARKINGBRAKE_VARIABLE));
 					}
 				}
 			}
@@ -329,7 +327,7 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 		}
 	}
 	
-	public boolean canPlayerStartEngines(WrapperPlayer player){
+	public boolean canPlayerStartEngines(IWrapperPlayer player){
 		if(!ConfigSystem.settings.general.keyRequiredToStartVehicles.value){
 			return true;
 		}else{
@@ -364,11 +362,11 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 	}
 	
 	@Override
-	public WrapperNBT save(WrapperNBT data){
+	public IWrapperNBT save(IWrapperNBT data){
 		super.save(data);
 		data.setDouble("electricPower", electricPower);
 		data.setString("selectedBeaconName", selectedBeaconName);
-		data.setData("fuelTank", fuelTank.save(InterfaceCore.getNewNBTWrapper()));
+		data.setData("fuelTank", fuelTank.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
 		return data;
 	}
 }

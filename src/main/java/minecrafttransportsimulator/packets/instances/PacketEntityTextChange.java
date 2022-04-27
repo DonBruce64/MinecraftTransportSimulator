@@ -5,7 +5,7 @@ import java.util.List;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
 /**Packet sent to entities to update their their text lines.  This is sent from the
@@ -40,7 +40,7 @@ public class PacketEntityTextChange extends APacketEntity<AEntityD_Definable<?>>
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, AEntityD_Definable<?> entity){
+	public boolean handle(AWrapperWorld world, AEntityD_Definable<?> entity){
 		entity.updateText(textLines);
 		return true;
 	}

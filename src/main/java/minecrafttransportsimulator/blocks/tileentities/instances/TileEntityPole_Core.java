@@ -2,8 +2,8 @@ package minecrafttransportsimulator.blocks.tileentities.instances;
 
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 
 /**Core component for poles.  Allows us to change the core model.
  * 
@@ -11,7 +11,7 @@ import minecrafttransportsimulator.mcinterface.WrapperPlayer;
  */
 public class TileEntityPole_Core extends ATileEntityPole_Component{
 		
-	public TileEntityPole_Core(TileEntityPole core, WrapperPlayer placingPlayer, Axis axis, WrapperNBT data){
+	public TileEntityPole_Core(TileEntityPole core, IWrapperPlayer placingPlayer, Axis axis, IWrapperNBT data){
 		super(core, placingPlayer, axis, data);
 	}
 }

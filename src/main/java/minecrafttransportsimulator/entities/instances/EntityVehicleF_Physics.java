@@ -7,11 +7,10 @@ import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.TowingConnection;
 import minecrafttransportsimulator.entities.components.AEntityG_Towable;
 import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
-import minecrafttransportsimulator.mcinterface.InterfaceCore;
-import minecrafttransportsimulator.mcinterface.InterfacePacket;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.rendering.instances.RenderVehicle;
@@ -135,7 +134,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	//Animator for vehicles
 	private static RenderVehicle renderer;;
 
-	public EntityVehicleF_Physics(WrapperWorld world, WrapperPlayer placingPlayer, WrapperNBT data){
+	public EntityVehicleF_Physics(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data){
 		super(world, placingPlayer, data);
 		this.flapCurrentAngle = data.getDouble("flapCurrentAngle");
 	}
@@ -184,7 +183,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 				//Only check once per base entity.
 				towedEntity = connection.towedVehicle;
 				if(towedEntitiesCheckedForWeights.contains(towedEntity)){
-					InterfaceCore.logError("Infinite loop detected on weight checking code!  Is a trailer towing the thing that's towing it?");
+					InterfaceManager.coreInterface.logError("Infinite loop detected on weight checking code!  Is a trailer towing the thing that's towing it?");
 					break;
 				}else{
 					towedEntitiesCheckedForWeights.add(towedEntity);
@@ -214,7 +213,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 			delta = -degrees;
 		}
 		setVariable(RUDDER_VARIABLE, rudderAngle + delta);
-		InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, RUDDER_VARIABLE, delta));
+		InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, RUDDER_VARIABLE, delta));
 	}
 	
 	@Override
@@ -510,13 +509,13 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 				if(throttle < MAX_THROTTLE){
 					throttle += MAX_THROTTLE/100D;
 					setVariable(THROTTLE_VARIABLE, throttle);
-					InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, THROTTLE_VARIABLE, MAX_THROTTLE/100D));
+					InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, THROTTLE_VARIABLE, MAX_THROTTLE/100D));
 				}
 			}else if(velocity > autopilotSetting){
 				if(throttle > 0){
 					throttle -= MAX_THROTTLE/100D;
 					setVariable(THROTTLE_VARIABLE, throttle);
-					InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, THROTTLE_VARIABLE, -MAX_THROTTLE/100D));
+					InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, THROTTLE_VARIABLE, -MAX_THROTTLE/100D));
 				}
 			}
 		}
@@ -530,11 +529,11 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 					if(motion.y < 0 && throttle < MAX_THROTTLE){
 						throttle += MAX_THROTTLE/100D;
 						setVariable(THROTTLE_VARIABLE, throttle);
-						InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, THROTTLE_VARIABLE, MAX_THROTTLE/100D));
+						InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, THROTTLE_VARIABLE, MAX_THROTTLE/100D));
 					}else if(motion.y > 0 && throttle < MAX_THROTTLE){
 						throttle -= MAX_THROTTLE/100D;
 						setVariable(THROTTLE_VARIABLE, throttle);
-						InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, THROTTLE_VARIABLE, -MAX_THROTTLE/100D));
+						InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, THROTTLE_VARIABLE, -MAX_THROTTLE/100D));
 					}
 				}
 				//Change pitch/roll based on movement.
@@ -544,33 +543,33 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 				double sidewaysDelta = sidewaysVelocity - prevMotion.dotProduct(sideVector, false);
 				if(forwardsDelta > 0 && forwardsVelocity > 0 && elevatorTrim < MAX_ELEVATOR_TRIM){
 					setVariable(ELEVATOR_TRIM_VARIABLE, elevatorTrim + 1);
-					InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_TRIM_VARIABLE, 1));
+					InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_TRIM_VARIABLE, 1));
 				}else if(forwardsDelta < 0 && forwardsVelocity < 0 && elevatorTrim > -MAX_ELEVATOR_TRIM){
 					setVariable(ELEVATOR_TRIM_VARIABLE, elevatorTrim - 1);
-					InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_TRIM_VARIABLE, -1));
+					InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_TRIM_VARIABLE, -1));
 				}
 				if(sidewaysVelocity > 0 && sidewaysDelta > 0 && aileronTrim < MAX_AILERON_TRIM){
 					setVariable(AILERON_TRIM_VARIABLE, aileronTrim + 1);
-					InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_TRIM_VARIABLE, 1));
+					InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_TRIM_VARIABLE, 1));
 				}else if(sidewaysVelocity < 0 && sidewaysDelta < 0  && aileronTrim > -MAX_AILERON_TRIM){
 					setVariable(AILERON_TRIM_VARIABLE, aileronTrim - 1);
-					InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_TRIM_VARIABLE, -1));
+					InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_TRIM_VARIABLE, -1));
 				}
 			}else{
 				//Reset trim to prevent directional surges.
 				if(elevatorTrim < 0){
 					setVariable(ELEVATOR_TRIM_VARIABLE, elevatorTrim + 1);
-					InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_TRIM_VARIABLE, 1));
+					InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_TRIM_VARIABLE, 1));
 				}else if(elevatorTrim > 0){
 					setVariable(ELEVATOR_TRIM_VARIABLE, elevatorTrim - 1);
-					InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_TRIM_VARIABLE, -1));
+					InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_TRIM_VARIABLE, -1));
 				}
 				if(aileronTrim < 0){
 					setVariable(AILERON_TRIM_VARIABLE, aileronTrim + 1);
-					InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_TRIM_VARIABLE, 1));
+					InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_TRIM_VARIABLE, 1));
 				}else if(aileronTrim > 0){
 					setVariable(AILERON_TRIM_VARIABLE, aileronTrim - 1);
-					InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_TRIM_VARIABLE, -1));
+					InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_TRIM_VARIABLE, -1));
 				}
 			}
 		}else if(definition.motorized.isAircraft && autopilotSetting != 0){
@@ -578,18 +577,18 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 			//If we are not flying at a steady elevation, angle the elevator to compensate
 			if(-motion.y*100 > elevatorTrim + 1 && elevatorTrim < MAX_ELEVATOR_TRIM){
 				setVariable(ELEVATOR_TRIM_VARIABLE, elevatorTrim + 0.1);
-				InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_TRIM_VARIABLE, 0.1));
+				InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_TRIM_VARIABLE, 0.1));
 			}else if(-motion.y*100 < elevatorTrim - 1 && elevatorTrim > -MAX_ELEVATOR_TRIM){
 				setVariable(ELEVATOR_TRIM_VARIABLE, elevatorTrim - 0.1);
-				InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_TRIM_VARIABLE, -0.1));
+				InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_TRIM_VARIABLE, -0.1));
 			}
 			//Keep the roll angle at 0.
 			if(-orientation.angles.z > aileronTrim + 0.1 && aileronTrim < MAX_AILERON_TRIM){
 				setVariable(AILERON_TRIM_VARIABLE, aileronTrim + 0.1);
-				InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_TRIM_VARIABLE, 0.1));
+				InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_TRIM_VARIABLE, 0.1));
 			}else if(-orientation.angles.z < aileronTrim - 0.1 && aileronTrim > -MAX_AILERON_TRIM){
 				setVariable(AILERON_TRIM_VARIABLE, aileronTrim - 0.1);
-				InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_TRIM_VARIABLE, -0.1));
+				InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_TRIM_VARIABLE, -0.1));
 			}
 		}
 		
@@ -597,35 +596,35 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 		if(getController() == null && !lockedOnRoad){
 			if(aileronAngle > AILERON_DAMPEN_RATE){
 				setVariable(AILERON_VARIABLE, aileronAngle - AILERON_DAMPEN_RATE);
-				InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_VARIABLE, -AILERON_DAMPEN_RATE, 0, MAX_AILERON_ANGLE));
+				InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_VARIABLE, -AILERON_DAMPEN_RATE, 0, MAX_AILERON_ANGLE));
 			}else if(aileronAngle < -AILERON_DAMPEN_RATE){
 				setVariable(AILERON_VARIABLE, aileronAngle + AILERON_DAMPEN_RATE);
-				InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_VARIABLE, AILERON_DAMPEN_RATE, -MAX_AILERON_ANGLE, 0));
+				InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_VARIABLE, AILERON_DAMPEN_RATE, -MAX_AILERON_ANGLE, 0));
 			}else if(aileronAngle != 0){
 				setVariable(AILERON_VARIABLE, 0);
-				InterfacePacket.sendToAllClients(new PacketEntityVariableSet(this, AILERON_VARIABLE, 0));
+				InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, AILERON_VARIABLE, 0));
 			}
 			
 			if(elevatorAngle > ELEVATOR_DAMPEN_RATE){
 				setVariable(ELEVATOR_VARIABLE, elevatorAngle - ELEVATOR_DAMPEN_RATE);
-				InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_VARIABLE, -ELEVATOR_DAMPEN_RATE, 0, MAX_ELEVATOR_ANGLE));
+				InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_VARIABLE, -ELEVATOR_DAMPEN_RATE, 0, MAX_ELEVATOR_ANGLE));
 			}else if(elevatorAngle < -ELEVATOR_DAMPEN_RATE){
 				setVariable(ELEVATOR_VARIABLE, elevatorAngle + ELEVATOR_DAMPEN_RATE);
-				InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_VARIABLE, ELEVATOR_DAMPEN_RATE, -MAX_ELEVATOR_ANGLE, 0));
+				InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_VARIABLE, ELEVATOR_DAMPEN_RATE, -MAX_ELEVATOR_ANGLE, 0));
 			}else if(elevatorAngle != 0){
 				setVariable(ELEVATOR_VARIABLE, 0);
-				InterfacePacket.sendToAllClients(new PacketEntityVariableSet(this, ELEVATOR_VARIABLE, 0));
+				InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, ELEVATOR_VARIABLE, 0));
 			}
 			
 			if(rudderAngle > RUDDER_DAMPEN_RATE){
 				setVariable(RUDDER_VARIABLE, rudderAngle - RUDDER_DAMPEN_RATE);
-				InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, RUDDER_VARIABLE, -RUDDER_DAMPEN_RATE, 0, MAX_RUDDER_ANGLE));
+				InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, RUDDER_VARIABLE, -RUDDER_DAMPEN_RATE, 0, MAX_RUDDER_ANGLE));
 			}else if(rudderAngle < -RUDDER_DAMPEN_RATE){
 				setVariable(RUDDER_VARIABLE, rudderAngle + RUDDER_DAMPEN_RATE);
-				InterfacePacket.sendToAllClients(new PacketEntityVariableIncrement(this, RUDDER_VARIABLE, RUDDER_DAMPEN_RATE, -MAX_RUDDER_ANGLE, 0));
+				InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, RUDDER_VARIABLE, RUDDER_DAMPEN_RATE, -MAX_RUDDER_ANGLE, 0));
 			}else if(rudderAngle != 0){
 				setVariable(RUDDER_VARIABLE, 0);
-				InterfacePacket.sendToAllClients(new PacketEntityVariableSet(this, RUDDER_VARIABLE, 0));
+				InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, RUDDER_VARIABLE, 0));
 			}
 		}
 	}
@@ -740,7 +739,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	}
     
 	@Override
-	public WrapperNBT save(WrapperNBT data){
+	public IWrapperNBT save(IWrapperNBT data){
 		super.save(data);
 		data.setDouble("flapCurrentAngle", flapCurrentAngle);
 		return data;

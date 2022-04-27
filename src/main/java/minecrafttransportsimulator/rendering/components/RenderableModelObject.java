@@ -20,7 +20,7 @@ import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
 import minecrafttransportsimulator.jsondefs.JSONLight;
 import minecrafttransportsimulator.jsondefs.JSONLight.JSONLightBlendableComponent;
 import minecrafttransportsimulator.jsondefs.JSONText;
-import minecrafttransportsimulator.mcinterface.InterfaceRender;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.instances.RenderText;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
@@ -121,7 +121,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 						if(object.name.contains(textDef.fieldName)){
 							String textValue = entity.text.get(textDef);
 							if(!textValue.isEmpty() && !textValue.contains(" ")){
-								String errorString = InterfaceRender.downloadURLTexture(textValue);
+								String errorString = InterfaceManager.renderingInterface.downloadURLTexture(textValue);
 								if(errorString != null){
 									textEntry.setValue(errorString);
 								}else{

@@ -7,7 +7,7 @@ import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityLoader;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.PartInteractable;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
 /**Packet sent to loaders  on clients to change what part they are connected to.
@@ -57,7 +57,7 @@ public class PacketTileEntityLoaderConnection extends APacketEntity<ATileEntityL
 	}
 	
 	@Override
-	protected boolean handle(WrapperWorld world, ATileEntityLoader loader){
+	protected boolean handle(AWrapperWorld world, ATileEntityLoader loader){
 		AEntityF_Multipart<?> entity = world.getEntity(linkedID);
 		if(connect){
 			if(entity != null){

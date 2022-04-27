@@ -6,10 +6,10 @@ import java.util.List;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
-import minecrafttransportsimulator.mcinterface.InterfaceClient;
-import minecrafttransportsimulator.mcinterface.WrapperInventory;
-import minecrafttransportsimulator.mcinterface.WrapperItemStack;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.mcinterface.IWrapperInventory;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 
 /**Abstract GUI class used as the base for GUIs with inventory slots.  By default, it sets up slots
  * for all the player's items and populates them.
@@ -19,8 +19,8 @@ import minecrafttransportsimulator.mcinterface.WrapperPlayer;
 public abstract class AGUIInventory extends AGUIBase{
 	
 	private final String texture;
-	protected final WrapperPlayer player;
-	protected final WrapperInventory playerInventory;
+	protected final IWrapperPlayer player;
+	protected final IWrapperInventory playerInventory;
 	private final List<GUIComponentButton> playerSlotButtons = new ArrayList<GUIComponentButton>();
 	private final List<GUIComponentItem> playerSlotIcons = new ArrayList<GUIComponentItem>();
 	protected final List<GUIComponentButton> interactableSlotButtons = new ArrayList<GUIComponentButton>();
@@ -29,7 +29,7 @@ public abstract class AGUIInventory extends AGUIBase{
 	public AGUIInventory(String texture){
 		super();
 		this.texture = texture != null ? texture : "mts:textures/guis/inventory.png";
-		this.player = InterfaceClient.getClientPlayer();
+		this.player = InterfaceManager.clientInterface.getClientPlayer();
 		this.playerInventory = player.getInventory();
 	}
 
@@ -73,7 +73,7 @@ public abstract class AGUIInventory extends AGUIBase{
 		super.setStates();
 		//Set player item icons to player inventory.
 		for(int i=0; i<playerSlotButtons.size(); ++i){
-			WrapperItemStack stack = playerInventory.getStack(i);
+			IWrapperItemStack stack = playerInventory.getStack(i);
 			playerSlotButtons.get(i).enabled = !stack.isEmpty();
 			playerSlotIcons.get(i).stack = stack;
 		}

@@ -6,9 +6,9 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.NavBeacon;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.jsondefs.JSONText;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 
 /**Beacon tile entity.  Contains code for handling interfacing with
@@ -22,7 +22,7 @@ import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 public class TileEntityBeacon extends TileEntityDecor{
 	public NavBeacon currentBeacon;
 	
-	public TileEntityBeacon(WrapperWorld world, Point3D position, WrapperPlayer placingPlayer, WrapperNBT data){
+	public TileEntityBeacon(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, IWrapperNBT data){
 		super(world, position, placingPlayer, data);
 	}
 	
@@ -44,7 +44,7 @@ public class TileEntityBeacon extends TileEntityDecor{
     }
 		
     @Override
-	public boolean interact(WrapperPlayer player){
+	public boolean interact(IWrapperPlayer player){
 		player.sendPacket(new PacketEntityGUIRequest(this, player, PacketEntityGUIRequest.EntityGUIType.TEXT_EDITOR));
 		return true;
 	}

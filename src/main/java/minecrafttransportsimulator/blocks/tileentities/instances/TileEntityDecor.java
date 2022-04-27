@@ -4,10 +4,10 @@ import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
-import minecrafttransportsimulator.mcinterface.InterfacePacket;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
@@ -26,7 +26,7 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor>{
 	
 	private static RenderDecor renderer;
 	
-	public TileEntityDecor(WrapperWorld world, Point3D position, WrapperPlayer placingPlayer, WrapperNBT data){
+	public TileEntityDecor(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, IWrapperNBT data){
 		super(world, position, placingPlayer, data);
 		//If we are on a slab, we go down to match it.
 		if(world.isBlockBelowBottomSlab(position)){
@@ -53,7 +53,7 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor>{
 	}
 	
 	@Override
-	public boolean interact(WrapperPlayer player){
+	public boolean interact(IWrapperPlayer player){
 		if(player.isHoldingItemType(ItemComponentType.PAINT_GUN)){
 			//Don't do decor actions if we are holding a paint gun.
 			return false;
@@ -70,8 +70,8 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor>{
 		if(!world.isClient()){
 			setVariable(CLICKED_VARIABLE, 1);
 			toggleVariable(ACTIVATED_VARIABLE);
-			InterfacePacket.sendToAllClients(new PacketEntityVariableSet(this, CLICKED_VARIABLE, 1));
-			InterfacePacket.sendToAllClients(new PacketEntityVariableToggle(this, ACTIVATED_VARIABLE));
+			InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, CLICKED_VARIABLE, 1));
+			InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableToggle(this, ACTIVATED_VARIABLE));
 		}
 		return true;
 	}

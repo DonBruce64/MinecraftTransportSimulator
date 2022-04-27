@@ -2,7 +2,7 @@ package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.entities.instances.PartEffector;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
 /**Packet used to send signals to effectors.  Currently, this is only used to increment the number of blocks
@@ -21,7 +21,7 @@ public class PacketPartEffector extends APacketEntity<PartEffector>{
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, PartEffector effector){
+	public boolean handle(AWrapperWorld world, PartEffector effector){
 		++effector.blocksBroken;
 		return true;
 	}

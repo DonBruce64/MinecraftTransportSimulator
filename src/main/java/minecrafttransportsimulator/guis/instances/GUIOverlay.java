@@ -3,7 +3,6 @@ package minecrafttransportsimulator.guis.instances;
 import java.util.ArrayList;
 import java.util.List;
 
-import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -20,9 +19,8 @@ import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
-import minecrafttransportsimulator.mcinterface.InterfaceClient;
-import minecrafttransportsimulator.mcinterface.InterfaceSound;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.CameraSystem;
@@ -68,8 +66,8 @@ public class GUIOverlay extends AGUIBase{
 		scannerItem.stack = null;
 		tooltipText.clear();
 		
-		AEntityB_Existing mousedOverEntity = InterfaceClient.getMousedOverEntity();
-		WrapperPlayer player = InterfaceClient.getClientPlayer();
+		AEntityB_Existing mousedOverEntity = InterfaceManager.clientInterface.getMousedOverEntity();
+		IWrapperPlayer player = InterfaceManager.clientInterface.getClientPlayer();
 		if(player.isHoldingItemType(ItemComponentType.SCANNER)){
 			if(mousedOverEntity instanceof APart){
 				mousedOverEntity = ((APart) mousedOverEntity).entityOn;
@@ -120,7 +118,7 @@ public class GUIOverlay extends AGUIBase{
 						
 						//If we are on the start of the cycle, beep.
 						if(vehicle.ticksExisted%cycle == 0){
-							InterfaceSound.playQuickSound(new SoundInstance(vehicle, MasterLoader.resourceDomain + ":scanner_beep"));
+							InterfaceManager.soundInterface.playQuickSound(new SoundInstance(vehicle, InterfaceManager.coreModID + ":scanner_beep"));
 						}
 					}
 				}

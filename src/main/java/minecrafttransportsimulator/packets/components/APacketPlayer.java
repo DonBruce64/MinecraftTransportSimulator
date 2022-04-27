@@ -3,8 +3,8 @@ package minecrafttransportsimulator.packets.components;
 import java.util.UUID;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 
 /**Packet class that includes a default implementation for transmitting a player
  * with a packet.  Useful for packets where something happens to the player, or the player
@@ -18,7 +18,7 @@ import minecrafttransportsimulator.mcinterface.WrapperWorld;
 public abstract class APacketPlayer extends APacketBase{
 	private final UUID playerID;
 	
-	public APacketPlayer(WrapperPlayer player){
+	public APacketPlayer(IWrapperPlayer player){
 		super(null);
 		this.playerID = player.getID();
 	}
@@ -35,8 +35,8 @@ public abstract class APacketPlayer extends APacketBase{
 	}
 	
 	@Override
-	public void handle(WrapperWorld world){
-		WrapperPlayer player = (WrapperPlayer) world.getExternalEntity(playerID);
+	public void handle(AWrapperWorld world){
+		IWrapperPlayer player = (IWrapperPlayer) world.getExternalEntity(playerID);
 		if(player != null){
 			handle(world, player);
 		}
@@ -47,5 +47,5 @@ public abstract class APacketPlayer extends APacketBase{
 	 *  If the player is null,  then this method won't be called.
 	 *  Saves having to do null checks for every packet type.
 	 */
-	protected abstract void handle(WrapperWorld world, WrapperPlayer player);
+	protected abstract void handle(AWrapperWorld world, IWrapperPlayer player);
 }

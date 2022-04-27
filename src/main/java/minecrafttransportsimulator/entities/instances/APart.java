@@ -18,9 +18,9 @@ import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
-import minecrafttransportsimulator.mcinterface.InterfaceCore;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packloading.JSONParser;
 import minecrafttransportsimulator.rendering.instances.RenderPart;
@@ -68,7 +68,7 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 	private AnimationSwitchbox placementMovementSwitchbox;
 	private AnimationSwitchbox internalMovementSwitchbox;
 		
-	public APart(AEntityF_Multipart<?> entityOn, WrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, WrapperNBT data, APart parentPart){
+	public APart(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, IWrapperNBT data, APart parentPart){
 		super(entityOn.world, placingPlayer, data);
 		this.entityOn = entityOn;
 		this.vehicleOn = entityOn instanceof EntityVehicleF_Physics ? (EntityVehicleF_Physics) entityOn : null;
@@ -224,11 +224,11 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 		if(!placementDefinition.isPermanent && definition.generic.canBeRemovedByHand && damage.isHand){
 			//Attacked a removable part, remove us to the player's inventory.
 			//If the inventory can't fit us, don't remove us.
-			WrapperPlayer player = (WrapperPlayer) damage.entityResponsible;
+			IWrapperPlayer player = (IWrapperPlayer) damage.entityResponsible;
 			if(entityOn.locked){
 				player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_VEHICLE_LOCKED));
 			}else{
-				if(player.getInventory().addStack(getItem().getNewStack(save(InterfaceCore.getNewNBTWrapper())))){
+				if(player.getInventory().addStack(getItem().getNewStack(save(InterfaceManager.coreInterface.getNewNBTWrapper())))){
 					entityOn.removePart(this, null);
 				}
 			}
@@ -239,7 +239,7 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 	}
 	
 	@Override
-	public PlayerOwnerState getOwnerState(WrapperPlayer player){
+	public PlayerOwnerState getOwnerState(IWrapperPlayer player){
 		return entityOn.getOwnerState(player);
 	}
 	

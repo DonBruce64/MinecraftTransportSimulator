@@ -18,11 +18,10 @@ import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
-import minecrafttransportsimulator.mcinterface.InterfaceCore;
-import minecrafttransportsimulator.mcinterface.InterfacePacket;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement;
 import minecrafttransportsimulator.packets.instances.PacketVehicleServerSync;
@@ -58,7 +57,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	public double groundVelocity;
 	public double weightTransfer = 0;
 	public final RotationMatrix rotation = new RotationMatrix();
-	private final WrapperPlayer placingPlayer;
+	private final IWrapperPlayer placingPlayer;
 	
 	//Properties
 	@ModifiedValue
@@ -106,7 +105,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	private AEntityE_Interactable<?> lastCollidedEntity;
   	public VehicleGroundDeviceCollection groundDeviceCollective;
 	
-	public AEntityVehicleD_Moving(WrapperWorld world, WrapperPlayer placingPlayer, WrapperNBT data){
+	public AEntityVehicleD_Moving(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data){
 		super(world, placingPlayer, data);
 		this.totalPathDelta = data.getDouble("totalPathDelta");
 		this.prevTotalPathDelta = totalPathDelta;
@@ -172,7 +171,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 					placingPlayer.sendPacket(new PacketPlayerChatMessage(placingPlayer, JSONConfigLanguage.INTERACT_VEHICLE_NOSPACE));
 					//Need to add stack back as it will have been removed here.
 					if(!placingPlayer.isCreative()){
-						placingPlayer.setHeldStack(getItem().getNewStack(save(InterfaceCore.getNewNBTWrapper())));
+						placingPlayer.setHeldStack(getItem().getNewStack(save(InterfaceManager.coreInterface.getNewNBTWrapper())));
 					}
 					return;
 				}else{
@@ -984,14 +983,14 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 				serverDeltaM.add(motionApplied);
 				serverDeltaR.add(rotationApplied.angles);
 				serverDeltaP += pathingApplied;
-				InterfacePacket.sendToAllClients(new PacketVehicleServerMovement((EntityVehicleF_Physics) this, motionApplied, rotationApplied.angles, pathingApplied));
+				InterfaceManager.packetInterface.sendToAllClients(new PacketVehicleServerMovement((EntityVehicleF_Physics) this, motionApplied, rotationApplied.angles, pathingApplied));
 			}
 		}
 	}
 	
 	public void syncServerDeltas(Point3D motionSnapshot, Point3D rotationSnapshot, double pathingSnapshot){
 		if(!world.isClient()){
-			InterfacePacket.sendToAllClients(new PacketVehicleServerSync((EntityVehicleF_Physics) this, serverDeltaM, serverDeltaR, serverDeltaP));
+			InterfaceManager.packetInterface.sendToAllClients(new PacketVehicleServerSync((EntityVehicleF_Physics) this, serverDeltaM, serverDeltaR, serverDeltaP));
 		}else if(motionSnapshot != null && !serverDeltaMAtSync.isZero()){
 			serverDeltaM.add(motionSnapshot).subtract(serverDeltaMAtSync);
 			serverDeltaR.add(rotationSnapshot).subtract(serverDeltaRAtSync);
@@ -1002,7 +1001,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			serverDeltaMAtSync.set(serverDeltaM);
 			serverDeltaRAtSync.set(serverDeltaR);
 			serverDeltaPAtSync = serverDeltaP;
-			InterfacePacket.sendToServer(new PacketVehicleServerSync((EntityVehicleF_Physics) this));
+			InterfaceManager.packetInterface.sendToServer(new PacketVehicleServerSync((EntityVehicleF_Physics) this));
 		}
 	}
 	
@@ -1033,7 +1032,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	protected abstract void adjustControlSurfaces();
 	
 	@Override
-	public WrapperNBT save(WrapperNBT data){
+	public IWrapperNBT save(IWrapperNBT data){
 		super.save(data);
 		data.setPoint3d("serverDeltaM", serverDeltaM);
 		data.setPoint3d("serverDeltaR", serverDeltaR);

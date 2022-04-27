@@ -3,8 +3,8 @@ package minecrafttransportsimulator.packets.instances;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.packets.components.APacketPlayer;
 
 /**Packet used for sending the player chat messages from the server.  Mainly for informing them
@@ -16,12 +16,12 @@ import minecrafttransportsimulator.packets.components.APacketPlayer;
 public class PacketPlayerChatMessage extends APacketPlayer{
 	private final String message;
 	
-	public PacketPlayerChatMessage(WrapperPlayer player, LanguageEntry language){
+	public PacketPlayerChatMessage(IWrapperPlayer player, LanguageEntry language){
 		super(player);
 		this.message = language.key;
 	}
 	
-	public PacketPlayerChatMessage(WrapperPlayer player, String message){
+	public PacketPlayerChatMessage(IWrapperPlayer player, String message){
 		super(player);
 		this.message = message;
 	}
@@ -38,7 +38,7 @@ public class PacketPlayerChatMessage extends APacketPlayer{
 	}
 	
 	@Override
-	public void handle(WrapperWorld world, WrapperPlayer player){
+	public void handle(AWrapperWorld world, IWrapperPlayer player){
 		LanguageEntry language = JSONConfigLanguage.coreEntries.get(message);
 		if(language != null){
 			player.displayChatMessage(language);

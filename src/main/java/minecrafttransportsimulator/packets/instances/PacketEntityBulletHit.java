@@ -6,7 +6,7 @@ import minecrafttransportsimulator.entities.instances.EntityBullet;
 import minecrafttransportsimulator.entities.instances.PartGun;
 import minecrafttransportsimulator.items.instances.ItemBullet;
 import minecrafttransportsimulator.jsondefs.JSONBullet.BulletType;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
@@ -48,7 +48,7 @@ public class PacketEntityBulletHit extends APacketEntity<PartGun>{
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, PartGun gun){
+	public boolean handle(AWrapperWorld world, PartGun gun){
 		if(!world.isClient()){
 			//If the bullet hasn't been marked as hit yet, do hit logic.
 			if(!gun.bulletsHitOnServer.contains(bulletNumber)){
@@ -69,9 +69,9 @@ public class PacketEntityBulletHit extends APacketEntity<PartGun>{
 	 *  Helper handler for this abstract packet.
 	 *  This handler checks to make sure that the bullet
 	 *  isn't a duplicate hit, or is on the client, before being called.
-	 *  Return method has the same behavior as {@link #handle(WrapperWorld, PartGun)}.
+	 *  Return method has the same behavior as {@link #handle(AWrapperWorld, PartGun)}.
 	 */
-	public boolean handleBulletHit(WrapperWorld world){
+	public boolean handleBulletHit(AWrapperWorld world){
 		return false;
 	}
 }

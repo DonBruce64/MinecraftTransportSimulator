@@ -6,9 +6,9 @@ import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
-import minecrafttransportsimulator.mcinterface.InterfaceCore;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
@@ -20,7 +20,7 @@ import minecrafttransportsimulator.systems.PackParserSystem;
 public class PacketPartChange extends APacketEntity<AEntityF_Multipart<?>>{
 	private final Point3D partOffset;
 	private final AItemPart partItem;
-	private final WrapperNBT partData;
+	private final IWrapperNBT partData;
 	private Point3D parentPartOffset;
 	
 	public PacketPartChange(AEntityF_Multipart<?> entity, Point3D partOffset){
@@ -35,7 +35,7 @@ public class PacketPartChange extends APacketEntity<AEntityF_Multipart<?>>{
 		super(entity);
 		this.partOffset = partAdded.placementOffset;
 		this.partItem = partAdded.getItem();
-		this.partData = InterfaceCore.getNewNBTWrapper();
+		this.partData = InterfaceManager.coreInterface.getNewNBTWrapper();
 		partAdded.save(partData);
 		this.parentPartOffset = partAdded.parentPart != null ? partAdded.parentPart.placementOffset : null;
 	}
@@ -80,7 +80,7 @@ public class PacketPartChange extends APacketEntity<AEntityF_Multipart<?>>{
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, AEntityF_Multipart<?> entity){
+	public boolean handle(AWrapperWorld world, AEntityF_Multipart<?> entity){
 		if(partItem == null){
 			APart part = entity.getPartAtLocation(partOffset);
 			if(part != null){

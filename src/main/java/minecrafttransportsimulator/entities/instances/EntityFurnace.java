@@ -2,10 +2,10 @@ package minecrafttransportsimulator.entities.instances;
 
 import minecrafttransportsimulator.jsondefs.JSONPart.FurnaceComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPart.JSONPartInteractable;
-import minecrafttransportsimulator.mcinterface.InterfacePacket;
-import minecrafttransportsimulator.mcinterface.WrapperItemStack;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketFurnaceFuelAdd;
 import minecrafttransportsimulator.packets.instances.PacketFurnaceTimeSet;
 
@@ -27,7 +27,7 @@ public class EntityFurnace extends EntityInventoryContainer{
 	public static final int FUEL_ITEM_SLOT = 2;
 	public static final String FURNACE_FUEL_NAME = "furnace";
 	
-	public EntityFurnace(WrapperWorld world, WrapperNBT data, JSONPartInteractable definition){
+	public EntityFurnace(AWrapperWorld world, IWrapperNBT data, JSONPartInteractable definition){
 		super(world, data, 3);
 		this.ticksAddedOfFuel = data.getInteger("ticksAddedOfFuel");
 		this.ticksLeftOfFuel = data.getInteger("ticksLeftOfFuel");
@@ -43,21 +43,21 @@ public class EntityFurnace extends EntityInventoryContainer{
 		if(ticksLeftToSmelt > 0){
 			//If we have no fuel, and are a standard type, get fuel from the stack in us.
 			if(!world.isClient() && ticksLeftOfFuel == 0 && definition.furnaceType.equals(FurnaceComponentType.STANDARD)){
-				WrapperItemStack fuelStack = getStack(FUEL_ITEM_SLOT);
+				IWrapperItemStack fuelStack = getStack(FUEL_ITEM_SLOT);
 				if(!fuelStack.isEmpty()){
 					ticksAddedOfFuel = fuelStack.getFuelValue();
 					ticksLeftOfFuel = ticksAddedOfFuel;
-					InterfacePacket.sendToAllClients(new PacketFurnaceFuelAdd(this));
+					InterfaceManager.packetInterface.sendToAllClients(new PacketFurnaceFuelAdd(this));
 					removeFromSlot(FUEL_ITEM_SLOT, 1);
 				}
 			}
 			
 			//Make sure the smelting stack didn't get removed.
-			WrapperItemStack smeltingStack = getStack(SMELTING_ITEM_SLOT);
+			IWrapperItemStack smeltingStack = getStack(SMELTING_ITEM_SLOT);
 			if(!world.isClient() && smeltingStack.isEmpty()){
 				ticksNeededToSmelt = 0;
 				ticksLeftToSmelt = ticksNeededToSmelt;
-				InterfacePacket.sendToAllClients(new PacketFurnaceTimeSet(this));
+				InterfaceManager.packetInterface.sendToAllClients(new PacketFurnaceTimeSet(this));
 			}
 			
 			//We are smelting and have fuel, continue the process.
@@ -71,8 +71,8 @@ public class EntityFurnace extends EntityInventoryContainer{
 					if(--ticksLeftToSmelt == 0){
 						//Add to output, and remove from input.
 						//Need to set the stack in case the output is empty or we have multiple items.
-						WrapperItemStack smeltingResult = smeltingStack.getSmeltedItem();
-						WrapperItemStack stackInResult = getStack(SMELTED_ITEM_SLOT);
+						IWrapperItemStack smeltingResult = smeltingStack.getSmeltedItem();
+						IWrapperItemStack stackInResult = getStack(SMELTED_ITEM_SLOT);
 						
 						if(stackInResult.isEmpty()){
 							stackInResult = smeltingResult; 
@@ -91,14 +91,14 @@ public class EntityFurnace extends EntityInventoryContainer{
 		}else{
 			//Not currently smelting, see if we can smelt anything.
 			if(!world.isClient()){
-				WrapperItemStack smeltingStack = getStack(SMELTING_ITEM_SLOT);
+				IWrapperItemStack smeltingStack = getStack(SMELTING_ITEM_SLOT);
 				if(!smeltingStack.isEmpty()){
-					WrapperItemStack smeltingResult = smeltingStack.getSmeltedItem();
-					WrapperItemStack stackInResult = getStack(SMELTED_ITEM_SLOT);
+					IWrapperItemStack smeltingResult = smeltingStack.getSmeltedItem();
+					IWrapperItemStack stackInResult = getStack(SMELTED_ITEM_SLOT);
 					if(stackInResult.isEmpty() || (stackInResult.isCompleteMatch(smeltingResult) && (stackInResult.getMaxSize() - stackInResult.getSize() >= smeltingResult.getSize()))){
 						ticksNeededToSmelt = (int) (smeltingStack.getSmeltingTime()*1F/definition.furnaceRate);
 						ticksLeftToSmelt = ticksNeededToSmelt;
-						InterfacePacket.sendToAllClients(new PacketFurnaceTimeSet(this));	
+						InterfaceManager.packetInterface.sendToAllClients(new PacketFurnaceTimeSet(this));	
 					}
 				}
 			}
@@ -106,7 +106,7 @@ public class EntityFurnace extends EntityInventoryContainer{
 	}
 	
 	@Override
-	public boolean isStackValid(WrapperItemStack stackToCheck, int index){
+	public boolean isStackValid(IWrapperItemStack stackToCheck, int index){
 		if(index == SMELTING_ITEM_SLOT){
 			return !stackToCheck.getSmeltedItem().isEmpty(); 
 		}else if(index == FUEL_ITEM_SLOT){
@@ -120,7 +120,7 @@ public class EntityFurnace extends EntityInventoryContainer{
 	 *  Saves tank data to the passed-in NBT.
 	 */
 	@Override
-	public WrapperNBT save(WrapperNBT data){
+	public IWrapperNBT save(IWrapperNBT data){
 		super.save(data);
 		data.setInteger("ticksAddedOfFuel", ticksAddedOfFuel);
 		data.setInteger("ticksLeftOfFuel", ticksLeftOfFuel);

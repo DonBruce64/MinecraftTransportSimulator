@@ -4,10 +4,10 @@ import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityFuelPump;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIFuelPump;
-import minecrafttransportsimulator.mcinterface.InterfaceClient;
-import minecrafttransportsimulator.mcinterface.WrapperItemStack;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.components.APacketEntityInteract;
 
 /**Packet sent to pumps to allow dispensing of fluids to vehicles.  This will remove an item
@@ -17,17 +17,17 @@ import minecrafttransportsimulator.packets.components.APacketEntityInteract;
  * 
  * @author don_bruce
  */
-public class PacketTileEntityFuelPumpDispense extends APacketEntityInteract<TileEntityFuelPump, WrapperPlayer>{
+public class PacketTileEntityFuelPumpDispense extends APacketEntityInteract<TileEntityFuelPump, IWrapperPlayer>{
 	private final int slotClicked;
 	private final int amountChangedTo;
 	
-	public PacketTileEntityFuelPumpDispense(TileEntityFuelPump pump, WrapperPlayer player, int slotClicked, int amountChangedTo){
+	public PacketTileEntityFuelPumpDispense(TileEntityFuelPump pump, IWrapperPlayer player, int slotClicked, int amountChangedTo){
 		super(pump, player);
 		this.slotClicked = slotClicked;
 		this.amountChangedTo = amountChangedTo;
 	}
 	
-	public PacketTileEntityFuelPumpDispense(TileEntityFuelPump pump, WrapperPlayer player, int slotClicked){
+	public PacketTileEntityFuelPumpDispense(TileEntityFuelPump pump, IWrapperPlayer player, int slotClicked){
 		super(pump, player);
 		this.slotClicked = slotClicked;
 		this.amountChangedTo = -1;
@@ -47,15 +47,15 @@ public class PacketTileEntityFuelPumpDispense extends APacketEntityInteract<Tile
 	}
 	
 	@Override
-	protected boolean handle(WrapperWorld world, TileEntityFuelPump pump, WrapperPlayer player){
+	protected boolean handle(AWrapperWorld world, TileEntityFuelPump pump, IWrapperPlayer player){
 		if(amountChangedTo != -1){
 			pump.fuelAmounts.set(slotClicked, amountChangedTo);
 			return true;
 		}else{
-			WrapperItemStack stack = pump.fuelItems.getStack(slotClicked);
+			IWrapperItemStack stack = pump.fuelItems.getStack(slotClicked);
 			if(player.getInventory().removeStack(stack, stack.getSize())){
 				pump.fuelPurchasedRemaining += pump.fuelAmounts.get(slotClicked);
-				if(world.isClient() && player.equals(InterfaceClient.getClientPlayer()) && AGUIBase.activeInputGUI instanceof GUIFuelPump){
+				if(world.isClient() && player.equals(InterfaceManager.clientInterface.getClientPlayer()) && AGUIBase.activeInputGUI instanceof GUIFuelPump){
 					AGUIBase.activeInputGUI.close();
 				}
 				return true;

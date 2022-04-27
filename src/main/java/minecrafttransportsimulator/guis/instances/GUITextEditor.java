@@ -15,7 +15,7 @@ import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONText;
-import minecrafttransportsimulator.mcinterface.InterfacePacket;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityTextChange;
 import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
 
@@ -109,7 +109,7 @@ public class GUITextEditor extends AGUIBase{
 				for(JSONText textObject : textObjects){
 					packetTextLines.add(textInputBoxes.get(textInputFieldNames.indexOf(textObject.fieldName)).getText());
 				}
-				InterfacePacket.sendToServer(new PacketEntityTextChange(entity, packetTextLines));
+				InterfaceManager.packetInterface.sendToServer(new PacketEntityTextChange(entity, packetTextLines));
 				close();
 			}
 		});

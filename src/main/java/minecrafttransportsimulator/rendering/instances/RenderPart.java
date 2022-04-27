@@ -8,7 +8,7 @@ import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.PartGun;
 import minecrafttransportsimulator.jsondefs.JSONMuzzle;
-import minecrafttransportsimulator.mcinterface.InterfaceClient;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.components.ARenderEntityDefinable;
 
 public class RenderPart extends ARenderEntityDefinable<APart>{
@@ -23,7 +23,7 @@ public class RenderPart extends ARenderEntityDefinable<APart>{
 	
 	@Override
 	public void renderBoundingBoxes(APart part, TransformationMatrix transform){
-		if(!part.entityOn.areVariablesBlocking(part.placementDefinition, InterfaceClient.getClientPlayer())){
+		if(!part.entityOn.areVariablesBlocking(part.placementDefinition, InterfaceManager.clientInterface.getClientPlayer())){
 			super.renderBoundingBoxes(part, transform);
 			//Draw the gun muzzle bounding boxes.
 			if(part instanceof PartGun){

@@ -11,9 +11,9 @@ import minecrafttransportsimulator.items.components.IItemEntityProvider;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 
 public class ItemPartGun extends AItemPart implements IItemEntityProvider<EntityPlayerGun>{
 	
@@ -27,12 +27,12 @@ public class ItemPartGun extends AItemPart implements IItemEntityProvider<Entity
 	}
 	
 	@Override
-	public PartGun createPart(AEntityF_Multipart<?> entity, WrapperPlayer placingPlayer, JSONPartDefinition packVehicleDef, WrapperNBT partData, APart parentPart){
+	public PartGun createPart(AEntityF_Multipart<?> entity, IWrapperPlayer placingPlayer, JSONPartDefinition packVehicleDef, IWrapperNBT partData, APart parentPart){
 		return new PartGun(entity, placingPlayer, packVehicleDef, partData, parentPart);
 	}
 	
 	@Override
-	public void addTooltipLines(List<String> tooltipLines, WrapperNBT data){
+	public void addTooltipLines(List<String> tooltipLines, IWrapperNBT data){
 		super.addTooltipLines(tooltipLines, data);
 		tooltipLines.add(JSONConfigLanguage.ITEMINFO_GUN_DIAMETER.value + definition.gun.diameter);
 		tooltipLines.add(JSONConfigLanguage.ITEMINFO_GUN_CASERANGE.value + definition.gun.minCaseLength + "-" + definition.gun.maxCaseLength);
@@ -52,7 +52,7 @@ public class ItemPartGun extends AItemPart implements IItemEntityProvider<Entity
 	}
 	
 	@Override
-	public EntityPlayerGun createEntity(WrapperWorld world, WrapperPlayer placingPlayer, WrapperNBT data){
+	public EntityPlayerGun createEntity(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data){
 		return new EntityPlayerGun(world, placingPlayer, data);
 	}
 

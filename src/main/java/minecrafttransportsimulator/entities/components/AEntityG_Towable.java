@@ -16,12 +16,11 @@ import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.jsondefs.JSONConnection;
 import minecrafttransportsimulator.jsondefs.JSONConnectionGroup;
-import minecrafttransportsimulator.mcinterface.InterfaceCore;
-import minecrafttransportsimulator.mcinterface.InterfacePacket;
-import minecrafttransportsimulator.mcinterface.WrapperEntity;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityTowingChange;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 
@@ -38,10 +37,10 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
 	private final List<TowingConnection> savedTowingConnections = new ArrayList<TowingConnection>();
 	public static final String TOWING_CONNECTION_REQUEST_VARIABLE = "connection_requested";
 	
-	public AEntityG_Towable(WrapperWorld world, WrapperPlayer placingPlayer, WrapperNBT data){
+	public AEntityG_Towable(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data){
 		super(world, placingPlayer, data);
 		//Load towing data.
-		WrapperNBT towData = data.getData("towedByConnection");
+		IWrapperNBT towData = data.getData("towedByConnection");
 		if(towData != null){
 			this.savedTowedByConnection = new TowingConnection(towData);
 		}
@@ -90,11 +89,11 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
 						}
 					}catch(Exception e){
 						savedTowedByConnection = null;
-						InterfaceCore.logError("Could not hook-up trailer to entity towing it.  Did the JSON or pack change?");
+						InterfaceManager.coreInterface.logError("Could not hook-up trailer to entity towing it.  Did the JSON or pack change?");
 					}
 				}else{
 					savedTowedByConnection = null;
-					InterfaceCore.logError("Could not hook-up trailer to entity towing it.  Did the JSON or pack change?");
+					InterfaceManager.coreInterface.logError("Could not hook-up trailer to entity towing it.  Did the JSON or pack change?");
 				}
 			}
 		}
@@ -111,12 +110,12 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
 							}
 						}catch(Exception e){
 							iterator.remove();
-							InterfaceCore.logError("Could not connect trailer(s) to the entity towing them.  Did the JSON or pack change?");
+							InterfaceManager.coreInterface.logError("Could not connect trailer(s) to the entity towing them.  Did the JSON or pack change?");
 						}
 					}
 				}else{
 					savedTowingConnections.clear();
-					InterfaceCore.logError("Could not connect trailer(s) to the entity towing them.  Did the JSON or pack change?");
+					InterfaceManager.coreInterface.logError("Could not connect trailer(s) to the entity towing them.  Did the JSON or pack change?");
 				}
 			}
 		}
@@ -419,7 +418,7 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
 		connection.hitchCurrentPosition.set(connection.hitchConnection.pos).rotate(connection.towingEntity.orientation).add(connection.towingEntity.position);
 		connection.hookupCurrentPosition.set(connection.hookupConnection.pos).rotate(connection.towedEntity.orientation).add(connection.towedEntity.position);
 		if(!world.isClient()){
-			InterfacePacket.sendToAllClients(new PacketEntityTowingChange(this, connection));
+			InterfaceManager.packetInterface.sendToAllClients(new PacketEntityTowingChange(this, connection));
 		}else if(AGUIBase.activeInputGUI instanceof AGUIPanel){
 			((AGUIPanel) AGUIBase.activeInputGUI).handleConnectionChange(connection);
 		}
@@ -432,7 +431,7 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
 		TowingConnection connection = towingConnections.remove(connectionIndex);
 		connection.towedVehicle.towedByConnection = null;
 		if(!world.isClient()){
-			InterfacePacket.sendToAllClients(new PacketEntityTowingChange(this, connectionIndex));
+			InterfaceManager.packetInterface.sendToAllClients(new PacketEntityTowingChange(this, connectionIndex));
 		}else if(AGUIBase.activeInputGUI instanceof AGUIPanel){
 			((AGUIPanel) AGUIBase.activeInputGUI).handleConnectionChange(connection);
 		}
@@ -452,16 +451,16 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
 	}
 	
 	@Override
-	public WrapperNBT save(WrapperNBT data){
+	public IWrapperNBT save(IWrapperNBT data){
 		super.save(data);
 		//Save towing data.
 		if(towedByConnection != null){
-			data.setData("towedByConnection", towedByConnection.save(InterfaceCore.getNewNBTWrapper()));
+			data.setData("towedByConnection", towedByConnection.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
 		}
 		
 		int towingConnectionIndex = 0;
 		for(TowingConnection towingEntry : towingConnections){
-			data.setData("towingConnection" + (towingConnectionIndex++), towingEntry.save(InterfaceCore.getNewNBTWrapper()));
+			data.setData("towingConnection" + (towingConnectionIndex++), towingEntry.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
 		}
 		data.setInteger("towingConnectionCount", towingConnectionIndex);
 		return data;
@@ -489,9 +488,9 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
 		}
 		
 		private void handlePacket(AEntityG_Towable<?> messageSource){
-			for(WrapperEntity entity : messageSource.world.getEntitiesWithin(new BoundingBox(messageSource.position, 16, 16, 16))){
-				if(entity instanceof WrapperPlayer){
-					((WrapperPlayer) entity).sendPacket(new PacketPlayerChatMessage((WrapperPlayer) entity, language));
+			for(IWrapperEntity entity : messageSource.world.getEntitiesWithin(new BoundingBox(messageSource.position, 16, 16, 16))){
+				if(entity instanceof IWrapperPlayer){
+					((IWrapperPlayer) entity).sendPacket(new PacketPlayerChatMessage((IWrapperPlayer) entity, language));
 				}
 			}
 		}

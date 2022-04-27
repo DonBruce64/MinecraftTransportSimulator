@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
@@ -14,51 +13,21 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad.
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartEngine;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent.PoleComponentType;
-import minecrafttransportsimulator.jsondefs.AJSONInteractableEntity;
-import minecrafttransportsimulator.jsondefs.AJSONItem;
+import minecrafttransportsimulator.jsondefs.*;
 import minecrafttransportsimulator.jsondefs.AJSONItem.General.TextLine;
-import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
-import minecrafttransportsimulator.jsondefs.AJSONPartProvider;
-import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
-import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition.AnimationComponentType;
-import minecrafttransportsimulator.jsondefs.JSONBullet;
-import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
-import minecrafttransportsimulator.jsondefs.JSONCollisionGroup;
-import minecrafttransportsimulator.jsondefs.JSONConnection;
-import minecrafttransportsimulator.jsondefs.JSONConnectionGroup;
-import minecrafttransportsimulator.jsondefs.JSONCraftingBench;
-import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONDecor.DecorComponentType;
-import minecrafttransportsimulator.jsondefs.JSONDoor;
-import minecrafttransportsimulator.jsondefs.JSONInstrument;
-import minecrafttransportsimulator.jsondefs.JSONInstrumentDefinition;
-import minecrafttransportsimulator.jsondefs.JSONItem;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONItem.JSONBooklet.BookletPage;
-import minecrafttransportsimulator.jsondefs.JSONLight;
 import minecrafttransportsimulator.jsondefs.JSONLight.JSONLightBlendableComponent;
-import minecrafttransportsimulator.jsondefs.JSONMuzzle;
-import minecrafttransportsimulator.jsondefs.JSONMuzzleGroup;
-import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPart.EffectorComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPart.FurnaceComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPart.JSONPartEngine.EngineSound;
-import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition.ExhaustObject;
-import minecrafttransportsimulator.jsondefs.JSONParticle;
 import minecrafttransportsimulator.jsondefs.JSONParticle.ParticleType;
-import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
-import minecrafttransportsimulator.jsondefs.JSONRendering;
 import minecrafttransportsimulator.jsondefs.JSONRendering.ModelType;
-import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
-import minecrafttransportsimulator.jsondefs.JSONSkin;
-import minecrafttransportsimulator.jsondefs.JSONSound;
-import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
-import minecrafttransportsimulator.jsondefs.JSONText;
-import minecrafttransportsimulator.jsondefs.JSONVehicle;
-import minecrafttransportsimulator.mcinterface.InterfaceCore;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.components.AModelParser;
 import minecrafttransportsimulator.rendering.components.RenderableObject;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -339,7 +308,7 @@ public final class LegacyCompatSystem{
 				}
 				if(definition.motorized.isBigTruck){
 					JSONSound airbrakeSound = new JSONSound();
-					airbrakeSound.name = MasterLoader.resourceDomain + ":air_brake_activating";
+					airbrakeSound.name = InterfaceManager.coreModID + ":air_brake_activating";
 					airbrakeSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
 					JSONAnimationDefinition airbrakeDef = new JSONAnimationDefinition();
 					airbrakeDef.animationType = AnimationComponentType.VISIBILITY;
@@ -350,7 +319,7 @@ public final class LegacyCompatSystem{
 					definition.rendering.sounds.add(airbrakeSound);
 					
 					JSONSound backupBeeperSound = new JSONSound();
-					backupBeeperSound.name = MasterLoader.resourceDomain + ":backup_beeper";
+					backupBeeperSound.name = InterfaceManager.coreModID + ":backup_beeper";
 					backupBeeperSound.looping = true;
 					backupBeeperSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
 					JSONAnimationDefinition backupBeeperDef = new JSONAnimationDefinition();
@@ -824,7 +793,7 @@ public final class LegacyCompatSystem{
 				
 				//Griding sound plays when engine has a bad shift.
 				JSONSound grindingSound = new JSONSound();
-				grindingSound.name = MasterLoader.resourceDomain + ":engine_shifting_grinding";
+				grindingSound.name = InterfaceManager.coreModID + ":engine_shifting_grinding";
 				grindingSound.forceSound = true;
 				grindingSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
 				JSONAnimationDefinition grindingActiveDef = new JSONAnimationDefinition();
@@ -983,7 +952,7 @@ public final class LegacyCompatSystem{
 				}
 				
 				JSONSound blowoutSound = new JSONSound();
-				blowoutSound.name = MasterLoader.resourceDomain + ":wheel_blowout";
+				blowoutSound.name = InterfaceManager.coreModID + ":wheel_blowout";
 				blowoutSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
 				JSONAnimationDefinition blowoutDef = new JSONAnimationDefinition();
 				blowoutDef.animationType = AnimationComponentType.VISIBILITY;
@@ -994,7 +963,7 @@ public final class LegacyCompatSystem{
 				definition.rendering.sounds.add(blowoutSound);
 				
 				JSONSound strikingSound = new JSONSound();
-				strikingSound.name = MasterLoader.resourceDomain + ":" + "wheel_striking";
+				strikingSound.name = InterfaceManager.coreModID + ":" + "wheel_striking";
 				strikingSound.forceSound = true;
 				strikingSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
 				JSONAnimationDefinition strikingDef = new JSONAnimationDefinition();
@@ -1006,7 +975,7 @@ public final class LegacyCompatSystem{
 				definition.rendering.sounds.add(strikingSound);
 				
 				JSONSound skiddingSound = new JSONSound();
-				skiddingSound.name = MasterLoader.resourceDomain + ":" + "wheel_skidding";
+				skiddingSound.name = InterfaceManager.coreModID + ":" + "wheel_skidding";
 				skiddingSound.looping = true;
 				skiddingSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
 				JSONAnimationDefinition skiddingDef = new JSONAnimationDefinition();
@@ -2288,8 +2257,8 @@ public final class LegacyCompatSystem{
 				}
 			}
     	}catch(Exception e){
-			InterfaceCore.logError("Could not do model-based legacy compats on " + definition.packID + ":" + definition.systemName + ".  Lights and treads will likely not be present on this model.");
-			InterfaceCore.logError(e.getMessage());
+			InterfaceManager.coreInterface.logError("Could not do model-based legacy compats on " + definition.packID + ":" + definition.systemName + ".  Lights and treads will likely not be present on this model.");
+			InterfaceManager.coreInterface.logError(e.getMessage());
 		}
     }
 }

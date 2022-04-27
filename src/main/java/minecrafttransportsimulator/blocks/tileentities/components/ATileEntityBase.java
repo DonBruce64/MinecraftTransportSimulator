@@ -3,9 +3,9 @@ package minecrafttransportsimulator.blocks.tileentities.components;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**Base Tile Entity class.  In essence, this class holds the data and state of a Tile Entity in the world.
@@ -25,7 +25,7 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONMultiModelProv
 	private float lastLightLevel;
 	private final Point3D blockPosition;
 	
-	public ATileEntityBase(WrapperWorld world, Point3D position, WrapperPlayer placingPlayer, WrapperNBT data){
+	public ATileEntityBase(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, IWrapperNBT data){
 		super(world, placingPlayer, data);
 		//Offset the position of this tile to be centered in the blocks 0->1 space.
 		//This allows for better rotation code and simpler models.
@@ -45,7 +45,7 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONMultiModelProv
 	 *  Returns the rotation, in the Y-direction, that should be applied to newly-placed instances of this entity.
 	 *  The player is passed-in as it is expected the rotation will depend on the player's rotation.
 	 */
-	public double getPlacementRotation(WrapperPlayer player){
+	public double getPlacementRotation(IWrapperPlayer player){
 		int clampAngle = getRotationIncrement();
 		return Math.round((player.getYaw()+180)/clampAngle)*clampAngle%360;
 	}
@@ -102,7 +102,7 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONMultiModelProv
 	public void onNeighborChanged(Point3D otherPosition){}
 	
 	@Override
-	public WrapperNBT save(WrapperNBT data){
+	public IWrapperNBT save(IWrapperNBT data){
 		super.save(data);
 		if(shouldSavePosition()){
 			//Overwrite the position with the actual block position.

@@ -18,8 +18,8 @@ import minecrafttransportsimulator.guis.instances.GUIPartBench;
 import minecrafttransportsimulator.guis.instances.GUIRadio;
 import minecrafttransportsimulator.guis.instances.GUISignalController;
 import minecrafttransportsimulator.guis.instances.GUITextEditor;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.packets.components.APacketEntityInteract;
 
 /**Packet sent to entities to request a GUI be opened on them.  The GUI to be sent is an enum
@@ -29,10 +29,10 @@ import minecrafttransportsimulator.packets.components.APacketEntityInteract;
  * 
  * @author don_bruce
  */
-public class PacketEntityGUIRequest extends APacketEntityInteract<AEntityB_Existing, WrapperPlayer>{
+public class PacketEntityGUIRequest extends APacketEntityInteract<AEntityB_Existing, IWrapperPlayer>{
 	private final EntityGUIType guiRequested;
 	
-	public PacketEntityGUIRequest(AEntityB_Existing entity, WrapperPlayer player, EntityGUIType guiRequested){
+	public PacketEntityGUIRequest(AEntityB_Existing entity, IWrapperPlayer player, EntityGUIType guiRequested){
 		super(entity, player);
 		this.guiRequested = guiRequested;
 	}
@@ -49,7 +49,7 @@ public class PacketEntityGUIRequest extends APacketEntityInteract<AEntityB_Exist
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, AEntityB_Existing entity, WrapperPlayer player){
+	public boolean handle(AWrapperWorld world, AEntityB_Existing entity, IWrapperPlayer player){
 		switch(guiRequested){
 			case INSTRUMENTS: new GUIInstruments((EntityVehicleF_Physics) entity); break;
 			case INVENTORY_CHEST: new GUIInventoryContainer(((TileEntityChest) entity).inventory, ((TileEntityChest) entity).definition.decor.inventoryTexture, false); break;

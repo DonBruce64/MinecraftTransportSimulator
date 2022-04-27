@@ -14,7 +14,6 @@ import java.util.TreeMap;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import minecrafttransportsimulator.MasterLoader;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.components.AItemPart.AItemPartCreator;
@@ -40,7 +39,7 @@ import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
 import minecrafttransportsimulator.jsondefs.JSONSkin;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
-import minecrafttransportsimulator.mcinterface.InterfaceCore;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.JSONParser;
 import minecrafttransportsimulator.packloading.LegacyCompatSystem;
 import minecrafttransportsimulator.packloading.PackResourceLoader.ItemClassification;
@@ -172,11 +171,11 @@ public final class PackParserSystem{
     public static void addDefaultItems(){
 		try{
 			JSONPack packDef = new JSONPack();
-			packDef.packID = MasterLoader.MODID;
+			packDef.packID = InterfaceManager.coreModID;
 			packDef.fileStructure = 0;
-			packDef.packName = InterfaceCore.getModName(MasterLoader.MODID);
+			packDef.packName = InterfaceManager.coreInterface.getModName(InterfaceManager.coreModID);
 			packDef.packItem = "wrench";
-			PackParserSystem.packMap.put(MasterLoader.MODID, packDef);
+			PackParserSystem.packMap.put(InterfaceManager.coreModID, packDef);
 			
 			Map<String, ItemClassification> defaultItems = new HashMap<String, ItemClassification>();
 			defaultItems.put("fuelhose", ItemClassification.ITEM);
@@ -207,11 +206,11 @@ public final class PackParserSystem{
 			defaultItems.put("invisible_standing", ItemClassification.PART);
 			defaultItems.put("invisible_wheel", ItemClassification.PART);
 			
-			String prefixFolders = "/assets/" + MasterLoader.MODID + "/jsondefs/";
+			String prefixFolders = "/assets/" + InterfaceManager.coreModID + "/jsondefs/";
 			for(Entry<String, ItemClassification> defaultItem : defaultItems.entrySet()){
 				String systemName = defaultItem.getKey();
 				ItemClassification classification = defaultItem.getValue();
-				AJSONItem itemDef = JSONParser.parseStream(MasterLoader.class.getResourceAsStream(prefixFolders + classification.toDirectory() + systemName + ".json"), classification.representingClass, packDef.packID, systemName);
+				AJSONItem itemDef = JSONParser.parseStream(PackParserSystem.class.getResourceAsStream(prefixFolders + classification.toDirectory() + systemName + ".json"), classification.representingClass, packDef.packID, systemName);
 				itemDef.packID = packDef.packID;
 				itemDef.systemName = systemName;
 				itemDef.classification = classification;
@@ -276,7 +275,7 @@ public final class PackParserSystem{
 			}
 			jarFile.close();
     	}catch(Exception e){
-			InterfaceCore.logError("A fault was encountered when trying to check file " + packJar.getName() + " for pack data.  This pack will not be loaded.");
+			InterfaceManager.coreInterface.logError("A fault was encountered when trying to check file " + packJar.getName() + " for pack data.  This pack will not be loaded.");
 			e.printStackTrace();
 		}
     } 
@@ -295,7 +294,7 @@ public final class PackParserSystem{
     	while(iterator.hasNext()){
     		JSONPack packDef = packMap.get(iterator.next());
     		//Don't parse the core pack.  THat's all internal.
-    		if(packDef.packID.equals(MasterLoader.resourceDomain)){
+    		if(packDef.packID.equals(InterfaceManager.coreModID)){
     			continue;
     		}
     		
@@ -308,7 +307,7 @@ public final class PackParserSystem{
     			for(String subDirectory : packDef.activators.keySet()){
     				if(!packDef.activators.get(subDirectory).isEmpty()){
     					for(String activator : packDef.activators.get(subDirectory)){
-    	    				if(packIDs.contains(activator) || InterfaceCore.isModPresent(activator)){
+    	    				if(packIDs.contains(activator) || InterfaceManager.coreInterface.isModPresent(activator)){
     	    					validSubDirectories.add(subDirectory);
         						break;
         					}
@@ -325,7 +324,7 @@ public final class PackParserSystem{
     		if(packDef.blockers != null){
     			for(String subDirectory : packDef.blockers.keySet()){
 	    			for(String blocker : packDef.blockers.get(subDirectory)){
-	    				if(packIDs.contains(blocker) || InterfaceCore.isModPresent(blocker)){
+	    				if(packIDs.contains(blocker) || InterfaceManager.coreInterface.isModPresent(blocker)){
 	    					validSubDirectories.remove(subDirectory);
     						break;
     					}
@@ -336,7 +335,7 @@ public final class PackParserSystem{
     		//If we have dependent sets, make sure we log a pack fault.
     		if(packDef.dependents != null){
     			for(String dependent : packDef.dependents){
-					if(packIDs.contains(dependent) || InterfaceCore.isModPresent(dependent)){
+					if(packIDs.contains(dependent) || InterfaceManager.coreInterface.isModPresent(dependent)){
 						faultMap.put(packDef.packID, packDef.dependents);
 						break;
 					}
@@ -383,7 +382,7 @@ public final class PackParserSystem{
 								try{
 									classification = ItemClassification.fromDirectory(assetPath.substring(0, assetPath.indexOf("/") + 1));
 								}catch(Exception e){
-									InterfaceCore.logError("Was given an invalid classifcation sub-folder for asset: " + fileName + ".  Check your folder paths.");
+									InterfaceManager.coreInterface.logError("Was given an invalid classifcation sub-folder for asset: " + fileName + ".  Check your folder paths.");
 									continue;
 								}
 								
@@ -393,8 +392,8 @@ public final class PackParserSystem{
 								try{
 									definition = JSONParser.parseStream(jarFile.getInputStream(entry), classification.representingClass, packDef.packID, systemName);
 								}catch(Exception e){
-									InterfaceCore.logError("Could not parse: " + packDef.packID + ":" + fileName);
-						    		InterfaceCore.logError(e.getMessage());
+									InterfaceManager.coreInterface.logError("Could not parse: " + packDef.packID + ":" + fileName);
+						    		InterfaceManager.coreInterface.logError(e.getMessage());
 						    		continue;
 								}
 								
@@ -413,7 +412,7 @@ public final class PackParserSystem{
 					//Done parsing.  Close the jarfile.
 					jarFile.close();
 				}catch(Exception e){
-					InterfaceCore.logError("Could not start parsing of pack: " + packDef.packID);
+					InterfaceManager.coreInterface.logError("Could not start parsing of pack: " + packDef.packID);
 					e.printStackTrace();
 				}
     		}
@@ -474,7 +473,7 @@ public final class PackParserSystem{
 		    	packItemMap.get(item.definition.packID).put(item.definition.systemName, item);
 			}
     	}catch(Exception e){
-    		InterfaceCore.logError(e.getMessage());
+    		InterfaceManager.coreInterface.logError(e.getMessage());
     	}
     }
     
@@ -531,7 +530,7 @@ public final class PackParserSystem{
 						}
 					}
 					if(item == null){
-						InterfaceCore.logError("Was told to parse part " + partDef.packID + ":" + partDef.systemName + " with part type " + partDef.generic.type + ", but that's not a valid type for creating a part.");
+						InterfaceManager.coreInterface.logError("Was told to parse part " + partDef.packID + ":" + partDef.systemName + " with part type " + partDef.generic.type + ", but that's not a valid type for creating a part.");
 						return;
 					}
 					break;

@@ -10,10 +10,10 @@ import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPole_Component;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
-import minecrafttransportsimulator.mcinterface.InterfaceCore;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 
 /**Traffic signal controller tile entity.  Responsible for keeping the state of traffic
@@ -50,7 +50,7 @@ public class TileEntitySignalController extends TileEntityDecor{
 	/**Lane counts and intersection widths.**/
 	public final Map<Axis, IntersectionProperties> intersectionProperties = new HashMap<Axis, IntersectionProperties>();
 	
-	public TileEntitySignalController(WrapperWorld world, Point3D position, WrapperPlayer placingPlayer, WrapperNBT data){
+	public TileEntitySignalController(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, IWrapperNBT data){
 		super(world, position, placingPlayer, data);
 		initializeController(data);
 	}
@@ -104,7 +104,7 @@ public class TileEntitySignalController extends TileEntityDecor{
 	}
 	
 	@Override
-	public boolean interact(WrapperPlayer player){
+	public boolean interact(IWrapperPlayer player){
 		player.sendPacket(new PacketEntityGUIRequest(this, player, PacketEntityGUIRequest.EntityGUIType.SIGNAL_CONTROLLER));
 		return true;
 	}
@@ -115,9 +115,9 @@ public class TileEntitySignalController extends TileEntityDecor{
 	 *  settings are changed, either by placing the block the first time, or updating via the GUI.
 	 *  If the GUI is used, pass null in here to prevent data re-parsing.  Otherwise, pass-in the data.
 	 */
-	public void initializeController(WrapperNBT data){
+	public void initializeController(IWrapperNBT data){
 		if(data == null){
-			data = save(InterfaceCore.getNewNBTWrapper());
+			data = save(InterfaceManager.coreInterface.getNewNBTWrapper());
 		}
 		
 		//Load state data.
@@ -191,7 +191,7 @@ public class TileEntitySignalController extends TileEntityDecor{
 	}
     
 	@Override
-    public WrapperNBT save(WrapperNBT data){
+    public IWrapperNBT save(IWrapperNBT data){
 		super.save(data);
 		data.setBoolean("isRightHandDrive", isRightHandDrive);
 		data.setBoolean("timedMode", timedMode);
@@ -230,7 +230,7 @@ public class TileEntitySignalController extends TileEntityDecor{
 		public double centerDistance;
 		public double centerOffset;
 		
-		public IntersectionProperties(WrapperNBT data){
+		public IntersectionProperties(IWrapperNBT data){
 			this.centerLaneCount = data.getInteger("centerLaneCount");
 			this.leftLaneCount = data.getInteger("leftLaneCount");
 			this.rightLaneCount = data.getInteger("rightLaneCount");
@@ -239,8 +239,8 @@ public class TileEntitySignalController extends TileEntityDecor{
 			this.centerOffset = data.getDouble("centerOffset");
 		}
 		
-		public WrapperNBT getData(){
-			WrapperNBT data = InterfaceCore.getNewNBTWrapper();
+		public IWrapperNBT getData(){
+			IWrapperNBT data = InterfaceManager.coreInterface.getNewNBTWrapper();
 			data.setInteger("centerLaneCount", centerLaneCount);
 			data.setInteger("leftLaneCount", leftLaneCount);
 			data.setInteger("rightLaneCount", rightLaneCount);
@@ -268,7 +268,7 @@ public class TileEntitySignalController extends TileEntityDecor{
 		public final double signalLineWidth;
 		public final Point3D signalLineCenter;
 		
-		private SignalGroup(Axis axis, SignalDirection direction, WrapperNBT data){
+		private SignalGroup(Axis axis, SignalDirection direction, IWrapperNBT data){
 			this.axis = axis;
 			this.direction = direction;
 			this.isMainSignal = axis.equals(mainDirectionAxis) || axis.equals(mainDirectionAxis.getOpposite());
@@ -398,8 +398,8 @@ public class TileEntitySignalController extends TileEntityDecor{
 		
 		protected abstract boolean isSignalBlocking(SignalGroup otherSignal);
 		
-		protected WrapperNBT getData(){
-			WrapperNBT data = InterfaceCore.getNewNBTWrapper();
+		protected IWrapperNBT getData(){
+			IWrapperNBT data = InterfaceManager.coreInterface.getNewNBTWrapper();
 			data.setString("currentLight", currentLight.name());
 			if(requestedLight != null){
 				data.setString("requestedLight", requestedLight.name());
@@ -411,7 +411,7 @@ public class TileEntitySignalController extends TileEntityDecor{
 	
 	private class SignalGroupCenter extends SignalGroup{
 		
-		private SignalGroupCenter(Axis axis, WrapperNBT data){
+		private SignalGroupCenter(Axis axis, IWrapperNBT data){
 			super(axis, SignalDirection.CENTER, data);
 			this.requestedLight = LightType.STOP_LIGHT;
 		}
@@ -480,7 +480,7 @@ public class TileEntitySignalController extends TileEntityDecor{
 	
 	private class SignalGroupLeft extends SignalGroup{
 		
-		private SignalGroupLeft(Axis axis, WrapperNBT data){
+		private SignalGroupLeft(Axis axis, IWrapperNBT data){
 			super(axis, SignalDirection.LEFT, data);
 			this.requestedLight = LightType.STOP_LIGHT_LEFT;
 		}
@@ -549,7 +549,7 @@ public class TileEntitySignalController extends TileEntityDecor{
 	
 	private class SignalGroupRight extends SignalGroup{
 		
-		private SignalGroupRight(Axis axis, WrapperNBT data){
+		private SignalGroupRight(Axis axis, IWrapperNBT data){
 			super(axis, SignalDirection.RIGHT, data);
 			this.requestedLight = LightType.STOP_LIGHT_RIGHT;
 		}

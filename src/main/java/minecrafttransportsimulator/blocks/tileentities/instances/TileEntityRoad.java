@@ -20,11 +20,11 @@ import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent.JSONLaneSector;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent.JSONRoadCollisionArea;
-import minecrafttransportsimulator.mcinterface.InterfacePacket;
-import minecrafttransportsimulator.mcinterface.WrapperItemStack;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityRoadCollisionUpdate;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
@@ -64,7 +64,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	
 	private static RenderRoad renderer;
 	
-	public TileEntityRoad(WrapperWorld world, Point3D position, WrapperPlayer placingPlayer, WrapperNBT data){
+	public TileEntityRoad(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, IWrapperNBT data){
 		super(world, position, placingPlayer, data);
 		
 		//Set the bounding box.
@@ -104,7 +104,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	}
 	
 	@Override
-	public double getPlacementRotation(WrapperPlayer player){
+	public double getPlacementRotation(IWrapperPlayer player){
 		if(!definition.road.type.equals(RoadComponent.CORE_DYNAMIC)){
 			int clampAngle = getRotationIncrement();
 			//Normally blocks are placed facing us.  For roads though, we want us to have the angles the player is facing.
@@ -135,7 +135,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	}
 	
 	@Override
-	public void addDropsToList(List<WrapperItemStack> drops){
+	public void addDropsToList(List<IWrapperItemStack> drops){
 		for(RoadComponent componentType : RoadComponent.values()){
 			if(components.containsKey(componentType)){
 				drops.add(components.get(componentType).getNewStack(null));
@@ -174,7 +174,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
     }
 	
 	@Override
-	public boolean interact(WrapperPlayer player){
+	public boolean interact(IWrapperPlayer player){
 		//Check if we aren't active.  If not, try to spawn collision again.
     	if(!isActive){
     		spawnCollisionBlocks(player);
@@ -211,7 +211,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	 *  a static or dynamic road.  Data is passed-in, but may be null if we're generating
 	 *  lanes for the first time.
 	 */
-	public void generateLanes(WrapperNBT data){
+	public void generateLanes(IWrapperNBT data){
 		int totalLanes = 0;
 		if(definition.road.type.equals(RoadComponent.CORE_DYNAMIC)){
 			for(int i=0; i<definition.road.laneOffsets.length; ++i){
@@ -304,7 +304,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	 *  Returns true and makes this TE active if all the boxes could be spawned.
 	 *  False if there are blocking blocks.  OP and creative-mode players override blocking block checks.
 	 */
-	public boolean spawnCollisionBlocks(WrapperPlayer player){
+	public boolean spawnCollisionBlocks(IWrapperPlayer player){
 		Map<Point3D, Integer> collisionHeightMap = generateCollisionPoints();
 		if(collidingBlockOffsets.isEmpty() || (player.isCreative() && player.isOP())){
 			for(Point3D offset : collisionBlockOffsets){
@@ -312,12 +312,12 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 			}
 			collidingBlockOffsets.clear();
 			setActive(true);
-			InterfacePacket.sendToAllClients(new PacketTileEntityRoadCollisionUpdate(this));
+			InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityRoadCollisionUpdate(this));
 			return true;
 		}else{
 			collisionBlockOffsets.clear();
 			player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_ROAD_BLOCKINGBLOCKS));
-			InterfacePacket.sendToAllClients(new PacketTileEntityRoadCollisionUpdate(this));
+			InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityRoadCollisionUpdate(this));
 			return false;
 		}
 	}
@@ -332,7 +332,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 	}
 	
 	@Override
-    public WrapperNBT save(WrapperNBT data){
+    public IWrapperNBT save(IWrapperNBT data){
 		super.save(data);
 		//Save isActive state.
 		data.setBoolean("isActive", isActive);

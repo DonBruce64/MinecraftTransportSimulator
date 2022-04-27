@@ -4,7 +4,7 @@ import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition.AnimationComponentType;
-import minecrafttransportsimulator.mcinterface.InterfaceSound;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.sound.SoundInstance;
 
 /**Class designed for maintaining the state of a duration/delay for an animation.
@@ -123,14 +123,14 @@ public class DurationDelayClock{
 						endedForwardsMovement = true;
 						movedThisUpdate = true;
 						if(animation.forwardsEndSound != null && entity.world.isClient()){
-							InterfaceSound.playQuickSound(new SoundInstance(entity, animation.forwardsEndSound));
+							InterfaceManager.soundInterface.playQuickSound(new SoundInstance(entity, animation.forwardsEndSound));
 						}
 					}
 				}
 				if(!startedForwardsMovement){
 					startedForwardsMovement = true;
 					if(animation.forwardsStartSound != null && entity.world.isClient()){
-						InterfaceSound.playQuickSound(new SoundInstance(entity, animation.forwardsStartSound));
+						InterfaceManager.soundInterface.playQuickSound(new SoundInstance(entity, animation.forwardsStartSound));
 					}
 				}
 			}
@@ -150,14 +150,14 @@ public class DurationDelayClock{
 						endedReverseMovement = true;
 						movedThisUpdate = true;
 						if(animation.reverseEndSound != null && entity.world.isClient()){
-							InterfaceSound.playQuickSound(new SoundInstance(entity, animation.reverseEndSound));
+							InterfaceManager.soundInterface.playQuickSound(new SoundInstance(entity, animation.reverseEndSound));
 						}
 					}
 				}
 				if(!startedReverseMovement){
 					startedReverseMovement = true;
 					if(animation.reverseStartSound != null && entity.world.isClient()){
-						InterfaceSound.playQuickSound(new SoundInstance(entity, animation.reverseStartSound));
+						InterfaceManager.soundInterface.playQuickSound(new SoundInstance(entity, animation.reverseStartSound));
 					}
 				}
 			}

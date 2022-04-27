@@ -28,13 +28,11 @@ import minecrafttransportsimulator.jsondefs.JSONParticle;
 import minecrafttransportsimulator.jsondefs.JSONSound;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONText;
-import minecrafttransportsimulator.mcinterface.InterfaceClient;
-import minecrafttransportsimulator.mcinterface.InterfaceCore;
-import minecrafttransportsimulator.mcinterface.InterfaceSound;
-import minecrafttransportsimulator.mcinterface.WrapperItemStack;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
@@ -96,7 +94,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 	public final Map<String, JSONLight> lightObjectDefinitions = new HashMap<String, JSONLight>();
 	
 	/**Constructor for synced entities**/
-	public AEntityD_Definable(WrapperWorld world, WrapperPlayer placingPlayer, WrapperNBT data){
+	public AEntityD_Definable(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data){
 		super(world, placingPlayer, data);
 		this.subName = data.getString("subName");
 		AItemSubTyped<JSONDefinition> item = PackParserSystem.getItem(data.getString("packID"), data.getString("systemName"), subName);
@@ -127,7 +125,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 	}
 	
 	/**Constructor for un-synced entities.  Allows for specification of position/motion/angles.**/
-	public AEntityD_Definable(WrapperWorld world, Point3D position, Point3D motion, Point3D angles, AItemSubTyped<JSONDefinition> creatingItem){
+	public AEntityD_Definable(AWrapperWorld world, Point3D position, Point3D motion, Point3D angles, AItemSubTyped<JSONDefinition> creatingItem){
 		super(world, position, motion, angles);
 		this.subName = creatingItem.subName;
 		this.definition = creatingItem.definition;
@@ -281,10 +279,10 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 	 *  return a stack that can re-create this entity, whereas drops may or may not allow for this.
 	 *  An example is a vehicle that is broken in a crash versus picked up via a wrench.
 	 */
-	public void addDropsToList(List<WrapperItemStack> drops){
+	public void addDropsToList(List<IWrapperItemStack> drops){
 		AItemPack<JSONDefinition> packItem = getItem();
 		if(packItem != null){
-			drops.add(packItem.getNewStack(save(InterfaceCore.getNewNBTWrapper())));
+			drops.add(packItem.getNewStack(save(InterfaceManager.coreInterface.getNewNBTWrapper())));
 		}
 	}
 	
@@ -477,9 +475,9 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     	for(JSONSound soundDef : allSoundDefs){
     		if(soundDef.canPlayOnPartialTicks ^ partialTicks == 0){
 	    		//Check if the sound should be playing before we try to update state.
-	    		AEntityE_Interactable<?> entityRiding = InterfaceClient.getClientPlayer().getEntityRiding();
+	    		AEntityE_Interactable<?> entityRiding = InterfaceManager.clientInterface.getClientPlayer().getEntityRiding();
 	    		boolean playerRidingEntity = this.equals(entityRiding) || (this instanceof APart && ((APart) this).entityOn.equals(entityRiding));
-	    		boolean shouldSoundStartPlaying = playerRidingEntity && InterfaceClient.inFirstPerson() && !CameraSystem.runningCustomCameras ? !soundDef.isExterior : !soundDef.isInterior;
+	    		boolean shouldSoundStartPlaying = playerRidingEntity && InterfaceManager.clientInterface.inFirstPerson() && !CameraSystem.runningCustomCameras ? !soundDef.isExterior : !soundDef.isInterior;
 				boolean anyClockMovedThisUpdate = false;
 				if(shouldSoundStartPlaying){
 					AnimationSwitchbox activeSwitchbox = soundActiveSwitchboxes.get(soundDef);
@@ -505,7 +503,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 						}
 					}
 					if(!isSoundPlaying){
-						InterfaceSound.playQuickSound(new SoundInstance(this, soundDef));
+						InterfaceManager.soundInterface.playQuickSound(new SoundInstance(this, soundDef));
 					}
 				}else{
 					if(soundDef.looping){
@@ -544,7 +542,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 							
 							//If the player is in a closed-top vehicle that isn't this one, dampen the sound
 							//Unless it's a radio, in which case don't do so.
-							if(!playerRidingEntity && sound.radio == null && entityRiding instanceof EntityVehicleF_Physics && !((EntityVehicleF_Physics) entityRiding).definition.motorized.hasOpenTop && InterfaceClient.inFirstPerson() && !CameraSystem.runningCustomCameras){
+							if(!playerRidingEntity && sound.radio == null && entityRiding instanceof EntityVehicleF_Physics && !((EntityVehicleF_Physics) entityRiding).definition.motorized.hasOpenTop && InterfaceManager.clientInterface.inFirstPerson() && !CameraSystem.runningCustomCameras){
 								sound.volume *= 0.5F;
 							}
 							
@@ -825,7 +823,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 	}
 	
 	@Override
-	public WrapperNBT save(WrapperNBT data){
+	public IWrapperNBT save(IWrapperNBT data){
 		super.save(data);
 		data.setString("packID", definition.packID);
 		data.setString("systemName", definition.systemName);

@@ -8,7 +8,7 @@ import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.mcinterface.InterfaceEventsModelLoader;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.JSONParser;
 import minecrafttransportsimulator.rendering.components.AModelParser;
 import minecrafttransportsimulator.rendering.components.RenderableObject;
@@ -52,7 +52,7 @@ public final class ModelParserLT extends AModelParser{
 				Point3D min = new Point3D();
 				Point3D max = new Point3D();
 				
-				float[] uvPoints = InterfaceEventsModelLoader.getDefaultBlockTexture(tile.tile.block);
+				float[] uvPoints = InterfaceManager.renderingInterface.getDefaultBlockTexture(tile.tile.block);
 				
 				for(LTBox box : tile.boxes){
 					for(int i=0; i<6; ++i){

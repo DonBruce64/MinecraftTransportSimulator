@@ -3,9 +3,9 @@ package minecrafttransportsimulator.packets.instances;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.TowingConnection;
 import minecrafttransportsimulator.entities.components.AEntityG_Towable;
-import minecrafttransportsimulator.mcinterface.InterfaceCore;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
 /**Packet used to send signals to entities to connect/disconnect towing entities.  Sent from the server to all clients when 
@@ -15,12 +15,12 @@ import minecrafttransportsimulator.packets.components.APacketEntity;
  */
 public class PacketEntityTowingChange extends APacketEntity<AEntityG_Towable<?>>{
 	private final int connectionIndex;
-	private final WrapperNBT connectionData;
+	private final IWrapperNBT connectionData;
 	
 	public PacketEntityTowingChange(AEntityG_Towable<?> hitchEntity, TowingConnection connection){
 		super(hitchEntity);
 		this.connectionIndex = -1;
-		this.connectionData = connection.save(InterfaceCore.getNewNBTWrapper());
+		this.connectionData = connection.save(InterfaceManager.coreInterface.getNewNBTWrapper());
 	}
 	
 	public PacketEntityTowingChange(AEntityG_Towable<?> hitchEntity, int connectionIndex){
@@ -49,7 +49,7 @@ public class PacketEntityTowingChange extends APacketEntity<AEntityG_Towable<?>>
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, AEntityG_Towable<?> hitchEntity){
+	public boolean handle(AWrapperWorld world, AEntityG_Towable<?> hitchEntity){
 		if(connectionIndex == -1){
 			TowingConnection connection = new TowingConnection(connectionData);
 			if(connection.initConnection(world)){

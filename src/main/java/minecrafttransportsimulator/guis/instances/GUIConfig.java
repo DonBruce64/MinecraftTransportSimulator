@@ -14,7 +14,7 @@ import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.jsondefs.JSONConfigEntry;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
-import minecrafttransportsimulator.mcinterface.InterfaceInput;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ControlSystem;
@@ -84,8 +84,8 @@ public class GUIConfig extends AGUIBase{
 	
 	public GUIConfig(){
 		super();
-		if(!InterfaceInput.isJoystickSupportEnabled()){
-			InterfaceInput.initJoysticks();
+		if(!InterfaceManager.inputInterface.isJoystickSupportEnabled()){
+			InterfaceManager.inputInterface.initJoysticks();
 		}
 	}
 	
@@ -180,7 +180,7 @@ public class GUIConfig extends AGUIBase{
 					GUIComponentTextBox box = new GUIComponentTextBox(guiLeft + horizontalOffset, guiTop + verticalOffset, 40, 10, "", ColorRGB.WHITE, 5){
 						@Override
 						public void handleKeyTyped(char typedChar, int typedCode, TextBoxControlKey control){
-							setText(InterfaceInput.getNameForKeyCode(typedCode));
+							setText(InterfaceManager.inputInterface.getNameForKeyCode(typedCode));
 		        			keyboardBoxes.get(vehicleConfiguring).get(this).config.keyCode =  typedCode;
 		        			ConfigSystem.saveToDisk();
 		        			focused = false;
@@ -224,8 +224,8 @@ public class GUIConfig extends AGUIBase{
 			GUIComponentButton button = new GUIComponentButton(guiLeft + 10, guiTop + 40 + 20*joystickSelectionButtons.size(), 235, 20, ""){
 				@Override
 				public void onClicked(boolean leftSide){
-					selectedJoystickName = InterfaceInput.getAllJoystickNames().get(joystickSelectionButtons.indexOf(this));
-					selectedJoystickComponentCount = InterfaceInput.getJoystickComponentCount(selectedJoystickName);
+					selectedJoystickName = InterfaceManager.inputInterface.getAllJoystickNames().get(joystickSelectionButtons.indexOf(this));
+					selectedJoystickComponentCount = InterfaceManager.inputInterface.getJoystickComponentCount(selectedJoystickName);
 				}};
 			joystickSelectionButtons.add(button);
 			addComponent(button);
@@ -247,7 +247,7 @@ public class GUIConfig extends AGUIBase{
 				@Override
 				public void onClicked(boolean leftSide){
 					joystickComponentId = joystickComponentSelectionButtons.indexOf(this) + scrollSpot;
-					if(InterfaceInput.isJoystickComponentAxis(selectedJoystickName, joystickComponentId)){
+					if(InterfaceManager.inputInterface.isJoystickComponentAxis(selectedJoystickName, joystickComponentId)){
 						assigningDigital = false;
 					}else{
 						assigningDigital = true;
@@ -397,12 +397,12 @@ public class GUIConfig extends AGUIBase{
 		
 		
 		//If we are configuring controls, and haven't selected a vehicle, render the vehicle selection components.
-		vehicleSelectionFaultLabel.visible = !InterfaceInput.isJoystickSupportEnabled() && configuringControls && !configuringKeyboard;
+		vehicleSelectionFaultLabel.visible = !InterfaceManager.inputInterface.isJoystickSupportEnabled() && configuringControls && !configuringKeyboard;
 		if(vehicleSelectionFaultLabel.visible){
-			vehicleSelectionFaultLabel.text = InterfaceInput.isJoystickSupportBlocked() ? JSONConfigLanguage.GUI_CONFIG_JOYSTICK_DISABLED.value : JSONConfigLanguage.GUI_CONFIG_JOYSTICK_ERROR.value;
+			vehicleSelectionFaultLabel.text = InterfaceManager.inputInterface.isJoystickSupportBlocked() ? JSONConfigLanguage.GUI_CONFIG_JOYSTICK_DISABLED.value : JSONConfigLanguage.GUI_CONFIG_JOYSTICK_ERROR.value;
 		}
 		for(GUIComponentButton button : vehicleSelectionButtons.keySet()){
-			button.visible = configuringControls && vehicleConfiguring.isEmpty() && (!vehicleSelectionButtons.get(button).endsWith(".joystick") || InterfaceInput.isJoystickSupportEnabled());
+			button.visible = configuringControls && vehicleConfiguring.isEmpty() && (!vehicleSelectionButtons.get(button).endsWith(".joystick") || InterfaceManager.inputInterface.isJoystickSupportEnabled());
 		}
 		
 		
@@ -417,13 +417,13 @@ public class GUIConfig extends AGUIBase{
 				if(textBox.focused){
 					textBox.setText("");
 				}else{
-					textBox.setText(InterfaceInput.getNameForKeyCode(keyboardBoxes.get(vehicleType).get(textBox).config.keyCode));
+					textBox.setText(InterfaceManager.inputInterface.getNameForKeyCode(keyboardBoxes.get(vehicleType).get(textBox).config.keyCode));
 				}
 			}
 			for(GUIComponentLabel label : keyboardLabels.get(vehicleType).keySet()){
 				label.visible = finishKeyboardBindingsButton.visible && vehicleType.equals(vehicleConfiguring);
 				ControlsKeyboardDynamic dynamicControl = keyboardLabels.get(vehicleType).get(label);
-				label.text = dynamicControl.language.value + ": " + InterfaceInput.getNameForKeyCode(dynamicControl.modControl.config.keyCode) + " + " + InterfaceInput.getNameForKeyCode(dynamicControl.mainControl.config.keyCode);
+				label.text = dynamicControl.language.value + ": " + InterfaceManager.inputInterface.getNameForKeyCode(dynamicControl.modControl.config.keyCode) + " + " + InterfaceManager.inputInterface.getNameForKeyCode(dynamicControl.mainControl.config.keyCode);
 			}
 		}
 		
@@ -431,7 +431,7 @@ public class GUIConfig extends AGUIBase{
 		
 		//If we have selected a vehicle, and are not configuring a keyboard, but haven't selected a joystick
 		//make the joystick selection screen components visible.
-		List<String> allJoystickNames = InterfaceInput.getAllJoystickNames();
+		List<String> allJoystickNames = InterfaceManager.inputInterface.getAllJoystickNames();
 		for(byte i=0; i<9; ++i){
 			GUIComponentButton button = joystickSelectionButtons.get(i);
 			if(allJoystickNames.size() > i){
@@ -456,7 +456,7 @@ public class GUIConfig extends AGUIBase{
 			if(button.visible){
 				//Set basic button text.
 				int controlIndex = i+scrollSpot;
-				button.text = String.format(" %02d  %-15.15s", controlIndex+1, InterfaceInput.getJoystickComponentName(selectedJoystickName, controlIndex));
+				button.text = String.format(" %02d  %-15.15s", controlIndex+1, InterfaceManager.inputInterface.getJoystickComponentName(selectedJoystickName, controlIndex));
 				
 				//If this joystick is assigned to a control, append that to the text string.
 				for(ControlsJoystick joystickControl : ControlsJoystick.values()){
@@ -469,8 +469,8 @@ public class GUIConfig extends AGUIBase{
 				
 				//Set state of color rendering to display axis state.
 				//Joystick component selection buttons and text.
-				float pollData = InterfaceInput.getJoystickAxisValue(selectedJoystickName, controlIndex);
-				if(InterfaceInput.isJoystickComponentAxis(selectedJoystickName, controlIndex)){
+				float pollData = InterfaceManager.inputInterface.getJoystickAxisValue(selectedJoystickName, controlIndex);
+				if(InterfaceManager.inputInterface.isJoystickComponentAxis(selectedJoystickName, controlIndex)){
 					int pollDataInt = (int) (pollData*20);
 					componentBackground.visible = true;
 					componentForeground.position.x = componentForeground.constructedX;
@@ -544,7 +544,7 @@ public class GUIConfig extends AGUIBase{
 		axisMinBoundsTextBox.visible = calibrating;
 		axisMaxBoundsTextBox.visible = calibrating;
 		if(calibrating){
-			float pollData = InterfaceInput.getJoystickAxisValue(selectedJoystickName, joystickComponentId);
+			float pollData = InterfaceManager.inputInterface.getJoystickAxisValue(selectedJoystickName, joystickComponentId);
 			if(pollData < 0){
 				axisMinBoundsTextBox.setText(String.valueOf(Math.min(Double.valueOf(axisMinBoundsTextBox.getText()), pollData)));
 			}else{

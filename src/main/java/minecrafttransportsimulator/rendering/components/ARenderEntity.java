@@ -4,8 +4,7 @@ import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
-import minecrafttransportsimulator.mcinterface.InterfaceClient;
-import minecrafttransportsimulator.mcinterface.InterfaceRender;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 
 /**Base Entity rendering class.  
  *
@@ -36,7 +35,7 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Renderable>{
 			}
 			
 			//Subtract the entity's position by the render entity position to get the delta for translating.
-			interpolatedPositionHolder.subtract(InterfaceClient.getRenderViewEntity().getRenderedPosition(partialTicks));
+			interpolatedPositionHolder.subtract(InterfaceManager.clientInterface.getRenderViewEntity().getRenderedPosition(partialTicks));
 			
 			//Get interpolated orientation if required.
 			if(entity.changesPosition()){
@@ -46,7 +45,7 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Renderable>{
 			}
 	       
 	        //Set up lighting.
-	        InterfaceRender.setLightingToPosition(entity.position);
+	        InterfaceManager.renderingInterface.setLightingToPosition(entity.position);
 	        
 	        //Set up matrixes.
 	        translatedMatrix.resetTransforms();
@@ -67,7 +66,7 @@ public abstract class ARenderEntity<RenderedEntity extends AEntityC_Renderable>{
 			}
 			
 			//Render bounding boxes.
-			if(!blendingEnabled && InterfaceRender.shouldRenderBoundingBoxes()){
+			if(!blendingEnabled && InterfaceManager.renderingInterface.shouldRenderBoundingBoxes()){
 				entity.world.beginProfiling("BoundingBoxes", true);
 				renderBoundingBoxes(entity, translatedMatrix);
 				entity.world.endProfiling();

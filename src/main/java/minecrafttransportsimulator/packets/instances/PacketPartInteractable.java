@@ -12,8 +12,8 @@ import minecrafttransportsimulator.guis.instances.GUIFurnace;
 import minecrafttransportsimulator.guis.instances.GUIInventoryContainer;
 import minecrafttransportsimulator.guis.instances.GUIPartBench;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.packets.components.APacketEntityInteract;
 
 /**Packet used to send signals to interactable parts.  This is either used used to link the interactable with
@@ -24,11 +24,11 @@ import minecrafttransportsimulator.packets.components.APacketEntityInteract;
  * 
  * @author don_bruce
  */
-public class PacketPartInteractable extends APacketEntityInteract<PartInteractable, WrapperPlayer>{
+public class PacketPartInteractable extends APacketEntityInteract<PartInteractable, IWrapperPlayer>{
 	private final UUID linkedID;
 	private final Point3D linkedOffset;
 	
-	public PacketPartInteractable(PartInteractable interactable, WrapperPlayer player){
+	public PacketPartInteractable(PartInteractable interactable, IWrapperPlayer player){
 		super(interactable, player);
 		if(interactable.linkedVehicle != null){
 			this.linkedID = interactable.linkedVehicle.uniqueUUID;
@@ -70,7 +70,7 @@ public class PacketPartInteractable extends APacketEntityInteract<PartInteractab
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, PartInteractable interactable, WrapperPlayer player){
+	public boolean handle(AWrapperWorld world, PartInteractable interactable, IWrapperPlayer player){
 		if(linkedID != null){
 			AEntityA_Base linkedEntity = world.getEntity(linkedID);
 			if(linkedEntity != null){

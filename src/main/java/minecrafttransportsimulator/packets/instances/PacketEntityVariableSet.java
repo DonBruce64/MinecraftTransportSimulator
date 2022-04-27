@@ -2,7 +2,7 @@ package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
 /**Packet used to set variable states.  Sent from clients to servers to
@@ -39,7 +39,7 @@ public class PacketEntityVariableSet extends APacketEntity<AEntityD_Definable<?>
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, AEntityD_Definable<?> entity){
+	public boolean handle(AWrapperWorld world, AEntityD_Definable<?> entity){
 		entity.setVariable(variableName, variableValue);
 		return true;
 	}

@@ -21,13 +21,11 @@ import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONText;
-import minecrafttransportsimulator.mcinterface.InterfaceClient;
-import minecrafttransportsimulator.mcinterface.InterfaceCore;
-import minecrafttransportsimulator.mcinterface.InterfacePacket;
-import minecrafttransportsimulator.mcinterface.WrapperEntity;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPartChange;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.systems.PackParserSystem;
@@ -86,7 +84,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 	private final float PART_SLOT_HITBOX_WIDTH = 0.75F;
 	private final float PART_SLOT_HITBOX_HEIGHT = 2.25F;
 	
-	public AEntityF_Multipart(WrapperWorld world, WrapperPlayer placingPlayer, WrapperNBT data){
+	public AEntityF_Multipart(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data){
 		super(world, placingPlayer, data);
 		//Add parts.
 		//Also Replace ride-able locations with seat locations.
@@ -95,12 +93,12 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 			//Use a try-catch for parts in case they've changed since this entity was last placed.
 			//Don't want crashes due to pack updates.
 			try{
-				WrapperNBT partData = data.getData("part_" + i);
+				IWrapperNBT partData = data.getData("part_" + i);
 				AItemPart partItem = PackParserSystem.getItem(partData.getString("packID"), partData.getString("systemName"), partData.getString("subName"));
 				Point3D partOffset = partData.getPoint3d("offset");
 				addPartFromItem(partItem, placingPlayer, partData, partOffset, true);
 			}catch(Exception e){
-				InterfaceCore.logError("Could not load part from NBT.  Did you un-install a pack?");
+				InterfaceManager.coreInterface.logError("Could not load part from NBT.  Did you un-install a pack?");
 			}
 		}
 		
@@ -178,7 +176,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 		if(world.isClient()){
 			world.beginProfiling("PartSlotActives", false);
 			activePartSlotBoxes.clear();
-			WrapperPlayer player = InterfaceClient.getClientPlayer();
+			IWrapperPlayer player = InterfaceManager.clientInterface.getClientPlayer();
 			AItemBase heldItem = player.getHeldItem();
 			if(heldItem instanceof AItemPart){
 				for(Entry<BoundingBox, JSONPartDefinition> partSlotBoxEntry : allPartSlotBoxes.entrySet()){
@@ -215,7 +213,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 	}
 	
 	@Override
-	public boolean addRider(WrapperEntity rider, Point3D riderLocation){
+	public boolean addRider(IWrapperEntity rider, Point3D riderLocation){
 		//Auto-close doors for the rider in the seat they are going in, if such doors exist.
 		if(super.addRider(rider, riderLocation)){
 			PartSeat seat = getSeatForRider(rider);
@@ -231,7 +229,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 	}
 	
 	@Override
-	public void removeRider(WrapperEntity rider){
+	public void removeRider(IWrapperEntity rider){
 		//Auto-open doors for the rider in the seat they were in, if such doors exist.
 		PartSeat seat = getSeatForRider(rider);
 		if(seat != null && seat.placementDefinition.linkedVariables != null){
@@ -247,7 +245,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
    	 *  This  may return null if the entity isn't riding
    	 *  us, or if the seat isn't loaded from NBT data yet (first tick).
    	 */
-    public PartSeat getSeatForRider(WrapperEntity rider){
+    public PartSeat getSeatForRider(IWrapperEntity rider){
     	return (PartSeat) getPartAtLocation(locationRiderMap.inverse().get(rider));
     }
     
@@ -255,8 +253,8 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 	 *  Helper method used to get the controlling entity for this entity.
 	 *  Is normally the player, but may be a NPC if one is in the seat.
 	 */
-	public WrapperEntity getController(){
-		for(WrapperEntity rider : locationRiderMap.inverse().keySet()){
+	public IWrapperEntity getController(){
+		for(IWrapperEntity rider : locationRiderMap.inverse().keySet()){
 			if(getSeatForRider(rider).placementDefinition.isController){
 				return rider;
 			}
@@ -385,7 +383,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 	 * Returns true if any linked variables are blocking the player from
 	 * accessing the passed-in part slot.
 	 */
-	public boolean areVariablesBlocking(JSONPartDefinition partDef, WrapperPlayer player){
+	public boolean areVariablesBlocking(JSONPartDefinition partDef, IWrapperPlayer player){
 		if(partDef.linkedVariables != null){
 			for(String variableName : partDef.linkedVariables){
 				if(variableName.startsWith("!")){
@@ -417,7 +415,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 	 * prevent calling the lists, maps, and other systems that aren't set up yet.
 	 * This method returns the part if it was added, null if it wasn't.
 	 */
-    public APart addPartFromItem(AItemPart partItem, WrapperPlayer playerAdding, WrapperNBT partData, Point3D offset, boolean addedDuringConstruction){
+    public APart addPartFromItem(AItemPart partItem, IWrapperPlayer playerAdding, IWrapperNBT partData, Point3D offset, boolean addedDuringConstruction){
     	//Get the part pack to add.
 		JSONPartDefinition newPartDef = getPackDefForLocation(offset);
 		APart partToAdd = null;
@@ -535,7 +533,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 		
 		//If we are on the server, and need to notify clients, do so.
 		if(sendPacket && !world.isClient()){
-			InterfacePacket.sendToAllClients(new PacketPartChange(this,  part));
+			InterfaceManager.packetInterface.sendToAllClients(new PacketPartChange(this,  part));
 		}
 		
 		//Add the part to the world.
@@ -587,7 +585,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 			part.remove();
 			//If we are on the server, notify all clients of this change.
 			if(!world.isClient()){
-				InterfacePacket.sendToAllClients(new PacketPartChange(this, part.placementOffset));
+				InterfaceManager.packetInterface.sendToAllClients(new PacketPartChange(this, part.placementOffset));
 			}
 		}else if(partsFromNBT.contains(part)){
 			partsFromNBT.remove(part);
@@ -747,13 +745,13 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 	 * The savedParent flag is to let this method add only default permanent parts, as they get
 	 * removed with the part when wrenched, and added back when placed again, and don't save their states.
 	 */
-	public void addDefaultPart(JSONPartDefinition partDef, WrapperPlayer playerAdding, AJSONPartProvider providingDef, boolean addedDuringConstruction, boolean savedParent){
+	public void addDefaultPart(JSONPartDefinition partDef, IWrapperPlayer playerAdding, AJSONPartProvider providingDef, boolean addedDuringConstruction, boolean savedParent){
 		if(partDef.defaultPart != null && (!savedParent || partDef.isPermanent)){
 			try{
 				String partPackID = partDef.defaultPart.substring(0, partDef.defaultPart.indexOf(':'));
 				String partSystemName = partDef.defaultPart.substring(partDef.defaultPart.indexOf(':') + 1);
 				try{
-					APart addedPart = addPartFromItem(PackParserSystem.getItem(partPackID, partSystemName), playerAdding, InterfaceCore.getNewNBTWrapper(), partDef.pos, addedDuringConstruction);
+					APart addedPart = addPartFromItem(PackParserSystem.getItem(partPackID, partSystemName), playerAdding, InterfaceManager.coreInterface.getNewNBTWrapper(), partDef.pos, addedDuringConstruction);
 					if(addedPart != null){
 						//Set the default tone for the part, if it requests one and we can provide one.
 						updatePartTone(addedPart);
@@ -837,7 +835,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 		
 		//Only add active slots on clients, but all slots on servers.
 		//The only exception is if the player has a scanner, in which case we add them all to allow it to work.
-		if(world.isClient() && !InterfaceClient.getClientPlayer().isHoldingItemType(ItemComponentType.SCANNER)){
+		if(world.isClient() && !InterfaceManager.clientInterface.getClientPlayer().isHoldingItemType(ItemComponentType.SCANNER)){
 			allInteractionBoxes.addAll(activePartSlotBoxes.keySet());
 		}else{
 			allInteractionBoxes.addAll(allPartSlotBoxes.keySet());
@@ -853,7 +851,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 			//However, we do need to decide if we need to add those boxes to the interaction list.
 			//This is dependent on what the current player entity is holding.
 			if(world.isClient()){
-				WrapperPlayer clientPlayer = InterfaceClient.getClientPlayer();
+				IWrapperPlayer clientPlayer = InterfaceManager.clientInterface.getClientPlayer();
 				
 				//If the part is a seat, and we are riding it, don't add it.
 				//This keeps us from clicking our own seat when we want to click other things.
@@ -984,7 +982,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 		
 	
 	@Override
-	public WrapperNBT save(WrapperNBT data){
+	public IWrapperNBT save(IWrapperNBT data){
 		super.save(data);
 		List<APart> allParts = new ArrayList<APart>();
 		allParts.addAll(parts);
@@ -993,7 +991,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 		for(APart part : allParts){
 			//Don't save the part if it's not valid or a fake part.
 			if(part.isValid && !part.isFake()){
-				WrapperNBT partData = part.save(InterfaceCore.getNewNBTWrapper());
+				IWrapperNBT partData = part.save(InterfaceManager.coreInterface.getNewNBTWrapper());
 				//We need to set some extra data here for the part to allow this entity to know where it went.
 				//This only gets set here during saving/loading, and is NOT returned in the item that comes from the part.
 				partData.setPoint3d("offset", part.placementOffset);

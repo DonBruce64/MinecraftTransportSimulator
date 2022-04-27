@@ -2,9 +2,9 @@ package minecrafttransportsimulator.blocks.components;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 
 /**Abstract class for blocks that have tile entities.  Such tile entities
  * are pack-based, so are linked to a specific pack definition.
@@ -18,7 +18,7 @@ public abstract class ABlockBaseTileEntity extends ABlockBase{
 	}
 	
 	@Override
-	public void onBroken(WrapperWorld world, Point3D position){
+	public void onBroken(AWrapperWorld world, Point3D position){
 		ATileEntityBase<?> tile = world.getTileEntity(position);
 		if(tile != null){
 			tile.destroy(tile.boundingBox);
@@ -38,5 +38,5 @@ public abstract class ABlockBaseTileEntity extends ABlockBase{
 	 *  Gets a new Tile Entity for this block.
 	 *  The placingPlayer may be null if this is being loaded from NBT.
 	 */
-	public abstract ATileEntityBase<?> createTileEntity(WrapperWorld world, Point3D position, WrapperPlayer placingPlayer, WrapperNBT data);
+	public abstract ATileEntityBase<?> createTileEntity(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, IWrapperNBT data);
 }

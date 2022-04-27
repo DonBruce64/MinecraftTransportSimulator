@@ -5,12 +5,12 @@ import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemDecor;
 import minecrafttransportsimulator.items.instances.ItemPartInteractable;
-import minecrafttransportsimulator.mcinterface.InterfaceCore;
-import minecrafttransportsimulator.mcinterface.WrapperInventory;
-import minecrafttransportsimulator.mcinterface.WrapperItemStack;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperInventory;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.components.APacketEntityInteract;
 
 /**Packet used to send transfer an item to or from a player inventory to an inventory in a
@@ -20,12 +20,12 @@ import minecrafttransportsimulator.packets.components.APacketEntityInteract;
  * 
  * @author don_bruce
  */
-public class PacketPlayerItemTransfer extends APacketEntityInteract<EntityInventoryContainer, WrapperPlayer>{
+public class PacketPlayerItemTransfer extends APacketEntityInteract<EntityInventoryContainer, IWrapperPlayer>{
 	private final int inventorySlot;
 	private final int playerSlot;
 	private final boolean saveToPlayer;
 	
-	public PacketPlayerItemTransfer(EntityInventoryContainer inventory, WrapperPlayer player, int inventorySlot, int playerSlot, boolean saveToPlayer){
+	public PacketPlayerItemTransfer(EntityInventoryContainer inventory, IWrapperPlayer player, int inventorySlot, int playerSlot, boolean saveToPlayer){
 		super(inventory, player);
 		this.inventorySlot = inventorySlot;
 		this.playerSlot = playerSlot;
@@ -48,15 +48,15 @@ public class PacketPlayerItemTransfer extends APacketEntityInteract<EntityInvent
 	}
 	
 	@Override
-	public boolean handle(WrapperWorld world, EntityInventoryContainer inventory, WrapperPlayer player){
-		WrapperInventory playerInventory = player.getInventory();
+	public boolean handle(AWrapperWorld world, EntityInventoryContainer inventory, IWrapperPlayer player){
+		IWrapperInventory playerInventory = player.getInventory();
 		if(inventorySlot != -1){
-			WrapperItemStack stackToTransfer = inventory.getStack(inventorySlot);
+			IWrapperItemStack stackToTransfer = inventory.getStack(inventorySlot);
 			if(playerInventory.addStack(stackToTransfer)){
 				inventory.setStack(stackToTransfer, inventorySlot);
 			}
 		}else if(playerSlot != -1){
-			WrapperItemStack stackToTransfer = playerInventory.getStack(playerSlot);
+			IWrapperItemStack stackToTransfer = playerInventory.getStack(playerSlot);
 			
 			//Make sure we aren't an inventory container.
 			//Those can't go into our inventories.
@@ -73,8 +73,8 @@ public class PacketPlayerItemTransfer extends APacketEntityInteract<EntityInvent
 			}
 		}
 		if(saveToPlayer){
-			WrapperNBT newData = InterfaceCore.getNewNBTWrapper();
-			newData.setData("inventory", inventory.save(InterfaceCore.getNewNBTWrapper()));
+			IWrapperNBT newData = InterfaceManager.coreInterface.getNewNBTWrapper();
+			newData.setData("inventory", inventory.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
 			player.getHeldStack().setData(newData);
 		}
 		return false;

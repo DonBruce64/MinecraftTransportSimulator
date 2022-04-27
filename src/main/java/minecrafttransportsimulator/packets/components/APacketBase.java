@@ -5,56 +5,13 @@ import java.util.UUID;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.mcinterface.InterfacePacket;
-import minecrafttransportsimulator.mcinterface.WrapperNBT;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
-import minecrafttransportsimulator.packets.instances.PacketEntityBulletHit;
-import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitBlock;
-import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitEntity;
-import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitWrapper;
-import minecrafttransportsimulator.packets.instances.PacketEntityColorChange;
-import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
-import minecrafttransportsimulator.packets.instances.PacketEntityInstrumentChange;
-import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
-import minecrafttransportsimulator.packets.instances.PacketEntityTextChange;
-import minecrafttransportsimulator.packets.instances.PacketEntityTowingChange;
-import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
-import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
-import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
-import minecrafttransportsimulator.packets.instances.PacketFluidTankChange;
-import minecrafttransportsimulator.packets.instances.PacketFurnaceFuelAdd;
-import minecrafttransportsimulator.packets.instances.PacketFurnaceTimeSet;
-import minecrafttransportsimulator.packets.instances.PacketGUIRequest;
-import minecrafttransportsimulator.packets.instances.PacketInventoryContainerChange;
-import minecrafttransportsimulator.packets.instances.PacketItemInteractable;
-import minecrafttransportsimulator.packets.instances.PacketPartChange;
-import minecrafttransportsimulator.packets.instances.PacketPartEffector;
-import minecrafttransportsimulator.packets.instances.PacketPartEngine;
-import minecrafttransportsimulator.packets.instances.PacketPartGroundDevice;
-import minecrafttransportsimulator.packets.instances.PacketPartGun;
-import minecrafttransportsimulator.packets.instances.PacketPartInteractable;
-import minecrafttransportsimulator.packets.instances.PacketPartSeat;
-import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
-import minecrafttransportsimulator.packets.instances.PacketPlayerCraftItem;
-import minecrafttransportsimulator.packets.instances.PacketPlayerItemTransfer;
-import minecrafttransportsimulator.packets.instances.PacketRadioStateChange;
-import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpConnection;
-import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpDispense;
-import minecrafttransportsimulator.packets.instances.PacketTileEntityLoaderConnection;
-import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleChange;
-import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleCollisionUpdate;
-import minecrafttransportsimulator.packets.instances.PacketTileEntityRoadChange;
-import minecrafttransportsimulator.packets.instances.PacketTileEntityRoadCollisionUpdate;
-import minecrafttransportsimulator.packets.instances.PacketTileEntityRoadConnectionUpdate;
-import minecrafttransportsimulator.packets.instances.PacketTileEntitySignalControllerChange;
-import minecrafttransportsimulator.packets.instances.PacketVehicleBeaconChange;
-import minecrafttransportsimulator.packets.instances.PacketVehicleInteract;
-import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement;
-import minecrafttransportsimulator.packets.instances.PacketVehicleServerSync;
-import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataCSHandshake;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.packets.instances.*;
 
 /**Base packet class.  All packets must extend this class to be used with the
- * {@link InterfacePacket}.  This allows for standard packet handling across
+ * {@link InterfaceManager.packetInterface}.  This allows for standard packet handling across
  * all MC versions.
  *
  * @author don_bruce
@@ -63,7 +20,7 @@ public abstract class APacketBase{
 	
 	/**
 	 *  Constructs the packet from the buffer.  This should
-	 *  populate all fields to be used by {@link #handle(WrapperWorld)} and
+	 *  populate all fields to be used by {@link #handle(AWrapperWorld)} and
 	 *  is used to create this packet from a buffer after it is
 	 *  received on the other end of the network line.  Note that
 	 *  the network system expects this constructor, so leaving it
@@ -89,14 +46,14 @@ public abstract class APacketBase{
 	 *  the buffer so the network knows what packet class this packet goes to!
 	 */
 	public void writeToBuffer(ByteBuf buf){
-		buf.writeByte(InterfacePacket.getPacketIndex(this));
+		buf.writeByte(InterfaceManager.packetInterface.getPacketIndex(this));
 	}
 	
 	/**
 	 *  This is called to handle the logic of this packet.  An instance of
 	 *  the world is passed-in here for referencing objects.
 	 */
-	public abstract void handle(WrapperWorld world);
+	public abstract void handle(AWrapperWorld world);
 	
 	/**
 	 *  Helper method to write a string to the buffer.
@@ -174,15 +131,15 @@ public abstract class APacketBase{
 	/**
 	 *  Forwarder to interface method for cleaner packet code.
 	 */
-	protected static void writeDataToBuffer(WrapperNBT data, ByteBuf buf){
-		InterfacePacket.writeDataToBuffer(data, buf);
+	protected static void writeDataToBuffer(IWrapperNBT data, ByteBuf buf){
+		InterfaceManager.packetInterface.writeDataToBuffer(data, buf);
 	}
 	
 	/**
 	 *  Forwarder to interface method for cleaner packet code.
 	 */
-	protected static WrapperNBT readDataFromBuffer(ByteBuf buf){
-		return InterfacePacket.readDataFromBuffer(buf);
+	protected static IWrapperNBT readDataFromBuffer(ByteBuf buf){
+		return InterfaceManager.packetInterface.readDataFromBuffer(buf);
 	}
 	
 	/**
@@ -195,71 +152,71 @@ public abstract class APacketBase{
 		//Ideally this could be done via reflection, but it doesn't work too well so we don't do that.
 		
 		//Entity packets.
-		InterfacePacket.registerPacket(packetIndex++, PacketEntityColorChange.class);
-		InterfacePacket.registerPacket(packetIndex++, PacketEntityInstrumentChange.class);
-		InterfacePacket.registerPacket(packetIndex++, PacketEntityRiderChange.class);
-		InterfacePacket.registerPacket(packetIndex++, PacketEntityTextChange.class);
-		InterfacePacket.registerPacket(packetIndex++, PacketEntityTowingChange.class);
-		InterfacePacket.registerPacket(packetIndex++, PacketEntityVariableIncrement.class);
-		InterfacePacket.registerPacket(packetIndex++, PacketEntityVariableSet.class);
-		InterfacePacket.registerPacket(packetIndex++, PacketEntityVariableToggle.class);
+		InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityColorChange.class);
+		InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityInstrumentChange.class);
+		InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityRiderChange.class);
+		InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityTextChange.class);
+		InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityTowingChange.class);
+		InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityVariableIncrement.class);
+		InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityVariableSet.class);
+		InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityVariableToggle.class);
 		
 		//Bullet packets.
-		InterfacePacket.registerPacket(packetIndex++, PacketEntityBulletHit.class);
-		InterfacePacket.registerPacket(packetIndex++, PacketEntityBulletHitBlock.class);
-		InterfacePacket.registerPacket(packetIndex++, PacketEntityBulletHitEntity.class);
-		InterfacePacket.registerPacket(packetIndex++, PacketEntityBulletHitWrapper.class);
+		InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityBulletHit.class);
+		InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityBulletHitBlock.class);
+		InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityBulletHitEntity.class);
+		InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityBulletHitWrapper.class);
 		
 		//Fluid tank packets.
-		InterfacePacket.registerPacket(packetIndex++, PacketFluidTankChange.class);
+		InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketFluidTankChange.class);
 		
 		//Inventory container packets.
-		InterfacePacket.registerPacket(packetIndex++, PacketInventoryContainerChange.class);
-		InterfacePacket.registerPacket(packetIndex++, PacketItemInteractable.class);
+		InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketInventoryContainerChange.class);
+		InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketItemInteractable.class);
 		
 		//Furnace packets.
-		InterfacePacket.registerPacket(packetIndex++, PacketFurnaceFuelAdd.class);
-		InterfacePacket.registerPacket(packetIndex++, PacketFurnaceTimeSet.class);
+		InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketFurnaceFuelAdd.class);
+		InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketFurnaceTimeSet.class);
 		
 		//GUI packets.
-		InterfacePacket.registerPacket(packetIndex++, PacketGUIRequest.class);
-		InterfacePacket.registerPacket(packetIndex++, PacketEntityGUIRequest.class);
+		InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketGUIRequest.class);
+		InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityGUIRequest.class);
 		
 		//Part packets.
-		InterfacePacket.registerPacket(packetIndex++, PacketPartChange.class);
-		InterfacePacket.registerPacket(packetIndex++, PacketPartGun.class);
-		InterfacePacket.registerPacket(packetIndex++, PacketPartEffector.class);
-		InterfacePacket.registerPacket(packetIndex++, PacketPartEngine.class);
-		InterfacePacket.registerPacket(packetIndex++, PacketPartGroundDevice.class);
-		InterfacePacket.registerPacket(packetIndex++, PacketPartInteractable.class);
-		InterfacePacket.registerPacket(packetIndex++, PacketPartSeat.class);
+		InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPartChange.class);
+		InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPartGun.class);
+		InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPartEffector.class);
+		InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPartEngine.class);
+		InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPartGroundDevice.class);
+		InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPartInteractable.class);
+		InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPartSeat.class);
 		
 		//Player packets.
-		InterfacePacket.registerPacket(packetIndex++, PacketPlayerChatMessage.class);
-		InterfacePacket.registerPacket(packetIndex++, PacketPlayerCraftItem.class);
-		InterfacePacket.registerPacket(packetIndex++, PacketPlayerItemTransfer.class);
+		InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPlayerChatMessage.class);
+		InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPlayerCraftItem.class);
+		InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketPlayerItemTransfer.class);
 		
 		//Radio packets.
-		InterfacePacket.registerPacket(packetIndex++, PacketRadioStateChange.class);
+		InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketRadioStateChange.class);
 		
 		//Tile entity packets.
-		InterfacePacket.registerPacket(packetIndex++, PacketTileEntityLoaderConnection.class);
-		InterfacePacket.registerPacket(packetIndex++, PacketTileEntityFuelPumpConnection.class);
-		InterfacePacket.registerPacket(packetIndex++, PacketTileEntityFuelPumpDispense.class);
-		InterfacePacket.registerPacket(packetIndex++, PacketTileEntityRoadCollisionUpdate.class);
-		InterfacePacket.registerPacket(packetIndex++, PacketTileEntityPoleChange.class);
-		InterfacePacket.registerPacket(packetIndex++, PacketTileEntityPoleCollisionUpdate.class);
-		InterfacePacket.registerPacket(packetIndex++, PacketTileEntityRoadChange.class);
-		InterfacePacket.registerPacket(packetIndex++, PacketTileEntityRoadConnectionUpdate.class);
-		InterfacePacket.registerPacket(packetIndex++, PacketTileEntitySignalControllerChange.class);
+		InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketTileEntityLoaderConnection.class);
+		InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketTileEntityFuelPumpConnection.class);
+		InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketTileEntityFuelPumpDispense.class);
+		InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketTileEntityRoadCollisionUpdate.class);
+		InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketTileEntityPoleChange.class);
+		InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketTileEntityPoleCollisionUpdate.class);
+		InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketTileEntityRoadChange.class);
+		InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketTileEntityRoadConnectionUpdate.class);
+		InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketTileEntitySignalControllerChange.class);
 		
 		//Vehicle packets.
-		InterfacePacket.registerPacket(packetIndex++, PacketVehicleBeaconChange.class);
-		InterfacePacket.registerPacket(packetIndex++, PacketVehicleInteract.class);
-		InterfacePacket.registerPacket(packetIndex++, PacketVehicleServerMovement.class);
-		InterfacePacket.registerPacket(packetIndex++, PacketVehicleServerSync.class);
+		InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketVehicleBeaconChange.class);
+		InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketVehicleInteract.class);
+		InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketVehicleServerMovement.class);
+		InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketVehicleServerSync.class);
 		
 		//World packets.
-		InterfacePacket.registerPacket(packetIndex++, PacketWorldSavedDataCSHandshake.class);
+		InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketWorldSavedDataCSHandshake.class);
 	}
 }

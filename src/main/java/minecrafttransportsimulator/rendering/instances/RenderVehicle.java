@@ -11,8 +11,8 @@ import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
-import minecrafttransportsimulator.mcinterface.InterfaceClient;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.components.ARenderEntityDefinable;
 
 /**Main render class for all vehicles.  Renders the vehicle, along with all parts.
@@ -30,7 +30,7 @@ public class RenderVehicle extends ARenderEntityDefinable<EntityVehicleF_Physics
 		//If we are holding a part, render the valid slots.
 		//If we are holding a scanner, render all slots.
 		vehicle.world.beginProfiling("PartHoloboxes", true);
-		WrapperPlayer player = InterfaceClient.getClientPlayer();
+		IWrapperPlayer player = InterfaceManager.clientInterface.getClientPlayer();
 		AItemBase heldItem = player.getHeldItem();
 		AItemPart heldPart = heldItem instanceof AItemPart ? (AItemPart) heldItem : null;
 		boolean holdingScanner = player.isHoldingItemType(ItemComponentType.SCANNER);

@@ -12,8 +12,8 @@ import minecrafttransportsimulator.guis.components.GUIComponentItem;
 import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
-import minecrafttransportsimulator.mcinterface.InterfacePacket;
-import minecrafttransportsimulator.mcinterface.WrapperPlayer;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityColorChange;
 import minecrafttransportsimulator.packloading.PackMaterialComponent;
 import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
@@ -30,7 +30,7 @@ public class GUIPaintGun extends AGUIBase{
 	
 	//Init variables.
 	private final AEntityD_Definable<?> entity;
-	private final WrapperPlayer player;
+	private final IWrapperPlayer player;
 	
 	//Buttons and labels.
 	private GUIComponentLabel partName;
@@ -51,7 +51,7 @@ public class GUIPaintGun extends AGUIBase{
 	private AItemSubTyped<?> prevSubItem;
 	private AItemSubTyped<?> nextSubItem;
 
-	public GUIPaintGun(AEntityD_Definable<?> entity, WrapperPlayer player){
+	public GUIPaintGun(AEntityD_Definable<?> entity, IWrapperPlayer player){
 		super();
 		this.entity = entity;
 		this.player = player;
@@ -93,7 +93,7 @@ public class GUIPaintGun extends AGUIBase{
 		addComponent(confirmButton = new GUIComponentButton(guiLeft + 99, guiTop + 167, 20, 20, 20, 196, 20, 20){
 			@Override
 			public void onClicked(boolean leftSide){
-				InterfacePacket.sendToServer(new PacketEntityColorChange(entity, player, currentItem));
+				InterfaceManager.packetInterface.sendToServer(new PacketEntityColorChange(entity, player, currentItem));
 				close();
 			}
 		});

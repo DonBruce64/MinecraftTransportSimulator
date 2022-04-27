@@ -10,8 +10,7 @@ import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.jsondefs.JSONItem.JSONBooklet.BookletPage;
 import minecrafttransportsimulator.jsondefs.JSONText;
-import minecrafttransportsimulator.mcinterface.InterfaceCore;
-import minecrafttransportsimulator.mcinterface.InterfaceInput;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
 
 public class GUIBooklet extends AGUIBase{
@@ -110,8 +109,8 @@ public class GUIBooklet extends AGUIBase{
 							pageNumber = i + 1;
 						}
 					}
-					InterfaceCore.logError("An error was encountered when creating booklet page #" + pageNumber);
-					InterfaceCore.logError(e.getMessage());
+					InterfaceManager.coreInterface.logError("An error was encountered when creating booklet page #" + pageNumber);
+					InterfaceManager.coreInterface.logError(e.getMessage());
 				}
 			}
 			pageTextLabels.add(pageLabels);
@@ -126,7 +125,7 @@ public class GUIBooklet extends AGUIBase{
 		rightButton.visible = booklet.pageNumber + 1 < totalPages;
 		
 		//Check the mouse to see if it updated and we need to change pages.
-		int wheelMovement = InterfaceInput.getTrackedMouseWheel();
+		int wheelMovement = InterfaceManager.inputInterface.getTrackedMouseWheel();
 		if(wheelMovement < 0 && rightButton.visible){
 			++booklet.pageNumber;
 		}else if(wheelMovement > 0 && leftButton.visible){

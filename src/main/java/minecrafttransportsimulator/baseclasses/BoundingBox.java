@@ -7,7 +7,7 @@ import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup;
-import minecrafttransportsimulator.mcinterface.WrapperWorld;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.rendering.components.RenderableObject;
 import net.minecraft.util.math.AxisAlignedBB;
 
@@ -112,19 +112,19 @@ public class BoundingBox{
 	 *  Note that the passed-in offset is only applied for this check,  and is reverted after this call.
 	 *  If blocks collided with this box after this method, true is returned.
 	 */
-	public boolean updateCollidingBlocks(WrapperWorld world, Point3D offset){
+	public boolean updateCollidingBlocks(AWrapperWorld world, Point3D offset){
 		return updateCollisions(world, offset, false);
 	}
 	
 	/**
-	 *  Like {@link #updateCollidingBlocks(WrapperWorld, Point3D)}, but takes movement into account
+	 *  Like {@link #updateCollidingBlocks(AWrapperWorld, Point3D)}, but takes movement into account
 	 *  when setting collision depth.
 	 */
-	public boolean updateMovingCollisions(WrapperWorld world, Point3D offset){
+	public boolean updateMovingCollisions(AWrapperWorld world, Point3D offset){
 		return updateCollisions(world, offset, true);
 	}
 	
-	private boolean updateCollisions(WrapperWorld world, Point3D offset, boolean ignoreIfGreater){
+	private boolean updateCollisions(AWrapperWorld world, Point3D offset, boolean ignoreIfGreater){
 		tempGlobalCenter.set(globalCenter);
 		globalCenter.add(offset);
 		world.updateBoundingBoxCollisions(this, offset, ignoreIfGreater);

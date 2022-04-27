@@ -12,8 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import minecrafttransportsimulator.MasterLoader;
-import minecrafttransportsimulator.mcinterface.InterfaceCore;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 
 /**Class that manages all radios and stations.  Responsible for creating new stations and storing them,
  * as well as giving said stations to radios when they request them.  This class also interfaces with
@@ -31,7 +30,7 @@ public class RadioManager{
 	 * Need to set up global radio variables before we can create an instance of a radio.
 	 */
 	static{
-		musicDir = new File(MasterLoader.gameDirectory, "mts_music");
+		musicDir = new File(InterfaceManager.gameDirectory, "mts_music");
 		musicDir.mkdir();
 		radioStationsFile = new File(musicDir.getAbsolutePath() + File.separator + "radio_stations.txt");
 		if(!radioStationsFile.exists()){
@@ -117,8 +116,8 @@ public class RadioManager{
 				return "";
 			}
 		}catch(IOException e){
-			InterfaceCore.logError("Unable to parse radio_stations.txt file.  Is it in use?");
-			InterfaceCore.logError(e.getMessage());
+			InterfaceManager.coreInterface.logError("Unable to parse radio_stations.txt file.  Is it in use?");
+			InterfaceManager.coreInterface.logError(e.getMessage());
 			return "";
 		}
 	}
@@ -148,8 +147,8 @@ public class RadioManager{
 			}
 			radioStationFileWriter.close();
 		}catch(IOException e){
-			InterfaceCore.logError("Unable to save radio_stations.txt file.  Is it in use?");
-			InterfaceCore.logError(e.getMessage());
+			InterfaceManager.coreInterface.logError("Unable to save radio_stations.txt file.  Is it in use?");
+			InterfaceManager.coreInterface.logError(e.getMessage());
 		}
 	}
 	
