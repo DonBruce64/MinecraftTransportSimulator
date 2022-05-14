@@ -37,7 +37,7 @@ public class CameraSystem{
 		if(zoomIn && zoomLevel > 0){
 			zoomLevel -= 2;
 		}else if(!zoomIn){
-			zoomLevel += 2;
+			if(zoomLevel < 60) zoomLevel += 2;
 		}
 	}
 	
