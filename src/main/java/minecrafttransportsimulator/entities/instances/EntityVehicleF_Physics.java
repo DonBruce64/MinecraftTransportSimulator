@@ -230,6 +230,13 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 		currentOverSteer = definition.motorized.overSteer;
 		currentUnderSteer = definition.motorized.underSteer;
 		currentAxleRatio = definition.motorized.axleRatio;
+		currentAxleRatio = definition.motorized.axleRatio;
+		currentRollAngle = definition.motorized.rollAngle;
+		currentPitchAngle = definition.motorized.pitchAngle;
+		currentYawAngle = definition.motorized.yawAngle;
+		currentRollForce = definition.motorized.rollForce;
+		currentPitchForce = definition.motorized.pitchForce;
+		currentYawForce = definition.motorized.yawForce;
 		
 		//Adjust current variables to modifiers, if any exist.
 		if(definition.variableModifiers != null){
@@ -247,6 +254,12 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 					case "overSteer" : currentOverSteer = adjustVariable(modifier, currentOverSteer); break;
 					case "underSteer" : currentUnderSteer = adjustVariable(modifier, currentUnderSteer); break;
 					case "axleRatio" : currentAxleRatio = adjustVariable(modifier, currentAxleRatio); break;
+					case "rollAngle" : currentRollAngle = adjustVariable(modifier, currentRollAngle); break;
+					case "pitchAngle" : currentPitchAngle = adjustVariable(modifier, currentPitchAngle); break;
+					case "yawAngle" : currentYawAngle = adjustVariable(modifier, currentYawAngle); break;
+					case "rollForce" : currentRollForce = adjustVariable(modifier, currentRollForce); break;
+					case "pitchForce" : currentPitchForce = adjustVariable(modifier, currentPitchForce); break;
+					case "yawForce" : currentYawForce = adjustVariable(modifier, currentYawForce); break;
 					default : setVariable(modifier.variable, adjustVariable(modifier, (float) getVariable(modifier.variable))); break;
 				}
 			}
