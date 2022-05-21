@@ -709,6 +709,19 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 						groundDeviceCollective.performRollCorrection(groundMotion);
 					}
 					
+					if(definition.motorized.customTiltAngles == true){
+						
+						pitchForceCompensation += currentPitchForce/10;
+						rollForceCompensation += currentRollForce/10;
+						rotation.angles.z = (-orientation.angles.z + rollForceCompensation) + currentRollAngle;
+						rotation.angles.x = (-orientation.angles.x + pitchForceCompensation) + currentPitchAngle;
+						rotation.angles.y += currentYawForce;
+					}else{
+						rotation.angles.z += currentRollForce;
+						rotation.angles.x += currentPitchForce;
+						rotation.angles.y += currentYawForce;
+					}
+					
 					//If we are flagged as a tilting vehicle try to keep us upright, unless we are turning, in which case turn into the turn.
 					if(definition.motorized.maxTiltAngle != 0){
 						rotation.angles.z = -orientation.angles.z - definition.motorized.maxTiltAngle*2.0*Math.min(0.5, velocity/2D)*getSteeringAngle();
