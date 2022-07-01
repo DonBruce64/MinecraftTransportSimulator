@@ -247,7 +247,7 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityFl
 	@Override
 	public String getRawTextVariableValue(JSONText textDef, float partialTicks){
 		if(textDef.variableName.equals("fuelpump_fluid")){
-			return tank.getFluidLevel() > 0 ? InterfaceManager.coreInterface.getFluidName(tank.getFluid()) : "";
+			return tank.getFluidLevel() > 0 ? InterfaceManager.clientInterface.getFluidName(tank.getFluid()) : "";
 		}
 		
 		return super.getRawTextVariableValue(textDef, partialTicks);

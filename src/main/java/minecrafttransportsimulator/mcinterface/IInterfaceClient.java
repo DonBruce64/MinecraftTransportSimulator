@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.mcinterface;
 
 import java.util.List;
+import java.util.Map;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
@@ -26,6 +27,17 @@ public interface IInterfaceClient{
 	 *  Returns the current language name.
 	 */
 	public String getLanguageName();
+
+	/**
+	 *  Returns the in-game name for the passed-in fluid.  If the passed-in fluid is
+	 *  invalid (i.e. there's no fluid registered with the name), then "INVALID" is returned.
+	 */
+	public String getFluidName(String fluidID);
+	
+	/**
+	 *  Returns all fluid registry and in-game names as a key-value map.
+	 */
+	public Map<String, String> getAllFluidNames();
 	
 	/**
 	 *  Returns true if the chat window is open.

@@ -1,6 +1,8 @@
 package mcinterface1122;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -31,6 +33,9 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.TextFormatting;
+import net.minecraftforge.fluids.Fluid;
+import net.minecraftforge.fluids.FluidRegistry;
+import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -55,6 +60,21 @@ public class InterfaceClient implements IInterfaceClient{
 	@Override
 	public String getLanguageName(){
 		return Minecraft.getMinecraft().gameSettings.language;
+	}
+	
+	@Override
+	public String getFluidName(String fluidID){
+		Fluid fluid = FluidRegistry.getFluid(fluidID);
+		return fluid != null ? new FluidStack(fluid, 1).getLocalizedName() : "INVALID";
+	}
+	
+	@Override
+	public Map<String, String> getAllFluidNames(){
+		Map<String, String> fluidIDsToNames = new HashMap<String, String>();
+		for(String fluidID : FluidRegistry.getRegisteredFluids().keySet()){
+			fluidIDsToNames.put(fluidID, new FluidStack(FluidRegistry.getFluid(fluidID), 1).getLocalizedName());
+		}
+		return fluidIDsToNames;
 	}
 	
 	@Override

@@ -52,9 +52,8 @@ public class ItemPartEngine extends AItemPart{
 		if(ConfigSystem.settings.fuel.fuels.containsKey(definition.engine.fuelType)){
 			String line = JSONConfigLanguage.ITEMINFO_ENGINE_FLUIDS.value;
 			for(Entry<String, Double> fuelEntry : ConfigSystem.settings.fuel.fuels.get(definition.engine.fuelType).entrySet()){
-				String fluidName = InterfaceManager.coreInterface.getFluidName(fuelEntry.getKey());
-				if(!fluidName.equals("INVALID")){
-					line += InterfaceManager.coreInterface.getFluidName(fuelEntry.getKey()) + "@" + fuelEntry.getValue() + ", ";
+				if(InterfaceManager.coreInterface.isFluidValid(fuelEntry.getKey())){
+					line += InterfaceManager.clientInterface.getFluidName(fuelEntry.getKey()) + "@" + fuelEntry.getValue() + ", ";
 				}
 			}
 			tooltipLines.add(line.substring(0, line.length() - 2));

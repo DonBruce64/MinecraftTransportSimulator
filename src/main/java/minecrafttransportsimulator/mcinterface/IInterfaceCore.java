@@ -1,7 +1,6 @@
 package minecrafttransportsimulator.mcinterface;
 
 import java.util.List;
-import java.util.Map;
 
 import minecrafttransportsimulator.items.components.AItemBase;
 
@@ -23,6 +22,11 @@ public interface IInterfaceCore{
 	 *  Returns true if the mod with the passed-in modID is present.
 	 */
 	public boolean isModPresent(String modID);
+	
+	/**
+	 *  Returns true if there is a fluid registered with the passed-in name, false otherwise.
+	 */
+	public boolean isFluidValid(String fluidID);
 	
 	/**
 	 *  Returns the text-based name for the passed-in mod.
@@ -60,17 +64,6 @@ public interface IInterfaceCore{
 	 *  Returns all possible stacks that could be used for the passed-in OreDict name.
 	 */
 	public List<IWrapperItemStack> getOredictMaterials(String oreName);
-	
-	/**
-	 *  Returns the text-based name for the passed-in fluid.
-	 *  Returns "INVALID" if the name does not exist.
-	 */
-	public String getFluidName(String fluidID);
-	
-	/**
-	 *  Returns all fluids currently in the game.
-	 */
-	public Map<String, String> getAllFluids();
 	
 	/**
 	 *  Logs an error to the logging system.  Used when things don't work right.

@@ -62,7 +62,7 @@ public class ItemPartInteractable extends AItemPart implements IItemVehicleInter
 				if(jerrycanFluid.isEmpty()){
 					tooltipLines.add(JSONConfigLanguage.ITEMINFO_JERRYCAN_EMPTY.value);
 				}else{
-					tooltipLines.add(JSONConfigLanguage.ITEMINFO_JERRYCAN_CONTAINS.value + InterfaceManager.coreInterface.getFluidName(jerrycanFluid));
+					tooltipLines.add(JSONConfigLanguage.ITEMINFO_JERRYCAN_CONTAINS.value + InterfaceManager.clientInterface.getFluidName(jerrycanFluid));
 				}
 				break;
 			}

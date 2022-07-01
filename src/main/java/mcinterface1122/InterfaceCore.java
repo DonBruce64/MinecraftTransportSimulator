@@ -1,9 +1,7 @@
 package mcinterface1122;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.mcinterface.IInterfaceCore;
@@ -13,7 +11,6 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
 import net.minecraftforge.fluids.FluidRegistry;
-import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.oredict.OreDictionary;
 
@@ -28,6 +25,11 @@ class InterfaceCore implements IInterfaceCore{
 	@Override
 	public boolean isModPresent(String modID){
 		return Loader.isModLoaded(modID);
+	}
+	
+	@Override
+	public boolean isFluidValid(String fluidID){
+		return FluidRegistry.isFluidRegistered(fluidID);
 	}
 	
 	@Override
@@ -75,20 +77,6 @@ class InterfaceCore implements IInterfaceCore{
 			stacks.add(new WrapperItemStack(stack.copy()));
 		}
 		return stacks;
-	}
-	
-	@Override
-	public String getFluidName(String fluidID){
-		return FluidRegistry.getFluid(fluidID) != null ? new FluidStack(FluidRegistry.getFluid(fluidID), 1).getLocalizedName() : "INVALID";
-	}
-	
-	@Override
-	public Map<String, String> getAllFluids(){
-		Map<String, String> fluidIDsToNames = new HashMap<String, String>();
-		for(String fluidID : FluidRegistry.getRegisteredFluids().keySet()){
-			fluidIDsToNames.put(fluidID, new FluidStack(FluidRegistry.getFluid(fluidID), 1).getLocalizedName());
-		}
-		return fluidIDsToNames;
 	}
 	
 	@Override

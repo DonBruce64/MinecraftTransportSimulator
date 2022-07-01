@@ -73,7 +73,6 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.IPlantable;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.WorldEvent;
-import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
@@ -88,7 +87,6 @@ import net.minecraftforge.items.IItemHandler;
  *
  * @author don_bruce
  */
-@EventBusSubscriber
 public class WrapperWorld extends AWrapperWorld{
 	private static final Map<World, WrapperWorld> worldWrappers = new HashMap<World, WrapperWorld>();
 	private final Map<EntityPlayerGun, BuilderEntityExisting> playerServerGunBuilders = new HashMap<EntityPlayerGun, BuilderEntityExisting>();
