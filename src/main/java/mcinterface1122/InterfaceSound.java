@@ -208,9 +208,10 @@ public class InterfaceSound implements IInterfaceSound{
 				AL10.alGetError();
 				AL10.alGenSources(sourceBuffer);
 				if(AL10.alGetError() != AL10.AL_NO_ERROR){
-					++sourceGetFailures;
 					AL10.alDeleteBuffers(dataBufferPointer);
-					InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_SOUNDSLOT);
+					if(++sourceGetFailures == 10) {
+						InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_SOUNDSLOT);
+					}
 					return;
 				}
 				sound.sourceIndex = sourceBuffer.get(0);
@@ -241,8 +242,9 @@ public class InterfaceSound implements IInterfaceSound{
 			AL10.alGetError();
 			AL10.alGenSources(sourceBuffer);
 			if(AL10.alGetError() != AL10.AL_NO_ERROR){
-				++sourceGetFailures;
-				InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_SOUNDSLOT);
+				if(++sourceGetFailures == 10) {
+					InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_SOUNDSLOT);
+				}
 				return;
 			}
 			sound.sourceIndex = sourceBuffer.get(0);

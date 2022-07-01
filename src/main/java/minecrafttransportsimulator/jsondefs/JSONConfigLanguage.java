@@ -5,6 +5,7 @@ import java.util.Map;
 
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**Config class for language interfacing.  This contains all default text strings, and will be loaded
@@ -19,9 +20,10 @@ public class JSONConfigLanguage{
 	public static final Map<String, LanguageEntry> coreEntries = new LinkedHashMap<String, LanguageEntry>();
 	
 	public void populateEntries(){
+		boolean overrideJSONWithDefinedValues = InterfaceManager.clientInterface.usingDefaultLanguage(); 
 		//First populate core entries.
 		for(LanguageEntry entry : coreEntries.values()){
-			if(!core.containsKey(entry.key)){
+			if(!core.containsKey(entry.key) || overrideJSONWithDefinedValues){
 				core.put(entry.key, entry.value);
 			}else{
 				entry.value = core.get(entry.key);
@@ -56,11 +58,11 @@ public class JSONConfigLanguage{
 					itemName = packItem.definition.general.name != null ? packItem.definition.general.name : packItem.definition.systemName;
 				}
 				String itemDescription = packItem.definition.general.description != null ? packItem.definition.general.description : "";
-				if(!itemName.equals(entry.name) || (itemDescription != null && !itemDescription.equals(entry.description))){
-					if(entry.name == null){
+				if(!itemName.equals(entry.name) || (itemDescription != null && !itemDescription.equals(entry.description)) || overrideJSONWithDefinedValues){
+					if(entry.name == null || overrideJSONWithDefinedValues){
 						entry.name = itemName;
 					}
-					if(entry.description == null){
+					if(entry.description == null || overrideJSONWithDefinedValues){
 						entry.description = itemDescription;
 					}
 				}
@@ -270,10 +272,10 @@ public class JSONConfigLanguage{
 	public static final LanguageEntry ITEMINFO_ENGINE_FUELTYPE = new LanguageEntry("iteminfo.engine.fueltype", "Fuel type: ");
 	public static final LanguageEntry ITEMINFO_ENGINE_FLUIDS = new LanguageEntry("iteminfo.engine.fluids", "Takes Fluids: ");
 	public static final LanguageEntry ITEMINFO_ENGINE_HOURS = new LanguageEntry("iteminfo.engine.hours", "Runtime hours: ");
-	public static final LanguageEntry ITEMINFO_ENGINE_OILLEAK = new LanguageEntry("iteminfo.engine.oilleak", "§cHas an oil leak!");
-	public static final LanguageEntry ITEMINFO_ENGINE_FUELLEAK = new LanguageEntry("iteminfo.engine.fuelleak", "§cHas a fuel leak!");
-	public static final LanguageEntry ITEMINFO_ENGINE_BROKENSTARTER = new LanguageEntry("iteminfo.engine.brokenstarter", "§cElectric starter is broken!");
-	public static final LanguageEntry ITEMINFO_ENGINE_CREATIVE = new LanguageEntry("iteminfo.engine.creative", "§5Creative: Needs no fuel, accumulates no hours, cannot blow up.");
+	public static final LanguageEntry ITEMINFO_ENGINE_OILLEAK = new LanguageEntry("iteminfo.engine.oilleak", "ï¿½cHas an oil leak!");
+	public static final LanguageEntry ITEMINFO_ENGINE_FUELLEAK = new LanguageEntry("iteminfo.engine.fuelleak", "ï¿½cHas a fuel leak!");
+	public static final LanguageEntry ITEMINFO_ENGINE_BROKENSTARTER = new LanguageEntry("iteminfo.engine.brokenstarter", "ï¿½cElectric starter is broken!");
+	public static final LanguageEntry ITEMINFO_ENGINE_CREATIVE = new LanguageEntry("iteminfo.engine.creative", "ï¿½5Creative: Needs no fuel, accumulates no hours, cannot blow up.");
 
 	public static final LanguageEntry ITEMINFO_GROUND_DEVICE_DIAMETER = new LanguageEntry("iteminfo.ground_device.diameter", "Diameter: ");
 	public static final LanguageEntry ITEMINFO_GROUND_DEVICE_MOTIVEFRICTION = new LanguageEntry("iteminfo.ground_device.motivefrictionmotivefriction", "Power friction: ");
@@ -373,6 +375,6 @@ public class JSONConfigLanguage{
 	public static final LanguageEntry INPUT_TURNSIGNAL_R = new LanguageEntry("input.turnsignal_r", "RightSignal");
 	public static final LanguageEntry INPUT_TURNSIGNAL_L = new LanguageEntry("input.turnsignal_l", "LeftSignal");
 	
-	public static final LanguageEntry SYSTEM_SOUNDSLOT = new LanguageEntry("sytstem.soundslot", "IMMERSIVE VEHICLES ERROR: Tried to play a sound, but was told no sound slots were available.  Some mod is taking up all the slots.  Probabaly Immersive Railroading or Dynamic Surroundings.  If you have those installed, complain to the mod author or check the mod configs.  Sound will not play.");
+	public static final LanguageEntry SYSTEM_SOUNDSLOT = new LanguageEntry("sytstem.soundslot", "IMMERSIVE VEHICLES ERROR: Tried to play a sound, but was told no sound slots were available.  Some mod is taking up all the slots.  If you have Immersive Engineering, set override sound channels to false in that mod's config.  If running GregTech, set maxNumSounds to a lower value in that mod's config.  Dynamic Surrondings and Optifine also may cause issues.  Apply fixes, or complain to those mod's authors.  Sounds will not play.");
 	public static final LanguageEntry SYSTEM_DEBUG = new LanguageEntry("sytstem.debug", "%s"); 
 }

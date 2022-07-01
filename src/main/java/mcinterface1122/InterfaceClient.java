@@ -63,6 +63,11 @@ public class InterfaceClient implements IInterfaceClient{
 	}
 	
 	@Override
+	public boolean usingDefaultLanguage(){
+		return Minecraft.getMinecraft().gameSettings.language.equals("en_us");
+	}
+	
+	@Override
 	public String getFluidName(String fluidID){
 		Fluid fluid = FluidRegistry.getFluid(fluidID);
 		return fluid != null ? new FluidStack(fluid, 1).getLocalizedName() : "INVALID";
