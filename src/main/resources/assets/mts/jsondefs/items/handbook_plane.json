@@ -218,7 +218,7 @@
             "rot": [0.0,0.0,0.0],
             "scale": 0.65,
             "fieldName": "",
-            "defaultText": "Trim is normally overlooked by most pilots, but is a useful tool to make flying much easier.  Trim can be adjusted in the U-panel, with each trim doing different things.  Elecator trim makes for a constant pitch, which is useful if you keep climbing because you want to go faster.  Yaw is useful if you lose an engine and keep yawing.",
+            "defaultText": "Trim is normally overlooked by most pilots, but is a useful tool to make flying much easier.  Trim can be adjusted in the U-panel, with each trim doing different things.  Elevator trim makes for a constant pitch, which is useful if you keep climbing because you want to go faster.  Yaw is useful if you lose an engine and keep yawing.",
             "color": "000000",
             "wrapWidth": 110,
             "renderPosition": 1
