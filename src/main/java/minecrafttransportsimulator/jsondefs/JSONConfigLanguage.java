@@ -19,8 +19,8 @@ public class JSONConfigLanguage{
 	public Map<String, Map<String, JSONItemEntry>> packs = new LinkedHashMap<String, Map<String, JSONItemEntry>>();
 	public static final Map<String, LanguageEntry> coreEntries = new LinkedHashMap<String, LanguageEntry>();
 	
-	public void populateEntries(){
-		boolean overrideJSONWithDefinedValues = InterfaceManager.clientInterface.usingDefaultLanguage(); 
+	public void populateEntries(boolean isClient){
+		boolean overrideJSONWithDefinedValues = !isClient || InterfaceManager.clientInterface.usingDefaultLanguage(); 
 		//First populate core entries.
 		for(LanguageEntry entry : coreEntries.values()){
 			if(!core.containsKey(entry.key) || overrideJSONWithDefinedValues){
