@@ -113,13 +113,13 @@ public class InterfaceEventsEntityRendering{
 	@SubscribeEvent
     public static void on(RenderGameOverlayEvent.Pre event){
 		//If we are rendering the custom camera overlay, block the crosshairs and the hotbar..
-		if((event.getType().equals(RenderGameOverlayEvent.ElementType.CROSSHAIRS) || event.getType().equals(RenderGameOverlayEvent.ElementType.HOTBAR)) && CameraSystem.customCameraOverlay != null){
+		if((event.getType() == RenderGameOverlayEvent.ElementType.CROSSHAIRS || event.getType() == RenderGameOverlayEvent.ElementType.HOTBAR) && CameraSystem.customCameraOverlay != null){
 			event.setCanceled(true);
 			return;
 		}
 		
 		//If we are seated in a controller seat, and are rendering GUIs, disable the hotbar.
-		if((event.getType().equals(RenderGameOverlayEvent.ElementType.HOTBAR) || event.getType().equals(RenderGameOverlayEvent.ElementType.FOOD) || event.getType().equals(RenderGameOverlayEvent.ElementType.HEALTH) || event.getType().equals(RenderGameOverlayEvent.ElementType.EXPERIENCE)) && (InterfaceManager.clientInterface.inFirstPerson() ? ConfigSystem.client.renderingSettings.renderHUD_1P.value : ConfigSystem.client.renderingSettings.renderHUD_3P.value)){
+		if((event.getType() == RenderGameOverlayEvent.ElementType.HOTBAR || event.getType() == RenderGameOverlayEvent.ElementType.FOOD || event.getType() == RenderGameOverlayEvent.ElementType.HEALTH || event.getType() == RenderGameOverlayEvent.ElementType.ARMOR || event.getType() == RenderGameOverlayEvent.ElementType.EXPERIENCE) && (InterfaceManager.clientInterface.inFirstPerson() ? ConfigSystem.client.renderingSettings.renderHUD_1P.value : ConfigSystem.client.renderingSettings.renderHUD_3P.value)){
 			IWrapperPlayer player = InterfaceManager.clientInterface.getClientPlayer();
 			AEntityE_Interactable<?> ridingEntity = player.getEntityRiding();
 			if(ridingEntity instanceof AEntityF_Multipart && ((AEntityF_Multipart<?>) ridingEntity).getSeatForRider(player).placementDefinition.isController){
