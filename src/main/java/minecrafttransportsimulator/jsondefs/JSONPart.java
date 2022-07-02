@@ -424,6 +424,9 @@ public class JSONPart extends AJSONPartProvider{
 		@JSONDescription("If set, this part's inventory can be used by the vehicle and its parts.  This does not affect loader/unloader operations.")
     	public boolean feedsVehicles;
 		
+		@JSONDescription("If this part is a crate with ammo, or barrel with fuel, and it is hit, then when it is destroyed it will not make a massive explosion like normal.  Used for specialty ammo crates that shouldn't nuke the vehicle they are on if compromised.")
+    	public boolean hasBlowoutPanels;
+		
 		@JSONDescription("If set, this inventory will be able to be opened while in the player's hand.  Only valid for chests.")
     	public boolean canBeOpenedInHand;
 		
