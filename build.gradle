@@ -16,7 +16,7 @@ apply plugin: 'eclipse'
 //apply plugin: 'org.spongepowered.mixin'
 
 //Set file name.
-version = "1.12.2-21.3.0-BETA13"
+version = "1.12.2-21.3.0-BETA17"
 group= "minecrafttransportsimulator"
 archivesBaseName = "Immersive Vehicles"
 

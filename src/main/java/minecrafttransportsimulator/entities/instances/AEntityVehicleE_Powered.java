@@ -227,8 +227,13 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving{
 	
 	@Override
 	public void removeRider(IWrapperEntity rider){
+		PartSeat seat = getSeatForRider(rider);
+		//De-select active gun if required.
+		if(seat.placementDefinition.canDisableGun) {
+			seat.activeGun = null;
+		}
+		
 		if(world.isClient() && ConfigSystem.client.controlSettings.autostartEng.value && rider.equals(InterfaceManager.clientInterface.getClientPlayer())){
-			PartSeat seat = getSeatForRider(rider);
 			if(rider instanceof IWrapperPlayer && seat.placementDefinition.isController){
 				//Check if another player is in a controller seat.  If so, don't stop the engines.
 				boolean otherController = false;
