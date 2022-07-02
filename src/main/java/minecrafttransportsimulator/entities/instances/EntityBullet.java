@@ -234,8 +234,11 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 									InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitEntity(this, hitBox, hitPart));
 									lastHit = HitType.PART;
 									if(ConfigSystem.settings.general.devMode.value)InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "HIT PART");
-									remove();
-									return;
+									//Only destroy the bullet if it's explosive.
+									if(definition.bullet.blastStrength > 0) {
+										remove();
+										return;
+									}
 								}else{
 									InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitEntity(this, hitBox, entity));
 									lastHit = HitType.ENTITY;

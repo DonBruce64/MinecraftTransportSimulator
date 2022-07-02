@@ -7,7 +7,9 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
+import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityBullet;
+import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
@@ -65,6 +67,14 @@ public class PacketEntityBulletHitEntity extends PacketEntityBulletHit{
 				Damage damage = new Damage(damageAmount, hitBox, null, attacker, language);
 				damage.setBullet(bulletItem);
 				entityHit.attack(damage);
+				
+				//If we are explosive, and we blew up a part, also blow up the vehicle too.
+				if(bulletItem.definition.bullet.blastStrength > 0 && entityHit instanceof APart) {
+					EntityVehicleF_Physics vehicle = ((APart) entityHit).vehicleOn;
+					if(vehicle != null) {
+						vehicle.attack(damage);
+					}
+				}
 			}
 		}
 		return false;
