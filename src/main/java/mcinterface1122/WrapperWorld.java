@@ -305,14 +305,14 @@ public class WrapperWorld extends AWrapperWorld{
 			if(!(mcEntityCollided instanceof ABuilderEntityBase)){
 				if(damage.damgeSource != null){
 					Entity ridingEntity = mcEntityCollided.getRidingEntity();
-					if(ridingEntity instanceof BuilderEntityExisting){
-						AEntityB_Existing internalEntity = ((BuilderEntityExisting) ridingEntity).entity;
-						if(damage.damgeSource.equals(internalEntity)){
+					if(ridingEntity instanceof BuilderEntityLinkedSeat){
+						AEntityB_Existing internalEntity = ((BuilderEntityLinkedSeat) ridingEntity).entity;
+						if(damage.damgeSource == internalEntity){
 							//Don't attack riders of the source of the damage.
 							continue;
 						}else if(damage.damgeSource instanceof APart){
 							APart damagingPart = (APart) damage.damgeSource;
-							if(damagingPart.entityOn.equals(internalEntity)){
+							if(damagingPart.entityOn == internalEntity){
 								//Don't attack riders of the multipart the part applying damage is a part of.
 								continue;
 							}
