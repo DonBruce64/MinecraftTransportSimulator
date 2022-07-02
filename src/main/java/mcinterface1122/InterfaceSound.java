@@ -25,6 +25,7 @@ import minecrafttransportsimulator.sound.IStreamDecoder;
 import minecrafttransportsimulator.sound.OGGDecoder;
 import minecrafttransportsimulator.sound.RadioStation;
 import minecrafttransportsimulator.sound.SoundInstance;
+import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -134,7 +135,7 @@ public class InterfaceSound implements IInterfaceSound{
 					//Update position and volume.
 					sound.updatePosition();
 					AL10.alSource3f(sound.sourceIndex, AL10.AL_POSITION, (float) sound.position.x, (float) sound.position.y, (float) sound.position.z);
-					AL10.alSourcef(sound.sourceIndex, AL10.AL_GAIN, sound.volume);
+					AL10.alSourcef(sound.sourceIndex, AL10.AL_GAIN, sound.volume*ConfigSystem.client.controlSettings.masterVolume.value);
 					
 					//If the sound is looping, and the player isn't riding the source, calculate doppler pitch effect.
 					//Otherwise, set pitch as normal.

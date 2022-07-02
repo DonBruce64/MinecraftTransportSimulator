@@ -58,6 +58,7 @@ public class JSONConfigClient{
 		public JSONConfigEntry<Double> flightControlRate = new JSONConfigEntry<Double>(EntityVehicleF_Physics.AILERON_DAMPEN_RATE, "How many degrees to move the elevators and ailerons on aircraft for every tick the button is held down.  This is not used when using a joystick.");
 		public JSONConfigEntry<Double> mouseYokeRate = new JSONConfigEntry<Double>(0.1D, "How many degrees to move control surfaces for every 1 mouse unit change.  Used for mouse yoke controls.");
 		public JSONConfigEntry<Double> joystickDeadZone = new JSONConfigEntry<Double>(0.03D, "Dead zone for joystick axis.  This is NOT joystick specific.");
+		public JSONConfigEntry<Float> masterVolume = new JSONConfigEntry<Float>(1.0F, "Volume for all sounds in the mod.  This is used instead of the game's master volume.");
 	}
 	
 	public static class JSONControls{

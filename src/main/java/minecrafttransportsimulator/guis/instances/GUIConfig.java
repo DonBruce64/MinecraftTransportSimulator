@@ -41,6 +41,11 @@ public class GUIConfig extends AGUIBase{
 	private GUIComponentLabel vehicleSelectionFaultLabel;
 	private GUIComponentButton finishKeyboardBindingsButton;
 	
+	//Volume level variables.
+	private GUIComponentButton volumeUpButton;
+	private GUIComponentButton volumeDownButton;
+	private GUIComponentLabel volumeLabel;
+	
 	//Keyboard assignment variables.
 	private boolean configuringKeyboard;
 	private Map<String, Map<GUIComponentTextBox, ControlsKeyboard>> keyboardBoxes = new HashMap<String, Map<GUIComponentTextBox, ControlsKeyboard>>();
@@ -148,6 +153,24 @@ public class GUIConfig extends AGUIBase{
 				addComponent(new GUIComponentLabel(guiLeft+20, guiTop+10, ColorRGB.BLACK, JSONConfigLanguage.GUI_CONFIG_CONTROLS_TITLE.value).setButton(buttonKeyboard));
 			}
 		}
+		
+		//Add volume buttons and label.
+		addComponent(volumeUpButton = new GUIComponentButton(guiLeft+68, guiTop+160, 20, 20, "/\\") {
+			@Override
+			public void onClicked(boolean leftSide){
+				ConfigSystem.client.controlSettings.masterVolume.value = (((int) (ConfigSystem.client.controlSettings.masterVolume.value*10)) + 1)/10F;
+				ConfigSystem.saveToDisk();
+			}
+		});
+		addComponent(volumeDownButton = new GUIComponentButton(guiLeft+168, guiTop+160, 20, 20, "\\/") {
+			@Override
+			public void onClicked(boolean leftSide){
+				ConfigSystem.client.controlSettings.masterVolume.value = (((int) (ConfigSystem.client.controlSettings.masterVolume.value*10)) - 1)/10F;
+				ConfigSystem.saveToDisk();
+			}
+		});
+		addComponent(volumeLabel = new GUIComponentLabel(guiLeft+128, guiTop+165, ColorRGB.BLACK, JSONConfigLanguage.GUI_CONFIG_CONTROLS_VOLUME.value + String.valueOf(ConfigSystem.client.controlSettings.masterVolume.value), TextAlignment.CENTERED, 1.0F));
+		volumeLabel.setButton(volumeDownButton);
 		
 		//Now add joystick buttons.
 		for(String vehicleType : vehicleTypes){
@@ -405,6 +428,18 @@ public class GUIConfig extends AGUIBase{
 			button.visible = configuringControls && vehicleConfiguring.isEmpty() && (!vehicleSelectionButtons.get(button).endsWith(".joystick") || InterfaceManager.inputInterface.isJoystickSupportEnabled());
 		}
 		
+		
+		//If we haven't selected anything, render the volume controls.
+		if(configuringControls && vehicleConfiguring.isEmpty()) {
+			volumeUpButton.visible = true;
+			volumeUpButton.enabled = ConfigSystem.client.controlSettings.masterVolume.value < 1.5;
+			volumeDownButton.visible = true;
+			volumeDownButton.enabled = ConfigSystem.client.controlSettings.masterVolume.value > 0;
+			volumeLabel.text = JSONConfigLanguage.GUI_CONFIG_CONTROLS_VOLUME.value + String.valueOf(ConfigSystem.client.controlSettings.masterVolume.value);
+		}else {
+			volumeUpButton.visible = false;
+			volumeDownButton.visible = false;
+		}
 		
 		
 		//If we have selected a vehicle, and are configuring a keyboard, render the keyboard controls.

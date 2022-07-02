@@ -168,6 +168,7 @@ public class JSONConfigLanguage{
 	public static final LanguageEntry GUI_CONFIG_HEADER_CONTROLS = new LanguageEntry("gui.config.header.controls", "CONTROLS");
 
 	public static final LanguageEntry GUI_CONFIG_CONTROLS_TITLE = new LanguageEntry("gui.config.controls.title", "Choose a configuration to change: ");
+	public static final LanguageEntry GUI_CONFIG_CONTROLS_VOLUME = new LanguageEntry("gui.config.controls.volume", "Volume: ");
 	public static final LanguageEntry GUI_CONFIG_CONTROLS_AIRCRAFT_KEYBOARD = new LanguageEntry("gui.config.controls.aircraft.keyboard", "AIRCRAFT KEYBOARD");
 	public static final LanguageEntry GUI_CONFIG_CONTROLS_AIRCRAFT_JOYSTICK = new LanguageEntry("gui.config.controls.aircraft.joystick", "AIRCRAFT JOYSTICK");
 	public static final LanguageEntry GUI_CONFIG_CONTROLS_CAR_KEYBOARD = new LanguageEntry("gui.config.controls.car.keyboard", "CAR/BOAT KEYBOARD");
