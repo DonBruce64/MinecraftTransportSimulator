@@ -16,6 +16,9 @@ public class JSONBullet extends AJSONMultiModelProvider{
     	@JSONRequired
 		@JSONDescription("A list of types describing the bullet.  This defines how it inflicts damage on whatever it hits.")
     	public List<BulletType> types;
+    	
+    	@JSONDescription("If true, then this bullet will be considered a HEAT bullet and will use the HEAT armor value on any collision boxes it finds.  If that value isn't defined, it will just use the normal armor value.")
+    	public boolean isHeat;
 		
 		@JSONDescription("How many bullets are in the bullet item crafted at the bullet bench. Because nobody wants to have to craft 500 bullets one by one...")
     	public int quantity;

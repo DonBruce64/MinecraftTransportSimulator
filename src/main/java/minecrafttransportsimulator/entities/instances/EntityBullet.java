@@ -218,13 +218,15 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 						Iterator<BoundingBox> hitBoxIterator = hitBoxes.values().iterator();
 						while(hitBoxIterator.hasNext()){
 							BoundingBox hitBox = hitBoxIterator.next();
-							if(hitBox.definition != null && hitBox.definition.armorThickness > 0){
-								armorPenetrated += hitBox.definition.armorThickness;
-								if(armorPenetrated > definition.bullet.armorPenetration*velocity/initialVelocity){
+							double armorThickness = definition.bullet.isHeat && hitBox.definition.heatArmorThickness != 0 ? hitBox.definition.heatArmorThickness : hitBox.definition.armorThickness;
+							double penetrationPotential = definition.bullet.isHeat ? definition.bullet.armorPenetration : definition.bullet.armorPenetration*velocity/initialVelocity;
+							if(hitBox.definition != null && armorThickness > 0){
+								armorPenetrated += armorThickness;
+								if(armorPenetrated > penetrationPotential){
 									//Hit too much armor.  Don't do anything except spawn explosions.
 									InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHit(this, hitBox.globalCenter));
 									lastHit = HitType.ARMOR;
-									if(ConfigSystem.settings.general.devMode.value)InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "HIT TOO MUCH ARMOR.  MAX PEN: " + (int)(definition.bullet.armorPenetration*velocity/initialVelocity));
+									if(ConfigSystem.settings.general.devMode.value)InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "HIT TOO MUCH ARMOR.  MAX PEN: " + (int)(penetrationPotential));
 									remove();
 									return;
 								}

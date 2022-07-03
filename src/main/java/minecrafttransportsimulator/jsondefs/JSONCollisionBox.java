@@ -9,7 +9,7 @@ public class JSONCollisionBox{
 	@JSONDescription("n entry of x, y, and z coordinates that define the center point of where this collision box is relative to the center of the object.")
 	public Point3D pos;
 	
-	@JSONDescription("The width of this collision box, in meters.  Note that since the pos parameter is the center of the box the box will actually extend ½ the width in the X and Z direction.")
+	@JSONDescription("The width of this collision box, in meters.  Note that since the pos parameter is the center of the box the box will actually extend ï¿½ the width in the X and Z direction.")
     public float width;
 	
 	@JSONDescription("Same as width, just for the Y direction.")
@@ -20,6 +20,9 @@ public class JSONCollisionBox{
 	
 	@JSONDescription("How much armor this collision box has.  Values greater than 0 will make this box use armor code to block bullets from passing through it.  Leaving this value out will make all bullets pass through it (no armor).")
     public float armorThickness;
+	
+	@JSONDescription("Like normal armor thickness, but used only if a bullet is a HEAT bullet.")
+    public float heatArmorThickness;
 	
 	@JSONDescription("If set, clicking this collision box will do variable operations.  The exact operation depends on the variableType and variableValue.  Useful for doors, though can be used for any toggle-able variable, not just custom doors.")
     public String variableName;
