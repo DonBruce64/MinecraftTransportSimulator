@@ -548,33 +548,36 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 	}
 	
 	private static <TreadEntity extends AEntityD_Definable<?>> List<Double[]> generateTreads(TreadEntity entityTreadAttachedTo, String treadPathModel, Map<Float, List<Double[]>> treadPointsMap, PartGroundDevice tread){
-		//If we don't have the deltas, calculate them based on the points of the rollers on the model.			
+		//If we don't have the deltas, calculate them based on the points of the rollers defined in the JSON.			
 		//Search through rotatable parts on the model and grab the rollers.
-		Map<Integer, RenderableTreadRoller<TreadEntity>> parsedRollers = new HashMap<Integer, RenderableTreadRoller<TreadEntity>>();
-		for(RenderableModelObject<?> modelObject : ((ARenderEntityDefinable<?>) entityTreadAttachedTo.getRenderer()).objectLists.get(treadPathModel)){
-			if(modelObject instanceof RenderableTreadRoller){
-				@SuppressWarnings("unchecked")
-				RenderableTreadRoller<TreadEntity> treadObject = (RenderableTreadRoller<TreadEntity>) modelObject;
-				if(!treadObject.isLeft){
-					parsedRollers.put(treadObject.rollerNumber, treadObject);
+		List<RenderableObject> parsedModel = AModelParser.parseModel(entityTreadAttachedTo.definition.getModelLocation(entityTreadAttachedTo.definition.definitions.get(0).subName));
+		List<TreadRoller> rollers = new ArrayList<TreadRoller>();
+		if(tread.placementDefinition.treadPath == null) {
+			throw new IllegalArgumentException("No tread path found for part slot on " + entityTreadAttachedTo.getItem().getItemName() + "!");
+		}
+		for(String rollerName : tread.placementDefinition.treadPath) {
+			boolean foundRoller = false;
+			for(RenderableObject modelObject : parsedModel){
+				if(modelObject.name.equals(rollerName)){
+					rollers.add(new TreadRoller(modelObject));
+					foundRoller = true;
+					break;
 				}
+			}
+			if(!foundRoller) {
+				throw new IllegalArgumentException("Could not create tread path for " + entityTreadAttachedTo.getItem().getItemName() + " Due to missing roller " + rollerName + " in the model!");
 			}
 		}
 		
+		
 		//Now that we have all the rollers, we can start calculating points.
 		//First calculate the endpoints on the rollers by calling the calculation method.
-		//We also transfer the rollers to an ordered array for convenience later.
-		List<RenderableTreadRoller<TreadEntity>> rollers = new ArrayList<RenderableTreadRoller<TreadEntity>>();
-		for(int i=0; i<parsedRollers.size(); ++ i){
-			if(!parsedRollers.containsKey(i)){
-				throw new IndexOutOfBoundsException("Attempted to render roller_" + i + " on " + entityTreadAttachedTo.definition.packID + ":" + entityTreadAttachedTo.definition.systemName + ", but it was not found.  Did you not make it in the OBJ model?");
-			}
-			if(i < parsedRollers.size() - 1){
-				parsedRollers.get(i).calculateEndpoints(parsedRollers.get(i + 1));
+		for(int i=0; i<rollers.size(); ++ i){
+			if(i < rollers.size() - 1){
+				rollers.get(i).calculateEndpoints(rollers.get(i + 1));
 			}else{
-				parsedRollers.get(i).calculateEndpoints(parsedRollers.get(0));
+				rollers.get(i).calculateEndpoints(rollers.get(0));
 			}
-			rollers.add(parsedRollers.get(i));
 		}
 		
 		//We need to ensure the endpoints are all angle-aligned.
@@ -586,7 +589,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 		//At the end, we should have an end angle of 540, or 180 + 360.
 		rollers.get(0).endAngle = 180;
 		for(int i=1; i<rollers.size(); ++i){
-			RenderableTreadRoller<?> roller = rollers.get(i);
+			TreadRoller roller = rollers.get(i);
 			roller.startAngle = rollers.get(i - 1).endAngle;
 			//End angle should be 0-360 greater than start angle, or within
 			//30 degrees less, as is the case for concave rollers. 
@@ -616,13 +619,13 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 		double totalPathLength = 0;
 		for(int i=0; i<rollers.size(); ++i){
 			//Get roller and add roller path contribution.
-			RenderableTreadRoller<?> roller = rollers.get(i);
+			TreadRoller roller = rollers.get(i);
 			totalPathLength += 2*Math.PI*roller.radius*Math.abs(roller.endAngle - (i == 0 ? roller.startAngle - 360 : roller.startAngle))/360D;
 			
 			//Get next roller and add distance path contribution.
 			//For points that start and end at an angle of around 0 (top of rollers) we add droop.
 			//This is a hyperbolic function, so we need to calculate the integral value to account for the path.
-			RenderableTreadRoller<?> nextRoller = i == rollers.size() - 1 ? rollers.get(0) : rollers.get(i + 1);
+			TreadRoller nextRoller = i == rollers.size() - 1 ? rollers.get(0) : rollers.get(i + 1);
 			double straightPathLength = Math.hypot(nextRoller.startY - roller.endY, nextRoller.startZ - roller.endZ);
 			if(tread.placementDefinition.treadDroopConstant > 0 && (roller.endAngle%360 < 10 || roller.endAngle%360 > 350) && (nextRoller.startAngle%360 < 10 || nextRoller.startAngle%360 > 350)){
 				//Catenary path length is a*singh(x/a), a is droop constant, x will be 1/2 total catenary distance due to symmetry, multiply this distance by 2 for total droop.
@@ -638,7 +641,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 		double zPoint = 0; 
 		List<Double[]> points = new ArrayList<Double[]>();
 		for(int i=0; i<rollers.size(); ++i){
-			RenderableTreadRoller<?> roller = rollers.get(i);
+			TreadRoller roller = rollers.get(i);
 			//Follow the curve of the roller from the start and end point.
 			//Do this until we don't have enough roller path left to make a point.
 			//If we have any remaining path from a prior operation, we
@@ -692,7 +695,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 			//If we don't do this, the line won't start at the end of the prior roller.
 			//If we are on the last roller, we need to get the first roller to complete the loop.
 			//For points that start and end at an angle of around 0 (top of rollers) we add droop.
-			RenderableTreadRoller<?> nextRoller = i == rollers.size() - 1 ? rollers.get(0) : rollers.get(i + 1);
+			TreadRoller nextRoller = i == rollers.size() - 1 ? rollers.get(0) : rollers.get(i + 1);
 			double straightPathLength = Math.hypot(nextRoller.startY - roller.endY, nextRoller.startZ - roller.endZ);
 			double extraPathLength = rollerPathLength + leftoverPathLength;
 			double normalizedY = (nextRoller.startY - roller.endY)/straightPathLength;

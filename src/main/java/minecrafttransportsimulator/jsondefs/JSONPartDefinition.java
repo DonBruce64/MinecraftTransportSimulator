@@ -23,7 +23,7 @@ public class JSONPartDefinition{
 	@JSONDescription("This parameter is optional.  If included and set to true, the part will be used to steer vehicles.  If you want the part to visually turn, you will need to add an animation block and specify this.")
     public boolean turnsWithSteer;
 	
-	@JSONDescription("This parameter is optional.  If included and set to true, the seat at this location will be marked as a controller seat.  This allows the player in this seat to control the vehicle.  You may have multiple controller seats per vehicle (such as a pilot and co-pilot seat for a plane), but inputs from the controllers are all handled equally, so just because you are in the “first” seat does not mean you get full control.")
+	@JSONDescription("This parameter is optional.  If included and set to true, the seat at this location will be marked as a controller seat.  This allows the player in this seat to control the vehicle.  You may have multiple controller seats per vehicle (such as a pilot and co-pilot seat for a plane), but inputs from the controllers are all handled equally, so just because you are in the ï¿½firstï¿½ seat does not mean you get full control.")
     public boolean isController;
 	
 	@JSONDescription("This parameter is optional.  If included and set to true, and this is on a gun part, and the part in this slot is also a gun, then when the part-slot gun is active, it will be allowed to control the main gun.  This allows for switching to SMGs placed on turrets while still moving the turret, but not firing from it.")
@@ -99,11 +99,14 @@ public class JSONPartDefinition{
     @JSONDescription("A list of part types that can go in this position.  Normally you'll only have one entry in this list, as there's really no reason to have a ground_device at the same location as an engine.  There are some exceptions to this, however.  One is for interior equipment, like seats and chests, where you want players to be able to choose what they put in that position. ")
     public List<String> types;
     
-    @JSONDescription("This parameter is optional.  If included, this slot will ONLY accept parts whose customType parameter matches one of the items in this list.  If the part's customType is not defined, and a blank entry of “” is not present in the list, it will be invalid and cannot be added.  Useful for pack creators who don't want their vehicles to play nice with other content packs, or slots that should only accept sub-sets of a type of part (such as specific styles of seats).")
+    @JSONDescription("This parameter is optional.  If included, this slot will ONLY accept parts whose customType parameter matches one of the items in this list.  If the part's customType is not defined, and a blank entry of ï¿½ï¿½ is not present in the list, it will be invalid and cannot be added.  Useful for pack creators who don't want their vehicles to play nice with other content packs, or slots that should only accept sub-sets of a type of part (such as specific styles of seats).")
     public List<String> customTypes;
     
     @JSONDescription("A list of subNames this part can go on.  If included, this part will only be allowed to go on the specified definition sub-name variants.  Used to allow for variant-specific configurations, such as police variants of cars.")
     public List<String> validSubNames;
+    
+    @JSONDescription("A list of objects on the model that define the path of the tread placed in this part slot.  The tread will start on the bottom of the first roller, and will follow the rollers as defined in this path, eventually going back to the first roller.")
+    public List<String> treadPath;
     
     @JSONDescription("This parameter allows for additional parts to be placed when this part is present.  Each entry in this list is the same format as a regular part.  Common uses are duel-wheeled axles, and cab-over-engine vehicles.")
     public List<JSONPartDefinition> additionalParts;

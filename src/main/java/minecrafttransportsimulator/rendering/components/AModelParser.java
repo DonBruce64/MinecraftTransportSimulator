@@ -19,7 +19,6 @@ import minecrafttransportsimulator.rendering.instances.ModelParserOBJ;
  */
 public abstract class AModelParser{
 	private static final Map<String, AModelParser> parsers = new HashMap<String, AModelParser>();
-	public static final String ROLLER_OBJECT_NAME = "roller";
 	public static final String WINDOW_OBJECT_NAME = "window";
 	public static final String ONLINE_TEXTURE_OBJECT_NAME = "url";
 	public static final String TRANSLUCENT_OBJECT_NAME = "translucent";
@@ -65,15 +64,9 @@ public abstract class AModelParser{
 	 */
 	public static <AnimationEntity extends AEntityD_Definable<?>> List<RenderableModelObject<AnimationEntity>> generateRenderables(AEntityD_Definable<?> entity){
 		String modelLocation = entity.definition.getModelLocation(entity.subName);
-		List<RenderableObject> parsedModelObjects = parseModel(modelLocation);
 		List<RenderableModelObject<AnimationEntity>> modelObjects = new ArrayList<RenderableModelObject<AnimationEntity>>();
-		for(RenderableObject parsedObject : parsedModelObjects){
-			//If we are a tread roller, make a roller rather than a standard object.
-			if(parsedObject.name.toLowerCase().contains(ROLLER_OBJECT_NAME)){
-				modelObjects.add(new RenderableTreadRoller<AnimationEntity>(modelLocation, parsedObject));
-			}else{
-				modelObjects.add(new RenderableModelObject<AnimationEntity>(modelLocation, parsedObject));
-			}
+		for(RenderableObject parsedObject : parseModel(modelLocation)){
+			modelObjects.add(new RenderableModelObject<AnimationEntity>(modelLocation, parsedObject));
 		}
 		return modelObjects;
 	}

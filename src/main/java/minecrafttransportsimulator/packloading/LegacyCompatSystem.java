@@ -1,8 +1,11 @@
 package minecrafttransportsimulator.packloading;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -13,23 +16,54 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad.
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartEngine;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent.PoleComponentType;
-import minecrafttransportsimulator.jsondefs.*;
+import minecrafttransportsimulator.jsondefs.AJSONInteractableEntity;
+import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.AJSONItem.General.TextLine;
+import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
+import minecrafttransportsimulator.jsondefs.AJSONPartProvider;
+import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
+import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition.AnimationComponentType;
+import minecrafttransportsimulator.jsondefs.JSONBullet;
+import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
+import minecrafttransportsimulator.jsondefs.JSONCollisionGroup;
+import minecrafttransportsimulator.jsondefs.JSONConnection;
+import minecrafttransportsimulator.jsondefs.JSONConnectionGroup;
+import minecrafttransportsimulator.jsondefs.JSONCraftingBench;
+import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONDecor.DecorComponentType;
+import minecrafttransportsimulator.jsondefs.JSONDoor;
+import minecrafttransportsimulator.jsondefs.JSONInstrument;
+import minecrafttransportsimulator.jsondefs.JSONInstrumentDefinition;
+import minecrafttransportsimulator.jsondefs.JSONItem;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONItem.JSONBooklet.BookletPage;
+import minecrafttransportsimulator.jsondefs.JSONLight;
 import minecrafttransportsimulator.jsondefs.JSONLight.JSONLightBlendableComponent;
+import minecrafttransportsimulator.jsondefs.JSONMuzzle;
+import minecrafttransportsimulator.jsondefs.JSONMuzzleGroup;
+import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPart.EffectorComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPart.FurnaceComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPart.JSONPartEngine.EngineSound;
+import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition.ExhaustObject;
+import minecrafttransportsimulator.jsondefs.JSONParticle;
 import minecrafttransportsimulator.jsondefs.JSONParticle.ParticleType;
+import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
+import minecrafttransportsimulator.jsondefs.JSONRendering;
 import minecrafttransportsimulator.jsondefs.JSONRendering.ModelType;
+import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
+import minecrafttransportsimulator.jsondefs.JSONSkin;
+import minecrafttransportsimulator.jsondefs.JSONSound;
+import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
+import minecrafttransportsimulator.jsondefs.JSONText;
+import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.components.AModelParser;
 import minecrafttransportsimulator.rendering.components.RenderableObject;
+import minecrafttransportsimulator.rendering.components.TreadRoller;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**
@@ -2186,13 +2220,69 @@ public final class LegacyCompatSystem{
 			}
 			
 			//Now check for tread rollers.
+			//We need to convert them into the new path system.
+			List<String> leftRollers = new ArrayList<String>();
+			List<String> rightRollers = new ArrayList<String>();
 			for(RenderableObject object : parsedModel){
-				if(object.name.toLowerCase().contains(AModelParser.ROLLER_OBJECT_NAME)){
-					//Check if an animation with this name exists already.
+				if(object.name.toLowerCase().contains("roller")){
+					//Add roller to roller lists.
+					if(object.name.toLowerCase().startsWith("l") || object.name.toLowerCase().startsWith("$l")) {
+						leftRollers.add(object.name);
+					}else {
+						rightRollers.add(object.name);
+					}
+				}
+			}
+			
+			if(!leftRollers.isEmpty() || !rightRollers.isEmpty()) {
+				//Sort rollers by name.
+				Comparator<String> sorter = new Comparator<String>() {
+					@Override
+					public int compare(String roller1, String roller2){
+						int roller1Index = Integer.valueOf(roller1.substring(roller1.lastIndexOf('_') + 1));
+						int roller2Index = Integer.valueOf(roller2.substring(roller2.lastIndexOf('_') + 1));
+						return roller1Index > roller2Index ? 1 : roller1Index < roller2Index ? -1 : 0;
+					}
+				};
+				leftRollers.sort(sorter);
+				rightRollers.sort(sorter);
+				
+				//If we don't have any left rollers, then we are an older system that didn't split them.
+				//Copy the rollers to the left side for the part slot pathing.
+				if(leftRollers.isEmpty()) {
+					leftRollers.addAll(rightRollers);
+				}
+				
+				//Find the part slot and def these rollers go to.
+				int leftSlotIndex = -1;
+				int rightSlotIndex = -1;
+				for(JSONPartDefinition partDef : ((AJSONPartProvider) definition).parts){
+					if(partDef.types.contains("ground_tread")){
+						if(partDef.pos.x <= 0){
+							rightSlotIndex = ((AJSONPartProvider) definition).parts.indexOf(partDef) + 1;
+							if(partDef.treadPath == null) {
+								partDef.treadPath = rightRollers;
+							}
+						}else {
+							leftSlotIndex = ((AJSONPartProvider) definition).parts.indexOf(partDef) + 1;
+							if(partDef.treadPath == null) {
+								partDef.treadPath = leftRollers;
+							}
+						}
+					}
+				}
+				
+				//Check if an animation for the rollers exists already.
+				//We use a set here to prevent duplicates in the loop (less calls).
+				Set<String> allRollers = new HashSet<String>();
+				allRollers.addAll(leftRollers);
+				allRollers.addAll(rightRollers);
+				
+				for(String rollerName : allRollers) {
 					boolean animationPresent = false;
 					if(definition.rendering != null && definition.rendering.animatedObjects != null){
 						for(JSONAnimatedObject animatedObject : definition.rendering.animatedObjects){
-							if(object.name.equals(animatedObject.objectName)){
+							if(rollerName.equals(animatedObject.objectName)){
 								animationPresent = true;
 								break;
 							}
@@ -2200,37 +2290,21 @@ public final class LegacyCompatSystem{
 					}
 					
 					if(!animationPresent){
-						//Get roller general properties.
-						boolean isLeft = object.name.toLowerCase().startsWith("l");
-						int partIndex = 1;
-						for(JSONPartDefinition partDef : ((AJSONPartProvider) definition).parts){
-							if(partDef.types.contains("ground_tread")){
-								if(!(partDef.pos.x >= 0 ^ isLeft)){
-									break;
-								}
-								++partIndex;
+						//Get the model object for the roller.
+						RenderableObject rollerObject = null;
+						TreadRoller roller = null;
+						for(RenderableObject object : parsedModel) {
+							if(object.name.equals(rollerName)) {
+								rollerObject = object;
+								roller = new TreadRoller(object);
+								break;
 							}
 						}
 						
 						//Create new animation.
 						JSONAnimationDefinition animation = new JSONAnimationDefinition();
 						animation.animationType = AnimationComponentType.ROTATION;
-						animation.variable = "ground_rotation_" + partIndex;
-						
-						//Get the points that define this roller.
-						float minY = 999;
-						float maxY = -999;
-						float minZ = 999;
-						float maxZ = -999;
-						for(int i=0; i<object.vertices.capacity(); i+=8){
-							float y = object.vertices.get(i+6);
-							float z = object.vertices.get(i+7);
-							minY = Math.min(minY, y);
-							maxY = Math.max(maxY, y);
-							minZ = Math.min(minZ, z);
-							maxZ = Math.max(maxZ, z);
-						}
-						double radius = (maxZ - minZ)/2D;
+						animation.variable = "ground_rotation_" + (leftRollers.contains(rollerName) ? leftSlotIndex : rightSlotIndex);
 						
 						//Set roller center and axis.
 						//360 degrees is 1 block, so if we have a roller of circumference of 1,
@@ -2238,8 +2312,8 @@ public final class LegacyCompatSystem{
 						//Knowing this, we can calculate the linear velocity for this roller, as a roller with
 						//half the circumference needs double the factor, and vice-versa.  Basically, we get
 						//the ratio of the two circumferences of the "standard" roller and our roller.
-						animation.centerPoint = new Point3D(0, minY + (maxY - minY)/2D, minZ + (maxZ - minZ)/2D);
-						animation.axis = new Point3D((1.0D/Math.PI)/(radius*2D), 0, 0);
+						animation.centerPoint = roller.centerPoint;
+						animation.axis = new Point3D((1.0D/Math.PI)/(roller.radius*2D), 0, 0);
 						
 						//Create animated object and save.
 						if(definition.rendering == null){
@@ -2249,7 +2323,7 @@ public final class LegacyCompatSystem{
 							definition.rendering.animatedObjects = new ArrayList<JSONAnimatedObject>();
 						}
 						JSONAnimatedObject animatedObject = new JSONAnimatedObject();
-						animatedObject.objectName = object.name;
+						animatedObject.objectName = rollerObject.name;
 						animatedObject.animations = new ArrayList<JSONAnimationDefinition>();
 						animatedObject.animations.add(animation);
 						definition.rendering.animatedObjects.add(animatedObject);

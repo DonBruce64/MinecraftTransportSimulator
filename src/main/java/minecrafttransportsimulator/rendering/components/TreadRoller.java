@@ -1,17 +1,13 @@
 package minecrafttransportsimulator.rendering.components;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 
-/**A specific class of {@link RenderableModelObject}, designed
- * for tread rollers.  Contains an extra method for calculating things.
- * Also auto-creates rotatableModelObject definitions in the relevant JSON.
+/**Helper class of sorts that stores a tread roller object.  Created from
+ * the vertices of the roller in the model, and used for pathing math.
  *
  * @author don_bruce
  */
-public class RenderableTreadRoller<AnimationEntity extends AEntityD_Definable<?>> extends RenderableModelObject<AnimationEntity>{
-	public final boolean isLeft;
-	public final int rollerNumber;
+public class TreadRoller{
 	public final Point3D centerPoint;
 	public final double radius;
 	public final double circumference;
@@ -24,11 +20,7 @@ public class RenderableTreadRoller<AnimationEntity extends AEntityD_Definable<?>
 	public double endZ;
 	public double endAngle;
 	
-	public RenderableTreadRoller(String modelLocation, RenderableObject object){
-		super(modelLocation, object);
-		this.isLeft = object.name.toLowerCase().startsWith("l");
-		this.rollerNumber = Integer.valueOf(object.name.substring(object.name.lastIndexOf('_') + 1));
-		
+	public TreadRoller(RenderableObject object){
 		//Calculate the center and radius from the model.
 		float minY = 999;
 		float maxY = -999;
@@ -54,7 +46,7 @@ public class RenderableTreadRoller<AnimationEntity extends AEntityD_Definable<?>
 	 * Additionally, we know we'll start on the bottom of a roller, so between
 	 * those two things we can tell which tangent we should follow.
 	 */
-	public void calculateEndpoints(RenderableTreadRoller<AnimationEntity> nextRoller){
+	public void calculateEndpoints(TreadRoller nextRoller){
 		//What calculations we do depend on if the rollers are the same size.
 		//If so, we can do simple calcs.  If not, we get to do trig.
 		if(radius == nextRoller.radius){
