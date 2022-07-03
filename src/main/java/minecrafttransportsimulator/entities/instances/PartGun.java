@@ -86,6 +86,8 @@ public class PartGun extends APart{
 	private final Point3D targetVector = new Point3D();
 	private final Point3D targetAngles = new Point3D();
 	private final RotationMatrix firingSpreadRotation = new RotationMatrix();
+	private final RotationMatrix pitchMuzzleRotation = new RotationMatrix();
+	private final RotationMatrix yawMuzzleRotation = new RotationMatrix();
 	
 	//Global data.
 	public final List<Integer> bulletsHitOnServer = new ArrayList<Integer>();
@@ -671,7 +673,15 @@ public class PartGun extends APart{
 		}
 
 		//Set position.
-		bulletPosition.set(muzzle.pos).rotate(internalOrientation).rotate(zeroReferenceOrientation).add(position);
+		bulletPosition.set(muzzle.pos);
+		if(!muzzle.center.isZero()) {
+			pitchMuzzleRotation.setToZero().rotateX(internalOrientation.angles.x);
+			yawMuzzleRotation.setToZero().rotateY(internalOrientation.angles.y);
+			bulletPosition.subtract(muzzle.center).rotate(pitchMuzzleRotation).add(muzzle.center).rotate(yawMuzzleRotation);
+		}else {
+			bulletPosition.rotate(internalOrientation);
+		}
+		bulletPosition.rotate(zeroReferenceOrientation).add(position);
 		
 		//Set orientation.
 		bulletOrientation.set(zeroReferenceOrientation).multiply(internalOrientation);

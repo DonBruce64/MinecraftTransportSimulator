@@ -14,6 +14,6 @@ public class JSONMuzzle {
 	public RotationMatrix rot;
 	
 	@JSONRequired
-	@JSONDescription("This is the point this muzzle will rotate about when the gun's pitch is applied.  Only uused on pitchIsInternal guns, as external pitch guns move the whole gun, not the muzzle.")
+	@JSONDescription("This is the point this muzzle will rotate about when the gun's pitch is applied.  Used to define a point of rotation for things like tank barrels.  If the barrel is part of, and rotates, with the gun, don't include this.")
 	public Point3D center;
 }

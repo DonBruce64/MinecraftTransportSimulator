@@ -694,7 +694,6 @@ public final class LegacyCompatSystem{
 				muzzleGroup.muzzles = new ArrayList<JSONMuzzle>();
 				JSONMuzzle muzzle = new JSONMuzzle();
 				muzzle.pos = new Point3D(0, 0, definition.gun.length);
-				muzzle.center = new Point3D();
 				muzzleGroup.muzzles.add(muzzle);
 				definition.gun.muzzleGroups.add(muzzleGroup);
 			}
