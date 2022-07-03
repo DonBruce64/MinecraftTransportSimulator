@@ -89,7 +89,7 @@ import net.minecraftforge.items.IItemHandler;
  */
 public class WrapperWorld extends AWrapperWorld{
 	private static final Map<World, WrapperWorld> worldWrappers = new HashMap<World, WrapperWorld>();
-	private final Map<EntityPlayerGun, BuilderEntityExisting> playerServerGunBuilders = new HashMap<EntityPlayerGun, BuilderEntityExisting>();
+	private final Map<UUID, BuilderEntityExisting> playerServerGunBuilders = new HashMap<UUID, BuilderEntityExisting>();
 	private final Map<UUID, Integer> ticksSincePlayerJoin = new HashMap<UUID, Integer>();
 	private final List<AxisAlignedBB> mutableCollidingAABBs = new ArrayList<AxisAlignedBB>();
 	private final Set<BlockPos> knownAirBlocks = new HashSet<BlockPos>();
@@ -863,25 +863,21 @@ public class WrapperWorld extends AWrapperWorld{
 	   if(event.world.equals(world) && event.phase.equals(Phase.END) && !event.world.isRemote){
 		   for(EntityPlayer player : event.world.playerEntities){
 			   UUID playerUUID = player.getUniqueID();
-			   //Need to use wrapper here as the player equality tests don't work if there are two players with the same ID.
-			   EntityPlayerGun playerGun = EntityPlayerGun.playerServerGuns.get(playerUUID);
-			   if(playerGun != null){
+			   BuilderEntityExisting gunBuilder = playerServerGunBuilders.get(playerUUID);
+			   if(gunBuilder != null){
 				   //Gun exists, check if world is the same and it is actually updating.
 				   //We check basic states, and then the watchdog bit that gets reset every tick.
 				   //This way if we're in the world, but not valid we will know.
-				   BuilderEntityExisting gunBuilder = playerServerGunBuilders.get(playerGun);
-				   if(((WrapperWorld) playerGun.world).world != player.world || ((WrapperPlayer) playerGun.player).player != player || player.isDead || !playerGun.isValid || gunBuilder == null || gunBuilder.idleTickCounter == 20){
+				   if(gunBuilder.world != player.world || player.isDead || !gunBuilder.entity.isValid || gunBuilder.idleTickCounter == 20){
 					   //Follower is not linked.  Remove it and re-create in code below.
-					   if(gunBuilder != null){
-						   gunBuilder.setDead();
-						   playerServerGunBuilders.remove(playerGun);
-					   }
+					   gunBuilder.setDead();
+					   playerServerGunBuilders.remove(playerUUID);
 					   ticksSincePlayerJoin.remove(playerUUID);
 				   }else{
 					   ++gunBuilder.idleTickCounter;
 					   continue;
 				   }
-			   }else{
+			   }else if(!player.isDead){
 				   //Gun does not exist, check if player has been present for 3 seconds and spawn it.
 				   int totalTicksWaited = 0;
 				   if(ticksSincePlayerJoin.containsKey(playerUUID)){
@@ -891,7 +887,7 @@ public class WrapperWorld extends AWrapperWorld{
 					   //Spawn gun.
 					   IWrapperPlayer playerWrapper = WrapperPlayer.getWrapperFor(player);
 					   EntityPlayerGun entity = new EntityPlayerGun(this, playerWrapper, InterfaceManager.coreInterface.getNewNBTWrapper());
-					   playerServerGunBuilders.put(entity, spawnEntityInternal(entity));
+					   playerServerGunBuilders.put(playerUUID, spawnEntityInternal(entity));
 					   
 					   //If the player is new, also add handbooks.
 					   if(!ConfigSystem.settings.general.joinedPlayers.value.contains(playerUUID)){

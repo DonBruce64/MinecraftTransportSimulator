@@ -77,8 +77,8 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun>{
 		}
 		
 
-		//Don't load duplicates.  However, do load saved guns.
-		//These come after the player joins the world, so replace them.
+		//Don't load duplicates.  However, do ensure if we replace a gun we remove it.
+		//These come after the player joins the world where a gun was already present.
 		if(world.isClient()){
 			if(playerClientGuns.containsKey(player.getID())){
 				playerClientGuns.get(player.getID()).remove();
@@ -212,9 +212,6 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun>{
 					orientation.set(player.getOrientation());
 					position.add(player.getPosition());
 				}
-				
-				//Now add player's position offset.
-				
 				
 				if(!world.isClient()){
 					//Save gun data if we stopped firing the prior tick.
