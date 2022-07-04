@@ -1,7 +1,6 @@
 package minecrafttransportsimulator.entities.components;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
@@ -57,65 +56,67 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
 	@Override
 	public void update(){
 		super.update();
-		//Do validity checks for towing variables.  We could do this whenever we disconnect,
-		//but there are tons of ways this could happen.  The trailer could blow up, the 
-		//part-hitch could have been blown up, the trailer could have gotten wrenched, the
-		//part hitch could have gotten wrenched, etc.  And that doesn't even count what the
-		//thing towing us could have done! 
 		world.beginProfiling("EntityG_Level", true);
-		if(towedByConnection != null){
-			if(!towedByConnection.towingEntity.isValid){
-				towedByConnection = null;
+		if(!world.isClient()) {
+			//Do validity checks for towing variables.  We could do this whenever we disconnect,
+			//but there are tons of ways this could happen.  The trailer could blow up, the 
+			//part-hitch could have been blown up, the trailer could have gotten wrenched, the
+			//part hitch could have gotten wrenched, etc.  And that doesn't even count what the
+			//thing towing us could have done! 
+			if(towedByConnection != null){
+				if(!towedByConnection.towingEntity.isValid){
+					towedByConnection.towingVehicle.disconnectTrailer(towedByConnection.towingVehicle.towingConnections.indexOf(towedByConnection));
+				}
 			}
-		}
-		if(!towingConnections.isEmpty()){
-			//First functional expression here in the whole codebase, history in the making!
-			towingConnections.removeIf(connection -> !connection.towedEntity.isValid);
-		}
-		
-		//See if we need to link connections.
-		//We need to wait on this in case the entity didn't load at the same time.
-		//That being said, it may be the vehicle we are loading is in another chunk.
-		//As such we wait only some time, and if we caon't find all entities, we remove
-		//them from the listing of entities to find.
-		//Only do this once a second, and if we hit 5 seconds, bail.
-		if(savedTowedByConnection != null){
-			if(ticksExisted%20 == 0){
-				if(ticksExisted <= 100){
-					try{
+			if(!towingConnections.isEmpty()){
+				//First functional expression here in the whole codebase, history in the making!
+				//Is what this used to say before we fixed things...
+				for(int i=0; i<towingConnections.size(); ++i) {
+					TowingConnection connection = towingConnections.get(i);
+					if(!connection.towedEntity.isValid) {
+						disconnectTrailer(i);
+						--i;
+					}
+				}
+			}
+			
+			//See if we need to link connections.
+			//We need to wait on this in case the entity didn't load at the same time.
+			//That being said, it may be the vehicle we are loading is in another chunk.
+			//As such we wait only some time, and if we caon't find all entities, we remove
+			//them from the listing of entities to find.
+			//Only do this once a second, and if we hit 5 seconds, bail.
+			//We do this linking both ways, as we don't know if the towed vehicle or the towing vehicle will load first.
+			if(savedTowedByConnection != null){
+				if(ticksExisted%20 == 0){
+					if(ticksExisted <= 100){
 						if(savedTowedByConnection.initConnection(world)){
-							towedByConnection = savedTowedByConnection;
-							savedTowedByConnection = null;
+							savedTowedByConnection.towingVehicle.connectTrailer(savedTowedByConnection);
 						}
-					}catch(Exception e){
+					}else{
 						savedTowedByConnection = null;
 						InterfaceManager.coreInterface.logError("Could not hook-up trailer to entity towing it.  Did the JSON or pack change?");
 					}
-				}else{
-					savedTowedByConnection = null;
-					InterfaceManager.coreInterface.logError("Could not hook-up trailer to entity towing it.  Did the JSON or pack change?");
 				}
 			}
-		}
-		if(!savedTowingConnections.isEmpty()){
-			if(ticksExisted%20 == 0){
-				if(ticksExisted <= 100){
-					Iterator<TowingConnection> iterator = savedTowingConnections.iterator();
-					while(iterator.hasNext()){
-						TowingConnection savedTowingConnection = iterator.next();
-						try{
-							if(savedTowingConnection.initConnection(world)){
-								towingConnections.add(savedTowingConnection);
-								iterator.remove();
+			if(!savedTowingConnections.isEmpty()){
+				if(ticksExisted%20 == 0){
+					if(ticksExisted <= 100){
+						for(int i=0; i<savedTowingConnections.size(); ++i) {
+							TowingConnection savedTowingConnection = savedTowingConnections.get(i);
+							try{
+								if(savedTowingConnection.initConnection(world)){
+									connectTrailer(savedTowingConnection);
+									--i;
+								}
+							}catch(Exception e){
+								InterfaceManager.coreInterface.logError("Could not connect trailer(s) to the entity towing them.  Did the JSON or pack change?");
 							}
-						}catch(Exception e){
-							iterator.remove();
-							InterfaceManager.coreInterface.logError("Could not connect trailer(s) to the entity towing them.  Did the JSON or pack change?");
 						}
+					}else{
+						savedTowingConnections.clear();
+						InterfaceManager.coreInterface.logError("Could not connect trailer(s) to the entity towing them.  Did the JSON or pack change?");
 					}
-				}else{
-					savedTowingConnections.clear();
-					InterfaceManager.coreInterface.logError("Could not connect trailer(s) to the entity towing them.  Did the JSON or pack change?");
 				}
 			}
 		}
@@ -149,7 +150,7 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
 	 * This allows the entity update to be delayed to a later point in the code.
 	 */
 	public boolean blockMainUpdateCall(){
-		return savedTowedByConnection != null || towedByConnection != null;
+		return towedByConnection != null;
 	}
 	
 	@Override
@@ -414,10 +415,13 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
 	public void connectTrailer(TowingConnection connection){
 		towingConnections.add(connection);
 		connection.towedVehicle.towedByConnection = connection;
+		((AEntityG_Towable<?>)connection.towedVehicle).savedTowedByConnection = null;
+		
 		//Need to set initial values to avoid bad-syncing.
 		connection.hitchCurrentPosition.set(connection.hitchConnection.pos).rotate(connection.towingEntity.orientation).add(connection.towingEntity.position);
 		connection.hookupCurrentPosition.set(connection.hookupConnection.pos).rotate(connection.towedEntity.orientation).add(connection.towedEntity.position);
 		if(!world.isClient()){
+			savedTowingConnections.removeIf(testConnection -> connection.hitchConnectionGroup.equals(testConnection.hitchConnectionGroup) && connection.hitchConnectionIndex == testConnection.hitchConnectionIndex);
 			InterfaceManager.packetInterface.sendToAllClients(new PacketEntityTowingChange(this, connection));
 		}else if(AGUIBase.activeInputGUI instanceof AGUIPanel){
 			((AGUIPanel) AGUIBase.activeInputGUI).handleConnectionChange(connection);

@@ -80,7 +80,7 @@ public class TowingConnection{
 				hookupConnection = hookupConnectionGroup.connections.get(hookupConnectionIndex);
 			}
 		}
-		return hitchConnection != null && hookupConnection != null;
+		return hitchConnection != null && hookupConnection != null && towedVehicle != towingVehicle;
 	}
 	
 	public IWrapperNBT save(IWrapperNBT data){
