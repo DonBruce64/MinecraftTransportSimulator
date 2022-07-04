@@ -28,6 +28,7 @@ import minecrafttransportsimulator.jsondefs.JSONParticle;
 import minecrafttransportsimulator.jsondefs.JSONSound;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONText;
+import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
@@ -73,6 +74,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 	private final Map<JSONParticle, AnimationSwitchbox> particleActiveSwitchboxes = new HashMap<JSONParticle, AnimationSwitchbox>();
 	private final Map<JSONParticle, AnimationSwitchbox> particleSpawningSwitchboxes = new HashMap<JSONParticle, AnimationSwitchbox>();
 	private final Map<JSONParticle, Long> lastTickParticleSpawned = new HashMap<JSONParticle, Long>();
+	private final Map<JSONVariableModifier, VariableModifierSwitchbox> variableModiferSwitchboxes = new LinkedHashMap<JSONVariableModifier, VariableModifierSwitchbox>();
 	
 	/**Maps animated (model) object names to their JSON bits for this entity.  Used for model lookups as the same model might be used on multiple JSONs,
 	 * and iterating through the entire rendering section of the JSON is time-consuming.**/
@@ -252,6 +254,17 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 					text.put(definition.rendering.textObjects.get(i), definition.rendering.textObjects.get(i).defaultText);
 				}
 			}
+		}
+		
+		//Add variable modifiers.
+		if(definition.variableModifiers != null){
+			variableModiferSwitchboxes.clear();
+			for(JSONVariableModifier modifier : definition.variableModifiers){
+				if(modifier.animations != null){
+					variableModiferSwitchboxes.put(modifier,  new VariableModifierSwitchbox(this, modifier.animations));
+				}
+			}
+			
 		}
 	}
 	
@@ -820,6 +833,65 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 	 */
 	public boolean isVariableActive(String variable){
 		return variables.containsKey(variable);
+	}
+
+	 /**
+	 * Helper method for variable modification.
+	 */
+	protected float adjustVariable(JSONVariableModifier modifier, float currentValue){
+		float modifiedValue = modifier.setValue != 0 ? modifier.setValue : currentValue + modifier.addValue;
+		VariableModifierSwitchbox switchbox = variableModiferSwitchboxes.get(modifier);
+		if(switchbox != null){
+			switchbox.modifiedValue = modifiedValue;
+			if(switchbox.runSwitchbox(0, true)){
+				modifiedValue = switchbox.modifiedValue;
+			}else{
+				return currentValue;
+			}
+		}
+		if(modifier.minValue != 0 || modifier.maxValue != 0){
+			if(modifiedValue < modifier.minValue){
+				return modifier.minValue;
+			}else if(modifiedValue > modifier.maxValue){
+				return modifier.maxValue;
+			}
+		}
+		return modifiedValue;
+	}
+	
+	/**
+	 *  Custom variable modifier switchbox class.
+	 */
+	private static class VariableModifierSwitchbox extends AnimationSwitchbox{
+		private float modifiedValue = 0;
+		
+		private VariableModifierSwitchbox(AEntityD_Definable<?> entity, List<JSONAnimationDefinition> animations){
+			super(entity, animations, null);
+		}
+		
+		@Override
+		public void runTranslation(DurationDelayClock clock, float partialTicks){
+			if(clock.animation.axis.x != 0){
+				modifiedValue *= entity.getAnimatedVariableValue(clock, clock.animation.axis.x, partialTicks);
+			}else if(clock.animation.axis.y != 0){
+				modifiedValue += entity.getAnimatedVariableValue(clock, clock.animation.axis.y, partialTicks);
+			}else{
+				modifiedValue = (float) (entity.getAnimatedVariableValue(clock, clock.animation.axis.z, partialTicks));
+			}
+		}
+	}
+	
+    /**
+	 * Called to update the variable modifiers for this entity.
+	 * By default, this will get any variables that {@link #getVariable(String)}
+	 * returns, but can be extended to do other variables specific to the entity.
+	 */
+	protected void updateVariableModifiers(){
+		if(definition.variableModifiers != null){
+			for(JSONVariableModifier modifier : definition.variableModifiers){
+				setVariable(modifier.variable, adjustVariable(modifier, (float) getVariable(modifier.variable)));
+			}
+		}
 	}
 	
 	@Override

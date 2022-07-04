@@ -4,6 +4,7 @@ import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
+import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
@@ -23,6 +24,7 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor>{
 	
 	public static final String CLICKED_VARIABLE = "clicked";
 	public static final String ACTIVATED_VARIABLE = "activated";
+	private float lightLevel;
 	
 	private static RenderDecor renderer;
 	
@@ -47,6 +49,11 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor>{
 	
 	@Override
 	public void update(){
+		//Need to do this before updating as these require knowledge of prior states.
+		//If we call super, then it will overwrite the prior state.
+		//We update both our variables and our part variables here.
+		updateVariableModifiers();		
+		
 		super.update();
 		//Reset clicked state.
 		setVariable(CLICKED_VARIABLE, 0);
@@ -83,7 +90,22 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor>{
 	
 	@Override
 	public float getLightProvided(){
-    	return definition.decor.lightLevel;
+    	return lightLevel;
+	}
+	
+	@Override
+	protected void updateVariableModifiers(){
+		lightLevel = definition.decor.lightLevel;
+		
+		//Adjust current variables to modifiers, if any exist.
+		if(definition.variableModifiers != null){
+			for(JSONVariableModifier modifier : definition.variableModifiers){
+				switch(modifier.variable){
+					case "lightLevel" : lightLevel = adjustVariable(modifier, lightLevel); break;
+					default : setVariable(modifier.variable, adjustVariable(modifier, (float) getVariable(modifier.variable))); break;
+				}
+			}
+		}
 	}
 	
 	@Override

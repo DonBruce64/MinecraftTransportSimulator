@@ -26,7 +26,6 @@ import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup;
 import minecrafttransportsimulator.jsondefs.JSONInstrument.JSONInstrumentComponent;
 import minecrafttransportsimulator.jsondefs.JSONInstrumentDefinition;
-import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
@@ -35,7 +34,6 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
-import minecrafttransportsimulator.rendering.components.DurationDelayClock;
 import minecrafttransportsimulator.rendering.components.RenderableObject;
 import minecrafttransportsimulator.rendering.instances.RenderInstrument.InstrumentSwitchbox;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -114,9 +112,6 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 	
 	/**Maps instrument slot transforms to their respective switchboxes.**/
 	public final Map<JSONInstrumentDefinition, AnimationSwitchbox> instrumentSlotSwitchboxes = new LinkedHashMap<JSONInstrumentDefinition, AnimationSwitchbox>();
-	
-	/**Maps variable modifers to their respective switchboxes.**/
-	public final Map<JSONVariableModifier, VariableModifierSwitchbox> variableModiferSwitchboxes = new LinkedHashMap<JSONVariableModifier, VariableModifierSwitchbox>();
 	
 	/**Locked state.  Locked entities should not be able to be interacted with except by entities riding them,
 	 * their owners, or OP players (server admins).
@@ -241,17 +236,6 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 				}
 			}
 		}
-		
-		//Add variable modifiers.
-		if(definition.variableModifiers != null){
-			variableModiferSwitchboxes.clear();
-			for(JSONVariableModifier modifier : definition.variableModifiers){
-				if(modifier.animations != null){
-					variableModiferSwitchboxes.put(modifier,  new VariableModifierSwitchbox(this, modifier.animations));
-				}
-			}
-			
-		}
 	}
 	
 	@Override
@@ -334,65 +318,6 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
     	}
     	encompassingBox.updateToEntity(this, null);
     }
-    
-    /**
-	 * Called to update the variable modifiers for this entity.
-	 * By default, this will get any variables that {@link #getVariable(String)}
-	 * returns, but can be extended to do other variables specific to the entity.
-	 */
-	protected void updateVariableModifiers(){
-		if(definition.variableModifiers != null){
-			for(JSONVariableModifier modifier : definition.variableModifiers){
-				setVariable(modifier.variable, adjustVariable(modifier, (float) getVariable(modifier.variable)));
-			}
-		}
-	}
-	
-	 /**
-	 * Helper method for variable modification.
-	 */
-	protected float adjustVariable(JSONVariableModifier modifier, float currentValue){
-		float modifiedValue = modifier.setValue != 0 ? modifier.setValue : currentValue + modifier.addValue;
-		VariableModifierSwitchbox switchbox = variableModiferSwitchboxes.get(modifier);
-		if(switchbox != null){
-			switchbox.modifiedValue = modifiedValue;
-			if(switchbox.runSwitchbox(0, true)){
-				modifiedValue = switchbox.modifiedValue;
-			}else{
-				return currentValue;
-			}
-		}
-		if(modifier.minValue != 0 || modifier.maxValue != 0){
-			if(modifiedValue < modifier.minValue){
-				return modifier.minValue;
-			}else if(modifiedValue > modifier.maxValue){
-				return modifier.maxValue;
-			}
-		}
-		return modifiedValue;
-	}
-	
-	/**
-	 *  Custom variable modifier switchbox class.
-	 */
-	private static class VariableModifierSwitchbox extends AnimationSwitchbox{
-		private float modifiedValue = 0;
-		
-		private VariableModifierSwitchbox(AEntityD_Definable<?> entity, List<JSONAnimationDefinition> animations){
-			super(entity, animations, null);
-		}
-		
-		@Override
-		public void runTranslation(DurationDelayClock clock, float partialTicks){
-			if(clock.animation.axis.x != 0){
-				modifiedValue *= entity.getAnimatedVariableValue(clock, clock.animation.axis.x, partialTicks);
-			}else if(clock.animation.axis.y != 0){
-				modifiedValue += entity.getAnimatedVariableValue(clock, clock.animation.axis.y, partialTicks);
-			}else{
-				modifiedValue = (float) (entity.getAnimatedVariableValue(clock, clock.animation.axis.z, partialTicks));
-			}
-		}
-	}
 	
 	@Override
 	public void doPostUpdateLogic(){
