@@ -211,6 +211,12 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 							hitBoxes.put(delta.distanceTo(position), box);
 						}
 					}
+					for(BoundingBox box : entity.allBulletCollisionBoxes){
+						Point3D delta = box.getIntersectionPoint(position, endPoint); 
+						if(delta != null){
+							hitBoxes.put(delta.distanceTo(position), box);
+						}
+					}
 					
 					//If we hit at least one hitbox, do logic.
 					if(!hitBoxes.isEmpty()){

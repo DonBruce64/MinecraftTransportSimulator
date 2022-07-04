@@ -134,6 +134,9 @@ public abstract class ARenderEntityDefinable<RenderedEntity extends AEntityD_Def
 			for(BoundingBox box : interactable.interactionBoxes){
 				box.renderWireframe(entity, transform, null, null);
 			}
+			for(BoundingBox box : interactable.bulletCollisionBoxes){
+				box.renderWireframe(entity, transform, null, null);
+			}
 			if(interactable instanceof AEntityF_Multipart){
 				interactable.encompassingBox.renderWireframe(entity, transform, null, ColorRGB.WHITE);
 			}

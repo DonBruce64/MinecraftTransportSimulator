@@ -65,6 +65,10 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 	 * core {@link #boundingBox} for this entity.**/
 	public final Set<BoundingBox> interactionBoxes = new HashSet<BoundingBox>();
 	
+	/**List of bounding boxes that should be used for bullet collisions with this entity.
+	 * These can't be clicked by players, and can't be collided with.**/
+	public final Set<BoundingBox> bulletCollisionBoxes = new HashSet<BoundingBox>();
+	
 	/**Box that encompasses all boxes on this entity.  This can be used as a pre-check for collision operations
 	 * to check a single large box rather than multiple small ones to save processing power.**/
 	public final BoundingBox encompassingBox = new BoundingBox(new Point3D(), new Point3D(), 0, 0, 0, false);
@@ -271,6 +275,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
     	blockCollisionBoxes.clear();
     	entityCollisionBoxes.clear();
     	interactionBoxes.clear();
+    	bulletCollisionBoxes.clear();
     	
     	if(definition.collisionGroups != null){
 			for(JSONCollisionGroup groupDef : definition.collisionGroups){
@@ -298,9 +303,13 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 							box.updateToEntity(this, null);
 						}
 					}
-					entityCollisionBoxes.addAll(collisionBoxes);
-					if(!groupDef.isInterior && !ConfigSystem.settings.general.noclipVehicles.value){
-						blockCollisionBoxes.addAll(collisionBoxes);
+					if(groupDef.isBulletHitbox) {
+						bulletCollisionBoxes.addAll(collisionBoxes);
+					}else {
+						if(!groupDef.isInterior && !ConfigSystem.settings.general.noclipVehicles.value){
+							blockCollisionBoxes.addAll(collisionBoxes);
+						}
+						entityCollisionBoxes.addAll(collisionBoxes);	
 					}
 				}
 			}
@@ -312,6 +321,11 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
     	encompassingBox.heightRadius = 0;
     	encompassingBox.depthRadius = 0;
     	for(BoundingBox box : interactionBoxes){
+    		encompassingBox.widthRadius = (float) Math.max(encompassingBox.widthRadius, Math.abs(box.globalCenter.x - position.x + box.widthRadius));
+    		encompassingBox.heightRadius = (float) Math.max(encompassingBox.heightRadius, Math.abs(box.globalCenter.y - position.y + box.heightRadius));
+    		encompassingBox.depthRadius = (float) Math.max(encompassingBox.depthRadius, Math.abs(box.globalCenter.z - position.z + box.depthRadius));
+    	}
+    	for(BoundingBox box : bulletCollisionBoxes){
     		encompassingBox.widthRadius = (float) Math.max(encompassingBox.widthRadius, Math.abs(box.globalCenter.x - position.x + box.widthRadius));
     		encompassingBox.heightRadius = (float) Math.max(encompassingBox.heightRadius, Math.abs(box.globalCenter.y - position.y + box.heightRadius));
     		encompassingBox.depthRadius = (float) Math.max(encompassingBox.depthRadius, Math.abs(box.globalCenter.z - position.z + box.depthRadius));

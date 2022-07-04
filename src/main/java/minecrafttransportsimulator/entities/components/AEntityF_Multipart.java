@@ -74,6 +74,9 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 	/**List of interaction boxes, plus all part boxes included.**/
 	public final List<BoundingBox> allInteractionBoxes = new ArrayList<BoundingBox>();
 	
+	/**List of bullet boxes, plus all part boxes included.**/
+	public final List<BoundingBox> allBulletCollisionBoxes = new ArrayList<BoundingBox>();
+	
 	/**Map of part slot boxes.  Key is the box, value is the definition for that slot.**/
 	public final Map<BoundingBox, JSONPartDefinition> allPartSlotBoxes = new HashMap<BoundingBox, JSONPartDefinition>();
 	
@@ -832,6 +835,8 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 		allBlockCollisionBoxes.addAll(blockCollisionBoxes);
 		allInteractionBoxes.clear();
 		allInteractionBoxes.addAll(interactionBoxes);
+		allBulletCollisionBoxes.clear();
+		allBulletCollisionBoxes.addAll(bulletCollisionBoxes);
 		
 		//Only add active slots on clients, but all slots on servers.
 		//The only exception is if the player has a scanner, in which case we add them all to allow it to work.
@@ -845,6 +850,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 		for(APart part : parts){
 			allEntityCollisionBoxes.addAll(part.entityCollisionBoxes);
 			allBlockCollisionBoxes.addAll(part.blockCollisionBoxes);
+			allBulletCollisionBoxes.addAll(part.bulletCollisionBoxes);
 			
 			//Part interaction boxes are updated by the part, so we don't need to update those.
 			//Rather, the part will update them on it's own update call.

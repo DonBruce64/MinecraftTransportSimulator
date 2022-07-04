@@ -87,6 +87,9 @@ public class BoundingBox{
 			if(definition.variableName != null){
 				//Green for boxes that activate variables..
 				boxColor = ColorRGB.GREEN;
+			}else if(groupDef != null && groupDef.isBulletHitbox){
+				//Orange for bullet collisions.
+				boxColor = ColorRGB.ORANGE;
 			}else if(groupDef != null && !groupDef.isInterior){
 				//Red for block collisions.
 				boxColor = ColorRGB.RED;
