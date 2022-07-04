@@ -71,7 +71,6 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun>{
 				this.player = foundPlayer;
 			}else{
 				this.player = null;
-				remove();
 				return;
 			}
 		}
