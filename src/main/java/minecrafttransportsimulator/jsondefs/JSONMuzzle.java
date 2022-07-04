@@ -13,7 +13,6 @@ public class JSONMuzzle {
 	@JSONDescription("The rotation of this muzzle.  Allows for slight toe-in on barrels.")
 	public RotationMatrix rot;
 	
-	@JSONRequired
 	@JSONDescription("This is the point this muzzle will rotate about when the gun's pitch is applied.  Used to define a point of rotation for things like tank barrels.  If the barrel is part of, and rotates, with the gun, don't include this.")
 	public Point3D center;
 }

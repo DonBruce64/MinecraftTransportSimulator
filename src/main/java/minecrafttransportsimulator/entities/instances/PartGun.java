@@ -674,7 +674,7 @@ public class PartGun extends APart{
 
 		//Set position.
 		bulletPosition.set(muzzle.pos);
-		if(!muzzle.center.isZero()) {
+		if(muzzle.center != null) {
 			pitchMuzzleRotation.setToZero().rotateX(internalOrientation.angles.x);
 			yawMuzzleRotation.setToZero().rotateY(internalOrientation.angles.y);
 			bulletPosition.subtract(muzzle.center).rotate(pitchMuzzleRotation).add(muzzle.center).rotate(yawMuzzleRotation);
