@@ -48,9 +48,10 @@ import minecrafttransportsimulator.systems.PackParserSystem;
  */
 public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteractableEntity> extends AEntityD_Definable<JSONDefinition>{
 	
-	/**List of boxes generated from JSON.  These are stored here as objects since they may not be
-	 * added to their respective maps if they aren't active.**/
-	public final Map<JSONCollisionGroup, Set<BoundingBox>> definitionCollisionBoxes = new HashMap<JSONCollisionGroup, Set<BoundingBox>>();
+	/**List of boxes generated from JSON.  These are stored here as objects to prevent the need
+	 * to create them every time we want to parse out hitboxes.  This allows parsing them into sub-sets,
+	 * and querying the entire list to find the hitbox for a given group and index.**/
+	public final List<List<BoundingBox>> definitionCollisionBoxes = new ArrayList<List<BoundingBox>>();
 	private final Map<JSONCollisionGroup, AnimationSwitchbox> collisionSwitchboxes = new HashMap<JSONCollisionGroup, AnimationSwitchbox>();
 	
 	/**List of bounding boxes that should be used to check collision of this entity with blocks.**/
@@ -193,11 +194,11 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 			definitionCollisionBoxes.clear();
 			collisionSwitchboxes.clear();
 			for(JSONCollisionGroup groupDef : definition.collisionGroups){
-				Set<BoundingBox> boxes = new HashSet<BoundingBox>();
+				List<BoundingBox> boxes = new ArrayList<BoundingBox>();
 				for(JSONCollisionBox boxDef : groupDef.collisions){
 					boxes.add(new BoundingBox(boxDef, groupDef));
 				}
-				definitionCollisionBoxes.put(groupDef, boxes);
+				definitionCollisionBoxes.add(boxes);
 				if(groupDef.animations != null || groupDef.applyAfter != null){
 					List<JSONAnimationDefinition> animations = new ArrayList<JSONAnimationDefinition>();
 					if(groupDef.animations != null){
@@ -278,8 +279,9 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
     	bulletCollisionBoxes.clear();
     	
     	if(definition.collisionGroups != null){
-			for(JSONCollisionGroup groupDef : definition.collisionGroups){
-				Set<BoundingBox> collisionBoxes = definitionCollisionBoxes.get(groupDef);
+			for(int i=0; i<definition.collisionGroups.size(); ++i){
+				JSONCollisionGroup groupDef = definition.collisionGroups.get(i);
+				List<BoundingBox> collisionBoxes = definitionCollisionBoxes.get(i);
 				if(collisionBoxes == null){
 					//This can only happen if we hotloaded the definition due to devMode.
 					//Flag us as needing a reset, and then bail to prevent further collision checks.
@@ -303,7 +305,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 							box.updateToEntity(this, null);
 						}
 					}
-					if(groupDef.isBulletHitbox) {
+					if(groupDef.isForBullets) {
 						bulletCollisionBoxes.addAll(collisionBoxes);
 					}else {
 						if(!groupDef.isInterior && !ConfigSystem.settings.general.noclipVehicles.value){
@@ -532,29 +534,23 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 	 *  applications, which means one of those may have made this entity invalid.
 	 */
 	public void attack(Damage damage){
-		if(!damage.isWater){ 
-			if(definition.collisionGroups != null){
-				for(JSONCollisionGroup groupDef : definition.collisionGroups){
-					Set<BoundingBox> collisionBoxes = definitionCollisionBoxes.get(groupDef);
-					if(collisionBoxes.contains(damage.box)){
-						if(groupDef.health != 0){
-							String variableName = "collision_" + (definition.collisionGroups.indexOf(groupDef) + 1) + "_damage";
-							double currentDamage = getVariable(variableName) + damage.amount;
-							if(currentDamage > groupDef.health){
-								double amountActuallyNeeded = damage.amount - (currentDamage - groupDef.health);
-								currentDamage = groupDef.health;
-								InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, variableName, amountActuallyNeeded));
-							}else{
-								InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, variableName, damage.amount));
-							}
-							setVariable(variableName, currentDamage);
-							return;
-						}
-					}
+		if(!damage.isWater){
+			//Damage the group if it exists and has health defined.
+			if(damage.box.groupDef != null && damage.box.groupDef.health != 0) {
+				String variableName = "collision_" + (definition.collisionGroups.indexOf(damage.box.groupDef) + 1) + "_damage";
+				double currentDamage = getVariable(variableName) + damage.amount;
+				if(currentDamage > damage.box.groupDef.health){
+					double amountActuallyNeeded = damage.amount - (currentDamage - damage.box.groupDef.health);
+					currentDamage = damage.box.groupDef.health;
+					InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, variableName, amountActuallyNeeded));
+				}else{
+					InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, variableName, damage.amount));
 				}
+				setVariable(variableName, currentDamage);
+				return;
 			}
 			
-			//Didn't hit a collision box or found one with no health defined 
+			//Didn't hit a collision group with health defined, damage ourselves. 
 			damageAmount += damage.amount;
 			if(damageAmount > definition.general.health){
 				double amountActuallyNeeded = damage.amount - (damageAmount - definition.general.health);

@@ -41,6 +41,7 @@ public class BoundingBox{
 	public double heightRadius;
 	public double depthRadius;
 	public final boolean collidesWithLiquids;
+	public final JSONCollisionGroup groupDef;
 	public final JSONCollisionBox definition;
 	
 	private static final Point3D helperPoint = new Point3D();
@@ -80,6 +81,7 @@ public class BoundingBox{
 		this.heightRadius = heightRadius;
 		this.depthRadius = depthRadius;
 		this.collidesWithLiquids = collidesWithLiquids;
+		this.groupDef = groupDef;
 		this.definition = definition;
 		
 		final ColorRGB boxColor;
@@ -87,7 +89,7 @@ public class BoundingBox{
 			if(definition.variableName != null){
 				//Green for boxes that activate variables..
 				boxColor = ColorRGB.GREEN;
-			}else if(groupDef != null && groupDef.isBulletHitbox){
+			}else if(groupDef != null && groupDef.isForBullets){
 				//Orange for bullet collisions.
 				boxColor = ColorRGB.ORANGE;
 			}else if(groupDef != null && !groupDef.isInterior){

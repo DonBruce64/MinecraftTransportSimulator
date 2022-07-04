@@ -24,6 +24,9 @@ public class JSONCollisionBox{
 	@JSONDescription("Like normal armor thickness, but used only if a bullet is a HEAT bullet.")
     public float heatArmorThickness;
 	
+	@JSONDescription("How much to multiply the damage for bullets that hit this hitbox by.  Is 1.0 if not specified.")
+    public float damageMultiplier;
+	
 	@JSONDescription("If set, clicking this collision box will do variable operations.  The exact operation depends on the variableType and variableValue.  Useful for doors, though can be used for any toggle-able variable, not just custom doors.")
     public String variableName;
 	

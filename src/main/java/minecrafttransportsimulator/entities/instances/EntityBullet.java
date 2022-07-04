@@ -48,6 +48,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 	private PartEngine engineTargeted;
 	private IWrapperEntity externalEntityTargeted;
 	private HitType lastHit;
+	public Damage currentDamage;
 	
 	private static RenderBullet renderer;
 	
@@ -173,10 +174,10 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 		
 		//Now that we have an accurate motion, check for collisions.
 		//First get a damage object.
-		Damage damage = new Damage((velocity/initialVelocity)*definition.bullet.damage*ConfigSystem.settings.damage.bulletDamageFactor.value, boundingBox, gun, null, null);
+		currentDamage = new Damage((velocity/initialVelocity)*definition.bullet.damage*ConfigSystem.settings.damage.bulletDamageFactor.value, boundingBox, gun, null, null);
 		
 		//Check for collided external entities and attack them.
-		List<IWrapperEntity> attackedEntities = world.attackEntities(damage, motion);
+		List<IWrapperEntity> attackedEntities = world.attackEntities(currentDamage, motion);
 		if(!attackedEntities.isEmpty()){
 			for(IWrapperEntity entity : attackedEntities){
 				//Check to make sure we don't hit our controller.
