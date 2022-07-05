@@ -27,9 +27,9 @@ public class PacketEntityBulletHitEntity extends PacketEntityBulletHit{
 
 	public PacketEntityBulletHitEntity(EntityBullet bullet, BoundingBox box, AEntityE_Interactable<?> hitEntity){
 		super(bullet, box.globalCenter);
-		this.hitboxGroupIndex = hitEntity.definition.collisionGroups.indexOf(box.groupDef);
-		this.hitboxIndex = box.groupDef.collisions.indexOf(box.definition);
-		this.damageAmount = bullet.currentDamage.amount*(box.definition.damageMultiplier != 0 ? box.definition.damageMultiplier : 1);
+		this.hitboxGroupIndex = box.groupDef != null ? hitEntity.definition.collisionGroups.indexOf(box.groupDef) : -1;
+		this.hitboxIndex = box.definition != null ? box.groupDef.collisions.indexOf(box.definition) : -1;
+		this.damageAmount = bullet.currentDamage.amount*(box.definition != null && box.definition.damageMultiplier != 0 ? box.definition.damageMultiplier : 1);
 		this.hitEntityID = hitEntity.uniqueUUID;
 		this.controllerEntityID = bullet.gun.lastController != null ? bullet.gun.lastController.getID() : null;
 	}
@@ -62,7 +62,7 @@ public class PacketEntityBulletHitEntity extends PacketEntityBulletHit{
 			AEntityE_Interactable<?> entityHit = world.getEntity(hitEntityID);
 			if(entityHit != null){
 				//Create damage object and attack the entity.
-				BoundingBox hitBox = entityHit.definitionCollisionBoxes.get(hitboxGroupIndex).get(hitboxIndex);;
+				BoundingBox hitBox = hitboxGroupIndex != -1 ? entityHit.definitionCollisionBoxes.get(hitboxGroupIndex).get(hitboxIndex) : entityHit.boundingBox;
 				IWrapperEntity attacker = controllerEntityID != null ? world.getExternalEntity(controllerEntityID) : null;
 				LanguageEntry language = attacker != null ? JSONConfigLanguage.DEATH_BULLET_PLAYER : JSONConfigLanguage.DEATH_BULLET_NULL;
 				Damage damage = new Damage(damageAmount, hitBox, null, attacker, language);

@@ -225,9 +225,9 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 						Iterator<BoundingBox> hitBoxIterator = hitBoxes.values().iterator();
 						while(hitBoxIterator.hasNext()){
 							BoundingBox hitBox = hitBoxIterator.next();
-							double armorThickness = definition.bullet.isHeat && hitBox.definition.heatArmorThickness != 0 ? hitBox.definition.heatArmorThickness : hitBox.definition.armorThickness;
+							double armorThickness = hitBox.definition != null ? (definition.bullet.isHeat && hitBox.definition.heatArmorThickness != 0 ? hitBox.definition.heatArmorThickness : hitBox.definition.armorThickness) : 0;
 							double penetrationPotential = definition.bullet.isHeat ? definition.bullet.armorPenetration : definition.bullet.armorPenetration*velocity/initialVelocity;
-							if(hitBox.definition != null && armorThickness > 0){
+							if(armorThickness > 0){
 								armorPenetrated += armorThickness;
 								if(armorPenetrated > penetrationPotential){
 									//Hit too much armor.  Don't do anything except spawn explosions.
