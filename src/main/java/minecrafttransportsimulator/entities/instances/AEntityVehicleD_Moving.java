@@ -416,10 +416,6 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 				brakingFactor += 0.15D*brakingPower*groundDeviceCollective.getNumberBoxesInLiquid();
 			}
 		}
-		
-		//Get any contributions from liquid boxes that aren't in liquids.
-		brakingFactor += 2.0F*groundDeviceCollective.getNumberCollidedLiquidBoxes();
-		
 		return brakingFactor;
 	}
 	

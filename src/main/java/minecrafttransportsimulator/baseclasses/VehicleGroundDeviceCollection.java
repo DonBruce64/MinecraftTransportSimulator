@@ -105,26 +105,6 @@ public class VehicleGroundDeviceCollection{
 	}
 	
 	/**
-	 * Gets the number of liquid boxes that are collided with the ground.
-	 */
-	public int getNumberCollidedLiquidBoxes(){
-		int count = 0;
-		if(frontLeftGDB.isGroundedLiquid){
-			++count;
-		}
-		if(frontRightGDB.isGroundedLiquid){
-			++count;
-		}
-		if(rearLeftGDB.isGroundedLiquid){
-			++count;
-		}
-		if(rearRightGDB.isGroundedLiquid){
-			++count;
-		}
-		return count;
-	}
-	
-	/**
 	 * Gets the number of boxes in liquid.  Only valid if the box is allowed
 	 * to collide with liquids.
 	 */
