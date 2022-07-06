@@ -469,7 +469,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 					rotation.angles.z = orientation.angles.z;
 					rotation.updateToAngles();
 				}
-				towedByConnection.hookupCurrentPosition.set(towedByConnection.hookupConnection.pos).rotate(rotation).add(towedByConnection.towedEntity.position);
+				towedByConnection.hookupCurrentPosition.set(towedByConnection.hookupConnection.pos).multiply(towedByConnection.towedEntity.scale).rotate(rotation).add(towedByConnection.towedEntity.position);
 			}else{
 				//Need to apply both motion to move the trailer, and yaw to adjust the trailer's angle relative to the truck.
 				//Yaw is applied based on the current and next position of the truck's hookup.
@@ -490,7 +490,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 				}
 				rotation.angles.set(0, rotationDelta, 0);
 				rotation.updateToAngles();
-				towedByConnection.hookupCurrentPosition.set(towedByConnection.hookupConnection.pos).rotate(towedByConnection.towedEntity.orientation).rotate(rotation).add(towedByConnection.towedEntity.position);
+				towedByConnection.hookupCurrentPosition.set(towedByConnection.hookupConnection.pos).multiply(towedByConnection.towedEntity.scale).rotate(towedByConnection.towedEntity.orientation).rotate(rotation).add(towedByConnection.towedEntity.position);
 			}
 			//Now get positional delta.  This assumes perfectly-aligned orientation.				
 			motion.set(towedByConnection.hitchCurrentPosition).subtract(towedByConnection.hookupCurrentPosition).scale(1/speedFactor);

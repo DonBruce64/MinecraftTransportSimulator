@@ -201,7 +201,7 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
 			world.beginProfiling("TowedEntities", true);
 			for(TowingConnection connection : towingConnections){
 				connection.hitchPriorPosition.set(connection.hitchCurrentPosition);
-				connection.hitchCurrentPosition.set(connection.hitchConnection.pos).rotate(connection.towingEntity.orientation).add(connection.towingEntity.position);
+				connection.hitchCurrentPosition.set(connection.hitchConnection.pos).multiply(connection.towingEntity.scale).rotate(connection.towingEntity.orientation).add(connection.towingEntity.position);
 				connection.towedVehicle.update();
 				connection.towedVehicle.doPostUpdateLogic();
 			}
