@@ -27,7 +27,7 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 public class InterfaceLoader{
 	public static final String MODID = "mts";
 	public static final String MODNAME = "Immersive Vehicles (MTS)";
-	public static final String MODVER = "21.3.0-BETA32";
+	public static final String MODVER = "21.3.0-BETA33";
 	public static Logger logger;
 	
 	@Instance(MODID)
@@ -90,7 +90,7 @@ public class InterfaceLoader{
 			ConfigSystem.settings.fuel.lastLoadedFluids = InterfaceManager.clientInterface.getAllFluidNames();
 			
 			//Also diable playerTweaks if some known-problematic mods are present.
-			if(InterfaceManager.coreInterface.isModPresent("tails") || InterfaceManager.coreInterface.isModPresent("obfuscate")) {
+			if(InterfaceManager.coreInterface.isModPresent("tails") || InterfaceManager.coreInterface.isModPresent("obfuscate") || InterfaceManager.coreInterface.isModPresent("mobends")) {
 				ConfigSystem.client.renderingSettings.playerTweaks.value = false;
 			}
 			
