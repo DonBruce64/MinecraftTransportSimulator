@@ -26,16 +26,21 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	//Aileron.
 	@DerivedValue
+	public double aileronInput;
+	@DerivedValue
 	public double aileronAngle;
 	@DerivedValue
 	public double aileronTrim;
 	public static final double MAX_AILERON_ANGLE = 25;
 	public static final double MAX_AILERON_TRIM = 10;
 	public static final double AILERON_DAMPEN_RATE = 0.6;
+	public static final String AILERON_INPUT_VARIABLE = "input_aileron";
 	public static final String AILERON_VARIABLE = "aileron";
 	public static final String AILERON_TRIM_VARIABLE = "trim_aileron";
 	
 	//Elevator.
+	@DerivedValue
+	public double elevatorInput;
 	@DerivedValue
 	public double elevatorAngle;
 	@DerivedValue
@@ -43,10 +48,13 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	public static final double MAX_ELEVATOR_ANGLE = 25;
 	public static final double MAX_ELEVATOR_TRIM = 10;
 	public static final double ELEVATOR_DAMPEN_RATE = 0.6;
+	public static final String ELEVATOR_INPUT_VARIABLE = "input_elevator";
 	public static final String ELEVATOR_VARIABLE = "elevator";
 	public static final String ELEVATOR_TRIM_VARIABLE = "trim_elevator";
 	
 	//Rudder.
+	@DerivedValue
+	public double rudderInput;
 	@DerivedValue
 	public double rudderAngle;
 	@DerivedValue
@@ -54,6 +62,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	public static final double MAX_RUDDER_ANGLE = 45;
 	public static final double MAX_RUDDER_TRIM = 10;
 	public static final double RUDDER_DAMPEN_RATE = 2.0;
+	public static final String RUDDER_INPUT_VARIABLE = "input_rudder";
 	public static final String RUDDER_VARIABLE = "rudder";
 	public static final String RUDDER_TRIM_VARIABLE = "trim_rudder";
 	
@@ -149,11 +158,11 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 		sideVector.set(verticalVector.crossProduct(headingVector));
 		
 		//Parse out variables.
-		aileronAngle = getVariable(AILERON_VARIABLE);
+		aileronInput = getVariable(AILERON_INPUT_VARIABLE);
 		aileronTrim = getVariable(AILERON_TRIM_VARIABLE);
-		elevatorAngle = getVariable(ELEVATOR_VARIABLE);
+		elevatorInput = getVariable(ELEVATOR_INPUT_VARIABLE);
 		elevatorTrim = getVariable(ELEVATOR_TRIM_VARIABLE);
-		rudderAngle = getVariable(RUDDER_VARIABLE);
+		rudderInput = getVariable(RUDDER_INPUT_VARIABLE);
 		rudderTrim = getVariable(RUDDER_TRIM_VARIABLE);
 		autopilotSetting = getVariable(AUTOPILOT_VARIABLE);
 		flapDesiredAngle = getVariable(FLAPS_VARIABLE);
@@ -198,22 +207,22 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	
 	@Override
 	protected double getSteeringAngle(){
-		return -rudderAngle/(float)MAX_RUDDER_ANGLE;
+		return -rudderInput/(float)MAX_RUDDER_ANGLE;
 	}
 	
 	@Override
 	protected void addToSteeringAngle(float degrees){
 		//Invert the degrees, as rudder is inverted from normal steering.
 		double delta = 0;
-		if(rudderAngle - degrees > MAX_RUDDER_ANGLE){
-			delta = MAX_RUDDER_ANGLE - rudderAngle;
-		}else if(rudderAngle - degrees < -MAX_RUDDER_ANGLE){
-			delta = -MAX_RUDDER_ANGLE - rudderAngle;
+		if(rudderInput - degrees > MAX_RUDDER_ANGLE){
+			delta = MAX_RUDDER_ANGLE - rudderInput;
+		}else if(rudderInput - degrees < -MAX_RUDDER_ANGLE){
+			delta = -MAX_RUDDER_ANGLE - rudderInput;
 		}else{
 			delta = -degrees;
 		}
-		setVariable(RUDDER_VARIABLE, rudderAngle + delta);
-		InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, RUDDER_VARIABLE, delta));
+		setVariable(RUDDER_INPUT_VARIABLE, rudderInput + delta);
+		InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, RUDDER_INPUT_VARIABLE, delta));
 	}
 	
 	@Override
@@ -230,6 +239,9 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 		currentOverSteer = definition.motorized.overSteer;
 		currentUnderSteer = definition.motorized.underSteer;
 		currentAxleRatio = definition.motorized.axleRatio;
+		aileronAngle = aileronInput;
+		elevatorAngle = elevatorInput;
+		rudderAngle = rudderInput;
 		
 		//Adjust current variables to modifiers, if any exist.
 		if(definition.variableModifiers != null){
@@ -247,10 +259,18 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 					case "overSteer" : currentOverSteer = adjustVariable(modifier, currentOverSteer); break;
 					case "underSteer" : currentUnderSteer = adjustVariable(modifier, currentUnderSteer); break;
 					case "axleRatio" : currentAxleRatio = adjustVariable(modifier, currentAxleRatio); break;
+					case AILERON_VARIABLE : aileronAngle = adjustVariable(modifier, (float) aileronAngle); break;
+					case ELEVATOR_VARIABLE : elevatorAngle = adjustVariable(modifier, (float) elevatorAngle); break;
+					case RUDDER_VARIABLE : rudderAngle = adjustVariable(modifier, (float) rudderAngle); break;
 					default : setVariable(modifier.variable, adjustVariable(modifier, (float) getVariable(modifier.variable))); break;
 				}
 			}
 		}
+		
+		//Set variables for control surfaces to their true derived and edited state.
+		setVariable(AILERON_VARIABLE, aileronAngle);
+		setVariable(ELEVATOR_VARIABLE, elevatorAngle);
+		setVariable(RUDDER_VARIABLE, rudderAngle);
 	}
 	
 	@Override
@@ -594,37 +614,37 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 		
 		//If we don't have a controller, reset control states to 0.
 		if(getController() == null && !lockedOnRoad){
-			if(aileronAngle > AILERON_DAMPEN_RATE){
-				setVariable(AILERON_VARIABLE, aileronAngle - AILERON_DAMPEN_RATE);
-				InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_VARIABLE, -AILERON_DAMPEN_RATE, 0, MAX_AILERON_ANGLE));
-			}else if(aileronAngle < -AILERON_DAMPEN_RATE){
-				setVariable(AILERON_VARIABLE, aileronAngle + AILERON_DAMPEN_RATE);
-				InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_VARIABLE, AILERON_DAMPEN_RATE, -MAX_AILERON_ANGLE, 0));
-			}else if(aileronAngle != 0){
-				setVariable(AILERON_VARIABLE, 0);
-				InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, AILERON_VARIABLE, 0));
+			if(aileronInput > AILERON_DAMPEN_RATE){
+				setVariable(AILERON_INPUT_VARIABLE, aileronInput - AILERON_DAMPEN_RATE);
+				InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_INPUT_VARIABLE, -AILERON_DAMPEN_RATE, 0, MAX_AILERON_ANGLE));
+			}else if(aileronInput < -AILERON_DAMPEN_RATE){
+				setVariable(AILERON_INPUT_VARIABLE, aileronInput + AILERON_DAMPEN_RATE);
+				InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_INPUT_VARIABLE, AILERON_DAMPEN_RATE, -MAX_AILERON_ANGLE, 0));
+			}else if(aileronInput != 0){
+				setVariable(AILERON_INPUT_VARIABLE, 0);
+				InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, AILERON_INPUT_VARIABLE, 0));
 			}
 			
-			if(elevatorAngle > ELEVATOR_DAMPEN_RATE){
-				setVariable(ELEVATOR_VARIABLE, elevatorAngle - ELEVATOR_DAMPEN_RATE);
-				InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_VARIABLE, -ELEVATOR_DAMPEN_RATE, 0, MAX_ELEVATOR_ANGLE));
-			}else if(elevatorAngle < -ELEVATOR_DAMPEN_RATE){
-				setVariable(ELEVATOR_VARIABLE, elevatorAngle + ELEVATOR_DAMPEN_RATE);
-				InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_VARIABLE, ELEVATOR_DAMPEN_RATE, -MAX_ELEVATOR_ANGLE, 0));
-			}else if(elevatorAngle != 0){
-				setVariable(ELEVATOR_VARIABLE, 0);
-				InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, ELEVATOR_VARIABLE, 0));
+			if(elevatorInput > ELEVATOR_DAMPEN_RATE){
+				setVariable(ELEVATOR_INPUT_VARIABLE, elevatorInput - ELEVATOR_DAMPEN_RATE);
+				InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_INPUT_VARIABLE, -ELEVATOR_DAMPEN_RATE, 0, MAX_ELEVATOR_ANGLE));
+			}else if(elevatorInput < -ELEVATOR_DAMPEN_RATE){
+				setVariable(ELEVATOR_INPUT_VARIABLE, elevatorInput + ELEVATOR_DAMPEN_RATE);
+				InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_INPUT_VARIABLE, ELEVATOR_DAMPEN_RATE, -MAX_ELEVATOR_ANGLE, 0));
+			}else if(elevatorInput != 0){
+				setVariable(ELEVATOR_INPUT_VARIABLE, 0);
+				InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, ELEVATOR_INPUT_VARIABLE, 0));
 			}
 			
-			if(rudderAngle > RUDDER_DAMPEN_RATE){
-				setVariable(RUDDER_VARIABLE, rudderAngle - RUDDER_DAMPEN_RATE);
-				InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, RUDDER_VARIABLE, -RUDDER_DAMPEN_RATE, 0, MAX_RUDDER_ANGLE));
-			}else if(rudderAngle < -RUDDER_DAMPEN_RATE){
-				setVariable(RUDDER_VARIABLE, rudderAngle + RUDDER_DAMPEN_RATE);
-				InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, RUDDER_VARIABLE, RUDDER_DAMPEN_RATE, -MAX_RUDDER_ANGLE, 0));
-			}else if(rudderAngle != 0){
-				setVariable(RUDDER_VARIABLE, 0);
-				InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, RUDDER_VARIABLE, 0));
+			if(rudderInput > RUDDER_DAMPEN_RATE){
+				setVariable(RUDDER_INPUT_VARIABLE, rudderInput - RUDDER_DAMPEN_RATE);
+				InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, RUDDER_INPUT_VARIABLE, -RUDDER_DAMPEN_RATE, 0, MAX_RUDDER_ANGLE));
+			}else if(rudderInput < -RUDDER_DAMPEN_RATE){
+				setVariable(RUDDER_INPUT_VARIABLE, rudderInput + RUDDER_DAMPEN_RATE);
+				InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, RUDDER_INPUT_VARIABLE, RUDDER_DAMPEN_RATE, -MAX_RUDDER_ANGLE, 0));
+			}else if(rudderInput != 0){
+				setVariable(RUDDER_INPUT_VARIABLE, 0);
+				InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, RUDDER_INPUT_VARIABLE, 0));
 			}
 		}
 	}

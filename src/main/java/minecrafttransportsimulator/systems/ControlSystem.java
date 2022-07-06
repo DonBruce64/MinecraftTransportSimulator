@@ -330,7 +330,7 @@ public final class ControlSystem{
 		}
 		
 		//Check yaw.
-		controlControlSurface(aircraft, ControlsJoystick.AIRCRAFT_YAW, ControlsKeyboard.AIRCRAFT_YAW_R, ControlsKeyboard.AIRCRAFT_YAW_L, ConfigSystem.client.controlSettings.steeringControlRate.value, EntityVehicleF_Physics.MAX_RUDDER_ANGLE, EntityVehicleF_Physics.RUDDER_VARIABLE, aircraft.rudderAngle);
+		controlControlSurface(aircraft, ControlsJoystick.AIRCRAFT_YAW, ControlsKeyboard.AIRCRAFT_YAW_R, ControlsKeyboard.AIRCRAFT_YAW_L, ConfigSystem.client.controlSettings.steeringControlRate.value, EntityVehicleF_Physics.MAX_RUDDER_ANGLE, EntityVehicleF_Physics.RUDDER_INPUT_VARIABLE, aircraft.rudderInput);
 		controlControlTrim(aircraft, ControlsJoystick.AIRCRAFT_TRIM_YAW_R, ControlsJoystick.AIRCRAFT_TRIM_YAW_L, EntityVehicleF_Physics.MAX_RUDDER_TRIM, EntityVehicleF_Physics.RUDDER_TRIM_VARIABLE);
 		
 		//Check is mouse yoke is enabled.  If so do controls by mouse rather than buttons.
@@ -339,17 +339,17 @@ public final class ControlSystem{
 				long mouseDelta = InterfaceManager.inputInterface.getMouseDelta();
 				double deltaAileron = ConfigSystem.client.controlSettings.flightControlRate.value*((short) (mouseDelta >> Integer.SIZE));
 				double deltaElevator = ConfigSystem.client.controlSettings.flightControlRate.value*((short) ((int) -mouseDelta));
-				InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableIncrement(aircraft, EntityVehicleF_Physics.AILERON_VARIABLE, deltaAileron, -EntityVehicleF_Physics.MAX_AILERON_ANGLE, EntityVehicleF_Physics.MAX_AILERON_ANGLE));
-				InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableIncrement(aircraft, EntityVehicleF_Physics.ELEVATOR_VARIABLE, deltaElevator, -EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE, EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE));
+				InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableIncrement(aircraft, EntityVehicleF_Physics.AILERON_INPUT_VARIABLE, deltaAileron, -EntityVehicleF_Physics.MAX_AILERON_ANGLE, EntityVehicleF_Physics.MAX_AILERON_ANGLE));
+				InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableIncrement(aircraft, EntityVehicleF_Physics.ELEVATOR_INPUT_VARIABLE, deltaElevator, -EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE, EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE));
 				
 			}
 		}else{
 			//Check pitch.
-			controlControlSurface(aircraft, ControlsJoystick.AIRCRAFT_PITCH, ControlsKeyboard.AIRCRAFT_PITCH_U, ControlsKeyboard.AIRCRAFT_PITCH_D, ConfigSystem.client.controlSettings.flightControlRate.value, EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE, EntityVehicleF_Physics.ELEVATOR_VARIABLE, aircraft.elevatorAngle);
+			controlControlSurface(aircraft, ControlsJoystick.AIRCRAFT_PITCH, ControlsKeyboard.AIRCRAFT_PITCH_U, ControlsKeyboard.AIRCRAFT_PITCH_D, ConfigSystem.client.controlSettings.flightControlRate.value, EntityVehicleF_Physics.MAX_ELEVATOR_ANGLE, EntityVehicleF_Physics.ELEVATOR_INPUT_VARIABLE, aircraft.elevatorInput);
 			controlControlTrim(aircraft, ControlsJoystick.AIRCRAFT_TRIM_PITCH_U, ControlsJoystick.AIRCRAFT_TRIM_PITCH_D, EntityVehicleF_Physics.MAX_ELEVATOR_TRIM, EntityVehicleF_Physics.ELEVATOR_TRIM_VARIABLE);
 			
 			//Check roll.
-			controlControlSurface(aircraft, ControlsJoystick.AIRCRAFT_ROLL, ControlsKeyboard.AIRCRAFT_ROLL_R, ControlsKeyboard.AIRCRAFT_ROLL_L, ConfigSystem.client.controlSettings.flightControlRate.value, EntityVehicleF_Physics.MAX_AILERON_ANGLE, EntityVehicleF_Physics.AILERON_VARIABLE, aircraft.aileronAngle);
+			controlControlSurface(aircraft, ControlsJoystick.AIRCRAFT_ROLL, ControlsKeyboard.AIRCRAFT_ROLL_R, ControlsKeyboard.AIRCRAFT_ROLL_L, ConfigSystem.client.controlSettings.flightControlRate.value, EntityVehicleF_Physics.MAX_AILERON_ANGLE, EntityVehicleF_Physics.AILERON_INPUT_VARIABLE, aircraft.aileronInput);
 			controlControlTrim(aircraft, ControlsJoystick.AIRCRAFT_TRIM_ROLL_R, ControlsJoystick.AIRCRAFT_TRIM_ROLL_L, EntityVehicleF_Physics.MAX_AILERON_TRIM, EntityVehicleF_Physics.AILERON_TRIM_VARIABLE);
 		}
 		
@@ -500,10 +500,10 @@ public final class ControlSystem{
 				if(EntityVehicleF_Physics.lockCameraToMovement && AGUIBase.activeInputGUI == null){
 					long mouseDelta = InterfaceManager.inputInterface.getMouseDelta();
 					double deltaRudder = ConfigSystem.client.controlSettings.flightControlRate.value*((short) (mouseDelta >> Integer.SIZE));
-					InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableIncrement(powered, EntityVehicleF_Physics.RUDDER_VARIABLE, deltaRudder, -EntityVehicleF_Physics.MAX_RUDDER_ANGLE, EntityVehicleF_Physics.MAX_RUDDER_ANGLE));
+					InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableIncrement(powered, EntityVehicleF_Physics.RUDDER_INPUT_VARIABLE, deltaRudder, -EntityVehicleF_Physics.MAX_RUDDER_ANGLE, EntityVehicleF_Physics.MAX_RUDDER_ANGLE));
 				}
 			}else{
-				controlControlSurface(powered, ControlsJoystick.CAR_TURN, ControlsKeyboard.CAR_TURN_R, ControlsKeyboard.CAR_TURN_L, ConfigSystem.client.controlSettings.steeringControlRate.value, EntityVehicleF_Physics.MAX_RUDDER_ANGLE, EntityVehicleF_Physics.RUDDER_VARIABLE, powered.rudderAngle);
+				controlControlSurface(powered, ControlsJoystick.CAR_TURN, ControlsKeyboard.CAR_TURN_R, ControlsKeyboard.CAR_TURN_L, ConfigSystem.client.controlSettings.steeringControlRate.value, EntityVehicleF_Physics.MAX_RUDDER_ANGLE, EntityVehicleF_Physics.RUDDER_INPUT_VARIABLE, powered.rudderInput);
 			}
 		}
 		
@@ -565,25 +565,25 @@ public final class ControlSystem{
 		//pressed direction for 2 seconds, or if we turn in the other direction.
 		//This only happens if the signals are set to automatic.  For manual signals, we let the player control them.
 		if(ConfigSystem.client.controlSettings.autoTrnSignals.value){
-			if(!powered.turningLeft && powered.rudderAngle < -20){
+			if(!powered.turningLeft && powered.rudderInput < -20){
 				powered.turningLeft = true;
 				powered.turningCooldown = 40;
 				InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(powered, EntityVehicleF_Physics.LEFTTURNLIGHT_VARIABLE));
 			}
-			if(!powered.turningRight && powered.rudderAngle > 20){
+			if(!powered.turningRight && powered.rudderInput > 20){
 				powered.turningRight = true;
 				powered.turningCooldown = 40;
 				InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(powered, EntityVehicleF_Physics.RIGHTTURNLIGHT_VARIABLE));
 			}
-			if(powered.turningLeft && (powered.rudderAngle > 0 || powered.turningCooldown == 0)){
+			if(powered.turningLeft && (powered.rudderInput > 0 || powered.turningCooldown == 0)){
 				powered.turningLeft = false;
 				InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(powered, EntityVehicleF_Physics.LEFTTURNLIGHT_VARIABLE));
 			}
-			if(powered.turningRight && (powered.rudderAngle < 0 || powered.turningCooldown == 0)){
+			if(powered.turningRight && (powered.rudderInput < 0 || powered.turningCooldown == 0)){
 				powered.turningRight = false;
 				InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(powered, EntityVehicleF_Physics.RIGHTTURNLIGHT_VARIABLE));
 			}
-			if(powered.velocity != 0 && powered.turningCooldown > 0 && powered.rudderAngle == 0){
+			if(powered.velocity != 0 && powered.turningCooldown > 0 && powered.rudderInput == 0){
 				--powered.turningCooldown;
 			}
 		}
