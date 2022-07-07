@@ -12,7 +12,7 @@ VERSTRING=${VERSTRING%%\"*}
 
 #Now that we have the version we need to inject it into the build.gradle file.
 echo "Configuring build.gradle for $VERPREFIX$VERSTRING"
-sed -i '19s/.*version.*/version = "'$VERPREFIX$VERSTRING'"/' build.gradle
+sed -i '16s/.*version.*/version = "'$VERPREFIX$VERSTRING'"/' build.gradle
 
 #Finally, build the mod.
 ./gradlew build --offline

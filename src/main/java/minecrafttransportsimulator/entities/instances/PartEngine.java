@@ -389,8 +389,10 @@ public class PartEngine extends APart{
 						}else if(vehicleOn.damageAmount == vehicleOn.definition.general.health){
 							stallEngine(Signal.DEAD_VEHICLE);
 							InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.DEAD_VEHICLE));
+						}else if(ConfigSystem.settings.general.engineDimensionWhitelist.value.isEmpty() ? ConfigSystem.settings.general.engineDimensionBlacklist.value.contains(world.getName()) : !ConfigSystem.settings.general.engineDimensionWhitelist.value.contains(world.getName())){
+							stallEngine(Signal.INVALID_DIMENSION);
+							InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.INVALID_DIMENSION));
 						}
-						
 					}
 				}
 				
@@ -762,7 +764,7 @@ public class PartEngine extends APart{
 		
 		//If we stalled due to not drowning, set internal fuel to play wind-down sounds.
 		if(world.isClient()){
-			if(!signal.equals(Signal.DROWN)){
+			if(signal != Signal.DROWN && signal != Signal.INVALID_DIMENSION){
 				internalFuel = 100;
 			}
 		}

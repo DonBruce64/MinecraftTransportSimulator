@@ -148,7 +148,7 @@ public class WrapperWorld extends AWrapperWorld{
 	
 	@Override
 	public String getName(){
-		return world.getWorldInfo().getWorldName();
+		return world.provider.getDimensionType().getName();
 	}
 		
 	@Override

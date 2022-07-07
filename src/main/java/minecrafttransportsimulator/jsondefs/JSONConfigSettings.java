@@ -2,8 +2,10 @@ package minecrafttransportsimulator.jsondefs;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import minecrafttransportsimulator.entities.instances.EntityFurnace;
@@ -46,7 +48,9 @@ public class JSONConfigSettings{
 		public JSONConfigEntry<Double> gravityFactor = new JSONConfigEntry<Double>(1.0D, "Factor for gravitational forces applied to vehicles.  Can be adjusted if you think cars are too 'floaty'.  Does not affect aircraft.");
 		public JSONConfigEntry<Double> engineSpeedTempFactor = new JSONConfigEntry<Double>(1.0D, "Factor for how RPM affects engine temp.  Higher values will make engines heat up quicker at higher RPMs.");
 		public JSONConfigEntry<Double> engineBiomeTempFactor = new JSONConfigEntry<Double>(1.0D, "Factor for how biome temp affects engine temp.  Higher values will make engines heat up quicker in hotter biomes.");
-		public JSONConfigEntry<Map<String, Double>> packVehicleScales = new JSONConfigEntry<Map<String, Double>>(new HashMap<String, Double>(), "Scale of all vheicles for this pack.  You probably won't want to change this, but if you do want the vehicles to be smaller for some reason, you can.");
+		public JSONConfigEntry<Set<String>> engineDimensionBlacklist = new JSONConfigEntry<Set<String>>(new HashSet<String>(), "Blacklist of dimension names where engines will be prevented from being started.  Can be used to disable vehicles in specific dimensions.  Think Galacticraft, where you don't want folks flying planes on the moon.");
+		public JSONConfigEntry<Set<String>> engineDimensionWhitelist = new JSONConfigEntry<Set<String>>(new HashSet<String>(), "Whitelist of dimension names where engines will only be alowed to work.  Overrides the blacklist if this exists.");
+		public JSONConfigEntry<Map<String, Double>> packVehicleScales = new JSONConfigEntry<Map<String, Double>>(new HashMap<String, Double>(), "Scale of all vehicles for this pack.  You probably won't want to change this, but if you do want the vehicles to be smaller for some reason, you can.");
 		public JSONConfigEntry<Map<String, Double>> packSpeedFactors = new JSONConfigEntry<Map<String, Double>>(new HashMap<String, Double>(), "A mapping of pack-speciifc speed factors.  These values will only apply to the vehicles in the pack modified.  This allows for speeding up packs with slower vehicles, or slowing down packs with fast vehicles for a more even play experience.  Note that this applies on top of the global speed factor.  So if that is set to 0.30, and a pack is set to 0.5, then the total speed factor will be 0.15");
 		public ConfigItemWeights itemWeights = new ConfigItemWeights();
 		public JSONConfigEntry<List<UUID>> joinedPlayers = new JSONConfigEntry<List<UUID>>(new ArrayList<UUID>(), "Listing of players that have joined this world.  Players will be given the manual on their first join.");

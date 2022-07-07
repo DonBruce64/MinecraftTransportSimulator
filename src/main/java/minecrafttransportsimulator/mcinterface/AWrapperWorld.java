@@ -44,7 +44,7 @@ public abstract class AWrapperWorld extends EntityManager{
 	public abstract long getTime();
 	
 	/**
-	 *  Returns the name of this world.  All names are assured to be unique, so this may
+	 *  Returns the name of this world (dimension).  All names are assured to be unique, so this may
 	 *  be used as a map-key or other identifier.
 	 */
 	public abstract String getName();
