@@ -281,6 +281,9 @@ public class JSONPart extends AJSONPartProvider{
 		@JSONDescription("The spacing between repeated tread links to be animated in the model.  Used only if isTread is true.")
         public float spacing;
 		
+		@JSONDescription("The object order to render for the treads.  Allows rendering of patterend tread links with multiple objects in the same model, rendering in the defined sequence.  Used only if isTread is true.")
+        public List<String> treadOrder;
+		
 		@JSONRequired
 		@JSONDescription("A mapping of friction modifiers.  These are used to determine the friction change when on specific surfaces.  Defaults to -0.1 (except for treads) on wet surfaces, and -0.2 on ice and snow for all ground devices.  Valid surfaces are: normal, normal_wet, dirt, dirt_wet, sand, sand_wet, snow, and ice.")
         public LinkedHashMap<BlockMaterial, Float> frictionModifiers;

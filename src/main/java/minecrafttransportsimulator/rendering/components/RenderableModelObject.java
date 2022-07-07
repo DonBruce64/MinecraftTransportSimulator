@@ -43,9 +43,10 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 	private final Map<JSONLight, RenderableObject> beamObjects = new HashMap<JSONLight, RenderableObject>();
 	
 	
-	/**Map of tread points, keyed by the model the tread is pathing about, then the spacing of the tread.
+	/**Map of tread points, keyed by the model the tread is pathing about, then the part slot, then the spacing of the tread.
 	 * This can be shared for two different treads of the same spacing as they render the same.**/
-	private static final Map<String, Map<Float, List<Double[]>>> treadPoints = new HashMap<String, Map<Float, List<Double[]>>>();
+	//TODO replace with part slot in branched version.
+	private static final Map<String, Map<Point3D, Map<Float, List<Double[]>>>> treadPoints = new HashMap<String, Map<Point3D, Map<Float, List<Double[]>>>>();
 	private static final TransformationMatrix treadPathBaseTransform = new TransformationMatrix();
 	private static final RotationMatrix treadRotation = new RotationMatrix();
 	private static final float COLOR_OFFSET = 0.0001F;
@@ -242,15 +243,20 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 	private void doTreadRendering(PartGroundDevice tread, float partialTicks){
 		AEntityD_Definable<?> entityTreadAttachedTo = tread.placementDefinition.isSubPart ? tread.parentPart : tread.entityOn;
 		String treadPathModel = entityTreadAttachedTo.definition.getModelLocation(entityTreadAttachedTo.subName); 
-		Map<Float, List<Double[]>> treadPointsMap = treadPoints.get(treadPathModel);
+		Map<Point3D, Map<Float, List<Double[]>>> treadPointsMap = treadPoints.get(treadPathModel);
 		if(treadPointsMap == null){
-			treadPointsMap = new HashMap<Float, List<Double[]>>();
+			treadPointsMap = new HashMap<Point3D, Map<Float, List<Double[]>>>();
 		}
-		List<Double[]> points = treadPointsMap.get(tread.definition.ground.spacing);
+		Map<Float, List<Double[]>> treadPointsSubMap = treadPointsMap.get(tread.placementOffset);
+		if(treadPointsSubMap == null) {
+			treadPointsSubMap = new HashMap<Float, List<Double[]>>();
+		}
+		List<Double[]> points = treadPointsSubMap.get(tread.definition.ground.spacing);
 		
 		if(points == null){
-			points = generateTreads(entityTreadAttachedTo, treadPathModel, treadPointsMap, tread);
-			treadPointsMap.put(tread.definition.ground.spacing, points);
+			points = generateTreads(entityTreadAttachedTo, treadPathModel, treadPointsSubMap, tread);
+			treadPointsSubMap.put(tread.definition.ground.spacing, points);
+			treadPointsMap.put(tread.placementOffset, treadPointsSubMap);
 			treadPoints.put(treadPathModel, treadPointsMap);
 		}
 				
@@ -279,6 +285,22 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 		point = points.get(0);
 		object.transform.applyTranslation(0, point[0], point[1]);
 		
+		//Get cycle index for later.
+		boolean[] renderIndexes = null; 
+		if(tread.definition.ground.treadOrder != null) {
+			int treadCycleCount = tread.definition.ground.treadOrder.size();
+			int treadCycleIndex = (int)Math.floor(treadCycleCount*(treadLinearPosition%(treadCycleCount*tread.definition.ground.spacing)));
+			if(treadCycleIndex < 0) {
+				//Need to handle negatives if we only go backwards.
+				treadCycleIndex += treadCycleCount; 
+			}
+			renderIndexes = new boolean[treadCycleCount];
+			for(int i=0; i<treadCycleCount; ++i) {
+				String treadObject = tread.definition.ground.treadOrder.get(i);
+				renderIndexes[(i + treadCycleIndex)%treadCycleCount] = treadObject.equals(object.name);
+			}
+		}
+		
 		//Now transform all points.
 		for(int i=0; i<points.size() - 1; ++i){
 			//Update variables.
@@ -299,6 +321,13 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 				angleDelta -= 360;
 			}else if(angleDelta < -180){
 				angleDelta += 360;
+			}
+			
+			//Check if we should render this object as a link in this position.
+			//This is normally true, but for patterns we need to only render in specific spots.
+			if(renderIndexes != null && !renderIndexes[i%renderIndexes.length]) {
+				object.transform.applyTranslation(0, yDelta, zDelta);
+				continue;
 			}
 			
 			//Translate to the current position of the tread based on the percent it has moved.

@@ -27,7 +27,7 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 public class InterfaceLoader{
 	public static final String MODID = "mts";
 	public static final String MODNAME = "Immersive Vehicles (MTS)";
-	public static final String MODVER = "21.3.0-BETA38";
+	public static final String MODVER = "21.3.0-BETA39";
 	public static Logger logger;
 	
 	@Instance(MODID)
