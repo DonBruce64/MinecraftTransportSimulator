@@ -1,22 +1,19 @@
 buildscript {
     repositories {
         maven { url = 'https://maven.minecraftforge.net' }
-				//maven { url = "https://repo.spongepowered.org/maven" }
         mavenCentral()
     }
     dependencies {
         classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
-				//classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
     }
 }
 
 //Apply plugins
 apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'eclipse'
-//apply plugin: 'org.spongepowered.mixin'
 
 //Set file name.
-version = "1.12.2-21.3.0-BETA39"
+version = "1.12.2-21.3.0-BETA43"
 group= "minecrafttransportsimulator"
 archivesBaseName = "Immersive Vehicles"
 
@@ -51,8 +48,9 @@ minecraft {
 }
 
 repositories {
-  maven { url = 'https://mvnrepository.com/artifact/org.jcraft/jorbis'}
-  //Location of the maven that hosts JEI files
+	//MP3 library.
+	maven { url = 'https://mvnrepository.com/artifact/org.jcraft/jorbis'}
+	//JEI
 	maven {url = "https://dvs1.progwml6.com/files/maven/"}
 }
 
@@ -64,33 +62,20 @@ configurations {
 
 //Specify dependencies.
 dependencies {
-	//Version of Minecraft to use.
-  minecraft 'net.minecraftforge:forge:1.12.2-14.23.5.2859'
-
+	//Minecraft to use.
+	minecraft 'net.minecraftforge:forge:1.12.2-14.23.5.2859'
+	
 	//Set sound code bits as embeds so they are included into the jar.
-  embed(group: 'com.googlecode.soundlibs', name: 'jlayer', version: '1.0.1.4')
-	embed(group: 'org.jcraft', name: 'jorbis', version: '0.0.17')
+	embed("com.googlecode.soundlibs:jlayer:1.0.1.4")
+	embed("org.jcraft:jorbis:0.0.17")
 	
 	//Compile against the JEI API but do not include it at runtime
-  compileOnly fg.deobf("mezz.jei:jei_1.12.2:4.16.1.302:api")
-  //At runtime, use the full JEI jar
+	compileOnly fg.deobf("mezz.jei:jei_1.12.2:4.16.1.302:api")
+	//At runtime, use the full JEI jar
 	//Disabled as Access Transformers don't work on FG 3.0 runtimes despite them saying they do.
 	//Not a huge issue, as it just prevents using JEI in-dev, and we already have it working so don't really need to test.
-  //runtimeOnly fg.deobf("mezz.jei:jei_1.12.2:4.16.1.302")
-	
-	//Embed mixins into the code.
-	//embed('org.spongepowered:mixin:0.8.5')
-	
-	//Apply Mixin AP ForgeGradle.
-	//annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+	//runtimeOnly fg.deobf("mezz.jei:jei_1.12.2:4.16.1.302")
 }
-
-//Set mixin properties.
-//Note, createSrgToMcp and createMcpToSrg tasks need to be run before this.
-//mixin {
-  //add sourceSets.main, "mts.refmap.json"
-	//config "mts.mixins.json"
-//}
 
 //Here is where we zip up all embeds and add them to our jar.
 jar {
