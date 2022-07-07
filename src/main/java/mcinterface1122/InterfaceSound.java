@@ -212,6 +212,25 @@ public class InterfaceSound implements IInterfaceSound{
 					AL10.alDeleteBuffers(dataBufferPointer);
 					if(++sourceGetFailures == 10) {
 						InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_SOUNDSLOT);
+						///Kill off the sound that's furthest from the player to make room if we have a sound we can remove.
+						//This keeps the sounds going, even with limited slots.
+						if(!playingSounds.isEmpty()) {
+							SoundInstance furthestSound = null;
+							Point3D playerPosition = InterfaceManager.clientInterface.getClientPlayer().getPosition();
+							for(SoundInstance testSound : playingSounds) {
+								if(furthestSound == null || playerPosition.isFirstCloserThanSecond(testSound.position, furthestSound.position)) {
+									furthestSound = testSound;
+								}
+							}
+							sourceGetFailures = 0;
+							//Manually stop sound and remove from iterator.
+							//This makes the source entity think that it's still playing and won't re-add it.
+							AL10.alSourcei(furthestSound.sourceIndex, AL10.AL_BUFFER, AL10.AL_NONE);
+							sourceBuffer = BufferUtils.createIntBuffer(1);
+							sourceBuffer.put(furthestSound.sourceIndex).flip();
+							AL10.alDeleteSources(sourceBuffer);
+							playingSounds.remove(furthestSound);
+						}
 					}
 					return;
 				}
