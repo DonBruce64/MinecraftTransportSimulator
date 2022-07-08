@@ -159,8 +159,27 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 		isInvisible = false;
 		scale.set(placementDefinition.isSubPart && parentPart != null ? parentPart.scale : entityOn.scale);
 		localOrientation.setToZero();
+        
+        //Internal movement uses local coords.
+        //First rotate orientation to face rotated state.
+        if(placementDefinition.rot != null){
+            localOrientation.set(placementDefinition.rot);
+        }
+        //Also apply part scale, so everything stays local.
+        //We will still have to multiply the translation by this scale though.
+        if(placementDefinition.partScale != null){
+            scale.multiply(placementDefinition.partScale);
+        }
+        if(internalMovementSwitchbox != null){
+            isInvisible = !internalMovementSwitchbox.runSwitchbox(0, false) || isInvisible;
+            //Offset here is local and just needs translation, as it's
+            //assuming that we are the origin.
+            localOffset.add(internalMovementSwitchbox.translation.multiply(scale).rotate(localOrientation));
+            localOrientation.multiply(internalMovementSwitchbox.rotation);
+        }
 		
-		//Placement movement uses the coords of the thing we are on.
+		//Placement movement uses the coords of the thing we are on,
+        //so we transform our points by the matrix resultant.
 		if(placementMovementSwitchbox != null){
 			isInvisible = !placementMovementSwitchbox.runSwitchbox(0, false);
 			//Offset needs to move according to full transform.
@@ -172,24 +191,6 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 		//Offset now needs to be multiplied by the scale, as that's the scale of what we are on.
 		//This ensures that we're offset relative the proper amount.
 		localOffset.multiply(scale);
-		
-		//Internal movement uses local coords.
-		//First rotate orientation to face rotated state.
-		if(placementDefinition.rot != null){
-			localOrientation.multiply(placementDefinition.rot);
-		}
-		//Also apply part scale, so everything stays local.
-		//We will still have to multiply the translation by this scale though.
-		if(placementDefinition.partScale != null){
-			scale.multiply(placementDefinition.partScale);
-		}
-		if(internalMovementSwitchbox != null){
-			isInvisible = !internalMovementSwitchbox.runSwitchbox(0, false) || isInvisible;
-			//Offset here is local and just needs translation, as it's
-			//assuming that we are the origin.
-			localOffset.add(internalMovementSwitchbox.translation.multiply(scale));
-			localOrientation.multiply(internalMovementSwitchbox.rotation);
-		}
 		
 		//Now that locals are set, set globals to reflect them.
 		Point3D localPositionDelta = new Point3D().set(localOffset).rotate(orientation);
