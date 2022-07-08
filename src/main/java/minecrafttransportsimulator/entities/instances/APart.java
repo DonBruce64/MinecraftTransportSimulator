@@ -158,24 +158,27 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 		//Update local position, orientation, scale, and enabled state.
 		isInvisible = false;
 		scale.set(placementDefinition.isSubPart && parentPart != null ? parentPart.scale : entityOn.scale);
-		localOrientation.setToZero();
         
         //Internal movement uses local coords.
         //First rotate orientation to face rotated state.
         if(placementDefinition.rot != null){
             localOrientation.set(placementDefinition.rot);
+        }else {
+            localOrientation.setToZero();
         }
+        
         //Also apply part scale, so everything stays local.
         //We will still have to multiply the translation by this scale though.
         if(placementDefinition.partScale != null){
             scale.multiply(placementDefinition.partScale);
         }
+        
+        //Translate by internal movement.  We need to do this before transforming by the part slot movement.
         if(internalMovementSwitchbox != null){
             isInvisible = !internalMovementSwitchbox.runSwitchbox(0, false) || isInvisible;
             //Offset here is local and just needs translation, as it's
             //assuming that we are the origin.
             localOffset.add(internalMovementSwitchbox.translation.multiply(scale).rotate(localOrientation));
-            localOrientation.multiply(internalMovementSwitchbox.rotation);
         }
 		
 		//Placement movement uses the coords of the thing we are on,
@@ -186,8 +189,17 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 			//This is because these coords are from what we are on.
 			//Orientation just needs to update according to new rotation.
 			localOffset.transform(placementMovementSwitchbox.netMatrix);
-			localOrientation.multiply(placementMovementSwitchbox.rotation);
 		}
+		
+		//Now adjust rotation to account for internal and external factors.
+		//This happens in the opposite order due to how the matrixes work.
+		if(placementMovementSwitchbox != null){
+            localOrientation.multiply(placementMovementSwitchbox.rotation);
+        }
+		if(internalMovementSwitchbox != null){
+            localOrientation.multiply(internalMovementSwitchbox.rotation);
+        }
+		
 		//Offset now needs to be multiplied by the scale, as that's the scale of what we are on.
 		//This ensures that we're offset relative the proper amount.
 		localOffset.multiply(scale);
