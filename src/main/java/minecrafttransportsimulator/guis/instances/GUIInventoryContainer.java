@@ -90,7 +90,7 @@ public class GUIInventoryContainer extends AGUIInventory{
 		if(maxRowIncrements > 0){
 			priorRowButton.enabled = rowOffset > 0;
 			nextRowButton.enabled = rowOffset < maxRowIncrements;
-			sliderCutout.position.x = sliderCutout.constructedX + 73*rowOffset/maxRowIncrements;
+			sliderCutout.position.y = -sliderCutout.constructedY - 73*rowOffset/maxRowIncrements;
 		}
 		
 		//Set other item icons to other inventory.
