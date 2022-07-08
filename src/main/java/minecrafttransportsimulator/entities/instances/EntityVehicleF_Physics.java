@@ -240,8 +240,11 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 		currentUnderSteer = definition.motorized.underSteer;
 		currentAxleRatio = definition.motorized.axleRatio;
 		aileronAngle = aileronInput;
+		setVariable(AILERON_VARIABLE, aileronAngle);
 		elevatorAngle = elevatorInput;
+		setVariable(ELEVATOR_VARIABLE, elevatorAngle);
 		rudderAngle = rudderInput;
+		setVariable(RUDDER_VARIABLE, rudderAngle);
 		
 		//Adjust current variables to modifiers, if any exist.
 		if(definition.variableModifiers != null){
@@ -259,18 +262,13 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 					case "overSteer" : currentOverSteer = adjustVariable(modifier, currentOverSteer); break;
 					case "underSteer" : currentUnderSteer = adjustVariable(modifier, currentUnderSteer); break;
 					case "axleRatio" : currentAxleRatio = adjustVariable(modifier, currentAxleRatio); break;
-					case AILERON_VARIABLE : aileronAngle = adjustVariable(modifier, (float) aileronAngle); break;
-					case ELEVATOR_VARIABLE : elevatorAngle = adjustVariable(modifier, (float) elevatorAngle); break;
-					case RUDDER_VARIABLE : rudderAngle = adjustVariable(modifier, (float) rudderAngle); break;
+					case AILERON_VARIABLE : aileronAngle = adjustVariable(modifier, (float) aileronAngle); setVariable(AILERON_VARIABLE, aileronAngle); break;
+					case ELEVATOR_VARIABLE : elevatorAngle = adjustVariable(modifier, (float) elevatorAngle); setVariable(ELEVATOR_VARIABLE, elevatorAngle); break;
+					case RUDDER_VARIABLE : rudderAngle = adjustVariable(modifier, (float) rudderAngle); setVariable(RUDDER_VARIABLE, rudderAngle); break;
 					default : setVariable(modifier.variable, adjustVariable(modifier, (float) getVariable(modifier.variable))); break;
 				}
 			}
 		}
-		
-		//Set variables for control surfaces to their true derived and edited state.
-		setVariable(AILERON_VARIABLE, aileronAngle);
-		setVariable(ELEVATOR_VARIABLE, elevatorAngle);
-		setVariable(RUDDER_VARIABLE, rudderAngle);
 	}
 	
 	@Override
