@@ -70,7 +70,10 @@ public class NavBeacon{
 			beaconListing = InterfaceManager.coreInterface.getNewNBTWrapper();
 		}
 		beaconListing.setData(name, save(InterfaceManager.coreInterface.getNewNBTWrapper()));
-		world.setData(BEACON_LISTING_KEY, beaconListing);	
+		world.setData(BEACON_LISTING_KEY, beaconListing);
+		if(cachedBeaconMaps.containsKey(world)){
+            cachedBeaconMaps.remove(world);
+        }
 	}
 	
 	public double getBearingDelta(AEntityB_Existing entity){

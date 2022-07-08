@@ -202,7 +202,7 @@ public abstract class AGUIBase{
 			//We only need to do this once, even if we are lit, as we just change the text lighting.
 			boolean isTextLit = !getGUILightMode().equals(GUILightingMode.DARK);
 			for(AGUIComponent component : components){
-				if(component.visible && component.text != null && !component.text.isEmpty()){
+				if(component.visible && component.text != null){
 					component.renderText(isTextLit);
 				}
 			}

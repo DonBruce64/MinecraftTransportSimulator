@@ -47,6 +47,10 @@ public class GUIComponentTextBox extends GUIComponentCutout{
 	 */
 	public void updateFocus(int mouseX, int mouseY){
 		focused = visible && enabled && isMouseInBounds(mouseX, mouseY);
+		if(focused && text == null) {
+	        text = "";
+	        flashText = "_";
+		}
 	}
 	
 	/**

@@ -85,7 +85,8 @@ public abstract class AGUIComponent{
     /**
 	 *  Renders the component's text.  This is done separately from the main render as text uses its own texture,
 	 *  and we don't want to do this until the rest of the GUI is rendered as it will cause a texture bind.
-	 *  Note that this method is not called if {@link #text} is null or empty.
+	 *  Note that this method is not called if {@link #text} is null, but will render if it is empty since some systems
+	 *  may consider empty text valid for triggering animations versus it just not existing whatsoever.
 	 */
     public void renderText(boolean renderTextLit){}
     

@@ -34,7 +34,8 @@ import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataCSHandshake;
+import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataRequest;
+import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataUpdate;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.block.Block;
@@ -119,7 +120,7 @@ public class WrapperWorld extends AWrapperWorld{
 		if(world.isRemote){
 			//Send packet to server to request data for this world.
 			this.savedData = InterfaceManager.coreInterface.getNewNBTWrapper();
-			InterfaceManager.packetInterface.sendToServer(new PacketWorldSavedDataCSHandshake(InterfaceManager.clientInterface.getClientPlayer(), "", null));
+			InterfaceManager.packetInterface.sendToServer(new PacketWorldSavedDataRequest(InterfaceManager.clientInterface.getClientPlayer()));
 		}else{
 			//Load data from disk.
 			try{
@@ -185,6 +186,7 @@ public class WrapperWorld extends AWrapperWorld{
 		if(!isClient()){
 			try{
 				CompressedStreamTools.writeCompressed(((WrapperNBT) savedData).tag, new FileOutputStream(getDataFile()));
+				InterfaceManager.packetInterface.sendToAllClients(new PacketWorldSavedDataUpdate(name, value));
 			}catch(Exception e){
 				e.printStackTrace();
 				throw new IllegalStateException("Could not save data to disk!  This will result in data loss if we continue!");

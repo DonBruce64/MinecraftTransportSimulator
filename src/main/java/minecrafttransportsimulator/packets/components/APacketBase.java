@@ -217,6 +217,7 @@ public abstract class APacketBase{
 		InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketVehicleServerSync.class);
 		
 		//World packets.
-		InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketWorldSavedDataCSHandshake.class);
+		InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketWorldSavedDataRequest.class);
+		InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketWorldSavedDataUpdate.class);
 	}
 }
