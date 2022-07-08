@@ -55,14 +55,6 @@ public class TreadRoller{
 			//the vector.  We rotate 90 degrees as we know the roller orientation will be
 			//counter-clockwise, and thus we always want the tread to be on that side.
 			endAngle = Math.toDegrees(Math.atan2(nextRoller.centerPoint.z - centerPoint.z, nextRoller.centerPoint.y - centerPoint.y)) - 90D;
-			nextRoller.startAngle = endAngle;
-			
-			//Now that we know the start and end angles, we can calculate the start and end points.
-			//Simple polar to rectangular coord conversion here.
-			endY = centerPoint.y + radius*Math.cos(Math.toRadians(endAngle));
-			endZ = centerPoint.z + radius*Math.sin(Math.toRadians(endAngle));
-			nextRoller.startY = nextRoller.centerPoint.y + nextRoller.radius*Math.cos(Math.toRadians(endAngle));
-			nextRoller.startZ = nextRoller.centerPoint.z + nextRoller.radius*Math.sin(Math.toRadians(endAngle));
 		}else{
 			//First, get the distance between the roller centers.
 			double centerDistance = Math.hypot(nextRoller.centerPoint.z - centerPoint.z, nextRoller.centerPoint.y - centerPoint.y);
@@ -97,14 +89,19 @@ public class TreadRoller{
 			//The final angle depends on which roller we are using as r1.
 			double netAngle = centerVectorAngle + (nextRollerLarger ? -inscribedVectorAngle - Math.PI/2D : inscribedVectorAngle + Math.PI/2D);						
 			endAngle = Math.toDegrees(netAngle);
-			nextRoller.startAngle = endAngle;
-			
-			//Now that we know the start and end angles, we can calculate the start and end points.
-			//Simple polar to rectangular coord conversion here.
-			endY = centerPoint.y + radius*Math.cos(Math.toRadians(endAngle));
-			endZ = centerPoint.z + radius*Math.sin(Math.toRadians(endAngle));
-			nextRoller.startY = nextRoller.centerPoint.y + nextRoller.radius*Math.cos(Math.toRadians(endAngle));
-			nextRoller.startZ = nextRoller.centerPoint.z + nextRoller.radius*Math.sin(Math.toRadians(endAngle));
 		}
+        setEndAngle(endAngle);
+	}
+	
+	public void setStartAngle(double startAngle) {
+        this.startAngle = startAngle;
+        startY = centerPoint.y + radius*Math.cos(Math.toRadians(startAngle));
+        startZ = centerPoint.z + radius*Math.sin(Math.toRadians(startAngle));
+    }
+	
+	public void setEndAngle(double endAngle) {
+	    this.endAngle = endAngle;
+	    endY = centerPoint.y + radius*Math.cos(Math.toRadians(endAngle));
+        endZ = centerPoint.z + radius*Math.sin(Math.toRadians(endAngle));
 	}
 }

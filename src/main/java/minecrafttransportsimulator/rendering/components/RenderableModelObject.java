@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.lwjgl.input.Keyboard;
+
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -253,7 +255,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 		}
 		List<Double[]> points = treadPointsSubMap.get(tread.definition.ground.spacing);
 		
-		if(points == null){
+		if(points == null || Keyboard.isKeyDown(Keyboard.KEY_LCONTROL)){
 			points = generateTreads(entityTreadAttachedTo, treadPathModel, treadPointsSubMap, tread);
 			treadPointsSubMap.put(tread.definition.ground.spacing, points);
 			treadPointsMap.put(tread.placementOffset, treadPointsSubMap);
@@ -305,15 +307,17 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 		for(int i=0; i<points.size() - 1; ++i){
 			//Update variables.
 			//If we're at the last point, set the next point to the first point.
+		    //Also adjust angle delta, as it'll likely be almost 360 and needs to be adjusted for this.
 			point = points.get(i);
 			if(i == points.size() - 1){
 				nextPoint = points.get(0);
+				angleDelta = (nextPoint[2] + 360) - point[2];
 			}else{
 				nextPoint = points.get(i + 1);
+				angleDelta = nextPoint[2] - point[2];
 			}
 			yDelta = nextPoint[0] - point[0];
 			zDelta = nextPoint[1] - point[1];
-			angleDelta = nextPoint[2] - point[2];
 			
 			//If our angle delta is greater than 180, we can assume that we're inverted.
 			//This happens when we cross the 360 degree rotation barrier.
@@ -612,33 +616,40 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 		//We need to ensure the endpoints are all angle-aligned.
 		//It's possible to have a start angle of -181 and end angle of
 		//181, which is really just 2 degress of angle (179-181).
-		//To do this, we set the end angle of roller 0 and start
-		//angle of roller 1 to be around 180, or downward-facing.
-		//From there, we add angles to align things.
-		//At the end, we should have an end angle of 540, or 180 + 360.
-		rollers.get(0).endAngle = 180;
+		//To do this, we set the star angle of roller 1 to be 180, 
+		//or downward-facing.  From there, we add angles to align things.
+		//At the end, we should have a total angle of 540, or 180 + 360.
+        rollers.get(0).setEndAngle(180);
 		for(int i=1; i<rollers.size(); ++i){
 			TreadRoller roller = rollers.get(i);
-			roller.startAngle = rollers.get(i - 1).endAngle;
-			//End angle should be 0-360 greater than start angle, or within
-			//30 degrees less, as is the case for concave rollers. 
+			TreadRoller priorRoller = rollers.get(i-1);
+			
+			//Set the start angle to the end angle of the prior roller, then check for validity.
+			roller.startAngle = i==1 ? 180 : priorRoller.endAngle;
+			
+			//Roller angle delta  should be within -30-330 degrees.
+			//Positive angles are standard, but negative are possible for concave routing points.
 			while(roller.endAngle < roller.startAngle - 30){
-				roller.endAngle += 360;
-			}
-			while(roller.endAngle > roller.startAngle + 360){
-				roller.endAngle += 360;
-			}
+                roller.endAngle += 360;
+            }
+            while(roller.endAngle > roller.startAngle + 330){
+                roller.endAngle -= 360;
+            }
+			
+			if(roller.endAngle < roller.startAngle){
+                //We have a concave roller.  Set our start and end angle to the midpoint of their current values.
+			    //This aligns the point on the roller to the center of concavity.
+			    double midPoint = roller.endAngle + (roller.startAngle - roller.endAngle)/2D;
+			    roller.startAngle = midPoint;
+			    roller.endAngle = midPoint;
+            }
+			
+			//Roller angles are bound.  Set our start and end angle values.
+			roller.setStartAngle(roller.startAngle);
+			roller.setEndAngle(roller.endAngle);
 		}
-		//Set the end angle of the last roller, or start angle of the first roller, manually.
-		//Need to get it between the value of 360 + 0-180 as that's where we will connect.
-		while(rollers.get(0).startAngle < 0){
-			rollers.get(0).startAngle += 360;
-		}
-		if(rollers.get(0).startAngle > 180){
-			rollers.get(0).startAngle -= 360;
-		}
-		rollers.get(0).startAngle += 360;
-		rollers.get(rollers.size() - 1).endAngle = rollers.get(0).startAngle;
+		//Set the start angle to match the end angle of the last roller, rather than the 180 we set.
+		rollers.get(0).setStartAngle(rollers.get(rollers.size() - 1).endAngle);
 		
 		
 		//Now that the endpoints are set, we can calculate the path.
@@ -649,7 +660,12 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 		for(int i=0; i<rollers.size(); ++i){
 			//Get roller and add roller path contribution.
 			TreadRoller roller = rollers.get(i);
-			totalPathLength += 2*Math.PI*roller.radius*Math.abs(roller.endAngle - (i == 0 ? roller.startAngle - 360 : roller.startAngle))/360D;
+			double angleDelta = roller.endAngle - roller.startAngle;
+			if(i==0) {
+			    //Need to add 360 rev for angle delta, as this will be this way from the tread going around the path.
+			    angleDelta += 360;
+			}
+			totalPathLength += 2*Math.PI*roller.radius*angleDelta/360D;
 			
 			//Get next roller and add distance path contribution.
 			//For points that start and end at an angle of around 0 (top of rollers) we add droop.
@@ -678,9 +694,14 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 			//It can very well be that this remainder will be more than the path length
 			//of the roller.  If so, we just skip the roller entirely.
 			//For the first roller we need to do some special math, as the angles will be inverted
-			//For start and end due to the tread making a full 360 path.				
-			double rollerPathLength = 2*Math.PI*roller.radius*Math.abs(roller.endAngle - (i == 0 ? roller.startAngle - 360 : roller.startAngle))/360D;
-			double currentAngle = roller.startAngle;
+			//For start and end due to the tread making a full 360 path.
+	        double currentAngle = roller.startAngle;
+			double angleDelta = roller.endAngle - roller.startAngle;
+			if(i==0) {
+                //Need to add 360 rev for angle delta, as this will be this way from the tread going around the path.
+                angleDelta += 360;
+            }
+			double rollerPathLength = 2*Math.PI*roller.radius*angleDelta/360D;
 			
 			//Add the first point here, and add more as we follow the path.
 			if(i == 0){
@@ -713,10 +734,10 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 					zPoint = roller.centerPoint.z + roller.radius*Math.sin(Math.toRadians(currentAngle));
 					points.add(new Double[]{yPoint, zPoint, currentAngle + 180});
 				}
-				
-				//Done following roller.  Set angle to end angle.
-				currentAngle = roller.endAngle;
 			}
+            
+            //Done following roller, set angle to roller end angle to prevent slight FPEs.
+            currentAngle = roller.endAngle;
 			
 			//If we have any leftover roller path, account for it here to keep spacing consistent.
 			//We may also have leftover straight path length if we didn't do anything on a roller.
@@ -740,6 +761,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 				double catenaryFunctionCurrent = -catenaryPathLength/2F;
 				double catenaryPointZ;
 				double catenaryPointY;
+				double startingCatenaryPathLength = catenaryPathLength;
 				while(catenaryPathLength + extraPathLength > deltaDist){
 					//Go to and add the next point on the catenary path.
 					if(extraPathLength > 0){
@@ -751,12 +773,13 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 						catenaryPathLength -= deltaDist;
 					}
 					double value = catenaryFunctionCurrent/tread.placementDefinition.treadDroopConstant;
-					double arcSin = catenaryFunctionCurrent == 0.0 ? 0 : Math.log(value + Math.sqrt(value*value + 1.0));;
+					double arcSin = catenaryFunctionCurrent == 0.0 ? 0 : Math.log(value + Math.sqrt(value*value + 1.0));
+					double catenaryFunctionPercent = (catenaryFunctionCurrent + startingCatenaryPathLength/2)/startingCatenaryPathLength;
 					catenaryPointZ = tread.placementDefinition.treadDroopConstant*arcSin;
 					catenaryPointY = tread.placementDefinition.treadDroopConstant*Math.cosh(catenaryPointZ/tread.placementDefinition.treadDroopConstant);
-					yPoint = roller.endY + catenaryPointY - catenaryPathEdgeY;
+					yPoint = roller.endY + normalizedY*catenaryFunctionPercent + catenaryPointY - catenaryPathEdgeY;
 					zPoint = roller.endZ + catenaryPointZ + straightPathLength/2D;
-					points.add(new Double[]{yPoint, zPoint, roller.endAngle + 180 - Math.toDegrees(Math.asin(catenaryFunctionCurrent/tread.placementDefinition.treadDroopConstant))});
+					points.add(new Double[]{yPoint, zPoint, currentAngle + 180 - Math.toDegrees(Math.asin(catenaryFunctionCurrent/tread.placementDefinition.treadDroopConstant))});
 				}
 				leftoverPathLength = catenaryPathLength;
 			}else{
@@ -772,7 +795,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 						zPoint += normalizedZ*deltaDist;
 						straightPathLength -= deltaDist;
 					}
-					points.add(new Double[]{yPoint, zPoint, roller.endAngle + 180});
+					points.add(new Double[]{yPoint, zPoint, currentAngle + 180});
 				}
 				leftoverPathLength = straightPathLength;
 			}
