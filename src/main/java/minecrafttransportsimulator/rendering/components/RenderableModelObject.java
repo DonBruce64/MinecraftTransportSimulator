@@ -7,8 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.lwjgl.input.Keyboard;
-
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -255,7 +253,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 		}
 		List<Double[]> points = treadPointsSubMap.get(tread.definition.ground.spacing);
 		
-		if(points == null || Keyboard.isKeyDown(Keyboard.KEY_LCONTROL)){
+		if(points == null){
 			points = generateTreads(entityTreadAttachedTo, treadPathModel, treadPointsSubMap, tread);
 			treadPointsSubMap.put(tread.definition.ground.spacing, points);
 			treadPointsMap.put(tread.placementOffset, treadPointsSubMap);

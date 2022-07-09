@@ -10,13 +10,13 @@ import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.JSONBullet;
+import minecrafttransportsimulator.jsondefs.JSONBullet.BulletType;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.packets.instances.PacketEntityBulletHit;
 import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitBlock;
-import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitEntity;
 import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitWrapper;
+import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
 import minecrafttransportsimulator.rendering.instances.RenderBullet;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
@@ -35,7 +35,6 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 public class EntityBullet extends AEntityD_Definable<JSONBullet>{	
 	//Properties
 	public final PartGun gun;
-	public final int bulletNumber;
 	private final boolean isBomb;
 	public final double initialVelocity;
 	private final double velocityToAddEachTick;
@@ -44,11 +43,11 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 	//States
 	private Point3D targetPosition;
 	public double targetDistance;
+	private double armorPenetrated;
 	private Point3D targetVector;
 	private PartEngine engineTargeted;
 	private IWrapperEntity externalEntityTargeted;
 	private HitType lastHit;
-	public Damage currentDamage;
 	
 	private static RenderBullet renderer;
 	
@@ -56,7 +55,6 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
     public EntityBullet(Point3D position, Point3D motion, RotationMatrix orientation, PartGun gun){
     	super(gun.world, position, motion, ZERO_FOR_CONSTRUCTOR, gun.loadedBullet);
     	this.gun = gun;
-        this.bulletNumber = gun.bulletsFired;
         this.isBomb = gun.definition.gun.muzzleVelocity == 0;
         this.boundingBox.widthRadius = definition.bullet.diameter/1000D/2D;
         this.boundingBox.heightRadius = definition.bullet.diameter/1000D/2D;
@@ -173,18 +171,18 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 		}	
 		
 		//Now that we have an accurate motion, check for collisions.
-		//First get a damage object.
-		currentDamage = new Damage((velocity/initialVelocity)*definition.bullet.damage*ConfigSystem.settings.damage.bulletDamageFactor.value, boundingBox, gun, null, null);
+		//First get a damage object to try to attack entities with.
+		Damage damage = new Damage((velocity/initialVelocity)*definition.bullet.damage*ConfigSystem.settings.damage.bulletDamageFactor.value, boundingBox, gun, null, null);
 		
 		//Check for collided external entities and attack them.
-		List<IWrapperEntity> attackedEntities = world.attackEntities(currentDamage, motion);
+		List<IWrapperEntity> attackedEntities = world.attackEntities(damage, motion);
 		if(!attackedEntities.isEmpty()){
 			for(IWrapperEntity entity : attackedEntities){
 				//Check to make sure we don't hit our controller.
 				//This can happen with hand-held guns at speed.
 				if(!entity.equals(gun.lastController)){
 					//Only attack the first entity.  Bullets don't get to attack multiple per scan.
-					InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitWrapper(this, entity));
+					InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitWrapper(this, damage.amount, entity));
 					lastHit = HitType.ENTITY;
 					if(ConfigSystem.settings.general.devMode.value)InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "HIT ENTITY");
 					remove();
@@ -197,69 +195,92 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 		//This is a bit more involved, as we need to check all possible types and check hitbox distance.
 		Point3D endPoint = position.copy().add(motion);
 		BoundingBox bulletMovmenetBounds = new BoundingBox(position, endPoint);
-		for(EntityVehicleF_Physics entity : world.getEntitiesOfType(EntityVehicleF_Physics.class)){
-			double armorPenetrated = 0;
+		for(EntityVehicleF_Physics hitEntity : world.getEntitiesOfType(EntityVehicleF_Physics.class)){
 			//Don't attack the entity that has the gun that fired us.
-			if(!entity.parts.contains(gun)){
+			if(!hitEntity.parts.contains(gun)){
 				//Make sure that we could even possibly hit this vehicle before we try and attack it.
-				if(entity.encompassingBox.intersects(bulletMovmenetBounds)){
+				if(hitEntity.encompassingBox.intersects(bulletMovmenetBounds)){
 					//Get all collision boxes on the vehicle, and check if we hit any of them.
 					//Sort them by distance for later.
 					TreeMap<Double, BoundingBox> hitBoxes = new TreeMap<Double, BoundingBox>();
-					for(BoundingBox box : entity.allInteractionBoxes){
+					for(BoundingBox box : hitEntity.allInteractionBoxes){
 						Point3D delta = box.getIntersectionPoint(position, endPoint); 
 						if(delta != null){
 							hitBoxes.put(delta.distanceTo(position), box);
 						}
 					}
-					for(BoundingBox box : entity.allBulletCollisionBoxes){
+					for(BoundingBox box : hitEntity.allBulletCollisionBoxes){
 						Point3D delta = box.getIntersectionPoint(position, endPoint); 
 						if(delta != null){
 							hitBoxes.put(delta.distanceTo(position), box);
 						}
 					}
 					
-					//If we hit at least one hitbox, do logic.
-					if(!hitBoxes.isEmpty()){
-						//Check all boxes for armor and see if we penetrated them.
-						Iterator<BoundingBox> hitBoxIterator = hitBoxes.values().iterator();
-						while(hitBoxIterator.hasNext()){
-							BoundingBox hitBox = hitBoxIterator.next();
-							double armorThickness = hitBox.definition != null ? (definition.bullet.isHeat && hitBox.definition.heatArmorThickness != 0 ? hitBox.definition.heatArmorThickness : hitBox.definition.armorThickness) : 0;
-							double penetrationPotential = definition.bullet.isHeat ? definition.bullet.armorPenetration : definition.bullet.armorPenetration*velocity/initialVelocity;
-							if(armorThickness > 0){
-								armorPenetrated += armorThickness;
-								if(armorPenetrated > penetrationPotential){
-									//Hit too much armor.  Don't do anything except spawn explosions.
-									InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHit(this, hitBox.globalCenter));
-									lastHit = HitType.ARMOR;
-									if(ConfigSystem.settings.general.devMode.value)InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "HIT TOO MUCH ARMOR.  MAX PEN: " + (int)(penetrationPotential));
-									remove();
-									return;
-								}
-							}else{
-								APart hitPart = entity.getPartWithBox(hitBox);
-								if(hitPart != null){
-									InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitEntity(this, hitBox, hitPart));
-									lastHit = HitType.PART;
-									if(ConfigSystem.settings.general.devMode.value)InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "HIT PART");
-									//Only destroy the bullet if it's explosive.
-									if(definition.bullet.blastStrength > 0) {
-										remove();
-										return;
-									}
-								}else{
-									InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitEntity(this, hitBox, entity));
-									lastHit = HitType.ENTITY;
-									if(ConfigSystem.settings.general.devMode.value)InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "HIT VEHICLE");
-									remove();
-									return;
-								}
+					//Check all boxes for armor and see if we penetrated them.
+					Iterator<BoundingBox> hitBoxIterator = hitBoxes.values().iterator();
+					while(hitBoxIterator.hasNext()){
+						BoundingBox hitBox = hitBoxIterator.next();
+						
+						//First check if we need to reduce health of the hitbox.
+						if(hitBox.groupDef != null && hitBox.groupDef.health != 0 && !damage.isWater) {
+                            String variableName = "collision_" + (hitEntity.definition.collisionGroups.indexOf(hitBox.groupDef) + 1) + "_damage";
+                            double currentDamage = hitEntity.getVariable(variableName) + damage.amount;
+                            if(currentDamage > hitBox.groupDef.health){
+                                double amountActuallyNeeded = damage.amount - (currentDamage - hitBox.groupDef.health);
+                                currentDamage = hitBox.groupDef.health;
+                                InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(hitEntity, variableName, amountActuallyNeeded));
+                            }else{
+                                InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(hitEntity, variableName, damage.amount));
+                            }
+                            hitEntity.setVariable(variableName, currentDamage);
+                            if(ConfigSystem.settings.general.devMode.value)InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "HIT HEALTH BOX.  ATTACKED FOR: " + damage.amount + ".  BOX CURRENT DAMAGE: " + currentDamage + " OF " + hitBox.groupDef.health);
+                        }
+						
+						double armorThickness = hitBox.definition != null ? (definition.bullet.isHeat && hitBox.definition.heatArmorThickness != 0 ? hitBox.definition.heatArmorThickness : hitBox.definition.armorThickness) : 0;
+						double penetrationPotential = definition.bullet.isHeat ? definition.bullet.armorPenetration : definition.bullet.armorPenetration*velocity/initialVelocity;
+						if(armorThickness > 0){
+							armorPenetrated += armorThickness;
+							if(ConfigSystem.settings.general.devMode.value)InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "HIT ARMOR OF: " + (int)armorThickness);
+							if(armorPenetrated > penetrationPotential){
+								//Hit too much armor.  We die now.
+								lastHit = HitType.ARMOR;
+								if(ConfigSystem.settings.general.devMode.value)InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "HIT TOO MUCH ARMOR.  MAX PEN: " + (int)(penetrationPotential));
+								remove();
+								return;
 							}
+						}else{
+						    //Need to re-create damage object to reference this hitbox.
+						    damage = new Damage(damage.amount, hitBox, gun, null, null);
+						    
+						    //Now check which damage we need to apply.
+						    if(hitBox.groupDef != null) {
+				                if(hitBox.groupDef.health == 0 || damage.isWater) {
+				                    //This is a core hitbox, or a water bullet, so attack entity directly.
+                                    //After this, we die.
+                                    hitEntity.attack(damage);
+                                    lastHit = HitType.ENTITY;
+                                    if(ConfigSystem.settings.general.devMode.value)InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "HIT ENTITY CORE BOX FOR DAMAGE: " + (int)damage.amount + " DAMAGE NOW AT " + (int)hitEntity.damageAmount);
+                                    remove();
+                                    return;
+				                }
+				            }else {
+				                //Didn't have a group def, this must be a core part box.
+				                //Damage part and keep going on, unless that part is flagged to forward damage, then we do so and die.
+				                APart hitPart = hitEntity.getPartWithBox(hitBox);
+				                hitPart.attack(damage);
+                                lastHit = HitType.PART;
+                                if(ConfigSystem.settings.general.devMode.value)InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "HIT PART FOR DAMAGE: " + (int)damage.amount + " DAMAGE NOW AT " + (int)hitPart.damageAmount);
+                                if(hitPart.definition.generic.forwardsDamage || hitPart instanceof PartEngine) {
+                                    if(ConfigSystem.settings.general.devMode.value)InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "FORWARDING DAMAGE TO VEHICLE.  CURRENT DAMAGE IS: " + (int)hitPart.vehicleOn.damageAmount);
+                                    hitPart.vehicleOn.attack(damage);
+                                    remove();
+                                    return;
+                                }
+				            }
 						}
-						if(armorPenetrated != 0){
-							if(ConfigSystem.settings.general.devMode.value)InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "PEN ARMOR: " + (int)armorPenetrated + " TOTAL UNITS OUT OF " + (int)(definition.bullet.armorPenetration*velocity/initialVelocity) + " POSSIBLE");
-						}
+					}
+					if(armorPenetrated != 0){
+						if(ConfigSystem.settings.general.devMode.value)InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "PEN ARMOR: " + (int)armorPenetrated + " TOTAL UNITS OUT OF " + (int)(definition.bullet.armorPenetration*velocity/initialVelocity) + " POSSIBLE");
 					}
 				}
 			}
@@ -268,7 +289,23 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 		//Didn't hit an entity.  Check for blocks.
 		Point3D hitPos = world.getBlockHit(position, motion);
 		if(hitPos != null){
-			InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitBlock(this, hitPos));
+		    if(definition.bullet.types.contains(BulletType.WATER)){
+                world.extinguish(hitPos);
+            }else{
+                float hardnessHit = world.getBlockHardness(hitPos);
+                if(ConfigSystem.settings.general.blockBreakage.value && hardnessHit > 0 && hardnessHit <= (Math.random()*0.3F + 0.3F*definition.bullet.diameter/20F)){
+                    world.destroyBlock(hitPos, true);
+                }else if(definition.bullet.types.contains(BulletType.INCENDIARY)){
+                    //Couldn't break block, but we might be able to set it on fire.
+                    hitPos.add(0, 1, 0);
+                    if(world.isAir(hitPos)){
+                        world.setToFire(hitPos);
+                    }
+                }else{
+                    //Couldn't break the block or set it on fire.  Have clients do sounds.
+                    InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitBlock(hitPos));
+                }
+            }
 			lastHit = HitType.BLOCK;
 			if(ConfigSystem.settings.general.devMode.value)InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "HIT BLOCK");
 			remove();
@@ -289,7 +326,6 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 					if(distanceToTarget > definition.bullet.proximityFuze){
 						position.interpolate(targetToHit, (distanceToTarget - definition.bullet.proximityFuze)/definition.bullet.proximityFuze);
 					}
-					InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHit(this, position));
 					if(externalEntityTargeted != null){
 						lastHit =  HitType.ENTITY;
 						if(ConfigSystem.settings.general.devMode.value)InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "PROX FUZE HIT ENTITY");	
@@ -309,7 +345,6 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 		//Didn't hit a block either. Check the air-burst time, if it was used.
 		if(definition.bullet.airBurstDelay != 0) {
 			if(ticksExisted > definition.bullet.airBurstDelay){
-				InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHit(this, position));
 				lastHit = HitType.BURST;
 				if(ConfigSystem.settings.general.devMode.value)InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "BURST");
 				remove();
@@ -328,6 +363,11 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
     
     @Override
 	public void remove(){
+        //Spawn an explosion if we are an explosive bullet prior to removal.
+        if(definition.bullet.types.contains(BulletType.EXPLOSIVE) && lastHit != null){
+            float blastSize = definition.bullet.blastStrength == 0 ? definition.bullet.diameter/10F : definition.bullet.blastStrength;
+            world.spawnExplosion(position, blastSize, definition.bullet.types.contains(BulletType.INCENDIARY));
+        }
     	//Check one final time for particles in case we have some that spawn when we hit something.
     	if(world.isClient()){
     		this.spawnParticles(0);

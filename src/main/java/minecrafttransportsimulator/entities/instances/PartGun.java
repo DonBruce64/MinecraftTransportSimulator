@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.entities.instances;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -48,14 +47,12 @@ public class PartGun extends APart{
 	private final double defaultPitch;
 	private final double pitchSpeed;
 	
-	private final long millisecondFiringDelay;
+	//TODO pretty sure this got put into a different class with the linking overhaul?
 	private final AItemPart gunItem;
 	
 	//Stored variables used to determine bullet firing behavior.
-	protected int bulletsFired;
 	private int bulletsLeft;
 	private int bulletsReloading;
-	private int bulletsRemovedThisRequest;
 	//TODO make this private when rendering goes in-class.
 	public int currentMuzzleGroupIndex;
 	private final RotationMatrix internalOrientation;
@@ -68,16 +65,14 @@ public class PartGun extends APart{
 	public boolean firedThisCheck;
 	public boolean playerHoldingTrigger;
 	public boolean isHandHeldGunAimed;
-	private int ticksFiring;
+	private int camOffset;
+	private int cooldownTimeRemaining;
 	private int reloadTimeRemaining;
-	private long millisecondLastTimeFired;
 	private int windupTimeCurrent;
 	private int windupRotation;
 	public IWrapperEntity lastController;
 	private IWrapperEntity entityTarget;
 	private PartEngine engineTarget;
-	private long millisecondCamOffset;
-	private long lastTimeFired;
 	private final Point3D bulletPosition = new Point3D();
 	private final Point3D bulletVelocity = new Point3D();
 	private final RotationMatrix bulletOrientation = new RotationMatrix();
@@ -90,8 +85,7 @@ public class PartGun extends APart{
 	private final RotationMatrix yawMuzzleRotation = new RotationMatrix();
 	
 	//Global data.
-	public final List<Integer> bulletsHitOnServer = new ArrayList<Integer>();
-	public static final int RAYTRACE_DISTANCE = 750;
+	private static final int RAYTRACE_DISTANCE = 750;
 		
 	public PartGun(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, IWrapperNBT data, APart parentPart){
 		super(entityOn, placingPlayer, placementDefinition, data, parentPart);
@@ -152,12 +146,10 @@ public class PartGun extends APart{
 			this.pitchSpeed = placementDefinition.pitchSpeed;
 		}
 		
-		this.millisecondFiringDelay = (long) (definition.gun.fireDelay*50);
 		this.gunItem = getItem();
 		
 		//Load saved data.
 		this.state = GunState.values()[data.getInteger("state")];
-		this.bulletsFired = data.getInteger("shotsFired");
 		this.bulletsLeft = data.getInteger("bulletsLeft");
 		this.bulletsReloading = data.getInteger("bulletsReloading");
 		this.currentMuzzleGroupIndex = data.getInteger("currentMuzzleGroupIndex");
@@ -243,65 +235,89 @@ public class PartGun extends APart{
 				handleControl(controller);
 			}
 			
-			//Set final gun active state and variables.
+			//Decrement cooldown, if we have it.
+			if(cooldownTimeRemaining > 0) {
+			    --cooldownTimeRemaining;
+			}
+			
+			//Set final gun active state and variables, and fire if those line up with conditions.
+			//Note that this code runs concurrently on the client and server.  This prevents the need for packets for bullet
+			//spawning and ensures that they spawn every tick on quick-firing guns.  Hits are registered on both sides, but
+			//hit processing is only done on the server; clients just de-spawn the bullet and wait for packets.
+			//Because of this, there is no linking between client and server bullets, and therefore they do not handle NBT or UUIDs.
 			boolean ableToFire = windupTimeCurrent == definition.gun.windupTime && bulletsLeft > 0 && (!definition.gun.isSemiAuto || !firedThisRequest);
 			if(ableToFire && state.isAtLeast(GunState.FIRING_REQUESTED)){
 				//Set firing to true if we aren't firing, and we've waited long enough since the last firing command.
 				//If we don't wait, we can bypass the cooldown by toggling the trigger.
-				long timeSinceFiring = System.currentTimeMillis() - lastTimeFired;
-				if(!state.isAtLeast(GunState.FIRING_CURRENTLY) && timeSinceFiring >= millisecondFiringDelay){
-					List<APart> allGuns = entityOn.partsByItem.get(gunItem);
-					//Check if we have a primary gun.  If so, we may need to adjust cams to resume the firing sequence.
-					int sequenceIndex = allGuns.indexOf(this);
-					APart lastPrimaryPart = entityOn.lastPrimaryPart.get(gunItem);
-					if(lastPrimaryPart != null){
-						sequenceIndex = sequenceIndex - 1 - allGuns.indexOf(lastPrimaryPart);
-						if(sequenceIndex < 0){
-							sequenceIndex += allGuns.size();
-						}
-					}
-
-					state = state.promote(GunState.FIRING_CURRENTLY);
-					millisecondCamOffset = definition.gun.fireSolo ? 0 : millisecondFiringDelay*sequenceIndex/allGuns.size();
-					lastTimeFired = System.currentTimeMillis() + millisecondCamOffset;
-					//For clients, we offset the time fired back one cycle, so we can spawn the first bullet.
-					//This will be set current in the particle spawning logic.
-					if(world.isClient()){
-						lastTimeFired -= millisecondFiringDelay;
-					}
-				}
+			    if(cooldownTimeRemaining == 0) {
+			        //Start of firing sequence, set state and cam offset to proper value prior to firing checks.
+    				if(!state.isAtLeast(GunState.FIRING_CURRENTLY)){
+    					List<APart> allGuns = entityOn.partsByItem.get(gunItem);
+    					//Check if we have a primary gun.  If so, we may need to adjust cams to resume the firing sequence.
+    					int sequenceIndex = allGuns.indexOf(this);
+    					APart lastPrimaryPart = entityOn.lastPrimaryPart.get(gunItem);
+    					if(lastPrimaryPart != null){
+    						sequenceIndex = sequenceIndex - 1 - allGuns.indexOf(lastPrimaryPart);
+    						if(sequenceIndex < 0){
+    							sequenceIndex += allGuns.size();
+    						}
+    					}
+    
+    					state = state.promote(GunState.FIRING_CURRENTLY);
+    					camOffset = definition.gun.fireSolo ? 0 : (int)definition.gun.fireDelay*sequenceIndex/allGuns.size();
+    				}
+				
+    				//If we are in our cam, fire the bullets.
+    				if(camOffset == 0) {
+    				    for(JSONMuzzle muzzle : definition.gun.muzzleGroups.get(currentMuzzleGroupIndex).muzzles){
+    	                    //Get the bullet's state.
+    	                    setBulletSpawn(bulletPosition, bulletVelocity, bulletOrientation, muzzle);
+    	                    
+    	                    //Add the bullet to the world.
+    	                    //If the bullet is a missile, give it a target.
+    	                    EntityBullet newBullet;
+    	                    if(loadedBullet.definition.bullet.turnRate > 0){
+    	                        if(entityTarget != null){
+    	                            newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this, entityTarget);
+    	                        }else if(engineTarget != null){
+    	                            newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this, engineTarget);
+    	                        }else{
+    	                            //No entity found, just fire missile off in direction facing.
+    	                            newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this);
+    	                        }
+    	                    }else{
+    	                        newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this);
+    	                    }
+    	                    world.addEntity(newBullet);
+    	                    
+    	                    //Decrement bullets, but check to make sure we still have some.
+    	                    //We might have a partial volley with only some muzzles firing in this group.
+    	                    if(!ConfigSystem.settings.general.devMode.value)--bulletsLeft;
+    	                    if(bulletsLeft == 0){
+    	                        loadedBullet = null;
+    	                        break;
+    	                    }
+    	                }
+    	                
+    	                //Update states.
+    	                entityOn.lastPrimaryPart.put(gunItem, this);
+    	                cooldownTimeRemaining =(int)definition.gun.fireDelay;
+    	                firedThisRequest = true;
+    	                firedThisCheck = true;
+    	                if(definition.gun.muzzleGroups.size() == ++currentMuzzleGroupIndex){
+    	                    currentMuzzleGroupIndex = 0;
+    	                }
+    				}
+    				
+    				//Decrement the cam offset to align us with our own cam if required.
+    				if(camOffset > 0) {
+    				    --camOffset;
+    				}
+			    }
 			}else if(!ableToFire){
 				state = state.demote(GunState.FIRING_REQUESTED);
-				ticksFiring = 0;
 				if(!state.isAtLeast(GunState.FIRING_REQUESTED)){
 					firedThisRequest = false;
-				}
-			}
-			
-			//If we are on the server, check if we are firing and can remove a bullet this tick.
-			//This uses a total time of firing to account for partial tick firing rates on clients.
-			if(!world.isClient()){
-				if(state.isAtLeast(GunState.FIRING_CURRENTLY)){
-					int bulletsToRemove = definition.gun.isSemiAuto ? 1 : (int) ((++ticksFiring + definition.gun.fireDelay - millisecondCamOffset/50)/definition.gun.fireDelay - bulletsRemovedThisRequest);
-					if(bulletsToRemove > 0){
-						//Need to take muzzle count into account.
-						bulletsToRemove *= definition.gun.muzzleGroups.get(currentMuzzleGroupIndex).muzzles.size();
-						firedThisRequest = true;
-						if(!ConfigSystem.settings.general.devMode.value)bulletsLeft -= bulletsToRemove;
-						bulletsRemovedThisRequest += bulletsToRemove;
-						bulletsFired += bulletsToRemove;
-						entityOn.lastPrimaryPart.put(gunItem, this);
-						millisecondLastTimeFired = System.currentTimeMillis();
-						if(definition.gun.muzzleGroups.size() == ++currentMuzzleGroupIndex){
-							currentMuzzleGroupIndex = 0;
-						}
-						if(bulletsLeft <= 0){
-							bulletsLeft = 0;
-							loadedBullet = null;
-						}
-					}
-				}else{
-					bulletsRemovedThisRequest = 0;
 				}
 			}
 			
@@ -711,7 +727,7 @@ public class PartGun extends APart{
 			case("gun_yaw"): return prevInternalOrientation.angles.y + (internalOrientation.angles.y - prevInternalOrientation.angles.y)*partialTicks;
 			case("gun_pitching"): return prevInternalOrientation.angles.x != internalOrientation.angles.x ? 1 : 0;
 			case("gun_yawing"): return prevInternalOrientation.angles.y != internalOrientation.angles.y ? 1 : 0;
-			case("gun_cooldown"): return millisecondLastTimeFired + millisecondFiringDelay > System.currentTimeMillis() ? 1 : 0;
+			case("gun_cooldown"): return cooldownTimeRemaining;
 			case("gun_windup_time"): return windupTimeCurrent;
 			case("gun_windup_rotation"): return windupRotation;
 			case("gun_windup_complete"): return windupTimeCurrent == definition.gun.windupTime ? 1 : 0;
@@ -734,69 +750,9 @@ public class PartGun extends APart{
 	}
 	
 	@Override
-	public void spawnParticles(float partialTicks){
-		super.spawnParticles(partialTicks);
-		//If this gun is being told to fire, and we are currently active and able to fire, do so.
-		//We don't spawn bullets on the server, as they will cause lots of lag and network traffic.
-		//Instead, we spawn them on the clients, and then send back hit data to the server.
-		//This is backwards from what usually happens, and can possibly be hacked, but it's FAR
-		//easier on MC to leave clients to handle lots of bullets than the server and network systems.
-		//We still need to run the gun code on the server, however, as we need to mess with inventory.
-		long timeSinceFiring = System.currentTimeMillis() - lastTimeFired;
-		if(state.isAtLeast(GunState.FIRING_CURRENTLY) && bulletsLeft > 0 && (!definition.gun.isSemiAuto || !firedThisRequest) && timeSinceFiring >= millisecondFiringDelay){			
-			for(JSONMuzzle muzzle : definition.gun.muzzleGroups.get(currentMuzzleGroupIndex).muzzles){
-				//Get the bullet's state.
-				setBulletSpawn(bulletPosition, bulletVelocity, bulletOrientation, muzzle);
-				
-				//Add the bullet as a particle.
-				//If the bullet is a missile, give it a target.
-				EntityBullet newBullet;
-				if(loadedBullet.definition.bullet.turnRate > 0){
-					if(entityTarget != null){
-						newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this, entityTarget);
-					}else if(engineTarget != null){
-						newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this, engineTarget);
-					}else{
-						//No entity found, just fire missile off in direction facing.
-						newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this);
-					}
-				}else{
-					newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this);
-				}
-				world.addEntity(newBullet);
-				
-				//Decrement bullets, but check to make sure we still have some.
-				//We might have a partial volley.
-				if(!ConfigSystem.settings.general.devMode.value)--bulletsLeft;
-				++bulletsFired;
-				millisecondLastTimeFired = System.currentTimeMillis();
-				if(bulletsLeft == 0){
-					break;
-				}
-			}
-			
-			//Update states.
-			entityOn.lastPrimaryPart.put(gunItem, this);
-			lastTimeFired += millisecondFiringDelay;
-			firedThisRequest = true;
-			firedThisCheck = true;
-			if(definition.gun.muzzleGroups.size() == ++currentMuzzleGroupIndex){
-				currentMuzzleGroupIndex = 0;
-			}
-		}else{
-			//Only keep variable on for one tick, or one frame, depending on the firing rate.
-			//This ensures we don't start tons of sounds.
-			if(millisecondFiringDelay < 50){
-				firedThisCheck = false;
-			}
-		}
-	}
-	
-	@Override
 	public IWrapperNBT save(IWrapperNBT data){
 		super.save(data);
 		data.setInteger("state", (byte) state.ordinal());
-		data.setInteger("shotsFired", bulletsFired);
 		data.setInteger("bulletsLeft", bulletsLeft);
 		data.setInteger("bulletsReloading", bulletsReloading);
 		data.setInteger("currentMuzzleGroupIndex", currentMuzzleGroupIndex);

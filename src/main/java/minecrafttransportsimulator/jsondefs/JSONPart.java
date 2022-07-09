@@ -93,6 +93,9 @@ public class JSONPart extends AJSONPartProvider{
     	@JSONDescription("If true, this part will be able to be removed by hand and without a wrench.  This also bypasses owner requirements (but not vehicle locking).  Useful for small parts like luggage that anyone should be able to remove at any time.")
     	public boolean canBeRemovedByHand;
     	
+    	@JSONDescription("If true, this part will forward damage onto the vehicle it is on when hit by a bullet.  This will also cause the bullet to stop when it hits this part.  Engines ignore this behavior and always forward damage.")
+        public boolean forwardsDamage;
+    	
 		@JSONDescription("The width of the part.")
     	public float width;
 		
@@ -351,7 +354,7 @@ public class JSONPart extends AJSONPartProvider{
 		@JSONDescription("How fast, in m/s, the bullet will exit the barrel of this gun.  May be 0 in cases where bombers are concerned, as the exit velocity of the barrel is this value PLUS the velocity of the vehicle that's firing the bullet.")
     	public int muzzleVelocity;
 		
-		@JSONDescription("The delay, in ticks, between the firing of bullets.  Allows for fractions for partial tick firing, though if you do this ensure your firing sounds also will play on those partial ticks.")
+		@JSONDescription("The delay, in ticks, between the firing of bullets.")
     	public float fireDelay;
 		
 		@JSONDescription("How much velocity, each tick, should be added in the -Y direction.  Used to make bullets travel in arcs.")

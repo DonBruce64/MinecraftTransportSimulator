@@ -534,33 +534,17 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 	 *  applications, which means one of those may have made this entity invalid.
 	 */
 	public void attack(Damage damage){
-		if(!damage.isWater){
-			//Damage the group if it exists and has health defined.
-			if(damage.box.groupDef != null && damage.box.groupDef.health != 0) {
-				String variableName = "collision_" + (definition.collisionGroups.indexOf(damage.box.groupDef) + 1) + "_damage";
-				double currentDamage = getVariable(variableName) + damage.amount;
-				if(currentDamage > damage.box.groupDef.health){
-					double amountActuallyNeeded = damage.amount - (currentDamage - damage.box.groupDef.health);
-					currentDamage = damage.box.groupDef.health;
-					InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, variableName, amountActuallyNeeded));
-				}else{
-					InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, variableName, damage.amount));
-				}
-				setVariable(variableName, currentDamage);
-				return;
-			}
-			
-			//Didn't hit a collision group with health defined, damage ourselves. 
-			damageAmount += damage.amount;
-			if(damageAmount > definition.general.health){
-				double amountActuallyNeeded = damage.amount - (damageAmount - definition.general.health);
-				damageAmount = definition.general.health;
-				InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, DAMAGE_VARIABLE, amountActuallyNeeded));
-			}else{
-				InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, DAMAGE_VARIABLE, damage.amount));
-			}
-			setVariable(DAMAGE_VARIABLE, damageAmount);
-		}
+	    if(!damage.isWater){
+    	    damageAmount += damage.amount;
+            if(damageAmount > definition.general.health){
+                double amountActuallyNeeded = damage.amount - (damageAmount - definition.general.health);
+                damageAmount = definition.general.health;
+                InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, DAMAGE_VARIABLE, amountActuallyNeeded));
+            }else{
+                InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, DAMAGE_VARIABLE, damage.amount));
+            }
+            setVariable(DAMAGE_VARIABLE, damageAmount);
+	    }
 	}
 	
 	@Override

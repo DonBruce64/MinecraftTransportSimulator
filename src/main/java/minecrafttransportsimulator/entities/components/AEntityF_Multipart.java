@@ -629,7 +629,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 	 */
 	public APart getPartWithBox(BoundingBox box){
 		for(APart part : parts){
-			if(part.interactionBoxes.contains(box)){
+			if(part.interactionBoxes.contains(box) || part.bulletCollisionBoxes.contains(box)){
 				return part;
 			}
 		}
