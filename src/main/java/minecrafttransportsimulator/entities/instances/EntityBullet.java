@@ -41,6 +41,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 	private final Point3D motionToAddEachTick;
 	
 	//States
+	private int impactDesapawnTimer = -1;
 	private Point3D targetPosition;
 	public double targetDistance;
 	private double armorPenetrated;
@@ -97,6 +98,14 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
     @Override
     public void update(){
 		super.update();
+		//Check if we impacted.  If so, don't process anything and just stay in place.
+		if(impactDesapawnTimer >= 0) {
+		    if(impactDesapawnTimer-- == 0) {
+		        remove();
+		    }
+		    return;
+		}
+		
 		//Add gravity and slowdown forces, if we don't have a burning motor.
 		if(ticksExisted > definition.bullet.burnTime){
 			if(definition.bullet.slowdownSpeed > 0){
@@ -183,9 +192,10 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 				if(!entity.equals(gun.lastController)){
 					//Only attack the first entity.  Bullets don't get to attack multiple per scan.
 					InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitWrapper(this, damage.amount, entity));
+					position.set(entity.getPosition());
 					lastHit = HitType.ENTITY;
 					if(ConfigSystem.settings.general.devMode.value)InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "HIT ENTITY");
-					remove();
+					doHitLogic();
 					return;
 				}
 			}
@@ -243,9 +253,10 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 							if(ConfigSystem.settings.general.devMode.value)InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "HIT ARMOR OF: " + (int)armorThickness);
 							if(armorPenetrated > penetrationPotential){
 								//Hit too much armor.  We die now.
+							    position.set(hitBox.globalCenter);
 								lastHit = HitType.ARMOR;
 								if(ConfigSystem.settings.general.devMode.value)InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "HIT TOO MUCH ARMOR.  MAX PEN: " + (int)(penetrationPotential));
-								remove();
+								doHitLogic();
 								return;
 							}
 						}else{
@@ -257,10 +268,11 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 				                if(hitBox.groupDef.health == 0 || damage.isWater) {
 				                    //This is a core hitbox, or a water bullet, so attack entity directly.
                                     //After this, we die.
+				                    position.set(hitEntity.position);
                                     hitEntity.attack(damage);
                                     lastHit = HitType.ENTITY;
                                     if(ConfigSystem.settings.general.devMode.value)InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "HIT ENTITY CORE BOX FOR DAMAGE: " + (int)damage.amount + " DAMAGE NOW AT " + (int)hitEntity.damageAmount);
-                                    remove();
+                                    doHitLogic();
                                     return;
 				                }
 				            }else {
@@ -268,12 +280,13 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 				                //Damage part and keep going on, unless that part is flagged to forward damage, then we do so and die.
 				                APart hitPart = hitEntity.getPartWithBox(hitBox);
 				                hitPart.attack(damage);
+				                position.set(hitPart.position);
                                 lastHit = HitType.PART;
                                 if(ConfigSystem.settings.general.devMode.value)InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "HIT PART FOR DAMAGE: " + (int)damage.amount + " DAMAGE NOW AT " + (int)hitPart.damageAmount);
                                 if(hitPart.definition.generic.forwardsDamage || hitPart instanceof PartEngine) {
                                     if(ConfigSystem.settings.general.devMode.value)InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "FORWARDING DAMAGE TO VEHICLE.  CURRENT DAMAGE IS: " + (int)hitPart.vehicleOn.damageAmount);
                                     hitPart.vehicleOn.attack(damage);
-                                    remove();
+                                    doHitLogic();
                                     return;
                                 }
 				            }
@@ -303,12 +316,13 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
                     }
                 }else{
                     //Couldn't break the block or set it on fire.  Have clients do sounds.
-                    InterfaceManager.packetInterface.sendToServer(new PacketEntityBulletHitBlock(hitPos));
+                    InterfaceManager.packetInterface.sendToAllClients(new PacketEntityBulletHitBlock(hitPos));
                 }
             }
+		    position.set(hitPos);
 			lastHit = HitType.BLOCK;
 			if(ConfigSystem.settings.general.devMode.value)InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "HIT BLOCK");
-			remove();
+			doHitLogic();
 			return;
 		}
 		
@@ -336,7 +350,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 						lastHit = HitType.BLOCK;
 						if(ConfigSystem.settings.general.devMode.value)InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "PROX FUZE HIT BLOCK");
 					}
-					remove();
+					doHitLogic();
 					return;
 				}
 			}
@@ -347,7 +361,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 			if(ticksExisted > definition.bullet.airBurstDelay){
 				lastHit = HitType.BURST;
 				if(ConfigSystem.settings.general.devMode.value)InterfaceManager.clientInterface.getClientPlayer().displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, "BURST");
-				remove();
+				doHitLogic();
 				return;
 			}
 		}
@@ -360,6 +374,15 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 			orientation.setToVector(motion, true);
 		}
 	}
+    
+    private void doHitLogic(){
+        //Spawn an explosion if we are an explosive bullet.
+        if(definition.bullet.types.contains(BulletType.EXPLOSIVE) && lastHit != null){
+            float blastSize = definition.bullet.blastStrength == 0 ? definition.bullet.diameter/10F : definition.bullet.blastStrength;
+            world.spawnExplosion(position, blastSize, definition.bullet.types.contains(BulletType.INCENDIARY));
+        }
+        impactDesapawnTimer = definition.bullet.impactDespawnTime;
+    }
     
     @Override
 	public void remove(){
