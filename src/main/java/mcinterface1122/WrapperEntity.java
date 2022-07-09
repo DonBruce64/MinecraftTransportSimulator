@@ -180,7 +180,8 @@ public class WrapperEntity implements IWrapperEntity{
 	
 	@Override
 	public Point3D getVelocity(){
-		mutableVelocity.set(entity.motionX, entity.motionY, entity.motionZ);
+	    //Need to manually put 0 here for Y since entities on ground have a constant -Y motion.
+		mutableVelocity.set(entity.motionX, entity.onGround ? 0 : entity.motionY, entity.motionZ);
 		return mutableVelocity;
 	}
 	private final Point3D mutableVelocity = new Point3D();
