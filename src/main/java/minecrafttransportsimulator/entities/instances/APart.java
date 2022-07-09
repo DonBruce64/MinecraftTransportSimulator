@@ -158,6 +158,7 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 		//Update local position, orientation, scale, and enabled state.
 		isInvisible = false;
 		scale.set(placementDefinition.isSubPart && parentPart != null ? parentPart.scale : entityOn.scale);
+		localOffset.multiply(scale);
         
         //Internal movement uses local coords.
         //First rotate orientation to face rotated state.
@@ -199,10 +200,6 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 		if(internalMovementSwitchbox != null){
             localOrientation.multiply(internalMovementSwitchbox.rotation);
         }
-		
-		//Offset now needs to be multiplied by the scale, as that's the scale of what we are on.
-		//This ensures that we're offset relative the proper amount.
-		localOffset.multiply(scale);
 		
 		//Now that locals are set, set globals to reflect them.
 		Point3D localPositionDelta = new Point3D().set(localOffset).rotate(orientation);
