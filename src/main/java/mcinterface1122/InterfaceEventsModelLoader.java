@@ -160,9 +160,6 @@ public class InterfaceEventsModelLoader{
 		
 		//Now that we've created all the pack loaders, reload the resource manager to add them to the systems.
 		FMLClientHandler.instance().refreshResources(VanillaResourceType.MODELS);
-		
-		//Register the invisible item.
-		ModelLoader.setCustomModelResourceLocation(BuilderItem.invisibleItem, 0, new ModelResourceLocation(BuilderItem.invisibleItem.getRegistryName(), "inventory"));
 	}
 	
 	/**

@@ -13,7 +13,7 @@ apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'eclipse'
 
 //Set file name.
-version = "1.12.2-21.3.0-BETA54"
+version = "1.12.2-21.3.0-BETA55"
 group= "minecrafttransportsimulator"
 archivesBaseName = "Immersive Vehicles"
 

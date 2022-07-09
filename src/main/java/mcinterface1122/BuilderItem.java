@@ -65,15 +65,6 @@ public class BuilderItem extends Item implements IBuilderItemInterface{
 	/**Map of created items linked to their builder instances.  Used for interface operations.**/
 	protected static final Map<AItemBase, BuilderItem> itemMap = new LinkedHashMap<AItemBase, BuilderItem>();
 	
-	/**Invisible item used for rendering routines to block hand rendering.**/
-	protected static Item invisibleItem = new Item() {
-		@Override
-		public String getItemStackDisplayName(ItemStack stack){
-			return InterfaceEventsEntityRendering.heldStackHolder != null ? InterfaceEventsEntityRendering.heldStackHolder.getDisplayName() : super.getItemStackDisplayName(stack);
-		}
-		
-	};
-	
 	/**Current item we are built around.**/
 	private final AItemBase item;
 	
@@ -280,8 +271,5 @@ public class BuilderItem extends Item implements IBuilderItemInterface{
 				OreDictionary.registerOre(item.definition.general.oreDict, mcItem);
 			}
 		}
-		
-		//Register our invisible item.
-		event.getRegistry().register(invisibleItem.setRegistryName("invisible"));
 	}
 }

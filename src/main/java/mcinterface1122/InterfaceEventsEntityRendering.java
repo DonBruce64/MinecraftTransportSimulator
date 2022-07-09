@@ -33,11 +33,12 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.client.event.RenderHandEvent;
 import net.minecraftforge.client.event.RenderLivingEvent;
+import net.minecraftforge.client.event.RenderSpecificHandEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.PlayerTickEvent;
 import net.minecraftforge.fml.relauncher.Side;
 
 /**Interface for handling events pertaining to entity rendering.  This modifies the player's rendered state
@@ -48,16 +49,12 @@ import net.minecraftforge.fml.relauncher.Side;
  */
 @EventBusSubscriber(Side.CLIENT)
 public class InterfaceEventsEntityRendering{
-    private static int lastScreenWidth;
-	private static int lastScreenHeight;
-	protected static boolean renderCurrentRiderSitting;
-	protected static boolean renderCurrentRiderStanding;
+	public static boolean renderCurrentRiderSitting;
+	public static boolean renderCurrentRiderStanding;
 	private static boolean overwrotePlayerModel = false;
 	private static boolean needPlayerTweaks = false;
 	private static boolean needToPopMatrix = false;
-	private static int heldStackSlot = -1;
-	protected static ItemStack heldStackHolder = null;
-	private static final ItemStack invisibleStack = new ItemStack(BuilderItem.invisibleItem);
+	private static ItemStack heldStackHolder = null;
 	private static final Point3D leftArmAngles = new Point3D();
 	private static final Point3D rightArmAngles = new Point3D();
 	private static final Point3D entityScale = new Point3D();
@@ -105,38 +102,9 @@ public class InterfaceEventsEntityRendering{
 		RenderHelper.disableStandardItemLighting();
 		InterfaceManager.renderingInterface.setLightingState(false);
     }
-	
-
     
-    /**
-	 *  On the start of the player tick, remove the gun item from the player's hand if they are holding one.
-	 *  This prevents the hand and model from rendering.  Also do this if they have a custom camera.
-	 *  If we removed this item, and the conditions are no longer met, add it back.
-	 */
-    @SubscribeEvent
-    public static void on(PlayerTickEvent event){
-    	if(event.side == Side.CLIENT) {
-	    	if(event.player != null) {
-	    		EntityPlayerGun gunEntity = EntityPlayerGun.playerClientGuns.get(event.player.getUniqueID());
-	    		boolean shouldDisableItem = (gunEntity != null && gunEntity.activeGun != null) || CameraSystem.runningCustomCameras;
-		    	
-	    		//This needs to come first in case we switched from one gun slot to another.
-	    		if(heldStackHolder != null && (!shouldDisableItem || heldStackSlot != event.player.inventory.currentItem)){
-			    	event.player.inventory.setInventorySlotContents(heldStackSlot, heldStackHolder);
-			    	heldStackHolder = null;
-		    	}
-	    		
-	    		if(shouldDisableItem){
-		    		ItemStack testStack = event.player.getHeldItemMainhand();
-		    		if(testStack.getItem() != invisibleStack.getItem()) {
-			    		heldStackHolder = testStack;
-			    		heldStackSlot = event.player.inventory.currentItem;
-			    		event.player.inventory.setInventorySlotContents(heldStackSlot, invisibleStack);
-		    		}
-		    	}
-	    	}
-    	}
-    }
+    private static int lastScreenWidth;
+	private static int lastScreenHeight;
     
     /**
      * Renders all overlay things.  This is essentially anything that's a 2D render, such as the main overlay,
@@ -162,7 +130,7 @@ public class InterfaceEventsEntityRendering{
     	
     	//Do overlay rendering before the chat window is rendered.
     	//This renders them over the main hotbar, but doesn't block the chat window.
-    	if(event.getType() == RenderGameOverlayEvent.ElementType.CHAT){
+    	if(event.getType().equals(RenderGameOverlayEvent.ElementType.CHAT)){
 			//Set up variables.
 	    	long displaySize = InterfaceManager.clientInterface.getPackedDisplaySize();
 	    	int screenWidth = (int) (displaySize >>  Integer.SIZE);
@@ -399,19 +367,14 @@ public class InterfaceEventsEntityRendering{
 		    		}
 		    		
 		    		//Remove the held item from the enitty's hand
-		    		
+		    		EntityPlayer player = (EntityPlayer) entity;
+		    		heldStackHolder = player.getHeldItemMainhand();
+		    		player.inventory.setInventorySlotContents(player.inventory.currentItem, ItemStack.EMPTY);
 		    		
 		    		//Flag us for player tweaks in the render.
 		    		needPlayerTweaks = true;
 		    	}
 			}
-		}
-		
-		//If we have a custom camera, remove the player's hand-held item so it doesn't render.
-		if(CameraSystem.runningCustomCameras && heldStackHolder == null && entity == Minecraft.getMinecraft().player) {
-			EntityPlayer player = (EntityPlayer) entity;
-    		heldStackHolder = player.getHeldItemMainhand();
-    		player.inventory.setInventorySlotContents(player.inventory.currentItem, invisibleStack);
 		}
     }
     
@@ -423,6 +386,11 @@ public class InterfaceEventsEntityRendering{
     	if(needToPopMatrix){
     		GL11.glPopMatrix();
         }
+    	if(heldStackHolder != null){
+    		EntityPlayer player = (EntityPlayer) event.getEntity();
+    		player.inventory.setInventorySlotContents(player.inventory.currentItem, heldStackHolder);
+    		heldStackHolder = null;
+    	}
     }
     
     private static class ModelPlayerCustom extends ModelPlayer{
@@ -465,6 +433,26 @@ public class InterfaceEventsEntityRendering{
     			this.bipedRightArm.rotateAngleZ = (float) rightArmAngles.z;
     			copyModelAngles(this.bipedRightArm, this.bipedRightArmwear);
     		}
+    	}
+    }
+    
+    /**
+	 *  Hand render events.  We use these to disable rendering of the item in the player's hand
+	 *  if they are holding a gun.  Not sure why there's two events, but we cancel them both!
+	 */
+    @SubscribeEvent
+    public static void on(RenderHandEvent event){
+    	EntityPlayerGun entity = EntityPlayerGun.playerClientGuns.get(Minecraft.getMinecraft().player.getUniqueID());
+    	if((entity != null && entity.activeGun != null) || CameraSystem.runningCustomCameras){
+    		event.setCanceled(true);
+    	}
+    }
+    
+    @SubscribeEvent
+    public static void on(RenderSpecificHandEvent event){
+    	EntityPlayerGun entity = EntityPlayerGun.playerClientGuns.get(Minecraft.getMinecraft().player.getUniqueID());
+    	if((entity != null && entity.activeGun != null) || CameraSystem.runningCustomCameras){
+    		event.setCanceled(true);
     	}
     }
 }
