@@ -47,7 +47,7 @@ public abstract class ATileEntityLoader extends TileEntityDecor{
 	
 	protected void updateNearestPart(){
 		PartInteractable nearestPart = null;
-		double nearestDistance = 999;
+		double nearestDistance = 10;
 		if(canOperate()){
 			for(PartInteractable interactablePart : world.getEntitiesOfType(PartInteractable.class)){
 				if(canLoadPart(interactablePart)){
