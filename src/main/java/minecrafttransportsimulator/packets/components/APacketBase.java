@@ -5,11 +5,12 @@ import java.util.UUID;
 
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.items.components.AItemPack;
+import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitBlock;
-import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitWrapper;
 import minecrafttransportsimulator.packets.instances.PacketEntityColorChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 import minecrafttransportsimulator.packets.instances.PacketEntityInstrumentChange;
@@ -51,6 +52,7 @@ import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement
 import minecrafttransportsimulator.packets.instances.PacketVehicleServerSync;
 import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataRequest;
 import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataUpdate;
+import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**Base packet class.  All packets must extend this class to be used with the
  * {@link InterfaceManager.packetInterface}.  This allows for standard packet handling across
@@ -137,6 +139,23 @@ public abstract class APacketBase{
 	}
 	
 	/**
+     *  Helper method to write a pack item to the buffer.
+     */
+    protected static void writeItemToBuffer(AItemPack<?> item, ByteBuf buf){
+        writeStringToBuffer(item.definition.packID, buf);
+        writeStringToBuffer(item.definition.systemName, buf);
+        writeStringToBuffer(item instanceof AItemSubTyped ? ((AItemSubTyped<?>) item).subName : "", buf);
+    }
+    
+    /**
+     *  Helper method to read a UUID from the buffer.
+     */
+    @SuppressWarnings("unchecked")
+    protected static<T extends AItemPack<?>> T readItemFromBuffer(ByteBuf buf){
+        return (T) PackParserSystem.getItem(readStringFromBuffer(buf), readStringFromBuffer(buf), readStringFromBuffer(buf));
+    }
+	
+	/**
 	 *  Helper method to write a Point3d to the buffer.
 	 */
 	protected static void writePoint3dToBuffer(Point3D point, ByteBuf buf){
@@ -205,7 +224,6 @@ public abstract class APacketBase{
 		
 		//Bullet packets.
 		InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityBulletHitBlock.class);
-		InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketEntityBulletHitWrapper.class);
 		
 		//Fluid tank packets.
 		InterfaceManager.packetInterface.registerPacket(packetIndex++, PacketFluidTankChange.class);

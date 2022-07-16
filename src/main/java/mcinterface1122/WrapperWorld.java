@@ -23,6 +23,7 @@ import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.instances.APart;
+import minecrafttransportsimulator.entities.instances.EntityBullet;
 import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.components.AItemBase;
@@ -275,7 +276,7 @@ public class WrapperWorld extends AWrapperWorld{
     }
 	
 	@Override
-	public List<IWrapperEntity> attackEntities(Damage damage, Point3D motion){
+	public List<IWrapperEntity> attackEntities(Damage damage, Point3D motion, boolean generateList){
 		AxisAlignedBB mcBox = damage.box.convert();
 		List<Entity> collidedEntities;
 		
@@ -332,9 +333,7 @@ public class WrapperWorld extends AWrapperWorld{
 			}
 		}
 		
-		//If we are on the server, attack the entities.
-		//If we are on a client, we won't have attacked any entities, but we need to return what we found.
-		if(isClient()){
+		if(generateList){
 			return hitEntities;
 		}else{
 			for(IWrapperEntity entity : hitEntities){
@@ -862,7 +861,8 @@ public class WrapperWorld extends AWrapperWorld{
    @SubscribeEvent
    public void on(TickEvent.WorldTickEvent event){
 	   //Need to check if it's our world, because Forge is stupid like that.
-	   if(event.world.equals(world) && event.phase.equals(Phase.END) && !event.world.isRemote){
+       //Note that the client world never calls this method: to do client ticks we need to use the client interface.
+	   if(!event.world.isRemote && event.world.equals(world) && event.phase.equals(Phase.END)){
 		   for(EntityPlayer player : event.world.playerEntities){
 			   UUID playerUUID = player.getUniqueID();
 			   BuilderEntityExisting gunBuilder = playerServerGunBuilders.get(playerUUID);
@@ -903,7 +903,13 @@ public class WrapperWorld extends AWrapperWorld{
 				   }
 			   }
 		   }
-	   }
+		   
+		   //Update bullets.
+           beginProfiling("MTS_BulletUpdates", true);
+           for(EntityBullet bullet : getEntitiesOfType(EntityBullet.class)){
+               bullet.update();
+           }
+       }
    }
 	
 	/**

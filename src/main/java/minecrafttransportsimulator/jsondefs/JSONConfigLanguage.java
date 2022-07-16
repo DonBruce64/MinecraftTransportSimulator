@@ -9,7 +9,8 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**Config class for language interfacing.  This contains all default text strings, and will be loaded
- * by clients.  When choosing a file to load, the current language suffix will be used.  If this file doens't exist,
+ * by both the client and server.  When choosing a file to load, the current language suffix will be used
+ * on clients, whereas servers will always use the default, english language.  If a file doesn't exist,
  * or is missing an entry, then the default value will be used instead.
  * 
  * @author don_bruce

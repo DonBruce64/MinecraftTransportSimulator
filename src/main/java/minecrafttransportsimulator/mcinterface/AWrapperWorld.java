@@ -130,15 +130,12 @@ public abstract class AWrapperWorld extends EntityManager{
 	/**
 	 *  Attacks all entities that are in the passed-in damage range.  
 	 *  This only includes external entities, and NOT any entities
-	 *  that extend {@link BuilderEntityExisting}  If this is called on 
-	 *  clients, then this method will not attack any entities. Instead, 
+	 *  that extend {@link BuilderEntityExisting}  If this is called with 
+	 *  generateList as true, then this method will not attack any entities. Instead, 
 	 *  it will return a list of all entities that could have been attacked. 
-	 *  This is because attacking cannot be done on clients, but it may be useful to 
-	 *  know what entities could have been attacked should the call have been made on a server.
-	 *  Note that the passed-in motion is used to move the Damage BoundingBox a set distance to
-	 *  prevent excess collision checking, and may be null if no motion is applied.
+	 *  Otherwise, the method returns null.
 	 */
-	public abstract List<IWrapperEntity> attackEntities(Damage damage, Point3D motion);
+	public abstract List<IWrapperEntity> attackEntities(Damage damage, Point3D motion, boolean generateList);
 	
 	/**
 	 *  Loads all entities that are in the passed-in range into the passed-in entity.

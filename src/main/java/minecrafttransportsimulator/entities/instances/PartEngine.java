@@ -574,13 +574,13 @@ public class PartEngine extends APart{
 					IWrapperEntity controller = vehicleOn.getController();
 					LanguageEntry language = controller != null ? JSONConfigLanguage.DEATH_JETINTAKE_PLAYER : JSONConfigLanguage.DEATH_JETINTAKE_NULL;
 					Damage jetIntake = new Damage(definition.engine.jetPowerFactor*ConfigSystem.settings.damage.jetDamageFactor.value*rpm/1000F, boundingBox, this, controller, language);
-					world.attackEntities(jetIntake, null);
+					world.attackEntities(jetIntake, null, false);
 					
 					boundingBox.globalCenter.subtract(vehicleOn.headingVector);
 					boundingBox.globalCenter.subtract(vehicleOn.headingVector);
 					language = controller != null ? JSONConfigLanguage.DEATH_JETEXHAUST_PLAYER : JSONConfigLanguage.DEATH_JETEXHAUST_NULL;
 					Damage jetExhaust = new Damage(definition.engine.jetPowerFactor*ConfigSystem.settings.damage.jetDamageFactor.value*rpm/2000F, boundingBox, this, controller, language).setFire();
-					world.attackEntities(jetExhaust, null);
+					world.attackEntities(jetExhaust, null, false);
 					
 					boundingBox.globalCenter.add(vehicleOn.headingVector);
 					boundingBox.widthRadius -= 0.25;

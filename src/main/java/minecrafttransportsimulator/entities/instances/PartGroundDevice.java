@@ -154,7 +154,7 @@ public class PartGroundDevice extends APart{
 					IWrapperEntity controller = vehicleOn.getController();
 					LanguageEntry language = controller != null ? JSONConfigLanguage.DEATH_WHEEL_PLAYER : JSONConfigLanguage.DEATH_WHEEL_NULL;
 					Damage wheelDamage = new Damage(wheelDamageAmount, boundingBox, this, controller, language);
-					vehicleOn.world.attackEntities(wheelDamage, null);
+					vehicleOn.world.attackEntities(wheelDamage, null, false);
 					boundingBox.widthRadius -= 0.25;
 					boundingBox.depthRadius -= 0.25;
 				}

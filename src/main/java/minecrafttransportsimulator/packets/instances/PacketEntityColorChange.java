@@ -9,7 +9,6 @@ import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperInventory;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.packets.components.APacketEntityInteract;
-import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**Packet sent to entities to update their their subName (color).  This gets sent from
  * a client when they change the color in the paint gun GUI.  Change is applied to the
@@ -27,15 +26,13 @@ public class PacketEntityColorChange extends APacketEntityInteract<AEntityD_Defi
 	
 	public PacketEntityColorChange(ByteBuf buf){
 		super(buf);
-		this.newItem = (AItemSubTyped<?>) PackParserSystem.getItem(readStringFromBuffer(buf), readStringFromBuffer(buf), readStringFromBuffer(buf));
+		this.newItem = readItemFromBuffer(buf);
 	}
 	
 	@Override
 	public void writeToBuffer(ByteBuf buf){
 		super.writeToBuffer(buf);
-		writeStringToBuffer(newItem.definition.packID, buf);
-		writeStringToBuffer(newItem.definition.systemName, buf);
-		writeStringToBuffer(newItem.subName, buf);
+		writeItemToBuffer(newItem, buf);
 	}
 	
 	@Override

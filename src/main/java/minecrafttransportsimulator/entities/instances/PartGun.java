@@ -58,6 +58,7 @@ public class PartGun extends APart{
 	private final RotationMatrix internalOrientation;
 	private final RotationMatrix prevInternalOrientation;
 	protected ItemBullet loadedBullet;
+	public ItemBullet clientNextBullet;
 	
 	//These variables are used during firing and will be reset on loading.
 	public GunState state;
@@ -70,6 +71,7 @@ public class PartGun extends APart{
 	private int reloadTimeRemaining;
 	private int windupTimeCurrent;
 	private int windupRotation;
+	private long lastMillisecondFired;
 	public IWrapperEntity lastController;
 	private IWrapperEntity entityTarget;
 	private PartEngine engineTarget;
@@ -183,6 +185,7 @@ public class PartGun extends APart{
 	@Override
 	public void update(){
 		//Set gun state and do updates.
+	    firedThisCheck = false;
 		prevInternalOrientation.set(internalOrientation);
 		if(isActive && !placementDefinition.isSpare){
 			//Check if we have a controller.
@@ -288,13 +291,18 @@ public class PartGun extends APart{
     	                    }else{
     	                        newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this);
     	                    }
+
     	                    world.addEntity(newBullet);
     	                    
     	                    //Decrement bullets, but check to make sure we still have some.
     	                    //We might have a partial volley with only some muzzles firing in this group.
-    	                    if(!ConfigSystem.settings.general.devMode.value)--bulletsLeft;
-    	                    if(bulletsLeft == 0){
-    	                        loadedBullet = null;
+    	                    if(--bulletsLeft == 0){
+    	                        //Only set the bullet to null on the server.  This lets the server choose a different bullet to load.
+    	                        //If we did this on the client, we might set the bullet to null after we got a packet for a reload.
+    	                        //That would cause us to finish the reload with a null bullet, and crash later.
+    	                        if(!world.isClient()) {
+    	                            loadedBullet = null;
+    	                        }
     	                        break;
     	                    }
     	                }
@@ -304,6 +312,7 @@ public class PartGun extends APart{
     	                cooldownTimeRemaining =(int)definition.gun.fireDelay;
     	                firedThisRequest = true;
     	                firedThisCheck = true;
+    	                lastMillisecondFired = System.currentTimeMillis();
     	                if(definition.gun.muzzleGroups.size() == ++currentMuzzleGroupIndex){
     	                    currentMuzzleGroupIndex = 0;
     	                }
@@ -365,6 +374,14 @@ public class PartGun extends APart{
 				}
 			}
 			
+			//If we are a client, this is where we get our bullets.
+			if(clientNextBullet != null) {
+                loadedBullet = clientNextBullet;
+                bulletsReloading = clientNextBullet.definition.bullet.quantity;
+                reloadTimeRemaining = definition.gun.reloadTime;
+                clientNextBullet = null;
+            }
+			
 			//If we are reloading, decrement the reloading timer.
 			//If we are done reloading, add the new bullets.
 			//This comes after the reloading block as we need a 0/1 state-change for the various animations,
@@ -402,10 +419,8 @@ public class PartGun extends APart{
 			firedThisRequest = false;
 		}
 		
-		//Now run super.  Firing check reset needs to happen after this call as the firing gets
-		//done by the rendering system for particle spawning and will be set true here on call.
+		//Now run super.  This needed to wait for the gun states to ensure proper states.
 		super.update();
-		firedThisCheck = false;
 	}
 	
 	/**
@@ -461,9 +476,9 @@ public class PartGun extends APart{
 			}
 		}else{
 			//Player-controlled gun.
-			//If we are on a client, check for a target for this gun if we have a lock-on missile.
+			//Check for a target for this gun if we have a lock-on missile.
 			//Only do this once every 1/2 second.
-			if(world.isClient() && loadedBullet != null && loadedBullet.definition.bullet.turnRate > 0){
+			if(loadedBullet != null && loadedBullet.definition.bullet.turnRate > 0){
 				//Try to find the entity the controller is looking at.
 				entityTarget = world.getEntityLookingAt(controller, RAYTRACE_DISTANCE, true);
 				if(entityTarget == null){
@@ -613,15 +628,13 @@ public class PartGun extends APart{
 		//Also don't fill bullets if we are currently reloading bullets.
 		if(item.definition.bullet != null){
 			boolean isNewBulletValid = item.definition.bullet.diameter == definition.gun.diameter && item.definition.bullet.caseLength >= definition.gun.minCaseLength && item.definition.bullet.caseLength <= definition.gun.maxCaseLength; 
-			if((bulletsReloading == 0 && (loadedBullet == null ? isNewBulletValid : loadedBullet.equals(item))) || world.isClient()){
+			if(bulletsReloading == 0 && (loadedBullet == null ? isNewBulletValid : loadedBullet.equals(item))){
 				//Make sure we don't over-fill the gun.
-				if(item.definition.bullet.quantity + bulletsLeft <= definition.gun.capacity || world.isClient()){
+				if(item.definition.bullet.quantity + bulletsLeft <= definition.gun.capacity){
 					loadedBullet = item;
 					bulletsReloading = item.definition.bullet.quantity;
 					reloadTimeRemaining = definition.gun.reloadTime;
-					if(!world.isClient()){
-						InterfaceManager.packetInterface.sendToAllClients(new PacketPartGun(this, loadedBullet));
-					}
+					InterfaceManager.packetInterface.sendToAllClients(new PacketPartGun(this, loadedBullet));
 					return true;
 				}
 			}
@@ -719,6 +732,7 @@ public class PartGun extends APart{
 			case("gun_active"): return state.isAtLeast(GunState.CONTROLLED) ? 1 : 0;
 			case("gun_firing"): return state.isAtLeast(GunState.FIRING_REQUESTED) ? 1 : 0;
 			case("gun_fired"): return firedThisCheck ? 1 : 0;
+			case("gun_muzzleflash"): return firedThisCheck && lastMillisecondFired + 25 < System.currentTimeMillis() ? 1 : 0;
 			case("gun_lockedon"): return entityTarget != null || engineTarget != null ? 1 : 0;
 			case("gun_lockedon_x"): return entityTarget != null ? entityTarget.getPosition().x : (engineTarget != null ? engineTarget.position.x : 0);
 			case("gun_lockedon_y"): return entityTarget != null ? entityTarget.getPosition().y : (engineTarget != null ? engineTarget.position.y : 0);
@@ -727,7 +741,7 @@ public class PartGun extends APart{
 			case("gun_yaw"): return prevInternalOrientation.angles.y + (internalOrientation.angles.y - prevInternalOrientation.angles.y)*partialTicks;
 			case("gun_pitching"): return prevInternalOrientation.angles.x != internalOrientation.angles.x ? 1 : 0;
 			case("gun_yawing"): return prevInternalOrientation.angles.y != internalOrientation.angles.y ? 1 : 0;
-			case("gun_cooldown"): return cooldownTimeRemaining;
+			case("gun_cooldown"): return cooldownTimeRemaining > 0 ? 1 : 0;
 			case("gun_windup_time"): return windupTimeCurrent;
 			case("gun_windup_rotation"): return windupRotation;
 			case("gun_windup_complete"): return windupTimeCurrent == definition.gun.windupTime ? 1 : 0;

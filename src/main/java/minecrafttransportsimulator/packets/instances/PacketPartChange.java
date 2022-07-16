@@ -10,7 +10,6 @@ import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.components.APacketEntity;
-import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**Packet used to add/remove parts from an entity.  This packet only appears on clients after the
  * server has added or removed a part from the entity.
@@ -44,7 +43,7 @@ public class PacketPartChange extends APacketEntity<AEntityF_Multipart<?>>{
 		super(buf);
 		this.partOffset = readPoint3dFromBuffer(buf);
 		if(buf.readBoolean()){
-			this.partItem = PackParserSystem.getItem(readStringFromBuffer(buf), readStringFromBuffer(buf), readStringFromBuffer(buf));
+			this.partItem = readItemFromBuffer(buf);
 			this.partData = readDataFromBuffer(buf);
 			if(buf.readBoolean()){
 				this.parentPartOffset = readPoint3dFromBuffer(buf);
@@ -64,9 +63,7 @@ public class PacketPartChange extends APacketEntity<AEntityF_Multipart<?>>{
 		writePoint3dToBuffer(partOffset, buf);
 		if(partItem != null){
 			buf.writeBoolean(true);
-			writeStringToBuffer(partItem.definition.packID, buf);
-			writeStringToBuffer(partItem.definition.systemName, buf);
-			writeStringToBuffer(partItem.subName, buf);
+			writeItemToBuffer(partItem, buf);
 			writeDataToBuffer(partData, buf);
 			if(parentPartOffset != null){
 				buf.writeBoolean(true);

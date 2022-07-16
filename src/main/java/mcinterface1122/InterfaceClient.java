@@ -248,10 +248,11 @@ public class InterfaceClient implements IInterfaceClient{
 			
 			WrapperWorld clientWorld = WrapperWorld.getWrapperFor(Minecraft.getMinecraft().world);
 			if(clientWorld != null){
-				clientWorld.beginProfiling("MTS_BulletUpdates", true);
-				for(EntityBullet bullet : clientWorld.getEntitiesOfType(EntityBullet.class)){
-					bullet.update();
-				}
+			   clientWorld.beginProfiling("MTS_BulletUpdates", true);
+	           for(EntityBullet bullet : clientWorld.getEntitiesOfType(EntityBullet.class)){
+	               bullet.update();
+	           }
+		           
 				clientWorld.beginProfiling("MTS_ParticleUpdates", false);
 				for(EntityParticle particle : clientWorld.getEntitiesOfType(EntityParticle.class)){
 					particle.update();

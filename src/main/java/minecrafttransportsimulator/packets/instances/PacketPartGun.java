@@ -5,7 +5,6 @@ import minecrafttransportsimulator.entities.instances.PartGun;
 import minecrafttransportsimulator.items.instances.ItemBullet;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
-import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**Packet used to send signals to guns.  This can be either to start/stop the firing of the gun,
  * or to re-load the gun with the specified bullets.  If we are doing start/stop commands, then
@@ -19,18 +18,14 @@ public class PacketPartGun extends APacketEntity<PartGun>{
 	private final boolean controlPulse;
 	private final boolean triggerState;
 	private final boolean aimState;
-	private final String bulletPackID;
-	private final String bulletSystemName;
-	private final String bulletSubName;
+	private final ItemBullet bulletItem;
 	
 	public PacketPartGun(PartGun gun, boolean triggerState, boolean aimState){
 		super(gun);
 		this.controlPulse = true;
 		this.triggerState = triggerState;
 		this.aimState = aimState;
-		this.bulletPackID = null;
-		this.bulletSystemName = null;
-		this.bulletSubName = null;
+		this.bulletItem = null;
 	}
 	
 	public PacketPartGun(PartGun gun, ItemBullet bullet){
@@ -38,9 +33,7 @@ public class PacketPartGun extends APacketEntity<PartGun>{
 		this.controlPulse = false;
 		this.triggerState = false;
 		this.aimState = false;
-		this.bulletPackID = bullet.definition.packID;
-		this.bulletSystemName = bullet.definition.systemName;
-		this.bulletSubName = bullet.subName;
+		this.bulletItem = bullet;
 	}
 	
 	public PacketPartGun(ByteBuf buf){
@@ -49,14 +42,10 @@ public class PacketPartGun extends APacketEntity<PartGun>{
 		this.aimState = buf.readBoolean();
 		if(controlPulse){
 			this.triggerState = buf.readBoolean();
-			this.bulletPackID = null;
-			this.bulletSystemName = null;
-			this.bulletSubName = null;
+			this.bulletItem = null;
 		}else{
 			this.triggerState = false;
-			this.bulletPackID = readStringFromBuffer(buf);
-			this.bulletSystemName = readStringFromBuffer(buf);
-			this.bulletSubName = readStringFromBuffer(buf);
+			this.bulletItem = readItemFromBuffer(buf);
 		}
 	}
 	
@@ -68,9 +57,7 @@ public class PacketPartGun extends APacketEntity<PartGun>{
 		if(controlPulse){
 			buf.writeBoolean(triggerState);
 		}else{
-			writeStringToBuffer(bulletPackID, buf);
-			writeStringToBuffer(bulletSystemName, buf);
-			writeStringToBuffer(bulletSubName, buf);
+			writeItemToBuffer(bulletItem, buf);
 		}
 	}
 	
@@ -81,7 +68,8 @@ public class PacketPartGun extends APacketEntity<PartGun>{
 			gun.isHandHeldGunAimed = aimState;
 			return true;
 		}else{
-			return gun.tryToReload(PackParserSystem.getItem(bulletPackID, bulletSystemName, bulletSubName));
+			gun.clientNextBullet = bulletItem;
+			return false;
 		}
 	}
 }

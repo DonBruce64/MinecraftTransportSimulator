@@ -172,6 +172,11 @@ public class CameraSystem{
 				cameraAdjustedPosition.set(0, (eyeHeight + seatOffset)*verticalScale, 0).rotate(cameraOrientation).add(0, -eyeHeight, 0);
 				cameraOrientation.applyRotation(player.getOrientation());
             	return true;
+			}else {
+			    //No custom camera, and no seat camera modifications.  Standard world view.
+			    enableCustomCameras = false;
+                runningCustomCameras = false;
+                return false;
 			}
     	}else if(InterfaceManager.clientInterface.inThirdPerson()){
     		//If we were running a custom camera, and hit the switch key, increment our camera index.
