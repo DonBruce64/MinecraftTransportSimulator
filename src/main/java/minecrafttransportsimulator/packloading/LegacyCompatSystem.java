@@ -18,7 +18,6 @@ import minecrafttransportsimulator.entities.instances.PartEngine;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent.PoleComponentType;
 import minecrafttransportsimulator.jsondefs.AJSONInteractableEntity;
 import minecrafttransportsimulator.jsondefs.AJSONItem;
-import minecrafttransportsimulator.jsondefs.AJSONItem.General.TextLine;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 import minecrafttransportsimulator.jsondefs.AJSONPartProvider;
 import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
@@ -32,7 +31,6 @@ import minecrafttransportsimulator.jsondefs.JSONConnectionGroup;
 import minecrafttransportsimulator.jsondefs.JSONCraftingBench;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONDecor.DecorComponentType;
-import minecrafttransportsimulator.jsondefs.JSONDoor;
 import minecrafttransportsimulator.jsondefs.JSONInstrument;
 import minecrafttransportsimulator.jsondefs.JSONInstrumentDefinition;
 import minecrafttransportsimulator.jsondefs.JSONItem;
@@ -46,9 +44,7 @@ import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPart.EffectorComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPart.FurnaceComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
-import minecrafttransportsimulator.jsondefs.JSONPart.JSONPartEngine.EngineSound;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
-import minecrafttransportsimulator.jsondefs.JSONPartDefinition.ExhaustObject;
 import minecrafttransportsimulator.jsondefs.JSONParticle;
 import minecrafttransportsimulator.jsondefs.JSONParticle.ParticleType;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
@@ -869,7 +865,7 @@ public final class LegacyCompatSystem{
 				
 				//Running sound plays when engine is running, and pitch-shifts to match engine speed.
 				if(definition.engine.customSoundset != null){
-					for(EngineSound customSound : definition.engine.customSoundset){
+					for(minecrafttransportsimulator.jsondefs.JSONPart.JSONPartEngine.EngineSound customSound : definition.engine.customSoundset){
 						JSONSound runningSound = new JSONSound();
 						runningSound.name = customSound.soundName;
 						runningSound.looping = true;
@@ -1303,7 +1299,7 @@ public final class LegacyCompatSystem{
 		//If we are a sign using the old textlines, update them.
 		if(definition.general.textLines != null){
 			definition.general.textObjects = new ArrayList<JSONText>();
-			for(TextLine line : definition.general.textLines){
+			for(minecrafttransportsimulator.jsondefs.AJSONItem.General.TextLine line : definition.general.textLines){
 				JSONText object = new JSONText();
 				object.color = line.color;
 				object.scale = line.scale;
@@ -1455,7 +1451,7 @@ public final class LegacyCompatSystem{
 		if(definition.general.textLines != null){
 			definition.general.textObjects = new ArrayList<JSONText>();
 			int lineNumber = 0;
-			for(TextLine line : definition.general.textLines){
+			for(minecrafttransportsimulator.jsondefs.AJSONItem.General.TextLine line : definition.general.textLines){
 				JSONText object = new JSONText();
 				object.lightsUp = true;
 				object.color = line.color;
@@ -1681,7 +1677,7 @@ public final class LegacyCompatSystem{
 		}
 		if(partDef.exhaustObjects != null) {
 			partDef.particleObjects = new ArrayList<JSONParticle>();
-			for(ExhaustObject exhaust : partDef.exhaustObjects) {
+			for(minecrafttransportsimulator.jsondefs.JSONPartDefinition.ExhaustObject exhaust : partDef.exhaustObjects) {
 				JSONParticle particle = new JSONParticle();
 				particle.type = ParticleType.SMOKE;
 				particle.pos = exhaust.pos;
@@ -1849,7 +1845,7 @@ public final class LegacyCompatSystem{
 			if(interactableDef.collisionGroups == null){
 				interactableDef.collisionGroups = new ArrayList<JSONCollisionGroup>();
 			}
-			for(JSONDoor door : interactableDef.doors){
+			for(minecrafttransportsimulator.jsondefs.JSONDoor door : interactableDef.doors){
 				//Check if door should auto-open when placed.
 				if(!door.closedByDefault){
 					//We can assume rendering exists.  Cause who the heck makes doors that don't animate?
