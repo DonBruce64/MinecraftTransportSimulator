@@ -6,7 +6,7 @@ import java.util.Map;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.systems.PackParserSystem;
+import minecrafttransportsimulator.packloading.PackParser;
 
 /**Config class for language interfacing.  This contains all default text strings, and will be loaded
  * by both the client and server.  When choosing a file to load, the current language suffix will be used
@@ -32,13 +32,13 @@ public class JSONConfigLanguage{
 		}
 		
 		//Populate pack entries.
-		for(String packID : PackParserSystem.getAllPackIDs()){
+		for(String packID : PackParser.getAllPackIDs()){
 			Map<String, JSONItemEntry> packMap = packs.get(packID);
 			if(packMap == null){
 				packMap = new LinkedHashMap<String, JSONItemEntry>();
 				packs.put(packID, packMap);
 			}
-			for(AItemPack<?> packItem : PackParserSystem.getAllItemsForPack(packID, true)){
+			for(AItemPack<?> packItem : PackParser.getAllItemsForPack(packID, true)){
 				String itemKey = packItem.getRegistrationName();
 				JSONItemEntry entry = packMap.get(itemKey);
 				if(entry == null){

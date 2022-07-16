@@ -17,6 +17,7 @@ import minecrafttransportsimulator.jsondefs.JSONConfigSettings;
 import minecrafttransportsimulator.jsondefs.JSONCraftingOverrides;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.JSONParser;
+import minecrafttransportsimulator.packloading.PackParser;
 
 
 /**Class that handles all configuration settings. This file is responsible for saving and loading
@@ -104,7 +105,7 @@ public final class ConfigSystem{
 			try{
 				JSONCraftingOverrides craftingOverridesObject = new JSONCraftingOverrides();
 				craftingOverridesObject.overrides = new LinkedHashMap<String, Map<String, List<String>>>();
-				for(AItemPack<?> packItem : PackParserSystem.getAllPackItems()){
+				for(AItemPack<?> packItem : PackParser.getAllPackItems()){
 					if(!craftingOverridesObject.overrides.containsKey(packItem.definition.packID)){
 						craftingOverridesObject.overrides.put(packItem.definition.packID, new LinkedHashMap<String, List<String>>());
 					}
@@ -129,7 +130,7 @@ public final class ConfigSystem{
 				JSONCraftingOverrides craftingOverridesObject = JSONParser.parseStream(new FileInputStream(craftingFile), JSONCraftingOverrides.class, null, null);
 				for(String craftingOverridePackID : craftingOverridesObject.overrides.keySet()){
 					for(String craftingOverrideSystemName : craftingOverridesObject.overrides.get(craftingOverridePackID).keySet()){
-						AItemPack<? extends AJSONItem> item = PackParserSystem.getItem(craftingOverridePackID, craftingOverrideSystemName);
+						AItemPack<? extends AJSONItem> item = PackParser.getItem(craftingOverridePackID, craftingOverrideSystemName);
 						if(item instanceof AItemSubTyped){
 							List<String> extraMaterials = ((AItemSubTyped<?>) item).getExtraMaterials();
 							extraMaterials.clear();

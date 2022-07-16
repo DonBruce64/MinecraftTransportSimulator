@@ -20,7 +20,7 @@ import minecrafttransportsimulator.items.instances.ItemDecor;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.PackMaterialComponent;
-import minecrafttransportsimulator.systems.PackParserSystem;
+import minecrafttransportsimulator.packloading.PackParser;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 
@@ -36,14 +36,14 @@ public class InterfaceJEI implements IModPlugin{
 	@Override
 	public void registerCategories(IRecipeCategoryRegistration registry){
 		//Check all pack items for benches.
-		for(AItemPack<?> packItem : PackParserSystem.getAllPackItems()){
+		for(AItemPack<?> packItem : PackParser.getAllPackItems()){
 			if(packItem instanceof ItemDecor){
 				ItemDecor benchItem = (ItemDecor) packItem;
 				if(benchItem.definition.decor.crafting != null){
 					
 					//For each bench, get all things they can craft, and add them as recipes.
 					List<IRecipeWrapper> benchRecipes = new ArrayList<IRecipeWrapper>();
-					for(AItemPack<?> packItemToTest : PackParserSystem.getAllPackItems()){
+					for(AItemPack<?> packItemToTest : PackParser.getAllPackItems()){
 						if(packItemToTest.isBenchValid(benchItem.definition.decor.crafting)){
 							benchRecipes.add(new PackRecipeWrapper(packItemToTest, false));
 							if(packItemToTest.definition.general.repairMaterials != null){
@@ -119,7 +119,7 @@ public class InterfaceJEI implements IModPlugin{
 
 		@Override
 		public String getModName(){
-			return PackParserSystem.getPackConfiguration(benchItem.definition.packID).packName;
+			return PackParser.getPackConfiguration(benchItem.definition.packID).packName;
 		}
 		
 		@Override

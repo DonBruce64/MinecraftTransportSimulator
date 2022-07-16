@@ -37,11 +37,11 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
+import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.rendering.components.DurationDelayClock;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.CameraSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**Base class for entities that are defined via JSON definitions and can be modeled in 3D.
  * This level adds various method for said definitions, which include rendering functions. 
@@ -99,7 +99,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 	public AEntityD_Definable(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data){
 		super(world, placingPlayer, data);
 		this.subName = data.getString("subName");
-		AItemSubTyped<JSONDefinition> item = PackParserSystem.getItem(data.getString("packID"), data.getString("systemName"), subName);
+		AItemSubTyped<JSONDefinition> item = PackParser.getItem(data.getString("packID"), data.getString("systemName"), subName);
 		this.definition = item != null ? item.definition : generateDefaultDefinition();
 		
 		//Load text.
@@ -283,7 +283,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 	 *  Returns the current item for this entity.
 	 */
 	public <ItemInstance extends AItemPack<JSONDefinition>> ItemInstance getItem(){
-		return PackParserSystem.getItem(definition.packID, definition.systemName, subName);
+		return PackParser.getItem(definition.packID, definition.systemName, subName);
 	}
 	
 	/**

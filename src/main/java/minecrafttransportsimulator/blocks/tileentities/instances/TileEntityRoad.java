@@ -27,10 +27,10 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityRoadCollisionUpdate;
+import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.rendering.components.RenderableObject;
 import minecrafttransportsimulator.rendering.instances.RenderRoad;
-import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**Road tile entity.  Contains the definition so we know how
  * to render this in the TESR call, as well as stores the "fake"
@@ -79,7 +79,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 			String packID = data.getString("packID" + componentType.name());
 			if(!packID.isEmpty()){
 				String systemName = data.getString("systemName" + componentType.name());
-				ItemRoadComponent newComponent = PackParserSystem.getItem(packID, systemName);
+				ItemRoadComponent newComponent = PackParser.getItem(packID, systemName);
 				components.put(componentType, newComponent);
 			}
 		}

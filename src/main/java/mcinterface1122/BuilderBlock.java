@@ -19,7 +19,7 @@ import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.IItemBlock;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.systems.PackParserSystem;
+import minecrafttransportsimulator.packloading.PackParser;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockHorizontal;
 import net.minecraft.block.material.Material;
@@ -324,8 +324,8 @@ public class BuilderBlock extends Block{
 		//Create all pack items.  We need to do this here in the blocks because
 		//block registration comes first, and we use the items registered to determine
 		//which blocks we need to register.
-		for(String packID : PackParserSystem.getAllPackIDs()){
-			for(AItemPack<?> packItem : PackParserSystem.getAllItemsForPack(packID, true)){
+		for(String packID : PackParser.getAllPackIDs()){
+			for(AItemPack<?> packItem : PackParser.getAllItemsForPack(packID, true)){
 				if(packItem.autoGenerate()){
 					new BuilderItem(packItem);
 				}

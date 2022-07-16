@@ -23,8 +23,8 @@ import minecrafttransportsimulator.jsondefs.JSONInstrumentDefinition;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityInstrumentChange;
+import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
-import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**A GUI that is used to put instruments into vehicles.  This GUI is essentially an overlay
  * to {@link GUIHUD} and {@link AGUIPanel} that uses the textures from those GUIs, but does
@@ -182,8 +182,8 @@ public class GUIInstruments extends AGUIBase{
 		//This depends on if the player has the instruments, or if they are in creative.
 		playerInstruments.clear();
 		String firstPackSeen = null;
-		for(String packID : PackParserSystem.getAllPackIDs()){
-			for(AItemPack<?> packItem : PackParserSystem.getAllItemsForPack(packID, true)){
+		for(String packID : PackParser.getAllPackIDs()){
+			for(AItemPack<?> packItem : PackParser.getAllItemsForPack(packID, true)){
 				if(packItem instanceof ItemInstrument){
 					if(player.isCreative() || player.getInventory().getSlotForStack(packItem.getNewStack(null)) != -1){
 						//Add the instrument to the list of instruments the player has.
@@ -206,7 +206,7 @@ public class GUIInstruments extends AGUIBase{
 		
 		//Set instrument icon and button states depending on which instruments the player has.
 		if(currentPack != null){
-			packName.text = PackParserSystem.getPackConfiguration(currentPack).packName;
+			packName.text = PackParser.getPackConfiguration(currentPack).packName;
 		}
 		for(int i=0; i<instrumentSlots.size(); ++i){
 			if(currentPack != null && playerInstruments.get(currentPack).size() > i){

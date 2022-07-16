@@ -28,7 +28,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPartChange;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
-import minecrafttransportsimulator.systems.PackParserSystem;
+import minecrafttransportsimulator.packloading.PackParser;
 
 /**Base class for multipart entities.  These entities hold other, part-based entities.  These part
  * entities may be added or removed from this entity based on the implementation, but assurances
@@ -97,7 +97,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 			//Don't want crashes due to pack updates.
 			try{
 				IWrapperNBT partData = data.getData("part_" + i);
-				AItemPart partItem = PackParserSystem.getItem(partData.getString("packID"), partData.getString("systemName"), partData.getString("subName"));
+				AItemPart partItem = PackParser.getItem(partData.getString("packID"), partData.getString("systemName"), partData.getString("subName"));
 				Point3D partOffset = partData.getPoint3d("offset");
 				addPartFromItem(partItem, placingPlayer, partData, partOffset, true);
 			}catch(Exception e){
@@ -754,7 +754,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 				String partPackID = partDef.defaultPart.substring(0, partDef.defaultPart.indexOf(':'));
 				String partSystemName = partDef.defaultPart.substring(partDef.defaultPart.indexOf(':') + 1);
 				try{
-					APart addedPart = addPartFromItem(PackParserSystem.getItem(partPackID, partSystemName), playerAdding, InterfaceManager.coreInterface.getNewNBTWrapper(), partDef.pos, addedDuringConstruction);
+					APart addedPart = addPartFromItem(PackParser.getItem(partPackID, partSystemName), playerAdding, InterfaceManager.coreInterface.getNewNBTWrapper(), partDef.pos, addedDuringConstruction);
 					if(addedPart != null){
 						//Set the default tone for the part, if it requests one and we can provide one.
 						updatePartTone(addedPart);

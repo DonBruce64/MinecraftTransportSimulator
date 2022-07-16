@@ -39,10 +39,10 @@ import minecrafttransportsimulator.jsondefs.JSONSkin;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.JSONParser;
+import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDefaults;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
-import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**This is a special GUI that doesn't use the normal GUI code.  Instead, it uses the Swing
  * libraries to allow for an interactive JSON editor.  This allows pack authors to edit
@@ -154,9 +154,9 @@ public class GUIPackEditor extends JFrame{
 			            		AJSONItem definition = (AJSONItem) currentJSON;
 			            		if(definition.packID != null && definition.systemName != null){
 			            			if(definition instanceof AJSONMultiModelProvider){
-			            				JOptionPane.showMessageDialog(null, JSONParser.hotloadJSON(file, PackParserSystem.getItem(definition.packID, definition.systemName, ((AJSONMultiModelProvider) definition).definitions.get(0).subName).definition));
+			            				JOptionPane.showMessageDialog(null, JSONParser.hotloadJSON(file, PackParser.getItem(definition.packID, definition.systemName, ((AJSONMultiModelProvider) definition).definitions.get(0).subName).definition));
 			            			}else{
-			            				JOptionPane.showMessageDialog(null, JSONParser.hotloadJSON(file, PackParserSystem.getItem(definition.packID, definition.systemName).definition));
+			            				JOptionPane.showMessageDialog(null, JSONParser.hotloadJSON(file, PackParser.getItem(definition.packID, definition.systemName).definition));
 			            			}
 			            		}
 			            	}

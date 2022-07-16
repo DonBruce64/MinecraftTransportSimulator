@@ -3,13 +3,13 @@ package minecrafttransportsimulator.jsondefs;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
+import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 import minecrafttransportsimulator.packloading.PackResourceLoader.ItemClassification;
-import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**Base JSON class for all pack-loaded JSONs.  All pack-loaded JSONs MUST extend this class.
- * This class will be loaded by {@link PackParserSystem} to create objects that contain the properties
+ * This class will be loaded by {@link PackParser} to create objects that contain the properties
  * of the pack items that the sub-classes of this class define.
  * 
  * @author don_bruce

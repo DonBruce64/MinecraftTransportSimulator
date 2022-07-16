@@ -11,7 +11,7 @@ import java.util.UUID;
 import minecrafttransportsimulator.entities.instances.EntityFurnace;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemPartEngine;
-import minecrafttransportsimulator.systems.PackParserSystem;
+import minecrafttransportsimulator.packloading.PackParser;
 
 /**Config class for game settings.  This is for internal code logic and is used on both
  * the server and client.  While this can be modified in-game, it needs to be done so
@@ -100,7 +100,7 @@ public class JSONConfigSettings{
 		
 		public static Map<String, Map<String, Double>> getDefaultFuels(){
 			Map<String, Map<String, Double>> fuels = new HashMap<String, Map<String, Double>>();
-			for(AItemPack<?> packItem : PackParserSystem.getAllPackItems()){
+			for(AItemPack<?> packItem : PackParser.getAllPackItems()){
 				if(packItem instanceof ItemPartEngine){
 					ItemPartEngine engine = (ItemPartEngine) packItem;
 					//For old packs, if we don't have a fuelType set it to diesel.

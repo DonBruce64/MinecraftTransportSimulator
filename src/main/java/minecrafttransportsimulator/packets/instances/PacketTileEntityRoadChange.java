@@ -7,7 +7,7 @@ import minecrafttransportsimulator.items.instances.ItemRoadComponent;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.packets.components.APacketEntityInteract;
-import minecrafttransportsimulator.systems.PackParserSystem;
+import minecrafttransportsimulator.packloading.PackParser;
 
 /**Packet sent to roads to change their states.  This gets sent when a player clicks a road on the client.
  * Packet is sent to the server to change the road state to match what item the player is holding.
@@ -29,7 +29,7 @@ public class PacketTileEntityRoadChange extends APacketEntityInteract<TileEntity
 		super(buf);
 		this.componentType = RoadComponent.values()[buf.readByte()];
 		if(buf.readBoolean()){
-			this.componentItem = PackParserSystem.getItem(readStringFromBuffer(buf), readStringFromBuffer(buf));
+			this.componentItem = PackParser.getItem(readStringFromBuffer(buf), readStringFromBuffer(buf));
 		}else{
 			this.componentItem = null;
 		}

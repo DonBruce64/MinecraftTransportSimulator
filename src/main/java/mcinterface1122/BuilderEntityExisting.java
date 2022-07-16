@@ -17,8 +17,8 @@ import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.IItemEntityProvider;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -263,7 +263,7 @@ public class BuilderEntityExisting extends ABuilderEntityBase{
 	@SubscribeEvent
 	public static void registerEntities(RegistryEvent.Register<EntityEntry> event){
 		//Iterate over all pack items and find those that spawn entities.
-		for(AItemPack<?> packItem : PackParserSystem.getAllPackItems()){
+		for(AItemPack<?> packItem : PackParser.getAllPackItems()){
 			if(packItem instanceof IItemEntityProvider<?>){
 				entityMap.put(((IItemEntityProvider<?>) packItem).getEntityClass().getSimpleName(), (IItemEntityProvider<?>) packItem);
 			}

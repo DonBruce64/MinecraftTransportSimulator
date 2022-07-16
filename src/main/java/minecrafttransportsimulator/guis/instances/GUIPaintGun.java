@@ -16,8 +16,8 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityColorChange;
 import minecrafttransportsimulator.packloading.PackMaterialComponent;
+import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
-import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**A GUI that is used to craft vehicle parts and other pack components.  This GUI displays
  * the items required to craft a vehicle, the item that will be crafted, and some properties
@@ -55,7 +55,7 @@ public class GUIPaintGun extends AGUIBase{
 		super();
 		this.entity = entity;
 		this.player = player;
-		this.currentItem = (AItemSubTyped<?>) PackParserSystem.getItem(entity.definition.packID, entity.definition.systemName, entity.subName);
+		this.currentItem = (AItemSubTyped<?>) PackParser.getItem(entity.definition.packID, entity.definition.systemName, entity.subName);
 	}
 
 	@Override
@@ -137,7 +137,7 @@ public class GUIPaintGun extends AGUIBase{
 	 */
 	private void updateNames(){
 		//Get all pack indexes.		
-		List<AItemPack<?>> packItems = PackParserSystem.getAllItemsForPack(currentItem.definition.packID, true);
+		List<AItemPack<?>> packItems = PackParser.getAllItemsForPack(currentItem.definition.packID, true);
 		int currentItemIndex = packItems.indexOf(currentItem);
 		
 		//Loop forwards in our pack to find the next item in that pack.

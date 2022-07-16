@@ -34,10 +34,10 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
+import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.rendering.components.RenderableObject;
 import minecrafttransportsimulator.rendering.instances.RenderInstrument.InstrumentSwitchbox;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**Base entity class containing riders and their positions on this entity.  Used for
  * entities that need to keep track of riders and their locations.  This also contains
@@ -157,7 +157,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 							String instrumentPackID = packInstrument.defaultInstrument.substring(0, packInstrument.defaultInstrument.indexOf(':'));
 							String instrumentSystemName = packInstrument.defaultInstrument.substring(packInstrument.defaultInstrument.indexOf(':') + 1);
 							try{
-								ItemInstrument instrument = PackParserSystem.getItem(instrumentPackID, instrumentSystemName);
+								ItemInstrument instrument = PackParser.getItem(instrumentPackID, instrumentSystemName);
 								if(instrument != null){
 									addInstrument(instrument, definition.instruments.indexOf(packInstrument));
 									continue;
@@ -175,7 +175,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 					String instrumentPackID = data.getString("instrument" + i + "_packID");
 					String instrumentSystemName = data.getString("instrument" + i + "_systemName");
 					if(!instrumentPackID.isEmpty()){
-						ItemInstrument instrument = PackParserSystem.getItem(instrumentPackID, instrumentSystemName);
+						ItemInstrument instrument = PackParser.getItem(instrumentPackID, instrumentSystemName);
 						//Check to prevent loading of faulty instruments due to updates.
 						if(instrument != null){
 							addInstrument(instrument, i);

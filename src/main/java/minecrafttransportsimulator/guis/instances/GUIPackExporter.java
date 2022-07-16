@@ -21,7 +21,7 @@ import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.JSONParser;
-import minecrafttransportsimulator.systems.PackParserSystem;
+import minecrafttransportsimulator.packloading.PackParser;
 
 /**This GUI is normally locked, and is only available in devMode.  It allows
  * pack importing and exporting to and from files.  The idea is that pack authors 
@@ -76,7 +76,7 @@ public class GUIPackExporter extends AGUIBase{
 				
 				long lastTimeModified = 0;
 				debug.setText("Export dir is: " + jsonDir.getAbsolutePath());
-				for(String packID : PackParserSystem.getAllPackIDs()){
+				for(String packID : PackParser.getAllPackIDs()){
 					File packDir = new File(jsonDir, packID);
 					if(!packDir.exists()){
 						if(!packDir.mkdir()){
@@ -84,7 +84,7 @@ public class GUIPackExporter extends AGUIBase{
 							return;
 						}	
 					}
-					for(AItemPack<?> packItem : PackParserSystem.getAllItemsForPack(packID, false)){
+					for(AItemPack<?> packItem : PackParser.getAllItemsForPack(packID, false)){
 						try{
 							File jsonFile = new File(packDir, packItem.definition.classification.toDirectory() + packItem.definition.prefixFolders);
 							jsonFile.mkdirs();
@@ -132,10 +132,10 @@ public class GUIPackExporter extends AGUIBase{
 						}
 						
 						Set<File> parsedFiles = new HashSet<File>();
-						for(String packID : PackParserSystem.getAllPackIDs()){
+						for(String packID : PackParser.getAllPackIDs()){
 							File packDir = new File(jsonDir, packID);
 							if(packDir.exists()){
-								for(AItemPack<?> packItem : PackParserSystem.getAllItemsForPack(packID, false)){
+								for(AItemPack<?> packItem : PackParser.getAllItemsForPack(packID, false)){
 									File jsonFile = new File(packDir, packItem.definition.classification.toDirectory() + packItem.definition.prefixFolders + packItem.definition.systemName + ".json");
 									if(!parsedFiles.contains(jsonFile)){
 										if(jsonFile.lastModified() > lastTimeModified){

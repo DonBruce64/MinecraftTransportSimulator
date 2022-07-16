@@ -13,13 +13,11 @@ apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'eclipse'
 
 //Set file name.
-version = "1.12.2-21.3.0"
+version = "1.12.2-21.4.0-BETA1"
 group= "minecrafttransportsimulator"
 archivesBaseName = "Immersive Vehicles"
 
 //Options for Java version to compile to.
-//java.toolchain.languageVersion = JavaLanguageVersion.of(8)
-//Don't need these with toolchain?
 sourceCompatibility = targetCompatibility = '1.8'
 compileJava {
 	sourceCompatibility = targetCompatibility = '1.8'

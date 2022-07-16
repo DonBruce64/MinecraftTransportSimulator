@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.systems;
+package minecrafttransportsimulator.packloading;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -40,10 +40,9 @@ import minecrafttransportsimulator.jsondefs.JSONSkin;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.packloading.JSONParser;
-import minecrafttransportsimulator.packloading.LegacyCompatSystem;
 import minecrafttransportsimulator.packloading.PackResourceLoader.ItemClassification;
 import minecrafttransportsimulator.packloading.PackResourceLoader.PackStructure;
+import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**
  * Class responsible for parsing content pack data.  Gets properties from the text files that other parts
@@ -51,7 +50,7 @@ import minecrafttransportsimulator.packloading.PackResourceLoader.PackStructure;
  *
  * @author don_bruce
  */
-public final class PackParserSystem{
+public final class PackParser{
 	/**Links packs to the jar files that they are a part of.  Used for pack loading only: asset loading uses Java classpath systems.**/
 	private static final Map<String, File> packJarMap = new HashMap<String, File>();
 	
@@ -176,7 +175,7 @@ public final class PackParserSystem{
 			packDef.fileStructure = 0;
 			packDef.packName = InterfaceManager.coreInterface.getModName(InterfaceManager.coreModID);
 			packDef.packItem = "wrench";
-			PackParserSystem.packMap.put(InterfaceManager.coreModID, packDef);
+			PackParser.packMap.put(InterfaceManager.coreModID, packDef);
 			
 			Map<String, ItemClassification> defaultItems = new HashMap<String, ItemClassification>();
 			defaultItems.put("fuelhose", ItemClassification.ITEM);
@@ -211,12 +210,12 @@ public final class PackParserSystem{
 			for(Entry<String, ItemClassification> defaultItem : defaultItems.entrySet()){
 				String systemName = defaultItem.getKey();
 				ItemClassification classification = defaultItem.getValue();
-				AJSONItem itemDef = JSONParser.parseStream(PackParserSystem.class.getResourceAsStream(prefixFolders + classification.toDirectory() + systemName + ".json"), classification.representingClass, packDef.packID, systemName);
+				AJSONItem itemDef = JSONParser.parseStream(PackParser.class.getResourceAsStream(prefixFolders + classification.toDirectory() + systemName + ".json"), classification.representingClass, packDef.packID, systemName);
 				itemDef.packID = packDef.packID;
 				itemDef.systemName = systemName;
 				itemDef.classification = classification;
 				itemDef.prefixFolders = prefixFolders;
-				PackParserSystem.registerItem(itemDef);
+				PackParser.registerItem(itemDef);
 			}
 		}catch(Exception e){
 			e.printStackTrace();

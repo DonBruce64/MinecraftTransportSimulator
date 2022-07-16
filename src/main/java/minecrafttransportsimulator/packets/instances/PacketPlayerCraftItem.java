@@ -9,7 +9,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.packets.components.APacketPlayer;
-import minecrafttransportsimulator.systems.PackParserSystem;
+import minecrafttransportsimulator.packloading.PackParser;
 
 /**Packet used to craft items from crafting benches.  This goes to the server which verifies the
  * player has the appropriate materials.  If so, the item is crafted on the server and materials
@@ -30,7 +30,7 @@ public class PacketPlayerCraftItem extends APacketPlayer{
 	
 	public PacketPlayerCraftItem(ByteBuf buf){
 		super(buf);
-		this.itemToCraft = PackParserSystem.getItem(readStringFromBuffer(buf), readStringFromBuffer(buf));
+		this.itemToCraft = PackParser.getItem(readStringFromBuffer(buf), readStringFromBuffer(buf));
 		this.forRepair = buf.readBoolean();
 	}
 	

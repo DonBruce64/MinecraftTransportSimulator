@@ -18,8 +18,8 @@ import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ControlSystem;
-import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.block.SoundType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
@@ -263,7 +263,7 @@ public class InterfaceClient implements IInterfaceClient{
 				if(player != null && !player.isSpectator()){
 					ControlSystem.controlGlobal(player);
 					if(((WrapperPlayer) player).player.ticksExisted%100 == 0){
-						if(!InterfaceManager.clientInterface.isGUIOpen() && !PackParserSystem.arePacksPresent()){
+						if(!InterfaceManager.clientInterface.isGUIOpen() && !PackParser.arePacksPresent()){
 							new GUIPackMissing();
 				    	}
 					}

@@ -13,7 +13,6 @@ import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
 import minecrafttransportsimulator.jsondefs.JSONSkin;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
-import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**
  * Class responsible for loading pack resource files from pack archives.  This happens both during load
@@ -27,7 +26,7 @@ public class PackResourceLoader{
 	 *  for the file-name, and may be different than the definition system name.
 	 */
 	public static String getPackResource(AJSONItem definition, ResourceType type, String name){
-    	switch(PackStructure.values()[PackParserSystem.getPackConfiguration(definition.packID).fileStructure]){
+    	switch(PackStructure.values()[PackParser.getPackConfiguration(definition.packID).fileStructure]){
     		case DEFAULT : {
     			 return "/assets/" + definition.packID + "/" + type.prefixFolder + definition.classification.toDirectory() + name + type.normalSuffix;
     		}

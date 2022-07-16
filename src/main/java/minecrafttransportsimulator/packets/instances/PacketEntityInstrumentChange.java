@@ -8,7 +8,7 @@ import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.packets.components.APacketEntityInteract;
-import minecrafttransportsimulator.systems.PackParserSystem;
+import minecrafttransportsimulator.packloading.PackParser;
 
 /**Packet used to change instruments on entities.  Sent to the server
  * to process the instrument change, and then sent to all clients if
@@ -67,7 +67,7 @@ public class PacketEntityInstrumentChange extends APacketEntityInteract<AEntityE
 		}else{
 			//Check to make sure player has the instrument they are trying to put in.
 			//This is only done on the server, as checking on the client won't make any difference.
-			ItemInstrument instrument = PackParserSystem.getItem(instrumentPackID, instrumentSystemName);
+			ItemInstrument instrument = PackParser.getItem(instrumentPackID, instrumentSystemName);
 			if(!world.isClient() && !player.isCreative()){
 				int stackIndex = player.getInventory().getSlotForStack(instrument.getNewStack(null));
 				if(stackIndex != -1){

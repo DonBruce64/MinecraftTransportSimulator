@@ -9,8 +9,8 @@ import minecrafttransportsimulator.jsondefs.JSONPack;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**Base item class for all pack-created items.  Stores information such as the
  * pack the item belongs to and the class that extends {@link AJSONItem} that
@@ -54,8 +54,8 @@ public abstract class AItemPack<JSONDefinition extends AJSONItem> extends AItemB
 	public String getCreativeTabID(){
 		String owningPackID = definition.packID;
 		String generatingPackID = sourcePackID != null ? sourcePackID : definition.packID;
-		JSONPack owningConfiguration = PackParserSystem.getPackConfiguration(definition.packID);
-		JSONPack generatingConfiguration = PackParserSystem.getPackConfiguration(generatingPackID);
+		JSONPack owningConfiguration = PackParser.getPackConfiguration(definition.packID);
+		JSONPack generatingConfiguration = PackParser.getPackConfiguration(generatingPackID);
 		if(owningConfiguration.externalSkinsInOwnTab){
 			return generatingPackID;
 		}else if(generatingConfiguration.internalSkinsInOwnTab){

@@ -16,8 +16,8 @@ import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
-import minecrafttransportsimulator.systems.PackParserSystem;
 
 public class ItemPoleComponent extends AItemSubTyped<JSONPoleComponent> implements IItemBlock{
 	
@@ -54,7 +54,7 @@ public class ItemPoleComponent extends AItemSubTyped<JSONPoleComponent> implemen
 		 *  to the pole, only creates it.
 		 */
 		public static ATileEntityPole_Component createComponent(TileEntityPole pole, IWrapperPlayer placingPlayer, Axis axis, IWrapperNBT data){
-			ItemPoleComponent item = PackParserSystem.getItem(data.getString("packID"), data.getString("systemName"), data.getString("subName"));
+			ItemPoleComponent item = PackParser.getItem(data.getString("packID"), data.getString("systemName"), data.getString("subName"));
 			switch(item.definition.pole.type){
 				case CORE : return new TileEntityPole_Core(pole, placingPlayer, axis, data);	
 				case TRAFFIC_SIGNAL : return new TileEntityPole_TrafficSignal(pole, placingPlayer, axis, data);

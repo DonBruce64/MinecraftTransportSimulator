@@ -21,9 +21,9 @@ import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.rendering.instances.RenderPlayerGun;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**Entity class responsible for storing and syncing information about the current gun
  * any player is holding.  This entity will trigger rendering of the held gun, if it exists.
@@ -103,7 +103,7 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun>{
 		fakeDef.pos = new Point3D();
 		fakeDef.types = new ArrayList<String>();
 		//Look though all gun types and add them.
-		for(AItemPack<?> packItem : PackParserSystem.getAllPackItems()){
+		for(AItemPack<?> packItem : PackParser.getAllPackItems()){
 			if(packItem instanceof ItemPartGun){
 				ItemPartGun gunItem = (ItemPartGun) packItem;
 				if(gunItem.definition.gun.handHeld){

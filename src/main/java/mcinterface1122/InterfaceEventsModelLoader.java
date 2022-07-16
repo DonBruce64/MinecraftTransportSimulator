@@ -20,9 +20,9 @@ import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.packloading.PackResourceLoader;
 import minecrafttransportsimulator.packloading.PackResourceLoader.ResourceType;
-import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
@@ -209,7 +209,7 @@ public class InterfaceEventsModelLoader{
 					try{
 						String packID = combinedPackInfo.substring(0, combinedPackInfo.indexOf("."));
 						String systemName = combinedPackInfo.substring(combinedPackInfo.indexOf(".") + 1);
-						AItemPack<?> packItem = PackParserSystem.getItem(packID, systemName);
+						AItemPack<?> packItem = PackParser.getItem(packID, systemName);
 						resourcePath = PackResourceLoader.getPackResource(packItem.definition, ResourceType.ITEM_JSON, systemName);
 						
 						//Try to load the item JSON, or create it if it doesn't exist.
@@ -254,7 +254,7 @@ public class InterfaceEventsModelLoader{
 					if(systemName.endsWith("_item")){
 						systemName = systemName.substring(0, systemName.length() - "_item".length());
 					}
-					AItemPack<?> packItem = PackParserSystem.getItem(packID, systemName);
+					AItemPack<?> packItem = PackParser.getItem(packID, systemName);
 					
 					if(packItem != null){
 						//Get the actual resource path for this resource and return its stream.

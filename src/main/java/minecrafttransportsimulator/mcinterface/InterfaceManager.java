@@ -8,7 +8,7 @@ import minecrafttransportsimulator.items.instances.ItemPartGun;
 import minecrafttransportsimulator.items.instances.ItemPartInteractable;
 import minecrafttransportsimulator.items.instances.ItemPartPropeller;
 import minecrafttransportsimulator.items.instances.ItemPartSeat;
-import minecrafttransportsimulator.systems.PackParserSystem;
+import minecrafttransportsimulator.packloading.PackParser;
 
 /**Master interface system for the mod.  This class is not an interface, unlike everything else.
  * Instead, it keeps references to all interfaces, which are passed-in during construction.
@@ -38,13 +38,13 @@ public class InterfaceManager{
 
 	static{
     	//Add part constructors to the part map.
-    	PackParserSystem.addItemPartCreator(ItemPartEffector.CREATOR);
-    	PackParserSystem.addItemPartCreator(ItemPartEngine.CREATOR);
-    	PackParserSystem.addItemPartCreator(ItemPartGeneric.CREATOR);
-    	PackParserSystem.addItemPartCreator(ItemPartGroundDevice.CREATOR);
-    	PackParserSystem.addItemPartCreator(ItemPartGun.CREATOR);
-    	PackParserSystem.addItemPartCreator(ItemPartInteractable.CREATOR);
-    	PackParserSystem.addItemPartCreator(ItemPartPropeller.CREATOR);
-    	PackParserSystem.addItemPartCreator(ItemPartSeat.CREATOR);
+    	PackParser.addItemPartCreator(ItemPartEffector.CREATOR);
+    	PackParser.addItemPartCreator(ItemPartEngine.CREATOR);
+    	PackParser.addItemPartCreator(ItemPartGeneric.CREATOR);
+    	PackParser.addItemPartCreator(ItemPartGroundDevice.CREATOR);
+    	PackParser.addItemPartCreator(ItemPartGun.CREATOR);
+    	PackParser.addItemPartCreator(ItemPartInteractable.CREATOR);
+    	PackParser.addItemPartCreator(ItemPartPropeller.CREATOR);
+    	PackParser.addItemPartCreator(ItemPartSeat.CREATOR);
 	}
 }

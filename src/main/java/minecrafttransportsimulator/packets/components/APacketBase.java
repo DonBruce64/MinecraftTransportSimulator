@@ -52,7 +52,7 @@ import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement
 import minecrafttransportsimulator.packets.instances.PacketVehicleServerSync;
 import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataRequest;
 import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataUpdate;
-import minecrafttransportsimulator.systems.PackParserSystem;
+import minecrafttransportsimulator.packloading.PackParser;
 
 /**Base packet class.  All packets must extend this class to be used with the
  * {@link InterfaceManager.packetInterface}.  This allows for standard packet handling across
@@ -152,7 +152,7 @@ public abstract class APacketBase{
      */
     @SuppressWarnings("unchecked")
     protected static<T extends AItemPack<?>> T readItemFromBuffer(ByteBuf buf){
-        return (T) PackParserSystem.getItem(readStringFromBuffer(buf), readStringFromBuffer(buf), readStringFromBuffer(buf));
+        return (T) PackParser.getItem(readStringFromBuffer(buf), readStringFromBuffer(buf), readStringFromBuffer(buf));
     }
 	
 	/**

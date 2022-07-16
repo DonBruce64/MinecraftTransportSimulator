@@ -7,8 +7,8 @@ import java.util.List;
 import org.apache.logging.log4j.Logger;
 
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
@@ -27,7 +27,7 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 public class InterfaceLoader{
 	public static final String MODID = "mts";
 	public static final String MODNAME = "Immersive Vehicles (MTS)";
-	public static final String MODVER = "21.3.0";
+	public static final String MODVER = "21.4.0-BETA1";
 	public static Logger logger;
 	
 	@Instance(MODID)
@@ -69,8 +69,8 @@ public class InterfaceLoader{
 			}
 			
 			//Parse the packs.
-			PackParserSystem.addDefaultItems();
-			PackParserSystem.parsePacks(packDirectories, event.getSide().isClient());
+			PackParser.addDefaultItems();
+			PackParser.parsePacks(packDirectories, event.getSide().isClient());
 		}else{
 			InterfaceManager.coreInterface.logError("Could not find mods directory!  Game directory is confirmed to: " + gameDirectory);
 		}

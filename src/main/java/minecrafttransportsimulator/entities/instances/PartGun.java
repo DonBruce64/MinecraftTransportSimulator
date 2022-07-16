@@ -19,8 +19,8 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPartGun;
+import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**Basic gun class class.  This class is responsible for representing a gun in the world.  This gun
  * can be placed on anything and modeled by anything as the code is only for controlling the firing
@@ -160,7 +160,7 @@ public class PartGun extends APart{
 		String loadedBulletPack = data.getString("loadedBulletPack");
 		String loadedBulletName = data.getString("loadedBulletName");
 		if(!loadedBulletPack.isEmpty()){
-			this.loadedBullet = PackParserSystem.getItem(loadedBulletPack, loadedBulletName);
+			this.loadedBullet = PackParser.getItem(loadedBulletPack, loadedBulletName);
 		}
 		//If we didn't load the bullet due to pack changes, set the current bullet count to 0.
 		//This prevents pack changes from locking guns.

@@ -21,7 +21,7 @@ import minecrafttransportsimulator.jsondefs.JSONPack;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.systems.PackParserSystem;
+import minecrafttransportsimulator.packloading.PackParser;
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.creativetab.CreativeTabs;
@@ -257,8 +257,8 @@ public class BuilderItem extends Item implements IBuilderItemInterface{
 			if(!item.definition.packID.equals(InterfaceManager.coreModID) || !item.definition.systemName.contains("invisible")){
 				String tabID = item.getCreativeTabID();
 				if(!BuilderCreativeTab.createdTabs.containsKey(tabID)){
-					JSONPack packConfiguration = PackParserSystem.getPackConfiguration(tabID);
-					BuilderCreativeTab.createdTabs.put(tabID, new BuilderCreativeTab(packConfiguration.packName, itemMap.get(PackParserSystem.getItem(packConfiguration.packID,  packConfiguration.packItem)))); 
+					JSONPack packConfiguration = PackParser.getPackConfiguration(tabID);
+					BuilderCreativeTab.createdTabs.put(tabID, new BuilderCreativeTab(packConfiguration.packName, itemMap.get(PackParser.getItem(packConfiguration.packID,  packConfiguration.packItem)))); 
 				}
 				BuilderCreativeTab.createdTabs.get(tabID).addItem(item, mcItem);
 			}

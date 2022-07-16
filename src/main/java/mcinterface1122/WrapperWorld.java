@@ -37,8 +37,8 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataRequest;
 import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataUpdate;
+import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import minecrafttransportsimulator.systems.PackParserSystem;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockBush;
 import net.minecraft.block.BlockCrops;
@@ -893,8 +893,8 @@ public class WrapperWorld extends AWrapperWorld{
 					   
 					   //If the player is new, also add handbooks.
 					   if(!ConfigSystem.settings.general.joinedPlayers.value.contains(playerUUID)){
-						   playerWrapper.getInventory().addStack(PackParserSystem.getItem("mts", "handbook_car").getNewStack(null));
-						   playerWrapper.getInventory().addStack(PackParserSystem.getItem("mts", "handbook_plane").getNewStack(null));
+						   playerWrapper.getInventory().addStack(PackParser.getItem("mts", "handbook_car").getNewStack(null));
+						   playerWrapper.getInventory().addStack(PackParser.getItem("mts", "handbook_plane").getNewStack(null));
 						   ConfigSystem.settings.general.joinedPlayers.value.add(playerUUID);
 						   ConfigSystem.saveToDisk();
 					   }

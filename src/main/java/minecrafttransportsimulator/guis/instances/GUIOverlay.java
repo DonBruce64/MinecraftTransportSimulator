@@ -21,10 +21,10 @@ import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.CameraSystem;
-import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**A GUI that is used to render overlay components.  These components are independent of 
  * any vehicle or entity the player is riding, and are always visible.
@@ -90,7 +90,7 @@ public class GUIOverlay extends AGUIBase{
 					//Populate stacks.
 					JSONPartDefinition packVehicleDef = vehicle.allPartSlotBoxes.get(mousedOverBox);
 					List<AItemPart> validParts = new ArrayList<AItemPart>();
-					for(AItemPack<?> packItem : PackParserSystem.getAllPackItems()){
+					for(AItemPack<?> packItem : PackParser.getAllPackItems()){
 						if(packItem instanceof AItemPart){
 							AItemPart part = (AItemPart) packItem;
 							if(part.isPartValidForPackDef(packVehicleDef, vehicle.subName, true)){

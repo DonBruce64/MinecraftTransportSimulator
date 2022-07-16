@@ -28,8 +28,8 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPlayerCraftItem;
 import minecrafttransportsimulator.packloading.PackMaterialComponent;
+import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
-import minecrafttransportsimulator.systems.PackParserSystem;
 
 /**A GUI that is used to craft vehicle parts and other pack components.  This GUI displays
  * the items required to craft a vehicle, the item that will be crafted, and some properties
@@ -101,7 +101,7 @@ public class GUIPartBench extends AGUIBase{
 			currentPack = currentItem.definition.packID;
 		}else{
 			//Find a pack that has the item we are supposed to craft and set it.
-			for(AItemPack<?> packItem : PackParserSystem.getAllPackItems()){
+			for(AItemPack<?> packItem : PackParser.getAllPackItems()){
 				if(packItem.isBenchValid(definition)){
 					currentItem = packItem;
 					currentPack = packItem.definition.packID;
@@ -316,7 +316,7 @@ public class GUIPartBench extends AGUIBase{
 	 */
 	private void updateNames(){
 		//Get all pack indexes.
-		List<String> packIDs = new ArrayList<String>(PackParserSystem.getAllPackIDs());
+		List<String> packIDs = new ArrayList<String>(PackParser.getAllPackIDs());
 		int currentPackIndex = packIDs.indexOf(currentPack);
 		
 		//Loop forwards to find a pack that has the items we need and set that as the next pack.
@@ -324,7 +324,7 @@ public class GUIPartBench extends AGUIBase{
 		nextPack = null;
 		if(currentPackIndex < packIDs.size()){
 			for(int i=currentPackIndex+1; i<packIDs.size() && nextPack == null; ++i){
-				for(AItemPack<?> packItem : PackParserSystem.getAllItemsForPack(packIDs.get(i), true)){
+				for(AItemPack<?> packItem : PackParser.getAllItemsForPack(packIDs.get(i), true)){
 					if(packItem.isBenchValid(definition)){
 						nextPack = packIDs.get(i);
 						break;
@@ -338,7 +338,7 @@ public class GUIPartBench extends AGUIBase{
 		prevPack = null;
 		if(currentPackIndex > 0){
 			for(int i=currentPackIndex-1; i>=0 && prevPack == null; --i){
-				for(AItemPack<?> packItem : PackParserSystem.getAllItemsForPack(packIDs.get(i), true)){
+				for(AItemPack<?> packItem : PackParser.getAllItemsForPack(packIDs.get(i), true)){
 					if(packItem.isBenchValid(definition)){
 						prevPack = packIDs.get(i);
 						break;
@@ -353,7 +353,7 @@ public class GUIPartBench extends AGUIBase{
 		if(currentPack == null){
 			return;
 		}
-		List<AItemPack<?>> packItems = PackParserSystem.getAllItemsForPack(currentPack, true);
+		List<AItemPack<?>> packItems = PackParser.getAllItemsForPack(currentPack, true);
 		int currentItemIndex = packItems.indexOf(currentItem);
 		//If currentItem is null, it means we switched packs and need to re-set it to the first item of the new pack.
 		//Do so now before we do looping to prevent crashes.
@@ -433,7 +433,7 @@ public class GUIPartBench extends AGUIBase{
 		
 		
 		//All pack and part bits are now set and updated.  Update info labels and item icons.
-		packName.text = PackParserSystem.getPackConfiguration(currentPack).packName;
+		packName.text = PackParser.getPackConfiguration(currentPack).packName;
 		partName.text = currentItem.getItemName();
 		
 		//Create part description text.
