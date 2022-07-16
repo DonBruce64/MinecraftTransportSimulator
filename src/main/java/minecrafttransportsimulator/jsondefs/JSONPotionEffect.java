@@ -11,7 +11,7 @@ public class JSONPotionEffect{
 	public String name;
 	
 	@JSONRequired
-	@JSONDescription("How long the effect will last, in ticks. For most effects, this just needs to be high enough that the effect doesn’t wear out before the system has a chance to reapply it, meaning a value of 5 should certainly do the trick. Some effects (like night_vision), however, behave differently once below a certain value (200 ticks), so in those cases, you may want the value to be higher. Regardless of this value, riders will not keep their effects after leaving the seat or vehicle that is applying these effects.")
+	@JSONDescription("How long the effect will last, in ticks. For most effects, this just needs to be high enough that the effect doesn't wear out before the system has a chance to reapply it, meaning a value of 5 should certainly do the trick. Some effects (like night_vision), however, behave differently once below a certain value (200 ticks), so in those cases, you may want the value to be higher. Regardless of this value, riders will not keep their effects after leaving the seat or vehicle that is applying these effects.")
 	public int duration;
 	
 	@JSONRequired

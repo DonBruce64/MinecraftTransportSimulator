@@ -7,7 +7,7 @@ import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 
 public class JSONConnection{
 	@JSONRequired
-	@JSONDescription("The type of connection.  This can be anything you want, but it is recommended to use a generic enough name that allows your pack to be compatible with other packs wishing to use the same connection.  “Tow” is a common one in use for a hitch position on vehicles that allows them to be towed by a tow truck, for example.")
+	@JSONDescription("The type of connection.  This can be anything you want, but it is recommended to use a generic enough name that allows your pack to be compatible with other packs wishing to use the same connection.  'Tow' is a common one in use for a hitch position on vehicles that allows them to be towed by a tow truck, for example.")
 	public String type;
 	
 	@JSONRequired

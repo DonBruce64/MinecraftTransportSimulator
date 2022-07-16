@@ -15,7 +15,7 @@ public class JSONText{
     public RotationMatrix rot;
 	
 	@JSONRequired
-	@JSONDescription("The scale of the text.  1.0 will render text about ½ block high, as 1 text character pixel equates to one block texture pixel, and text is 8-pixels high.")
+	@JSONDescription("The scale of the text.  1.0 will render text about 1/2 block high, as 1 text character pixel equates to one block texture pixel, and text is 8-pixels high.")
 	public float scale;
 	
 	@JSONDescription("The name for this text field.  If two text fields share a name, then they both will be combined in the text GUI into one entry, and changing the text in the GUI will affect both of them.  Useful for license plates and route signs.\nNote: if this object is part of text-based rendering system, this defines which variable is displayed.")

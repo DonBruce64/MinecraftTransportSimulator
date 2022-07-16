@@ -23,7 +23,7 @@ import minecrafttransportsimulator.rendering.components.RenderableObject;
  * @author don_bruce
  */
 public class RenderText{
-	public static final char FORMATTING_CHAR = 167;//'ง';
+	public static final char FORMATTING_CHAR = 167;//'ยง' [\u00a7], this doesn't always translate right across platforms, so we use the keycode here rather than the actual char.
 	public static final char BOLD_FORMATTING_CHAR = 'l';
 	public static final char ITALIC_FORMATTING_CHAR = 'o';
 	public static final char UNDERLINE_FORMATTING_CHAR = 'n';
