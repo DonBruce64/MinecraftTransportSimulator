@@ -21,12 +21,8 @@ import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.PackParser;
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockHorizontal;
 import net.minecraft.block.material.Material;
-import net.minecraft.block.properties.IProperty;
-import net.minecraft.block.properties.PropertyDirection;
 import net.minecraft.block.state.BlockFaceShape;
-import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -65,16 +61,12 @@ public class BuilderBlock extends Block{
 	created during the drop checks here to ensure they actually drop when the block is broken. **/
 	private static final Map<BlockPos, List<IWrapperItemStack>> dropsAtPositions = new HashMap<BlockPos, List<IWrapperItemStack>>();
 	
-	//TODO remove this when we figure out how to not make blocks go poof.
-	private static final PropertyDirection FACING = BlockHorizontal.FACING;
-	
     BuilderBlock(ABlockBase block){
 		super(Material.ROCK);
 		this.block = block;
 		fullBlock = false;
 		setHardness(block.hardness);
 		setResistance(block.blastResistance);
-		setDefaultState(blockState.getBaseState().withProperty(FACING, EnumFacing.SOUTH));
 	}
     
     @Override
@@ -260,18 +252,6 @@ public class BuilderBlock extends Block{
     	}else{
     		return FULL_BLOCK_AABB;
     	}
-    }
-
-    @Override
-    public int getMetaFromState(IBlockState state){
-    	//Saves the state as metadata.
-        return state.getValue(FACING).getHorizontalIndex();
-    }
-
-    @Override
-    protected BlockStateContainer createBlockState(){
-    	//Creates a new, default, blockstate holder.  Return the four facing directions here.
-        return new BlockStateContainer(this, new IProperty[] {FACING});
     }
 	
     @Override
