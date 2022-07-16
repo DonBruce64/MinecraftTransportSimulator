@@ -6,8 +6,8 @@ import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.rendering.instances.RenderText;
-import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
+import minecrafttransportsimulator.rendering.RenderText;
+import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
 
 /**Custom item render class.  This class is designed to render a {@link IWrapperItemStack} 
  * or list of stacks into the GUI.  This allows us to use a simple string 

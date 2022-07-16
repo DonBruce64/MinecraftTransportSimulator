@@ -29,7 +29,7 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPlayerCraftItem;
 import minecrafttransportsimulator.packloading.PackMaterialComponent;
 import minecrafttransportsimulator.packloading.PackParser;
-import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
+import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
 
 /**A GUI that is used to craft vehicle parts and other pack components.  This GUI displays
  * the items required to craft a vehicle, the item that will be crafted, and some properties

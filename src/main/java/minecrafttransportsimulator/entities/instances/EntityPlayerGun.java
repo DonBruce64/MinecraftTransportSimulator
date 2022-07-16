@@ -22,7 +22,6 @@ import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.packloading.PackParser;
-import minecrafttransportsimulator.rendering.instances.RenderPlayerGun;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**Entity class responsible for storing and syncing information about the current gun
@@ -43,8 +42,6 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun>{
 	private IWrapperItemStack gunStack;
 	private boolean didGunFireLastTick;
 	public PartGun activeGun;
-	
-	private static RenderPlayerGun renderer;
 	
 	public EntityPlayerGun(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data){
 		super(world, placingPlayer, data);
@@ -266,13 +263,10 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun>{
 	}
 	
 	@Override
-	@SuppressWarnings("unchecked")
-	public RenderPlayerGun getRenderer(){
-		if(renderer == null){
-			renderer = new RenderPlayerGun();
-		}
-		return renderer;
-	}
+    public boolean disableRendering(float partialTicks){
+	    //Don't render the player gun entity.  Only render the gun itself.
+        return true;
+    }
 	
 	@Override
 	public IWrapperNBT save(IWrapperNBT data){

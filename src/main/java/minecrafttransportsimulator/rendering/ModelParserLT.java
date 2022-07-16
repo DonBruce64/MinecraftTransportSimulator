@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.rendering.instances;
+package minecrafttransportsimulator.rendering;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -10,8 +10,6 @@ import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.JSONParser;
-import minecrafttransportsimulator.rendering.components.AModelParser;
-import minecrafttransportsimulator.rendering.components.RenderableObject;
 
 /**Class responsible for parsing Little Tiles models into arrays that can be fed to the GPU.
  * 

@@ -19,6 +19,8 @@ import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
+import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.AJSONInteractableEntity;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
@@ -35,8 +37,9 @@ import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packloading.PackParser;
-import minecrafttransportsimulator.rendering.components.RenderableObject;
-import minecrafttransportsimulator.rendering.instances.RenderInstrument.InstrumentSwitchbox;
+import minecrafttransportsimulator.rendering.RenderInstrument;
+import minecrafttransportsimulator.rendering.RenderableObject;
+import minecrafttransportsimulator.rendering.RenderInstrument.InstrumentSwitchbox;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**Base entity class containing riders and their positions on this entity.  Used for
@@ -47,7 +50,10 @@ import minecrafttransportsimulator.systems.ConfigSystem;
  * @author don_bruce
  */
 public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteractableEntity> extends AEntityD_Definable<JSONDefinition>{
-	
+    /**Static helper matrix for transforming instrument positions.**/
+    private static final TransformationMatrix instrumentTransform = new TransformationMatrix();
+    private static final RotationMatrix INSTRUMENT_ROTATION_INVERSION = new RotationMatrix().setToAxisAngle(0, 1, 0, 180);
+    
 	/**List of boxes generated from JSON.  These are stored here as objects to prevent the need
 	 * to create them every time we want to parse out hitboxes.  This allows parsing them into sub-sets,
 	 * and querying the entire list to find the hitbox for a given group and index.**/
@@ -546,6 +552,55 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
             setVariable(DAMAGE_VARIABLE, damageAmount);
 	    }
 	}
+	
+    @Override
+    public void renderBoundingBoxes(TransformationMatrix transform){
+        for(BoundingBox box : interactionBoxes){
+            box.renderWireframe(this, transform, null, null);
+        }
+        for(BoundingBox box : bulletCollisionBoxes){
+            box.renderWireframe(this, transform, null, null);
+        }
+    }
+    
+    @Override
+    protected void renderModel(TransformationMatrix transform, boolean blendingEnabled, float partialTicks){
+        super.renderModel(transform, blendingEnabled, partialTicks);
+        
+        //Renders all instruments on the entity.  Uses the instrument's render code.
+        //We only apply the appropriate translation and rotation.
+        //Normalization is required here, as otherwise the normals get scaled with the
+        //scaling operations, and shading gets applied funny.
+        if(definition.instruments != null){
+            world.beginProfiling("Instruments", false);
+            for(int i=0; i<definition.instruments.size(); ++i){
+                ItemInstrument instrument = instruments.get(i);
+                if(instrument != null){
+                    JSONInstrumentDefinition packInstrument = definition.instruments.get(i);
+                    
+                    //Translate and rotate to standard position.
+                    //Note that instruments with rotation of Y=0 face backwards, which is opposite of normal rendering.
+                    //To compensate, we rotate them 180 here.
+                    instrumentTransform.set(transform);
+                    instrumentTransform.applyTranslation(packInstrument.pos);
+                    instrumentTransform.applyRotation(packInstrument.rot);
+                    instrumentTransform.applyRotation(INSTRUMENT_ROTATION_INVERSION);
+                    
+                    //Do transforms if required and render if allowed.
+                    AnimationSwitchbox switchbox = instrumentSlotSwitchboxes.get(packInstrument);
+                    if(switchbox == null || switchbox.runSwitchbox(partialTicks, false)){
+                        if(switchbox != null){
+                            instrumentTransform.multiply(switchbox.netMatrix);
+                        }
+                        //Instruments render with 1 unit being 1 pixel, not 1 block, so scale by 1/16.
+                        instrumentTransform.applyScaling(1/16F, 1/16F, 1/16F);
+                        RenderInstrument.drawInstrument(this, instrumentTransform, i, false, blendingEnabled, partialTicks);
+                    }
+                }
+            }
+            world.endProfiling();
+        }
+    }
 	
 	@Override
 	public IWrapperNBT save(IWrapperNBT data){

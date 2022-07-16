@@ -45,8 +45,7 @@ import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.rendering.components.ARenderEntityDefinable;
-import minecrafttransportsimulator.rendering.instances.ModelParserLT.LTBox;
+import minecrafttransportsimulator.rendering.ModelParserLT.LTBox;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**This class contains various methods to parse out JSON data from JSON files.
@@ -627,7 +626,7 @@ public class JSONParser{
 		
 			//Reset renderers and send reset commands to entities.
 			if(definitionToOverride instanceof AJSONMultiModelProvider){
-				ARenderEntityDefinable.clearObjectCaches((AJSONMultiModelProvider) definitionToOverride);
+				AEntityD_Definable.clearObjectCaches((AJSONMultiModelProvider) definitionToOverride);
 			}
 			for(AEntityC_Renderable entity : InterfaceManager.clientInterface.getClientWorld().renderableEntities){
 				if(entity instanceof AEntityD_Definable){

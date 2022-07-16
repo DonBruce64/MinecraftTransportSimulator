@@ -1,12 +1,12 @@
 package minecrafttransportsimulator.blocks.tileentities.components;
 
+import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.rendering.instances.RenderPoleComponent;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**Base class for components that can go on poles.  Not actually a TE, just sits on one.
@@ -17,8 +17,6 @@ public abstract class ATileEntityPole_Component extends AEntityD_Definable<JSONP
 	
 	public final TileEntityPole core;
 	public final Axis axis;
-	
-	private static RenderPoleComponent renderer;
 	
 	public ATileEntityPole_Component(TileEntityPole core, IWrapperPlayer placingPlayer, Axis axis, IWrapperNBT data){
 		super(core.world, placingPlayer, data);
@@ -74,11 +72,10 @@ public abstract class ATileEntityPole_Component extends AEntityD_Definable<JSONP
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public RenderPoleComponent getRenderer(){
-		if(renderer == null){
-			renderer = new RenderPoleComponent();
-		}
-		return renderer;
-	}
+    public void renderBoundingBoxes(TransformationMatrix transform){
+        //Only render the bounding box for the core component.
+        if(axis.equals(Axis.NONE)){
+            core.renderBoundingBoxes(transform);
+        }
+    }
 }

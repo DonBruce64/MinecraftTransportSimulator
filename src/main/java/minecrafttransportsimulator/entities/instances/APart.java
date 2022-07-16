@@ -10,6 +10,7 @@ import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
+import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
@@ -23,7 +24,6 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packloading.JSONParser;
-import minecrafttransportsimulator.rendering.instances.RenderPart;
 
 /**This class is the base for all parts and should be extended for any entity-compatible parts.
  * Use {@link AEntityF_Multipart#addPart(APart, boolean)} to add parts 
@@ -34,9 +34,7 @@ import minecrafttransportsimulator.rendering.instances.RenderPart;
  * 
  * @author don_bruce
  */
-public abstract class APart extends AEntityE_Interactable<JSONPart>{
-	private static RenderPart renderer;
-	
+public abstract class APart extends AEntityE_Interactable<JSONPart>{	
 	//JSON properties.
 	public final JSONPartDefinition placementDefinition;
 	public final Point3D placementOffset;
@@ -401,11 +399,14 @@ public abstract class APart extends AEntityE_Interactable<JSONPart>{
 	}
 	
 	@Override
-	@SuppressWarnings("unchecked")
-	public RenderPart getRenderer(){
-		if(renderer == null){
-			renderer = new RenderPart();
-		}
-		return renderer;
-	}
+    public boolean disableRendering(float partialTicks){
+        return super.disableRendering(partialTicks) || isFake() || isInvisible;
+    }
+	
+	@Override
+    public void renderBoundingBoxes(TransformationMatrix transform){
+        if(!entityOn.areVariablesBlocking(placementDefinition, InterfaceManager.clientInterface.getClientPlayer())){
+            super.renderBoundingBoxes(transform);
+        }
+    }
 }

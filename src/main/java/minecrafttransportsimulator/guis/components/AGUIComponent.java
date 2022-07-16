@@ -5,9 +5,9 @@ import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.rendering.components.RenderableObject;
-import minecrafttransportsimulator.rendering.instances.RenderText;
-import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
+import minecrafttransportsimulator.rendering.RenderText;
+import minecrafttransportsimulator.rendering.RenderableObject;
+import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
 
 /**Base class for all components.  Contains basic common variables to all rendering.
  * Note that {@link #constructedX} and {@link #constructedY} are only valid as the values

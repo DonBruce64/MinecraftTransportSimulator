@@ -99,7 +99,7 @@ public class InterfaceEventsModelLoader{
 							//Start master profiling section.
 							for(AEntityC_Renderable entity : allEntities){
 								world.beginProfiling("MTSRendering", true);
-								entity.getRenderer().render(entity, blendingEnabled, partialTicks);
+								entity.render(blendingEnabled, partialTicks);
 								world.endProfiling();
 							}
 							

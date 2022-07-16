@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.rendering.components;
+package minecrafttransportsimulator.rendering;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -6,8 +6,6 @@ import java.util.List;
 import java.util.Map;
 
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
-import minecrafttransportsimulator.rendering.instances.ModelParserLT;
-import minecrafttransportsimulator.rendering.instances.ModelParserOBJ;
 
 /**Abstract class for parsing models.  This contains methods for determining what models
  * the parser can parse, and the operations for parsing them into the form MTS needs.
@@ -57,16 +55,16 @@ public abstract class AModelParser{
 	}
 	
 	/**
-	 *  Parses the model at the passed-in location, and generates all {@link RenderableModelObject}s for it.
+	 *  Parses the model for the passed-in entity, and generates all {@link RenderableModelObject}s for it.
 	 *  These are returned as a list.  Objects in the parsed model are cross-checked with the passed-in 
 	 *  definition to ensure the proper constructors are created.  All objects in the model
 	 *  are assured to be turned into one of the objects in the returned list.
 	 */
-	public static <AnimationEntity extends AEntityD_Definable<?>> List<RenderableModelObject<AnimationEntity>> generateRenderables(AEntityD_Definable<?> entity){
+	public static List<RenderableModelObject> generateRenderables(AEntityD_Definable<?> entity){
 		String modelLocation = entity.definition.getModelLocation(entity.subName);
-		List<RenderableModelObject<AnimationEntity>> modelObjects = new ArrayList<RenderableModelObject<AnimationEntity>>();
+		List<RenderableModelObject> modelObjects = new ArrayList<RenderableModelObject>();
 		for(RenderableObject parsedObject : parseModel(modelLocation)){
-			modelObjects.add(new RenderableModelObject<AnimationEntity>(modelLocation, parsedObject));
+			modelObjects.add(new RenderableModelObject(modelLocation, parsedObject));
 		}
 		return modelObjects;
 	}

@@ -3,7 +3,7 @@ package minecrafttransportsimulator.guis.components;
 import java.nio.FloatBuffer;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.rendering.components.RenderableObject;
+import minecrafttransportsimulator.rendering.RenderableObject;
 
 /**Class that renders a cut-out area of the currently bound texture.  This is cleaner than doing manual
  * rendering in the draw calls, and allows for standardized component batch-rendering.

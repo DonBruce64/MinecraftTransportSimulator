@@ -24,7 +24,6 @@ import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest.EntityGUIType;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleChange;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleCollisionUpdate;
-import minecrafttransportsimulator.rendering.instances.RenderPole;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**Pole tile entity.  Remembers what components we have attached and the state of the components.
@@ -37,7 +36,6 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 	public final Map<Axis, ATileEntityPole_Component> components = new HashMap<Axis, ATileEntityPole_Component>();
 	
 	private float maxTotalLightLevel;
-	private static RenderPole renderer;
 	
 	public TileEntityPole(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, IWrapperNBT data){
 		super(world, position, placingPlayer, data);
@@ -267,13 +265,10 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent>{
 	}
 	
 	@Override
-	@SuppressWarnings("unchecked")
-	public RenderPole getRenderer(){
-		if(renderer == null){
-			renderer = new RenderPole();
-		}
-		return renderer;
-	}
+    public boolean disableRendering(float partialTicks){
+	    //We don't render poles themselves.  Just their components.
+        return true;
+    }
 	
 	@Override
     public IWrapperNBT save(IWrapperNBT data){

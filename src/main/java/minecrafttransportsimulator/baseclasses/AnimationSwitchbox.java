@@ -5,7 +5,7 @@ import java.util.List;
 
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
-import minecrafttransportsimulator.rendering.components.DurationDelayClock;
+import minecrafttransportsimulator.rendering.DurationDelayClock;
 
 /**A helper class of sorts for doing switch-based animations for {@link JSONAnimationDefinition}
  * when parired with {@link DurationDelayClock}s.  This wraps the rather long and boilerplate-code

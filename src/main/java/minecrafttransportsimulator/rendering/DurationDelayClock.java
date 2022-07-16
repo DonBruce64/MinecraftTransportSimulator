@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.rendering.components;
+package minecrafttransportsimulator.rendering;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;

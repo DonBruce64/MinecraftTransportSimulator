@@ -7,8 +7,8 @@ import java.util.Map;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
-import minecrafttransportsimulator.rendering.components.AModelParser;
-import minecrafttransportsimulator.rendering.components.RenderableObject;
+import minecrafttransportsimulator.rendering.AModelParser;
+import minecrafttransportsimulator.rendering.RenderableObject;
 
 /**Custom #D model render class.  This allows for rendering a parsed model into a GUI.
  * Mainly used to render vehicles, though can be used for other models if desired.

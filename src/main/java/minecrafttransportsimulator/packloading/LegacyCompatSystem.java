@@ -57,9 +57,9 @@ import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.rendering.components.AModelParser;
-import minecrafttransportsimulator.rendering.components.RenderableObject;
-import minecrafttransportsimulator.rendering.components.TreadRoller;
+import minecrafttransportsimulator.rendering.AModelParser;
+import minecrafttransportsimulator.rendering.RenderableObject;
+import minecrafttransportsimulator.rendering.TreadRoller;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**

@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.rendering.instances;
+package minecrafttransportsimulator.rendering;
 
 import java.awt.image.BufferedImage;
 import java.nio.FloatBuffer;
@@ -15,7 +15,6 @@ import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.JSONText;
-import minecrafttransportsimulator.rendering.components.RenderableObject;
 
 /**Main render class for text.  This class contains a few methods for rendering text.  These mainly pertain to rendering
  * text strings given a specified set of formatting and position/rotation.

@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.rendering.instances;
+package minecrafttransportsimulator.rendering;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -9,8 +9,6 @@ import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.rendering.components.AModelParser;
-import minecrafttransportsimulator.rendering.components.RenderableObject;
 
 /**Class responsible for parsing OBJ models into arrays that can be fed to the GPU.
  * Much more versatile than the Forge system.

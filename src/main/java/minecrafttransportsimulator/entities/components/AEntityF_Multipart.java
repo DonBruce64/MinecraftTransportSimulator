@@ -10,8 +10,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.items.components.AItemBase;
@@ -985,6 +987,11 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 			return 0;
 		}
 	}
+	
+	@Override
+    public void renderBoundingBoxes(TransformationMatrix transform){
+	    encompassingBox.renderWireframe(this, transform, null, ColorRGB.WHITE);
+    }
 		
 	
 	@Override

@@ -2,8 +2,11 @@ package minecrafttransportsimulator.entities.instances;
 
 import java.util.List;
 
+import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
+import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPart;
@@ -53,8 +56,7 @@ public class PartGun extends APart{
 	//Stored variables used to determine bullet firing behavior.
 	private int bulletsLeft;
 	private int bulletsReloading;
-	//TODO make this private when rendering goes in-class.
-	public int currentMuzzleGroupIndex;
+	private int currentMuzzleGroupIndex;
 	private final RotationMatrix internalOrientation;
 	private final RotationMatrix prevInternalOrientation;
 	protected ItemBullet loadedBullet;
@@ -78,6 +80,9 @@ public class PartGun extends APart{
 	private final Point3D bulletPosition = new Point3D();
 	private final Point3D bulletVelocity = new Point3D();
 	private final RotationMatrix bulletOrientation = new RotationMatrix();
+	private final Point3D bulletPositionRender = new Point3D();
+    private final Point3D bulletVelocityRender = new Point3D();
+    private final RotationMatrix bulletOrientationRender = new RotationMatrix();
 	
 	//Temp helper variables for calculations
 	private final Point3D targetVector = new Point3D();
@@ -762,6 +767,18 @@ public class PartGun extends APart{
 		
 		return super.getRawTextVariableValue(textDef, partialTicks);
 	}
+	
+	@Override
+    public void renderBoundingBoxes(TransformationMatrix transform){
+        if(!entityOn.areVariablesBlocking(placementDefinition, InterfaceManager.clientInterface.getClientPlayer())){
+            super.renderBoundingBoxes(transform);
+            //Draw the gun muzzle bounding boxes.
+            for(JSONMuzzle muzzle : definition.gun.muzzleGroups.get(currentMuzzleGroupIndex).muzzles){
+                setBulletSpawn(bulletPositionRender, bulletVelocityRender, bulletOrientationRender, muzzle);
+                new BoundingBox(bulletPositionRender, 0.25, 0.25, 0.25).renderWireframe(this, transform, null, ColorRGB.BLUE);
+            }
+        }
+    }
 	
 	@Override
 	public IWrapperNBT save(IWrapperNBT data){

@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.rendering.components;
+package minecrafttransportsimulator.rendering;
 
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
@@ -21,7 +21,6 @@ import minecrafttransportsimulator.jsondefs.JSONLight;
 import minecrafttransportsimulator.jsondefs.JSONLight.JSONLightBlendableComponent;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.rendering.instances.RenderText;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**This class represents an object that can be rendered from a model.  This object is a set of
@@ -31,7 +30,7 @@ import minecrafttransportsimulator.systems.ConfigSystem;
  *
  * @author don_bruce
  */
-public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>>{
+public class RenderableModelObject{
 	protected final String modelLocation;
 	protected final RenderableObject object;
 	private final boolean isWindow;
@@ -93,7 +92,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 	 *  Renders this object, applying any transforms that need to happen.  This method also
 	 *  renders any objects that depend on this object's transforms after rendering.
 	 */
-	public void render(AnimationEntity entity, TransformationMatrix transform, boolean blendingEnabled, float partialTicks){
+	public void render(AEntityD_Definable<?> entity, TransformationMatrix transform, boolean blendingEnabled, float partialTicks){
 		//Do pre-render checks based on the object we are rendering.
 		//This may block rendering if there are false visibility transforms or the wrong render pass.
 		JSONLight lightDef = entity.lightObjectDefinitions.get(object.name);
@@ -201,7 +200,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 		treadPoints.remove(modelLocation);
 	}
 	
-	private boolean shouldRender(AnimationEntity entity, JSONLight lightDef, boolean blendingEnabled, float partialTicks){
+	private boolean shouldRender(AEntityD_Definable<?> entity, JSONLight lightDef, boolean blendingEnabled, float partialTicks){
 		//Translucent only renders on blended pass.
 		if(object.isTranslucent && !blendingEnabled){
 			return false;
@@ -362,7 +361,7 @@ public class RenderableModelObject<AnimationEntity extends AEntityD_Definable<?>
 		}
 	}
 		
-	private void doLightRendering(AnimationEntity entity, JSONLight lightDef, float lightLevel, ColorRGB color, boolean blendingEnabled){
+	private void doLightRendering(AEntityD_Definable<?> entity, JSONLight lightDef, float lightLevel, ColorRGB color, boolean blendingEnabled){
 		if(blendingEnabled && lightLevel > 0 && lightDef.emissive){
 			//Light color detected on blended render pass.
 			if(colorObject == null){

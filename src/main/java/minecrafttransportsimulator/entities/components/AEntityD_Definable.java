@@ -14,6 +14,7 @@ import java.util.Map.Entry;
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityParticle;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
@@ -25,6 +26,7 @@ import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONCameraObject;
 import minecrafttransportsimulator.jsondefs.JSONLight;
 import minecrafttransportsimulator.jsondefs.JSONParticle;
+import minecrafttransportsimulator.jsondefs.JSONRendering.ModelType;
 import minecrafttransportsimulator.jsondefs.JSONSound;
 import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.jsondefs.JSONText;
@@ -38,7 +40,10 @@ import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncreme
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packloading.PackParser;
-import minecrafttransportsimulator.rendering.components.DurationDelayClock;
+import minecrafttransportsimulator.rendering.AModelParser;
+import minecrafttransportsimulator.rendering.DurationDelayClock;
+import minecrafttransportsimulator.rendering.RenderText;
+import minecrafttransportsimulator.rendering.RenderableModelObject;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.CameraSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -94,6 +99,9 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 	
 	/**Maps light (model) object names to their definitions.  This is created from the JSON definition to prevent the need to do loops.**/
 	public final Map<String, JSONLight> lightObjectDefinitions = new HashMap<String, JSONLight>();
+	
+	/**Object lists for models parsed in for this class.  Maps are keyed by the model name.**/
+    protected static final Map<String, List<RenderableModelObject>> objectLists = new HashMap<String, List<RenderableModelObject>>();
 	
 	/**Constructor for synced entities**/
 	public AEntityD_Definable(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data){
@@ -893,6 +901,62 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 			}
 		}
 	}
+	
+	@Override
+    protected void renderModel(TransformationMatrix transform, boolean blendingEnabled, float partialTicks){
+        //Update internal lighting states.
+        world.beginProfiling("LightStateUpdates", true);
+        updateLightBrightness(partialTicks);
+        
+        //Parse model if it hasn't been already.
+        world.beginProfiling("ParsingMainModel", false);
+        String modelLocation = definition.getModelLocation(subName);
+        if(!objectLists.containsKey(modelLocation)){
+            objectLists.put(modelLocation, AModelParser.generateRenderables(this));
+        }
+        
+        //Render model object individually.
+        world.beginProfiling("RenderingMainModel", false);
+        for(RenderableModelObject modelObject : objectLists.get(modelLocation)){
+            modelObject.render(this, transform, blendingEnabled, partialTicks);
+        }
+        
+        //Render any static text.
+        world.beginProfiling("MainText", false);
+        if(!blendingEnabled){
+            for(Entry<JSONText, String> textEntry : text.entrySet()){
+                JSONText textDef = textEntry.getKey();
+                if(textDef.attachedTo == null){
+                    RenderText.draw3DText(textEntry.getValue(), this, transform, textDef, false);
+                }
+            }
+        }
+        //Handle particles.
+        world.beginProfiling("Particles", false);
+        spawnParticles(partialTicks);
+        world.endProfiling();
+    }
+    
+    @Override
+    protected boolean disableRendering(float partialTicks){
+        //Don't render if we don't have a model.
+        return super.disableRendering(partialTicks) || definition.rendering.modelType.equals(ModelType.NONE);
+    }
+    
+    /**
+     *  Called externally to reset all caches for all renders.
+     */
+    public static void clearObjectCaches(AJSONMultiModelProvider definition){
+        for(JSONSubDefinition subDef : definition.definitions){
+            String modelLocation = definition.getModelLocation(subDef.subName);
+            List<RenderableModelObject> resetObjects = objectLists.remove(modelLocation);
+            if(resetObjects != null){
+                for(RenderableModelObject modelObject : resetObjects){
+                    modelObject.destroy();
+                }
+            }
+        }
+    }
 	
 	@Override
 	public IWrapperNBT save(IWrapperNBT data){

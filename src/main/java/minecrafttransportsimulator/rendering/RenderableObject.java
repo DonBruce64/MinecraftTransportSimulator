@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.rendering.components;
+package minecrafttransportsimulator.rendering;
 
 import java.nio.FloatBuffer;
 

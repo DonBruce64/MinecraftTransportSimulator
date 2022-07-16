@@ -12,7 +12,6 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
-import minecrafttransportsimulator.rendering.instances.RenderDecor;
 
 /**Decor tile entity.  Contains the definition so we know how
  * to render this in the TESR call, as well as if we need to do
@@ -25,8 +24,6 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor>{
 	public static final String CLICKED_VARIABLE = "clicked";
 	public static final String ACTIVATED_VARIABLE = "activated";
 	private float lightLevel;
-	
-	private static RenderDecor renderer;
 	
 	public TileEntityDecor(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, IWrapperNBT data){
 		super(world, position, placingPlayer, data);
@@ -106,14 +103,5 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor>{
 				}
 			}
 		}
-	}
-	
-	@Override
-	@SuppressWarnings("unchecked")
-	public RenderDecor getRenderer(){
-		if(renderer == null){
-			renderer = new RenderDecor();
-		}
-		return renderer;
 	}
 }

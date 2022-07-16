@@ -3,9 +3,9 @@ package minecrafttransportsimulator.guis.components;
 import java.nio.FloatBuffer;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.rendering.components.RenderableObject;
-import minecrafttransportsimulator.rendering.instances.RenderText;
-import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
+import minecrafttransportsimulator.rendering.RenderText;
+import minecrafttransportsimulator.rendering.RenderableObject;
+import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
 
 /**Custom class for selectors.  Selectors are like buttons, except they have a defined state that's saved internally.
  * This state allows for the selector's texture to be manually set.  They also render their text below the selector,

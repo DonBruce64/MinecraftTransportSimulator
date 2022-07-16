@@ -1,4 +1,4 @@
-package minecrafttransportsimulator.rendering.components;
+package minecrafttransportsimulator.rendering;
 
 import java.awt.Color;
 import java.awt.Graphics2D;

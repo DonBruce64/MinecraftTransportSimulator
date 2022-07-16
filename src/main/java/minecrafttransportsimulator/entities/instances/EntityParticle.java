@@ -12,8 +12,7 @@ import minecrafttransportsimulator.jsondefs.JSONParticle;
 import minecrafttransportsimulator.jsondefs.JSONParticle.ParticleType;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.rendering.components.RenderableObject;
-import minecrafttransportsimulator.rendering.instances.RenderParticle;
+import minecrafttransportsimulator.rendering.RenderableObject;
 
 /**Basic particle class.  This mimic's MC's particle logic, except we can manually set
  * movement logic.
@@ -40,8 +39,6 @@ public class EntityParticle extends AEntityC_Renderable{
 	//Runtime variables.
 	private boolean touchingBlocks;
 	private int age;
-	
-	private static RenderParticle renderer;
 
 	public EntityParticle(AEntityD_Definable<?> entitySpawning, JSONParticle definition, AnimationSwitchbox switchbox){
 		super(entitySpawning.world, entitySpawning.position, ZERO_FOR_CONSTRUCTOR, ZERO_FOR_CONSTRUCTOR);
@@ -205,13 +202,29 @@ public class EntityParticle extends AEntityC_Renderable{
 	}
 	
 	@Override
-	@SuppressWarnings("unchecked")
-	public RenderParticle getRenderer(){
-		if(renderer == null){
-			renderer = new RenderParticle();
-		}
-		return renderer;
-	}
+    protected void renderModel(TransformationMatrix transform, boolean blendingEnabled, float partialTicks){
+        if(blendingEnabled){
+            if(staticColor == null){
+                renderable.color.red = startColor.red + (endColor.red - startColor.red)*(age+partialTicks)/maxAge;
+                renderable.color.green = startColor.green + (endColor.green - startColor.green)*(age+partialTicks)/maxAge;
+                renderable.color.blue = startColor.blue + (endColor.blue - startColor.blue)*(age+partialTicks)/maxAge;
+            }
+            renderable.alpha = getAlpha(partialTicks);
+            renderable.transform.set(transform);
+            double totalScale = getSize()*getScale(partialTicks);
+            renderable.transform.applyScaling(totalScale*entitySpawning.scale.x, totalScale*entitySpawning.scale.y, totalScale*entitySpawning.scale.z);
+            
+            switch(definition.type){
+                case SMOKE: setParticleTextureBounds(7 - age*8/maxAge, 0); break;//Smoke gets smaller as it ages.
+                case FLAME: setParticleTextureBounds(0, 3); break;
+                case DRIP: setParticleTextureBounds(touchingBlocks ? 1 : 0, 7); break;//Drips become flat when they hit the ground.
+                case BUBBLE: setParticleTextureBounds(0, 2); break;
+                case BREAK: break;//Do nothing, this will have been set at construction.
+                case GENERIC: break;//Do nothing, this is the same as the default buffer.
+            }
+            renderable.render();
+        }
+    }
 	
 	/**
 	 *  Gets the max age of the particle.  This tries to use the definition's
@@ -243,32 +256,6 @@ public class EntityParticle extends AEntityC_Renderable{
 	 */
 	private float getSize(){
 		return definition.type.equals(ParticleType.DRIP) || definition.type.equals(ParticleType.BREAK) ? 0.1F : 0.2F;
-	}
-	
-	/**
-	 *  Called to render the particle..
-	 *  Cleaner as we don't need to preface variable references.
-	 */
-	public void render(TransformationMatrix transform, float partialTicks){
-		if(staticColor == null){
-			renderable.color.red = startColor.red + (endColor.red - startColor.red)*(age+partialTicks)/maxAge;
-			renderable.color.green = startColor.green + (endColor.green - startColor.green)*(age+partialTicks)/maxAge;
-			renderable.color.blue = startColor.blue + (endColor.blue - startColor.blue)*(age+partialTicks)/maxAge;
-		}
-		renderable.alpha = getAlpha(partialTicks);
-		renderable.transform.set(transform);
-		double totalScale = getSize()*getScale(partialTicks);
-		renderable.transform.applyScaling(totalScale*entitySpawning.scale.x, totalScale*entitySpawning.scale.y, totalScale*entitySpawning.scale.z);
-		
-		switch(definition.type){
-			case SMOKE: setParticleTextureBounds(7 - age*8/maxAge, 0); break;//Smoke gets smaller as it ages.
-			case FLAME: setParticleTextureBounds(0, 3); break;
-			case DRIP: setParticleTextureBounds(touchingBlocks ? 1 : 0, 7); break;//Drips become flat when they hit the ground.
-			case BUBBLE: setParticleTextureBounds(0, 2); break;
-			case BREAK: break;//Do nothing, this will have been set at construction.
-			case GENERIC: break;//Do nothing, this is the same as the default buffer.
-		}
-		renderable.render();
 	}
 	
 	/**

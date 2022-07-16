@@ -24,7 +24,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityInstrumentChange;
 import minecrafttransportsimulator.packloading.PackParser;
-import minecrafttransportsimulator.rendering.instances.RenderText.TextAlignment;
+import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
 
 /**A GUI that is used to put instruments into vehicles.  This GUI is essentially an overlay
  * to {@link GUIHUD} and {@link AGUIPanel} that uses the textures from those GUIs, but does

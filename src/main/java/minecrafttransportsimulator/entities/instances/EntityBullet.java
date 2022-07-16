@@ -20,7 +20,6 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitBlock;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
-import minecrafttransportsimulator.rendering.instances.RenderBullet;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**This part class is special, in that it does not extend APart.
@@ -54,8 +53,6 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 	private PartEngine engineTargeted;
 	private IWrapperEntity externalEntityTargeted;
 	private HitType lastHit;
-	
-	private static RenderBullet renderer;
 	
 	/**Generic constructor for no target.**/
     public EntityBullet(Point3D position, Point3D motion, RotationMatrix orientation, PartGun gun){
@@ -433,15 +430,6 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet>{
 	@Override
 	public boolean shouldSavePosition(){
 		return false;
-	}
-	
-	@Override
-	@SuppressWarnings("unchecked")
-	public RenderBullet getRenderer(){
-		if(renderer == null){
-			renderer = new RenderBullet();
-		}
-		return renderer;
 	}
 	
 	private static enum HitType{

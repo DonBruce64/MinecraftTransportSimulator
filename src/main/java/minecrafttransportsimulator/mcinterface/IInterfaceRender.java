@@ -3,7 +3,7 @@ package minecrafttransportsimulator.mcinterface;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
-import minecrafttransportsimulator.rendering.components.RenderableObject;
+import minecrafttransportsimulator.rendering.RenderableObject;
 
 /**Interface for the various MC rendering engines.  This class has functions for
  * binding textures, changing lightmap statuses, etc.
