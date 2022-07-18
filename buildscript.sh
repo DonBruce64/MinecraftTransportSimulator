@@ -19,4 +19,12 @@ echo "Configuring build.gradle for $VERPREFIX$VERSTRING"
 sed -i '16s/.*version.*/version = "'$VERPREFIX$VERSTRING'"/' build.gradle
 
 #Finally, build the mod.
-./gradlew build --offline
+if [[ "$PULL_DEPS" != 1 ]]; then
+    # Default behavior: build it with `--offline`
+    ./gradlew build --offline
+else
+    # Set PULL_DEPS=1 to build it without `--offline`
+    ./gradlew build
+fi
+
+exit $?
