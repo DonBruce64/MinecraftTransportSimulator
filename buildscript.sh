@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #Set java to 1.8 to match ForgeGradle 3.+.
-JAVA_HOME="C:\Program Files\Java\jdk1.8.0_241"
+#JAVA_HOME="C:\Program Files\Java\jdk1.8.0_241"
 
 VERPREFIX="1.12.2-"
 
