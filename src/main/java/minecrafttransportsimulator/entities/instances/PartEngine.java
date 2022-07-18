@@ -43,7 +43,7 @@ public class PartEngine extends APart{
 	public int internalFuel;
 	public double hours;
 	public double rpm;
-	public double temp = 20;
+	public double temp;
 	public double pressure;
 	public float propellerGearboxRatio;
 	
@@ -332,7 +332,7 @@ public class PartEngine extends APart{
 					//Try to get fuel from the vehicle and calculate fuel flow.
 					if(!isCreative && !vehicleOn.fuelTank.getFluid().isEmpty()){
 						if(!ConfigSystem.settings.fuel.fuels.containsKey(definition.engine.fuelType)){					
-							throw new IllegalArgumentException("Engine:" + definition.packID + ":" + definition.systemName + " wanted fuel configs for fuel of type:" + definition.engine.fuelType + ", but these do not exist in the config file.  Fuels currently in the file are:" + ConfigSystem.settings.fuel.fuels.keySet().toString() + "If you are on a server, this means the server and client configs are not the same.  If this is a modpack, TELL THE AUTHOR IT IS BORKEN!");
+							throw new IllegalArgumentException("Engine:" + definition.packID + ":" + definition.systemName + " wanted fuel configs for fuel of type:" + definition.engine.fuelType + ", but these do not exist in the config file.  Fuels currently in the file are:" + ConfigSystem.settings.fuel.fuels.keySet() + "If you are on a server, this means the server and client configs are not the same.  If this is a modpack, TELL THE AUTHOR IT IS BORKEN!");
 						}else if(!ConfigSystem.settings.fuel.fuels.get(definition.engine.fuelType).containsKey(vehicleOn.fuelTank.getFluid())){
 							//Clear out the fuel from this vehicle as it's the wrong type.
 							vehicleOn.fuelTank.drain(vehicleOn.fuelTank.getFluid(), vehicleOn.fuelTank.getFluidLevel(), true);
@@ -487,13 +487,7 @@ public class PartEngine extends APart{
 					}else{
 						//No wheel force.  Adjust wheels to engine speed.
 						for(PartGroundDevice wheel : vehicleOn.groundDeviceCollective.drivenWheels){
-							if(currentGearRatio != 0){
-								wheel.angularVelocity = rpm/currentGearRatio/vehicleOn.currentAxleRatio/1200D;
-							}else if(wheel.angularVelocity > 0){
-								wheel.angularVelocity = Math.max(0, wheel.angularVelocity - 0.01D);
-							}else{
-								wheel.angularVelocity = Math.min(0, wheel.angularVelocity + 0.01D);
-							}
+							wheel.angularVelocity = rpm/currentGearRatio/vehicleOn.currentAxleRatio/1200D;
 						}
 					}
 				}
@@ -826,7 +820,7 @@ public class PartEngine extends APart{
 	}
 	
 	private boolean shiftUp(){
-		byte nextGear = 0;
+		byte nextGear;
 		boolean doShift = false;
 		if(definition.engine.jetPowerFactor == 0 ){
 			//Check to make sure we can shift.
@@ -858,7 +852,7 @@ public class PartEngine extends APart{
 	}
 	
 	private boolean shiftDown(){
-		byte nextGear = 0;
+		byte nextGear;
 		boolean doShift = false;
 		if(definition.engine.jetPowerFactor == 0){
 			//Check to make sure we can shift.
@@ -934,7 +928,7 @@ public class PartEngine extends APart{
 		engineForce.set(0D, 0D, 0D);
 		//First get wheel forces, if we have friction to do so.
 		if(definition.engine.jetPowerFactor == 0 && wheelFriction != 0){
-			double wheelForce = 0;
+			double wheelForce;
 			//If running, use the friction of the wheels to determine the new speed.
 			if(running || electricStarterEngaged){
 				if(rpm > currentRevlimitRPM && currentRevlimitRPM != -1){
@@ -1014,7 +1008,7 @@ public class PartEngine extends APart{
 			engineForce.set(engineAxisVector).scale(thrust);
 			force.add(engineForce);
 			engineForce.reOrigin(vehicleOn.orientation);
-			torque.y += engineForce.z*localOffset.x + engineForce.x*localOffset.z;
+			torque.y -= engineForce.z*localOffset.x + engineForce.x*localOffset.z;
 			torque.z += engineForce.y*localOffset.x - engineForce.x*localOffset.y;
 			if(!vehicleOn.groundDeviceCollective.isAnythingOnGround()){
 				torque.x += engineForce.z*localOffset.y - engineForce.y*localOffset.z;
