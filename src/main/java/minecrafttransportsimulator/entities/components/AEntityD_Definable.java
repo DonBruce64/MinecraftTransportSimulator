@@ -832,10 +832,6 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                 newValue = maxValue;
             }
         }
-        InterfaceLoader.LOGGER.info("Variable changed: " + variable + "\nIncrement: " + incrementValue + "\nMinimum: " + minValue +
-                "\nMax: " + maxValue +
-                "\nCurrent: " + currentValue +
-                "\nNew: " + newValue);
         if (newValue != currentValue) {
             setVariable(variable, newValue);
             return true;
