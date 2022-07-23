@@ -10,6 +10,6 @@ import minecrafttransportsimulator.items.components.AItemBase;
  *
  * @author don_bruce
  */
-public interface IBuilderItemInterface{
-	public AItemBase getItem();
+public interface IBuilderItemInterface {
+    AItemBase getItem();
 }

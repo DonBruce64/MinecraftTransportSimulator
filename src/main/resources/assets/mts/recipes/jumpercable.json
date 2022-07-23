@@ -1,16 +1,22 @@
 {
     "type": "minecraft:crafting_shaped",
-    "pattern":[
+    "pattern": [
         "a a",
         "bcb",
         "bbb"
     ],
-    "key":{
-		"a":{"item": "minecraft:shears"},
-		"b":{"item": "minecraft:string"},
-		"c":{"item": "minecraft:redstone"}
+    "key": {
+        "a": {
+            "item": "minecraft:shears"
+        },
+        "b": {
+            "item": "minecraft:string"
+        },
+        "c": {
+            "item": "minecraft:redstone"
+        }
     },
-    "result":{
+    "result": {
         "item": "mts:mts.jumpercable"
     }
 }
