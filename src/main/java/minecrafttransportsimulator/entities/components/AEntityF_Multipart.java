@@ -988,9 +988,15 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 		}
 	}
 	
-	@Override
-    public void renderBoundingBoxes(TransformationMatrix transform){
-	    encompassingBox.renderWireframe(this, transform, null, ColorRGB.WHITE);
+    @Override
+    public void renderBoundingBoxes(TransformationMatrix transform) {
+        encompassingBox.renderWireframe(this, transform, null, ColorRGB.WHITE);
+	for (BoundingBox box : interactionBoxes) {
+            box.renderWireframe(this, transform, null, null);
+        }
+        for (BoundingBox box : bulletCollisionBoxes) {
+            box.renderWireframe(this, transform, null, null);
+        }
     }
 		
 	
