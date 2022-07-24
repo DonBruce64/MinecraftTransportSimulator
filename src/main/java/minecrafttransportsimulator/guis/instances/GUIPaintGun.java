@@ -26,7 +26,8 @@ import java.util.List;
 public class GUIPaintGun extends AGUIBase {
 
     //Init variables.
-    private final AEntityD_Definable<?> entity;
+    @SuppressWarnings("FieldMayBeFinal")
+    private AEntityD_Definable<?> entity;
     private final IWrapperPlayer player;
 
     //Buttons and labels.
