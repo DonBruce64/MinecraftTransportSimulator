@@ -69,14 +69,14 @@ public abstract class AGUIPanel extends AGUIBase {
         //This method allows for recursion for connected trailers.
         if (entity.definition.connectionGroups != null) {
             for (JSONConnectionGroup connectionGroup : entity.definition.connectionGroups) {
-                if (connectionGroup.canInitiateConnections) {
+                if (connectionGroup.canIntiateConnections) {
                     trailerSwitchDefs.add(new SwitchEntry(entity, connectionGroup));
                 }
             }
 
             //Also check things we are towing, if we are set to do so.
             for (TowingConnection connection : entity.towingConnections) {
-                if (connection.hookupConnectionGroup.canInitiateSubConnections) {
+                if (connection.hookupConnectionGroup.canIntiateSubConnections) {
                     setupTowingButtons(connection.towedVehicle);
                 }
             }
@@ -86,7 +86,7 @@ public abstract class AGUIPanel extends AGUIBase {
         for (APart part : entity.parts) {
             if (part.definition.connectionGroups != null) {
                 for (JSONConnectionGroup connectionGroup : part.definition.connectionGroups) {
-                    if (connectionGroup.canInitiateConnections) {
+                    if (connectionGroup.canIntiateConnections) {
                         trailerSwitchDefs.add(new SwitchEntry(part, connectionGroup));
                     }
                 }

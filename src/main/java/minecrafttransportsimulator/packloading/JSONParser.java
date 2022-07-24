@@ -688,11 +688,11 @@ public class JSONParser {
             //Only check for objects that are defined in the jsondefs class file.
             //If we extend recursion to others, it could get nasty...
             if (obj.getClass().getPackage().getName().contains("jsondefs")) {
-                Object recursiveObject;
+                Object recursiveObject = null;
                 try {
                     recursiveObject = field.get(obj);
                 } catch (Exception e) {
-                    throw new RuntimeException(e);
+                    e.printStackTrace();
                 }
 
                 if (recursiveObject != null) {

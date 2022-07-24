@@ -242,7 +242,7 @@ public class GUIPanelGround extends AGUIPanel {
 
     @Override
     protected void setupGeneralComponents(int guiLeft, int guiTop) {
-        //Create up to 8 trailer selectors. Note that not all may be rendered.
+        //Create up to 8 trailer selectors.  Note that not all may be rendered.
         trailerSelectors.clear();
         for (int i = 0; i < 8; ++i) {
             //Go to next column if we are on our 4th trailer selector.
@@ -264,7 +264,7 @@ public class GUIPanelGround extends AGUIPanel {
         }
 
         //If we have gear, add a selector for it.
-        //This is rendered on the 4th row. It is assumed that this will never be combined with 8 trailers...
+        //This is rendered on the 4th row.  It is assumed that this will never be combined with 8 trailers...
         if (vehicle.definition.motorized.gearSequenceDuration != 0) {
             gearSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 3 * (SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE, SELECTOR_SIZE, JSONConfigLanguage.GUI_PANEL_GEAR.value, vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, GEAR_TEXTURE_WIDTH_OFFSET, GEAR_TEXTURE_HEIGHT_OFFSET, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE) {
                 @Override

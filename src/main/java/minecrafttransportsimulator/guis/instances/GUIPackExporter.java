@@ -24,7 +24,6 @@ import java.util.Set;
  * @author don_bruce
  */
 public class GUIPackExporter extends AGUIBase {
-
     //Main screen components.
     private GUIComponentButton modelRenderButton;
     private GUIComponentButton packExportButton;
@@ -199,8 +198,7 @@ public class GUIPackExporter extends AGUIBase {
                     componentItemModel.position.x = componentItemModel.constructedX + Integer.parseInt(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
                     componentItemModel.position.y = -componentItemModel.constructedY - Integer.parseInt(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
                     componentItemModel.scale = Float.parseFloat(dataEntryBoxes.get(dataEntryBoxIndex++).getText());
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
+                } catch (Exception ignored) {
                 }
             }
         });
@@ -253,8 +251,7 @@ public class GUIPackExporter extends AGUIBase {
             componentItemModel.position.x = componentItemModel.constructedX + Integer.parseInt(dataEntryBoxes.get(2).getText());
             componentItemModel.position.y = componentItemModel.constructedY - Integer.parseInt(dataEntryBoxes.get(3).getText());
             componentItemModel.scale = Float.parseFloat(dataEntryBoxes.get(4).getText());
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        } catch (Exception ignored) {
         }
     }
 

@@ -74,8 +74,7 @@ public class GUIPackEditor extends JFrame {
                 if (currentJSON != null) {
                     initEditor();
                 }
-            } catch (Exception e) {
-                throw new RuntimeException(e);
+            } catch (Exception ignored) {
             }
         });
         filePanel.add(newButton);
@@ -98,8 +97,7 @@ public class GUIPackEditor extends JFrame {
                         initEditor();
                         lastFileAccessed = file;
                     }
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
+                } catch (Exception ignored) {
                 }
             }
         });
@@ -135,11 +133,9 @@ public class GUIPackEditor extends JFrame {
                                 }
                             }
                         }
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
+                    } catch (Exception ignored) {
                     }
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
+                } catch (Exception ignored) {
                 }
             }
         });
@@ -262,8 +258,7 @@ public class GUIPackEditor extends JFrame {
                 obj = new ArrayList<>();
                 try {
                     field.set(declaringObject, obj);
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
+                } catch (Exception ignored) {
                 }
             }
             Class<?> paramClass = (Class<?>) ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
@@ -447,8 +442,7 @@ public class GUIPackEditor extends JFrame {
                             String tooltipText = formatTooltipText(enumField.getAnnotation(JSONDescription.class).value());
                             list.setToolTipText(tooltipText);
                         }
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
+                    } catch (Exception ignored) {
                     }
                 }
                 return component;
@@ -468,8 +462,7 @@ public class GUIPackEditor extends JFrame {
                     try {
                         String tooltipText = formatTooltipText(currentClass.getAnnotation(JSONDescription.class).value());
                         list.setToolTipText(tooltipText);
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
+                    } catch (Exception ignored) {
                     }
                 }
                 return component;
@@ -565,8 +558,7 @@ public class GUIPackEditor extends JFrame {
                     parentPanel.add(new ListElementPanel(parentPanel, list, newObj));
                     parentPanel.revalidate();
                     parentPanel.repaint();
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
+                } catch (Exception ignored) {
                 }
             });
             buttonPanel.add(copyEntryButton);
