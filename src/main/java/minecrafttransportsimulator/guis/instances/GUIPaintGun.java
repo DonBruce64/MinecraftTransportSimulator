@@ -24,7 +24,6 @@ import java.util.List;
  * @author don_bruce
  */
 public class GUIPaintGun extends AGUIBase {
-
     //Init variables.
     @SuppressWarnings("FieldMayBeFinal")
     private AEntityD_Definable<?> entity;

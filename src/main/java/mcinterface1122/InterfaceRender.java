@@ -277,7 +277,7 @@ public class InterfaceRender implements IInterfaceRender {
                     internalTextures.put(textureLocation, new ResourceLocation(domain, location));
                 } else {
                     InterfaceManager.coreInterface.logError("Could not find texture: " + formattedLocation + " Reverting to fallback texture.");
-                    internalTextures.put(textureLocation, TextureMap.LOCATION_MISSING_TEXTURE);
+                    internalTextures.put(textureLocation, new ResourceLocation(InterfaceManager.coreModID, "textures/rendering/missing.png"));
                 }
             }
             Minecraft.getMinecraft().getTextureManager().bindTexture(internalTextures.get(textureLocation));

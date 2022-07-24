@@ -49,7 +49,6 @@ import java.nio.FloatBuffer;
  * @author don_bruce
  */
 public class RenderableObject {
-
     public final String name;
     public String texture;
     public final ColorRGB color;

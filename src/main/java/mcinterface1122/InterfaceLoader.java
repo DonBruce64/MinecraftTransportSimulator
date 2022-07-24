@@ -42,9 +42,9 @@ public class InterfaceLoader {
 
         //Init interfaces and send to the main game system.
         if (event.getSide().isClient()) {
-            new InterfaceManager(MODID, gameDirectory, new InterfaceCore(), new InterfacePacket(), new InterfaceClient(), new InterfaceInput(), new InterfaceSound(), new InterfaceRender());
+            new InterfaceManager(InterfaceLoader.MODID, gameDirectory, new InterfaceCore(), new InterfacePacket(), new InterfaceClient(), new InterfaceInput(), new InterfaceSound(), new InterfaceRender());
         } else {
-            new InterfaceManager(MODID, gameDirectory, new InterfaceCore(), new InterfacePacket(), null, null, null, null);
+            new InterfaceManager(InterfaceLoader.MODID, gameDirectory, new InterfaceCore(), new InterfacePacket(), null, null, null, null);
         }
 
         //Set LOGGER and add log items from pre-boot operations.
