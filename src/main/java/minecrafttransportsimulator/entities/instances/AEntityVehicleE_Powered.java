@@ -293,10 +293,6 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
                     }
                 }
             }
-
-            //Engine position not found. Get the next free slot and add it.
-            while (engines.containsKey(engineNumber++)) ;
-            engineNumber--;
             engines.put(engineNumber, (PartEngine) part);
         }
     }

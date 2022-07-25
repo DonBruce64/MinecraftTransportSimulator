@@ -1801,7 +1801,7 @@ public final class LegacyCompatSystem {
                         hitchGroup = new JSONConnectionGroup();
                         hitchGroup.connections = new ArrayList<>();
                         hitchGroup.groupName = "TRAILER";
-                        hitchGroup.canIntiateConnections = true;
+                        hitchGroup.canInitiateConnections = true;
                     }
                     hitchGroup.connections.add(connection);
                 }

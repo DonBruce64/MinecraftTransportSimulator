@@ -31,7 +31,6 @@ public class RenderText {
     public static final char RESET_FORMATTING_CHAR = 'r';
     public static final char UNDERLINE_CHAR = '_';
     public static final char STRIKETHROUGH_CHAR = '-';
-
     private static final Map<String, FontData> fontDatas = new HashMap<>();
     private static final TransformationMatrix transformHelper = new TransformationMatrix();
 
@@ -318,7 +317,7 @@ public class RenderText {
             }
 
             //Standard ASCII font is 7px tall out of 8.
-            //Unicode font is 10pz tall out of 16, or 5 out of 8.
+            //Unicode font is 10px tall out of 16, or 5 out of 8.
             //To compensate, we scale the font by (7/8)/(5/8) = 1.4.
             //However, this will move the font down, as it's top-left centered.
             //To compensate, we move the font 2px up, which would get the unicode
@@ -390,13 +389,13 @@ public class RenderText {
             int indexAtLastNewline = 0;
             ColorRGB currentColor = color;
             FontRenderState currentState = STATES[0];
-            for (int i = 0; i < text.length(); ++i) {
+            for (int i = 0; i < text.length(); i++) {
                 char textChar = text.charAt(i);
 
                 //Check if we are a formatting code before doing any other parsing.
                 if (textChar == FORMATTING_CHAR) {
                     //Get the format code and apply operation.
-                    char formattingChar = text.charAt(++i);
+                    char formattingChar = text.charAt(i++);
                     switch (formattingChar) {
                         case (BOLD_FORMATTING_CHAR):
                             currentState = STATES[currentState.index | FontRenderState.BOLD_BIT_INDEX];
@@ -439,7 +438,7 @@ public class RenderText {
                     //Don't do this if we don't have a space in this line though. This is the case for URLs
                     //and other long segments of text.
                     if (text.substring(indexAtLastNewline + 1, i).indexOf(' ') != -1) {
-                        for (int j = i - 1; j > 0; --j) {
+                        for (int j = i - 1; j > 0; j--) {
                             char priorChar = text.charAt(j);
                             if (priorChar == ' ') {
                                 i = j;
@@ -487,7 +486,7 @@ public class RenderText {
                     //If we are bold, we will double-render slightly offset.
                     //If we are underline, add an underline overlay.
                     //If we are italic, we slightly skew the UV map by 1px.
-                    //If we are strikethrough, we add a strikethough overlay.
+                    //If we are strikethrough, we add a strikethrough overlay.
                     RenderableObject currentRenderObject = getObjectFor(textChar, currentColor);
                     float charWidth = charWidths[textChar];
                     int charSteps = 6;

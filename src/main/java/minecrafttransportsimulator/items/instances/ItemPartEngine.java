@@ -66,7 +66,7 @@ public class ItemPartEngine extends AItemPart {
             for (byte i = 0; i < definition.engine.gearRatios.size(); i += 5) {
                 StringBuilder gearRatios = new StringBuilder();
                 for (byte j = i; j < i + 5 && j < definition.engine.gearRatios.size(); ++j) {
-                    gearRatios.append(String.valueOf(definition.engine.gearRatios.get(j)));
+                    gearRatios.append(definition.engine.gearRatios.get(j));
                     if (j < definition.engine.gearRatios.size() - 1) {
                         gearRatios.append(",  ");
                     }
