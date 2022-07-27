@@ -1,17 +1,27 @@
 {
     "type": "minecraft:crafting_shaped",
-    "pattern":[
+    "pattern": [
         "aaa",
         "bca",
         " dd"
     ],
-    "key":{
-        "a":{"type": "forge:ore_dict", "ore": "ingotIron"},
-		"b":{"item": "minecraft:iron_bars"},
-		"c":{"type": "forge:ore_dict", "ore" : "dyeRed"},
-		"d":{"item": "minecraft:iron_block"}
+    "key": {
+        "a": {
+            "type": "forge:ore_dict",
+            "ore": "ingotIron"
+        },
+        "b": {
+            "item": "minecraft:iron_bars"
+        },
+        "c": {
+            "type": "forge:ore_dict",
+            "ore": "dyeRed"
+        },
+        "d": {
+            "item": "minecraft:iron_block"
+        }
     },
-    "result":{
+    "result": {
         "item": "mts:mts.enginebench"
     }
 }

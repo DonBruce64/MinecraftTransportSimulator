@@ -1,31 +1,19 @@
 {
-	"parent": "mts:enginebench",
-	"display": {
-		"icon": {
-            "item": "mts:mts.fuelpump"
-        },
-        "title": {
-            "translate": "advancements.mts.fuelpump.title"
-        },
-        "description": {
-            "translate": "advancements.mts.fuelpump.description"
+    "parent": "mts:enginebench",
+    "display": {
+        "icon": {"item": "mts:mts.fuelpump"},
+        "title": {"translate": "advancements.mts.fuelpump.title"},
+        "description": {"translate": "advancements.mts.fuelpump.description"}
+    },
+    "criteria": {
+        "has_fuelpump": {
+            "trigger": "minecraft:inventory_changed",
+            "conditions": {
+                "items": [{"item": "mts:mts.fuelpump"}]
+            }
         }
-	},
-	"criteria": {
-		"has_fuelpump": {
-			"trigger": "minecraft:inventory_changed",
-			"conditions": {
-				"items": [
-					{
-						"item": "mts:mts.fuelpump"
-					}
-				]
-			}
-		}
-	},
-	"rewards": {
-		"recipes": [
-			"mts:jerrycan"
-		]
-	}
+    },
+    "rewards": {
+        "recipes": ["mts:jerrycan"]
+    }
 }

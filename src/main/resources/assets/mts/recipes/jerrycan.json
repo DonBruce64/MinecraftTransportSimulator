@@ -1,15 +1,21 @@
 {
     "type": "minecraft:crafting_shaped",
-    "pattern":[
+    "pattern": [
         "aba",
         "aba",
         "aaa"
     ],
-    "key":{
-		"a":{"type": "forge:ore_dict", "ore": "ingotIron"},
-		"b":{"type": "forge:ore_dict", "ore" : "dyeRed"}
+    "key": {
+        "a": {
+            "type": "forge:ore_dict",
+            "ore": "ingotIron"
+        },
+        "b": {
+            "type": "forge:ore_dict",
+            "ore": "dyeRed"
+        }
     },
-    "result":{
+    "result": {
         "item": "mts:mts.jerrycan"
     }
 }
