@@ -111,6 +111,15 @@ public class PacketPartEngine extends APacketEntity<PartEngine> {
             case BACKFIRE:
                 engine.backfireEngine();
                 break;
+            case SHIFT_UP:
+                engine.shiftUp();
+                break;
+            case SHIFT_DOWN:
+                engine.shiftDown();
+                break;
+            case SHIFT_NEUTRAL:
+                engine.shiftNeutral();
+                break;
             case BAD_SHIFT:
                 engine.badShiftEngine();
                 break;
@@ -157,6 +166,9 @@ public class PacketPartEngine extends APacketEntity<PartEngine> {
         HS_ON,
         AS_ON,
         BACKFIRE,
+        SHIFT_UP,
+        SHIFT_DOWN,
+        SHIFT_NEUTRAL,
         BAD_SHIFT,
         START,
         FUEL_OUT,

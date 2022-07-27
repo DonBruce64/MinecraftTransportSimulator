@@ -64,7 +64,7 @@ class InterfacePacket implements IInterfacePacket {
 
     /**
      * Gets the world this packet was sent from based on its context.
-     * Used for handling packets arriving on the server.
+     * Used for handling packets arriving at the server.
      */
     private static AWrapperWorld getServerWorld(MessageContext ctx) {
         return WrapperWorld.getWrapperFor(ctx.getServerHandler().player.world);
@@ -91,7 +91,7 @@ class InterfacePacket implements IInterfacePacket {
     /**
      * Custom class for packets. Allows for a common packet to be used for all MC versions,
      * as well as less boilerplate code due to thread operations. Note that when this packet
-     * arrives on the other side of the pipeline, MC won't know what class to construct.
+     * arrives at the other side of the pipeline, MC won't know what class to construct.
      * That's up to us to handle via the packet's first byte. Also note that this class
      * must be public, as if it is private MC won't be able to construct it due to access violations.
      */
@@ -137,7 +137,7 @@ class InterfacePacket implements IInterfacePacket {
                 FMLCommonHandler.instance().getWorldThread(ctx.netHandler).addScheduledTask(() -> {
                     //We need to use side-specific getters here to avoid side-specific classes from trying to be loaded
                     //by the JVM when this method is created. Failure to do this will result in network faults.
-                    //For this, we use abstract methods that are extended in our sub-classes.
+                    //For this, we use abstract methods that are extended in our subclasses.
                     AWrapperWorld world;
                     if (ctx.side.isServer()) {
                         world = getServerWorld(ctx);

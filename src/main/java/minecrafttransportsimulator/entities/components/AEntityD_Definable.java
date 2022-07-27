@@ -810,7 +810,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
      */
     public void setVariable(String variable, double value) {
         if (value == 0) {
-            //Remove variable from the map so we don't have as many to deal with.
+            //Remove variable from the map so that we don't have as many to deal with.
             variables.remove(variable);
         } else {
             variables.put(variable, value);

@@ -12,6 +12,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine;
@@ -298,16 +299,18 @@ public class PartEngine extends APart {
                 hours += (rpm - currentMaxSafeRPM) / currentMaxSafeRPM * getTotalWearFactor();
             }
 
-            //Check for any shifting requests.
-            if (isVariableActive(UP_SHIFT_VARIABLE)) {
-                shiftUp();
-                toggleVariable(UP_SHIFT_VARIABLE);
-            } else if (isVariableActive(DOWN_SHIFT_VARIABLE)) {
-                shiftDown();
-                toggleVariable(DOWN_SHIFT_VARIABLE);
-            } else if (isVariableActive(NEUTRAL_SHIFT_VARIABLE)) {
-                shiftNeutral();
-                toggleVariable(NEUTRAL_SHIFT_VARIABLE);
+            //Check for any shifting requests
+            if (!world.isClient()) {
+                if (isVariableActive(UP_SHIFT_VARIABLE)) {
+                    toggleVariable(UP_SHIFT_VARIABLE);
+                    shiftUp();
+                } else if (isVariableActive(DOWN_SHIFT_VARIABLE)) {
+                    toggleVariable(DOWN_SHIFT_VARIABLE);
+                    shiftDown();
+                } else if (isVariableActive(NEUTRAL_SHIFT_VARIABLE)) {
+                    toggleVariable(NEUTRAL_SHIFT_VARIABLE);
+                    shiftNeutral();
+                }
             }
 
             //Check for reversing if we are on a blimp with reversed thrust.
@@ -360,7 +363,7 @@ public class PartEngine extends APart {
                         }
                     }
 
-                    //Add extra hours, and possibly explode the engine, if its too hot.
+                    //Add extra hours, and possibly explode the engine if it's too hot.
                     if (temp > OVERHEAT_TEMP_1 && !isCreative) {
                         hours += 0.001 * (temp - OVERHEAT_TEMP_1) * getTotalWearFactor();
                         if (temp > FAILURE_TEMP && !world.isClient()) {
@@ -751,6 +754,7 @@ public class PartEngine extends APart {
             case ("engine_fuelleak"):
                 return fuelLeak ? 1 : 0;
         }
+
         if (variable.startsWith("engine_piston_")) {
             if (running) {
                 String pistonVariable = variable.substring("engine_piston_".length());
@@ -872,7 +876,7 @@ public class PartEngine extends APart {
         }
     }
 
-    private boolean shiftUp() {
+    public boolean shiftUp() {
         byte nextGear;
         boolean doShift = false;
         if (definition.engine.jetPowerFactor == 0) {
@@ -895,7 +899,7 @@ public class PartEngine extends APart {
                 shiftCooldown = definition.engine.shiftSpeed;
                 upshiftCountdown = definition.engine.clutchTime;
                 if (!world.isClient()) {
-                    InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, UP_SHIFT_VARIABLE, 1));
+                    InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.SHIFT_UP));
                 }
             } else if (!world.isClient()) {
                 InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.BAD_SHIFT));
@@ -904,7 +908,7 @@ public class PartEngine extends APart {
         return doShift;
     }
 
-    private boolean shiftDown() {
+    public boolean shiftDown() {
         byte nextGear;
         boolean doShift = false;
         if (definition.engine.jetPowerFactor == 0) {
@@ -927,7 +931,7 @@ public class PartEngine extends APart {
                 shiftCooldown = definition.engine.shiftSpeed;
                 downshiftCountdown = definition.engine.clutchTime;
                 if (!world.isClient()) {
-                    InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, DOWN_SHIFT_VARIABLE, 1));
+                    InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.SHIFT_DOWN));
                 }
             } else if (!world.isClient()) {
                 InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.BAD_SHIFT));
@@ -936,7 +940,7 @@ public class PartEngine extends APart {
         return doShift;
     }
 
-    private void shiftNeutral() {
+    public void shiftNeutral() {
         if (definition.engine.jetPowerFactor == 0) {
             if (currentGear != 0) {//Any gear to neutral.
                 if (currentGear > 0) {
@@ -948,7 +952,7 @@ public class PartEngine extends APart {
                 currentGear = 0;
                 setVariable(GEAR_VARIABLE, currentGear);
                 if (!world.isClient()) {
-                    InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, NEUTRAL_SHIFT_VARIABLE, 1));
+                    InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.SHIFT_NEUTRAL));
                 }
             }
         }

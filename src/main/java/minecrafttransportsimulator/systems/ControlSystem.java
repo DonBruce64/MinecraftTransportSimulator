@@ -375,7 +375,7 @@ public final class ControlSystem {
             //Check brake and gas. Brake always changes, gas goes up-down.
             controlBrake(powered, ControlsKeyboardDynamic.CAR_PARK, ControlsJoystick.CAR_BRAKE, ControlsJoystick.CAR_BRAKE_DIGITAL, ControlsJoystick.CAR_PARK);
             if (InterfaceManager.inputInterface.isJoystickPresent(ControlsJoystick.CAR_GAS.config.joystickName)) {
-                //Send throttle over if throttle if cruise control is off, or if throttle is less than the axis level.
+                //Send throttle over if throttle and cruise control are off or if throttle is less than the axis level.
                 double throttleLevel = ControlsJoystick.CAR_GAS.getAxisState(true) * EntityVehicleF_Physics.MAX_THROTTLE;
                 if (powered.autopilotSetting == 0 || powered.throttle < throttleLevel) {
                     InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, throttleLevel));
@@ -439,7 +439,7 @@ public final class ControlSystem {
                     }
 
                     //If we are going slow, and don't have gas or brake, automatically set the brake.
-                    //Otherwise send normal values if we are in neutral or forwards,
+                    //Otherwise, send normal values if we are in neutral or forwards,
                     //and invert controls if we are in a reverse gear.
                     if (throttleValue == 0 && brakeValue == 0 && powered.axialVelocity < PartEngine.MAX_SHIFT_SPEED) {
                         InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.BRAKE_VARIABLE, EntityVehicleF_Physics.MAX_BRAKE));
@@ -474,7 +474,7 @@ public final class ControlSystem {
                             InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, EntityVehicleF_Physics.MAX_THROTTLE / 2D));
                         }
                     } else {
-                        //Send gas off packet if we don't have cruise on.
+                        //Send gas off packet if we don't have cruise control on.
                         if (powered.autopilotSetting == 0) {
                             InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, 0D));
                         }

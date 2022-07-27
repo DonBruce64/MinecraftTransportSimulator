@@ -27,7 +27,7 @@ import java.util.List;
 public class InterfaceLoader {
     public static final String MODID = "mts";
     public static final String MODNAME = "Immersive Vehicles (MTS)";
-    public static final String MODVER = "21.4.0-BETA5";
+    public static final String MODVER = "21.4.0-BETA7";
     public static final Logger LOGGER = LogManager.getLogger(InterfaceLoader.MODID);
 
     static {
