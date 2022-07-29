@@ -114,6 +114,18 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     public float currentBallastVolume;
     @ModifiedValue
     public float currentAxleRatio;
+    @ModifiedValue
+    public float currentRollAngle;
+    @ModifiedValue
+    public float currentPitchAngle;
+    @ModifiedValue
+    public float currentYawAngle;
+    @ModifiedValue
+    public float currentRollForce;
+    @ModifiedValue
+    public float currentPitchForce;
+    @ModifiedValue
+    public float currentYawForce;
 
     //Coefficients.
     private double wingLiftCoeff;

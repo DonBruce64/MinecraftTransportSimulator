@@ -693,24 +693,24 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 if (fallingDown || towedByConnection != null) {
                     world.beginProfiling("GroundHandlingPitch", false);
                     groundDeviceCollective.performPitchCorrection(groundMotion);
-                    //Don't do roll correction if we don't have roll.
+                    //Don't do roll correction if we don't have any roll.
                     if (groundDeviceCollective.canDoRollChecks()) {
                         world.beginProfiling("GroundHandlingRoll", false);
                         groundDeviceCollective.performRollCorrection(groundMotion);
                     }
-                    
-                    if (definition.motorized.customTiltAngles == true){
-				        pitchForceCompensation += currentPitchForce/10;
-					    rollForceCompensation += currentRollForce/10;
-					    rotation.angles.z = (-orientation.angles.z + rollForceCompensation) + currentRollAngle;
-					    rotation.angles.x = (-orientation.angles.x + pitchForceCompensation) + currentPitchAngle;
-					    rotation.angles.y += currentYawForce;
-				    } else {
-					    rotation.angles.z += currentRollForce;
-					    rotation.angles.x += currentPitchForce;
-                        rotation.angles.y += currentYawForce;
-				    }
-              
+
+                    //if (definition.motorized.customTiltAngles == true) {
+                    //    pitchForceCompensation += currentPitchForce / 10;
+                    //    rollForceCompensation += currentRollForce / 10;
+                    //    rotation.angles.z = (-orientation.angles.z + rollForceCompensation) + currentRollAngle;
+                    //    rotation.angles.x = (-orientation.angles.x + pitchForceCompensation) + currentPitchAngle;
+                    //    rotation.angles.y += currentYawForce;
+                    //} else {
+                    //    rotation.angles.z += currentRollForce;
+                    //    rotation.angles.x += currentPitchForce;
+                    //    rotation.angles.y += currentYawForce;
+                    //}
+
                     //If we are flagged as a tilting vehicle try to keep us upright, unless we are turning, in which case turn into the turn.
                     if (definition.motorized.maxTiltAngle != 0) {
                         rotation.angles.z = -orientation.angles.z - definition.motorized.maxTiltAngle * 2.0 * Math.min(0.5, velocity / 2D) * getSteeringAngle();
@@ -863,7 +863,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             //Rotation for mounted connections aligns using orientation, not angle-deltas.
             orientation.set(rotation).convertToAngles();
 
-            //For syncing, just add our deltas. We don't actually do syncing operations here.
+            //For syncing, just add our deltas. We don't actually do sync operations here.
             if (world.isClient()) {
                 clientDeltaM.add(motionApplied);
                 rotationApplied.angles.set(orientation.angles).subtract(prevOrientation.angles).clamp180();
