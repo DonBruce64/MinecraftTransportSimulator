@@ -241,6 +241,12 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         currentOverSteer = definition.motorized.overSteer;
         currentUnderSteer = definition.motorized.underSteer;
         currentAxleRatio = definition.motorized.axleRatio;
+        currentRollAngle = definition.motorized.rollAngle;
+		currentPitchAngle = definition.motorized.pitchAngle;
+		currentYawAngle = definition.motorized.yawAngle;
+		currentRollForce = definition.motorized.rollForce;
+		currentPitchForce = definition.motorized.pitchForce;
+		currentYawForce = definition.motorized.yawForce;
         aileronAngle = aileronInput;
         setVariable(AILERON_VARIABLE, aileronAngle);
         elevatorAngle = elevatorInput;
@@ -287,6 +293,24 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                         break;
                     case "axleRatio":
                         currentAxleRatio = adjustVariable(modifier, currentAxleRatio);
+                        break;
+                    case "rollAngle":
+                        currentRollAngle = adjustVariable(modifier, currentRollAngle);
+                        break;
+					case "pitchAngle":
+                        currentPitchAngle = adjustVariable(modifier, currentPitchAngle);
+                        break;
+					case "yawAngle":
+                        currentYawAngle = adjustVariable(modifier, currentYawAngle);
+                        break;
+					case "rollForce":
+                        currentRollForce = adjustVariable(modifier, currentRollForce);
+                        break;
+					case "pitchForce":
+                        currentPitchForce = adjustVariable(modifier, currentPitchForce);
+                        break;
+					case "yawForce":
+                        currentYawForce = adjustVariable(modifier, currentYawForce);
                         break;
                     case AILERON_VARIABLE:
                         aileronAngle = adjustVariable(modifier, (float) aileronAngle);
