@@ -54,7 +54,6 @@ public class RenderableObject {
     public final ColorRGB color;
     public FloatBuffer vertices;
     public final boolean cacheVertices;
-
     public boolean isTranslucent;
     public int cachedVertexIndex = -1;
     public BlendState blend = BlendState.SOLID;
