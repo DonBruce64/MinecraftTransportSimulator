@@ -117,7 +117,7 @@ public class JSONVehicle extends AJSONPartProvider {
         @JSONDescription("The angle which this vehicle will try to tilt to at max turning. Note that the vehicle may not reach this angle if it isn't going fast enough. Designed for bikes and boats.")
         public float maxTiltAngle;
         
-	    @JSONDescription("Enables pitch/roll/yawAngle. User made rotation physics is required in order to function properly, so it is disabled by default. If you need to make small tweaks to rotations without ovveriding the whole system, consider pitch/roll/yawForce")
+	@JSONDescription("Enables pitch/roll/yawAngle. User made rotation physics is required in order to function properly, so it is disabled by default. If you need to make small tweaks to rotations without ovveriding the whole system, consider pitch/roll/yawForce")
     	public boolean customTiltAngles;
 
     	@JSONDescription("Manually sets the current roll (left/right tilt) of the vehicle. If the value is set to 1 and is unchanged, the vehicle will have it's rotation set to 1 degee and will be unchanged until the value is updated. useful for custom physics")
