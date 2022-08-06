@@ -16,7 +16,7 @@ import java.util.Set;
  * @author don_bruce
  */
 public class VehicleGroundDeviceCollection {
-    private final EntityVehicleF_Physics vehicle;
+    public final EntityVehicleF_Physics vehicle;
     private final VehicleGroundDeviceBox frontLeftGDB;
     private final VehicleGroundDeviceBox frontRightGDB;
     private final VehicleGroundDeviceBox rearLeftGDB;

@@ -54,6 +54,8 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     public double weightTransfer = 0;
     public final RotationMatrix rotation = new RotationMatrix();
     private final IWrapperPlayer placingPlayer;
+    public float pitchForceCompensation;
+    public float rollForceCompensation;
 
     //Properties
     @ModifiedValue
@@ -85,7 +87,6 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     private final Point3D clientDeltaMApplied = new Point3D();
     private final Point3D clientDeltaRApplied = new Point3D();
     private double clientDeltaPApplied;
-
     private final Point3D roadMotion = new Point3D();
     private final Point3D roadRotation = new Point3D();
     private final Point3D vehicleCollisionMotion = new Point3D();
@@ -94,7 +95,6 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     private final Point3D motionApplied = new Point3D();
     private final RotationMatrix rotationApplied = new RotationMatrix();
     private double pathingApplied;
-
     private final Point3D tempBoxPosition = new Point3D();
     private final Point3D normalizedGroundVelocityVector = new Point3D();
     private final Point3D normalizedGroundHeadingVector = new Point3D();
@@ -295,7 +295,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     }
 
     /**
-     * Method block for ground operations. This does braking force
+     * Method block for ground operations. This does brake force
      * and turning for applications independent of vehicle-specific
      * movement. Must come AFTER force calculations as it depends on motions.
      */
@@ -596,7 +596,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
 
                 //Check to make sure followers are still valid, and do logic.
                 if (frontFollower != null && rearFollower != null && rearPoint != null) {
-                    //Set our position so we're aligned with the road.
+                    //Set our position so that we're aligned with the road.
                     //To do this, we get the distance between our contact points for front and rear, and then interpolate between them.
                     //First get the rear point. This defines the delta for the movement of the vehicle.
                     rearPoint.rotate(orientation).add(position);
@@ -673,7 +673,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
 
                 //After checking the ground devices to ensure we aren't shoving ourselves into the ground, we try to move the vehicle.
                 //If the vehicle can move without a collision box colliding with something, then we can move to the re-positioning of the vehicle.
-                //If we hit something, however, we need to inhibit the movement so we don't do that.
+                //If we hit something, however, we need to inhibit the movement so that we don't do that.
                 //This prevents vehicles from phasing through walls even though they are driving on the ground.
                 //If we are being towed, apply this movement to the towing vehicle, not ourselves, as this can lead to the vehicle getting stuck.
                 world.beginProfiling("CollisionCheck_" + allBlockCollisionBoxes.size(), false);
@@ -699,17 +699,16 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                         groundDeviceCollective.performRollCorrection(groundMotion);
                     }
 
-                    //if (definition.motorized.customTiltAngles == true) {
-                    //    pitchForceCompensation += currentPitchForce / 10;
-                    //    rollForceCompensation += currentRollForce / 10;
-                    //    rotation.angles.z = (-orientation.angles.z + rollForceCompensation) + currentRollAngle;
-                    //    rotation.angles.x = (-orientation.angles.x + pitchForceCompensation) + currentPitchAngle;
-                    //    rotation.angles.y += currentYawForce;
-                    //} else {
-                    //    rotation.angles.z += currentRollForce;
-                    //    rotation.angles.x += currentPitchForce;
-                    //    rotation.angles.y += currentYawForce;
-                    //}
+                    if (definition.motorized.customTiltAngles) {
+                        pitchForceCompensation += this.groundDeviceCollective.vehicle.currentPitchForce / 10;
+                        rollForceCompensation += this.groundDeviceCollective.vehicle.currentRollForce / 10;
+                        rotation.angles.z = (-orientation.angles.z + rollForceCompensation) + this.groundDeviceCollective.vehicle.currentRollAngle;
+                        rotation.angles.x = (-orientation.angles.x + pitchForceCompensation) + this.groundDeviceCollective.vehicle.currentPitchAngle;
+                    } else {
+                        rotation.angles.z += this.groundDeviceCollective.vehicle.currentRollForce;
+                        rotation.angles.x += this.groundDeviceCollective.vehicle.currentPitchForce;
+                    }
+                    rotation.angles.y += this.groundDeviceCollective.vehicle.currentYawForce;
 
                     //If we are flagged as a tilting vehicle try to keep us upright, unless we are turning, in which case turn into the turn.
                     if (definition.motorized.maxTiltAngle != 0) {
@@ -741,7 +740,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                     vehicleCollisionMotion.add(interactable.position).subtract(interactable.prevPosition);
 
                     //If we just contacted an entity, adjust our motion to match that entity's motion.
-                    //We take our motion, and then remove it so it's the delta to that entity.
+                    //We take our motion and then remove it so that it's the delta to that entity.
                     //This ensures that if we're moving and land on an entity, we don't run off.
                     if (lastCollidedEntity == null) {
                         lastCollidedEntity = interactable;
@@ -759,7 +758,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 }
             }
 
-            //Now that that the movement has been checked, move the vehicle.
+            //Now that the movement has been checked, move the vehicle.
             world.beginProfiling("ApplyMotions", false);
             motionApplied.set(motion).scale(speedFactor).add(groundMotion);
             rotationApplied.angles.set(rotation.angles);

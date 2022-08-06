@@ -27,7 +27,7 @@ import java.util.List;
 public class InterfaceLoader {
     public static final String MODID = "mts";
     public static final String MODNAME = "Immersive Vehicles (MTS)";
-    public static final String MODVER = "21.4.0-BETA7";
+    public static final String MODVER = "21.4.0-BETA8";
     public static final Logger LOGGER = LogManager.getLogger(InterfaceLoader.MODID);
 
     static {
@@ -75,7 +75,6 @@ public class InterfaceLoader {
     public void init(FMLInitializationEvent event) {
         //Init networking interface. This will register packets as well.
         InterfacePacket.init();
-
 
         if (event.getSide().isClient()) {
             //Init keybinds if we're on the client.
