@@ -31,6 +31,10 @@ public class ItemBullet extends AItemSubTyped<JSONBullet> {
                 case WATER:
                     tooltipLines.add(JSONConfigLanguage.ITEMINFO_BULLET_TYPE_WATER.value);
                     break;
+                case SHELL:
+                    tooltipLines.add(JSONConfigLanguage.ITEMINFO_BULLET_TYPE_SHELL.value);
+                    tooltipLines.add(JSONConfigLanguage.ITEMINFO_BULLET_PELLETS.value + definition.bullet.pellets);
+                    break;
             }
 
         }

@@ -304,6 +304,7 @@ public class JSONConfigLanguage {
     public static final LanguageEntry ITEMINFO_BULLET_TYPE_NORMAL = new LanguageEntry("iteminfo.bullet.type.normal", "Normal Bullet");
     public static final LanguageEntry ITEMINFO_BULLET_TYPE_EXPLOSIVE = new LanguageEntry("iteminfo.bullet.type.explosive", "Explosive Bullet");
     public static final LanguageEntry ITEMINFO_BULLET_TYPE_INCENDIARY = new LanguageEntry("iteminfo.bullet.type.incendiary", "Incendiary Bullet");
+    public static final LanguageEntry ITEMINFO_BULLET_TYPE_SHELL = new LanguageEntry("iteminfo.bullet.type.shell", "Shotgun Shell");
     public static final LanguageEntry ITEMINFO_BULLET_TYPE_ARMOR_PIERCING = new LanguageEntry("iteminfo.bullet.type.armor_piercing", "Armor Piercing Bullet");
     public static final LanguageEntry ITEMINFO_BULLET_TYPE_TRACER = new LanguageEntry("iteminfo.bullet.type.tracer", "Tracer Bullet");
     public static final LanguageEntry ITEMINFO_BULLET_TYPE_WATER = new LanguageEntry("iteminfo.bullet.type.water", "Water Bullet");
@@ -311,6 +312,7 @@ public class JSONConfigLanguage {
     public static final LanguageEntry ITEMINFO_BULLET_CASELENGTH = new LanguageEntry("iteminfo.bullet.caseLength", "Case Length (mm): ");
     public static final LanguageEntry ITEMINFO_BULLET_PENETRATION = new LanguageEntry("iteminfo.bullet.penetration", "Penetration (mm): ");
     public static final LanguageEntry ITEMINFO_BULLET_QUANTITY = new LanguageEntry("iteminfo.bullet.quantity", "Quantity: ");
+    public static final LanguageEntry ITEMINFO_BULLET_PELLETS = new LanguageEntry("iteminfo.bullet.pellets", "Pellets: ");
 
     public static final LanguageEntry ITEMINFO_INTERACTABLE_CAPACITY = new LanguageEntry("iteminfo.interactable.capacity", "Capacity: ");
 

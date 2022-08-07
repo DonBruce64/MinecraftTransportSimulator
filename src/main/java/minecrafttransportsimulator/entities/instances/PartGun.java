@@ -289,6 +289,16 @@ public class PartGun extends APart {
                                 newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this);
                             }
 
+                            if (loadedBullet.definition.bullet.pellets > 0) {
+                                for (int i=0;i<loadedBullet.definition.bullet.pellets;i++) {
+                                    if (definition.gun.bulletSpreadFactor > 0) {
+                                        firingSpreadRotation.angles.set((Math.random() - 0.5F) * definition.gun.bulletSpreadFactor, (Math.random() - 0.5F) * definition.gun.bulletSpreadFactor, 0D);
+                                        bulletVelocity.rotate(firingSpreadRotation);
+                                    }
+                                    newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this);
+                                    world.addEntity(newBullet);
+                                }
+                            } else
                             world.addEntity(newBullet);
 
                             //Decrement bullets, but check to make sure we still have some.
