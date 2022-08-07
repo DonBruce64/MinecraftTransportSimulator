@@ -290,12 +290,16 @@ public class PartGun extends APart {
                             }
 
                             if (loadedBullet.definition.bullet.pellets > 1) {
+                                //Spawn all pellet into the world
                                 for (int i=0;i<loadedBullet.definition.bullet.pellets;i++) {
+                                    //Give pellet random spread based on the bore sight
+                                    Point3D randomBulletVelocity = bulletVelocity;
                                     if (loadedBullet.definition.bullet.pelletSpreadFactor > 0) {
-                                        firingSpreadRotation.angles.set((Math.random() - 0.5F) * loadedBullet.definition.bullet.pelletSpreadFactor, (Math.random() - 0.5F) * loadedBullet.definition.bullet.pelletSpreadFactor, 0D);
-                                        bulletVelocity.rotate(firingSpreadRotation);
+
+                                        firingSpreadRotation.angles.set((Math.random() - 0.5F) * loadedBullet.definition.bullet.pelletSpreadFactor, (Math.random() - 0.5F) * loadedBullet.definition.bullet.pelletSpreadFactor, (Math.random() - 0.5F) * loadedBullet.definition.bullet.pelletSpreadFactor);
+                                        randomBulletVelocity.rotate(firingSpreadRotation);
                                     }
-                                    newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this);
+                                    newBullet = new EntityBullet(bulletPosition, randomBulletVelocity, bulletOrientation, this);
                                     world.addEntity(newBullet);
                                 }
                             } else
@@ -712,7 +716,7 @@ public class PartGun extends APart {
             bulletVelocity.add(motion);
         }
 
-        //Set position.
+        //Set bullet position.
         bulletPosition.set(muzzle.pos);
         if (muzzle.center != null) {
             pitchMuzzleRotation.setToZero().rotateX(internalOrientation.angles.x);
@@ -723,7 +727,7 @@ public class PartGun extends APart {
         }
         bulletPosition.rotate(zeroReferenceOrientation).add(position);
 
-        //Set orientation.
+        //Set bullet orientation.
         bulletOrientation.set(zeroReferenceOrientation).multiply(internalOrientation);
         if (muzzle.rot != null && !definition.gun.disableMuzzleOrientation) {
             bulletOrientation.multiply(muzzle.rot);
