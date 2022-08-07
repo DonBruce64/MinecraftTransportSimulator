@@ -20,6 +20,9 @@ public class JSONBullet extends AJSONMultiModelProvider {
         @JSONDescription("If true, then this bullet will be considered a HEAT bullet and will use the HEAT armor value on any collision boxes it finds. If that value isn't defined, it will just use the normal armor value.")
         public boolean isHeat;
 
+        @JSONDescription("How hard the bullet is, if it's equal or more than 0.3 it can break glass")
+        public float hardness;
+
         @JSONDescription("How many bullets are in the bullet item crafted at the bullet bench. Because nobody wants to have to craft 500 bullets one by one...")
         public int quantity;
 
