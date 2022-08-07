@@ -291,7 +291,7 @@ public class PartGun extends APart {
 
                             if (loadedBullet.definition.bullet.pellets > 1) {
                                 for (int i=0;i<loadedBullet.definition.bullet.pellets;i++) {
-                                    if (definition.gun.bulletSpreadFactor > 0) {
+                                    if (loadedBullet.definition.bullet.pelletSpreadFactor > 0) {
                                         firingSpreadRotation.angles.set((Math.random() - 0.5F) * loadedBullet.definition.bullet.pelletSpreadFactor, (Math.random() - 0.5F) * loadedBullet.definition.bullet.pelletSpreadFactor, 0D);
                                         bulletVelocity.rotate(firingSpreadRotation);
                                     }
