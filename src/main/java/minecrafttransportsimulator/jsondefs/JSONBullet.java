@@ -68,6 +68,9 @@ public class JSONBullet extends AJSONMultiModelProvider {
         @JSONDescription("Number of pellets that this shell has")
         public int pellets;
 
+        @JSONDescription("How much spread the pellets will have when fired. 0 is no spread, higher values have higher spread.")
+        public int pelletSpreadFactor;
+
         @JSONDescription("A optional list of effects that this bullet will impart on the entity that it hits.")
         public List<JSONPotionEffect> effects;
     }
@@ -80,8 +83,6 @@ public class JSONBullet extends AJSONMultiModelProvider {
         @JSONDescription("Like incendiary, but puts out fires rather than starts them.")
         WATER,
         @JSONDescription("A bullet that pierces player armor. Useful for pesky super-suits.")
-        ARMOR_PIERCING,
-        @JSONDescription("Contains multiple smaller shots inside.")
-        SHELL
+        ARMOR_PIERCING
     }
 }
