@@ -325,7 +325,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                     world.extinguish(hitPos);
                 } else {
                     float hardnessHit = world.getBlockHardness(hitPos);
-                    if (ConfigSystem.settings.general.blockBreakage.value && hardnessHit > 0 && definition.bullet.hardness > 0 ? hardnessHit <= definition.bullet.hardness : hardnessHit <= (Math.random() * 0.3F + 0.3F * definition.bullet.diameter / 20F)) {
+                    if (ConfigSystem.settings.general.blockBreakage.value && hardnessHit > 0 && hardnessHit <= (Math.random() * 0.3F + 0.3F * definition.bullet.diameter / 20F)) {
                         world.destroyBlock(hitPos, true);
                     } else if (definition.bullet.types.contains(BulletType.INCENDIARY)) {
                         //Couldn't break block, but we might be able to set it on fire.
