@@ -295,11 +295,24 @@ public class PartGun extends APart {
                                     //Give pellet random spread based on the bore sight
                                     Point3D randomBulletVelocity = bulletVelocity;
                                     if (loadedBullet.definition.bullet.pelletSpreadFactor > 0) {
-
                                         firingSpreadRotation.angles.set((Math.random() - 0.5F) * loadedBullet.definition.bullet.pelletSpreadFactor, (Math.random() - 0.5F) * loadedBullet.definition.bullet.pelletSpreadFactor, (Math.random() - 0.5F) * loadedBullet.definition.bullet.pelletSpreadFactor);
                                         randomBulletVelocity.rotate(firingSpreadRotation);
                                     }
-                                    newBullet = new EntityBullet(bulletPosition, randomBulletVelocity, bulletOrientation, this);
+
+                                    //Check if this is a missile or not
+                                    if (loadedBullet.definition.bullet.turnRate > 0) {
+                                        if (entityTarget != null) {
+                                            newBullet = new EntityBullet(bulletPosition, randomBulletVelocity, bulletOrientation, this, entityTarget);
+                                        } else if (engineTarget != null) {
+                                            newBullet = new EntityBullet(bulletPosition, randomBulletVelocity, bulletOrientation, this, engineTarget);
+                                        } else {
+                                            //No entity found, just fire missile off in direction facing.
+                                            newBullet = new EntityBullet(bulletPosition, randomBulletVelocity, bulletOrientation, this);
+                                        }
+                                    } else {
+                                        //Normal bullet
+                                        newBullet = new EntityBullet(bulletPosition, randomBulletVelocity, bulletOrientation, this);
+                                    }
                                     world.addEntity(newBullet);
                                 }
                             } else
