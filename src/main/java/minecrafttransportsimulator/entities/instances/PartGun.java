@@ -270,7 +270,7 @@ public class PartGun extends APart {
                     //If we are in our cam, fire the bullets.
                     if (camOffset == 0) {
                         for (JSONMuzzle muzzle : definition.gun.muzzleGroups.get(currentMuzzleGroupIndex).muzzles) {
-                            for (int i=0; i < loadedBullet.definition.bullet.pellets; i++) {
+                            for (int i=0; i < (loadedBullet.definition.bullet.pellets > 0 ? loadedBullet.definition.bullet.pellets : 1); i++) {
                                 //Get the bullet's state.
                                 setBulletSpawn(bulletPosition, bulletVelocity, bulletOrientation, muzzle);
 
@@ -682,14 +682,9 @@ public class PartGun extends APart {
         //Set velocity.
         if (definition.gun.muzzleVelocity != 0) {
             bulletVelocity.set(0, 0, definition.gun.muzzleVelocity / 20D / 10D);
-            //Randomize the spread for normal bullet
+            //Randomize the spread for normal bullet and pellets
             if (definition.gun.bulletSpreadFactor > 0) {
-                firingSpreadRotation.angles.set((Math.random() - 0.5F) * definition.gun.bulletSpreadFactor, (Math.random() - 0.5F) * definition.gun.bulletSpreadFactor, 0D);
-                bulletVelocity.rotate(firingSpreadRotation);
-            }
-            //Randomize the spread for shotgun shell pellets
-            if (loadedBullet.definition.bullet.pelletSpreadFactor > 0) {
-                firingSpreadRotation.angles.set((Math.random() - 0.5F) * loadedBullet.definition.bullet.pelletSpreadFactor, (Math.random() - 0.5F) * loadedBullet.definition.bullet.pelletSpreadFactor, 0D);
+                firingSpreadRotation.angles.set((Math.random() - 0.5F) * (definition.gun.bulletSpreadFactor + loadedBullet.definition.bullet.pelletSpreadFactor), (Math.random() - 0.5F) * (definition.gun.bulletSpreadFactor + loadedBullet.definition.bullet.pelletSpreadFactor), 0D);
                 bulletVelocity.rotate(firingSpreadRotation);
             }
 
