@@ -311,6 +311,7 @@ public class JSONConfigLanguage {
     public static final LanguageEntry ITEMINFO_BULLET_CASELENGTH = new LanguageEntry("iteminfo.bullet.caseLength", "Case Length (mm): ");
     public static final LanguageEntry ITEMINFO_BULLET_PENETRATION = new LanguageEntry("iteminfo.bullet.penetration", "Penetration (mm): ");
     public static final LanguageEntry ITEMINFO_BULLET_QUANTITY = new LanguageEntry("iteminfo.bullet.quantity", "Quantity: ");
+    public static final LanguageEntry ITEMINFO_BULLET_PELLETS = new LanguageEntry("iteminfo.bullet.pellets", "Pellets: ");
 
     public static final LanguageEntry ITEMINFO_INTERACTABLE_CAPACITY = new LanguageEntry("iteminfo.interactable.capacity", "Capacity: ");
 

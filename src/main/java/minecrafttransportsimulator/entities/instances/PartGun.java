@@ -270,26 +270,28 @@ public class PartGun extends APart {
                     //If we are in our cam, fire the bullets.
                     if (camOffset == 0) {
                         for (JSONMuzzle muzzle : definition.gun.muzzleGroups.get(currentMuzzleGroupIndex).muzzles) {
-                            //Get the bullet's state.
-                            setBulletSpawn(bulletPosition, bulletVelocity, bulletOrientation, muzzle);
+                            for (int i=0; i < (loadedBullet.definition.bullet.pellets > 0 ? loadedBullet.definition.bullet.pellets : 1); i++) {
+                                //Get the bullet's state.
+                                setBulletSpawn(bulletPosition, bulletVelocity, bulletOrientation, muzzle);
 
-                            //Add the bullet to the world.
-                            //If the bullet is a missile, give it a target.
-                            EntityBullet newBullet;
-                            if (loadedBullet.definition.bullet.turnRate > 0) {
-                                if (entityTarget != null) {
-                                    newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this, entityTarget);
-                                } else if (engineTarget != null) {
-                                    newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this, engineTarget);
+                                //Add the bullet to the world.
+                                //If the bullet is a missile, give it a target.
+                                EntityBullet newBullet;
+                                if (loadedBullet.definition.bullet.turnRate > 0) {
+                                    if (entityTarget != null) {
+                                        newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this, entityTarget);
+                                    } else if (engineTarget != null) {
+                                        newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this, engineTarget);
+                                    } else {
+                                        //No entity found, just fire missile off in direction facing.
+                                        newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this);
+                                    }
                                 } else {
-                                    //No entity found, just fire missile off in direction facing.
                                     newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this);
                                 }
-                            } else {
-                                newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this);
-                            }
 
-                            world.addEntity(newBullet);
+                                world.addEntity(newBullet);
+                            }
 
                             //Decrement bullets, but check to make sure we still have some.
                             //We might have a partial volley with only some muzzles firing in this group.
@@ -680,8 +682,9 @@ public class PartGun extends APart {
         //Set velocity.
         if (definition.gun.muzzleVelocity != 0) {
             bulletVelocity.set(0, 0, definition.gun.muzzleVelocity / 20D / 10D);
-            if (definition.gun.bulletSpreadFactor > 0) {
-                firingSpreadRotation.angles.set((Math.random() - 0.5F) * definition.gun.bulletSpreadFactor, (Math.random() - 0.5F) * definition.gun.bulletSpreadFactor, 0D);
+            //Randomize the spread for normal bullet and pellets
+            if (definition.gun.bulletSpreadFactor > 0 || loadedBullet.definition.bullet.pelletSpreadFactor > 0) {
+                firingSpreadRotation.angles.set((Math.random() - 0.5F) * (definition.gun.bulletSpreadFactor + loadedBullet.definition.bullet.pelletSpreadFactor), (Math.random() - 0.5F) * (definition.gun.bulletSpreadFactor + loadedBullet.definition.bullet.pelletSpreadFactor), 0D);
                 bulletVelocity.rotate(firingSpreadRotation);
             }
 
@@ -702,7 +705,7 @@ public class PartGun extends APart {
             bulletVelocity.add(motion);
         }
 
-        //Set position.
+        //Set bullet position.
         bulletPosition.set(muzzle.pos);
         if (muzzle.center != null) {
             pitchMuzzleRotation.setToZero().rotateX(internalOrientation.angles.x);
@@ -713,7 +716,7 @@ public class PartGun extends APart {
         }
         bulletPosition.rotate(zeroReferenceOrientation).add(position);
 
-        //Set orientation.
+        //Set bullet orientation.
         bulletOrientation.set(zeroReferenceOrientation).multiply(internalOrientation);
         if (muzzle.rot != null && !definition.gun.disableMuzzleOrientation) {
             bulletOrientation.multiply(muzzle.rot);

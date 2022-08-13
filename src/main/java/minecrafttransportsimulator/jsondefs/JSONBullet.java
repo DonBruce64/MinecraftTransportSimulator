@@ -65,6 +65,12 @@ public class JSONBullet extends AJSONMultiModelProvider {
         @JSONDescription("The rate of turn, in degrees per tick, that this bullet will be able to turn to track entities. If set, then this bullet will lock-on to entities, and hot engines when fired.")
         public float turnRate;
 
+        @JSONDescription("Number of pellets that this shell has")
+        public int pellets;
+
+        @JSONDescription("How much spread the pellets will have when fired. 0 is no spread, higher values have higher spread.")
+        public float pelletSpreadFactor;
+
         @JSONDescription("A optional list of effects that this bullet will impart on the entity that it hits.")
         public List<JSONPotionEffect> effects;
     }
