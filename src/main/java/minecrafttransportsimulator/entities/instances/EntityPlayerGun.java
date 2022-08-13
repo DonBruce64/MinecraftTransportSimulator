@@ -33,7 +33,6 @@ import java.util.UUID;
 public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun> {
     public static final Map<UUID, EntityPlayerGun> playerClientGuns = new HashMap<>();
     public static final Map<UUID, EntityPlayerGun> playerServerGuns = new HashMap<>();
-
     public final IWrapperPlayer player;
     private final RotationMatrix handRotation = new RotationMatrix();
     private int hotbarSelected = -1;
@@ -97,7 +96,7 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun> {
         JSONPartDefinition fakeDef = new JSONPartDefinition();
         fakeDef.pos = new Point3D();
         fakeDef.types = new ArrayList<>();
-        //Look though all gun types and add them.
+        //Look through all gun types and add them.
         for (AItemPack<?> packItem : PackParser.getAllPackItems()) {
             if (packItem instanceof ItemPartGun) {
                 ItemPartGun gunItem = (ItemPartGun) packItem;

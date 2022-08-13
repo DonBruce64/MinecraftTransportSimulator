@@ -625,7 +625,6 @@ public final class ControlSystem {
         CAR_TURNSIGNAL_R(ControlsJoystick.CAR_TURNSIGNAL_R, true, "NUMPAD6", JSONConfigLanguage.INPUT_TURNSIGNAL_R),
         CAR_JS_INHIBIT(ControlsJoystick.CAR_JS_INHIBIT, true, "SCROLL", JSONConfigLanguage.INPUT_JS_INHIBIT);
 
-
         public final boolean isMomentary;
         public final String systemName;
         public final LanguageEntry language;
