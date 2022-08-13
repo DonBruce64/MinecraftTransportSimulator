@@ -683,7 +683,7 @@ public class PartGun extends APart {
         if (definition.gun.muzzleVelocity != 0) {
             bulletVelocity.set(0, 0, definition.gun.muzzleVelocity / 20D / 10D);
             //Randomize the spread for normal bullet and pellets
-            if (definition.gun.bulletSpreadFactor > 0) {
+            if (definition.gun.bulletSpreadFactor > 0 || loadedBullet.definition.bullet.pelletSpreadFactor > 0) {
                 firingSpreadRotation.angles.set((Math.random() - 0.5F) * (definition.gun.bulletSpreadFactor + loadedBullet.definition.bullet.pelletSpreadFactor), (Math.random() - 0.5F) * (definition.gun.bulletSpreadFactor + loadedBullet.definition.bullet.pelletSpreadFactor), 0D);
                 bulletVelocity.rotate(firingSpreadRotation);
             }
