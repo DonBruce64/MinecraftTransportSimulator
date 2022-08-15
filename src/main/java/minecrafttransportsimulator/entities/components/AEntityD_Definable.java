@@ -950,9 +950,11 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             }
         }
         //Handle particles.
-        world.beginProfiling("Particles", false);
-        spawnParticles(partialTicks);
-        world.endProfiling();
+        if(!InterfaceManager.clientInterface.isGamePaused()) {
+            world.beginProfiling("Particles", false);
+            spawnParticles(partialTicks);
+            world.endProfiling();
+        }
     }
 
     @Override
