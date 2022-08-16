@@ -75,7 +75,6 @@ public class BuilderGUI extends GuiScreen {
      * This is called by the main MC system for keyboard events. We Override it here to check
      * to forward the inputs to focused textBoxes for further processing.
      */
-    @SuppressWarnings("UnnecessaryContinue")
     @Override
     protected void keyTyped(char key, int keyCode) throws IOException {
         super.keyTyped(key, keyCode);
@@ -103,7 +102,6 @@ public class BuilderGUI extends GuiScreen {
                                 continue;
                             default:
                                 textBox.handleKeyTyped(key, keyCode, null);
-                                continue;
                         }
                     }
                 }
