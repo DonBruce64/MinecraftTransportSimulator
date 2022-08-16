@@ -36,7 +36,7 @@ public abstract class ABuilderEntityBase extends Entity {
      **/
     public boolean loadFromSavedNBT;
     /**
-     * Set to true when loaded NBT is parsed and loaded. This is done to prevent re-parsing of NBT from triggering a second load command.
+     * Set to true when loaded NBT is parsed and loaded. This is done to prevent reparsing of NBT from triggering a second load command.
      * Note that if this entity is being spawned manually rather than loaded from disk, this should be set prior to ticking.
      **/
     public boolean loadedFromSavedNBT;

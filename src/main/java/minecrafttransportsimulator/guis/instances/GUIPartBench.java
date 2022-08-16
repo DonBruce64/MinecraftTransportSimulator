@@ -303,7 +303,7 @@ public class GUIPartBench extends AGUIBase {
      * uses the order to determine which pack/item to scroll to when a button is clicked.
      * Sets the variables to be used on a button action, so once an action is performed this
      * logic MUST be called to update the button action states!
-     *
+     * <p>
      * Some IDEs think otherwise, but the casts are needed
      */
     @SuppressWarnings("RedundantCast")

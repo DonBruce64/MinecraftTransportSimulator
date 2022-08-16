@@ -13,7 +13,7 @@ public class JSONRoadComponent extends AJSONMultiModelProvider {
     @JSONDescription("Road-generic properties.")
     public JSONRoadGeneric road;
 
-    public class JSONRoadGeneric {
+    public static class JSONRoadGeneric {
         //Common variables.
         @JSONDescription("The type of this road component. This defines its properties.")
         public RoadComponent type;

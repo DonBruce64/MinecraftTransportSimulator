@@ -93,7 +93,7 @@ public interface IWrapperEntity {
 
     /**
      * Gets the entity's position as a point.
-     * The returned position may by modified without affecting the entity's actual position.
+     * The returned position may be modified without affecting the entity's actual position.
      * However, the object itself may be re-used on the next call, so do not keep reference to it.
      */
     Point3D getPosition();

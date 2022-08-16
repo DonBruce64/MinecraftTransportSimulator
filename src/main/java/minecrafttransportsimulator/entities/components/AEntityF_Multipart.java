@@ -402,7 +402,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                     }
                 } else {
                     double value = getRawVariableValue(variableName, 0);
-                    if (value > 0 && !Double.isNaN(value)) {
+                    if (!Double.isNaN(value) && value > 0) {
                         //We have the variable, no need to check any further.
                         return false;
                     }

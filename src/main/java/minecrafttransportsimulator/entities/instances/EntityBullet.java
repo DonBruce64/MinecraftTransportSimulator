@@ -144,7 +144,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
         if (targetPosition != null && !notAcceleratingYet) {
             if (externalEntityTargeted != null) {
                 if (externalEntityTargeted.isValid()) {
-                    targetPosition.set(externalEntityTargeted.getPosition());
+                    targetPosition.set(externalEntityTargeted.getPosition()).add(0D, externalEntityTargeted.getBounds().heightRadius, 0D);
                 } else {
                     //Entity is dead. Don't target it anymore.
                     externalEntityTargeted = null;

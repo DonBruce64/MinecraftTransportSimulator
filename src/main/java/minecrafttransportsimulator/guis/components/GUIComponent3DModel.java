@@ -17,7 +17,7 @@ import java.util.Map;
  * switching as we don't need to parse the models each time we view them. These lists
  * are cleared when the GUI containing this component is un-loaded. Note that the
  * model and texture associated with this component may change while this component
- * is still active. This is to allows us to use one component to render changing
+ * is still active. This allows us to use one component to render changing
  * models, say in a crafting bench for instance. The same reasoning applies
  * for why the position is not static (though it is required at construction).
  *
@@ -64,7 +64,7 @@ public class GUIComponent3DModel extends AGUIComponent {
                 //Remove any windows and "commented" objects from the model. We don't want to render those.
                 parsedObjects.removeIf(object -> object.name.toLowerCase().contains("window") || object.name.startsWith("#"));
 
-                //Get the min/max vertex values for the model so we know how much to scale it.
+                //Get the min/max vertex values for the model so that we know how much to scale it.
                 //Also get how many vertices are in the model total for the final buffer.
                 float minX = 999;
                 float maxX = -999;

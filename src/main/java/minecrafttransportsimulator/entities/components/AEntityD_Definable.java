@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.entities.components;
 
-import mcinterface1122.InterfaceLoader;
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;

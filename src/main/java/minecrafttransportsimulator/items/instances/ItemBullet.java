@@ -34,7 +34,8 @@ public class ItemBullet extends AItemSubTyped<JSONBullet> {
             }
 
         }
-        if (definition.bullet.pellets > 0) tooltipLines.add(JSONConfigLanguage.ITEMINFO_BULLET_PELLETS.value + definition.bullet.pellets);
+        if (definition.bullet.pellets > 0)
+            tooltipLines.add(JSONConfigLanguage.ITEMINFO_BULLET_PELLETS.value + definition.bullet.pellets);
         tooltipLines.add(JSONConfigLanguage.ITEMINFO_BULLET_DIAMETER.value + definition.bullet.diameter);
         tooltipLines.add(JSONConfigLanguage.ITEMINFO_BULLET_CASELENGTH.value + definition.bullet.caseLength);
         tooltipLines.add(JSONConfigLanguage.ITEMINFO_BULLET_PENETRATION.value + definition.bullet.armorPenetration);

@@ -254,11 +254,11 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         currentUnderSteer = definition.motorized.underSteer;
         currentAxleRatio = definition.motorized.axleRatio;
         currentRollAngle = definition.motorized.rollAngle;
-		currentPitchAngle = definition.motorized.pitchAngle;
-		currentYawAngle = definition.motorized.yawAngle;
-		currentRollForce = definition.motorized.rollForce;
-		currentPitchForce = definition.motorized.pitchForce;
-		currentYawForce = definition.motorized.yawForce;
+        currentPitchAngle = definition.motorized.pitchAngle;
+        currentYawAngle = definition.motorized.yawAngle;
+        currentRollForce = definition.motorized.rollForce;
+        currentPitchForce = definition.motorized.pitchForce;
+        currentYawForce = definition.motorized.yawForce;
         aileronAngle = aileronInput;
         setVariable(AILERON_VARIABLE, aileronAngle);
         elevatorAngle = elevatorInput;
@@ -309,19 +309,19 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                     case "rollAngle":
                         currentRollAngle = adjustVariable(modifier, currentRollAngle);
                         break;
-					case "pitchAngle":
+                    case "pitchAngle":
                         currentPitchAngle = adjustVariable(modifier, currentPitchAngle);
                         break;
-					case "yawAngle":
+                    case "yawAngle":
                         currentYawAngle = adjustVariable(modifier, currentYawAngle);
                         break;
-					case "rollForce":
+                    case "rollForce":
                         currentRollForce = adjustVariable(modifier, currentRollForce);
                         break;
-					case "pitchForce":
+                    case "pitchForce":
                         currentPitchForce = adjustVariable(modifier, currentPitchForce);
                         break;
-					case "yawForce":
+                    case "yawForce":
                         currentYawForce = adjustVariable(modifier, currentYawForce);
                         break;
                     case AILERON_VARIABLE:

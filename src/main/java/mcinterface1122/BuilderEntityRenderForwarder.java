@@ -14,6 +14,7 @@ import net.minecraftforge.fml.common.registry.EntityEntry;
 import net.minecraftforge.fml.common.registry.EntityEntryBuilder;
 
 import javax.annotation.Nonnull;
+import java.util.UUID;
 
 /**
  * Builder for an entity to forward rendering calls to all internal renderer. This is due to prevent
@@ -47,7 +48,7 @@ public class BuilderEntityRenderForwarder extends ABuilderEntityBase {
     public void onEntityUpdate() {
         super.onEntityUpdate();
         if (playerFollowing != null && playerFollowing.world == this.world && !playerFollowing.isDead) {
-            //Need to move the fake entity forwards to account for the partial ticks interpolation MC does.
+            //Need to move the fake entity forwards to account for the partial tick interpolation MC does.
             //If we don't do this, and we move faster than 1 block per tick, we'll get flickering.
             WrapperPlayer playerWrapper = WrapperPlayer.getWrapperFor(playerFollowing);
             double playerVelocity = Math.sqrt(playerFollowing.motionX * playerFollowing.motionX + playerFollowing.motionY * playerFollowing.motionY + playerFollowing.motionZ * playerFollowing.motionZ);
@@ -60,7 +61,8 @@ public class BuilderEntityRenderForwarder extends ABuilderEntityBase {
             setDead();
         } else if (!loadedFromSavedNBT && loadFromSavedNBT) {
             //Load player following from client NBT.
-            playerFollowing = world.getPlayerEntityByUUID(lastLoadedNBT.getUniqueId("playerFollowing"));
+            final UUID playerEntityUUID = lastLoadedNBT.getUniqueId("playerFollowing");
+            playerFollowing = playerEntityUUID != null ? world.getPlayerEntityByUUID(playerEntityUUID) : null;
             loadedFromSavedNBT = true;
             lastLoadedNBT = null;
         }

@@ -36,7 +36,6 @@ public class PartGun extends APart {
     private final double maxYaw;
     private final double defaultYaw;
     private final double yawSpeed;
-
     private final double minPitch;
     private final double maxPitch;
     private final double defaultPitch;
@@ -270,7 +269,7 @@ public class PartGun extends APart {
                     //If we are in our cam, fire the bullets.
                     if (camOffset == 0) {
                         for (JSONMuzzle muzzle : definition.gun.muzzleGroups.get(currentMuzzleGroupIndex).muzzles) {
-                            for (int i=0; i < (loadedBullet.definition.bullet.pellets > 0 ? loadedBullet.definition.bullet.pellets : 1); i++) {
+                            for (int i = 0; i < (loadedBullet.definition.bullet.pellets > 0 ? loadedBullet.definition.bullet.pellets : 1); i++) {
                                 //Get the bullet's state.
                                 setBulletSpawn(bulletPosition, bulletVelocity, bulletOrientation, muzzle);
 
