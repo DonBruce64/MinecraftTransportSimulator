@@ -324,7 +324,7 @@ public class JSONPart extends AJSONPartProvider {
     }
 
     public static class JSONPartGun {
-        @JSONDescription("If set, this causes the gun to automatically reload from the vehicle's inventory when its ammo count hits 0. Guns will prefer to reload the same ammo that was previously in the gun, and will only reload different (yet compatible) ammo if the old ammo is not found.")
+        @JSONDescription("If set in vehicles, this causes the gun to automatically reload from the vehicle's inventory.  For hand-held guns, it will cause the gun to try and load ammo before the gun hits 0 bullets (hand-helds will always reload when they hit 0).  Guns will prefer to reload the same ammo that was previously in the gun, and will only reload different (yet compatible) ammo if the old ammo is not found.")
         public boolean autoReload;
 
         @JSONDescription("If set and true, then this gun part will be able to be held and fired from the player's hand. All animations, and lighting applies here, so keep this in mind. If this is set, then handHeldNormalOffset and handHeldAimingOffset MUST be included!  Note that custom cameras will work when hand-held, but they will not be activated via the standard F5 cycling. Instead, they will be activated when the player sneaks. This is intended to allow for scopes and the like.")

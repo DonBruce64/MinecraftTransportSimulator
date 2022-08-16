@@ -259,7 +259,6 @@ public class WrapperWorld extends AWrapperWorld {
         return builder;
     }
 
-    @SuppressWarnings("UnnecessaryContinue")
     @Override
     public List<IWrapperEntity> attackEntities(Damage damage, Point3D motion, boolean generateList) {
         AxisAlignedBB mcBox = damage.box.convert();
@@ -307,10 +306,7 @@ public class WrapperWorld extends AWrapperWorld {
                 }
 
                 //Didn't hit a rider on the damage source. Do normal raytracing or just add if there's no motion.
-                if (motion != null && mcEntityCollided.getEntityBoundingBox().calculateIntercept(start, end) == null) {
-                    //Raytracing doesn't intercept the box, so no hits.
-                    continue;
-                } else {
+                if (motion == null || mcEntityCollided.getEntityBoundingBox().calculateIntercept(start, end) == null) {
                     hitEntities.add(WrapperEntity.getWrapperFor(mcEntityCollided));
                 }
             }
@@ -843,7 +839,6 @@ public class WrapperWorld extends AWrapperWorld {
      * We also track followers, and ensure that if the player doesn't exist, they are removed.
      * This handles players leaving. We could use events for this, but they're not reliable.
      */
-    @SuppressWarnings("UnnecessaryContinue")
     @SubscribeEvent
     public void on(TickEvent.WorldTickEvent event) {
         //Need to check if it's our world, because Forge is stupid like that.
@@ -863,7 +858,6 @@ public class WrapperWorld extends AWrapperWorld {
                         ticksSincePlayerJoin.remove(playerUUID);
                     } else {
                         ++gunBuilder.idleTickCounter;
-                        continue;
                     }
                 } else if (!player.isDead) {
                     //Gun does not exist, check if player has been present for 3 seconds and spawn it.

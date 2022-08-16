@@ -150,6 +150,7 @@ public class PartGun extends APart {
         this.state = GunState.values()[data.getInteger("state")];
         this.bulletsLeft = data.getInteger("bulletsLeft");
         this.bulletsReloading = data.getInteger("bulletsReloading");
+        this.reloadTimeRemaining = data.getInteger("reloadTimeRemaining");
         this.currentMuzzleGroupIndex = data.getInteger("currentMuzzleGroupIndex");
         this.internalOrientation = new RotationMatrix().setToAngles(data.getPoint3d("internalAngles"));
         this.prevInternalOrientation = new RotationMatrix().set(internalOrientation);
@@ -801,6 +802,7 @@ public class PartGun extends APart {
         data.setInteger("state", (byte) state.ordinal());
         data.setInteger("bulletsLeft", bulletsLeft);
         data.setInteger("bulletsReloading", bulletsReloading);
+        data.setInteger("reloadTimeRemaining", reloadTimeRemaining);
         data.setInteger("currentMuzzleGroupIndex", currentMuzzleGroupIndex);
         data.setPoint3d("internalAngles", internalOrientation.angles);
         if (loadedBullet != null) {
