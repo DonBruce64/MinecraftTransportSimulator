@@ -92,7 +92,7 @@ public class EntityParticle extends AEntityC_Renderable {
         STANDARD_RENDER_BUFFER.rewind();
         buffer.flip();
         this.renderable = new RenderableObject("particle", definition.texture != null ? definition.texture : (definition.type.equals(ParticleType.BREAK) ? RenderableObject.GLOBAL_TEXTURE_NAME : RenderableObject.PARTICLE_TEXTURE_NAME), staticColor != null ? staticColor : new ColorRGB(), buffer, false);
-        renderable.disableLighting = definition.type.equals(ParticleType.FLAME);
+        renderable.disableLighting = definition.type.equals(ParticleType.FLAME) || definition.isBright;
         renderable.ignoreWorldShading = true;
         if (definition.type.equals(ParticleType.BREAK)) {
             setParticleTextureBounds(0, 0);
