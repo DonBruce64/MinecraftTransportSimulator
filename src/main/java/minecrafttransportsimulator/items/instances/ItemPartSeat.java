@@ -9,26 +9,25 @@ import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 
-public class ItemPartSeat extends AItemPart {
-
-    public ItemPartSeat(JSONPart definition, String subName, String sourcePackID) {
-        super(definition, subName, sourcePackID);
-    }
-
-    @Override
-    public PartSeat createPart(AEntityF_Multipart<?> entity, IWrapperPlayer placingPlayer, JSONPartDefinition packVehicleDef, IWrapperNBT partData, APart parentPart) {
-        return new PartSeat(entity, placingPlayer, packVehicleDef, partData, parentPart);
-    }
-
-    public static final AItemPartCreator CREATOR = new AItemPartCreator() {
-        @Override
-        public boolean isCreatorValid(JSONPart definition) {
-            return definition.generic.type.startsWith("seat");
-        }
-
-        @Override
-        public ItemPartSeat createItem(JSONPart definition, String subName, String sourcePackID) {
-            return new ItemPartSeat(definition, subName, sourcePackID);
-        }
-    };
+public class ItemPartSeat extends AItemPart{
+	
+	public ItemPartSeat(JSONPart definition, String subName, String sourcePackID){
+		super(definition, subName, sourcePackID);
+	}
+	
+	@Override
+	public PartSeat createPart(AEntityF_Multipart<?> entity, IWrapperPlayer placingPlayer, JSONPartDefinition packVehicleDef, IWrapperNBT partData, APart parentPart){
+		return new PartSeat(entity, placingPlayer, packVehicleDef, partData, parentPart);
+	}
+	
+	public static final AItemPartCreator CREATOR = new AItemPartCreator(){
+		@Override
+		public boolean isCreatorValid(JSONPart definition){
+			return definition.generic.type.startsWith("seat");
+		}
+		@Override
+		public ItemPartSeat createItem(JSONPart definition, String subName, String sourcePackID){
+			return new ItemPartSeat(definition, subName, sourcePackID);
+		}
+	};
 }

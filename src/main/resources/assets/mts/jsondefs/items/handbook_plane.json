@@ -1,278 +1,278 @@
 {
-    "item": {
-        "type": "booklet"
-    },
-    "booklet": {
-        "textureWidth": 280,
-        "textureHeight": 180,
-        "coverTexture": "mts:textures/guis/manual_plane_cover.png",
-        "titleText": [
-            {
-                "pos": [210.0, 20.0, 0.0],
-                "rot": [0.0, 0.0, 0.0],
-                "scale": 1.5,
-                "fieldName": "",
-                "defaultText": "MINECRAFT",
-                "color": "FFFFFF"
-            },
-            {
-                "pos": [210.0, 35.0, 0.0],
-                "rot": [0.0, 0.0, 0.0],
-                "scale": 1.5,
-                "fieldName": "",
-                "defaultText": "FLIGHT",
-                "color": "FFFFFF"
-            },
-            {
-                "pos": [210.0, 50.0, 0.0],
-                "rot": [0.0, 0.0, 0.0],
-                "scale": 1.5,
-                "fieldName": "",
-                "defaultText": "SIMULATOR",
-                "color": "FFFFFF"
-            },
-            {
-                "pos": [210.0, 65.0, 0.0],
-                "rot": [0.0, 0.0, 0.0],
-                "scale": 1.5,
-                "fieldName": "",
-                "defaultText": "HANDBOOK",
-                "color": "FFFFFF"
-            },
-            {
-                "pos": [210.0, 100.0, 0.0],
-                "rot": [0.0, 0.0, 0.0],
-                "scale": 1.0,
-                "fieldName": "",
-                "defaultText": "A Division of ",
-                "color": "FFFFFF"
-            },
-            {
-                "pos": [210.0, 110.0, 0.0],
-                "rot": [0.0, 0.0, 0.0],
-                "scale": 1.0,
-                "fieldName": "",
-                "defaultText": "Immersive Vehicles",
-                "color": "FFFFFF"
-            },
-            {
-                "pos": [190.0, 160.0, 0.0],
-                "rot": [0.0, 0.0, 0.0],
-                "scale": 1.0,
-                "fieldName": "",
-                "defaultText": "-by don_bruce",
-                "color": "FFFFFF"
-            }
-        ],
-        "pages": [
-            {
-                "pageTexture": "mts:textures/guis/manual_plane_pages.png",
-                "title": "Propellers",
-                "pageText": [
-                    {
-                        "pos": [75.0, 25.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 1.0,
-                        "fieldName": "",
-                        "defaultText": "Propellers",
-                        "color": "000000"
-                    },
-                    {
-                        "pos": [20.0, 40.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 0.65,
-                        "fieldName": "",
-                        "defaultText": "If you're going to use anything that's not a car, it will likely need one of these (well, unless it's a jet). Larger diameter propellers provide more thrust than smaller ones; however, larger-diameter propellers also need larger engines to turn, so it may be that a weak engine can produce more thrust with a smaller propeller than a larger one. Propellers are created on the Propeller Bench.",
-                        "color": "000000",
-                        "wrapWidth": 110,
-                        "renderPosition": 1
-                    },
-                    {
-                        "pos": [155.0, 20.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 0.65,
-                        "fieldName": "",
-                        "defaultText": "Propeller pitch is also important, perhaps more so than diameter, as it determines the optimal speed at any RPM. Anything below this speed will speed the aircraft up, anything below will slow it down. Note that propellers that have dynamic pitch will adjust their pitch in flight to maintain optimum thrust, and may also be reversed by pressing the REV button in the plane panel. Reversed propellers are not very effective, so make sure to use plenty of throttle and watch your temps!",
-                        "color": "000000",
-                        "wrapWidth": 110,
-                        "renderPosition": 1
-                    }
-                ]
-            },
-            {
-                "pageTexture": "mts:textures/guis/manual_plane_pages.png",
-                "title": "Time to Fly!",
-                "pageText": [
-                    {
-                        "pos": [75.0, 25.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 1.0,
-                        "fieldName": "",
-                        "defaultText": "Time to Fly!",
-                        "color": "000000"
-                    },
-                    {
-                        "pos": [20.0, 40.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 0.65,
-                        "fieldName": "",
-                        "defaultText": "Before your first flight you should be aware of a few key facts. First, planes do not go up when you pull up. We repeat: PLANES DO NOT GO UP WHEN YOU PULL UP!  This is the #1 cause of crashes for new pilots. In MFS, and in real-life, planes gain lift through moving air over the wings. Therefore, the proper way to lift off the ground is to go fast so lots of air moves over the wings and makes lots of lift.",
-                        "color": "000000",
-                        "wrapWidth": 110,
-                        "renderPosition": 1
-                    },
-                    {
-                        "pos": [155.0, 20.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 0.65,
-                        "fieldName": "",
-                        "defaultText": "This means that you will need a decent runway for takeoff, and it is highly recommended you avoid taking off towards high things like trees and mountains. If you are piloting a plane equipped with flaps you can set a few notches to increase the lifting power of the plane. Note that this will cause a loss in fuel efficiency and slow you down, so only use flaps when performing takeoffs and landings. Also note that weight (items in inventory and cargo) is a factor in plane handling, so make sure not to overload your plane.",
-                        "color": "000000",
-                        "wrapWidth": 110,
-                        "renderPosition": 1
-                    }
-                ]
-            },
-            {
-                "pageTexture": "mts:textures/guis/manual_plane_pages.png",
-                "title": "In-Flight",
-                "pageText": [
-                    {
-                        "pos": [75.0, 25.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 1.0,
-                        "fieldName": "",
-                        "defaultText": "In-Flight",
-                        "color": "000000"
-                    },
-                    {
-                        "pos": [20.0, 40.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 0.65,
-                        "fieldName": "",
-                        "defaultText": "Once your plane is up in the air flying just becomes a matter of two things: not crashing into wild mountains, and not crashing into the ground. The former can simply be dodged by banking the plane into a turn by rolling the airplane (A and D) or simply flying above build height. Turns will slowly decrease your altitude, so watch that if you're close to terrain.",
-                        "color": "000000",
-                        "wrapWidth": 110,
-                        "renderPosition": 1
-                    },
-                    {
-                        "pos": [155.0, 20.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 0.65,
-                        "fieldName": "",
-                        "defaultText": "While flying you may have to keep holding inputs to make your plane behave the way you want. If you keep climbing, it's because you have too much thrust and should let off the throttle. You can also add some trim and keep the throttle up to get a bit more speed at the cost of fuel economy. You may also move to other seats while flying by right-clicking them, and some planes even allow for multiple pilots. Check the Vehicle Bench for specifics on seat and pilot counts.",
-                        "color": "000000",
-                        "wrapWidth": 110,
-                        "renderPosition": 1
-                    }
-                ]
-            },
-            {
-                "pageTexture": "mts:textures/guis/manual_plane_pages.png",
-                "title": "Using Beacons",
-                "pageText": [
-                    {
-                        "pos": [75.0, 25.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 1.0,
-                        "fieldName": "",
-                        "defaultText": "Using Beacons",
-                        "color": "000000"
-                    },
-                    {
-                        "pos": [20.0, 40.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 0.65,
-                        "fieldName": "",
-                        "defaultText": "Beacons (from this mod, not Vanilla ones) are used to define waypoints that can be used with the instruments on some planes. Placing down a beacon and naming it will let you select it in the U-panel. A selected beacon is valid if it is green, and red if it doesn't exist. Once a beacon is selected, all instruments will perform their functions using it.",
-                        "color": "000000",
-                        "wrapWidth": 110,
-                        "renderPosition": 1
-                    },
-                    {
-                        "pos": [155.0, 20.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 0.65,
-                        "fieldName": "",
-                        "defaultText": "There are two instruments that use beacons. The ADF simply points towards the selected beacon, but the ILS is a bit different. It uses the beacon's bearing and glideslope to help you line up landing. Glideslope is the landing angle, and bearing is the landing heading. The two bars move in the ILS depending on how far you are 'off' from the beacon, with centered bars meaning you're on the landing beam.",
-                        "color": "000000",
-                        "wrapWidth": 110,
-                        "renderPosition": 1
-                    }
-                ]
-            },
-            {
-                "pageTexture": "mts:textures/guis/manual_plane_pages.png",
-                "title": "Trim/Autopilot",
-                "pageText": [
-                    {
-                        "pos": [75.0, 25.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 1.0,
-                        "fieldName": "",
-                        "defaultText": "Trim/Autopilot",
-                        "color": "000000"
-                    },
-                    {
-                        "pos": [20.0, 40.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 0.65,
-                        "fieldName": "",
-                        "defaultText": "Trim is normally overlooked by most pilots, but is a useful tool to make flying much easier. Trim can be adjusted in the U-panel, with each trim doing different things. Elevator trim makes for a constant pitch, which is useful if you keep climbing because you want to go faster. Yaw is useful if you lose an engine and keep yawing.",
-                        "color": "000000",
-                        "wrapWidth": 110,
-                        "renderPosition": 1
-                    },
-                    {
-                        "pos": [155.0, 20.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 0.65,
-                        "fieldName": "",
-                        "defaultText": "While you can manually apply trim, you can also let the autopilot do it for you (if the aircraft is equipped with it). Autopilot will apply elevator trim to keep the altitude the same, and will apply aileron trim to keep the aircraft level. For helicopters, it will function as an auto-hover, keeping the heli in the same place and same altitude.",
-                        "color": "000000",
-                        "wrapWidth": 110,
-                        "renderPosition": 1
-                    }
-                ]
-            },
-            {
-                "pageTexture": "mts:textures/guis/manual_plane_pages.png",
-                "title": "Landing",
-                "pageText": [
-                    {
-                        "pos": [75.0, 25.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 1.0,
-                        "fieldName": "",
-                        "defaultText": "Landing",
-                        "color": "000000"
-                    },
-                    {
-                        "pos": [20.0, 40.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 0.65,
-                        "fieldName": "",
-                        "defaultText": "There is a fine line between successfully landing a plane and a controlled crash. To avoid that second category it is important to remember the saying, 'To go down you need to slow down.'  Speed is what keeps your plane aloft, so a reduction in speed is needed to land. This can be as simple as lowering the throttle and applying the flaps.",
-                        "color": "000000",
-                        "wrapWidth": 110,
-                        "renderPosition": 1
-                    },
-                    {
-                        "pos": [155.0, 20.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 0.65,
-                        "fieldName": "",
-                        "defaultText": "Some times, however, you end up in that second category. Running out of fuel is the most common way to get down quickly, but it is not necessarily deadly. Planes can glide without engines, giving you a short amount of time to pick a flat spot to become an impromptu runway. Should one not be available a body of water is also a good choice as it will prevent explosions on a hard crash and will allow you to bail while in mid-air. Anything hilly should be avoided at all costs.",
-                        "color": "000000",
-                        "wrapWidth": 110,
-                        "renderPosition": 1
-                    }
-                ]
-            }
+  "item": {
+    "type": "booklet"
+  },
+  "booklet": {
+    "textureWidth": 280,
+    "textureHeight": 180,
+    "coverTexture": "mts:textures/guis/manual_plane_cover.png",
+    "titleText": [
+      {
+        "pos": [210.0,20.0,0.0],
+        "rot": [0.0,0.0,0.0],
+        "scale": 1.5,
+        "fieldName": "",
+        "defaultText": "MINECRAFT",
+        "color": "FFFFFF"
+      },
+      {
+        "pos": [210.0,35.0,0.0],
+        "rot": [0.0,0.0,0.0],
+        "scale": 1.5,
+        "fieldName": "",
+        "defaultText": "FLIGHT",
+        "color": "FFFFFF"
+      },
+      {
+        "pos": [210.0,50.0,0.0],
+        "rot": [0.0,0.0,0.0],
+        "scale": 1.5,
+        "fieldName": "",
+        "defaultText": "SIMULATOR",
+        "color": "FFFFFF"
+      },
+      {
+        "pos": [210.0,65.0,0.0],
+        "rot": [0.0,0.0,0.0],
+        "scale": 1.5,
+        "fieldName": "",
+        "defaultText": "HANDBOOK",
+        "color": "FFFFFF"
+      },
+      {
+        "pos": [210.0,100.0,0.0],
+        "rot": [0.0,0.0,0.0],
+        "scale": 1.0,
+        "fieldName": "",
+        "defaultText": "A Division of ",
+        "color": "FFFFFF"
+      },
+      {
+        "pos": [210.0,110.0,0.0],
+        "rot": [0.0,0.0,0.0],
+        "scale": 1.0,
+        "fieldName": "",
+        "defaultText": "Immersive Vehicles",
+        "color": "FFFFFF"
+      },
+      {
+        "pos": [190.0,160.0,0.0],
+        "rot": [0.0,0.0,0.0],
+        "scale": 1.0,
+        "fieldName": "",
+        "defaultText": "-by don_bruce",
+        "color": "FFFFFF"
+      }
+    ],
+    "pages": [
+      {
+        "pageTexture": "mts:textures/guis/manual_plane_pages.png",
+        "title": "Propellers",
+        "pageText": [
+          {
+            "pos": [75.0,25.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 1.0,
+            "fieldName": "",
+            "defaultText": "Propellers",
+            "color": "000000"
+          },
+          {
+            "pos": [20.0,40.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 0.65,
+            "fieldName": "",
+            "defaultText": "If you're going to use anything that's not a car, it will likely need one of these (well, unless it's a jet).  Larger diameter propellers provide more thrust than smaller ones; however, larger-diameter propellers also need larger engines to turn, so it may be that a weak engine can produce more thrust with a smaller propeller than a larger one.  Propellers are created on the Propeller Bench.",
+            "color": "000000",
+            "wrapWidth": 110,
+            "renderPosition": 1
+          },
+          {
+            "pos": [155.0,20.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 0.65,
+            "fieldName": "",
+            "defaultText": "Propeller pitch is also important, perhaps moreso than diameter, as it determines the optimal speed at any RPM.  Anything below this speed will speed the aircraft up, anything below will slow it down.  Note that propellers that have dynamic pitch will adjust their pitch in flight to maintain optimum thrust, and may also be reversed by pressing the REV button in the plane panel.  Reversed propellers are not very effective, so make sure to use plenty of throttle and watch your temps!",
+            "color": "000000",
+            "wrapWidth": 110,
+            "renderPosition": 1
+          }
         ]
-    },
-    "general": {
-        "name": "MFS Flight Manual (READ ME!)",
-        "materials": []
-    }
+      },
+      {
+        "pageTexture": "mts:textures/guis/manual_plane_pages.png",
+        "title": "Time to Fly!",
+        "pageText": [
+          {
+            "pos": [75.0,25.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 1.0,
+            "fieldName": "",
+            "defaultText": "Time to Fly!",
+            "color": "000000"
+          },
+          {
+            "pos": [20.0,40.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 0.65,
+            "fieldName": "",
+            "defaultText": "Before your first flight you should be aware of a few key facts.  First, planes do not go up when you pull up.  We repeat: PLANES DO NOT GO UP WHEN YOU PULL UP!  This is the #1 cause of crashes for new pilots.  In MFS, and in real-life, planes gain lift through moving air over the wings.  Therefore, the proper way to lift off the ground is to go fast so lots of air moves over the wings and makes lots of lift.",
+            "color": "000000",
+            "wrapWidth": 110,
+            "renderPosition": 1
+          },
+          {
+            "pos": [155.0,20.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 0.65,
+            "fieldName": "",
+            "defaultText": "This means that you will need a decent runway for takeoff, and it is highly recommended you avoid taking off towards high things like trees and mountains.  If you are piloting a plane equipped with flaps you can set a few notches to increase the lifting power of the plane.  Note that this will cause a loss in fuel efficiency and slow you down, so only use flaps when performing takeoffs and landings.  Also note that weight (items in inventory and cargo) is a factor in plane handling, so make sure not to overload your plane.",
+            "color": "000000",
+            "wrapWidth": 110,
+            "renderPosition": 1
+          }
+        ]
+      },
+      {
+        "pageTexture": "mts:textures/guis/manual_plane_pages.png",
+        "title": "In-Flight",
+        "pageText": [
+          {
+            "pos": [75.0,25.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 1.0,
+            "fieldName": "",
+            "defaultText": "In-Flight",
+            "color": "000000"
+          },
+          {
+            "pos": [20.0,40.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 0.65,
+            "fieldName": "",
+            "defaultText": "Once your plane is up in the air flying just becomes a matter of two things: not crashing into wild mountains, and not crashing into the ground.  The former can simply be dodged by banking the plane into a turn by rolling the airplane (A and D) or simply flying above build height.  Turns will slowly decrease your altitude, so watch that if you're close to terrain.",
+            "color": "000000",
+            "wrapWidth": 110,
+            "renderPosition": 1
+          },
+          {
+            "pos": [155.0,20.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 0.65,
+            "fieldName": "",
+            "defaultText": "While flying you may have to keep holding inputs to make your plane behave the way you want.  If you keep climbing, it's because you have too much thrust and should let off the throttle.  You can also add some trim and keep the throttle up to get a bit more speed at the cost of fuel economy.  You may also move to other seats while flying by right-clicking them, and some planes even allow for multiple pilots.  Check the Vehicle Bench for specifics on seat and pilot counts.",
+            "color": "000000",
+            "wrapWidth": 110,
+            "renderPosition": 1
+          }
+        ]
+      },
+      {
+        "pageTexture": "mts:textures/guis/manual_plane_pages.png",
+        "title": "Using Beacons",
+        "pageText": [
+          {
+            "pos": [75.0,25.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 1.0,
+            "fieldName": "",
+            "defaultText": "Using Beacons",
+            "color": "000000"
+          },
+          {
+            "pos": [20.0,40.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 0.65,
+            "fieldName": "",
+            "defaultText": "Beacons (from this mod, not Vanilla ones) are used to define waypoints that can be used with the instruments on some planes.  Placing down a beacon and naming it will let you select it in the U-panel.  A selected beacon is valid if it is green, and red if it doesn't exist.  Once a beacon is selected, all instruments will perform their functions using it.",
+            "color": "000000",
+            "wrapWidth": 110,
+            "renderPosition": 1
+          },
+          {
+            "pos": [155.0,20.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 0.65,
+            "fieldName": "",
+            "defaultText": "There are two instruments that use beacons.  The ADF simply points towards the selected beacon, but the ILS is a bit different.  It uses the beacon's bearing and glideslope to help you line up landing.  Glideslope is the landing angle, and bearing is the landing heading.  The two bars move in the ILS depending on how far you are 'off' from the beacon, with centered bars meaning you're on the landing beam.",
+            "color": "000000",
+            "wrapWidth": 110,
+            "renderPosition": 1
+          }
+        ]
+      },
+      {
+        "pageTexture": "mts:textures/guis/manual_plane_pages.png",
+        "title": "Trim/Autopilot",
+        "pageText": [
+          {
+            "pos": [75.0,25.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 1.0,
+            "fieldName": "",
+            "defaultText": "Trim/Autopilot",
+            "color": "000000"
+          },
+          {
+            "pos": [20.0,40.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 0.65,
+            "fieldName": "",
+            "defaultText": "Trim is normally overlooked by most pilots, but is a useful tool to make flying much easier.  Trim can be adjusted in the U-panel, with each trim doing different things.  Elevator trim makes for a constant pitch, which is useful if you keep climbing because you want to go faster.  Yaw is useful if you lose an engine and keep yawing.",
+            "color": "000000",
+            "wrapWidth": 110,
+            "renderPosition": 1
+          },
+          {
+            "pos": [155.0,20.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 0.65,
+            "fieldName": "",
+            "defaultText": "While you can manually apply trim, you can also let the autopilot do it for you (if the aircraft is equipped with it).  Autopilot will apply elevator trim to keep the altitude the same, and will apply aileron trim to keep the aircraft level.  For helicopters, it will function as an auto-hover, keeping the heli in the same place and same altitude.",
+            "color": "000000",
+            "wrapWidth": 110,
+            "renderPosition": 1
+          }
+        ]
+      },
+      {
+        "pageTexture": "mts:textures/guis/manual_plane_pages.png",
+        "title": "Landing",
+        "pageText": [
+          {
+            "pos": [75.0,25.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 1.0,
+            "fieldName": "",
+            "defaultText": "Landing",
+            "color": "000000"
+          },
+          {
+            "pos": [20.0,40.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 0.65,
+            "fieldName": "",
+            "defaultText": "There is a fine line between successfully landing a plane and a controlled crash.  To avoid that second category it is important to remember the saying, 'To go down you need to slow down.'  Speed is what keeps your plane aloft, so a reduction in speed is needed to land.  This can be as simple as lowering the throttle and applying the flaps.",
+            "color": "000000",
+            "wrapWidth": 110,
+            "renderPosition": 1
+          },
+          {
+            "pos": [155.0,20.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 0.65,
+            "fieldName": "",
+            "defaultText": "Some times, however, you end up in that second category.  Running out of fuel is the most common way to get down quickly, but it is not necessarily deadly.  Planes can glide without engines, giving you a short amount of time to pick a flat spot to become an impromptu runway.  Should one not be available a body of water is also a good choice as it will prevent explosions on a hard crash and will allow you to bail while in mid-air.  Anything hilly should be avoided at all costs.",
+            "color": "000000",
+            "wrapWidth": 110,
+            "renderPosition": 1
+          }
+        ]
+      }
+    ]
+  },
+  "general": {
+    "name": "MFS Flight Manual (READ ME!)",
+    "materials": []
+  }
 }

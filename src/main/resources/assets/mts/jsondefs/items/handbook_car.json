@@ -1,588 +1,587 @@
 {
-    "item": {
-        "type": "booklet"
-    },
-    "booklet": {
-        "textureWidth": 467,
-        "textureHeight": 180,
-        "coverTexture": "mts:textures/guis/manual_car_cover.png",
-        "titleText": [
-            {
-                "pos": [330.0, 56.0, 0.0],
-                "rot": [0.0, 0.0, 0.0],
-                "scale": 1.5,
-                "fieldName": "",
-                "defaultText": "IMMERSIVE VEHICLES",
-                "color": "000000"
-            },
-            {
-                "pos": [291.0, 71.0, 0.0],
-                "rot": [0.0, 0.0, 0.0],
-                "scale": 1.5,
-                "fieldName": "",
-                "defaultText": "HANDBOOK",
-                "color": "000000"
-            },
-            {
-                "pos": [300.0, 155.0, 0.0],
-                "rot": [0.0, 0.0, 0.0],
-                "scale": 1.0,
-                "fieldName": "",
-                "defaultText": "-by don_bruce",
-                "color": "FFFFFF"
-            }
-        ],
-        "pages": [
-            {
-                "pageTexture": "mts:textures/guis/manual_car_pages.png",
-                "title": "Introduction",
-                "pageText": [
-                    {
-                        "pos": [111.0, 25.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 1.0,
-                        "fieldName": "",
-                        "defaultText": "Introduction",
-                        "color": "000000"
-                    },
-                    {
-                        "pos": [27.0, 40.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 0.85,
-                        "fieldName": "",
-                        "defaultText": "Thank you for downloading Immersive Vehicles!  This manual goes over how to construct and operate all the vehicles in the mod. It is STRONGLY suggested new players read this to get familiar with the various systems. Failing to do so and asking a question on the Discord that's covered in this manual is frowned upon and will just get you made fun of, so make sure you read all the way through!",
-                        "color": "000000",
-                        "wrapWidth": 180,
-                        "renderPosition": 1
-                    },
-                    {
-                        "pos": [261.0, 25.0, 0.0
-                        ],
-                        "rot": [0.0, 0.0, 0.0
-                        ],
-                        "scale": 0.85,
-                        "fieldName": "",
-                        "defaultText": "Note that aircraft have their own manual as flying them is more complex than just driving a car, so see that one for details. If there's something that is not included in this manual for vehicles, this is the time when you ask on Discord. We'll be happy to answer your question and add it to the manual in a later update!  Oh, and you can scroll through this manual (as well as all GUIs) with your mouse wheel, if your mouse is equipped with one.",
-                        "color": "000000",
-                        "wrapWidth": 180,
-                        "renderPosition": 1
-                    }
-                ]
-            },
-            {
-                "pageTexture": "mts:textures/guis/manual_car_pages.png",
-                "title": "Basic Crafting",
-                "pageText": [
-                    {
-                        "pos": [111.0, 25.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 1.0,
-                        "fieldName": "",
-                        "defaultText": "Basic Crafting",
-                        "color": "000000"
-                    },
-                    {
-                        "pos": [27.0, 40.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 0.85,
-                        "fieldName": "",
-                        "defaultText": "Like most mods that have packs and lots of content, IV uses crafting benches for crafting. The Vehicle Bench is used to craft vehicles, while the other benches craft their own parts. You'll likely want to start filling your garage early with these benches as most vehicles use at least one type of every part. JEI is supported, and will tell you what benches make what parts.",
-                        "color": "000000",
-                        "wrapWidth": 180,
-                        "renderPosition": 1
-                    },
-                    {
-                        "pos": [261.0, 25.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 0.85,
-                        "fieldName": "",
-                        "defaultText": "Crafting the benches themselves is as simple as making them in a vanilla crafting table. JEI or your mod of choice will show you these recipes. The first benches you should craft are the Component Bench and the Decor Bench. These are used by a lot of packs to add custom items that are used to craft vehicle parts, and even vehicles themselves. Some packs also use the Custom Bench to make parts for other parts, so that one is also worth a look.",
-                        "color": "000000",
-                        "wrapWidth": 180,
-                        "renderPosition": 1
-                    }
-                ]
-            },
-            {
-                "pageTexture": "mts:textures/guis/manual_car_pages.png",
-                "title": "Vehicle Assembly",
-                "pageText": [
-                    {
-                        "pos": [111.0, 25.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 1.0,
-                        "fieldName": "",
-                        "defaultText": "Vehicle Assembly",
-                        "color": "000000"
-                    },
-                    {
-                        "pos": [27.0, 40.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 0.85,
-                        "fieldName": "",
-                        "defaultText": "Assembling vehicles is a simple as clicking them with the required parts. When holding a valid part a green hologram will appear in locations where you can place it. Simply right-click with that part and it will attach to the vehicle. Note that some parts may require other parts to be installed before they may be placed, such as propellers that connect to aircraft engines.",
-                        "color": "000000",
-                        "wrapWidth": 180,
-                        "renderPosition": 1
-                    },
-                    {
-                        "pos": [261.0, 25.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 0.85,
-                        "fieldName": "",
-                        "defaultText": "If you are holding a part and the hologram is red, it means the part is the correct type, but the wrong size. One common example is a wheel that is too big or too small for the vehicle. Another is if a pack creator wants to restrict that location to specific parts, such as a specific engine, so try parts from the pack first. Creators may also put what goes to the vehicle in the item description.",
-                        "color": "000000",
-                        "wrapWidth": 180,
-                        "renderPosition": 1
-                    }
-                ]
-            },
-            {
-                "pageTexture": "mts:textures/guis/manual_car_pages.png",
-                "title": "Vehicle Assembly (Cont.)",
-                "pageText": [
-                    {
-                        "pos": [111.0, 25.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 1.0,
-                        "fieldName": "",
-                        "defaultText": "Vehicle Assembly (Cont.)",
-                        "color": "000000"
-                    },
-                    {
-                        "pos": [27.0, 40.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 0.85,
-                        "fieldName": "",
-                        "defaultText": "If you know a part should go on a vehicle, but can't figure out which part this may be, then the Scanner may be of use to you. It will show all part positions, and cycle through all possible parts that can go at the pointed-at position. If nothing cycles, and you don't hear beeping, then the slot cannot take anything. This should be reported to the pack author as it indicates an invalid slot.",
-                        "color": "000000",
-                        "wrapWidth": 180,
-                        "renderPosition": 1
-                    },
-                    {
-                        "pos": [261.0, 25.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 0.85,
-                        "fieldName": "",
-                        "defaultText": "If you want to remove a part, simply attack it with a wrench. This may only be done on parts that don't have other parts on them. i.e. you can remove a tire, but if it has a hubcap on it, you need to remove the hubcap first before you can remove the tire itself. Note that some parts, such as those that come with the vehicle, may be permanent and cannot be removed. If you want to remove the vehicle itself from the world, sneak-attack it with the wrench.",
-                        "color": "000000",
-                        "wrapWidth": 180,
-                        "renderPosition": 1
-                    }
-                ]
-            },
-            {
-                "pageTexture": "mts:textures/guis/manual_car_pages.png",
-                "title": "Vehicle Customization",
-                "pageText": [
-                    {
-                        "pos": [111.0, 25.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 1.0,
-                        "fieldName": "",
-                        "defaultText": "Vehicle Customization",
-                        "color": "000000"
-                    },
-                    {
-                        "pos": [27.0, 40.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 0.85,
-                        "fieldName": "",
-                        "defaultText": "While vehicles are spawned in the color chosen when crafting, you may change this color by using the paint gun. This will let you change liveries for the vehicle. Do note that some vehicles may restrict some parts to a specific livery, such as police cars to the police livery.",
-                        "color": "000000",
-                        "wrapWidth": 180,
-                        "renderPosition": 1
-                    },
-                    {
-                        "pos": [261.0, 25.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 0.85,
-                        "fieldName": "",
-                        "defaultText": "Parts can be changed with the paint gun as well, though most have only a single color option. Some vehicles support 'toned' paint schemes. These result in parts being changed to match the vehicle color. Keep this in mind when using the paint gun. Also note that clicking the vehicle paints the vehicle (and toned parts), whereas clicking a part paints that part only.",
-                        "color": "000000",
-                        "wrapWidth": 180,
-                        "renderPosition": 1
-                    }
-                ]
-            },
-            {
-                "pageTexture": "mts:textures/guis/manual_car_pages.png",
-                "title": "Vehicle Collision",
-                "pageText": [
-                    {
-                        "pos": [111.0, 25.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 1.0,
-                        "fieldName": "",
-                        "defaultText": "Vehicle Destruction",
-                        "color": "000000"
-                    },
-                    {
-                        "pos": [27.0, 40.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 0.85,
-                        "fieldName": "",
-                        "defaultText": "Normally, a good driver doesn't crash. Should you not be a good driver, one of a few things may happen. Normally, the block you hit will break and you will slow down. However, this may not happen if the block is very hard (obsidian, bedrock, etc.), or if block breaking is disabled in the config.",
-                        "color": "000000",
-                        "wrapWidth": 180,
-                        "renderPosition": 1
-                    },
-                    {
-                        "pos": [261.0, 25.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 0.85,
-                        "fieldName": "",
-                        "defaultText": "If you hit enough blocks at a high enough speed, the vehicle will crash and blow up. The explosion size being determined on the amount of fuel in the vehicle. Some crafting materials and all parts will be dropped, but these may be destroyed in the explosion. Note that both the explosion and the destruction of the vehicle itself are configs and may be disabled if desired.",
-                        "color": "000000",
-                        "wrapWidth": 180,
-                        "renderPosition": 1
-                    }
-                ]
-            },
-            {
-                "pageTexture": "mts:textures/guis/manual_car_pages.png",
-                "title": "Fueling",
-                "pageText": [
-                    {
-                        "pos": [111.0, 25.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 1.0,
-                        "fieldName": "",
-                        "defaultText": "Fueling",
-                        "color": "000000"
-                    },
-                    {
-                        "pos": [27.0, 40.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 0.85,
-                        "fieldName": "",
-                        "defaultText": "Vehicles require fuel (though some come pre-fueled), and are fueled from a fuel pump. Just click the fuel pump and it will automatically connect to the nearest vehicle. The pump will then transfer fuel at a rate of 10 mb/t. The pump itself has a 15000mb reservoir and can be filled directly from liquid-holding containers, or by connecting a pipe to the bottom from pipe systems compatible with Forge fluids.",
-                        "color": "000000",
-                        "wrapWidth": 180,
-                        "renderPosition": 1
-                    },
-                    {
-                        "pos": [261.0, 25.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 0.85,
-                        "fieldName": "",
-                        "defaultText": "Note that if you connect a pipe to the bottom of the pump you can set an item-based cost for using the pump. Simply put the item stack you wish to charge in your inventory, then click the pump with a wrench to open the price GUI. From there you can click a slot to set the item and the amount of fuel that item will allow. This may only be done by the person who placed the pump, or a server admin.",
-                        "color": "000000",
-                        "wrapWidth": 180,
-                        "renderPosition": 1
-                    }
-                ]
-            },
-            {
-                "pageTexture": "mts:textures/guis/manual_car_pages.png",
-                "title": "Fuel Types",
-                "pageText": [
-                    {
-                        "pos": [111.0, 25.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 1.0,
-                        "fieldName": "",
-                        "defaultText": "Fuel Types",
-                        "color": "000000"
-                    },
-                    {
-                        "pos": [27.0, 40.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 0.85,
-                        "fieldName": "",
-                        "defaultText": "Each engine has a fuel type that is associated with it. Fuel types can be served by multiple fluids, but each fluid's potency will likely differ. Potency is how much energy that fluid has, with higher-potency fluids lasting longer in vehicles. Valid fluids for each engine and the potencies are displayed in the engine item tooltip.",
-                        "color": "000000",
-                        "wrapWidth": 180,
-                        "renderPosition": 1
-                    },
-                    {
-                        "pos": [261.0, 25.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 0.85,
-                        "fieldName": "",
-                        "defaultText": "The potency values, as well as what fluids work with what engine fuel types, are all configurable in the config file. In addition, there exists a config option called fuelUsageFactor that globally sets the fuel consumption for all engines. If you find engines to be thirstier than you'd like, you can adjust that rather than adjusting each fuel individually.",
-                        "color": "000000",
-                        "wrapWidth": 180,
-                        "renderPosition": 1
-                    }
-                ]
-            },
-            {
-                "pageTexture": "mts:textures/guis/manual_car_pages.png",
-                "title": "Engine Care",
-                "pageText": [
-                    {
-                        "pos": [111.0, 25.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 1.0,
-                        "fieldName": "",
-                        "defaultText": "Engine Care",
-                        "color": "000000"
-                    },
-                    {
-                        "pos": [27.0, 40.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 0.85,
-                        "fieldName": "",
-                        "defaultText": "No matter what they are in, engines form the heart of your vehicle. Engines come in a variety of fuel consumptions and max RPMs, so chose carefully based on your application. Fuel-less versions of engines are available in the creative tab, should you not wish to mess with fuel.",
-                        "color": "000000",
-                        "wrapWidth": 180,
-                        "renderPosition": 1
-                    },
-                    {
-                        "pos": [261.0, 25.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 0.85,
-                        "fieldName": "",
-                        "defaultText": "Beware: engines will gradually accumulate hours and lose their power, going so far as to start backfiring when really worn out. Over-revving, over-heating, and running the engine too fast before it has warmed up will quickly add hours to an otherwise new engine. Engines may also accumulate hours from damage, going so far as to spring leaks or lose their electric starters.",
-                        "color": "000000",
-                        "wrapWidth": 180,
-                        "renderPosition": 1
-                    }
-                ]
-            },
-            {
-                "pageTexture": "mts:textures/guis/manual_car_pages.png",
-                "title": "Instruments",
-                "pageText": [
-                    {
-                        "pos": [111.0, 25.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 1.0,
-                        "fieldName": "",
-                        "defaultText": "Instruments",
-                        "color": "000000"
-                    },
-                    {
-                        "pos": [27.0, 40.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 0.85,
-                        "fieldName": "",
-                        "defaultText": "Instruments make piloting a plane and driving a car much more immersive. They are also useful for monitoring key properties like fuel levels, RPM, and engine temps, and make flying in the dark much less hazardous. While some vehicles come with instruments when first placed down, most do not.",
-                        "color": "000000",
-                        "wrapWidth": 180,
-                        "renderPosition": 1
-                    },
-                    {
-                        "pos": [261.0, 25.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 0.85,
-                        "fieldName": "",
-                        "defaultText": "Instruments are added to vehicles by right-clicking with the wrench on them. The resulting GUI shows a view of the HUD and all instruments in your possession that work on that vehicle. Simply click the slot you want to put the instrument in, and click that instrument.",
-                        "color": "000000",
-                        "wrapWidth": 180,
-                        "renderPosition": 1
-                    }
-                ]
-            },
-            {
-                "pageTexture": "mts:textures/guis/manual_car_pages.png",
-                "title": "Using Keys",
-                "pageText": [
-                    {
-                        "pos": [111.0, 25.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 1.0,
-                        "fieldName": "",
-                        "defaultText": "Using Keys",
-                        "color": "000000"
-                    },
-                    {
-                        "pos": [27.0, 40.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 0.85,
-                        "fieldName": "",
-                        "defaultText": "The only thing worse than getting your nice car blown up by a creeper is having it (or parts of it) stolen by other players. Normally, vehicles may only be modified by their owners (the person who last placed them), but can be driven by anyone. By using a key you can lock vehicles, ensuring nobody can drive off with, or take things out of them.",
-                        "color": "000000",
-                        "wrapWidth": 180,
-                        "renderPosition": 1
-                    },
-                    {
-                        "pos": [261.0, 25.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 0.85,
-                        "fieldName": "",
-                        "defaultText": "Locked vehicles may not be entered, and their inventories may not be accessed, except by players inside them. This allows you to lock yourself into vehicles to prevent random passengers. If a player that isn't the vehicle's owner has a key, they may enter and drive it, but they still cannot modify it. Note that OPs bypass these restrictions to allow server admins to move/remove abandoned vehicles. You can also tow vehicles you're not the owner of. Wink wink.",
-                        "color": "000000",
-                        "wrapWidth": 180,
-                        "renderPosition": 1
-                    }
-                ]
-            },
-            {
-                "pageTexture": "mts:textures/guis/manual_car_pages.png",
-                "title": "Roads",
-                "pageText": [
-                    {
-                        "pos": [111.0, 25.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 1.0,
-                        "fieldName": "",
-                        "defaultText": "Roads",
-                        "color": "000000"
-                    },
-                    {
-                        "pos": [27.0, 40.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 0.85,
-                        "fieldName": "",
-                        "defaultText": "While roads aren't vehicles, they are something all vehicles will interact with. There are two types of roads in the mod: static and dynamic. Static roads are pre-built sections that you place down like a Lego road plate. Dynamic roads are the opposite: flexible connections you can put anywhere.",
-                        "color": "000000",
-                        "wrapWidth": 180,
-                        "renderPosition": 1
-                    },
-                    {
-                        "pos": [261.0, 25.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 0.85,
-                        "fieldName": "",
-                        "defaultText": "For dynamic roads, you need to define two points to make a road path. The first is done by sneak-clicking a block in the direction for the road to go. The second is done by moving to the other end of where you want the road, and face in the direction towards the first point. You can also click an existing road segment rather than a block, and the road will auto-connect to that segment. This includes static sections, which are how you make road junctions.",
-                        "color": "000000",
-                        "wrapWidth": 180,
-                        "renderPosition": 1
-                    }
-                ]
-            },
-            {
-                "pageTexture": "mts:textures/guis/manual_car_pages.png",
-                "title": "Keyboard Controls",
-                "pageText": [
-                    {
-                        "pos": [111.0, 25.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 1.0,
-                        "fieldName": "",
-                        "defaultText": "Keyboard Controls",
-                        "color": "000000"
-                    },
-                    {
-                        "pos": [27.0, 40.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 0.85,
-                        "fieldName": "",
-                        "defaultText": "IV offers multiple control schemes. The standard scheme is the keyboard control. Unlike other mods, IV is equipped with a no-bind system. This prevents it from clogging up keybindings and from intercepting and taking other mod's keystrokes. Configuration for this mode, and the other control modes, can be activated by pressing the config key (P by default).",
-                        "color": "000000",
-                        "wrapWidth": 180,
-                        "renderPosition": 1
-                    },
-                    {
-                        "pos": [261.0, 25.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 0.85,
-                        "fieldName": "",
-                        "defaultText": "This key is the only one that's bound in the standard way in the controls menu, and may be double-bound by default in some modpacks, so if you can't bring up the config menu check your keybindings. Do note that while IV will not block other mod's key signals, it may still be affected by the signals of other mods who do not use context-sensitive triggers. Keep this in mind when controlling vehicles.",
-                        "color": "000000",
-                        "wrapWidth": 180,
-                        "renderPosition": 1
-                    }
-                ]
-            },
-            {
-                "pageTexture": "mts:textures/guis/manual_car_pages.png",
-                "title": "Joystick Controls",
-                "pageText": [
-                    {
-                        "pos": [111.0, 25.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 1.0,
-                        "fieldName": "",
-                        "defaultText": "Joystick Controls",
-                        "color": "000000"
-                    },
-                    {
-                        "pos": [27.0, 40.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 0.85,
-                        "fieldName": "",
-                        "defaultText": "The second control scheme is a Joystick-Keyboard hybrid. This controller MUST be connected at the time you start Minecraft. Configuration is done though the JOYSTICK section of the P-key menu. When an axis such as yaw or pitch is being controlled by a joystick it will be unavailable on the keyboard. This is the case even if you un-plug the joystick, so un-bind it before you do.",
-                        "color": "000000",
-                        "wrapWidth": 180,
-                        "renderPosition": 1
-                    },
-                    {
-                        "pos": [261.0, 25.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 0.85,
-                        "fieldName": "",
-                        "defaultText": "The final method of control available is a mouse-yoke system similar to both Flan's and MCHeli. For all of these controls, there are a few extra settings in the P-key CONFIG menu. These can be used to control joystick dead-zone, sensitivity, keyboard cooldown, as well as other general control settings.",
-                        "color": "000000",
-                        "wrapWidth": 180,
-                        "renderPosition": 1
-                    }
-                ]
-            },
-            {
-                "pageTexture": "mts:textures/guis/manual_car_pages.png",
-                "title": "Driver's Ed",
-                "pageText": [
-                    {
-                        "pos": [111.0, 25.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 1.0,
-                        "fieldName": "",
-                        "defaultText": "Driver's Ed",
-                        "color": "000000"
-                    },
-                    {
-                        "pos": [27.0, 40.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 0.85,
-                        "fieldName": "",
-                        "defaultText": "Driving a car (or a boat) is so simple, even a villager could do it. The default controls use the simple throttle setup, where W makes the vehicle move forwards, and S stops it and then makes it move backwards. A and D steer left and right. Some vehicles are equipped with lights, horns, sirens, etc., so check your controls and the panel (U key) for details.",
-                        "color": "000000",
-                        "wrapWidth": 180,
-                        "renderPosition": 1
-                    },
-                    {
-                        "pos": [261.0, 25.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 0.85,
-                        "fieldName": "",
-                        "defaultText": "If you want a more realistic driving experience, you can turn off simple throttle. This will make all cars start in neutral, and pressing R puts them into forwards. Pressing F will shift back into neutral, and F again will shift into reverse. In this mode, W is the gas, and S is the brake. Shifting should be done while stopped to avoid scary transmission noises. The only exception are engines with manual transmissions, which have multiple forwards gears.",
-                        "color": "000000",
-                        "wrapWidth": 180,
-                        "renderPosition": 1
-                    }
-                ]
-            },
-            {
-                "pageTexture": "mts:textures/guis/manual_car_pages.png",
-                "title": "Tweaks",
-                "pageText": [
-                    {
-                        "pos": [111.0, 25.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 1.0,
-                        "fieldName": "",
-                        "defaultText": "Tweaks",
-                        "color": "000000"
-                    },
-                    {
-                        "pos": [27.0, 40.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 0.85,
-                        "fieldName": "",
-                        "defaultText": "IV has many config options, some of which aren't available in the in-game config menu. See the mtsconfig.json file in your config directory for a full listing and description of configs. Commonly-modified configs include block breakage, fuel consumption, and fuel values.",
-                        "color": "000000",
-                        "wrapWidth": 180,
-                        "renderPosition": 1
-                    },
-                    {
-                        "pos": [261.0, 25.0, 0.0],
-                        "rot": [0.0, 0.0, 0.0],
-                        "scale": 0.85,
-                        "fieldName": "",
-                        "defaultText": "Should you wish to modify the recipes for the items made on the benches, you may do so by adding an override in the mtscraftingoverrides.json file. See that file for details on how to do so. Anything created on a crafting bench follows the normal process for editing, e.g. CraftTweaker.",
-                        "color": "000000",
-                        "wrapWidth": 180,
-                        "renderPosition": 1
-                    }
-                ]
-            }
+  "item": {
+    "type": "booklet"
+  },
+  "booklet": {
+    "textureWidth": 467,
+    "textureHeight": 180,
+    "coverTexture": "mts:textures/guis/manual_car_cover.png",
+    "titleText": [
+      {
+        "pos": [330.0,56.0,0.0],
+        "rot": [0.0,0.0,0.0],
+        "scale": 1.5,
+        "fieldName": "",
+        "defaultText": "IMMERSIVE VEHICLES",
+        "color": "000000"
+      },
+      {
+        "pos": [291.0,71.0,0.0],
+        "rot": [0.0,0.0,0.0],
+        "scale": 1.5,
+        "fieldName": "",
+        "defaultText": "HANDBOOK",
+        "color": "000000"
+      },
+      {
+        "pos": [300.0,155.0,0.0],
+        "rot": [0.0,0.0,0.0],
+        "scale": 1.0,
+        "fieldName": "",
+        "defaultText": "-by don_bruce",
+        "color": "FFFFFF"
+      }
+    ],
+    "pages": [
+      {
+        "pageTexture": "mts:textures/guis/manual_car_pages.png",
+        "title": "Introduction",
+        "pageText": [
+          {
+            "pos": [111.0,25.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 1.0,
+            "fieldName": "",
+            "defaultText": "Introduction",
+            "color": "000000"
+          },
+          {
+            "pos": [27.0,40.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 0.85,
+            "fieldName": "",
+            "defaultText": "Thank you for downloading Immersive Vehicles!  This manual goes over how to construct and operate all the vehicles in the mod.  It is STRONGLY suggested new players read this to get familliar with the various systems.  Failing to do so and asking a question on the Discord that's covered in this manual is frowned upon and will just get you made fun of, so make sure you read all the way through!",
+            "color": "000000",
+            "wrapWidth": 180,
+            "renderPosition": 1
+          },
+          {
+            "pos": [261.0,25.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 0.85,
+            "fieldName": "",
+            "defaultText": "Note that aircraft have their own manual as flying them is more complex than just driving a car, so see that one for details.  If there's something that is not included in this manual for vehicles, this is the time when you ask on Discord.  We'll be happy to answer your question and add it to the manual in a later update!  Oh, and you can scroll through this manual (as well as all GUIs) with your mouse wheel, if your mouse is equipped with one.",
+            "color": "000000",
+            "wrapWidth": 180,
+            "renderPosition": 1
+          }
         ]
-    },
-    "general": {
-        "name": "IV Operator's Manual (READ ME!)",
-        "materials": []
-    }
+      },
+      {
+        "pageTexture": "mts:textures/guis/manual_car_pages.png",
+        "title": "Basic Crafting",
+        "pageText": [
+          {
+            "pos": [111.0,25.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 1.0,
+            "fieldName": "",
+            "defaultText": "Basic Crafting",
+            "color": "000000"
+          },
+          {
+            "pos": [27.0,40.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 0.85,
+            "fieldName": "",
+            "defaultText": "Like most mods that have packs and lots of content, IV uses crafting benches for crafting.  The Vehicle Bench is used to craft vehicles, while the other benches craft their own parts.  You'll likely want to start filling your garage early with these benches as most vehicles use at least one type of every part.  JEI is supported, and will tell you what benches make what parts.",
+            "color": "000000",
+            "wrapWidth": 180,
+            "renderPosition": 1
+          },
+          {
+            "pos": [261.0,25.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 0.85,
+            "fieldName": "",
+            "defaultText": "Crafting the benches themselves is as simple as making them in a vanilla crafting table.  JEI or your mod of choice will show you these recipes.  The first benches you should craft are the Component Bench and the Decor Bench.  These are used by a lot of packs to add custom items that are used to craft vehicle parts, and even vehicles themselves.  Some packs also use the Custom Bench to make parts for other parts, so that one is also worth a look.",
+            "color": "000000",
+            "wrapWidth": 180,
+            "renderPosition": 1
+          }
+        ]
+      },
+      {
+        "pageTexture": "mts:textures/guis/manual_car_pages.png",
+        "title": "Vehicle Assembly",
+        "pageText": [
+          {
+            "pos": [111.0,25.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 1.0,
+            "fieldName": "",
+            "defaultText": "Vehicle Assembly",
+            "color": "000000"
+          },
+          {
+            "pos": [27.0,40.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 0.85,
+            "fieldName": "",
+            "defaultText": "Assembling vehicles is a simple as clicking them with the required parts.  When holding a valid part a green hologram will appear in locations where you can place it.  Simply right-click with that part and it will attach to the vehicle.  Note that some parts may require other parts to be installed before they may be placed, such as propellers that connect to aircraft engines.",
+            "color": "000000",
+            "wrapWidth": 180,
+            "renderPosition": 1
+          },
+          {
+            "pos": [261.0,25.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 0.85,
+            "fieldName": "",
+            "defaultText": "If you are holding a part and the hologram is red, it means the part is the correct type, but the wrong size.  One common example is a wheel that is too big or too small for the vehicle.  Another is if a pack creator wants to restrict that location to specific parts, such as a specific engine, so try parts from the pack first.  Creators may also put what goes to the vehicle in the item description.",
+            "color": "000000",
+            "wrapWidth": 180,
+            "renderPosition": 1
+          }
+        ]
+      },
+      {
+        "pageTexture": "mts:textures/guis/manual_car_pages.png",
+        "title": "Vehicle Assembly (Cont.)",
+        "pageText": [
+          {
+            "pos": [111.0,25.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 1.0,
+            "fieldName": "",
+            "defaultText": "Vehicle Assembly (Cont.)",
+            "color": "000000"
+          },
+          {
+            "pos": [27.0,40.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 0.85,
+            "fieldName": "",
+            "defaultText": "If you know a part should go on a vehicle, but can't figure out which part this may be, then the Scanner may be of use to you.  It will show all part positions, and cycle through all possible parts that can go at the pointed-at position.  If nothing cycles, and you don't hear beeping, then the slot cannot take anything.  This should be reported to the pack author as it indicates an invalid slot.",
+            "color": "000000",
+            "wrapWidth": 180,
+            "renderPosition": 1
+          },
+          {
+            "pos": [261.0,25.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 0.85,
+            "fieldName": "",
+            "defaultText": "If you want to remove a part, simply attack it with a wrench.  This may only be done on parts that don't have other parts on them.  i.e. you can remove a tire, but if it has a hubcap on it, you need to remove the hubcap first before you can remove the tire itself.  Note that some parts, such as those that come with the vehicle, may be permanent and cannot be removed.  If you want to remove the vehicle itself from the world, sneak-attack it with the wrench.",
+            "color": "000000",
+            "wrapWidth": 180,
+            "renderPosition": 1
+          }
+        ]
+      },
+      {
+        "pageTexture": "mts:textures/guis/manual_car_pages.png",
+        "title": "Vehicle Customization",
+        "pageText": [
+          {
+            "pos": [111.0,25.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 1.0,
+            "fieldName": "",
+            "defaultText": "Vehicle Customization",
+            "color": "000000"
+          },
+          {
+            "pos": [27.0,40.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 0.85,
+            "fieldName": "",
+            "defaultText": "While vehicles are spawned in the color chosen when crafting, you may change this color by using the paint gun.  This will let you change liveries for the vehicle.  Do note that some vehicles may restrict some parts to a specific livery, such as police cars to the police livery.",
+            "color": "000000",
+            "wrapWidth": 180,
+            "renderPosition": 1
+          },
+          {
+            "pos": [261.0,25.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 0.85,
+            "fieldName": "",
+            "defaultText": "Parts can be changed with the paint gun as well, though most have only a single color option.  Some vehicles support 'toned' paint schemes.  These result in parts being changed to match the vehicle color.  Keep this in mind when using the paint gun.  Also note that clicking the vehicle paints the vehicle (and toned parts), whereas clicking a part paints that part only.",
+            "color": "000000",
+            "wrapWidth": 180,
+            "renderPosition": 1
+          }
+        ]
+      },
+      {
+        "pageTexture": "mts:textures/guis/manual_car_pages.png",
+        "title": "Vehicle Collision",
+        "pageText": [
+          {
+            "pos": [111.0,25.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 1.0,
+            "fieldName": "",
+            "defaultText": "Vehicle Destruction",
+            "color": "000000"
+          },
+          {
+            "pos": [27.0,40.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 0.85,
+            "fieldName": "",
+            "defaultText": "Normally, a good driver doesn't crash.  Should you not be a good driver, one of a few things may happen.  Normally, the block you hit will break and you will slow down.  However, this may not happen if the block is very hard (obsidian, bedrock, etc.), or if block breaking is disabled in the config.",
+            "color": "000000",
+            "wrapWidth": 180,
+            "renderPosition": 1
+          },
+          {
+            "pos": [261.0,25.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 0.85,
+            "fieldName": "",
+            "defaultText": "If you hit enough blocks at a high enough speed, the vehicle will crash and blow up.  The explosion size being determined on the amount of fuel in the vehicle.  Some crafting materials and all parts will be dropped, but these may be destroyed in the explosion.  Note that both the explosion and the destruction of the vehicle itself are configs and may be disabled if desired.",
+            "color": "000000",
+            "wrapWidth": 180,
+            "renderPosition": 1
+          }
+        ]
+      },
+      {
+        "pageTexture": "mts:textures/guis/manual_car_pages.png",
+        "title": "Fueling",
+        "pageText": [
+          {
+            "pos": [111.0,25.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 1.0,
+            "fieldName": "",
+            "defaultText": "Fueling",
+            "color": "000000"
+          },
+          {
+            "pos": [27.0,40.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 0.85,
+            "fieldName": "",
+            "defaultText": "Vehicles require fuel (though some come pre-fueled), and are fueled from a fuel pump.  Just click the fuel pump and it will automatically connect to the nearest vehicle.  The pump will then transfer fuel at a rate of 10 mb/t.  The pump itself has a 15000mb reservoir and can be filled directly from liquid-holding containers, or by connecting a pipe to the bottom from pipe systems compatible with Forge fluids.",
+            "color": "000000",
+            "wrapWidth": 180,
+            "renderPosition": 1
+          },
+          {
+            "pos": [261.0,25.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 0.85,
+            "fieldName": "",
+            "defaultText": "Note that if you connect a pipe to the bottom of the pump you can set an item-based cost for using the pump.  Simply put the item stack you wish to charge in your inventory, then click the pump with a wrench to open the price GUI.  From there you can click a slot to set the item and the amount of fuel that item will allow.  This may only be done by the person who placed the pump, or a server admin.",
+            "color": "000000",
+            "wrapWidth": 180,
+            "renderPosition": 1
+          }
+        ]
+      },
+      {
+        "pageTexture": "mts:textures/guis/manual_car_pages.png",
+        "title": "Fuel Types",
+        "pageText": [
+          {
+            "pos": [111.0,25.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 1.0,
+            "fieldName": "",
+            "defaultText": "Fuel Types",
+            "color": "000000"
+          },
+          {
+            "pos": [27.0,40.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 0.85,
+            "fieldName": "",
+            "defaultText": "Each engine has a fuel type that is associated with it.  Fuel types can be served by multiple fluids, but each fluid's potency will likely differ.  Potency is how much energy that fluid has, with higher-potency fluids lasting longer in vehicles.  Valid fluids for each engine and the potencies are displayed in the engine item tooltip.",
+            "color": "000000",
+            "wrapWidth": 180,
+            "renderPosition": 1
+          },
+          {
+            "pos": [261.0,25.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 0.85,
+            "fieldName": "",
+            "defaultText": "The potency values, as well as what fluids work with what engine fuel types, are all configurable in the config file.  In addition, there exists a config option called fuelUsageFactor that globally sets the fuel consumption for all engines.  If you find engines to be thirstier than you'd like, you can adjust that rather than adjusting each fuel individually.",
+            "color": "000000",
+            "wrapWidth": 180,
+            "renderPosition": 1
+          }
+        ]
+      },
+			
+      {
+        "pageTexture": "mts:textures/guis/manual_car_pages.png",
+        "title": "Engine Care",
+        "pageText": [
+          {
+            "pos": [111.0,25.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 1.0,
+            "fieldName": "",
+            "defaultText": "Engine Care",
+            "color": "000000"
+          },
+          {
+            "pos": [27.0,40.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 0.85,
+            "fieldName": "",
+            "defaultText": "No matter what they are in, engines form the heart of your vehicle.  Engines come in a variety of fuel consumptions and max RPMs, so chose carefully based on your application.  Fuel-less versions of engines are avaliable in the creative tab, should you not wish to mess with fuel.",
+            "color": "000000",
+            "wrapWidth": 180,
+            "renderPosition": 1
+          },
+          {
+            "pos": [261.0,25.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 0.85,
+            "fieldName": "",
+            "defaultText": "Beware: engines will gradually accumulate hours and lose their power, going so far as to start backfiring when really worn out.  Over-revving, over-heating, and running the engine too fast before it has warmed up will quickly add hours to an otherwise new engine.  Engines may also accumulate hours from damage, going so far as to spring leaks or lose their electric starters.",
+            "color": "000000",
+            "wrapWidth": 180,
+            "renderPosition": 1
+          }
+        ]
+      },
+      {
+        "pageTexture": "mts:textures/guis/manual_car_pages.png",
+        "title": "Instruments",
+        "pageText": [
+          {
+            "pos": [111.0,25.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 1.0,
+            "fieldName": "",
+            "defaultText": "Instruments",
+            "color": "000000"
+          },
+          {
+            "pos": [27.0,40.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 0.85,
+            "fieldName": "",
+            "defaultText": "Instruments make piloting a plane and driving a car much more immersive.  They are also useful for monitoring key properties like fuel levels, RPM, and engine temps, and make flying in the dark much less hazardous.  While some vehicles come with instruments when first placed down, most do not.",
+            "color": "000000",
+            "wrapWidth": 180,
+            "renderPosition": 1
+          },
+          {
+            "pos": [261.0,25.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 0.85,
+            "fieldName": "",
+            "defaultText": "Instruments are added to vehicles by right-clicking with the wrench on them.  The resulting GUI shows a view of the HUD and all instruments in your possession that work on that vehicle.  Simply click the slot you want to put the instrument in, and click that instrument.",
+            "color": "000000",
+            "wrapWidth": 180,
+            "renderPosition": 1
+          }
+        ]
+      },
+      {
+        "pageTexture": "mts:textures/guis/manual_car_pages.png",
+        "title": "Using Keys",
+        "pageText": [
+          {
+            "pos": [111.0,25.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 1.0,
+            "fieldName": "",
+            "defaultText": "Using Keys",
+            "color": "000000"
+          },
+          {
+            "pos": [27.0,40.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 0.85,
+            "fieldName": "",
+            "defaultText": "The only thing worse than getting your nice car blown up by a creeper is having it (or parts of it) stolen by other players.  Normally, vehicles may only be modfiied by their owners (the person who last placed them), but can be driven by anyone.  By using a key you can lock vehicles, ensuring nobody can drive off with, or take things out of them.",
+            "color": "000000",
+            "wrapWidth": 180,
+            "renderPosition": 1
+          },
+          {
+            "pos": [261.0,25.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 0.85,
+            "fieldName": "",
+            "defaultText": "Locked vehicles may not be entered, and their inventories may not be accessed, except by players inside them.  This allows you to lock yourself into vehicles to prevent random passengers.  If a player that isn't the vehicle's owner has a key, they may enter and drive it, but they still cannot modity it.  Note that OPs bypass these restrictions to allow server admins to move/remove abandoned vehicles.  You can also tow vehicles you're not the owner of.  Wink wink.",
+            "color": "000000",
+            "wrapWidth": 180,
+            "renderPosition": 1
+          }
+        ]
+      },
+			{
+        "pageTexture": "mts:textures/guis/manual_car_pages.png",
+        "title": "Roads",
+        "pageText": [
+          {
+            "pos": [111.0,25.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 1.0,
+            "fieldName": "",
+            "defaultText": "Roads",
+            "color": "000000"
+          },
+          {
+            "pos": [27.0,40.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 0.85,
+            "fieldName": "",
+            "defaultText": "While roads aren't vehicles, they are something all vehicles will interact with.  There are two types of roads in the mod: static and dynamic.  Static roads are pre-built sections that you place down like a Lego road plate.  Dynamic roads are the opposite: flexible connections you can put anywhere.",
+            "color": "000000",
+            "wrapWidth": 180,
+            "renderPosition": 1
+          },
+          {
+            "pos": [261.0,25.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 0.85,
+            "fieldName": "",
+            "defaultText": "For dynamic roads, you need to define two points to make a road path.  The first is done by sneak-clicking a block in the direction for the road to go. The second is done by moving to the other end of where you want the road, and face in the direction towards the first point.  You can also click an existing road segment rather than a block, and the road will auto-connect to that segment.  This includes static sections, which are how you make road junctions.",
+            "color": "000000",
+            "wrapWidth": 180,
+            "renderPosition": 1
+          }
+        ]
+      },
+      {
+        "pageTexture": "mts:textures/guis/manual_car_pages.png",
+        "title": "Keyboard Controls",
+        "pageText": [
+          {
+            "pos": [111.0,25.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 1.0,
+            "fieldName": "",
+            "defaultText": "Keyboard Controls",
+            "color": "000000"
+          },
+          {
+            "pos": [27.0,40.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 0.85,
+            "fieldName": "",
+            "defaultText": "IV offers multiple control schemes.  The standard scheme is the keyboard control.  Unlike other mods, IV is equipped with a no-bind system.  This prevents it from clogging up keybindings and from intercepting and taking other mod's keystrokes.  Configuration for this mode, and the other control modes, can be activated by pressing the config key (P by default).",
+            "color": "000000",
+            "wrapWidth": 180,
+            "renderPosition": 1
+          },
+          {
+            "pos": [261.0,25.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 0.85,
+            "fieldName": "",
+            "defaultText": "This key is the only one that's bound in the standard way in the controls menu, and may be double-bound by default in some modpacks, so if you can't bring up the config menu check your keybindings.  Do note that while IV will not block other mod's key signals, it may still be affected by the signals of other mods who do not use context-sensitive triggers.  Keep this in mind when controlling vehicles.",
+            "color": "000000",
+            "wrapWidth": 180,
+            "renderPosition": 1
+          }
+        ]
+      },
+      {
+        "pageTexture": "mts:textures/guis/manual_car_pages.png",
+        "title": "Joystick Controls",
+        "pageText": [
+          {
+            "pos": [111.0,25.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 1.0,
+            "fieldName": "",
+            "defaultText": "Joystick Controls",
+            "color": "000000"
+          },
+          {
+            "pos": [27.0,40.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 0.85,
+            "fieldName": "",
+            "defaultText": "The second control scheme is a Joystick-Keyboard hybrid.  This controller MUST be connected at the time you start Minecraft.  Configuration is done though the JOYSTICK section of the P-key menu.  When an axis such as yaw or pitch is being controlled by a joystick it will be unavailable on the keyboard.  This is the case even if you un-plug the joystick, so un-bind it before you do.",
+            "color": "000000",
+            "wrapWidth": 180,
+            "renderPosition": 1
+          },
+          {
+            "pos": [261.0,25.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 0.85,
+            "fieldName": "",
+            "defaultText": "The final method of control available is a mouse-yoke system similar to both Flan's and MCHeli.  For all of these controls, there are a few extra settings in the P-key CONFIG menu.  These can be used to control joystick dead-zone, sensitivity, keyboard cooldown, as well as other general control settings.",
+            "color": "000000",
+            "wrapWidth": 180,
+            "renderPosition": 1
+          }
+        ]
+      },
+      {
+        "pageTexture": "mts:textures/guis/manual_car_pages.png",
+        "title": "Driver's Ed",
+        "pageText": [
+          {
+            "pos": [111.0,25.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 1.0,
+            "fieldName": "",
+            "defaultText": "Driver's Ed",
+            "color": "000000"
+          },
+          {
+            "pos": [27.0,40.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 0.85,
+            "fieldName": "",
+            "defaultText": "Driving a car (or a boat) is so simple, even a villager could do it.  The default controls use the simple throttle setup, where W makes the vehicle move forwards, and S stops it and then makes it move backwards.  A and D steer left and right.  Some vehicles are equipped with lights, horns, sirens, etc., so check your controls and the panel (U key) for details.",
+            "color": "000000",
+            "wrapWidth": 180,
+            "renderPosition": 1
+          },
+          {
+            "pos": [261.0,25.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 0.85,
+            "fieldName": "",
+            "defaultText": "If you want a more realistic driving experience, you can turn off simple throttle. This will make all cars start in neutral, and pressing R puts them into forwards.  Pressing F will shift back into neutral, and F again will shift into reverse.  In this mode, W is the gas, and S is the brake.  Shifting should be done while stopped to avoid scary transmission noises.  The only exception are engines with manual transmissions, which have multiple forwards gears.",
+            "color": "000000",
+            "wrapWidth": 180,
+            "renderPosition": 1
+          }
+        ]
+      },
+      {
+        "pageTexture": "mts:textures/guis/manual_car_pages.png",
+        "title": "Tweaks",
+        "pageText": [
+          {
+            "pos": [111.0,25.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 1.0,
+            "fieldName": "",
+            "defaultText": "Tweaks",
+            "color": "000000"
+          },
+          {
+            "pos": [27.0,40.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 0.85,
+            "fieldName": "",
+            "defaultText": "IV has many config options, some of which aren't available in the in-game config menu.  See the mtsconfig.json file in your config directory for a full listing and description of configs.  Commonly-modified configs include block breagage, fuel consumption, and fuel values.",
+            "color": "000000",
+            "wrapWidth": 180,
+            "renderPosition": 1
+          },
+          {
+            "pos": [261.0,25.0,0.0],
+            "rot": [0.0,0.0,0.0],
+            "scale": 0.85,
+            "fieldName": "",
+            "defaultText": "Should you wish to modify the recipes for the items made on the benches, you may do so by adding an override in the mtscraftingoverrides.json file.  See that file for details on how to do so.  Anything created on a crafting bench follows the normal process for editing, e.g. CraftTweaker.",
+            "color": "000000",
+            "wrapWidth": 180,
+            "renderPosition": 1
+          }
+        ]
+      }
+    ]
+  },
+  "general": {
+    "name": "IV Operator's Manual (READ ME!)",
+    "materials": []
+  }
 }

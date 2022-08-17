@@ -11,7 +11,7 @@ import java.util.Map.Entry;
 /**
  * The FMCMRT (Flans Mod Compiled Model Recovery Tool) is used to recover and
  * re-build models that have been compiled into .java files that Toolbox can
- * import. These models must be de-compiled by an external program, but
+ * import.  These models must be de-compiled by an external program, but
  * once this is done they can be corrected with this program.
  * 
  * @author don_bruce
@@ -38,10 +38,10 @@ public class FMCMRT{
 				System.out.println("ERROR: No file specified for conversion.");
 				return;
 			}
-			//Set-up the input and output file object. If we can't find the input, error out and exit.
+			//Set-up the input and output file object.  If we can't find the input, error out and exit.
 			File decompFile = new File(args[0]);
 			if(!decompFile.exists()){
-				System.out.println("ERROR: File not found. Check to make sure the file and FMCMR are in the same folder and you are running this program from that folder.");
+				System.out.println("ERROR: File not found.  Check to make sure the file and FMCMR are in the same folder and you are running this program from that folder.");
 				return;
 			}
 			BufferedReader decompFileReader = new BufferedReader(new FileReader(decompFile));
@@ -75,11 +75,11 @@ public class FMCMRT{
 					line = line.substring(1).replace(").rotateAngle", ".rotateAngle");
 				}
 				
-				//Check to see if we have an array index in the line. If so, we know it's part of a part.
+				//Check to see if we have an array index in the line.  If so, we know it's part of a part.
 				int arrayBracketStartIndex = line.indexOf('[');
 				int arrayBracketEndIndex = line.indexOf(']');
 				if(arrayBracketStartIndex != -1 && arrayBracketEndIndex != -1 && arrayBracketStartIndex < arrayBracketEndIndex){
-					//Check to make sure we are actually referencing a part. This will be true if we have one of the following:
+					//Check to make sure we are actually referencing a part.  This will be true if we have one of the following:
 					//1) "new ModelRendererTurbo(this,".
 					//2) .addBox.
 					//3) .addShapebox.
@@ -99,7 +99,7 @@ public class FMCMRT{
 							int c2dIndexDoubleEnd = 0;
 							String newCombinedString = "";
 							while(c2dIndexStart != -1 + "new Coord2D(".length()){
-								//Add anything before this C2D that we passed-over. This needs to be done before we start parsing.
+								//Add anything before this C2D that we passed-over.  This needs to be done before we start parsing.
 								newCombinedString += line.substring(c2dIndexDoubleEnd, c2dIndexStart);
 								
 								//Get the first number knowing that it will have a comma or space after it.

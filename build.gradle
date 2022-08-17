@@ -1,55 +1,55 @@
 buildscript {
     repositories {
-        maven { url = "https://maven.minecraftforge.net" }
+        maven { url = 'https://maven.minecraftforge.net' }
         mavenCentral()
     }
     dependencies {
-        classpath group: "net.minecraftforge.gradle", name: "ForgeGradle", version: "3.+", changing: true
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
     }
 }
 
 //Apply plugins
-apply plugin: "net.minecraftforge.gradle"
-apply plugin: "eclipse"
+apply plugin: 'net.minecraftforge.gradle'
+apply plugin: 'eclipse'
 
 //Set file name.
-version = "1.12.2-21.4.0-BETA9"
-group = "minecrafttransportsimulator"
+version = "1.12.2-21.4.0-BETA1"
+group= "minecrafttransportsimulator"
 archivesBaseName = "Immersive Vehicles"
 
 //Options for Java version to compile to.
-sourceCompatibility = targetCompatibility = "1.8"
+sourceCompatibility = targetCompatibility = '1.8'
 compileJava {
-    sourceCompatibility = targetCompatibility = "1.8"
-    options.compilerArgs << "-Xlint:deprecation" << "-Xlint:unchecked"
+	sourceCompatibility = targetCompatibility = '1.8'
+	options.compilerArgs << "-Xlint:deprecation" << "-Xlint:unchecked"
 }
 
 //Minecraft mappings and run configs.
 minecraft {
-    // The mappings can be changed at any time, and must be in the following format.
-    // Channel:   Version:
-    // snapshot   YYYYMMDD   Snapshot are built nightly.
-    // stable     #          Stables are built at the discretion of the MCP team.
-    // official   MCVersion  Official field/method names from Mojang mapping files
-    mappings channel: "stable", version: "39-1.12"
+	// The mappings can be changed at any time, and must be in the following format.
+	// Channel:   Version:
+	// snapshot   YYYYMMDD   Snapshot are built nightly.
+	// stable     #          Stables are built at the discretion of the MCP team.
+	// official   MCVersion  Official field/method names from Mojang mapping files
+	mappings channel: 'stable', version: '39-1.12'
+	
+	//Run configurations.
+	runs {
+		client {
+				workingDirectory project.file('run')
+		}
 
-    //Run configurations.
-    runs {
-        client {
-            workingDirectory project.file("run")
-        }
-
-        server {
-            workingDirectory project.file("run")
-        }
-    }
+		server {
+				workingDirectory project.file('run')
+		}
+	}
 }
 
 repositories {
-    //MP3 library.
-    maven { url = "https://mvnrepository.com/artifact/org.jcraft/jorbis" }
-    //JEI
-    maven { url = "https://dvs1.progwml6.com/files/maven/" }
+	//MP3 library.
+	maven { url = 'https://mvnrepository.com/artifact/org.jcraft/jorbis'}
+	//JEI
+	maven {url = "https://dvs1.progwml6.com/files/maven/"}
 }
 
 //Configuration that holds jars to include in the jar
@@ -60,19 +60,19 @@ configurations {
 
 //Specify dependencies.
 dependencies {
-    //Minecraft to use.
-    minecraft "net.minecraftforge:forge:1.12.2-14.23.5.2859"
-
-    //Set sound code bits as embeds so they are included into the jar.
-    embed("com.googlecode.soundlibs:jlayer:1.0.1.4")
-    embed("org.jcraft:jorbis:0.0.17")
-
-    //Compile against the JEI API but do not include it at runtime
-    compileOnly fg.deobf("mezz.jei:jei_1.12.2:4.16.1.302:api")
-    //At runtime, use the full JEI jar
-    //Disabled as Access Transformers don"t work on FG 3.0 runtimes despite them saying they do.
-    //Not a huge issue, as it just prevents using JEI in-dev, and we already have it working so don"t really need to test.
-    //runtimeOnly fg.deobf("mezz.jei:jei_1.12.2:4.16.1.302")
+	//Minecraft to use.
+	minecraft 'net.minecraftforge:forge:1.12.2-14.23.5.2859'
+	
+	//Set sound code bits as embeds so they are included into the jar.
+	embed("com.googlecode.soundlibs:jlayer:1.0.1.4")
+	embed("org.jcraft:jorbis:0.0.17")
+	
+	//Compile against the JEI API but do not include it at runtime
+	compileOnly fg.deobf("mezz.jei:jei_1.12.2:4.16.1.302:api")
+	//At runtime, use the full JEI jar
+	//Disabled as Access Transformers don't work on FG 3.0 runtimes despite them saying they do.
+	//Not a huge issue, as it just prevents using JEI in-dev, and we already have it working so don't really need to test.
+	//runtimeOnly fg.deobf("mezz.jei:jei_1.12.2:4.16.1.302")
 }
 
 //Here is where we zip up all embeds and add them to our jar.
@@ -83,4 +83,4 @@ jar {
 }
 
 //Now compile the mod.
-jar.finalizedBy("reobfJar") 
+jar.finalizedBy('reobfJar') 

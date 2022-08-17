@@ -1,11 +1,11 @@
 {
-    "general": {
-        "name": "Seat & Cargo Bench",
-        "materials": [],
-        "width": 1.0,
-        "height": 1.0,
-        "depth": 1.0,
-        "itemTypes": ["part"],
-        "partTypes": ["seat", "crate", "interactable_", "effector_"]
-    }
+	"general": {
+		"name" : "Seat & Cargo Bench",
+		"materials" : [],
+		"width" : 1.0,
+		"height" : 1.0,
+		"depth" : 1.0,
+		"itemTypes" : ["part"],
+		"partTypes" : ["seat", "crate", "interactable_", "effector_"]
+	}
 }

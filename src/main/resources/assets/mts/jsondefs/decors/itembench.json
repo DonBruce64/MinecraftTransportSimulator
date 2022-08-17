@@ -1,10 +1,10 @@
 {
-    "general": {
-        "name": "Component Bench",
-        "materials": [],
-        "width": 1.0,
-        "height": 1.0,
-        "depth": 1.0,
-        "itemTypes": ["item", "booklet"]
-    }
+	"general": {
+		"name" : "Component Bench",
+		"materials" : [],
+		"width" : 1.0,
+		"height" : 1.0,
+		"depth" : 1.0,
+		"itemTypes" : ["item", "booklet"]
+	}
 }

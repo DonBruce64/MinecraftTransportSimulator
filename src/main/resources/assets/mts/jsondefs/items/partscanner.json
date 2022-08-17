@@ -1,8 +1,8 @@
 {
-    "general": {
-        "name": "Part Scanner",
-        "description": "Hover over a part box to see what can be placed at that slot.\nSneak while using to cycle slower.",
-        "materials": [],
-        "type": "scanner"
-    }
+  "general": {
+	"name" : "Part Scanner",
+	"description" : "Hover over a part box to see what can be placed at that slot.\nSneak while using to cycle slower.",
+	"materials" : [],
+	"type" : "scanner"
+  }
 }

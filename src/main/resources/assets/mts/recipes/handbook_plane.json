@@ -1,26 +1,17 @@
 {
     "type": "minecraft:crafting_shaped",
-    "pattern": [
+    "pattern":[
         " a ",
         "dbd",
         " c "
     ],
-    "key": {
-        "a": {
-            "item": "minecraft:feather"
-        },
-        "b": {
-            "item": "minecraft:book"
-        },
-        "c": {
-            "type": "forge:ore_dict",
-            "ore": "dyeBlack"
-        },
-        "d": {
-            "item": "minecraft:paper"
-        }
+    "key":{
+        "a":{"item": "minecraft:feather"},
+		"b":{"item": "minecraft:book"},
+		"c":{"type": "forge:ore_dict", "ore" : "dyeBlack"},
+		"d":{"item": "minecraft:paper"}
     },
-    "result": {
+    "result":{
         "item": "mts:mts.handbook_plane"
     }
 }

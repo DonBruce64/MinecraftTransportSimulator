@@ -4,37 +4,37 @@ import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 
 @Deprecated
-public class JSONDoor {
-    @JSONRequired
-    @Deprecated
-    public String name;
-
+public class JSONDoor{
+	@JSONRequired
+	@Deprecated
+	public String name;
+	
     @JSONRequired
     @Deprecated
     public Point3D closedPos;
-
-    @JSONRequired
-    @Deprecated
-    public Point3D openPos;
-
-    @Deprecated
+    
+	@JSONRequired
+	@Deprecated
+	public Point3D openPos;
+	
+	@Deprecated
     public float width;
-
-    @Deprecated
+	
+	@Deprecated
     public float height;
-
-    @Deprecated
+	
+	@Deprecated
     public float armorThickness;
-
-    @Deprecated
+	
+	@Deprecated
     public boolean closedByDefault;
-
-    @Deprecated
+	
+	@Deprecated
     public boolean closeOnMovement;
-
-    @Deprecated
+	
+	@Deprecated
     public boolean activateOnSeated;
-
-    @Deprecated
+	
+	@Deprecated
     public boolean ignoresClicks;
 }
