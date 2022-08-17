@@ -1,7 +1,6 @@
 package minecrafttransportsimulator.items.instances;
 
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
-import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.jsondefs.JSONPart;
@@ -16,8 +15,8 @@ public class ItemPartSeat extends AItemPart{
 	}
 	
 	@Override
-	public PartSeat createPart(AEntityF_Multipart<?> entity, IWrapperPlayer placingPlayer, JSONPartDefinition packVehicleDef, IWrapperNBT partData, APart parentPart){
-		return new PartSeat(entity, placingPlayer, packVehicleDef, partData, parentPart);
+	public PartSeat createPart(AEntityF_Multipart<?> entity, IWrapperPlayer placingPlayer, JSONPartDefinition packVehicleDef, IWrapperNBT partData){
+		return new PartSeat(entity, placingPlayer, packVehicleDef, partData);
 	}
 	
 	public static final AItemPartCreator CREATOR = new AItemPartCreator(){

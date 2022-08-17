@@ -1,7 +1,5 @@
 package minecrafttransportsimulator.entities.instances;
 
-import java.util.Iterator;
-
 import minecrafttransportsimulator.baseclasses.BezierCurve;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -54,6 +52,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	public boolean slipping;
 	public boolean skidSteerActive;
 	public boolean lockedOnRoad;
+	private boolean updateGroundDevicesRequest;
 	public double groundVelocity;
 	public double weightTransfer = 0;
 	public final RotationMatrix rotation = new RotationMatrix();
@@ -149,8 +148,8 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			}
 			
 			//Next, boost based on parts.
-			for(APart part : parts){
-				furthestDownPoint = Math.min(part.placementOffset.y - part.getHeight()/2F, furthestDownPoint);
+			for(APart part : allParts){
+				furthestDownPoint = Math.min(part.placementDefinition.pos.y - part.getHeight()/2F, furthestDownPoint);
 			}
 			
 			//Add on -0.1 blocks for the default collision clamping.
@@ -184,13 +183,6 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 		brake = getVariable(BRAKE_VARIABLE);
 		parkingBrakeOn = isVariableActive(PARKINGBRAKE_VARIABLE);
 		
-		//Update our GDB members if any of our ground devices don't have the same total offset as placement.
-		//This is required to move the GDBs if the GDs move.
-		world.beginProfiling("GroundDevices", true);
-		if(ticksExisted == 1){
-			groundDeviceCollective.updateBounds();
-		}
-		
 		//Now do update calculations and logic.
 		if(!ConfigSystem.settings.general.noclipVehicles.value || groundDeviceCollective.isReady()){
 			world.beginProfiling("GroundForces", false);
@@ -210,27 +202,21 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	}
 	
 	@Override
-	public void addPart(APart part, boolean sendPacket){
-		super.addPart(part, sendPacket);
-		groundDeviceCollective.updateMembers();
-		groundDeviceCollective.updateBounds();
-	}
+	protected void updateAllpartList() {
+        super.updateAllpartList();
+        if(ticksExisted > 1){
+            updateGroundDevicesRequest = true;
+        }
+    }
 	
 	@Override
-	public void removePart(APart part, Iterator<APart> iterator){
-		super.removePart(part, iterator);
-		groundDeviceCollective.updateMembers();
-		groundDeviceCollective.updateBounds();
-	}
-	
-	@Override
-	protected void sortBoxes(){
-		super.sortBoxes();
-		if(ticksExisted == 1){
-			//Need to do initial GDB updates.
+	protected void updateEncompassingBoxLists(){
+		super.updateEncompassingBoxLists();
+		if(ticksExisted == 1 || updateGroundDevicesRequest){
 			groundDeviceCollective.updateMembers();
 			groundDeviceCollective.updateBounds();
 			groundDeviceCollective.updateCollisions();
+			updateGroundDevicesRequest = false;
 		}
 	}
 	
@@ -452,8 +438,8 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 			//Don't use fake ground devices here as it'll mess up math for vehicles.
 			boolean treadsOnly = true;
 			for(PartGroundDevice groundDevice : groundDeviceCollective.groundedGroundDevices){
-				if(groundDevice.placementDefinition.turnsWithSteer && !groundDevice.isFake()){
-					turningDistance = Math.max(turningDistance, Math.abs(groundDevice.placementOffset.z));
+				if(groundDevice.turnsWithSteer && !groundDevice.isFake()){
+					turningDistance = Math.max(turningDistance, Math.abs(groundDevice.placementDefinition.pos.z));
 					if(treadsOnly && !groundDevice.definition.ground.isTread){
 						treadsOnly = false;
 					}
@@ -470,7 +456,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 				for(APart part : parts){
 					if(part instanceof PartPropeller){
 						if(part.isInLiquid()){
-							turningDistance = Math.max(turningDistance, Math.abs(part.placementOffset.z));
+							turningDistance = Math.max(turningDistance, Math.abs(part.placementDefinition.pos.z));
 							break;
 						}
 					}
@@ -488,7 +474,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 						for(APart part : parts){
 							if(part instanceof PartGroundDevice){
 								if(groundDeviceCollective.groundedGroundDevices.contains(part)){
-									if(part.placementOffset.x > 0){
+									if(part.placementDefinition.pos.x > 0){
 										leftWheelGrounded = true;
 									}else{
 										rightWheelGrounded = true;
@@ -631,7 +617,11 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 						roadRotation.set(pitchDelta - orientation.angles.x, yawDelta, rollDelta - orientation.angles.z);
 						roadRotation.y = roadRotation.getClampedYDelta(orientation.angles.y);
 						if(!world.isClient()){
-							addToSteeringAngle((float) (goingInReverse ? -roadRotation.y : roadRotation.y)*1.5F);
+						    if(towedByConnection != null) {
+						        addToSteeringAngle(towedByConnection.towingVehicle.getSteeringAngle() - getSteeringAngle());
+						    }else {
+						        addToSteeringAngle((goingInReverse ? -roadRotation.y : roadRotation.y)*1.5D);
+						    }
 						}
 					}
 				}else{
@@ -1014,7 +1004,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding{
 	 * methods.  Clients should be sent a packet based on the
 	 * actual state changes.
 	 */
-	protected abstract void addToSteeringAngle(float degrees);
+	protected abstract void addToSteeringAngle(double degrees);
 	
 	/**
 	 * Method block for force and motion calculations.

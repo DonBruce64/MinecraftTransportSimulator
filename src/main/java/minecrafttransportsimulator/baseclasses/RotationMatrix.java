@@ -389,9 +389,15 @@ public class RotationMatrix{
 	 * Interpolates between the two passed-in matrixes, storing the result
 	 * in this matrix.  Note that this function is NOT thread-safe!
 	 */
-	public synchronized RotationMatrix interploate(RotationMatrix start, RotationMatrix end, double delta){
+	public synchronized void interploate(RotationMatrix start, RotationMatrix end, double delta){
 		//Convert start and end matrix to quaternions.
-		double quatStartw = Math.sqrt(1 + start.m00 + start.m11 + start.m22)/2D; 
+		double quatStartw = Math.sqrt(1 + start.m00 + start.m11 + start.m22)/2D;
+		if(quatStartw == 0) {
+		    //No delta between the quaternions, just return the start.
+		    this.set(start);
+		    return;
+		}
+		
 		double quatStarti = 1/(4*quatStartw)*(start.m21 - start.m12);
 		double quatStartj = 1/(4*quatStartw)*(start.m02 - start.m20);
 		double quatStartk = 1/(4*quatStartw)*(start.m10 - start.m01);
@@ -441,6 +447,5 @@ public class RotationMatrix{
 		m02 = (2.0*(quatNeti*quatNetk + quatNetr*quatNetj));
 		m12 = (2.0*(quatNetj*quatNetk - quatNetr*quatNeti));
 		m22 = (1.0 - 2.0*quatNeti*quatNeti - 2.0*quatNetj*quatNetj);
-		return this;
 	}
 }

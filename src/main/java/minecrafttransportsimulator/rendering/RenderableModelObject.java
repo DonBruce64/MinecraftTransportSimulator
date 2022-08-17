@@ -45,7 +45,7 @@ public class RenderableModelObject{
 	/**Map of tread points, keyed by the model the tread is pathing about, then the part slot, then the spacing of the tread.
 	 * This can be shared for two different treads of the same spacing as they render the same.**/
 	//TODO replace with part slot in branched version.
-	private static final Map<String, Map<Point3D, Map<Float, List<Double[]>>>> treadPoints = new HashMap<String, Map<Point3D, Map<Float, List<Double[]>>>>();
+	private static final Map<String, Map<Integer, Map<Float, List<Double[]>>>> treadPoints = new HashMap<String, Map<Integer, Map<Float, List<Double[]>>>>();
 	private static final TransformationMatrix treadPathBaseTransform = new TransformationMatrix();
 	private static final RotationMatrix treadRotation = new RotationMatrix();
 	private static final float COLOR_OFFSET = 0.0001F;
@@ -148,7 +148,7 @@ public class RenderableModelObject{
 					}
 				}
 				
-				if(entity instanceof PartGroundDevice && ((PartGroundDevice) entity).definition.ground.isTread && !((PartGroundDevice) entity).placementDefinition.isSpare){
+				if(entity instanceof PartGroundDevice && ((PartGroundDevice) entity).definition.ground.isTread && !((PartGroundDevice) entity).isSpare){
 					//Active tread.  Do tread-path rendering instead of normal model.
 					if(!blendingEnabled){
 						doTreadRendering((PartGroundDevice) entity, partialTicks);
@@ -240,22 +240,21 @@ public class RenderableModelObject{
 	}
 	
 	private void doTreadRendering(PartGroundDevice tread, float partialTicks){
-		AEntityD_Definable<?> entityTreadAttachedTo = tread.placementDefinition.isSubPart ? tread.parentPart : tread.entityOn;
-		String treadPathModel = entityTreadAttachedTo.definition.getModelLocation(entityTreadAttachedTo.subName); 
-		Map<Point3D, Map<Float, List<Double[]>>> treadPointsMap = treadPoints.get(treadPathModel);
+		String treadPathModel = tread.entityOn.definition.getModelLocation(tread.entityOn.subName); 
+		Map<Integer, Map<Float, List<Double[]>>> treadPointsMap = treadPoints.get(treadPathModel);
 		if(treadPointsMap == null){
-			treadPointsMap = new HashMap<Point3D, Map<Float, List<Double[]>>>();
+			treadPointsMap = new HashMap<Integer, Map<Float, List<Double[]>>>();
 		}
-		Map<Float, List<Double[]>> treadPointsSubMap = treadPointsMap.get(tread.placementOffset);
+		Map<Float, List<Double[]>> treadPointsSubMap = treadPointsMap.get(tread.placementSlot);
 		if(treadPointsSubMap == null) {
 			treadPointsSubMap = new HashMap<Float, List<Double[]>>();
 		}
 		List<Double[]> points = treadPointsSubMap.get(tread.definition.ground.spacing);
 		
 		if(points == null){
-			points = generateTreads(entityTreadAttachedTo, treadPathModel, treadPointsSubMap, tread);
+			points = generateTreads(tread.entityOn, treadPathModel, treadPointsSubMap, tread);
 			treadPointsSubMap.put(tread.definition.ground.spacing, points);
-			treadPointsMap.put(tread.placementOffset, treadPointsSubMap);
+			treadPointsMap.put(tread.placementSlot, treadPointsSubMap);
 			treadPoints.put(treadPathModel, treadPointsMap);
 		}
 				
@@ -276,7 +275,7 @@ public class RenderableModelObject{
 		
 		//Tread rendering is done via the thing the tread is on, which will assume the part is centered at 0, 0, 0.
 		//We need to undo the offset of the tread part for this routine.
-		if(!(entityTreadAttachedTo instanceof APart)){
+		if(!(tread.entityOn instanceof APart)){
 			object.transform.applyTranslation(0, -tread.localOffset.y, -tread.localOffset.z);
 		}
 		

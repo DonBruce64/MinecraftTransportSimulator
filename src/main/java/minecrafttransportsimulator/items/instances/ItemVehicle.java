@@ -7,7 +7,6 @@ import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartEngine;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.components.IItemEntityProvider;
-import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
@@ -36,33 +35,26 @@ public class ItemVehicle extends AItemSubTyped<JSONVehicle> implements IItemEnti
 			//as if it has been saved in the world rather than into an item.  If there's no data,
 			//then we just make a blank, new instance.
 			EntityVehicleF_Physics vehicle = createEntity(world, player, data);
+			vehicle.addPartsPostAddition(player, data);
 			
-			//If we are a new vehicle, set default properties, if required.
-			if(!wasSaved){
-				//Add default parts via the vehicle's recursion.
-				for(JSONPartDefinition partDef : vehicle.definition.parts){
-					vehicle.addDefaultPart(partDef, player, vehicle.definition, true, false);
-				}
-				
-				//If we have a default fuel, add it now as we SHOULD have an engine to tell
-				//us what fuel type we will need to add.
-				if(vehicle.definition.motorized.defaultFuelQty > 0){
-					for(APart part : vehicle.partsFromNBT){
-						if(part instanceof PartEngine){
-							//Get the most potent fuel for the vehicle from the fuel configs.
-							String mostPotentFluid = "";
-							for(String fluidName : ConfigSystem.settings.fuel.fuels.get(part.definition.engine.fuelType).keySet()){
-								if(mostPotentFluid.isEmpty() || ConfigSystem.settings.fuel.fuels.get(part.definition.engine.fuelType).get(mostPotentFluid) < ConfigSystem.settings.fuel.fuels.get(part.definition.engine.fuelType).get(fluidName)){
-									mostPotentFluid = fluidName;
-								}
+			//If we have a default fuel, add it now as we SHOULD have an engine to tell
+			//us what fuel type we will need to add.
+			if(!wasSaved && vehicle.definition.motorized.defaultFuelQty > 0){
+				for(APart part : vehicle.parts){
+					if(part instanceof PartEngine){
+						//Get the most potent fuel for the vehicle from the fuel configs.
+						String mostPotentFluid = "";
+						for(String fluidName : ConfigSystem.settings.fuel.fuels.get(part.definition.engine.fuelType).keySet()){
+							if(mostPotentFluid.isEmpty() || ConfigSystem.settings.fuel.fuels.get(part.definition.engine.fuelType).get(mostPotentFluid) < ConfigSystem.settings.fuel.fuels.get(part.definition.engine.fuelType).get(fluidName)){
+								mostPotentFluid = fluidName;
 							}
-							vehicle.fuelTank.manuallySet(mostPotentFluid, vehicle.definition.motorized.defaultFuelQty);
-							break;
 						}
+						vehicle.fuelTank.manuallySet(mostPotentFluid, vehicle.definition.motorized.defaultFuelQty);
+						break;
 					}
-					if(vehicle.fuelTank.getFluid().isEmpty()){
-						player.sendPacket(new PacketPlayerChatMessage(player, "A defaultFuelQty was specified for: " + vehicle.definition.packID + ":" + vehicle.definition.systemName + ", but no engine was noted as a defaultPart, so we don't know what fuel to put in the vehicle.  Vehicle will be spawned without fuel and engine."));
-					}
+				}
+				if(vehicle.fuelTank.getFluid().isEmpty()){
+					player.sendPacket(new PacketPlayerChatMessage(player, "A defaultFuelQty was specified for: " + vehicle.definition.packID + ":" + vehicle.definition.systemName + ", but no engine was noted as a defaultPart, so we don't know what fuel to put in the vehicle.  Vehicle will be spawned without fuel and engine."));
 				}
 			}
 			

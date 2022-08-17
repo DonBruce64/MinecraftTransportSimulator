@@ -7,7 +7,9 @@ import java.util.List;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.entities.components.AEntityG_Towable;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
+import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
@@ -24,7 +26,7 @@ import minecrafttransportsimulator.systems.ConfigSystem;
  * 
  * @author don_bruce
  */
-abstract class AEntityVehicleC_Colliding extends AEntityVehicleB_Rideable{
+abstract class AEntityVehicleC_Colliding extends AEntityG_Towable<JSONVehicle>{
 	
 	//Internal states.
 	private float hardnessHitThisTick = 0;
@@ -32,8 +34,14 @@ abstract class AEntityVehicleC_Colliding extends AEntityVehicleB_Rideable{
 	public double axialVelocity;
 	public final Point3D headingVector = new Point3D();
 	
+	/**Cached value for speedFactor.  Saves us from having to use the long form all over.*/
+    public final double speedFactor;
+	
 	public AEntityVehicleC_Colliding(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data){
 		super(world, placingPlayer, data);
+		this.speedFactor = (definition.motorized.isAircraft ? ConfigSystem.settings.general.aircraftSpeedFactor.value : ConfigSystem.settings.general.carSpeedFactor.value)*ConfigSystem.settings.general.packSpeedFactors.value.get(definition.packID);
+        double vehicleScale = ConfigSystem.settings.general.packVehicleScales.value.get(definition.packID);
+        scale.set(vehicleScale, vehicleScale, vehicleScale);
 	}
 	
 	@Override
@@ -136,35 +144,36 @@ abstract class AEntityVehicleC_Colliding extends AEntityVehicleB_Rideable{
 	
 	@Override
 	public void destroy(BoundingBox box){
-		super.destroy(box);
-		
-		//Spawn drops from us and our parts.
-		List<IWrapperItemStack> drops = new ArrayList<IWrapperItemStack>();
-		addDropsToList(drops);
-		for(APart part : parts){
-			part.addDropsToList(drops);
-		}
-		for(IWrapperItemStack stack : drops){
-			world.spawnItemStack(stack, box.globalCenter);
-		}
-		
-		//Damage all riders, including the controller.
-		IWrapperEntity controller = getController();
-		LanguageEntry language = controller != null ? JSONConfigLanguage.DEATH_CRASH_PLAYER : JSONConfigLanguage.DEATH_CRASH_NULL;
-		Damage controllerCrashDamage = new Damage(ConfigSystem.settings.damage.crashDamageFactor.value*velocity*20, null, this, null, null);
-		Damage passengerCrashDamage = new Damage(ConfigSystem.settings.damage.crashDamageFactor.value*velocity*20, null, this, controller, language);
-		for(IWrapperEntity rider : locationRiderMap.values()){
-			if(rider.equals(controller)){
-				rider.attack(controllerCrashDamage);
-			}else{
-				rider.attack(passengerCrashDamage);
-			}
-		}
-		
-		//Now remove all riders from the vehicle.
-		Iterator<IWrapperEntity> riderIterator = locationRiderMap.inverse().keySet().iterator();
-		while(riderIterator.hasNext()){
-			removeRider(riderIterator.next());
-		}
+	    //Get drops.
+	    List<IWrapperItemStack> drops = new ArrayList<IWrapperItemStack>();
+	    addDropsToList(drops);
+	    
+	    //Do part things before we call super, as that will remove the parts from this vehicle.
+	    IWrapperEntity controller = getController();
+        Damage controllerCrashDamage = new Damage(ConfigSystem.settings.damage.crashDamageFactor.value*velocity*20, null, this, null, JSONConfigLanguage.DEATH_CRASH_NULL);
+        LanguageEntry language = controller != null ? JSONConfigLanguage.DEATH_CRASH_PLAYER : JSONConfigLanguage.DEATH_CRASH_NULL;
+        Damage passengerCrashDamage = new Damage(ConfigSystem.settings.damage.crashDamageFactor.value*velocity*20, null, this, controller, language);
+	    for(APart part : allParts){
+	        //Damage riders.
+	        if(part.rider != null) {
+                if(part.rider == controller){
+                    part.rider.attack(controllerCrashDamage);
+                }else{
+                    part.rider.attack(passengerCrashDamage);
+                }
+            }
+	        
+	        //Add drops.
+	        part.addDropsToList(drops);
+	    }
+        
+        //Now call super and spawn drops.
+	    super.destroy(box);
+	    drops.forEach(stack -> world.spawnItemStack(stack, box.globalCenter));
 	}
+	
+	@Override
+    public double getMass(){
+        return super.getMass() + definition.motorized.emptyMass;
+    }
 }

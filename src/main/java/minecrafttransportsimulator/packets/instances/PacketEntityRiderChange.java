@@ -1,7 +1,6 @@
 package minecrafttransportsimulator.packets.instances;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
@@ -14,33 +13,42 @@ import minecrafttransportsimulator.packets.components.APacketEntityInteract;
  * @author don_bruce
  */
 public class PacketEntityRiderChange extends APacketEntityInteract<AEntityE_Interactable<?>, IWrapperEntity>{
-	private final Point3D position;
+	private final boolean mount;
+	private final boolean facesForwards;
 	
-	public PacketEntityRiderChange(AEntityE_Interactable<?> entity, IWrapperEntity rider, Point3D position){
+	/**Constructor for setting the rider.**/
+	public PacketEntityRiderChange(AEntityE_Interactable<?> entity, IWrapperEntity rider, boolean facesForwards){
 		super(entity, rider);
-		this.position = position;
+		this.mount = true;
+		this.facesForwards = facesForwards;
 	}
+	
+	/**Constructor for removing the rider.**/
+	public PacketEntityRiderChange(AEntityE_Interactable<?> entity, IWrapperEntity rider){
+        super(entity, rider);
+        this.mount = false;
+        this.facesForwards = false;
+    }
 	
 	public PacketEntityRiderChange(ByteBuf buf){
 		super(buf);
-		position = buf.readBoolean() ? readPoint3dFromBuffer(buf) : null;
+		this.mount = buf.readBoolean();
+		this.facesForwards = buf.readBoolean();
 	}
 	
 	@Override
 	public void writeToBuffer(ByteBuf buf){
 		super.writeToBuffer(buf);
-		buf.writeBoolean(position != null);
-		if(position != null){
-			writePoint3dToBuffer(position, buf);
-		}
+		buf.writeBoolean(mount);
+		buf.writeBoolean(facesForwards);
 	}
 	
 	@Override
 	protected boolean handle(AWrapperWorld world, AEntityE_Interactable<?> entity, IWrapperEntity rider){
-		if(position != null){
-			entity.addRider(rider, position);
+		if(mount){
+			entity.setRider(rider, facesForwards);
 		}else{
-			entity.removeRider(rider);
+			entity.removeRider();
 		}
 		return true;
 	}

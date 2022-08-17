@@ -5,7 +5,6 @@ import java.util.Map.Entry;
 
 import minecrafttransportsimulator.blocks.components.ABlockBase.BlockMaterial;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
-import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.PartGroundDevice;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
@@ -26,8 +25,8 @@ public class ItemPartGroundDevice extends AItemPart{
 	}
 	
 	@Override
-	public PartGroundDevice createPart(AEntityF_Multipart<?> entity, IWrapperPlayer placingPlayer, JSONPartDefinition packVehicleDef, IWrapperNBT partData, APart parentPart){
-		return new PartGroundDevice(entity, placingPlayer, packVehicleDef, partData, parentPart);
+	public PartGroundDevice createPart(AEntityF_Multipart<?> entity, IWrapperPlayer placingPlayer, JSONPartDefinition packVehicleDef, IWrapperNBT partData){
+		return new PartGroundDevice(entity, placingPlayer, packVehicleDef, partData);
 	}
 	
 	@Override

@@ -24,7 +24,6 @@ public class VehicleGroundDeviceCollection{
 	private final RotationMatrix rotationApplied = new RotationMatrix();
 	private final TransformationMatrix transformApplied = new TransformationMatrix();
 	public final Set<PartGroundDevice> groundedGroundDevices = new HashSet<PartGroundDevice>();
-	public final Set<PartGroundDevice> drivenWheels = new HashSet<PartGroundDevice>();
 	
 	public VehicleGroundDeviceCollection(EntityVehicleF_Physics vehicle){
 		this.vehicle = vehicle;
@@ -42,27 +41,6 @@ public class VehicleGroundDeviceCollection{
 		frontRightGDB.updateMembers();
 		rearLeftGDB.updateMembers();
 		rearRightGDB.updateMembers();
-		drivenWheels.clear();
-		for(PartGroundDevice ground : frontLeftGDB.getGroundDevices()){
-			if(!ground.placementDefinition.isSpare && ground.isActive && (ground.definition.ground.isWheel || ground.definition.ground.isTread) && (vehicle.definition.motorized.isFrontWheelDrive)){
-				drivenWheels.add(ground);
-			}
-		}
-		for(PartGroundDevice ground : frontRightGDB.getGroundDevices()){
-			if(!ground.placementDefinition.isSpare && ground.isActive && (ground.definition.ground.isWheel || ground.definition.ground.isTread) && (vehicle.definition.motorized.isFrontWheelDrive)){
-				drivenWheels.add(ground);
-			}
-		}
-		for(PartGroundDevice ground : rearLeftGDB.getGroundDevices()){
-			if(!ground.placementDefinition.isSpare && ground.isActive && (ground.definition.ground.isWheel || ground.definition.ground.isTread) && (vehicle.definition.motorized.isRearWheelDrive)){
-				drivenWheels.add(ground);
-			}
-		}
-		for(PartGroundDevice ground : rearRightGDB.getGroundDevices()){
-			if(!ground.placementDefinition.isSpare && ground.isActive && (ground.definition.ground.isWheel || ground.definition.ground.isTread) && (vehicle.definition.motorized.isRearWheelDrive)){
-				drivenWheels.add(ground);
-			}
-		}
 	}
 	
 	/**

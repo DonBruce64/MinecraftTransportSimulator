@@ -25,8 +25,8 @@ public final class PartInteractable extends APart{
 	public PartInteractable linkedPart;
 	public EntityVehicleF_Physics linkedVehicle;
 	
-	public PartInteractable(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, IWrapperNBT data, APart parentPart){
-		super(entityOn, placingPlayer, placementDefinition, data, parentPart);
+	public PartInteractable(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, IWrapperNBT data){
+		super(entityOn, placingPlayer, placementDefinition, data);
 		if(definition.interactable.interactionType.equals(InteractableComponentType.FURNACE)){
 			this.furnace = new EntityFurnace(world, data.getDataOrNew("furnace"), definition.interactable);
 			this.inventory = furnace;

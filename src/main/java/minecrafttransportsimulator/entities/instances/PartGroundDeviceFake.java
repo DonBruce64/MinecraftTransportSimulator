@@ -14,7 +14,7 @@ public final class PartGroundDeviceFake extends PartGroundDevice{
 	private final PartGroundDevice masterPart;
 	
 	public PartGroundDeviceFake(PartGroundDevice masterPart, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, IWrapperNBT data, APart parentPart){
-		super(masterPart.entityOn, placingPlayer, placementDefinition, data, parentPart);
+		super(masterPart.entityOn, placingPlayer, placementDefinition, data);
 		this.masterPart = masterPart;
 	}
 	

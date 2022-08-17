@@ -78,8 +78,8 @@ public class BuilderEntityLinkedSeat extends ABuilderEntityBase{
 		super.setDead();
 		//Notify internal entity of rider being removed.
 		if(entity != null && rider != null){
-			if(!world.isRemote && entity.locationRiderMap.containsValue(rider)){
-				entity.removeRider(rider);
+			if(!world.isRemote && rider.equals(entity.rider)){
+				entity.removeRider();
 			}
 			rider = null;
 			entity = null;
@@ -90,13 +90,13 @@ public class BuilderEntityLinkedSeat extends ABuilderEntityBase{
     public void updatePassenger(Entity passenger){
     	//Forward passenger updates to the entity.
     	if(entity != null && rider != null){
-    		if(!entity.locationRiderMap.containsValue(rider)){
+    		if(entity.rider == null){
     			if(!world.isRemote){ 
-        			//Couldn't find rider in entity list.  Add them prior to update.
-    				entity.addRider(rider, null);
+        			//Couldn't find rider on entity.  Add them prior to update.
+    				entity.setRider(rider, true);
     			}
     		}else{
-    			entity.updateRider(rider);
+    			entity.updateRider();
     		}
     	}
     }

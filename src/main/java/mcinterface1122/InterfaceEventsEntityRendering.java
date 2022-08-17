@@ -12,7 +12,6 @@ import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
-import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.guis.components.AGUIBase;
@@ -122,7 +121,7 @@ public class InterfaceEventsEntityRendering{
 		if((event.getType() == RenderGameOverlayEvent.ElementType.HOTBAR || event.getType() == RenderGameOverlayEvent.ElementType.FOOD || event.getType() == RenderGameOverlayEvent.ElementType.HEALTH || event.getType() == RenderGameOverlayEvent.ElementType.ARMOR || event.getType() == RenderGameOverlayEvent.ElementType.EXPERIENCE) && (InterfaceManager.clientInterface.inFirstPerson() ? ConfigSystem.client.renderingSettings.renderHUD_1P.value : ConfigSystem.client.renderingSettings.renderHUD_3P.value)){
 			IWrapperPlayer player = InterfaceManager.clientInterface.getClientPlayer();
 			AEntityE_Interactable<?> ridingEntity = player.getEntityRiding();
-			if(ridingEntity instanceof AEntityF_Multipart && ((AEntityF_Multipart<?>) ridingEntity).getSeatForRider(player).placementDefinition.isController){
+			if(ridingEntity instanceof PartSeat && ((PartSeat) ridingEntity).placementDefinition.isController){
 				event.setCanceled(true);
 				return;
 			}
@@ -221,8 +220,8 @@ public class InterfaceEventsEntityRendering{
     	if(ridingEntity != null){
     		GL11.glPushMatrix();
         	//Get orientation and scale for entity.
-        	if(ridingEntity instanceof AEntityF_Multipart){
-        		PartSeat seat = ((AEntityF_Multipart<?>) ridingEntity).getSeatForRider(entityWrapper);
+        	if(ridingEntity instanceof PartSeat){
+        		PartSeat seat = (PartSeat) ridingEntity;
         		seat.getInterpolatedOrientation(riderBodyOrientation, event.getPartialRenderTick());
         		seat.getRiderInterpolatedOrientation(riderHeadOrientation, event.getPartialRenderTick());
         		

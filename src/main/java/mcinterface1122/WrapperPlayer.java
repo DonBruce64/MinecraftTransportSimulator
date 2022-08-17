@@ -5,7 +5,6 @@ import java.util.Iterator;
 import java.util.Map;
 
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
-import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemItem;
@@ -66,8 +65,8 @@ public class WrapperPlayer extends WrapperEntity implements IWrapperPlayer{
 	public double getSeatOffset(){
 		AEntityE_Interactable<?> riding = getEntityRiding();
 		if(riding != null){
-			if(riding instanceof AEntityF_Multipart){
-				PartSeat seat = ((AEntityF_Multipart<?>) riding).getSeatForRider(this);
+			if(riding instanceof PartSeat){
+				PartSeat seat = (PartSeat) riding;
 				if(!seat.definition.seat.standing){
 					//Player legs are 12 pixels.
 					return -12D/16D;

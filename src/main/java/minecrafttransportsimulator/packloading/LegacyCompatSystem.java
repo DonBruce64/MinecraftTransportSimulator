@@ -140,6 +140,32 @@ public final class LegacyCompatSystem{
 			definition.car = null;
 		}
 		
+		//Remove FWD and RWD parameters and replace with engine linking.
+		if(definition.motorized.isFrontWheelDrive || definition.motorized.isRearWheelDrive) {
+		    for(JSONPartDefinition partDef : definition.parts) {
+		        for(String partDefType : partDef.types) {
+		            if(partDefType.startsWith("engine")) {
+		                //Link all slots with wheels, or generic, to this engine.
+		                if(partDef.linkedParts == null) {
+		                    partDef.linkedParts = new ArrayList<Integer>();
+		                }
+		                for(JSONPartDefinition partDef2 : definition.parts) {
+		                    if((definition.motorized.isFrontWheelDrive && partDef2.pos.z > 0) || definition.motorized.isRearWheelDrive && partDef2.pos.z <= 0) {
+    		                    for(String partDefType2 : partDef2.types) {
+    		                        if(partDefType2.startsWith("ground") || partDefType2.startsWith("generic")) {
+    		                            partDef.linkedParts.add(definition.parts.indexOf(partDef2)+1);
+    		                            break;
+    	                            }
+    		                    }
+		                    }
+		                }
+		            }
+		        }
+		    }
+		    definition.motorized.isFrontWheelDrive = false;
+		    definition.motorized.isRearWheelDrive = false;
+		}
+		
 		//If we still have the old type parameter and are an aircraft, set the flag to true.
 		if(definition.general.type != null){
 			if(definition.general.type.equals("plane") || definition.general.type.equals("blimp") || definition.general.type.equals("helicopter")){
@@ -277,6 +303,11 @@ public final class LegacyCompatSystem{
 				throw new NullPointerException("Could not perform Legacy Compats on part entry #" + (definition.parts.indexOf(partDef) + 1) + " due to an unknown error.  This is likely due to a missing or incorrectly-named field.");
 			}
 		}
+		if(definition.parts != null) {
+		    performPartSlotListingLegacyCompats(definition.parts, definition.motorized.isFrontWheelDrive, definition.motorized.isRearWheelDrive);
+		}
+		definition.motorized.isFrontWheelDrive = false;
+		definition.motorized.isRearWheelDrive = false;
 		
 		performVehicleConnectionLegacyCompats(definition);
 		performVehicleCollisionLegacyCompats(definition);
@@ -713,6 +744,9 @@ public final class LegacyCompatSystem{
     				throw new NullPointerException("Could not perform Legacy Compats on sub-part entry #" + (definition.parts.indexOf(subPartDef) + 1) + " due to an unknown error.  This is likely due to a missing or incorrectly-named field.");
     			}
     		}
+		}
+		if(definition.parts != null) {
+		    performPartSlotListingLegacyCompats(definition.parts, false, false);
 		}
 		
 		if(definition.rendering != null){
@@ -1644,6 +1678,85 @@ public final class LegacyCompatSystem{
 		}
 	}
 	
+	private static void performPartSlotListingLegacyCompats(List<JSONPartDefinition> partDefs, boolean linkFrontWheels, boolean linkRearWheels) {
+	    //First move all additional parts into regular part slots.
+	    //We will need to apply LCs to block their placement unless the part is placed.
+	    for(int i=0; i<partDefs.size(); ++i) {
+	        JSONPartDefinition partDef = partDefs.get(i);
+	        if(partDef.additionalParts != null) {
+	            for(JSONPartDefinition additionalDef : partDef.additionalParts) {
+	                //If we are at the end of the list, just add this entry.
+	                //Otherwise, insert it one ahead of the current entry.
+	                if(i+1==partDefs.size()) {
+	                    partDefs.add(additionalDef);
+	                }else {
+	                    partDefs.add(i+1, additionalDef);   
+	                }
+	                
+	                //Add interactable variable to block interaction based on part present.
+	                //Then combine this with existing IVs since they should inherit from the "parent".
+	                if(additionalDef.interactableVariables == null) {
+	                    additionalDef.interactableVariables = new ArrayList<List<String>>();
+	                }
+	                List<String> presenceList = new ArrayList<String>();
+	                presenceList.add("part_present_" + (i+1));
+	                additionalDef.interactableVariables.add(presenceList);
+	                if(partDef.interactableVariables != null) {
+	                    //Need to deep copy these, if we just add the list then edits will foul things up.
+	                    for(List<String> variableList : partDef.interactableVariables) {
+	                        List<String> copiedList = new ArrayList<String>();
+	                        copiedList.addAll(variableList);
+	                        additionalDef.interactableVariables.add(copiedList);
+	                    }
+	                }
+	            }
+	            partDef.additionalParts = null;
+	        }
+	    }
+	    
+        //Update linking for engines, seats, and effectors.
+        for(JSONPartDefinition partDef : partDefs){
+	        if(partDef.linkedParts == null) {
+                for(String partDefType : partDef.types) {
+                    if(partDefType.startsWith("engine")) {
+                        //Engine should link to as least one part on this definition.  What's the point of it if it doesn't drive anything?
+                        partDef.linkedParts = new ArrayList<Integer>();
+                        for(JSONPartDefinition partDef2 : partDefs) {
+                            for(String partDefType2 : partDef2.types) {
+                                if(partDefType2.startsWith("generic") || partDefType2.startsWith("propeller") || (partDefType2.startsWith("ground") && ((linkFrontWheels && partDef2.pos.z > 0) || linkRearWheels && partDef2.pos.z <= 0))) {
+                                    partDef.linkedParts.add(partDefs.indexOf(partDef2)+1);
+                                    break;
+                                }
+                            }
+                        }
+                    }else if(partDefType.startsWith("seat") && partDef.isController) {
+                        //Controller seats link to guns, or generics, as those might have guns on them.
+                        partDef.linkedParts = new ArrayList<Integer>();
+                        for(JSONPartDefinition partDef2 : partDefs) {
+                            for(String partDefType2 : partDef2.types) {
+                                if(partDefType2.startsWith("generic") || partDefType2.startsWith("gun")) {
+                                    partDef.linkedParts.add(partDefs.indexOf(partDef2)+1);
+                                    break;
+                                }
+                            }
+                        }
+                    }else if(partDefType.startsWith("effector")) {
+                        //Effectors link to interactables (i.e. crates).  We don't link to genrics though as that would let them pull from the wrong things.
+                        partDef.linkedParts = new ArrayList<Integer>();
+                        for(JSONPartDefinition partDef2 : partDefs) {
+                            for(String partDefType2 : partDef2.types) {
+                                if(partDefType2.startsWith("interactable")) {
+                                    partDef.linkedParts.add(partDefs.indexOf(partDef2)+1);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+	        }
+	    }
+	}
+	
 	private static void performVehiclePartDefLegacyCompats(JSONPartDefinition partDef){
 		if(partDef.additionalPart != null){
 			partDef.additionalParts = new ArrayList<JSONPartDefinition>();
@@ -1658,6 +1771,11 @@ public final class LegacyCompatSystem{
 		if(partDef.linkedDoors != null){
 			partDef.linkedVariables = partDef.linkedDoors;
 			partDef.linkedDoors = null;
+		}
+		if(partDef.linkedVariables != null) {
+		    partDef.interactableVariables = new ArrayList<List<String>>();
+		    partDef.interactableVariables.add(partDef.linkedVariables);
+		    partDef.linkedVariables = null;
 		}
 		if(partDef.exhaustPos != null){
 			partDef.particleObjects = new ArrayList<JSONParticle>();
@@ -1784,6 +1902,15 @@ public final class LegacyCompatSystem{
 			partDef.playerScale = new Point3D(partDef.widthScale, partDef.heightScale, partDef.widthScale);
 			partDef.widthScale = 0;
 			partDef.heightScale = 0;
+		}
+		//Set mirroing to new format.  Only do this for wheels, or things with inverse mirroring set.
+		for(byte i=0; i<partDef.types.size(); ++i){
+            String partName = partDef.types.get(i);
+    		if(partName.startsWith("ground_wheel") || partDef.inverseMirroring) {
+    		    partDef.isMirrored = (partDef.pos.x < 0 && !partDef.inverseMirroring) || (partDef.pos.x >= 0 && partDef.inverseMirroring);
+    		    partDef.inverseMirroring = false;
+    		    break;
+    		}
 		}
 	}
 	

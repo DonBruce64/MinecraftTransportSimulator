@@ -11,9 +11,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
-
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
@@ -85,27 +82,10 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 	 * This set should be cleared after all collisions have been checked.**/
 	public final Set<AEntityE_Interactable<?>> collidedEntities = new HashSet<AEntityE_Interactable<?>>();
 	
-	/**List of all possible locations for riders on this entity.  For the actual riders in these positions,
-	 * see the map.  This list is only used to allow for querying of valid locations for placing riders.
-	 * This should be populated prior to trying to load riders, so ideally this will be populated during construction.
-	 * Note that these values are shared as keys in the rider map, so if you change them, you will no longer have
-	 * hash equality in the keys.  If you need to interface with the map with a new Point3d object, you should do equality
-	 * checks on this list to find the "same" point and use that in map operations to ensure hash-matching of the map.
+	/**The entity that is currently riding this entity.  There is only one rider per entity, though one can
+	 * make a multipart entity where each part has a rider to allow for effectively multiple riders per entity.
 	 **/
-	public final Set<Point3D> ridableLocations = new HashSet<Point3D>();
-	
-	/**List of locations where rider were last save.  This is used to re-populate riders on reloads.
-	 * It can be assumed that riders will be re-added in the same order the location list was saved.
-	 **/
-	public final List<Point3D> savedRiderLocations = new ArrayList<Point3D>();
-	
-	/**Maps relative position locations to riders riding at those positions.  Only one rider
-	 * may be present per position.  Positions should be modified via mutable modification to
-	 * avoid modifying this map.  The only modifications should be done when a rider is 
-	 * mounting/dismounting this entity and we don't want to track them anymore.
-	 * While you are free to read this map, all modifications should be through the method calls in this class.
-	 **/
-	public final BiMap<Point3D, IWrapperEntity> locationRiderMap = HashBiMap.create();
+	public IWrapperEntity rider;
 	
 	/**List of instruments based on their slot in the JSON.  Note that this list is created on first construction
 	 * and will contain null elements for any instrument that isn't present in that slot.
@@ -143,9 +123,6 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 	
 	public AEntityE_Interactable(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data){
 		super(world, placingPlayer, data);
-		//Load saved rider positions.  We don't have riders here yet (as those get created later), 
-		//so just make the locations for the moment so they are ready when riders are created.
-		this.savedRiderLocations.addAll(data.getPoint3ds("savedRiderLocations"));
 		this.locked = data.getBoolean("locked");
 		this.ownerUUID = placingPlayer != null ? placingPlayer.getID() : data.getUUID("ownerUUID");
 		
@@ -193,8 +170,8 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 	}
 	
 	@Override
-	protected void initializeDefinition(){
-		super.initializeDefinition();
+	protected void initializeAnimations(){
+		super.initializeAnimations();
 		//Create collision boxes.
 		if(definition.collisionGroups != null){
 			definitionCollisionBoxes.clear();
@@ -260,8 +237,16 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 	}
 	
 	@Override
+    public void remove(){
+        super.remove();
+        if(rider != null) {
+            removeRider();
+        }
+    }
+	
+	@Override
 	public double getMass(){
-		return 100*locationRiderMap.values().size();
+		return rider != null ? 100 : 0;
 	}
 	
 	@Override
@@ -411,84 +396,61 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
     }
 	
 	/**
-	 *  Called to update the passed-in rider.  This gets called after the update loop,
+	 *  Called to update the rider on this entity.  This gets called after the update loop,
 	 *  as the entity needs to move to its new position before we can know where the
-	 *  riders of said entity will be.
+	 *  riders of said entity will be.  The calling function will assure that the rider
+	 *  is non-null at this point, so null checks are not required in this function.
+	 *  However, if the rider is removed, false is returned, and further processing should halt.
 	 */
-	public void updateRider(IWrapperEntity rider){
+	public boolean updateRider(){
 		//Update entity position and motion.
 		if(rider.isValid()){
-			rider.setPosition(locationRiderMap.inverse().get(rider), false);
+			rider.setPosition(position, false);
 			rider.setVelocity(motion);
+			return true;
 		}else{
 			//Remove invalid rider.
-			removeRider(rider);
+			removeRider();
+			return false;
 		}
 	}
 	
 	/**
-	 *  Called to add a rider to this entity.  Passed-in point is the point they
-	 *  should try to ride.  If this isn't possible, return false.  Otherwise,
-	 *  return true.  Call this ONLY on the server!  Packets are sent to clients
+	 *  Called to set the rider for this entity.  If this isn't possible because
+	 *  there is already a rider, or we shouldn't accept riders, return false.
+	 *  Otherwise, return true.  Call this ONLY on the server!  Packets are sent to clients
 	 *  for syncing so calling this on clients will result in Bad Stuff.
-	 *  If we are re-loading a rider from saved data, pass-in null as the position
+	 *  If the rider needs to face forward when they are added, set the boolean to true.
+	 *  Note: this will only set them to face forwards on the tick they mount.
+	 *  It won't block them from turning to a different orientation later.
 	 *  
 	 */
-	public boolean addRider(IWrapperEntity rider, Point3D riderLocation){
-		if(riderLocation == null){
-			if(savedRiderLocations.isEmpty()){
-				return false;
-			}else{
-				riderLocation = savedRiderLocations.get(0);
-			}
-		}
-		
-		//Need to find the actual point reference for this to ensure hash equality.
-		for(Point3D location : ridableLocations){
-			if(riderLocation.equals(location)){
-				riderLocation = location;
-				break;
-			}
-		}
-		
-		//Remove the existing location, if we have one.
-		savedRiderLocations.remove(riderLocation);
-		if(locationRiderMap.containsKey(riderLocation)){
-			//We already have a rider in this location.
-			return false;
-		}else{
-			//If this rider wasn't riding this vehicle before, adjust their yaw to 0.
-			//This ensures their orientation will be aligned with the entity when first mounting.
-			//If we are riding this entity, clear out the location before we change it.
-			if(!locationRiderMap.containsValue(rider)){
-				rider.setYaw(0);
-			}else{
-				locationRiderMap.inverse().remove(rider);
-			}
-			
-			//Add rider to map, and send out packet if required.
-			locationRiderMap.put(riderLocation, rider);
-			if(!world.isClient()){
-				rider.setRiding(this);
-				InterfaceManager.packetInterface.sendToAllClients(new PacketEntityRiderChange(this, rider, riderLocation));
-			}
-			return true;
+	public boolean setRider(IWrapperEntity newRider, boolean facesForwards){
+		if(rider != null){
+		    return false;
+		}else {
+		    rider = newRider;
+            if(facesForwards){
+                rider.setYaw(0);
+                rider.setPitch(0);
+            }
+            if(!world.isClient()){
+                rider.setRiding(this);
+                InterfaceManager.packetInterface.sendToAllClients(new PacketEntityRiderChange(this, rider, facesForwards));
+            }
+            return true;
 		}
 	}
 	
 	/**
-	 *  Called to remove the passed-in rider from this entity.
-	 *  Passed-in iterator is optional, but MUST be included if this is called inside a loop
-	 *  that's iterating over {@link #ridersToLocations} or you will get a CME!
+	 *  Called to remove the rider that is currently riding this entity.
 	 */
-	public void removeRider(IWrapperEntity rider){
-		if(locationRiderMap.containsValue(rider)){
-			locationRiderMap.inverse().remove(rider);
-			if(!world.isClient()){
-				rider.setRiding(null);
-				InterfaceManager.packetInterface.sendToAllClients(new PacketEntityRiderChange(this, rider, null));
-			}
-		}
+	public void removeRider(){
+	    if(!world.isClient()){
+            rider.setRiding(null);
+            InterfaceManager.packetInterface.sendToAllClients(new PacketEntityRiderChange(this, rider));
+        }
+	    rider = null;
 	}
 	
 	/**
@@ -605,7 +567,6 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 	@Override
 	public IWrapperNBT save(IWrapperNBT data){
 		super.save(data);
-		data.setPoint3ds("savedRiderLocations", locationRiderMap.keySet());
 		data.setBoolean("locked", locked);
 		if(ownerUUID != null){
 			data.setUUID("ownerUUID", ownerUUID);

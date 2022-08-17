@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.items.instances;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
@@ -26,7 +25,6 @@ import minecrafttransportsimulator.jsondefs.JSONItem;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
-import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
@@ -65,14 +63,14 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 					//If the player isn't the owner of the vehicle, they can't interact with it.
 					if(!ownerState.equals(PlayerOwnerState.USER)){
 						if(rightClick){
-							if(ConfigSystem.settings.general.devMode.value && vehicle.equals(player.getEntityRiding())){
+							if(ConfigSystem.settings.general.devMode.value && vehicle.allParts.contains(player.getEntityRiding())){
 								player.sendPacket(new PacketEntityGUIRequest(vehicle, player, PacketEntityGUIRequest.EntityGUIType.PACK_EXPORTER));
 							}else if(player.isSneaking()){
 								player.sendPacket(new PacketEntityGUIRequest(vehicle, player, PacketEntityGUIRequest.EntityGUIType.TEXT_EDITOR));
 							}else{
 								player.sendPacket(new PacketEntityGUIRequest(vehicle, player, PacketEntityGUIRequest.EntityGUIType.INSTRUMENTS));
 							}
-						}else if(!vehicle.world.isClient()){
+						}else{
 							if(part != null && !player.isSneaking() && !part.placementDefinition.isPermanent && part.isValid){
 								LanguageEntry partResult = part.checkForRemoval();
 								if(partResult != null){
@@ -81,10 +79,10 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 								}else{
 									//Player can remove part, spawn item in the world and remove part.
 									//Make sure to remove the part before spawning the item.
-									vehicle.removePart(part, null);
+									part.entityOn.removePart(part, null);
 									AItemPart droppedItem = part.getItem();
 									if(droppedItem != null){
-										vehicle.world.spawnItem(droppedItem, part.save(InterfaceManager.coreInterface.getNewNBTWrapper()), part.position);
+									    part.entityOn.world.spawnItem(droppedItem, part.save(InterfaceManager.coreInterface.getNewNBTWrapper()), part.position);
 									}
 								}
 							}else if(player.isSneaking()){
@@ -183,13 +181,11 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
 			case TICKET : {
 				if(!vehicle.world.isClient() && rightClick){
 					if(player.isSneaking()){
-						Iterator<IWrapperEntity> iterator = vehicle.locationRiderMap.inverse().keySet().iterator();
-						while(iterator.hasNext()){
-							IWrapperEntity entity = iterator.next();
-							if(!(entity instanceof IWrapperPlayer)){
-								vehicle.removeRider(entity);
-							}
-						}
+					    for(APart otherPart : vehicle.allParts) {
+					        if(otherPart.rider != null) {
+					            otherPart.removeRider();
+					        }
+					    }
 					}else{
 						vehicle.world.loadEntities(new BoundingBox(player.getPosition(), 8D, 8D, 8D), vehicle);
 					}

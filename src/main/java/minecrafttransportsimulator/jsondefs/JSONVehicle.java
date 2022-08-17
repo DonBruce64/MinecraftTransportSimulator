@@ -31,12 +31,6 @@ public class JSONVehicle extends AJSONPartProvider{
     	@JSONDescription("If set to true, this vehicle will attempt to get and use the light states of any vehicle that is towing it. Useful for trailers where you want the lights to come on with the vehicle, but not towed cars where you want them to stay off.")
     	public boolean isTrailer;
     	
-    	@JSONDescription("Set to true to have the engine power the front wheels.  This can be set in tandem with isRearWheelDrive to create allWheelDrive vehicles.")
-    	public boolean isFrontWheelDrive;
-    	
-    	@JSONDescription("Same as isFrontWheelDrive, but for the rear wheels.")
-    	public boolean isRearWheelDrive;
-    	
     	@JSONDescription("Tells MTS that this vehicle does not have a roof.  This is used only for the SoundSystem and lets MTS know that sounds should be quieter when inside this vehicle.  This does not have an effect when in third-person, however, as the camera is considered outside of the vehicle so having a top or not does not matter.")
     	public boolean hasOpenTop;
     	
@@ -179,6 +173,10 @@ public class JSONVehicle extends AJSONPartProvider{
     	public boolean isBigTruck;
     	@Deprecated
     	public boolean hasCruiseControl;
+    	@Deprecated
+        public boolean isFrontWheelDrive;
+    	@Deprecated
+        public boolean isRearWheelDrive;
         @Deprecated
     	public String hornSound;
         @Deprecated

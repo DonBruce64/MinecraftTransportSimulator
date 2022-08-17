@@ -2,7 +2,6 @@ package minecrafttransportsimulator.mcinterface;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
-import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.rendering.RenderableObject;
 
 /**Interface for the various MC rendering engines.  This class has functions for
@@ -84,11 +83,4 @@ public interface IInterfaceRender{
 	 *  Returns true if bounding boxes should be rendered.
 	 */
 	public boolean shouldRenderBoundingBoxes();
-	
-	/**
-	 *  This method manually renders all riders on an entity.  Useful if you're rendering the entity manually
-	 *  and the entity and its riders have been culled from rendering.
-	 */
-	//FIXME see if this is needed?
-	public void renderEntityRiders(AEntityE_Interactable<?> entity, float partialTicks);
 }

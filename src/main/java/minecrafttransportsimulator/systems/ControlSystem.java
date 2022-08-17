@@ -2,6 +2,7 @@ package minecrafttransportsimulator.systems;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
@@ -43,6 +44,7 @@ public final class ControlSystem{
 	
 	private static BoundingBox closestBox = null;
 	private static EntityVehicleF_Physics closestVehicle = null;
+	private static AEntityF_Multipart<?> closestEntity = null;
 	
 	/**
 	 * Static initializer for the IWrapper inputs, as we need to iterate through the enums to initialize them
@@ -115,6 +117,7 @@ public final class ControlSystem{
 			
 			closestBox = null;
 			closestVehicle = null;
+			closestEntity = null;
 			for(EntityVehicleF_Physics vehicle : player.getWorld().getEntitiesOfType(EntityVehicleF_Physics.class)){
 				if(vehicle.encompassingBox.intersects(clickBounds)){
 					//Could have hit this vehicle, check if and what we did via raytracing.
@@ -123,17 +126,21 @@ public final class ControlSystem{
 							if(closestBox == null || startPosition.isFirstCloserThanSecond(box.globalCenter, closestBox.globalCenter)){
 								closestBox = box;
 								closestVehicle = vehicle;
+								closestEntity = vehicle.getPartWithBox(closestBox);
+								if(closestEntity == null) {
+								    closestEntity = closestVehicle;
+								}
 							}
 						}
 					}
 				}
 			}
 			if(closestBox != null){
-				InterfaceManager.packetInterface.sendToServer(new PacketVehicleInteract(closestVehicle,  player, closestBox, clickingLeft, clickingRight));
+				InterfaceManager.packetInterface.sendToServer(new PacketVehicleInteract(closestEntity,  player, closestBox, clickingLeft, clickingRight));
 			}
 		}else if(closestBox != null){
-			//Fire off un-click to vehicle last clicked.
-			InterfaceManager.packetInterface.sendToServer(new PacketVehicleInteract(closestVehicle,  player, closestBox, clickingLeft, clickingRight));
+			//Fire off un-click to entity last clicked.
+			InterfaceManager.packetInterface.sendToServer(new PacketVehicleInteract(closestEntity,  player, closestBox, clickingLeft, clickingRight));
 		}
 	}
 	
@@ -148,7 +155,7 @@ public final class ControlSystem{
 	
 	private static void controlCamera(ControlsKeyboard camLock, ControlsKeyboard zoomIn, ControlsKeyboard zoomOut, ControlsJoystick changeView){
 		if(camLock.isPressed()){
-			EntityVehicleF_Physics.lockCameraToMovement = !EntityVehicleF_Physics.lockCameraToMovement; 
+			PartSeat.lockCameraToMovement = !PartSeat.lockCameraToMovement; 
 		}
 		
 		if(zoomIn.isPressed()){
@@ -211,15 +218,16 @@ public final class ControlSystem{
 	
 	private static void controlGun(EntityVehicleF_Physics vehicle, ControlsKeyboard gunTrigger, ControlsKeyboard gunSwitch){
 		boolean gunSwitchPressedThisScan = gunSwitch.isPressed();
-		for(APart part : vehicle.parts){
+		IWrapperPlayer clientPlayer = InterfaceManager.clientInterface.getClientPlayer();
+		for(APart part : vehicle.allParts){
 			if(part instanceof PartGun){
 				PartGun gun = (PartGun) part;
-				if(InterfaceManager.clientInterface.getClientPlayer().equals(gun.getGunController())){
+				if(clientPlayer.equals(gun.getGunController())){
 					InterfaceManager.packetInterface.sendToServer(new PacketPartGun(gun, gunTrigger.isPressed(), false));
 				}
 			}else if(part instanceof PartSeat){
 				if(gunSwitchPressedThisScan){
-					if(InterfaceManager.clientInterface.getClientPlayer().equals(vehicle.locationRiderMap.get(part.placementOffset))){
+					if(clientPlayer.equals(part.rider)){
 						InterfaceManager.packetInterface.sendToServer(new PacketPartSeat((PartSeat) part));
 					}
 				}
@@ -335,7 +343,7 @@ public final class ControlSystem{
 		
 		//Check is mouse yoke is enabled.  If so do controls by mouse rather than buttons.
 		if(ConfigSystem.client.controlSettings.mouseYoke.value){
-			if(EntityVehicleF_Physics.lockCameraToMovement && AGUIBase.activeInputGUI == null){
+			if(PartSeat.lockCameraToMovement && AGUIBase.activeInputGUI == null){
 				long mouseDelta = InterfaceManager.inputInterface.getMouseDelta();
 				double deltaAileron = ConfigSystem.client.controlSettings.flightControlRate.value*((short) (mouseDelta >> Integer.SIZE));
 				double deltaElevator = ConfigSystem.client.controlSettings.flightControlRate.value*((short) ((int) -mouseDelta));
@@ -497,7 +505,7 @@ public final class ControlSystem{
 		//Check steering.  If mouse yoke is enabled, we do controls by mouse rather than buttons.
 		if(!powered.lockedOnRoad){
 			if(ConfigSystem.client.controlSettings.mouseYoke.value){
-				if(EntityVehicleF_Physics.lockCameraToMovement && AGUIBase.activeInputGUI == null){
+				if(PartSeat.lockCameraToMovement && AGUIBase.activeInputGUI == null){
 					long mouseDelta = InterfaceManager.inputInterface.getMouseDelta();
 					double deltaRudder = ConfigSystem.client.controlSettings.flightControlRate.value*((short) (mouseDelta >> Integer.SIZE));
 					InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableIncrement(powered, EntityVehicleF_Physics.RUDDER_INPUT_VARIABLE, deltaRudder, -EntityVehicleF_Physics.MAX_RUDDER_ANGLE, EntityVehicleF_Physics.MAX_RUDDER_ANGLE));

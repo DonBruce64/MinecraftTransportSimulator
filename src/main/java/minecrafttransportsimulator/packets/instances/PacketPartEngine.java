@@ -57,7 +57,7 @@ public class PacketPartEngine extends APacketEntity<PartEngine>{
 		this.fuelLeak = false;
 		this.brokenStarter = false;
 		this.linkedID = linkedEngine.entityOn.uniqueUUID;
-		this.linkedPos = linkedEngine.placementOffset;
+		this.linkedPos = linkedEngine.placementDefinition.pos;
 	}
 	
 	public PacketPartEngine(ByteBuf buf){
@@ -127,7 +127,7 @@ public class PacketPartEngine extends APacketEntity<PartEngine>{
 				AEntityF_Multipart<?> otherEntity = world.getEntity(linkedID);
 				if(otherEntity != null){
 					for(APart part : otherEntity.parts){
-						if(part.placementOffset.equals(linkedPos)){
+						if(part.placementDefinition.pos.equals(linkedPos)){
 							((PartEngine) part).linkedEngine = engine;
 							engine.linkedEngine = (PartEngine) part;
 							return false;

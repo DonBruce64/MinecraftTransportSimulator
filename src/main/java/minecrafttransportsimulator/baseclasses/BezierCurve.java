@@ -61,12 +61,12 @@ public class BezierCurve{
 	 * Generates an offset curve by the passed-in offset.  The curve may or may not have a different
 	 * pathLength than the curve it was generated from.  Used to create parallel paths from a common curve.
 	 */
-	public BezierCurve generateOffsetCurve(float offset){
-		Point3D newStartPos = new Point3D(offset, 0, 0);
+	public BezierCurve generateOffsetCurve(Point3D offset){
+		Point3D newStartPos = offset.copy();
 		getRotationAt(0).rotate(newStartPos);
 		offsetPointByPositionAt(newStartPos, 0);
 		
-		Point3D newEndPos = new Point3D(offset, 0, 0);
+		Point3D newEndPos = offset.copy();
 		getRotationAt(pathLength).rotate(newEndPos);
 		offsetPointByPositionAt(newEndPos, pathLength);
 		

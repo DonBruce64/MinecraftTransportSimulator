@@ -1,5 +1,8 @@
 package minecrafttransportsimulator.entities.instances;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -90,7 +93,9 @@ public class PartEngine extends APart{
 	private double prevEngineRotation;
 	private double driveshaftRotation;
 	private double prevDriveshaftRotation;
-	private PartPropeller attachedPropeller;
+	private final List<PartGroundDevice> linkedWheels = new ArrayList<PartGroundDevice>();
+    private final List<PartGroundDevice> drivenWheels = new ArrayList<PartGroundDevice>();
+	private final List<PartPropeller> linkedPropellers = new ArrayList<PartPropeller>();
 	private final Point3D engineAxisVector = new Point3D();
 	private final Point3D engineForce = new Point3D();
 	
@@ -110,8 +115,8 @@ public class PartEngine extends APart{
 	public static final float MAX_SHIFT_SPEED = 0.35F;
 	
 	
-	public PartEngine(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, IWrapperNBT data, APart parentPart){
-		super(entityOn, placingPlayer, placementDefinition, data, parentPart);
+	public PartEngine(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, IWrapperNBT data){
+		super(entityOn, placingPlayer, placementDefinition, data);
 		this.isCreative = data.getBoolean("isCreative");
 		this.oilLeak = data.getBoolean("oilLeak");
 		this.fuelLeak = data.getBoolean("fuelLeak");
@@ -307,7 +312,7 @@ public class PartEngine extends APart{
 			}
 			
 			//Check for reversing if we are on a blimp with reversed thrust.
-			if(vehicleOn != null && vehicleOn.definition.motorized.isBlimp && attachedPropeller != null){
+			if(vehicleOn != null && vehicleOn.definition.motorized.isBlimp && !linkedPropellers.isEmpty()){
 				if(vehicleOn.reverseThrust && currentGear > 0){
 					currentGear = -1;
 				}else if(!vehicleOn.reverseThrust && currentGear < 0){
@@ -451,18 +456,27 @@ public class PartEngine extends APart{
 				}
 			}
 			
+			//Update driven wheels.  These are a subset of linked depending on the wheel state.
+			drivenWheels.clear();
+			for(PartGroundDevice wheel : linkedWheels){
+	            if(!wheel.isSpare && wheel.isActive && (wheel.definition.ground.isWheel || wheel.definition.ground.isTread)){
+	                drivenWheels.add(wheel);
+	                wheel.drivenLastTick = true;
+	            }
+	        }
+			
 			//Update engine RPM.  This depends on what is connected.
 			//First check to see if we need to check driven wheels.
 			//While doing this we also get the friction those wheels are providing.
 			//This is used later in force calculations.
-			if(definition.engine.jetPowerFactor == 0 && (vehicleOn.definition.motorized.isFrontWheelDrive || vehicleOn.definition.motorized.isRearWheelDrive)){
+			if(definition.engine.jetPowerFactor == 0 && !drivenWheels.isEmpty()){
 				lowestWheelVelocity = 999F;
 				desiredWheelVelocity = -999F;
 				wheelFriction = 0;
 				engineTargetRPM = !electricStarterEngaged ? vehicleOn.throttle*(currentMaxRPM - currentIdleRPM)/(1 + hours/1250) + currentIdleRPM : definition.engine.startRPM;
 				
 				//Update wheel friction and velocity.
-				for(PartGroundDevice wheel : vehicleOn.groundDeviceCollective.drivenWheels){
+				for(PartGroundDevice wheel : drivenWheels){
 					//If we have grounded wheels, and this wheel is not on the ground, don't take it into account.
 					//This means the wheel is spinning in the air and can't provide force or feedback.
 					if(vehicleOn.groundDeviceCollective.groundedGroundDevices.contains(wheel)){
@@ -486,49 +500,45 @@ public class PartEngine extends APart{
 						}
 					}else{
 						//No wheel force.  Adjust wheels to engine speed.
-						for(PartGroundDevice wheel : vehicleOn.groundDeviceCollective.drivenWheels){
+						for(PartGroundDevice wheel : drivenWheels){
 							wheel.angularVelocity = rpm/currentGearRatio/vehicleOn.currentAxleRatio/1200D;
 						}
 					}
 				}
 			}
 			
-			//Update propeller variables.
-			attachedPropeller = null;
-			for(APart part : childParts){
-				if(part instanceof PartPropeller){
-					attachedPropeller = (PartPropeller) part;
-					propellerAxialVelocity = vehicleOn.motion.dotProduct(attachedPropeller.propellerAxisVector, false);
-					propellerGearboxRatio = Math.signum(currentGearRatio)*(definition.engine.propellerRatio != 0 ? definition.engine.propellerRatio : Math.abs(currentGearRatio));
+			//Do logic for those propellers now.
+			for(PartPropeller attachedPropeller : linkedPropellers){
+				propellerAxialVelocity = vehicleOn.motion.dotProduct(attachedPropeller.propellerAxisVector, false);
+				propellerGearboxRatio = Math.signum(currentGearRatio)*(definition.engine.propellerRatio != 0 ? definition.engine.propellerRatio : Math.abs(currentGearRatio));
+				
+				//If wheel friction is 0, and we aren't in neutral, get RPM contributions for that.
+				if(wheelFriction == 0 && currentGearRatio != 0){
+					isPropellerInLiquid = attachedPropeller.isInLiquid();
+					double propellerForcePenalty = Math.max(0, (attachedPropeller.definition.propeller.diameter - 75)/(50*(currentFuelConsumption + (currentSuperchargerFuelConsumption*currentSuperchargerEfficiency)) - 15));
+					double propellerDesiredSpeed = 0.0254*attachedPropeller.currentPitch*rpm/propellerGearboxRatio/60D/20D;
+					double propellerFeedback = (propellerDesiredSpeed - propellerAxialVelocity)*(isPropellerInLiquid ? 130 : 40);
+					if(currentGear < 0 || attachedPropeller.currentPitch < 0){
+						propellerFeedback *= -1;
+					}
 					
-					//If wheel friction is 0, and we aren't in neutral, get RPM contributions for that.
-					if(wheelFriction == 0 && currentGearRatio != 0){
-						isPropellerInLiquid = attachedPropeller.isInLiquid();
-						double propellerForcePenalty = Math.max(0, (attachedPropeller.definition.propeller.diameter - 75)/(50*(currentFuelConsumption + (currentSuperchargerFuelConsumption*currentSuperchargerEfficiency)) - 15));
-						double propellerDesiredSpeed = 0.0254*attachedPropeller.currentPitch*rpm/propellerGearboxRatio/60D/20D;
-						double propellerFeedback = (propellerDesiredSpeed - propellerAxialVelocity)*(isPropellerInLiquid ? 130 : 40);
-						if(currentGear < 0 || attachedPropeller.currentPitch < 0){
-							propellerFeedback *= -1;
-						}
+					if(running){
+						propellerFeedback += propellerForcePenalty*50;
+						engineTargetRPM = vehicleOn.throttle*(currentMaxRPM - currentIdleRPM)/(1 + hours/1250) + currentIdleRPM;
+						double engineRPMDifference = engineTargetRPM - rpm;
 						
-						if(running){
-							propellerFeedback += propellerForcePenalty*50;
-							engineTargetRPM = vehicleOn.throttle*(currentMaxRPM - currentIdleRPM)/(1 + hours/1250) + currentIdleRPM;
-							double engineRPMDifference = engineTargetRPM - rpm;
-							
-							//propellerFeedback can't make an engine stall, but hours can.
-							if(rpm + engineRPMDifference/definition.engine.revResistance > definition.engine.stallRPM && rpm + engineRPMDifference/definition.engine.revResistance - propellerFeedback < definition.engine.stallRPM){
-								rpm = definition.engine.stallRPM;
-							}else{
-								rpm += engineRPMDifference/definition.engine.revResistance - propellerFeedback;
-							}
-						}else if(!electricStarterEngaged && !handStarterEngaged){
-							rpm -= (1 + propellerFeedback)*Math.abs(propellerGearboxRatio);
-							
-							//Don't let the engine RPM go negative.  This results in physics errors.
-							if(rpm < 0){
-								rpm = 0;
-							}
+						//propellerFeedback can't make an engine stall, but hours can.
+						if(rpm + engineRPMDifference/definition.engine.revResistance > definition.engine.stallRPM && rpm + engineRPMDifference/definition.engine.revResistance - propellerFeedback < definition.engine.stallRPM){
+							rpm = definition.engine.stallRPM;
+						}else{
+							rpm += engineRPMDifference/definition.engine.revResistance - propellerFeedback;
+						}
+					}else if(!electricStarterEngaged && !handStarterEngaged){
+						rpm -= (1 + propellerFeedback)*Math.abs(propellerGearboxRatio);
+						
+						//Don't let the engine RPM go negative.  This results in physics errors.
+						if(rpm < 0){
+							rpm = 0;
 						}
 					}
 				}
@@ -536,7 +546,7 @@ public class PartEngine extends APart{
 			
 			//If wheel friction is 0, and we don't have a propeller, or we're in neutral, adjust RPM to throttle position.
 			//Or, if we are not on, just slowly spin the engine down.
-			if((wheelFriction == 0 && attachedPropeller == null) || currentGearRatio == 0){
+			if((wheelFriction == 0 && linkedPropellers.isEmpty()) || currentGearRatio == 0){
 				if(running){
 					engineTargetRPM = vehicleOn.throttle*(currentMaxRPM - currentIdleRPM)/(1 + hours/1250) + currentIdleRPM;
 					rpm += (engineTargetRPM - rpm)/(definition.engine.revResistance*3);
@@ -597,7 +607,7 @@ public class PartEngine extends APart{
 			
 			prevDriveshaftRotation = driveshaftRotation;
 			double driveshaftDesiredSpeed = -999;
-			for(PartGroundDevice wheel : vehicleOn.groundDeviceCollective.drivenWheels){
+			for(PartGroundDevice wheel : drivenWheels){
 				driveshaftDesiredSpeed = Math.max(wheel.angularVelocity, driveshaftDesiredSpeed);
 			}
 			if(driveshaftDesiredSpeed != -999){
@@ -614,6 +624,24 @@ public class PartEngine extends APart{
 			}
 		}
 	}
+	
+	@Override
+    public void doPostAllpartUpdates() {
+	    super.doPostAllpartUpdates();
+	    
+        //Update linked wheel list.
+	    linkedWheels.clear();
+	    addLinkedPartsToList(linkedWheels, PartGroundDevice.class);
+        
+        //Update propellers that are linked to us.
+        linkedPropellers.clear();
+        parts.forEach(part -> {
+            if(part instanceof PartPropeller) {
+                linkedPropellers.add((PartPropeller) part);
+            }
+        });
+        addLinkedPartsToList(linkedPropellers, PartPropeller.class);
+    }
 	
 	@Override
 	protected void updateVariableModifiers(){
@@ -657,7 +685,7 @@ public class PartEngine extends APart{
 		//Turn off and tell wheels to stop skipping calcs from being controlled by the engine.
 		running = false;
 		if(vehicleOn != null){
-			for(PartGroundDevice wheel : vehicleOn.groundDeviceCollective.drivenWheels){
+			for(PartGroundDevice wheel : drivenWheels){
 				wheel.skipAngularCalcs = false;
 			}
 		}
@@ -941,7 +969,7 @@ public class PartEngine extends APart{
 					//If they do, we'll need to provide less force.
 					if(Math.abs(wheelForce/300D) > wheelFriction || (Math.abs(lowestWheelVelocity) - Math.abs(desiredWheelVelocity) > 0.1 && Math.abs(lowestWheelVelocity) - Math.abs(desiredWheelVelocity) < Math.abs(wheelForce/300D))){
 						wheelForce *= vehicleOn.currentMass/100000D*wheelFriction/Math.abs(wheelForce/300F);
-						for(PartGroundDevice wheel : vehicleOn.groundDeviceCollective.drivenWheels){
+						for(PartGroundDevice wheel : drivenWheels){
 							if(currentGearRatio > 0){
 								if(wheelForce >= 0){
 									wheel.angularVelocity = Math.min(engineTargetRPM/1200F/currentGearRatio/vehicleOn.currentAxleRatio, wheel.angularVelocity + 0.01D);
@@ -959,7 +987,7 @@ public class PartEngine extends APart{
 						}
 					}else{
 						//If we have wheels not on the ground and we drive them, adjust their velocity now.
-						for(PartGroundDevice wheel : vehicleOn.groundDeviceCollective.drivenWheels){
+						for(PartGroundDevice wheel : drivenWheels){
 							wheel.skipAngularCalcs = false;
 							if(!vehicleOn.groundDeviceCollective.groundedGroundDevices.contains(wheel)){
 								wheel.angularVelocity = lowestWheelVelocity;
@@ -968,7 +996,7 @@ public class PartEngine extends APart{
 					}
 				}else if(currentGearRatio == 0){
 					//Tell the wheels to not skid if they are already doing so.
-					for(PartGroundDevice wheel : vehicleOn.groundDeviceCollective.drivenWheels){
+					for(PartGroundDevice wheel : drivenWheels){
 						wheel.skipAngularCalcs = false;
 					}
 				}

@@ -3,7 +3,6 @@ package minecrafttransportsimulator.packets.instances;
 import java.util.UUID;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityLoader;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.PartInteractable;
@@ -16,17 +15,14 @@ import minecrafttransportsimulator.packets.components.APacketEntity;
  */
 public class PacketTileEntityLoaderConnection extends APacketEntity<ATileEntityLoader>{
 	private final UUID linkedID;
-	private final Point3D partOffset;
 	private final boolean connect;
 	
 	public PacketTileEntityLoaderConnection(ATileEntityLoader loader, boolean connect){
 		super(loader);
 		if(loader.connectedPart != null){
-			this.linkedID = loader.connectedPart.entityOn.uniqueUUID;
-			this.partOffset = loader.connectedPart.placementOffset;
+			this.linkedID = loader.connectedPart.uniqueUUID;
 		}else{
 			this.linkedID = null;
-			this.partOffset = null;
 		}
 		this.connect = connect;
 	}
@@ -35,10 +31,8 @@ public class PacketTileEntityLoaderConnection extends APacketEntity<ATileEntityL
 		super(buf);
 		if(buf.readBoolean()){
 			this.linkedID = readUUIDFromBuffer(buf);
-			this.partOffset = readPoint3dFromBuffer(buf);
 		}else{
 			this.linkedID = null;
-			this.partOffset = null;
 		}
 		this.connect = buf.readBoolean();
 	}
@@ -49,7 +43,6 @@ public class PacketTileEntityLoaderConnection extends APacketEntity<ATileEntityL
 		if(linkedID != null){
 			buf.writeBoolean(true);
 			writeUUIDToBuffer(linkedID, buf);
-			writePoint3dToBuffer(partOffset, buf);
 		}else{
 			buf.writeBoolean(false);
 		}
@@ -61,7 +54,7 @@ public class PacketTileEntityLoaderConnection extends APacketEntity<ATileEntityL
 		AEntityF_Multipart<?> entity = world.getEntity(linkedID);
 		if(connect){
 			if(entity != null){
-				loader.connectToPart((PartInteractable) entity.getPartAtLocation(partOffset));
+				loader.connectToPart((PartInteractable) entity);
 			}
 		}else{
 			loader.connectToPart(null);

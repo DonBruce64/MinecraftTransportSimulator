@@ -15,7 +15,7 @@ import minecrafttransportsimulator.blocks.components.ABlockBase.BlockMaterial;
 import minecrafttransportsimulator.blocks.components.ABlockBaseTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
-import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
+import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
 
@@ -138,10 +138,10 @@ public abstract class AWrapperWorld extends EntityManager{
 	public abstract List<IWrapperEntity> attackEntities(Damage damage, Point3D motion, boolean generateList);
 	
 	/**
-	 *  Loads all entities that are in the passed-in range into the passed-in entity.
+	 *  Loads all entities that are in the passed-in range into the passed-in vehicle.
 	 *  Only non-hostile mobs that are not already riding an entity will be loaded.
 	 */
-	public abstract void loadEntities(BoundingBox box, AEntityE_Interactable<?> entityToLoad);
+	public abstract void loadEntities(BoundingBox box, EntityVehicleF_Physics vehicleToLoad);
 	
 	/**
 	 *  Returns the block at the passed-in position, or null if it doesn't exist in the world.

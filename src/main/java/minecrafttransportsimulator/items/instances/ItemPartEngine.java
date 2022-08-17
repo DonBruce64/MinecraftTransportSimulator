@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
-import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.PartEngine;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
@@ -27,8 +26,8 @@ public class ItemPartEngine extends AItemPart{
 	}
 	
 	@Override
-	public PartEngine createPart(AEntityF_Multipart<?> entity, IWrapperPlayer placingPlayer, JSONPartDefinition packVehicleDef, IWrapperNBT partData, APart parentPart){
-		return new PartEngine(entity, placingPlayer, packVehicleDef, partData, parentPart);
+	public PartEngine createPart(AEntityF_Multipart<?> entity, IWrapperPlayer placingPlayer, JSONPartDefinition packVehicleDef, IWrapperNBT partData){
+		return new PartEngine(entity, placingPlayer, packVehicleDef, partData);
 	}
 	
 	@Override

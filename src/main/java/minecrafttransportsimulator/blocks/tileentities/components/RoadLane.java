@@ -73,7 +73,7 @@ public class RoadLane{
 		//end offset point.  If we were made from a dynamic road, then the road's curve will be non-null;
 		if(road.dynamicCurve != null){
 			//Only one curve, as we are a dynamic lane.
-			BezierCurve dynamicCurve = road.dynamicCurve.generateOffsetCurve(road.definition.road.laneOffsets[laneNumber]);
+			BezierCurve dynamicCurve = road.dynamicCurve.generateOffsetCurve(new Point3D(road.definition.road.laneOffsets[laneNumber], road.definition.road.collisionHeight/16D, 0));
 			curves.add(dynamicCurve);
 		}else{
 			//Generate all curves for our lane as defined by the static mapping.)

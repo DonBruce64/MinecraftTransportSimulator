@@ -162,7 +162,7 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun>{
 						ItemPartGun heldGun = (ItemPartGun) heldItem;
 						if(heldGun.definition.gun.handHeld){
 							gunStack = player.getHeldStack();
-							addPartFromItem(heldGun, player, gunStack.getData(), new Point3D(), false);
+							addPartFromItem(heldGun, player, gunStack.getData(), 0);
 							hotbarSelected = player.getHotbarIndex();
 						}
 					}
@@ -196,8 +196,8 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun>{
 				//If we are riding an entity, we need to orient to the seated position.
 				//If not, then we just orient to the player.
 				AEntityE_Interactable<?> ridingEntity = player.getEntityRiding();
-				if(ridingEntity != null){
-					orientation.set(((AEntityF_Multipart<?>) ridingEntity).getSeatForRider(player).zeroReferenceOrientation);
+				if(ridingEntity instanceof PartSeat){
+					orientation.set(((PartSeat) ridingEntity).zeroReferenceOrientation);
 					position.rotate(orientation);
 					orientation.multiply(player.getOrientation());
 					position.add(player.getPosition());

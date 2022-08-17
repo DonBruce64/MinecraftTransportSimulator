@@ -13,14 +13,13 @@ apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'eclipse'
 
 //Set file name.
-version = "1.12.2-21.4.0-BETA1"
+version = "1.12.2-21.4L.0-BETA10"
 group= "minecrafttransportsimulator"
 archivesBaseName = "Immersive Vehicles"
 
 //Options for Java version to compile to.
 sourceCompatibility = targetCompatibility = '1.8'
 compileJava {
-	sourceCompatibility = targetCompatibility = '1.8'
 	options.compilerArgs << "-Xlint:deprecation" << "-Xlint:unchecked"
 }
 
@@ -55,7 +54,7 @@ repositories {
 //Configuration that holds jars to include in the jar
 configurations {
     embed
-    compile.extendsFrom(embed)
+    compileOnly.extendsFrom(embed)
 }
 
 //Specify dependencies.
@@ -84,3 +83,7 @@ jar {
 
 //Now compile the mod.
 jar.finalizedBy('reobfJar') 
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
+}

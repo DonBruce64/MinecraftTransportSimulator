@@ -2,15 +2,15 @@ package minecrafttransportsimulator.guis.instances;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map.Entry;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityFluidLoader;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
-import minecrafttransportsimulator.entities.instances.APart;
+import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.EntityFluidTank;
-import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartInteractable;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
@@ -69,31 +69,30 @@ public class GUIOverlay extends AGUIBase{
 		AEntityB_Existing mousedOverEntity = InterfaceManager.clientInterface.getMousedOverEntity();
 		IWrapperPlayer player = InterfaceManager.clientInterface.getClientPlayer();
 		if(player.isHoldingItemType(ItemComponentType.SCANNER)){
-			if(mousedOverEntity instanceof APart){
-				mousedOverEntity = ((APart) mousedOverEntity).entityOn;
-			}
-			if(mousedOverEntity instanceof EntityVehicleF_Physics){
-				EntityVehicleF_Physics vehicle = (EntityVehicleF_Physics) mousedOverEntity;
+			if(mousedOverEntity instanceof AEntityF_Multipart){
+			    AEntityF_Multipart<?> multipart = (AEntityF_Multipart<?>) mousedOverEntity;
 				Point3D playerEyesStartVector = player.getPosition().add(0, player.getEyeHeight(), 0);
 				Point3D playerEyesEndVector = playerEyesStartVector.copy().add(player.getLineOfSight(10));
 				
 				BoundingBox mousedOverBox = null;
-				for(BoundingBox box : vehicle.allPartSlotBoxes.keySet()){
+				JSONPartDefinition packVehicleDef = null;
+				for(Entry<BoundingBox, JSONPartDefinition> boxEntry : multipart.allPartSlotBoxes.entrySet()){
+				    BoundingBox box = boxEntry.getKey();
 					if(box.getIntersectionPoint(playerEyesStartVector, playerEyesEndVector) != null){
 						if(mousedOverBox == null || (box.globalCenter.distanceTo(playerEyesStartVector) < mousedOverBox.globalCenter.distanceTo(playerEyesStartVector))){
 							mousedOverBox = box;
+							packVehicleDef = boxEntry.getValue();
 						}
 					}
 				}
 				
 				if(mousedOverBox != null){
 					//Populate stacks.
-					JSONPartDefinition packVehicleDef = vehicle.allPartSlotBoxes.get(mousedOverBox);
 					List<AItemPart> validParts = new ArrayList<AItemPart>();
 					for(AItemPack<?> packItem : PackParser.getAllPackItems()){
 						if(packItem instanceof AItemPart){
 							AItemPart part = (AItemPart) packItem;
-							if(part.isPartValidForPackDef(packVehicleDef, vehicle.subName, true)){
+							if(part.isPartValidForPackDef(packVehicleDef, multipart.subName, true)){
 								validParts.add(part);
 							}
 						}
@@ -112,13 +111,13 @@ public class GUIOverlay extends AGUIBase{
 					if(!validParts.isEmpty()){
 						//Get current part to render based on the cycle.
 						int cycle = player.isSneaking() ? 30 : 15;
-						AItemPart partToRender = validParts.get((int) ((vehicle.ticksExisted/cycle)%validParts.size()));
+						AItemPart partToRender = validParts.get((int) ((multipart.ticksExisted/cycle)%validParts.size()));
 						tooltipText.add(partToRender.getItemName());
 						scannerItem.stack = partToRender.getNewStack(null);
 						
 						//If we are on the start of the cycle, beep.
-						if(vehicle.ticksExisted%cycle == 0){
-							InterfaceManager.soundInterface.playQuickSound(new SoundInstance(vehicle, InterfaceManager.coreModID + ":scanner_beep"));
+						if(multipart.ticksExisted%cycle == 0){
+							InterfaceManager.soundInterface.playQuickSound(new SoundInstance(multipart, InterfaceManager.coreModID + ":scanner_beep"));
 						}
 					}
 				}

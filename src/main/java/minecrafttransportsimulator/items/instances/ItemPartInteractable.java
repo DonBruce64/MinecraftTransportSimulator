@@ -39,8 +39,8 @@ public class ItemPartInteractable extends AItemPart implements IItemVehicleInter
 	}
 	
 	@Override
-	public PartInteractable createPart(AEntityF_Multipart<?> entity, IWrapperPlayer placingPlayer, JSONPartDefinition packVehicleDef, IWrapperNBT partData, APart parentPart){
-		return new PartInteractable(entity, placingPlayer, packVehicleDef, partData, parentPart);
+	public PartInteractable createPart(AEntityF_Multipart<?> entity, IWrapperPlayer placingPlayer, JSONPartDefinition packVehicleDef, IWrapperNBT partData){
+		return new PartInteractable(entity, placingPlayer, packVehicleDef, partData);
 	}
 	
 	@Override

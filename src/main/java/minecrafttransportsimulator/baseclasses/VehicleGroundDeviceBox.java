@@ -40,6 +40,8 @@ public class VehicleGroundDeviceBox{
 	/**The point where this box contacts the world, in local coords to the vehicle it is on**/
 	public final Point3D contactPoint = new Point3D();
 	
+	private static final double MAX_DELTA_FROM_ZERO = 0.25;
+	
 	public VehicleGroundDeviceBox(EntityVehicleF_Physics vehicle, boolean isFront, boolean isLeft){
 		this.vehicle = vehicle;
 		this.isFront = isFront;
@@ -59,9 +61,10 @@ public class VehicleGroundDeviceBox{
 				final boolean boxLeft;
 				final boolean boxRight;
 				if(partOn != null){
-					boxFront = partOn.placementOffset.z > 0;
-					boxLeft = partOn.placementOffset.x >= 0;
-					boxRight = partOn.placementOffset.x <= 0;
+				    Point3D relativePosition = partOn.position.copy().subtract(partOn.vehicleOn.position).reOrigin(partOn.vehicleOn.orientation);
+					boxFront = relativePosition.z > 0;
+					boxLeft = relativePosition.x >= -MAX_DELTA_FROM_ZERO;
+					boxRight = relativePosition.x <= MAX_DELTA_FROM_ZERO;
 				}else{
 					boxFront = box.localCenter.z > 0;
 					boxLeft = box.localCenter.x >= 0;
@@ -87,13 +90,13 @@ public class VehicleGroundDeviceBox{
 		groundDevices.clear();
 		liquidDevices.clear();
 		canRollOnGround = false;
-		for(APart part : vehicle.parts){
+		for(APart part : vehicle.allParts){
 			if(part instanceof PartGroundDevice){
-				if(!part.placementDefinition.isSpare){
+				if(!part.isSpare){
 					//X-offsets of 0 are both left and right as they are center points.
 					//This ensures we don't roll to try and align a center point.
-					if(isFront && part.placementOffset.z > 0){
-						if(isLeft && part.placementOffset.x >= 0){
+					if(isFront && part.localOffset.z > 0){
+						if(isLeft && part.localOffset.x >= -MAX_DELTA_FROM_ZERO){
 							groundDevices.add((PartGroundDevice) part);
 							if(part.definition.ground.isWheel || part.definition.ground.isTread){
 								canRollOnGround = true;
@@ -101,7 +104,7 @@ public class VehicleGroundDeviceBox{
 							if(part.definition.ground.canFloat){
 								liquidDevices.add((PartGroundDevice) part);
 							}
-						}else if(!isLeft && part.placementOffset.x <= 0){
+						}else if(!isLeft && part.localOffset.x <= MAX_DELTA_FROM_ZERO){
 							groundDevices.add((PartGroundDevice) part);
 							if(part.definition.ground.isWheel || part.definition.ground.isTread){
 								canRollOnGround = true;
@@ -110,8 +113,8 @@ public class VehicleGroundDeviceBox{
 								liquidDevices.add((PartGroundDevice) part);
 							}
 						}
-					}else if(!isFront && part.placementOffset.z <= 0){
-						if(isLeft && part.placementOffset.x >= 0){
+					}else if(!isFront && part.localOffset.z <= 0){
+						if(isLeft && part.localOffset.x >= -MAX_DELTA_FROM_ZERO){
 							groundDevices.add((PartGroundDevice) part);
 							if(part.definition.ground.isWheel || part.definition.ground.isTread){
 								canRollOnGround = true;
@@ -119,7 +122,7 @@ public class VehicleGroundDeviceBox{
 							if(part.definition.ground.canFloat){
 								liquidDevices.add((PartGroundDevice) part);
 							}
-						}else if(!isLeft && part.placementOffset.x <= 0){
+						}else if(!isLeft && part.localOffset.x <= MAX_DELTA_FROM_ZERO){
 							groundDevices.add((PartGroundDevice) part);
 							if(part.definition.ground.isWheel || part.definition.ground.isTread){
 								canRollOnGround = true;

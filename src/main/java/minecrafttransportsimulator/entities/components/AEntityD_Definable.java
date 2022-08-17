@@ -62,7 +62,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 	/**The current subName for this entity.  Used to select which definition represents this entity.*/
 	public String subName;
 	
-	/**Variable for saving animation initialized state.  Is set true on the first tick, but may be set false afterwards to re-initialize animations.*/
+	/**Variable for saving animation definition initialized state.  Is set true on the first tick, but may be set false afterwards to re-initialize animation definitions.*/
 	public boolean animationsInitialized;
 	
 	/**Map containing text lines for saved text provided by this entity.**/
@@ -102,6 +102,9 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 	
 	/**Object lists for models parsed in for this class.  Maps are keyed by the model name.**/
     protected static final Map<String, List<RenderableModelObject>> objectLists = new HashMap<String, List<RenderableModelObject>>();
+
+	/**Cached item to prevent pack lookups each item request.  May not be used if this is extended for other mods.**/
+	private AItemPack<JSONDefinition> cachedItem;
 	
 	/**Constructor for synced entities**/
 	public AEntityD_Definable(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data){
@@ -127,11 +130,6 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 				variables.put(variable, 1D);
 			}
 		}
-		if(definition.rendering != null && definition.rendering.constants != null){
-			for(String variable : definition.rendering.constants){
-				variables.put(variable, 1D);
-			}
-		}
 	}
 	
 	/**Constructor for un-synced entities.  Allows for specification of position/motion/angles.**/
@@ -139,32 +137,23 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 		super(world, position, motion, angles);
 		this.subName = creatingItem.subName;
 		this.definition = creatingItem.definition;
-		
-		//Add constants.
-		if(definition.rendering != null && definition.rendering.constants != null){
-			for(String variable : definition.rendering.constants){
-				variables.put(variable, 1D);
-			}
-		}
 	}
 	
 	@Override
 	public void update(){
 		super.update();
 		world.beginProfiling("EntityD_Level", true);
-		//Create animations if we haven't done so already.
 		if(!animationsInitialized){
-			initializeDefinition();
+			initializeAnimations();
 			animationsInitialized = true;
 		}
 		world.endProfiling();
 	}
 	
 	/**
-	 * Called to perform supplemental update logic on this entity.  This should be called after all logic on the
-	 * entity has been performed, and is used to do updates that require the new state to be ready.
-	 * Calling this before the entity finishes moving will lead to things "lagging" behind the entity, and calling
-	 * this before all states are set will lead to Bad Stuff.
+	 * Called to perform supplemental update logic on this entity.  This is called after the main {@link #update()}
+	 * loop, and is used to do updates that require the new state to be ready.  At this point, all "prior" values
+	 * and current values will be set to their current states.
 	 */
 	public void doPostUpdateLogic(){
 		//Update value-based text.  Only do this on clients as servers won't render this text.
@@ -182,7 +171,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 	 *  Called the first update tick after this entity is first constructed, and when the definition on it is reset via hotloading.
 	 *  This should create (and reset) all JSON clocks and other static objects that depend on the definition. 
 	 */
-	protected void initializeDefinition(){
+	protected void initializeAnimations(){
 		if(definition.rendering != null && definition.rendering.sounds != null){
 			allSoundDefs.clear();
 			soundActiveSwitchboxes.clear();
@@ -274,6 +263,13 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 			}
 			
 		}
+
+        //Add constants.
+        if(definition.rendering != null && definition.rendering.constants != null){
+            for(String variable : definition.rendering.constants){
+                variables.put(variable, 1D);
+            }
+        }
 	}
 	
 	@Override
@@ -288,10 +284,14 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 	}
 	
 	/**
-	 *  Returns the current item for this entity.
+	 *  Returns the current item for this entity.  This is not a static value to allow for overriding by packs.
 	 */
-	public <ItemInstance extends AItemPack<JSONDefinition>> ItemInstance getItem(){
-		return PackParser.getItem(definition.packID, definition.systemName, subName);
+	@SuppressWarnings("unchecked")
+    public <ItemInstance extends AItemPack<JSONDefinition>> ItemInstance getItem(){
+	    if(cachedItem == null) {
+	        cachedItem = PackParser.getItem(definition.packID, definition.systemName, subName);
+	    }
+		return (ItemInstance) cachedItem;
 	}
 	
 	/**
@@ -580,7 +580,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 							}else if(sound.volume < 0){
 								sound.pitch = 0;
 							}
-						}						
+						}
 					}
 				}
     		}
@@ -601,7 +601,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 		public boolean runSound(float partialTicks){
 			value = 0;
 			definedValue = false;
-			return runSwitchbox(partialTicks, false);
+			return runSwitchbox(partialTicks, true);
 		}
 		
 		@Override

@@ -45,7 +45,7 @@ public abstract class AItemPart extends AItemSubTyped<JSONPart>{
 	 * perform data-validation on said data so it has all properties required to create the part in the
 	 * part's constructor.
 	 */
-	public abstract APart createPart(AEntityF_Multipart<?> entity, IWrapperPlayer placingPlayer, JSONPartDefinition packVehicleDef, IWrapperNBT partData, APart parentPart);
+	public abstract APart createPart(AEntityF_Multipart<?> entity, IWrapperPlayer placingPlayer, JSONPartDefinition packVehicleDef, IWrapperNBT partData);
 	
 	/**Class used to create instances of part items.  One of these should be registered
 	 * for every item before packs are parsed so the parser knows which to create.

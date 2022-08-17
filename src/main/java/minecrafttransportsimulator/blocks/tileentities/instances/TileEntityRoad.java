@@ -251,7 +251,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent>{
 				for(float offset=0; offset <= definition.road.roadWidth; offset += segmentDelta){
 					testOffset.set(offset, 0, 0).rotate(dynamicCurve.getRotationAt(f));
 					dynamicCurve.offsetPointByPositionAt(testOffset, f);
-					testOffset.subtract(position);
+					testOffset.subtract(position).add(0, definition.road.collisionHeight/16F, 0);
 					Point3D testPoint = new Point3D((int) testOffset.x, (int) Math.floor(testOffset.y), (int) testOffset.z);
 					
 					//If we don't have a block in this position, check if we need one.

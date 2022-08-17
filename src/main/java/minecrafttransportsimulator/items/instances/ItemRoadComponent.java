@@ -90,8 +90,8 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 						genPosition.z -= definition.road.segmentLength;
 						genPosition.rotate(genRotation);
 						
-						//Offset position by 0.5 to be in the center of the clicked block, and up 1 to the block above, and include collision height.
-						genPosition.add(position).add(0.5, 1 + definition.road.collisionHeight/16F, 0.5);
+						//Offset position by 0.5 to be in the center of the clicked block, and up 1 to the block above.
+						genPosition.add(position).add(0.5, 1, 0.5);
 						lastRoadGenPositionClicked.put(player, genPosition);
 						lastRoadGenRotationClicked.put(player, genRotation);
 					}
@@ -143,7 +143,7 @@ public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implemen
 						}else{
 							blockPlacementPoint = position.copy().add(0, 1, 0);
 							startRotation = new RotationMatrix().rotateY(Math.round(player.getYaw()/15)*15);
-							startPosition = definition.road.cornerOffset.copy().rotate(startRotation).add(0.5, definition.road.collisionHeight/16F, 0.5).add(blockPlacementPoint);
+							startPosition = definition.road.cornerOffset.copy().rotate(startRotation).add(0.5, 0, 0.5).add(blockPlacementPoint);
 						}
 						
 						

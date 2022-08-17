@@ -1,7 +1,6 @@
 package minecrafttransportsimulator.entities.instances;
 
 import java.util.HashSet;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
@@ -10,10 +9,6 @@ import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.TowingConnection;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityG_Towable;
-import minecrafttransportsimulator.items.components.AItemBase;
-import minecrafttransportsimulator.items.components.AItemPart;
-import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
-import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
@@ -216,7 +211,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 	}
 	
 	@Override
-	protected void addToSteeringAngle(float degrees){
+	protected void addToSteeringAngle(double degrees){
 		//Invert the degrees, as rudder is inverted from normal steering.
 		double delta = 0;
 		if(rudderInput - degrees > MAX_RUDDER_ANGLE){
@@ -292,13 +287,13 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 			thrustForce.set(0, 0, 0);
 			thrustTorque.set(0, 0, 0);
 			rotorRotation.set(0, 0, 0);
-			for(APart part : parts){
+			for(APart part : allParts){
 				if(part instanceof PartEngine){
 					((PartEngine) part).addToForceOutput(thrustForce, thrustTorque);
 				}else if(part instanceof PartPropeller){
 					PartPropeller propeller = (PartPropeller) part;
 					propeller.addToForceOutput(thrustForce, thrustTorque);
-					if(propeller.definition.propeller.isRotor && propeller.angularVelocity > 0 && !groundDeviceCollective.isAnythingOnGround()){
+					if(propeller.definition.propeller.isRotor && !groundDeviceCollective.isAnythingOnGround()){
 						hasRotors = true;
 						if(getVariable(AUTOLEVEL_VARIABLE) != 0){
 							rotorRotation.set((-(elevatorAngle + elevatorTrim) - orientation.angles.x)/MAX_ELEVATOR_ANGLE, -5D*rudderAngle/MAX_RUDDER_ANGLE, ((aileronAngle + aileronTrim) - orientation.angles.z)/MAX_AILERON_ANGLE);
@@ -751,48 +746,6 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered{
 		//Just return super here.
 		return super.getRawVariableValue(variable, partialTicks);
 	}
-	
-	@Override
-    protected void renderHolographicBoxes(TransformationMatrix transform){
-        //If we are holding a part, render the valid slots.
-        //If we are holding a scanner, render all slots.
-        world.beginProfiling("PartHoloboxes", true);
-        IWrapperPlayer player = InterfaceManager.clientInterface.getClientPlayer();
-        AItemBase heldItem = player.getHeldItem();
-        AItemPart heldPart = heldItem instanceof AItemPart ? (AItemPart) heldItem : null;
-        boolean holdingScanner = player.isHoldingItemType(ItemComponentType.SCANNER);
-        if(heldPart != null || holdingScanner){
-            if(holdingScanner){
-                for(Entry<BoundingBox, JSONPartDefinition> partSlotEntry : allPartSlotBoxes.entrySet()){
-                    JSONPartDefinition placementDefinition = partSlotEntry.getValue();
-                    if(!areVariablesBlocking(placementDefinition, player) && (placementDefinition.validSubNames == null || placementDefinition.validSubNames.contains(subName))){
-                        BoundingBox box = partSlotEntry.getKey();
-                        Point3D boxCenterDelta = box.globalCenter.copy().subtract(position);
-                        box.renderHolographic(transform, boxCenterDelta, ColorRGB.BLUE);
-                    }
-                }
-            }else{
-                for(Entry<BoundingBox, JSONPartDefinition> partSlotEntry : activePartSlotBoxes.entrySet()){
-                    boolean isHoldingCorrectTypePart = false;
-                    boolean isHoldingCorrectParamPart = false;
-                    
-                    if(heldPart.isPartValidForPackDef(partSlotEntry.getValue(), subName, false)){
-                        isHoldingCorrectTypePart = true;
-                        if(heldPart.isPartValidForPackDef(partSlotEntry.getValue(), subName, true)){
-                            isHoldingCorrectParamPart = true;
-                        }
-                    }
-                            
-                    if(isHoldingCorrectTypePart){
-                        BoundingBox box = partSlotEntry.getKey();
-                        Point3D boxCenterDelta = box.globalCenter.copy().subtract(position);
-                        box.renderHolographic(transform, boxCenterDelta, isHoldingCorrectParamPart ? ColorRGB.GREEN : ColorRGB.RED);
-                    }
-                }
-            }
-        }
-        world.endProfiling();
-    }
     
     @Override
     public void renderBoundingBoxes(TransformationMatrix transform){

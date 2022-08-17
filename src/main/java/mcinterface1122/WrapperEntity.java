@@ -10,7 +10,6 @@ import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
-import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
@@ -101,7 +100,7 @@ public class WrapperEntity implements IWrapperEntity{
 		if(mcEntityRiding instanceof BuilderEntityLinkedSeat){
 			AEntityE_Interactable<?> entityRiding = ((BuilderEntityLinkedSeat) mcEntityRiding).entity;
 			//Need to check this as MC might have us as a rider on the builer, but we might not be a rider on the entity.
-			if(entityRiding != null && entityRiding.locationRiderMap.containsValue(this)){
+			if(entityRiding != null && this.equals(entityRiding.rider)){
 				return entityRiding;
 			}
 		}
@@ -133,9 +132,8 @@ public class WrapperEntity implements IWrapperEntity{
 	@Override
 	public double getVerticalScale(){
 		AEntityE_Interactable<?> riding = getEntityRiding();
-		if(riding instanceof AEntityF_Multipart){
-			AEntityF_Multipart<?> multipart = (AEntityF_Multipart<?>) riding;
-			PartSeat seat = multipart.getSeatForRider(this);
+		if(riding instanceof PartSeat){
+			PartSeat seat = (PartSeat) riding;
 			if(seat != null){
 				if(seat.placementDefinition.playerScale != null){
 					if(seat.definition.seat.playerScale != null){
@@ -233,8 +231,8 @@ public class WrapperEntity implements IWrapperEntity{
 		//Need to check if we're riding a vehicle or not.  Vehicles adjust sight vectors.
 		PartSeat seat = null;
 		AEntityE_Interactable<?> riding = getEntityRiding();
-		if(riding instanceof AEntityF_Multipart){
-			seat = ((AEntityF_Multipart<?>) riding).getSeatForRider(this);
+		if(riding instanceof PartSeat){
+			seat = (PartSeat) riding;
 		}
 		
 		mutableSight.set(0, 0, distance).rotate(getOrientation());

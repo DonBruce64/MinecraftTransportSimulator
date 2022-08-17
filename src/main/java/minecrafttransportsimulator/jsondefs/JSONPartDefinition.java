@@ -8,7 +8,6 @@ import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 
 public class JSONPartDefinition{
-	public transient boolean isSubPart;
 	
 	@JSONRequired
 	@JSONDescription("An entry of x, y, and z coordinates that define the center point of where this part will attach to the object.")
@@ -35,8 +34,8 @@ public class JSONPartDefinition{
 	@JSONDescription("This parameter is optional.  If included and set to true, then this part will be marked as a spare.  If the part is a ground type, then it will not be used for ground device operations, and if it is a gun it will not be fire-able or select-able.  Useful for decorations like spare tires and gun racks.")
     public boolean isSpare;
 	
-	@JSONDescription("This parameter is optional.  If included and set to true, this part will be mirrored if the pos X-value is negative, but will NOT be mirrored by the normal condition of the pos X-value being positive.  Useful for mirroring parts like wheels when they normally wouldn't be, say for dually wheel configurations.")
-    public boolean inverseMirroring;
+	@JSONDescription("This parameter is optional.  If included and set to true, this part will be flagged as mirroed.  This has no effect except for setting this property on the part, which can then be queried by the part's animations.  Mainly used for rotating wheels around on the other side of vehicles, or swapping out seat/door models.")
+    public boolean isMirrored;
 	
 	@JSONDescription("This parameter is optional.  If included and set to true, then when selecting guns from this seat the ability to select no gun will be present.  Useful for seats controlling guns that you may not want to always be active.")
     public boolean canDisableGun;
@@ -108,11 +107,11 @@ public class JSONPartDefinition{
     @JSONDescription("A list of objects on the model that define the path of the tread placed in this part slot.  The tread will start on the bottom of the first roller, and will follow the rollers as defined in this path, eventually going back to the first roller.")
     public List<String> treadPath;
     
-    @JSONDescription("This parameter allows for additional parts to be placed when this part is present.  Each entry in this list is the same format as a regular part.  Common uses are duel-wheeled axles, and cab-over-engine vehicles.")
-    public List<JSONPartDefinition> additionalParts;
+    @JSONDescription("A double-nested list of variables.  If this is set, then this part will not be interactable with unless a variable in each of the sets is true (think of variables in a set being an OR condition, and each set being AND ed together).  Additionally, should the part not exist, it will not be able to be placed.  Useful for hoods covering engines, doors covering seats, switches activating sub-parts, and trunks covering luggage.  If this part is a seat, and the player enters the seat, then all of these variables will be set to false.  Similarly, if the player exits this seat, all the variables will be set to true.  Useful for auto opening/closing of doors.")
+    public List<List<String>> interactableVariables;
     
-    @JSONDescription("A list of variables.  If this is set, then this part will not be interactable with unless one of the variables in the list is true.  Additionally, should the part not exist, it will not be able to be placed.  Useful for hoods covering engines, doors covering seats, switches activating sub-parts, and trunks covering luggage.  If this part is a seat, and the player enters the seat, then all of these variables will be set to false.  Similarly, if the player exits this seat, all the variables will be set to true.  Useful for auto opening/closing of doors.")
-    public List<String> linkedVariables;
+    @JSONDescription("A list of indexes for parts that are linked to this one.  Normally not used, but is required to link wheels to engines, propellers to engines, guns to seats that control them, guns to ammo crates for them to pull from, and effectors to crates they can pull supplies from and feed drops into.  The linking is bi-directional: you can link an engine to a wheel, or a wheel to an engine.  Also, linking is recursive.  So if you link an engine to an axle custom part, any wheels on that part when placed will be linked as if they were in that slot.  Similar logic applies for seats to hardmount points that might hold guns.")
+    public List<Integer> linkedParts;
     
     @JSONDescription("If this part is a seat, this list of potion effects will be applied to the rider. This section works the same as the normal vehicle-based effects, but apply only to the rider of a specific seat, rather than the entire vehicle")
     public List<JSONPotionEffect> seatEffects;
@@ -129,9 +128,13 @@ public class JSONPartDefinition{
     @Deprecated
     public JSONPartDefinition additionalPart;
     @Deprecated
+    public List<JSONPartDefinition> additionalParts;
+    @Deprecated
     public String linkedDoor;
     @Deprecated
     public List<String> linkedDoors;
+    @Deprecated
+    public List<String> linkedVariables;
     @Deprecated
     public String translationVariable;
     @Deprecated
@@ -158,6 +161,8 @@ public class JSONPartDefinition{
 	public float widthScale;
     @Deprecated
 	public float heightScale;
+    @Deprecated
+    public boolean inverseMirroring;
     
     
     //Engine-specific part variables.

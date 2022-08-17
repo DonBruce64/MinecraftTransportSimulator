@@ -23,10 +23,8 @@ import org.lwjgl.opengl.GL11;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
-import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IInterfaceRender;
-import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.GIFParser;
@@ -40,7 +38,6 @@ import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.texture.TextureUtil;
-import net.minecraft.entity.Entity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 
@@ -431,19 +428,5 @@ public class InterfaceRender implements IInterfaceRender{
 	@Override
 	public boolean shouldRenderBoundingBoxes(){
 		return Minecraft.getMinecraft().getRenderManager().isDebugBoundingBox();
-	}
-	
-	@Override
-	public void renderEntityRiders(AEntityE_Interactable<?> entity, float partialTicks){
-		for(IWrapperEntity rider : entity.locationRiderMap.values()){
-			Entity riderEntity = ((WrapperEntity) rider).entity;
-			if(!(InterfaceManager.clientInterface.getClientPlayer().equals(rider) && InterfaceManager.clientInterface.inFirstPerson()) && riderEntity.posY > riderEntity.world.getHeight()){
-				GL11.glPushMatrix();
-				Point3D riderPosition = rider.getRenderedPosition(partialTicks);
-				GL11.glTranslated(riderPosition.x, riderPosition.y, riderPosition.z);
-				Minecraft.getMinecraft().getRenderManager().renderEntityStatic(riderEntity, partialTicks, false);
-				GL11.glPopMatrix();
-			}
-		}
 	}
 }
