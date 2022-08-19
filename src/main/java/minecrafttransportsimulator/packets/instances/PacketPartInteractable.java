@@ -22,56 +22,56 @@ import minecrafttransportsimulator.packets.components.APacketEntityInteract;
  * 
  * @author don_bruce
  */
-public class PacketPartInteractable extends APacketEntityInteract<PartInteractable, IWrapperPlayer>{
-	private final UUID linkedID;
-	
-	public PacketPartInteractable(PartInteractable interactable, IWrapperPlayer player){
-		super(interactable, player);
-		if(interactable.linkedVehicle != null){
-			this.linkedID = interactable.linkedVehicle.uniqueUUID;
-		}else if(interactable.linkedPart != null){
-			this.linkedID = interactable.linkedPart.uniqueUUID;
-		}else{
-			this.linkedID = null;
-		}
-	}
-	
-	public PacketPartInteractable(ByteBuf buf){
-		super(buf);
-		this.linkedID = buf.readBoolean() ? readUUIDFromBuffer(buf) : null;
-	}
-	
-	@Override
-	public void writeToBuffer(ByteBuf buf){
-		super.writeToBuffer(buf);
-		if(linkedID != null){
-			buf.writeBoolean(true);
-			writeUUIDToBuffer(linkedID, buf);
-		}else{
-			buf.writeBoolean(false);
-		}
-	}
-	
-	@Override
-	public boolean handle(AWrapperWorld world, PartInteractable interactable, IWrapperPlayer player){
-		if(linkedID != null){
-			AEntityA_Base linkedEntity = world.getEntity(linkedID);
-			if(linkedEntity != null){
-				if(linkedEntity instanceof EntityVehicleF_Physics){
-					interactable.linkedVehicle = (EntityVehicleF_Physics) linkedEntity;
-				}else{
-					interactable.linkedPart = (PartInteractable) (PartInteractable) linkedEntity;
-				}
-			}
-		}else{
-			if(interactable.definition.interactable.interactionType.equals(InteractableComponentType.CRAFTING_BENCH)){
-				new GUIPartBench(interactable.definition.interactable.crafting);
-			}else if(interactable.definition.interactable.interactionType.equals(InteractableComponentType.CRATE)){
-				new GUIInventoryContainer(interactable.inventory, interactable.definition.interactable.inventoryTexture, false);
-			}else if(interactable.definition.interactable.interactionType.equals(InteractableComponentType.FURNACE)){
-				new GUIFurnace(interactable.furnace, interactable.definition.interactable.inventoryTexture);
-			}
-		}
-		return true;
-	}
+public class PacketPartInteractable extends APacketEntityInteract<PartInteractable, IWrapperPlayer> {
+    private final UUID linkedID;
+
+    public PacketPartInteractable(PartInteractable interactable, IWrapperPlayer player) {
+        super(interactable, player);
+        if (interactable.linkedVehicle != null) {
+            this.linkedID = interactable.linkedVehicle.uniqueUUID;
+        } else if (interactable.linkedPart != null) {
+            this.linkedID = interactable.linkedPart.uniqueUUID;
+        } else {
+            this.linkedID = null;
+        }
+    }
+
+    public PacketPartInteractable(ByteBuf buf) {
+        super(buf);
+        this.linkedID = buf.readBoolean() ? readUUIDFromBuffer(buf) : null;
+    }
+
+    @Override
+    public void writeToBuffer(ByteBuf buf) {
+        super.writeToBuffer(buf);
+        if (linkedID != null) {
+            buf.writeBoolean(true);
+            writeUUIDToBuffer(linkedID, buf);
+        } else {
+            buf.writeBoolean(false);
+        }
+    }
+
+    @Override
+    public boolean handle(AWrapperWorld world, PartInteractable interactable, IWrapperPlayer player) {
+        if (linkedID != null) {
+            AEntityA_Base linkedEntity = world.getEntity(linkedID);
+            if (linkedEntity != null) {
+                if (linkedEntity instanceof EntityVehicleF_Physics) {
+                    interactable.linkedVehicle = (EntityVehicleF_Physics) linkedEntity;
+                } else {
+                    interactable.linkedPart = (PartInteractable) (PartInteractable) linkedEntity;
+                }
+            }
+        } else {
+            if (interactable.definition.interactable.interactionType.equals(InteractableComponentType.CRAFTING_BENCH)) {
+                new GUIPartBench(interactable.definition.interactable.crafting);
+            } else if (interactable.definition.interactable.interactionType.equals(InteractableComponentType.CRATE)) {
+                new GUIInventoryContainer(interactable.inventory, interactable.definition.interactable.inventoryTexture, false);
+            } else if (interactable.definition.interactable.interactionType.equals(InteractableComponentType.FURNACE)) {
+                new GUIFurnace(interactable.furnace, interactable.definition.interactable.inventoryTexture);
+            }
+        }
+        return true;
+    }
 }

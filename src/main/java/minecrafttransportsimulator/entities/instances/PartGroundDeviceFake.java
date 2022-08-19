@@ -10,36 +10,36 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
  * 
  * @author don_bruce
  */
-public final class PartGroundDeviceFake extends PartGroundDevice{
-	private final PartGroundDevice masterPart;
-	
-	public PartGroundDeviceFake(PartGroundDevice masterPart, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, IWrapperNBT data, APart parentPart){
-		super(masterPart.entityOn, placingPlayer, placementDefinition, data);
-		this.masterPart = masterPart;
-	}
-	
-	@Override
-	public boolean isFake(){
-		return true;
-	}
-	
-	@Override
-	public double getWidth(){
-		return masterPart != null ? masterPart.getWidth() : 1.0F;
-	}
-	
-	@Override
-	public double getHeight(){
-		return masterPart != null ? masterPart.getHeight() : 1.0F;
-	}
-	
-	@Override
-	public ItemPartGroundDevice getItem(){
-		return null;
-	}
-	
-	@Override
-	public float getLongPartOffset(){
-		return -masterPart.getLongPartOffset();
-	}
+public final class PartGroundDeviceFake extends PartGroundDevice {
+    private final PartGroundDevice masterPart;
+
+    public PartGroundDeviceFake(PartGroundDevice masterPart, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, IWrapperNBT data, APart parentPart) {
+        super(masterPart.entityOn, placingPlayer, placementDefinition, data);
+        this.masterPart = masterPart;
+    }
+
+    @Override
+    public boolean isFake() {
+        return true;
+    }
+
+    @Override
+    public double getWidth() {
+        return masterPart != null ? masterPart.getWidth() : 1.0F;
+    }
+
+    @Override
+    public double getHeight() {
+        return masterPart != null ? masterPart.getHeight() : 1.0F;
+    }
+
+    @Override
+    public ItemPartGroundDevice getItem() {
+        return null;
+    }
+
+    @Override
+    public float getLongPartOffset() {
+        return -masterPart.getLongPartOffset();
+    }
 }

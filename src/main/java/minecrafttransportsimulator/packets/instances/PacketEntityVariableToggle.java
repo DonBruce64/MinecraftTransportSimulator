@@ -11,28 +11,28 @@ import minecrafttransportsimulator.packets.components.APacketEntity;
  * 
  * @author don_bruce
  */
-public class PacketEntityVariableToggle extends APacketEntity<AEntityD_Definable<?>>{
-	private final String variableName;
-	
-	public PacketEntityVariableToggle(AEntityD_Definable<?> entity, String variableName){
-		super(entity);
-		this.variableName = variableName;
-	}
-	
-	public PacketEntityVariableToggle(ByteBuf buf){
-		super(buf);
-		this.variableName = readStringFromBuffer(buf);
-	}
-	
-	@Override
-	public void writeToBuffer(ByteBuf buf){
-		super.writeToBuffer(buf);
-		writeStringToBuffer(variableName, buf);
-	}
-	
-	@Override
-	public boolean handle(AWrapperWorld world, AEntityD_Definable<?> entity){
-		entity.toggleVariable(variableName);
-		return true;
-	}
+public class PacketEntityVariableToggle extends APacketEntity<AEntityD_Definable<?>> {
+    private final String variableName;
+
+    public PacketEntityVariableToggle(AEntityD_Definable<?> entity, String variableName) {
+        super(entity);
+        this.variableName = variableName;
+    }
+
+    public PacketEntityVariableToggle(ByteBuf buf) {
+        super(buf);
+        this.variableName = readStringFromBuffer(buf);
+    }
+
+    @Override
+    public void writeToBuffer(ByteBuf buf) {
+        super.writeToBuffer(buf);
+        writeStringToBuffer(variableName, buf);
+    }
+
+    @Override
+    public boolean handle(AWrapperWorld world, AEntityD_Definable<?> entity) {
+        entity.toggleVariable(variableName);
+        return true;
+    }
 }

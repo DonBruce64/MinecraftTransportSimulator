@@ -1,5 +1,5 @@
 package minecrafttransportsimulator.jsondefs;
 
-public class JSONPlayerGun extends AJSONPartProvider{
-	
+public class JSONPlayerGun extends AJSONPartProvider {
+
 }

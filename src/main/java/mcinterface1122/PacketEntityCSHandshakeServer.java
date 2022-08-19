@@ -13,53 +13,53 @@ import net.minecraft.util.math.BlockPos;
  * 
  * @author don_bruce
  */
-public class PacketEntityCSHandshakeServer extends APacketBase{
-	private final String builderID;
-	private final IWrapperNBT data;
-	
-	public PacketEntityCSHandshakeServer(ABuilderEntityBase builder, IWrapperNBT data){
-		super(null);
-		this.builderID = builder.getCachedUniqueIdString();
-		this.data = data;
-	}
-	
-	public PacketEntityCSHandshakeServer(BuilderTileEntity<?> builder, IWrapperNBT data){
-		super(null);
-		this.builderID = builder.getPos().getX() + "," + builder.getPos().getY() + "," + builder.getPos().getZ();
-		this.data = data;
-	}
-	
-	public PacketEntityCSHandshakeServer(ByteBuf buf){
-		super(buf);
-		this.builderID = readStringFromBuffer(buf);
-		this.data = readDataFromBuffer(buf);
-	}
-	
-	@Override
-	public void writeToBuffer(ByteBuf buf){
-		super.writeToBuffer(buf);
-		writeStringToBuffer(builderID, buf);
-		writeDataToBuffer(data, buf);
-	}
-	
-	@Override
-	public void handle(AWrapperWorld world){
-		if(builderID.contains(",")){
-			String[] stringPos = builderID.split(",");
-			BuilderTileEntity<?> tile = (BuilderTileEntity<?>) ((WrapperWorld) world).world.getTileEntity(new BlockPos(Integer.valueOf(stringPos[0]), Integer.valueOf(stringPos[1]), Integer.valueOf(stringPos[2])));
-			if(tile != null){
-				tile.lastLoadedNBT = ((WrapperNBT) data).tag;
-				tile.loadFromSavedNBT = true;
-			}
-		}else{
-			for(Entity entity : ((WrapperWorld) world).world.loadedEntityList){
-				if(entity.getCachedUniqueIdString().equals(builderID)){
-					//Set last loaded NBT.
-					((ABuilderEntityBase) entity).lastLoadedNBT = ((WrapperNBT) data).tag;
-					((ABuilderEntityBase) entity).loadFromSavedNBT = true;
-					break;
-				}
-			}
-		}
-	}
+public class PacketEntityCSHandshakeServer extends APacketBase {
+    private final String builderID;
+    private final IWrapperNBT data;
+
+    public PacketEntityCSHandshakeServer(ABuilderEntityBase builder, IWrapperNBT data) {
+        super(null);
+        this.builderID = builder.getCachedUniqueIdString();
+        this.data = data;
+    }
+
+    public PacketEntityCSHandshakeServer(BuilderTileEntity<?> builder, IWrapperNBT data) {
+        super(null);
+        this.builderID = builder.getPos().getX() + "," + builder.getPos().getY() + "," + builder.getPos().getZ();
+        this.data = data;
+    }
+
+    public PacketEntityCSHandshakeServer(ByteBuf buf) {
+        super(buf);
+        this.builderID = readStringFromBuffer(buf);
+        this.data = readDataFromBuffer(buf);
+    }
+
+    @Override
+    public void writeToBuffer(ByteBuf buf) {
+        super.writeToBuffer(buf);
+        writeStringToBuffer(builderID, buf);
+        writeDataToBuffer(data, buf);
+    }
+
+    @Override
+    public void handle(AWrapperWorld world) {
+        if (builderID.contains(",")) {
+            String[] stringPos = builderID.split(",");
+            BuilderTileEntity<?> tile = (BuilderTileEntity<?>) ((WrapperWorld) world).world.getTileEntity(new BlockPos(Integer.valueOf(stringPos[0]), Integer.valueOf(stringPos[1]), Integer.valueOf(stringPos[2])));
+            if (tile != null) {
+                tile.lastLoadedNBT = ((WrapperNBT) data).tag;
+                tile.loadFromSavedNBT = true;
+            }
+        } else {
+            for (Entity entity : ((WrapperWorld) world).world.loadedEntityList) {
+                if (entity.getCachedUniqueIdString().equals(builderID)) {
+                    //Set last loaded NBT.
+                    ((ABuilderEntityBase) entity).lastLoadedNBT = ((WrapperNBT) data).tag;
+                    ((ABuilderEntityBase) entity).loadFromSavedNBT = true;
+                    break;
+                }
+            }
+        }
+    }
 }

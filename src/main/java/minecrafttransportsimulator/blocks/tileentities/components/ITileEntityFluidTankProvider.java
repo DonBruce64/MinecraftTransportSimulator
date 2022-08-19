@@ -9,9 +9,9 @@ import minecrafttransportsimulator.entities.instances.EntityFluidTank;
  *
  * @author don_bruce
  */
-public interface ITileEntityFluidTankProvider{
-	/**
-	 *  Gets the tank for this interface.
-	 */
-	public EntityFluidTank getTank();
+public interface ITileEntityFluidTankProvider {
+    /**
+     *  Gets the tank for this interface.
+     */
+    public EntityFluidTank getTank();
 }

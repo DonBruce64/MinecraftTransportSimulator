@@ -9,17 +9,17 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
  *
  * @author don_bruce
  */
-public interface IItemEntityProvider<EntityType extends AEntityB_Existing>{
-	
-	/**
-	 *  Gets a new instance of the entity this item creates.
-	 */
-	public EntityType createEntity(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data);
-	
-	/**
-	 *  Gets the class of the Entity this item makes.
-	 *  This is for registration, not construction.  For construction,
-	 *  use {@link #createEntity(AWrapperWorld, IWrapperNBT)}
-	 */
-	public Class<EntityType> getEntityClass();
+public interface IItemEntityProvider<EntityType extends AEntityB_Existing> {
+
+    /**
+     *  Gets a new instance of the entity this item creates.
+     */
+    public EntityType createEntity(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data);
+
+    /**
+     *  Gets the class of the Entity this item makes.
+     *  This is for registration, not construction.  For construction,
+     *  use {@link #createEntity(AWrapperWorld, IWrapperNBT)}
+     */
+    public Class<EntityType> getEntityClass();
 }

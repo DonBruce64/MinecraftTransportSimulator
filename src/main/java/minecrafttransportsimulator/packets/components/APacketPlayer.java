@@ -15,37 +15,37 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
  *
  * @author don_bruce
  */
-public abstract class APacketPlayer extends APacketBase{
-	private final UUID playerID;
-	
-	public APacketPlayer(IWrapperPlayer player){
-		super(null);
-		this.playerID = player.getID();
-	}
-	
-	public APacketPlayer(ByteBuf buf){
-		super(buf);
-		this.playerID = readUUIDFromBuffer(buf);
-	};
+public abstract class APacketPlayer extends APacketBase {
+    private final UUID playerID;
 
-	@Override
-	public void writeToBuffer(ByteBuf buf){
-		super.writeToBuffer(buf);
-		writeUUIDToBuffer(playerID, buf);
-	}
-	
-	@Override
-	public void handle(AWrapperWorld world){
-		IWrapperPlayer player = (IWrapperPlayer) world.getExternalEntity(playerID);
-		if(player != null){
-			handle(world, player);
-		}
-	}
-	
-	/**
-	 *  Handler method with an extra parameter for the player for this packet.
-	 *  If the player is null,  then this method won't be called.
-	 *  Saves having to do null checks for every packet type.
-	 */
-	protected abstract void handle(AWrapperWorld world, IWrapperPlayer player);
+    public APacketPlayer(IWrapperPlayer player) {
+        super(null);
+        this.playerID = player.getID();
+    }
+
+    public APacketPlayer(ByteBuf buf) {
+        super(buf);
+        this.playerID = readUUIDFromBuffer(buf);
+    };
+
+    @Override
+    public void writeToBuffer(ByteBuf buf) {
+        super.writeToBuffer(buf);
+        writeUUIDToBuffer(playerID, buf);
+    }
+
+    @Override
+    public void handle(AWrapperWorld world) {
+        IWrapperPlayer player = (IWrapperPlayer) world.getExternalEntity(playerID);
+        if (player != null) {
+            handle(world, player);
+        }
+    }
+
+    /**
+     *  Handler method with an extra parameter for the player for this packet.
+     *  If the player is null,  then this method won't be called.
+     *  Saves having to do null checks for every packet type.
+     */
+    protected abstract void handle(AWrapperWorld world, IWrapperPlayer player);
 }

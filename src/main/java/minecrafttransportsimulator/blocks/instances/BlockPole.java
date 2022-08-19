@@ -12,19 +12,19 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
  *
  * @author don_bruce
  */
-public class BlockPole extends ABlockBaseTileEntity{
-	
-	public BlockPole(){
-		super(10.0F, 5.0F);
-	}
-	
-	@Override
-    public Class<TileEntityPole> getTileEntityClass(){
-    	return TileEntityPole.class;
+public class BlockPole extends ABlockBaseTileEntity {
+
+    public BlockPole() {
+        super(10.0F, 5.0F);
     }
-	
-	@Override
-	public TileEntityPole createTileEntity(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, IWrapperNBT data){
-		return new TileEntityPole(world, position, placingPlayer, data);
-	}
+
+    @Override
+    public Class<TileEntityPole> getTileEntityClass() {
+        return TileEntityPole.class;
+    }
+
+    @Override
+    public TileEntityPole createTileEntity(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, IWrapperNBT data) {
+        return new TileEntityPole(world, position, placingPlayer, data);
+    }
 }

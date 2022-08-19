@@ -11,19 +11,19 @@ import minecrafttransportsimulator.packets.components.APacketEntity;
  * 
  * @author don_bruce
  */
-public class PacketPartSeat extends APacketEntity<PartSeat>{
-	
-	public PacketPartSeat(PartSeat seat){
-		super(seat);
-	}
-	
-	public PacketPartSeat(ByteBuf buf){
-		super(buf);
-	}
-	
-	@Override
-	public boolean handle(AWrapperWorld world, PartSeat seat){
-		seat.setNextActiveGun();
-		return true;
-	}
+public class PacketPartSeat extends APacketEntity<PartSeat> {
+
+    public PacketPartSeat(PartSeat seat) {
+        super(seat);
+    }
+
+    public PacketPartSeat(ByteBuf buf) {
+        super(buf);
+    }
+
+    @Override
+    public boolean handle(AWrapperWorld world, PartSeat seat) {
+        seat.setNextActiveGun();
+        return true;
+    }
 }

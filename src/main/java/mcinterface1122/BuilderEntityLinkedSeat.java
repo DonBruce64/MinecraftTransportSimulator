@@ -22,111 +22,111 @@ import net.minecraftforge.fml.common.registry.EntityEntryBuilder;
  * @author don_bruce
  */
 @EventBusSubscriber
-public class BuilderEntityLinkedSeat extends ABuilderEntityBase{
-	
-	/**Current entity we are a seat on.  This MAY be null if we haven't loaded NBT from the server yet.**/
-	protected AEntityE_Interactable<?> entity;
-	/**Current rider for this seat.  This MAY be null if we haven't loaded NBT from the server yet.**/
-	protected WrapperEntity rider;
-	/**Set to true when the rider dismounts.  We set their position the next tick to override it.**/
-	private boolean dismountedRider;
-	
-	public BuilderEntityLinkedSeat(World world){
-		super(world);
-		setSize(0.05F, 0.05F);
-	}
-	
-	@Override
-    public void onEntityUpdate(){
-    	super.onEntityUpdate();
-    	
-    	//If our entity isn't null, update us to the entity position.
-    	//What really matters is the player's position, and that comes later.
-    	//This just gets us "close enough" so we don't de-spawn or something.
-    	if(entity != null){
-    		//Check if the entity we are a seat on is still valid, or need to be set dead.
-    		if(!entity.isValid){
-    			setDead();
-    		}else{
-	    		setPosition(entity.position.x, entity.position.y, entity.position.z);
-	    		List<Entity> riders = getPassengers();
-    			if(!riders.isEmpty()){
-    				rider = WrapperEntity.getWrapperFor(riders.get(0));
-    			}else if(dismountedRider){
-    				setDead();
-    			}
-    		}
-    	}else{
-    		//If we have NBT, and haven't loaded it, do so now.
-    		if(!loadedFromSavedNBT && loadFromSavedNBT){
-				WrapperWorld worldWrapper = WrapperWorld.getWrapperFor(world);
-				try{
-					entity = worldWrapper.getEntity(lastLoadedNBT.getUniqueId("entityUUID"));
-					loadedFromSavedNBT = true;
-					lastLoadedNBT = null;
-				}catch(Exception e){
-					InterfaceManager.coreInterface.logError("Failed to load seat on builder from saved NBT.  Did a pack change?");
-					InterfaceManager.coreInterface.logError(e.getMessage());
-					setDead();
-				}
-			}
-    	}
+public class BuilderEntityLinkedSeat extends ABuilderEntityBase {
+
+    /**Current entity we are a seat on.  This MAY be null if we haven't loaded NBT from the server yet.**/
+    protected AEntityE_Interactable<?> entity;
+    /**Current rider for this seat.  This MAY be null if we haven't loaded NBT from the server yet.**/
+    protected WrapperEntity rider;
+    /**Set to true when the rider dismounts.  We set their position the next tick to override it.**/
+    private boolean dismountedRider;
+
+    public BuilderEntityLinkedSeat(World world) {
+        super(world);
+        setSize(0.05F, 0.05F);
     }
-    
-	@Override
-	public void setDead(){
-		super.setDead();
-		//Notify internal entity of rider being removed.
-		if(entity != null && rider != null){
-			if(!world.isRemote && rider.equals(entity.rider)){
-				entity.removeRider();
-			}
-			rider = null;
-			entity = null;
-		}
-	}
-    
+
     @Override
-    public void updatePassenger(Entity passenger){
-    	//Forward passenger updates to the entity.
-    	if(entity != null && rider != null){
-    		if(entity.rider == null){
-    			if(!world.isRemote){ 
-        			//Couldn't find rider on entity.  Add them prior to update.
-    				entity.setRider(rider, true);
-    			}
-    		}else{
-    			entity.updateRider();
-    		}
-    	}
+    public void onEntityUpdate() {
+        super.onEntityUpdate();
+
+        //If our entity isn't null, update us to the entity position.
+        //What really matters is the player's position, and that comes later.
+        //This just gets us "close enough" so we don't de-spawn or something.
+        if (entity != null) {
+            //Check if the entity we are a seat on is still valid, or need to be set dead.
+            if (!entity.isValid) {
+                setDead();
+            } else {
+                setPosition(entity.position.x, entity.position.y, entity.position.z);
+                List<Entity> riders = getPassengers();
+                if (!riders.isEmpty()) {
+                    rider = WrapperEntity.getWrapperFor(riders.get(0));
+                } else if (dismountedRider) {
+                    setDead();
+                }
+            }
+        } else {
+            //If we have NBT, and haven't loaded it, do so now.
+            if (!loadedFromSavedNBT && loadFromSavedNBT) {
+                WrapperWorld worldWrapper = WrapperWorld.getWrapperFor(world);
+                try {
+                    entity = worldWrapper.getEntity(lastLoadedNBT.getUniqueId("entityUUID"));
+                    loadedFromSavedNBT = true;
+                    lastLoadedNBT = null;
+                } catch (Exception e) {
+                    InterfaceManager.coreInterface.logError("Failed to load seat on builder from saved NBT.  Did a pack change?");
+                    InterfaceManager.coreInterface.logError(e.getMessage());
+                    setDead();
+                }
+            }
+        }
     }
-    
+
     @Override
-    protected void removePassenger(Entity passenger){
-    	super.removePassenger(passenger);
-    	dismountedRider = true;
+    public void setDead() {
+        super.setDead();
+        //Notify internal entity of rider being removed.
+        if (entity != null && rider != null) {
+            if (!world.isRemote && rider.equals(entity.rider)) {
+                entity.removeRider();
+            }
+            rider = null;
+            entity = null;
+        }
     }
-    
+
     @Override
-    public boolean shouldRiderSit(){
-    	return entity != null ? InterfaceEventsEntityRendering.renderCurrentRiderSitting : super.shouldRiderSit();
+    public void updatePassenger(Entity passenger) {
+        //Forward passenger updates to the entity.
+        if (entity != null && rider != null) {
+            if (entity.rider == null) {
+                if (!world.isRemote) {
+                    //Couldn't find rider on entity.  Add them prior to update.
+                    entity.setRider(rider, true);
+                }
+            } else {
+                entity.updateRider();
+            }
+        }
     }
-    
-	@Override
-	public NBTTagCompound writeToNBT(NBTTagCompound tag){
-		super.writeToNBT(tag);
-		if(entity != null){
-			//Entity is valid, save UUID and return the modified tag.
-			tag.setUniqueId("entityUUID", entity.uniqueUUID);
-		}
-		return tag;
-	}
-	
-	/**
-	 * Registers our own class for use.
-	 */
-	@SubscribeEvent
-	public static void registerEntities(RegistryEvent.Register<EntityEntry> event){
-		event.getRegistry().register(EntityEntryBuilder.create().entity(BuilderEntityLinkedSeat.class).id(new ResourceLocation(InterfaceManager.coreModID, "mts_entity_seat"), 1).tracker(32*16, 5, false).name("mts_entity_seat").build());
-	}
+
+    @Override
+    protected void removePassenger(Entity passenger) {
+        super.removePassenger(passenger);
+        dismountedRider = true;
+    }
+
+    @Override
+    public boolean shouldRiderSit() {
+        return entity != null ? InterfaceEventsEntityRendering.renderCurrentRiderSitting : super.shouldRiderSit();
+    }
+
+    @Override
+    public NBTTagCompound writeToNBT(NBTTagCompound tag) {
+        super.writeToNBT(tag);
+        if (entity != null) {
+            //Entity is valid, save UUID and return the modified tag.
+            tag.setUniqueId("entityUUID", entity.uniqueUUID);
+        }
+        return tag;
+    }
+
+    /**
+     * Registers our own class for use.
+     */
+    @SubscribeEvent
+    public static void registerEntities(RegistryEvent.Register<EntityEntry> event) {
+        event.getRegistry().register(EntityEntryBuilder.create().entity(BuilderEntityLinkedSeat.class).id(new ResourceLocation(InterfaceManager.coreModID, "mts_entity_seat"), 1).tracker(32 * 16, 5, false).name("mts_entity_seat").build());
+    }
 }

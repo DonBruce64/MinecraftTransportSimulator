@@ -9,9 +9,9 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 *
 * @author don_bruce
 */
-public class TileEntityPole_Sign extends ATileEntityPole_Component{
-	
-	public TileEntityPole_Sign(TileEntityPole core, IWrapperPlayer placingPlayer, Axis axis, IWrapperNBT data){
-		super(core, placingPlayer, axis, data);
-	}
+public class TileEntityPole_Sign extends ATileEntityPole_Component {
+
+    public TileEntityPole_Sign(TileEntityPole core, IWrapperPlayer placingPlayer, Axis axis, IWrapperNBT data) {
+        super(core, placingPlayer, axis, data);
+    }
 }

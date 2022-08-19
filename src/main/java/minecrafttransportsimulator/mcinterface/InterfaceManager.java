@@ -15,36 +15,36 @@ import minecrafttransportsimulator.packloading.PackParser;
  *
  * @author don_bruce
  */
-public class InterfaceManager{
-	public static String coreModID;
-	public static String gameDirectory;
-	public static IInterfaceCore coreInterface;
-	public static IInterfacePacket packetInterface;
-	public static IInterfaceClient clientInterface;
-	public static IInterfaceInput inputInterface;
-	public static IInterfaceSound soundInterface;
-	public static IInterfaceRender renderingInterface;
+public class InterfaceManager {
+    public static String coreModID;
+    public static String gameDirectory;
+    public static IInterfaceCore coreInterface;
+    public static IInterfacePacket packetInterface;
+    public static IInterfaceClient clientInterface;
+    public static IInterfaceInput inputInterface;
+    public static IInterfaceSound soundInterface;
+    public static IInterfaceRender renderingInterface;
 
-	public InterfaceManager(String coreModID, String gameDirectory, IInterfaceCore coreInterface, IInterfacePacket packetInterface, IInterfaceClient clientInterface, IInterfaceInput inputInterface, IInterfaceSound soundInterface, IInterfaceRender renderingInterface){
-		InterfaceManager.coreModID = coreModID;
-		InterfaceManager.gameDirectory = gameDirectory;
-		InterfaceManager.coreInterface = coreInterface;
-		InterfaceManager.packetInterface = packetInterface;
-		InterfaceManager.clientInterface = clientInterface;
-		InterfaceManager.inputInterface = inputInterface;
-		InterfaceManager.soundInterface = soundInterface;
-		InterfaceManager.renderingInterface = renderingInterface;
-	}
+    public InterfaceManager(String coreModID, String gameDirectory, IInterfaceCore coreInterface, IInterfacePacket packetInterface, IInterfaceClient clientInterface, IInterfaceInput inputInterface, IInterfaceSound soundInterface, IInterfaceRender renderingInterface) {
+        InterfaceManager.coreModID = coreModID;
+        InterfaceManager.gameDirectory = gameDirectory;
+        InterfaceManager.coreInterface = coreInterface;
+        InterfaceManager.packetInterface = packetInterface;
+        InterfaceManager.clientInterface = clientInterface;
+        InterfaceManager.inputInterface = inputInterface;
+        InterfaceManager.soundInterface = soundInterface;
+        InterfaceManager.renderingInterface = renderingInterface;
+    }
 
-	static{
-    	//Add part constructors to the part map.
-    	PackParser.addItemPartCreator(ItemPartEffector.CREATOR);
-    	PackParser.addItemPartCreator(ItemPartEngine.CREATOR);
-    	PackParser.addItemPartCreator(ItemPartGeneric.CREATOR);
-    	PackParser.addItemPartCreator(ItemPartGroundDevice.CREATOR);
-    	PackParser.addItemPartCreator(ItemPartGun.CREATOR);
-    	PackParser.addItemPartCreator(ItemPartInteractable.CREATOR);
-    	PackParser.addItemPartCreator(ItemPartPropeller.CREATOR);
-    	PackParser.addItemPartCreator(ItemPartSeat.CREATOR);
-	}
+    static {
+        //Add part constructors to the part map.
+        PackParser.addItemPartCreator(ItemPartEffector.CREATOR);
+        PackParser.addItemPartCreator(ItemPartEngine.CREATOR);
+        PackParser.addItemPartCreator(ItemPartGeneric.CREATOR);
+        PackParser.addItemPartCreator(ItemPartGroundDevice.CREATOR);
+        PackParser.addItemPartCreator(ItemPartGun.CREATOR);
+        PackParser.addItemPartCreator(ItemPartInteractable.CREATOR);
+        PackParser.addItemPartCreator(ItemPartPropeller.CREATOR);
+        PackParser.addItemPartCreator(ItemPartSeat.CREATOR);
+    }
 }

@@ -12,29 +12,29 @@ import minecrafttransportsimulator.packets.components.APacketEntity;
  * 
  * @author don_bruce
  */
-public class PacketVehicleBeaconChange extends APacketEntity<EntityVehicleF_Physics>{
-	private final String beaconName;
-	
-	public PacketVehicleBeaconChange(EntityVehicleF_Physics vehicle, String beaconName){
-		super(vehicle);
-		this.beaconName = beaconName;
-	}
-	
-	public PacketVehicleBeaconChange(ByteBuf buf){
-		super(buf);
-		this.beaconName = readStringFromBuffer(buf);
-	}
-	
-	@Override
-	public void writeToBuffer(ByteBuf buf){
-		super.writeToBuffer(buf);
-		writeStringToBuffer(beaconName, buf);
-	}
-	
-	@Override
-	public boolean handle(AWrapperWorld world, EntityVehicleF_Physics vehicle){
-		vehicle.selectedBeaconName = beaconName;
-		vehicle.selectedBeacon = NavBeacon.getByNameFromWorld(world, beaconName);
-		return true;
-	}
+public class PacketVehicleBeaconChange extends APacketEntity<EntityVehicleF_Physics> {
+    private final String beaconName;
+
+    public PacketVehicleBeaconChange(EntityVehicleF_Physics vehicle, String beaconName) {
+        super(vehicle);
+        this.beaconName = beaconName;
+    }
+
+    public PacketVehicleBeaconChange(ByteBuf buf) {
+        super(buf);
+        this.beaconName = readStringFromBuffer(buf);
+    }
+
+    @Override
+    public void writeToBuffer(ByteBuf buf) {
+        super.writeToBuffer(buf);
+        writeStringToBuffer(beaconName, buf);
+    }
+
+    @Override
+    public boolean handle(AWrapperWorld world, EntityVehicleF_Physics vehicle) {
+        vehicle.selectedBeaconName = beaconName;
+        vehicle.selectedBeacon = NavBeacon.getByNameFromWorld(world, beaconName);
+        return true;
+    }
 }

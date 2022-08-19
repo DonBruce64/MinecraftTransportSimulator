@@ -29,53 +29,73 @@ import minecrafttransportsimulator.packets.components.APacketEntityInteract;
  * 
  * @author don_bruce
  */
-public class PacketEntityGUIRequest extends APacketEntityInteract<AEntityB_Existing, IWrapperPlayer>{
-	private final EntityGUIType guiRequested;
-	
-	public PacketEntityGUIRequest(AEntityB_Existing entity, IWrapperPlayer player, EntityGUIType guiRequested){
-		super(entity, player);
-		this.guiRequested = guiRequested;
-	}
-	
-	public PacketEntityGUIRequest(ByteBuf buf){
-		super(buf);
-		this.guiRequested = EntityGUIType.values()[buf.readByte()];
-	}
-	
-	@Override
-	public void writeToBuffer(ByteBuf buf){
-		super.writeToBuffer(buf);
-		buf.writeByte(guiRequested.ordinal());
-	}
-	
-	@Override
-	public boolean handle(AWrapperWorld world, AEntityB_Existing entity, IWrapperPlayer player){
-		switch(guiRequested){
-			case INSTRUMENTS: new GUIInstruments((EntityVehicleF_Physics) entity); break;
-			case INVENTORY_CHEST: new GUIInventoryContainer(((TileEntityChest) entity).inventory, ((TileEntityChest) entity).definition.decor.inventoryTexture, false); break;
-			case FUEL_PUMP: new GUIFuelPump((TileEntityFuelPump) entity, false); break;
-			case FUEL_PUMP_CONFIG: new GUIFuelPump((TileEntityFuelPump) entity, true); break;
-			case PACK_EXPORTER: new GUIPackExporter((EntityVehicleF_Physics) entity);	break;
-			case PAINT_GUN: new GUIPaintGun((AEntityD_Definable<?>) entity, player);	break;
-			case PART_BENCH: new GUIPartBench(((TileEntityDecor) entity).definition.decor.crafting); break;
-			case RADIO: new GUIRadio((EntityRadio) entity); break;
-			case SIGNAL_CONTROLLER: new GUISignalController((TileEntitySignalController) entity); break;
-			case TEXT_EDITOR: new GUITextEditor((AEntityD_Definable<?>) entity); break;
-		}
-		return true;
-	}
-	
-	public static enum EntityGUIType{
-		INSTRUMENTS,
-		INVENTORY_CHEST,
-		FUEL_PUMP,
-		FUEL_PUMP_CONFIG,
-		PACK_EXPORTER,
-		PAINT_GUN,
-		PART_BENCH,
-		RADIO,
-		SIGNAL_CONTROLLER,
-		TEXT_EDITOR;
-		
-	}
+public class PacketEntityGUIRequest extends APacketEntityInteract<AEntityB_Existing, IWrapperPlayer> {
+    private final EntityGUIType guiRequested;
+
+    public PacketEntityGUIRequest(AEntityB_Existing entity, IWrapperPlayer player, EntityGUIType guiRequested) {
+        super(entity, player);
+        this.guiRequested = guiRequested;
+    }
+
+    public PacketEntityGUIRequest(ByteBuf buf) {
+        super(buf);
+        this.guiRequested = EntityGUIType.values()[buf.readByte()];
+    }
+
+    @Override
+    public void writeToBuffer(ByteBuf buf) {
+        super.writeToBuffer(buf);
+        buf.writeByte(guiRequested.ordinal());
+    }
+
+    @Override
+    public boolean handle(AWrapperWorld world, AEntityB_Existing entity, IWrapperPlayer player) {
+        switch (guiRequested) {
+            case INSTRUMENTS:
+                new GUIInstruments((EntityVehicleF_Physics) entity);
+                break;
+            case INVENTORY_CHEST:
+                new GUIInventoryContainer(((TileEntityChest) entity).inventory, ((TileEntityChest) entity).definition.decor.inventoryTexture, false);
+                break;
+            case FUEL_PUMP:
+                new GUIFuelPump((TileEntityFuelPump) entity, false);
+                break;
+            case FUEL_PUMP_CONFIG:
+                new GUIFuelPump((TileEntityFuelPump) entity, true);
+                break;
+            case PACK_EXPORTER:
+                new GUIPackExporter((EntityVehicleF_Physics) entity);
+                break;
+            case PAINT_GUN:
+                new GUIPaintGun((AEntityD_Definable<?>) entity, player);
+                break;
+            case PART_BENCH:
+                new GUIPartBench(((TileEntityDecor) entity).definition.decor.crafting);
+                break;
+            case RADIO:
+                new GUIRadio((EntityRadio) entity);
+                break;
+            case SIGNAL_CONTROLLER:
+                new GUISignalController((TileEntitySignalController) entity);
+                break;
+            case TEXT_EDITOR:
+                new GUITextEditor((AEntityD_Definable<?>) entity);
+                break;
+        }
+        return true;
+    }
+
+    public static enum EntityGUIType {
+        INSTRUMENTS,
+        INVENTORY_CHEST,
+        FUEL_PUMP,
+        FUEL_PUMP_CONFIG,
+        PACK_EXPORTER,
+        PAINT_GUN,
+        PART_BENCH,
+        RADIO,
+        SIGNAL_CONTROLLER,
+        TEXT_EDITOR;
+
+    }
 }

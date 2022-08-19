@@ -15,32 +15,32 @@ import minecrafttransportsimulator.packets.components.APacketEntity;
  * 
  * @author don_bruce
  */
-public class PacketEntityVariableSet extends APacketEntity<AEntityD_Definable<?>>{
-	private final String variableName;
-	private final double variableValue;
-	
-	public PacketEntityVariableSet(AEntityD_Definable<?> entity, String variableName, double variableValue){
-		super(entity);
-		this.variableName = variableName;
-		this.variableValue = variableValue;
-	}
-	
-	public PacketEntityVariableSet(ByteBuf buf){
-		super(buf);
-		this.variableName = readStringFromBuffer(buf);
-		this.variableValue = buf.readDouble();
-	}
-	
-	@Override
-	public void writeToBuffer(ByteBuf buf){
-		super.writeToBuffer(buf);
-		writeStringToBuffer(variableName, buf);
-		buf.writeDouble(variableValue);
-	}
-	
-	@Override
-	public boolean handle(AWrapperWorld world, AEntityD_Definable<?> entity){
-		entity.setVariable(variableName, variableValue);
-		return true;
-	}
+public class PacketEntityVariableSet extends APacketEntity<AEntityD_Definable<?>> {
+    private final String variableName;
+    private final double variableValue;
+
+    public PacketEntityVariableSet(AEntityD_Definable<?> entity, String variableName, double variableValue) {
+        super(entity);
+        this.variableName = variableName;
+        this.variableValue = variableValue;
+    }
+
+    public PacketEntityVariableSet(ByteBuf buf) {
+        super(buf);
+        this.variableName = readStringFromBuffer(buf);
+        this.variableValue = buf.readDouble();
+    }
+
+    @Override
+    public void writeToBuffer(ByteBuf buf) {
+        super.writeToBuffer(buf);
+        writeStringToBuffer(variableName, buf);
+        buf.writeDouble(variableValue);
+    }
+
+    @Override
+    public boolean handle(AWrapperWorld world, AEntityD_Definable<?> entity) {
+        entity.setVariable(variableName, variableValue);
+        return true;
+    }
 }

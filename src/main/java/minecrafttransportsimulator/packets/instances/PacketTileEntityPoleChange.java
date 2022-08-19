@@ -14,47 +14,46 @@ import minecrafttransportsimulator.packets.components.APacketEntityInteract;
  * 
  * @author don_bruce
  */
-public class PacketTileEntityPoleChange extends APacketEntityInteract<TileEntityPole, IWrapperPlayer>{
-	private final Axis axis;
-	private final IWrapperNBT data;
-	
-	
-	public PacketTileEntityPoleChange(TileEntityPole pole, IWrapperPlayer player, Axis axis, IWrapperNBT data){
-		super(pole, player);
-		this.axis = axis;
-		this.data = data;
-	}
-	
-	public PacketTileEntityPoleChange(ByteBuf buf){
-		super(buf);
-		this.axis = Axis.values()[buf.readByte()];
-		if(buf.readBoolean()){
-			this.data = readDataFromBuffer(buf);
-		}else{
-			this.data = null;
-		}
-	}
-	
-	@Override
-	public void writeToBuffer(ByteBuf buf){
-		super.writeToBuffer(buf);
-		buf.writeByte(axis.ordinal());
-		if(data != null){
-			buf.writeBoolean(true);
-			writeDataToBuffer(data, buf);
-		}else{
-			buf.writeBoolean(false);
-		}
-	}
-	
-	@Override
-	protected boolean handle(AWrapperWorld world, TileEntityPole pole, IWrapperPlayer player){
-		if(data != null){
-			//Player clicked with a component.  Add it.
-			pole.changeComponent(axis, PoleComponentType.createComponent(pole, player, axis, data));
-		}else{
-			pole.changeComponent(axis, null);
-		}
-		return false;
-	}
+public class PacketTileEntityPoleChange extends APacketEntityInteract<TileEntityPole, IWrapperPlayer> {
+    private final Axis axis;
+    private final IWrapperNBT data;
+
+    public PacketTileEntityPoleChange(TileEntityPole pole, IWrapperPlayer player, Axis axis, IWrapperNBT data) {
+        super(pole, player);
+        this.axis = axis;
+        this.data = data;
+    }
+
+    public PacketTileEntityPoleChange(ByteBuf buf) {
+        super(buf);
+        this.axis = Axis.values()[buf.readByte()];
+        if (buf.readBoolean()) {
+            this.data = readDataFromBuffer(buf);
+        } else {
+            this.data = null;
+        }
+    }
+
+    @Override
+    public void writeToBuffer(ByteBuf buf) {
+        super.writeToBuffer(buf);
+        buf.writeByte(axis.ordinal());
+        if (data != null) {
+            buf.writeBoolean(true);
+            writeDataToBuffer(data, buf);
+        } else {
+            buf.writeBoolean(false);
+        }
+    }
+
+    @Override
+    protected boolean handle(AWrapperWorld world, TileEntityPole pole, IWrapperPlayer player) {
+        if (data != null) {
+            //Player clicked with a component.  Add it.
+            pole.changeComponent(axis, PoleComponentType.createComponent(pole, player, axis, data));
+        } else {
+            pole.changeComponent(axis, null);
+        }
+        return false;
+    }
 }

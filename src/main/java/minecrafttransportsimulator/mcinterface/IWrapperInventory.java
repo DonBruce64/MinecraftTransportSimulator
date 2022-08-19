@@ -8,6 +8,6 @@ import minecrafttransportsimulator.baseclasses.IInventoryProvider;
  *
  * @author don_bruce
  */
-public interface IWrapperInventory extends IInventoryProvider{
+public interface IWrapperInventory extends IInventoryProvider {
 
 }

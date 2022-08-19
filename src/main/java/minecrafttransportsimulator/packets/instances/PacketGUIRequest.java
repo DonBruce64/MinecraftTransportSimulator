@@ -14,33 +14,35 @@ import minecrafttransportsimulator.packets.components.APacketPlayer;
  * 
  * @author don_bruce
  */
-public class PacketGUIRequest extends APacketPlayer{
-	private final GUIType guiRequested;
-	
-	public PacketGUIRequest(IWrapperPlayer player, GUIType guiRequested){
-		super(player);
-		this.guiRequested = guiRequested;
-	}
-	
-	public PacketGUIRequest(ByteBuf buf){
-		super(buf);
-		this.guiRequested = GUIType.values()[buf.readByte()];
-	}
-	
-	@Override
-	public void writeToBuffer(ByteBuf buf){
-		super.writeToBuffer(buf);
-		buf.writeByte(guiRequested.ordinal());
-	}
-	
-	@Override
-	public void handle(AWrapperWorld world, IWrapperPlayer player){
-		switch(guiRequested){
-			case BOOKELET: new GUIBooklet((ItemItem) player.getHeldItem()); break;
-		}
-	}
-	
-	public static enum GUIType{
-		BOOKELET;
-	}
+public class PacketGUIRequest extends APacketPlayer {
+    private final GUIType guiRequested;
+
+    public PacketGUIRequest(IWrapperPlayer player, GUIType guiRequested) {
+        super(player);
+        this.guiRequested = guiRequested;
+    }
+
+    public PacketGUIRequest(ByteBuf buf) {
+        super(buf);
+        this.guiRequested = GUIType.values()[buf.readByte()];
+    }
+
+    @Override
+    public void writeToBuffer(ByteBuf buf) {
+        super.writeToBuffer(buf);
+        buf.writeByte(guiRequested.ordinal());
+    }
+
+    @Override
+    public void handle(AWrapperWorld world, IWrapperPlayer player) {
+        switch (guiRequested) {
+            case BOOKELET:
+                new GUIBooklet((ItemItem) player.getHeldItem());
+                break;
+        }
+    }
+
+    public static enum GUIType {
+        BOOKELET;
+    }
 }

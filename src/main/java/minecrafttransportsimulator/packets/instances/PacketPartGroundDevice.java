@@ -10,28 +10,28 @@ import minecrafttransportsimulator.packets.components.APacketEntity;
  * 
  * @author don_bruce
  */
-public class PacketPartGroundDevice extends APacketEntity<PartGroundDevice>{
-	final boolean flat;
-	
-	public PacketPartGroundDevice(PartGroundDevice groundDevice, boolean flat){
-		super(groundDevice);
-		this.flat = flat;
-	}
-	
-	public PacketPartGroundDevice(ByteBuf buf){
-		super(buf);
-		this.flat = buf.readBoolean();
-	}
-	
-	@Override
-	public void writeToBuffer(ByteBuf buf){
-		super.writeToBuffer(buf);
-		buf.writeBoolean(flat);
-	}
-	
-	@Override
-	public boolean handle(AWrapperWorld world, PartGroundDevice groundDevice){
-		groundDevice.setFlatState(flat);
-		return true;
-	}
+public class PacketPartGroundDevice extends APacketEntity<PartGroundDevice> {
+    final boolean flat;
+
+    public PacketPartGroundDevice(PartGroundDevice groundDevice, boolean flat) {
+        super(groundDevice);
+        this.flat = flat;
+    }
+
+    public PacketPartGroundDevice(ByteBuf buf) {
+        super(buf);
+        this.flat = buf.readBoolean();
+    }
+
+    @Override
+    public void writeToBuffer(ByteBuf buf) {
+        super.writeToBuffer(buf);
+        buf.writeBoolean(flat);
+    }
+
+    @Override
+    public boolean handle(AWrapperWorld world, PartGroundDevice groundDevice) {
+        groundDevice.setFlatState(flat);
+        return true;
+    }
 }

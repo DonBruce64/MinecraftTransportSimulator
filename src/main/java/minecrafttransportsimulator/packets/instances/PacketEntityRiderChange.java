@@ -12,44 +12,44 @@ import minecrafttransportsimulator.packets.components.APacketEntityInteract;
  * 
  * @author don_bruce
  */
-public class PacketEntityRiderChange extends APacketEntityInteract<AEntityE_Interactable<?>, IWrapperEntity>{
-	private final boolean mount;
-	private final boolean facesForwards;
-	
-	/**Constructor for setting the rider.**/
-	public PacketEntityRiderChange(AEntityE_Interactable<?> entity, IWrapperEntity rider, boolean facesForwards){
-		super(entity, rider);
-		this.mount = true;
-		this.facesForwards = facesForwards;
-	}
-	
-	/**Constructor for removing the rider.**/
-	public PacketEntityRiderChange(AEntityE_Interactable<?> entity, IWrapperEntity rider){
+public class PacketEntityRiderChange extends APacketEntityInteract<AEntityE_Interactable<?>, IWrapperEntity> {
+    private final boolean mount;
+    private final boolean facesForwards;
+
+    /**Constructor for setting the rider.**/
+    public PacketEntityRiderChange(AEntityE_Interactable<?> entity, IWrapperEntity rider, boolean facesForwards) {
+        super(entity, rider);
+        this.mount = true;
+        this.facesForwards = facesForwards;
+    }
+
+    /**Constructor for removing the rider.**/
+    public PacketEntityRiderChange(AEntityE_Interactable<?> entity, IWrapperEntity rider) {
         super(entity, rider);
         this.mount = false;
         this.facesForwards = false;
     }
-	
-	public PacketEntityRiderChange(ByteBuf buf){
-		super(buf);
-		this.mount = buf.readBoolean();
-		this.facesForwards = buf.readBoolean();
-	}
-	
-	@Override
-	public void writeToBuffer(ByteBuf buf){
-		super.writeToBuffer(buf);
-		buf.writeBoolean(mount);
-		buf.writeBoolean(facesForwards);
-	}
-	
-	@Override
-	protected boolean handle(AWrapperWorld world, AEntityE_Interactable<?> entity, IWrapperEntity rider){
-		if(mount){
-			entity.setRider(rider, facesForwards);
-		}else{
-			entity.removeRider();
-		}
-		return true;
-	}
+
+    public PacketEntityRiderChange(ByteBuf buf) {
+        super(buf);
+        this.mount = buf.readBoolean();
+        this.facesForwards = buf.readBoolean();
+    }
+
+    @Override
+    public void writeToBuffer(ByteBuf buf) {
+        super.writeToBuffer(buf);
+        buf.writeBoolean(mount);
+        buf.writeBoolean(facesForwards);
+    }
+
+    @Override
+    protected boolean handle(AWrapperWorld world, AEntityE_Interactable<?> entity, IWrapperEntity rider) {
+        if (mount) {
+            entity.setRider(rider, facesForwards);
+        } else {
+            entity.removeRider();
+        }
+        return true;
+    }
 }

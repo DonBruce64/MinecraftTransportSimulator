@@ -20,28 +20,38 @@ import minecrafttransportsimulator.jsondefs.JSONDecor;
  * 
  * @author don_bruce
  */
-public class ItemDecor extends AItemSubTyped<JSONDecor> implements IItemBlock{
-	
-	public ItemDecor(JSONDecor definition, String subName, String sourcePackID){
-		super(definition, subName, sourcePackID);
-	}
-	
-	@Override
-	public Class<? extends ABlockBase> getBlockClass(){
-		switch(definition.decor.type){
-			case CHEST : return BlockChest.class;		
-			case BEACON : return BlockBeacon.class;	
-			case SIGNAL_CONTROLLER : return BlockSignalController.class;
-			case FUEL_PUMP : return BlockFuelPump.class;
-			case ITEM_LOADER : return BlockItemLoader.class;
-			case ITEM_UNLOADER : return BlockItemLoader.class;
-			case FLUID_LOADER : return BlockFluidLoader.class;
-			case FLUID_UNLOADER : return BlockFluidLoader.class;
-			case RADIO : return BlockRadio.class;
-			case GENERIC : return BlockDecor.class;
-		}
-		
-		//We won't ever get here, but this makes the compiler happy.
-		return null;
-	}
+public class ItemDecor extends AItemSubTyped<JSONDecor> implements IItemBlock {
+
+    public ItemDecor(JSONDecor definition, String subName, String sourcePackID) {
+        super(definition, subName, sourcePackID);
+    }
+
+    @Override
+    public Class<? extends ABlockBase> getBlockClass() {
+        switch (definition.decor.type) {
+            case CHEST:
+                return BlockChest.class;
+            case BEACON:
+                return BlockBeacon.class;
+            case SIGNAL_CONTROLLER:
+                return BlockSignalController.class;
+            case FUEL_PUMP:
+                return BlockFuelPump.class;
+            case ITEM_LOADER:
+                return BlockItemLoader.class;
+            case ITEM_UNLOADER:
+                return BlockItemLoader.class;
+            case FLUID_LOADER:
+                return BlockFluidLoader.class;
+            case FLUID_UNLOADER:
+                return BlockFluidLoader.class;
+            case RADIO:
+                return BlockRadio.class;
+            case GENERIC:
+                return BlockDecor.class;
+        }
+
+        //We won't ever get here, but this makes the compiler happy.
+        return null;
+    }
 }

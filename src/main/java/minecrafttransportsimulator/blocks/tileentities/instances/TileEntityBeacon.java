@@ -19,50 +19,50 @@ import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
  *
  * @author don_bruce
  */
-public class TileEntityBeacon extends TileEntityDecor{
-	public NavBeacon currentBeacon;
-	
-	public TileEntityBeacon(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, IWrapperNBT data){
-		super(world, position, placingPlayer, data);
-	}
-	
-	@Override
-	protected void initializeAnimations(){
-		super.initializeAnimations();
-		for(JSONText textDef : text.keySet()){
-			currentBeacon = NavBeacon.getByNameFromWorld(world, text.get(textDef));
-			return;
-		}
-	}
-	
-	@Override
-    public void destroy(BoundingBox box){
-    	super.destroy(box);
-    	if(currentBeacon != null){
-			NavBeacon.removeFromWorld(world, currentBeacon.name);
-		}
+public class TileEntityBeacon extends TileEntityDecor {
+    public NavBeacon currentBeacon;
+
+    public TileEntityBeacon(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, IWrapperNBT data) {
+        super(world, position, placingPlayer, data);
     }
-		
+
     @Override
-	public boolean interact(IWrapperPlayer player){
-		player.sendPacket(new PacketEntityGUIRequest(this, player, PacketEntityGUIRequest.EntityGUIType.TEXT_EDITOR));
-		return true;
-	}
-	
-	@Override
-	public void updateText(List<String> textLines){
-		if(currentBeacon != null){
-			NavBeacon.removeFromWorld(world, currentBeacon.name);
-			currentBeacon = null;
-		}
-		try{
-			//Try to create the beacon before setting text.  If it's invalid text, we don't want to save it.
-			//If the object can be created, then we just call super and let it handle this.
-			NavBeacon newBeacon = new NavBeacon(world, textLines.get(0), Double.valueOf(textLines.get(1)), Double.valueOf(textLines.get(2)), position);
-			super.updateText(textLines);
-			currentBeacon = newBeacon;
-		}catch(Exception e){
-			//Don't update text.  It's entered invalid.
-		}
-	}
+    protected void initializeAnimations() {
+        super.initializeAnimations();
+        for (JSONText textDef : text.keySet()) {
+            currentBeacon = NavBeacon.getByNameFromWorld(world, text.get(textDef));
+            return;
+        }
+    }
+
+    @Override
+    public void destroy(BoundingBox box) {
+        super.destroy(box);
+        if (currentBeacon != null) {
+            NavBeacon.removeFromWorld(world, currentBeacon.name);
+        }
+    }
+
+    @Override
+    public boolean interact(IWrapperPlayer player) {
+        player.sendPacket(new PacketEntityGUIRequest(this, player, PacketEntityGUIRequest.EntityGUIType.TEXT_EDITOR));
+        return true;
+    }
+
+    @Override
+    public void updateText(List<String> textLines) {
+        if (currentBeacon != null) {
+            NavBeacon.removeFromWorld(world, currentBeacon.name);
+            currentBeacon = null;
+        }
+        try {
+            //Try to create the beacon before setting text.  If it's invalid text, we don't want to save it.
+            //If the object can be created, then we just call super and let it handle this.
+            NavBeacon newBeacon = new NavBeacon(world, textLines.get(0), Double.valueOf(textLines.get(1)), Double.valueOf(textLines.get(2)), position);
+            super.updateText(textLines);
+            currentBeacon = newBeacon;
+        } catch (Exception e) {
+            //Don't update text.  It's entered invalid.
+        }
+    }
 }

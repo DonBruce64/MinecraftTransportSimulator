@@ -20,82 +20,82 @@ import minecrafttransportsimulator.packets.components.APacketPlayer;
  * 
  * @author don_bruce
  */
-public class PacketItemInteractable extends APacketPlayer{
-	private final UUID uniqueUUID;
-	private final IWrapperNBT data;
-	private final int units;
-	private final String texture;
-	
-	public PacketItemInteractable(IWrapperPlayer player, EntityInventoryContainer inventory, String texture){
-		super(player);
-		this.uniqueUUID = inventory.uniqueUUID;
-		this.data = inventory.save(InterfaceManager.coreInterface.getNewNBTWrapper());
-		this.units = inventory.getSize();
-		this.texture = texture;
-	}
-	
-	private PacketItemInteractable(IWrapperPlayer player, UUID uniqueUUID){
-		super(player);
-		this.uniqueUUID = uniqueUUID;
-		this.data = null;
-		this.units = 0;
-		this.texture = null;
-	}
-	
-	public PacketItemInteractable(ByteBuf buf){
-		super(buf);
-		this.uniqueUUID = readUUIDFromBuffer(buf);
-		if(buf.readBoolean()){
-			this.data = readDataFromBuffer(buf);
-			this.units = buf.readInt();
-			if(buf.readBoolean()){
-				this.texture = readStringFromBuffer(buf);
-			}else{
-				this.texture = null;
-			}
-		}else{
-			this.data = null;
-			this.units = 0;
-			this.texture = null;
-		}
-	}
-	
-	@Override
-	public void writeToBuffer(ByteBuf buf){
-		super.writeToBuffer(buf);
-		writeUUIDToBuffer(uniqueUUID, buf);
-		if(data == null){
-			buf.writeBoolean(false);
-		}else{
-			buf.writeBoolean(true);
-			writeDataToBuffer(data, buf);
-			buf.writeInt(units);
-			if(texture != null){
-				buf.writeBoolean(true);
-				writeStringToBuffer(texture, buf);
-			}else{
-				buf.writeBoolean(false);
-			}
-		}
-	}
-	
-	@Override
-	public void handle(AWrapperWorld world, IWrapperPlayer player){
-		if(world.isClient()){
-			//Create new inventory container ad-hoc to match server's data.
-			//We then delete this container, and the one on the server, when the GUI is closed.
-			EntityInventoryContainer inventory = new EntityInventoryContainer(world, data, units);
-			new GUIInventoryContainer(inventory, texture, true){
-				@Override
-				public void close(){
-					super.close();
-					InterfaceManager.packetInterface.sendToServer(new PacketItemInteractable(player, uniqueUUID));
-					inventory.remove();
-				}
-			};
-			world.addEntity(inventory);
-		}else{
-			world.getEntity(uniqueUUID).remove();
-		}
-	}
+public class PacketItemInteractable extends APacketPlayer {
+    private final UUID uniqueUUID;
+    private final IWrapperNBT data;
+    private final int units;
+    private final String texture;
+
+    public PacketItemInteractable(IWrapperPlayer player, EntityInventoryContainer inventory, String texture) {
+        super(player);
+        this.uniqueUUID = inventory.uniqueUUID;
+        this.data = inventory.save(InterfaceManager.coreInterface.getNewNBTWrapper());
+        this.units = inventory.getSize();
+        this.texture = texture;
+    }
+
+    private PacketItemInteractable(IWrapperPlayer player, UUID uniqueUUID) {
+        super(player);
+        this.uniqueUUID = uniqueUUID;
+        this.data = null;
+        this.units = 0;
+        this.texture = null;
+    }
+
+    public PacketItemInteractable(ByteBuf buf) {
+        super(buf);
+        this.uniqueUUID = readUUIDFromBuffer(buf);
+        if (buf.readBoolean()) {
+            this.data = readDataFromBuffer(buf);
+            this.units = buf.readInt();
+            if (buf.readBoolean()) {
+                this.texture = readStringFromBuffer(buf);
+            } else {
+                this.texture = null;
+            }
+        } else {
+            this.data = null;
+            this.units = 0;
+            this.texture = null;
+        }
+    }
+
+    @Override
+    public void writeToBuffer(ByteBuf buf) {
+        super.writeToBuffer(buf);
+        writeUUIDToBuffer(uniqueUUID, buf);
+        if (data == null) {
+            buf.writeBoolean(false);
+        } else {
+            buf.writeBoolean(true);
+            writeDataToBuffer(data, buf);
+            buf.writeInt(units);
+            if (texture != null) {
+                buf.writeBoolean(true);
+                writeStringToBuffer(texture, buf);
+            } else {
+                buf.writeBoolean(false);
+            }
+        }
+    }
+
+    @Override
+    public void handle(AWrapperWorld world, IWrapperPlayer player) {
+        if (world.isClient()) {
+            //Create new inventory container ad-hoc to match server's data.
+            //We then delete this container, and the one on the server, when the GUI is closed.
+            EntityInventoryContainer inventory = new EntityInventoryContainer(world, data, units);
+            new GUIInventoryContainer(inventory, texture, true) {
+                @Override
+                public void close() {
+                    super.close();
+                    InterfaceManager.packetInterface.sendToServer(new PacketItemInteractable(player, uniqueUUID));
+                    inventory.remove();
+                }
+            };
+            world.addEntity(inventory);
+        } else {
+            world.getEntity(uniqueUUID).remove();
+        }
+    }
 }

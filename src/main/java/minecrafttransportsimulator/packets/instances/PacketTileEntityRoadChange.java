@@ -15,57 +15,57 @@ import minecrafttransportsimulator.packloading.PackParser;
  * 
  * @author don_bruce
  */
-public class PacketTileEntityRoadChange extends APacketEntityInteract<TileEntityRoad, IWrapperPlayer>{
-	private final RoadComponent componentType;
-	private final ItemRoadComponent componentItem;
-	
-	public PacketTileEntityRoadChange(TileEntityRoad road, IWrapperPlayer player, RoadComponent componentType, ItemRoadComponent componentItem){
-		super(road, player);
-		this.componentType = componentType;
-		this.componentItem = componentItem;
-	}
-	
-	public PacketTileEntityRoadChange(ByteBuf buf){
-		super(buf);
-		this.componentType = RoadComponent.values()[buf.readByte()];
-		if(buf.readBoolean()){
-			this.componentItem = PackParser.getItem(readStringFromBuffer(buf), readStringFromBuffer(buf));
-		}else{
-			this.componentItem = null;
-		}
-	}
-	
-	@Override
-	public void writeToBuffer(ByteBuf buf){
-		super.writeToBuffer(buf);
-		buf.writeByte(componentType.ordinal());
-		if(componentItem != null){
-			buf.writeBoolean(true);
-			writeStringToBuffer(componentItem.definition.packID, buf);
-			writeStringToBuffer(componentItem.definition.systemName, buf);
-		}else{
-			buf.writeBoolean(false);
-		}
-	}
-	
-	@Override
-	protected boolean handle(AWrapperWorld world, TileEntityRoad road, IWrapperPlayer player){
-		if(componentItem != null){
-			//Player clicked with a component.  Add/change it.
-			road.components.put(componentType, componentItem);
-			if(!player.isCreative()){
-				player.getInventory().removeFromSlot(player.getHotbarIndex(), 1);
-			}
-			return true;
-		}else{
-			//Player clicked with a wrench, try to remove the component.
-			if(road.components.containsKey(componentType)){
-				if(world.isClient() || player.isCreative() || player.getInventory().addStack(road.components.get(componentType).getNewStack(null))){
-					road.components.remove(componentType);
-					return true;
-				}
-			}
-		}
-		return false;
-	}
+public class PacketTileEntityRoadChange extends APacketEntityInteract<TileEntityRoad, IWrapperPlayer> {
+    private final RoadComponent componentType;
+    private final ItemRoadComponent componentItem;
+
+    public PacketTileEntityRoadChange(TileEntityRoad road, IWrapperPlayer player, RoadComponent componentType, ItemRoadComponent componentItem) {
+        super(road, player);
+        this.componentType = componentType;
+        this.componentItem = componentItem;
+    }
+
+    public PacketTileEntityRoadChange(ByteBuf buf) {
+        super(buf);
+        this.componentType = RoadComponent.values()[buf.readByte()];
+        if (buf.readBoolean()) {
+            this.componentItem = PackParser.getItem(readStringFromBuffer(buf), readStringFromBuffer(buf));
+        } else {
+            this.componentItem = null;
+        }
+    }
+
+    @Override
+    public void writeToBuffer(ByteBuf buf) {
+        super.writeToBuffer(buf);
+        buf.writeByte(componentType.ordinal());
+        if (componentItem != null) {
+            buf.writeBoolean(true);
+            writeStringToBuffer(componentItem.definition.packID, buf);
+            writeStringToBuffer(componentItem.definition.systemName, buf);
+        } else {
+            buf.writeBoolean(false);
+        }
+    }
+
+    @Override
+    protected boolean handle(AWrapperWorld world, TileEntityRoad road, IWrapperPlayer player) {
+        if (componentItem != null) {
+            //Player clicked with a component.  Add/change it.
+            road.components.put(componentType, componentItem);
+            if (!player.isCreative()) {
+                player.getInventory().removeFromSlot(player.getHotbarIndex(), 1);
+            }
+            return true;
+        } else {
+            //Player clicked with a wrench, try to remove the component.
+            if (road.components.containsKey(componentType)) {
+                if (world.isClient() || player.isCreative() || player.getInventory().addStack(road.components.get(componentType).getNewStack(null))) {
+                    road.components.remove(componentType);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 }

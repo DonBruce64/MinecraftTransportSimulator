@@ -11,27 +11,27 @@ import minecrafttransportsimulator.packets.components.APacketBase;
  * 
  * @author don_bruce
  */
-public class PacketEntityBulletHitBlock extends APacketBase{
+public class PacketEntityBulletHitBlock extends APacketBase {
     private final Point3D hitPosition;
 
-	public PacketEntityBulletHitBlock(Point3D hitPosition){
-		super(null);
-		this.hitPosition = hitPosition;
-	}
-	
-	public PacketEntityBulletHitBlock(ByteBuf buf){
-		super(buf);
-		this.hitPosition = readPoint3dFromBuffer(buf);
-	}
-	
-	@Override
-    public void writeToBuffer(ByteBuf buf){
+    public PacketEntityBulletHitBlock(Point3D hitPosition) {
+        super(null);
+        this.hitPosition = hitPosition;
+    }
+
+    public PacketEntityBulletHitBlock(ByteBuf buf) {
+        super(buf);
+        this.hitPosition = readPoint3dFromBuffer(buf);
+    }
+
+    @Override
+    public void writeToBuffer(ByteBuf buf) {
         super.writeToBuffer(buf);
         writePoint3dToBuffer(hitPosition, buf);
     }
-	
-	@Override
-	public void handle(AWrapperWorld world){
-	    InterfaceManager.clientInterface.playBlockBreakSound(hitPosition);
-	}
+
+    @Override
+    public void handle(AWrapperWorld world) {
+        InterfaceManager.clientInterface.playBlockBreakSound(hitPosition);
+    }
 }

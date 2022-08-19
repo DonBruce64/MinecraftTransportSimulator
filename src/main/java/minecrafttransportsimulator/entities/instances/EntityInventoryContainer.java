@@ -16,44 +16,44 @@ import minecrafttransportsimulator.packets.instances.PacketInventoryContainerCha
  *
  * @author don_bruce
  */
-public class EntityInventoryContainer extends AEntityA_Base implements IInventoryProvider{
-	private final List<IWrapperItemStack> inventory;
-	
-	public EntityInventoryContainer(AWrapperWorld world, IWrapperNBT data, int maxSlots){
-		super(world, data);
-		this.inventory = data.getStacks(maxSlots);
-	}
-	
-	@Override
-	public double getMass(){
-		return getInventoryMass();
-	}
+public class EntityInventoryContainer extends AEntityA_Base implements IInventoryProvider {
+    private final List<IWrapperItemStack> inventory;
 
-	@Override
-	public int getSize(){
-		return inventory.size();
-	}
-	
-	@Override
-	public IWrapperItemStack getStack(int index){
-		return inventory.get(index);
-	}
-	
-	@Override
-	public void setStack(IWrapperItemStack stackToSet, int index){
-		inventory.set(index, stackToSet);
-		if(!world.isClient()){
-			InterfaceManager.packetInterface.sendToAllClients(new PacketInventoryContainerChange(this, index, stackToSet));
-		}
-	}
-	
-	/**
-	 *  Saves inventory data to the passed-in NBT.
-	 */
-	@Override
-	public IWrapperNBT save(IWrapperNBT data){
-		super.save(data);
-		data.setStacks(inventory);
-		return data;
-	}
+    public EntityInventoryContainer(AWrapperWorld world, IWrapperNBT data, int maxSlots) {
+        super(world, data);
+        this.inventory = data.getStacks(maxSlots);
+    }
+
+    @Override
+    public double getMass() {
+        return getInventoryMass();
+    }
+
+    @Override
+    public int getSize() {
+        return inventory.size();
+    }
+
+    @Override
+    public IWrapperItemStack getStack(int index) {
+        return inventory.get(index);
+    }
+
+    @Override
+    public void setStack(IWrapperItemStack stackToSet, int index) {
+        inventory.set(index, stackToSet);
+        if (!world.isClient()) {
+            InterfaceManager.packetInterface.sendToAllClients(new PacketInventoryContainerChange(this, index, stackToSet));
+        }
+    }
+
+    /**
+     *  Saves inventory data to the passed-in NBT.
+     */
+    @Override
+    public IWrapperNBT save(IWrapperNBT data) {
+        super.save(data);
+        data.setStacks(inventory);
+        return data;
+    }
 }

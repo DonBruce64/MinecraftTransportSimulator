@@ -12,27 +12,27 @@ import minecrafttransportsimulator.packets.components.APacketPlayer;
  * 
  * @author don_bruce
  */
-public class PacketWorldSavedDataRequest extends APacketPlayer{
-	
-	public PacketWorldSavedDataRequest(IWrapperPlayer player){
-		super(player);
-	}
-	
-	public PacketWorldSavedDataRequest(ByteBuf buf){
-		super(buf);
-	}
-	
-	@Override
-	public void handle(AWrapperWorld world, IWrapperPlayer player){
-	    //Send back packet in data-block batches.
+public class PacketWorldSavedDataRequest extends APacketPlayer {
+
+    public PacketWorldSavedDataRequest(IWrapperPlayer player) {
+        super(player);
+    }
+
+    public PacketWorldSavedDataRequest(ByteBuf buf) {
+        super(buf);
+    }
+
+    @Override
+    public void handle(AWrapperWorld world, IWrapperPlayer player) {
+        //Send back packet in data-block batches.
         IWrapperNBT savedData = world.getData("");
-        for(String dataName : savedData.getAllNames()){
+        for (String dataName : savedData.getAllNames()) {
             player.sendPacket(new PacketWorldSavedDataUpdate(dataName, savedData.getData(dataName)));
         }
-	}
-	
-	@Override
-	public boolean runOnMainThread(){
-		return false;
-	}
+    }
+
+    @Override
+    public boolean runOnMainThread() {
+        return false;
+    }
 }

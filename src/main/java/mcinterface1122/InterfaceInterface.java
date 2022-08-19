@@ -18,76 +18,76 @@ import net.minecraft.world.World;
  *
  * @author don_bruce
  */
-public class InterfaceInterface{
-	
-	public static WrapperWorld toInternal(World world){
-		return WrapperWorld.getWrapperFor(world);
-	}
-	
-	public static World toExternal(WrapperWorld world){
-		return world.world;
-	}
-	
-	public static AEntityB_Existing toInternal(BuilderEntityExisting entity){
-		return entity.entity;
-	}
-	
-	public static BuilderEntityExisting toExternal(AEntityB_Existing entity){
-		for(Entity mcEntity : ((WrapperWorld) entity.world).world.loadedEntityList){
-			if(mcEntity instanceof BuilderEntityExisting){
-				if(entity.equals(((BuilderEntityExisting) mcEntity).entity)){
-					return (BuilderEntityExisting) mcEntity;
-				}
-			}
-		}
-		return null;
-	}
-	
-	public static ATileEntityBase<?> toInternal(BuilderTileEntity<?> tile){
-		return tile.tileEntity;
-	}
-	
-	public static BuilderTileEntity<?> toExternal(ATileEntityBase<?> tile){
-		return (BuilderTileEntity<?>) ((WrapperWorld) tile.world).world.getTileEntity(new BlockPos(tile.position.x, tile.position.y, tile.position.z));
-	}
-	
-	public static WrapperEntity toInternal(Entity entity){
-		return WrapperEntity.getWrapperFor(entity);
-	}
-	
-	public static Entity toExternal(WrapperEntity entity){
-		return entity.entity;
-	}
-	
-	public static WrapperPlayer toInternal(EntityPlayer player){
-		return WrapperPlayer.getWrapperFor(player);
-	}
-	
-	public static EntityPlayer toExternal(WrapperPlayer player){
-		return player.player;
-	}
-	
-	public static WrapperNBT toInternal(NBTTagCompound tag){
-		return new WrapperNBT(tag);
-	}
-	
-	public static NBTTagCompound toExternal(WrapperNBT data){
-		return data.tag;
-	}
-	
-	public static WrapperInventory toInternal(IInventory inventory){
-		return new WrapperInventory(inventory);
-	}
-	
-	public static ItemStack toExternal(WrapperInventory inventory){
-		throw new UnsupportedOperationException("ERROR: Cannot return external form of inventory wrapper due to external form being based on abstract class IInventory.");
-	}
-	
-	public static WrapperItemStack toInternal(ItemStack stack){
-		return new WrapperItemStack(stack);
-	}
-	
-	public static ItemStack toExternal(WrapperItemStack stack){
-		return stack.stack;
-	}
+public class InterfaceInterface {
+
+    public static WrapperWorld toInternal(World world) {
+        return WrapperWorld.getWrapperFor(world);
+    }
+
+    public static World toExternal(WrapperWorld world) {
+        return world.world;
+    }
+
+    public static AEntityB_Existing toInternal(BuilderEntityExisting entity) {
+        return entity.entity;
+    }
+
+    public static BuilderEntityExisting toExternal(AEntityB_Existing entity) {
+        for (Entity mcEntity : ((WrapperWorld) entity.world).world.loadedEntityList) {
+            if (mcEntity instanceof BuilderEntityExisting) {
+                if (entity.equals(((BuilderEntityExisting) mcEntity).entity)) {
+                    return (BuilderEntityExisting) mcEntity;
+                }
+            }
+        }
+        return null;
+    }
+
+    public static ATileEntityBase<?> toInternal(BuilderTileEntity<?> tile) {
+        return tile.tileEntity;
+    }
+
+    public static BuilderTileEntity<?> toExternal(ATileEntityBase<?> tile) {
+        return (BuilderTileEntity<?>) ((WrapperWorld) tile.world).world.getTileEntity(new BlockPos(tile.position.x, tile.position.y, tile.position.z));
+    }
+
+    public static WrapperEntity toInternal(Entity entity) {
+        return WrapperEntity.getWrapperFor(entity);
+    }
+
+    public static Entity toExternal(WrapperEntity entity) {
+        return entity.entity;
+    }
+
+    public static WrapperPlayer toInternal(EntityPlayer player) {
+        return WrapperPlayer.getWrapperFor(player);
+    }
+
+    public static EntityPlayer toExternal(WrapperPlayer player) {
+        return player.player;
+    }
+
+    public static WrapperNBT toInternal(NBTTagCompound tag) {
+        return new WrapperNBT(tag);
+    }
+
+    public static NBTTagCompound toExternal(WrapperNBT data) {
+        return data.tag;
+    }
+
+    public static WrapperInventory toInternal(IInventory inventory) {
+        return new WrapperInventory(inventory);
+    }
+
+    public static ItemStack toExternal(WrapperInventory inventory) {
+        throw new UnsupportedOperationException("ERROR: Cannot return external form of inventory wrapper due to external form being based on abstract class IInventory.");
+    }
+
+    public static WrapperItemStack toInternal(ItemStack stack) {
+        return new WrapperItemStack(stack);
+    }
+
+    public static ItemStack toExternal(WrapperItemStack stack) {
+        return stack.stack;
+    }
 }

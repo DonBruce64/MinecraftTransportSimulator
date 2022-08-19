@@ -9,9 +9,9 @@ import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
  *
  * @author don_bruce
  */
-public interface ITileEntityInventoryProvider{
-	/**
-	 *  Gets the inventory for this interface.
-	 */
-	public EntityInventoryContainer getInventory();
+public interface ITileEntityInventoryProvider {
+    /**
+     *  Gets the inventory for this interface.
+     */
+    public EntityInventoryContainer getInventory();
 }

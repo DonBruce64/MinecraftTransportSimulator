@@ -18,58 +18,58 @@ import net.minecraft.util.NonNullList;
  *
  * @author don_bruce
  */
-public class BuilderCreativeTab extends CreativeTabs{
-	/**Map of created tabs names linked to their builder instances.  Used for interface operations.**/
-	protected static final Map<String, BuilderCreativeTab> createdTabs = new HashMap<String, BuilderCreativeTab>();
-	
-	private Item itemIcon;
-	private final List<Item> items = new ArrayList<Item>();
-	
-	BuilderCreativeTab(String name, BuilderItem mcItem){
-		super(name);
-		this.itemIcon = mcItem;
-	}
-	
-	/**
+public class BuilderCreativeTab extends CreativeTabs {
+    /**Map of created tabs names linked to their builder instances.  Used for interface operations.**/
+    protected static final Map<String, BuilderCreativeTab> createdTabs = new HashMap<String, BuilderCreativeTab>();
+
+    private Item itemIcon;
+    private final List<Item> items = new ArrayList<Item>();
+
+    BuilderCreativeTab(String name, BuilderItem mcItem) {
+        super(name);
+        this.itemIcon = mcItem;
+    }
+
+    /**
      * Adds the passed-in item to this tab.
      */
-	public void addItem(AItemBase item, BuilderItem mcItem){
-		items.add(mcItem);
-		mcItem.setCreativeTab(this);
+    public void addItem(AItemBase item, BuilderItem mcItem) {
+        items.add(mcItem);
+        mcItem.setCreativeTab(this);
     }
-	
-	@Override
-	public String getTranslationKey(){
-		return getTabLabel();
-    }
-	
-	@Override
-	public ItemStack createIcon(){
-		return itemIcon != null ? new ItemStack(itemIcon) : null;
-	}
-	
-	@Override
-	public ItemStack getIcon(){
-		if(itemIcon != null){
-			return super.getIcon();
-		}else{
-			return new ItemStack(items.get((int) (System.currentTimeMillis()/1000%items.size())));
-		}
-	}
 
-	@Override
-    public void displayAllRelevantItems(NonNullList<ItemStack> givenList){
-		//This is needed to re-sort the items here to get them in the correct order.
-		//MC will re-order these by ID if we let it.  To prevent this, we swap MC's
-		//internal list with our own, which ensures that the order is the order
-		//we did registration in.
-		givenList.clear();
-		for(Item item : items){
-			for(CreativeTabs tab : item.getCreativeTabs()){
-				if(this.equals(tab)){
-					item.getSubItems(tab, givenList);
-				}
-			}
-		}
+    @Override
+    public String getTranslationKey() {
+        return getTabLabel();
+    }
+
+    @Override
+    public ItemStack createIcon() {
+        return itemIcon != null ? new ItemStack(itemIcon) : null;
+    }
+
+    @Override
+    public ItemStack getIcon() {
+        if (itemIcon != null) {
+            return super.getIcon();
+        } else {
+            return new ItemStack(items.get((int) (System.currentTimeMillis() / 1000 % items.size())));
+        }
+    }
+
+    @Override
+    public void displayAllRelevantItems(NonNullList<ItemStack> givenList) {
+        //This is needed to re-sort the items here to get them in the correct order.
+        //MC will re-order these by ID if we let it.  To prevent this, we swap MC's
+        //internal list with our own, which ensures that the order is the order
+        //we did registration in.
+        givenList.clear();
+        for (Item item : items) {
+            for (CreativeTabs tab : item.getCreativeTabs()) {
+                if (this.equals(tab)) {
+                    item.getSubItems(tab, givenList);
+                }
+            }
+        }
     }
 }

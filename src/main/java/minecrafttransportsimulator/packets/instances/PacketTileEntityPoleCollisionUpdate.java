@@ -10,19 +10,19 @@ import minecrafttransportsimulator.packets.components.APacketEntity;
  * 
  * @author don_bruce
  */
-public class PacketTileEntityPoleCollisionUpdate extends APacketEntity<TileEntityPole>{
-	
-	public PacketTileEntityPoleCollisionUpdate(TileEntityPole pole){
-		super(pole);
-	}
-	
-	public PacketTileEntityPoleCollisionUpdate(ByteBuf buf){
-		super(buf);
-	}
-	
-	@Override
-	protected boolean handle(AWrapperWorld world, TileEntityPole pole){
-		pole.updateCollision(false);
-		return false;
-	}
+public class PacketTileEntityPoleCollisionUpdate extends APacketEntity<TileEntityPole> {
+
+    public PacketTileEntityPoleCollisionUpdate(TileEntityPole pole) {
+        super(pole);
+    }
+
+    public PacketTileEntityPoleCollisionUpdate(ByteBuf buf) {
+        super(buf);
+    }
+
+    @Override
+    protected boolean handle(AWrapperWorld world, TileEntityPole pole) {
+        pole.updateCollision(false);
+        return false;
+    }
 }

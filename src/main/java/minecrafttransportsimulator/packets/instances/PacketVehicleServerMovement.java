@@ -17,36 +17,36 @@ import minecrafttransportsimulator.packets.components.APacketEntity;
  * 
  * @author don_bruce
  */
-public class PacketVehicleServerMovement extends APacketEntity<EntityVehicleF_Physics>{
-	private final Point3D motion;
-	private final Point3D rotation;
-	private final double pathing;
-	
-	public PacketVehicleServerMovement(EntityVehicleF_Physics vehicle, Point3D motion, Point3D rotation, double pathing){
-		super(vehicle);
-		this.motion = motion;
-		this.rotation = rotation;
-		this.pathing = pathing;
-	}
-	
-	public PacketVehicleServerMovement(ByteBuf buf){
-		super(buf);
-		this.motion = readPoint3dFromBuffer(buf);
-		this.rotation = readPoint3dFromBuffer(buf);
-		this.pathing = buf.readDouble();
-	}
-	
-	@Override
-	public void writeToBuffer(ByteBuf buf){
-		super.writeToBuffer(buf);
-		writePoint3dToBuffer(motion, buf);
-		writePoint3dToBuffer(rotation, buf);
-		buf.writeDouble(pathing);
-	}
-	
-	@Override
-	public boolean handle(AWrapperWorld world, EntityVehicleF_Physics vehicle){
-		vehicle.addToServerDeltas(motion, rotation, pathing);
-		return false;
-	}
+public class PacketVehicleServerMovement extends APacketEntity<EntityVehicleF_Physics> {
+    private final Point3D motion;
+    private final Point3D rotation;
+    private final double pathing;
+
+    public PacketVehicleServerMovement(EntityVehicleF_Physics vehicle, Point3D motion, Point3D rotation, double pathing) {
+        super(vehicle);
+        this.motion = motion;
+        this.rotation = rotation;
+        this.pathing = pathing;
+    }
+
+    public PacketVehicleServerMovement(ByteBuf buf) {
+        super(buf);
+        this.motion = readPoint3dFromBuffer(buf);
+        this.rotation = readPoint3dFromBuffer(buf);
+        this.pathing = buf.readDouble();
+    }
+
+    @Override
+    public void writeToBuffer(ByteBuf buf) {
+        super.writeToBuffer(buf);
+        writePoint3dToBuffer(motion, buf);
+        writePoint3dToBuffer(rotation, buf);
+        buf.writeDouble(pathing);
+    }
+
+    @Override
+    public boolean handle(AWrapperWorld world, EntityVehicleF_Physics vehicle) {
+        vehicle.addToServerDeltas(motion, rotation, pathing);
+        return false;
+    }
 }

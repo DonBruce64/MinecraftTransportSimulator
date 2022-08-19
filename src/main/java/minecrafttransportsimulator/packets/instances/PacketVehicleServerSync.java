@@ -18,54 +18,54 @@ import minecrafttransportsimulator.packets.components.APacketEntity;
  * 
  * @author don_bruce
  */
-public class PacketVehicleServerSync extends APacketEntity<EntityVehicleF_Physics>{
-	private final Point3D motion;
-	private final Point3D rotation;
-	private final double pathing;
-	
-	public PacketVehicleServerSync(EntityVehicleF_Physics vehicle){
-		super(vehicle);
-		this.motion = null;
-		this.rotation = null;
-		this.pathing = 0;
-	}
-	
-	public PacketVehicleServerSync(EntityVehicleF_Physics vehicle, Point3D motion, Point3D rotation, double pathing){
-		super(vehicle);
-		this.motion = motion;
-		this.rotation = rotation;
-		this.pathing = pathing;
-	}
-	
-	public PacketVehicleServerSync(ByteBuf buf){
-		super(buf);
-		if(buf.readBoolean()){
-			this.motion = readPoint3dFromBuffer(buf);
-			this.rotation = readPoint3dFromBuffer(buf);
-			this.pathing = buf.readDouble();
-		}else{
-			this.motion = null;
-			this.rotation = null;
-			this.pathing = 0;
-		}
-	}
-	
-	@Override
-	public void writeToBuffer(ByteBuf buf){
-		super.writeToBuffer(buf);
-		if(motion != null){
-			buf.writeBoolean(true);
-			writePoint3dToBuffer(motion, buf);
-			writePoint3dToBuffer(rotation, buf);
-			buf.writeDouble(pathing);
-		}else{
-			buf.writeBoolean(false);
-		}
-	}
-	
-	@Override
-	public boolean handle(AWrapperWorld world, EntityVehicleF_Physics vehicle){
-		vehicle.syncServerDeltas(motion, rotation, pathing);
-		return false;
-	}
+public class PacketVehicleServerSync extends APacketEntity<EntityVehicleF_Physics> {
+    private final Point3D motion;
+    private final Point3D rotation;
+    private final double pathing;
+
+    public PacketVehicleServerSync(EntityVehicleF_Physics vehicle) {
+        super(vehicle);
+        this.motion = null;
+        this.rotation = null;
+        this.pathing = 0;
+    }
+
+    public PacketVehicleServerSync(EntityVehicleF_Physics vehicle, Point3D motion, Point3D rotation, double pathing) {
+        super(vehicle);
+        this.motion = motion;
+        this.rotation = rotation;
+        this.pathing = pathing;
+    }
+
+    public PacketVehicleServerSync(ByteBuf buf) {
+        super(buf);
+        if (buf.readBoolean()) {
+            this.motion = readPoint3dFromBuffer(buf);
+            this.rotation = readPoint3dFromBuffer(buf);
+            this.pathing = buf.readDouble();
+        } else {
+            this.motion = null;
+            this.rotation = null;
+            this.pathing = 0;
+        }
+    }
+
+    @Override
+    public void writeToBuffer(ByteBuf buf) {
+        super.writeToBuffer(buf);
+        if (motion != null) {
+            buf.writeBoolean(true);
+            writePoint3dToBuffer(motion, buf);
+            writePoint3dToBuffer(rotation, buf);
+            buf.writeDouble(pathing);
+        } else {
+            buf.writeBoolean(false);
+        }
+    }
+
+    @Override
+    public boolean handle(AWrapperWorld world, EntityVehicleF_Physics vehicle) {
+        vehicle.syncServerDeltas(motion, rotation, pathing);
+        return false;
+    }
 }

@@ -12,89 +12,89 @@ import minecrafttransportsimulator.packets.components.APacketBase;
  *
  * @author don_bruce
  */
-public interface IWrapperPlayer extends IWrapperEntity{
+public interface IWrapperPlayer extends IWrapperEntity {
 
-	/**
-	 *  Returns true if this player is OP.  Will always return true on single-player worlds.
-	 */
-	public boolean isOP();
-	
-	/**
-	 *  Displays the passed-in chat message to the player.
-	 *  Arguments will be substituted into the string as applicable.
-	 */
-	public void displayChatMessage(LanguageEntry language, Object... args);
-	
-	/**
-	 *  Returns true if this player is in creative mode.
-	 */
-	public boolean isCreative();
-	
-	/**
-	 *  Returns true if this player is in spectator mode.
-	 */
-	public boolean isSpectator();
-	
-	/**
-	 *  Returns true if this player is sneaking.
-	 */
-	public boolean isSneaking();
-	
-	/**
-	 *  Gets the currently-leashed entity for this player, or null if it doesn't exist.
-	 */
-	public IWrapperEntity getLeashedEntity();
-	
-	/**
-	 *  Returns true if the player is holding the pack-item type passed-in.
-	 */
-	public boolean isHoldingItemType(ItemComponentType type);
-	
-	/**
-	 *  Returns the held item.  Only valid for {@link AItemBase} items.
-	 *  This is less RAM-intensive than {@link #getHeldStack()} due to
-	 *  not needing to make a new IWrapper during the call.  So if you only
-	 *  need to know the item the player is holding, you should use this method
-	 *  rather than getting the item out of the stack.  Of course, if you already
-	 *  have a stack, just use that.
-	 */
-	public AItemBase getHeldItem();
-	
-	/**
-	 *  Returns the held stack.
-	 */
-	public IWrapperItemStack getHeldStack();
-	
-	/**
-	 *  Sets the held stack.  Overwrites what was in the hand before this.
-	 */
-	public void setHeldStack(IWrapperItemStack stack);
-	
-	/**
-	 *  Gets the index of the held stack in the hotbar.
-	 *  This corresponds to the inventory slot the item is in.
-	 */
-	public int getHotbarIndex();
-	
-	/**
-	 *  Gets the inventory of the player.
-	 */
-	public IWrapperInventory getInventory();
-	
-	/**
-	 *  Sends a packet to this player over the network.
-	 *  Convenience method so we don't need to call the
-	 *  {@link InterfaceManager.packetInterface} for player-specific packets.
-	 *  Note that this may ONLY be called on the server, as
-	 *  clients don't know about other player's network pipelines.
-	 */
-	public void sendPacket(APacketBase packet);
-	
-	/**
-	 *  Opens the crafting table GUI.  This overrides the normal GUI opened
-	 *  when a block is clicked, which allows players to open a GUI by clicking
-	 *  an entity instead.  Required as normally MC checks if there is a block
-	 *  present in the internal code, which automatically closes the GUI.
-	 */
-	public void openCraftingGUI();
+    /**
+     *  Returns true if this player is OP.  Will always return true on single-player worlds.
+     */
+    public boolean isOP();
+
+    /**
+     *  Displays the passed-in chat message to the player.
+     *  Arguments will be substituted into the string as applicable.
+     */
+    public void displayChatMessage(LanguageEntry language, Object... args);
+
+    /**
+     *  Returns true if this player is in creative mode.
+     */
+    public boolean isCreative();
+
+    /**
+     *  Returns true if this player is in spectator mode.
+     */
+    public boolean isSpectator();
+
+    /**
+     *  Returns true if this player is sneaking.
+     */
+    public boolean isSneaking();
+
+    /**
+     *  Gets the currently-leashed entity for this player, or null if it doesn't exist.
+     */
+    public IWrapperEntity getLeashedEntity();
+
+    /**
+     *  Returns true if the player is holding the pack-item type passed-in.
+     */
+    public boolean isHoldingItemType(ItemComponentType type);
+
+    /**
+     *  Returns the held item.  Only valid for {@link AItemBase} items.
+     *  This is less RAM-intensive than {@link #getHeldStack()} due to
+     *  not needing to make a new IWrapper during the call.  So if you only
+     *  need to know the item the player is holding, you should use this method
+     *  rather than getting the item out of the stack.  Of course, if you already
+     *  have a stack, just use that.
+     */
+    public AItemBase getHeldItem();
+
+    /**
+     *  Returns the held stack.
+     */
+    public IWrapperItemStack getHeldStack();
+
+    /**
+     *  Sets the held stack.  Overwrites what was in the hand before this.
+     */
+    public void setHeldStack(IWrapperItemStack stack);
+
+    /**
+     *  Gets the index of the held stack in the hotbar.
+     *  This corresponds to the inventory slot the item is in.
+     */
+    public int getHotbarIndex();
+
+    /**
+     *  Gets the inventory of the player.
+     */
+    public IWrapperInventory getInventory();
+
+    /**
+     *  Sends a packet to this player over the network.
+     *  Convenience method so we don't need to call the
+     *  {@link InterfaceManager.packetInterface} for player-specific packets.
+     *  Note that this may ONLY be called on the server, as
+     *  clients don't know about other player's network pipelines.
+     */
+    public void sendPacket(APacketBase packet);
+
+    /**
+     *  Opens the crafting table GUI.  This overrides the normal GUI opened
+     *  when a block is clicked, which allows players to open a GUI by clicking
+     *  an entity instead.  Required as normally MC checks if there is a block
+     *  present in the internal code, which automatically closes the GUI.
+     */
+    public void openCraftingGUI();
 }

@@ -7,12 +7,12 @@ package minecrafttransportsimulator.jsondefs;
  * 
  * @author don_bruce
  */
-public class JSONConfigEntry<ConfigType>{	
-	public ConfigType value;
-	public String comment;
-	
-	public JSONConfigEntry(ConfigType defaultValue, String comment){
-		this.value = defaultValue;
-		this.comment = comment;
-	}
+public class JSONConfigEntry<ConfigType> {
+    public ConfigType value;
+    public String comment;
+
+    public JSONConfigEntry(ConfigType defaultValue, String comment) {
+        this.value = defaultValue;
+        this.comment = comment;
+    }
 }

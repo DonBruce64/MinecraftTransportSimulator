@@ -21,68 +21,68 @@ import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
  *
  * @author don_bruce
  */
-public class GUIComponentItem extends AGUIComponent{		
-	public final float scale;
-	public IWrapperItemStack stack;
-	public List<IWrapperItemStack> stacks;
-	private IWrapperItemStack stackToRender;
-	private TransformationMatrix transform = new TransformationMatrix();
-	
-	/**Default item constructor.**/
-	public GUIComponentItem(int x, int y, float scale){
-		super(x, y, (int) (16*scale), (int) (16*scale));
-		this.scale = scale;
-		//Items are normally rendered with origin at bottom-right like normal models.
+public class GUIComponentItem extends AGUIComponent {
+    public final float scale;
+    public IWrapperItemStack stack;
+    public List<IWrapperItemStack> stacks;
+    private IWrapperItemStack stackToRender;
+    private TransformationMatrix transform = new TransformationMatrix();
+
+    /**Default item constructor.**/
+    public GUIComponentItem(int x, int y, float scale) {
+        super(x, y, (int) (16 * scale), (int) (16 * scale));
+        this.scale = scale;
+        //Items are normally rendered with origin at bottom-right like normal models.
         //The 16 y-offset moves them to top-left orientation.
-		this.textPosition.set(position.x + scale*16, position.y - 16F*scale + scale*8, textPosition.z);
-	}
-	
-	/**Constructor for an item linked with a button.  Button is assumed to be 18x18px so item will be offset 1px to center.**/
-	public GUIComponentItem(GUIComponentButton linkedButton){
-		this(linkedButton.constructedX + 1, linkedButton.constructedY + 1, 1.0F);
-	}
-	
-	@Override
-	public int getZOffset(){
-		return MODEL_DEFAULT_ZOFFSET;
-	}
+        this.textPosition.set(position.x + scale * 16, position.y - 16F * scale + scale * 8, textPosition.z);
+    }
+
+    /**Constructor for an item linked with a button.  Button is assumed to be 18x18px so item will be offset 1px to center.**/
+    public GUIComponentItem(GUIComponentButton linkedButton) {
+        this(linkedButton.constructedX + 1, linkedButton.constructedY + 1, 1.0F);
+    }
 
     @Override
-	public void render(AGUIBase gui, int mouseX, int mouseY, boolean renderBright, boolean renderLitTexture, boolean blendingEnabled, float partialTicks){
-    	if(stack != null){
-    		stackToRender = stack;
-    	}else if(stacks != null && !stacks.isEmpty()){
-    		stackToRender = stacks.get((int) (System.currentTimeMillis()%(stacks.size()*500)/500));
-    	}else{
-    		stackToRender = null;
-    		text = null;
-    	}
-    	
-    	if(stackToRender != null){
-    		transform.resetTransforms();
-    		transform.setTranslation(position.x, position.y, position.z);
-    		transform.applyScaling(scale, scale, scale);
-    		InterfaceManager.renderingInterface.renderItemModel(stackToRender, transform);
-    		
-    		if(stackToRender.getSize() > 1){
-    			text = String.valueOf(RenderText.FORMATTING_CHAR) + String.valueOf(RenderText.BOLD_FORMATTING_CHAR) + String.valueOf(stackToRender.getSize());
-    		}else{
-    			text = null;
-    		}
-    	}
+    public int getZOffset() {
+        return MODEL_DEFAULT_ZOFFSET;
     }
-    
+
     @Override
-    public void renderText(boolean renderTextLit){
-    	RenderText.drawText(text, null, textPosition, ColorRGB.WHITE, TextAlignment.RIGHT_ALIGNED, scale, false, 0, renderTextLit);
+    public void render(AGUIBase gui, int mouseX, int mouseY, boolean renderBright, boolean renderLitTexture, boolean blendingEnabled, float partialTicks) {
+        if (stack != null) {
+            stackToRender = stack;
+        } else if (stacks != null && !stacks.isEmpty()) {
+            stackToRender = stacks.get((int) (System.currentTimeMillis() % (stacks.size() * 500) / 500));
+        } else {
+            stackToRender = null;
+            text = null;
+        }
+
+        if (stackToRender != null) {
+            transform.resetTransforms();
+            transform.setTranslation(position.x, position.y, position.z);
+            transform.applyScaling(scale, scale, scale);
+            InterfaceManager.renderingInterface.renderItemModel(stackToRender, transform);
+
+            if (stackToRender.getSize() > 1) {
+                text = String.valueOf(RenderText.FORMATTING_CHAR) + String.valueOf(RenderText.BOLD_FORMATTING_CHAR) + String.valueOf(stackToRender.getSize());
+            } else {
+                text = null;
+            }
+        }
     }
-    
+
     @Override
-	public List<String> getTooltipText(){
-    	if(stackToRender != null && !stackToRender.isEmpty()){
-			return InterfaceManager.clientInterface.getTooltipLines(stackToRender);
-    	}else{
-    		return null;
-    	}
+    public void renderText(boolean renderTextLit) {
+        RenderText.drawText(text, null, textPosition, ColorRGB.WHITE, TextAlignment.RIGHT_ALIGNED, scale, false, 0, renderTextLit);
+    }
+
+    @Override
+    public List<String> getTooltipText() {
+        if (stackToRender != null && !stackToRender.isEmpty()) {
+            return InterfaceManager.clientInterface.getTooltipLines(stackToRender);
+        } else {
+            return null;
+        }
     }
 }

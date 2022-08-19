@@ -10,19 +10,19 @@ import minecrafttransportsimulator.packets.components.APacketEntity;
  * 
  * @author don_bruce
  */
-public class PacketPartEffector extends APacketEntity<PartEffector>{
-	
-	public PacketPartEffector(PartEffector effector){
-		super(effector);
-	}
-	
-	public PacketPartEffector(ByteBuf buf){
-		super(buf);
-	}
-	
-	@Override
-	public boolean handle(AWrapperWorld world, PartEffector effector){
-		++effector.blocksBroken;
-		return true;
-	}
+public class PacketPartEffector extends APacketEntity<PartEffector> {
+
+    public PacketPartEffector(PartEffector effector) {
+        super(effector);
+    }
+
+    public PacketPartEffector(ByteBuf buf) {
+        super(buf);
+    }
+
+    @Override
+    public boolean handle(AWrapperWorld world, PartEffector effector) {
+        ++effector.blocksBroken;
+        return true;
+    }
 }

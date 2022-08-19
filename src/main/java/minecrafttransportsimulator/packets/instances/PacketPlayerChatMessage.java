@@ -13,37 +13,38 @@ import minecrafttransportsimulator.packets.components.APacketPlayer;
  * 
  * @author don_bruce
  */
-public class PacketPlayerChatMessage extends APacketPlayer{
-	private final String message;
-	
-	public PacketPlayerChatMessage(IWrapperPlayer player, LanguageEntry language){
-		super(player);
-		this.message = language.key;
-	}
-	
-	public PacketPlayerChatMessage(IWrapperPlayer player, String message){
-		super(player);
-		this.message = message;
-	}
-	
-	public PacketPlayerChatMessage(ByteBuf buf){
-		super(buf);
-		this.message = readStringFromBuffer(buf);;
-	}
-	
-	@Override
-	public void writeToBuffer(ByteBuf buf){
-		super.writeToBuffer(buf);
-		writeStringToBuffer(message, buf);
-	}
-	
-	@Override
-	public void handle(AWrapperWorld world, IWrapperPlayer player){
-		LanguageEntry language = JSONConfigLanguage.coreEntries.get(message);
-		if(language != null){
-			player.displayChatMessage(language);
-		}else{
-			player.displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, message);
-		}
-	}
+public class PacketPlayerChatMessage extends APacketPlayer {
+    private final String message;
+
+    public PacketPlayerChatMessage(IWrapperPlayer player, LanguageEntry language) {
+        super(player);
+        this.message = language.key;
+    }
+
+    public PacketPlayerChatMessage(IWrapperPlayer player, String message) {
+        super(player);
+        this.message = message;
+    }
+
+    public PacketPlayerChatMessage(ByteBuf buf) {
+        super(buf);
+        this.message = readStringFromBuffer(buf);
+        ;
+    }
+
+    @Override
+    public void writeToBuffer(ByteBuf buf) {
+        super.writeToBuffer(buf);
+        writeStringToBuffer(message, buf);
+    }
+
+    @Override
+    public void handle(AWrapperWorld world, IWrapperPlayer player) {
+        LanguageEntry language = JSONConfigLanguage.coreEntries.get(message);
+        if (language != null) {
+            player.displayChatMessage(language);
+        } else {
+            player.displayChatMessage(JSONConfigLanguage.SYSTEM_DEBUG, message);
+        }
+    }
 }
