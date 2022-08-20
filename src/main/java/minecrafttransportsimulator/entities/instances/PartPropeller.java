@@ -87,7 +87,7 @@ public class PartPropeller extends APart {
                 PartEngine currentConnectedEngine = null;
                 for (PartEngine connectedEngine : connectedEngines) {
                     double engineDrivenRPM = connectedEngine.rpm / connectedEngine.propellerGearboxRatio;
-                    if (highestRunningRPM == 0 || engineDrivenRPM > highestPossibleRPM) {
+                    if (currentConnectedEngine == null || engineDrivenRPM > highestPossibleRPM) {
                         highestPossibleRPM = engineDrivenRPM;
                         currentConnectedEngine = connectedEngine;
                     }

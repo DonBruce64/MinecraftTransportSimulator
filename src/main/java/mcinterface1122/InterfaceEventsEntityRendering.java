@@ -296,9 +296,41 @@ public class InterfaceEventsEntityRendering {
 
         //Check for player model tweaks and changes.
         if (entity instanceof EntityPlayer) {
+            //Check if we are holding a gun.  This is the only other time
+            //we apply player tweaks besides riding in a vehicle.
+            if (ConfigSystem.client.renderingSettings.playerTweaks.value) {
+                EntityPlayerGun gunEntity = EntityPlayerGun.playerClientGuns.get(entity.getUniqueID());
+                if (gunEntity != null && gunEntity.activeGun != null) {
+                    //Get arm rotations.
+                    Point3D heldVector;
+                    if (gunEntity.activeGun.isHandHeldGunAimed) {
+                        heldVector = gunEntity.activeGun.definition.gun.handHeldAimedOffset;
+                    } else {
+                        heldVector = gunEntity.activeGun.definition.gun.handHeldNormalOffset;
+                    }
+                    double heldVectorLength = heldVector.length();
+                    double armPitchOffset = Math.toRadians(-90 + entity.rotationPitch) - Math.asin(heldVector.y / heldVectorLength);
+                    double armYawOffset = -Math.atan2(heldVector.x / heldVectorLength, heldVector.z / heldVectorLength);
+
+                    //Set rotation points on the model.
+                    rightArmAngles.set(armPitchOffset, armYawOffset + Math.toRadians(entity.rotationYawHead - entity.renderYawOffset), 0);
+                    if (gunEntity.activeGun.isHandHeldGunAimed) {
+                        leftArmAngles.set(armPitchOffset, -armYawOffset + Math.toRadians(entity.rotationYawHead - entity.renderYawOffset), 0);
+                    }
+
+                    //Remove the held item from the enitty's hand
+                    EntityPlayer player = (EntityPlayer) entity;
+                    heldStackHolder = player.getHeldItemMainhand();
+                    player.inventory.setInventorySlotContents(player.inventory.currentItem, ItemStack.EMPTY);
+
+                    //Flag us for player tweaks in the render.
+                    needPlayerTweaks = true;
+                }
+            }
+
             //Check if we modified the player model to allow us to change angles.
-            boolean setModelToCustom = ConfigSystem.client.renderingSettings.playerTweaks.value && !overwrotePlayerModel;
-            boolean setModelToDefault = !ConfigSystem.client.renderingSettings.playerTweaks.value && overwrotePlayerModel;
+            boolean setModelToCustom = ConfigSystem.client.renderingSettings.playerTweaks.value && needPlayerTweaks && !overwrotePlayerModel;
+            boolean setModelToDefault = (!ConfigSystem.client.renderingSettings.playerTweaks.value || !needPlayerTweaks) && overwrotePlayerModel;
             if (setModelToCustom || setModelToDefault) {
                 for (Field renderManagerField : RenderManager.class.getDeclaredFields()) {
                     if (renderManagerField.getName().equals("skinMap") || renderManagerField.getName().equals("field_178636_l")) {
@@ -340,38 +372,6 @@ public class InterfaceEventsEntityRendering {
                             e.printStackTrace();
                         }
                     }
-                }
-            }
-
-            //Check if we are holding a gun.  This is the only other time
-            //we apply player tweaks besides riding in a vehicle.
-            if (ConfigSystem.client.renderingSettings.playerTweaks.value) {
-                EntityPlayerGun gunEntity = EntityPlayerGun.playerClientGuns.get(entity.getUniqueID());
-                if (gunEntity != null && gunEntity.activeGun != null) {
-                    //Get arm rotations.
-                    Point3D heldVector;
-                    if (gunEntity.activeGun.isHandHeldGunAimed) {
-                        heldVector = gunEntity.activeGun.definition.gun.handHeldAimedOffset;
-                    } else {
-                        heldVector = gunEntity.activeGun.definition.gun.handHeldNormalOffset;
-                    }
-                    double heldVectorLength = heldVector.length();
-                    double armPitchOffset = Math.toRadians(-90 + entity.rotationPitch) - Math.asin(heldVector.y / heldVectorLength);
-                    double armYawOffset = -Math.atan2(heldVector.x / heldVectorLength, heldVector.z / heldVectorLength);
-
-                    //Set rotation points on the model.
-                    rightArmAngles.set(armPitchOffset, armYawOffset + Math.toRadians(entity.rotationYawHead - entity.renderYawOffset), 0);
-                    if (gunEntity.activeGun.isHandHeldGunAimed) {
-                        leftArmAngles.set(armPitchOffset, -armYawOffset + Math.toRadians(entity.rotationYawHead - entity.renderYawOffset), 0);
-                    }
-
-                    //Remove the held item from the enitty's hand
-                    EntityPlayer player = (EntityPlayer) entity;
-                    heldStackHolder = player.getHeldItemMainhand();
-                    player.inventory.setInventorySlotContents(player.inventory.currentItem, ItemStack.EMPTY);
-
-                    //Flag us for player tweaks in the render.
-                    needPlayerTweaks = true;
                 }
             }
         }
