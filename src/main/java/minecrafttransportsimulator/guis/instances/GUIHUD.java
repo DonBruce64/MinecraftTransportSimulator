@@ -42,33 +42,38 @@ public class GUIHUD extends AGUIBase {
 
     @Override
     public void setupComponents() {
-        //Need to adjust GUITop if we are a half hud.  This makes everything go down 1/4 height.
-        if (halfHUDActive) {
-            guiTop += getHeight() / 2;
-        }
-        super.setupComponents();
-
-        //Add instruments.  These go wherever they are specified in the JSON.
-        instruments.clear();
-        for (int i = 0; i < vehicle.instruments.size(); ++i) {
-            if (vehicle.instruments.get(i) != null && !vehicle.definition.instruments.get(i).placeOnPanel) {
-                GUIComponentInstrument instrument = new GUIComponentInstrument(guiLeft, guiTop, vehicle, i);
-                instruments.add(instrument);
-                addComponent(instrument);
+        //Only show instruments and background if we are a controller.
+        if (seat.placementDefinition.isController) {
+            //Need to adjust GUITop if we are a half hud.  This makes everything go down 1/4 height.
+            if (halfHUDActive) {
+                guiTop += getHeight() / 2;
             }
-        }
-        //Now add part instruments.
-        for (APart part : vehicle.parts) {
-            for (int i = 0; i < part.instruments.size(); ++i) {
-                if (part.instruments.get(i) != null && !part.definition.instruments.get(i).placeOnPanel) {
-                    addComponent(new GUIComponentInstrument(guiLeft, guiTop, part, i));
+            super.setupComponents();
+
+            //Add instruments.  These go wherever they are specified in the JSON.
+            instruments.clear();
+            for (int i = 0; i < vehicle.instruments.size(); ++i) {
+                if (vehicle.instruments.get(i) != null && !vehicle.definition.instruments.get(i).placeOnPanel) {
+                    GUIComponentInstrument instrument = new GUIComponentInstrument(guiLeft, guiTop, vehicle, i);
+                    instruments.add(instrument);
+                    addComponent(instrument);
                 }
             }
-        }
+            //Now add part instruments.
+            for (APart part : vehicle.parts) {
+                for (int i = 0; i < part.instruments.size(); ++i) {
+                    if (part.instruments.get(i) != null && !part.definition.instruments.get(i).placeOnPanel) {
+                        addComponent(new GUIComponentInstrument(guiLeft, guiTop, part, i));
+                    }
+                }
+            }
 
-        //Set top back to normal.
-        if (halfHUDActive) {
-            guiTop -= getHeight() / 2;
+            //Set top back to normal.
+            if (halfHUDActive) {
+                guiTop -= getHeight() / 2;
+            }
+        } else {
+            super.setupComponents();
         }
 
         //Add labels.
@@ -96,7 +101,7 @@ public class GUIHUD extends AGUIBase {
 
         //Set health label text and visibility.
         healthLabel.text = String.format("Health:%3.1f%%", 100 * (vehicle.definition.general.health - vehicle.damageAmount) / vehicle.definition.general.health);
-        healthLabel.visible = seat.placementDefinition.isController;
+        healthLabel.visible = seat.placementDefinition.isController || seat.canControlGuns;
 
         //Set gun label text, if we are in a seat that has one.
         //If we are in a seat controlling a gun, render a text line for it.

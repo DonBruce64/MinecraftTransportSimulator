@@ -1725,7 +1725,7 @@ public final class LegacyCompatSystem {
             }
         }
 
-        //Update linking for engines, seats, and effectors.
+        //Update linking for engines, guns, and effectors.
         for (JSONPartDefinition partDef : partDefs) {
             if (partDef.linkedParts == null) {
                 for (String partDefType : partDef.types) {
@@ -1734,20 +1734,41 @@ public final class LegacyCompatSystem {
                         partDef.linkedParts = new ArrayList<Integer>();
                         for (JSONPartDefinition partDef2 : partDefs) {
                             for (String partDefType2 : partDef2.types) {
-                                if (partDefType2.startsWith("generic") || partDefType2.startsWith("propeller") || (partDefType2.startsWith("ground") && ((linkFrontWheels && partDef2.pos.z > 0) || linkRearWheels && partDef2.pos.z <= 0))) {
+                                if (partDefType2.startsWith("propeller") || (partDefType2.startsWith("ground") && ((linkFrontWheels && partDef2.pos.z > 0) || linkRearWheels && partDef2.pos.z <= 0))) {
                                     partDef.linkedParts.add(partDefs.indexOf(partDef2) + 1);
                                     break;
                                 }
                             }
                         }
-                    } else if (partDefType.startsWith("seat") && partDef.isController) {
-                        //Controller seats link to guns, or generics, as those might have guns on them.
+                    } else if (partDefType.startsWith("gun")) {
+                        //If the gun requires a seat to be present to place, link it to that seat rather than the controller.
                         partDef.linkedParts = new ArrayList<Integer>();
-                        for (JSONPartDefinition partDef2 : partDefs) {
-                            for (String partDefType2 : partDef2.types) {
-                                if (partDefType2.startsWith("generic") || partDefType2.startsWith("gun")) {
-                                    partDef.linkedParts.add(partDefs.indexOf(partDef2) + 1);
+                        boolean foundLink = false;
+                        if (partDef.interactableVariables != null) {
+                            for (List<String> variables : partDef.interactableVariables) {
+                                for (String variable : variables) {
+                                    if (variable.startsWith("part_present")) {
+                                        partDef.linkedParts.add(Integer.valueOf(variable.substring("part_present_".length())));
+                                        foundLink = true;
+                                        break;
+                                    }
+                                }
+                                if (foundLink) {
                                     break;
+                                }
+                            }
+                        }
+
+                        if (!foundLink) {
+                            //No required seat found, just link to controller(s).
+                            for (JSONPartDefinition partDef2 : partDefs) {
+                                if (partDef2.isController) {
+                                    for (String partDefType2 : partDef2.types) {
+                                        if (partDefType2.startsWith("seat")) {
+                                            partDef.linkedParts.add(partDefs.indexOf(partDef2) + 1);
+                                            break;
+                                        }
+                                    }
                                 }
                             }
                         }

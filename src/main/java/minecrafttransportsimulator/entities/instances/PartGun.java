@@ -266,17 +266,11 @@ public class PartGun extends APart {
                     //Start of firing sequence, set state and cam offset to proper value prior to firing checks.
                     if (!state.isAtLeast(GunState.FIRING_CURRENTLY)) {
                         //Get current group and use it to determine firing offset.
-                        //If the seat fired a gun before, we need to offset our index for that gun.
-                        //This allows for resumption of the sequence if it was paused mid-firing.
+                        //Don't calculate this if we already did on a prior firing command.
                         if (lastGunGroup != null) {
-                            int sequenceIndex = lastGunGroup.indexOf(this);
-                            if (lastControllerSeat != null && lastControllerSeat.lastGunFired != null) {
-                                sequenceIndex = sequenceIndex - 1 - lastGunGroup.indexOf(lastControllerSeat.lastGunFired);
-                                if (sequenceIndex < 0) {
-                                    sequenceIndex += lastGunGroup.size();
-                                }
+                            if (camOffset == 0) {
+                                camOffset = definition.gun.fireSolo ? 0 : (int) definition.gun.fireDelay * lastGunGroup.indexOf(this) / lastGunGroup.size();
                             }
-                            camOffset = definition.gun.fireSolo ? 0 : (int) definition.gun.fireDelay * sequenceIndex / lastGunGroup.size();
                         } else {
                             camOffset = 0;
                         }
@@ -434,6 +428,22 @@ public class PartGun extends APart {
 
         //Now run super.  This needed to wait for the gun states to ensure proper states.
         super.update();
+    }
+
+    @Override
+    public void doPostAllpartUpdates() {
+        super.doPostAllpartUpdates();
+
+        seatsControllingGun.clear();
+        addLinkedPartsToList(seatsControllingGun, PartSeat.class);
+        for (APart part : parts) {
+            if (part instanceof PartSeat) {
+                seatsControllingGun.add((PartSeat) part);
+            }
+        }
+        if (entityOn instanceof PartSeat) {
+            seatsControllingGun.add((PartSeat) entityOn);
+        }
     }
 
     /**
@@ -681,23 +691,10 @@ public class PartGun extends APart {
 
         //Check any linked seats.
         //This also includes seats on us, and the seat we are on (if we are on one).
-        seatsControllingGun.clear();
-        addLinkedPartsToList(seatsControllingGun, PartSeat.class);
-        for (APart part : parts) {
-            if (part instanceof PartSeat) {
-                seatsControllingGun.add((PartSeat) part);
-            }
-        }
-        if (entityOn instanceof PartSeat) {
-            seatsControllingGun.add((PartSeat) entityOn);
-        }
-
-        if (!seatsControllingGun.isEmpty()) {
-            for (PartSeat seat : seatsControllingGun) {
-                //Check to make sure linking is both ways, we could be in the process of linking.
-                if (seat.rider != null && seat.rider.getEntityRiding() != null) {
-                    return seat.rider;
-                }
+        for (PartSeat seat : seatsControllingGun) {
+            //Check to make sure linking is both ways, we could be in the process of linking.
+            if (seat.rider != null && seat.rider.getEntityRiding() != null) {
+                return seat.rider;
             }
         }
         return null;

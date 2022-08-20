@@ -207,7 +207,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
 
         //Don't add our interaction boxes to the box list if we aren't active and on the client.
         //Servers need all of these since we might be active for some players and not others.
-        if (world.isClient() && areVariablesBlocking(placementDefinition, InterfaceManager.clientInterface.getClientPlayer())) {
+        if (world.isClient() && !canBeClicked()) {
             allInteractionBoxes.removeAll(interactionBoxes);
             return;
         }
@@ -223,7 +223,6 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
                 }
             }
         }
-
     }
 
     @Override
@@ -375,6 +374,15 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     }
 
     /**
+     * Returns true if this part can be clicked.  Normally true unless there are false linkedVariables.
+     * However, some parts (like seats) may choose to ignore these in specific cases.
+     * 
+     */
+    public boolean canBeClicked() {
+        return !entityOn.areVariablesBlocking(placementDefinition, InterfaceManager.clientInterface.getClientPlayer());
+    }
+
+    /**
      * This is called during part save/load calls.  Fakes parts are
      * added to entities, but they aren't saved with the NBT.  Rather, 
      * they should be re-created in the constructor of the part that added
@@ -468,7 +476,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
 
     @Override
     public void renderBoundingBoxes(TransformationMatrix transform) {
-        if (!entityOn.areVariablesBlocking(placementDefinition, InterfaceManager.clientInterface.getClientPlayer())) {
+        if (canBeClicked()) {
             super.renderBoundingBoxes(transform);
         }
     }

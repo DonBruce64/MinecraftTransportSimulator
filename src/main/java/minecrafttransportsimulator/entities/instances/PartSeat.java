@@ -39,7 +39,6 @@ public final class PartSeat extends APart {
 
     public boolean canControlGuns;
     public ItemPartGun activeGunItem;
-    public PartGun lastGunFired;
     public int gunIndex;
     public final HashMap<ItemPartGun, List<PartGun>> gunGroups = new LinkedHashMap<ItemPartGun, List<PartGun>>();
 
@@ -121,7 +120,7 @@ public final class PartSeat extends APart {
 
         //Don't have any interaction boxes if we are on a client and the player is sitting in us.
         //This keeps us from clicking our own seat when we want to click other things.
-        if (world.isClient() && rider != null && rider == InterfaceManager.clientInterface.getClientPlayer()) {
+        if (world.isClient() && rider != null && InterfaceManager.clientInterface.getClientPlayer().equals(rider)) {
             allInteractionBoxes.clear();
             return;
         }
@@ -164,12 +163,12 @@ public final class PartSeat extends APart {
         if (super.setRider(rider, facesForwards)) {
             boolean clientRiderOnVehicle = vehicleOn != null && world.isClient() && InterfaceManager.clientInterface.getClientPlayer().equals(rider);
 
-            if (clientRiderOnVehicle && placementDefinition.isController) {
+            if (clientRiderOnVehicle) {
                 //Open the HUD.  This will have been closed in the remove call.
                 new GUIHUD(vehicleOn, this);
 
                 //Auto-start the engines, if we have that config enabled and we can start them.
-                if (ConfigSystem.client.controlSettings.autostartEng.value && vehicleOn.canPlayerStartEngines((IWrapperPlayer) rider)) {
+                if (placementDefinition.isController && ConfigSystem.client.controlSettings.autostartEng.value && vehicleOn.canPlayerStartEngines((IWrapperPlayer) rider)) {
                     for (PartEngine engine : vehicleOn.engines.values()) {
                         if (!vehicleOn.definition.motorized.isAircraft) {
                             InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE));
@@ -305,6 +304,20 @@ public final class PartSeat extends APart {
         }
     }
 
+    @Override
+    public boolean canBeClicked() {
+        //Don't block clicking of seats on clients if the player is a rider on one of the parts of the vehicle we are on.
+        if (world.isClient() && vehicleOn != null) {
+            IWrapperPlayer player = InterfaceManager.clientInterface.getClientPlayer();
+            for (APart part : vehicleOn.allParts) {
+                if (player.equals(part.rider) && part != this) {
+                    return true;
+                }
+            }
+        }
+        return super.canBeClicked();
+    }
+
     /**
      *  Like {@link #getInterpolatedOrientation(TransformationMatrix, double)}, just for
      *  the rider.  This is to allow for the fact the rider won't turn in the
@@ -320,7 +333,6 @@ public final class PartSeat extends APart {
      * see if this rider can control them.  If so, then the active gun is set to that gun type.
      */
     public void setNextActiveGun() {
-        lastGunFired = null;
         //If we don't have an active gun, just get the next possible unit.
         if (activeGunItem == null) {
             for (ItemPartGun gunItem : gunGroups.keySet()) {
@@ -386,7 +398,7 @@ public final class PartSeat extends APart {
             case ("seat_occupied"):
                 return rider != null ? 1 : 0;
             case ("seat_occupied_client"):
-                return InterfaceManager.clientInterface.getClientPlayer() == rider ? 1 : 0;
+                return InterfaceManager.clientInterface.getClientPlayer().equals(rider) ? 1 : 0;
             case ("seat_rider_yaw"):
                 return rider != null ? rider.getYaw() : 0;
             case ("seat_rider_pitch"):

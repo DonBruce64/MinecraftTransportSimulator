@@ -145,7 +145,7 @@ public class WrapperWorld extends AWrapperWorld {
 
     @Override
     public long getTime() {
-        return world.getWorldTime();
+        return world.getWorldTime() % 24000;
     }
 
     @Override
