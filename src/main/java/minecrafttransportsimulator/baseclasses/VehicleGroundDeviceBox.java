@@ -95,7 +95,7 @@ public class VehicleGroundDeviceBox {
                 if (!part.isSpare) {
                     //X-offsets of 0 are both left and right as they are center points.
                     //This ensures we don't roll to try and align a center point.
-                    if (isFront && part.localOffset.z > 0) {
+                    if (isFront && part.localOffset.z > MAX_DELTA_FROM_ZERO) {
                         if (isLeft && part.localOffset.x >= -MAX_DELTA_FROM_ZERO) {
                             groundDevices.add((PartGroundDevice) part);
                             if (part.definition.ground.isWheel || part.definition.ground.isTread) {
@@ -113,7 +113,7 @@ public class VehicleGroundDeviceBox {
                                 liquidDevices.add((PartGroundDevice) part);
                             }
                         }
-                    } else if (!isFront && part.localOffset.z <= 0) {
+                    } else if (!isFront && part.localOffset.z <= MAX_DELTA_FROM_ZERO) {
                         if (isLeft && part.localOffset.x >= -MAX_DELTA_FROM_ZERO) {
                             groundDevices.add((PartGroundDevice) part);
                             if (part.definition.ground.isWheel || part.definition.ground.isTread) {

@@ -439,7 +439,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             boolean treadsOnly = true;
             for (PartGroundDevice groundDevice : groundDeviceCollective.groundedGroundDevices) {
                 if (groundDevice.turnsWithSteer && !groundDevice.isFake()) {
-                    turningDistance = Math.max(turningDistance, Math.abs(groundDevice.placementDefinition.pos.z));
+                    turningDistance = Math.max(turningDistance, Math.abs(groundDevice.localOffset.z));
                     if (treadsOnly && !groundDevice.definition.ground.isTread) {
                         treadsOnly = false;
                     }
@@ -453,7 +453,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
 
             //If we didn't find any ground devices to make us turn, check propellers in the water.
             if (turningDistance == 0) {
-                for (APart part : parts) {
+                for (APart part : allParts) {
                     if (part instanceof PartPropeller) {
                         if (part.isInLiquid()) {
                             turningDistance = Math.max(turningDistance, Math.abs(part.placementDefinition.pos.z));
