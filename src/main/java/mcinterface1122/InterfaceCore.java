@@ -7,6 +7,7 @@ import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.mcinterface.IInterfaceCore;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
@@ -71,10 +72,20 @@ class InterfaceCore implements IInterfaceCore {
 
     @Override
     public List<IWrapperItemStack> getOredictMaterials(String oreName) {
-        NonNullList<ItemStack> oreDictStacks = OreDictionary.getOres(oreName, true);
+        NonNullList<ItemStack> oreDictStacks = OreDictionary.getOres(oreName, false);
         List<IWrapperItemStack> stacks = new ArrayList<IWrapperItemStack>();
         for (ItemStack stack : oreDictStacks) {
-            stacks.add(new WrapperItemStack(stack.copy()));
+            if (stack.getMetadata() == net.minecraftforge.oredict.OreDictionary.WILDCARD_VALUE) {
+                NonNullList<ItemStack> oreDictSubStacks = NonNullList.create();
+                stack.getItem().getSubItems(CreativeTabs.SEARCH, oreDictSubStacks);
+                for (ItemStack subStack : oreDictSubStacks) {
+                    stacks.add(new WrapperItemStack(subStack.copy()));
+                }
+
+            } else {
+                stacks.add(new WrapperItemStack(stack.copy()));
+            }
+
         }
         return stacks;
     }
