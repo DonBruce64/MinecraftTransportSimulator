@@ -15,7 +15,6 @@ import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
-import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityParticle;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.components.AItemPack;
@@ -502,7 +501,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             if (soundDef.canPlayOnPartialTicks ^ partialTicks == 0) {
                 //Check if the sound should be playing before we try to update state.
                 AEntityE_Interactable<?> entityRiding = InterfaceManager.clientInterface.getClientPlayer().getEntityRiding();
-                boolean playerRidingEntity = this.equals(entityRiding) || (this instanceof APart && ((APart) this).entityOn.equals(entityRiding));
+                boolean playerRidingEntity = this.equals(entityRiding) || (this instanceof AEntityF_Multipart && ((AEntityF_Multipart<?>) this).allParts.contains(entityRiding));
                 boolean shouldSoundStartPlaying = playerRidingEntity && InterfaceManager.clientInterface.inFirstPerson() && !CameraSystem.runningCustomCameras ? !soundDef.isExterior : !soundDef.isInterior;
                 boolean anyClockMovedThisUpdate = false;
                 if (shouldSoundStartPlaying) {

@@ -39,6 +39,8 @@ public final class PartSeat extends APart {
 
     public boolean canControlGuns;
     public ItemPartGun activeGunItem;
+    public int gunSequenceCooldown;
+    public int gunGroupIndex;
     public int gunIndex;
     public final HashMap<ItemPartGun, List<PartGun>> gunGroups = new LinkedHashMap<ItemPartGun, List<PartGun>>();
 
@@ -156,6 +158,9 @@ public final class PartSeat extends APart {
             activeGunItem = null;
             gunIndex = 0;
         }
+
+        //Reset active index so we don't risk going out of range.
+        gunGroupIndex = 0;
     }
 
     @Override
@@ -345,6 +350,7 @@ public final class PartSeat extends APart {
             //This will be our first gun, unless we had an active gun and we can disable our gun.
             //In this case, we will just set our active gun to null.
             activeGunItem = getNextActiveGun();
+            gunGroupIndex = 0;
         }
     }
 

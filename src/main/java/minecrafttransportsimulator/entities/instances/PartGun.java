@@ -77,7 +77,6 @@ public class PartGun extends APart {
     private long lastMillisecondFired;
     public IWrapperEntity lastController;
     private PartSeat lastControllerSeat;
-    private List<PartGun> lastGunGroup;
     private IWrapperEntity entityTarget;
     private PartEngine engineTarget;
     private final Point3D bulletPosition = new Point3D();
@@ -207,7 +206,6 @@ public class PartGun extends APart {
                 } else {
                     //If this gun type can only have one selected at a time, check that this has the selected index.
                     lastControllerSeat = (PartSeat) lastController.getEntityRiding();
-                    lastGunGroup = lastControllerSeat.gunGroups.get(getItem());
                     if (gunItem == lastControllerSeat.activeGunItem && (!definition.gun.fireSolo || lastControllerSeat.gunGroups.get(gunItem).get(lastControllerSeat.gunIndex) == this)) {
                         state = state.promote(GunState.CONTROLLED);
                     } else {
@@ -263,19 +261,23 @@ public class PartGun extends APart {
                 //Set firing to true if we aren't firing, and we've waited long enough since the last firing command.
                 //If we don't wait, we can bypass the cooldown by toggling the trigger.
                 if (cooldownTimeRemaining == 0) {
-                    //Start of firing sequence, set state and cam offset to proper value prior to firing checks.
-                    if (!state.isAtLeast(GunState.FIRING_CURRENTLY)) {
-                        //Get current group and use it to determine firing offset.
-                        //Don't calculate this if we already did on a prior firing command.
-                        if (lastGunGroup != null) {
-                            if (camOffset == 0) {
-                                camOffset = definition.gun.fireSolo ? 0 : (int) definition.gun.fireDelay * lastGunGroup.indexOf(this) / lastGunGroup.size();
+                    //Get current group and use it to determine firing offset.
+                    //Don't calculate this if we already did on a prior firing command.
+                    if (camOffset <= 0) {
+                        if (!definition.gun.fireSolo && lastControllerSeat != null) {
+                            List<PartGun> gunGroup = lastControllerSeat.gunGroups.get(getItem());
+                            int thisGunIndex = gunGroup.indexOf(this);
+                            if (lastControllerSeat.gunGroupIndex == thisGunIndex) {
+                                camOffset = ((int) definition.gun.fireDelay) / gunGroup.size();
+                            } else {
+                                //Wait for our turn.
+                                camOffset = -1;
                             }
-                        } else {
-                            camOffset = 0;
                         }
-                        state = state.promote(GunState.FIRING_CURRENTLY);
+                    } else {
+                        --camOffset;
                     }
+                    state = state.promote(GunState.FIRING_CURRENTLY);
 
                     //If we are in our cam, fire the bullets.
                     if (camOffset == 0) {
@@ -322,11 +324,15 @@ public class PartGun extends APart {
                         if (definition.gun.muzzleGroups.size() == ++currentMuzzleGroupIndex) {
                             currentMuzzleGroupIndex = 0;
                         }
-                    }
-
-                    //Decrement the cam offset to align us with our own cam if required.
-                    if (camOffset > 0) {
-                        --camOffset;
+                        if (lastControllerSeat != null) {
+                            List<PartGun> gunGroup = lastControllerSeat.gunGroups.get(getItem());
+                            int currentIndex = gunGroup.indexOf(this);
+                            if (currentIndex + 1 < gunGroup.size()) {
+                                lastControllerSeat.gunGroupIndex = currentIndex + 1;
+                            } else {
+                                lastControllerSeat.gunGroupIndex = 0;
+                            }
+                        }
                     }
                 }
             } else if (!ableToFire) {

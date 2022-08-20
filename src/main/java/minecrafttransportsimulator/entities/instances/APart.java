@@ -259,6 +259,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     @Override
     public void doPostAllpartUpdates() {
         super.doPostAllpartUpdates();
+        linkedParts.clear();
         addLinkedPartsToList(linkedParts, APart.class);
     }
 
@@ -338,10 +339,25 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
                 for (int partIndex : part.placementDefinition.linkedParts) {
                     if (partIndex - 1 == this.placementSlot) {
                         if (partClass.isInstance(part)) {
+                            //Part class matches, add it as linked.
                             partList.add(partClass.cast(part));
+                        } else {
+                            //Index matches, but not class, add all sub-parts that match (probably a generic part).
+                            part.addMatchingPartsToList(partList, partClass);
                         }
-                        part.addMatchingPartsToList(partList, partClass);
                     }
+                }
+            }
+        }
+
+        //Add all parts our parent is linked to, if we have one that's a part.
+        //This allows parts multiple levels deep to query their parent.
+        //We know that our parent will have their lists correct at this point as
+        //they update them first, then update us.
+        if (partOn != null) {
+            for (APart part : partOn.linkedParts) {
+                if (partClass.isInstance(part)) {
+                    partList.add(partClass.cast(part));
                 }
             }
         }
@@ -350,8 +366,10 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     public <PartClass extends APart> void addMatchingPartsToList(List<PartClass> partList, Class<PartClass> partClass) {
         for (APart part : parts) {
             if (partClass.isInstance(part)) {
+                //Class matches list, add it.
                 partList.add(partClass.cast(part));
             } else if (part != null) {
+                //Class doesn't match list, see if it's holding something that matches.
                 part.addMatchingPartsToList(partList, partClass);
             }
         }
