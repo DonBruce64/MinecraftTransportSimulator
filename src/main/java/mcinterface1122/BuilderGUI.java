@@ -100,7 +100,6 @@ public class BuilderGUI extends GuiScreen {
                                 continue;
                             default:
                                 textBox.handleKeyTyped(key, keyCode, null);
-                                continue;
                         }
                     }
                 }

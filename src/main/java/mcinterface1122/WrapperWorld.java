@@ -324,10 +324,7 @@ public class WrapperWorld extends AWrapperWorld {
                 }
 
                 //Didn't hit a rider on the damage source. Do normal raytracing or just add if there's no motion.
-                if (motion != null && mcEntityCollided.getEntityBoundingBox().calculateIntercept(start, end) == null) {
-                    //Raytracing doesn't intercept the box, so no hits.
-                    continue;
-                } else {
+                if (motion == null || mcEntityCollided.getEntityBoundingBox().calculateIntercept(start, end) == null) {
                     hitEntities.add(WrapperEntity.getWrapperFor(mcEntityCollided));
                 }
             }
@@ -876,7 +873,6 @@ public class WrapperWorld extends AWrapperWorld {
                         ticksSincePlayerJoin.remove(playerUUID);
                     } else {
                         ++gunBuilder.idleTickCounter;
-                        continue;
                     }
                 } else if (!player.isDead) {
                     //Gun does not exist, check if player has been present for 3 seconds and spawn it.
