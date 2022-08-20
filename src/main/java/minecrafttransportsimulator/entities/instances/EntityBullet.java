@@ -211,7 +211,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
         BoundingBox bulletMovmenetBounds = new BoundingBox(position, endPoint);
         for (EntityVehicleF_Physics hitVehicle : world.getEntitiesOfType(EntityVehicleF_Physics.class)) {
             //Don't attack the entity that has the gun that fired us.
-            if (!hitVehicle.parts.contains(gun)) {
+            if (!hitVehicle.allParts.contains(gun)) {
                 //Make sure that we could even possibly hit this vehicle before we try and attack it.
                 if (hitVehicle.encompassingBox.intersects(bulletMovmenetBounds)) {
                     //Get all collision boxes on the vehicle, and check if we hit any of them.

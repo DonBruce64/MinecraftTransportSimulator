@@ -10,7 +10,6 @@ import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.items.components.AItemBase;
-import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.instances.ItemBullet;
 import minecrafttransportsimulator.jsondefs.JSONMuzzle;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
@@ -51,9 +50,6 @@ public class PartGun extends APart {
     private final double defaultPitch;
     private final double pitchSpeed;
 
-    //TODO pretty sure this got put into a different class with the linking overhaul?
-    private final AItemPart gunItem;
-
     //Stored variables used to determine bullet firing behavior.
     private int bulletsLeft;
     private int bulletsReloading;
@@ -69,6 +65,7 @@ public class PartGun extends APart {
     public boolean firedThisCheck;
     public boolean playerHoldingTrigger;
     public boolean isHandHeldGunAimed;
+    public boolean isRunningInCoaxialMode;
     private int camOffset;
     private int cooldownTimeRemaining;
     private int reloadTimeRemaining;
@@ -156,8 +153,6 @@ public class PartGun extends APart {
             this.pitchSpeed = placementDefinition.pitchSpeed;
         }
 
-        this.gunItem = getItem();
-
         //Load saved data.
         this.state = GunState.values()[data.getInteger("state")];
         this.bulletsLeft = data.getInteger("bulletsLeft");
@@ -194,6 +189,7 @@ public class PartGun extends APart {
     public void update() {
         //Set gun state and do updates.
         firedThisCheck = false;
+        isRunningInCoaxialMode = false;
         prevInternalOrientation.set(internalOrientation);
         if (isActive && !isSpare) {
             //Check if we have a controller.
@@ -206,7 +202,7 @@ public class PartGun extends APart {
                 } else {
                     //If this gun type can only have one selected at a time, check that this has the selected index.
                     lastControllerSeat = (PartSeat) lastController.getEntityRiding();
-                    if (gunItem == lastControllerSeat.activeGunItem && (!definition.gun.fireSolo || lastControllerSeat.gunGroups.get(gunItem).get(lastControllerSeat.gunIndex) == this)) {
+                    if (getItem() == lastControllerSeat.activeGunItem && (!definition.gun.fireSolo || lastControllerSeat.gunGroups.get(getItem()).get(lastControllerSeat.gunIndex) == this)) {
                         state = state.promote(GunState.CONTROLLED);
                     } else {
                         state = state.demote(GunState.ACTIVE);
@@ -225,7 +221,13 @@ public class PartGun extends APart {
                         if (part instanceof PartGun && part.placementDefinition.isCoAxial) {
                             controller = ((PartGun) part).getGunController();
                             if (controller != null) {
-                                state = state.promote(GunState.CONTROLLED);
+                                //Check if the coaxial is controlled or not.
+                                lastController = controller;
+                                lastControllerSeat = (PartSeat) lastController.getEntityRiding();
+                                if (part.getItem() == lastControllerSeat.activeGunItem && (!definition.gun.fireSolo || lastControllerSeat.gunGroups.get(part.getItem()).get(lastControllerSeat.gunIndex) == part)) {
+                                    state = state.promote(GunState.CONTROLLED);
+                                    isRunningInCoaxialMode = true;
+                                }
                                 break;
                             }
                         }
@@ -244,6 +246,12 @@ public class PartGun extends APart {
             //Adjust yaw and pitch to the direction of the controller.
             if (state.isAtLeast(GunState.CONTROLLED)) {
                 handleControl(controller);
+                if (isRunningInCoaxialMode) {
+                    state = state.demote(GunState.ACTIVE);
+                    controller = null;
+                    entityTarget = null;
+                    engineTarget = null;
+                }
             }
 
             //Decrement cooldown, if we have it.

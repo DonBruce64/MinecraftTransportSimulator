@@ -136,7 +136,11 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
 
         //Update zero-reference.
         prevZeroReferenceOrientation.set(zeroReferenceOrientation);
-        zeroReferenceOrientation.set(entityOn.orientation);
+        if (partOn != null) {
+            zeroReferenceOrientation.set(partOn.zeroReferenceOrientation);
+        } else {
+            zeroReferenceOrientation.set(entityOn.orientation);
+        }
         if (placementDefinition.rot != null) {
             zeroReferenceOrientation.multiply(placementDefinition.rot);
         }

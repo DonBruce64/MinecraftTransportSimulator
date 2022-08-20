@@ -104,6 +104,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                 }
             }
         }
+        recalculatePartSlots();
     }
 
     @Override
@@ -556,7 +557,6 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
      */
     private void recalculatePartSlots() {
         partSlotBoxes.clear();
-        activePartSlotBoxes.clear();
         for (int i = 0; i < partsInSlots.size(); ++i) {
             if (partsInSlots.get(i) == null) {
                 JSONPartDefinition partDef = definition.parts.get(i);
