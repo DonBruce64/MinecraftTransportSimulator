@@ -34,7 +34,7 @@ public class JSONPartDefinition {
     @JSONDescription("This parameter is optional.  If included and set to true, then this part will be marked as a spare.  If the part is a ground type, then it will not be used for ground device operations, and if it is a gun it will not be fire-able or select-able.  Useful for decorations like spare tires and gun racks.")
     public boolean isSpare;
 
-    @JSONDescription("This parameter is optional.  If included and set to true, this part will be flagged as mirroed.  This has no effect except for setting this property on the part, which can then be queried by the part's animations.  Mainly used for rotating wheels around on the other side of vehicles, or swapping out seat/door models.")
+    @JSONDescription("This parameter is optional.  If included and set to true, this part will be flagged as mirroed.  This has no effect except for setting this property on the part, which can then be queried by the part's animations, and making ground devices return a negative rotation for any rotation variables.  Mainly used for rotating wheels around on the other side of vehicles, or swapping out seat/door models.")
     public boolean isMirrored;
 
     @JSONDescription("This parameter is optional.  If included and set to true, then when selecting guns from this seat the ability to select no gun will be present.  Useful for seats controlling guns that you may not want to always be active.")

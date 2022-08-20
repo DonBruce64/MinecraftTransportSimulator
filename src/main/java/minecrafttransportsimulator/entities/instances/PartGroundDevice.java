@@ -172,7 +172,11 @@ public class PartGroundDevice extends APart {
                 }
             }
             prevAngularPosition = angularPosition;
-            angularPosition += angularVelocity;
+            if (isMirrored) {
+                angularPosition -= angularVelocity;
+            } else {
+                angularPosition += angularVelocity;
+            }
         }
         //Now that we have our wheel position, call super.
         super.update();

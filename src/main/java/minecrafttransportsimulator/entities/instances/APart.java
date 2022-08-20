@@ -52,6 +52,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     public boolean isActive = true;
     public final boolean turnsWithSteer;
     public final boolean isSpare;
+    public final boolean isMirrored;
     /**The local offset from this part, to the master entity.  This may not be the offset from the part to the entity it is
      * on if the entity is a part itself.*/
     public final Point3D localOffset;
@@ -83,6 +84,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
 
         this.turnsWithSteer = placementDefinition.turnsWithSteer || (partOn != null && partOn.turnsWithSteer);
         this.isSpare = placementDefinition.isSpare || (partOn != null && partOn.isSpare);
+        this.isMirrored = placementDefinition.isMirrored || (partOn != null && partOn.isMirrored);
 
         //Set initial position and rotation.  This ensures part doesn't "warp" the first tick.
         //Note that this isn't exact, as we can't calculate the exact locals until after the first tick
@@ -461,7 +463,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
             case ("part_present"):
                 return 1;
             case ("part_ismirrored"):
-                return placementDefinition.isMirrored ? 1 : 0;
+                return isMirrored ? 1 : 0;
         }
 
         //No variables, check super variables before doing generic forwarding.

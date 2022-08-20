@@ -775,31 +775,26 @@ public final class LegacyCompatSystem {
 
         //Do compats for wheel rotation and mirroring.
         if (definition.ground != null && definition.ground.isWheel) {
+            if (definition.generic.movementAnimations != null) {
+                ///Check for old isMirroed LCed animations.  These will be wrong.
+                boolean oldAnimationsDetected = false;
+                for (JSONAnimationDefinition animation : definition.generic.movementAnimations) {
+                    if (animation.variable.equals("part_ismirrored")) {
+                        oldAnimationsDetected = true;
+                        break;
+                    }
+                }
+                if (oldAnimationsDetected) {
+                    definition.generic.movementAnimations = null;
+                }
+            }
             if (definition.generic.movementAnimations == null) {
                 definition.generic.movementAnimations = new ArrayList<JSONAnimationDefinition>();
 
                 JSONAnimationDefinition animation = new JSONAnimationDefinition();
-                animation.centerPoint = new Point3D(0, 0, 0);
-                animation.axis = new Point3D(0, 180, 0);
-                animation.animationType = AnimationComponentType.ROTATION;
-                animation.variable = "part_ismirrored";
-                definition.generic.movementAnimations.add(animation);
-
                 animation = new JSONAnimationDefinition();
                 animation.centerPoint = new Point3D(0, 0, 0);
                 animation.axis = new Point3D(1, 0, 0);
-                animation.animationType = AnimationComponentType.ROTATION;
-                animation.variable = "ground_rotation";
-                definition.generic.movementAnimations.add(animation);
-
-                animation = new JSONAnimationDefinition();
-                animation.animationType = AnimationComponentType.INHIBITOR;
-                animation.variable = "part_ismirrored";
-                definition.generic.movementAnimations.add(animation);
-
-                animation = new JSONAnimationDefinition();
-                animation.centerPoint = new Point3D(0, 0, 0);
-                animation.axis = new Point3D(-2, 0, 0);
                 animation.animationType = AnimationComponentType.ROTATION;
                 animation.variable = "ground_rotation";
                 definition.generic.movementAnimations.add(animation);
@@ -1940,6 +1935,9 @@ public final class LegacyCompatSystem {
             String partName = partDef.types.get(i);
             if (partName.startsWith("ground_wheel") || partDef.inverseMirroring) {
                 partDef.isMirrored = (partDef.pos.x < 0 && !partDef.inverseMirroring) || (partDef.pos.x >= 0 && partDef.inverseMirroring);
+                if (partDef.isMirrored && partDef.rot == null) {
+                    partDef.rot = new RotationMatrix().rotateY(180);
+                }
                 partDef.inverseMirroring = false;
                 break;
             }
