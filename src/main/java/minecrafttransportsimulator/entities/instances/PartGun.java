@@ -264,7 +264,7 @@ public class PartGun extends APart {
             //spawning and ensures that they spawn every tick on quick-firing guns.  Hits are registered on both sides, but
             //hit processing is only done on the server; clients just de-spawn the bullet and wait for packets.
             //Because of this, there is no linking between client and server bullets, and therefore they do not handle NBT or UUIDs.
-            boolean ableToFire = windupTimeCurrent == definition.gun.windupTime && bulletsLeft > 0 && (!definition.gun.isSemiAuto || !firedThisRequest);
+            boolean ableToFire = windupTimeCurrent == definition.gun.windupTime && (!definition.gun.isSemiAuto || !firedThisRequest);
             if (ableToFire && state.isAtLeast(GunState.FIRING_REQUESTED)) {
                 //Set firing to true if we aren't firing, and we've waited long enough since the last firing command.
                 //If we don't wait, we can bypass the cooldown by toggling the trigger.
@@ -285,53 +285,64 @@ public class PartGun extends APart {
                     } else {
                         --camOffset;
                     }
-                    state = state.promote(GunState.FIRING_CURRENTLY);
 
-                    //If we are in our cam, fire the bullets.
-                    if (camOffset == 0) {
-                        for (JSONMuzzle muzzle : definition.gun.muzzleGroups.get(currentMuzzleGroupIndex).muzzles) {
-                            //Get the bullet's state.
-                            setBulletSpawn(bulletPosition, bulletVelocity, bulletOrientation, muzzle);
+                    //If we have bullets, try and fire them.
+                    boolean cycledGun = false;
+                    if (bulletsLeft > 0) {
+                        state = state.promote(GunState.FIRING_CURRENTLY);
 
-                            //Add the bullet to the world.
-                            //If the bullet is a missile, give it a target.
-                            EntityBullet newBullet;
-                            if (loadedBullet.definition.bullet.turnRate > 0) {
-                                if (entityTarget != null) {
-                                    newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this, entityTarget);
-                                } else if (engineTarget != null) {
-                                    newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this, engineTarget);
+                        //If we are in our cam, fire the bullets.
+                        if (camOffset == 0) {
+                            for (JSONMuzzle muzzle : definition.gun.muzzleGroups.get(currentMuzzleGroupIndex).muzzles) {
+                                //Get the bullet's state.
+                                setBulletSpawn(bulletPosition, bulletVelocity, bulletOrientation, muzzle);
+
+                                //Add the bullet to the world.
+                                //If the bullet is a missile, give it a target.
+                                EntityBullet newBullet;
+                                if (loadedBullet.definition.bullet.turnRate > 0) {
+                                    if (entityTarget != null) {
+                                        newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this, entityTarget);
+                                    } else if (engineTarget != null) {
+                                        newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this, engineTarget);
+                                    } else {
+                                        //No entity found, just fire missile off in direction facing.
+                                        newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this);
+                                    }
                                 } else {
-                                    //No entity found, just fire missile off in direction facing.
                                     newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this);
                                 }
-                            } else {
-                                newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this);
-                            }
 
-                            world.addEntity(newBullet);
+                                world.addEntity(newBullet);
 
-                            //Decrement bullets, but check to make sure we still have some.
-                            //We might have a partial volley with only some muzzles firing in this group.
-                            if (--bulletsLeft == 0) {
-                                //Only set the bullet to null on the server.  This lets the server choose a different bullet to load.
-                                //If we did this on the client, we might set the bullet to null after we got a packet for a reload.
-                                //That would cause us to finish the reload with a null bullet, and crash later.
-                                if (!world.isClient()) {
-                                    loadedBullet = null;
+                                //Decrement bullets, but check to make sure we still have some.
+                                //We might have a partial volley with only some muzzles firing in this group.
+                                if (--bulletsLeft == 0) {
+                                    //Only set the bullet to null on the server.  This lets the server choose a different bullet to load.
+                                    //If we did this on the client, we might set the bullet to null after we got a packet for a reload.
+                                    //That would cause us to finish the reload with a null bullet, and crash later.
+                                    if (!world.isClient()) {
+                                        loadedBullet = null;
+                                    }
+                                    break;
                                 }
-                                break;
+                            }
+
+                            //Update states.
+                            cooldownTimeRemaining = (int) definition.gun.fireDelay;
+                            firedThisRequest = true;
+                            firedThisCheck = true;
+                            cycledGun = true;
+                            lastMillisecondFired = System.currentTimeMillis();
+                            if (definition.gun.muzzleGroups.size() == ++currentMuzzleGroupIndex) {
+                                currentMuzzleGroupIndex = 0;
                             }
                         }
-
-                        //Update states.
-                        cooldownTimeRemaining = (int) definition.gun.fireDelay;
-                        firedThisRequest = true;
-                        firedThisCheck = true;
-                        lastMillisecondFired = System.currentTimeMillis();
-                        if (definition.gun.muzzleGroups.size() == ++currentMuzzleGroupIndex) {
-                            currentMuzzleGroupIndex = 0;
-                        }
+                    } else if (camOffset == 0) {
+                        //Got to end of cam with no bullets, cycle gun.
+                        cycledGun = true;
+                    }
+                    if (cycledGun) {
                         if (lastControllerSeat != null) {
                             List<PartGun> gunGroup = lastControllerSeat.gunGroups.get(getItem());
                             int currentIndex = gunGroup.indexOf(this);
