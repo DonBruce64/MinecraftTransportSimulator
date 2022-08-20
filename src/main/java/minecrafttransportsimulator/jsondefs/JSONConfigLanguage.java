@@ -144,8 +144,6 @@ public class JSONConfigLanguage {
     public static final LanguageEntry GUI_PART_BENCH_WHEEL = new LanguageEntry("gui.part_bench.wheel", "Wheel Size: ");
     public static final LanguageEntry GUI_PART_BENCH_COLOR = new LanguageEntry("gui.part_bench.color", "Color: ");
 
-    public static final LanguageEntry GUI_PANEL_OFF = new LanguageEntry("gui.panel.off", "OFF");
-    public static final LanguageEntry GUI_PANEL_ON = new LanguageEntry("gui.panel.on", "ON");
     public static final LanguageEntry GUI_PANEL_START = new LanguageEntry("gui.panel.start", "START");
     public static final LanguageEntry GUI_PANEL_MAGNETO = new LanguageEntry("gui.panel.magneto", "MAG");
     public static final LanguageEntry GUI_PANEL_ENGINE = new LanguageEntry("gui.panel.engine", "ENGINE");
@@ -174,12 +172,10 @@ public class JSONConfigLanguage {
     public static final LanguageEntry GUI_CONFIG_CONTROLS_AIRCRAFT_JOYSTICK = new LanguageEntry("gui.config.controls.aircraft.joystick", "AIRCRAFT JOYSTICK");
     public static final LanguageEntry GUI_CONFIG_CONTROLS_CAR_KEYBOARD = new LanguageEntry("gui.config.controls.car.keyboard", "CAR/BOAT KEYBOARD");
     public static final LanguageEntry GUI_CONFIG_CONTROLS_CAR_JOYSTICK = new LanguageEntry("gui.config.controls.car.joystick", "CAR/BOAT JOYSTICK");
-    public static final LanguageEntry GUI_CONFIG_CONTROLS_CONFIRM = new LanguageEntry("gui.config.controls.confirm", "Confirm");
     public static final LanguageEntry GUI_CONFIG_JOYSTICK_ERROR = new LanguageEntry("gui.config.joystick.error", "ERROR: MTS could not initialize the control system!  This is likely due to a device mis-representing itself as a joystick to Java.  Mice have been known to have this issue, especially Corsair mice, so try a different mouse.  You may also try un-plugging your mouse, and then opening this GUI to re-poll the joysticks.  This won't make controls work on boot, but can be used if you only have one mouse.");
     public static final LanguageEntry GUI_CONFIG_JOYSTICK_DISABLED = new LanguageEntry("gui.config.joystick.disabled", "ERROR: The control system locked up when MTS tried to initialize it.  This is likely a driver issue, and happens for some reason on some machines.  The root cause is not known, but if you find out how to make this erorr go away, let us know!  For now, joysick support will be disabled.");
     public static final LanguageEntry GUI_CONFIG_JOYSTICK_SELECT = new LanguageEntry("gui.config.joystick.select", "Choose a joystick: ");
     public static final LanguageEntry GUI_CONFIG_JOYSTICK_NAME = new LanguageEntry("gui.config.joystick.name", "Name: ");
-    public static final LanguageEntry GUI_CONFIG_JOYSTICK_TYPE = new LanguageEntry("gui.config.joystick.type", "Type: ");
     public static final LanguageEntry GUI_CONFIG_JOYSTICK_MAPPING = new LanguageEntry("gui.config.joystick.mapping", "Mapping");
     public static final LanguageEntry GUI_CONFIG_JOYSTICK_DEADZONE = new LanguageEntry("gui.config.joystick.deadzone", "Dead-zone: ");
     public static final LanguageEntry GUI_CONFIG_JOYSTICK_STATE = new LanguageEntry("gui.config.joystick.state", "State: ");
@@ -192,7 +188,6 @@ public class JSONConfigLanguage {
     public static final LanguageEntry GUI_CONFIG_JOYSTICK_AXISMODE = new LanguageEntry("gui.config.joystick.axismode", "Axis mode: ");
     public static final LanguageEntry GUI_CONFIG_JOYSTICK_NORMAL = new LanguageEntry("gui.config.joystick.normal", "Normal");
     public static final LanguageEntry GUI_CONFIG_JOYSTICK_INVERT = new LanguageEntry("gui.config.joystick.invert", "Inverted");
-    public static final LanguageEntry GUI_CONFIG_JOYSTICK_CONFIRM = new LanguageEntry("gui.config.joystick.confirm", "Confirm");
 
     public static final LanguageEntry GUI_PACKMISSING_TITLE = new LanguageEntry("gui.packmissing.title", "!ERROR!");
     public static final LanguageEntry GUI_PACKMISSING_TEXT = new LanguageEntry("gui.packmissing.text", "MTS has detected that it has been started without a content pack.  This will result in NO vehicles being present!  If you do NOT have a content pack yet installed, please see the Curse page for this mod for a link to one.  If you DID download a pack ensure that it is the same place as all your other mods.  If the pack is in that location, and you are still seeing this message, ensure you are running the correct pack version.");
@@ -262,7 +257,6 @@ public class JSONConfigLanguage {
 
     public static final LanguageEntry ITEMINFO_ENGINE_AUTOMATIC = new LanguageEntry("iteminfo.engine.automatic", "Transmission: Automatic");
     public static final LanguageEntry ITEMINFO_ENGINE_MANUAL = new LanguageEntry("iteminfo.engine.manual", "Transmission: Manual");
-    public static final LanguageEntry ITEMINFO_ENGINE_NUMBERGEARS = new LanguageEntry("iteminfo.engine.numbergears", "Number gears: ");
     public static final LanguageEntry ITEMINFO_ENGINE_GEARRATIOS = new LanguageEntry("iteminfo.engine.gearratios", "Gear Ratios: ");
     public static final LanguageEntry ITEMINFO_ENGINE_JETPOWERFACTOR = new LanguageEntry("iteminfo.engine.jetpowerfactor", "Jet Power: ");
     public static final LanguageEntry ITEMINFO_ENGINE_BYPASSRATIO = new LanguageEntry("iteminfo.engine.bypassratio", "Bypass Ratio: ");
@@ -290,12 +284,10 @@ public class JSONConfigLanguage {
 
     public static final LanguageEntry ITEMINFO_PROPELLER_STATICPITCH = new LanguageEntry("iteminfo.propeller.staticPitch", "Static Pitch");
     public static final LanguageEntry ITEMINFO_PROPELLER_DYNAMICPITCH = new LanguageEntry("iteminfo.propeller.dynamicPitch", "Dynamic Pitch");
-    public static final LanguageEntry ITEMINFO_PROPELLER_NUMBERBLADES = new LanguageEntry("iteminfo.propeller.numberBlades", "Blades: ");
     public static final LanguageEntry ITEMINFO_PROPELLER_PITCH = new LanguageEntry("iteminfo.propeller.pitch", "Pitch: ");
     public static final LanguageEntry ITEMINFO_PROPELLER_DIAMETER = new LanguageEntry("iteminfo.propeller.diameter", "Diameter: ");
 
     public static final LanguageEntry ITEMINFO_GUN_DIAMETER = new LanguageEntry("iteminfo.gun.diameter", "Barrel Diameter (mm): ");
-    public static final LanguageEntry ITEMINFO_GUN_LENGTH = new LanguageEntry("iteminfo.gun.length", "Barrel Length (m): ");
     public static final LanguageEntry ITEMINFO_GUN_CASERANGE = new LanguageEntry("iteminfo.gun.caseRange", "Case Range (mm): ");
     public static final LanguageEntry ITEMINFO_GUN_FIREDELAY = new LanguageEntry("iteminfo.gun.fireDelay", "Fire Delay (ticks): ");
     public static final LanguageEntry ITEMINFO_GUN_MUZZLEVELOCITY = new LanguageEntry("iteminfo.gun.muzzleVelocity", "Velocity (blk/s): ");
@@ -304,11 +296,9 @@ public class JSONConfigLanguage {
     public static final LanguageEntry ITEMINFO_GUN_YAWRANGE = new LanguageEntry("iteminfo.gun.yawRange", "Yaw Range: ");
     public static final LanguageEntry ITEMINFO_GUN_PITCHRANGE = new LanguageEntry("iteminfo.gun.pitchRange", "Pitch Range: ");
 
-    public static final LanguageEntry ITEMINFO_BULLET_TYPE_NORMAL = new LanguageEntry("iteminfo.bullet.type.normal", "Normal Bullet");
     public static final LanguageEntry ITEMINFO_BULLET_TYPE_EXPLOSIVE = new LanguageEntry("iteminfo.bullet.type.explosive", "Explosive Bullet");
     public static final LanguageEntry ITEMINFO_BULLET_TYPE_INCENDIARY = new LanguageEntry("iteminfo.bullet.type.incendiary", "Incendiary Bullet");
     public static final LanguageEntry ITEMINFO_BULLET_TYPE_ARMOR_PIERCING = new LanguageEntry("iteminfo.bullet.type.armor_piercing", "Armor Piercing Bullet");
-    public static final LanguageEntry ITEMINFO_BULLET_TYPE_TRACER = new LanguageEntry("iteminfo.bullet.type.tracer", "Tracer Bullet");
     public static final LanguageEntry ITEMINFO_BULLET_TYPE_WATER = new LanguageEntry("iteminfo.bullet.type.water", "Water Bullet");
     public static final LanguageEntry ITEMINFO_BULLET_DIAMETER = new LanguageEntry("iteminfo.bullet.diameter", "Diameter (mm): ");
     public static final LanguageEntry ITEMINFO_BULLET_CASELENGTH = new LanguageEntry("iteminfo.bullet.caseLength", "Case Length (mm): ");
@@ -339,7 +329,6 @@ public class JSONConfigLanguage {
     public static final LanguageEntry INPUT_FLAPS_U = new LanguageEntry("input.flaps_u", "FlapsUp");
     public static final LanguageEntry INPUT_FLAPS_D = new LanguageEntry("input.flaps_d", "FlapsDown");
     public static final LanguageEntry INPUT_BRAKE = new LanguageEntry("input.brake", "Brake");
-    public static final LanguageEntry INPUT_BRAKE_DIGITAL = new LanguageEntry("input.brake_digital", "Brake");
     public static final LanguageEntry INPUT_GEAR = new LanguageEntry("input.gear", "Gear");
     public static final LanguageEntry INPUT_PANEL = new LanguageEntry("input.panel", "Panel");
     public static final LanguageEntry INPUT_PARK = new LanguageEntry("input.park", "ParkingBrake");
@@ -371,7 +360,6 @@ public class JSONConfigLanguage {
     public static final LanguageEntry INPUT_SHIFT_D = new LanguageEntry("input.shift_d", "ShiftDown");
     public static final LanguageEntry INPUT_SHIFT_N = new LanguageEntry("input.shift_n", "ShiftNeutral");;
     public static final LanguageEntry INPUT_HORN = new LanguageEntry("input.horn", "Horn");
-    public static final LanguageEntry INPUT_TRAILER = new LanguageEntry("input.trailer", "TrailerLink");
     public static final LanguageEntry INPUT_SLOW = new LanguageEntry("input.slow", "Slow");
     public static final LanguageEntry INPUT_LIGHTS = new LanguageEntry("input.lights", "Lights");
     public static final LanguageEntry INPUT_TURNSIGNAL_R = new LanguageEntry("input.turnsignal_r", "RightSignal");
