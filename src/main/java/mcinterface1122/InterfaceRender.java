@@ -1,25 +1,5 @@
 package mcinterface1122;
 
-import java.awt.image.BufferedImage;
-import java.net.URL;
-import java.net.URLConnection;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.DoubleBuffer;
-import java.nio.FloatBuffer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
-import javax.imageio.ImageIO;
-import javax.imageio.ImageReader;
-import javax.imageio.stream.ImageInputStream;
-
-import org.lwjgl.opengl.GL11;
-
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
@@ -28,9 +8,9 @@ import minecrafttransportsimulator.mcinterface.IInterfaceRender;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.GIFParser;
-import minecrafttransportsimulator.rendering.RenderableObject;
 import minecrafttransportsimulator.rendering.GIFParser.GIFImageFrame;
 import minecrafttransportsimulator.rendering.GIFParser.ParsedGIF;
+import minecrafttransportsimulator.rendering.RenderableObject;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
@@ -40,21 +20,37 @@ import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.texture.TextureUtil;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import org.lwjgl.opengl.GL11;
 
-/**Interface for the various MC rendering engines.  This class has functions for
+import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
+import java.awt.image.BufferedImage;
+import java.net.URL;
+import java.net.URLConnection;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.DoubleBuffer;
+import java.nio.FloatBuffer;
+import java.util.*;
+import java.util.Map.Entry;
+
+/**
+ * Interface for the various MC rendering engines.  This class has functions for
  * binding textures, changing lightmap statuses, etc.
  *
  * @author don_bruce
  */
 public class InterfaceRender implements IInterfaceRender {
     private static final DoubleBuffer buffer = ByteBuffer.allocateDirect(16 * Double.BYTES).order(ByteOrder.nativeOrder()).asDoubleBuffer();
-    private static final Map<String, ResourceLocation> internalTextures = new HashMap<String, ResourceLocation>();
-    private static final Map<String, Integer> onlineTextures = new HashMap<String, Integer>();
-    private static final Map<String, ParsedGIF> animatedGIFs = new HashMap<String, ParsedGIF>();
-    private static final Map<ParsedGIF, Map<GIFImageFrame, Integer>> animatedGIFFrames = new LinkedHashMap<ParsedGIF, Map<GIFImageFrame, Integer>>();
-    private static final Map<IWrapperItemStack, TransformationMatrix> stacksToRender = new LinkedHashMap<IWrapperItemStack, TransformationMatrix>();
+    private static final Map<String, ResourceLocation> internalTextures = new HashMap<>();
+    private static final Map<String, Integer> onlineTextures = new HashMap<>();
+    private static final Map<String, ParsedGIF> animatedGIFs = new HashMap<>();
+    private static final Map<ParsedGIF, Map<GIFImageFrame, Integer>> animatedGIFFrames = new LinkedHashMap<>();
+    private static final Map<IWrapperItemStack, TransformationMatrix> stacksToRender = new LinkedHashMap<>();
     private static float lastLightmapX;
     private static float lastLightmapY;
+    private static final ResourceLocation MISSING_TEXTURE = new ResourceLocation("mts:textures/rendering/missing.png");
 
     //Copied from ParticleManager as it's not accessable.
     private static final ResourceLocation PARTICLE_TEXTURES = new ResourceLocation("textures/particle/particles.png");
@@ -64,13 +60,13 @@ public class InterfaceRender implements IInterfaceRender {
         //Get normal model.
         IBlockState state = ((WrapperWorld) world).world.getBlockState(new BlockPos(position.x, position.y, position.z));
         TextureAtlasSprite sprite = Minecraft.getMinecraft().getBlockRendererDispatcher().getBlockModelShapes().getTexture(state);
-        return new float[] { sprite.getMinU(), sprite.getMaxU(), sprite.getMinV(), sprite.getMaxV() };
+        return new float[]{sprite.getMinU(), sprite.getMaxU(), sprite.getMinV(), sprite.getMaxV()};
     }
 
     @Override
     public float[] getDefaultBlockTexture(String name) {
         TextureAtlasSprite sprite = Minecraft.getMinecraft().getBlockRendererDispatcher().getBlockModelShapes().getModelManager().getTextureMap().getAtlasSprite(name.replace(":", ":blocks/"));
-        return new float[] { sprite.getMinU(), sprite.getMaxU(), sprite.getMinV(), sprite.getMaxV() };
+        return new float[]{sprite.getMinU(), sprite.getMaxU(), sprite.getMinV(), sprite.getMaxV()};
     }
 
     @Override
@@ -79,8 +75,8 @@ public class InterfaceRender implements IInterfaceRender {
     }
 
     /**
-     *  Does the actual stack render.  Put into a batch at the end of GUI rendering as item
-     *  stack rendering changes the OpenGL state and can muck up normal rendering.
+     * Does the actual stack render.  Put into a batch at the end of GUI rendering as item
+     * stack rendering changes the OpenGL state and can muck up normal rendering.
      */
     protected void renderAllStacks() {
         for (Entry<IWrapperItemStack, TransformationMatrix> stackEntry : stacksToRender.entrySet()) {
@@ -196,7 +192,7 @@ public class InterfaceRender implements IInterfaceRender {
     }
 
     /**
-     *  Renders a set of raw vertices without any caching.
+     * Renders a set of raw vertices without any caching.
      */
     private static void renderVertices(FloatBuffer vertices) {
         GL11.glBegin(GL11.GL_TRIANGLES);
@@ -211,14 +207,14 @@ public class InterfaceRender implements IInterfaceRender {
     }
 
     /**
-     *  Renders a set of vertices previously cached with {@link #cacheVertices(FloatBuffer)}
+     * Renders a set of vertices previously cached with {@link #cacheVertices(FloatBuffer)}
      */
     private static void renderVertices(int index) {
         GL11.glCallList(index);
     }
 
     /**
-     *  Renders a set of raw lines without any caching.
+     * Renders a set of raw lines without any caching.
      */
     private static void renderLines(FloatBuffer vertices, float width) {
         GL11.glLineWidth(width);
@@ -233,11 +229,11 @@ public class InterfaceRender implements IInterfaceRender {
     }
 
     /**
-     *  Caches the vertices in some form for quick rendering.  This form is version-dependent,
-     *  but no matter which version is used, the returned value is assured to be unique for each
-     *  call to this function.  This should be used in tandem with {@link #renderVertices(int)},
-     *  which will render the cached vertices from this function.  Note that the vertex format
-     *  is expected to be the same as what is in {@link RenderableObject}
+     * Caches the vertices in some form for quick rendering.  This form is version-dependent,
+     * but no matter which version is used, the returned value is assured to be unique for each
+     * call to this function.  This should be used in tandem with {@link #renderVertices(int)},
+     * which will render the cached vertices from this function.  Note that the vertex format
+     * is expected to be the same as what is in {@link RenderableObject}
      */
     private static int cacheVertices(FloatBuffer vertices) {
         int displayListIndex = GL11.glGenLists(1);
@@ -248,9 +244,9 @@ public class InterfaceRender implements IInterfaceRender {
     }
 
     /**
-     *  Binds the passed-in texture to be rendered.  The instance of the texture is 
-     *  cached in this class once created for later use, so feel free to not cache
-     *  the string values that are passed-in.
+     * Binds the passed-in texture to be rendered.  The instance of the texture is
+     * cached in this class once created for later use, so feel free to not cache
+     * the string values that are passed-in.
      */
     private static void bindTexture(String textureLocation) {
         if (animatedGIFs.containsKey(textureLocation)) {
@@ -271,7 +267,7 @@ public class InterfaceRender implements IInterfaceRender {
             if (!internalTextures.containsKey(textureLocation)) {
                 //If the texture has a colon, it's a short-hand form that needs to be converted.
                 String formattedLocation = textureLocation;
-                if (textureLocation.indexOf(":") != -1) {
+                if (textureLocation.contains(":")) {
                     formattedLocation = "/assets/" + textureLocation.replace(":", "/");
                 }
 
@@ -283,7 +279,7 @@ public class InterfaceRender implements IInterfaceRender {
                     internalTextures.put(textureLocation, new ResourceLocation(domain, location));
                 } else {
                     InterfaceManager.coreInterface.logError("Could not find texture: " + formattedLocation + " Reverting to fallback texture.");
-                    internalTextures.put(textureLocation, TextureMap.LOCATION_MISSING_TEXTURE);
+                    internalTextures.put(textureLocation, MISSING_TEXTURE);
                 }
             }
             Minecraft.getMinecraft().getTextureManager().bindTexture(internalTextures.get(textureLocation));
@@ -299,7 +295,7 @@ public class InterfaceRender implements IInterfaceRender {
                 URL url = new URL(textureURL);
                 URLConnection connection = url.openConnection();
                 try {
-                    List<String> validContentTypes = new ArrayList<String>();
+                    List<String> validContentTypes = new ArrayList<>();
                     for (String imageSuffix : ImageIO.getReaderFileSuffixes()) {
                         validContentTypes.add("image/" + imageSuffix);
                     }
@@ -312,7 +308,7 @@ public class InterfaceRender implements IInterfaceRender {
                             ParsedGIF gif = GIFParser.parseGIF(reader);
                             if (gif != null) {
                                 animatedGIFs.put(textureURL, gif);
-                                Map<GIFImageFrame, Integer> gifFrameIndexes = new HashMap<GIFImageFrame, Integer>();
+                                Map<GIFImageFrame, Integer> gifFrameIndexes = new HashMap<>();
                                 for (GIFImageFrame frame : gif.frames.values()) {
                                     int glTexturePointer = TextureUtil.glGenTextures();
                                     TextureUtil.uploadTextureImageAllocate(glTexturePointer, frame.getImage(), false, false);
@@ -329,12 +325,12 @@ public class InterfaceRender implements IInterfaceRender {
                             onlineTextures.put(textureURL, glTexturePointer);
                         }
                     } else {
-                        String errorString = "Invalid content type found.  Found:" + contentType + ", but the only valid types are: ";
+                        StringBuilder errorString = new StringBuilder("Invalid content type found.  Found:" + contentType + ", but the only valid types are: ");
                         for (String validType : validContentTypes) {
-                            errorString += validType + ", ";
+                            errorString.append(validType).append(", ");
                         }
                         onlineTextures.put(textureURL, TextureUtil.MISSING_TEXTURE.getGlTextureId());
-                        return errorString;
+                        return errorString.toString();
                     }
                 } catch (Exception e) {
                     onlineTextures.put(textureURL, TextureUtil.MISSING_TEXTURE.getGlTextureId());
@@ -357,11 +353,11 @@ public class InterfaceRender implements IInterfaceRender {
     }
 
     /**
-     *  Enables or disables OpenGL lighting for this draw sequence.
-     *  This effectively prevents OpenGL lighting calculations on textures.
-     *  Do note that the normal internal lightmapping will still be applied.
-     *  This essentially prevents shadow creation on models based on their face
-     *  orientation relative to the main light "source".
+     * Enables or disables OpenGL lighting for this draw sequence.
+     * This effectively prevents OpenGL lighting calculations on textures.
+     * Do note that the normal internal lightmapping will still be applied.
+     * This essentially prevents shadow creation on models based on their face
+     * orientation relative to the main light "source".
      */
     private static void setSystemLightingState(boolean enabled) {
         if (enabled) {
@@ -372,10 +368,10 @@ public class InterfaceRender implements IInterfaceRender {
     }
 
     /**
-     *  Enables or disables internal lighting for this draw sequence.
-     *  This disables the internal lightmapping, effectively making the rendered
-     *  texture as bright as it would be during daytime.  Do note that the system
-     *  lighting calculations for shadowing will still be applied to the model.
+     * Enables or disables internal lighting for this draw sequence.
+     * This disables the internal lightmapping, effectively making the rendered
+     * texture as bright as it would be during daytime.  Do note that the system
+     * lighting calculations for shadowing will still be applied to the model.
      */
     private static void setInternalLightingState(boolean enabled) {
         if (enabled) {
@@ -405,8 +401,8 @@ public class InterfaceRender implements IInterfaceRender {
     }
 
     /**
-     *  Sets the blend state to bright.  This does special blending
-     *  when blending is enabled.
+     * Sets the blend state to bright.  This does special blending
+     * when blending is enabled.
      */
     private static void setBlendBright(boolean enabled) {
         if (enabled) {
@@ -417,9 +413,9 @@ public class InterfaceRender implements IInterfaceRender {
     }
 
     /**
-     *  Sets MC color to the passed-in color and alpha.  Required when needing to keep MC states happy.
-     *  In particular, this is needed if colors are changed during MC internal draw calls,
-     *  such as rendering a string, changing the color, and then rendering another string.
+     * Sets MC color to the passed-in color and alpha.  Required when needing to keep MC states happy.
+     * In particular, this is needed if colors are changed during MC internal draw calls,
+     * such as rendering a string, changing the color, and then rendering another string.
      */
     private static void setColorState(ColorRGB color, float alpha) {
         GlStateManager.color(color.red, color.green, color.blue, alpha);

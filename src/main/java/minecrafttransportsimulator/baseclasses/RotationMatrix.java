@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.baseclasses;
 
-/**3D Matrix class for rotation operations.  This should be used
+/**
+ * 3D Matrix class for rotation operations.  This should be used
  * instead of Euler angles for all things in the code.
  * All methods return this object for nested operations, unless
  * otherwise specified or void.
@@ -17,7 +18,8 @@ public class RotationMatrix {
     public double m20;
     public double m21;
     public double m22;
-    /**The current Euler angles that make up this matrix.  These are used to create the rotation
+    /**
+     * The current Euler angles that make up this matrix.  These are used to create the rotation
      * matrix on the first rotation operation.  Subsequent modifications to this variable will
      * re-create the matrix if a rotation operation is called.  However, they will NOT be updated
      * when matrix multiplication operations are performed.  The idea is to use them to create the
@@ -166,7 +168,7 @@ public class RotationMatrix {
      * Returns the angles that make up this matrix.  Note: these may not be the
      * same as the value in the {@link #angles} parameter, as rotation
      * matrix conversion has multiple solutions.  In general, these shouldn't be
-     * used for calculations and rather should just be used to store the state of 
+     * used for calculations and rather should just be used to store the state of
      * the matrix for later use where the orientation of the matrix matters, but
      * the actual angles don't.  Note that in addition to returning the angles,
      * the value of {@link #angles} is set.
@@ -371,7 +373,7 @@ public class RotationMatrix {
     /**
      * Updates this rotation of this matrix to match it to the current
      * value of its internal {@link #angles} variable.  This is an internal
-     * function and is normally only called prior to rotation operations 
+     * function and is normally only called prior to rotation operations
      * (as needed) as it does some rather lengthy calculations.  However,
      * it may be called any time the angles have changed and you want
      * this matrix to reflect those changes.

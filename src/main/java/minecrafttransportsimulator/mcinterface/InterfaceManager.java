@@ -1,16 +1,10 @@
 package minecrafttransportsimulator.mcinterface;
 
-import minecrafttransportsimulator.items.instances.ItemPartEffector;
-import minecrafttransportsimulator.items.instances.ItemPartEngine;
-import minecrafttransportsimulator.items.instances.ItemPartGeneric;
-import minecrafttransportsimulator.items.instances.ItemPartGroundDevice;
-import minecrafttransportsimulator.items.instances.ItemPartGun;
-import minecrafttransportsimulator.items.instances.ItemPartInteractable;
-import minecrafttransportsimulator.items.instances.ItemPartPropeller;
-import minecrafttransportsimulator.items.instances.ItemPartSeat;
+import minecrafttransportsimulator.items.instances.*;
 import minecrafttransportsimulator.packloading.PackParser;
 
-/**Master interface system for the mod.  This class is not an interface, unlike everything else.
+/**
+ * Master interface system for the mod.  This class is not an interface, unlike everything else.
  * Instead, it keeps references to all interfaces, which are passed-in during construction.
  *
  * @author don_bruce

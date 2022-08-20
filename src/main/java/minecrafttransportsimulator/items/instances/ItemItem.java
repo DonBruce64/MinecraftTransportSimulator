@@ -1,8 +1,5 @@
 package minecrafttransportsimulator.items.instances;
 
-import java.util.List;
-import java.util.UUID;
-
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
@@ -10,11 +7,7 @@ import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBas
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable.PlayerOwnerState;
-import minecrafttransportsimulator.entities.instances.APart;
-import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
-import minecrafttransportsimulator.entities.instances.PartEngine;
-import minecrafttransportsimulator.entities.instances.PartInteractable;
-import minecrafttransportsimulator.entities.instances.PartSeat;
+import minecrafttransportsimulator.entities.instances.*;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.components.IItemFood;
@@ -24,19 +17,12 @@ import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.jsondefs.JSONItem;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
-import minecrafttransportsimulator.mcinterface.AWrapperWorld;
-import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
-import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
-import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
-import minecrafttransportsimulator.packets.instances.PacketGUIRequest;
-import minecrafttransportsimulator.packets.instances.PacketPartEngine;
-import minecrafttransportsimulator.packets.instances.PacketPartInteractable;
-import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
+import minecrafttransportsimulator.mcinterface.*;
+import minecrafttransportsimulator.packets.instances.*;
 import minecrafttransportsimulator.systems.ConfigSystem;
+
+import java.util.List;
+import java.util.UUID;
 
 public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInteractable, IItemFood {
     /*Current page of this item, if it's a booklet.  Kept here locally as only one item class is constructed for each booklet definition.*/
@@ -127,14 +113,13 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
                         //Check if we are the owner before making this a valid key.
                         if (vehicle.ownerUUID != null && ownerState.equals(PlayerOwnerState.USER)) {
                             player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_KEY_NOTOWNER));
-                            return CallbackType.NONE;
                         } else {
                             keyVehicleUUID = vehicle.uniqueUUID;
                             data.setUUID("vehicle", keyVehicleUUID);
                             stack.setData(data);
                             player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_KEY_BIND));
-                            return CallbackType.NONE;
                         }
+                        return CallbackType.NONE;
                     }
 
                     //Try to lock or unlock this vehicle.
@@ -326,7 +311,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
     public boolean onUsed(AWrapperWorld world, IWrapperPlayer player) {
         if (definition.item.type.equals(ItemComponentType.BOOKLET)) {
             if (!world.isClient()) {
-                player.sendPacket(new PacketGUIRequest(player, PacketGUIRequest.GUIType.BOOKELET));
+                player.sendPacket(new PacketGUIRequest(player, PacketGUIRequest.GUIType.BOOKLET));
             }
         } else if (definition.item.type.equals(ItemComponentType.Y2K_BUTTON)) {
             if (!world.isClient() && player.isOP()) {

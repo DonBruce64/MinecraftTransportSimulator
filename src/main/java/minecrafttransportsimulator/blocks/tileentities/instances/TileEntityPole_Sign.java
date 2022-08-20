@@ -5,10 +5,11 @@ import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPol
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 
-/**Sign pole component.  Renders a sign texture and text.
-*
-* @author don_bruce
-*/
+/**
+ * Sign pole component.  Renders a sign texture and text.
+ *
+ * @author don_bruce
+ */
 public class TileEntityPole_Sign extends ATileEntityPole_Component {
 
     public TileEntityPole_Sign(TileEntityPole core, IWrapperPlayer placingPlayer, Axis axis, IWrapperNBT data) {

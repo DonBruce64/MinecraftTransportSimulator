@@ -1,11 +1,11 @@
 package minecrafttransportsimulator.jsondefs;
 
-import java.util.List;
-
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
+
+import java.util.List;
 
 public class JSONParticle {
     @JSONRequired
@@ -14,7 +14,7 @@ public class JSONParticle {
 
     @JSONDescription("Foces this particle to spawn every tick it is active.  Useful for constant particle flows, like smoke.")
     public boolean spawnEveryTick;
-    
+
     @JSONDescription("If true, this particle will ignore lighting and will render bright at all times.  Useful for muzzle flashes and sparks.")
     public boolean isBright;
 
@@ -67,7 +67,7 @@ public class JSONParticle {
     @Deprecated
     public Point3D velocityVector;
 
-    public static enum ParticleType {
+    public enum ParticleType {
         @JSONDescription("The standard smoke particle.")
         SMOKE,
         @JSONDescription("The standard (torch) flame particle.")
@@ -79,6 +79,6 @@ public class JSONParticle {
         @JSONDescription("The standard block breakage particle. The block texture to use will always be the block below this particle when first spawned.")
         BREAK,
         @JSONDescription("A generic particle.  This has no movement by default, so you will have to specify it.")
-        GENERIC;
+        GENERIC
     }
 }

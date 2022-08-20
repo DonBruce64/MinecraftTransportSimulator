@@ -6,24 +6,29 @@ import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.packets.components.APacketEntityInteract;
 
-/**Packet used to add/remove riders from an entity.  This packet only appears on clients after the
+/**
+ * Packet used to add/remove riders from an entity.  This packet only appears on clients after the
  * server has added or removed a rider from the entity.  If a position is given, then this rider should
  * be added to that position.  If no position is given, then the rider should be removed.
- * 
+ *
  * @author don_bruce
  */
 public class PacketEntityRiderChange extends APacketEntityInteract<AEntityE_Interactable<?>, IWrapperEntity> {
     private final boolean mount;
     private final boolean facesForwards;
 
-    /**Constructor for setting the rider.**/
+    /**
+     * Constructor for setting the rider.
+     **/
     public PacketEntityRiderChange(AEntityE_Interactable<?> entity, IWrapperEntity rider, boolean facesForwards) {
         super(entity, rider);
         this.mount = true;
         this.facesForwards = facesForwards;
     }
 
-    /**Constructor for removing the rider.**/
+    /**
+     * Constructor for removing the rider.
+     **/
     public PacketEntityRiderChange(AEntityE_Interactable<?> entity, IWrapperEntity rider) {
         super(entity, rider);
         this.mount = false;

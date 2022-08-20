@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.baseclasses;
 
-/**Basic color class.  Stores a color as three floats representing RGBA values from 0 to 1.
+/**
+ * Basic color class.  Stores a color as three floats representing RGBA values from 0 to 1.
  * These are in the domain of 0-255 for standard RGB, but stored as floats as OpenGL
  * uses those internally.  You may, however, create this from a standard 0-255 constructor.
  * This class is used instead of the AWT class as it lets us pack color into the JSON, which
@@ -56,7 +57,7 @@ public class ColorRGB {
         float finalBlue;
 
         if (isHSV) {
-            this.hsv = new int[] { (int) red, (int) green, (int) blue };
+            this.hsv = new int[]{(int) red, (int) green, (int) blue};
             float[] RGB = HSVtoRGB(red % 360, green / 100, blue / 100);
             finalRed = RGB[0];
             finalGreen = RGB[1];
@@ -80,17 +81,17 @@ public class ColorRGB {
         float m = value - c;
 
         if (hue < 60) {
-            return new float[] { c + m, x + m, m };
+            return new float[]{c + m, x + m, m};
         } else if (hue < 120) {
-            return new float[] { x + m, c + m, m };
+            return new float[]{x + m, c + m, m};
         } else if (hue < 180) {
-            return new float[] { m, c + m, x + m };
+            return new float[]{m, c + m, x + m};
         } else if (hue < 240) {
-            return new float[] { m, x + m, c + m };
+            return new float[]{m, x + m, c + m};
         } else if (hue < 300) {
-            return new float[] { x + m, m, c + m };
+            return new float[]{x + m, m, c + m};
         } else {
-            return new float[] { c + m, m, x + m };
+            return new float[]{c + m, m, x + m};
         }
     }
 
@@ -103,8 +104,8 @@ public class ColorRGB {
         float cMin = Math.min(red, Math.min(green, blue));
         float diff = cMax - cMin;
 
-        int hue = 0;
-        int saturation = 0;
+        int hue;
+        int saturation;
 
         if (cMax == cMin) {
             hue = 0;
@@ -124,7 +125,7 @@ public class ColorRGB {
 
         int value = (int) cMax * 100;
 
-        return new int[] { hue, saturation, value };
+        return new int[]{hue, saturation, value};
 
     }
 

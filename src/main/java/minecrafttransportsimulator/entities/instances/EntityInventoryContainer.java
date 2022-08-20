@@ -1,7 +1,5 @@
 package minecrafttransportsimulator.entities.instances;
 
-import java.util.List;
-
 import minecrafttransportsimulator.baseclasses.IInventoryProvider;
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
@@ -10,7 +8,10 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketInventoryContainerChange;
 
-/**Basic inventory class.  Class contains methods for adding and removing items from the inventory, as well as automatic
+import java.util.List;
+
+/**
+ * Basic inventory class.  Class contains methods for adding and removing items from the inventory, as well as automatic
  * syncing of items across clients and servers.  This allows the inventory to be put on any object
  * without the need to worry about packets getting out of whack.
  *
@@ -48,7 +49,7 @@ public class EntityInventoryContainer extends AEntityA_Base implements IInventor
     }
 
     /**
-     *  Saves inventory data to the passed-in NBT.
+     * Saves inventory data to the passed-in NBT.
      */
     @Override
     public IWrapperNBT save(IWrapperNBT data) {

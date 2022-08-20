@@ -1,12 +1,12 @@
 package minecrafttransportsimulator.jsondefs;
 
-import java.util.List;
-
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable.ModifiableValue;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
+
+import java.util.List;
 
 @JSONDescription("This is the most complex area of the entire JSON system and is where you'll be spending the bulk of your time.  As the vehicle JSON defines positions that relate to your model, it is important to ensure that your model is correctly scaled, positioned, and oriented BEFORE making the JSON file.  If you have to re-do your model, you also may have to re-do JSON work, and that's extra work you don't want to do.\nTo ensure your vehicle's model is correct you can simply replace any OBJ model in a pack with your model.  This will cause MTS to load that model instead, allowing you to verify that the model is correct before you go to the work of making a JSON for it.  Once that is done, you're ready to tackle the JSON file.  JSON files can be rather long, so expect a lot of sub-sections here.\nA note about treads:\nTread paths are automatically created in the vehicle by checking for rollers in the format of \"$roller_xx\", where xx is the roller number.  The roller number must start at 0, and increment in a counter-clockwise direction when viewed from the left side.  The first roller MUST be the bottom-front roller in this case, with the second roller being behind it and also on the ground.  In other words, the rollers will increment in the direction of tread movement when the vehicle is going forwards.  For this reason, it is highly recommended that you simply make the 0 roller the one that's the first ground-contacting roller in the tread path and then follow the tread direction from there.  Also note that the name \"$roller_xx\" MUST be in lowercase.  From these rollers MTS will auto-create a tread path that follows said rollers, all without you needing to specify any points or do any JSON work!\nIn addition to creating a path, the MTS system will also auto-add all appropriate rotations to the JSON's animation sections.  This means you can simply name your rollers according to convention, set some JSON parameters for your part, and let MTS do the heavy-lifting calculating all the points and rotation speeds for your cogs and idlers.")
 public class JSONVehicle extends AJSONPartProvider {
@@ -21,7 +21,7 @@ public class JSONVehicle extends AJSONPartProvider {
     @Deprecated
     public VehicleCar car;
 
-    public class VehicleMotorized {
+    public static class VehicleMotorized {
         @JSONDescription("If this is true, then MTS will consider this vehicle an aircraft and have it use the aircraft control system.  Has no other effect besides this.")
         public boolean isAircraft;
 
@@ -163,7 +163,7 @@ public class JSONVehicle extends AJSONPartProvider {
         @JSONDescription("A listing of notches for flap deployment.  These will be used to determine the requested flap setting for vehicles that have them.  Only functional for vehicles where isAircraft is set to true.  Both 0 and the highest notch should be included")
         public List<Float> flapNotches;
 
-        @JSONRequired(dependentField = "isTrailer", dependentValues = { "true" })
+        @JSONRequired(dependentField = "isTrailer", dependentValues = {"true"})
         @JSONDescription("A listing of variables that will be checked off the towing vehicle if this vehicle is a trailer and connected.  Used by trailers to get the states of their towing vehicles for light and door animations.")
         public List<String> hookupVariables;
 
@@ -194,7 +194,7 @@ public class JSONVehicle extends AJSONPartProvider {
     }
 
     @Deprecated
-    public class VehiclePlane {
+    public static class VehiclePlane {
         public boolean hasFlaps;
         public boolean hasAutopilot;
         public float wingSpan;
@@ -206,7 +206,7 @@ public class JSONVehicle extends AJSONPartProvider {
     }
 
     @Deprecated
-    public class VehicleBlimp {
+    public static class VehicleBlimp {
         public float crossSectionalArea;
         public float tailDistance;
         public float rudderArea;
@@ -214,7 +214,7 @@ public class JSONVehicle extends AJSONPartProvider {
     }
 
     @Deprecated
-    public class VehicleCar {
+    public static class VehicleCar {
         public boolean isBigTruck;
         public boolean isFrontWheelDrive;
         public boolean isRearWheelDrive;

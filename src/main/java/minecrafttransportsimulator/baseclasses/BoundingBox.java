@@ -1,8 +1,5 @@
 package minecrafttransportsimulator.baseclasses;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
@@ -11,7 +8,11 @@ import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.rendering.RenderableObject;
 import net.minecraft.util.math.AxisAlignedBB;
 
-/**Basic bounding box.  This class is mutable and allows for quick setting of values
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Basic bounding box.  This class is mutable and allows for quick setting of values
  * without the need to make a new instance every time.  Also is based on a center point and
  * height and width parameters rather than min/max, though such parameters are calculated to be
  * used in bounds checks.  Note that rather than width and height we use radius here.  The idea
@@ -21,7 +22,7 @@ import net.minecraft.util.math.AxisAlignedBB;
  * <br><br>
  * Of note is how we set the center points.  The first point passed-in is the boxes' local
  * center point.  This should NEVER be modified, as it's designed to never change and always be relative
- * to the center of the object that owns this box.  The second global parameter represents the boxes' 
+ * to the center of the object that owns this box.  The second global parameter represents the boxes'
  * actual center point in the world, when all appropriate translations/rotations have been performed.
  * Most, if not all, updates to boxes on an object will simply require modifying this second parameter.
  *
@@ -32,7 +33,7 @@ public class BoundingBox {
     public final Point3D localCenter;
     public final Point3D globalCenter;
     public final Point3D currentCollisionDepth;
-    public final List<Point3D> collidingBlockPositions = new ArrayList<Point3D>();
+    public final List<Point3D> collidingBlockPositions = new ArrayList<>();
     private final RenderableObject wireframeRenderable;
     private final RenderableObject holographicRenderable;
     private final Point3D tempGlobalCenter;
@@ -46,22 +47,30 @@ public class BoundingBox {
 
     private static final Point3D helperPoint = new Point3D();
 
-    /**Simple constructor.  Used for blocks, bounds checks, or other things that don't need local/global positional differences.**/
+    /**
+     * Simple constructor.  Used for blocks, bounds checks, or other things that don't need local/global positional differences.
+     **/
     public BoundingBox(Point3D center, double widthRadius, double heightRadius, double depthRadius) {
         this(new Point3D(), center, widthRadius, heightRadius, depthRadius, false, null, null);
     }
 
-    /**Complex constructor.  Used for things that have local and global positions.  These can also collide with liquid blocks.**/
+    /**
+     * Complex constructor.  Used for things that have local and global positions.  These can also collide with liquid blocks.
+     **/
     public BoundingBox(Point3D localCenter, Point3D globalCenter, double widthRadius, double heightRadius, double depthRadius, boolean collidesWithLiquids) {
         this(localCenter, globalCenter, widthRadius, heightRadius, depthRadius, collidesWithLiquids, null, null);
     }
 
-    /**JSON constructor.  Used for boxes that are created from JSON and need extended properties.**/
+    /**
+     * JSON constructor.  Used for boxes that are created from JSON and need extended properties.
+     **/
     public BoundingBox(JSONCollisionBox definition, JSONCollisionGroup groupDef) {
         this(definition.pos, definition.pos.copy(), definition.width / 2D, definition.height / 2D, definition.width / 2D, definition.collidesWithLiquids, definition, groupDef);
     }
 
-    /**Vector constructor.  Creates a box for a vector.  Used mainly in raytracing applications for pre-calculation.**/
+    /**
+     * Vector constructor.  Creates a box for a vector.  Used mainly in raytracing applications for pre-calculation.
+     **/
     public BoundingBox(Point3D start, Point3D end) {
         this(new Point3D(), 0, 0, 0);
         globalCenter.set(end).subtract(start).scale(0.5);
@@ -71,7 +80,9 @@ public class BoundingBox {
         globalCenter.add(start);
     }
 
-    /**Master constructor.  Used for main creation.**/
+    /**
+     * Master constructor.  Used for main creation.
+     **/
     private BoundingBox(Point3D localCenter, Point3D globalCenter, double widthRadius, double heightRadius, double depthRadius, boolean collidesWithLiquids, JSONCollisionBox definition, JSONCollisionGroup groupDef) {
         this.localCenter = localCenter;
         this.globalCenter = globalCenter;
@@ -113,17 +124,17 @@ public class BoundingBox {
     }
 
     /**
-     *  Populates the collidingBlocks list with all currently-colliding blocks.
-     *  Note that the passed-in offset is only applied for this check,  and is reverted after this call.
-     *  If blocks collided with this box after this method, true is returned.
+     * Populates the collidingBlocks list with all currently-colliding blocks.
+     * Note that the passed-in offset is only applied for this check,  and is reverted after this call.
+     * If blocks collided with this box after this method, true is returned.
      */
     public boolean updateCollidingBlocks(AWrapperWorld world, Point3D offset) {
         return updateCollisions(world, offset, false);
     }
 
     /**
-     *  Like {@link #updateCollidingBlocks(AWrapperWorld, Point3D)}, but takes movement into account
-     *  when setting collision depth.
+     * Like {@link #updateCollidingBlocks(AWrapperWorld, Point3D)}, but takes movement into account
+     * when setting collision depth.
      */
     public boolean updateMovingCollisions(AWrapperWorld world, Point3D offset) {
         return updateCollisions(world, offset, true);
@@ -138,10 +149,10 @@ public class BoundingBox {
     }
 
     /**
-     *  Sets the global center of this box to the position of the passed-in entity, rotated by the
-     *  entity's rotation and offset by the local center, or the passed-in offset if it is non-null.
-     *  Mostly used for updating hitboxes that rotate with the entity.  Rotation is done using the fine 
-     *  Point3d rotation to allow for better interaction while standing on entities.
+     * Sets the global center of this box to the position of the passed-in entity, rotated by the
+     * entity's rotation and offset by the local center, or the passed-in offset if it is non-null.
+     * Mostly used for updating hitboxes that rotate with the entity.  Rotation is done using the fine
+     * Point3d rotation to allow for better interaction while standing on entities.
      */
     public void updateToEntity(AEntityD_Definable<?> entity, Point3D optionalOffset) {
         if (optionalOffset != null) {
@@ -164,17 +175,17 @@ public class BoundingBox {
     }
 
     /**
-     *  Returns the edge points for this box.
-     *  Order is the 4 -x points, then the 4 +x.
-     *  Y is -y for two, +y for two.
-     *  Z alternates each point.
+     * Returns the edge points for this box.
+     * Order is the 4 -x points, then the 4 +x.
+     * Y is -y for two, +y for two.
+     * Z alternates each point.
      */
     public float[][] getEdgePoints() {
         float[][] points = new float[8][];
         for (int i = 0; i < 2; ++i) {
             for (int j = 0; j < 2; ++j) {
                 for (int k = 0; k < 2; ++k) {
-                    points[i * 4 + j * 2 + k] = new float[] { (float) (i == 0 ? -widthRadius : +widthRadius), (float) (j == 0 ? -heightRadius : +heightRadius), (float) (k == 0 ? -depthRadius : +depthRadius) };
+                    points[i * 4 + j * 2 + k] = new float[]{(float) (i == 0 ? -widthRadius : +widthRadius), (float) (j == 0 ? -heightRadius : +heightRadius), (float) (k == 0 ? -depthRadius : +depthRadius)};
                 }
             }
         }
@@ -182,45 +193,45 @@ public class BoundingBox {
     }
 
     /**
-     *  Returns true if the passed-in point is inside this box.
-     *  Note that this returns true for points on the border, to allow use to use in
-     *  in conjunction with hit-scanning code to find out which box got hit-scanned.
+     * Returns true if the passed-in point is inside this box.
+     * Note that this returns true for points on the border, to allow use to use in
+     * in conjunction with hit-scanning code to find out which box got hit-scanned.
      */
     public boolean isPointInside(Point3D point) {
         return globalCenter.x - widthRadius <= point.x && globalCenter.x + widthRadius >= point.x && globalCenter.y - heightRadius <= point.y && globalCenter.y + heightRadius >= point.y && globalCenter.z - depthRadius <= point.z && globalCenter.z + depthRadius >= point.z;
     }
 
     /**
-     *  Returns true if the passed-in box intersects this box.
+     * Returns true if the passed-in box intersects this box.
      */
     public boolean intersects(BoundingBox box) {
         return globalCenter.x - widthRadius < box.globalCenter.x + box.widthRadius && globalCenter.x + widthRadius > box.globalCenter.x - box.widthRadius && globalCenter.y - heightRadius < box.globalCenter.y + box.heightRadius && globalCenter.y + heightRadius > box.globalCenter.y - box.heightRadius && globalCenter.z - depthRadius < box.globalCenter.z + box.depthRadius && globalCenter.z + depthRadius > box.globalCenter.z - box.depthRadius;
     }
 
     /**
-     *  Returns true if the passed-in point intersects this box in the YZ-plane.
+     * Returns true if the passed-in point intersects this box in the YZ-plane.
      */
     private boolean intersectsWithYZ(Point3D point) {
         return point.y >= globalCenter.y - heightRadius && point.y <= globalCenter.y + heightRadius && point.z >= globalCenter.z - depthRadius && point.z <= globalCenter.z + depthRadius;
     }
 
     /**
-     *  Returns true if the passed-in point intersects this box in the XZ-plane.
+     * Returns true if the passed-in point intersects this box in the XZ-plane.
      */
     private boolean intersectsWithXZ(Point3D point) {
         return point.x >= globalCenter.x - widthRadius && point.x <= globalCenter.x + widthRadius && point.z >= globalCenter.z - depthRadius && point.z <= globalCenter.z + depthRadius;
     }
 
     /**
-     *  Returns true if the passed-in point intersects this box in the XY-plane.
+     * Returns true if the passed-in point intersects this box in the XY-plane.
      */
     private boolean intersectsWithXY(Point3D point) {
         return point.x >= globalCenter.x - widthRadius && point.x <= globalCenter.x + widthRadius && point.y >= globalCenter.y - heightRadius && point.y <= globalCenter.y + heightRadius;
     }
 
     /**
-     *  Returns the point between the start and end points that collides with this box,
-     *  or null if such a point does not exist.
+     * Returns the point between the start and end points that collides with this box,
+     * or null if such a point does not exist.
      */
     private Point3D getXPlaneCollision(Point3D start, Point3D end, double xPoint) {
         Point3D collisionPoint = start.getIntermediateWithXValue(end, xPoint);
@@ -228,8 +239,8 @@ public class BoundingBox {
     }
 
     /**
-     *  Returns the point between the start and end points that collides with this box,
-     *  or null if such a point does not exist.
+     * Returns the point between the start and end points that collides with this box,
+     * or null if such a point does not exist.
      */
     private Point3D getYPlaneCollision(Point3D start, Point3D end, double yPoint) {
         Point3D collisionPoint = start.getIntermediateWithYValue(end, yPoint);
@@ -237,8 +248,8 @@ public class BoundingBox {
     }
 
     /**
-     *  Returns the point between the start and end points that collides with this box,
-     *  or null if such a point does not exist.
+     * Returns the point between the start and end points that collides with this box,
+     * or null if such a point does not exist.
      */
     private Point3D getZPlaneCollision(Point3D start, Point3D end, double zPoint) {
         Point3D collisionPoint = start.getIntermediateWithZValue(end, zPoint);
@@ -246,9 +257,9 @@ public class BoundingBox {
     }
 
     /**
-     *  Checks to see if the line defined by the passed-in start and end points intersects this box.
-     *  If so, then a new point is returned on the first point of intersection (outer bounds).  If the
-     *  line created by the two points does not intersect this box, null is returned.
+     * Checks to see if the line defined by the passed-in start and end points intersects this box.
+     * If so, then a new point is returned on the first point of intersection (outer bounds).  If the
+     * line created by the two points does not intersect this box, null is returned.
      */
     public Point3D getIntersectionPoint(Point3D start, Point3D end) {
         //First check minX.
@@ -288,25 +299,25 @@ public class BoundingBox {
     }
 
     /**
-     *  Helper method to convert the BoundingBox to an AxisAlignedBB.
+     * Helper method to convert the BoundingBox to an AxisAlignedBB.
      */
     public AxisAlignedBB convert() {
         return new AxisAlignedBB(globalCenter.x - widthRadius, globalCenter.y - heightRadius, globalCenter.z - depthRadius, globalCenter.x + widthRadius, globalCenter.y + heightRadius, globalCenter.z + depthRadius);
     }
 
     /**
-     *  Helper method to convert the BoundingBox to an AxisAlignedBB.
-     *  This method allows for an offset to the conversion, to prevent
-     *  creating two AABBs (the conversion and the offset box).
+     * Helper method to convert the BoundingBox to an AxisAlignedBB.
+     * This method allows for an offset to the conversion, to prevent
+     * creating two AABBs (the conversion and the offset box).
      */
     public AxisAlignedBB convertWithOffset(double x, double y, double z) {
         return new AxisAlignedBB(x + globalCenter.x - widthRadius, y + globalCenter.y - heightRadius, z + globalCenter.z - depthRadius, x + globalCenter.x + widthRadius, y + globalCenter.y + heightRadius, z + globalCenter.z + depthRadius);
     }
 
     /**
-     *  Renders this bounding box as a wireframe model.
-     *  Automatically applies appropriate transforms to go from entity center to itself, or uses
-     *  the passed-in offset from global center if it is set.
+     * Renders this bounding box as a wireframe model.
+     * Automatically applies appropriate transforms to go from entity center to itself, or uses
+     * the passed-in offset from global center if it is set.
      */
     public void renderWireframe(AEntityC_Renderable entity, TransformationMatrix transform, Point3D offset, ColorRGB color) {
         wireframeRenderable.transform.set(transform);
@@ -325,9 +336,9 @@ public class BoundingBox {
     }
 
     /**
-     *  Renders this bounding box as a holographic model.  Does
-     *  not offset to its global position, as this might not play
-     *  nicely with the current matrix sate.
+     * Renders this bounding box as a holographic model.  Does
+     * not offset to its global position, as this might not play
+     * nicely with the current matrix sate.
      */
     public void renderHolographic(TransformationMatrix transform, Point3D offset, ColorRGB color) {
         holographicRenderable.transform.set(transform);

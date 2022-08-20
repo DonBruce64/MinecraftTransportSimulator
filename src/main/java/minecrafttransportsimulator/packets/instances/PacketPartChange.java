@@ -9,9 +9,10 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
-/**Packet used to add/remove parts from an entity.  This packet only appears on clients after the
+/**
+ * Packet used to add/remove parts from an entity.  This packet only appears on clients after the
  * server has added or removed a part from the entity.
- * 
+ *
  * @author don_bruce
  */
 public class PacketPartChange extends APacketEntity<AEntityF_Multipart<?>> {

@@ -1,9 +1,9 @@
 package minecrafttransportsimulator.jsondefs;
 
-import java.util.List;
-
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
+
+import java.util.List;
 
 @JSONDescription("Sometimes, you just want to have something shiny to place in the world that can't be driven away by a pesky thief.  In this case, decor is the go-to choice.  Decors are essentially block-based OBJ models that can be placed down.  These come with full animation support, and can even have some additional functions built-in to justify the cost of crafting them.")
 public class JSONDecor extends AJSONMultiModelProvider {
@@ -11,7 +11,7 @@ public class JSONDecor extends AJSONMultiModelProvider {
     @JSONDescription("Decor-specific properties.")
     public JSONDecorGeneric decor;
 
-    public class JSONDecorGeneric {
+    public static class JSONDecorGeneric {
         @JSONDescription("An optional type for this decor to give it functionality.")
         public DecorComponentType type;
 
@@ -53,7 +53,7 @@ public class JSONDecor extends AJSONMultiModelProvider {
         public List<String> items;
     }
 
-    public static enum DecorComponentType {
+    public enum DecorComponentType {
         @JSONDescription("Will make the decor have no functionality.")
         GENERIC,
         @JSONDescription("Will make the decor have chest functionality.")
@@ -73,6 +73,6 @@ public class JSONDecor extends AJSONMultiModelProvider {
         @JSONDescription("Will make the decor have fluid unloader functionality.")
         FLUID_UNLOADER,
         @JSONDescription("Will make the decor have radio functionality.  Exact same system as vehicles.  It even syncs up with them!")
-        RADIO;
+        RADIO
     }
 }

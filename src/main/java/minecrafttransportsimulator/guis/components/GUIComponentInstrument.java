@@ -5,7 +5,8 @@ import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.jsondefs.JSONInstrumentDefinition;
 import minecrafttransportsimulator.rendering.RenderInstrument;
 
-/**Custom instrument render class.  This class is designed to render an instrument into
+/**
+ * Custom instrument render class.  This class is designed to render an instrument into
  * the GUI.  This instrument will render as if it was on the entity itself, and will have
  * all lighting effects that entity may or may not have.
  *

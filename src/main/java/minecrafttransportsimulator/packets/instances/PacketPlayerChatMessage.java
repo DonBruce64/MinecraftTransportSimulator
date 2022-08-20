@@ -7,10 +7,11 @@ import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.packets.components.APacketPlayer;
 
-/**Packet used for sending the player chat messages from the server.  Mainly for informing them
+/**
+ * Packet used for sending the player chat messages from the server.  Mainly for informing them
  * about things they did to a vehicle they interacted with.  Do NOT send this packet to the server
  * or it will crash when it tries to display chat messages on something without a screen!
- * 
+ *
  * @author don_bruce
  */
 public class PacketPlayerChatMessage extends APacketPlayer {
@@ -29,7 +30,6 @@ public class PacketPlayerChatMessage extends APacketPlayer {
     public PacketPlayerChatMessage(ByteBuf buf) {
         super(buf);
         this.message = readStringFromBuffer(buf);
-        ;
     }
 
     @Override

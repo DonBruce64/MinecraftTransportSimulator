@@ -1,11 +1,5 @@
 package mcinterface1122;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.logging.log4j.Logger;
-
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -15,8 +9,14 @@ import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.Mod.Instance;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import org.apache.logging.log4j.Logger;
 
-/**Loader interface for the mod.  This class is not actually an interface, unlike everything else.
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Loader interface for the mod.  This class is not actually an interface, unlike everything else.
  * Instead, it keeps references to all interfaces, which are passed-in during construction.
  * It also handles initialization calls when the game is first booted.  There will only
  * be ONE loader per running instance of Minecraft.
@@ -27,7 +27,7 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 public class InterfaceLoader {
     public static final String MODID = "mts";
     public static final String MODNAME = "Immersive Vehicles (MTS)";
-    public static final String MODVER = "21.4.0-BETA37";
+    public static final String MODVER = "21.4.0-BETA40";
     public static Logger logger;
 
     @Instance(MODID)
@@ -57,7 +57,7 @@ public class InterfaceLoader {
 
         //Parse packs now that we have a logger.
         ConfigSystem.loadFromDisk(new File(gameDirectory, "config"), event.getSide().isClient());
-        List<File> packDirectories = new ArrayList<File>();
+        List<File> packDirectories = new ArrayList<>();
         File modDirectory = new File(gameDirectory, "mods");
         if (modDirectory.exists()) {
             packDirectories.add(modDirectory);

@@ -1,7 +1,5 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
-import java.util.List;
-
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.NavBeacon;
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -11,7 +9,10 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 
-/**Beacon tile entity.  Contains code for handling interfacing with
+import java.util.List;
+
+/**
+ * Beacon tile entity.  Contains code for handling interfacing with
  * the global world saved data and information of the beacon states.
  * Note that the variables for this beacon are saved as textLines
  * in the main decor class to ensure they both display properly,
@@ -58,7 +59,7 @@ public class TileEntityBeacon extends TileEntityDecor {
         try {
             //Try to create the beacon before setting text.  If it's invalid text, we don't want to save it.
             //If the object can be created, then we just call super and let it handle this.
-            NavBeacon newBeacon = new NavBeacon(world, textLines.get(0), Double.valueOf(textLines.get(1)), Double.valueOf(textLines.get(2)), position);
+            NavBeacon newBeacon = new NavBeacon(world, textLines.get(0), Double.parseDouble(textLines.get(1)), Double.parseDouble(textLines.get(2)), position);
             super.updateText(textLines);
             currentBeacon = newBeacon;
         } catch (Exception e) {

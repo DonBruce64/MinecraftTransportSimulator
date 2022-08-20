@@ -8,9 +8,10 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
-/**Base Tile Entity class.  In essence, this class holds the data and state of a Tile Entity in the world.
+/**
+ * Base Tile Entity class.  In essence, this class holds the data and state of a Tile Entity in the world.
  * All TileEntities are used for making pack-based blocks, so they have JSON parameters
- * attached to them.  
+ * attached to them.
  * <br><br>
  * Note that this constructor is called on the server when first creating the TE or loading it from disk,
  * but on the client this is called after the server sends over the saved data, not when the player first clicks.
@@ -42,8 +43,8 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONMultiModelProv
     }
 
     /**
-     *  Returns the rotation, in the Y-direction, that should be applied to newly-placed instances of this entity.
-     *  The player is passed-in as it is expected the rotation will depend on the player's rotation.
+     * Returns the rotation, in the Y-direction, that should be applied to newly-placed instances of this entity.
+     * The player is passed-in as it is expected the rotation will depend on the player's rotation.
      */
     public double getPlacementRotation(IWrapperPlayer player) {
         int clampAngle = getRotationIncrement();
@@ -88,18 +89,18 @@ public abstract class ATileEntityBase<JSONDefinition extends AJSONMultiModelProv
     }
 
     /**
-     *  Returns the rotation increment for this TE.  This will ensure the TE is
-     *  rotated only in this increment when placed into the world.  If no rotation
-     *  should be performed, return 360.
+     * Returns the rotation increment for this TE.  This will ensure the TE is
+     * rotated only in this increment when placed into the world.  If no rotation
+     * should be performed, return 360.
      */
     public int getRotationIncrement() {
         return 15;
     }
 
     /**
-     *  Called when the neighboring block of this TE changes.  This can either
-     *  be a block being added or removed or just updating state.
-     *  This is only called on the SERVER.
+     * Called when the neighboring block of this TE changes.  This can either
+     * be a block being added or removed or just updating state.
+     * This is only called on the SERVER.
      */
     public void onNeighborChanged(Point3D otherPosition) {
     }

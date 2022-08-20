@@ -1,19 +1,20 @@
 package minecrafttransportsimulator.baseclasses;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.rendering.DurationDelayClock;
 
-/**A helper class of sorts for doing switch-based animations for {@link JSONAnimationDefinition}
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * A helper class of sorts for doing switch-based animations for {@link JSONAnimationDefinition}
  * when parired with {@link DurationDelayClock}s.  This wraps the rather long and boilerplate-code
  * switch statement into something a bit more compact.  After the switchbox runs, the various variables
  * will be set in this class, and will stay set until the next call.  Note that in the case of the returned
  * matrix, all operations are done as pre-operations.  So a translation operation followed by a rotate operation
  * is valid, but the internal code here will take the rotation matrix and multiply it by the translation matrix.  Then
- * any further calls will the calling matrix transform multiplied by the net transform. 
+ * any further calls will the calling matrix transform multiplied by the net transform.
  *
  * @author don_bruce
  */
@@ -27,7 +28,7 @@ public class AnimationSwitchbox {
     //Computational variables.
     protected final AEntityD_Definable<?> entity;
     private final String applyAfter;
-    private final List<DurationDelayClock> clocks = new ArrayList<DurationDelayClock>();
+    private final List<DurationDelayClock> clocks = new ArrayList<>();
     private final Point3D helperPoint = new Point3D();
     private final Point3D helperScalingVector = new Point3D();
     private final RotationMatrix helperRotationMatrix = new RotationMatrix();

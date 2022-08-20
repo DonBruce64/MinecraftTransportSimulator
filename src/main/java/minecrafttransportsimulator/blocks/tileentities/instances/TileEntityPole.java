@@ -1,10 +1,5 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.instances.BlockPole;
@@ -15,25 +10,27 @@ import minecrafttransportsimulator.items.instances.ItemPoleComponent;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent.PoleComponentType;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
-import minecrafttransportsimulator.mcinterface.AWrapperWorld;
-import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.mcinterface.*;
 import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest.EntityGUIType;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleChange;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleCollisionUpdate;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
-/**Pole tile entity.  Remembers what components we have attached and the state of the components.
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
+/**
+ * Pole tile entity.  Remembers what components we have attached and the state of the components.
  * This tile entity does not tick, as states can be determined without ticks or are controlled
  * from other tickable TEs.
-*
-* @author don_bruce
-*/
+ *
+ * @author don_bruce
+ */
 public class TileEntityPole extends ATileEntityBase<JSONPoleComponent> {
-    public final Map<Axis, ATileEntityPole_Component> components = new HashMap<Axis, ATileEntityPole_Component>();
+    public final Map<Axis, ATileEntityPole_Component> components = new HashMap<>();
 
     private float maxTotalLightLevel;
 
@@ -268,7 +265,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent> {
     @Override
     public boolean disableRendering(float partialTicks) {
         //We don't render poles themselves.  Just their components.
-        return true;
+        return false;
     }
 
     @Override

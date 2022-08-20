@@ -7,7 +7,8 @@ import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 
-/**Pole block class.  This class allows for dynamic collision boxes and dynamic
+/**
+ * Pole block class.  This class allows for dynamic collision boxes and dynamic
  * placement of components on poles via the Tile Entity.
  *
  * @author don_bruce

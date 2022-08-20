@@ -13,9 +13,10 @@ import minecrafttransportsimulator.jsondefs.JSONCameraObject;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 
-/**System for handling camera zoom, position, and overlays.  Note that actual overlay
+/**
+ * System for handling camera zoom, position, and overlays.  Note that actual overlay
  * rendering is left up to the interface: this class only maintains which overlay
- * needs to be rendered, if any. 
+ * needs to be rendered, if any.
  *
  * @author don_bruce
  */
@@ -31,7 +32,7 @@ public class CameraSystem {
     private static final Point3D cameraOffset = new Point3D();
 
     /**
-     *  Adjusts the camera zoom, zooming in or out depending on the flag.
+     * Adjusts the camera zoom, zooming in or out depending on the flag.
      */
     public static void changeCameraZoom(boolean zoomIn) {
         if (zoomIn && zoomLevel > 0) {
@@ -46,10 +47,10 @@ public class CameraSystem {
      * Passed-in position and rotation should be zero, and will be set to the desired position
      * and rotation, or left at zero if no transforms are required.  The important thing is
      * that after calling this method, no other camera modification operations are performed
-     * and the camera is set to the position and rotation that were passed in.  We may or may not 
-     * specify an overlay for {@link #customCameraOverlay}.  
+     * and the camera is set to the position and rotation that were passed in.  We may or may not
+     * specify an overlay for {@link #customCameraOverlay}.
      * This is assured to not change until this method is next called.  If we want to use global
-     * transforms for the camera, return true.  If we only offset the camera and want to keep its 
+     * transforms for the camera, return true.  If we only offset the camera and want to keep its
      * frame of reference and use local transformations rather than global, return false.
      */
     public static boolean adjustCamera(IWrapperPlayer player, Point3D cameraAdjustedPosition, TransformationMatrix cameraOrientation, float partialTicks) {

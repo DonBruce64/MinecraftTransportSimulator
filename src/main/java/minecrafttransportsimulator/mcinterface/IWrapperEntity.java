@@ -1,7 +1,5 @@
 package minecrafttransportsimulator.mcinterface;
 
-import java.util.UUID;
-
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -9,7 +7,10 @@ import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
 
-/**IWrapper for the base Entity class.  This class mainly allows for interaction with position
+import java.util.UUID;
+
+/**
+ * IWrapper for the base Entity class.  This class mainly allows for interaction with position
  * and motion variables for entities, as well as setting their riding statuses.
  *
  * @author don_bruce
@@ -17,222 +18,222 @@ import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
 public interface IWrapperEntity {
 
     /**
-     *  Returns true if this entity is valid.  More specifically, this
-     *  returns true if the entity passed-in to create this IWrapper was
-     *  not null, and the entity is not "dead".  For all intents, if this
-     *  method returns false the entity in this IWrapper can be assumed
-     *  to not exist in the world.
+     * Returns true if this entity is valid.  More specifically, this
+     * returns true if the entity passed-in to create this IWrapper was
+     * not null, and the entity is not "dead".  For all intents, if this
+     * method returns false the entity in this IWrapper can be assumed
+     * to not exist in the world.
      */
-    public boolean isValid();
+    boolean isValid();
 
     /**
-     *  Returns the entity's global UUID.  This is an ID that's unique to every player on Minecraft.
-     *  Useful for assigning ownership where the entity ID of a player might change between sessions.
-     *  Also should be used during packets to ensure the proper entity is retrieved, as some mods (and
-     *  most Sponge servers) will muck up the entity ID maps and IDs will not be synchronized.
-     *  <br><br>
-     *  NOTE: While this ID isn't supposed to change, some systems WILL, in fact, change it.  Cracked
-     *  servers, and the nastiest of Bukkit systems will deliberately change the UUID of players, which,
-     *  when combined with their changing of entity IDs, makes server-client lookup impossible.
+     * Returns the entity's global UUID.  This is an ID that's unique to every player on Minecraft.
+     * Useful for assigning ownership where the entity ID of a player might change between sessions.
+     * Also should be used during packets to ensure the proper entity is retrieved, as some mods (and
+     * most Sponge servers) will muck up the entity ID maps and IDs will not be synchronized.
+     * <br><br>
+     * NOTE: While this ID isn't supposed to change, some systems WILL, in fact, change it.  Cracked
+     * servers, and the nastiest of Bukkit systems will deliberately change the UUID of players, which,
+     * when combined with their changing of entity IDs, makes server-client lookup impossible.
      */
-    public UUID getID();
+    UUID getID();
 
     /**
-     *  Returns the name for this entity.  This is the general name for
-     *  the entity, and may be whatever the coder who made this entity
-     *  set it to.
+     * Returns the name for this entity.  This is the general name for
+     * the entity, and may be whatever the coder who made this entity
+     * set it to.
      */
-    public String getName();
+    String getName();
 
     /**
-     *  Returns the world this entity is in.
+     * Returns the world this entity is in.
      */
-    public AWrapperWorld getWorld();
+    AWrapperWorld getWorld();
 
     /**
-     *  Returns the entity this entity is riding, or null if
-     *  the entity is not riding any MTS entity (rider may will be riding
-     *  a vanilla entity).
+     * Returns the entity this entity is riding, or null if
+     * the entity is not riding any MTS entity (rider may will be riding
+     * a vanilla entity).
      */
-    public AEntityE_Interactable<?> getEntityRiding();
+    AEntityE_Interactable<?> getEntityRiding();
 
     /**
-     *  Tells the entity to start riding the passed-in entity.
-     *  If null is passed-in, then this rider will stop riding whatever entity it
-     *  is riding, if it was riding any entity.
+     * Tells the entity to start riding the passed-in entity.
+     * If null is passed-in, then this rider will stop riding whatever entity it
+     * is riding, if it was riding any entity.
      */
-    public void setRiding(AEntityE_Interactable<?> entityToRide);
+    void setRiding(AEntityE_Interactable<?> entityToRide);
 
     /**
-     *  Returns the vertical scaling factor for this entity.  Normally is 1,
-     *  but can differ (usually smaller) if the entity is riding a vehicle
-     *  and that vehicle has a scaled seat.  This should be taken into account
-     *  for all calls that care about eye height, as seat scaling in the Y direction
-     *  will affect eye and camera heights.
+     * Returns the vertical scaling factor for this entity.  Normally is 1,
+     * but can differ (usually smaller) if the entity is riding a vehicle
+     * and that vehicle has a scaled seat.  This should be taken into account
+     * for all calls that care about eye height, as seat scaling in the Y direction
+     * will affect eye and camera heights.
      */
-    public double getVerticalScale();
+    double getVerticalScale();
 
     /**
-     *  Returns a Y-offset for where this entity should sit in a seat.
-     *  This is used if the sitting point of the entity isn't at the base
-     *  of the entity. For example, players, when sitting, rotate their
-     *  legs forwards, but they don't translate down.  This parameter is the
-     *  amount that they should be translated, and takes into account whether
-     *  or not the entity is actually sitting.  Useful in rendering and camera
-     *  operations as this will also affect eye height.
+     * Returns a Y-offset for where this entity should sit in a seat.
+     * This is used if the sitting point of the entity isn't at the base
+     * of the entity. For example, players, when sitting, rotate their
+     * legs forwards, but they don't translate down.  This parameter is the
+     * amount that they should be translated, and takes into account whether
+     * or not the entity is actually sitting.  Useful in rendering and camera
+     * operations as this will also affect eye height.
      */
-    public double getSeatOffset();
+    double getSeatOffset();
 
     /**
-     *  Returns how high the eyes of the entity are from its base.
-     *  This does not take into account the base of the model.  If you need
-     *  the distance for that, use {@link #getSeatOffset()}
+     * Returns how high the eyes of the entity are from its base.
+     * This does not take into account the base of the model.  If you need
+     * the distance for that, use {@link #getSeatOffset()}
      */
-    public double getEyeHeight();
+    double getEyeHeight();
 
     /**
-     *  Gets the entity's position as a point.
-     *  The returned position may by modified without affecting the entity's actual position.
-     *  However, the object itself may be re-used on the next call, so do not keep reference to it.
+     * Gets the entity's position as a point.
+     * The returned position may by modified without affecting the entity's actual position.
+     * However, the object itself may be re-used on the next call, so do not keep reference to it.
      */
-    public Point3D getPosition();
+    Point3D getPosition();
 
     /**
-     *  Sets the entity's position to the passed-in point.
-     *  Boolean is included to set ground state.  This should
-     *  be set if the entity is on another entity collision box,
-     *  but not if they are riding an entity.
+     * Sets the entity's position to the passed-in point.
+     * Boolean is included to set ground state.  This should
+     * be set if the entity is on another entity collision box,
+     * but not if they are riding an entity.
      */
-    public void setPosition(Point3D position, boolean onGround);
+    void setPosition(Point3D position, boolean onGround);
 
     /**
-     *  Gets the entity's velocity as a vector.
-     *  The returned velocity may by modified without affecting the entity's actual velocity.
-     *  However, the object itself may be re-used on the next call, so do not keep reference to it.
+     * Gets the entity's velocity as a vector.
+     * The returned velocity may by modified without affecting the entity's actual velocity.
+     * However, the object itself may be re-used on the next call, so do not keep reference to it.
      */
-    public Point3D getVelocity();
+    Point3D getVelocity();
 
     /**
-     *  Sets the entity's velocity to the passed-in vector.
+     * Sets the entity's velocity to the passed-in vector.
      */
-    public void setVelocity(Point3D motion);
+    void setVelocity(Point3D motion);
 
     /**
-     *  Returns the entity's orientation.
-     *  Do NOT modify the returned object.  This object is cached on
-     *  calculation to avoid the need to re-calculate it every tick/frame.
-     *  If you modify the object and the entity does not change, you will get
-     *  invalid results.
+     * Returns the entity's orientation.
+     * Do NOT modify the returned object.  This object is cached on
+     * calculation to avoid the need to re-calculate it every tick/frame.
+     * If you modify the object and the entity does not change, you will get
+     * invalid results.
      */
-    public RotationMatrix getOrientation();
+    RotationMatrix getOrientation();
 
     /**
-     *  Sets the entity's orientation.
-     *  Note that this method runs off the angles inside the
-     *  matrix object, not the actual transform, so keep this in mind
-     *  when calling this method.
+     * Sets the entity's orientation.
+     * Note that this method runs off the angles inside the
+     * matrix object, not the actual transform, so keep this in mind
+     * when calling this method.
      */
-    public void setOrientation(RotationMatrix rotation);
+    void setOrientation(RotationMatrix rotation);
 
     /**
-     *  Returns the entity's pitch (x-axis rotation).
+     * Returns the entity's pitch (x-axis rotation).
      */
-    public float getPitch();
+    float getPitch();
 
     /**
-     *  Returns the entity's yaw (y-axis rotation).
-     *  NOTE: the return value from this function is inverted
-     *  from the normal MC standard to have it follow the RHR
-     *  for rotations.  This is OpenGL convention, and MC doesn't
-     *  follow it, which is why rendering is such a PITA with yaw.
+     * Returns the entity's yaw (y-axis rotation).
+     * NOTE: the return value from this function is inverted
+     * from the normal MC standard to have it follow the RHR
+     * for rotations.  This is OpenGL convention, and MC doesn't
+     * follow it, which is why rendering is such a PITA with yaw.
      */
-    public float getYaw();
+    float getYaw();
 
     /**
-     *  Returns the entity's body yaw (y-axis rotation).
-     *  NOTE: the return value from this function is inverted
-     *  from the normal MC standard to have it follow the RHR
-     *  for rotations.  This is OpenGL convention, and MC doesn't
-     *  follow it, which is why rendering is such a PITA with yaw.
+     * Returns the entity's body yaw (y-axis rotation).
+     * NOTE: the return value from this function is inverted
+     * from the normal MC standard to have it follow the RHR
+     * for rotations.  This is OpenGL convention, and MC doesn't
+     * follow it, which is why rendering is such a PITA with yaw.
      */
-    public float getBodyYaw();
+    float getBodyYaw();
 
     /**
-     *  Returns a vector in the direction of the entity's line of sight,
-     *  with a magnitude equal to the passed-in distance. 
-     *  The returned vector  may by modified without affecting the entity's actual line of sight.
-     *  However, the object itself may be re-used on the next call, so do not keep references to it.
+     * Returns a vector in the direction of the entity's line of sight,
+     * with a magnitude equal to the passed-in distance.
+     * The returned vector  may by modified without affecting the entity's actual line of sight.
+     * However, the object itself may be re-used on the next call, so do not keep references to it.
      */
-    public Point3D getLineOfSight(double distance);
+    Point3D getLineOfSight(double distance);
 
     /**
-     *  Sets the entity's yaw to the passed-in yaw.
-     *  NOTE: the yaw value from this function is inverted
-     *  from the normal MC standard to have it follow the RHR
-     *  for rotations.  This is OpenGL convention, and MC doesn't
-     *  follow it, which is why rendering is such a PITA with yaw.
+     * Sets the entity's yaw to the passed-in yaw.
+     * NOTE: the yaw value from this function is inverted
+     * from the normal MC standard to have it follow the RHR
+     * for rotations.  This is OpenGL convention, and MC doesn't
+     * follow it, which is why rendering is such a PITA with yaw.
      */
-    public void setYaw(double yaw);
+    void setYaw(double yaw);
 
     /**
-     *  Sets the entity's bod yyaw to the passed-in yaw.
-     *  NOTE: the yaw value from this function is inverted
-     *  from the normal MC standard to have it follow the RHR
-     *  for rotations.  This is OpenGL convention, and MC doesn't
-     *  follow it, which is why rendering is such a PITA with yaw.
+     * Sets the entity's bod yyaw to the passed-in yaw.
+     * NOTE: the yaw value from this function is inverted
+     * from the normal MC standard to have it follow the RHR
+     * for rotations.  This is OpenGL convention, and MC doesn't
+     * follow it, which is why rendering is such a PITA with yaw.
      */
-    public void setBodyYaw(double yaw);
+    void setBodyYaw(double yaw);
 
     /**
-     *  Sets the entity's pitch to the passed-in pitch.
+     * Sets the entity's pitch to the passed-in pitch.
      */
-    public void setPitch(double pitch);
+    void setPitch(double pitch);
 
     /**
-     *  Gets the entity's bounding box.
-     *  The returned velocity may by modified without affecting the entity's actual bounds.
-     *  However, the object itself may be re-used on the next call, so do not keep reference to it.
+     * Gets the entity's bounding box.
+     * The returned velocity may by modified without affecting the entity's actual bounds.
+     * However, the object itself may be re-used on the next call, so do not keep reference to it.
      */
-    public BoundingBox getBounds();
+    BoundingBox getBounds();
 
     /**
-     *  Returns the entity's NBT data.
+     * Returns the entity's NBT data.
      */
-    public IWrapperNBT getData();
+    IWrapperNBT getData();
 
     /**
-     *  Loads the entity data from the passed-in NBT.
+     * Loads the entity data from the passed-in NBT.
      */
-    public void setData(IWrapperNBT data);
+    void setData(IWrapperNBT data);
 
     /**
-     *  Tries to leash up the entity to the passed-in player.
-     *  False may be returned if the entity cannot be leashed,
-     *  or if the player isn't holding a leash.
+     * Tries to leash up the entity to the passed-in player.
+     * False may be returned if the entity cannot be leashed,
+     * or if the player isn't holding a leash.
      */
-    public boolean leashTo(IWrapperPlayer player);
+    boolean leashTo(IWrapperPlayer player);
 
     /**
-     *  Attacks the entity.
+     * Attacks the entity.
      */
-    public void attack(Damage damage);
+    void attack(Damage damage);
 
     /**
-     *  Returns the rendered position based on the passed-in partial ticks.
-     *  The returned position may by modified without affecting the actual rendered position.
-     *  However, the object itself may be re-used on the next call, so do not keep reference to it.
+     * Returns the rendered position based on the passed-in partial ticks.
+     * The returned position may by modified without affecting the actual rendered position.
+     * However, the object itself may be re-used on the next call, so do not keep reference to it.
      */
-    public Point3D getRenderedPosition(float partialTicks);
+    Point3D getRenderedPosition(float partialTicks);
 
     /**
      * Adds the potion effect with the specified name to the entity.  Only valid for living entities that
      * are effected by potions.
      */
-    public void addPotionEffect(JSONPotionEffect effect);
+    void addPotionEffect(JSONPotionEffect effect);
 
     /**
      * Removes the potion effect with the specified name from the entity.  Only valid for living entities that
      * are effected by potions.
      */
-    public void removePotionEffect(JSONPotionEffect effect);
+    void removePotionEffect(JSONPotionEffect effect);
 }

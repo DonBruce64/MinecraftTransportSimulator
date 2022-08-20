@@ -6,8 +6,9 @@ import minecrafttransportsimulator.jsondefs.JSONPart.FurnaceComponentType;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
-/**Packet sent to furnaces to add fuel to them.
- * 
+/**
+ * Packet sent to furnaces to add fuel to them.
+ *
  * @author don_bruce
  */
 public class PacketFurnaceFuelAdd extends APacketEntity<EntityFurnace> {

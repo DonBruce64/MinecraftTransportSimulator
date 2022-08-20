@@ -12,7 +12,8 @@ import minecrafttransportsimulator.jsondefs.JSONInstrument.JSONInstrumentCompone
 import minecrafttransportsimulator.jsondefs.JSONInstrumentDefinition;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
-/**Main render class for instruments.  This class contains a main method that takes an instance of {@link ItemInstrument},
+/**
+ * Main render class for instruments.  This class contains a main method that takes an instance of {@link ItemInstrument},
  * as well as the engine associated with that instrument and the vehicle the instrument is on.  This allows for an
  * instrument to be rendered a vehicle, GUI, or HUD.}.
  *
@@ -21,7 +22,7 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 public final class RenderInstrument {
     private static int partNumber = 0;
     private static RenderableObject renderObject = null;
-    private static TransformationMatrix textTransform = new TransformationMatrix();
+    private static final TransformationMatrix textTransform = new TransformationMatrix();
     private static final Point3D bottomLeft = new Point3D();
     private static final Point3D topLeft = new Point3D();
     private static final Point3D topRight = new Point3D();
@@ -31,8 +32,8 @@ public final class RenderInstrument {
     private static final float[][] instrumentSingleComponentPoints = new float[6][8];
 
     /**
-     * Renders the passed-in instrument using the entity's current state.  Note that this method does NOT take any 
-     * entity JSON parameters into account as it does not know which instrument is being rendered.  This means that 
+     * Renders the passed-in instrument using the entity's current state.  Note that this method does NOT take any
+     * entity JSON parameters into account as it does not know which instrument is being rendered.  This means that
      * any transformations that need to be applied for translation should be applied prior to calling this method.
      * Also note that the parameters in the JSON here are in png-texture space, so y is inverted.  Hence the various
      * negations in translation transforms.
@@ -56,7 +57,7 @@ public final class RenderInstrument {
         //This is more efficient than rendering each one individually.
         for (int i = 0; i < instrument.definition.components.size(); ++i) {
             JSONInstrumentComponent component = instrument.definition.components.get(i);
-            if (component.overlayTexture ? blendingEnabled : !blendingEnabled) {
+            if (component.overlayTexture == blendingEnabled) {
                 //If we have text, do a text render.  Otherwise, do a normal instrument render.
                 if (component.textObject != null) {
                     //Also translate slightly away from the instrument location to prevent clipping.
@@ -119,7 +120,7 @@ public final class RenderInstrument {
     }
 
     /**
-     *  Custom instrument switchbox class.
+     * Custom instrument switchbox class.
      */
     public static class InstrumentSwitchbox extends AnimationSwitchbox {
         private final JSONInstrumentComponent component;
@@ -241,7 +242,8 @@ public final class RenderInstrument {
         for (int i = 0; i < instrumentSingleComponentPoints.length; ++i) {
             float[] vertex = instrumentSingleComponentPoints[i];
             switch (i) {
-                case (0): {//Bottom-right
+                case (0):
+                case (3): {//Bottom-right
                     vertex[5] = component.textureWidth / 2;
                     vertex[6] = -component.textureHeight / 2;
                     vertex[3] = (float) bottomRight.x;
@@ -255,20 +257,7 @@ public final class RenderInstrument {
                     vertex[4] = (float) topRight.y;
                     break;
                 }
-                case (2): {//Top-left
-                    vertex[5] = -component.textureWidth / 2;
-                    vertex[6] = component.textureHeight / 2;
-                    vertex[3] = (float) topLeft.x;
-                    vertex[4] = (float) topLeft.y;
-                    break;
-                }
-                case (3): {//Bottom-right
-                    vertex[5] = component.textureWidth / 2;
-                    vertex[6] = -component.textureHeight / 2;
-                    vertex[3] = (float) bottomRight.x;
-                    vertex[4] = (float) bottomRight.y;
-                    break;
-                }
+                case (2):
                 case (4): {//Top-left
                     vertex[5] = -component.textureWidth / 2;
                     vertex[6] = component.textureHeight / 2;

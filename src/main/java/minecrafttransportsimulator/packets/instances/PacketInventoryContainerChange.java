@@ -1,8 +1,5 @@
 package minecrafttransportsimulator.packets.instances;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
@@ -11,8 +8,12 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
-/**Packet sent to inventory containers to update the inventory in them.
- * 
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Packet sent to inventory containers to update the inventory in them.
+ *
  * @author don_bruce
  */
 public class PacketInventoryContainerChange extends APacketEntity<EntityInventoryContainer> {
@@ -36,7 +37,7 @@ public class PacketInventoryContainerChange extends APacketEntity<EntityInventor
         super.writeToBuffer(buf);
         buf.writeInt(index);
         IWrapperNBT stackData = InterfaceManager.coreInterface.getNewNBTWrapper();
-        List<IWrapperItemStack> stackList = new ArrayList<IWrapperItemStack>();
+        List<IWrapperItemStack> stackList = new ArrayList<>();
         stackList.add(stackToChangeTo);
         stackData.setStacks(stackList);
         writeDataToBuffer(stackData, buf);

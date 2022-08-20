@@ -10,7 +10,8 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
-/**Interface that un-interfaces our interfaces.  This is ONLY for use by other mods that want to
+/**
+ * Interface that un-interfaces our interfaces.  This is ONLY for use by other mods that want to
  * see inside the builders, wrappers, and whatnot that are in the objects of the mcinterface
  * package.  In essence, this could be thought of as an API class, but in reverse.
  * Note that a good number of these methods are rather slow in their lookup code,
@@ -19,7 +20,6 @@ import net.minecraft.world.World;
  * @author don_bruce
  */
 public class InterfaceInterface {
-
     public static WrapperWorld toInternal(World world) {
         return WrapperWorld.getWrapperFor(world);
     }

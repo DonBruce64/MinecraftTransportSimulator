@@ -1,8 +1,5 @@
 package minecrafttransportsimulator.entities.components;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.TowingConnection;
@@ -15,25 +12,25 @@ import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.jsondefs.JSONConnection;
 import minecrafttransportsimulator.jsondefs.JSONConnectionGroup;
-import minecrafttransportsimulator.mcinterface.AWrapperWorld;
-import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.mcinterface.*;
 import minecrafttransportsimulator.packets.instances.PacketEntityTowingChange;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 
-/**Base entity class containing towing states and methods.
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Base entity class containing towing states and methods.
  * At this level as not all multiparts can be towed.
- * 
+ *
  * @author don_bruce
  */
 public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider> extends AEntityF_Multipart<JSONDefinition> {
     //Connection data.
     public TowingConnection towedByConnection;
-    public final List<TowingConnection> towingConnections = new ArrayList<TowingConnection>();
+    public final List<TowingConnection> towingConnections = new ArrayList<>();
     private TowingConnection savedTowedByConnection;
-    private final List<TowingConnection> savedTowingConnections = new ArrayList<TowingConnection>();
+    private final List<TowingConnection> savedTowingConnections = new ArrayList<>();
     public static final String TOWING_CONNECTION_REQUEST_VARIABLE = "connection_requested";
 
     public AEntityG_Towable(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data) {
@@ -162,8 +159,8 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
             String[] variableData = variable.split("_");
             if (variableData.length == 4) {
                 boolean isHookup = false;
-                int groupIndex = Integer.valueOf(variableData[1]) - 1;
-                int connectionIndex = Integer.valueOf(variableData[2]) - 1;
+                int groupIndex = Integer.parseInt(variableData[1]) - 1;
+                int connectionIndex = Integer.parseInt(variableData[2]) - 1;
                 if (towedByConnection != null) {
                     if (towedByConnection.hookupGroupIndex == groupIndex && towedByConnection.hookupConnectionIndex == connectionIndex) {
                         isHookup = true;
@@ -229,9 +226,7 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
     }
 
     protected boolean matchesTowed(AEntityB_Existing entityToCollide) {
-        if (towingConnections.isEmpty()) {
-            return false;
-        } else {
+        if (!towingConnections.isEmpty()) {
             for (TowingConnection connection : towingConnections) {
                 if (entityToCollide.equals(connection.towedVehicle)) {
                     return true;
@@ -239,8 +234,8 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
                     return true;
                 }
             }
-            return false;
         }
+        return false;
     }
 
     /**
@@ -267,8 +262,7 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
 
         if (connectionToDisconnect == null) {
             TrailerConnectionResult result;
-            List<AEntityG_Towable<?>> entitiesToCheck = new ArrayList<AEntityG_Towable<?>>();
-            entitiesToCheck.addAll(world.getEntitiesOfType(EntityVehicleF_Physics.class));
+            List<AEntityG_Towable<?>> entitiesToCheck = new ArrayList<>(world.getEntitiesOfType(EntityVehicleF_Physics.class));
 
             if (requestedGroup.isHookup) {
                 //Find entity that can tow us.
@@ -323,7 +317,6 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
      * are the main entity and will start towing the trailer if the connection is successful.
      * For connection indexes, a -1 will allow for any index, while a value other than -1 will try to connect
      * using only that connection group.
-     * 
      */
     private TrailerConnectionResult checkIfTrailerCanConnect(AEntityG_Towable<?> hitchEntity, AEntityE_Interactable<?> hitchConnectionDefiner, int requestedHitchGroupIndex, AEntityG_Towable<?> hookupEntity, AEntityE_Interactable<?> hookupConnectionDefiner, int requestedHookupGroupIndex) {
         //Make sure we should be connecting.
@@ -476,7 +469,7 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
     /**
      * Emum for easier functions for trailer connections.
      */
-    private static enum TrailerConnectionResult {
+    private enum TrailerConnectionResult {
         FEEDBACK_LOOP(true, JSONConfigLanguage.INTERACT_TRAILER_FEEDBACKLOOP),
         ALREADY_TOWED(true, JSONConfigLanguage.INTERACT_TRAILER_ALREADYTOWED),
         NOTFOUND(true, JSONConfigLanguage.INTERACT_TRAILER_NOTFOUND),
@@ -486,10 +479,10 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
         CONNECTED(false, JSONConfigLanguage.INTERACT_TRAILER_CONNECTED),
         DISCONNECTED(false, JSONConfigLanguage.INTERACT_TRAILER_DISCONNECTED);
 
-        private boolean skip;
-        private LanguageEntry language;
+        private final boolean skip;
+        private final LanguageEntry language;
 
-        private TrailerConnectionResult(boolean skip, LanguageEntry language) {
+        TrailerConnectionResult(boolean skip, LanguageEntry language) {
             this.skip = skip;
             this.language = language;
         }

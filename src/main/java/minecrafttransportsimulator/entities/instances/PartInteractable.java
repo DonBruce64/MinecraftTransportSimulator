@@ -7,11 +7,7 @@ import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
-import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.mcinterface.*;
 import minecrafttransportsimulator.packets.instances.PacketFurnaceFuelAdd;
 import minecrafttransportsimulator.packets.instances.PacketPartInteractable;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
@@ -170,8 +166,8 @@ public final class PartInteractable extends APart {
     }
 
     /**
-     *  Helper method to check for fuels for furnaces and add them.
-     *  Only call on the server-side, except for electric furnaces.
+     * Helper method to check for fuels for furnaces and add them.
+     * Only call on the server-side, except for electric furnaces.
      */
     private void addFurnaceFuel() {
         //Try to fill the furnace with the appropriate fuel type, if we have it.
@@ -278,9 +274,9 @@ public final class PartInteractable extends APart {
     }
 
     /**
-     *  Gets the explosive power of this part.  Used when it is blown up or attacked.
-     *  For our calculations, only ammo is checked.  While we could check for fuel, we assume
-     *  that fuel-containing items are stable enough to not blow up when this container is hit.
+     * Gets the explosive power of this part.  Used when it is blown up or attacked.
+     * For our calculations, only ammo is checked.  While we could check for fuel, we assume
+     * that fuel-containing items are stable enough to not blow up when this container is hit.
      */
     public double getExplosiveContribution() {
         if (inventory != null) {

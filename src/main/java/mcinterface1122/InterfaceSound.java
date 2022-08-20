@@ -1,20 +1,5 @@
 package mcinterface1122;
 
-import java.io.InputStream;
-import java.nio.ByteBuffer;
-import java.nio.IntBuffer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import org.lwjgl.BufferUtils;
-import org.lwjgl.openal.AL;
-import org.lwjgl.openal.AL10;
-
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.instances.EntityRadio;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
@@ -32,37 +17,58 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.relauncher.Side;
+import org.lwjgl.BufferUtils;
+import org.lwjgl.openal.AL;
+import org.lwjgl.openal.AL10;
 
-/**Interface for the sound system.  This is responsible for playing sound from vehicles/interactions.
+import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
+import java.util.*;
+
+/**
+ * Interface for the sound system.  This is responsible for playing sound from vehicles/interactions.
  * As well as from the internal radio.
  *
  * @author don_bruce
  */
 @EventBusSubscriber(Side.CLIENT)
 public class InterfaceSound implements IInterfaceSound {
-    /**Flag for game paused state.  Gets set when the game is paused.**/
+    /**
+     * Flag for game paused state.  Gets set when the game is paused.
+     **/
     private static boolean isSystemPaused;
 
-    /**Map of String-based file-names to Integer pointers to buffer locations.  Used for loading sounds into
-     * memory to prevent the need to load them every time they are played.**/
-    private static final Map<String, Integer> dataSourceBuffers = new HashMap<String, Integer>();
+    /**
+     * Map of String-based file-names to Integer pointers to buffer locations.  Used for loading sounds into
+     * memory to prevent the need to load them every time they are played.
+     **/
+    private static final Map<String, Integer> dataSourceBuffers = new HashMap<>();
 
-    /**List of sounds currently playing.  Queued for updates every tick.**/
-    private static final Set<SoundInstance> playingSounds = new HashSet<SoundInstance>();
+    /**
+     * List of sounds currently playing.  Queued for updates every tick.
+     **/
+    private static final Set<SoundInstance> playingSounds = new HashSet<>();
 
-    /**List of playing {@link RadioStation} objects.**/
-    private static final List<RadioStation> playingStations = new ArrayList<RadioStation>();
+    /**
+     * List of playing {@link RadioStation} objects.
+     **/
+    private static final List<RadioStation> playingStations = new ArrayList<>();
 
-    /**List of sounds to start playing next update.  Split from playing sounds to avoid CMEs and odd states.**/
-    private static volatile List<SoundInstance> queuedSounds = new ArrayList<SoundInstance>();
+    /**
+     * List of sounds to start playing next update.  Split from playing sounds to avoid CMEs and odd states.
+     **/
+    private static final List<SoundInstance> queuedSounds = new ArrayList<>();
 
-    /**This gets incremented whenever we try to get a source and fail.  If we get to 10, the sound system
-     * will stop attempting to play sounds.  Used for when mods take all the sources.**/
+    /**
+     * This gets incremented whenever we try to get a source and fail.  If we get to 10, the sound system
+     * will stop attempting to play sounds.  Used for when mods take all the sources.
+     **/
     private static byte sourceGetFailures = 0;
 
     /**
-     *  Main update loop.  Call every tick to update playing sounds,
-     *  as well as queue up sounds that aren't playing yet but need to.
+     * Main update loop.  Call every tick to update playing sounds,
+     * as well as queue up sounds that aren't playing yet but need to.
      */
     public static void update() {
         if (!AL.isCreated()) {
@@ -300,9 +306,7 @@ public class InterfaceSound implements IInterfaceSound {
         boolean freeBuffer = true;
         EntityRadio badRadio = null;
         AL10.alGetError();
-        Iterator<EntityRadio> iterator = playingRadios.iterator();
-        while (iterator.hasNext()) {
-            EntityRadio radio = iterator.next();
+        for (EntityRadio radio : playingRadios) {
             SoundInstance sound = radio.getPlayingSound();
             if (AL10.alGetSourcei(sound.sourceIndex, AL10.AL_BUFFERS_PROCESSED) == 0) {
                 freeBuffer = false;
@@ -341,11 +345,11 @@ public class InterfaceSound implements IInterfaceSound {
     }
 
     /**
-     *  Loads an OGG file in its entirety using the {@link InterfaceOGGDecoder}. 
-     *  The sound is then stored in a dataBuffer keyed by soundName located in {@link #dataSourceBuffers}.
-     *  The pointer to the dataBuffer is returned for convenience as it allows for transparent sound caching.
-     *  If a sound with the same name is passed-in at a later time, it is assumed to be the same and rather
-     *  than re-parse the sound the system will simply return the same pointer index to be bound.
+     * Loads an OGG file in its entirety using the {@link InterfaceOGGDecoder}.
+     * The sound is then stored in a dataBuffer keyed by soundName located in {@link #dataSourceBuffers}.
+     * The pointer to the dataBuffer is returned for convenience as it allows for transparent sound caching.
+     * If a sound with the same name is passed-in at a later time, it is assumed to be the same and rather
+     * than re-parse the sound the system will simply return the same pointer index to be bound.
      */
     private static Integer loadOGGJarSound(String soundName) {
         if (dataSourceBuffers.containsKey(soundName)) {
@@ -405,12 +409,7 @@ public class InterfaceSound implements IInterfaceSound {
     @SubscribeEvent
     public static void on(WorldEvent.Unload event) {
         if (event.getWorld().isRemote) {
-            Iterator<SoundInstance> iterator = queuedSounds.iterator();
-            while (iterator.hasNext()) {
-                if (event.getWorld() == ((WrapperWorld) iterator.next().entity.world).world) {
-                    iterator.remove();
-                }
-            }
+            queuedSounds.removeIf(soundInstance -> event.getWorld() == ((WrapperWorld) soundInstance.entity.world).world);
             for (SoundInstance sound : playingSounds) {
                 if (event.getWorld() == ((WrapperWorld) sound.entity.world).world) {
                     if (sound.radio != null) {

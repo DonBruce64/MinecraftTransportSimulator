@@ -1,10 +1,5 @@
 package minecrafttransportsimulator.entities.instances;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
@@ -14,27 +9,30 @@ import minecrafttransportsimulator.entities.instances.PartGun.GunState;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemPartGun;
+import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONPlayerGun;
-import minecrafttransportsimulator.mcinterface.AWrapperWorld;
-import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.*;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
-/**Entity class responsible for storing and syncing information about the current gun
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
+/**
+ * Entity class responsible for storing and syncing information about the current gun
  * any player is holding.  This entity will trigger rendering of the held gun, if it exists.
- * The current item the player is holding is stored, and whenever the player either changes 
- * this item, or stops firing, the data is saved back to that item to ensure that the gun's 
+ * The current item the player is holding is stored, and whenever the player either changes
+ * this item, or stops firing, the data is saved back to that item to ensure that the gun's
  * state is maintained.
- *  
+ *
  * @author don_bruce
  */
 public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun> {
-    public static final Map<UUID, EntityPlayerGun> playerClientGuns = new HashMap<UUID, EntityPlayerGun>();
-    public static final Map<UUID, EntityPlayerGun> playerServerGuns = new HashMap<UUID, EntityPlayerGun>();
+    public static final Map<UUID, EntityPlayerGun> playerClientGuns = new HashMap<>();
+    public static final Map<UUID, EntityPlayerGun> playerServerGuns = new HashMap<>();
 
     public final IWrapperPlayer player;
     private final RotationMatrix handRotation = new RotationMatrix();
@@ -58,7 +56,7 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun> {
             IWrapperPlayer foundPlayer = null;
             for (IWrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, 16, 16, 16))) {
                 if (entity instanceof IWrapperPlayer) {
-                    if (((IWrapperPlayer) entity).getID().equals(playerUUID)) {
+                    if (entity.getID().equals(playerUUID)) {
                         foundPlayer = (IWrapperPlayer) entity;
                         break;
                     }
@@ -92,12 +90,12 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun> {
         JSONPlayerGun defaultDefinition = new JSONPlayerGun();
         defaultDefinition.packID = "dummy";
         defaultDefinition.systemName = "dummy";
-        defaultDefinition.general = defaultDefinition.new General();
+        defaultDefinition.general = new AJSONItem.General();
         defaultDefinition.general.health = 100;
 
         JSONPartDefinition fakeDef = new JSONPartDefinition();
         fakeDef.pos = new Point3D();
-        fakeDef.types = new ArrayList<String>();
+        fakeDef.types = new ArrayList<>();
         //Look though all gun types and add them.
         for (AItemPack<?> packItem : PackParser.getAllPackItems()) {
             if (packItem instanceof ItemPartGun) {
@@ -111,7 +109,7 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun> {
         }
 
         fakeDef.maxValue = Float.MAX_VALUE;
-        defaultDefinition.parts = new ArrayList<JSONPartDefinition>();
+        defaultDefinition.parts = new ArrayList<>();
         defaultDefinition.parts.add(fakeDef);
         return defaultDefinition;
     }
@@ -264,7 +262,7 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun> {
     @Override
     public boolean disableRendering(float partialTicks) {
         //Don't render the player gun entity.  Only render the gun itself.
-        return true;
+        return false;
     }
 
     @Override

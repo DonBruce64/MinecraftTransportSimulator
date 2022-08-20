@@ -1,13 +1,7 @@
 package minecrafttransportsimulator.entities.instances;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
-import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.guis.components.AGUIBase;
@@ -24,15 +18,16 @@ import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
-import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
-import minecrafttransportsimulator.packets.instances.PacketPartEngine;
+import minecrafttransportsimulator.packets.instances.*;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine.Signal;
-import minecrafttransportsimulator.packets.instances.PacketPartSeat;
-import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ControlSystem;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 
 public final class PartSeat extends APart {
     public static boolean lockCameraToMovement = true;
@@ -42,7 +37,7 @@ public final class PartSeat extends APart {
     public int gunSequenceCooldown;
     public int gunGroupIndex;
     public int gunIndex;
-    public final HashMap<ItemPartGun, List<PartGun>> gunGroups = new LinkedHashMap<ItemPartGun, List<PartGun>>();
+    public final HashMap<ItemPartGun, List<PartGun>> gunGroups = new LinkedHashMap<>();
 
     public PartSeat(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, IWrapperNBT data) {
         super(entityOn, placingPlayer, placementDefinition, data);
@@ -82,11 +77,7 @@ public final class PartSeat extends APart {
                             if (playerEntityRiding != null) {
                                 playerEntityRiding.removeRider();
                             }
-                            if (playerEntityRiding instanceof PartSeat && ((PartSeat) playerEntityRiding).vehicleOn == vehicleOn) {
-                                setRider(player, false);
-                            } else {
-                                setRider(player, true);
-                            }
+                            setRider(player, !(playerEntityRiding instanceof PartSeat) || ((PartSeat) playerEntityRiding).vehicleOn != vehicleOn);
 
                             //If this seat can control a gun, and isn't controlling one, set it now.
                             //This prevents the need to select a gun when initially mounting.
@@ -124,16 +115,15 @@ public final class PartSeat extends APart {
         //This keeps us from clicking our own seat when we want to click other things.
         if (world.isClient() && rider != null && InterfaceManager.clientInterface.getClientPlayer().equals(rider)) {
             allInteractionBoxes.clear();
-            return;
         }
     }
 
     @Override
-    public void doPostAllpartUpdates() {
-        super.doPostAllpartUpdates();
+    public void updateParts() {
+        super.updateParts();
 
         //Update gun list, this is grouped by the specific gun.
-        List<PartGun> gunList = new ArrayList<PartGun>();
+        List<PartGun> gunList = new ArrayList<>();
         addLinkedPartsToList(gunList, PartGun.class);
         for (APart part : parts) {
             if (part instanceof PartGun) {
@@ -148,7 +138,7 @@ public final class PartSeat extends APart {
         for (PartGun gun : gunList) {
             ItemPartGun gunItem = gun.getItem();
             if (!gunGroups.containsKey(gunItem)) {
-                gunGroups.put(gunItem, new ArrayList<PartGun>());
+                gunGroups.put(gunItem, new ArrayList<>());
             }
             gunGroups.get(gunItem).add(gun);
         }
@@ -217,7 +207,7 @@ public final class PartSeat extends APart {
             AGUIBase.closeIfOpen(GUIRadio.class);
 
             //Auto-stop engines if we have the config, and there aren't any other controllers in the vehicle.
-            if (clientRiderOnVehicle && placementDefinition.isController && ConfigSystem.client.controlSettings.autostartEng.value) {
+            if (placementDefinition.isController && ConfigSystem.client.controlSettings.autostartEng.value) {
                 boolean otherController = false;
                 for (APart part : vehicleOn.allParts) {
                     if (part != this && part.rider instanceof IWrapperPlayer && part.placementDefinition.isController) {
@@ -287,7 +277,7 @@ public final class PartSeat extends APart {
             }
 
             //If we are on the client, and the rider is the main client player, check controls.
-            //If the seat is a controller, and we have mouseYoke enabled, and our view is locked disable the mouse from MC.             
+            //If the seat is a controller, and we have mouseYoke enabled, and our view is locked disable the mouse from MC.
             //We also need to make sure the player in this event is the actual client player.  If we are on a server,
             //another player could be getting us to this logic point and thus we'd be making their inputs in the vehicle.
             if (vehicleOn != null && world.isClient() && !InterfaceManager.clientInterface.isChatOpen() && rider.equals(InterfaceManager.clientInterface.getClientPlayer())) {
@@ -324,10 +314,10 @@ public final class PartSeat extends APart {
     }
 
     /**
-     *  Like {@link #getInterpolatedOrientation(TransformationMatrix, double)}, just for
-     *  the rider.  This is to allow for the fact the rider won't turn in the
-     *  seat when the seat turns via animations: only their rendered body will rotate.
-     *  In a nutshell, this get's the riders orientation assuming a non-rotated seat.
+     * Like {@link #getInterpolatedOrientation(RotationMatrix, double)}, just for
+     * the rider.  This is to allow for the fact the rider won't turn in the
+     * seat when the seat turns via animations: only their rendered body will rotate.
+     * In a nutshell, this get's the riders orientation assuming a non-rotated seat.
      */
     public void getRiderInterpolatedOrientation(RotationMatrix store, double partialTicks) {
         store.interploate(prevZeroReferenceOrientation, zeroReferenceOrientation, partialTicks);

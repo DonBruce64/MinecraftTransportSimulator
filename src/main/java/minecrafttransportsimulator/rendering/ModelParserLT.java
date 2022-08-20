@@ -1,18 +1,19 @@
 package minecrafttransportsimulator.rendering;
 
+import minecrafttransportsimulator.baseclasses.ColorRGB;
+import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.packloading.JSONParser;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.packloading.JSONParser;
-
-/**Class responsible for parsing Little Tiles models into arrays that can be fed to the GPU.
- * 
+/**
+ * Class responsible for parsing Little Tiles models into arrays that can be fed to the GPU.
+ *
  * @author don_bruce
  */
 public final class ModelParserLT extends AModelParser {
@@ -24,7 +25,7 @@ public final class ModelParserLT extends AModelParser {
 
     @Override
     protected List<RenderableObject> parseModelInternal(String modelLocation) {
-        List<RenderableObject> objectList = new ArrayList<RenderableObject>();
+        List<RenderableObject> objectList = new ArrayList<>();
         InputStream stream;
         try {
             stream = ModelParserLT.class.getResourceAsStream(modelLocation);
@@ -40,7 +41,7 @@ public final class ModelParserLT extends AModelParser {
             for (LTTileEntry tile : model.tiles) {
                 if (tile.bBox != null) {
                     //Move single box to list for ease of parsing.
-                    tile.boxes = new ArrayList<LTBox>();
+                    tile.boxes = new ArrayList<>();
                     tile.boxes.add(tile.bBox);
                 }
 

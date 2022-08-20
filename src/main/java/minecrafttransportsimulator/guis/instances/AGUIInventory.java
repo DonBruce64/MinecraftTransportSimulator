@@ -1,8 +1,5 @@
 package minecrafttransportsimulator.guis.instances;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
@@ -11,9 +8,13 @@ import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 
-/**Abstract GUI class used as the base for GUIs with inventory slots.  By default, it sets up slots
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Abstract GUI class used as the base for GUIs with inventory slots.  By default, it sets up slots
  * for all the player's items and populates them.
- * 
+ *
  * @author don_bruce
  */
 public abstract class AGUIInventory extends AGUIBase {
@@ -21,10 +22,10 @@ public abstract class AGUIInventory extends AGUIBase {
     private final String texture;
     protected final IWrapperPlayer player;
     protected final IWrapperInventory playerInventory;
-    private final List<GUIComponentButton> playerSlotButtons = new ArrayList<GUIComponentButton>();
-    private final List<GUIComponentItem> playerSlotIcons = new ArrayList<GUIComponentItem>();
-    protected final List<GUIComponentButton> interactableSlotButtons = new ArrayList<GUIComponentButton>();
-    protected final List<GUIComponentItem> interactableSlotIcons = new ArrayList<GUIComponentItem>();
+    private final List<GUIComponentButton> playerSlotButtons = new ArrayList<>();
+    private final List<GUIComponentItem> playerSlotIcons = new ArrayList<>();
+    protected final List<GUIComponentButton> interactableSlotButtons = new ArrayList<>();
+    protected final List<GUIComponentItem> interactableSlotIcons = new ArrayList<>();
 
     public AGUIInventory(String texture) {
         super();

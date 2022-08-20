@@ -1,8 +1,5 @@
 package minecrafttransportsimulator.entities.instances;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -15,14 +12,15 @@ import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine.Signal;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
-public class PartEngine extends APart {
+import java.util.ArrayList;
+import java.util.List;
 
+public class PartEngine extends APart {
     //State data.
     public boolean isCreative;
     public boolean oilLeak;
@@ -93,9 +91,9 @@ public class PartEngine extends APart {
     private double prevEngineRotation;
     private double driveshaftRotation;
     private double prevDriveshaftRotation;
-    private final List<PartGroundDevice> linkedWheels = new ArrayList<PartGroundDevice>();
-    private final List<PartGroundDevice> drivenWheels = new ArrayList<PartGroundDevice>();
-    private final List<PartPropeller> linkedPropellers = new ArrayList<PartPropeller>();
+    private final List<PartGroundDevice> linkedWheels = new ArrayList<>();
+    private final List<PartGroundDevice> drivenWheels = new ArrayList<>();
+    private final List<PartPropeller> linkedPropellers = new ArrayList<>();
     private final Point3D engineAxisVector = new Point3D();
     private final Point3D engineForce = new Point3D();
 
@@ -304,19 +302,21 @@ public class PartEngine extends APart {
             }
 
             //Check for any shifting requests.
-            if (isVariableActive(UP_SHIFT_VARIABLE)) {
-                shiftUp();
-                toggleVariable(UP_SHIFT_VARIABLE);
-            } else if (isVariableActive(DOWN_SHIFT_VARIABLE)) {
-                shiftDown();
-                toggleVariable(DOWN_SHIFT_VARIABLE);
-            } else if (isVariableActive(NEUTRAL_SHIFT_VARIABLE)) {
-                shiftNeutral();
-                toggleVariable(NEUTRAL_SHIFT_VARIABLE);
+            if (!world.isClient()) {
+                if (isVariableActive(UP_SHIFT_VARIABLE)) {
+                    toggleVariable(UP_SHIFT_VARIABLE);
+                    shiftUp();
+                } else if (isVariableActive(DOWN_SHIFT_VARIABLE)) {
+                    toggleVariable(DOWN_SHIFT_VARIABLE);
+                    shiftDown();
+                } else if (isVariableActive(NEUTRAL_SHIFT_VARIABLE)) {
+                    toggleVariable(NEUTRAL_SHIFT_VARIABLE);
+                    shiftNeutral();
+                }
             }
 
             //Check for reversing if we are on a blimp with reversed thrust.
-            if (vehicleOn != null && vehicleOn.definition.motorized.isBlimp && !linkedPropellers.isEmpty()) {
+            if (vehicleOn.definition.motorized.isBlimp && !linkedPropellers.isEmpty()) {
                 if (vehicleOn.reverseThrust && currentGear > 0) {
                     currentGear = -1;
                 } else if (!vehicleOn.reverseThrust && currentGear < 0) {
@@ -341,7 +341,7 @@ public class PartEngine extends APart {
                     //Try to get fuel from the vehicle and calculate fuel flow.
                     if (!isCreative && !vehicleOn.fuelTank.getFluid().isEmpty()) {
                         if (!ConfigSystem.settings.fuel.fuels.containsKey(definition.engine.fuelType)) {
-                            throw new IllegalArgumentException("Engine:" + definition.packID + ":" + definition.systemName + " wanted fuel configs for fuel of type:" + definition.engine.fuelType + ", but these do not exist in the config file.  Fuels currently in the file are:" + ConfigSystem.settings.fuel.fuels.keySet() + "If you are on a server, this means the server and client configs are not the same.  If this is a modpack, TELL THE AUTHOR IT IS BORKEN!");
+                            throw new IllegalArgumentException("Engine:" + definition.packID + ":" + definition.systemName + " wanted fuel configs for fuel of type:" + definition.engine.fuelType + ", but these do not exist in the config file.  Fuels currently in the file are:" + ConfigSystem.settings.fuel.fuels.keySet() + "If you are on a server, this means the server and client configs are not the same.  If this is a modpack, TELL THE AUTHOR IT IS BROKEN!");
                         } else if (!ConfigSystem.settings.fuel.fuels.get(definition.engine.fuelType).containsKey(vehicleOn.fuelTank.getFluid())) {
                             //Clear out the fuel from this vehicle as it's the wrong type.
                             vehicleOn.fuelTank.drain(vehicleOn.fuelTank.getFluid(), vehicleOn.fuelTank.getFluidLevel(), true);
@@ -365,7 +365,7 @@ public class PartEngine extends APart {
                         }
                     }
 
-                    //Add extra hours, and possibly explode the engine, if its too hot.
+                    //Add extra hours, and possibly explode the engine, if it's too hot.
                     if (temp > OVERHEAT_TEMP_1 && !isCreative) {
                         hours += 0.001 * (temp - OVERHEAT_TEMP_1) * getTotalWearFactor();
                         if (temp > FAILURE_TEMP && !world.isClient()) {
@@ -630,8 +630,8 @@ public class PartEngine extends APart {
     }
 
     @Override
-    public void doPostAllpartUpdates() {
-        super.doPostAllpartUpdates();
+    public void updateParts() {
+        super.updateParts();
 
         //Update linked wheel list.
         linkedWheels.clear();
@@ -784,7 +784,7 @@ public class PartEngine extends APart {
                 String pistonVariable = variable.substring("engine_piston_".length());
                 int pistonNumber = Integer.parseInt(pistonVariable.substring(0, pistonVariable.indexOf("_")));
                 pistonVariable.substring(pistonVariable.indexOf("_"));
-                int totalPistons = Integer.parseInt(pistonVariable.substring(0, pistonVariable.indexOf("_")));
+                int totalPistons = pistonNumber;
                 long engineCycleTime = (long) (2D * (1D / (rpm / 60D / 1000D)));
 
                 if (engineCycleTime != 0) {
@@ -898,7 +898,7 @@ public class PartEngine extends APart {
         }
     }
 
-    private boolean shiftUp() {
+    public boolean shiftUp() {
         byte nextGear;
         boolean doShift = false;
         if (definition.engine.jetPowerFactor == 0) {
@@ -921,7 +921,7 @@ public class PartEngine extends APart {
                 shiftCooldown = definition.engine.shiftSpeed;
                 upshiftCountdown = definition.engine.clutchTime;
                 if (!world.isClient()) {
-                    InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, UP_SHIFT_VARIABLE, 1));
+                    InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.SHIFT_UP));
                 }
             } else if (!world.isClient()) {
                 InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.BAD_SHIFT));
@@ -930,7 +930,7 @@ public class PartEngine extends APart {
         return doShift;
     }
 
-    private boolean shiftDown() {
+    public boolean shiftDown() {
         byte nextGear;
         boolean doShift = false;
         if (definition.engine.jetPowerFactor == 0) {
@@ -953,7 +953,7 @@ public class PartEngine extends APart {
                 shiftCooldown = definition.engine.shiftSpeed;
                 downshiftCountdown = definition.engine.clutchTime;
                 if (!world.isClient()) {
-                    InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, DOWN_SHIFT_VARIABLE, 1));
+                    InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.SHIFT_DOWN));
                 }
             } else if (!world.isClient()) {
                 InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.BAD_SHIFT));
@@ -962,7 +962,7 @@ public class PartEngine extends APart {
         return doShift;
     }
 
-    private void shiftNeutral() {
+    public void shiftNeutral() {
         if (definition.engine.jetPowerFactor == 0) {
             if (currentGear != 0) {//Any gear to neutral.
                 if (currentGear > 0) {
@@ -974,7 +974,7 @@ public class PartEngine extends APart {
                 currentGear = 0;
                 setVariable(GEAR_VARIABLE, currentGear);
                 if (!world.isClient()) {
-                    InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, NEUTRAL_SHIFT_VARIABLE, 1));
+                    InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.SHIFT_NEUTRAL));
                 }
             }
         }
@@ -1019,18 +1019,10 @@ public class PartEngine extends APart {
                     if (Math.abs(wheelForce / 300D) > wheelFriction || (Math.abs(lowestWheelVelocity) - Math.abs(desiredWheelVelocity) > 0.1 && Math.abs(lowestWheelVelocity) - Math.abs(desiredWheelVelocity) < Math.abs(wheelForce / 300D))) {
                         wheelForce *= vehicleOn.currentMass / 100000D * wheelFriction / Math.abs(wheelForce / 300F);
                         for (PartGroundDevice wheel : drivenWheels) {
-                            if (currentGearRatio > 0) {
-                                if (wheelForce >= 0) {
-                                    wheel.angularVelocity = Math.min(engineTargetRPM / 1200F / currentGearRatio / vehicleOn.currentAxleRatio, wheel.angularVelocity + 0.01D);
-                                } else {
-                                    wheel.angularVelocity = Math.max(engineTargetRPM / 1200F / currentGearRatio / vehicleOn.currentAxleRatio, wheel.angularVelocity - 0.01D);
-                                }
+                            if (wheelForce >= 0) {
+                                wheel.angularVelocity = Math.min(engineTargetRPM / 1200F / currentGearRatio / vehicleOn.currentAxleRatio, wheel.angularVelocity + 0.01D);
                             } else {
-                                if (wheelForce >= 0) {
-                                    wheel.angularVelocity = Math.min(engineTargetRPM / 1200F / currentGearRatio / vehicleOn.currentAxleRatio, wheel.angularVelocity + 0.01D);
-                                } else {
-                                    wheel.angularVelocity = Math.max(engineTargetRPM / 1200F / currentGearRatio / vehicleOn.currentAxleRatio, wheel.angularVelocity - 0.01D);
-                                }
+                                wheel.angularVelocity = Math.max(engineTargetRPM / 1200F / currentGearRatio / vehicleOn.currentAxleRatio, wheel.angularVelocity - 0.01D);
                             }
                             wheel.skipAngularCalcs = true;
                         }
@@ -1087,7 +1079,7 @@ public class PartEngine extends APart {
             engineForce.reOrigin(vehicleOn.orientation);
             torque.y -= engineForce.z * localOffset.x + engineForce.x * localOffset.z;
             torque.z += engineForce.y * localOffset.x - engineForce.x * localOffset.y;
-            if (!vehicleOn.groundDeviceCollective.isAnythingOnGround()) {
+            if (vehicleOn.groundDeviceCollective.isAnythingOnGround()) {
                 torque.x += engineForce.z * localOffset.y - engineForce.y * localOffset.z;
             }
         }

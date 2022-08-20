@@ -7,7 +7,8 @@ import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition.AnimationCom
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.sound.SoundInstance;
 
-/**Class designed for maintaining the state of a duration/delay for an animation.
+/**
+ * Class designed for maintaining the state of a duration/delay for an animation.
  * This is used anything that queries animation states.
  * This also contains a method for calculating easing equations and returning the interpolated values
  * This is used for interpolating animation values with non-linear equations.
@@ -46,20 +47,20 @@ public class DurationDelayClock {
     }
 
     /**
-     *  Returns the actual 0-1 value for a state-based duration/delay variable.
-     *  Optionally plays sounds if the state changes appropriately.
+     * Returns the actual 0-1 value for a state-based duration/delay variable.
+     * Optionally plays sounds if the state changes appropriately.
      */
     public double getFactoredState(AEntityD_Definable<?> entity, double value, float partialTicks) {
         boolean commandForwards = value > 0;
         //We do all time here in milliseconds, not ticks.  This allows for partial ticks.
         long currentTime = (long) ((entity.ticksExisted + partialTicks) * 50D);
-        long forwardsCycleTime = animation.forwardsDelay * 50;
+        long forwardsCycleTime = animation.forwardsDelay * 50L;
         if (!animation.skipForwardsMovement) {
-            forwardsCycleTime += animation.duration * 50 + animation.reverseDelay * 50;
+            forwardsCycleTime += animation.duration * 50L + animation.reverseDelay * 50L;
         }
-        long reverseCycleTime = animation.reverseDelay * 50;
+        long reverseCycleTime = animation.reverseDelay * 50L;
         if (!animation.skipReverseMovement) {
-            reverseCycleTime += animation.duration * 50 + animation.forwardsDelay * 50;
+            reverseCycleTime += animation.duration * 50L + animation.forwardsDelay * 50L;
         }
         movedThisUpdate = false;
 
@@ -109,9 +110,9 @@ public class DurationDelayClock {
         double movementFactor = 0;
         if (commandForwards) {
             long timedelayed = currentTime - timeCommandedForwards;
-            if (timedelayed >= animation.forwardsDelay * 50) {
-                long timeMoved = currentTime - (timeCommandedForwards + animation.forwardsDelay * 50);
-                if (timeMoved < animation.duration * 50 && !animation.skipForwardsMovement) {
+            if (timedelayed >= animation.forwardsDelay * 50L) {
+                long timeMoved = currentTime - (timeCommandedForwards + animation.forwardsDelay * 50L);
+                if (timeMoved < animation.duration * 50L && !animation.skipForwardsMovement) {
                     movedThisUpdate = true;
                     movementFactor = timeMoved / (double) (animation.duration * 50);
                     if (animation.forwardsEasing != null) {
@@ -136,9 +137,9 @@ public class DurationDelayClock {
             }
         } else {
             long timedelayed = currentTime - timeCommandedReverse;
-            if (timedelayed >= animation.reverseDelay * 50) {
-                long timeMoved = currentTime - (timeCommandedReverse + animation.reverseDelay * 50);
-                if (timeMoved < animation.duration * 50 && !animation.skipReverseMovement) {
+            if (timedelayed >= animation.reverseDelay * 50L) {
+                long timeMoved = currentTime - (timeCommandedReverse + animation.reverseDelay * 50L);
+                if (timeMoved < animation.duration * 50L && !animation.skipReverseMovement) {
                     movedThisUpdate = true;
                     movementFactor = timeMoved / (double) (animation.duration * 50);
                     if (animation.reverseEasing != null) {
@@ -170,10 +171,9 @@ public class DurationDelayClock {
     /**
      * This is used to check the easing type defined in the JSON fields
      * and call the respective easing function to return a value
-     * 
+     *
      * @param direction The JSON field either {@code forwardsEasing} or {@code reverseEasing}.
-     * 
-     * @param time The time that has elapsed for an animation or the percent complete from 0 to 1.
+     * @param time      The time that has elapsed for an animation or the percent complete from 0 to 1.
      */
     private static double getEasingType(JSONAnimationDefinition.AnimationEasingType direction, double time) {
         switch (direction) {

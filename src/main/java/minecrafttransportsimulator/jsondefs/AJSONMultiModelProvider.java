@@ -1,12 +1,12 @@
 package minecrafttransportsimulator.jsondefs;
 
-import java.util.List;
-
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 import minecrafttransportsimulator.packloading.PackResourceLoader;
 import minecrafttransportsimulator.packloading.PackResourceLoader.ResourceType;
 import minecrafttransportsimulator.rendering.RenderableObject;
+
+import java.util.List;
 
 public abstract class AJSONMultiModelProvider extends AJSONItem {
 
@@ -22,7 +22,7 @@ public abstract class AJSONMultiModelProvider extends AJSONItem {
     public JSONRendering rendering;
 
     /**
-     *  Returns the model location in the classpath for this definition.
+     * Returns the model location in the classpath for this definition.
      */
     public String getModelLocation(String currentSubName) {
         for (JSONSubDefinition subDefinition : definitions) {
@@ -42,8 +42,8 @@ public abstract class AJSONMultiModelProvider extends AJSONItem {
     }
 
     /**
-     *  Returns the OBJ model texture location in the classpath for this definition.
-     *  Sub-name is passed-in as different sub-names have different textures.
+     * Returns the OBJ model texture location in the classpath for this definition.
+     * Sub-name is passed-in as different sub-names have different textures.
      */
     public String getTextureLocation(String currentSubName) {
         for (JSONSubDefinition subDefinition : definitions) {

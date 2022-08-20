@@ -5,7 +5,8 @@ import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 
-/**Base Block class.  This type is used in the constructor of {@link BuilderBlock} to allow us to use
+/**
+ * Base Block class.  This type is used in the constructor of {@link BuilderBlock} to allow us to use
  * completely custom code that is not associated with MC's standard block code that changes EVERY FREAKING VERSION.
  * Seriously guys, you make a game about blocks.  How many times you gonna re-invent them?
  * Anyways... This code contains methods for the block's hardness, blast resistance, and rotation.
@@ -22,18 +23,18 @@ public abstract class ABlockBase {
     }
 
     /**
-     *  Called when this block is removed from the world.  This occurs when the block is broken
-     *  by a player, explosion, vehicle, etc.  This method is called prior to the Tile Entity being
-     *  removed, as logic may be needed to be performed that requires the data from the TE.
-     *  This is ONLY called on the server, so if you have data to sync, do it via packets. 
+     * Called when this block is removed from the world.  This occurs when the block is broken
+     * by a player, explosion, vehicle, etc.  This method is called prior to the Tile Entity being
+     * removed, as logic may be needed to be performed that requires the data from the TE.
+     * This is ONLY called on the server, so if you have data to sync, do it via packets.
      */
     public void onBroken(AWrapperWorld world, Point3D position) {
     }
 
     /**
-     *  Enums for side-specific stuff.
+     * Enums for side-specific stuff.
      */
-    public static enum Axis {
+    public enum Axis {
         NONE(0, 0, 0, 0, false, false),
         UP(0, 1, 0, 0, true, false),
         DOWN(0, -1, 0, 0, true, false),
@@ -54,7 +55,7 @@ public abstract class ABlockBase {
         public final boolean blockBased;
         public final boolean xzPlanar;
 
-        private Axis(int xOffset, int yOffset, int zOffset, int yRotation, boolean blockBased, boolean xzPlanar) {
+        Axis(int xOffset, int yOffset, int zOffset, int yRotation, boolean blockBased, boolean xzPlanar) {
             this.xOffset = xOffset;
             this.yOffset = yOffset;
             this.zOffset = zOffset;
@@ -110,10 +111,10 @@ public abstract class ABlockBase {
     }
 
     /**
-     *  Enums for block material properties.  Not used by any of our blocks,
-     *  but instead are materials that blocks in the world may be made of.
+     * Enums for block material properties.  Not used by any of our blocks,
+     * but instead are materials that blocks in the world may be made of.
      */
-    public static enum BlockMaterial {
+    public enum BlockMaterial {
         NORMAL,
         NORMAL_WET,
         DIRT,
@@ -121,6 +122,6 @@ public abstract class ABlockBase {
         SAND,
         SAND_WET,
         SNOW,
-        ICE;
+        ICE
     }
 }

@@ -1,15 +1,8 @@
 package minecrafttransportsimulator.guis.instances;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
-import minecrafttransportsimulator.guis.components.AGUIBase;
-import minecrafttransportsimulator.guis.components.GUIComponent3DModel;
-import minecrafttransportsimulator.guis.components.GUIComponentButton;
-import minecrafttransportsimulator.guis.components.GUIComponentItem;
-import minecrafttransportsimulator.guis.components.GUIComponentLabel;
+import minecrafttransportsimulator.guis.components.*;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
@@ -19,29 +12,30 @@ import minecrafttransportsimulator.packloading.PackMaterialComponent;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
 
-/**A GUI that is used to craft vehicle parts and other pack components.  This GUI displays
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * A GUI that is used to craft vehicle parts and other pack components.  This GUI displays
  * the items required to craft a vehicle, the item that will be crafted, and some properties
  * of that item.  Allows for scrolling via a scroll wheel, and remembers the last item that
  * was selected to allow for faster lookup next time the GUI is opened.
- * 
+ *
  * @author don_bruce
  */
 public class GUIPaintGun extends AGUIBase {
-
     //Init variables.
     private final AEntityD_Definable<?> entity;
     private final IWrapperPlayer player;
 
     //Buttons and labels.
     private GUIComponentLabel partName;
-
     private GUIComponentButton prevColorButton;
     private GUIComponentButton nextColorButton;
-
     private GUIComponentButton confirmButton;
 
     //Crafting components.
-    private final List<GUIComponentItem> craftingItemIcons = new ArrayList<GUIComponentItem>();
+    private final List<GUIComponentItem> craftingItemIcons = new ArrayList<>();
 
     //Renders for the item.
     private GUIComponent3DModel modelRender;

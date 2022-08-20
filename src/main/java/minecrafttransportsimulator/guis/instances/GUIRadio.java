@@ -1,28 +1,24 @@
 package minecrafttransportsimulator.guis.instances;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.entities.instances.EntityRadio;
-import minecrafttransportsimulator.guis.components.AGUIBase;
-import minecrafttransportsimulator.guis.components.AGUIComponent;
-import minecrafttransportsimulator.guis.components.GUIComponentButton;
-import minecrafttransportsimulator.guis.components.GUIComponentCutout;
-import minecrafttransportsimulator.guis.components.GUIComponentLabel;
-import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
+import minecrafttransportsimulator.guis.components.*;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketRadioStateChange;
 import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
 import minecrafttransportsimulator.sound.RadioManager;
 import minecrafttransportsimulator.sound.RadioManager.RadioSources;
 
-/**GUI for interfacing with radios.
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * GUI for interfacing with radios.
  * This GUI allows for state changes to radios, which are then
  * picked up by the audio system to affect the playing song.
-*
-* @author don_bruce
-*/
+ *
+ * @author don_bruce
+ */
 public class GUIRadio extends AGUIBase {
     //Buttons.
     private GUIComponentButton offButton;
@@ -37,10 +33,10 @@ public class GUIRadio extends AGUIBase {
     private GUIComponentButton equalizerResetButton;
     private GUIComponentButton volUpButton;
     private GUIComponentButton volDnButton;
-    private List<GUIComponentButton> presetButtons = new ArrayList<GUIComponentButton>();
-    private List<GUIComponentButton> equalizerButtons = new ArrayList<GUIComponentButton>();
-    private List<GUIComponentCutout> equalizerSliderBands = new ArrayList<GUIComponentCutout>();
-    private List<GUIComponentCutout> equalizerSliders = new ArrayList<GUIComponentCutout>();
+    private final List<GUIComponentButton> presetButtons = new ArrayList<>();
+    private final List<GUIComponentButton> equalizerButtons = new ArrayList<>();
+    private final List<GUIComponentCutout> equalizerSliderBands = new ArrayList<>();
+    private final List<GUIComponentCutout> equalizerSliders = new ArrayList<>();
 
     //Input boxes
     private GUIComponentTextBox stationDisplay;
@@ -244,7 +240,7 @@ public class GUIRadio extends AGUIBase {
 
         //Set volume system states to current volume settings.
         volumeDisplay.enabled = false;
-        volumeDisplay.setText("VOL        " + String.valueOf(radio.volume));
+        volumeDisplay.setText("VOL        " + radio.volume);
         volUpButton.enabled = radio.volume < 10;
         volDnButton.enabled = radio.volume > 1;
 

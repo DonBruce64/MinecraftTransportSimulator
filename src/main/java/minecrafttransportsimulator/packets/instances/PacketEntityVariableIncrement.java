@@ -5,11 +5,12 @@ import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
-/**Packet used to increment variable states.  Sent from clients to servers to
+/**
+ * Packet used to increment variable states.  Sent from clients to servers to
  * tell them to change the custom state of an entity variable, and then sent
  * back to all clients to have them update those states.  May also be sent directly
  * from a server to all clients if the server is the one that changed the state.
- * 
+ *
  * @author don_bruce
  */
 public class PacketEntityVariableIncrement extends APacketEntity<AEntityD_Definable<?>> {

@@ -1,7 +1,5 @@
 package minecrafttransportsimulator.baseclasses;
 
-import java.util.List;
-
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.items.instances.ItemBullet;
 import minecrafttransportsimulator.jsondefs.JSONBullet.BulletType;
@@ -9,7 +7,10 @@ import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 
-/**Basic damage class.  Used to make instances of damage to apply to entities.  Allows for quick addition
+import java.util.List;
+
+/**
+ * Basic damage class.  Used to make instances of damage to apply to entities.  Allows for quick addition
  * of new damage types that prevents the need to change constructors.  The boundingBox hit is required for
  * construction, as some entities may do different things based on what bounding box was hit.  If this is
  * an "area of effect" attack, and not a target attack, the BoundingBox should be the area of effect, not

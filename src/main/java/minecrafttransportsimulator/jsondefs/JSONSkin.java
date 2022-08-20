@@ -9,7 +9,7 @@ public class JSONSkin extends AJSONMultiModelProvider {
     @JSONDescription("The properties for this skin.")
     public Skin skin;
 
-    public class Skin {
+    public static class Skin {
         @JSONRequired
         @JSONDescription("The packID of the vehicle/part/decor/etc. that this skin goes to.")
         public String packID;

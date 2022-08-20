@@ -1,14 +1,15 @@
 package minecrafttransportsimulator.rendering;
 
-import java.nio.FloatBuffer;
-
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 
-/**Class designed to represent a renderable object.  Said object has at minimum some
+import java.nio.FloatBuffer;
+
+/**
+ * Class designed to represent a renderable object.  Said object has at minimum some
  * geometry, though this can be a cached set of vertices or a hard-coded saved set.
  * It may also have a texture, though this texture may be a single solid white sheet
  * for shader-compatible solid rendering.  In this case, the color will be specified,
@@ -20,8 +21,8 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
  * To assist with this, the equals() method checks texture and color and, if they are identical,
  * returns true.  This allows for said objects to be used as map-keys for easier grouping.
  * Note that this does NOT include the actual vertex data in this equality check.
- * 
- *  For said vertex data, the data order is as follows:
+ * <p>
+ * For said vertex data, the data order is as follows:
  *  <ul>
  *  <li>The nX-coordinate of the normal for the vertex, in the x-dimension.
  *  <li>The nY-coordinate of the normal for the vertex, in the y-dimension.
@@ -32,7 +33,7 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
  *  <li>The y-coordinate of a vertex on the model.
  *  <li>The z-coordinate of a vertex on the model.
  *  </ul>
- *  
+ * <p>
  *  Note that this object can render lines as well as tris.  For lines, {@link #lineWidth} should
  *  be set to a non-zero number.  If this is the case, then the buffer will be interpreted as line
  *  data and line rendering will occur.   the data format is as follows:
@@ -65,38 +66,42 @@ public class RenderableObject {
     public boolean ignoreWorldShading;
     public boolean enableBrightBlending;
 
-    /**The Global texture.  This contains all block/item textures for the game.  Used when rendering said blocks/items.**/
+    /**
+     * The Global texture.  This contains all block/item textures for the game.  Used when rendering said blocks/items.
+     **/
     public static final String GLOBAL_TEXTURE_NAME = "GLOBAL";
-    /**The Particle texture.  This contains all built-in particle textures for the game.  Used when rendering particles with default textures.**/
+    /**
+     * The Particle texture.  This contains all built-in particle textures for the game.  Used when rendering particles with default textures.
+     **/
     public static final String PARTICLE_TEXTURE_NAME = "PARTICLE";
 
-    private static final int[][] FACE_POINT_INDEXES = new int[][] {
+    private static final int[][] FACE_POINT_INDEXES = new int[][]{
             //X-axis.
-            new int[] { 0, 1, 3, 2 }, new int[] { 5, 4, 6, 7 },
+            new int[]{0, 1, 3, 2}, new int[]{5, 4, 6, 7},
 
             //Y-axis.
-            new int[] { 6, 2, 3, 7 }, new int[] { 5, 1, 0, 4 },
+            new int[]{6, 2, 3, 7}, new int[]{5, 1, 0, 4},
 
             //Z-axis.
-            new int[] { 4, 0, 2, 6 }, new int[] { 1, 5, 7, 3 } };
-    private static final float[][] FACE_NORMALS = new float[][] {
+            new int[]{4, 0, 2, 6}, new int[]{1, 5, 7, 3}};
+    private static final float[][] FACE_NORMALS = new float[][]{
             //X-axis.
-            new float[] { -1.0F, 0.0F, 0.0F }, new float[] { 1.0F, 0.0F, 0.0F },
+            new float[]{-1.0F, 0.0F, 0.0F}, new float[]{1.0F, 0.0F, 0.0F},
 
             //Y-axis.
-            new float[] { 0.0F, 1.0F, 0.0F }, new float[] { 0.0F, -1.0F, 0.0F },
+            new float[]{0.0F, 1.0F, 0.0F}, new float[]{0.0F, -1.0F, 0.0F},
 
             //Z-axis.
-            new float[] { 0.0F, 0.0F, -1.0F }, new float[] { 0.0F, 0.0F, 1.0F } };
-    private static final int[][] WIREFRAME_POINT_INDEXES = new int[][] {
+            new float[]{0.0F, 0.0F, -1.0F}, new float[]{0.0F, 0.0F, 1.0F}};
+    private static final int[][] WIREFRAME_POINT_INDEXES = new int[][]{
             //Bottom.
-            new int[] { 0, 1 }, new int[] { 4, 5 }, new int[] { 0, 4 }, new int[] { 1, 5 },
+            new int[]{0, 1}, new int[]{4, 5}, new int[]{0, 4}, new int[]{1, 5},
 
             //Top.
-            new int[] { 2, 3 }, new int[] { 6, 7 }, new int[] { 2, 6 }, new int[] { 3, 7 },
+            new int[]{2, 3}, new int[]{6, 7}, new int[]{2, 6}, new int[]{3, 7},
 
             //Sides.
-            new int[] { 0, 2 }, new int[] { 1, 3 }, new int[] { 4, 6 }, new int[] { 5, 7 } };
+            new int[]{0, 2}, new int[]{1, 3}, new int[]{4, 6}, new int[]{5, 7}};
 
     private static final int BUFFERS_PER_LINE = 6;
     private static final int BUFFERS_PER_VERTEX = 8;
@@ -146,7 +151,8 @@ public class RenderableObject {
         }
     }
 
-    /**Renders the vertices from this object.  If they were cached, it renders them as such and destroys
+    /**
+     * Renders the vertices from this object.  If they were cached, it renders them as such and destroys
      * the reference to the static vertices object.  This is to free up the FloatBuffer for re-use.  We
      * would normally set it to null during construction, but it is realized that having this for post-processing
      * after model parsing is ideal, so it's not destroyed until render.
@@ -155,7 +161,8 @@ public class RenderableObject {
         InterfaceManager.renderingInterface.renderVertices(this);
     }
 
-    /**Adds a line to the {@link #vertices} of this object.
+    /**
+     * Adds a line to the {@link #vertices} of this object.
      */
     public void addLine(Point3D point1, Point3D point2) {
         vertices.put((float) point1.x);
@@ -166,7 +173,8 @@ public class RenderableObject {
         vertices.put((float) point2.z);
     }
 
-    /**sets the holographic {@link BoundingBox} box to the {@link #vertices} of this object.
+    /**
+     * sets the holographic {@link BoundingBox} box to the {@link #vertices} of this object.
      * The box added will be centered at 0,0,0.
      */
     public void setHolographicBoundingBox(BoundingBox box) {
@@ -205,7 +213,8 @@ public class RenderableObject {
         vertices.flip();
     }
 
-    /**Sets the wireframe {@link BoundingBox} box to the {@link #vertices} of this object.
+    /**
+     * Sets the wireframe {@link BoundingBox} box to the {@link #vertices} of this object.
      * The box added will be centered at 0,0,0, and will extend to the bound of the BoundingBox.
      */
     public void setWireframeBoundingBox(BoundingBox box) {
@@ -217,7 +226,8 @@ public class RenderableObject {
         vertices.flip();
     }
 
-    /**Normalizes the UVs in this object.  This is done to re-map them to the 0->1 texture space
+    /**
+     * Normalizes the UVs in this object.  This is done to re-map them to the 0->1 texture space
      * for overridden textures such as lights and windows.
      */
     public void normalizeUVs() {
@@ -243,6 +253,7 @@ public class RenderableObject {
                 //Normal tri or first half of quad using tri mapping.
                 switch (i % 6) {
                     case (0):
+                    case (5):
                         vertices.put(i * 8 + 3, 0.0F);
                         vertices.put(i * 8 + 4, 0.0F);
                         break;
@@ -251,9 +262,6 @@ public class RenderableObject {
                         vertices.put(i * 8 + 4, 1.0F);
                         break;
                     case (2):
-                        vertices.put(i * 8 + 3, 1.0F);
-                        vertices.put(i * 8 + 4, 1.0F);
-                        break;
 
                     case (3):
                         vertices.put(i * 8 + 3, 1.0F);
@@ -263,18 +271,16 @@ public class RenderableObject {
                         vertices.put(i * 8 + 3, 1.0F);
                         vertices.put(i * 8 + 4, 0.0F);
                         break;
-                    case (5):
-                        vertices.put(i * 8 + 3, 0.0F);
-                        vertices.put(i * 8 + 4, 0.0F);
-                        break;
                 }
             }
         }
     }
 
-    /**Destroys this object, resetting all references in it for use in other areas.
+    /**
+     * Destroys this object, resetting all references in it for use in other areas.
      * Note that this is not required if {@link #cacheVertices} is false as no external
-     * references will be kept in that mode.*/
+     * references will be kept in that mode.
+     */
     public void destroy() {
         vertices = null;
         InterfaceManager.renderingInterface.deleteVertices(this);
@@ -283,6 +289,6 @@ public class RenderableObject {
     public enum BlendState {
         SOLID,
         TRANSLUCENT,
-        BRIGHT_BLENDED;
+        BRIGHT_BLENDED
     }
 }

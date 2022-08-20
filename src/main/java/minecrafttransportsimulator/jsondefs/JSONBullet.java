@@ -1,9 +1,9 @@
 package minecrafttransportsimulator.jsondefs;
 
-import java.util.List;
-
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
+
+import java.util.List;
 
 @JSONDescription("Bullets are special JSONs, as they're not a part, but they work with parts.  They're not an actual item like food, but they normally are only in item form.  Rather, they are an item that turns itself into a model with logic when fired from a gun.")
 public class JSONBullet extends AJSONMultiModelProvider {
@@ -12,7 +12,7 @@ public class JSONBullet extends AJSONMultiModelProvider {
     @JSONDescription("Bullet-specific properties.")
     public Bullet bullet;
 
-    public class Bullet {
+    public static class Bullet {
         @JSONRequired
         @JSONDescription("A list of types describing the bullet.  This defines how it inflicts damage on whatever it hits.")
         public List<BulletType> types;
@@ -69,7 +69,7 @@ public class JSONBullet extends AJSONMultiModelProvider {
         public List<JSONPotionEffect> effects;
     }
 
-    public static enum BulletType {
+    public enum BulletType {
         @JSONDescription("Explodes when it hits something.  Explosion size is based on the bullet's diameter.")
         EXPLOSIVE,
         @JSONDescription("Sets whatever it hits on fire, if it's flammable.  This includes entities.")
@@ -77,6 +77,6 @@ public class JSONBullet extends AJSONMultiModelProvider {
         @JSONDescription("Like incendiary, but puts out fires rather than starts them.")
         WATER,
         @JSONDescription("A bullet that pierces player armor.  Useful for pesky super-suits.")
-        ARMOR_PIERCING;
+        ARMOR_PIERCING
     }
 }

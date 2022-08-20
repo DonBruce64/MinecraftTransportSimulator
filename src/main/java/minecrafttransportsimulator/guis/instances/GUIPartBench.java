@@ -1,29 +1,13 @@
 package minecrafttransportsimulator.guis.instances;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.guis.components.AGUIBase;
-import minecrafttransportsimulator.guis.components.GUIComponent3DModel;
-import minecrafttransportsimulator.guis.components.GUIComponentButton;
-import minecrafttransportsimulator.guis.components.GUIComponentCutout;
-import minecrafttransportsimulator.guis.components.GUIComponentItem;
-import minecrafttransportsimulator.guis.components.GUIComponentLabel;
+import minecrafttransportsimulator.guis.components.*;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent.PoleComponentType;
 import minecrafttransportsimulator.items.instances.ItemVehicle;
-import minecrafttransportsimulator.jsondefs.AJSONItem;
-import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
-import minecrafttransportsimulator.jsondefs.JSONCraftingBench;
-import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
-import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
-import minecrafttransportsimulator.jsondefs.JSONVehicle;
+import minecrafttransportsimulator.jsondefs.*;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPlayerCraftItem;
@@ -31,16 +15,22 @@ import minecrafttransportsimulator.packloading.PackMaterialComponent;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
 
-/**A GUI that is used to craft vehicle parts and other pack components.  This GUI displays
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * A GUI that is used to craft vehicle parts and other pack components.  This GUI displays
  * the items required to craft a vehicle, the item that will be crafted, and some properties
  * of that item.  Allows for scrolling via a scroll wheel, and remembers the last item that
  * was selected to allow for faster lookup next time the GUI is opened.
- * 
+ *
  * @author don_bruce
  */
 public class GUIPartBench extends AGUIBase {
     /*Last item this GUI was on when closed.  Keyed by definition instance to keep all benches in-sync.*/
-    private static final Map<JSONCraftingBench, AItemPack<? extends AJSONItem>> lastOpenedItem = new HashMap<JSONCraftingBench, AItemPack<? extends AJSONItem>>();
+    private static final Map<JSONCraftingBench, AItemPack<? extends AJSONItem>> lastOpenedItem = new HashMap<>();
 
     //Init variables.
     private final JSONCraftingBench definition;
@@ -67,8 +57,8 @@ public class GUIPartBench extends AGUIBase {
     private GUIComponentButton confirmButton;
 
     //Crafting components.
-    private final List<GUIComponentItem> craftingItemIcons = new ArrayList<GUIComponentItem>();
-    private final List<GUIComponentCutout> craftingItemBackgrounds = new ArrayList<GUIComponentCutout>();
+    private final List<GUIComponentItem> craftingItemIcons = new ArrayList<>();
+    private final List<GUIComponentCutout> craftingItemBackgrounds = new ArrayList<>();
     private List<PackMaterialComponent> normalMaterials;
     private List<PackMaterialComponent> repairMaterials;
 
@@ -260,15 +250,15 @@ public class GUIPartBench extends AGUIBase {
                 int materialIndex = i + materialOffset;
                 if (materialIndex < materials.size()) {
                     craftingItemIcons.get(i).stacks = materials.get(materialIndex).possibleItems;
-                    craftingItemBackgrounds.get(i).visible = !player.isCreative() && inClockPeriod(20, 10) && (viewingRepair ? !player.getInventory().hasSpecificMaterial(currentItem, i, true, true, true) : !player.getInventory().hasSpecificMaterial(currentItem, i, true, true, false));
+                    craftingItemBackgrounds.get(i).visible = !player.isCreative() && inClockPeriod(20, 10) && (viewingRepair ? player.getInventory().hasSpecificMaterial(currentItem, i, true, true, true) : player.getInventory().hasSpecificMaterial(currentItem, i, true, true, false));
                 } else {
                     craftingItemIcons.get(i).stacks = null;
                     craftingItemBackgrounds.get(i).visible = false;
                 }
             }
         } else {
-            for (byte i = 0; i < craftingItemIcons.size(); ++i) {
-                craftingItemIcons.get(i).stacks = null;
+            for (GUIComponentItem craftingItemIcon : craftingItemIcons) {
+                craftingItemIcon.stacks = null;
             }
         }
 
@@ -306,9 +296,10 @@ public class GUIPartBench extends AGUIBase {
      * Sets the variables to be used on a button action, so once an action is performed this
      * logic MUST be called to update the button action states!
      */
+    @SuppressWarnings("RedundantCast")
     private void updateNames() {
         //Get all pack indexes.
-        List<String> packIDs = new ArrayList<String>(PackParser.getAllPackIDs());
+        List<String> packIDs = new ArrayList<>(PackParser.getAllPackIDs());
         int currentPackIndex = packIDs.indexOf(currentPack);
 
         //Loop forwards to find a pack that has the items we need and set that as the next pack.
@@ -427,7 +418,7 @@ public class GUIPartBench extends AGUIBase {
         partName.text = currentItem.getItemName();
 
         //Create part description text.
-        List<String> descriptiveLines = new ArrayList<String>();
+        List<String> descriptiveLines = new ArrayList<>();
         currentItem.addTooltipLines(descriptiveLines, InterfaceManager.coreInterface.getNewNBTWrapper());
         partInfo.text = "";
         for (String line : descriptiveLines) {
@@ -513,17 +504,17 @@ public class GUIPartBench extends AGUIBase {
 
         //Combine translated header and info text together into a single string and return.
         String totalInformation = "";
-        totalInformation += JSONConfigLanguage.GUI_PART_BENCH_WEIGHT.value + String.valueOf(vehicleDefinition.motorized.emptyMass) + "\n";
-        totalInformation += JSONConfigLanguage.GUI_PART_BENCH_FUEL.value + String.valueOf(vehicleDefinition.motorized.fuelCapacity) + "\n";
-        totalInformation += JSONConfigLanguage.GUI_PART_BENCH_CONTROLLERS.value + String.valueOf(controllers) + "\n";
-        totalInformation += JSONConfigLanguage.GUI_PART_BENCH_PASSENGERS.value + String.valueOf(passengers) + "\n";
-        totalInformation += JSONConfigLanguage.GUI_PART_BENCH_CARGO.value + String.valueOf(cargo) + "\n";
-        totalInformation += JSONConfigLanguage.GUI_PART_BENCH_MIXED.value + String.valueOf(mixed) + "\n";
+        totalInformation += JSONConfigLanguage.GUI_PART_BENCH_WEIGHT.value + vehicleDefinition.motorized.emptyMass + "\n";
+        totalInformation += JSONConfigLanguage.GUI_PART_BENCH_FUEL.value + vehicleDefinition.motorized.fuelCapacity + "\n";
+        totalInformation += JSONConfigLanguage.GUI_PART_BENCH_CONTROLLERS.value + controllers + "\n";
+        totalInformation += JSONConfigLanguage.GUI_PART_BENCH_PASSENGERS.value + passengers + "\n";
+        totalInformation += JSONConfigLanguage.GUI_PART_BENCH_CARGO.value + cargo + "\n";
+        totalInformation += JSONConfigLanguage.GUI_PART_BENCH_MIXED.value + mixed + "\n";
         if (minFuelConsumption != 99) {
-            totalInformation += JSONConfigLanguage.GUI_PART_BENCH_ENGINE.value + String.valueOf(minFuelConsumption) + "-" + String.valueOf(maxFuelConsumption) + "\n";
+            totalInformation += JSONConfigLanguage.GUI_PART_BENCH_ENGINE.value + minFuelConsumption + "-" + maxFuelConsumption + "\n";
         }
         if (minWheelSize != 99) {
-            totalInformation += JSONConfigLanguage.GUI_PART_BENCH_WHEEL.value + String.valueOf(minWheelSize) + "-" + String.valueOf(maxWheelSize) + "\n";
+            totalInformation += JSONConfigLanguage.GUI_PART_BENCH_WHEEL.value + minWheelSize + "-" + maxWheelSize + "\n";
         }
         return totalInformation;
     }

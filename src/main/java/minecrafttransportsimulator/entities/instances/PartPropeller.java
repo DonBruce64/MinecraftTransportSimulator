@@ -1,8 +1,5 @@
 package minecrafttransportsimulator.entities.instances;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -18,15 +15,22 @@ import minecrafttransportsimulator.packets.instances.PacketPartEngine;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine.Signal;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class PartPropeller extends APart {
     private double currentRPM;
-    /**In revolutions, or 1/360th a degree.**/
+    /**
+     * In revolutions, or 1/360th a degree.
+     **/
     private double angularPosition;
-    /**In revolutions per tick**/
+    /**
+     * In revolutions per tick
+     **/
     private double angularVelocity;
     public int currentPitch;
 
-    private final List<PartEngine> connectedEngines = new ArrayList<PartEngine>();
+    private final List<PartEngine> connectedEngines = new ArrayList<>();
     protected final Point3D propellerAxisVector = new Point3D();
     private final Point3D propellerForce = new Point3D();
     private final BoundingBox damageBounds;
@@ -57,7 +61,6 @@ public class PartPropeller extends APart {
                         InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(connectedEngine, Signal.HS_ON));
                     });
                 }
-                return;
             } else if (damageAmount == definition.general.health) {
                 if (ConfigSystem.settings.damage.explosions.value) {
                     world.spawnExplosion(position, 1F, true);
@@ -164,8 +167,8 @@ public class PartPropeller extends APart {
     }
 
     @Override
-    public void doPostAllpartUpdates() {
-        super.doPostAllpartUpdates();
+    public void updateParts() {
+        super.updateParts();
 
         connectedEngines.clear();
         if (entityOn instanceof PartEngine) {
@@ -234,7 +237,7 @@ public class PartPropeller extends APart {
                 propellerForce.reOrigin(vehicleOn.orientation);
                 torque.y -= propellerForce.z * localOffset.x;
                 torque.z += propellerForce.y * localOffset.x;
-                if (!vehicleOn.groundDeviceCollective.isAnythingOnGround()) {
+                if (vehicleOn.groundDeviceCollective.isAnythingOnGround()) {
                     torque.x += propellerForce.z * localOffset.y;
                 }
             }

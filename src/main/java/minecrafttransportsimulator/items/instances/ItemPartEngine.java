@@ -1,8 +1,5 @@
 package minecrafttransportsimulator.items.instances;
 
-import java.util.List;
-import java.util.Map.Entry;
-
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.PartEngine;
 import minecrafttransportsimulator.items.components.AItemPart;
@@ -13,6 +10,9 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.systems.ConfigSystem;
+
+import java.util.List;
+import java.util.Map.Entry;
 
 public class ItemPartEngine extends AItemPart {
 
@@ -49,10 +49,10 @@ public class ItemPartEngine extends AItemPart {
         }
         tooltipLines.add(JSONConfigLanguage.ITEMINFO_ENGINE_FUELTYPE.value + definition.engine.fuelType);
         if (ConfigSystem.settings.fuel.fuels.containsKey(definition.engine.fuelType)) {
-            String line = JSONConfigLanguage.ITEMINFO_ENGINE_FLUIDS.value;
+            StringBuilder line = new StringBuilder(JSONConfigLanguage.ITEMINFO_ENGINE_FLUIDS.value);
             for (Entry<String, Double> fuelEntry : ConfigSystem.settings.fuel.fuels.get(definition.engine.fuelType).entrySet()) {
                 if (InterfaceManager.coreInterface.isFluidValid(fuelEntry.getKey())) {
-                    line += InterfaceManager.clientInterface.getFluidName(fuelEntry.getKey()) + "@" + fuelEntry.getValue() + ", ";
+                    line.append(InterfaceManager.clientInterface.getFluidName(fuelEntry.getKey())).append("@").append(fuelEntry.getValue()).append(", ");
                 }
             }
             tooltipLines.add(line.substring(0, line.length() - 2));

@@ -9,8 +9,9 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
-/**Base class for components that can go on poles.  Not actually a TE, just sits on one.
- * 
+/**
+ * Base class for components that can go on poles.  Not actually a TE, just sits on one.
+ *
  * @author don_bruce
  */
 public abstract class ATileEntityPole_Component extends AEntityD_Definable<JSONPoleComponent> {
@@ -50,7 +51,7 @@ public abstract class ATileEntityPole_Component extends AEntityD_Definable<JSONP
         if (variable.startsWith("neighbor_present_")) {
             Axis connectionAxis = Axis.valueOf(variable.substring("neighbor_present_".length()).toUpperCase());
             ATileEntityBase<?> otherTile = world.getTileEntity(connectionAxis.getOffsetPoint(position));
-            return otherTile != null && otherTile instanceof TileEntityPole ? 1 : 0;
+            return otherTile instanceof TileEntityPole ? 1 : 0;
         }
         if (variable.startsWith("matching_present_")) {
             Axis connectionAxis = Axis.valueOf(variable.substring("matching_present_".length()).toUpperCase());

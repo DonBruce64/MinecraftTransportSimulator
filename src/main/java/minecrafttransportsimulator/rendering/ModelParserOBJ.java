@@ -1,5 +1,8 @@
 package minecrafttransportsimulator.rendering;
 
+import minecrafttransportsimulator.baseclasses.ColorRGB;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -7,12 +10,10 @@ import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
-
-/**Class responsible for parsing OBJ models into arrays that can be fed to the GPU.
+/**
+ * Class responsible for parsing OBJ models into arrays that can be fed to the GPU.
  * Much more versatile than the Forge system.
- * 
+ *
  * @author don_bruce
  */
 public final class ModelParserOBJ extends AModelParser {
@@ -24,7 +25,7 @@ public final class ModelParserOBJ extends AModelParser {
 
     @Override
     protected List<RenderableObject> parseModelInternal(String modelLocation) {
-        List<RenderableObject> objectList = new ArrayList<RenderableObject>();
+        List<RenderableObject> objectList = new ArrayList<>();
         BufferedReader reader;
         try {
             reader = new BufferedReader(new InputStreamReader(ModelParserOBJ.class.getResourceAsStream(modelLocation)));
@@ -33,10 +34,10 @@ public final class ModelParserOBJ extends AModelParser {
         }
 
         String objectName = null;
-        final List<float[]> vertexList = new ArrayList<float[]>();
-        final List<float[]> normalList = new ArrayList<float[]>();
-        final List<float[]> textureList = new ArrayList<float[]>();
-        final List<String> faceList = new ArrayList<String>();
+        final List<float[]> vertexList = new ArrayList<>();
+        final List<float[]> normalList = new ArrayList<>();
+        final List<float[]> textureList = new ArrayList<>();
+        final List<String> faceList = new ArrayList<>();
 
         try {
             int lineNumber = 0;
@@ -63,10 +64,10 @@ public final class ModelParserOBJ extends AModelParser {
                 } else if (line.startsWith("v ")) {
                     try {
                         float[] coords = new float[3];
-                        line = line.trim().substring(2, line.trim().length()).trim();
-                        coords[0] = Float.valueOf(line.substring(0, line.indexOf(' ')));
-                        coords[1] = Float.valueOf(line.substring(line.indexOf(' ') + 1, line.lastIndexOf(' ')));
-                        coords[2] = Float.valueOf(line.substring(line.lastIndexOf(' ') + 1, line.length()));
+                        line = line.trim().substring(2).trim();
+                        coords[0] = Float.parseFloat(line.substring(0, line.indexOf(' ')));
+                        coords[1] = Float.parseFloat(line.substring(line.indexOf(' ') + 1, line.lastIndexOf(' ')));
+                        coords[2] = Float.parseFloat(line.substring(line.lastIndexOf(' ') + 1));
                         vertexList.add(coords);
                     } catch (Exception e) {
                         InterfaceManager.coreInterface.logError("Could not parse vertex info at line: " + lineNumber + " of: " + modelLocation + " due to bad formatting.  Vertex lines must consist of only three numbers (X, Y, Z).");
@@ -74,12 +75,12 @@ public final class ModelParserOBJ extends AModelParser {
                 } else if (line.startsWith("vt ")) {
                     try {
                         float[] coords = new float[2];
-                        line = line.trim().substring(3, line.trim().length()).trim();
+                        line = line.trim().substring(3).trim();
                         int space = line.indexOf(' ');
                         int vertexEnd = line.lastIndexOf(' ') == space ? line.length() : line.lastIndexOf(' ');
-                        coords[0] = Float.valueOf(line.substring(0, space));
+                        coords[0] = Float.parseFloat(line.substring(0, space));
                         //Need to invert the V of the UV to change from texture origin being top-left to OpenGL origin being bottom-left.
-                        coords[1] = 1 - Float.valueOf(line.substring(space + 1, vertexEnd));
+                        coords[1] = 1 - Float.parseFloat(line.substring(space + 1, vertexEnd));
                         textureList.add(coords);
                     } catch (Exception e) {
                         InterfaceManager.coreInterface.logError("Could not parse vertex texture info at line: " + lineNumber + " of: " + modelLocation + " due to bad formatting.  Vertex texture lines must consist of only two numbers (U, V).");
@@ -87,17 +88,17 @@ public final class ModelParserOBJ extends AModelParser {
                 } else if (line.startsWith("vn ")) {
                     try {
                         float[] coords = new float[3];
-                        line = line.trim().substring(2, line.trim().length()).trim();
-                        coords[0] = Float.valueOf(line.substring(0, line.indexOf(' ')));
-                        coords[1] = Float.valueOf(line.substring(line.indexOf(' ') + 1, line.lastIndexOf(' ')));
-                        coords[2] = Float.valueOf(line.substring(line.lastIndexOf(' ') + 1, line.length()));
+                        line = line.trim().substring(2).trim();
+                        coords[0] = Float.parseFloat(line.substring(0, line.indexOf(' ')));
+                        coords[1] = Float.parseFloat(line.substring(line.indexOf(' ') + 1, line.lastIndexOf(' ')));
+                        coords[2] = Float.parseFloat(line.substring(line.lastIndexOf(' ') + 1));
                         normalList.add(coords);
                     } catch (Exception e) {
                         InterfaceManager.coreInterface.logError("Could not parse normals info at line: " + lineNumber + " of: " + modelLocation + " due to bad formatting.  Normals lines must consist of only three numbers (Xn, Yn, Zn).");
                     }
                 } else if (line.startsWith("f ")) {
                     try {
-                        faceList.add(line.trim().substring(2, line.trim().length()));
+                        faceList.add(line.trim().substring(2));
                     } catch (Exception e) {
                         InterfaceManager.coreInterface.logError("Could not parse face info at line: " + lineNumber + " of: " + modelLocation + " due to bad formatting.  Face lines must consist of sets of three numbers in the format (V1/T1/N1, V2/T2/N2, ...).");
                     }
@@ -121,9 +122,9 @@ public final class ModelParserOBJ extends AModelParser {
         }
 
         try {
-            List<Integer[]> vertexDataSets = new ArrayList<Integer[]>();
+            List<Integer[]> vertexDataSets = new ArrayList<>();
             for (String faceString : faceList) {
-                List<Integer[]> faceVertexData = new ArrayList<Integer[]>();
+                List<Integer[]> faceVertexData = new ArrayList<>();
                 while (!faceString.isEmpty()) {
                     //Get the face string in format X/Y/Z.  Use the space as a separator between vertices making up the face.
                     int defEnd = faceString.indexOf(' ');
@@ -144,9 +145,9 @@ public final class ModelParserOBJ extends AModelParser {
                     //Parse all these out and store them in the array.
                     int firstSlash = faceDef.indexOf('/');
                     int secondSlash = faceDef.lastIndexOf('/');
-                    int vertexNumber = Integer.valueOf(faceDef.substring(0, firstSlash)) - 1;
-                    int textureNumber = Integer.valueOf(faceDef.substring(firstSlash + 1, secondSlash)) - 1;
-                    int normalNumber = Integer.valueOf(faceDef.substring(secondSlash + 1)) - 1;
+                    int vertexNumber = Integer.parseInt(faceDef.substring(0, firstSlash)) - 1;
+                    int textureNumber = Integer.parseInt(faceDef.substring(firstSlash + 1, secondSlash)) - 1;
+                    int normalNumber = Integer.parseInt(faceDef.substring(secondSlash + 1)) - 1;
 
                     //If we have three or more points in faceValues, it means we need to make a triangle out of this shape.
                     //Add the first point, the most recent point, and this point to make a triangle.
@@ -155,15 +156,14 @@ public final class ModelParserOBJ extends AModelParser {
                         faceVertexData.add(faceVertexData.get(0));
                         faceVertexData.add(faceVertexData.get(faceVertexData.size() - 2));
                     }
-                    faceVertexData.add(new Integer[] { vertexNumber, textureNumber, normalNumber });
+                    faceVertexData.add(new Integer[]{vertexNumber, textureNumber, normalNumber});
                 }
                 vertexDataSets.addAll(faceVertexData);
             }
 
             //Compile buffer.
             FloatBuffer compiledBuffer = FloatBuffer.allocate(vertexDataSets.size() * 8);
-            for (int i = 0; i < vertexDataSets.size(); ++i) {
-                Integer[] vertexData = vertexDataSets.get(i);
+            for (Integer[] vertexData : vertexDataSets) {
                 compiledBuffer.put(normalList.get(vertexData[2]));
                 compiledBuffer.put(textureList.get(vertexData[1]));
                 compiledBuffer.put(vertexList.get(vertexData[0]));

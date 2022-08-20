@@ -1,16 +1,17 @@
 package minecrafttransportsimulator.packets.instances;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
-/**Packet sent to entities to update their their text lines.  This is sent from the
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Packet sent to entities to update their their text lines.  This is sent from the
  * text GUI to servers to update the text, and then sent back to all clients for syncing.
- * 
+ *
  * @author don_bruce
  */
 public class PacketEntityTextChange extends APacketEntity<AEntityD_Definable<?>> {
@@ -24,7 +25,7 @@ public class PacketEntityTextChange extends APacketEntity<AEntityD_Definable<?>>
     public PacketEntityTextChange(ByteBuf buf) {
         super(buf);
         byte textLineCount = buf.readByte();
-        this.textLines = new ArrayList<String>();
+        this.textLines = new ArrayList<>();
         for (byte i = 0; i < textLineCount; ++i) {
             textLines.add(readStringFromBuffer(buf));
         }

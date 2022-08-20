@@ -8,10 +8,11 @@ import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPlayerItemTransfer;
 
-/**A GUI that is used to interface with inventory containers.   Displays the player's items on the bottom,
+/**
+ * A GUI that is used to interface with inventory containers.   Displays the player's items on the bottom,
  * and the items in the container in the top.  Works a bit differently than the MC GUIs, as it
  * doesn't support item dragging or movement.  Just storage to the first available slot.
- * 
+ *
  * @author don_bruce
  */
 public class GUIInventoryContainer extends AGUIInventory {

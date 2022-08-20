@@ -1,10 +1,5 @@
 package mcinterface1122;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.UUID;
-
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -33,17 +28,21 @@ import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
 @EventBusSubscriber
 public class WrapperEntity implements IWrapperEntity {
-    private static final Map<Entity, WrapperEntity> entityWrappers = new HashMap<Entity, WrapperEntity>();
+    private static final Map<Entity, WrapperEntity> entityWrappers = new HashMap<>();
 
     protected final Entity entity;
 
     /**
-     *  Returns a wrapper instance for the passed-in entity instance.
-     *  Null may be passed-in safely to ease function-forwarding.
-     *  Wrapper is cached to avoid re-creating the wrapper each time it is requested.
-     *  If the entity is a player, then a player wrapper is returned.
+     * Returns a wrapper instance for the passed-in entity instance.
+     * Null may be passed-in safely to ease function-forwarding.
+     * Wrapper is cached to avoid re-creating the wrapper each time it is requested.
+     * If the entity is a player, then a player wrapper is returned.
      */
     public static WrapperEntity getWrapperFor(Entity entity) {
         if (entity instanceof EntityPlayer) {
@@ -255,7 +254,7 @@ public class WrapperEntity implements IWrapperEntity {
     @Override
     public void setBodyYaw(double yaw) {
         if (entity instanceof EntityLivingBase) {
-            ((EntityLivingBase) entity).setRenderYawOffset((float) -yaw);
+            entity.setRenderYawOffset((float) -yaw);
         }
     }
 
@@ -334,7 +333,7 @@ public class WrapperEntity implements IWrapperEntity {
             newSource.setDamageBypassesArmor();
         }
         if (damage.ignoreCooldown && entity instanceof EntityLivingBase) {
-            ((EntityLivingBase) entity).hurtResistantTime = 0;
+            entity.hurtResistantTime = 0;
         }
         if (ConfigSystem.settings.general.creativeDamage.value) {
             newSource.setDamageAllowedInCreativeMode();
@@ -395,11 +394,6 @@ public class WrapperEntity implements IWrapperEntity {
      */
     @SubscribeEvent
     public static void on(WorldEvent.Unload event) {
-        Iterator<Entity> iterator = entityWrappers.keySet().iterator();
-        while (iterator.hasNext()) {
-            if (event.getWorld() == iterator.next().world) {
-                iterator.remove();
-            }
-        }
+        entityWrappers.keySet().removeIf(entity1 -> event.getWorld() == entity1.world);
     }
 }

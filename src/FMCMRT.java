@@ -20,7 +20,7 @@ public class FMCMRT{
 	private static final Map<String, String> mappings = genMappings();
 	
 	private static Map<String, String> genMappings(){
-		Map<String, String> mappings = new HashMap<String, String>();
+		Map<String, String> mappings = new HashMap<>();
 		mappings.put("func_78790_a", "addBox");
 		mappings.put("func_78793_a", "setRotationPoint");
 		mappings.put("field_78795_f", "rotateAngleX");

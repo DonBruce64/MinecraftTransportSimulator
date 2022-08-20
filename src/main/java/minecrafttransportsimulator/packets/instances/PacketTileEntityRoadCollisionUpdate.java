@@ -1,18 +1,19 @@
 package minecrafttransportsimulator.packets.instances;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
-/**Packet sent to roads when their collision data changes.  This can either be the blocks that make up the
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Packet sent to roads when their collision data changes.  This can either be the blocks that make up the
  * road's collision, blocks blocking the collision, or the active state in general.  This is sent from servers
  * to all clients when collision checks are requested for roads.
- * 
+ *
  * @author don_bruce
  */
 public class PacketTileEntityRoadCollisionUpdate extends APacketEntity<TileEntityRoad> {
@@ -27,13 +28,13 @@ public class PacketTileEntityRoadCollisionUpdate extends APacketEntity<TileEntit
 
     public PacketTileEntityRoadCollisionUpdate(ByteBuf buf) {
         super(buf);
-        this.collisionBlockOffsets = new ArrayList<Point3D>();
+        this.collisionBlockOffsets = new ArrayList<>();
         int collisionBlockOffsetCount = buf.readInt();
         for (int i = 0; i < collisionBlockOffsetCount; ++i) {
             collisionBlockOffsets.add(readPoint3dCompactFromBuffer(buf));
         }
 
-        this.collidingBlockOffsets = new ArrayList<Point3D>();
+        this.collidingBlockOffsets = new ArrayList<>();
         int collidingBlockOffsetCount = buf.readInt();
         for (int i = 0; i < collidingBlockOffsetCount; ++i) {
             collidingBlockOffsets.add(readPoint3dCompactFromBuffer(buf));

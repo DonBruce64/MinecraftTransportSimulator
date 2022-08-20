@@ -1,12 +1,5 @@
 package minecrafttransportsimulator.packloading;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Set;
-
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
@@ -16,51 +9,24 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad.
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartEngine;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent.PoleComponentType;
-import minecrafttransportsimulator.jsondefs.AJSONInteractableEntity;
-import minecrafttransportsimulator.jsondefs.AJSONItem;
-import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
-import minecrafttransportsimulator.jsondefs.AJSONPartProvider;
-import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
-import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
+import minecrafttransportsimulator.jsondefs.*;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition.AnimationComponentType;
-import minecrafttransportsimulator.jsondefs.JSONBullet;
-import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
-import minecrafttransportsimulator.jsondefs.JSONCollisionGroup;
-import minecrafttransportsimulator.jsondefs.JSONConnection;
-import minecrafttransportsimulator.jsondefs.JSONConnectionGroup;
-import minecrafttransportsimulator.jsondefs.JSONCraftingBench;
-import minecrafttransportsimulator.jsondefs.JSONDecor;
 import minecrafttransportsimulator.jsondefs.JSONDecor.DecorComponentType;
-import minecrafttransportsimulator.jsondefs.JSONInstrument;
-import minecrafttransportsimulator.jsondefs.JSONInstrumentDefinition;
-import minecrafttransportsimulator.jsondefs.JSONItem;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONItem.JSONBooklet.BookletPage;
-import minecrafttransportsimulator.jsondefs.JSONLight;
 import minecrafttransportsimulator.jsondefs.JSONLight.JSONLightBlendableComponent;
-import minecrafttransportsimulator.jsondefs.JSONMuzzle;
-import minecrafttransportsimulator.jsondefs.JSONMuzzleGroup;
-import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPart.EffectorComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPart.FurnaceComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
-import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
-import minecrafttransportsimulator.jsondefs.JSONParticle;
 import minecrafttransportsimulator.jsondefs.JSONParticle.ParticleType;
-import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
-import minecrafttransportsimulator.jsondefs.JSONRendering;
 import minecrafttransportsimulator.jsondefs.JSONRendering.ModelType;
-import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
-import minecrafttransportsimulator.jsondefs.JSONSkin;
-import minecrafttransportsimulator.jsondefs.JSONSound;
-import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
-import minecrafttransportsimulator.jsondefs.JSONText;
-import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.AModelParser;
 import minecrafttransportsimulator.rendering.RenderableObject;
 import minecrafttransportsimulator.rendering.TreadRoller;
 import minecrafttransportsimulator.systems.ConfigSystem;
+
+import java.util.*;
 
 /**
  * Class responsible for applying legacy compat code to JSONs.  All legacy compat code should
@@ -147,7 +113,7 @@ public final class LegacyCompatSystem {
                     if (partDefType.startsWith("engine")) {
                         //Link all slots with wheels, or generic, to this engine.
                         if (partDef.linkedParts == null) {
-                            partDef.linkedParts = new ArrayList<Integer>();
+                            partDef.linkedParts = new ArrayList<>();
                         }
                         for (JSONPartDefinition partDef2 : definition.parts) {
                             if ((definition.motorized.isFrontWheelDrive && partDef2.pos.z > 0) || definition.motorized.isRearWheelDrive && partDef2.pos.z <= 0) {
@@ -213,7 +179,7 @@ public final class LegacyCompatSystem {
 
         //Check for old hitches and hookups.
         if (definition.motorized.hitchPos != null) {
-            definition.connections = new ArrayList<JSONConnection>();
+            definition.connections = new ArrayList<>();
             for (String hitchName : definition.motorized.hitchTypes) {
                 JSONConnection connection = new JSONConnection();
                 connection.hookup = false;
@@ -229,7 +195,7 @@ public final class LegacyCompatSystem {
         }
         if (definition.motorized.hookupPos != null) {
             if (definition.connections == null) {
-                definition.connections = new ArrayList<JSONConnection>();
+                definition.connections = new ArrayList<>();
             }
             JSONConnection connection = new JSONConnection();
             connection.hookup = true;
@@ -254,7 +220,7 @@ public final class LegacyCompatSystem {
         //Check for old flaps.
         if (definition.motorized.hasFlaps) {
             definition.motorized.flapSpeed = 0.1F;
-            definition.motorized.flapNotches = new ArrayList<Float>();
+            definition.motorized.flapNotches = new ArrayList<>();
             for (int i = 0; i <= EntityVehicleF_Physics.MAX_FLAP_ANGLE_REFERENCE / 10 / 5; ++i) {
                 definition.motorized.flapNotches.add((float) (i * 5));
             }
@@ -284,7 +250,7 @@ public final class LegacyCompatSystem {
 
         //Add hookup variables if we are a trailer and don't have them.
         if (definition.motorized.isTrailer && definition.motorized.hookupVariables == null) {
-            definition.motorized.hookupVariables = new ArrayList<String>();
+            definition.motorized.hookupVariables = new ArrayList<>();
             definition.motorized.hookupVariables.add("electric_power");
             definition.motorized.hookupVariables.add("engine_gear_1");
             definition.motorized.hookupVariables.add("engines_on");
@@ -334,12 +300,12 @@ public final class LegacyCompatSystem {
 
             //Do compats for sounds.
             if (definition.rendering.sounds == null) {
-                definition.rendering.sounds = new ArrayList<JSONSound>();
+                definition.rendering.sounds = new ArrayList<>();
                 if (definition.motorized.hornSound != null) {
                     JSONSound hornSound = new JSONSound();
                     hornSound.name = definition.motorized.hornSound;
                     hornSound.looping = true;
-                    hornSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
+                    hornSound.activeAnimations = new ArrayList<>();
                     JSONAnimationDefinition hornDef = new JSONAnimationDefinition();
                     hornDef.animationType = AnimationComponentType.VISIBILITY;
                     hornDef.variable = "horn";
@@ -353,7 +319,7 @@ public final class LegacyCompatSystem {
                     JSONSound sirenSound = new JSONSound();
                     sirenSound.name = definition.motorized.sirenSound;
                     sirenSound.looping = true;
-                    sirenSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
+                    sirenSound.activeAnimations = new ArrayList<>();
                     JSONAnimationDefinition sirenDef = new JSONAnimationDefinition();
                     sirenDef.animationType = AnimationComponentType.VISIBILITY;
                     sirenDef.variable = "siren";
@@ -362,7 +328,7 @@ public final class LegacyCompatSystem {
                     sirenSound.activeAnimations.add(sirenDef);
                     definition.rendering.sounds.add(sirenSound);
                     if (definition.rendering.customVariables == null) {
-                        definition.rendering.customVariables = new ArrayList<String>();
+                        definition.rendering.customVariables = new ArrayList<>();
                     }
                     definition.rendering.customVariables.add("siren");
                     definition.motorized.sirenSound = null;
@@ -370,7 +336,7 @@ public final class LegacyCompatSystem {
                 if (definition.motorized.isBigTruck) {
                     JSONSound airbrakeSound = new JSONSound();
                     airbrakeSound.name = InterfaceManager.coreModID + ":air_brake_activating";
-                    airbrakeSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
+                    airbrakeSound.activeAnimations = new ArrayList<>();
                     JSONAnimationDefinition airbrakeDef = new JSONAnimationDefinition();
                     airbrakeDef.animationType = AnimationComponentType.VISIBILITY;
                     airbrakeDef.variable = "p_brake";
@@ -382,7 +348,7 @@ public final class LegacyCompatSystem {
                     JSONSound backupBeeperSound = new JSONSound();
                     backupBeeperSound.name = InterfaceManager.coreModID + ":backup_beeper";
                     backupBeeperSound.looping = true;
-                    backupBeeperSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
+                    backupBeeperSound.activeAnimations = new ArrayList<>();
                     JSONAnimationDefinition backupBeeperDef = new JSONAnimationDefinition();
                     backupBeeperDef.animationType = AnimationComponentType.VISIBILITY;
                     backupBeeperDef.variable = "engine_gear_1";
@@ -397,7 +363,7 @@ public final class LegacyCompatSystem {
 
             //Do compats for particles.
             if (definition.rendering.particles == null) {
-                definition.rendering.particles = new ArrayList<JSONParticle>();
+                definition.rendering.particles = new ArrayList<>();
             }
             int engineNumber = 0;
             for (JSONPartDefinition partDef : definition.parts) {
@@ -407,7 +373,7 @@ public final class LegacyCompatSystem {
                     for (JSONParticle exhaustDef : partDef.particleObjects) {
                         ++pistonNumber;
                         exhaustDef.type = ParticleType.SMOKE;
-                        exhaustDef.activeAnimations = new ArrayList<JSONAnimationDefinition>();
+                        exhaustDef.activeAnimations = new ArrayList<>();
                         exhaustDef.initialVelocity = exhaustDef.velocityVector;
                         exhaustDef.velocityVector = null;
                         JSONAnimationDefinition activeAnimation = new JSONAnimationDefinition();
@@ -425,7 +391,7 @@ public final class LegacyCompatSystem {
                         backfireDef.quantity = 5;
                         backfireDef.pos = exhaustDef.pos;
                         backfireDef.initialVelocity = exhaustDef.initialVelocity;
-                        backfireDef.activeAnimations = new ArrayList<JSONAnimationDefinition>();
+                        backfireDef.activeAnimations = new ArrayList<>();
                         activeAnimation = new JSONAnimationDefinition();
                         activeAnimation.animationType = AnimationComponentType.VISIBILITY;
                         activeAnimation.variable = "engine_backfired_" + engineNumber;
@@ -450,7 +416,7 @@ public final class LegacyCompatSystem {
         //Move general things to generic section.
         if (definition.general.type != null) {
             if (definition.generic == null) {
-                definition.generic = definition.new JSONPartGeneric();
+                definition.generic = new JSONPart.JSONPartGeneric();
             }
             definition.generic.type = definition.general.type;
             definition.general.type = null;
@@ -462,9 +428,9 @@ public final class LegacyCompatSystem {
 
         //If we are a part without a definition, add one so we don't crash on other systems.
         if (definition.definitions == null) {
-            definition.definitions = new ArrayList<JSONSubDefinition>();
+            definition.definitions = new ArrayList<>();
             JSONSubDefinition subDefinition = new JSONSubDefinition();
-            subDefinition.extraMaterials = new ArrayList<String>();
+            subDefinition.extraMaterials = new ArrayList<>();
             subDefinition.name = definition.general.name;
             subDefinition.subName = "";
             definition.definitions.add(subDefinition);
@@ -480,7 +446,7 @@ public final class LegacyCompatSystem {
         switch (definition.generic.type) {
             case ("wheel"): {
                 definition.generic.type = "ground_" + definition.generic.type;
-                definition.ground = definition.new JSONPartGroundDevice();
+                definition.ground = new JSONPart.JSONPartGroundDevice();
                 definition.ground.isWheel = true;
                 definition.ground.width = definition.wheel.diameter / 2F;
                 definition.ground.height = definition.wheel.diameter;
@@ -491,7 +457,7 @@ public final class LegacyCompatSystem {
             }
             case ("skid"): {
                 definition.generic.type = "ground_" + definition.generic.type;
-                definition.ground = definition.new JSONPartGroundDevice();
+                definition.ground = new JSONPart.JSONPartGroundDevice();
                 definition.ground.width = definition.skid.width;
                 definition.ground.height = definition.skid.width;
                 definition.ground.lateralFriction = definition.skid.lateralFriction;
@@ -500,7 +466,7 @@ public final class LegacyCompatSystem {
             }
             case ("pontoon"): {
                 definition.generic.type = "ground_" + definition.generic.type;
-                definition.ground = definition.new JSONPartGroundDevice();
+                definition.ground = new JSONPart.JSONPartGroundDevice();
                 definition.ground.canFloat = true;
                 definition.ground.width = definition.pontoon.width;
                 definition.ground.height = definition.pontoon.width;
@@ -511,7 +477,7 @@ public final class LegacyCompatSystem {
             }
             case ("tread"): {
                 definition.generic.type = "ground_" + definition.generic.type;
-                definition.ground = definition.new JSONPartGroundDevice();
+                definition.ground = new JSONPart.JSONPartGroundDevice();
                 definition.ground.isTread = true;
                 definition.ground.width = definition.tread.width;
                 definition.ground.height = definition.tread.width;
@@ -524,7 +490,7 @@ public final class LegacyCompatSystem {
             }
             case ("crate"): {
                 definition.generic.type = "interactable_crate";
-                definition.interactable = definition.new JSONPartInteractable();
+                definition.interactable = new JSONPart.JSONPartInteractable();
                 definition.interactable.interactionType = InteractableComponentType.CRATE;
                 definition.interactable.inventoryUnits = 1;
                 definition.interactable.feedsVehicles = true;
@@ -532,50 +498,50 @@ public final class LegacyCompatSystem {
             }
             case ("barrel"): {
                 definition.generic.type = "interactable_barrel";
-                definition.interactable = definition.new JSONPartInteractable();
+                definition.interactable = new JSONPart.JSONPartInteractable();
                 definition.interactable.interactionType = InteractableComponentType.BARREL;
                 definition.interactable.inventoryUnits = 1;
                 break;
             }
             case ("crafting_table"): {
                 definition.generic.type = "interactable_crafting_table";
-                definition.interactable = definition.new JSONPartInteractable();
+                definition.interactable = new JSONPart.JSONPartInteractable();
                 definition.interactable.interactionType = InteractableComponentType.CRAFTING_TABLE;
                 break;
             }
             case ("furnace"): {
                 definition.generic.type = "interactable_furnace";
-                definition.interactable = definition.new JSONPartInteractable();
+                definition.interactable = new JSONPart.JSONPartInteractable();
                 definition.interactable.interactionType = InteractableComponentType.FURNACE;
                 break;
             }
             case ("brewing_stand"): {
                 definition.generic.type = "interactable_brewing_stand";
-                definition.interactable = definition.new JSONPartInteractable();
+                definition.interactable = new JSONPart.JSONPartInteractable();
                 definition.interactable.interactionType = InteractableComponentType.BREWING_STAND;
                 break;
             }
             case ("fertilizer"): {
                 definition.generic.type = "effector_fertilizer";
-                definition.effector = definition.new JSONPartEffector();
+                definition.effector = new JSONPart.JSONPartEffector();
                 definition.effector.type = EffectorComponentType.FERTILIZER;
                 break;
             }
             case ("harvester"): {
                 definition.generic.type = "effector_harvester";
-                definition.effector = definition.new JSONPartEffector();
+                definition.effector = new JSONPart.JSONPartEffector();
                 definition.effector.type = EffectorComponentType.HARVESTER;
                 break;
             }
             case ("planter"): {
                 definition.generic.type = "effector_planter";
-                definition.effector = definition.new JSONPartEffector();
+                definition.effector = new JSONPart.JSONPartEffector();
                 definition.effector.type = EffectorComponentType.PLANTER;
                 break;
             }
             case ("plow"): {
                 definition.generic.type = "effector_plow";
-                definition.effector = definition.new JSONPartEffector();
+                definition.effector = new JSONPart.JSONPartEffector();
                 definition.effector.type = EffectorComponentType.PLOW;
                 break;
             }
@@ -688,7 +654,7 @@ public final class LegacyCompatSystem {
             }
             //Set friction modifiers.
             if (definition.ground.frictionModifiers == null) {
-                definition.ground.frictionModifiers = new LinkedHashMap<BlockMaterial, Float>();
+                definition.ground.frictionModifiers = new LinkedHashMap<>();
                 definition.ground.frictionModifiers.put(BlockMaterial.SNOW, -0.2F);
                 definition.ground.frictionModifiers.put(BlockMaterial.ICE, -0.2F);
                 if (!definition.ground.isTread) {
@@ -701,7 +667,7 @@ public final class LegacyCompatSystem {
 
         //If the part is a seat, and doesn't have a seat sub-section, add one.
         if (definition.generic.type.startsWith("seat") && definition.seat == null) {
-            definition.seat = definition.new JSONPartSeat();
+            definition.seat = new JSONPart.JSONPartSeat();
         }
 
         //If the part is a seat, and has player scaling, convert it.
@@ -729,9 +695,9 @@ public final class LegacyCompatSystem {
                 definition.gun.pitchSpeed = 50 / definition.gun.diameter + 1 / definition.gun.length;
             }
             if (definition.gun.muzzleGroups == null) {
-                definition.gun.muzzleGroups = new ArrayList<JSONMuzzleGroup>();
+                definition.gun.muzzleGroups = new ArrayList<>();
                 JSONMuzzleGroup muzzleGroup = new JSONMuzzleGroup();
-                muzzleGroup.muzzles = new ArrayList<JSONMuzzle>();
+                muzzleGroup.muzzles = new ArrayList<>();
                 JSONMuzzle muzzle = new JSONMuzzle();
                 muzzle.pos = new Point3D(0, 0, definition.gun.length);
                 muzzleGroup.muzzles.add(muzzle);
@@ -775,31 +741,27 @@ public final class LegacyCompatSystem {
 
         //Do compats for wheel rotation and mirroring.
         if (definition.ground != null && definition.ground.isWheel) {
+            if (definition.generic.movementAnimations != null) {
+                ///Check for old isMirroed LCed animations.  These will be wrong.
+                boolean oldAnimationsDetected = false;
+                for (JSONAnimationDefinition animation : definition.generic.movementAnimations) {
+                    if (animation.variable.equals("part_ismirrored")) {
+                        oldAnimationsDetected = true;
+                        break;
+                    }
+                }
+                if (oldAnimationsDetected) {
+                    definition.generic.movementAnimations = null;
+                }
+            }
+
             if (definition.generic.movementAnimations == null) {
-                definition.generic.movementAnimations = new ArrayList<JSONAnimationDefinition>();
+                definition.generic.movementAnimations = new ArrayList<>();
 
                 JSONAnimationDefinition animation = new JSONAnimationDefinition();
-                animation.centerPoint = new Point3D(0, 0, 0);
-                animation.axis = new Point3D(0, 180, 0);
-                animation.animationType = AnimationComponentType.ROTATION;
-                animation.variable = "part_ismirrored";
-                definition.generic.movementAnimations.add(animation);
-
                 animation = new JSONAnimationDefinition();
                 animation.centerPoint = new Point3D(0, 0, 0);
                 animation.axis = new Point3D(1, 0, 0);
-                animation.animationType = AnimationComponentType.ROTATION;
-                animation.variable = "ground_rotation";
-                definition.generic.movementAnimations.add(animation);
-
-                animation = new JSONAnimationDefinition();
-                animation.animationType = AnimationComponentType.INHIBITOR;
-                animation.variable = "part_ismirrored";
-                definition.generic.movementAnimations.add(animation);
-
-                animation = new JSONAnimationDefinition();
-                animation.centerPoint = new Point3D(0, 0, 0);
-                animation.axis = new Point3D(-2, 0, 0);
                 animation.animationType = AnimationComponentType.ROTATION;
                 animation.variable = "ground_rotation";
                 definition.generic.movementAnimations.add(animation);
@@ -809,7 +771,7 @@ public final class LegacyCompatSystem {
         //Do compats for propeller rotation.
         if (definition.propeller != null) {
             if (definition.generic.movementAnimations == null) {
-                definition.generic.movementAnimations = new ArrayList<JSONAnimationDefinition>();
+                definition.generic.movementAnimations = new ArrayList<>();
 
                 JSONAnimationDefinition animation = new JSONAnimationDefinition();
                 animation.centerPoint = new Point3D(0, 0, 0);
@@ -827,13 +789,13 @@ public final class LegacyCompatSystem {
                     definition.rendering = new JSONRendering();
                 }
                 if (definition.rendering.sounds == null) {
-                    definition.rendering.sounds = new ArrayList<JSONSound>();
+                    definition.rendering.sounds = new ArrayList<>();
                 }
 
                 //Starting sound plays when engine goes from stopped to running.
                 JSONSound startingSound = new JSONSound();
                 startingSound.name = definition.packID + ":" + definition.systemName + "_starting";
-                startingSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
+                startingSound.activeAnimations = new ArrayList<>();
                 JSONAnimationDefinition startingActiveDef = new JSONAnimationDefinition();
                 startingActiveDef.animationType = AnimationComponentType.VISIBILITY;
                 startingActiveDef.variable = "engine_running";
@@ -845,7 +807,7 @@ public final class LegacyCompatSystem {
                 //Stopping sound plays when engine goes from running to stopped.
                 JSONSound stoppingSound = new JSONSound();
                 stoppingSound.name = definition.packID + ":" + definition.systemName + "_stopping";
-                stoppingSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
+                stoppingSound.activeAnimations = new ArrayList<>();
                 JSONAnimationDefinition stoppingActiveDef = new JSONAnimationDefinition();
                 stoppingActiveDef.animationType = AnimationComponentType.VISIBILITY;
                 stoppingActiveDef.variable = "engine_running";
@@ -858,7 +820,7 @@ public final class LegacyCompatSystem {
                 JSONSound sputteringSound = new JSONSound();
                 sputteringSound.name = definition.packID + ":" + definition.systemName + "_sputter";
                 sputteringSound.forceSound = true;
-                sputteringSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
+                sputteringSound.activeAnimations = new ArrayList<>();
                 JSONAnimationDefinition sputteringActiveDef = new JSONAnimationDefinition();
                 sputteringActiveDef.animationType = AnimationComponentType.VISIBILITY;
                 sputteringActiveDef.variable = "engine_backfired";
@@ -871,7 +833,7 @@ public final class LegacyCompatSystem {
                 JSONSound grindingSound = new JSONSound();
                 grindingSound.name = InterfaceManager.coreModID + ":engine_shifting_grinding";
                 grindingSound.forceSound = true;
-                grindingSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
+                grindingSound.activeAnimations = new ArrayList<>();
                 JSONAnimationDefinition grindingActiveDef = new JSONAnimationDefinition();
                 grindingActiveDef.animationType = AnimationComponentType.VISIBILITY;
                 grindingActiveDef.variable = "engine_badshift";
@@ -884,7 +846,7 @@ public final class LegacyCompatSystem {
                 JSONSound crankingSound = new JSONSound();
                 crankingSound.name = definition.packID + ":" + definition.systemName + "_cranking";
                 crankingSound.looping = true;
-                crankingSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
+                crankingSound.activeAnimations = new ArrayList<>();
                 JSONAnimationDefinition crankingActiveDef = new JSONAnimationDefinition();
                 crankingActiveDef.animationType = AnimationComponentType.VISIBILITY;
                 crankingActiveDef.variable = "engine_starter";
@@ -892,7 +854,7 @@ public final class LegacyCompatSystem {
                 crankingActiveDef.clampMax = 1.0F;
                 crankingSound.activeAnimations.add(crankingActiveDef);
 
-                crankingSound.pitchAnimations = new ArrayList<JSONAnimationDefinition>();
+                crankingSound.pitchAnimations = new ArrayList<>();
                 JSONAnimationDefinition crankingPitchDef = new JSONAnimationDefinition();
                 if (!definition.engine.isCrankingNotPitched) {
                     crankingPitchDef.animationType = AnimationComponentType.TRANSLATION;
@@ -916,9 +878,9 @@ public final class LegacyCompatSystem {
                         JSONSound runningSound = new JSONSound();
                         runningSound.name = customSound.soundName;
                         runningSound.looping = true;
-                        runningSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
-                        runningSound.volumeAnimations = new ArrayList<JSONAnimationDefinition>();
-                        runningSound.pitchAnimations = new ArrayList<JSONAnimationDefinition>();
+                        runningSound.activeAnimations = new ArrayList<>();
+                        runningSound.volumeAnimations = new ArrayList<>();
+                        runningSound.pitchAnimations = new ArrayList<>();
 
                         //Add default sound on/off variable.
                         JSONAnimationDefinition runningStartDef = new JSONAnimationDefinition();
@@ -968,7 +930,7 @@ public final class LegacyCompatSystem {
                     JSONSound runningSound = new JSONSound();
                     runningSound.name = definition.packID + ":" + definition.systemName + "_running";
                     runningSound.looping = true;
-                    runningSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
+                    runningSound.activeAnimations = new ArrayList<>();
                     JSONAnimationDefinition runningVolumeDef = new JSONAnimationDefinition();
                     runningVolumeDef.animationType = AnimationComponentType.VISIBILITY;
                     runningVolumeDef.variable = "engine_powered";
@@ -976,7 +938,7 @@ public final class LegacyCompatSystem {
                     runningVolumeDef.clampMax = 1.0F;
                     runningSound.activeAnimations.add(runningVolumeDef);
 
-                    runningSound.pitchAnimations = new ArrayList<JSONAnimationDefinition>();
+                    runningSound.pitchAnimations = new ArrayList<>();
                     JSONAnimationDefinition runningPitchDef = new JSONAnimationDefinition();
                     runningPitchDef.animationType = AnimationComponentType.TRANSLATION;
                     runningPitchDef.variable = "engine_rpm";
@@ -992,14 +954,14 @@ public final class LegacyCompatSystem {
                     definition.rendering = new JSONRendering();
                 }
                 if (definition.rendering.sounds == null) {
-                    definition.rendering.sounds = new ArrayList<JSONSound>();
+                    definition.rendering.sounds = new ArrayList<>();
                 }
 
                 JSONSound firingSound = new JSONSound();
                 firingSound.name = definition.packID + ":" + definition.systemName + "_firing";
                 firingSound.forceSound = true;
                 firingSound.canPlayOnPartialTicks = definition.gun.fireDelay < 2;
-                firingSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
+                firingSound.activeAnimations = new ArrayList<>();
                 JSONAnimationDefinition firingDef = new JSONAnimationDefinition();
                 firingDef.animationType = AnimationComponentType.VISIBILITY;
                 firingDef.variable = "gun_fired";
@@ -1010,7 +972,7 @@ public final class LegacyCompatSystem {
 
                 JSONSound reloadingSound = new JSONSound();
                 reloadingSound.name = definition.packID + ":" + definition.systemName + "_reloading";
-                reloadingSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
+                reloadingSound.activeAnimations = new ArrayList<>();
                 JSONAnimationDefinition reloadingDef = new JSONAnimationDefinition();
                 reloadingDef.animationType = AnimationComponentType.VISIBILITY;
                 reloadingDef.variable = "gun_reload";
@@ -1023,12 +985,12 @@ public final class LegacyCompatSystem {
                     definition.rendering = new JSONRendering();
                 }
                 if (definition.rendering.sounds == null) {
-                    definition.rendering.sounds = new ArrayList<JSONSound>();
+                    definition.rendering.sounds = new ArrayList<>();
                 }
 
                 JSONSound blowoutSound = new JSONSound();
                 blowoutSound.name = InterfaceManager.coreModID + ":wheel_blowout";
-                blowoutSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
+                blowoutSound.activeAnimations = new ArrayList<>();
                 JSONAnimationDefinition blowoutDef = new JSONAnimationDefinition();
                 blowoutDef.animationType = AnimationComponentType.VISIBILITY;
                 blowoutDef.variable = "ground_isflat";
@@ -1040,7 +1002,7 @@ public final class LegacyCompatSystem {
                 JSONSound strikingSound = new JSONSound();
                 strikingSound.name = InterfaceManager.coreModID + ":" + "wheel_striking";
                 strikingSound.forceSound = true;
-                strikingSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
+                strikingSound.activeAnimations = new ArrayList<>();
                 JSONAnimationDefinition strikingDef = new JSONAnimationDefinition();
                 strikingDef.animationType = AnimationComponentType.VISIBILITY;
                 strikingDef.variable = "ground_contacted";
@@ -1052,7 +1014,7 @@ public final class LegacyCompatSystem {
                 JSONSound skiddingSound = new JSONSound();
                 skiddingSound.name = InterfaceManager.coreModID + ":" + "wheel_skidding";
                 skiddingSound.looping = true;
-                skiddingSound.activeAnimations = new ArrayList<JSONAnimationDefinition>();
+                skiddingSound.activeAnimations = new ArrayList<>();
                 JSONAnimationDefinition skiddingDef = new JSONAnimationDefinition();
                 skiddingDef.animationType = AnimationComponentType.VISIBILITY;
                 skiddingDef.variable = "ground_slipping";
@@ -1065,14 +1027,14 @@ public final class LegacyCompatSystem {
 
         //Do compats for particles.
         if (definition.rendering != null && definition.rendering.particles == null) {
-            definition.rendering.particles = new ArrayList<JSONParticle>();
+            definition.rendering.particles = new ArrayList<>();
             if (definition.engine != null) {
                 //Small overheat.
                 JSONParticle particleDef = new JSONParticle();
                 particleDef.type = ParticleType.SMOKE;
                 particleDef.color = ColorRGB.BLACK;
                 particleDef.spawnEveryTick = true;
-                particleDef.activeAnimations = new ArrayList<JSONAnimationDefinition>();
+                particleDef.activeAnimations = new ArrayList<>();
                 JSONAnimationDefinition activeAnimation = new JSONAnimationDefinition();
                 activeAnimation.animationType = AnimationComponentType.VISIBILITY;
                 activeAnimation.variable = "engine_temp";
@@ -1088,7 +1050,7 @@ public final class LegacyCompatSystem {
                 particleDef.spawnEveryTick = true;
                 particleDef.quantity = 1;
                 particleDef.scale = 2.5F;
-                particleDef.activeAnimations = new ArrayList<JSONAnimationDefinition>();
+                particleDef.activeAnimations = new ArrayList<>();
                 activeAnimation = new JSONAnimationDefinition();
                 activeAnimation.animationType = AnimationComponentType.VISIBILITY;
                 activeAnimation.variable = "engine_temp";
@@ -1101,7 +1063,7 @@ public final class LegacyCompatSystem {
                 particleDef = new JSONParticle();
                 particleDef.type = ParticleType.DRIP;
                 particleDef.color = ColorRGB.BLACK;
-                particleDef.activeAnimations = new ArrayList<JSONAnimationDefinition>();
+                particleDef.activeAnimations = new ArrayList<>();
                 activeAnimation = new JSONAnimationDefinition();
                 activeAnimation.animationType = AnimationComponentType.VISIBILITY;
                 activeAnimation.variable = "engine_oilleak";
@@ -1120,7 +1082,7 @@ public final class LegacyCompatSystem {
                 particleDef = new JSONParticle();
                 particleDef.type = ParticleType.DRIP;
                 particleDef.color = ColorRGB.RED;
-                particleDef.activeAnimations = new ArrayList<JSONAnimationDefinition>();
+                particleDef.activeAnimations = new ArrayList<>();
                 activeAnimation = new JSONAnimationDefinition();
                 activeAnimation.animationType = AnimationComponentType.VISIBILITY;
                 activeAnimation.variable = "engine_fuelleak";
@@ -1142,7 +1104,7 @@ public final class LegacyCompatSystem {
                 particleDef.quantity = 4;
                 particleDef.initialVelocity = new Point3D(0, 0.15, 0);
 
-                particleDef.activeAnimations = new ArrayList<JSONAnimationDefinition>();
+                particleDef.activeAnimations = new ArrayList<>();
                 JSONAnimationDefinition activeAnimation = new JSONAnimationDefinition();
                 activeAnimation.animationType = AnimationComponentType.VISIBILITY;
                 activeAnimation.variable = "ground_contacted";
@@ -1150,7 +1112,7 @@ public final class LegacyCompatSystem {
                 activeAnimation.clampMax = 1.0F;
                 particleDef.activeAnimations.add(activeAnimation);
 
-                particleDef.spawningAnimations = new ArrayList<JSONAnimationDefinition>();
+                particleDef.spawningAnimations = new ArrayList<>();
                 JSONAnimationDefinition spawningAnimation = new JSONAnimationDefinition();
                 spawningAnimation.animationType = AnimationComponentType.ROTATION;
                 spawningAnimation.variable = "ground_rotation";
@@ -1169,7 +1131,7 @@ public final class LegacyCompatSystem {
                 particleDef.pos = new Point3D(0, -definition.ground.height / 2, 0);
                 particleDef.initialVelocity = new Point3D(0, 0.15, 0);
 
-                particleDef.activeAnimations = new ArrayList<JSONAnimationDefinition>();
+                particleDef.activeAnimations = new ArrayList<>();
                 activeAnimation = new JSONAnimationDefinition();
                 activeAnimation.animationType = AnimationComponentType.VISIBILITY;
                 activeAnimation.variable = "ground_slipping";
@@ -1177,7 +1139,7 @@ public final class LegacyCompatSystem {
                 activeAnimation.clampMax = 1.0F;
                 particleDef.activeAnimations.add(activeAnimation);
 
-                particleDef.spawningAnimations = new ArrayList<JSONAnimationDefinition>();
+                particleDef.spawningAnimations = new ArrayList<>();
                 spawningAnimation = new JSONAnimationDefinition();
                 spawningAnimation.animationType = AnimationComponentType.ROTATION;
                 spawningAnimation.variable = "ground_rotation";
@@ -1197,7 +1159,7 @@ public final class LegacyCompatSystem {
                 particleDef.pos = new Point3D(0, -definition.ground.height / 2, 0);
                 particleDef.initialVelocity = new Point3D(0, 1.5, -1.5);
 
-                particleDef.activeAnimations = new ArrayList<JSONAnimationDefinition>();
+                particleDef.activeAnimations = new ArrayList<>();
                 activeAnimation = new JSONAnimationDefinition();
                 activeAnimation.animationType = AnimationComponentType.VISIBILITY;
                 activeAnimation.variable = "ground_skidding";
@@ -1205,7 +1167,7 @@ public final class LegacyCompatSystem {
                 activeAnimation.clampMax = 1.0F;
                 particleDef.activeAnimations.add(activeAnimation);
 
-                particleDef.spawningAnimations = new ArrayList<JSONAnimationDefinition>();
+                particleDef.spawningAnimations = new ArrayList<>();
                 spawningAnimation = new JSONAnimationDefinition();
                 spawningAnimation.animationType = AnimationComponentType.ROTATION;
                 spawningAnimation.variable = "ground_rotation";
@@ -1225,7 +1187,7 @@ public final class LegacyCompatSystem {
                 particleDef.pos = new Point3D(0, -definition.ground.height / 2, 0);
                 particleDef.initialVelocity = new Point3D(0, 1.5, 0.0);
 
-                particleDef.activeAnimations = new ArrayList<JSONAnimationDefinition>();
+                particleDef.activeAnimations = new ArrayList<>();
                 activeAnimation = new JSONAnimationDefinition();
                 activeAnimation.animationType = AnimationComponentType.VISIBILITY;
                 activeAnimation.variable = "ground_slipping";
@@ -1233,7 +1195,7 @@ public final class LegacyCompatSystem {
                 activeAnimation.clampMax = 1.0F;
                 particleDef.activeAnimations.add(activeAnimation);
 
-                particleDef.spawningAnimations = new ArrayList<JSONAnimationDefinition>();
+                particleDef.spawningAnimations = new ArrayList<>();
                 spawningAnimation = new JSONAnimationDefinition();
                 spawningAnimation.animationType = AnimationComponentType.ROTATION;
                 spawningAnimation.variable = "ground_rotation";
@@ -1253,6 +1215,7 @@ public final class LegacyCompatSystem {
         for (JSONInstrument.JSONInstrumentComponent component : definition.components) {
             if (component.rotationVariable != null || component.translationVariable != null) {
                 oldDefinition = true;
+                break;
             }
         }
         //Convert any old component definitions to the new style.
@@ -1263,7 +1226,7 @@ public final class LegacyCompatSystem {
                 component.lightOverlay = false;
             }
             if (component.rotationVariable != null) {
-                component.animations = new ArrayList<JSONAnimationDefinition>();
+                component.animations = new ArrayList<>();
                 JSONAnimationDefinition animation = new JSONAnimationDefinition();
                 animation.animationType = AnimationComponentType.ROTATION;
                 animation.variable = component.rotationVariable;
@@ -1283,7 +1246,7 @@ public final class LegacyCompatSystem {
             }
             if (component.translationVariable != null) {
                 if (component.animations == null) {
-                    component.animations = new ArrayList<JSONAnimationDefinition>();
+                    component.animations = new ArrayList<>();
                 }
                 JSONAnimationDefinition animation = new JSONAnimationDefinition();
                 animation.animationType = AnimationComponentType.TRANSLATION;
@@ -1334,9 +1297,9 @@ public final class LegacyCompatSystem {
     private static void performPoleLegacyCompats(JSONPoleComponent definition) {
         //If we are a pole without a definition, add one so we don't crash on other systems.
         if (definition.definitions == null) {
-            definition.definitions = new ArrayList<JSONSubDefinition>();
+            definition.definitions = new ArrayList<>();
             JSONSubDefinition subDefinition = new JSONSubDefinition();
-            subDefinition.extraMaterials = new ArrayList<String>();
+            subDefinition.extraMaterials = new ArrayList<>();
             subDefinition.name = definition.general.name;
             subDefinition.subName = "";
             definition.definitions.add(subDefinition);
@@ -1344,7 +1307,7 @@ public final class LegacyCompatSystem {
 
         //If we are a sign using the old textlines, update them.
         if (definition.general.textLines != null) {
-            definition.general.textObjects = new ArrayList<JSONText>();
+            definition.general.textObjects = new ArrayList<>();
             for (minecrafttransportsimulator.jsondefs.AJSONItem.General.TextLine line : definition.general.textLines) {
                 JSONText object = new JSONText();
                 object.color = line.color;
@@ -1377,7 +1340,7 @@ public final class LegacyCompatSystem {
 
         //Move pole general properties to new location.
         if (definition.general.type != null) {
-            definition.pole = definition.new JSONPoleGeneric();
+            definition.pole = new JSONPoleComponent.JSONPoleGeneric();
             definition.pole.type = PoleComponentType.valueOf(definition.general.type.toUpperCase());
             definition.general.type = null;
             definition.pole.radius = definition.general.radius;
@@ -1387,12 +1350,12 @@ public final class LegacyCompatSystem {
         //Create a animation set for core poles if they don't have one and use the old auto-render systems.
         if (definition.pole.type.equals(PoleComponentType.CORE) && definition.rendering == null) {
             definition.rendering = new JSONRendering();
-            definition.rendering.animatedObjects = new ArrayList<JSONAnimatedObject>();
+            definition.rendering.animatedObjects = new ArrayList<>();
             for (Axis axis : Axis.values()) {
                 if (!axis.equals(Axis.NONE)) {
                     JSONAnimatedObject connectorModelObject = new JSONAnimatedObject();
                     connectorModelObject.objectName = axis.name().toLowerCase();
-                    connectorModelObject.animations = new ArrayList<JSONAnimationDefinition>();
+                    connectorModelObject.animations = new ArrayList<>();
                     JSONAnimationDefinition connectorVisibilityInhibitor = new JSONAnimationDefinition();
 
                     connectorVisibilityInhibitor.animationType = AnimationComponentType.INHIBITOR;
@@ -1411,7 +1374,7 @@ public final class LegacyCompatSystem {
 
                     JSONAnimatedObject solidModelObject = new JSONAnimatedObject();
                     solidModelObject.objectName = axis.name().toLowerCase() + "_solid";
-                    solidModelObject.animations = new ArrayList<JSONAnimationDefinition>();
+                    solidModelObject.animations = new ArrayList<>();
                     JSONAnimationDefinition solidVisibility = new JSONAnimationDefinition();
                     solidVisibility.animationType = AnimationComponentType.VISIBILITY;
                     solidVisibility.variable = "solid_present_" + axis.name().toLowerCase();
@@ -1423,7 +1386,7 @@ public final class LegacyCompatSystem {
                     if (axis.equals(Axis.UP) || axis.equals(Axis.DOWN)) {
                         JSONAnimatedObject slabModelObject = new JSONAnimatedObject();
                         slabModelObject.objectName = axis.name().toLowerCase() + "_slab";
-                        slabModelObject.animations = new ArrayList<JSONAnimationDefinition>();
+                        slabModelObject.animations = new ArrayList<>();
                         JSONAnimationDefinition slabVisibility = new JSONAnimationDefinition();
                         slabVisibility.animationType = AnimationComponentType.VISIBILITY;
                         slabVisibility.variable = "slab_present_" + axis.name().toLowerCase();
@@ -1440,7 +1403,7 @@ public final class LegacyCompatSystem {
     private static void performDecorLegacyCompats(JSONDecor definition) {
         //Move decor general properties to new location.
         if (definition.decor == null) {
-            definition.decor = definition.new JSONDecorGeneric();
+            definition.decor = new JSONDecor.JSONDecorGeneric();
             if (definition.general.type != null) {
                 definition.decor.type = DecorComponentType.valueOf(definition.general.type.toUpperCase());
                 definition.general.type = null;
@@ -1484,9 +1447,9 @@ public final class LegacyCompatSystem {
 
         //If we are a decor without a definition, add one so we don't crash on other systems.
         if (definition.definitions == null) {
-            definition.definitions = new ArrayList<JSONSubDefinition>();
+            definition.definitions = new ArrayList<>();
             JSONSubDefinition subDefinition = new JSONSubDefinition();
-            subDefinition.extraMaterials = new ArrayList<String>();
+            subDefinition.extraMaterials = new ArrayList<>();
             subDefinition.name = definition.general.name;
             subDefinition.subName = "";
             definition.definitions.add(subDefinition);
@@ -1494,7 +1457,7 @@ public final class LegacyCompatSystem {
 
         //If we are a decor using the old textlines, update them.
         if (definition.general.textLines != null) {
-            definition.general.textObjects = new ArrayList<JSONText>();
+            definition.general.textObjects = new ArrayList<>();
             int lineNumber = 0;
             for (minecrafttransportsimulator.jsondefs.AJSONItem.General.TextLine line : definition.general.textLines) {
                 JSONText object = new JSONText();
@@ -1576,7 +1539,7 @@ public final class LegacyCompatSystem {
             if (definition.rendering == null) {
                 definition.rendering = new JSONRendering();
                 if (definition.rendering.textObjects == null) {
-                    definition.rendering.textObjects = new ArrayList<JSONText>();
+                    definition.rendering.textObjects = new ArrayList<>();
 
                     JSONText nameTextObject = new JSONText();
                     nameTextObject.pos = new Point3D(0, -500, 0);
@@ -1616,7 +1579,7 @@ public final class LegacyCompatSystem {
     private static void performItemLegacyCompats(JSONItem definition) {
         //Move item type if required.
         if (definition.item == null) {
-            definition.item = definition.new JSONItemGeneric();
+            definition.item = new JSONItem.JSONItemGeneric();
             if (definition.general.type != null) {
                 definition.item.type = ItemComponentType.valueOf(definition.general.type.toUpperCase());
                 definition.general.type = null;
@@ -1644,14 +1607,14 @@ public final class LegacyCompatSystem {
     private static void performSkinLegacyCompats(JSONSkin definition) {
         //Move skin properties to new location, if we have them.
         if (definition.general.packID != null) {
-            definition.skin = definition.new Skin();
+            definition.skin = new JSONSkin.Skin();
             definition.skin.packID = definition.general.packID;
             definition.general.packID = null;
             definition.skin.systemName = definition.general.systemName;
             definition.general.systemName = null;
         }
         //Make the materials empty, as the parser doesn't like them null.
-        definition.general.materials = new ArrayList<String>();
+        definition.general.materials = new ArrayList<>();
     }
 
     private static void performBulletLegacyCompats(JSONBullet definition) {
@@ -1666,19 +1629,18 @@ public final class LegacyCompatSystem {
                 definition.rendering = new JSONRendering();
             }
             if (definition.rendering.particles == null) {
-                definition.rendering.particles = new ArrayList<JSONParticle>();
+                definition.rendering.particles = new ArrayList<>();
             }
 
             //Block hit particle.
             JSONParticle particleDef = new JSONParticle();
-            particleDef = new JSONParticle();
             particleDef.type = ParticleType.BREAK;
             particleDef.color = new ColorRGB("999999");
             particleDef.quantity = 4;
             particleDef.scale = 0.3F;
             particleDef.pos = new Point3D(0, 0.5, 0);
             particleDef.initialVelocity = new Point3D(0, 1.5, 0);
-            particleDef.activeAnimations = new ArrayList<JSONAnimationDefinition>();
+            particleDef.activeAnimations = new ArrayList<>();
             JSONAnimationDefinition activeAnimation = new JSONAnimationDefinition();
             activeAnimation.animationType = AnimationComponentType.VISIBILITY;
             activeAnimation.variable = "bullet_hit_block";
@@ -1707,16 +1669,15 @@ public final class LegacyCompatSystem {
                     //Add interactable variable to block interaction based on part present.
                     //Then combine this with existing IVs since they should inherit from the "parent".
                     if (additionalDef.interactableVariables == null) {
-                        additionalDef.interactableVariables = new ArrayList<List<String>>();
+                        additionalDef.interactableVariables = new ArrayList<>();
                     }
-                    List<String> presenceList = new ArrayList<String>();
+                    List<String> presenceList = new ArrayList<>();
                     presenceList.add("part_present_" + (i + 1));
                     additionalDef.interactableVariables.add(presenceList);
                     if (partDef.interactableVariables != null) {
                         //Need to deep copy these, if we just add the list then edits will foul things up.
                         for (List<String> variableList : partDef.interactableVariables) {
-                            List<String> copiedList = new ArrayList<String>();
-                            copiedList.addAll(variableList);
+                            List<String> copiedList = new ArrayList<>(variableList);
                             additionalDef.interactableVariables.add(copiedList);
                         }
                     }
@@ -1731,7 +1692,7 @@ public final class LegacyCompatSystem {
                 for (String partDefType : partDef.types) {
                     if (partDefType.startsWith("engine")) {
                         //Engine should link to as least one part on this definition.  What's the point of it if it doesn't drive anything?
-                        partDef.linkedParts = new ArrayList<Integer>();
+                        partDef.linkedParts = new ArrayList<>();
                         for (JSONPartDefinition partDef2 : partDefs) {
                             for (String partDefType2 : partDef2.types) {
                                 if (partDefType2.startsWith("propeller") || (partDefType2.startsWith("ground") && ((linkFrontWheels && partDef2.pos.z > 0) || linkRearWheels && partDef2.pos.z <= 0))) {
@@ -1742,7 +1703,7 @@ public final class LegacyCompatSystem {
                         }
                     } else if (partDefType.startsWith("gun")) {
                         //If the gun requires a seat to be present to place, link it to that seat rather than the controller.
-                        partDef.linkedParts = new ArrayList<Integer>();
+                        partDef.linkedParts = new ArrayList<>();
                         boolean foundLink = false;
                         if (partDef.interactableVariables != null) {
                             for (List<String> variables : partDef.interactableVariables) {
@@ -1774,7 +1735,7 @@ public final class LegacyCompatSystem {
                         }
                     } else if (partDefType.startsWith("effector")) {
                         //Effectors link to interactables (i.e. crates).  We don't link to genrics though as that would let them pull from the wrong things.
-                        partDef.linkedParts = new ArrayList<Integer>();
+                        partDef.linkedParts = new ArrayList<>();
                         for (JSONPartDefinition partDef2 : partDefs) {
                             for (String partDefType2 : partDef2.types) {
                                 if (partDefType2.startsWith("interactable")) {
@@ -1791,12 +1752,12 @@ public final class LegacyCompatSystem {
 
     private static void performVehiclePartDefLegacyCompats(JSONPartDefinition partDef) {
         if (partDef.additionalPart != null) {
-            partDef.additionalParts = new ArrayList<JSONPartDefinition>();
+            partDef.additionalParts = new ArrayList<>();
             partDef.additionalParts.add(partDef.additionalPart);
             partDef.additionalPart = null;
         }
         if (partDef.linkedDoor != null) {
-            partDef.linkedDoors = new ArrayList<String>();
+            partDef.linkedDoors = new ArrayList<>();
             partDef.linkedDoors.add(partDef.linkedDoor);
             partDef.linkedDoor = null;
         }
@@ -1805,12 +1766,12 @@ public final class LegacyCompatSystem {
             partDef.linkedDoors = null;
         }
         if (partDef.linkedVariables != null) {
-            partDef.interactableVariables = new ArrayList<List<String>>();
+            partDef.interactableVariables = new ArrayList<>();
             partDef.interactableVariables.add(partDef.linkedVariables);
             partDef.linkedVariables = null;
         }
         if (partDef.exhaustPos != null) {
-            partDef.particleObjects = new ArrayList<JSONParticle>();
+            partDef.particleObjects = new ArrayList<>();
             for (int i = 0; i < partDef.exhaustPos.length; i += 3) {
                 JSONParticle particle = new JSONParticle();
                 particle.type = ParticleType.SMOKE;
@@ -1826,7 +1787,7 @@ public final class LegacyCompatSystem {
             partDef.exhaustVelocity = null;
         }
         if (partDef.exhaustObjects != null) {
-            partDef.particleObjects = new ArrayList<JSONParticle>();
+            partDef.particleObjects = new ArrayList<>();
             for (minecrafttransportsimulator.jsondefs.JSONPartDefinition.ExhaustObject exhaust : partDef.exhaustObjects) {
                 JSONParticle particle = new JSONParticle();
                 particle.type = ParticleType.SMOKE;
@@ -1841,7 +1802,7 @@ public final class LegacyCompatSystem {
             partDef.exhaustObjects = null;
         }
         if (partDef.rotationVariable != null) {
-            partDef.animations = new ArrayList<JSONAnimationDefinition>();
+            partDef.animations = new ArrayList<>();
             JSONAnimationDefinition animation = new JSONAnimationDefinition();
             animation.animationType = AnimationComponentType.ROTATION;
             animation.variable = partDef.rotationVariable;
@@ -1860,7 +1821,7 @@ public final class LegacyCompatSystem {
         }
         if (partDef.translationVariable != null) {
             if (partDef.animations == null) {
-                partDef.animations = new ArrayList<JSONAnimationDefinition>();
+                partDef.animations = new ArrayList<>();
             }
             JSONAnimationDefinition animation = new JSONAnimationDefinition();
             animation.animationType = AnimationComponentType.TRANSLATION;
@@ -1878,19 +1839,34 @@ public final class LegacyCompatSystem {
         }
         for (byte i = 0; i < partDef.types.size(); ++i) {
             String partName = partDef.types.get(i);
-            if (partName.equals("wheel") || partName.equals("skid") || partName.equals("pontoon") || partName.equals("tread")) {
-                if (partName.equals("tread")) {
-                    partDef.turnsWithSteer = true;
-                }
-                partDef.types.set(i, "ground_" + partName);
-            } else if (partName.equals("crate") || partName.equals("barrel") || partName.equals("crafting_table") || partName.equals("furnace") || partName.equals("brewing_stand")) {
-                partDef.types.set(i, "interactable_" + partName);
-                partDef.minValue = 0;
-                partDef.maxValue = 1;
-            } else if (partName.equals("fertilizer") || partName.equals("harvester") || partName.equals("planter") || partName.equals("plow")) {
-                partDef.types.set(i, "effector_" + partName);
-            } else if (partName.equals("custom")) {
-                partDef.types.set(i, "generic");
+            switch (partName) {
+                case "wheel":
+                case "skid":
+                case "pontoon":
+                case "tread":
+                    if (partName.equals("tread")) {
+                        partDef.turnsWithSteer = true;
+                    }
+                    partDef.types.set(i, "ground_" + partName);
+                    break;
+                case "crate":
+                case "barrel":
+                case "crafting_table":
+                case "furnace":
+                case "brewing_stand":
+                    partDef.types.set(i, "interactable_" + partName);
+                    partDef.minValue = 0;
+                    partDef.maxValue = 1;
+                    break;
+                case "fertilizer":
+                case "harvester":
+                case "planter":
+                case "plow":
+                    partDef.types.set(i, "effector_" + partName);
+                    break;
+                case "custom":
+                    partDef.types.set(i, "generic");
+                    break;
             }
 
             //If we have ground devices that are wheels, but no animations, add those automatically.
@@ -1899,7 +1875,7 @@ public final class LegacyCompatSystem {
             if (partName.startsWith("ground_wheel") && partDef.turnsWithSteer) {
                 if (partDef.animations == null) {
                     if (partDef.applyAfter == null) {
-                        partDef.animations = new ArrayList<JSONAnimationDefinition>();
+                        partDef.animations = new ArrayList<>();
                         JSONAnimationDefinition animation = new JSONAnimationDefinition();
                         animation.centerPoint = partDef.pos.copy();
                         animation.axis = new Point3D(0, partDef.pos.z > 0 ? -1 : 1, 0);
@@ -1935,11 +1911,14 @@ public final class LegacyCompatSystem {
             partDef.widthScale = 0;
             partDef.heightScale = 0;
         }
-        //Set mirroing to new format.  Only do this for wheels, or things with inverse mirroring set.
+        //Set mirroring to new format.  Only do this for wheels, or things with inverse mirroring set.
         for (byte i = 0; i < partDef.types.size(); ++i) {
             String partName = partDef.types.get(i);
             if (partName.startsWith("ground_wheel") || partDef.inverseMirroring) {
                 partDef.isMirrored = (partDef.pos.x < 0 && !partDef.inverseMirroring) || (partDef.pos.x >= 0 && partDef.inverseMirroring);
+                if (partDef.isMirrored && partDef.rot == null) {
+                    partDef.rot = new RotationMatrix().rotateY(180);
+                }
                 partDef.inverseMirroring = false;
                 break;
             }
@@ -1948,14 +1927,14 @@ public final class LegacyCompatSystem {
 
     private static void performVehicleConnectionLegacyCompats(AJSONInteractableEntity interactableDef) {
         if (interactableDef.connections != null) {
-            interactableDef.connectionGroups = new ArrayList<JSONConnectionGroup>();
+            interactableDef.connectionGroups = new ArrayList<>();
             JSONConnectionGroup hitchGroup = null;
             JSONConnectionGroup hookupGroup = null;
             for (JSONConnection connection : interactableDef.connections) {
                 if (connection.hookup) {
                     if (hookupGroup == null) {
                         hookupGroup = new JSONConnectionGroup();
-                        hookupGroup.connections = new ArrayList<JSONConnection>();
+                        hookupGroup.connections = new ArrayList<>();
                         hookupGroup.groupName = "HOOKUP";
                         hookupGroup.hookup = true;
                     }
@@ -1964,9 +1943,9 @@ public final class LegacyCompatSystem {
                 } else {
                     if (hitchGroup == null) {
                         hitchGroup = new JSONConnectionGroup();
-                        hitchGroup.connections = new ArrayList<JSONConnection>();
+                        hitchGroup.connections = new ArrayList<>();
                         hitchGroup.groupName = "TRAILER";
-                        hitchGroup.canIntiateConnections = true;
+                        hitchGroup.canInitiateConnections = true;
                     }
                     hitchGroup.connections.add(connection);
                 }
@@ -2002,20 +1981,20 @@ public final class LegacyCompatSystem {
     private static void performVehicleCollisionLegacyCompats(AJSONInteractableEntity interactableDef) {
         if (interactableDef.doors != null) {
             if (interactableDef.collisionGroups == null) {
-                interactableDef.collisionGroups = new ArrayList<JSONCollisionGroup>();
+                interactableDef.collisionGroups = new ArrayList<>();
             }
             for (minecrafttransportsimulator.jsondefs.JSONDoor door : interactableDef.doors) {
                 //Check if door should auto-open when placed.
                 if (!door.closedByDefault) {
                     //We can assume rendering exists.  Cause who the heck makes doors that don't animate?
                     if (interactableDef.rendering.initialVariables == null) {
-                        interactableDef.rendering.initialVariables = new ArrayList<String>();
+                        interactableDef.rendering.initialVariables = new ArrayList<>();
                     }
                     interactableDef.rendering.initialVariables.add(door.name);
                 }
                 //Add door to collision box listing for updates.
                 JSONCollisionGroup collisionGroup = new JSONCollisionGroup();
-                collisionGroup.collisions = new ArrayList<JSONCollisionBox>();
+                collisionGroup.collisions = new ArrayList<>();
                 collisionGroup.isInterior = true;
                 JSONCollisionBox collision = new JSONCollisionBox();
                 collision.variableName = door.ignoresClicks ? null : door.name;
@@ -2026,7 +2005,7 @@ public final class LegacyCompatSystem {
                 collisionGroup.collisions.add(collision);
 
                 //Create animations for this door.
-                collisionGroup.animations = new ArrayList<JSONAnimationDefinition>();
+                collisionGroup.animations = new ArrayList<>();
                 JSONAnimationDefinition animation = new JSONAnimationDefinition();
                 animation.axis = door.openPos.subtract(door.closedPos);
                 animation.animationType = AnimationComponentType.TRANSLATION;
@@ -2041,10 +2020,10 @@ public final class LegacyCompatSystem {
 
         if (interactableDef.collision != null) {
             if (interactableDef.collisionGroups == null) {
-                interactableDef.collisionGroups = new ArrayList<JSONCollisionGroup>();
+                interactableDef.collisionGroups = new ArrayList<>();
             }
-            List<JSONCollisionBox> interiorBoxes = new ArrayList<JSONCollisionBox>();
-            List<JSONCollisionBox> exteriorBoxes = new ArrayList<JSONCollisionBox>();
+            List<JSONCollisionBox> interiorBoxes = new ArrayList<>();
+            List<JSONCollisionBox> exteriorBoxes = new ArrayList<>();
             for (JSONCollisionBox boxDef : interactableDef.collision) {
                 if (boxDef.isInterior) {
                     interiorBoxes.add(boxDef);
@@ -2082,7 +2061,7 @@ public final class LegacyCompatSystem {
 
     private static void performAnimationLegacyCompats(JSONRendering rendering) {
         if (rendering.textMarkings != null) {
-            rendering.textObjects = new ArrayList<JSONText>();
+            rendering.textObjects = new ArrayList<>();
             for (JSONRendering.VehicleDisplayText marking : rendering.textMarkings) {
                 JSONText object = new JSONText();
                 object.lightsUp = rendering.textLighted;
@@ -2102,7 +2081,7 @@ public final class LegacyCompatSystem {
         }
         if (rendering.rotatableModelObjects != null) {
             if (rendering.animatedObjects == null) {
-                rendering.animatedObjects = new ArrayList<JSONAnimatedObject>();
+                rendering.animatedObjects = new ArrayList<>();
             }
             for (JSONRendering.VehicleRotatableModelObject rotatable : rendering.rotatableModelObjects) {
                 JSONAnimatedObject object = null;
@@ -2115,7 +2094,7 @@ public final class LegacyCompatSystem {
                 if (object == null) {
                     object = new JSONAnimatedObject();
                     object.objectName = rotatable.partName;
-                    object.animations = new ArrayList<JSONAnimationDefinition>();
+                    object.animations = new ArrayList<>();
                     rendering.animatedObjects.add(object);
                 }
 
@@ -2140,7 +2119,7 @@ public final class LegacyCompatSystem {
         }
         if (rendering.translatableModelObjects != null) {
             if (rendering.animatedObjects == null) {
-                rendering.animatedObjects = new ArrayList<JSONAnimatedObject>();
+                rendering.animatedObjects = new ArrayList<>();
             }
             for (JSONRendering.VehicleTranslatableModelObject translatable : rendering.translatableModelObjects) {
                 JSONAnimatedObject object = null;
@@ -2153,7 +2132,7 @@ public final class LegacyCompatSystem {
                 if (object == null) {
                     object = new JSONAnimatedObject();
                     object.objectName = translatable.partName;
-                    object.animations = new ArrayList<JSONAnimationDefinition>();
+                    object.animations = new ArrayList<>();
                     rendering.animatedObjects.add(object);
                 }
 
@@ -2194,14 +2173,14 @@ public final class LegacyCompatSystem {
 
             //If we don't have lights, check for them.
             if (definition.rendering.lightObjects == null) {
-                definition.rendering.lightObjects = new ArrayList<JSONLight>();
+                definition.rendering.lightObjects = new ArrayList<>();
                 for (RenderableObject object : parsedModel) {
                     if (object.name.contains("&")) {
                         JSONLight lightDef = new JSONLight();
                         lightDef.objectName = object.name;
-                        lightDef.brightnessAnimations = new ArrayList<JSONAnimationDefinition>();
+                        lightDef.brightnessAnimations = new ArrayList<>();
                         lightDef.color = new ColorRGB(object.name.substring(object.name.indexOf('_') + 1, object.name.indexOf('_') + 7));
-                        lightDef.brightnessAnimations = new ArrayList<JSONAnimationDefinition>();
+                        lightDef.brightnessAnimations = new ArrayList<>();
 
                         //Add standard animation variable for light name.
                         String lowerCaseName = object.name.toLowerCase();
@@ -2247,7 +2226,7 @@ public final class LegacyCompatSystem {
                         } else if (lowerCaseName.contains("emergencylight")) {
                             activeAnimation.variable = "EMERLTS";
                             if (definition.rendering.customVariables == null) {
-                                definition.rendering.customVariables = new ArrayList<String>();
+                                definition.rendering.customVariables = new ArrayList<>();
                             }
                             if (definition instanceof JSONVehicle)
                                 definition.rendering.customVariables.add("EMERLTS");
@@ -2333,14 +2312,14 @@ public final class LegacyCompatSystem {
                         }
 
                         String lightProperties = object.name.substring(object.name.lastIndexOf('_') + 1);
-                        boolean renderFlare = Integer.valueOf(lightProperties.substring(0, 1)) > 0;
-                        lightDef.emissive = Integer.valueOf(lightProperties.substring(1, 2)) > 0;
-                        lightDef.covered = Integer.valueOf(lightProperties.substring(2, 3)) > 0;
-                        boolean renderBeam = lightProperties.length() == 4 ? Integer.valueOf(lightProperties.substring(3)) > 0 : (lowerCaseName.contains("headlight") || lowerCaseName.contains("landinglight") || lowerCaseName.contains("taxilight") || lowerCaseName.contains("streetlight"));
+                        boolean renderFlare = Integer.parseInt(lightProperties.substring(0, 1)) > 0;
+                        lightDef.emissive = Integer.parseInt(lightProperties.substring(1, 2)) > 0;
+                        lightDef.covered = Integer.parseInt(lightProperties.substring(2, 3)) > 0;
+                        boolean renderBeam = lightProperties.length() == 4 ? Integer.parseInt(lightProperties.substring(3)) > 0 : (lowerCaseName.contains("headlight") || lowerCaseName.contains("landinglight") || lowerCaseName.contains("taxilight") || lowerCaseName.contains("streetlight"));
 
                         if (renderFlare || renderBeam) {
                             if (lightDef.blendableComponents == null) {
-                                lightDef.blendableComponents = new ArrayList<JSONLightBlendableComponent>();
+                                lightDef.blendableComponents = new ArrayList<>();
                             }
 
                             float[] masterVertex = new float[8];
@@ -2360,7 +2339,7 @@ public final class LegacyCompatSystem {
                                     minZ = Math.min(masterVertex[7], minZ);
                                     maxZ = Math.max(masterVertex[7], maxZ);
                                 }
-                                JSONLightBlendableComponent blendable = lightDef.new JSONLightBlendableComponent();
+                                JSONLightBlendableComponent blendable = new JSONLightBlendableComponent();
                                 if (renderFlare) {
                                     blendable.flareHeight = 3 * Math.max(Math.max((maxX - minX), (maxY - minY)), (maxZ - minZ));
                                     blendable.flareWidth = blendable.flareHeight;
@@ -2370,7 +2349,6 @@ public final class LegacyCompatSystem {
                                     blendable.beamLength = blendable.beamDiameter * 3;
                                 }
                                 blendable.pos = new Point3D(minX + (maxX - minX) / 2D, minY + (maxY - minY) / 2D, minZ + (maxZ - minZ) / 2D);
-                                ;
                                 blendable.axis = new Point3D(masterVertex[0], masterVertex[1], masterVertex[2]);
 
                                 lightDef.blendableComponents.add(blendable);
@@ -2384,8 +2362,8 @@ public final class LegacyCompatSystem {
 
             //Now check for tread rollers.
             //We need to convert them into the new path system.
-            List<String> leftRollers = new ArrayList<String>();
-            List<String> rightRollers = new ArrayList<String>();
+            List<String> leftRollers = new ArrayList<>();
+            List<String> rightRollers = new ArrayList<>();
             for (RenderableObject object : parsedModel) {
                 if (object.name.toLowerCase().contains("roller")) {
                     //Add roller to roller lists.
@@ -2399,13 +2377,10 @@ public final class LegacyCompatSystem {
 
             if (!leftRollers.isEmpty() || !rightRollers.isEmpty()) {
                 //Sort rollers by name.
-                Comparator<String> sorter = new Comparator<String>() {
-                    @Override
-                    public int compare(String roller1, String roller2) {
-                        int roller1Index = Integer.valueOf(roller1.substring(roller1.lastIndexOf('_') + 1));
-                        int roller2Index = Integer.valueOf(roller2.substring(roller2.lastIndexOf('_') + 1));
-                        return roller1Index > roller2Index ? 1 : roller1Index < roller2Index ? -1 : 0;
-                    }
+                Comparator<String> sorter = (roller1, roller2) -> {
+                    int roller1Index = Integer.parseInt(roller1.substring(roller1.lastIndexOf('_') + 1));
+                    int roller2Index = Integer.parseInt(roller2.substring(roller2.lastIndexOf('_') + 1));
+                    return Integer.compare(roller1Index, roller2Index);
                 };
                 leftRollers.sort(sorter);
                 rightRollers.sort(sorter);
@@ -2437,7 +2412,7 @@ public final class LegacyCompatSystem {
 
                 //Check if an animation for the rollers exists already.
                 //We use a set here to prevent duplicates in the loop (less calls).
-                Set<String> allRollers = new HashSet<String>();
+                Set<String> allRollers = new HashSet<>();
                 allRollers.addAll(leftRollers);
                 allRollers.addAll(rightRollers);
 
@@ -2483,11 +2458,11 @@ public final class LegacyCompatSystem {
                             definition.rendering = new JSONRendering();
                         }
                         if (definition.rendering.animatedObjects == null) {
-                            definition.rendering.animatedObjects = new ArrayList<JSONAnimatedObject>();
+                            definition.rendering.animatedObjects = new ArrayList<>();
                         }
                         JSONAnimatedObject animatedObject = new JSONAnimatedObject();
                         animatedObject.objectName = rollerObject.name;
-                        animatedObject.animations = new ArrayList<JSONAnimationDefinition>();
+                        animatedObject.animations = new ArrayList<>();
                         animatedObject.animations.add(animation);
                         definition.rendering.animatedObjects.add(animatedObject);
                     }

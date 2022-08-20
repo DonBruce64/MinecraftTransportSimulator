@@ -1,17 +1,18 @@
 package minecrafttransportsimulator.baseclasses;
 
+import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
+import minecrafttransportsimulator.entities.instances.PartGroundDevice;
+import minecrafttransportsimulator.systems.ConfigSystem;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
-import minecrafttransportsimulator.entities.instances.PartGroundDevice;
-import minecrafttransportsimulator.systems.ConfigSystem;
-
-/**This class is a collection for a set of four vehicle ground device points.  This allows for less
+/**
+ * This class is a collection for a set of four vehicle ground device points.  This allows for less
  * boilerplate code when we need to do operations on all four points in a vehicle.
- * 
+ *
  * @author don_bruce
  */
 public class VehicleGroundDeviceCollection {
@@ -23,7 +24,7 @@ public class VehicleGroundDeviceCollection {
     private final Point3D translationApplied = new Point3D();
     private final RotationMatrix rotationApplied = new RotationMatrix();
     private final TransformationMatrix transformApplied = new TransformationMatrix();
-    public final Set<PartGroundDevice> groundedGroundDevices = new HashSet<PartGroundDevice>();
+    public final Set<PartGroundDevice> groundedGroundDevices = new HashSet<>();
 
     public VehicleGroundDeviceCollection(EntityVehicleF_Physics vehicle) {
         this.vehicle = vehicle;
@@ -108,7 +109,7 @@ public class VehicleGroundDeviceCollection {
      * This will be the four ground points, or less if we don't have them.
      */
     public List<BoundingBox> getGroundBounds() {
-        List<BoundingBox> groundBoxes = new ArrayList<BoundingBox>();
+        List<BoundingBox> groundBoxes = new ArrayList<>();
         groundBoxes.add(frontLeftGDB.getBoundingBox());
         groundBoxes.add(frontRightGDB.getBoundingBox());
         groundBoxes.add(rearLeftGDB.getBoundingBox());
@@ -199,7 +200,7 @@ public class VehicleGroundDeviceCollection {
      * Returns true if any devices are on the ground.
      */
     public boolean isAnythingOnGround() {
-        return frontLeftGDB.isGrounded || frontRightGDB.isGrounded || rearLeftGDB.isGrounded || rearRightGDB.isGrounded;
+        return !frontLeftGDB.isGrounded && !frontRightGDB.isGrounded && !rearLeftGDB.isGrounded && !rearRightGDB.isGrounded;
     }
 
     /**
@@ -243,7 +244,7 @@ public class VehicleGroundDeviceCollection {
 
     /**
      * Corrects pitch for the GDBs.
-     * This amount is determined by checking which GDBs are on the ground, and which are free. 
+     * This amount is determined by checking which GDBs are on the ground, and which are free.
      * Rotation angles are adjusted internally and then groundMotion is modified to level everything out.
      * Actual motion and position are not changed, despite rotation being.
      */
@@ -255,11 +256,10 @@ public class VehicleGroundDeviceCollection {
                 if (!frontLeftGDB.isAirborne) {
                     if (!frontRightGDB.isAirborne) {
                         adjustAnglesMatrix(frontLeftGDB.contactPoint.z > frontRightGDB.contactPoint.z ? frontLeftGDB.contactPoint : frontRightGDB.contactPoint, rearLeftGDB, rearRightGDB, false, true, true, groundMotion);
-                        return;
                     } else {
                         adjustAnglesMatrix(frontLeftGDB.contactPoint, rearLeftGDB, rearRightGDB, false, true, true, groundMotion);
-                        return;
                     }
+                    return;
                 } else if (!frontRightGDB.isAirborne) {
                     adjustAnglesMatrix(frontRightGDB.contactPoint, rearLeftGDB, rearRightGDB, false, true, true, groundMotion);
                     return;
@@ -272,11 +272,10 @@ public class VehicleGroundDeviceCollection {
                 if (!rearLeftGDB.isAirborne) {
                     if (!rearRightGDB.isAirborne) {
                         adjustAnglesMatrix(rearLeftGDB.contactPoint.z < rearRightGDB.contactPoint.z ? rearLeftGDB.contactPoint : rearRightGDB.contactPoint, frontLeftGDB, frontRightGDB, true, true, true, groundMotion);
-                        return;
                     } else {
                         adjustAnglesMatrix(rearLeftGDB.contactPoint, frontLeftGDB, frontRightGDB, true, true, true, groundMotion);
-                        return;
                     }
+                    return;
                 } else if (!rearRightGDB.isAirborne) {
                     adjustAnglesMatrix(rearRightGDB.contactPoint, frontLeftGDB, frontRightGDB, true, true, true, groundMotion);
                     return;
@@ -300,10 +299,9 @@ public class VehicleGroundDeviceCollection {
             //Also make sure that we are on the server, or on a client with a significant enough collision to matter.
             //This allows roll to take over if required.
             if (rearLeftGDB.isCollided || rearRightGDB.isCollided) {
-                if (!vehicle.world.isClient() || (rearLeftGDB.collisionDepth > 0.1 || rearLeftGDB.collisionDepth > 0.1)) {
+                if (!vehicle.world.isClient() || rearLeftGDB.collisionDepth > 0.1) {
                     if (frontLeftGDB.isGrounded && !frontLeftGDB.isCollided && frontRightGDB.isGrounded && !frontRightGDB.isCollided) {
                         adjustAnglesMatrix(frontLeftGDB.contactPoint.z > frontRightGDB.contactPoint.z ? frontLeftGDB.contactPoint : frontRightGDB.contactPoint, rearLeftGDB, rearRightGDB, true, true, true, groundMotion);
-                        return;
                     }
                 }
             }
@@ -350,7 +348,7 @@ public class VehicleGroundDeviceCollection {
 
     /**
      * Corrects roll for the GDBs.
-     * This amount is determined by checking which GDBs are on the ground, and which are free. 
+     * This amount is determined by checking which GDBs are on the ground, and which are free.
      * Rotation angles are adjusted internally and then groundMotion is modified to level everything out.
      * Actual motion and position are not changed, despite rotation being.
      */
@@ -402,7 +400,7 @@ public class VehicleGroundDeviceCollection {
         }
 
         //Get the angle to rotate by based on the farthest points and collision depth.
-        double furthestDelta = box1Delta > box2Delta ? box1Delta : box2Delta;
+        double furthestDelta = Math.max(box1Delta, box2Delta);
         if (furthestDelta < ConfigSystem.settings.general.climbSpeed.value) {
             //This is too short of a wheelbase to do this function.
             return;
@@ -431,7 +429,7 @@ public class VehicleGroundDeviceCollection {
             transformApplied.applyInvertedTranslation(originPoint);
 
             //Check for collisions.
-            if (!checkCollisions || (!testBox1.collidedWithTransform(transformApplied, groundMotion) && !testBox2.collidedWithTransform(transformApplied, groundMotion))) {
+            if (!checkCollisions || (testBox1.collidedWithTransform(transformApplied, groundMotion) && testBox2.collidedWithTransform(transformApplied, groundMotion))) {
                 break;
             }
         }

@@ -1,15 +1,16 @@
 package minecrafttransportsimulator.packets.instances;
 
-import java.util.UUID;
-
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityFuelPump;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
-/**Packet sent to pumps on clients to change what vehicle they are connected to.
- * 
+import java.util.UUID;
+
+/**
+ * Packet sent to pumps on clients to change what vehicle they are connected to.
+ *
  * @author don_bruce
  */
 public class PacketTileEntityFuelPumpConnection extends APacketEntity<TileEntityFuelPump> {

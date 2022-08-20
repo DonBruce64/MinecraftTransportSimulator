@@ -1,9 +1,5 @@
 package minecrafttransportsimulator.blocks.tileentities.components;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-
 import minecrafttransportsimulator.baseclasses.BezierCurve;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
@@ -19,7 +15,11 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityRoadConnectionUpdate;
 
-/**Helper class for containing lane data.  Lanes contain a reference to the road
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Helper class for containing lane data.  Lanes contain a reference to the road
  * they are a part of,  the lane number they represent, the curves that define
  * the path this lane can take, the prior segment this lane connects to,
  * and the next segment for each curve this lane connects to.
@@ -42,13 +42,13 @@ public class RoadLane {
         this.sectorNumber = sectorNumber;
         this.sectorLaneNumber = sectorLaneNumber;
         this.laneNumber = laneNumber;
-        this.curves = new ArrayList<BezierCurve>();
+        this.curves = new ArrayList<>();
         generateCurves();
-        this.priorConnections = new ArrayList<List<RoadLaneConnection>>();
-        this.nextConnections = new ArrayList<List<RoadLaneConnection>>();
+        this.priorConnections = new ArrayList<>();
+        this.nextConnections = new ArrayList<>();
         for (int i = 0; i < curves.size(); ++i) {
-            priorConnections.add(new ArrayList<RoadLaneConnection>());
-            nextConnections.add(new ArrayList<RoadLaneConnection>());
+            priorConnections.add(new ArrayList<>());
+            nextConnections.add(new ArrayList<>());
         }
         if (data != null) {
             for (int i = 0; i < curves.size(); ++i) {
@@ -92,7 +92,7 @@ public class RoadLane {
     /**
      * Attempts to set this lane's connection points.  This should be done on initial placement only.
      * If a connection is made, it is saved, and a packet is sent to establish it on clients.
-     * For times when a road is broken, use {@link #removeConnections()} on the lanes of the road being broken, 
+     * For times when a road is broken, use {@link #removeConnections()} on the lanes of the road being broken,
      * not this method on the lane that was connected to the broken road.
      */
     public void generateConnections() {
@@ -239,12 +239,7 @@ public class RoadLane {
         List<RoadLaneConnection> connections = nextCurve ? nextConnections.get(curves.indexOf(curve)) : priorConnections.get(curves.indexOf(curve));
         if (!connections.isEmpty()) {
             //Sort the connections by curve net angle.
-            connections.sort(new Comparator<RoadLaneConnection>() {
-                @Override
-                public int compare(RoadLaneConnection arg0, RoadLaneConnection arg1) {
-                    return arg0.curveNetAngle < arg1.curveNetAngle ? -1 : (arg0.curveNetAngle > arg1.curveNetAngle ? 1 : 0);
-                }
-            });
+            connections.sort((arg0, arg1) -> Double.compare(arg0.curveNetAngle, arg1.curveNetAngle));
 
             //Get the connection requested.
             switch (requestedNextCurve) {
@@ -283,9 +278,9 @@ public class RoadLane {
         return data;
     }
 
-    public static enum LaneSelectionRequest {
+    public enum LaneSelectionRequest {
         LEFT,
         RIGHT,
-        NONE;
+        NONE
     }
 }

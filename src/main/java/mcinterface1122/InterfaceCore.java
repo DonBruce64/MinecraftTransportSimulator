@@ -1,8 +1,5 @@
 package mcinterface1122;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.mcinterface.IInterfaceCore;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
@@ -15,8 +12,11 @@ import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.oredict.OreDictionary;
 
+import java.util.ArrayList;
+import java.util.List;
+
 class InterfaceCore implements IInterfaceCore {
-    private List<String> queuedLogs = new ArrayList<String>();
+    private final List<String> queuedLogs = new ArrayList<>();
 
     @Override
     public String getGameVersion() {
@@ -73,7 +73,7 @@ class InterfaceCore implements IInterfaceCore {
     @Override
     public List<IWrapperItemStack> getOredictMaterials(String oreName) {
         NonNullList<ItemStack> oreDictStacks = OreDictionary.getOres(oreName, false);
-        List<IWrapperItemStack> stacks = new ArrayList<IWrapperItemStack>();
+        List<IWrapperItemStack> stacks = new ArrayList<>();
         for (ItemStack stack : oreDictStacks) {
             if (stack.getMetadata() == net.minecraftforge.oredict.OreDictionary.WILDCARD_VALUE) {
                 NonNullList<ItemStack> oreDictSubStacks = NonNullList.create();

@@ -1,8 +1,5 @@
 package minecrafttransportsimulator.items.instances;
 
-import java.util.List;
-import java.util.Map.Entry;
-
 import minecrafttransportsimulator.blocks.components.ABlockBase.BlockMaterial;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.PartGroundDevice;
@@ -12,6 +9,9 @@ import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+
+import java.util.List;
+import java.util.Map.Entry;
 
 public class ItemPartGroundDevice extends AItemPart {
 
@@ -35,20 +35,20 @@ public class ItemPartGroundDevice extends AItemPart {
         tooltipLines.add(JSONConfigLanguage.ITEMINFO_GROUND_DEVICE_DIAMETER.value + definition.ground.height);
         tooltipLines.add(JSONConfigLanguage.ITEMINFO_GROUND_DEVICE_MOTIVEFRICTION.value + definition.ground.motiveFriction);
         tooltipLines.add(JSONConfigLanguage.ITEMINFO_GROUND_DEVICE_LATERALFRICTION.value + definition.ground.lateralFriction);
-        String modifierString = null;
+        StringBuilder modifierString = null;
         int modifierCount = 0;
         for (Entry<BlockMaterial, Float> modifier : definition.ground.frictionModifiers.entrySet()) {
             if (modifierString == null) {
-                modifierString = "\n";
+                modifierString = new StringBuilder("\n");
             } else {
                 if (++modifierCount == 2) {
                     modifierCount = 0;
-                    modifierString += "\n";
+                    modifierString.append("\n");
                 } else {
-                    modifierString += ", ";
+                    modifierString.append(", ");
                 }
             }
-            modifierString += modifier.getKey().name().toLowerCase() + ": " + modifier.getValue();
+            modifierString.append(modifier.getKey().name().toLowerCase()).append(": ").append(modifier.getValue());
         }
         tooltipLines.add(JSONConfigLanguage.ITEMINFO_GROUND_DEVICE_FRICTIONMODIFIERS.value + modifierString);
         tooltipLines.add(definition.ground.isWheel ? JSONConfigLanguage.ITEMINFO_GROUND_DEVICE_ROTATESONSHAFT_TRUE.value : JSONConfigLanguage.ITEMINFO_GROUND_DEVICE_ROTATESONSHAFT_FALSE.value);

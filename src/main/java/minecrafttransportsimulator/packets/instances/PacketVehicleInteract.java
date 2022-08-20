@@ -1,7 +1,5 @@
 package minecrafttransportsimulator.packets.instances;
 
-import java.util.Map.Entry;
-
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
@@ -21,12 +19,15 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.components.APacketEntityInteract;
 
-/**Packet used to interact with vehicles.  Initially sent from clients to the server
+import java.util.Map.Entry;
+
+/**
+ * Packet used to interact with vehicles.  Initially sent from clients to the server
  * to handle players clicking on either the vehicle or a part on it.  Actions (if any) are performed on the server.
  * A corresponding interaction packet may be sent to all players tracking the entity if the
  * action requires updates on clients.  This can be driven by the logic in this packet, or
  * the logic in {@link IItemVehicleInteractable#doVehicleInteraction(IWrapperItemStack, EntityVehicleF_Physics, APart, IWrapperPlayer, PlayerOwnerState, boolean)}
- * 
+ *
  * @author don_bruce
  */
 public class PacketVehicleInteract extends APacketEntityInteract<AEntityF_Multipart<?>, IWrapperPlayer> {

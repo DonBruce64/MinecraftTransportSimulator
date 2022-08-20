@@ -1,13 +1,5 @@
 package minecrafttransportsimulator.entities.instances;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
@@ -19,16 +11,18 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPartEffector;
 
+import java.util.*;
+
 public class PartEffector extends APart {
 
-    private final List<IWrapperItemStack> drops = new ArrayList<IWrapperItemStack>();
+    private final List<IWrapperItemStack> drops = new ArrayList<>();
 
     //Variables used for drills.
     public int blocksBroken;
     private final Point3D flooredCenter = new Point3D();
-    private final Map<BoundingBox, Point3D> boxLastPositionsFloored = new HashMap<BoundingBox, Point3D>();
-    private final Map<BoundingBox, Integer> boxTimeSpentAtPosition = new HashMap<BoundingBox, Integer>();
-    private final Set<Point3D> blockFlooredPositionsBrokeThisTick = new HashSet<Point3D>();
+    private final Map<BoundingBox, Point3D> boxLastPositionsFloored = new HashMap<>();
+    private final Map<BoundingBox, Integer> boxTimeSpentAtPosition = new HashMap<>();
+    private final Set<Point3D> blockFlooredPositionsBrokeThisTick = new HashSet<>();
 
     public PartEffector(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, IWrapperNBT data) {
         super(entityOn, placingPlayer, placementDefinition, data);

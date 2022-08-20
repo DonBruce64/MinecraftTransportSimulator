@@ -1,7 +1,5 @@
 package mcinterface1122;
 
-import java.util.List;
-
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import net.minecraft.entity.Entity;
@@ -14,7 +12,10 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.registry.EntityEntry;
 import net.minecraftforge.fml.common.registry.EntityEntryBuilder;
 
-/**Builder for an entity to sit in so they can ride another entity.  We use this rather
+import java.util.List;
+
+/**
+ * Builder for an entity to sit in so they can ride another entity.  We use this rather
  * than a direct linking as entities with riders are removed by MC when the rider logs out.
  * This means that if we assigned this to the main entity, it would be removed when the rider left the server.
  * This is not ideal for things like trains where the engineer leaves and the main locomotive goes poof.
@@ -24,11 +25,17 @@ import net.minecraftforge.fml.common.registry.EntityEntryBuilder;
 @EventBusSubscriber
 public class BuilderEntityLinkedSeat extends ABuilderEntityBase {
 
-    /**Current entity we are a seat on.  This MAY be null if we haven't loaded NBT from the server yet.**/
+    /**
+     * Current entity we are a seat on.  This MAY be null if we haven't loaded NBT from the server yet.
+     **/
     protected AEntityE_Interactable<?> entity;
-    /**Current rider for this seat.  This MAY be null if we haven't loaded NBT from the server yet.**/
+    /**
+     * Current rider for this seat.  This MAY be null if we haven't loaded NBT from the server yet.
+     **/
     protected WrapperEntity rider;
-    /**Set to true when the rider dismounts.  We set their position the next tick to override it.**/
+    /**
+     * Set to true when the rider dismounts.  We set their position the next tick to override it.
+     **/
     private boolean dismountedRider;
 
     public BuilderEntityLinkedSeat(World world) {

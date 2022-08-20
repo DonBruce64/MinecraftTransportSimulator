@@ -1,8 +1,5 @@
 package minecrafttransportsimulator.guis.instances;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
@@ -13,13 +10,16 @@ import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class GUIBooklet extends AGUIBase {
     //Buttons and text.
     private GUIComponentButton leftButton;
     private GUIComponentButton rightButton;
     private GUIComponentButton contentsButton;
-    private List<List<GUIComponentLabel>> pageTextLabels = new ArrayList<List<GUIComponentLabel>>();
-    private List<GUIComponentButton> contentsButtons = new ArrayList<GUIComponentButton>();
+    private final List<List<GUIComponentLabel>> pageTextLabels = new ArrayList<>();
+    private final List<GUIComponentButton> contentsButtons = new ArrayList<>();
 
     //Item properties.
     private final ItemItem booklet;
@@ -53,7 +53,7 @@ public class GUIBooklet extends AGUIBase {
         });
 
         //Title text labels.
-        List<GUIComponentLabel> titleLabels = new ArrayList<GUIComponentLabel>();
+        List<GUIComponentLabel> titleLabels = new ArrayList<>();
         for (JSONText text : booklet.definition.booklet.titleText) {
             GUIComponentLabel titleLabel = new GUIComponentLabel(guiLeft + (int) text.pos.x, guiTop + (int) text.pos.y, text.color, text.defaultText, TextAlignment.values()[text.renderPosition], text.scale, text.wrapWidth, text.fontName, text.autoScale);
             titleLabels.add(titleLabel);
@@ -66,7 +66,7 @@ public class GUIBooklet extends AGUIBase {
             //TOC page label.
             GUIComponentLabel contentsLabel = new GUIComponentLabel(guiLeft + booklet.definition.booklet.textureWidth / 4 - 20, guiTop + 25, ColorRGB.BLACK, "CONTENTS");
             addComponent(contentsLabel);
-            List<GUIComponentLabel> contentsLabels = new ArrayList<GUIComponentLabel>();
+            List<GUIComponentLabel> contentsLabels = new ArrayList<>();
             contentsLabels.add(contentsLabel);
             pageTextLabels.add(contentsLabels);
 
@@ -96,7 +96,7 @@ public class GUIBooklet extends AGUIBase {
 
         //Regular page labels.
         for (BookletPage page : booklet.definition.booklet.pages) {
-            List<GUIComponentLabel> pageLabels = new ArrayList<GUIComponentLabel>();
+            List<GUIComponentLabel> pageLabels = new ArrayList<>();
             for (JSONText text : page.pageText) {
                 try {
                     GUIComponentLabel pageLabel = new GUIComponentLabel(guiLeft + (int) text.pos.x, guiTop + (int) text.pos.y, text.color, text.defaultText, TextAlignment.values()[text.renderPosition], text.scale, text.wrapWidth, text.fontName, text.autoScale);

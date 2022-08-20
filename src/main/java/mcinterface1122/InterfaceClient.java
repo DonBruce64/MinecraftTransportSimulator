@@ -1,9 +1,5 @@
 package mcinterface1122;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
@@ -13,11 +9,7 @@ import minecrafttransportsimulator.entities.instances.EntityParticle;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIPackMissing;
-import minecrafttransportsimulator.mcinterface.IInterfaceClient;
-import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.mcinterface.*;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ControlSystem;
 import net.minecraft.block.SoundType;
@@ -42,6 +34,10 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.relauncher.Side;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @EventBusSubscriber(Side.CLIENT)
 public class InterfaceClient implements IInterfaceClient {
@@ -75,7 +71,7 @@ public class InterfaceClient implements IInterfaceClient {
 
     @Override
     public Map<String, String> getAllFluidNames() {
-        Map<String, String> fluidIDsToNames = new HashMap<String, String>();
+        Map<String, String> fluidIDsToNames = new HashMap<>();
         for (String fluidID : FluidRegistry.getRegisteredFluids().keySet()) {
             fluidIDsToNames.put(fluidID, new FluidStack(FluidRegistry.getFluid(fluidID), 1).getLocalizedName());
         }
@@ -84,12 +80,12 @@ public class InterfaceClient implements IInterfaceClient {
 
     @Override
     public boolean isChatOpen() {
-        return Minecraft.getMinecraft().ingameGUI.getChatGUI().getChatOpen();
+        return !Minecraft.getMinecraft().ingameGUI.getChatGUI().getChatOpen();
     }
 
     @Override
     public boolean isGUIOpen() {
-        return Minecraft.getMinecraft().currentScreen != null;
+        return Minecraft.getMinecraft().currentScreen == null;
     }
 
     @Override
@@ -217,10 +213,10 @@ public class InterfaceClient implements IInterfaceClient {
     }
 
     /**
-    * Tick client-side entities like bullets and particles.
-    * These don't get ticked normally due to the world tick event
-    * not being called on clients.
-    */
+     * Tick client-side entities like bullets and particles.
+     * These don't get ticked normally due to the world tick event
+     * not being called on clients.
+     */
     @SubscribeEvent
     public static void on(TickEvent.ClientTickEvent event) {
         if (!InterfaceManager.clientInterface.isGamePaused() && event.phase.equals(Phase.END)) {
@@ -263,7 +259,7 @@ public class InterfaceClient implements IInterfaceClient {
                 if (player != null && !player.isSpectator()) {
                     ControlSystem.controlGlobal(player);
                     if (((WrapperPlayer) player).player.ticksExisted % 100 == 0) {
-                        if (!InterfaceManager.clientInterface.isGUIOpen() && !PackParser.arePacksPresent()) {
+                        if (InterfaceManager.clientInterface.isGUIOpen() && !PackParser.arePacksPresent()) {
                             new GUIPackMissing();
                         }
                     }

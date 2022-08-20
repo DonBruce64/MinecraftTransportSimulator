@@ -1,120 +1,126 @@
 package minecrafttransportsimulator.entities.components;
 
-import java.nio.FloatBuffer;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-
-import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
-import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.Damage;
-import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.baseclasses.RotationMatrix;
-import minecrafttransportsimulator.baseclasses.TransformationMatrix;
+import minecrafttransportsimulator.baseclasses.*;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
-import minecrafttransportsimulator.jsondefs.AJSONInteractableEntity;
-import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
-import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
-import minecrafttransportsimulator.jsondefs.JSONCollisionGroup;
+import minecrafttransportsimulator.jsondefs.*;
 import minecrafttransportsimulator.jsondefs.JSONInstrument.JSONInstrumentComponent;
-import minecrafttransportsimulator.jsondefs.JSONInstrumentDefinition;
-import minecrafttransportsimulator.mcinterface.AWrapperWorld;
-import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.mcinterface.*;
 import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.rendering.RenderInstrument;
-import minecrafttransportsimulator.rendering.RenderableObject;
 import minecrafttransportsimulator.rendering.RenderInstrument.InstrumentSwitchbox;
+import minecrafttransportsimulator.rendering.RenderableObject;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
-/**Base entity class containing riders and their positions on this entity.  Used for
+import java.nio.FloatBuffer;
+import java.util.*;
+
+/**
+ * Base entity class containing riders and their positions on this entity.  Used for
  * entities that need to keep track of riders and their locations.  This also contains
  * various collision box lists for collision, as riders cannot interact and start riding
  * entities without collision boxes to click.
- * 
+ *
  * @author don_bruce
  */
 public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteractableEntity> extends AEntityD_Definable<JSONDefinition> {
-    /**Static helper matrix for transforming instrument positions.**/
+    /**
+     * Static helper matrix for transforming instrument positions.
+     **/
     private static final TransformationMatrix instrumentTransform = new TransformationMatrix();
     private static final RotationMatrix INSTRUMENT_ROTATION_INVERSION = new RotationMatrix().setToAxisAngle(0, 1, 0, 180);
 
-    /**List of boxes generated from JSON.  These are stored here as objects to prevent the need
+    /**
+     * List of boxes generated from JSON.  These are stored here as objects to prevent the need
      * to create them every time we want to parse out hitboxes.  This allows parsing them into sub-sets,
-     * and querying the entire list to find the hitbox for a given group and index.**/
-    public final List<List<BoundingBox>> definitionCollisionBoxes = new ArrayList<List<BoundingBox>>();
-    private final Map<JSONCollisionGroup, AnimationSwitchbox> collisionSwitchboxes = new HashMap<JSONCollisionGroup, AnimationSwitchbox>();
+     * and querying the entire list to find the hitbox for a given group and index.
+     **/
+    public final List<List<BoundingBox>> definitionCollisionBoxes = new ArrayList<>();
+    private final Map<JSONCollisionGroup, AnimationSwitchbox> collisionSwitchboxes = new HashMap<>();
 
-    /**List of bounding boxes that should be used to check collision of this entity with blocks.**/
-    public final Set<BoundingBox> blockCollisionBoxes = new HashSet<BoundingBox>();
+    /**
+     * List of bounding boxes that should be used to check collision of this entity with blocks.
+     **/
+    public final Set<BoundingBox> blockCollisionBoxes = new HashSet<>();
 
-    /**List of bounding boxes that should be used for collision of other entities with this entity.
-     * This includes {@link #blockCollisionBoxes}, but may include others.**/
-    public final Set<BoundingBox> entityCollisionBoxes = new HashSet<BoundingBox>();
+    /**
+     * List of bounding boxes that should be used for collision of other entities with this entity.
+     * This includes {@link #blockCollisionBoxes}, but may include others.
+     **/
+    public final Set<BoundingBox> entityCollisionBoxes = new HashSet<>();
 
-    /**List of bounding boxes that should be used for interaction of other entities with this entity.
+    /**
+     * List of bounding boxes that should be used for interaction of other entities with this entity.
      * This includes all {@link #entityCollisionBoxes}, but may include others, most likely being the
-     * core {@link #boundingBox} for this entity.**/
-    public final Set<BoundingBox> interactionBoxes = new HashSet<BoundingBox>();
+     * core {@link #boundingBox} for this entity.
+     **/
+    public final Set<BoundingBox> interactionBoxes = new HashSet<>();
 
-    /**List of bounding boxes that should be used for bullet collisions with this entity.
-     * These can't be clicked by players, and can't be collided with.**/
-    public final Set<BoundingBox> bulletCollisionBoxes = new HashSet<BoundingBox>();
+    /**
+     * List of bounding boxes that should be used for bullet collisions with this entity.
+     * These can't be clicked by players, and can't be collided with.
+     **/
+    public final Set<BoundingBox> bulletCollisionBoxes = new HashSet<>();
 
-    /**Box that encompasses all boxes on this entity.  This can be used as a pre-check for collision operations
-     * to check a single large box rather than multiple small ones to save processing power.**/
+    /**
+     * Box that encompasses all boxes on this entity.  This can be used as a pre-check for collision operations
+     * to check a single large box rather than multiple small ones to save processing power.
+     **/
     public final BoundingBox encompassingBox = new BoundingBox(new Point3D(), new Point3D(), 0, 0, 0, false);
 
-    /**Set of entities that this entity collided with this tick.  Any entity that is in this set 
+    /**
+     * Set of entities that this entity collided with this tick.  Any entity that is in this set
      * should NOT do collision checks with this entity, or infinite loops will occur.
-     * This set should be cleared after all collisions have been checked.**/
-    public final Set<AEntityE_Interactable<?>> collidedEntities = new HashSet<AEntityE_Interactable<?>>();
+     * This set should be cleared after all collisions have been checked.
+     **/
+    public final Set<AEntityE_Interactable<?>> collidedEntities = new HashSet<>();
 
-    /**The entity that is currently riding this entity.  There is only one rider per entity, though one can
+    /**
+     * The entity that is currently riding this entity.  There is only one rider per entity, though one can
      * make a multipart entity where each part has a rider to allow for effectively multiple riders per entity.
      **/
     public IWrapperEntity rider;
 
-    /**List of instruments based on their slot in the JSON.  Note that this list is created on first construction
+    /**
+     * List of instruments based on their slot in the JSON.  Note that this list is created on first construction
      * and will contain null elements for any instrument that isn't present in that slot.
      * Do NOT modify this list directly.  Instead, use the add/remove methods in this class.
      * This ensures proper animation component creation.
      **/
-    public final List<ItemInstrument> instruments = new ArrayList<ItemInstrument>();
+    public final List<ItemInstrument> instruments = new ArrayList<>();
 
-    /**Similar to {@link #instruments}, except this is the renderable bits for them.  There's one entry for each component, 
-     * with text being a null entry as text components render via the text rendering system.*/
-    public final List<List<RenderableObject>> instrumentRenderables = new ArrayList<List<RenderableObject>>();
+    /**
+     * Similar to {@link #instruments}, except this is the renderable bits for them.  There's one entry for each component,
+     * with text being a null entry as text components render via the text rendering system.
+     */
+    public final List<List<RenderableObject>> instrumentRenderables = new ArrayList<>();
 
-    /**Maps instrument components to their respective switchboxes.**/
-    public final Map<JSONInstrumentComponent, InstrumentSwitchbox> instrumentComponentSwitchboxes = new LinkedHashMap<JSONInstrumentComponent, InstrumentSwitchbox>();
+    /**
+     * Maps instrument components to their respective switchboxes.
+     **/
+    public final Map<JSONInstrumentComponent, InstrumentSwitchbox> instrumentComponentSwitchboxes = new LinkedHashMap<>();
 
-    /**Maps instrument slot transforms to their respective switchboxes.**/
-    public final Map<JSONInstrumentDefinition, AnimationSwitchbox> instrumentSlotSwitchboxes = new LinkedHashMap<JSONInstrumentDefinition, AnimationSwitchbox>();
+    /**
+     * Maps instrument slot transforms to their respective switchboxes.
+     **/
+    public final Map<JSONInstrumentDefinition, AnimationSwitchbox> instrumentSlotSwitchboxes = new LinkedHashMap<>();
 
-    /**Locked state.  Locked entities should not be able to be interacted with except by entities riding them,
+    /**
+     * Locked state.  Locked entities should not be able to be interacted with except by entities riding them,
      * their owners, or OP players (server admins).
      **/
     public boolean locked;
 
-    /**The ID of the owner of this entity. If this is null, it can be assumed that there is no owner.
+    /**
+     * The ID of the owner of this entity. If this is null, it can be assumed that there is no owner.
      * UUIDs are set at creation time of an entity, and will never change, even on world re-loads.
      **/
     public final UUID ownerUUID;
 
-    /**The amount of damage on this entity.  This value is not necessarily used on all entities, but is put here
+    /**
+     * The amount of damage on this entity.  This value is not necessarily used on all entities, but is put here
      * as damage is something that a good number of entities will have and that the base entity should track.
      **/
     @DerivedValue
@@ -143,7 +149,6 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
                                 ItemInstrument instrument = PackParser.getItem(instrumentPackID, instrumentSystemName);
                                 if (instrument != null) {
                                     addInstrument(instrument, definition.instruments.indexOf(packInstrument));
-                                    continue;
                                 }
                             } catch (NullPointerException e) {
                                 placingPlayer.sendPacket(new PacketPlayerChatMessage(placingPlayer, "Attempted to add defaultInstrument: " + instrumentPackID + ":" + instrumentSystemName + " to: " + definition.packID + ":" + definition.systemName + " but that instrument doesn't exist in the pack item registry."));
@@ -177,13 +182,13 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
             definitionCollisionBoxes.clear();
             collisionSwitchboxes.clear();
             for (JSONCollisionGroup groupDef : definition.collisionGroups) {
-                List<BoundingBox> boxes = new ArrayList<BoundingBox>();
+                List<BoundingBox> boxes = new ArrayList<>();
                 for (JSONCollisionBox boxDef : groupDef.collisions) {
                     boxes.add(new BoundingBox(boxDef, groupDef));
                 }
                 definitionCollisionBoxes.add(boxes);
                 if (groupDef.animations != null || groupDef.applyAfter != null) {
-                    List<JSONAnimationDefinition> animations = new ArrayList<JSONAnimationDefinition>();
+                    List<JSONAnimationDefinition> animations = new ArrayList<>();
                     if (groupDef.animations != null) {
                         animations.addAll(groupDef.animations);
                     }
@@ -197,8 +202,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
         //Create instrument lists and animation clocks.
         if (definition.instruments != null) {
             //Check for existing instruments and save them.  Then make new ones based on JSON.
-            List<ItemInstrument> oldInstruments = new ArrayList<ItemInstrument>();
-            oldInstruments.addAll(instruments);
+            List<ItemInstrument> oldInstruments = new ArrayList<>(instruments);
             instruments.clear();
             instrumentRenderables.clear();
             instrumentSlotSwitchboxes.clear();
@@ -216,10 +220,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
             //Old instruments added, make animation definitions.
             for (JSONInstrumentDefinition packInstrument : definition.instruments) {
                 if (packInstrument.animations != null) {
-                    List<JSONAnimationDefinition> animations = new ArrayList<JSONAnimationDefinition>();
-                    if (packInstrument.animations != null) {
-                        animations.addAll(packInstrument.animations);
-                    }
+                    List<JSONAnimationDefinition> animations = new ArrayList<>(packInstrument.animations);
                     instrumentSlotSwitchboxes.put(packInstrument, new AnimationSwitchbox(this, animations, packInstrument.applyAfter));
                 }
             }
@@ -251,9 +252,8 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
 
     @Override
     public double getRawVariableValue(String variable, float partialTicks) {
-        switch (variable) {
-            case ("damage_percent"):
-                return damageAmount / definition.general.health;
+        if ("damage_percent".equals(variable)) {
+            return damageAmount / definition.general.health;
         }
 
         //Not a towing variable, check others.
@@ -261,8 +261,8 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
     }
 
     /**
-     *  Updates the position of all collision boxes, and sets them in their appropriate maps based on their
-     *  properties, and animation state (if applicable). 
+     * Updates the position of all collision boxes, and sets them in their appropriate maps based on their
+     * properties, and animation state (if applicable).
      */
     protected void updateCollisionBoxes() {
         blockCollisionBoxes.clear();
@@ -383,25 +383,25 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
     }
 
     /**
-     *  Returns a collection of BoundingBoxes that make up this entity's collision bounds.
+     * Returns a collection of BoundingBoxes that make up this entity's collision bounds.
      */
     public Collection<BoundingBox> getCollisionBoxes() {
         return entityCollisionBoxes;
     }
 
     /**
-     *  Returns a collection of BoundingBoxes that make up this entity's interaction bounds.
+     * Returns a collection of BoundingBoxes that make up this entity's interaction bounds.
      */
     public Collection<BoundingBox> getInteractionBoxes() {
         return interactionBoxes;
     }
 
     /**
-     *  Called to update the rider on this entity.  This gets called after the update loop,
-     *  as the entity needs to move to its new position before we can know where the
-     *  riders of said entity will be.  The calling function will assure that the rider
-     *  is non-null at this point, so null checks are not required in this function.
-     *  However, if the rider is removed, false is returned, and further processing should halt.
+     * Called to update the rider on this entity.  This gets called after the update loop,
+     * as the entity needs to move to its new position before we can know where the
+     * riders of said entity will be.  The calling function will assure that the rider
+     * is non-null at this point, so null checks are not required in this function.
+     * However, if the rider is removed, false is returned, and further processing should halt.
      */
     public boolean updateRider() {
         //Update entity position and motion.
@@ -417,14 +417,13 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
     }
 
     /**
-     *  Called to set the rider for this entity.  If this isn't possible because
-     *  there is already a rider, or we shouldn't accept riders, return false.
-     *  Otherwise, return true.  Call this ONLY on the server!  Packets are sent to clients
-     *  for syncing so calling this on clients will result in Bad Stuff.
-     *  If the rider needs to face forward when they are added, set the boolean to true.
-     *  Note: this will only set them to face forwards on the tick they mount.
-     *  It won't block them from turning to a different orientation later.
-     *  
+     * Called to set the rider for this entity.  If this isn't possible because
+     * there is already a rider, or we shouldn't accept riders, return false.
+     * Otherwise, return true.  Call this ONLY on the server!  Packets are sent to clients
+     * for syncing so calling this on clients will result in Bad Stuff.
+     * If the rider needs to face forward when they are added, set the boolean to true.
+     * Note: this will only set them to face forwards on the tick they mount.
+     * It won't block them from turning to a different orientation later.
      */
     public boolean setRider(IWrapperEntity newRider, boolean facesForwards) {
         if (rider != null) {
@@ -444,7 +443,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
     }
 
     /**
-     *  Called to remove the rider that is currently riding this entity.
+     * Called to remove the rider that is currently riding this entity.
      */
     public void removeRider() {
         if (!world.isClient()) {
@@ -455,11 +454,11 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
     }
 
     /**
-     *  Adds the instrument to the specified slot.
+     * Adds the instrument to the specified slot.
      */
     public void addInstrument(ItemInstrument instrument, int slot) {
         instruments.set(slot, instrument);
-        List<RenderableObject> renderables = new ArrayList<RenderableObject>();
+        List<RenderableObject> renderables = new ArrayList<>();
         for (JSONInstrumentComponent component : instrument.definition.components) {
             if (component.textObject != null) {
                 renderables.add(null);
@@ -474,7 +473,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
     }
 
     /**
-     *  Removes the instrument from the specified slot.
+     * Removes the instrument from the specified slot.
      */
     public void removeIntrument(int slot) {
         ItemInstrument removedInstrument = instruments.set(slot, null);
@@ -487,8 +486,8 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
     }
 
     /**
-     *  Returns the owner state of the passed-in player, relative to this entity.
-     *  Takes into account player OP status and {@link #ownerUUID}, if set.
+     * Returns the owner state of the passed-in player, relative to this entity.
+     * Takes into account player OP status and {@link #ownerUUID}, if set.
      */
     public PlayerOwnerState getOwnerState(IWrapperPlayer player) {
         boolean canPlayerEdit = player.isOP() || ownerUUID == null || player.getID().equals(ownerUUID);
@@ -496,11 +495,11 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
     }
 
     /**
-     *  Called when the entity is attacked.
-     *  This should ONLY be called on the server; clients will sync via packets.
-     *  If calling this method in a loop, make sure to check if this entity is valid.
-     *  as this function may be called multiple times in a single tick for multiple damage 
-     *  applications, which means one of those may have made this entity invalid.
+     * Called when the entity is attacked.
+     * This should ONLY be called on the server; clients will sync via packets.
+     * If calling this method in a loop, make sure to check if this entity is valid.
+     * as this function may be called multiple times in a single tick for multiple damage
+     * applications, which means one of those may have made this entity invalid.
      */
     public void attack(Damage damage) {
         if (!damage.isWater) {
@@ -589,9 +588,9 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
     /**
      * Emum for easier functions for owner states.
      */
-    public static enum PlayerOwnerState {
+    public enum PlayerOwnerState {
         USER,
         OWNER,
-        ADMIN;
+        ADMIN
     }
 }

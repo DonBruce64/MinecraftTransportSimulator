@@ -1,7 +1,5 @@
 package mcinterface1122;
 
-import org.lwjgl.opengl.GL11;
-
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
@@ -11,10 +9,12 @@ import net.minecraftforge.client.event.EntityViewRenderEvent.CameraSetup;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
+import org.lwjgl.opengl.GL11;
 
-/**Interface for handling events pertaining to camera orientation.  This class is responsible for handling
+/**
+ * Interface for handling events pertaining to camera orientation.  This class is responsible for handling
  * camera position and orientation operations.  The only camera functions this class does not handle is overlays,
- * as those are 2D rendering of textures, not 3D orientation of the camera itself. 
+ * as those are 2D rendering of textures, not 3D orientation of the camera itself.
  *
  * @author don_bruce
  */

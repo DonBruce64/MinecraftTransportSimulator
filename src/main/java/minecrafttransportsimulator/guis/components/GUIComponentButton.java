@@ -1,20 +1,19 @@
 package minecrafttransportsimulator.guis.components;
 
-import java.nio.FloatBuffer;
-
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.rendering.RenderText;
-import minecrafttransportsimulator.rendering.RenderableObject;
 import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
+import minecrafttransportsimulator.rendering.RenderableObject;
 
-/**Custom button class.  This allows for a custom button texture, as well as a cleaner constructor.
+import java.nio.FloatBuffer;
+
+/**
+ * Custom button class.  This allows for a custom button texture, as well as a cleaner constructor.
  * It also allows us to cut out a few MC methods from their own button class and use our own.
  * The simplest constructor will create a button at the point specified with a height of 20
  * and centered text.  The more complex constructor will create it with the specified height
  * and gives the choice of centered text or not.  The most complex constructor gives all those
  * options, as well as allowing the selection of where on the texture sheet to render the button.
- * 
- * 
  *
  * @author don_bruce
  */
@@ -33,32 +32,44 @@ public abstract class GUIComponentButton extends GUIComponentCutout {
     protected RenderableObject renderable2;
     protected RenderableObject renderable3;
 
-    /**A Simple button with a rendered string in grey and center-aligned.**/
+    /**
+     * A Simple button with a rendered string in grey and center-aligned.
+     **/
     public GUIComponentButton(int x, int y, int width, int height, String text) {
         this(x, y, width, height, text, true, ColorRGB.DARK_GRAY, DEFAULT_BUTTON_SECTION_WIDTH_OFFSET, DEFAULT_BUTTON_SECTION_HEIGHT_OFFSET, DEFAULT_BUTTON_SECTION_WIDTH, DEFAULT_BUTTON_SECTION_HEIGHT);
     }
 
-    /**A button made to render with item slots.  Renders the set item size, and renders the item slot texture off the "Inventory" gui if the final parameter is true.**/
+    /**
+     * A button made to render with item slots.  Renders the set item size, and renders the item slot texture off the "Inventory" gui if the final parameter is true.
+     **/
     public GUIComponentButton(int x, int y, boolean renderBackground) {
         this(x, y, ITEM_BUTTON_SIZE, ITEM_BUTTON_SIZE, renderBackground ? 194 : 0, 0, renderBackground ? ITEM_BUTTON_SIZE : 0, renderBackground ? ITEM_BUTTON_SIZE : 0);
     }
 
-    /**A button without texture or text.  Useful when you want a button for something that needs to render as another component.**/
+    /**
+     * A button without texture or text.  Useful when you want a button for something that needs to render as another component.
+     **/
     public GUIComponentButton(int x, int y, int width, int height) {
         this(x, y, width, height, "", true, ColorRGB.DARK_GRAY, 0, 0, 0, 0);
     }
 
-    /**A button made to render with custom button textures.  Does not render font, but does provide additional parameters for the size of the button.**/
+    /**
+     * A button made to render with custom button textures.  Does not render font, but does provide additional parameters for the size of the button.
+     **/
     public GUIComponentButton(int x, int y, int width, int height, int textureXOffset, int textureYOffset, int textureSectionWidth, int textureSectionHeight) {
         this(x, y, width, height, "", true, ColorRGB.DARK_GRAY, textureXOffset, textureYOffset, textureSectionWidth, textureSectionHeight);
     }
 
-    /**A complex button with custom height, text alignment, and text color.*/
+    /**
+     * A complex button with custom height, text alignment, and text color.
+     */
     public GUIComponentButton(int x, int y, int width, int height, String text, boolean centeredText, ColorRGB textColor, boolean renderBackground) {
         this(x, y, width, height, text, centeredText, textColor, DEFAULT_BUTTON_SECTION_WIDTH_OFFSET, DEFAULT_BUTTON_SECTION_HEIGHT_OFFSET, renderBackground ? DEFAULT_BUTTON_SECTION_WIDTH : 0, renderBackground ? DEFAULT_BUTTON_SECTION_HEIGHT : 0);
     }
 
-    /**A fully-customizable button with custom texture alignment and font color.  Note that making the width or the height of the texture section 0 will result in no texture being rendered.**/
+    /**
+     * A fully-customizable button with custom texture alignment and font color.  Note that making the width or the height of the texture section 0 will result in no texture being rendered.
+     **/
     private GUIComponentButton(int x, int y, int width, int height, String text, boolean centeredText, ColorRGB textColor, int textureXOffset, int textureYOffset, int textureSectionWidth, int textureSectionHeight) {
         super(x, y, width, height, textureXOffset, textureYOffset, textureSectionWidth, textureSectionHeight);
         this.textPosition.set(centeredText ? position.x + width / 2 : position.x, position.y - (height - 8) / 2, textPosition.z);
@@ -68,34 +79,34 @@ public abstract class GUIComponentButton extends GUIComponentCutout {
     }
 
     /**
-     *  Returns true if the mouse can click this button, given the mouse
-     *  position and current button state.  Used to know if we need to call
-     *  {@link #onClicked(boolean)} to do clicking actions.
+     * Returns true if the mouse can click this button, given the mouse
+     * position and current button state.  Used to know if we need to call
+     * {@link #onClicked(boolean)} to do clicking actions.
      */
     public boolean canClick(int mouseX, int mouseY) {
         return visible && enabled && isMouseInBounds(mouseX, mouseY);
     }
 
     /**
-     *  Called when this button is clicked by a mouse.  The button will
-     *  already have been verified to be both visible and enabled at
-     *  this point, so this click action is a true action.  Either extend
-     *  this class and override this method, or simply use generics in a 
-     *  constructor for simple tasks.  The purpose of this is to prevent
-     *  the need to check every button to see which one was clicked like
-     *  MC does.
+     * Called when this button is clicked by a mouse.  The button will
+     * already have been verified to be both visible and enabled at
+     * this point, so this click action is a true action.  Either extend
+     * this class and override this method, or simply use generics in a
+     * constructor for simple tasks.  The purpose of this is to prevent
+     * the need to check every button to see which one was clicked like
+     * MC does.
      */
     public abstract void onClicked(boolean leftSide);
 
     /**
-     *  Called when the mouse that clicked this button is released.  At this point
-     *  the mouse may no longer be over the button, but it can be assured that
-     *  the last thing the user clicked was this button.  Use this method for
-     *  things that need to have a maintained state while clicked rather than
-     *  have a single momentary action.
+     * Called when the mouse that clicked this button is released.  At this point
+     * the mouse may no longer be over the button, but it can be assured that
+     * the last thing the user clicked was this button.  Use this method for
+     * things that need to have a maintained state while clicked rather than
+     * have a single momentary action.
      */
     public void onReleased() {
-    };
+    }
 
     @Override
     public void render(AGUIBase gui, int mouseX, int mouseY, boolean renderBright, boolean renderLitTexture, boolean blendingEnabled, float partialTicks) {

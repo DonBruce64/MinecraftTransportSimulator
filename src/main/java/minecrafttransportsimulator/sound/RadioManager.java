@@ -1,30 +1,22 @@
 package minecrafttransportsimulator.sound;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 
-/**Class that manages all radios and stations.  Responsible for creating new stations and storing them,
+import java.io.*;
+import java.util.*;
+
+/**
+ * Class that manages all radios and stations.  Responsible for creating new stations and storing them,
  * as well as giving said stations to radios when they request them.  This class also interfaces with
  * the files on the local machine and keeps track of the order they are played in.
-*
-* @author don_bruce
-*/
+ *
+ * @author don_bruce
+ */
 public class RadioManager {
-    private static File musicDir;
-    private static File radioStationsFile;
-    private static Map<Integer, RadioStation> localSourcesMap = new HashMap<Integer, RadioStation>();
-    private static Map<String, RadioStation> internetSourcesMap = new HashMap<String, RadioStation>();
+    private static final File musicDir;
+    private static final File radioStationsFile;
+    private static final Map<Integer, RadioStation> localSourcesMap = new HashMap<>();
+    private static final Map<String, RadioStation> internetSourcesMap = new HashMap<>();
 
     /**
      * Need to set up global radio variables before we can create an instance of a radio.
@@ -48,7 +40,7 @@ public class RadioManager {
      */
     public static RadioStation getLocalStation(int index, boolean randomOrder) {
         //No clue why we have to use Integer.valueOf, but whatever...
-        Integer mapKey = Integer.valueOf(index);
+        Integer mapKey = index;
         if (!localSourcesMap.containsKey(mapKey)) {
             localSourcesMap.put(mapKey, new RadioStation(index, randomOrder));
         }
@@ -71,8 +63,8 @@ public class RadioManager {
      * Returns the files in the directory if they were found, or an empty list otherwise.
      */
     public static List<File> parseLocalDirectory(int index, boolean randomOrder) {
-        List<File> musicDirectories = new ArrayList<File>();
-        List<File> musicFiles = new ArrayList<File>();
+        List<File> musicDirectories = new ArrayList<>();
+        List<File> musicFiles = new ArrayList<>();
         for (File file : musicDir.listFiles()) {
             if (file.isDirectory()) {
                 musicDirectories.add(file);
@@ -98,10 +90,10 @@ public class RadioManager {
 
     /**
      * Gets the radio URL for the specified index in the radio_stations.txt file in the mts_music directory.
-    */
+     */
     public static String getLocalStationURL(int index) {
         try {
-            List<String> stations = new ArrayList<String>();
+            List<String> stations = new ArrayList<>();
             BufferedReader radioStationFileReader = new BufferedReader(new FileReader(radioStationsFile));
             while (radioStationFileReader.ready()) {
                 stations.add(radioStationFileReader.readLine());
@@ -127,7 +119,7 @@ public class RadioManager {
      */
     public static void setLocalStationURL(String stationURL, int index) {
         try {
-            List<String> stations = new ArrayList<String>();
+            List<String> stations = new ArrayList<>();
             BufferedReader radioStationFileReader = new BufferedReader(new FileReader(radioStationsFile));
             while (radioStationFileReader.ready()) {
                 stations.add(radioStationFileReader.readLine());
@@ -155,6 +147,6 @@ public class RadioManager {
     public enum RadioSources {
         LOCAL,
         SERVER,
-        INTERNET;
+        INTERNET
     }
 }

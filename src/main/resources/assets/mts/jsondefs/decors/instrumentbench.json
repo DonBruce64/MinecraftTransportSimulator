@@ -1,10 +1,10 @@
 {
-	"general": {
-		"name" : "Instrument Bench",
-		"materials" : [],
-		"width" : 1.0,
-		"height" : 1.0,
-		"depth" : 1.0,
-		"itemTypes" : ["instrument"]
-	}
+    "general": {
+        "name": "Instrument Bench",
+        "materials": [],
+        "width": 1.0,
+        "height": 1.0,
+        "depth": 1.0,
+        "itemTypes": ["instrument"]
+    }
 }
