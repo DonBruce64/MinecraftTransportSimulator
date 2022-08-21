@@ -1,9 +1,9 @@
 package minecrafttransportsimulator.jsondefs;
 
-import java.util.List;
-
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
+
+import java.util.List;
 
 @JSONDescription("Bullets are special JSONs, as they're not a part, but they work with parts.  They're not an actual item like food, but they normally are only in item form.  Rather, they are an item that turns itself into a model with logic when fired from a gun.")
 public class JSONBullet extends AJSONMultiModelProvider {
@@ -67,6 +67,12 @@ public class JSONBullet extends AJSONMultiModelProvider {
 
         @JSONDescription("A optional list of effects that this bullet will impart on the entity that it hits.")
         public List<JSONPotionEffect> effects;
+
+        @JSONDescription("Number of pellets that this shell has")
+        public int pellets;
+
+        @JSONDescription("How much spread the pellets will have when fired. 0 is no spread, higher values have higher spread.")
+        public float pelletSpreadFactor;
     }
 
     public static enum BulletType {

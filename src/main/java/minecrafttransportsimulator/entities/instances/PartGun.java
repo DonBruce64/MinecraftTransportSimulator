@@ -1,13 +1,6 @@
 package minecrafttransportsimulator.entities.instances;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.baseclasses.RotationMatrix;
-import minecrafttransportsimulator.baseclasses.TransformationMatrix;
+import minecrafttransportsimulator.baseclasses.*;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemBullet;
@@ -15,15 +8,13 @@ import minecrafttransportsimulator.jsondefs.JSONMuzzle;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONText;
-import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-import minecrafttransportsimulator.mcinterface.IWrapperInventory;
-import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.mcinterface.*;
 import minecrafttransportsimulator.packets.instances.PacketPartGun;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**Basic gun class class.  This class is responsible for representing a gun in the world.  This gun
  * can be placed on anything and modeled by anything as the code is only for controlling the firing
@@ -294,31 +285,33 @@ public class PartGun extends APart {
                         //If we are in our cam, fire the bullets.
                         if (camOffset == 0) {
                             for (JSONMuzzle muzzle : definition.gun.muzzleGroups.get(currentMuzzleGroupIndex).muzzles) {
-                                //Get the bullet's state.
-                                setBulletSpawn(bulletPosition, bulletVelocity, bulletOrientation, muzzle);
+                                for (int i=0; i < (loadedBullet.definition.bullet.pellets > 0 ? loadedBullet.definition.bullet.pellets : 1); i++) {
+                                    //Get the bullet's state.
+                                    setBulletSpawn(bulletPosition, bulletVelocity, bulletOrientation, muzzle);
 
-                                //Add the bullet to the world.
-                                //If the bullet is a missile, give it a target.
-                                EntityBullet newBullet;
-                                if (loadedBullet.definition.bullet.turnRate > 0) {
-                                    if (entityTarget != null) {
-                                        newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this, entityTarget);
-                                    } else if (engineTarget != null) {
-                                        newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this, engineTarget);
+                                    //Add the bullet to the world.
+                                    //If the bullet is a missile, give it a target.
+                                    EntityBullet newBullet;
+                                    if (loadedBullet.definition.bullet.turnRate > 0) {
+                                        if (entityTarget != null) {
+                                            newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this, entityTarget);
+                                        } else if (engineTarget != null) {
+                                            newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this, engineTarget);
+                                        } else {
+                                            //No entity found, just fire missile off in direction facing.
+                                            newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this);
+                                        }
                                     } else {
-                                        //No entity found, just fire missile off in direction facing.
                                         newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this);
                                     }
-                                } else {
-                                    newBullet = new EntityBullet(bulletPosition, bulletVelocity, bulletOrientation, this);
-                                }
 
-                                world.addEntity(newBullet);
+                                    world.addEntity(newBullet);
+                                }
 
                                 //Decrement bullets, but check to make sure we still have some.
                                 //We might have a partial volley with only some muzzles firing in this group.
                                 if (--bulletsLeft == 0) {
-                                    //Only set the bullet to null on the server.  This lets the server choose a different bullet to load.
+                                    //Only set the bullet to null on the server. This lets the server choose a different bullet to load.
                                     //If we did this on the client, we might set the bullet to null after we got a packet for a reload.
                                     //That would cause us to finish the reload with a null bullet, and crash later.
                                     if (!world.isClient()) {
@@ -734,8 +727,10 @@ public class PartGun extends APart {
         //Set velocity.
         if (definition.gun.muzzleVelocity != 0) {
             bulletVelocity.set(0, 0, definition.gun.muzzleVelocity / 20D / 10D);
-            if (definition.gun.bulletSpreadFactor > 0) {
-                firingSpreadRotation.angles.set((Math.random() - 0.5F) * definition.gun.bulletSpreadFactor, (Math.random() - 0.5F) * definition.gun.bulletSpreadFactor, 0D);
+            //Randomize the spread for normal bullet and pellets
+            if (definition.gun.bulletSpreadFactor > 0 || loadedBullet.definition.bullet.pelletSpreadFactor > 0) {
+                firingSpreadRotation.angles.set((Math.random() - 0.5F) * (definition.gun.bulletSpreadFactor + loadedBullet.definition.bullet.pelletSpreadFactor),
+                        (Math.random() - 0.5F) * (definition.gun.bulletSpreadFactor + loadedBullet.definition.bullet.pelletSpreadFactor), 0D);
                 bulletVelocity.rotate(firingSpreadRotation);
             }
 

@@ -1,12 +1,12 @@
 package minecrafttransportsimulator.items.instances;
 
-import java.util.List;
-
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.jsondefs.JSONBullet;
 import minecrafttransportsimulator.jsondefs.JSONBullet.BulletType;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+
+import java.util.List;
 
 public class ItemBullet extends AItemSubTyped<JSONBullet> {
 
@@ -34,6 +34,7 @@ public class ItemBullet extends AItemSubTyped<JSONBullet> {
             }
 
         }
+        if (definition.bullet.pellets > 0) tooltipLines.add(JSONConfigLanguage.ITEMINFO_BULLET_PELLETS.value + definition.bullet.pellets);
         tooltipLines.add(JSONConfigLanguage.ITEMINFO_BULLET_DIAMETER.value + definition.bullet.diameter);
         tooltipLines.add(JSONConfigLanguage.ITEMINFO_BULLET_CASELENGTH.value + definition.bullet.caseLength);
         tooltipLines.add(JSONConfigLanguage.ITEMINFO_BULLET_PENETRATION.value + definition.bullet.armorPenetration);

@@ -300,6 +300,7 @@ public class JSONConfigLanguage {
     public static final LanguageEntry ITEMINFO_BULLET_TYPE_INCENDIARY = new LanguageEntry("iteminfo.bullet.type.incendiary", "Incendiary Bullet");
     public static final LanguageEntry ITEMINFO_BULLET_TYPE_ARMOR_PIERCING = new LanguageEntry("iteminfo.bullet.type.armor_piercing", "Armor Piercing Bullet");
     public static final LanguageEntry ITEMINFO_BULLET_TYPE_WATER = new LanguageEntry("iteminfo.bullet.type.water", "Water Bullet");
+    public static final LanguageEntry ITEMINFO_BULLET_PELLETS = new LanguageEntry("iteminfo.bullet.pellets", "Pellets: ");
     public static final LanguageEntry ITEMINFO_BULLET_DIAMETER = new LanguageEntry("iteminfo.bullet.diameter", "Diameter (mm): ");
     public static final LanguageEntry ITEMINFO_BULLET_CASELENGTH = new LanguageEntry("iteminfo.bullet.caseLength", "Case Length (mm): ");
     public static final LanguageEntry ITEMINFO_BULLET_PENETRATION = new LanguageEntry("iteminfo.bullet.penetration", "Penetration (mm): ");
