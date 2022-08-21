@@ -268,9 +268,7 @@ public final class PartSeat extends APart {
 
     @Override
     public boolean updateRider() {
-        InterfaceLoader.LOGGER.info("Updating rider...");
         if (super.updateRider()) {
-            InterfaceLoader.LOGGER.info("Super of update rider ran");
             //Add all seat-specific effects to the rider
             if (placementDefinition.seatEffects != null) {
                 for (JSONPotionEffect effect : placementDefinition.seatEffects) {

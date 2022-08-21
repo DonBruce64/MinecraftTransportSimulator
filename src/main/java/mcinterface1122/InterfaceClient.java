@@ -80,12 +80,12 @@ public class InterfaceClient implements IInterfaceClient {
 
     @Override
     public boolean isChatOpen() {
-        return !Minecraft.getMinecraft().ingameGUI.getChatGUI().getChatOpen();
+        return Minecraft.getMinecraft().ingameGUI.getChatGUI().getChatOpen();
     }
 
     @Override
     public boolean isGUIOpen() {
-        return Minecraft.getMinecraft().currentScreen == null;
+        return Minecraft.getMinecraft().currentScreen != null;
     }
 
     @Override
@@ -259,7 +259,7 @@ public class InterfaceClient implements IInterfaceClient {
                 if (player != null && !player.isSpectator()) {
                     ControlSystem.controlGlobal(player);
                     if (((WrapperPlayer) player).player.ticksExisted % 100 == 0) {
-                        if (InterfaceManager.clientInterface.isGUIOpen() && !PackParser.arePacksPresent()) {
+                        if (!InterfaceManager.clientInterface.isGUIOpen() && !PackParser.arePacksPresent()) {
                             new GUIPackMissing();
                         }
                     }

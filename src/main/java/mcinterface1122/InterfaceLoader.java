@@ -6,7 +6,6 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
-import net.minecraftforge.fml.common.Mod.Instance;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import org.apache.logging.log4j.LogManager;
@@ -28,7 +27,7 @@ import java.util.List;
 public final class InterfaceLoader {
     public static final String MODID = "mts";
     public static final String MODNAME = "Immersive Vehicles (MTS)";
-    public static final String MODVER = "21.4.0-BETA40";
+    public static final String MODVER = "21.4.0-BETA41";
     public static final Logger LOGGER = LogManager.getLogger(InterfaceLoader.MODID);
 
     static {
@@ -36,6 +35,7 @@ public final class InterfaceLoader {
         FluidRegistry.enableUniversalBucket();
     }
 
+    @SuppressWarnings("InstantiationOfUtilityClass")
     @EventHandler
     public void preInit(FMLPreInitializationEvent event) {
         //Get game directory.
@@ -50,7 +50,7 @@ public final class InterfaceLoader {
 
         InterfaceLoader.LOGGER.error("Welcome to MTS VERSION:" + MODVER);
 
-        //Parse packs now that we have a logger.
+        //Parse packs
         ConfigSystem.loadFromDisk(new File(gameDirectory, "config"), event.getSide().isClient());
         List<File> packDirectories = new ArrayList<>();
         File modDirectory = new File(gameDirectory, "mods");
@@ -83,7 +83,7 @@ public final class InterfaceLoader {
             //Also put all liquids into the config file for use by modpack makers.
             ConfigSystem.settings.fuel.lastLoadedFluids = InterfaceManager.clientInterface.getAllFluidNames();
 
-            //Also diable playerTweaks if some known-problematic mods are present.
+            //Also disable playerTweaks if some known-problematic mods are present.
             if (InterfaceManager.coreInterface.isModPresent("tails") || InterfaceManager.coreInterface.isModPresent("obfuscate") || InterfaceManager.coreInterface.isModPresent("mobends")) {
                 ConfigSystem.client.renderingSettings.playerTweaks.value = false;
             }

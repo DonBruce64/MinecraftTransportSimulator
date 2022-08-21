@@ -2,7 +2,6 @@ package minecrafttransportsimulator.rendering;
 
 import mcinterface1122.InterfaceLoader;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
 
 import java.io.BufferedReader;
 import java.io.IOException;

@@ -56,7 +56,7 @@ public class JSONConfigLanguage {
                     itemName = packItem.definition.general.name != null ? packItem.definition.general.name : packItem.definition.systemName;
                 }
                 String itemDescription = packItem.definition.general.description != null ? packItem.definition.general.description : "";
-                if (!itemName.equals(entry.name) || (itemDescription != null && !itemDescription.equals(entry.description)) || overrideJSONWithDefinedValues) {
+                if (!itemName.equals(entry.name) || !itemDescription.equals(entry.description) || overrideJSONWithDefinedValues) {
                     if (entry.name == null || overrideJSONWithDefinedValues) {
                         entry.name = itemName;
                     }
@@ -89,8 +89,8 @@ public class JSONConfigLanguage {
     public static final LanguageEntry DEATH_BULLET_NULL = new LanguageEntry("death.bullet.null", "%s was shot by a spy");
     public static final LanguageEntry DEATH_BULLET_PLAYER = new LanguageEntry("death.bullet.player", "%s was shot by %s");
 
-    public static final LanguageEntry DEATH_PROPELLOR_NULL = new LanguageEntry("death.propellor.null", "%s was shredded by a propeller");
-    public static final LanguageEntry DEATH_PROPELLOR_PLAYER = new LanguageEntry("death.propellor.player", "%s was shredded by %s's propeller");
+    public static final LanguageEntry DEATH_PROPELLER_NULL = new LanguageEntry("death.propeller.null", "%s was shredded by a propeller");
+    public static final LanguageEntry DEATH_PROPELLER_PLAYER = new LanguageEntry("death.propeller.player", "%s was shredded by %s's propeller");
 
     public static final LanguageEntry DEATH_JETINTAKE_NULL = new LanguageEntry("death.jet_intake.null", "%s was sucked into a jet engine");
     public static final LanguageEntry DEATH_JETINTAKE_PLAYER = new LanguageEntry("death.jet_intake.player", "%s was sucked into %s's jet engine");
@@ -297,6 +297,7 @@ public class JSONConfigLanguage {
     public static final LanguageEntry ITEMINFO_BULLET_TYPE_INCENDIARY = new LanguageEntry("iteminfo.bullet.type.incendiary", "Incendiary Bullet");
     public static final LanguageEntry ITEMINFO_BULLET_TYPE_ARMOR_PIERCING = new LanguageEntry("iteminfo.bullet.type.armor_piercing", "Armor Piercing Bullet");
     public static final LanguageEntry ITEMINFO_BULLET_TYPE_WATER = new LanguageEntry("iteminfo.bullet.type.water", "Water Bullet");
+    public static final LanguageEntry ITEMINFO_BULLET_PELLETS = new LanguageEntry("iteminfo.bullet.pellets", "Pellets: ");
     public static final LanguageEntry ITEMINFO_BULLET_DIAMETER = new LanguageEntry("iteminfo.bullet.diameter", "Diameter (mm): ");
     public static final LanguageEntry ITEMINFO_BULLET_CASELENGTH = new LanguageEntry("iteminfo.bullet.caseLength", "Case Length (mm): ");
     public static final LanguageEntry ITEMINFO_BULLET_PENETRATION = new LanguageEntry("iteminfo.bullet.penetration", "Penetration (mm): ");

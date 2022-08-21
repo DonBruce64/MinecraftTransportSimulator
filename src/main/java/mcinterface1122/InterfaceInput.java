@@ -320,7 +320,7 @@ public class InterfaceInput implements IInterfaceInput {
         }
 
         //Check if we pressed the config key.
-        if (configKey.isPressed() && InterfaceManager.clientInterface.isGUIOpen()) {
+        if (configKey.isPressed() && !InterfaceManager.clientInterface.isGUIOpen()) {
             new GUIConfig();
         }
     }

@@ -106,7 +106,7 @@ public class GUIHUD extends AGUIBase {
 
         //Set gun label text, if we are in a seat that has one.
         //If we are in a seat controlling a gun, render a text line for it.
-        if (seat.canControlGuns && InterfaceManager.clientInterface.isChatOpen()) {
+        if (seat.canControlGuns && !InterfaceManager.clientInterface.isChatOpen()) {
             gunTypeLabel.visible = true;
             gunTypeLabel.text = "Active Gun: ";
             if (seat.activeGunItem != null) {
