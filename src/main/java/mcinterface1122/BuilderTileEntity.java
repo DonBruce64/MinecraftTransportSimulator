@@ -90,8 +90,8 @@ public class BuilderTileEntity<TileEntityType extends ATileEntityBase<?>> extend
                         loadedFromSavedNBT = true;
                         lastLoadedNBT = null;
                     } catch (Exception e) {
-                        InterfaceManager.coreInterface.logError("Failed to load tile entity on builder from saved NBT.  Did a pack change?");
-                        InterfaceManager.coreInterface.logError(e.getMessage());
+                        InterfaceLoader.LOGGER.error("Failed to load tile entity on builder from saved NBT.  Did a pack change?");
+                        InterfaceLoader.LOGGER.error(e.getMessage());
                         world.setBlockToAir(pos);
                     }
                 }

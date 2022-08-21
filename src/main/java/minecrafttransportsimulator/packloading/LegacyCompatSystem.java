@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.packloading;
 
+import mcinterface1122.InterfaceLoader;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
@@ -2469,8 +2470,8 @@ public final class LegacyCompatSystem {
                 }
             }
         } catch (Exception e) {
-            InterfaceManager.coreInterface.logError("Could not do model-based legacy compats on " + definition.packID + ":" + definition.systemName + ".  Lights and treads will likely not be present on this model.");
-            InterfaceManager.coreInterface.logError(e.getMessage());
+            InterfaceLoader.LOGGER.error("Could not do model-based legacy compats on " + definition.packID + ":" + definition.systemName + ".  Lights and treads will likely not be present on this model.");
+            InterfaceLoader.LOGGER.error(e.getMessage());
         }
     }
 }

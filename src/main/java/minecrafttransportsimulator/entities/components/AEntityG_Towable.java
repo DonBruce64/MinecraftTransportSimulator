@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.entities.components;
 
+import mcinterface1122.InterfaceLoader;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.TowingConnection;
@@ -92,7 +93,7 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
                         }
                     } else {
                         savedTowedByConnection = null;
-                        InterfaceManager.coreInterface.logError("Could not hook-up trailer to entity towing it.  Did the JSON or pack change?");
+                        InterfaceLoader.LOGGER.error("Could not hook-up trailer to entity towing it.  Did the JSON or pack change?");
                     }
                 }
             }
@@ -107,12 +108,12 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
                                     --i;
                                 }
                             } catch (Exception e) {
-                                InterfaceManager.coreInterface.logError("Could not connect trailer(s) to the entity towing them.  Did the JSON or pack change?");
+                                InterfaceLoader.LOGGER.error("Could not connect trailer(s) to the entity towing them.  Did the JSON or pack change?");
                             }
                         }
                     } else {
                         savedTowingConnections.clear();
-                        InterfaceManager.coreInterface.logError("Could not connect trailer(s) to the entity towing them.  Did the JSON or pack change?");
+                        InterfaceLoader.LOGGER.error("Could not connect trailer(s) to the entity towing them.  Did the JSON or pack change?");
                     }
                 }
             }

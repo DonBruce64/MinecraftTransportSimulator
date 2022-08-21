@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.entities.instances;
 
+import mcinterface1122.InterfaceLoader;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
@@ -31,7 +32,6 @@ import java.util.List;
 
 public final class PartSeat extends APart {
     public static boolean lockCameraToMovement = true;
-
     public boolean canControlGuns;
     public ItemPartGun activeGunItem;
     public int gunSequenceCooldown;
@@ -119,8 +119,8 @@ public final class PartSeat extends APart {
     }
 
     @Override
-    public void updateParts() {
-        super.updateParts();
+    public void updatePartList() {
+        super.updatePartList();
 
         //Update gun list, this is grouped by the specific gun.
         List<PartGun> gunList = new ArrayList<>();
@@ -149,7 +149,7 @@ public final class PartSeat extends APart {
             gunIndex = 0;
         }
 
-        //Reset active index so we don't risk going out of range.
+        //Reset active index so that we don't risk going out of range.
         gunGroupIndex = 0;
     }
 
@@ -268,7 +268,9 @@ public final class PartSeat extends APart {
 
     @Override
     public boolean updateRider() {
+        InterfaceLoader.LOGGER.info("Updating rider...");
         if (super.updateRider()) {
+            InterfaceLoader.LOGGER.info("Super of update rider ran");
             //Add all seat-specific effects to the rider
             if (placementDefinition.seatEffects != null) {
                 for (JSONPotionEffect effect : placementDefinition.seatEffects) {
@@ -279,7 +281,7 @@ public final class PartSeat extends APart {
             //If we are on the client, and the rider is the main client player, check controls.
             //If the seat is a controller, and we have mouseYoke enabled, and our view is locked disable the mouse from MC.
             //We also need to make sure the player in this event is the actual client player.  If we are on a server,
-            //another player could be getting us to this logic point and thus we'd be making their inputs in the vehicle.
+            //another player could be getting us to this logic point, thus we'd be making their inputs in the vehicle.
             if (vehicleOn != null && world.isClient() && !InterfaceManager.clientInterface.isChatOpen() && rider.equals(InterfaceManager.clientInterface.getClientPlayer())) {
                 ControlSystem.controlVehicle(vehicleOn, placementDefinition.isController);
                 InterfaceManager.inputInterface.setMouseEnabled(!(placementDefinition.isController && ConfigSystem.client.controlSettings.mouseYoke.value && lockCameraToMovement));

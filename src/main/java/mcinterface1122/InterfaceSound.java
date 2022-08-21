@@ -194,7 +194,7 @@ public class InterfaceSound implements IInterfaceSound {
 
         //If the sound system was reset, blow out all saved data points.
         if (soundSystemReset) {
-            InterfaceManager.coreInterface.logError("Had an invalid sound name.  Was the sound system reset?  Clearing all sounds, playing or not!");
+            InterfaceLoader.LOGGER.error("Had an invalid sound name.  Was the sound system reset?  Clearing all sounds, playing or not!");
             dataSourceBuffers.clear();
             for (SoundInstance sound : playingSounds) {
                 sound.entity.sounds.remove(sound);

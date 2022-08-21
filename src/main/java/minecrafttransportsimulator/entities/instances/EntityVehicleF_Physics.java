@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.entities.instances;
 
+import mcinterface1122.InterfaceLoader;
 import minecrafttransportsimulator.baseclasses.*;
 import minecrafttransportsimulator.entities.components.AEntityG_Towable;
 import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
@@ -188,7 +189,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                 //Only check once per base entity.
                 towedEntity = connection.towedVehicle;
                 if (towedEntitiesCheckedForWeights.contains(towedEntity)) {
-                    InterfaceManager.coreInterface.logError("Infinite loop detected on weight checking code!  Is a trailer towing the thing that's towing it?");
+                    InterfaceLoader.LOGGER.error("Infinite loop detected on weight checking code!  Is a trailer towing the thing that's towing it?");
                     break;
                 } else {
                     towedEntitiesCheckedForWeights.add(towedEntity);

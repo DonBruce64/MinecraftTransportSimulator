@@ -167,8 +167,8 @@ public class PartPropeller extends APart {
     }
 
     @Override
-    public void updateParts() {
-        super.updateParts();
+    public void updatePartList() {
+        super.updatePartList();
 
         connectedEngines.clear();
         if (entityOn instanceof PartEngine) {

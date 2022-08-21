@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.blocks.tileentities.components;
 
+import mcinterface1122.InterfaceLoader;
 import minecrafttransportsimulator.baseclasses.BezierCurve;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
@@ -203,7 +204,7 @@ public class RoadLane {
                         InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityRoadConnectionUpdate(otherLane, curvePriorConnection.curveNumber, false, null));
                     }
                 } catch (Exception e) {
-                    InterfaceManager.coreInterface.logError("Couldn't get TE at position " + curvePriorConnection.tileLocation + " to break prior road connection.  Was it changed?");
+                    InterfaceLoader.LOGGER.error("Couldn't get TE at position " + curvePriorConnection.tileLocation + " to break prior road connection.  Was it changed?");
                 }
             }
         }
@@ -226,7 +227,7 @@ public class RoadLane {
                         InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityRoadConnectionUpdate(otherLane, curveNextConnection.curveNumber, false, null));
                     }
                 } catch (Exception e) {
-                    InterfaceManager.coreInterface.logError("Couldn't get TE at position " + curveNextConnection.tileLocation + " to break next road connection.  Was it changed?");
+                    InterfaceLoader.LOGGER.error("Couldn't get TE at position " + curveNextConnection.tileLocation + " to break next road connection.  Was it changed?");
                 }
             }
         }

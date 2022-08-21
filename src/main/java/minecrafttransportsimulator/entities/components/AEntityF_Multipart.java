@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.entities.components;
 
+import mcinterface1122.InterfaceLoader;
 import minecrafttransportsimulator.baseclasses.*;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.items.components.AItemBase;
@@ -379,12 +380,12 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                         addPartFromItem(partItem, placingPlayer, partData, partSlot);
                     }
                 } catch (Exception e) {
-                    InterfaceManager.coreInterface.logError("Could not load part from NBT.  Did you un-install a pack?");
+                    InterfaceLoader.LOGGER.error("Could not load part from NBT.  Did you un-install a pack?");
                     e.printStackTrace();
                 }
 
                 //Add default parts.  We need to do this after we actually create this part so its slots are valid.
-                //We also need to know if we it is a new part or not, since that allows non-permanent default parts to be added.
+                //We also need to know if it is a new part or not, since that allows non-permanent default parts to be added.
                 JSONPartDefinition partDef = definition.parts.get(i);
                 if (newEntity && partDef.defaultPart != null) {
                     addDefaultPart(partDef, placingPlayer, definition);
@@ -444,7 +445,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             masterEntity = ((APart) masterEntity).entityOn;
         }
         masterEntity.updateAllpartList();
-        masterEntity.updateParts();
+        masterEntity.updatePartList();
     }
 
     /**
@@ -480,7 +481,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             masterEntity = ((APart) masterEntity).entityOn;
         }
         masterEntity.updateAllpartList();
-        masterEntity.updateParts();
+        masterEntity.updatePartList();
     }
 
     /**
@@ -502,8 +503,8 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
      * This includes both parent and child lists.  Operations that reference the allpart
      * list should occur here, not in {@link #updateAllpartList()}.
      */
-    public void updateParts() {
-        parts.forEach(APart::updateParts);
+    public void updatePartList() {
+        parts.forEach(APart::updatePartList);
     }
 
     /**

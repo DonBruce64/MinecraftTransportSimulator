@@ -7,8 +7,8 @@ import java.util.List;
 /**
  * Interface to the core MC system.  This class has methods for registrations
  * file locations, and other core things that are common to clients and servers.
- * Client-specific things go into {@link IInterfaceManager.clientInterface}, rendering goes into
- * {@link IInterfaceManager.renderingInterface}.
+ * Client-specific things go into {@link InterfaceManager.clientInterface}, rendering goes into
+ * {@link InterfaceManager.renderingInterface}.
  *
  * @author don_bruce
  */
@@ -65,15 +65,4 @@ public interface IInterfaceCore {
      * Returns all possible stacks that could be used for the passed-in OreDict name.
      */
     List<IWrapperItemStack> getOredictMaterials(String oreName);
-
-    /**
-     * Logs an error to the logging system.  Used when things don't work right.
-     */
-    void logError(String message);
-
-    /**
-     * Called to send queued logs to the logger.  This is required as the logger
-     * gets created during pre-init, but logs can be generated during construction.
-     */
-    void flushLogQueue();
 }

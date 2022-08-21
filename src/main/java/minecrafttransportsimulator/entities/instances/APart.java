@@ -266,8 +266,8 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     }
 
     @Override
-    public void updateParts() {
-        super.updateParts();
+    public void updatePartList() {
+        super.updatePartList();
         linkedParts.clear();
         addLinkedPartsToList(linkedParts, APart.class);
     }

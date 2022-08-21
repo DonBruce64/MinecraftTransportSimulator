@@ -16,8 +16,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 class InterfaceCore implements IInterfaceCore {
-    private final List<String> queuedLogs = new ArrayList<>();
-
     @Override
     public String getGameVersion() {
         return Loader.instance().getMCVersionString().substring("Minecraft ".length());
@@ -88,21 +86,5 @@ class InterfaceCore implements IInterfaceCore {
 
         }
         return stacks;
-    }
-
-    @Override
-    public void logError(String message) {
-        if (InterfaceLoader.logger == null) {
-            queuedLogs.add(InterfaceLoader.MODID.toUpperCase() + "ERROR: " + message);
-        } else {
-            InterfaceLoader.logger.error(InterfaceLoader.MODID.toUpperCase() + "ERROR: " + message);
-        }
-    }
-
-    @Override
-    public void flushLogQueue() {
-        for (String log : queuedLogs) {
-            logError(log);
-        }
     }
 }

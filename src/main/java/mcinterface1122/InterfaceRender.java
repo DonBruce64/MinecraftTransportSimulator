@@ -278,7 +278,7 @@ public class InterfaceRender implements IInterfaceRender {
                     String location = formattedLocation.substring("/assets/".length() + domain.length() + 1);
                     internalTextures.put(textureLocation, new ResourceLocation(domain, location));
                 } else {
-                    InterfaceManager.coreInterface.logError("Could not find texture: " + formattedLocation + " Reverting to fallback texture.");
+                    InterfaceLoader.LOGGER.error("Could not find texture: " + formattedLocation + " Reverting to fallback texture.");
                     internalTextures.put(textureLocation, MISSING_TEXTURE);
                 }
             }

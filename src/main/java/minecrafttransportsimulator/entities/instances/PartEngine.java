@@ -630,8 +630,8 @@ public class PartEngine extends APart {
     }
 
     @Override
-    public void updateParts() {
-        super.updateParts();
+    public void updatePartList() {
+        super.updatePartList();
 
         //Update linked wheel list.
         linkedWheels.clear();

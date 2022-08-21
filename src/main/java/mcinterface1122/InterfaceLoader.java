@@ -9,6 +9,7 @@ import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.Mod.Instance;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.File;
@@ -24,17 +25,14 @@ import java.util.List;
  * @author don_bruce
  */
 @Mod(modid = InterfaceLoader.MODID, name = InterfaceLoader.MODNAME, version = InterfaceLoader.MODVER)
-public class InterfaceLoader {
+public final class InterfaceLoader {
     public static final String MODID = "mts";
     public static final String MODNAME = "Immersive Vehicles (MTS)";
     public static final String MODVER = "21.4.0-BETA40";
-    public static Logger logger;
-
-    @Instance(MODID)
-    public static InterfaceLoader INSTANCE;
+    public static final Logger LOGGER = LogManager.getLogger(InterfaceLoader.MODID);
 
     static {
-        //Enable universal bucket so we can use buckets on fuel pumps.
+        //Enable universal bucket so that we can use buckets on fuel pumps.
         FluidRegistry.enableUniversalBucket();
     }
 
@@ -50,10 +48,7 @@ public class InterfaceLoader {
             new InterfaceManager(MODID, gameDirectory, new InterfaceCore(), new InterfacePacket(), null, null, null, null);
         }
 
-        //Set logger and add log items from pre-boot operations.
-        logger = event.getModLog();
-        InterfaceManager.coreInterface.flushLogQueue();
-        InterfaceManager.coreInterface.logError("Welcome to MTS VERSION:" + MODVER);
+        InterfaceLoader.LOGGER.error("Welcome to MTS VERSION:" + MODVER);
 
         //Parse packs now that we have a logger.
         ConfigSystem.loadFromDisk(new File(gameDirectory, "config"), event.getSide().isClient());
@@ -72,7 +67,7 @@ public class InterfaceLoader {
             PackParser.addDefaultItems();
             PackParser.parsePacks(packDirectories, event.getSide().isClient());
         } else {
-            InterfaceManager.coreInterface.logError("Could not find mods directory!  Game directory is confirmed to: " + gameDirectory);
+            InterfaceLoader.LOGGER.error("Could not find mods directory!  Game directory is confirmed to: " + gameDirectory);
         }
     }
 

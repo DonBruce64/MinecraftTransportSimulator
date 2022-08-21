@@ -448,8 +448,8 @@ public class PartGun extends APart {
     }
 
     @Override
-    public void updateParts() {
-        super.updateParts();
+    public void updatePartList() {
+        super.updatePartList();
 
         seatsControllingGun.clear();
         addLinkedPartsToList(seatsControllingGun, PartSeat.class);
