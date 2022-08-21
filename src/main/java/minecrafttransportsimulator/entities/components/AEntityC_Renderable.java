@@ -58,7 +58,7 @@ public abstract class AEntityC_Renderable extends AEntityB_Existing {
     public final void render(boolean blendingEnabled, float partialTicks) {
         //If we need to render, do so now.
         world.beginProfiling("RenderSetup", true);
-        if (disableRendering(partialTicks)) {
+        if (!disableRendering(partialTicks)) {
             //Get the render offset.
             //This is the interpolated movement, plus the prior position.
             if (changesPosition()) {
@@ -119,7 +119,7 @@ public abstract class AEntityC_Renderable extends AEntityB_Existing {
      */
     protected boolean disableRendering(float partialTicks) {
         //Don't render on the first tick, as we might have not created some variables yet.
-        return ticksExisted != 0;
+        return ticksExisted == 0;
     }
 
     /**
