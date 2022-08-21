@@ -5,19 +5,18 @@ import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedHashMap;
 
 /**
- * Packet sent to entities to update their their text lines.  This is sent from the
+ * Packet sent to entities to update their text lines.  This is sent from the
  * text GUI to servers to update the text, and then sent back to all clients for syncing.
  *
  * @author don_bruce
  */
 public class PacketEntityTextChange extends APacketEntity<AEntityD_Definable<?>> {
-    private final List<String> textLines;
+    private final LinkedHashMap<String, String> textLines;
 
-    public PacketEntityTextChange(AEntityD_Definable<?> entity, List<String> textLines) {
+    public PacketEntityTextChange(AEntityD_Definable<?> entity, LinkedHashMap<String, String> textLines) {
         super(entity);
         this.textLines = textLines;
     }
@@ -25,9 +24,9 @@ public class PacketEntityTextChange extends APacketEntity<AEntityD_Definable<?>>
     public PacketEntityTextChange(ByteBuf buf) {
         super(buf);
         byte textLineCount = buf.readByte();
-        this.textLines = new ArrayList<>();
+        this.textLines = new LinkedHashMap<>();
         for (byte i = 0; i < textLineCount; ++i) {
-            textLines.add(readStringFromBuffer(buf));
+            textLines.put(readStringFromBuffer(buf), readStringFromBuffer(buf));
         }
     }
 
@@ -35,9 +34,10 @@ public class PacketEntityTextChange extends APacketEntity<AEntityD_Definable<?>>
     public void writeToBuffer(ByteBuf buf) {
         super.writeToBuffer(buf);
         buf.writeByte(textLines.size());
-        for (String textLine : textLines) {
-            writeStringToBuffer(textLine, buf);
-        }
+        textLines.forEach((key, value) -> {
+            writeStringToBuffer(key, buf);
+            writeStringToBuffer(value, buf);
+        });
     }
 
     @Override

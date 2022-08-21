@@ -207,11 +207,13 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
     }
 
     @Override
-    public void updateText(List<String> textLines) {
-        int linesChecked = 0;
-        for (Entry<JSONText, String> textEntry : text.entrySet()) {
-            textEntry.setValue(textLines.get(linesChecked++));
-        }
+    public void updateText(LinkedHashMap<String, String> textLines) {
+        super.updateText(textLines);
+        allParts.forEach(part -> {
+            for (Entry<JSONText, String> textEntry : part.text.entrySet()) {
+                textEntry.setValue(textLines.get(textEntry.getKey().fieldName));
+            }
+        });
     }
 
     @Override

@@ -9,7 +9,8 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 
-import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map.Entry;
 
 /**
  * Beacon tile entity.  Contains code for handling interfacing with
@@ -51,7 +52,7 @@ public class TileEntityBeacon extends TileEntityDecor {
     }
 
     @Override
-    public void updateText(List<String> textLines) {
+    public void updateText(LinkedHashMap<String, String> textLines) {
         if (currentBeacon != null) {
             NavBeacon.removeFromWorld(world, currentBeacon.name);
             currentBeacon = null;
@@ -59,7 +60,26 @@ public class TileEntityBeacon extends TileEntityDecor {
         try {
             //Try to create the beacon before setting text.  If it's invalid text, we don't want to save it.
             //If the object can be created, then we just call super and let it handle this.
-            NavBeacon newBeacon = new NavBeacon(world, textLines.get(0), Double.parseDouble(textLines.get(1)), Double.parseDouble(textLines.get(2)), position);
+            String name = null;
+            double glideSlope = 0;
+            double bearing = 0;
+            int entry = 0;
+            for (Entry<String, String> textEntry : textLines.entrySet()) {
+                switch (entry++) {
+                    case 0:
+                        name = textEntry.getValue();
+                        break;
+                    case 1:
+                        glideSlope = Double.parseDouble(textEntry.getValue());
+                        break;
+                    case 2:
+                        bearing = Double.parseDouble(textEntry.getValue());
+                        break;
+                    default: //Don't do anything, we don't use this text here.
+                }
+            }
+
+            NavBeacon newBeacon = new NavBeacon(world, name, glideSlope, bearing, position);
             super.updateText(textLines);
             currentBeacon = newBeacon;
         } catch (Exception e) {

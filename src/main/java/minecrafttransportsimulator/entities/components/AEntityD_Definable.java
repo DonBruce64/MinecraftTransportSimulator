@@ -328,7 +328,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     /**
      * Returns the texture that should be bound to this entity for the passed-in object from the model.
      * This may change between render passes, but only ONE texture may be used for any given object render
-     * operation!  By default, this returns the JSON-defined texture, though the model parser may override this.
+     * operation!  By default this returns the JSON-defined texture, though the model parser may override this.
      */
     public String getTexture() {
         return definition.getTextureLocation(subName);
@@ -366,13 +366,13 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     }
 
     /**
-     * Called to update the text on this entity.  Normally just sets the text to the passed-in values,
+     * Called to update the text on this entity.  Variable is a map with the key as a field name,
+     * and the value as the value of that field.  Normally just sets the text to the passed-in values,
      * but may do supplemental logic if desired.
      */
-    public void updateText(List<String> textLines) {
-        int linesChecked = 0;
+    public void updateText(LinkedHashMap<String, String> textLines) {
         for (Entry<JSONText, String> textEntry : text.entrySet()) {
-            textEntry.setValue(textLines.get(linesChecked++));
+            textEntry.setValue(textLines.get(textEntry.getKey().fieldName));
         }
     }
 
@@ -628,7 +628,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         @Override
         public void runRotation(DurationDelayClock clock, float partialTicks) {
             definedValue = true;
-            //Parabola is defined with parameter A being x, and H being z.
+            //Parobola is defined with parameter A being x, and H being z.
             double parabolaValue = entity.getAnimatedVariableValue(clock, clock.animation.axis.y, -clock.animation.offset, partialTicks);
             value += clock.animation.axis.x * Math.pow(parabolaValue - clock.animation.axis.z, 2) + clock.animation.offset;
         }
@@ -637,7 +637,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     /**
      * Returns the raw value for the passed-in variable.  If the variable is not present, NaN
      * should be returned (calling functions need to account for this!).
-     * This should be extended on all subclasses for them to provide their own variables.
+     * This should be extended on all sub-classes for them to provide their own variables.
      * For all cases of this, the sub-classed variables should be checked first.  If none are
      * found, then the super() method should be called to return those as a default.
      */
@@ -742,7 +742,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     }
 
     /**
-     * Shorthand version of {@link #getAnimatedVariableValue(DurationDelayClock, double, double, float)}
+     * Short-hand version of {@link #getAnimatedVariableValue(DurationDelayClock, double, double, float)}
      * with a scale of 1.0 and offset of 0.0.
      */
     public final double getAnimatedVariableValue(DurationDelayClock clock, float partialTicks) {
@@ -772,7 +772,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
      * text definition.
      */
     public final String getAnimatedTextVariableValue(JSONText textDef, float partialTicks) {
-        //Check text values first, then animated values.
+        //Check text values first, then anmiated values.
         String value = getRawTextVariableValue(textDef, 0);
         if (value == null) {
             double numberValue = getRawVariableValue(textDef.variableName, 0);
@@ -965,7 +965,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     @Override
     protected boolean disableRendering(float partialTicks) {
         //Don't render if we don't have a model.
-        return super.disableRendering(partialTicks) && !definition.rendering.modelType.equals(ModelType.NONE);
+        return super.disableRendering(partialTicks) || definition.rendering.modelType.equals(ModelType.NONE);
     }
 
     /**

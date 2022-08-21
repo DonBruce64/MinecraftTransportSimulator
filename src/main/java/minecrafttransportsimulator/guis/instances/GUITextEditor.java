@@ -13,6 +13,7 @@ import minecrafttransportsimulator.packets.instances.PacketEntityTextChange;
 import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 public class GUITextEditor extends AGUIBase {
@@ -68,7 +69,7 @@ public class GUITextEditor extends AGUIBase {
 
             //Add part text objects if we are a multipart.
             if (entity instanceof AEntityF_Multipart) {
-                for (APart part : ((AEntityF_Multipart<?>) entity).parts) {
+                for (APart part : ((AEntityF_Multipart<?>) entity).allParts) {
                     textObjects.addAll(part.text.keySet());
                     textLines.addAll(part.text.values());
                 }
@@ -97,9 +98,9 @@ public class GUITextEditor extends AGUIBase {
         addComponent(confirmButton = new GUIComponentButton(guiLeft + 150, guiTop + 15, 80, 20, JSONConfigLanguage.GUI_CONFIRM.value) {
             @Override
             public void onClicked(boolean leftSide) {
-                List<String> packetTextLines = new ArrayList<>();
+                LinkedHashMap<String, String> packetTextLines = new LinkedHashMap<String, String>();
                 for (JSONText textObject : textObjects) {
-                    packetTextLines.add(textInputBoxes.get(textInputFieldNames.indexOf(textObject.fieldName)).getText());
+                    packetTextLines.put(textObject.fieldName, textInputBoxes.get(textInputFieldNames.indexOf(textObject.fieldName)).getText());
                 }
                 InterfaceManager.packetInterface.sendToServer(new PacketEntityTextChange(entity, packetTextLines));
                 close();

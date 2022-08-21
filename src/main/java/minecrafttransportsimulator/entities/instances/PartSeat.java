@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.entities.instances;
 
-import mcinterface1122.InterfaceLoader;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
