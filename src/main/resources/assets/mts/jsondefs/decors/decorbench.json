@@ -1,10 +1,10 @@
 {
-    "general": {
-        "name": "Decor Bench",
-        "materials": [],
-        "width": 1.0,
-        "height": 1.0,
-        "depth": 1.0,
-        "itemTypes": ["decor", "pole"]
-    }
+	"general": {
+		"name" : "Decor Bench",
+		"materials" : [],
+		"width" : 1.0,
+		"height" : 1.0,
+		"depth" : 1.0,
+		"itemTypes" : ["decor", "pole"]
+	}
 }

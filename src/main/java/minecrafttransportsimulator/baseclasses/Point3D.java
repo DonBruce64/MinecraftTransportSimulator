@@ -1,10 +1,9 @@
 package minecrafttransportsimulator.baseclasses;
 
-/**
- * Basic 3D point class. Allows for saving of positions in a less recourse-heavy
- * format than Minecraft's vectors. This class is mutable to allow
+/**Basic 3D point class.  Allows for saving of positions in a less recourse-heavy
+ * format than Minecraft's vectors.  This class is mutable to allow
  * the point to change, cause we don't need to create a new point every time we
- * move a thing. As this point can be used for vectors, methods exist for vector
+ * move a thing.  As this point can be used for vectors, methods exist for vector
  * operations such as dot product, cross product, and rotation.
  * Note that all methods return this object for nested operations, unless otherwise
  * specified.
@@ -84,9 +83,9 @@ public class Point3D {
     }
 
     /**
-     * Adds the scaled value of the scale multiplied by the
-     * passed-in vector to this point. This is useful
-     * if you don't want to modify the vector, but want
+     * Adds the scaled value of the scale multiplied by the 
+     * passed-in vector to this point.  This is useful
+     * if you don't want to modify the vector, but want 
      * to translate along it's path.
      */
     public Point3D addScaled(Point3D point, double scale) {
@@ -138,7 +137,7 @@ public class Point3D {
     }
 
     /**
-     * Inverts the sign on this point. This should be used instead of multiplying
+     * Inverts the sign on this point.  This should be used instead of multiplying
      * by -1 as it's quicker and more accurate.
      */
     public Point3D invert() {
@@ -160,7 +159,7 @@ public class Point3D {
 
     /**
      * Returns true if the distance between this point and the passed-in point
-     * is less than the distance specified. This is an optimized method of
+     * is less than the distance specified.  This is an optimized method of
      * {@link #distanceTo(Point3D)} as it doesn't do square root calls.
      */
     public boolean isDistanceToCloserThan(Point3D point, double distance) {
@@ -173,7 +172,7 @@ public class Point3D {
     /**
      * Returns true if the distance between this point and the first passed-in
      * point is less than the distance between this point and the second passed-in
-     * point. This is an optimized method to check which of two points are closer
+     * point.  This is an optimized method to check which of two points are closer
      * versus using {@link #distanceTo(Point3D)} as it doesn't do square root calls.
      */
     public boolean isFirstCloserThanSecond(Point3D first, Point3D second) {
@@ -190,10 +189,10 @@ public class Point3D {
 
     /**
      * Returns the dot product between this point and the passed-in point.
-     * Note: if normalized is true, then this method assumes both points are
-     * normalized and clamps between-1.0 and 1.0 to prevent out-of-bounds errors
-     * when the return value is used in trigonometric functions, even if the math
-     * doesn't strictly result in that value. If the parameter is false, then
+     * Note: if normalized is true, then this method assumes both points are 
+     * normalized and clamps between-1.0 and 1.0 to prevent out-of-bounds errors 
+     * when the return value is used in trigonometric functions, even if the math 
+     * doesn't strictly result in that value.  If the parameter is false, then
      * the actual dot product is returned.
      */
     public double dotProduct(Point3D point, boolean normalized) {
@@ -214,7 +213,7 @@ public class Point3D {
     /**
      * Returns the cross product between this point and the passed-in point.
      * Return value is a new point that is the cross product of the object
-     * this was invoked on, and the passed-in object. Neither object is
+     * this was invoked on, and the passed-in object.  Neither object is
      * modified by this operation.
      */
     public Point3D crossProduct(Point3D point) {
@@ -243,7 +242,7 @@ public class Point3D {
 
     /**
      * Returns the difference between the passed-in value and this point's Y value, between
-     * the range of -180 to 180. Placed here as Y is frequently used in yaw angle for in-game
+     * the range of -180 to 180.  Placed here as Y is frequently used in yaw angle for in-game
      * entities and needs to be clamped to this domain for calculations.
      */
     public double getClampedYDelta(double otherY) {
@@ -258,7 +257,7 @@ public class Point3D {
     }
 
     /**
-     * Sets this point to the angle values defined by it. If the point is not normalized,
+     * Sets this point to the angle values defined by it.  If the point is not normalized,
      * pass in true to the boolean to perform this operation.
      * Note that since there is no "roll" for vectors, the z-value will always be 0.
      * Returns the called object for nested operations.
@@ -278,12 +277,18 @@ public class Point3D {
      * Returns the called object for nested operations.
      */
     public Point3D clamp180() {
-        while (x > 180) x -= 360;
-        while (x < -180) x += 360;
-        while (y > 180) y -= 360;
-        while (y < -180) y += 360;
-        while (z > 180) z -= 360;
-        while (z < -180) z += 360;
+        while (x > 180)
+            x -= 360;
+        while (x < -180)
+            x += 360;
+        while (y > 180)
+            y -= 360;
+        while (y < -180)
+            y += 360;
+        while (z > 180)
+            z -= 360;
+        while (z < -180)
+            z += 360;
         return this;
     }
 
@@ -304,7 +309,7 @@ public class Point3D {
     /**
      * Returns a new point with the x value equal to the second parameter, provided the X value
      * is between this point and the passed-in point, and the passed-in point's x-value is not
-     * equal to this point's x-value. If such conditions are not satisfied, null is returned.
+     * equal to this point's x-value.  If such conditions are not satisfied, null is returned.
      */
     public Point3D getIntermediateWithXValue(Point3D endPoint, double targetX) {
         Point3D delta = endPoint.copy().subtract(this);
@@ -321,7 +326,7 @@ public class Point3D {
     /**
      * Returns a new point with the y value equal to the second parameter, provided the Y value
      * is between this point and the passed-in point, and the passed-in point's y-value is not
-     * equal to this point's y-value. If such conditions are not satisfied, null is returned.
+     * equal to this point's y-value.  If such conditions are not satisfied, null is returned.
      */
     public Point3D getIntermediateWithYValue(Point3D endPoint, double targetY) {
         Point3D delta = endPoint.copy().subtract(this);
@@ -338,7 +343,7 @@ public class Point3D {
     /**
      * Returns a new point with the z value equal to the second parameter, provided the Z value
      * is between this point and the passed-in point, and the passed-in point's z-value is not
-     * equal to this point's z-value. If such conditions are not satisfied, null is returned.
+     * equal to this point's z-value.  If such conditions are not satisfied, null is returned.
      */
     public Point3D getIntermediateWithZValue(Point3D endPoint, double targetZ) {
         Point3D delta = endPoint.copy().subtract(this);
@@ -351,7 +356,6 @@ public class Point3D {
             return factor >= 0.0D && factor <= 1.0D ? delta.scale(factor).add(this) : null;
         }
     }
-
 
     /**
      * Forwarded function to {@link RotationMatrix#rotate(Point3D)} for nested calling.

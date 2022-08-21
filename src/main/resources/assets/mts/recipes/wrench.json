@@ -1,17 +1,14 @@
 {
     "type": "minecraft:crafting_shaped",
-    "pattern": [
+    "pattern":[
         " a ",
         " aa",
         "a  "
     ],
-    "key": {
-        "a": {
-            "type": "forge:ore_dict",
-            "ore": "ingotIron"
-        }
+    "key":{
+        "a":{"type": "forge:ore_dict", "ore": "ingotIron"}
     },
-    "result": {
+    "result":{
         "item": "mts:mts.wrench"
     }
 }

@@ -1,5 +1,23 @@
 package minecrafttransportsimulator.packloading;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.TypeAdapter;
@@ -8,35 +26,36 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
+
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
-import minecrafttransportsimulator.jsondefs.*;
+import minecrafttransportsimulator.jsondefs.AJSONInteractableEntity;
+import minecrafttransportsimulator.jsondefs.AJSONItem;
+import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
+import minecrafttransportsimulator.jsondefs.AJSONPartProvider;
+import minecrafttransportsimulator.jsondefs.JSONBullet;
+import minecrafttransportsimulator.jsondefs.JSONDecor;
+import minecrafttransportsimulator.jsondefs.JSONInstrument;
+import minecrafttransportsimulator.jsondefs.JSONItem;
+import minecrafttransportsimulator.jsondefs.JSONPart;
+import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
+import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
+import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.ModelParserLT.LTBox;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
-import java.io.*;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import java.lang.reflect.Field;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.util.*;
-
-/**
- * This class contains various methods to parse out JSON data from JSON files.
+/**This class contains various methods to parse out JSON data from JSON files.
  * Contains  custom type adapters used in JSON parsing operations, and annotations for fields.
- * Put here to customize how we import/export JSONs. For importing, this is pretty much
- * un-changed, sans for checks on the null-ness of fields. For exporting, this prevents writing
+ * Put here to customize how we import/export JSONs.  For importing, this is pretty much
+ * un-changed, sans for checks on the null-ness of fields.  For exporting, this prevents writing 
  * default values to the JSON for clarity and changes how lists are written to make the JSONs more compact.
- *
- * @author don_bruce
- */
+*
+* @author don_bruce
+*/
 public class JSONParser {
 
     private static final TypeAdapter<Boolean> booleanAdapter = new TypeAdapter<Boolean>() {
@@ -56,7 +75,7 @@ public class JSONParser {
             if (!value) {
                 writer.nullValue();
             } else {
-                writer.value(true);
+                writer.value(value);
             }
         }
     };
@@ -75,7 +94,7 @@ public class JSONParser {
         @Override
         public void write(JsonWriter writer, Integer value) throws IOException {
             //Only write non-zero integers to save space.
-            if (value == 0) {
+            if (value.intValue() == 0) {
                 writer.nullValue();
             } else {
                 writer.value(value);
@@ -97,7 +116,7 @@ public class JSONParser {
         @Override
         public void write(JsonWriter writer, Float value) throws IOException {
             //Only write non-zero floats to save space.
-            if (value == 0) {
+            if (value.floatValue() == 0) {
                 writer.nullValue();
             } else {
                 writer.value(value);
@@ -123,6 +142,7 @@ public class JSONParser {
         public void write(JsonWriter writer, Point3D value) throws IOException {
             if (value == null) {
                 writer.nullValue();
+                return;
             } else {
                 //Setting the indent to nothing prevents GSON from applying newlines to Point3ds.
                 //We need to set the indent to the value afterwards though to keep pretty printing.
@@ -155,6 +175,7 @@ public class JSONParser {
         public void write(JsonWriter writer, RotationMatrix value) throws IOException {
             if (value == null) {
                 writer.nullValue();
+                return;
             } else {
                 //Setting the indent to nothing prevents GSON from applying newlines to Point3ds.
                 //We need to set the indent to the value afterwards though to keep pretty printing.
@@ -177,7 +198,7 @@ public class JSONParser {
                 return null;
             } else if (reader.peek() == JsonToken.BEGIN_ARRAY) {
 
-                List<Integer> hsv = new ArrayList<>();
+                List<Integer> hsv = new ArrayList<Integer>();
 
                 reader.beginArray();
                 while (reader.hasNext()) {
@@ -209,11 +230,11 @@ public class JSONParser {
                 writer.endArray();
                 writer.setIndent("  ");
             } else {
-                StringBuilder hexString = new StringBuilder(Integer.toHexString(value.rgbInt).toUpperCase());
+                String hexString = Integer.toHexString(value.rgbInt).toUpperCase();
                 while (hexString.length() < 6) {
-                    hexString.insert(0, "0");
+                    hexString = "0" + hexString;
                 }
-                writer.value(hexString.toString());
+                writer.value(hexString);
             }
         }
     };
@@ -229,8 +250,8 @@ public class JSONParser {
                 LTBox value = new LTBox();
                 //First item is actually a string due to dumb semicolon.
                 reader.nextString();
-                value.pos1 = new int[]{reader.nextInt(), reader.nextInt(), reader.nextInt()};
-                value.pos2 = new int[]{reader.nextInt(), reader.nextInt(), reader.nextInt()};
+                value.pos1 = new int[] { reader.nextInt(), reader.nextInt(), reader.nextInt() };
+                value.pos2 = new int[] { reader.nextInt(), reader.nextInt(), reader.nextInt() };
 
                 //Consume remaining tokens in case we have supplemental data.
                 while (reader.hasNext()) {
@@ -243,7 +264,7 @@ public class JSONParser {
 
         @Override
         public void write(JsonWriter writer, LTBox value) throws IOException {
-            //No need to parse back out the LT box. We don't export them.
+            //No need to parse back out the LT box.  We don't export them.
             writer.nullValue();
         }
     };
@@ -255,7 +276,7 @@ public class JSONParser {
                 reader.nextNull();
                 return null;
             } else {
-                List<Integer> value = new ArrayList<>();
+                List<Integer> value = new ArrayList<Integer>();
                 reader.beginArray();
                 while (reader.hasNext()) {
                     value.add(reader.nextInt());
@@ -290,7 +311,7 @@ public class JSONParser {
                 reader.nextNull();
                 return null;
             } else {
-                List<Float> value = new ArrayList<>();
+                List<Float> value = new ArrayList<Float>();
                 reader.beginArray();
                 while (reader.hasNext()) {
                     value.add((float) reader.nextDouble());
@@ -325,7 +346,7 @@ public class JSONParser {
                 reader.nextNull();
                 return null;
             } else {
-                List<String> value = new ArrayList<>();
+                List<String> value = new ArrayList<String>();
                 reader.beginArray();
                 while (reader.hasNext()) {
                     value.add(reader.nextString());
@@ -360,7 +381,7 @@ public class JSONParser {
                 reader.nextNull();
                 return null;
             } else {
-                List<ColorRGB> value = new ArrayList<>();
+                List<ColorRGB> value = new ArrayList<ColorRGB>();
                 reader.beginArray();
                 while (reader.hasNext()) {
                     value.add(colorAdapter.read(reader));
@@ -397,7 +418,7 @@ public class JSONParser {
                 return null;
             } else {
                 //Create a map lookup for the enums to speed up processing.
-                final Map<String, EnumType> lowercaseToEnum = new HashMap<>();
+                final Map<String, EnumType> lowercaseToEnum = new HashMap<String, EnumType>();
                 for (EnumType enumConstant : rawType.getEnumConstants()) {
                     lowercaseToEnum.put(enumConstant.toString().toLowerCase(), enumConstant);
                 }
@@ -431,52 +452,30 @@ public class JSONParser {
     private static final Gson packParser = getPackParserWithAdapters();
 
     private static Gson getPackParserWithAdapters() {
-        return new GsonBuilder()
-                .setPrettyPrinting()
-                .disableHtmlEscaping()
-                .enableComplexMapKeySerialization() //Used for enum keys.
-                .registerTypeAdapter(Boolean.class, booleanAdapter)
-                .registerTypeAdapter(Integer.class, integerAdapter)
-                .registerTypeAdapter(Float.class, floatAdapter)
-                .registerTypeAdapter(Point3D.class, point3DAdapter)
-                .registerTypeAdapter(RotationMatrix.class, rotationMatrixAdapter)
-                .registerTypeAdapter(ColorRGB.class, colorAdapter)
-                .registerTypeAdapter(LTBox.class, ltBoxAdapter)
-                .registerTypeAdapter(new TypeToken<List<Integer>>() {
-                }.getType(), intListAdapter)
-                .registerTypeAdapter(new TypeToken<List<Float>>() {
-                }.getType(), floatListAdapter)
-                .registerTypeAdapter(new TypeToken<List<String>>() {
-                }.getType(), stringListAdapter)
-                .registerTypeAdapter(new TypeToken<List<ColorRGB>>() {
-                }.getType(), colorListAdapter)
-                .registerTypeAdapterFactory(lowercaseEnumFactory)
-                .create();
+        return new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().enableComplexMapKeySerialization() //Used for enum keys.
+                .registerTypeAdapter(Boolean.class, booleanAdapter).registerTypeAdapter(Integer.class, integerAdapter).registerTypeAdapter(Float.class, floatAdapter).registerTypeAdapter(Point3D.class, point3DAdapter).registerTypeAdapter(RotationMatrix.class, rotationMatrixAdapter).registerTypeAdapter(ColorRGB.class, colorAdapter).registerTypeAdapter(LTBox.class, ltBoxAdapter).registerTypeAdapter(new TypeToken<List<Integer>>() {
+                }.getType(), intListAdapter).registerTypeAdapter(new TypeToken<List<Float>>() {
+                }.getType(), floatListAdapter).registerTypeAdapter(new TypeToken<List<String>>() {
+                }.getType(), stringListAdapter).registerTypeAdapter(new TypeToken<List<ColorRGB>>() {
+                }.getType(), colorListAdapter).registerTypeAdapterFactory(lowercaseEnumFactory).create();
     }
 
     //This needs to go down here AFTER we create the type adapters.
     private static final Gson configParser = getConfigParserWithAdapters();
 
     private static Gson getConfigParserWithAdapters() {
-        return new GsonBuilder()
-                .setPrettyPrinting()
-                .disableHtmlEscaping()
-                .registerTypeAdapter(new TypeToken<List<Integer>>() {
-                }.getType(), intListAdapter)
-                .registerTypeAdapter(new TypeToken<List<Float>>() {
-                }.getType(), floatListAdapter)
-                .registerTypeAdapter(new TypeToken<List<String>>() {
-                }.getType(), stringListAdapter)
-                .create();
+        return new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().registerTypeAdapter(new TypeToken<List<Integer>>() {
+        }.getType(), intListAdapter).registerTypeAdapter(new TypeToken<List<Float>>() {
+        }.getType(), floatListAdapter).registerTypeAdapter(new TypeToken<List<String>>() {
+        }.getType(), stringListAdapter).create();
     }
 
     /**
-     * Parses the passed in stream to the passed-in JSON type.
-     *
-     * @throws IOException
+     *  Parses the passed in stream to the passed-in JSON type.
+     * @throws IOException 
      */
-    public static <JSONClass> JSONClass parseStream(InputStream stream, Class<JSONClass> retClass, String packID, String systemName) throws IOException {
-        InputStreamReader jsonReader = new InputStreamReader(stream, StandardCharsets.UTF_8);
+    public static <JSONClass extends Object> JSONClass parseStream(InputStream stream, Class<JSONClass> retClass, String packID, String systemName) throws IOException {
+        InputStreamReader jsonReader = new InputStreamReader(stream, "UTF-8");
         JSONClass json;
         if (AJSONItem.class.isAssignableFrom(retClass)) {
             json = packParser.fromJson(jsonReader, retClass);
@@ -488,12 +487,11 @@ public class JSONParser {
     }
 
     /**
-     * Exports the passed-JSON to the passed-in stream.
-     *
-     * @throws IOException
+     *  Exports the passed-JSON to the passed-in stream.
+     * @throws IOException 
      */
     public static void exportStream(Object jsonObject, OutputStream stream) throws IOException {
-        OutputStreamWriter jsonWriter = new OutputStreamWriter(stream, StandardCharsets.UTF_8);
+        OutputStreamWriter jsonWriter = new OutputStreamWriter(stream, "UTF-8");
         if (AJSONItem.class.isAssignableFrom(jsonObject.getClass())) {
             packParser.toJson(jsonObject, jsonObject.getClass(), jsonWriter);
         } else {
@@ -504,16 +502,16 @@ public class JSONParser {
     }
 
     /**
-     * Duplicates the passed-in JSON, returning a new instance with a deep copy.
+     *  Duplicates the passed-in JSON, returning a new instance with a deep copy.
      */
     @SuppressWarnings("unchecked")
-    public static <JSONClass> JSONClass duplicateJSON(JSONClass objToDuplicate) {
+    public static <JSONClass extends Object> JSONClass duplicateJSON(JSONClass objToDuplicate) {
         return (JSONClass) packParser.fromJson(packParser.toJson(objToDuplicate), objToDuplicate.getClass());
     }
 
     /**
-     * Hot-loads the passed-in JSON, replacing the passed-in JSON with this one.
-     * Status message is returned, which either indicates import success, or error.
+     *  Hot-loads the passed-in JSON, replacing the passed-in JSON with this one.
+     *  Status message is returned, which either indicates import success, or error.
      */
     public static String hotloadJSON(File jsonFile, AJSONItem definitionToOverride) {
         try {
@@ -521,7 +519,7 @@ public class JSONParser {
             switch (definitionToOverride.classification) {
                 case VEHICLE: {
                     JSONVehicle vehicleDefinition = (JSONVehicle) definitionToOverride;
-                    JSONVehicle loadedVehicleDefinition = JSONParser.parseStream(Files.newInputStream(jsonFile.toPath()), JSONVehicle.class, vehicleDefinition.packID, vehicleDefinition.systemName);
+                    JSONVehicle loadedVehicleDefinition = JSONParser.parseStream(new FileInputStream(jsonFile), JSONVehicle.class, vehicleDefinition.packID, vehicleDefinition.systemName);
                     JSONParser.validateFields(loadedVehicleDefinition, "/", 1);
                     vehicleDefinition.motorized = loadedVehicleDefinition.motorized;
                     loadedDefinition = loadedVehicleDefinition;
@@ -529,7 +527,7 @@ public class JSONParser {
                 }
                 case PART: {
                     JSONPart partDefinition = (JSONPart) definitionToOverride;
-                    JSONPart loadedPartDefinition = JSONParser.parseStream(Files.newInputStream(jsonFile.toPath()), JSONPart.class, partDefinition.packID, partDefinition.systemName);
+                    JSONPart loadedPartDefinition = JSONParser.parseStream(new FileInputStream(jsonFile), JSONPart.class, partDefinition.packID, partDefinition.systemName);
                     JSONParser.validateFields(loadedPartDefinition, "/", 1);
                     partDefinition.generic = loadedPartDefinition.generic;
                     partDefinition.engine = loadedPartDefinition.engine;
@@ -544,7 +542,7 @@ public class JSONParser {
                 }
                 case INSTRUMENT: {
                     JSONInstrument instrumentDefinition = (JSONInstrument) definitionToOverride;
-                    JSONInstrument loadedInstrumentDefinition = JSONParser.parseStream(Files.newInputStream(jsonFile.toPath()), JSONInstrument.class, instrumentDefinition.packID, instrumentDefinition.systemName);
+                    JSONInstrument loadedInstrumentDefinition = JSONParser.parseStream(new FileInputStream(jsonFile), JSONInstrument.class, instrumentDefinition.packID, instrumentDefinition.systemName);
                     JSONParser.validateFields(loadedInstrumentDefinition, "/", 1);
                     instrumentDefinition.components = loadedInstrumentDefinition.components;
                     loadedDefinition = loadedInstrumentDefinition;
@@ -552,7 +550,7 @@ public class JSONParser {
                 }
                 case DECOR: {
                     JSONDecor decorDefinition = (JSONDecor) definitionToOverride;
-                    JSONDecor loadedDecorDefinition = JSONParser.parseStream(Files.newInputStream(jsonFile.toPath()), JSONDecor.class, decorDefinition.packID, decorDefinition.systemName);
+                    JSONDecor loadedDecorDefinition = JSONParser.parseStream(new FileInputStream(jsonFile), JSONDecor.class, decorDefinition.packID, decorDefinition.systemName);
                     JSONParser.validateFields(loadedDecorDefinition, "/", 1);
                     decorDefinition.decor = loadedDecorDefinition.decor;
                     loadedDefinition = loadedDecorDefinition;
@@ -560,7 +558,7 @@ public class JSONParser {
                 }
                 case ROAD: {
                     JSONRoadComponent roadDefinition = (JSONRoadComponent) definitionToOverride;
-                    JSONRoadComponent loadedRoadDefinition = JSONParser.parseStream(Files.newInputStream(jsonFile.toPath()), JSONRoadComponent.class, roadDefinition.packID, roadDefinition.systemName);
+                    JSONRoadComponent loadedRoadDefinition = JSONParser.parseStream(new FileInputStream(jsonFile), JSONRoadComponent.class, roadDefinition.packID, roadDefinition.systemName);
                     JSONParser.validateFields(loadedRoadDefinition, "/", 1);
                     roadDefinition.road = loadedRoadDefinition.road;
                     loadedDefinition = loadedRoadDefinition;
@@ -568,14 +566,14 @@ public class JSONParser {
                 }
                 case POLE: {
                     JSONPoleComponent poleDefinition = (JSONPoleComponent) definitionToOverride;
-                    JSONPoleComponent loadedPoleDefinition = JSONParser.parseStream(Files.newInputStream(jsonFile.toPath()), JSONPoleComponent.class, poleDefinition.packID, poleDefinition.systemName);
+                    JSONPoleComponent loadedPoleDefinition = JSONParser.parseStream(new FileInputStream(jsonFile), JSONPoleComponent.class, poleDefinition.packID, poleDefinition.systemName);
                     JSONParser.validateFields(loadedPoleDefinition, "/", 1);
                     loadedDefinition = loadedPoleDefinition;
                     break;
                 }
                 case BULLET: {
                     JSONBullet bulletDefinition = (JSONBullet) definitionToOverride;
-                    JSONBullet loadedBulletDefinition = JSONParser.parseStream(Files.newInputStream(jsonFile.toPath()), JSONBullet.class, bulletDefinition.packID, bulletDefinition.systemName);
+                    JSONBullet loadedBulletDefinition = JSONParser.parseStream(new FileInputStream(jsonFile), JSONBullet.class, bulletDefinition.packID, bulletDefinition.systemName);
                     JSONParser.validateFields(loadedBulletDefinition, "/", 1);
                     bulletDefinition.bullet = loadedBulletDefinition.bullet;
                     loadedDefinition = loadedBulletDefinition;
@@ -583,7 +581,7 @@ public class JSONParser {
                 }
                 case ITEM: {
                     JSONItem itemDefinition = (JSONItem) definitionToOverride;
-                    JSONItem loadedItemDefinition = JSONParser.parseStream(Files.newInputStream(jsonFile.toPath()), JSONItem.class, itemDefinition.packID, itemDefinition.systemName);
+                    JSONItem loadedItemDefinition = JSONParser.parseStream(new FileInputStream(jsonFile), JSONItem.class, itemDefinition.packID, itemDefinition.systemName);
                     JSONParser.validateFields(loadedItemDefinition, "/", 1);
                     itemDefinition.item = loadedItemDefinition.item;
                     itemDefinition.booklet = loadedItemDefinition.booklet;
@@ -593,7 +591,7 @@ public class JSONParser {
                     break;
                 }
                 default:
-                    return "\nERROR: Attempted to hotload unsupported JSON type:" + definitionToOverride.classification;
+                    return "\nERROR: Attempted to hotload unsuppoorted JSON type:" + definitionToOverride.classification;
             }
 
             //Do generic loading.
@@ -606,8 +604,9 @@ public class JSONParser {
                     ((AJSONInteractableEntity) definitionToOverride).collisionGroups = ((AJSONInteractableEntity) loadedDefinition).collisionGroups;
                     ((AJSONInteractableEntity) definitionToOverride).connectionGroups = ((AJSONInteractableEntity) loadedDefinition).connectionGroups;
                     ((AJSONInteractableEntity) definitionToOverride).instruments = ((AJSONInteractableEntity) loadedDefinition).instruments;
-                    ((AJSONInteractableEntity) definitionToOverride).effects = ((AJSONInteractableEntity) loadedDefinition).effects;
-                    ((AJSONPartProvider) definitionToOverride).parts = ((AJSONPartProvider) loadedDefinition).parts;
+                    if (definitionToOverride instanceof AJSONPartProvider) {
+                        ((AJSONPartProvider) definitionToOverride).parts = ((AJSONPartProvider) loadedDefinition).parts;
+                    }
                 }
             }
 
@@ -631,17 +630,17 @@ public class JSONParser {
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.FIELD)
-    public @interface JSONRequired {
+    public static @interface JSONRequired {
         /**
          * Optional value for a linked field that is used to check if this field can be null.
          */
         String dependentField() default "";
 
         /**
-         * Optional parameter for the optional variable value. This field will only be marked as required if the
-         * {@link #dependentField()} starts with one of these values. As this is a list of strings, any non-string fields
-         * will be converted to strings using the toString() method. This allows for this field to be null as long as
-         * the dependent doesn't have one of these values. If this annotation element is not specified, then the
+         * Optional parameter for the optional variable value.  This field will only be marked as required if the 
+         * {@link #dependentField()} starts with one of these values.  As this is a list of strings, any non-string fields
+         * will be converted to strings using the toString() method.  This allows for this field to be null as long as
+         * the dependent doesn't have one of these values.  If this annotation element is not specified, then the
          * field must always be non-null.
          */
         String[] dependentValues() default {};
@@ -654,8 +653,8 @@ public class JSONParser {
     }
 
     @Retention(RetentionPolicy.RUNTIME)
-    @Target({ElementType.TYPE, ElementType.FIELD})
-    public @interface JSONDescription {
+    @Target({ ElementType.TYPE, ElementType.FIELD })
+    public static @interface JSONDescription {
         /**
          * Description for this field.
          */
@@ -664,16 +663,16 @@ public class JSONParser {
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.FIELD)
-    public @interface JSONDefaults {
+    public static @interface JSONDefaults {
         /**
-         * Default values for this field. Values are not exclusive to ALL values for this field.
+         * Default values for this field.  Values are not exclusive to ALL values for this field.
          * Rather, they are the known values that are assured to be select-able.
          */
         Class<? extends Enum<?>> value();
     }
 
     /**
-     * Helper method to validate fields. Used for recursion.
+     *  Helper method to validate fields.  Used for recursion.
      */
     public static void validateFields(Object obj, String priorObjects, int index) {
         //First get all fields that have the annotation with no values.
@@ -692,7 +691,6 @@ public class JSONParser {
                 try {
                     recursiveObject = field.get(obj);
                 } catch (Exception e) {
-                    e.printStackTrace();
                 }
 
                 if (recursiveObject != null) {
@@ -703,7 +701,7 @@ public class JSONParser {
                                 validateFields(objEntry, priorObjects + field.getName() + "/", collectionIndex);
                                 ++collectionIndex;
                             } else {
-                                throw new NullPointerException("Unable to parse entry #" + collectionIndex + " in variable set " + priorObjects + field.getName() + " due to it not existing. Check your commas!");
+                                throw new NullPointerException("Unable to parse entry #" + collectionIndex + " in variable set " + priorObjects + field.getName() + " due to it not existing.  Check your commas!");
                             }
                         }
                     } else if (!recursiveObject.getClass().isEnum()) {
@@ -715,16 +713,15 @@ public class JSONParser {
     }
 
     /**
-     * Checks to see if the passed-in field is required, and is missing or corrupt. If so,
-     * a text-based error message is returned. If not, null is returned.
+     *  Checks to see if the passed-in field is required, and is missing or corrupt.  If so, 
+     *  a text-based error message is returned.  If not, null is returned.
      */
     private static String checkRequiredState(Field field, Object objectOn, String pathPrefix, int index) {
         if (field.isAnnotationPresent(JSONRequired.class)) {
-            Object testObj;
+            Object testObj = null;
             try {
                 testObj = field.get(objectOn);
             } catch (Exception e) {
-                throw new RuntimeException(e);
             }
 
             if (testObj == null) {
@@ -745,13 +742,13 @@ public class JSONParser {
                     }
 
                     if (depObj != null) {
-                        //Have object. If the object has to be a set of values to throw an error, check this.
+                        //Have object.  If the object has to be a set of values to throw an error, check this.
                         if (annotation.dependentValues().length == 0) {
                             return pathPrefix + field.getName() + ", entry #" + index + ", is required when '" + dependentVarName + "' is present!";
                         } else {
                             for (String possibleValue : annotation.dependentValues()) {
                                 if (depObj.toString().startsWith(possibleValue)) {
-                                    return pathPrefix + field.getName() + ", entry #" + index + ", is required when value of '" + dependentVarName + "' is '" + depObj + "'!";
+                                    return pathPrefix + field.getName() + ", entry #" + index + ", is required when value of '" + dependentVarName + "' is '" + depObj.toString() + "'!";
                                 }
                             }
                         }

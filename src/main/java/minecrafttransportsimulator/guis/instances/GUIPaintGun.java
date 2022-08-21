@@ -1,8 +1,15 @@
 package minecrafttransportsimulator.guis.instances;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
-import minecrafttransportsimulator.guis.components.*;
+import minecrafttransportsimulator.guis.components.AGUIBase;
+import minecrafttransportsimulator.guis.components.GUIComponent3DModel;
+import minecrafttransportsimulator.guis.components.GUIComponentButton;
+import minecrafttransportsimulator.guis.components.GUIComponentItem;
+import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
@@ -12,21 +19,17 @@ import minecrafttransportsimulator.packloading.PackMaterialComponent;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
 
-import java.util.ArrayList;
-import java.util.List;
-
-/**
- * A GUI that is used to craft vehicle parts and other pack components. This GUI displays
+/**A GUI that is used to craft vehicle parts and other pack components.  This GUI displays
  * the items required to craft a vehicle, the item that will be crafted, and some properties
- * of that item. Allows for scrolling via a scroll wheel, and remembers the last item that
+ * of that item.  Allows for scrolling via a scroll wheel, and remembers the last item that
  * was selected to allow for faster lookup next time the GUI is opened.
- *
+ * 
  * @author don_bruce
  */
 public class GUIPaintGun extends AGUIBase {
+
     //Init variables.
-    @SuppressWarnings("FieldMayBeFinal")
-    private AEntityD_Definable<?> entity;
+    private final AEntityD_Definable<?> entity;
     private final IWrapperPlayer player;
 
     //Buttons and labels.
@@ -38,12 +41,12 @@ public class GUIPaintGun extends AGUIBase {
     private GUIComponentButton confirmButton;
 
     //Crafting components.
-    private final List<GUIComponentItem> craftingItemIcons = new ArrayList<>();
+    private final List<GUIComponentItem> craftingItemIcons = new ArrayList<GUIComponentItem>();
 
     //Renders for the item.
     private GUIComponent3DModel modelRender;
 
-    //Runtime variables.
+    //Runtime variables.	
     private AItemSubTyped<?> currentItem;
     private AItemSubTyped<?> prevSubItem;
     private AItemSubTyped<?> nextSubItem;
@@ -75,7 +78,7 @@ public class GUIPaintGun extends AGUIBase {
         });
         addComponent(partName = new GUIComponentLabel(guiLeft + 60, guiTop + 120, ColorRGB.WHITE, "", TextAlignment.LEFT_ALIGNED, 1.0F, 98));
 
-        //Create the crafting item slots. 8 16X16 slots (8X2) need to be made here.
+        //Create the crafting item slots.  8 16X16 slots (8X2) need to be made here.
         craftingItemIcons.clear();
         for (byte i = 0; i < 4 * 2; ++i) {
             GUIComponentItem craftingItem = new GUIComponentItem(guiLeft + 225 + GUIComponentButton.ITEM_BUTTON_SIZE * (i / 4), guiTop + 26 + GUIComponentButton.ITEM_BUTTON_SIZE * (i % 4), 1.0F);
@@ -133,14 +136,14 @@ public class GUIPaintGun extends AGUIBase {
      * logic MUST be called to update the button action states!
      */
     private void updateNames() {
-        //Get all pack indexes.
+        //Get all pack indexes.		
         List<AItemPack<?>> packItems = PackParser.getAllItemsForPack(currentItem.definition.packID, true);
         int currentItemIndex = packItems.indexOf(currentItem);
 
         //Loop forwards in our pack to find the next item in that pack.
         nextSubItem = null;
         if (currentItemIndex < packItems.size()) {
-            for (int i = currentItemIndex + 1; i < packItems.size(); ++i) {
+            for (int i = currentItemIndex + 1; i < packItems.size() && nextSubItem == null; ++i) {
                 if (packItems.get(i).definition.systemName.equals(currentItem.definition.systemName)) {
                     nextSubItem = (AItemSubTyped<?>) packItems.get(i);
                     break;
@@ -151,7 +154,7 @@ public class GUIPaintGun extends AGUIBase {
         //Loop backwards in our pack to find the prev item in that pack.
         prevSubItem = null;
         if (currentItemIndex > 0) {
-            for (int i = currentItemIndex - 1; i >= 0; --i) {
+            for (int i = currentItemIndex - 1; i >= 0 && prevSubItem == null; --i) {
                 if (packItems.get(i).definition.systemName.equals(currentItem.definition.systemName)) {
                     prevSubItem = (AItemSubTyped<?>) packItems.get(i);
                     break;
@@ -159,7 +162,7 @@ public class GUIPaintGun extends AGUIBase {
             }
         }
 
-        //All item bits are now set and updated. Update info labels and item icons.
+        //All item bits are now set and updated.  Update info labels and item icons.
         partName.text = currentItem.getItemName();
 
         //Parse crafting items and set icon items.
@@ -171,7 +174,6 @@ public class GUIPaintGun extends AGUIBase {
                 craftingItemIcons.get(i).stacks = null;
             }
         }
-
 
         //Set model render properties.
         modelRender.modelLocation = currentItem.definition.getModelLocation(currentItem.subName);

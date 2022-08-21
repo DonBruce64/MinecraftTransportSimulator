@@ -1,9 +1,13 @@
 package mcinterface1122;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.mcinterface.IInterfaceCore;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
@@ -11,10 +15,9 @@ import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.oredict.OreDictionary;
 
-import java.util.ArrayList;
-import java.util.List;
-
 class InterfaceCore implements IInterfaceCore {
+    private List<String> queuedLogs = new ArrayList<String>();
+
     @Override
     public String getGameVersion() {
         return Loader.instance().getMCVersionString().substring("Minecraft ".length());
@@ -69,16 +72,37 @@ class InterfaceCore implements IInterfaceCore {
 
     @Override
     public List<IWrapperItemStack> getOredictMaterials(String oreName) {
-        NonNullList<ItemStack> oreDictStacks = OreDictionary.getOres(oreName, true);
-        List<IWrapperItemStack> stacks = new ArrayList<>();
+        NonNullList<ItemStack> oreDictStacks = OreDictionary.getOres(oreName, false);
+        List<IWrapperItemStack> stacks = new ArrayList<IWrapperItemStack>();
         for (ItemStack stack : oreDictStacks) {
-            stacks.add(new WrapperItemStack(stack.copy()));
+            if (stack.getMetadata() == net.minecraftforge.oredict.OreDictionary.WILDCARD_VALUE) {
+                NonNullList<ItemStack> oreDictSubStacks = NonNullList.create();
+                stack.getItem().getSubItems(CreativeTabs.SEARCH, oreDictSubStacks);
+                for (ItemStack subStack : oreDictSubStacks) {
+                    stacks.add(new WrapperItemStack(subStack.copy()));
+                }
+
+            } else {
+                stacks.add(new WrapperItemStack(stack.copy()));
+            }
+
         }
         return stacks;
     }
 
     @Override
     public void logError(String message) {
-        InterfaceLoader.LOGGER.error(InterfaceLoader.MODID.toUpperCase() + "ERROR: " + message);
+        if (InterfaceLoader.logger == null) {
+            queuedLogs.add(InterfaceLoader.MODID.toUpperCase() + "ERROR: " + message);
+        } else {
+            InterfaceLoader.logger.error(InterfaceLoader.MODID.toUpperCase() + "ERROR: " + message);
+        }
+    }
+
+    @Override
+    public void flushLogQueue() {
+        for (String log : queuedLogs) {
+            logError(log);
+        }
     }
 }

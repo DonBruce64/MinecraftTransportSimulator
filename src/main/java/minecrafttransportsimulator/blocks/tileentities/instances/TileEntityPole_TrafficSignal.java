@@ -7,10 +7,9 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntitySigna
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 
-/**
- * Traffic signal component for poles. This doesn't tick, as the state of the light
+/**Traffic signal component for poles.  This doesn't tick, as the state of the light
  * is by default having the unlinked light on until changed by a {@link TileEntitySignalController}.
- *
+ * 
  * @author don_bruce
  */
 public class TileEntityPole_TrafficSignal extends ATileEntityPole_Component {
@@ -42,8 +41,9 @@ public class TileEntityPole_TrafficSignal extends ATileEntityPole_Component {
 
     @Override
     public double getRawVariableValue(String variable, float partialTicks) {
-        if ("linked".equals(variable)) {
-            return linkedController != null ? 1 : 0;
+        switch (variable) {
+            case ("linked"):
+                return linkedController != null ? 1 : 0;
         }
 
         return super.getRawVariableValue(variable, partialTicks);

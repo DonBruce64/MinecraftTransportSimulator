@@ -8,11 +8,10 @@ import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPlayerItemTransfer;
 
-/**
- * A GUI that is used to interface with inventory containers.  Displays the player's items on the bottom,
- * and the items in the container in the top. Works a bit differently than the MC GUIs, as it
- * doesn't support item dragging or movement. Just storage to the first available slot.
- *
+/**A GUI that is used to interface with inventory containers.   Displays the player's items on the bottom,
+ * and the items in the container in the top.  Works a bit differently than the MC GUIs, as it
+ * doesn't support item dragging or movement.  Just storage to the first available slot.
+ * 
  * @author don_bruce
  */
 public class GUIInventoryContainer extends AGUIInventory {
@@ -57,14 +56,14 @@ public class GUIInventoryContainer extends AGUIInventory {
                 }
             });
 
-            //Add the slider box. This is static and always rendered.
+            //Add the slider box.  This is static and always rendered.
             addComponent(new GUIComponentCutout(guiLeft + 173, guiTop + 20, 14, 90, 242, 45));
 
             //Now add the slider.
             addComponent(sliderCutout = new GUIComponentCutout(guiLeft + 174, guiTop + 21, 12, 15, 244, 15));
         }
 
-        //Create all inventory slots. This is variable based on the size of the inventory, and can result in multiple pages.
+        //Create all inventory slots.  This is variable based on the size of the inventory, and can result in multiple pages.
         //However, one page can hold 6 rows, so we make all those slots and adjust as appropriate.
         int slotsToMake = Math.min(inventory.getSize(), MAX_ITEMS_PER_SCREEN);
         int inventoryRowOffset = (MAX_ITEMS_PER_SCREEN - slotsToMake) * GUIComponentButton.ITEM_BUTTON_SIZE / 9 / 2;

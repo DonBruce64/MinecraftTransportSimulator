@@ -1,5 +1,13 @@
 package minecrafttransportsimulator.guis.instances;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.entities.components.AEntityG_Towable;
 import minecrafttransportsimulator.entities.instances.APart;
@@ -16,14 +24,9 @@ import minecrafttransportsimulator.packets.instances.PacketVehicleBeaconChange;
 import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
-import java.util.*;
-import java.util.Map.Entry;
-
-
-/**
- * A GUI/control system hybrid, this takes the place of the HUD when called up.
+/**A GUI/control system hybrid, this takes the place of the HUD when called up.
  * Used for controlling engines, lights, trim, and other things.
- *
+ * 
  * @author don_bruce
  */
 public class GUIPanelGround extends AGUIPanel {
@@ -54,9 +57,9 @@ public class GUIPanelGround extends AGUIPanel {
     private GUIComponentSelector cruiseControlSelector;
     private GUIComponentSelector gearSelector;
     private GUIComponentTextBox beaconBox;
-    private final Map<Byte, GUIComponentSelector> engineSelectors = new HashMap<>();
-    private final List<GUIComponentSelector> trailerSelectors = new ArrayList<>();
-    private final List<GUIComponentSelector> customSelectors = new ArrayList<>();
+    private final Map<Byte, GUIComponentSelector> engineSelectors = new HashMap<Byte, GUIComponentSelector>();
+    private final List<GUIComponentSelector> trailerSelectors = new ArrayList<GUIComponentSelector>();
+    private final List<GUIComponentSelector> customSelectors = new ArrayList<GUIComponentSelector>();
 
     public GUIPanelGround(EntityVehicleF_Physics groundVehicle) {
         super(groundVehicle);
@@ -67,7 +70,7 @@ public class GUIPanelGround extends AGUIPanel {
         //Create a tri-state selector for the running lights and headlights.
         //For the tri-state we need to make sure we don't try to turn on running lights if we don't have any.
         if (vehicle.definition.motorized.hasRunningLights || vehicle.definition.motorized.hasHeadlights) {
-            lightSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS, SELECTOR_SIZE, SELECTOR_SIZE, "LIGHTS", vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, LIGHT_TEXTURE_WIDTH_OFFSET, LIGHT_TEXTURE_HEIGHT_OFFSET, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE) {
+            lightSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 0 * (GAP_BETWEEN_SELECTORS + SELECTOR_SIZE), SELECTOR_SIZE, SELECTOR_SIZE, "LIGHTS", vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, LIGHT_TEXTURE_WIDTH_OFFSET, LIGHT_TEXTURE_HEIGHT_OFFSET, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE) {
                 @Override
                 public void onClicked(boolean leftSide) {
                     if (leftSide) {
@@ -88,13 +91,17 @@ public class GUIPanelGround extends AGUIPanel {
                         }
                     }
                 }
+
+                @Override
+                public void onReleased() {
+                }
             };
             addComponent(lightSelector);
         }
 
         //Add the turn signal selector if we have turn signals.
         if (vehicle.definition.motorized.hasTurnSignals) {
-            turnSignalSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + (GAP_BETWEEN_SELECTORS + SELECTOR_SIZE), SELECTOR_SIZE, SELECTOR_SIZE, "TURNSGNL", vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, TURNSIGNAL_TEXTURE_WIDTH_OFFSET, TURNSIGNAL_TEXTURE_HEIGHT_OFFSET, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE) {
+            turnSignalSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 1 * (GAP_BETWEEN_SELECTORS + SELECTOR_SIZE), SELECTOR_SIZE, SELECTOR_SIZE, "TURNSGNL", vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, TURNSIGNAL_TEXTURE_WIDTH_OFFSET, TURNSIGNAL_TEXTURE_HEIGHT_OFFSET, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE) {
                 @Override
                 public void onClicked(boolean leftSide) {
                     if (leftSide) {
@@ -103,12 +110,16 @@ public class GUIPanelGround extends AGUIPanel {
                         InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.RIGHTTURNLIGHT_VARIABLE));
                     }
                 }
+
+                @Override
+                public void onReleased() {
+                }
             };
             addComponent(turnSignalSelector);
         }
 
         if (vehicle.definition.motorized.hasRadioNav || ConfigSystem.settings.general.allPlanesWithNav.value) {
-            //Add beacon text box. This is at the bottom of the light column where the siren used to be.
+            //Add beacon text box.  This is at the bottom of the light column where the siren used to be.
             beaconBox = new GUIComponentTextBox(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 3 * (SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE * 2, SELECTOR_SIZE, vehicle.selectedBeaconName, vehicle.selectedBeacon != null ? ColorRGB.GREEN : ColorRGB.RED, 5, BEACON_TEXTURE_WIDTH_OFFSET, BEACON_TEXTURE_HEIGHT_OFFSET, 40, 20) {
                 @Override
                 public void handleKeyTyped(char typedChar, int typedCode, TextBoxControlKey control) {
@@ -134,7 +145,7 @@ public class GUIPanelGround extends AGUIPanel {
                     public void onClicked(boolean leftSide) {
                         for (Byte engineNumber : vehicle.engines.keySet()) {
                             if (selectorState == 1 && !leftSide) {
-                                //Clicked and held right side. Engage electric starter if possible.
+                                //Clicked and held right side.  Engage electric starter if possible.
                                 if (!vehicle.engines.get(engineNumber).definition.engine.disableAutomaticStarter) {
                                     InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicle.engines.get(engineNumber), PartEngine.ELECTRIC_STARTER_VARIABLE));
                                 }
@@ -149,7 +160,7 @@ public class GUIPanelGround extends AGUIPanel {
                     public void onReleased() {
                         if (selectorState == 2) {
                             for (Byte engineNumber : vehicle.engines.keySet()) {
-                                //Released during sate 2. Disengage electric starter if possible.
+                                //Released during sate 2.  Disengage electric starter if possible.
                                 if (!vehicle.engines.get(engineNumber).definition.engine.disableAutomaticStarter) {
                                     InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicle.engines.get(engineNumber), PartEngine.ELECTRIC_STARTER_VARIABLE));
                                 }
@@ -171,7 +182,7 @@ public class GUIPanelGround extends AGUIPanel {
                     @Override
                     public void onClicked(boolean leftSide) {
                         if (selectorState == 1 && !leftSide) {
-                            //Clicked and held right side. Engage electric starter if possible.
+                            //Clicked and held right side.  Engage electric starter if possible.
                             if (!vehicle.engines.get(engineNumber).definition.engine.disableAutomaticStarter) {
                                 InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicle.engines.get(engineNumber), PartEngine.ELECTRIC_STARTER_VARIABLE));
                             }
@@ -184,7 +195,7 @@ public class GUIPanelGround extends AGUIPanel {
                     @Override
                     public void onReleased() {
                         if (selectorState == 2) {
-                            //Released during sate 2. Disengage electric starter if possible.
+                            //Released during sate 2.  Disengage electric starter if possible.
                             if (!vehicle.engines.get(engineNumber).definition.engine.disableAutomaticStarter) {
                                 InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicle.engines.get(engineNumber), PartEngine.ELECTRIC_STARTER_VARIABLE));
                             }
@@ -203,6 +214,10 @@ public class GUIPanelGround extends AGUIPanel {
                 public void onClicked(boolean leftSide) {
                     InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.REVERSE_THRUST_VARIABLE));
                 }
+
+                @Override
+                public void onReleased() {
+                }
             };
             addComponent(reverseSelector);
 
@@ -215,6 +230,10 @@ public class GUIPanelGround extends AGUIPanel {
                         InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(vehicle, EntityVehicleF_Physics.AUTOPILOT_VARIABLE, 0));
                     }
                 }
+
+                @Override
+                public void onReleased() {
+                }
             };
             addComponent(cruiseControlSelector);
         } else if (haveReverseThrustOption) {
@@ -222,6 +241,10 @@ public class GUIPanelGround extends AGUIPanel {
                 @Override
                 public void onClicked(boolean leftSide) {
                     InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.REVERSE_THRUST_VARIABLE));
+                }
+
+                @Override
+                public void onReleased() {
                 }
             };
             addComponent(reverseSelector);
@@ -234,6 +257,10 @@ public class GUIPanelGround extends AGUIPanel {
                     } else {
                         InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(vehicle, EntityVehicleF_Physics.AUTOPILOT_VARIABLE, 0));
                     }
+                }
+
+                @Override
+                public void onReleased() {
                 }
             };
             addComponent(cruiseControlSelector);
@@ -257,6 +284,10 @@ public class GUIPanelGround extends AGUIPanel {
                     public void onClicked(boolean leftSide) {
                         InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(switchDef.connectionDefiner, AEntityG_Towable.TOWING_CONNECTION_REQUEST_VARIABLE, switchDef.connectionGroupIndex + 1));
                     }
+
+                    @Override
+                    public void onReleased() {
+                    }
                 };
                 trailerSelectors.add(trailerSelector);
                 addComponent(trailerSelector);
@@ -271,6 +302,10 @@ public class GUIPanelGround extends AGUIPanel {
                 public void onClicked(boolean leftSide) {
                     InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.GEAR_VARIABLE));
                 }
+
+                @Override
+                public void onReleased() {
+                }
             };
             addComponent(gearSelector);
         }
@@ -280,7 +315,7 @@ public class GUIPanelGround extends AGUIPanel {
     public void setupCustomComponents(int guiLeft, int guiTop) {
         //Add custom selectors if we have any.
         //These are the right-most selector and are vehicle-specific.
-        Set<String> customVariables = new LinkedHashSet<>();
+        Set<String> customVariables = new LinkedHashSet<String>();
         if (vehicle.definition.rendering.customVariables != null) {
             customVariables.addAll(vehicle.definition.rendering.customVariables);
         }
@@ -296,6 +331,10 @@ public class GUIPanelGround extends AGUIPanel {
                 @Override
                 public void onClicked(boolean leftSide) {
                     InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicle, this.text));
+                }
+
+                @Override
+                public void onReleased() {
                 }
             };
             customSelectors.add(customSelector);

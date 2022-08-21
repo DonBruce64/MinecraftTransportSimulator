@@ -1,25 +1,24 @@
 package minecrafttransportsimulator.jsondefs;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.PackParser;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-
-/**
- * Config class for language interfacing. This contains all default text strings, and will be loaded
- * by both the client and server. When choosing a file to load, the current language suffix will be used
- * on clients, whereas servers will always use the default, english language. If a file doesn't exist,
+/**Config class for language interfacing.  This contains all default text strings, and will be loaded
+ * by both the client and server.  When choosing a file to load, the current language suffix will be used
+ * on clients, whereas servers will always use the default, english language.  If a file doesn't exist,
  * or is missing an entry, then the default value will be used instead.
- *
+ * 
  * @author don_bruce
  */
 public class JSONConfigLanguage {
-    public final Map<String, String> core = new LinkedHashMap<>();
-    public final Map<String, Map<String, JSONItemEntry>> packs = new LinkedHashMap<>();
-    public static final Map<String, LanguageEntry> coreEntries = new LinkedHashMap<>();
+    public Map<String, String> core = new LinkedHashMap<String, String>();
+    public Map<String, Map<String, JSONItemEntry>> packs = new LinkedHashMap<String, Map<String, JSONItemEntry>>();
+    public static final Map<String, LanguageEntry> coreEntries = new LinkedHashMap<String, LanguageEntry>();
 
     public void populateEntries(boolean isClient) {
         boolean overrideJSONWithDefinedValues = !isClient || InterfaceManager.clientInterface.usingDefaultLanguage();
@@ -34,7 +33,11 @@ public class JSONConfigLanguage {
 
         //Populate pack entries.
         for (String packID : PackParser.getAllPackIDs()) {
-            Map<String, JSONItemEntry> packMap = packs.computeIfAbsent(packID, k -> new LinkedHashMap<>());
+            Map<String, JSONItemEntry> packMap = packs.get(packID);
+            if (packMap == null) {
+                packMap = new LinkedHashMap<String, JSONItemEntry>();
+                packs.put(packID, packMap);
+            }
             for (AItemPack<?> packItem : PackParser.getAllItemsForPack(packID, true)) {
                 String itemKey = packItem.getRegistrationName();
                 JSONItemEntry entry = packMap.get(itemKey);
@@ -56,7 +59,7 @@ public class JSONConfigLanguage {
                     itemName = packItem.definition.general.name != null ? packItem.definition.general.name : packItem.definition.systemName;
                 }
                 String itemDescription = packItem.definition.general.description != null ? packItem.definition.general.description : "";
-                if (!itemName.equals(entry.name) || !itemDescription.equals(entry.description) || overrideJSONWithDefinedValues) {
+                if (!itemName.equals(entry.name) || (itemDescription != null && !itemDescription.equals(entry.description)) || overrideJSONWithDefinedValues) {
                     if (entry.name == null || overrideJSONWithDefinedValues) {
                         entry.name = itemName;
                     }
@@ -89,8 +92,8 @@ public class JSONConfigLanguage {
     public static final LanguageEntry DEATH_BULLET_NULL = new LanguageEntry("death.bullet.null", "%s was shot by a spy");
     public static final LanguageEntry DEATH_BULLET_PLAYER = new LanguageEntry("death.bullet.player", "%s was shot by %s");
 
-    public static final LanguageEntry DEATH_PROPELLER_NULL = new LanguageEntry("death.propeller.null", "%s was shredded by a propeller");
-    public static final LanguageEntry DEATH_PROPELLER_PLAYER = new LanguageEntry("death.propeller.player", "%s was shredded by %s's propeller");
+    public static final LanguageEntry DEATH_PROPELLOR_NULL = new LanguageEntry("death.propellor.null", "%s was shredded by a propeller");
+    public static final LanguageEntry DEATH_PROPELLOR_PLAYER = new LanguageEntry("death.propellor.player", "%s was shredded by %s's propeller");
 
     public static final LanguageEntry DEATH_JETINTAKE_NULL = new LanguageEntry("death.jet_intake.null", "%s was sucked into a jet engine");
     public static final LanguageEntry DEATH_JETINTAKE_PLAYER = new LanguageEntry("death.jet_intake.player", "%s was sucked into %s's jet engine");
@@ -141,8 +144,6 @@ public class JSONConfigLanguage {
     public static final LanguageEntry GUI_PART_BENCH_WHEEL = new LanguageEntry("gui.part_bench.wheel", "Wheel Size: ");
     public static final LanguageEntry GUI_PART_BENCH_COLOR = new LanguageEntry("gui.part_bench.color", "Color: ");
 
-    public static final LanguageEntry GUI_PANEL_OFF = new LanguageEntry("gui.panel.off", "OFF");
-    public static final LanguageEntry GUI_PANEL_ON = new LanguageEntry("gui.panel.on", "ON");
     public static final LanguageEntry GUI_PANEL_START = new LanguageEntry("gui.panel.start", "START");
     public static final LanguageEntry GUI_PANEL_MAGNETO = new LanguageEntry("gui.panel.magneto", "MAG");
     public static final LanguageEntry GUI_PANEL_ENGINE = new LanguageEntry("gui.panel.engine", "ENGINE");
@@ -171,12 +172,10 @@ public class JSONConfigLanguage {
     public static final LanguageEntry GUI_CONFIG_CONTROLS_AIRCRAFT_JOYSTICK = new LanguageEntry("gui.config.controls.aircraft.joystick", "AIRCRAFT JOYSTICK");
     public static final LanguageEntry GUI_CONFIG_CONTROLS_CAR_KEYBOARD = new LanguageEntry("gui.config.controls.car.keyboard", "CAR/BOAT KEYBOARD");
     public static final LanguageEntry GUI_CONFIG_CONTROLS_CAR_JOYSTICK = new LanguageEntry("gui.config.controls.car.joystick", "CAR/BOAT JOYSTICK");
-    public static final LanguageEntry GUI_CONFIG_CONTROLS_CONFIRM = new LanguageEntry("gui.config.controls.confirm", "Confirm");
-    public static final LanguageEntry GUI_CONFIG_JOYSTICK_ERROR = new LanguageEntry("gui.config.joystick.error", "ERROR: MTS could not initialize the control system!  This is likely due to a device mis-representing itself as a joystick to Java. Mice have been known to have this issue, especially Corsair mice, so try a different mouse. You may also try un-plugging your mouse, and then opening this GUI to re-poll the joysticks. This won't make controls work on boot, but can be used if you only have one mouse.");
-    public static final LanguageEntry GUI_CONFIG_JOYSTICK_DISABLED = new LanguageEntry("gui.config.joystick.disabled", "ERROR: The control system locked up when MTS tried to initialize it. This is likely a driver issue, and happens for some reason on some machines. The root cause is not known, but if you find out how to make this erorr go away, let us know!  For now, joysick support will be disabled.");
+    public static final LanguageEntry GUI_CONFIG_JOYSTICK_ERROR = new LanguageEntry("gui.config.joystick.error", "ERROR: MTS could not initialize the control system!  This is likely due to a device mis-representing itself as a joystick to Java.  Mice have been known to have this issue, especially Corsair mice, so try a different mouse.  You may also try un-plugging your mouse, and then opening this GUI to re-poll the joysticks.  This won't make controls work on boot, but can be used if you only have one mouse.");
+    public static final LanguageEntry GUI_CONFIG_JOYSTICK_DISABLED = new LanguageEntry("gui.config.joystick.disabled", "ERROR: The control system locked up when MTS tried to initialize it.  This is likely a driver issue, and happens for some reason on some machines.  The root cause is not known, but if you find out how to make this erorr go away, let us know!  For now, joysick support will be disabled.");
     public static final LanguageEntry GUI_CONFIG_JOYSTICK_SELECT = new LanguageEntry("gui.config.joystick.select", "Choose a joystick: ");
     public static final LanguageEntry GUI_CONFIG_JOYSTICK_NAME = new LanguageEntry("gui.config.joystick.name", "Name: ");
-    public static final LanguageEntry GUI_CONFIG_JOYSTICK_TYPE = new LanguageEntry("gui.config.joystick.type", "Type: ");
     public static final LanguageEntry GUI_CONFIG_JOYSTICK_MAPPING = new LanguageEntry("gui.config.joystick.mapping", "Mapping");
     public static final LanguageEntry GUI_CONFIG_JOYSTICK_DEADZONE = new LanguageEntry("gui.config.joystick.deadzone", "Dead-zone: ");
     public static final LanguageEntry GUI_CONFIG_JOYSTICK_STATE = new LanguageEntry("gui.config.joystick.state", "State: ");
@@ -189,21 +188,20 @@ public class JSONConfigLanguage {
     public static final LanguageEntry GUI_CONFIG_JOYSTICK_AXISMODE = new LanguageEntry("gui.config.joystick.axismode", "Axis mode: ");
     public static final LanguageEntry GUI_CONFIG_JOYSTICK_NORMAL = new LanguageEntry("gui.config.joystick.normal", "Normal");
     public static final LanguageEntry GUI_CONFIG_JOYSTICK_INVERT = new LanguageEntry("gui.config.joystick.invert", "Inverted");
-    public static final LanguageEntry GUI_CONFIG_JOYSTICK_CONFIRM = new LanguageEntry("gui.config.joystick.confirm", "Confirm");
 
     public static final LanguageEntry GUI_PACKMISSING_TITLE = new LanguageEntry("gui.packmissing.title", "!ERROR!");
-    public static final LanguageEntry GUI_PACKMISSING_TEXT = new LanguageEntry("gui.packmissing.text", "MTS has detected that it has been started without a content pack. This will result in NO vehicles being present!  If you do NOT have a content pack yet installed, please see the Curse page for this mod for a link to one. If you DID download a pack ensure that it is the same place as all your other mods. If the pack is in that location, and you are still seeing this message, ensure you are running the correct pack version.");
+    public static final LanguageEntry GUI_PACKMISSING_TEXT = new LanguageEntry("gui.packmissing.text", "MTS has detected that it has been started without a content pack.  This will result in NO vehicles being present!  If you do NOT have a content pack yet installed, please see the Curse page for this mod for a link to one.  If you DID download a pack ensure that it is the same place as all your other mods.  If the pack is in that location, and you are still seeing this message, ensure you are running the correct pack version.");
 
     public static final LanguageEntry INTERACT_KEY_LOCK = new LanguageEntry("interact.key.lock", "Vehicle locked!");
     public static final LanguageEntry INTERACT_KEY_UNLOCK = new LanguageEntry("interact.key.unlock", "Vehicle unlocked!");
-    public static final LanguageEntry INTERACT_KEY_BIND = new LanguageEntry("interact.key.bind", "Key bound to vehicle. Ready for locking/unlocking use.");
+    public static final LanguageEntry INTERACT_KEY_BIND = new LanguageEntry("interact.key.bind", "Key bound to vehicle.  Ready for locking/unlocking use.");
     public static final LanguageEntry INTERACT_KEY_NOTOWNER = new LanguageEntry("interact.key.notowner", "This key is not for any vehicle, and only the owner of this vehicle may make new keys!");
     public static final LanguageEntry INTERACT_KEY_WRONGKEY = new LanguageEntry("interact.key.wrongkey", "This key does not go to this vehicle!");
 
-    public static final LanguageEntry INTERACT_FUELPUMP_TOOFAR = new LanguageEntry("interact.fuelpump.toofar", "The fuel pump is too far away from the vehicle. The pump should be no more than 16 blocks away.");
-    public static final LanguageEntry INTERACT_FUELPUMP_NOFUEL = new LanguageEntry("interact.fuelpump.nofuel", "The fuel pump does not have any fuel in it. You need fuel in the fuel pump to use it.");
+    public static final LanguageEntry INTERACT_FUELPUMP_TOOFAR = new LanguageEntry("interact.fuelpump.toofar", "The fuel pump is too far away from the vehicle.  The pump should be no more than 16 blocks away.");
+    public static final LanguageEntry INTERACT_FUELPUMP_NOFUEL = new LanguageEntry("interact.fuelpump.nofuel", "The fuel pump does not have any fuel in it.  You need fuel in the fuel pump to use it.");
     public static final LanguageEntry INTERACT_FUELPUMP_WRONGTYPE = new LanguageEntry("interact.fuelpump.wrongtype", "This pump does not contain the same liquid as what is in the vehicle.");
-    public static final LanguageEntry INTERACT_FUELPUMP_WRONGENGINES = new LanguageEntry("interact.fuelpump.wrongengines", "The fuel in this pump is not a valid fuel for the engines in the vehicle. Check the manual for details.");
+    public static final LanguageEntry INTERACT_FUELPUMP_WRONGENGINES = new LanguageEntry("interact.fuelpump.wrongengines", "The fuel in this pump is not a valid fuel for the engines in the vehicle.  Check the manual for details.");
     public static final LanguageEntry INTERACT_FUELPUMP_CONNECT = new LanguageEntry("interact.fuelpump.connect", "Fuel pump connected and pumping.");
     public static final LanguageEntry INTERACT_FUELPUMP_COMPLETE = new LanguageEntry("interact.fuelpump.complete", "Vehicle is full, disconnecting.");
     public static final LanguageEntry INTERACT_FUELPUMP_EMPTY = new LanguageEntry("interact.fuelpump.empty", "Fuel pump is empty, disconnecting.");
@@ -213,14 +211,14 @@ public class JSONConfigLanguage {
     public static final LanguageEntry INTERACT_ROAD_ALREADYCONNECTED = new LanguageEntry("interact.road.alreadyconnected", "This road segment is already connected to another road.");
     public static final LanguageEntry INTERACT_ROAD_LANEMISMATCHFIRST = new LanguageEntry("interact.road.lanemismatchfirst", "The number of lanes at the road segment clicked first does not match the number of lanes for this road.");
     public static final LanguageEntry INTERACT_ROAD_LANEMISMATCHSECOND = new LanguageEntry("interact.road.lanemismatchsecond", "The number of lanes at the road segment just clicked does not match the number of lanes for this road.");
-    public static final LanguageEntry INTERACT_ROAD_BLOCKED = new LanguageEntry("interact.road.blocked", "No space found to place the master block for this road. Try a less crowded area?");
-    public static final LanguageEntry INTERACT_ROAD_SAME = new LanguageEntry("interact.road.same", "Both the first point and the second point clicked are the same block. Reset and try again.");
-    public static final LanguageEntry INTERACT_ROAD_TOOFAR = new LanguageEntry("interact.road.toofar", "The two points clicked are too far apart. Either find closer points, or increase the distance in the config file.");
-    public static final LanguageEntry INTERACT_ROAD_BLOCKINGBLOCKS = new LanguageEntry("interact.road.blockingblocks", "There are blocks blocking the placement of this road. Break the highlighted red ones, and then click the blue master road block to continue.");
+    public static final LanguageEntry INTERACT_ROAD_BLOCKED = new LanguageEntry("interact.road.blocked", "No space found to place the master block for this road.  Try a less crowded area?");
+    public static final LanguageEntry INTERACT_ROAD_SAME = new LanguageEntry("interact.road.same", "Both the first point and the second point clicked are the same block.  Reset and try again.");
+    public static final LanguageEntry INTERACT_ROAD_TOOFAR = new LanguageEntry("interact.road.toofar", "The two points clicked are too far apart.  Either find closer points, or increase the distance in the config file.");
+    public static final LanguageEntry INTERACT_ROAD_BLOCKINGBLOCKS = new LanguageEntry("interact.road.blockingblocks", "There are blocks blocking the placement of this road.  Break the highlighted red ones, and then click the blue master road block to continue.");
 
     public static final LanguageEntry INTERACT_JERRYCAN_EMPTY = new LanguageEntry("interact.jerrycan.empty", "This jerrycan is empty and cannot fuel this vehicle.");
     public static final LanguageEntry INTERACT_JERRYCAN_WRONGTYPE = new LanguageEntry("interact.jerrycan.wrongtype", "This jerrycan does not contain the same liquid as what is in the vehicle.");
-    public static final LanguageEntry INTERACT_JERRYCAN_TOOFULL = new LanguageEntry("interact.jerrycan.toofull", "This vehicle is already full of fuel. You cannot add any more.");
+    public static final LanguageEntry INTERACT_JERRYCAN_TOOFULL = new LanguageEntry("interact.jerrycan.toofull", "This vehicle is already full of fuel.  You cannot add any more.");
     public static final LanguageEntry INTERACT_JERRYCAN_SUCCESS = new LanguageEntry("interact.jerrycan.success", "Added 1000mb of fluid to this vehicle.");
 
     public static final LanguageEntry INTERACT_VEHICLE_SEATTAKEN = new LanguageEntry("interact.vehicle.seattaken", "This seat is taken!");
@@ -232,20 +230,20 @@ public class JSONConfigLanguage {
     public static final LanguageEntry INTERACT_VEHICLE_JUMPERPACK = new LanguageEntry("interact.vehicle.jumperpack", "Charged vehicle battery to maximum.");
 
     public static final LanguageEntry INTERACT_JUMPERCABLE_FIRSTLINK = new LanguageEntry("interact.jumpercable.firstlink", "Linking first engine to jumper cable.");
-    public static final LanguageEntry INTERACT_JUMPERCABLE_SECONDLINK = new LanguageEntry("interact.jumpercable.secondlink", "Engines linked. Transmitting power.");
-    public static final LanguageEntry INTERACT_JUMPERCABLE_LINKDROPPED = new LanguageEntry("interact.jumpercable.linkdropped", "The two engines have moved too far apart from one another. Breaking link.");
-    public static final LanguageEntry INTERACT_JUMPERCABLE_POWEREQUAL = new LanguageEntry("interact.jumpercable.powerequal", "The two engines now have the same battery level. Breaking link.");
+    public static final LanguageEntry INTERACT_JUMPERCABLE_SECONDLINK = new LanguageEntry("interact.jumpercable.secondlink", "Engines linked.  Transmitting power.");
+    public static final LanguageEntry INTERACT_JUMPERCABLE_LINKDROPPED = new LanguageEntry("interact.jumpercable.linkdropped", "The two engines have moved too far apart from one another.  Breaking link.");
+    public static final LanguageEntry INTERACT_JUMPERCABLE_POWEREQUAL = new LanguageEntry("interact.jumpercable.powerequal", "The two engines now have the same battery level.  Breaking link.");
     public static final LanguageEntry INTERACT_JUMPERCABLE_ALREADYLINKED = new LanguageEntry("interact.jumpercable.alreadylinked", "This engine is already linked to another engine and cannot be linked.");
-    public static final LanguageEntry INTERACT_JUMPERCABLE_TOOFAR = new LanguageEntry("interact.jumpercable.toofar", "The two engines are too far away. They should be no further than 16 blocks apart.");
-    public static final LanguageEntry INTERACT_JUMPERCABLE_SAMEVEHICLE = new LanguageEntry("interact.jumpercable.samevehicle", "The two engines are on the same vehicle. That's not going to work well..");
+    public static final LanguageEntry INTERACT_JUMPERCABLE_TOOFAR = new LanguageEntry("interact.jumpercable.toofar", "The two engines are too far away.  They should be no further than 16 blocks apart.");
+    public static final LanguageEntry INTERACT_JUMPERCABLE_SAMEVEHICLE = new LanguageEntry("interact.jumpercable.samevehicle", "The two engines are on the same vehicle.  That's not going to work well..");
 
     public static final LanguageEntry INTERACT_FUELHOSE_FIRSTLINK = new LanguageEntry("interact.fuelhose.firstlink", "Source tank linked to fuel hose.");
-    public static final LanguageEntry INTERACT_FUELHOSE_SECONDLINK = new LanguageEntry("interact.fuelhose.secondlink", "Linked to tank/vehicle. Transfering fluid.");
-    public static final LanguageEntry INTERACT_FUELHOSE_LINKDROPPED = new LanguageEntry("interact.fuelhose.linkdropped", "The linked tanks have moved too far apart from one another. Breaking link.");
+    public static final LanguageEntry INTERACT_FUELHOSE_SECONDLINK = new LanguageEntry("interact.fuelhose.secondlink", "Linked to tank/vehicle.  Transfering fluid.");
+    public static final LanguageEntry INTERACT_FUELHOSE_LINKDROPPED = new LanguageEntry("interact.fuelhose.linkdropped", "The linked tanks have moved too far apart from one another.  Breaking link.");
     public static final LanguageEntry INTERACT_FUELHOSE_TANKEMPTY = new LanguageEntry("interact.fuelhose.tankempty", "Source tank is empty, disconnecting.");
     public static final LanguageEntry INTERACT_FUELHOSE_TANKFULL = new LanguageEntry("interact.fuelhose.tankfull", "Destination tank is full, disconnecting.");
     public static final LanguageEntry INTERACT_FUELHOSE_ALREADYLINKED = new LanguageEntry("interact.fuelhose.alreadylinked", "This tank is already linked to another tank and cannot be linked.");
-    public static final LanguageEntry INTERACT_FUELHOSE_TOOFAR = new LanguageEntry("interact.fuelhose.toofar", "The two tanks are too far away. They should be no further than 16 blocks apart.");
+    public static final LanguageEntry INTERACT_FUELHOSE_TOOFAR = new LanguageEntry("interact.fuelhose.toofar", "The two tanks are too far away.  They should be no further than 16 blocks apart.");
     public static final LanguageEntry INTERACT_FUELHOSE_DIFFERENTFLUIDS = new LanguageEntry("interact.fuelhose.differentfluids", "The source and destination tanks do not contain the same fluid and cannot be linked.");
 
     public static final LanguageEntry INTERACT_TRAILER_CONNECTED = new LanguageEntry("interact.trailer.connected", "Trailer connected.");
@@ -253,13 +251,12 @@ public class JSONConfigLanguage {
     public static final LanguageEntry INTERACT_TRAILER_NOTFOUND = new LanguageEntry("interact.trailer.notfound", "No trailers were found anywhere near this vehicle.");
     public static final LanguageEntry INTERACT_TRAILER_TOOFAR = new LanguageEntry("interact.trailer.toofar", "The trailer is too far from the vehicle.");
     public static final LanguageEntry INTERACT_TRAILER_WRONGHITCH = new LanguageEntry("interact.trailer.wronghitch", "This vehicle does not have the correct hitch for this trailer.");
-    public static final LanguageEntry INTERACT_TRAILER_MISMATCH = new LanguageEntry("interact.trailer.mismatch", "A hitch was found that is close enough to connect, but was not the correct type. Also, a matching hitch was found, but it was too far to connect. Are you trying to use the wrong hitch?");
+    public static final LanguageEntry INTERACT_TRAILER_MISMATCH = new LanguageEntry("interact.trailer.mismatch", "A hitch was found that is close enough to connect, but was not the correct type.  Also, a matching hitch was found, but it was too far to connect.  Are you trying to use the wrong hitch?");
     public static final LanguageEntry INTERACT_TRAILER_ALREADYTOWED = new LanguageEntry("interact.trailer.alreadytowed", "The only nearby vehicle is already being towed.");
     public static final LanguageEntry INTERACT_TRAILER_FEEDBACKLOOP = new LanguageEntry("interact.trailer.feedbackloop", "The only nearby vehicles are being towed by this vehicle, towing would result in an infinite towing loop.");
 
     public static final LanguageEntry ITEMINFO_ENGINE_AUTOMATIC = new LanguageEntry("iteminfo.engine.automatic", "Transmission: Automatic");
     public static final LanguageEntry ITEMINFO_ENGINE_MANUAL = new LanguageEntry("iteminfo.engine.manual", "Transmission: Manual");
-    public static final LanguageEntry ITEMINFO_ENGINE_NUMBERGEARS = new LanguageEntry("iteminfo.engine.numbergears", "Number gears: ");
     public static final LanguageEntry ITEMINFO_ENGINE_GEARRATIOS = new LanguageEntry("iteminfo.engine.gearratios", "Gear Ratios: ");
     public static final LanguageEntry ITEMINFO_ENGINE_JETPOWERFACTOR = new LanguageEntry("iteminfo.engine.jetpowerfactor", "Jet Power: ");
     public static final LanguageEntry ITEMINFO_ENGINE_BYPASSRATIO = new LanguageEntry("iteminfo.engine.bypassratio", "Bypass Ratio: ");
@@ -287,12 +284,10 @@ public class JSONConfigLanguage {
 
     public static final LanguageEntry ITEMINFO_PROPELLER_STATICPITCH = new LanguageEntry("iteminfo.propeller.staticPitch", "Static Pitch");
     public static final LanguageEntry ITEMINFO_PROPELLER_DYNAMICPITCH = new LanguageEntry("iteminfo.propeller.dynamicPitch", "Dynamic Pitch");
-    public static final LanguageEntry ITEMINFO_PROPELLER_NUMBERBLADES = new LanguageEntry("iteminfo.propeller.numberBlades", "Blades: ");
     public static final LanguageEntry ITEMINFO_PROPELLER_PITCH = new LanguageEntry("iteminfo.propeller.pitch", "Pitch: ");
     public static final LanguageEntry ITEMINFO_PROPELLER_DIAMETER = new LanguageEntry("iteminfo.propeller.diameter", "Diameter: ");
 
     public static final LanguageEntry ITEMINFO_GUN_DIAMETER = new LanguageEntry("iteminfo.gun.diameter", "Barrel Diameter (mm): ");
-    public static final LanguageEntry ITEMINFO_GUN_LENGTH = new LanguageEntry("iteminfo.gun.length", "Barrel Length (m): ");
     public static final LanguageEntry ITEMINFO_GUN_CASERANGE = new LanguageEntry("iteminfo.gun.caseRange", "Case Range (mm): ");
     public static final LanguageEntry ITEMINFO_GUN_FIREDELAY = new LanguageEntry("iteminfo.gun.fireDelay", "Fire Delay (ticks): ");
     public static final LanguageEntry ITEMINFO_GUN_MUZZLEVELOCITY = new LanguageEntry("iteminfo.gun.muzzleVelocity", "Velocity (blk/s): ");
@@ -301,17 +296,14 @@ public class JSONConfigLanguage {
     public static final LanguageEntry ITEMINFO_GUN_YAWRANGE = new LanguageEntry("iteminfo.gun.yawRange", "Yaw Range: ");
     public static final LanguageEntry ITEMINFO_GUN_PITCHRANGE = new LanguageEntry("iteminfo.gun.pitchRange", "Pitch Range: ");
 
-    public static final LanguageEntry ITEMINFO_BULLET_TYPE_NORMAL = new LanguageEntry("iteminfo.bullet.type.normal", "Normal Bullet");
     public static final LanguageEntry ITEMINFO_BULLET_TYPE_EXPLOSIVE = new LanguageEntry("iteminfo.bullet.type.explosive", "Explosive Bullet");
     public static final LanguageEntry ITEMINFO_BULLET_TYPE_INCENDIARY = new LanguageEntry("iteminfo.bullet.type.incendiary", "Incendiary Bullet");
     public static final LanguageEntry ITEMINFO_BULLET_TYPE_ARMOR_PIERCING = new LanguageEntry("iteminfo.bullet.type.armor_piercing", "Armor Piercing Bullet");
-    public static final LanguageEntry ITEMINFO_BULLET_TYPE_TRACER = new LanguageEntry("iteminfo.bullet.type.tracer", "Tracer Bullet");
     public static final LanguageEntry ITEMINFO_BULLET_TYPE_WATER = new LanguageEntry("iteminfo.bullet.type.water", "Water Bullet");
     public static final LanguageEntry ITEMINFO_BULLET_DIAMETER = new LanguageEntry("iteminfo.bullet.diameter", "Diameter (mm): ");
     public static final LanguageEntry ITEMINFO_BULLET_CASELENGTH = new LanguageEntry("iteminfo.bullet.caseLength", "Case Length (mm): ");
     public static final LanguageEntry ITEMINFO_BULLET_PENETRATION = new LanguageEntry("iteminfo.bullet.penetration", "Penetration (mm): ");
     public static final LanguageEntry ITEMINFO_BULLET_QUANTITY = new LanguageEntry("iteminfo.bullet.quantity", "Quantity: ");
-    public static final LanguageEntry ITEMINFO_BULLET_PELLETS = new LanguageEntry("iteminfo.bullet.pellets", "Pellets: ");
 
     public static final LanguageEntry ITEMINFO_INTERACTABLE_CAPACITY = new LanguageEntry("iteminfo.interactable.capacity", "Capacity: ");
 
@@ -337,7 +329,6 @@ public class JSONConfigLanguage {
     public static final LanguageEntry INPUT_FLAPS_U = new LanguageEntry("input.flaps_u", "FlapsUp");
     public static final LanguageEntry INPUT_FLAPS_D = new LanguageEntry("input.flaps_d", "FlapsDown");
     public static final LanguageEntry INPUT_BRAKE = new LanguageEntry("input.brake", "Brake");
-    public static final LanguageEntry INPUT_BRAKE_DIGITAL = new LanguageEntry("input.brake_digital", "Brake");
     public static final LanguageEntry INPUT_GEAR = new LanguageEntry("input.gear", "Gear");
     public static final LanguageEntry INPUT_PANEL = new LanguageEntry("input.panel", "Panel");
     public static final LanguageEntry INPUT_PARK = new LanguageEntry("input.park", "ParkingBrake");
@@ -367,14 +358,13 @@ public class JSONConfigLanguage {
     public static final LanguageEntry INPUT_GAS = new LanguageEntry("input.gas", "Gas");
     public static final LanguageEntry INPUT_SHIFT_U = new LanguageEntry("input.shift_u", "ShiftUp");
     public static final LanguageEntry INPUT_SHIFT_D = new LanguageEntry("input.shift_d", "ShiftDown");
-    public static final LanguageEntry INPUT_SHIFT_N = new LanguageEntry("input.shift_n", "ShiftNeutral");
+    public static final LanguageEntry INPUT_SHIFT_N = new LanguageEntry("input.shift_n", "ShiftNeutral");;
     public static final LanguageEntry INPUT_HORN = new LanguageEntry("input.horn", "Horn");
-    public static final LanguageEntry INPUT_TRAILER = new LanguageEntry("input.trailer", "TrailerLink");
     public static final LanguageEntry INPUT_SLOW = new LanguageEntry("input.slow", "Slow");
     public static final LanguageEntry INPUT_LIGHTS = new LanguageEntry("input.lights", "Lights");
     public static final LanguageEntry INPUT_TURNSIGNAL_R = new LanguageEntry("input.turnsignal_r", "RightSignal");
     public static final LanguageEntry INPUT_TURNSIGNAL_L = new LanguageEntry("input.turnsignal_l", "LeftSignal");
 
-    public static final LanguageEntry SYSTEM_SOUNDSLOT = new LanguageEntry("sytstem.soundslot", "IMMERSIVE VEHICLES ERROR: Tried to play a sound, but was told no sound slots were available. Some mod is taking up all the slots. If you have Immersive Engineering, set override sound channels to false in that mod's config. If running GregTech, set maxNumSounds to a lower value in that mod's config. Dynamic Surrondings and Optifine also may cause issues. Apply fixes, or complain to those mod's authors. Sounds will not play.");
+    public static final LanguageEntry SYSTEM_SOUNDSLOT = new LanguageEntry("sytstem.soundslot", "IMMERSIVE VEHICLES ERROR: Tried to play a sound, but was told no sound slots were available. Some mod is taking up all the slots. If you have Immersive Railroading, set override sound channels to false in that mod's config. If running GregTech, set maxNumSounds to a lower value in that mod's config. Dynamic Surrondings and Optifine also may cause issues. Apply fixes, or complain to those mod's authors. Sounds will not play.");
     public static final LanguageEntry SYSTEM_DEBUG = new LanguageEntry("sytstem.debug", "%s");
 }

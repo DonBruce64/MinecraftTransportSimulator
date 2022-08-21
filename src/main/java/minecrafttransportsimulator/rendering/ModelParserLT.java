@@ -1,19 +1,18 @@
 package minecrafttransportsimulator.rendering;
 
-import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.packloading.JSONParser;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Class responsible for parsing Little Tiles models into arrays that can be fed to the GPU.
- *
+import minecrafttransportsimulator.baseclasses.ColorRGB;
+import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.packloading.JSONParser;
+
+/**Class responsible for parsing Little Tiles models into arrays that can be fed to the GPU.
+ * 
  * @author don_bruce
  */
 public final class ModelParserLT extends AModelParser {
@@ -25,12 +24,12 @@ public final class ModelParserLT extends AModelParser {
 
     @Override
     protected List<RenderableObject> parseModelInternal(String modelLocation) {
-        List<RenderableObject> objectList = new ArrayList<>();
+        List<RenderableObject> objectList = new ArrayList<RenderableObject>();
         InputStream stream;
         try {
             stream = ModelParserLT.class.getResourceAsStream(modelLocation);
         } catch (Exception e) {
-            throw new NullPointerException("Attempted to parse the Little Tiles model at: " + modelLocation + " but could not find it. Check the path and try again.");
+            throw new NullPointerException("Attempted to parse the Little Tiles model at: " + modelLocation + " but could not find it.  Check the path and try again.");
         }
 
         try {
@@ -41,11 +40,11 @@ public final class ModelParserLT extends AModelParser {
             for (LTTileEntry tile : model.tiles) {
                 if (tile.bBox != null) {
                     //Move single box to list for ease of parsing.
-                    tile.boxes = new ArrayList<>();
+                    tile.boxes = new ArrayList<LTBox>();
                     tile.boxes.add(tile.bBox);
                 }
 
-                //8 floats per vert, 6 vertices per side, 6 sides per box.
+                //8 floats per vert, 6 verts per side, 6 sides per box.
                 FloatBuffer buffer = FloatBuffer.allocate(tile.boxes.size() * 6 * 6 * 8);
                 Point3D normal = new Point3D();
                 Point3D min = new Point3D();
@@ -119,11 +118,11 @@ public final class ModelParserLT extends AModelParser {
 
             return objectList;
         } catch (IOException e) {
-            throw new IllegalStateException("Could not finish parsing: " + modelLocation + " due to IOException error. Did the file change state during parsing?");
+            throw new IllegalStateException("Could not finish parsing: " + modelLocation + " due to IOException error.  Did the file change state during parsing?");
         }
     }
 
-    private static void addFaceToBuffer(Point3D min, Point3D max, Point3D normal, float u, float U, float v, float V, boolean horizontalFace, FloatBuffer buffer) {
+    private static void addFaceToBuffer(Point3D min, Point3D max, Point3D normal, float u, float U, float v, float V, boolean horzontalFace, FloatBuffer buffer) {
         for (int i = 0; i < 6; ++i) {
             //Normals are just what the point has.
             buffer.put((float) normal.x);
@@ -136,7 +135,7 @@ public final class ModelParserLT extends AModelParser {
                 case (3): {
                     buffer.put(U);
                     buffer.put(V);
-                    if (horizontalFace) {
+                    if (horzontalFace) {
                         buffer.put((float) max.x);
                         buffer.put((float) min.y);
                         buffer.put((float) max.z);
@@ -150,7 +149,7 @@ public final class ModelParserLT extends AModelParser {
                 case (1): {//Top-right
                     buffer.put(U);
                     buffer.put(v);
-                    if (horizontalFace) {
+                    if (horzontalFace) {
                         buffer.put((float) max.x);
                         buffer.put((float) max.y);
                         buffer.put((float) max.z);
@@ -165,7 +164,7 @@ public final class ModelParserLT extends AModelParser {
                 case (4): {
                     buffer.put(u);
                     buffer.put(v);
-                    if (horizontalFace) {
+                    if (horzontalFace) {
                         buffer.put((float) min.x);
                         buffer.put((float) max.y);
                         buffer.put((float) min.z);
@@ -179,7 +178,7 @@ public final class ModelParserLT extends AModelParser {
                 case (5): {//Bottom-left
                     buffer.put(u);
                     buffer.put(V);
-                    if (horizontalFace) {
+                    if (horzontalFace) {
                         buffer.put((float) min.x);
                         buffer.put((float) min.y);
                         buffer.put((float) min.z);

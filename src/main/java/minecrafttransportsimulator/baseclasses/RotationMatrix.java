@@ -1,7 +1,6 @@
 package minecrafttransportsimulator.baseclasses;
 
-/**
- * 3D Matrix class for rotation operations. This should be used
+/**3D Matrix class for rotation operations.  This should be used
  * instead of Euler angles for all things in the code.
  * All methods return this object for nested operations, unless
  * otherwise specified or void.
@@ -18,12 +17,11 @@ public class RotationMatrix {
     public double m20;
     public double m21;
     public double m22;
-    /**
-     * The current Euler angles that make up this matrix. These are used to create the rotation
-     * matrix on the first rotation operation. Subsequent modifications to this variable will
-     * re-create the matrix if a rotation operation is called. However, they will NOT be updated
-     * when matrix multiplication operations are performed. The idea is to use them to create the
-     * initial matrix, then multiply/transform as applicable. If you need to get them back out of the
+    /**The current Euler angles that make up this matrix.  These are used to create the rotation
+     * matrix on the first rotation operation.  Subsequent modifications to this variable will
+     * re-create the matrix if a rotation operation is called.  However, they will NOT be updated
+     * when matrix multiplication operations are performed.  The idea is to use them to create the
+     * initial matrix, then multiply/transform as applicable.  If you need to get them back out of the
      * matrix, call {@link #convertToAngles()} which will convert the matrix back into the angles.
      * If you change these and want the matrix state to update to reflect them, call {@link #updateToAngles()}
      */
@@ -153,24 +151,24 @@ public class RotationMatrix {
         double pitch = -Math.toDegrees(Math.asin(angles.y));
 
         //Y-rotation (yaw), is the aTan of the planar components x and z.
-        //Normally aTan expects y, and x. But we need to give it x and z due to our coordinate definition.
-        //We can also set x to pitch, as we're done with it now.
+        //Normally aTan expects y, and x.  But we need to give it x and z due to our coordinate definition.
+        //We can also set x to pich, as we're done with it now.
         angles.y = Math.toDegrees(Math.atan2(angles.x, angles.z));
         angles.x = pitch;
 
-        //Z-rotation (roll) is always 0. Vectors can't represent roll.
+        //Z-rotation (roll) is always 0.  Vectors can't represent roll.
         angles.z = 0;
         updateToAngles();
         return this;
     }
 
     /**
-     * Returns the angles that make up this matrix. Note: these may not be the
+     * Returns the angles that make up this matrix.  Note: these may not be the
      * same as the value in the {@link #angles} parameter, as rotation
-     * matrix conversion has multiple solutions. In general, these shouldn't be
-     * used for calculations and rather should just be used to store the state of
+     * matrix conversion has multiple solutions.  In general, these shouldn't be
+     * used for calculations and rather should just be used to store the state of 
      * the matrix for later use where the orientation of the matrix matters, but
-     * the actual angles don't. Note that in addition to returning the angles,
+     * the actual angles don't.  Note that in addition to returning the angles,
      * the value of {@link #angles} is set.
      */
     public Point3D convertToAngles() {
@@ -206,9 +204,9 @@ public class RotationMatrix {
         //We now need to check for gimbal lock.
         //This realistically only happens if we manually set the values.
         //For all normal operations, exact lock will never occur.
-        //If we do get locked, just set roll to 0. This is because
+        //If we do get locked, just set roll to 0.  This is because
         //locks don't normally happen except on axial rotations, and
-        //those don't normally do roll operations. Since in both
+        //those don't normally do roll operations.  Since in both
         //locked cases yaw would equal roll, we just take yaw to be
         //the "true" rotation and mark roll as 0.
         if (m12 == -1) {
@@ -353,7 +351,7 @@ public class RotationMatrix {
     }
 
     /**
-     * Aligns the passed-in point to the matrix origin. Essentially, this leaves
+     * Aligns the passed-in point to the matrix origin.  Essentially, this leaves
      * the point in its current position, but changes the coordinate system
      * to be aligned to the coordinate system of this matrix.
      * More specifically, this is an inverted rotation by the transpose of the matrix.
@@ -372,9 +370,9 @@ public class RotationMatrix {
 
     /**
      * Updates this rotation of this matrix to match it to the current
-     * value of its internal {@link #angles} variable. This is an internal
-     * function and is normally only called prior to rotation operations
-     * (as needed) as it does some rather lengthy calculations. However,
+     * value of its internal {@link #angles} variable.  This is an internal
+     * function and is normally only called prior to rotation operations 
+     * (as needed) as it does some rather lengthy calculations.  However,
      * it may be called any time the angles have changed and you want
      * this matrix to reflect those changes.
      */
@@ -389,29 +387,35 @@ public class RotationMatrix {
 
     /**
      * Interpolates between the two passed-in matrixes, storing the result
-     * in this matrix. Note that this function is NOT thread-safe!
+     * in this matrix.  Note that this function is NOT thread-safe!
      */
-    public synchronized RotationMatrix interpolate(RotationMatrix start, RotationMatrix end, double delta) {
+    public synchronized void interploate(RotationMatrix start, RotationMatrix end, double delta) {
         //Convert start and end matrix to quaternions.
-        double quatStartW = Math.sqrt(1 + start.m00 + start.m11 + start.m22) / 2D;
-        double quatStartI = 1 / (4 * quatStartW) * (start.m21 - start.m12);
-        double quatStartJ = 1 / (4 * quatStartW) * (start.m02 - start.m20);
-        double quatStartK = 1 / (4 * quatStartW) * (start.m10 - start.m01);
+        double quatStartw = Math.sqrt(1 + start.m00 + start.m11 + start.m22) / 2D;
+        if (quatStartw == 0) {
+            //No delta between the quaternions, just return the start.
+            this.set(start);
+            return;
+        }
 
-        double quatEndW = Math.sqrt(1 + end.m00 + end.m11 + end.m22) / 2D;
-        double quatEndI = 1 / (4 * quatEndW) * (end.m21 - end.m12);
-        double quatEndJ = 1 / (4 * quatEndW) * (end.m02 - end.m20);
-        double quatEndK = 1 / (4 * quatEndW) * (end.m10 - end.m01);
+        double quatStarti = 1 / (4 * quatStartw) * (start.m21 - start.m12);
+        double quatStartj = 1 / (4 * quatStartw) * (start.m02 - start.m20);
+        double quatStartk = 1 / (4 * quatStartw) * (start.m10 - start.m01);
 
-        //Use quaternion SLERP to get interpolated quaternion.
-        //Copied from javax.vecmath.Quat4D
-        double dotProduct = quatStartI * quatEndI + quatStartJ * quatEndJ + quatStartK * quatEndK + quatStartW * quatEndW;
+        double quatEndw = Math.sqrt(1 + end.m00 + end.m11 + end.m22) / 2D;
+        double quatEndi = 1 / (4 * quatEndw) * (end.m21 - end.m12);
+        double quatEndj = 1 / (4 * quatEndw) * (end.m02 - end.m20);
+        double quatEndk = 1 / (4 * quatEndw) * (end.m10 - end.m01);
+
+        //Use quternion SLERP to get interpolated quaternion.
+        //Copied from javax.vecmath.Quat4d
+        double dotProduct = quatStarti * quatEndi + quatStartj * quatEndj + quatStartk * quatEndk + quatStartw * quatEndw;
         if (dotProduct < 0) {
             dotProduct = -dotProduct;
-            quatEndI = -quatEndI;
-            quatEndJ = -quatEndJ;
-            quatEndK = -quatEndK;
-            quatEndW = -quatEndW;
+            quatEndi = -quatEndi;
+            quatEndj = -quatEndj;
+            quatEndk = -quatEndk;
+            quatEndw = -quatEndw;
         }
 
         double segment1;
@@ -426,10 +430,10 @@ public class RotationMatrix {
             segment1 = 1.0 - delta;
             segment2 = delta;
         }
-        double quatNetr = segment1 * quatStartW + segment2 * quatEndW;
-        double quatNeti = segment1 * quatStartI + segment2 * quatEndI;
-        double quatNetj = segment1 * quatStartJ + segment2 * quatEndJ;
-        double quatNetk = segment1 * quatStartK + segment2 * quatEndK;
+        double quatNetr = segment1 * quatStartw + segment2 * quatEndw;
+        double quatNeti = segment1 * quatStarti + segment2 * quatEndi;
+        double quatNetj = segment1 * quatStartj + segment2 * quatEndj;
+        double quatNetk = segment1 * quatStartk + segment2 * quatEndk;
 
         //Now convert this quaternion back into this matrix.
         m00 = (1.0 - 2.0 * quatNetj * quatNetj - 2.0 * quatNetk * quatNetk);
@@ -443,6 +447,5 @@ public class RotationMatrix {
         m02 = (2.0 * (quatNeti * quatNetk + quatNetr * quatNetj));
         m12 = (2.0 * (quatNetj * quatNetk - quatNetr * quatNeti));
         m22 = (1.0 - 2.0 * quatNeti * quatNeti - 2.0 * quatNetj * quatNetj);
-        return this;
     }
 }

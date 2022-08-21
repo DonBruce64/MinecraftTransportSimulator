@@ -1,5 +1,10 @@
 package minecrafttransportsimulator.sound;
 
+import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.ShortBuffer;
+
 import com.jcraft.jogg.Packet;
 import com.jcraft.jogg.Page;
 import com.jcraft.jogg.StreamState;
@@ -9,80 +14,44 @@ import com.jcraft.jorbis.Comment;
 import com.jcraft.jorbis.DspState;
 import com.jcraft.jorbis.Info;
 
-import java.io.InputStream;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.ShortBuffer;
-
 public class OGGDecoder implements IStreamDecoder {
     private final static int OGG_BUFFER_SIZE = 4096;
 
-    /**
-     * Raw input stream for data.
-     **/
+    /**Raw input stream for data.**/
     private final InputStream dataSourceStream;
-    /**
-     * Buffer used to store decoded data that can be sent to OpenAL.
-     **/
+    /**Buffer used to store decoded data that can be sent to OpenAL.**/
     private final ByteBuffer decodedDataBuffer;
-    /**
-     * Internal flag set to true when we are done processing data. Some data may still be left in buffers for return at this point.
-     **/
+    /**Internal flag set to true when we are done processing data.  Some data may still be left in buffers for return at this point.**/
     private boolean doneProcessing;
 
-    /**
-     * The current sync state. Used to sync page read operations out of the bitstream
-     * and must be notified for every stream read and every page request. Does not handle packets,
-     * that is the job of the stream.
-     **/
+    /**The current sync state.  Used to sync page read operations out of the bitstreamn
+     * and must be notified for every stream read and every page request.  Does not handle packets,
+     * that is the job of the stream.**/
     private final SyncState syncState = new SyncState();
-    /**
-     * The current stream state. Used for processing packets out of the synced stream.
-     * Note that to use pages, they must first be passed from the syncState to the streamState.
-     **/
+    /**The current streamn state.  Used for processing packets out of the synced stream.
+     * Note that to use pages, they must first be passed from the syncState to the streamState.**/
     private final StreamState streamState = new StreamState();
-    /**
-     * The current page in use. This is a header, and a bunch of packets together.
-     **/
+    /**The current page in use.  This is a header, and a bunch of packets together.**/
     private final Page page = new Page();
-    /**
-     * The current packet in use. This is the raw audio data.
-     **/
+    /**The current packet in use.  This is the raw audio data.**/
     private final Packet packet = new Packet();
-    /**
-     * The current comment. This contains audio sub-data like track name and whatnot.
-     **/
+    /**The current comment.  This contains audiao sub-data like track name and whatnot.**/
     private final Comment comment = new Comment();
-    /**
-     * The current stream info. This is for stuff like stereo/mono, bitrate, etc.
-     **/
+    /**The current stream info.  This is for stuff like stero/mono, bitrate, etc.**/
     private final Info info = new Info();
 
-    /**
-     * State of the sound signal processor. Used for decoding samples to PCM.
-     **/
+    /**State of the sound signal processor.  Used for decoding samples to PCM.**/
     private final DspState dspState = new DspState();
-    /**
-     * Data blocks send to DSP for processing. Can be re-used.
-     **/
+    /**Data blocks send to DSP for processing.  Can be re-used.**/
     private final Block block = new Block(dspState);
-    /**
-     * The total samples processed for the current read operation. Reset every call..
-     **/
+    /**The total samples processed for the current read operation.  Reset every call..**/
     private int totalSamplesProcessed;
-    /**
-     * True if we were processing samples and filled the buffer before we returned.
-     **/
+    /**True if we were processing samples and filled the buffer before we returned.**/
     private boolean bufferFilledLastDecodeCall;
 
-
-    /**
-     * A three-dimensional an array with PCM information.
-     **/
+    /**A three-dimensional an array with PCM information.**/
     private final float[][][] pcmInfo;
-    /**
-     * The index for the PCM information.
-     **/
+    /**The index for the PCM information.**/
     private final int[] pcmIndex;
 
     public OGGDecoder(InputStream dataSourceStream) {
@@ -153,14 +122,14 @@ public class OGGDecoder implements IStreamDecoder {
 
         //Go until we read too much, or until we filled our buffer, or until we read everything.
         while (totalBytesRead < MAX_READ_SIZE && !bufferFilledLastDecodeCall && !doneProcessing) {
-            //Get packets from data. It appears a page can have multiple packets, but no example code checks for this?
-            //Just flat-call for a new page. If we don't have a packet, it means we need a new one anyways.
+            //Get packets from data.  It appears a page can have multiple packets, but no example code checks for this?
+            //Just flat-call for a new page.  If we don't have a packet, it means we need a new one anyways.
             //Though we do need to make sure we don't clobber the stream state with a null page.
             if (syncState.pageout(page) == 1) {
                 streamState.pagein(page);
             }
 
-            //Process packets in page. Do so until we return 0, which means no more packets.
+            //Process packets in page.  Do so until we return 0, which means no more packets.
             //-1 in this case is a packet data hole, and we can skip those here without issue.
             while (!bufferFilledLastDecodeCall && streamState.packetout(packet) == 1) {
                 if (block.synthesis(packet) == 0) {
@@ -215,8 +184,10 @@ public class OGGDecoder implements IStreamDecoder {
 
                 //Prevent bounds clipping before making a short value.
                 //If we didn't do this and went right to a short, we would loose context and could end up with a wrong state.
-                if (value > Short.MAX_VALUE) value = Short.MAX_VALUE;
-                if (value < Short.MIN_VALUE) value = Short.MIN_VALUE;
+                if (value > Short.MAX_VALUE)
+                    value = Short.MAX_VALUE;
+                if (value < Short.MIN_VALUE)
+                    value = Short.MIN_VALUE;
                 sampleBuffer.put((short) value);
             }
         }

@@ -1,20 +1,19 @@
 package minecrafttransportsimulator.baseclasses;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.rendering.DurationDelayClock;
 
-import java.util.ArrayList;
-import java.util.List;
-
-/**
- * A helper class of sorts for doing switch-based animations for {@link JSONAnimationDefinition}
- * when paired with {@link DurationDelayClock}s. This wraps the rather long and boilerplate-code
- * switch statement into something a bit more compact. After the switchbox runs, the various variables
- * will be set in this class, and will stay set until the next call. Note that in the case of the returned
- * matrix, all operations are done as pre-operations. So a translation operation followed by a rotate operation
- * is valid, but the internal code here will take the rotation matrix and multiply it by the translation matrix. Then
- * any further calls will the calling matrix transform multiplied by the net transform.
+/**A helper class of sorts for doing switch-based animations for {@link JSONAnimationDefinition}
+ * when parired with {@link DurationDelayClock}s.  This wraps the rather long and boilerplate-code
+ * switch statement into something a bit more compact.  After the switchbox runs, the various variables
+ * will be set in this class, and will stay set until the next call.  Note that in the case of the returned
+ * matrix, all operations are done as pre-operations.  So a translation operation followed by a rotate operation
+ * is valid, but the internal code here will take the rotation matrix and multiply it by the translation matrix.  Then
+ * any further calls will the calling matrix transform multiplied by the net transform. 
  *
  * @author don_bruce
  */
@@ -22,13 +21,13 @@ public class AnimationSwitchbox {
     public final TransformationMatrix netMatrix = new TransformationMatrix();
     public final RotationMatrix rotation = new RotationMatrix();
     public final Point3D translation = new Point3D();
-    public final Point3D scale = new Point3D();
+    public Point3D scale = new Point3D();
     public boolean anyClockMovedThisUpdate;
 
     //Computational variables.
     protected final AEntityD_Definable<?> entity;
     private final String applyAfter;
-    private final List<DurationDelayClock> clocks = new ArrayList<>();
+    private final List<DurationDelayClock> clocks = new ArrayList<DurationDelayClock>();
     private final Point3D helperPoint = new Point3D();
     private final Point3D helperScalingVector = new Point3D();
     private final RotationMatrix helperRotationMatrix = new RotationMatrix();
@@ -135,7 +134,7 @@ public class AnimationSwitchbox {
     }
 
     public void runTranslation(DurationDelayClock clock, float partialTicks) {
-        //Found translation. This gets applied in the translation axis direction directly.
+        //Found translation.  This gets applied in the translation axis direction directly.
         double variableValue = entity.getAnimatedVariableValue(clock, clock.animationAxisMagnitude, partialTicks);
         if (variableValue != 0) {
             helperPoint.set(clock.animationAxisNormalized).scale(variableValue);
@@ -145,7 +144,7 @@ public class AnimationSwitchbox {
     }
 
     public void runRotation(DurationDelayClock clock, float partialTicks) {
-        //Found rotation. Get angles that needs to be applied.
+        //Found rotation.  Get angles that needs to be applied.
         double variableValue = entity.getAnimatedVariableValue(clock, clock.animationAxisMagnitude, partialTicks);
         if (variableValue != 0) {
             helperRotationMatrix.setToAxisAngle(clock.animationAxisNormalized, variableValue);
@@ -160,7 +159,7 @@ public class AnimationSwitchbox {
                 //Now do rotation.
                 helperOffsetOperationMatrix.applyRotation(helperRotationMatrix);
 
-                //Translate back. This requires inverting the translation.
+                //Translate back.  This requires inverting the translation.
                 helperOffsetOperationMatrix.applyInvertedTranslation(clock.animation.centerPoint);
 
                 //Apply that net value to our main matrix.
@@ -176,13 +175,16 @@ public class AnimationSwitchbox {
     }
 
     public void runScaling(DurationDelayClock clock, float partialTicks) {
-        //Found scaling. Get scale that needs to be applied.
+        //Found scaling.  Get scale that needs to be applied.
         double variableValue = entity.getAnimatedVariableValue(clock, clock.animationAxisMagnitude, partialTicks);
         helperScalingVector.set(clock.animationAxisNormalized).scale(variableValue);
         //Check for 0s and remove them.
-        if (helperScalingVector.x == 0) helperScalingVector.x = 1.0;
-        if (helperScalingVector.y == 0) helperScalingVector.z = 1.0;
-        if (helperScalingVector.z == 0) helperScalingVector.z = 1.0;
+        if (helperScalingVector.x == 0)
+            helperScalingVector.x = 1.0;
+        if (helperScalingVector.y == 0)
+            helperScalingVector.z = 1.0;
+        if (helperScalingVector.z == 0)
+            helperScalingVector.z = 1.0;
 
         //If we have a center offset, do special translation code to handle it.
         //Otherwise, don't bother, as it'll just take cycles.
@@ -194,7 +196,7 @@ public class AnimationSwitchbox {
             //Now do scaling.
             helperOffsetOperationMatrix.applyScaling(helperScalingVector);
 
-            //Translate back. This requires inverting the translation.
+            //Translate back.  This requires inverting the translation.
             helperOffsetOperationMatrix.applyInvertedTranslation(clock.animation.centerPoint);
 
             //Apply that net value to our main matrix and our scale.

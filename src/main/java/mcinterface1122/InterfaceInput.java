@@ -1,14 +1,24 @@
 package mcinterface1122;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import org.lwjgl.input.Keyboard;
+import org.lwjgl.input.Mouse;
+
 import minecrafttransportsimulator.guis.instances.GUIConfig;
 import minecrafttransportsimulator.jsondefs.JSONConfigClient.ConfigJoystick;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.mcinterface.IInterfaceInput;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import minecrafttransportsimulator.systems.ControlSystem;
 import minecrafttransportsimulator.systems.ControlSystem.ControlsJoystick;
-import net.java.games.input.Controller;
-import net.java.games.input.ControllerEnvironment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.util.MouseHelper;
@@ -17,12 +27,6 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.relauncher.Side;
-import org.lwjgl.input.Controllers;
-import org.lwjgl.input.Keyboard;
-import org.lwjgl.input.Mouse;
-
-import java.util.*;
-import java.util.Map.Entry;
 
 @EventBusSubscriber(Side.CLIENT)
 public class InterfaceInput implements IInterfaceInput {
@@ -31,7 +35,7 @@ public class InterfaceInput implements IInterfaceInput {
 
     //Mouse variables.
     private static boolean enableMouse = false;
-    private static final InhibitableMouseHelper customMouseHelper = new InhibitableMouseHelper();
+    private static InhibitableMouseHelper customMouseHelper = new InhibitableMouseHelper();
 
     //Joystick variables.
     private static boolean runningJoystickThread = false;
@@ -40,14 +44,14 @@ public class InterfaceInput implements IInterfaceInput {
     private static boolean joystickEnabled = false;
     private static boolean joystickBlocked = false;
     private static boolean joystickInhibited = false;
-    private static final Map<String, Integer> joystickNameCounters = new HashMap<>();
+    private static final Map<String, Integer> joystickNameCounters = new HashMap<String, Integer>();
 
     //Normal mode joystick variables.
-    private static final Map<String, org.lwjgl.input.Controller> joystickMap = new LinkedHashMap<>();
-    private static final Map<String, Integer> joystickAxisCountMap = new LinkedHashMap<>();
+    private static final Map<String, org.lwjgl.input.Controller> joystickMap = new LinkedHashMap<String, org.lwjgl.input.Controller>();
+    private static final Map<String, Integer> joystickAxisCountMap = new LinkedHashMap<String, Integer>();
 
     //Classic mode joystick variables.
-    private static final Map<String, net.java.games.input.Controller> classicJoystickMap = new LinkedHashMap<>();
+    private static final Map<String, net.java.games.input.Controller> classicJoystickMap = new LinkedHashMap<String, net.java.games.input.Controller>();
 
     @Override
     public void initConfigKey() {
@@ -58,112 +62,115 @@ public class InterfaceInput implements IInterfaceInput {
     @Override
     public void initJoysticks() {
         //Populate the joystick device map.
-        //Joystick will be enabled if at least one controller is found. If none are found, we likely have an error.
+        //Joystick will be enabled if at least one controller is found.  If none are found, we likely have an error.
         //We can re-try this if the user removes their mouse and we re-run this method.
         if (!runningJoystickThread) {
             runningJoystickThread = true;
             joystickBlocked = true;
-            Thread joystickThread = new Thread(() -> {
-                try {
-                    joystickNameCounters.clear();
-                    if (ConfigSystem.settings.general.devMode.value)
-                        InterfaceManager.coreInterface.logError("Starting controller init.");
-                    if (runningClassicMode) {
+            Thread joystickThread = new Thread() {
+                @Override
+                public void run() {
+                    try {
+                        joystickNameCounters.clear();
                         if (ConfigSystem.settings.general.devMode.value)
-                            InterfaceManager.coreInterface.logError("Running classic mode.");
-                        classicJoystickMap.clear();
-                        if (ConfigSystem.settings.general.devMode.value)
-                            InterfaceManager.coreInterface.logError("Found this many controllers: " + ControllerEnvironment.getDefaultEnvironment().getControllers().length);
-                        for (Controller joystick : ControllerEnvironment.getDefaultEnvironment().getControllers()) {
-                            joystickEnabled = true;
-                            if (joystick.getType() != null && !joystick.getType().equals(Controller.Type.MOUSE) && !joystick.getType().equals(Controller.Type.KEYBOARD) && joystick.getName() != null && joystick.getComponents().length != 0) {
-                                String joystickName = joystick.getName();
-                                if (ConfigSystem.settings.general.devMode.value)
-                                    InterfaceManager.coreInterface.logError("Found valid controller: " + joystickName);
-
-                                //Add an index on this joystick to be sure we don't override multi-component units.
-                                if (!joystickNameCounters.containsKey(joystickName)) {
-                                    joystickNameCounters.put(joystickName, 0);
-                                }
-                                classicJoystickMap.put(joystickName + "_" + joystickNameCounters.get(joystickName), joystick);
-                                joystickNameCounters.put(joystickName, joystickNameCounters.get(joystickName) + 1);
-                            }
-                        }
-                    } else {
-                        if (ConfigSystem.settings.general.devMode.value)
-                            InterfaceManager.coreInterface.logError("Running modern mode.");
-                        if (!Controllers.isCreated()) {
+                            InterfaceManager.coreInterface.logError("Starting controller init.");
+                        if (runningClassicMode) {
                             if (ConfigSystem.settings.general.devMode.value)
-                                InterfaceManager.coreInterface.logError("Creating controller object.");
-                            Controllers.create();
-                        }
-                        joystickMap.clear();
-                        joystickAxisCountMap.clear();
-                        if (ConfigSystem.settings.general.devMode.value)
-                            InterfaceManager.coreInterface.logError("Found this many controllers: " + Controllers.getControllerCount());
-                        for (int i = 0; i < Controllers.getControllerCount(); ++i) {
-                            joystickEnabled = true;
-                            org.lwjgl.input.Controller joystick = Controllers.getController(i);
-                            if (joystick.getAxisCount() > 0 && joystick.getButtonCount() > 0 && joystick.getName() != null) {
-                                String joystickName = joystick.getName();
+                                InterfaceManager.coreInterface.logError("Running classic mode.");
+                            classicJoystickMap.clear();
+                            if (ConfigSystem.settings.general.devMode.value)
+                                InterfaceManager.coreInterface.logError("Found this many controllers: " + net.java.games.input.ControllerEnvironment.getDefaultEnvironment().getControllers().length);
+                            for (net.java.games.input.Controller joystick : net.java.games.input.ControllerEnvironment.getDefaultEnvironment().getControllers()) {
+                                joystickEnabled = true;
+                                if (joystick.getType() != null && !joystick.getType().equals(net.java.games.input.Controller.Type.MOUSE) && !joystick.getType().equals(net.java.games.input.Controller.Type.KEYBOARD) && joystick.getName() != null && joystick.getComponents().length != 0) {
+                                    String joystickName = joystick.getName();
+                                    if (ConfigSystem.settings.general.devMode.value)
+                                        InterfaceManager.coreInterface.logError("Found valid controller: " + joystickName);
+
+                                    //Add an index on this joystick to be sure we don't override multi-component units.
+                                    if (!joystickNameCounters.containsKey(joystickName)) {
+                                        joystickNameCounters.put(joystickName, 0);
+                                    }
+                                    classicJoystickMap.put(joystickName + "_" + joystickNameCounters.get(joystickName), joystick);
+                                    joystickNameCounters.put(joystickName, joystickNameCounters.get(joystickName) + 1);
+                                }
+                            }
+                        } else {
+                            if (ConfigSystem.settings.general.devMode.value)
+                                InterfaceManager.coreInterface.logError("Running modern mode.");
+                            if (!org.lwjgl.input.Controllers.isCreated()) {
                                 if (ConfigSystem.settings.general.devMode.value)
-                                    InterfaceManager.coreInterface.logError("Found valid controller: " + joystickName);
+                                    InterfaceManager.coreInterface.logError("Creating controller object.");
+                                org.lwjgl.input.Controllers.create();
+                            }
+                            joystickMap.clear();
+                            joystickAxisCountMap.clear();
+                            if (ConfigSystem.settings.general.devMode.value)
+                                InterfaceManager.coreInterface.logError("Found this many controllers: " + org.lwjgl.input.Controllers.getControllerCount());
+                            for (int i = 0; i < org.lwjgl.input.Controllers.getControllerCount(); ++i) {
+                                joystickEnabled = true;
+                                org.lwjgl.input.Controller joystick = org.lwjgl.input.Controllers.getController(i);
+                                if (joystick.getAxisCount() > 0 && joystick.getButtonCount() > 0 && joystick.getName() != null) {
+                                    String joystickName = joystick.getName();
+                                    if (ConfigSystem.settings.general.devMode.value)
+                                        InterfaceManager.coreInterface.logError("Found valid controller: " + joystickName);
 
-                                //Add an index on this joystick to be sure we don't override multi-component units.
-                                if (!joystickNameCounters.containsKey(joystickName)) {
-                                    joystickNameCounters.put(joystickName, 0);
+                                    //Add an index on this joystick to be sure we don't override multi-component units.
+                                    if (!joystickNameCounters.containsKey(joystickName)) {
+                                        joystickNameCounters.put(joystickName, 0);
+                                    }
+                                    joystickMap.put(joystickName + "_" + joystickNameCounters.get(joystickName), joystick);
+                                    joystickAxisCountMap.put(joystickName + "_" + joystickNameCounters.get(joystickName), joystick.getAxisCount());
+                                    joystickNameCounters.put(joystickName, joystickNameCounters.get(joystickName) + 1);
                                 }
-                                joystickMap.put(joystickName + "_" + joystickNameCounters.get(joystickName), joystick);
-                                joystickAxisCountMap.put(joystickName + "_" + joystickNameCounters.get(joystickName), joystick.getAxisCount());
-                                joystickNameCounters.put(joystickName, joystickNameCounters.get(joystickName) + 1);
                             }
                         }
-                    }
 
-                    //Validate joysticks are valid for this setup by making sure indexes aren't out of bounds.
-                    Iterator<Entry<String, ConfigJoystick>> iterator = ConfigSystem.client.controls.joystick.entrySet().iterator();
-                    if (ConfigSystem.settings.general.devMode.value)
-                        InterfaceManager.coreInterface.logError("Performing button validity checks.");
-                    while (iterator.hasNext()) {
-                        try {
-                            Entry<String, ConfigJoystick> controllerEntry = iterator.next();
-                            ControlsJoystick control = ControlsJoystick.valueOf(controllerEntry.getKey().toUpperCase());
-                            ConfigJoystick config = controllerEntry.getValue();
-                            if (runningClassicMode) {
-                                if (classicJoystickMap.containsKey(config.joystickName)) {
-                                    if (classicJoystickMap.get(config.joystickName).getComponents().length <= config.buttonIndex) {
-                                        iterator.remove();
-                                    }
-                                }
-                            } else {
-                                if (joystickMap.containsKey(config.joystickName)) {
-                                    if (control.isAxis) {
-                                        if (joystickMap.get(config.joystickName).getAxisCount() <= config.buttonIndex) {
-                                            iterator.remove();
-                                        }
-                                    } else {
-                                        if (joystickMap.get(config.joystickName).getButtonCount() <= config.buttonIndex - joystickAxisCountMap.get(config.joystickName)) {
+                        //Validate joysticks are valid for this setup by making sure indexes aren't out of bounds.
+                        Iterator<Entry<String, ConfigJoystick>> iterator = ConfigSystem.client.controls.joystick.entrySet().iterator();
+                        if (ConfigSystem.settings.general.devMode.value)
+                            InterfaceManager.coreInterface.logError("Performing button validity checks.");
+                        while (iterator.hasNext()) {
+                            try {
+                                Entry<String, ConfigJoystick> controllerEntry = iterator.next();
+                                ControlsJoystick control = ControlSystem.ControlsJoystick.valueOf(controllerEntry.getKey().toUpperCase());
+                                ConfigJoystick config = controllerEntry.getValue();
+                                if (runningClassicMode) {
+                                    if (classicJoystickMap.containsKey(config.joystickName)) {
+                                        if (classicJoystickMap.get(config.joystickName).getComponents().length <= config.buttonIndex) {
                                             iterator.remove();
                                         }
                                     }
+                                } else {
+                                    if (joystickMap.containsKey(config.joystickName)) {
+                                        if (control.isAxis) {
+                                            if (joystickMap.get(config.joystickName).getAxisCount() <= config.buttonIndex) {
+                                                iterator.remove();
+                                            }
+                                        } else {
+                                            if (joystickMap.get(config.joystickName).getButtonCount() <= config.buttonIndex - joystickAxisCountMap.get(config.joystickName)) {
+                                                iterator.remove();
+                                            }
+                                        }
+                                    }
                                 }
+                            } catch (Exception e) {
+                                //Invalid control.
+                                iterator.remove();
                             }
-                        } catch (Exception e) {
-                            //Invalid control.
-                            iterator.remove();
+                        }
+
+                        joystickBlocked = false;
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        InterfaceManager.coreInterface.logError(e.getMessage());
+                        for (StackTraceElement s : e.getStackTrace()) {
+                            InterfaceManager.coreInterface.logError(s.toString());
                         }
                     }
-
-                    joystickBlocked = false;
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    InterfaceManager.coreInterface.logError(e.getMessage());
-                    for (StackTraceElement s : e.getStackTrace()) {
-                        InterfaceManager.coreInterface.logError(s.toString());
-                    }
+                    runningJoystickThread = false;
                 }
-                runningJoystickThread = false;
-            });
+            };
             joystickThread.start();
         }
     }
@@ -205,7 +212,7 @@ public class InterfaceInput implements IInterfaceInput {
 
     @Override
     public List<String> getAllJoystickNames() {
-        return new ArrayList<>(runningClassicMode ? classicJoystickMap.keySet() : joystickMap.keySet());
+        return new ArrayList<String>(runningClassicMode ? classicJoystickMap.keySet() : joystickMap.keySet());
     }
 
     @Override
@@ -225,7 +232,7 @@ public class InterfaceInput implements IInterfaceInput {
 
     @Override
     public float getJoystickAxisValue(String joystickName, int index) {
-        //Check to make sure this control is operational before testing. It could have been removed from a prior game.
+        //Check to make sure this control is operational before testing.  It could have been removed from a prior game.
         if (runningClassicMode) {
             if (classicJoystickMap.containsKey(joystickName)) {
                 classicJoystickMap.get(joystickName).poll();
@@ -250,7 +257,7 @@ public class InterfaceInput implements IInterfaceInput {
 
     @Override
     public boolean getJoystickButtonValue(String joystickName, int index) {
-        //Check to make sure this control is operational before testing. It could have been removed from a prior game.
+        //Check to make sure this control is operational before testing.  It could have been removed from a prior game.
         if (runningClassicMode) {
             if (classicJoystickMap.containsKey(joystickName)) {
                 classicJoystickMap.get(joystickName).poll();
@@ -320,14 +327,14 @@ public class InterfaceInput implements IInterfaceInput {
         }
 
         //Check if we pressed the config key.
-        if (configKey.isPressed() && InterfaceManager.clientInterface.isGUIOpen()) {
+        if (configKey.isPressed() && !InterfaceManager.clientInterface.isGUIOpen()) {
             new GUIConfig();
         }
     }
 
     /**
-     * Custom MouseHelper class that can have movement checks inhibited based on
-     * settings in this class. Allows us to prevent player movement.
+     *  Custom MouseHelper class that can have movement checks inhibited based on
+     *  settings in this class.  Allows us to prevent player movement.
      */
     private static class InhibitableMouseHelper extends MouseHelper {
         private int deltaXForced;
@@ -351,6 +358,5 @@ public class InterfaceInput implements IInterfaceInput {
                 deltaY = 0;
             }
         }
-    }
-
+    };
 }

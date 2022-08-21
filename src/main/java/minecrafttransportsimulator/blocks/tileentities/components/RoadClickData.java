@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.blocks.tileentities.components;
 
+import java.util.List;
+
 import minecrafttransportsimulator.baseclasses.BezierCurve;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
@@ -7,12 +9,9 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad.RoadComponent;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent.JSONLaneSector;
 
-import java.util.List;
-
-/**
- * Helper class for containing data of what was clicked on this road.
- * The position and rotation variables are used to create a new road from this data,
- * should this be desired. Simply pass them in as the start or end position of a {@link BezierCurve}.
+/**Helper class for containing data of what was clicked on this road.
+ * The position and rotation variables are used to create a new road from this data, 
+ * should this be desired.  Simply pass them in as the start or end position of a {@link BezierCurve}.
  *
  * @author don_bruce
  */
@@ -29,9 +28,9 @@ public class RoadClickData {
         this.sectorClicked = sectorClicked;
         this.clickedStart = clickedStart;
 
-        //If we clicked a sector, line us up with it. If we didn't click a sector, line us up with the dynamic-lane curve.
+        //If we clicked a sector, line us up with it.  If we didn't click a sector, line us up with the dynamic-laned curve.
         if (roadClicked.definition.road.type.equals(RoadComponent.CORE_DYNAMIC)) {
-            //Get the position and rotation for this curve. Note that curve rotation is flipped 180 on the end of curves.
+            //Get the position and rotation for this curve.  Note that curve rotation is flipped 180 on the end of curves.
             //So if we are calculating curve endpoints, the angles will be flipped 180 to account for this.
             if (clickedStart) {
                 //Clicked start of the road curve segment.

@@ -1,13 +1,5 @@
 package minecrafttransportsimulator.rendering;
 
-import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.baseclasses.RotationMatrix;
-import minecrafttransportsimulator.baseclasses.TransformationMatrix;
-import minecrafttransportsimulator.entities.components.AEntityD_Definable;
-import minecrafttransportsimulator.jsondefs.JSONText;
-
-import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.nio.FloatBuffer;
 import java.util.HashMap;
@@ -15,8 +7,16 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Main render class for text. This class contains a few methods for rendering text. These mainly pertain to rendering
+import javax.imageio.ImageIO;
+
+import minecrafttransportsimulator.baseclasses.ColorRGB;
+import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
+import minecrafttransportsimulator.baseclasses.TransformationMatrix;
+import minecrafttransportsimulator.entities.components.AEntityD_Definable;
+import minecrafttransportsimulator.jsondefs.JSONText;
+
+/**Main render class for text.  This class contains a few methods for rendering text.  These mainly pertain to rendering
  * text strings given a specified set of formatting and position/rotation.
  *
  * @author don_bruce
@@ -31,22 +31,23 @@ public class RenderText {
     public static final char RESET_FORMATTING_CHAR = 'r';
     public static final char UNDERLINE_CHAR = '_';
     public static final char STRIKETHROUGH_CHAR = '-';
-    private static final Map<String, FontData> fontDatas = new HashMap<>();
+
+    private static final Map<String, FontData> fontDatas = new HashMap<String, FontData>();
     private static final TransformationMatrix transformHelper = new TransformationMatrix();
 
     /**
-     * Draws the specified text. This is designed for general draws where text is defined in-code, but still may
-     * use custom fonts. This method can render the text in multiple ways depending on the parameters passed-in.
-     * If a centered string is specified, then the point passed-in should be  the center point of the string, rather
-     * that the top-left of the string like normal. The same goes for right-justify. If wrapWidth is anything else but 0,
-     * then the wordWrap method will be called to render multi-line text.
-     * Note that this method expects transforms to be applied such that the coordinate space is local
-     * to the object rendering the text on, and is NOT the global coordinate space. The coordinates MAY, however, be
-     * in pixel-space. This is essentially 1/16 scale of blocks, as blocks are 16 pixels each.
-     * This is used for things that are already rendered in pixel-space, such as instruments and GUIs.
-     * This also inverts the y coordinate as with those systems +y is down whereas normally it is up.
-     * Also note that if a scale was applied prior to rendering this text, it should be passed-in here.
-     * This allows for proper normal calculations to prevent needing to re-normalize the text.
+     *  Draws the specified text.  This is designed for general draws where text is defined in-code, but still may
+     *  use custom fonts.  This method can render the text in multiple ways depending on the parameters passed-in.  
+     *  If a centered string is specified, then the point passed-in should be  the center point of the string, rather 
+     *  that the top-left of the string like normal.  The same goes for right-justify.  If wrapWidth is anything else but 0, 
+     *  then the wordWrap method will be called to render multi-line text.
+     *  Note that this method expects transforms to be applied such that the coordinate space is local
+     *  to the object rendering the text on, and is NOT the global coordinate space.  The coordinates MAY, however, be
+     *  in pixel-space.  This is essentially 1/16 scale of blocks, as blocks are 16 pixels each.
+     *  This is used for things that are already rendered in pixel-space, such as instruments and GUIs.
+     *  This also inverts the y coordinate as with those systems +y is down whereas normally it is up.
+     *  Also note that if a scale was applied prior to rendering this text, it should be passed-in here.
+     *  This allows for proper normal calculations to prevent needing to re-normalize the text.
      */
     public static void drawText(String text, String fontName, Point3D position, ColorRGB color, TextAlignment alignment, float scale, boolean autoScale, int wrapWidth, boolean renderLit) {
         if (!text.isEmpty()) {
@@ -57,8 +58,8 @@ public class RenderText {
     }
 
     /**
-     * Similar to the 2D text drawing method, except this method will render the text according to the passed-in text JSON in 3D space at the point specified.
-     * Essentially, this is JSON-defined rendering rather than manual entry of points.
+     *  Similar to the 2D text drawing method, except this method will render the text according to the passed-in text JSON in 3D space at the point specified.
+     *  Essentially, this is JSON-defined rendering rather than manual entry of points.
      */
     public static void draw3DText(String text, AEntityD_Definable<?> entity, TransformationMatrix transform, JSONText definition, boolean pixelCoords) {
         if (!text.isEmpty()) {
@@ -73,12 +74,12 @@ public class RenderText {
     }
 
     /**
-     * Returns the width of the passed-in text. Units are in pixels,
-     * though these are standardized for the default font. Fonts with
-     * higher resolutions may result in non-whole-pixel widths.
-     * NOTE: this applies an automatic 1.4 scaling to the default font
-     * as this is done internally by the renderer. This won't matter for
-     * most things, but keep it in mind if sizes don't seem to match.
+     *  Returns the width of the passed-in text.  Units are in pixels,
+     *  though these are standardized for the default font.  Fonts with
+     *  higher resolutions may result in non-whole-pixel widths.
+     *  NOTE: this applies an automatic 1.4 scaling to the default font
+     *  as this is done internally by the renderer.  This won't matter for
+     *  most things, but keep it in mind if sizes don't seem to match.
      */
     public static float getStringWidth(String text, String fontName) {
         FontData font = getFontData(fontName);
@@ -90,12 +91,12 @@ public class RenderText {
     }
 
     /**
-     * Returns the height of the number of lines of text. Units are in pixels,
-     * though these are standardized for the default font. Fonts with
-     * higher resolutions may result in non-whole-pixel widths.
-     * NOTE: this applies an automatic 1.4 scaling to the default font
-     * as this is done internally by the renderer. This won't matter for
-     * most things, but keep it in mind if sizes don't seem to match.
+     *  Returns the height of the number of lines of text.  Units are in pixels,
+     *  though these are standardized for the default font.  Fonts with
+     *  higher resolutions may result in non-whole-pixel widths.
+     *  NOTE: this applies an automatic 1.4 scaling to the default font
+     *  as this is done internally by the renderer.  This won't matter for
+     *  most things, but keep it in mind if sizes don't seem to match.
      */
     public static float getHeight(int numberLines, String fontName) {
         float height = numberLines * (FontData.DEFAULT_PIXELS_PER_CHAR + FontData.CHAR_SPACING);
@@ -107,9 +108,9 @@ public class RenderText {
     }
 
     /**
-     * Returns the correct font rendering charset for the passed-in font,
-     * creating it if it does not exist. Does not bind the actual texture,
-     * but does load it for calculating charset bounds.
+     *  Returns the correct font rendering charset for the passed-in font,
+     *  creating it if it does not exist.  Does not bind the actual texture,
+     *  but does load it for calculating charset bounds.
      */
     private static FontData getFontData(String fontName) {
         FontData fontData = fontDatas.get(fontName);
@@ -121,33 +122,16 @@ public class RenderText {
     }
 
     /**
-     * Class used for storing Unicode charset data for font rendering.
-     * Contains font bounds and sizes. Data is stored in an array with each
-     * element representing the char index on the texture sheet.
+     *  Class used for storing Unicode charset data for font rendering.
+     *  Contains font bounds and sizes.  Data is stored in an array with each
+     *  element representing the char index on the texture sheet.
      */
     private static class FontData {
         private static final byte CHARS_PER_ROWCOL = 16;
         private static final int CHARS_PER_TEXTURE_SHEET = CHARS_PER_ROWCOL * CHARS_PER_ROWCOL;
         private static final byte DEFAULT_PIXELS_PER_CHAR = 8;
         private static final float CHAR_SPACING = 0.5F;
-        private static final ColorRGB[] COLORS = new ColorRGB[]{
-                new ColorRGB(0, 0, 0),
-                new ColorRGB(0, 0, 170),
-                new ColorRGB(0, 170, 0),
-                new ColorRGB(0, 170, 170),
-                new ColorRGB(170, 0, 0),
-                new ColorRGB(170, 0, 170),
-                new ColorRGB(255, 170, 0),
-                new ColorRGB(170, 170, 170),
-                new ColorRGB(85, 85, 85),
-                new ColorRGB(85, 85, 255),
-                new ColorRGB(85, 255, 85),
-                new ColorRGB(85, 255, 255),
-                new ColorRGB(255, 85, 85),
-                new ColorRGB(255, 85, 255),
-                new ColorRGB(255, 255, 85),
-                new ColorRGB(255, 255, 255)
-        };
+        private static final ColorRGB[] COLORS = new ColorRGB[] { new ColorRGB(0, 0, 0), new ColorRGB(0, 0, 170), new ColorRGB(0, 170, 0), new ColorRGB(0, 170, 170), new ColorRGB(170, 0, 0), new ColorRGB(170, 0, 170), new ColorRGB(255, 170, 0), new ColorRGB(170, 170, 170), new ColorRGB(85, 85, 85), new ColorRGB(85, 85, 255), new ColorRGB(85, 255, 85), new ColorRGB(85, 255, 255), new ColorRGB(255, 85, 85), new ColorRGB(255, 85, 255), new ColorRGB(255, 255, 85), new ColorRGB(255, 255, 255) };
         private static final FontRenderState[] STATES = FontRenderState.generateDefaults();
         private static final int MAX_VERTCIES_PER_RENDER = 1000 * 6;
         private static final Point3D adjustmentOffset = new Point3D();
@@ -155,57 +139,33 @@ public class RenderText {
         private final boolean isDefault;
         /*Texture locations for the font files.**/
         private final String[] fontLocations = new String[Character.MAX_VALUE / CHARS_PER_TEXTURE_SHEET];
-        /**
-         * Char width, in actual game texture pixels (not font texture pixels). May be fractions of a pixel if the font is up-scaled.
-         **/
+        /**Char width, in actual game texture pixels (not font texture pixels).  May be fractions of a pixel if the font is up-scaled.**/
         private final float[] charWidths = new float[Character.MAX_VALUE];
-        /**
-         * Left-most offset for font text position, from 0-1, relative to the texture png.
-         **/
+        /**Left-most offset for font text position, from 0-1, relative to the texture png.**/
         private final float[] offsetsMinU = new float[Character.MAX_VALUE];
-        /**
-         * Right-most offset for font text position, from 0-1, relative to the texture png.
-         **/
+        /**Right-most offset for font text position, from 0-1, relative to the texture png.**/
         private final float[] offsetsMaxU = new float[Character.MAX_VALUE];
-        /**
-         * Bottom-most offset for font text position, from 0-1, relative to the texture png.
-         **/
+        /**Bottom-most offset for font text position, from 0-1, relative to the texture png.**/
         private final float[] offsetsMinV = new float[Character.MAX_VALUE];
-        /**
-         * Top-most offset for font text position, from 0-1, relative to the texture png.
-         **/
+        /**Top-most offset for font text position, from 0-1, relative to the texture png.**/
         private final float[] offsetsMaxV = new float[Character.MAX_VALUE];
 
-
-        /**
-         * Font render objects. These are created initially for use in render calls. Referencing is as follows:
+        /**Font render objects.  These are created initially for use in render calls.  Referencing is as follows:
          * The first array element is the texture sheet being used.
          * The second array element is the color.
-         * This ensures that there will always be one element for any permutation of states.
-         **/
-        private static final Map<String, Map<ColorRGB, RenderableObject>> createdRenderObjects = new HashMap<>();
-        /**
-         * Active font render objects. Items are added to this list during string parsing.
-         * At the end, it will be populated and should be looped over for drawing.
-         */
-        private final Set<RenderableObject> activeRenderObjects = new LinkedHashSet<>();
-        /**
-         * Mutable helper for doing vertex-building operations.
-         **/
+         * This ensures that there will always be one element for any permutation of states.**/
+        private static final Map<String, Map<ColorRGB, RenderableObject>> createdRenderObjects = new HashMap<String, Map<ColorRGB, RenderableObject>>();
+        /**Active font render objects.  Items are added to this list during string parsing.  
+         * At the end, it will be populated and should be looped over for drawing.*/
+        private final Set<RenderableObject> activeRenderObjects = new LinkedHashSet<RenderableObject>();
+        /**Mutable helper for doing vertex-building operations.**/
         private final float[] charVertex = new float[3];
-        /**
-         * Mutable helper for doing vertex-building operations for font effects like bold and underline.
-         **/
+        /**Mutable helper for doing vertex-building operations for font effects like bold and underline.**/
         private final float[] supplementalVertex = new float[3];
-        /**
-         * Mutable helper for doing uv-building operations.
-         **/
+        /**Mutable helper for doing uv-building operations.**/
         private final float[] charUV = new float[2];
-        /**
-         * Mutable helper for doing uv-building operations for font effects like bold and underline.
-         **/
+        /**Mutable helper for doing uv-building operations for font effects like bold and underline.**/
         private final float[] supplementalUV = new float[2];
-
 
         private FontData(String fontName) {
             this.isDefault = fontName == null;
@@ -225,13 +185,13 @@ public class RenderText {
                 try {
                     bufferedImage = ImageIO.read(RenderText.class.getResourceAsStream(fontLocations[i]));
                 } catch (Exception e) {
-                    //Just continue, as we don't care about this file. Not all files may be present for any given font.
+                    //Just continue, as we don't care about this file.  Not all files may be present for any given font.
                     continue;
                 }
 
                 //Calculate min/max.
                 //For each char, we look at the row/col bounds and check every pixel in the col
-                //starting from right to left. If we hit a pixel in this col sub-section, we know we
+                //starting from right to left.  If we hit a pixel in this col sub-section, we know we
                 //have found the end of the char and that's its width.
                 //Order is all chars in row 1, then row 2, etc.
                 int pixelsPerSide = bufferedImage.getHeight();
@@ -247,7 +207,7 @@ public class RenderText {
                             offsetsMinU[charChecking] = charCol / (float) CHARS_PER_ROWCOL;
                             offsetsMaxU[charChecking] = (charCol + 1) / (float) CHARS_PER_ROWCOL;
                             //Normally we'd invert the UV-mapping here to compensate for the inverted texture center.
-                            //But in this case, we don't have to do that. Still not 100% sure on the math, but it works?
+                            //But in this case, we don't have to do that.  Still not 100% sure on the math, but it works?
                             offsetsMaxV[charChecking] = (charRow) / (float) CHARS_PER_ROWCOL;
                             offsetsMinV[charChecking] = (charRow + 1) / (float) CHARS_PER_ROWCOL;
                             charWidths[charChecking] = DEFAULT_PIXELS_PER_CHAR;
@@ -257,7 +217,7 @@ public class RenderText {
                             for (int pixelCol = (charCol + 1) * pixelsPerRowCol - 1; pixelCol >= charCol * pixelsPerRowCol; --pixelCol) {
                                 //Check all rows of pixels in this column to see if we have one.
                                 for (int pixelRow = charRow * pixelsPerRowCol; pixelRow < (charRow + 1) * pixelsPerRowCol; ++pixelRow) {
-                                    //Check for alpha and color. Some systems write color, but no alpha to a pixel.
+                                    //Check for alpha and color.  Some systems write color, but no alpha to a pixel.
                                     int pixelValue = bufferedImage.getRGB(pixelCol, pixelRow);
                                     if (pixelValue != 0 && (pixelValue >> 24) != 0) {
                                         //Found a pixel, we must have this as our UV.
@@ -292,9 +252,9 @@ public class RenderText {
             }
 
             //Pre-calculate normals, as these won't change.
-            float[] normals = new float[]{0.0F, 0.0F, 1.0F};
+            float[] normals = new float[] { 0.0F, 0.0F, 1.0F };
 
-            //Check the string for a random font code char. If we have one, we need to substitute chars.
+            //Check the string for a random font code char.  If we have one, we need to substitute chars.
             //Do this prior to rendering operations as this will affect string length and blocks.
             if (text.indexOf(FORMATTING_CHAR + RANDOM_FORMATTING_CHAR) != -1) {
                 char[] textArray = text.toCharArray();
@@ -317,11 +277,11 @@ public class RenderText {
             }
 
             //Standard ASCII font is 7px tall out of 8.
-            //Unicode font is 10px tall out of 16, or 5 out of 8.
+            //Unicode font is 10pz tall out of 16, or 5 out of 8.
             //To compensate, we scale the font by (7/8)/(5/8) = 1.4.
             //However, this will move the font down, as it's top-left centered.
             //To compensate, we move the font 2px up, which would get the unicode
-            //to the same top-char position as ASCII without scale. We do this
+            //to the same top-char position as ASCII without scale.  We do this
             //movement post-scaling, as if we did it pre-scaling it wouldn't work
             //since scaled fonts have different top-alignments.
             //We only do this on the default font, however, which is replacing ASCII.
@@ -339,10 +299,8 @@ public class RenderText {
                 scale /= 16;
             }
 
-
             //Get the text width.
             float stringWidth = getStringWidth(text);
-
 
             //Check for auto-scaling.
             if (autoScale && wrapWidth > 0) {
@@ -366,7 +324,6 @@ public class RenderText {
                 wrapWidth = 0;
             }
 
-
             //Check if we need to adjust our offset for our alignment.
             //While this will be slightly off due to formatting and non-printable chars in the string,
             //it is better than trying to pre-strip them and then parse the text after.
@@ -389,13 +346,13 @@ public class RenderText {
             int indexAtLastNewline = 0;
             ColorRGB currentColor = color;
             FontRenderState currentState = STATES[0];
-            for (int i = 0; i < text.length(); i++) {
+            for (int i = 0; i < text.length(); ++i) {
                 char textChar = text.charAt(i);
 
                 //Check if we are a formatting code before doing any other parsing.
                 if (textChar == FORMATTING_CHAR) {
                     //Get the format code and apply operation.
-                    char formattingChar = text.charAt(i++);
+                    char formattingChar = text.charAt(++i);
                     switch (formattingChar) {
                         case (BOLD_FORMATTING_CHAR):
                             currentState = STATES[currentState.index | FontRenderState.BOLD_BIT_INDEX];
@@ -435,10 +392,10 @@ public class RenderText {
                 } else if (wrapWidth != 0 && currentOffset > wrapWidth) {
                     //Go backwards in text to find last space and split based on that.
                     //After this we will re-do the parsing of the prior chars on the next line.
-                    //Don't do this if we don't have a space in this line though. This is the case for URLs
+                    //Don't do this if we don't have a space in this line though.  This is the case for URLs
                     //and other long segments of text.
                     if (text.substring(indexAtLastNewline + 1, i).indexOf(' ') != -1) {
-                        for (int j = i - 1; j > 0; j--) {
+                        for (int j = i - 1; j > 0; --j) {
                             char priorChar = text.charAt(j);
                             if (priorChar == ' ') {
                                 i = j;
@@ -466,7 +423,7 @@ public class RenderText {
                                     underlineRenderObject.vertices.position(underlineRenderObject.vertices.position() - 6 * 8);
                                 }
                                 if (currentState.strikethrough) {
-                                    //Remove 1 char from the strikethrough object.
+                                    //Remove 1 char from the strikethough object.
                                     RenderableObject strikethroughRenderObject = getObjectFor(STRIKETHROUGH_CHAR, currentColor);
                                     strikethroughRenderObject.vertices.position(strikethroughRenderObject.vertices.position() - 6 * 8);
                                 }
@@ -486,13 +443,16 @@ public class RenderText {
                     //If we are bold, we will double-render slightly offset.
                     //If we are underline, add an underline overlay.
                     //If we are italic, we slightly skew the UV map by 1px.
-                    //If we are strikethrough, we add a strikethrough overlay.
+                    //If we are strikethough, we add a strikethough overlay.
                     RenderableObject currentRenderObject = getObjectFor(textChar, currentColor);
                     float charWidth = charWidths[textChar];
                     int charSteps = 6;
-                    if (currentState.bold) charSteps += 6;
-                    if (currentState.underline) charSteps += 6;
-                    if (currentState.strikethrough) charSteps += 6;
+                    if (currentState.bold)
+                        charSteps += 6;
+                    if (currentState.underline)
+                        charSteps += 6;
+                    if (currentState.strikethrough)
+                        charSteps += 6;
                     for (int j = 0; j < charSteps; ++j) {
                         //Set vertex properties.
                         switch (j) {
@@ -533,12 +493,12 @@ public class RenderText {
                                 break;
                             }
                             default: {
-                                //Custom vertex, either bold, underline or strikethrough.
+                                //Custom vertex, either bold, underline or strikethough.
                                 //Bold is done in indexes 6-11, underline 12-17, strikethrough 18-23.
                                 //Note that if one of the three isn't active, the others will move "up" in the order.
                                 //This is like how lists work.
 
-                                //Get the current char vertex we are mimicking. This requires checking the buffer.
+                                //Get the current char vertex we are mimicking.  This requires checking the buffer.
                                 //Skip the first three indexes as they are normal data we don't care about.
                                 int currentIndex = currentRenderObject.vertices.position();
                                 currentRenderObject.vertices.position(currentIndex - (6 - j % 6 + j - 6) * 8 + 3);
@@ -558,7 +518,7 @@ public class RenderText {
                                     } else if (currentState.strikethrough) {
                                         customChar = STRIKETHROUGH_CHAR;
                                     } else {
-                                        //We'll never get here (I hope?) , but it makes the compiler happy.
+                                        //We'll never get here (I hope?) , but it makes the complier happy.
                                         continue;
                                     }
 
@@ -633,12 +593,16 @@ public class RenderText {
 
         private RenderableObject getObjectFor(char textChar, ColorRGB color) {
             //First get the font block;
-            //Make sure we didn't get passed a bad char from some unicode junk text.
+            //MNake sure we didn't get passed a bad char from some unicode junk text.
             if (textChar / CHARS_PER_TEXTURE_SHEET >= fontLocations.length) {
                 textChar = 0;
             }
             String font = fontLocations[textChar / CHARS_PER_TEXTURE_SHEET];
-            Map<ColorRGB, RenderableObject> map1 = createdRenderObjects.computeIfAbsent(font, k -> new HashMap<>());
+            Map<ColorRGB, RenderableObject> map1 = createdRenderObjects.get(font);
+            if (map1 == null) {
+                map1 = new HashMap<ColorRGB, RenderableObject>();
+                createdRenderObjects.put(font, map1);
+            }
 
             RenderableObject object = map1.get(color);
             if (object == null) {
@@ -697,11 +661,11 @@ public class RenderText {
     }
 
     /**
-     * List of enums that define how text is rendered.
+     *  List of enums that define how text is rendered.
      */
-    public enum TextAlignment {
+    public static enum TextAlignment {
         CENTERED,
         LEFT_ALIGNED,
-        RIGHT_ALIGNED
+        RIGHT_ALIGNED;
     }
 }

@@ -1,26 +1,32 @@
 package minecrafttransportsimulator.entities.instances;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.entities.components.AEntityG_Towable;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
+import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
-import minecrafttransportsimulator.mcinterface.*;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
-import java.util.ArrayList;
-import java.util.List;
-
-/**
- * Now that we have an existing vehicle its time to add the ability to collide with it,
- * and for it to do collision with other entities in the world. This is where collision
+/**Now that we have an existing vehicle its time to add the ability to collide with it,
+ * and for it to do collision with other entities in the world.  This is where collision
  * bounds are added, as well as the mass of the entity is calculated, as that's required
- * for collision physics forces. We also add vectors here for the vehicle's orientation,
+ * for collision physics forces.  We also add vectors here for the vehicle's orientation,
  * as those are required for us to know how the vehicle collided in the first place.
- *
+ * 
  * @author don_bruce
  */
-abstract class AEntityVehicleC_Colliding extends AEntityVehicleB_Rideable {
+abstract class AEntityVehicleC_Colliding extends AEntityG_Towable<JSONVehicle> {
 
     //Internal states.
     private float hardnessHitThisTick = 0;
@@ -28,8 +34,14 @@ abstract class AEntityVehicleC_Colliding extends AEntityVehicleB_Rideable {
     public double axialVelocity;
     public final Point3D headingVector = new Point3D();
 
+    /**Cached value for speedFactor.  Saves us from having to use the long form all over.*/
+    public final double speedFactor;
+
     public AEntityVehicleC_Colliding(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data) {
         super(world, placingPlayer, data);
+        this.speedFactor = (definition.motorized.isAircraft ? ConfigSystem.settings.general.aircraftSpeedFactor.value : ConfigSystem.settings.general.carSpeedFactor.value) * ConfigSystem.settings.general.packSpeedFactors.value.get(definition.packID);
+        double vehicleScale = ConfigSystem.settings.general.packVehicleScales.value.get(definition.packID);
+        scale.set(vehicleScale, vehicleScale, vehicleScale);
     }
 
     @Override
@@ -51,7 +63,12 @@ abstract class AEntityVehicleC_Colliding extends AEntityVehicleB_Rideable {
         //Only do this once a second to prevent lag.
         if (velocity > 0.5 && ticksExisted % 20 == 0) {
             world.beginProfiling("CloseDoors", false);
-            variables.keySet().removeIf(s -> s.startsWith("door"));
+            Iterator<String> variableIterator = variables.keySet().iterator();
+            while (variableIterator.hasNext()) {
+                if (variableIterator.next().startsWith("door")) {
+                    variableIterator.remove();
+                }
+            }
         }
 
         //Set hardness hit this tick to 0 to reset collision force calculations.
@@ -80,7 +97,7 @@ abstract class AEntityVehicleC_Colliding extends AEntityVehicleB_Rideable {
                     if (ConfigSystem.settings.general.blockBreakage.value && blockHardness <= velocity * currentMass / 250F && blockHardness >= 0) {
                         hardnessHitThisBox += blockHardness;
                         if (!yAxis) {
-                            //Only add hardness if we hit in XZ movement. Don't want to blow up from falling fast, just break tons of dirt.
+                            //Only add hardness if we hit in XZ movement.  Don't want to blow up from falling fast, just break tons of dirt.
                             hardnessHitThisTick += blockHardness;
                         }
                         motion.scale(Math.max(1.0F - blockHardness * 0.5F / ((1000F + currentMass) / 1000F), 0.0F));
@@ -127,34 +144,36 @@ abstract class AEntityVehicleC_Colliding extends AEntityVehicleB_Rideable {
 
     @Override
     public void destroy(BoundingBox box) {
-        super.destroy(box);
-
-        //Spawn drops from us and our parts.
-        List<IWrapperItemStack> drops = new ArrayList<>();
+        //Get drops.
+        List<IWrapperItemStack> drops = new ArrayList<IWrapperItemStack>();
         addDropsToList(drops);
-        for (APart part : parts) {
+
+        //Do part things before we call super, as that will remove the parts from this vehicle.
+        IWrapperEntity controller = getController();
+        Damage controllerCrashDamage = new Damage(ConfigSystem.settings.damage.crashDamageFactor.value * velocity * 20, null, this, null, JSONConfigLanguage.DEATH_CRASH_NULL);
+        LanguageEntry language = controller != null ? JSONConfigLanguage.DEATH_CRASH_PLAYER : JSONConfigLanguage.DEATH_CRASH_NULL;
+        Damage passengerCrashDamage = new Damage(ConfigSystem.settings.damage.crashDamageFactor.value * velocity * 20, null, this, controller, language);
+        for (APart part : allParts) {
+            //Damage riders.
+            if (part.rider != null) {
+                if (part.rider == controller) {
+                    part.rider.attack(controllerCrashDamage);
+                } else {
+                    part.rider.attack(passengerCrashDamage);
+                }
+            }
+
+            //Add drops.
             part.addDropsToList(drops);
         }
-        for (IWrapperItemStack stack : drops) {
-            world.spawnItemStack(stack, box.globalCenter);
-        }
 
-        //Damage all riders, including the controller.
-        IWrapperEntity controller = getController();
-        LanguageEntry language = controller != null ? JSONConfigLanguage.DEATH_CRASH_PLAYER : JSONConfigLanguage.DEATH_CRASH_NULL;
-        Damage controllerCrashDamage = new Damage(ConfigSystem.settings.damage.crashDamageFactor.value * velocity * 20, null, this, null, null);
-        Damage passengerCrashDamage = new Damage(ConfigSystem.settings.damage.crashDamageFactor.value * velocity * 20, null, this, controller, language);
-        for (IWrapperEntity rider : riderLocationMap.values()) {
-            if (rider.equals(controller)) {
-                rider.attack(controllerCrashDamage);
-            } else {
-                rider.attack(passengerCrashDamage);
-            }
-        }
+        //Now call super and spawn drops.
+        super.destroy(box);
+        drops.forEach(stack -> world.spawnItemStack(stack, box.globalCenter));
+    }
 
-        //Now remove all riders from the vehicle.
-        for (IWrapperEntity iWrapperEntity : riderLocationMap.inverse().keySet()) {
-            removeRider(iWrapperEntity);
-        }
+    @Override
+    public double getMass() {
+        return super.getMass() + definition.motorized.emptyMass;
     }
 }

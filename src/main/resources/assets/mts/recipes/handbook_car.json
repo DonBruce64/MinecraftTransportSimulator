@@ -1,26 +1,17 @@
 {
     "type": "minecraft:crafting_shaped",
-    "pattern": [
+    "pattern":[
         " a ",
         "cbc",
         " d "
     ],
-    "key": {
-        "a": {
-            "item": "minecraft:feather"
-        },
-        "b": {
-            "item": "minecraft:book"
-        },
-        "c": {
-            "type": "forge:ore_dict",
-            "ore": "dyeBlack"
-        },
-        "d": {
-            "item": "minecraft:paper"
-        }
+    "key":{
+        "a":{"item": "minecraft:feather"},
+		"b":{"item": "minecraft:book"},
+		"c":{"type": "forge:ore_dict", "ore" : "dyeBlack"},
+		"d":{"item": "minecraft:paper"}
     },
-    "result": {
+    "result":{
         "item": "mts:mts.handbook_car"
     }
 }

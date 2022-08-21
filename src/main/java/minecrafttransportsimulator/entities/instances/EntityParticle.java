@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.entities.instances;
 
+import java.nio.FloatBuffer;
+
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -12,10 +14,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.RenderableObject;
 
-import java.nio.FloatBuffer;
-
-/**
- * Basic particle class. This mimic's MC's particle logic, except we can manually set
+/**Basic particle class.  This mimic's MC's particle logic, except we can manually set
  * movement logic.
  *
  * @author don_bruce
@@ -92,7 +91,7 @@ public class EntityParticle extends AEntityC_Renderable {
         STANDARD_RENDER_BUFFER.rewind();
         buffer.flip();
         this.renderable = new RenderableObject("particle", definition.texture != null ? definition.texture : (definition.type.equals(ParticleType.BREAK) ? RenderableObject.GLOBAL_TEXTURE_NAME : RenderableObject.PARTICLE_TEXTURE_NAME), staticColor != null ? staticColor : new ColorRGB(), buffer, false);
-        renderable.disableLighting = definition.type.equals(ParticleType.FLAME);
+        renderable.disableLighting = definition.type.equals(ParticleType.FLAME) || definition.isBright;
         renderable.ignoreWorldShading = true;
         if (definition.type.equals(ParticleType.BREAK)) {
             setParticleTextureBounds(0, 0);
@@ -171,7 +170,7 @@ public class EntityParticle extends AEntityC_Renderable {
             }
         }
 
-        //Check collision movement. If we hit a block, don't move.
+        //Check collision movement.  If we hit a block, don't move.
         touchingBlocks = boundingBox.updateMovingCollisions(world, motion);
         if (touchingBlocks) {
             motion.add(-boundingBox.currentCollisionDepth.x * Math.signum(motion.x), -boundingBox.currentCollisionDepth.y * Math.signum(motion.y), -boundingBox.currentCollisionDepth.z * Math.signum(motion.z));
@@ -238,10 +237,10 @@ public class EntityParticle extends AEntityC_Renderable {
     }
 
     /**
-     * Gets the max age of the particle. This tries to use the definition's
-     * maxAge, but will use Vanilla values if not set. This should only be
-     * called once, as the Vanilla values have a random element that means
-     * this function will return different values on each call for them.
+     *  Gets the max age of the particle.  This tries to use the definition's
+     *  maxAge, but will use Vanilla values if not set.  This should only be
+     *  called once, as the Vanilla values have a random element that means
+     *  this function will return different values on each call for them.
      */
     private int generateMaxAge() {
         if (definition.duration != 0) {
@@ -249,15 +248,17 @@ public class EntityParticle extends AEntityC_Renderable {
         } else {
             switch (definition.type) {
                 case SMOKE:
-                case BUBBLE:
-                case GENERIC:
                     return (int) (8.0D / (Math.random() * 0.8D + 0.2D));
                 case FLAME:
                     return (int) (8.0D / (Math.random() * 0.8D + 0.2D)) + 4;
                 case DRIP:
                     return (int) (64.0D / (Math.random() * 0.8D + 0.2D));
+                case BUBBLE:
+                    return (int) (8.0D / (Math.random() * 0.8D + 0.2D));
                 case BREAK:
                     return (int) (4.0D / (Math.random() * 0.9D + 0.1D));
+                case GENERIC:
+                    return (int) (8.0D / (Math.random() * 0.8D + 0.2D));
             }
             //We'll never get here, but it makes the compiler happy.
             return 0;
@@ -265,17 +266,17 @@ public class EntityParticle extends AEntityC_Renderable {
     }
 
     /**
-     * Gets the current size of the particle. This parameter
-     * is used for the particle's bounding box for collision, and
-     * does not necessarily need to take the scale of the particle into account.
+     *  Gets the current size of the particle.  This parameter
+     *  is used for the particle's bounding box for collision, and
+     *  does not necessarily need to take the scale of the particle into account.
      */
     private float getSize() {
         return definition.type.equals(ParticleType.DRIP) || definition.type.equals(ParticleType.BREAK) ? 0.1F : 0.2F;
     }
 
     /**
-     * Gets the current alpha value of the particle. This parameter
-     * is used to make the particle translucent.
+     *  Gets the current alpha value of the particle.  This parameter
+     *  is used to make the particle translucent.
      */
     private float getAlpha(float partialTicks) {
         if (definition.transparency != 0) {
@@ -290,8 +291,8 @@ public class EntityParticle extends AEntityC_Renderable {
     }
 
     /**
-     * Gets the current scale of the particle.
-     * This is for rendering only; it does not affect collision.
+     *  Gets the current scale of the particle.
+     *  This is for rendering only; it does not affect collision.
      */
     private float getScale(float partialTicks) {
         if (definition.scale != 0) {
@@ -334,8 +335,7 @@ public class EntityParticle extends AEntityC_Renderable {
 
         for (int i = 0; i < 6; ++i) {
             switch (i) {
-                case (0):
-                case (3): {//Bottom-right
+                case (0): {//Bottom-right
                     renderable.vertices.put(i * 8 + 3, U);
                     renderable.vertices.put(i * 8 + 4, V);
                     break;
@@ -345,7 +345,16 @@ public class EntityParticle extends AEntityC_Renderable {
                     renderable.vertices.put(i * 8 + 4, v);
                     break;
                 }
-                case (2):
+                case (2): {//Top-left
+                    renderable.vertices.put(i * 8 + 3, u);
+                    renderable.vertices.put(i * 8 + 4, v);
+                    break;
+                }
+                case (3): {//Bottom-right
+                    renderable.vertices.put(i * 8 + 3, U);
+                    renderable.vertices.put(i * 8 + 4, V);
+                    break;
+                }
                 case (4): {//Top-left
                     renderable.vertices.put(i * 8 + 3, u);
                     renderable.vertices.put(i * 8 + 4, v);
@@ -361,9 +370,9 @@ public class EntityParticle extends AEntityC_Renderable {
     }
 
     /**
-     * Helper method to generate a standard buffer to be used for all particles as a
-     * starting buffer. Saves computation when creating particles. Particle is assumed
-     * to have a size of 1x1 with UV-pamming of 0->1.
+     *  Helper method to generate a standard buffer to be used for all particles as a
+     *  starting buffer.  Saves computation when creating particles.  Particle is assumed
+     *  to have a size of 1x1 with UV-pamming of 0->1.
      */
     private static FloatBuffer generateStandardBuffer() {
         FloatBuffer buffer = FloatBuffer.allocate(6 * 8);
@@ -373,8 +382,7 @@ public class EntityParticle extends AEntityC_Renderable {
             buffer.put(0);
             buffer.put(1);
             switch (i) {
-                case (0):
-                case (3): {//Bottom-right
+                case (0): {//Bottom-right
                     buffer.put(1);
                     buffer.put(1);
                     buffer.put(0.5F);
@@ -388,7 +396,20 @@ public class EntityParticle extends AEntityC_Renderable {
                     buffer.put(0.5F);
                     break;
                 }
-                case (2):
+                case (2): {//Top-left
+                    buffer.put(0);
+                    buffer.put(0);
+                    buffer.put(-0.5F);
+                    buffer.put(0.5F);
+                    break;
+                }
+                case (3): {//Bottom-right
+                    buffer.put(1);
+                    buffer.put(1);
+                    buffer.put(0.5F);
+                    buffer.put(-0.5F);
+                    break;
+                }
                 case (4): {//Top-left
                     buffer.put(0);
                     buffer.put(0);

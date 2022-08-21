@@ -10,13 +10,12 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.packets.components.APacketEntityInteract;
 import minecrafttransportsimulator.packloading.PackParser;
 
-/**
- * Packet used to change instruments on entities. Sent to the server
+/**Packet used to change instruments on entities.  Sent to the server
  * to process the instrument change, and then sent to all clients if
- * the change is able to be made. Does not check ownership as that's
+ * the change is able to be made.  Does not check ownership as that's
  * done before {@link GUIInstruments} is opened by checking for
  * ownership in {@link ItemItem#doVehicleInteraction}.
- *
+ * 
  * @author don_bruce
  */
 public class PacketEntityInstrumentChange extends APacketEntityInteract<AEntityE_Interactable<?>, IWrapperPlayer> {
@@ -64,7 +63,7 @@ public class PacketEntityInstrumentChange extends APacketEntityInteract<AEntityE
         //If we are removing the instrument, do so now.
         //Otherwise add the instrument.
         if (instrumentPackID.isEmpty()) {
-            entity.removeInstrument(slot);
+            entity.removeIntrument(slot);
         } else {
             //Check to make sure player has the instrument they are trying to put in.
             //This is only done on the server, as checking on the client won't make any difference.

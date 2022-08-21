@@ -1,18 +1,40 @@
 package minecrafttransportsimulator.entities.components;
 
-import mcinterface1122.InterfaceLoader;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
-import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityParticle;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
-import minecrafttransportsimulator.jsondefs.*;
+import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
+import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
+import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
+import minecrafttransportsimulator.jsondefs.JSONCameraObject;
+import minecrafttransportsimulator.jsondefs.JSONLight;
+import minecrafttransportsimulator.jsondefs.JSONParticle;
 import minecrafttransportsimulator.jsondefs.JSONRendering.ModelType;
-import minecrafttransportsimulator.mcinterface.*;
+import minecrafttransportsimulator.jsondefs.JSONSound;
+import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
+import minecrafttransportsimulator.jsondefs.JSONText;
+import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
@@ -25,95 +47,65 @@ import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.CameraSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import java.util.*;
-import java.util.Map.Entry;
-
-/**
- * Base class for entities that are defined via JSON definitions and can be modeled in 3D.
- * This level adds various method for said definitions, which include rendering functions.
- *
+/**Base class for entities that are defined via JSON definitions and can be modeled in 3D.
+ * This level adds various method for said definitions, which include rendering functions. 
+ * 
  * @author don_bruce
  */
 public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelProvider> extends AEntityC_Renderable {
-    /**
-     * The pack definition for this entity. May contain extra sections if the super-classes
+    /**The pack definition for this entity.  May contain extra sections if the super-classes
      * have them in their respective JSONs.
      */
     public final JSONDefinition definition;
 
-    /**
-     * The current subName for this entity. Used to select which definition represents this entity.
-     */
+    /**The current subName for this entity.  Used to select which definition represents this entity.*/
     public String subName;
 
-    /**
-     * Variable for saving animation initialized state. Is set true on the first tick, but may be set false afterwards to re-initialize animations.
-     */
+    /**Variable for saving animation definition initialized state.  Is set true on the first tick, but may be set false afterwards to re-initialize animation definitions.*/
     public boolean animationsInitialized;
 
-    /**
-     * Map containing text lines for saved text provided by this entity.
-     **/
-    public final LinkedHashMap<JSONText, String> text = new LinkedHashMap<>();
+    /**Map containing text lines for saved text provided by this entity.**/
+    public final LinkedHashMap<JSONText, String> text = new LinkedHashMap<JSONText, String>();
 
-    /**
-     * Map of variables. These are generic and can be interfaced with in the JSON. Some names are hard-coded to specific variables.Used for animations/physics.
-     **/
-    protected final Map<String, Double> variables = new HashMap<>();
+    /**Map of variables.  These are generic and can be interfaced with in the JSON.  Some names are hard-coded to specific variables.Used for animations/physics.**/
+    protected final Map<String, Double> variables = new HashMap<String, Double>();
 
-    private final List<JSONSound> allSoundDefs = new ArrayList<>();
-    private final Map<JSONSound, AnimationSwitchbox> soundActiveSwitchboxes = new HashMap<>();
-    private final Map<JSONSound, SoundSwitchbox> soundVolumeSwitchboxes = new HashMap<>();
-    private final Map<JSONSound, SoundSwitchbox> soundPitchSwitchboxes = new HashMap<>();
-    private final Map<JSONLight, LightSwitchbox> lightBrightnessSwitchboxes = new HashMap<>();
-    private final Map<JSONParticle, AnimationSwitchbox> particleActiveSwitchboxes = new HashMap<>();
-    private final Map<JSONParticle, AnimationSwitchbox> particleSpawningSwitchboxes = new HashMap<>();
-    private final Map<JSONParticle, Long> lastTickParticleSpawned = new HashMap<>();
-    private final Map<JSONVariableModifier, VariableModifierSwitchbox> variableModifierSwitchboxes = new LinkedHashMap<>();
+    private final List<JSONSound> allSoundDefs = new ArrayList<JSONSound>();
+    private final Map<JSONSound, AnimationSwitchbox> soundActiveSwitchboxes = new HashMap<JSONSound, AnimationSwitchbox>();
+    private final Map<JSONSound, SoundSwitchbox> soundVolumeSwitchboxes = new HashMap<JSONSound, SoundSwitchbox>();
+    private final Map<JSONSound, SoundSwitchbox> soundPitchSwitchboxes = new HashMap<JSONSound, SoundSwitchbox>();
+    private final Map<JSONLight, LightSwitchbox> lightBrightnessSwitchboxes = new HashMap<JSONLight, LightSwitchbox>();
+    private final Map<JSONParticle, AnimationSwitchbox> particleActiveSwitchboxes = new HashMap<JSONParticle, AnimationSwitchbox>();
+    private final Map<JSONParticle, AnimationSwitchbox> particleSpawningSwitchboxes = new HashMap<JSONParticle, AnimationSwitchbox>();
+    private final Map<JSONParticle, Long> lastTickParticleSpawned = new HashMap<JSONParticle, Long>();
+    private final Map<JSONVariableModifier, VariableModifierSwitchbox> variableModiferSwitchboxes = new LinkedHashMap<JSONVariableModifier, VariableModifierSwitchbox>();
 
-    /**
-     * Maps animated (model) object names to their JSON bits for this entity. Used for model lookups as the same model might be used on multiple JSONs,
-     * and iterating through the entire rendering section of the JSON is time-consuming.
-     **/
-    public final Map<String, JSONAnimatedObject> animatedObjectDefinitions = new HashMap<>();
+    /**Maps animated (model) object names to their JSON bits for this entity.  Used for model lookups as the same model might be used on multiple JSONs,
+     * and iterating through the entire rendering section of the JSON is time-consuming.**/
+    public final Map<String, JSONAnimatedObject> animatedObjectDefinitions = new HashMap<String, JSONAnimatedObject>();
 
-    /**
-     * Maps animated (model) object names to their switchboxes. This is created from the JSON definition as each entity has their own switchbox.
-     **/
-    public final Map<String, AnimationSwitchbox> animatedObjectSwitchboxes = new HashMap<>();
+    /**Maps animated (model) object names to their switchboxes.  This is created from the JSON definition as each entity has their own switchbox.**/
+    public final Map<String, AnimationSwitchbox> animatedObjectSwitchboxes = new HashMap<String, AnimationSwitchbox>();
 
-    /**
-     * Maps cameras to their respective switchboxes.
-     **/
-    public final Map<JSONCameraObject, AnimationSwitchbox> cameraSwitchboxes = new LinkedHashMap<>();
+    /**Maps cameras to their respective switchboxes.**/
+    public final Map<JSONCameraObject, AnimationSwitchbox> cameraSwitchboxes = new LinkedHashMap<JSONCameraObject, AnimationSwitchbox>();
 
-    /**
-     * Maps light definitions to their current brightness. This is updated every frame prior to rendering.
-     **/
-    public final Map<JSONLight, Float> lightBrightnessValues = new HashMap<>();
+    /**Maps light definitions to their current brightness.  This is updated every frame prior to rendering.**/
+    public final Map<JSONLight, Float> lightBrightnessValues = new HashMap<JSONLight, Float>();
 
-    /**
-     * Maps light definitions to their current color. This is updated every frame prior to rendering.
-     **/
-    public final Map<JSONLight, ColorRGB> lightColorValues = new HashMap<>();
+    /**Maps light definitions to their current color.  This is updated every frame prior to rendering.**/
+    public final Map<JSONLight, ColorRGB> lightColorValues = new HashMap<JSONLight, ColorRGB>();
 
-    /**
-     * Maps light (model) object names to their definitions. This is created from the JSON definition to prevent the need to do loops.
-     **/
-    public final Map<String, JSONLight> lightObjectDefinitions = new HashMap<>();
+    /**Maps light (model) object names to their definitions.  This is created from the JSON definition to prevent the need to do loops.**/
+    public final Map<String, JSONLight> lightObjectDefinitions = new HashMap<String, JSONLight>();
 
-    /**
-     * Object lists for models parsed in for this class. Maps are keyed by the model name.
-     **/
-    protected static final Map<String, List<RenderableModelObject>> objectLists = new HashMap<>();
+    /**Object lists for models parsed in for this class.  Maps are keyed by the model name.**/
+    protected static final Map<String, List<RenderableModelObject>> objectLists = new HashMap<String, List<RenderableModelObject>>();
 
-    /**
-     * Constructor for synced entities
-     **/
+    /**Cached item to prevent pack lookups each item request.  May not be used if this is extended for other mods.**/
+    private AItemPack<JSONDefinition> cachedItem;
+
+    /**Constructor for synced entities**/
     public AEntityD_Definable(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data) {
         super(world, placingPlayer, data);
         this.subName = data.getString("subName");
@@ -137,49 +129,33 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                 variables.put(variable, 1D);
             }
         }
-        if (definition.rendering != null && definition.rendering.constants != null) {
-            for (String variable : definition.rendering.constants) {
-                variables.put(variable, 1D);
-            }
-        }
     }
 
-    /**
-     * Constructor for un-synced entities. Allows for specification of position/motion/angles.
-     **/
+    /**Constructor for un-synced entities.  Allows for specification of position/motion/angles.**/
     public AEntityD_Definable(AWrapperWorld world, Point3D position, Point3D motion, Point3D angles, AItemSubTyped<JSONDefinition> creatingItem) {
         super(world, position, motion, angles);
         this.subName = creatingItem.subName;
         this.definition = creatingItem.definition;
-
-        //Add constants.
-        if (definition.rendering != null && definition.rendering.constants != null) {
-            for (String variable : definition.rendering.constants) {
-                variables.put(variable, 1D);
-            }
-        }
     }
 
     @Override
     public void update() {
         super.update();
         world.beginProfiling("EntityD_Level", true);
-        //Create animations if we haven't done so already.
         if (!animationsInitialized) {
-            initializeDefinition();
+            initializeAnimations();
             animationsInitialized = true;
         }
         world.endProfiling();
     }
 
     /**
-     * Called to perform supplemental update logic on this entity. This should be called after all logic on the
-     * entity has been performed, and is used to do updates that require the new state to be ready.
-     * Calling this before the entity finishes moving will lead to things "lagging" behind the entity, and calling
-     * this before all states are set will lead to Bad Stuff.
+     * Called to perform supplemental update logic on this entity.  This is called after the main {@link #update()}
+     * loop, and is used to do updates that require the new state to be ready.  At this point, all "prior" values
+     * and current values will be set to their current states.
      */
     public void doPostUpdateLogic() {
-        //Update value-based text. Only do this on clients as servers won't render this text.
+        //Update value-based text.  Only do this on clients as servers won't render this text.
         if (world.isClient() && !text.isEmpty()) {
             for (Entry<JSONText, String> textEntry : text.entrySet()) {
                 JSONText textDef = textEntry.getKey();
@@ -191,10 +167,10 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     }
 
     /**
-     * Called the first update tick after this entity is first constructed, and when the definition on it is reset via hotloading.
-     * This should create (and reset) all JSON clocks and other static objects that depend on the definition.
+     *  Called the first update tick after this entity is first constructed, and when the definition on it is reset via hotloading.
+     *  This should create (and reset) all JSON clocks and other static objects that depend on the definition. 
      */
-    protected void initializeDefinition() {
+    protected void initializeAnimations() {
         if (definition.rendering != null && definition.rendering.sounds != null) {
             allSoundDefs.clear();
             soundActiveSwitchboxes.clear();
@@ -213,7 +189,6 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                 }
             }
         }
-
 
         if (definition.rendering != null && definition.rendering.lightObjects != null) {
             lightBrightnessSwitchboxes.clear();
@@ -263,7 +238,8 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         }
 
         //Store text data if we have it, then reset it.
-        List<String> oldTextValues = new ArrayList<>(text.values());
+        List<String> oldTextValues = new ArrayList<String>();
+        oldTextValues.addAll(text.values());
         text.clear();
         if (definition.rendering != null && definition.rendering.textObjects != null) {
             for (int i = 0; i < definition.rendering.textObjects.size(); ++i) {
@@ -277,13 +253,20 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
 
         //Add variable modifiers.
         if (definition.variableModifiers != null) {
-            variableModifierSwitchboxes.clear();
+            variableModiferSwitchboxes.clear();
             for (JSONVariableModifier modifier : definition.variableModifiers) {
                 if (modifier.animations != null) {
-                    variableModifierSwitchboxes.put(modifier, new VariableModifierSwitchbox(this, modifier.animations));
+                    variableModiferSwitchboxes.put(modifier, new VariableModifierSwitchbox(this, modifier.animations));
                 }
             }
 
+        }
+
+        //Add constants.
+        if (definition.rendering != null && definition.rendering.constants != null) {
+            for (String variable : definition.rendering.constants) {
+                variables.put(variable, 1D);
+            }
         }
     }
 
@@ -299,17 +282,21 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     }
 
     /**
-     * Returns the current item for this entity.
+     *  Returns the current item for this entity.  This is not a static value to allow for overriding by packs.
      */
+    @SuppressWarnings("unchecked")
     public <ItemInstance extends AItemPack<JSONDefinition>> ItemInstance getItem() {
-        return PackParser.getItem(definition.packID, definition.systemName, subName);
+        if (cachedItem == null) {
+            cachedItem = PackParser.getItem(definition.packID, definition.systemName, subName);
+        }
+        return (ItemInstance) cachedItem;
     }
 
     /**
-     * Populates the passed-in list with item stacks that will drop when this entity is broken.
-     * This is different than what is used for middle-clicking, as that will
-     * return a stack that can re-create this entity, whereas drops may or may not allow for this.
-     * An example is a vehicle that is broken in a crash versus picked up via a wrench.
+     *  Populates the passed-in list with item stacks that will drop when this entity is broken.
+     *  This is different than what is used for middle-clicking, as that will
+     *  return a stack that can re-create this entity, whereas drops may or may not allow for this.
+     *  An example is a vehicle that is broken in a crash versus picked up via a wrench.
      */
     public void addDropsToList(List<IWrapperItemStack> drops) {
         AItemPack<JSONDefinition> packItem = getItem();
@@ -319,35 +306,35 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     }
 
     /**
-     * Generates the default definition for this entity. Used if the item can't be found.
-     * This allows for internally-definable entities.
+     *  Generates the default definition for this entity. Used if the item can't be found.
+     *  This allows for internally-definable entities.
      */
     public JSONDefinition generateDefaultDefinition() {
-        throw new IllegalArgumentException("Was asked to auto-generate a definition on an entity with one not defined. This is NOT allowed. The entity must be missing its item. Perhaps a pack was removed with this entity still in the world?");
+        throw new IllegalArgumentException("Was asked to auto-generate a definition on an entity with one not defined.  This is NOT allowed.  The entity must be missing its item.  Perhaps a pack was removed with this entity still in the world?");
     }
 
     /**
-     * Returns the texture that should be bound to this entity for the passed-in object from the model.
-     * This may change between render passes, but only ONE texture may be used for any given object render
-     * operation!  By default this returns the JSON-defined texture, though the model parser may override this.
+     *  Returns the texture that should be bound to this entity for the passed-in object from the model.
+     *  This may change between render passes, but only ONE texture may be used for any given object render
+     *  operation!  By default this returns the JSON-defined texture, though the model parser may override this.
      */
     public String getTexture() {
         return definition.getTextureLocation(subName);
     }
 
     /**
-     * Returns true if this entity is lit up, and text should be rendered lit.
-     * Note that what text is lit is dependent on the text's definition, so just
-     * because text could be lit, does not mean it will be lit if the pack
-     * author doesn't want it to be.
+     *  Returns true if this entity is lit up, and text should be rendered lit.
+     *  Note that what text is lit is dependent on the text's definition, so just
+     *  because text could be lit, does not mean it will be lit if the pack
+     *  author doesn't want it to be.
      */
     public boolean renderTextLit() {
         return ConfigSystem.client.renderingSettings.brightLights.value;
     }
 
     /**
-     * Returns the color for the text on this entity. This takes into account the passed-in index.
-     * If a color exists at the index, it is returned. If not, then the passed-in color is returned.
+     *  Returns the color for the text on this entity.  This takes into account the passed-in index.
+     *  If a color exists at the index, it is returned.  If not, then the passed-in color is returned.
      */
     public ColorRGB getTextColor(int index, ColorRGB defaultColor) {
         if (index != 0) {
@@ -360,15 +347,15 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                     }
                 }
             }
-            throw new IllegalArgumentException("Tried to get the definition for an object of subName:" + subName + ". But that isn't a valid subName for the object:" + definition.packID + ":" + definition.systemName + ". Report this to the pack author as this is a missing JSON component!");
+            throw new IllegalArgumentException("Tried to get the definition for an object of subName:" + subName + ".  But that isn't a valid subName for the object:" + definition.packID + ":" + definition.systemName + ".  Report this to the pack author as this is a missing JSON component!");
         } else {
             return defaultColor;
         }
     }
 
     /**
-     * Called to update the text on this entity. Normally just sets the text to the passed-in values,
-     * but may do supplemental logic if desired.
+     *  Called to update the text on this entity.  Normally just sets the text to the passed-in values,
+     *  but may do supplemental logic if desired.
      */
     public void updateText(List<String> textLines) {
         int linesChecked = 0;
@@ -378,10 +365,10 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     }
 
     /**
-     * Spawns particles for this entity. This is called after every render frame, so
-     * watch your methods to prevent spam. Note that this method is not called if the
-     * game is paused, as particles are assumed to only be spawned during normal entity
-     * updates.
+     *  Spawns particles for this entity.  This is called after every render frame, so
+     *  watch your methods to prevent spam.  Note that this method is not called if the
+     *  game is paused, as particles are assumed to only be spawned during normal entity
+     *  updates.
      */
     public void spawnParticles(float partialTicks) {
         //Check all particle defs and update the existing particles accordingly.
@@ -406,10 +393,10 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     }
 
     /**
-     * Updates the light brightness values contained in {@link #lightBrightnessValues}. This is done
-     * every frame for all light definitions to prevent excess calculations caused by multiple
-     * lighting components for the light re-calculating the same value multiple times a frame.
-     * An example of this is a light with a bean and flare component.
+     *  Updates the light brightness values contained in {@link #lightBrightnessValues}.  This is done
+     *  every frame for all light definitions to prevent excess calculations caused by multiple
+     *  lighting components for the light re-calculating the same value multiple times a frame.
+     *  An example of this is a light with a bean and flare component. 
      */
     public void updateLightBrightness(float partialTicks) {
         if (definition.rendering != null && definition.rendering.lightObjects != null) {
@@ -445,7 +432,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     }
 
     /**
-     * Custom light switchbox class.
+     *  Custom light switchbox class.
      */
     private static class LightSwitchbox extends AnimationSwitchbox {
         private boolean definedBrightness = false;
@@ -490,17 +477,22 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                 colorY = clock.animation.axis.y * colorFactor + clock.animation.offset + color.green;
                 colorZ = clock.animation.axis.z * colorFactor + clock.animation.offset + color.blue;
             }
-            if (colorX < 0) colorX = 0;
-            if (colorY < 0) colorY = 0;
-            if (colorZ < 0) colorZ = 0;
-            if (colorX > 1) colorX = 1;
-            if (colorY > 1) colorY = 1;
-            if (colorZ > 1) colorZ = 1;
+            if (colorX < 0)
+                colorX = 0;
+            if (colorY < 0)
+                colorY = 0;
+            if (colorZ < 0)
+                colorZ = 0;
+            if (colorX > 1)
+                colorX = 1;
+            if (colorY > 1)
+                colorY = 1;
+            if (colorZ > 1)
+                colorZ = 1;
             color = new ColorRGB((float) colorX, (float) colorY, (float) colorZ, false);
         }
     }
 
-    @SuppressWarnings("RedundantCast")
     @Override
     public void updateSounds(float partialTicks) {
         super.updateSounds(partialTicks);
@@ -509,7 +501,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             if (soundDef.canPlayOnPartialTicks ^ partialTicks == 0) {
                 //Check if the sound should be playing before we try to update state.
                 AEntityE_Interactable<?> entityRiding = InterfaceManager.clientInterface.getClientPlayer().getEntityRiding();
-                boolean playerRidingEntity = this.equals(entityRiding) || (this instanceof APart && ((APart) this).entityOn.equals(entityRiding));
+                boolean playerRidingEntity = this.equals(entityRiding) || (this instanceof AEntityF_Multipart && ((AEntityF_Multipart<?>) this).allParts.contains(entityRiding));
                 boolean shouldSoundStartPlaying = playerRidingEntity && InterfaceManager.clientInterface.inFirstPerson() && !CameraSystem.runningCustomCameras ? !soundDef.isExterior : !soundDef.isInterior;
                 boolean anyClockMovedThisUpdate = false;
                 if (shouldSoundStartPlaying) {
@@ -525,7 +517,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                 }
 
                 if (shouldSoundStartPlaying) {
-                    //Sound should play. Check if we are a looping sound that has started so we don't double-play.
+                    //Sound should play.  Check if we are a looping sound that has started so we don't double-play.
                     boolean isSoundPlaying = false;
                     if (soundDef.looping) {
                         for (SoundInstance sound : sounds) {
@@ -550,46 +542,48 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                         }
                     }
 
-                    //Go to the next soundDef. No need to change properties on sounds that shouldn't play.
+                    //Go to the next soundDef.  No need to change properties on sounds that shouldn't play.
                     continue;
                 }
 
-                //Sound should be playing. If it's part of the sound list, update properties.
+                //Sound should be playing.  If it's part of the sound list, update properties.
                 //Sounds may not be in the list if they have just been queued and haven't started yet.
                 for (SoundInstance sound : sounds) {
-                    if (sound != null && sound.soundName.equals(soundDef.name)) {
-                        //Adjust volume.
-                        SoundSwitchbox volumeSwitchbox = soundVolumeSwitchboxes.get(soundDef);
-                        boolean definedVolume = false;
-                        if (volumeSwitchbox != null) {
-                            volumeSwitchbox.runSound(partialTicks);
-                            sound.volume = volumeSwitchbox.value;
-                            definedVolume = volumeSwitchbox.definedValue;
-                        }
-                        if (!definedVolume) {
-                            sound.volume = 1;
-                        } else if (sound.volume < 0) {
-                            sound.volume = 0;
-                        }
+                    if (sound.soundName.equals(soundDef.name)) {
+                        if (sound != null) {
+                            //Adjust volume.
+                            SoundSwitchbox volumeSwitchbox = soundVolumeSwitchboxes.get(soundDef);
+                            boolean definedVolume = false;
+                            if (volumeSwitchbox != null) {
+                                volumeSwitchbox.runSound(partialTicks);
+                                sound.volume = volumeSwitchbox.value;
+                                definedVolume = volumeSwitchbox.definedValue;
+                            }
+                            if (!definedVolume) {
+                                sound.volume = 1;
+                            } else if (sound.volume < 0) {
+                                sound.volume = 0;
+                            }
 
-                        //If the player is in a closed-top vehicle that isn't this one, dampen the sound
-                        //Unless it's a radio, in which case don't do so.
-                        if (!playerRidingEntity && sound.radio == null && entityRiding instanceof EntityVehicleF_Physics && !((EntityVehicleF_Physics) entityRiding).definition.motorized.hasOpenTop && InterfaceManager.clientInterface.inFirstPerson() && !CameraSystem.runningCustomCameras) {
-                            sound.volume *= 0.5F;
-                        }
+                            //If the player is in a closed-top vehicle that isn't this one, dampen the sound
+                            //Unless it's a radio, in which case don't do so.
+                            if (!playerRidingEntity && sound.radio == null && entityRiding instanceof EntityVehicleF_Physics && !((EntityVehicleF_Physics) entityRiding).definition.motorized.hasOpenTop && InterfaceManager.clientInterface.inFirstPerson() && !CameraSystem.runningCustomCameras) {
+                                sound.volume *= 0.5F;
+                            }
 
-                        //Adjust pitch.
-                        SoundSwitchbox pitchSwitchbox = soundPitchSwitchboxes.get(soundDef);
-                        boolean definedPitch = false;
-                        if (pitchSwitchbox != null) {
-                            pitchSwitchbox.runSound(partialTicks);
-                            sound.pitch = pitchSwitchbox.value;
-                            definedPitch = pitchSwitchbox.definedValue;
-                        }
-                        if (!definedPitch) {
-                            sound.pitch = 1;
-                        } else if (sound.volume < 0) {
-                            sound.pitch = 0;
+                            //Adjust pitch.
+                            SoundSwitchbox pitchSwitchbox = soundPitchSwitchboxes.get(soundDef);
+                            boolean definedPitch = false;
+                            if (pitchSwitchbox != null) {
+                                pitchSwitchbox.runSound(partialTicks);
+                                sound.pitch = pitchSwitchbox.value;
+                                definedPitch = pitchSwitchbox.definedValue;
+                            }
+                            if (!definedPitch) {
+                                sound.pitch = 1;
+                            } else if (sound.volume < 0) {
+                                sound.pitch = 0;
+                            }
                         }
                     }
                 }
@@ -598,7 +592,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     }
 
     /**
-     * Custom sound switchbox class.
+     *  Custom sound switchbox class.
      */
     private static class SoundSwitchbox extends AnimationSwitchbox {
         private boolean definedValue = false;
@@ -611,7 +605,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         public boolean runSound(float partialTicks) {
             value = 0;
             definedValue = false;
-            return runSwitchbox(partialTicks, false);
+            return runSwitchbox(partialTicks, true);
         }
 
         @Override
@@ -623,18 +617,18 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         @Override
         public void runRotation(DurationDelayClock clock, float partialTicks) {
             definedValue = true;
-            //Parabola is defined with parameter A being x, and H being z.
+            //Parobola is defined with parameter A being x, and H being z.
             double parabolaValue = entity.getAnimatedVariableValue(clock, clock.animation.axis.y, -clock.animation.offset, partialTicks);
             value += clock.animation.axis.x * Math.pow(parabolaValue - clock.animation.axis.z, 2) + clock.animation.offset;
         }
     }
 
     /**
-     * Returns the raw value for the passed-in variable. If the variable is not present, NaN
-     * should be returned (calling functions need to account for this!).
-     * This should be extended on all sub-classes for them to provide their own variables.
-     * For all cases of this, the sub-classed variables should be checked first. If none are
-     * found, then the super() method should be called to return those as a default.
+     *  Returns the raw value for the passed-in variable.  If the variable is not present, NaN
+     *  should be returned (calling functions need to account for this!).
+     *  This should be extended on all sub-classes for them to provide their own variables.
+     *  For all cases of this, the sub-classed variables should be checked first.  If none are
+     *  found, then the super() method should be called to return those as a default.
      */
     public double getRawVariableValue(String variable, float partialTicks) {
         switch (variable) {
@@ -667,9 +661,9 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         //Check if this is a cycle variable.
         if (variable.endsWith("_cycle")) {
             String[] parsedVariable = variable.split("_");
-            int offTime = Integer.parseInt(parsedVariable[0]);
-            int onTime = Integer.parseInt(parsedVariable[1]);
-            int totalTime = offTime + onTime + Integer.parseInt(parsedVariable[2]);
+            int offTime = Integer.valueOf(parsedVariable[0]);
+            int onTime = Integer.valueOf(parsedVariable[1]);
+            int totalTime = offTime + onTime + Integer.valueOf(parsedVariable[2]);
             long timeInCycle = ticksExisted % totalTime;
             return timeInCycle > offTime && timeInCycle - offTime < onTime ? 1 : 0;
         }
@@ -677,7 +671,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         //Check if this is a text_x_ispresent variable.
         if (variable.startsWith("text_") && variable.endsWith("_present")) {
             if (definition.rendering != null && definition.rendering.textObjects != null) {
-                int textIndex = Integer.parseInt(variable.substring("text_".length(), variable.length() - "_present".length())) - 1;
+                int textIndex = Integer.valueOf(variable.substring("text_".length(), variable.length() - "_present".length())) - 1;
                 if (definition.rendering.textObjects.size() > textIndex) {
                     return !text.get(definition.rendering.textObjects.get(textIndex)).isEmpty() ? 1 : 0;
                 }
@@ -685,30 +679,30 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             return 0;
         }
 
-        //Check if this is a generic variable. This contains lights in most cases.
+        //Check if this is a generic variable.  This contains lights in most cases.
         Double variableValue = variables.get(variable);
         if (variableValue != null) {
             return variableValue;
         }
 
-        //Didn't find a variable. Return NaN.
+        //Didn't find a variable.  Return NaN.
         return Double.NaN;
     }
 
     /**
-     * Similar to {@link #getRawVariableValue(String, float)}, but returns
-     * a String for text-based parameters rather than a double. If no match
-     * is found, return null. Otherwise, return the string.
+     *  Similar to {@link #getRawVariableValue(String, float)}, but returns
+     *  a String for text-based parameters rather than a double.  If no match
+     *  is found, return null.  Otherwise, return the string.
      */
     public String getRawTextVariableValue(JSONText textDef, float partialTicks) {
         return null;
     }
 
     /**
-     * Returns the value for the passed-in variable, subject to the clamping, and duration/delay requested in the
-     * animation definition. The passed-in offset is used to allow for stacking animations, and should be 0 if
-     * this functionality is not required. Note that the animation offset is applied AFTER the scaling performed by
-     * the scale parameter as only the variable value should be scaled, not the offset..
+     *  Returns the value for the passed-in variable, subject to the clamping, and duration/delay requested in the 
+     *  animation definition.  The passed-in offset is used to allow for stacking animations, and should be 0 if 
+     *  this functionality is not required.  Note that the animation offset is applied AFTER the scaling performed by
+     *  the scale parameter as only the variable value should be scaled, not the offset..
      */
     public final double getAnimatedVariableValue(DurationDelayClock clock, double scaleFactor, double offset, float partialTicks) {
         double value;
@@ -729,24 +723,24 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     }
 
     /**
-     * Short-hand version of {@link #getAnimatedVariableValue(DurationDelayClock, double, double, float)}
-     * with an offset of 0.0.
+     *  Short-hand version of {@link #getAnimatedVariableValue(DurationDelayClock, double, double, float)}
+     *  with an offset of 0.0.
      */
     public final double getAnimatedVariableValue(DurationDelayClock clock, double scaleFactor, float partialTicks) {
         return getAnimatedVariableValue(clock, scaleFactor, 0.0, partialTicks);
     }
 
     /**
-     * Short-hand version of {@link #getAnimatedVariableValue(DurationDelayClock, double, double, float)}
-     * with a scale of 1.0 and offset of 0.0.
+     *  Short-hand version of {@link #getAnimatedVariableValue(DurationDelayClock, double, double, float)}
+     *  with a scale of 1.0 and offset of 0.0.
      */
     public final double getAnimatedVariableValue(DurationDelayClock clock, float partialTicks) {
         return getAnimatedVariableValue(clock, 1.0, 0.0, partialTicks);
     }
 
     /**
-     * Helper method to clamp and scale the passed-in variable value based on the passed-in animation,
-     * returning it in the proper form.
+     *  Helper method to clamp and scale the passed-in variable value based on the passed-in animation, 
+     *  returning it in the proper form.
      */
     private static double clampAndScale(double value, JSONAnimationDefinition animation, double scaleFactor, double offset) {
         if (animation.axis != null) {
@@ -763,14 +757,14 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     }
 
     /**
-     * Returns the value for the passed-in variable, subject to the formatting and factoring in the
-     * text definition.
+     *  Returns the value for the passed-in variable, subject to the formatting and factoring in the 
+     *  text definition.
      */
     public final String getAnimatedTextVariableValue(JSONText textDef, float partialTicks) {
-        //Check text values first, then animated values.
-        String value = getRawTextVariableValue(textDef, partialTicks);
+        //Check text values first, then anmiated values.
+        String value = getRawTextVariableValue(textDef, 0);
         if (value == null) {
-            double numberValue = getRawVariableValue(textDef.variableName, partialTicks);
+            double numberValue = getRawVariableValue(textDef.variableName, 0);
             if (Double.isNaN(numberValue)) {
                 numberValue = 0;
             }
@@ -781,13 +775,13 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     }
 
     /**
-     * Helper method to get the index of the passed-in variable. Indexes are defined by
-     * variable names ending in _xx, where xx is a number. The defined number is assumed
-     * to be 1-indexed, but the returned number will be 0-indexed. If the variable doesn't
-     * define a number, then -1 is returned.
+     *  Helper method to get the index of the passed-in variable.  Indexes are defined by
+     *  variable names ending in _xx, where xx is a number.  The defined number is assumed
+     *  to be 1-indexed, but the returned number will be 0-indexed.  If the variable doesn't
+     *  define a number, then -1 is returned.
      */
     public static int getVariableNumber(String variable) {
-        if (variable.matches("^.*_\\d+$")) {
+        if (variable.matches("^.*_[0-9]+$")) {
             return Integer.parseInt(variable.substring(variable.lastIndexOf('_') + 1)) - 1;
         } else {
             return -1;
@@ -795,7 +789,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     }
 
     /**
-     * Helper method to toggle a variable for this entity.
+     *  Helper method to toggle a variable for this entity.
      */
     public void toggleVariable(String variable) {
         //Try to remove the variable,this requires only one key-search operation, unlike a containsKey followed by a remove.
@@ -806,11 +800,11 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     }
 
     /**
-     * Helper method to set a variable for this entity.
+     *  Helper method to set a variable for this entity.
      */
     public void setVariable(String variable, double value) {
         if (value == 0) {
-            //Remove variable from the map so that we don't have as many to deal with.
+            //Remove variable from the map so we don't have as many to deal with.
             variables.remove(variable);
         } else {
             variables.put(variable, value);
@@ -818,9 +812,9 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     }
 
     /**
-     * Helper method to increment a variable for this entity.
-     * This will adjust the value between the clamps. Returns
-     * true if the value was changed.
+     *  Helper method to increment a variable for this entity.
+     *  This will adjust the value between the clamps.  Returns
+     *  true if the value was changed.
      */
     public boolean incrementVariable(String variable, double incrementValue, double minValue, double maxValue) {
         double currentValue = getVariable(variable);
@@ -841,7 +835,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     }
 
     /**
-     * Helper method to get get a variable for this entity.
+     *  Helper method to get get a variable for this entity.
      */
     public double getVariable(String variable) {
         Double value = variables.get(variable);
@@ -854,19 +848,19 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     }
 
     /**
-     * Helper method to check if a variable is non-zero.
-     * This is a bit quicker than getting the value due to auto-boxing off the map.
+     *  Helper method to check if a variable is non-zero.
+     *  This is a bit quicker than getting the value due to auto-boxing off the map.
      */
     public boolean isVariableActive(String variable) {
         return variables.containsKey(variable);
     }
 
     /**
-     * Helper method for variable modification.
-     */
+    * Helper method for variable modification.
+    */
     protected float adjustVariable(JSONVariableModifier modifier, float currentValue) {
         float modifiedValue = modifier.setValue != 0 ? modifier.setValue : currentValue + modifier.addValue;
-        VariableModifierSwitchbox switchbox = variableModifierSwitchboxes.get(modifier);
+        VariableModifierSwitchbox switchbox = variableModiferSwitchboxes.get(modifier);
         if (switchbox != null) {
             switchbox.modifiedValue = modifiedValue;
             if (switchbox.runSwitchbox(0, true)) {
@@ -886,7 +880,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
     }
 
     /**
-     * Custom variable modifier switchbox class.
+     *  Custom variable modifier switchbox class.
      */
     private static class VariableModifierSwitchbox extends AnimationSwitchbox {
         private float modifiedValue = 0;
@@ -950,19 +944,21 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             }
         }
         //Handle particles.
-        world.beginProfiling("Particles", false);
-        spawnParticles(partialTicks);
-        world.endProfiling();
+        if (!InterfaceManager.clientInterface.isGamePaused()) {
+            world.beginProfiling("Particles", false);
+            spawnParticles(partialTicks);
+            world.endProfiling();
+        }
     }
 
     @Override
     protected boolean disableRendering(float partialTicks) {
         //Don't render if we don't have a model.
-        return super.disableRendering(partialTicks) && !definition.rendering.modelType.equals(ModelType.NONE);
+        return super.disableRendering(partialTicks) || definition.rendering.modelType.equals(ModelType.NONE);
     }
 
     /**
-     * Called externally to reset all caches for all renders.
+     *  Called externally to reset all caches for all renders.
      */
     public static void clearObjectCaches(AJSONMultiModelProvider definition) {
         for (JSONSubDefinition subDef : definition.definitions) {
@@ -998,14 +994,14 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
      * one of the variables in {@link AEntityD_Definable#variables}.
      * Variables that are derived are parsed from the map every update.
      * To modify them you will need to update their values in the respective
-     * variable set via
+     * variable set via 
      * {@link PacketEntityVariableToggle},
      * {@link PacketEntityVariableSet},
-     * {@link PacketEntityVariableIncrement}
+     * {@link PacketEntityVariableIncrement} 
      */
     @Retention(RetentionPolicy.SOURCE)
-    @Target({ElementType.FIELD})
-    public @interface DerivedValue {
+    @Target({ ElementType.FIELD })
+    public static @interface DerivedValue {
     }
 
     /**
@@ -1013,21 +1009,21 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
      * by the code in {@link AEntityE_Interactable#updateVariableModifiers()},
      * This annotation is only for variables that are NOT derived from states
      * and annotated with {@link DerivedValue}, as those variables can inherently
-     * be modified as they are derived from the variable states.
+     * be modified as they are derived from the variable states. 
      */
     @Retention(RetentionPolicy.SOURCE)
-    @Target({ElementType.FIELD})
-    public @interface ModifiableValue {
+    @Target({ ElementType.FIELD })
+    public static @interface ModifiableValue {
     }
 
     /**
      * Indicates that this field is a modified version of a field annotated with
-     * {@link ModifiableValue}. This is done to prevent modifying the parsed
+     * {@link ModifiableValue}.  This is done to prevent modifying the parsed
      * definition entry that contains the value, which is why it's stored
-     * in a new variable that gets aligned every tick before updates.
+     * in a new variable that gets aligned every tick before updates. 
      */
     @Retention(RetentionPolicy.SOURCE)
-    @Target({ElementType.FIELD})
-    public @interface ModifiedValue {
+    @Target({ ElementType.FIELD })
+    public static @interface ModifiedValue {
     }
 }

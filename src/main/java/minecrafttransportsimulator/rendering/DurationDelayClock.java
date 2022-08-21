@@ -7,8 +7,7 @@ import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition.AnimationCom
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.sound.SoundInstance;
 
-/**
- * Class designed for maintaining the state of a duration/delay for an animation.
+/**Class designed for maintaining the state of a duration/delay for an animation.
  * This is used anything that queries animation states.
  * This also contains a method for calculating easing equations and returning the interpolated values
  * This is used for interpolating animation values with non-linear equations.
@@ -47,20 +46,20 @@ public class DurationDelayClock {
     }
 
     /**
-     * Returns the actual 0-1 value for a state-based duration/delay variable.
-     * Optionally plays sounds if the state changes appropriately.
+     *  Returns the actual 0-1 value for a state-based duration/delay variable.
+     *  Optionally plays sounds if the state changes appropriately.
      */
     public double getFactoredState(AEntityD_Definable<?> entity, double value, float partialTicks) {
         boolean commandForwards = value > 0;
-        //We do all time here in milliseconds, not ticks. This allows for partial ticks.
+        //We do all time here in milliseconds, not ticks.  This allows for partial ticks.
         long currentTime = (long) ((entity.ticksExisted + partialTicks) * 50D);
-        long forwardsCycleTime = animation.forwardsDelay * 50L;
+        long forwardsCycleTime = animation.forwardsDelay * 50;
         if (!animation.skipForwardsMovement) {
-            forwardsCycleTime += animation.duration * 50L + animation.reverseDelay * 50L;
+            forwardsCycleTime += animation.duration * 50 + animation.reverseDelay * 50;
         }
-        long reverseCycleTime = animation.reverseDelay * 50L;
+        long reverseCycleTime = animation.reverseDelay * 50;
         if (!animation.skipReverseMovement) {
-            reverseCycleTime += animation.duration * 50L + animation.forwardsDelay * 50L;
+            reverseCycleTime += animation.duration * 50 + animation.forwardsDelay * 50;
         }
         movedThisUpdate = false;
 
@@ -81,7 +80,7 @@ public class DurationDelayClock {
                 timeCommandedReverse = currentTime;
                 long timeForwards = currentTime - timeCommandedForwards;
                 if (timeForwards < forwardsCycleTime) {
-                    //Didn't make it to the end of the cycle. Adjust start time to compensate.
+                    //Didn't make it to the end of the cycle.  Adjust start time to compensate.
                     timeCommandedReverse += timeForwards - forwardsCycleTime;
                 } else {
                     //Made it to the end of travel, so we aren't in the reversing process.
@@ -96,7 +95,7 @@ public class DurationDelayClock {
                 timeCommandedForwards = currentTime;
                 long timeReverse = currentTime - timeCommandedReverse;
                 if (timeReverse < reverseCycleTime) {
-                    //Didn't make it to the end of the cycle. Adjust start time to compensate.
+                    //Didn't make it to the end of the cycle.  Adjust start time to compensate.
                     timeCommandedForwards += timeReverse - reverseCycleTime;
                 } else {
                     //Made it to the end of travel, so we aren't in the forwards process.
@@ -109,10 +108,10 @@ public class DurationDelayClock {
 
         double movementFactor = 0;
         if (commandForwards) {
-            long timeDelayed = currentTime - timeCommandedForwards;
-            if (timeDelayed >= animation.forwardsDelay * 50L) {
-                long timeMoved = currentTime - (timeCommandedForwards + animation.forwardsDelay * 50L);
-                if (timeMoved < animation.duration * 50L && !animation.skipForwardsMovement) {
+            long timedelayed = currentTime - timeCommandedForwards;
+            if (timedelayed >= animation.forwardsDelay * 50) {
+                long timeMoved = currentTime - (timeCommandedForwards + animation.forwardsDelay * 50);
+                if (timeMoved < animation.duration * 50 && !animation.skipForwardsMovement) {
                     movedThisUpdate = true;
                     movementFactor = timeMoved / (double) (animation.duration * 50);
                     if (animation.forwardsEasing != null) {
@@ -136,10 +135,10 @@ public class DurationDelayClock {
                 }
             }
         } else {
-            long timeDelayed = currentTime - timeCommandedReverse;
-            if (timeDelayed >= animation.reverseDelay * 50L) {
-                long timeMoved = currentTime - (timeCommandedReverse + animation.reverseDelay * 50L);
-                if (timeMoved < animation.duration * 50L && !animation.skipReverseMovement) {
+            long timedelayed = currentTime - timeCommandedReverse;
+            if (timedelayed >= animation.reverseDelay * 50) {
+                long timeMoved = currentTime - (timeCommandedReverse + animation.reverseDelay * 50);
+                if (timeMoved < animation.duration * 50 && !animation.skipReverseMovement) {
                     movedThisUpdate = true;
                     movementFactor = timeMoved / (double) (animation.duration * 50);
                     if (animation.reverseEasing != null) {
@@ -171,9 +170,10 @@ public class DurationDelayClock {
     /**
      * This is used to check the easing type defined in the JSON fields
      * and call the respective easing function to return a value
-     *
+     * 
      * @param direction The JSON field either {@code forwardsEasing} or {@code reverseEasing}.
-     * @param time      The time that has elapsed for an animation or the percent complete from 0 to 1.
+     * 
+     * @param time The time that has elapsed for an animation or the percent complete from 0 to 1.
      */
     private static double getEasingType(JSONAnimationDefinition.AnimationEasingType direction, double time) {
         switch (direction) {

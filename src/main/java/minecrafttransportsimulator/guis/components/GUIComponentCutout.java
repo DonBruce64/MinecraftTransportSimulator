@@ -1,13 +1,13 @@
 package minecrafttransportsimulator.guis.components;
 
+import java.nio.FloatBuffer;
+
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.rendering.RenderableObject;
 
-import java.nio.FloatBuffer;
-
-/**
- * Class that renders a cut-out area of the currently bound texture. This is cleaner than doing manual
+/**Class that renders a cut-out area of the currently bound texture.  This is cleaner than doing manual
  * rendering in the draw calls, and allows for standardized component batch-rendering.
+ * 
  *
  * @author don_bruce
  */
@@ -15,29 +15,23 @@ public class GUIComponentCutout extends AGUIComponent {
 
     //Texture variables.
     private boolean renderFullScreen;
-    public final int textureXOffset;
+    public int textureXOffset;
     public int textureYOffset;
     public int textureSectionWidth;
-    public final int textureSectionHeight;
+    public int textureSectionHeight;
 
-    /**
-     * Standard constructor for a 1:1 rendering.
-     **/
+    /**Standard constructor for a 1:1 rendering.**/
     public GUIComponentCutout(int x, int y, int width, int height) {
         this(x, y, width, height, 0, 0, width, height);
         this.renderFullScreen = true;
     }
 
-    /**
-     * Shortened constructor for rendering across whole screen.
-     **/
+    /**Shortened constructor for rendering across whole screen.**/
     public GUIComponentCutout(int x, int y, int width, int height, int textureXOffset, int textureYOffset) {
         this(x, y, width, height, textureXOffset, textureYOffset, width, height);
     }
 
-    /**
-     * Expanded constructor for 1:x rendering. This allows the rendered texture component to be a different size than the texture.
-     **/
+    /**Expanded constructor for 1:x rendering.  This allows the rendered texture component to be a different size than the texture.**/
     public GUIComponentCutout(int x, int y, int width, int height, int textureXOffset, int textureYOffset, int textureSectionWidth, int textureSectionHeight) {
         super(x, y, width, height);
         this.textureXOffset = textureXOffset;

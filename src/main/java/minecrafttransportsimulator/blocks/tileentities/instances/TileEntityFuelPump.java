@@ -1,33 +1,42 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityFluidTankProvider;
-import minecrafttransportsimulator.entities.instances.*;
+import minecrafttransportsimulator.entities.instances.APart;
+import minecrafttransportsimulator.entities.instances.EntityFluidTank;
+import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
+import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
+import minecrafttransportsimulator.entities.instances.PartEngine;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemPartInteractable;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONText;
-import minecrafttransportsimulator.mcinterface.*;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpConnection;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
 public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityFluidTankProvider {
     public EntityVehicleF_Physics connectedVehicle;
     private final EntityFluidTank tank;
     public final EntityInventoryContainer fuelItems;
-    public final List<Integer> fuelAmounts = new ArrayList<>();
+    public final List<Integer> fuelAmounts = new ArrayList<Integer>();
     public int fuelPurchasedRemaining;
     public boolean isCreative;
-    public final UUID placingPlayerID;
+    public UUID placingPlayerID;
 
     public TileEntityFuelPump(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, IWrapperNBT data) {
         super(world, position, placingPlayer, data);
@@ -72,7 +81,7 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityFl
             }
         }
 
-        //Do fuel checks. Fuel checks only occur on servers. Clients get packets for state changes.
+        //Do fuel checks.  Fuel checks only occur on servers.  Clients get packets for state changes.
         if (connectedVehicle != null && !world.isClient()) {
             //Don't fuel vehicles that don't exist.
             if (!connectedVehicle.isValid) {
@@ -101,7 +110,7 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityFl
                     connectedVehicle.fuelTank.fill(tank.getFluid(), amountToDrain, true);
                     tank.drain(tank.getFluid(), amountToDrain, true);
                 } else {
-                    //No more room in the vehicle. Disconnect.
+                    //No more room in the vehicle.  Disconnect.
                     InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityFuelPumpConnection(this, false));
                     connectedVehicle.beingFueled = false;
                     connectedVehicle = null;
@@ -112,7 +121,7 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityFl
                     }
                 }
             } else {
-                //No more fuel. Disconnect vehicle.
+                //No more fuel.  Disconnect vehicle.
                 InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityFuelPumpConnection(this, false));
                 connectedVehicle.beingFueled = false;
                 connectedVehicle = null;
@@ -162,7 +171,7 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityFl
             return true;
         }
 
-        //We don't have a vehicle connected. Try to connect one now.
+        //We don't have a vehicle connected.  Try to connect one now.
         if (connectedVehicle == null) {
             //Get the closest vehicle within a 16-block radius.
             EntityVehicleF_Physics nearestVehicle = null;

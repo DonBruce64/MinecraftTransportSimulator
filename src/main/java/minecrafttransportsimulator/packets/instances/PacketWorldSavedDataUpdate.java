@@ -5,10 +5,9 @@ import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.packets.components.APacketBase;
 
-/**
- * Packet used to update save data on clients from the server.
+/**Packet used to update save data on clients from the server.
  * The string passed in will be the block to update.
- *
+ * 
  * @author don_bruce
  */
 public class PacketWorldSavedDataUpdate extends APacketBase {

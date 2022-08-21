@@ -1,5 +1,10 @@
 package minecrafttransportsimulator.entities.instances;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
@@ -9,30 +14,27 @@ import minecrafttransportsimulator.entities.instances.PartGun.GunState;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemPartGun;
-import minecrafttransportsimulator.jsondefs.AJSONItem;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONPlayerGun;
-import minecrafttransportsimulator.mcinterface.*;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-
-/**
- * Entity class responsible for storing and syncing information about the current gun
- * any player is holding. This entity will trigger rendering of the held gun, if it exists.
- * The current item the player is holding is stored, and whenever the player either changes
- * this item, or stops firing, the data is saved back to that item to ensure that the gun's
+/**Entity class responsible for storing and syncing information about the current gun
+ * any player is holding.  This entity will trigger rendering of the held gun, if it exists.
+ * The current item the player is holding is stored, and whenever the player either changes 
+ * this item, or stops firing, the data is saved back to that item to ensure that the gun's 
  * state is maintained.
- *
+ *  
  * @author don_bruce
  */
 public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun> {
-    public static final Map<UUID, EntityPlayerGun> playerClientGuns = new HashMap<>();
-    public static final Map<UUID, EntityPlayerGun> playerServerGuns = new HashMap<>();
+    public static final Map<UUID, EntityPlayerGun> playerClientGuns = new HashMap<UUID, EntityPlayerGun>();
+    public static final Map<UUID, EntityPlayerGun> playerServerGuns = new HashMap<UUID, EntityPlayerGun>();
 
     public final IWrapperPlayer player;
     private final RotationMatrix handRotation = new RotationMatrix();
@@ -50,13 +52,13 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun> {
             position.set(player.getPosition());
             prevPosition.set(position);
         } else {
-            //Saved entity. Either on the server or client.
-            //Get player via saved NBT. If the player isn't found, we're not valid.
+            //Saved entity.  Either on the server or client.
+            //Get player via saved NBT.  If the player isn't found, we're not valid.
             UUID playerUUID = data.getUUID("playerUUID");
             IWrapperPlayer foundPlayer = null;
             for (IWrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, 16, 16, 16))) {
                 if (entity instanceof IWrapperPlayer) {
-                    if (entity.getID().equals(playerUUID)) {
+                    if (((IWrapperPlayer) entity).getID().equals(playerUUID)) {
                         foundPlayer = (IWrapperPlayer) entity;
                         break;
                     }
@@ -70,8 +72,7 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun> {
             }
         }
 
-
-        //Don't load duplicates. However, do ensure if we replace a gun we remove it.
+        //Don't load duplicates.  However, do ensure if we replace a gun we remove it.
         //These come after the player joins the world where a gun was already present.
         if (world.isClient()) {
             if (playerClientGuns.containsKey(player.getID())) {
@@ -91,12 +92,12 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun> {
         JSONPlayerGun defaultDefinition = new JSONPlayerGun();
         defaultDefinition.packID = "dummy";
         defaultDefinition.systemName = "dummy";
-        defaultDefinition.general = new AJSONItem.General();
+        defaultDefinition.general = defaultDefinition.new General();
         defaultDefinition.general.health = 100;
 
         JSONPartDefinition fakeDef = new JSONPartDefinition();
         fakeDef.pos = new Point3D();
-        fakeDef.types = new ArrayList<>();
+        fakeDef.types = new ArrayList<String>();
         //Look though all gun types and add them.
         for (AItemPack<?> packItem : PackParser.getAllPackItems()) {
             if (packItem instanceof ItemPartGun) {
@@ -110,7 +111,7 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun> {
         }
 
         fakeDef.maxValue = Float.MAX_VALUE;
-        defaultDefinition.parts = new ArrayList<>();
+        defaultDefinition.parts = new ArrayList<JSONPartDefinition>();
         defaultDefinition.parts.add(fakeDef);
         return defaultDefinition;
     }
@@ -120,7 +121,7 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun> {
         super.update();
         //Make sure player is still valid and haven't left the server.
         if (player != null && player.isValid()) {
-            //Set our position to the player's position. We may update this later if we have a gun.
+            //Set our position to the player's position.  We may update this later if we have a gun.
             //We can't update position without the gun as it has an offset defined in it.
             position.set(player.getPosition());
             motion.set(player.getVelocity());
@@ -160,7 +161,7 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun> {
                         ItemPartGun heldGun = (ItemPartGun) heldItem;
                         if (heldGun.definition.gun.handHeld) {
                             gunStack = player.getHeldStack();
-                            addPartFromItem(heldGun, player, gunStack.getData(), new Point3D(), false);
+                            addPartFromItem(heldGun, player, gunStack.getData(), 0);
                             hotbarSelected = player.getHotbarIndex();
                         }
                     }
@@ -194,12 +195,12 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun> {
                 //If we are riding an entity, we need to orient to the seated position.
                 //If not, then we just orient to the player.
                 AEntityE_Interactable<?> ridingEntity = player.getEntityRiding();
-                if (ridingEntity != null) {
-                    orientation.set(((AEntityF_Multipart<?>) ridingEntity).getSeatForRider(player).zeroReferenceOrientation);
+                if (ridingEntity instanceof PartSeat) {
+                    orientation.set(((PartSeat) ridingEntity).zeroReferenceOrientation);
                     position.rotate(orientation);
                     orientation.multiply(player.getOrientation());
                     position.add(player.getPosition());
-                    //Also need to add the player's motion. While riding an entity, the player will always be updated
+                    //Also need to add the player's motion.  While riding an entity, the player will always be updated
                     //after this entity, as the player always updates first, and will be "lagging" in their actual position.
                     position.add(ridingEntity.position).subtract(ridingEntity.prevPosition);
                 } else {
@@ -217,7 +218,7 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun> {
                 }
             }
         } else {
-            //Player is either null or not valid. Remove us.
+            //Player is either null or not valid.  Remove us.
             //Don't update post movement, as the gun will crash on update.
             remove();
             return;
@@ -225,7 +226,7 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun> {
 
         //If we have a gun, and the player is spectating, don't allow the gun to render.
         if (activeGun != null) {
-            activeGun.isInvisible = player.isSpectator();
+            activeGun.isInvisible = player != null && player.isSpectator();
         }
     }
 
@@ -248,7 +249,7 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun> {
 
     @Override
     protected void updateCollisionBoxes() {
-        //Do nothing and don't add any collision. This could block player actions.
+        //Do nothing and don't add any collision.  This could block player actions.
     }
 
     private void saveGun(boolean remove) {
@@ -262,8 +263,8 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun> {
 
     @Override
     public boolean disableRendering(float partialTicks) {
-        //Don't render the player gun entity. Only render the gun itself.
-        return false;
+        //Don't render the player gun entity.  Only render the gun itself.
+        return true;
     }
 
     @Override

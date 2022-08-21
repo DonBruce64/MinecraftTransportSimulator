@@ -5,9 +5,8 @@ import minecrafttransportsimulator.entities.instances.EntityFluidTank;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
-/**
- * Packet sent to fluid tanks on clients to update the fluid they have in their tank.
- *
+/**Packet sent to fluid tanks on clients to update the fluid they have in their tank.
+ * 
  * @author don_bruce
  */
 public class PacketFluidTankChange extends APacketEntity<EntityFluidTank> {

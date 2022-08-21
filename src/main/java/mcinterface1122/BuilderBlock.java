@@ -1,5 +1,12 @@
 package mcinterface1122;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Nullable;
+
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.ABlockBaseTileEntity;
@@ -21,7 +28,11 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.*;
+import net.minecraft.util.EnumBlockRenderType;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.NonNullList;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
@@ -32,37 +43,23 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-/**
- * Builder for a basic MC Block class. This builder assumes the block will not be a solid
+/**Builder for a basic MC Block class.  This builder assumes the block will not be a solid
  * block (so no culling) and may have alpha channels in the texture (like glass).
  * It also assumes the block can be rotated, and saves the rotation as a set of
- * FACING properties. This MAY change in later versions to TE data though...
+ * FACING properties.  This MAY change in later versions to TE data though...
  *
  * @author don_bruce
  */
 @EventBusSubscriber
 public class BuilderBlock extends Block {
-    /**
-     * Map of created blocks linked to their builder instances. Used for interface operations.
-     **/
-    protected static final Map<ABlockBase, BuilderBlock> blockMap = new HashMap<>();
+    /**Map of created blocks linked to their builder instances.  Used for interface operations.**/
+    protected static final Map<ABlockBase, BuilderBlock> blockMap = new HashMap<ABlockBase, BuilderBlock>();
 
-    /**
-     * Current block we are built around.
-     **/
+    /**Current block we are built around.**/
     protected final ABlockBase block;
-    /**
-     * Holding map for block drops. MC calls breakage code after the TE is removed, so we need to store drops
-     * created during the drop checks here to ensure they actually drop when the block is broken.
-     **/
-    private static final Map<BlockPos, List<IWrapperItemStack>> dropsAtPositions = new HashMap<>();
+    /**Holding map for block drops.  MC calls breakage code after the TE is removed, so we need to store drops 
+    created during the drop checks here to ensure they actually drop when the block is broken. **/
+    private static final Map<BlockPos, List<IWrapperItemStack>> dropsAtPositions = new HashMap<BlockPos, List<IWrapperItemStack>>();
 
     BuilderBlock(ABlockBase block) {
         super(Material.ROCK);
@@ -73,14 +70,14 @@ public class BuilderBlock extends Block {
     }
 
     @Override
-    public boolean hasTileEntity(@Nonnull IBlockState state) {
+    public boolean hasTileEntity(IBlockState state) {
         //If our block implements the interface to be a TE, we return true.
         return block instanceof ABlockBaseTileEntity;
     }
 
     @Nullable
     @Override
-    public TileEntity createTileEntity(@Nonnull World world, @Nonnull IBlockState state) {
+    public TileEntity createTileEntity(World world, IBlockState state) {
         //Need to return a wrapper class here, not the actual TE.
         if (ITileEntityFluidTankProvider.class.isAssignableFrom(((ABlockBaseTileEntity) block).getTileEntityClass())) {
             return getTileEntityTankWrapper(block);
@@ -92,32 +89,32 @@ public class BuilderBlock extends Block {
     }
 
     /**
-     * Helper method for creating new Wrapper TEs for this block.
-     * Far better than ? all over for generics in the createTileEntity method.
-     */
+    *  Helper method for creating new Wrapper TEs for this block.
+    *  Far better than ? all over for generics in the createTileEntity method.
+    */
     private static <TileEntityType extends ATileEntityBase<?>> BuilderTileEntity<TileEntityType> getTileEntityGenericWrapper(ABlockBase block) {
-        return new BuilderTileEntity<>();
+        return new BuilderTileEntity<TileEntityType>();
     }
 
     /**
-     * Helper method for creating new Wrapper TEs for this block.
-     * Far better than ? all over for generics in the createTileEntity method.
+     *  Helper method for creating new Wrapper TEs for this block.
+     *  Far better than ? all over for generics in the createTileEntity method.
      */
     private static <TileEntityType extends ATileEntityBase<?> & ITileEntityInventoryProvider> BuilderTileEntity<TileEntityType> getTileEntityInventoryWrapper(ABlockBase block) {
-        return new BuilderTileEntityInventoryContainer<>();
+        return new BuilderTileEntityInventoryContainer<TileEntityType>();
     }
 
     /**
-     * Helper method for creating new Wrapper TEs for this block.
-     * Far better than ? all over for generics in the createTileEntity method.
-     */
+    *  Helper method for creating new Wrapper TEs for this block.
+    *  Far better than ? all over for generics in the createTileEntity method.
+    */
     private static <TileEntityType extends ATileEntityBase<?> & ITileEntityFluidTankProvider> BuilderTileEntity<TileEntityType> getTileEntityTankWrapper(ABlockBase block) {
-        return new BuilderTileEntityFluidTank<>();
+        return new BuilderTileEntityFluidTank<TileEntityType>();
     }
 
     @Override
-    public boolean onBlockActivated(@Nonnull World world, @Nonnull BlockPos pos, @Nonnull IBlockState state, @Nonnull EntityPlayer player, @Nonnull EnumHand hand, @Nonnull EnumFacing side, float hitX, float hitY, float hitZ) {
-        //Forward this click to the block. For left-clicks we'll need to use item attack calls.
+    public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ) {
+        //Forward this click to the block.  For left-clicks we'll need to use item attack calls.
         if (block instanceof ABlockBaseTileEntity) {
             if (!world.isRemote) {
                 TileEntity tile = world.getTileEntity(pos);
@@ -133,9 +130,9 @@ public class BuilderBlock extends Block {
         return super.onBlockActivated(world, pos, state, player, hand, side, hitX, hitY, hitZ);
     }
 
-    @SuppressWarnings("deprecation")
     @Override
-    public void neighborChanged(@Nonnull IBlockState state, @Nonnull World world, @Nonnull BlockPos pos, @Nonnull Block blockIn, @Nonnull BlockPos fromPos) {
+    @SuppressWarnings("deprecation")
+    public void neighborChanged(IBlockState state, World world, BlockPos pos, Block blockIn, BlockPos fromPos) {
         //Forward the change of state of a neighbor to the tile if we have one.
         if (block instanceof ABlockBaseTileEntity) {
             if (!world.isRemote) {
@@ -150,15 +147,14 @@ public class BuilderBlock extends Block {
         super.neighborChanged(state, world, pos, blockIn, fromPos);
     }
 
-    @Nonnull
     @Override
-    public ItemStack getPickBlock(@Nonnull IBlockState state, @Nonnull RayTraceResult target, @Nonnull World world, @Nonnull BlockPos pos, @Nonnull EntityPlayer player) {
+    public ItemStack getPickBlock(IBlockState state, RayTraceResult target, World world, BlockPos pos, EntityPlayer player) {
         //Returns the ItemStack that gets put in the player's inventory when they middle-click this block.
         //This calls down into getItem, which then uses the Item class's block<->item mapping to get a block.
-        //By overriding here, we intercept those calls and return our own. This also allows us to put NBT
+        //By overriding here, we intercept those calls and return our own.  This also allows us to put NBT
         //data on the stack based on the TE state.
 
-        //Note that this method is only used for middle-clicking and nothing else. Failure to return valid results
+        //Note that this method is only used for middle-clicking and nothing else.  Failure to return valid results
         //here will result in air being grabbed, and no WAILA support.
         if (block instanceof ABlockBaseTileEntity) {
             TileEntity mcTile = world.getTileEntity(pos);
@@ -176,8 +172,8 @@ public class BuilderBlock extends Block {
     }
 
     @Override
-    public void getDrops(@Nonnull NonNullList<ItemStack> drops, @Nonnull IBlockAccess world, @Nonnull BlockPos pos, @Nonnull IBlockState state, int fortune) {
-        //If this is a TE, drop TE drops. Otherwise, drop normal drops.
+    public void getDrops(NonNullList<ItemStack> drops, IBlockAccess world, BlockPos pos, IBlockState state, int fortune) {
+        //If this is a TE, drop TE drops.  Otherwise, drop normal drops.
         if (block instanceof ABlockBaseTileEntity) {
             List<IWrapperItemStack> positionDrops = dropsAtPositions.get(pos);
             if (positionDrops != null) {
@@ -193,17 +189,17 @@ public class BuilderBlock extends Block {
     }
 
     @Override
-    public void breakBlock(@Nonnull World world, BlockPos pos, @Nonnull IBlockState state) {
+    public void breakBlock(World world, BlockPos pos, IBlockState state) {
         //Forward the breaking call to the block to allow for breaking logic.
         block.onBroken(WrapperWorld.getWrapperFor(world), new Point3D(pos.getX(), pos.getY(), pos.getZ()));
-        //This gets called before the block is broken to do logic. Save drops to static map to be
-        //spawned during the getDrops method. Also notify the block that it's been broken in case
+        //This gets called before the block is broken to do logic.  Save drops to static map to be
+        //spawned during the getDrops method.  Also notify the block that it's been broken in case
         //it needs to do operations.
         if (block instanceof ABlockBaseTileEntity) {
             TileEntity tile = world.getTileEntity(pos);
             if (tile instanceof BuilderTileEntity) {
                 if (((BuilderTileEntity<?>) tile).tileEntity != null) {
-                    List<IWrapperItemStack> drops = new ArrayList<>();
+                    List<IWrapperItemStack> drops = new ArrayList<IWrapperItemStack>();
                     ((BuilderTileEntity<?>) tile).tileEntity.addDropsToList(drops);
                     dropsAtPositions.put(pos, drops);
                 }
@@ -212,19 +208,18 @@ public class BuilderBlock extends Block {
         super.breakBlock(world, pos, state);
     }
 
-    @SuppressWarnings("deprecation")
     @Override
-    public void addCollisionBoxToList(@Nonnull IBlockState state, @Nonnull World world, @Nonnull BlockPos pos, @Nonnull AxisAlignedBB entityBox, @Nonnull List<AxisAlignedBB> collidingBoxes, @Nullable Entity entity, boolean p_185477_7_) {
+    @SuppressWarnings("deprecation")
+    public void addCollisionBoxToList(IBlockState state, World world, BlockPos pos, AxisAlignedBB entityBox, List<AxisAlignedBB> collidingBoxes, @Nullable Entity entity, boolean p_185477_7_) {
         AxisAlignedBB mcBox = getBlockBox(state, world, pos, true);
         if (mcBox.intersects(entityBox)) {
             collidingBoxes.add(mcBox);
         }
     }
 
-    @SuppressWarnings("deprecation")
-    @Nonnull
     @Override
-    public AxisAlignedBB getBoundingBox(@Nonnull IBlockState state, @Nonnull IBlockAccess access, @Nonnull BlockPos pos) {
+    @SuppressWarnings("deprecation")
+    public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess access, BlockPos pos) {
         return getBlockBox(state, access, pos, false);
     }
 
@@ -259,37 +254,36 @@ public class BuilderBlock extends Block {
         }
     }
 
-    @SuppressWarnings("deprecation")
     @Override
-    public boolean isOpaqueCube(@Nonnull IBlockState state) {
-        //If this is opaque, we block light. None of our blocks are opaque and block light.
+    @SuppressWarnings("deprecation")
+    public boolean isOpaqueCube(IBlockState state) {
+        //If this is opaque, we block light.  None of our blocks are opaque and block light.
         return false;
     }
 
-    @SuppressWarnings("deprecation")
     @Override
-    public boolean isFullCube(@Nonnull IBlockState state) {
-        //If this is a full cube, we do culling on faces and potentially connections. None of our blocks are full cubes.
+    @SuppressWarnings("deprecation")
+    public boolean isFullCube(IBlockState state) {
+        //If this is a full cube, we do culling on faces and potentially connections.  None of our blocks are full cubes.
         return false;
     }
 
-    @SuppressWarnings({"NullableProblems", "deprecation"})
     @Override
-    public BlockFaceShape getBlockFaceShape(@Nonnull IBlockAccess worldIn, @Nonnull IBlockState state, @Nonnull BlockPos pos, @Nonnull EnumFacing face) {
-        //If this is SOLID, we can attach things to this block (e.g. torches). We don't want that for any of our blocks.
+    @SuppressWarnings("deprecation")
+    public BlockFaceShape getBlockFaceShape(IBlockAccess worldIn, IBlockState state, BlockPos pos, EnumFacing face) {
+        //If this is SOLID, we can attach things to this block (e.g. torches).  We don't want that for any of our blocks.
         return BlockFaceShape.UNDEFINED;
     }
 
-    @SuppressWarnings("deprecation")
-    @Nonnull
     @Override
-    public EnumBlockRenderType getRenderType(@Nonnull IBlockState state) {
-        //Don't render this block. We manually render via the TE.
+    @SuppressWarnings("deprecation")
+    public EnumBlockRenderType getRenderType(IBlockState state) {
+        //Don't render this block.  We manually render via the TE.
         return EnumBlockRenderType.INVISIBLE;
     }
 
     @Override
-    public int getLightValue(@Nonnull IBlockState state, @Nonnull IBlockAccess world, @Nonnull BlockPos pos) {
+    public int getLightValue(IBlockState state, IBlockAccess world, BlockPos pos) {
         if (block instanceof ABlockBaseTileEntity) {
             TileEntity tile = world.getTileEntity(pos);
             if (tile instanceof BuilderTileEntity) {
@@ -307,7 +301,7 @@ public class BuilderBlock extends Block {
      */
     @SubscribeEvent
     public static void registerBlocks(RegistryEvent.Register<Block> event) {
-        //Create all pack items. We need to do this here in the blocks because
+        //Create all pack items.  We need to do this here in the blocks because
         //block registration comes first, and we use the items registered to determine
         //which blocks we need to register.
         for (String packID : PackParser.getAllPackIDs()) {
@@ -323,22 +317,22 @@ public class BuilderBlock extends Block {
         GameRegistry.registerTileEntity(BuilderTileEntityInventoryContainer.class, new ResourceLocation(InterfaceManager.coreModID, BuilderTileEntityInventoryContainer.class.getSimpleName()));
         GameRegistry.registerTileEntity(BuilderTileEntityFluidTank.class, new ResourceLocation(InterfaceManager.coreModID, BuilderTileEntityFluidTank.class.getSimpleName()));
 
-        //Register the IItemBlock blocks. We cheat here and
+        //Register the IItemBlock blocks.  We cheat here and
         //iterate over all items and get the blocks they spawn.
         //Not only does this prevent us from having to manually set the blocks
         //we also pre-generate the block classes here.
-        List<ABlockBase> blocksRegistered = new ArrayList<>();
+        List<ABlockBase> blocksRegistred = new ArrayList<ABlockBase>();
         for (AItemBase item : BuilderItem.itemMap.keySet()) {
             if (item instanceof IItemBlock) {
                 ABlockBase itemBlockBlock = ((IItemBlock) item).getBlock();
-                if (!blocksRegistered.contains(itemBlockBlock)) {
-                    //New block class detected. Register it and its instance.
+                if (!blocksRegistred.contains(itemBlockBlock)) {
+                    //New block class detected.  Register it and its instance.
                     BuilderBlock wrapper = new BuilderBlock(itemBlockBlock);
                     String name = itemBlockBlock.getClass().getSimpleName();
                     name = InterfaceManager.coreModID + ":" + name.substring("Block".length());
                     event.getRegistry().register(wrapper.setRegistryName(name).setTranslationKey(name));
                     blockMap.put(itemBlockBlock, wrapper);
-                    blocksRegistered.add(itemBlockBlock);
+                    blocksRegistred.add(itemBlockBlock);
                 }
             }
         }

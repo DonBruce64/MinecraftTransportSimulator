@@ -1,13 +1,7 @@
 package minecrafttransportsimulator.rendering;
 
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
-import javax.imageio.ImageReader;
-import javax.imageio.metadata.IIOMetadata;
-import javax.imageio.metadata.IIOMetadataNode;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -15,16 +9,23 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Class responsible for parsing GIF images into their rendered form. No clue how this works. This should
+import javax.imageio.ImageReader;
+import javax.imageio.metadata.IIOMetadata;
+import javax.imageio.metadata.IIOMetadataNode;
+
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
+/**Class responsible for parsing GIF images into their rendered form.  No clue how this works.  This should
  * really be a built-in function of the built-in libraries...
- *
+ * 
  * @author don_bruce
  */
 public class GIFParser {
 
     public static ParsedGIF parseGIF(ImageReader reader) throws IOException {
-        ArrayList<GIFImageFrame> frames = new ArrayList<>(2);
+        ArrayList<GIFImageFrame> frames = new ArrayList<GIFImageFrame>(2);
 
         int width = -1;
         int height = -1;
@@ -33,7 +34,7 @@ public class GIFParser {
         if (metadata != null) {
             IIOMetadataNode globalRoot = (IIOMetadataNode) metadata.getAsTree(metadata.getNativeMetadataFormatName());
             NodeList globalScreenDescriptor = globalRoot.getElementsByTagName("LogicalScreenDescriptor");
-            if (globalScreenDescriptor.getLength() > 0) {
+            if (globalScreenDescriptor != null && globalScreenDescriptor.getLength() > 0) {
                 IIOMetadataNode screenDescriptor = (IIOMetadataNode) globalScreenDescriptor.item(0);
                 if (screenDescriptor != null) {
                     width = Integer.parseInt(screenDescriptor.getAttribute("logicalScreenWidth"));
@@ -44,7 +45,7 @@ public class GIFParser {
 
         BufferedImage master = null;
         Graphics2D masterGraphics = null;
-        for (int frameIndex = 0; ; frameIndex++) {
+        for (int frameIndex = 0;; frameIndex++) {
             BufferedImage image;
             try {
                 image = reader.read(frameIndex);
@@ -59,12 +60,11 @@ public class GIFParser {
 
             IIOMetadataNode root = (IIOMetadataNode) reader.getImageMetadata(frameIndex).getAsTree("javax_imageio_gif_image_1.0");
             IIOMetadataNode gce = (IIOMetadataNode) root.getElementsByTagName("GraphicControlExtension").item(0);
-            int delay = Integer.parseInt(gce.getAttribute("delayTime"));
+            int delay = Integer.valueOf(gce.getAttribute("delayTime"));
             String disposal = gce.getAttribute("disposalMethod");
 
             int x = 0;
             int y = 0;
-
 
             if (master == null) {
                 master = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
@@ -76,15 +76,14 @@ public class GIFParser {
                     Node nodeItem = children.item(nodeIndex);
                     if (nodeItem.getNodeName().equals("ImageDescriptor")) {
                         NamedNodeMap map = nodeItem.getAttributes();
-                        x = Integer.parseInt(map.getNamedItem("imageLeftPosition").getNodeValue());
-                        y = Integer.parseInt(map.getNamedItem("imageTopPosition").getNodeValue());
+                        x = Integer.valueOf(map.getNamedItem("imageLeftPosition").getNodeValue());
+                        y = Integer.valueOf(map.getNamedItem("imageTopPosition").getNodeValue());
                     }
                 }
             }
             masterGraphics.drawImage(image, x, y, null);
             BufferedImage copy = new BufferedImage(master.getColorModel(), master.copyData(null), master.isAlphaPremultiplied(), null);
             frames.add(new GIFImageFrame(copy, delay, disposal));
-
 
             if (disposal.equals("restoreToPrevious")) {
                 BufferedImage from = null;
@@ -109,7 +108,7 @@ public class GIFParser {
 
     public static class ParsedGIF {
 
-        public final Map<Integer, GIFImageFrame> frames = new LinkedHashMap<>();
+        public final Map<Integer, GIFImageFrame> frames = new LinkedHashMap<Integer, GIFImageFrame>();
         public final int totalDuration;
         public long currentCycleTime;
         private long lastCycleCheck;
@@ -130,7 +129,7 @@ public class GIFParser {
             lastCycleCheck = currentTime;
 
             //Get us in the delay bounds.
-            if (currentCycleTime > totalDuration * 2L) {
+            if (currentCycleTime > totalDuration * 2) {
                 //Reset to prevent loop slowdowns.
                 currentCycleTime = 0;
             }
@@ -150,7 +149,6 @@ public class GIFParser {
             return frames.get(lastDelayChecked);
         }
     }
-
 
     public static class GIFImageFrame {
         private final int delay;

@@ -1,20 +1,29 @@
 package minecrafttransportsimulator.packloading;
 
-import minecrafttransportsimulator.jsondefs.*;
-
 import java.util.ArrayList;
 import java.util.List;
 
+import minecrafttransportsimulator.jsondefs.AJSONItem;
+import minecrafttransportsimulator.jsondefs.JSONBullet;
+import minecrafttransportsimulator.jsondefs.JSONDecor;
+import minecrafttransportsimulator.jsondefs.JSONInstrument;
+import minecrafttransportsimulator.jsondefs.JSONItem;
+import minecrafttransportsimulator.jsondefs.JSONPart;
+import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
+import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
+import minecrafttransportsimulator.jsondefs.JSONSkin;
+import minecrafttransportsimulator.jsondefs.JSONVehicle;
+
 /**
- * Class responsible for loading pack resource files from pack archives. This happens both during load
+ * Class responsible for loading pack resource files from pack archives.  This happens both during load
  * and during gameplay as different references are requested.
  *
  * @author don_bruce
  */
 public class PackResourceLoader {
     /**
-     * Returns the requested resource for the passed-in definition. Name in this case is used
-     * for the file-name, and may be different than the definition system name.
+     *  Returns the requested resource for the passed-in definition.  Name in this case is used
+     *  for the file-name, and may be different than the definition system name.
      */
     public static String getPackResource(AJSONItem definition, ResourceType type, String name) {
         switch (PackStructure.values()[PackParser.getPackConfiguration(definition.packID).fileStructure]) {
@@ -34,7 +43,7 @@ public class PackResourceLoader {
     public enum PackStructure {
         DEFAULT,
         LAYERED,
-        MODULAR
+        MODULAR;
     }
 
     public enum ResourceType {
@@ -48,7 +57,7 @@ public class PackResourceLoader {
         public final String normalSuffix;
         public final String modularSuffix;
 
-        ResourceType(String prefixFolder, String normalSuffix, String modularSuffix) {
+        private ResourceType(String prefixFolder, String normalSuffix, String modularSuffix) {
             this.prefixFolder = prefixFolder;
             this.normalSuffix = normalSuffix;
             this.modularSuffix = modularSuffix;
@@ -68,12 +77,12 @@ public class PackResourceLoader {
 
         public final Class<? extends AJSONItem> representingClass;
 
-        ItemClassification(Class<? extends AJSONItem> representingClass) {
+        private ItemClassification(Class<? extends AJSONItem> representingClass) {
             this.representingClass = representingClass;
         }
 
         public static List<String> getAllTypesAsStrings() {
-            List<String> assetTypes = new ArrayList<>();
+            List<String> assetTypes = new ArrayList<String>();
             for (ItemClassification classification : ItemClassification.values()) {
                 assetTypes.add(classification.name().toLowerCase());
             }
@@ -88,7 +97,7 @@ public class PackResourceLoader {
             try {
                 return ItemClassification.valueOf(directory.substring(0, directory.length() - "s/".length()).toUpperCase());
             } catch (Exception e) {
-                throw new IllegalArgumentException("Was told to get classification for directory: " + directory + " but none exists. Contact the mod author!");
+                throw new IllegalArgumentException("Was told to get classification for directory: " + directory + " but none exists.  Contact the mod author!");
             }
         }
     }

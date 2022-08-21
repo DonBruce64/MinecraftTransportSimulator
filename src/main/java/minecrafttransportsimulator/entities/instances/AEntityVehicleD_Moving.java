@@ -1,6 +1,11 @@
 package minecrafttransportsimulator.entities.instances;
 
-import minecrafttransportsimulator.baseclasses.*;
+import minecrafttransportsimulator.baseclasses.BezierCurve;
+import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
+import minecrafttransportsimulator.baseclasses.TowingConnection;
+import minecrafttransportsimulator.baseclasses.VehicleGroundDeviceCollection;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.instances.BlockCollision;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadFollowingState;
@@ -20,15 +25,12 @@ import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement
 import minecrafttransportsimulator.packets.instances.PacketVehicleServerSync;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
-import java.util.Iterator;
-
-/**
- * At the final basic vehicle level we add in the functionality for state-based movement.
+/**At the final basic vehicle level we add in the functionality for state-based movement.
  * Here is where the functions for moving permissions, such as collision detection
- * routines and ground device effects come in. We also add functionality to keep
- * servers and clients from de-syncing. At this point we now have a basic vehicle
- * that can be manipulated for movement in the world.
- *
+ * routines and ground device effects come in.  We also add functionality to keep
+ * servers and clients from de-syncing.  At this point we now have a basic vehicle
+ *  that can be manipulated for movement in the world.  
+ * 
  * @author don_bruce
  */
 abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
@@ -50,6 +52,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     public boolean slipping;
     public boolean skidSteerActive;
     public boolean lockedOnRoad;
+    private boolean updateGroundDevicesRequest;
     public double groundVelocity;
     public double weightTransfer = 0;
     public final RotationMatrix rotation = new RotationMatrix();
@@ -99,7 +102,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     private final Point3D normalizedGroundVelocityVector = new Point3D();
     private final Point3D normalizedGroundHeadingVector = new Point3D();
     private AEntityE_Interactable<?> lastCollidedEntity;
-    public final VehicleGroundDeviceCollection groundDeviceCollective;
+    public VehicleGroundDeviceCollection groundDeviceCollective;
 
     public AEntityVehicleD_Moving(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data) {
         super(world, placingPlayer, data);
@@ -133,7 +136,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     public void update() {
         super.update();
         world.beginProfiling("VehicleD_Level", true);
-        //If we were placed down, and this is our first tick, check our collision boxes to make sure we aren't in the ground.
+        //If we were placed down, and this is our first tick, check our collision boxes to make sure we are't in the ground.
         if (ticksExisted == 1 && placingPlayer != null && !world.isClient()) {
             //Get how far above the ground the vehicle needs to be, and move it to that position.
             //First boost Y based on collision boxes.
@@ -145,13 +148,13 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             }
 
             //Next, boost based on parts.
-            for (APart part : parts) {
-                furthestDownPoint = Math.min(part.placementOffset.y - part.getHeight() / 2F, furthestDownPoint);
+            for (APart part : allParts) {
+                furthestDownPoint = Math.min(part.placementDefinition.pos.y - part.getHeight() / 2F, furthestDownPoint);
             }
 
             //Add on -0.1 blocks for the default collision clamping.
             //This prevents the clamping of the collision boxes from hitting the ground if they were clamped.
-            furthestDownPoint -= 0.1;
+            furthestDownPoint += -0.1;
 
             //Apply the boost, and check collisions.
             //If the core collisions are colliding, set the vehicle as dead and abort.
@@ -162,7 +165,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             for (BoundingBox coreBox : allBlockCollisionBoxes) {
                 coreBox.updateToEntity(this, null);
                 if (coreBox.updateCollidingBlocks(world, new Point3D(0D, -furthestDownPoint, 0D))) {
-                    //New vehicle shouldn't have been spawned. Bail out.
+                    //New vehicle shouldn't have been spawned.  Bail out.
                     remove();
                     placingPlayer.sendPacket(new PacketPlayerChatMessage(placingPlayer, JSONConfigLanguage.INTERACT_VEHICLE_NOSPACE));
                     //Need to add stack back as it will have been removed here.
@@ -176,16 +179,9 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             }
         }
 
-        //Update brake status. This is used in a lot of locations, so we don't want to query the set every time.
+        //Update brake status.  This is used in a lot of locations, so we don't want to query the set every time.
         brake = getVariable(BRAKE_VARIABLE);
         parkingBrakeOn = isVariableActive(PARKINGBRAKE_VARIABLE);
-
-        //Update our GDB members if any of our ground devices don't have the same total offset as placement.
-        //This is required to move the GDBs if the GDs move.
-        world.beginProfiling("GroundDevices", true);
-        if (ticksExisted == 1) {
-            groundDeviceCollective.updateBounds();
-        }
 
         //Now do update calculations and logic.
         if (!ConfigSystem.settings.general.noclipVehicles.value || groundDeviceCollective.isReady()) {
@@ -206,27 +202,21 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     }
 
     @Override
-    public void addPart(APart part, boolean sendPacket) {
-        super.addPart(part, sendPacket);
-        groundDeviceCollective.updateMembers();
-        groundDeviceCollective.updateBounds();
+    protected void updateAllpartList() {
+        super.updateAllpartList();
+        if (ticksExisted > 1) {
+            updateGroundDevicesRequest = true;
+        }
     }
 
     @Override
-    public void removePart(APart part, Iterator<APart> iterator) {
-        super.removePart(part, iterator);
-        groundDeviceCollective.updateMembers();
-        groundDeviceCollective.updateBounds();
-    }
-
-    @Override
-    protected void sortBoxes() {
-        super.sortBoxes();
-        if (ticksExisted == 1) {
-            //Need to do initial GDB updates.
+    protected void updateEncompassingBoxLists() {
+        super.updateEncompassingBoxLists();
+        if (ticksExisted == 1 || updateGroundDevicesRequest) {
             groundDeviceCollective.updateMembers();
             groundDeviceCollective.updateBounds();
             groundDeviceCollective.updateCollisions();
+            updateGroundDevicesRequest = false;
         }
     }
 
@@ -257,9 +247,9 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     }
 
     /**
-     * Returns the follower for the rear of the vehicle. Front follower should
+     * Returns the follower for the rear of the vehicle.  Front follower should
      * be obtained by getting the point from this follower the distance away from the
-     * front and the rear position. This may be the same curve, this may not.
+     * front and the rear position.  This may be the same curve, this may not.
      */
     private RoadFollowingState getFollower() {
         Point3D contactPoint = groundDeviceCollective.getContactPoint(false);
@@ -271,9 +261,9 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 if (road != null) {
                     //Check to see which lane we are on, if any.
                     Point3D testPoint = new Point3D();
-                    Point3D testRotation;
+                    Point3D testRotation = new Point3D();
                     for (RoadLane lane : road.lanes) {
-                        //Check path-points on the curve. If our angles and position are close, set this as the curve.
+                        //Check path-points on the curve.  If our angles and position are close, set this as the curve.
                         for (BezierCurve curve : lane.curves) {
                             for (float f = 0; f < curve.pathLength; ++f) {
                                 curve.setPointToPositionAt(testPoint, f);
@@ -295,9 +285,9 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     }
 
     /**
-     * Method block for ground operations. This does braking force
+     * Method block for ground operations.  This does braking force
      * and turning for applications independent of vehicle-specific
-     * movement. Must come AFTER force calculations as it depends on motions.
+     * movement.  Must come AFTER force calculations as it depends on motions.
      */
     private void performGroundOperations() {
         //Get braking force and apply it to the motions.
@@ -386,7 +376,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 motion.z = idealMotion.z;
 
                 //If we are slipping while turning, set the slipping variable to let other systems know.
-                //Only do this as a main vehicle. If we are a trailer, we don't do this unless the vehicle towing us is slipping.
+                //Only do this as a main vehicle.  If we are a trailer, we don't do this unless the vehicle towing us is slipping.
                 slipping = towedByConnection == null ? (world.isClient() && motionFactor != 1 && velocity > 0.75) : towedByConnection.towingVehicle.slipping;
             }
         }
@@ -408,7 +398,9 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                     brakingFactor += Math.max(groundDevicePower - groundDevice.getFrictionLoss(), 0);
                 }
             }
-            brakingFactor += 0.15D * brakingPower * groundDeviceCollective.getNumberBoxesInLiquid();
+            if (brakingPower > 0) {
+                brakingFactor += 0.15D * brakingPower * groundDeviceCollective.getNumberBoxesInLiquid();
+            }
         }
         return brakingFactor;
     }
@@ -426,7 +418,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             skiddingFactor += Math.max(groundDevice.getLateralFriction() - groundDevice.getFrictionLoss(), 0);
         }
 
-        //Now check if any collision boxes are in liquid. Needed for maritime vehicles.
+        //Now check if any collision boxes are in liquid.  Needed for maritime vehicles.
         skiddingFactor += 0.5D * groundDeviceCollective.getNumberBoxesInLiquid();
         return skiddingFactor > 0 ? skiddingFactor : 0;
     }
@@ -446,25 +438,25 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             //Don't use fake ground devices here as it'll mess up math for vehicles.
             boolean treadsOnly = true;
             for (PartGroundDevice groundDevice : groundDeviceCollective.groundedGroundDevices) {
-                if (groundDevice.placementDefinition.turnsWithSteer && !groundDevice.isFake()) {
-                    turningDistance = Math.max(turningDistance, Math.abs(groundDevice.placementOffset.z));
+                if (groundDevice.turnsWithSteer && !groundDevice.isFake()) {
+                    turningDistance = Math.max(turningDistance, Math.abs(groundDevice.localOffset.z));
                     if (treadsOnly && !groundDevice.definition.ground.isTread) {
                         treadsOnly = false;
                     }
                 }
             }
 
-            //If we only have treads, double the distance. This accounts for tracked-only vehicles.
+            //If we only have treads, double the distance.  This accounts for tracked-only vehicles.
             if (treadsOnly) {
                 turningDistance *= 2;
             }
 
             //If we didn't find any ground devices to make us turn, check propellers in the water.
             if (turningDistance == 0) {
-                for (APart part : parts) {
+                for (APart part : allParts) {
                     if (part instanceof PartPropeller) {
                         if (part.isInLiquid()) {
-                            turningDistance = Math.max(turningDistance, Math.abs(part.placementOffset.z));
+                            turningDistance = Math.max(turningDistance, Math.abs(part.placementDefinition.pos.z));
                             break;
                         }
                     }
@@ -482,7 +474,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                         for (APart part : parts) {
                             if (part instanceof PartGroundDevice) {
                                 if (groundDeviceCollective.groundedGroundDevices.contains(part)) {
-                                    if (part.placementOffset.x > 0) {
+                                    if (part.placementDefinition.pos.x > 0) {
                                         leftWheelGrounded = true;
                                     } else {
                                         rightWheelGrounded = true;
@@ -507,11 +499,11 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 //This means tighter turning for shorter-wheelbase vehicles and more input.
                 //This is opposite of the torque-based forces for control surfaces.
                 double turningForce = steeringAngle / turningDistance;
-                //Decrease force by the speed of the vehicle. If we are going fast, we can't turn as quickly.
+                //Decrease force by the speed of the vehicle.  If we are going fast, we can't turn as quickly.
                 if (groundVelocity > 0.35D) {
                     turningForce *= Math.pow(0.3F, (groundVelocity * (1 - currentDownForce) - 0.35D));
                 }
-                //Calculate the force the steering produces. Start with adjusting the steering factor by the ground velocity.
+                //Calculate the force the steering produces.  Start with adjusting the steering factor by the ground velocity.
                 //This is because the faster we go the quicker we need to turn to keep pace with the vehicle's movement.
                 //We need to take speed-factor into account here, as that will make us move different lengths per tick.
                 //Finally, we need to reduce this by a constant to get "proper" force..
@@ -534,7 +526,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
 
             //If we aren't on a road, try to find one.
             //If we are an aircraft, don't check as we shouldn't have aircraft on roads.
-            //If we are being towed, only check if the towing vehicle is on the road (since we should be on one too).
+            //If we are being towed, only check if the towing vehicle is on the road (since we should be on one too). 
             world.beginProfiling("RoadChecks", false);
             if (definition.motorized.isAircraft || (towedByConnection != null && !towedByConnection.towingVehicle.lockedOnRoad)) {
                 frontFollower = null;
@@ -552,7 +544,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                         if (towedByConnection == null) {
                             frontFollower = new RoadFollowingState(rearFollower).updateCurvePoints(pointDelta, LaneSelectionRequest.NONE);
                         } else {
-                            //Get delta between vehicle center and hitch, and vehicle center and hookup. This gets total distance between vehicle centers.
+                            //Get delta between vehicle center and hitch, and vehicle center and hookup.  This gets total distance between vehicle centers.
                             float segmentDelta = (float) (towedByConnection.hitchCurrentPosition.copy().subtract(towedByConnection.towingVehicle.position).length() + towedByConnection.hookupCurrentPosition.copy().subtract(towedByConnection.towedVehicle.position).length());
                             //If the hitch is on the back of the vehicle, we need to have our offset be negative.
                             if (towedByConnection.towingEntity instanceof APart ? ((APart) towedByConnection.towingEntity).localOffset.z <= 0 : towedByConnection.hitchConnection.pos.z <= 0) {
@@ -577,7 +569,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 //Check for the potential to change the requested segment.
                 //We can only do this if both our followers are on the same segment.
                 LaneSelectionRequest requestedSegment;
-                if (isVariableActive(LEFTTURNLIGHT_VARIABLE) == isVariableActive(RIGHTTURNLIGHT_VARIABLE)) {
+                if (!(isVariableActive(LEFTTURNLIGHT_VARIABLE) ^ isVariableActive(RIGHTTURNLIGHT_VARIABLE))) {
                     requestedSegment = LaneSelectionRequest.NONE;
                 } else if (isVariableActive(LEFTTURNLIGHT_VARIABLE)) {
                     requestedSegment = goingInReverse ? LaneSelectionRequest.RIGHT : LaneSelectionRequest.LEFT;
@@ -598,7 +590,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 if (frontFollower != null && rearFollower != null && rearPoint != null) {
                     //Set our position so we're aligned with the road.
                     //To do this, we get the distance between our contact points for front and rear, and then interpolate between them.
-                    //First get the rear point. This defines the delta for the movement of the vehicle.
+                    //First get the rear point.  This defines the delta for the movement of the vehicle.
                     rearPoint.rotate(orientation).add(position);
                     Point3D rearDesiredPoint = rearFollower.getCurrentPoint();
 
@@ -613,7 +605,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                     } else {
                         motion.y = 0;
 
-                        //Now get the front desired point. We don't care about actual point here, as we set angle based on the point delta.
+                        //Now get the front desired point.  We don't care about actual point here, as we set angle based on the point delta.
                         //Desired angle is the one that gives us the vector between the front and rear points.
                         Point3D desiredVector = frontFollower.getCurrentPoint().subtract(rearDesiredPoint);
                         double yawDelta = Math.toDegrees(Math.atan2(desiredVector.x, desiredVector.z));
@@ -625,7 +617,11 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                         roadRotation.set(pitchDelta - orientation.angles.x, yawDelta, rollDelta - orientation.angles.z);
                         roadRotation.y = roadRotation.getClampedYDelta(orientation.angles.y);
                         if (!world.isClient()) {
-                            addToSteeringAngle((float) (goingInReverse ? -roadRotation.y : roadRotation.y) * 1.5F);
+                            if (towedByConnection != null) {
+                                addToSteeringAngle(towedByConnection.towingVehicle.getSteeringAngle() - getSteeringAngle());
+                            } else {
+                                addToSteeringAngle((goingInReverse ? -roadRotation.y : roadRotation.y) * 1.5D);
+                            }
                         }
                     }
                 } else {
@@ -642,13 +638,13 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             //If followers aren't valid, do normal logic.
             if (!lockedOnRoad) {
                 //If any ground devices are collided after our movement, apply corrections to prevent this.
-                //The first correction we apply is +y motion. This counteracts gravity, and any GDBs that may
-                //have been moved into the ground by the application of our motion and rotation. We do this before collision
+                //The first correction we apply is +y motion.  This counteracts gravity, and any GDBs that may
+                //have been moved into the ground by the application of our motion and rotation.  We do this before collision
                 //boxes, as we don't want gravity to cause us to move into something when we really shouldn't move down because
-                //all the GDBs prevent this. In either case, apply +y motion to get all the GDBs out of the ground.
-                //This may not be possible, however, if the boxes are too deep into the ground. We don't want vehicles to
-                //instantly climb mountains. Because of this, we add only 1/8 block, or enough motionY to prevent collision,
-                //whichever is the lower of the two. If we apply boost, update our collision boxes before the next step.
+                //all the GDBs prevent this.  In either case, apply +y motion to get all the GDBs out of the ground.
+                //This may not be possible, however, if the boxes are too deep into the ground.  We don't want vehicles to
+                //instantly climb mountains.  Because of this, we add only 1/8 block, or enough motionY to prevent collision,
+                //whichever is the lower of the two.  If we apply boost, update our collision boxes before the next step.
                 //Note that this logic is not applied on trailers, as they use special checks with only rotations for movement.
                 world.beginProfiling("GroundBoostCheck", false);
                 groundMotion.y = groundDeviceCollective.getMaxCollisionDepth() / speedFactor;
@@ -680,11 +676,11 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 if (isCollisionBoxCollided()) {
                     world.beginProfiling("CollisionHandling", false);
                     if (towedByConnection != null) {
-                        Point3D initialMotion = motion.copy();
+                        Point3D initalMotion = motion.copy();
                         if (correctCollidingMovement()) {
                             return;
                         }
-                        towedByConnection.towingVehicle.motion.add(motion).subtract(initialMotion);
+                        towedByConnection.towingVehicle.motion.add(motion).subtract(initalMotion);
                     } else if (correctCollidingMovement()) {
                         return;
                     }
@@ -693,23 +689,11 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 if (fallingDown || towedByConnection != null) {
                     world.beginProfiling("GroundHandlingPitch", false);
                     groundDeviceCollective.performPitchCorrection(groundMotion);
-                    //Don't do roll correction if we don't have any roll.
+                    //Don't do roll correction if we don't have roll.
                     if (groundDeviceCollective.canDoRollChecks()) {
                         world.beginProfiling("GroundHandlingRoll", false);
                         groundDeviceCollective.performRollCorrection(groundMotion);
                     }
-
-                    //if (definition.motorized.customTiltAngles == true) {
-                    //    pitchForceCompensation += currentPitchForce / 10;
-                    //    rollForceCompensation += currentRollForce / 10;
-                    //    rotation.angles.z = (-orientation.angles.z + rollForceCompensation) + currentRollAngle;
-                    //    rotation.angles.x = (-orientation.angles.x + pitchForceCompensation) + currentPitchAngle;
-                    //    rotation.angles.y += currentYawForce;
-                    //} else {
-                    //    rotation.angles.z += currentRollForce;
-                    //    rotation.angles.x += currentPitchForce;
-                    //    rotation.angles.y += currentYawForce;
-                    //}
 
                     //If we are flagged as a tilting vehicle try to keep us upright, unless we are turning, in which case turn into the turn.
                     if (definition.motorized.maxTiltAngle != 0) {
@@ -723,7 +707,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             if (!collidedEntities.isEmpty()) {
                 world.beginProfiling("EntityMoveAlong", false);
                 for (AEntityE_Interactable<?> interactable : collidedEntities) {
-                    //Set angular movement delta.
+                    //Set angluar movement delta.
                     if (interactable instanceof AEntityVehicleD_Moving) {
                         vehicleCollisionRotation.set(interactable.orientation).multiplyTranspose(interactable.prevOrientation);
                         vehicleCollisionRotation.convertToAngles();
@@ -748,7 +732,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                         motion.subtract(lastCollidedEntity.motion);
                     }
 
-                    //Only check one for now. We could do multiple, but then we'd have to do maths.
+                    //Only check one for now.  We could do multiple, but then we'd have to do maths.
                     break;
                 }
             } else {
@@ -793,8 +777,8 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
 
             //Now adjust our movement to sync with the server.
             if (world.isClient()) {
-                //Get the delta difference, and square it. Then divide it by 25.
-                //This gives us a good "rubber banding correction" formula for deltas.
+                //Get the delta difference, and square it.  Then divide it by 25.
+                //This gives us a good "rubberbanding correction" formula for deltas.
                 //We add this correction motion to the existing motion applied.
                 //We need to keep the sign after squaring, however, as that tells us what direction to apply the deltas in.
                 clientDeltaM.add(motionApplied);
@@ -809,9 +793,9 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 }
 
                 //Note that orientation wasn't a direct angle-addition, as the rotation is applied relative to the current
-                //orientation. This means that if we yaw 5 degrees, but are rolling 10 degrees, then we need to not do the
+                //orientation.  This means that if we yaw 5 degrees, but are rolling 10 degrees, then we need to not do the
                 //yaw rotation in the XZ plane, but instead in that relative-rotated plane.
-                //To account for this, we get the angle delta between the prior and current orientation, and use that for the delta.
+                //To account for this, we get the angle delta between the prior and current orientation, and use that for the delta. 
                 //Though before we do this we check if those angles were non-zero, as no need to do math if they are.
                 if (!rotationApplied.angles.isZero()) {
                     rotationApplied.angles.set(orientation.angles).subtract(prevOrientation.angles).clamp180();
@@ -823,12 +807,18 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                     clientDeltaRApplied.y *= Math.abs(clientDeltaRApplied.y);
                     clientDeltaRApplied.z *= Math.abs(clientDeltaRApplied.z);
                     clientDeltaRApplied.scale(1D / 25D);
-                    if (clientDeltaRApplied.x < -5) clientDeltaRApplied.x = -5;
-                    if (clientDeltaRApplied.x > 5) clientDeltaRApplied.x = 5;
-                    if (clientDeltaRApplied.y < -5) clientDeltaRApplied.y = -5;
-                    if (clientDeltaRApplied.y > 5) clientDeltaRApplied.y = 5;
-                    if (clientDeltaRApplied.z < -5) clientDeltaRApplied.z = -5;
-                    if (clientDeltaRApplied.z > 5) clientDeltaRApplied.z = 5;
+                    if (clientDeltaRApplied.x < -5)
+                        clientDeltaRApplied.x = -5;
+                    if (clientDeltaRApplied.x > 5)
+                        clientDeltaRApplied.x = 5;
+                    if (clientDeltaRApplied.y < -5)
+                        clientDeltaRApplied.y = -5;
+                    if (clientDeltaRApplied.y > 5)
+                        clientDeltaRApplied.y = 5;
+                    if (clientDeltaRApplied.z < -5)
+                        clientDeltaRApplied.z = -5;
+                    if (clientDeltaRApplied.z > 5)
+                        clientDeltaRApplied.z = 5;
                     clientDeltaR.add(clientDeltaRApplied);
                     orientation.angles.add(clientDeltaRApplied);
                     orientation.updateToAngles();
@@ -845,7 +835,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
 
                 //If this is the 20th tick (1 second), and we are on the client, request a sync packet.
                 //This ensures that we have the proper deltas and didn't miss any updates from the server
-                //since we were spawned.
+                //since we were spanwed.
                 if (ticksExisted == 100 && world.isClient()) {
                     //TODO this seems to cause more issues than it fixes, because it can come any time during server packets.
                     //This results in incorrect delta application and the system doesn't know if it missed a sync packet or not.
@@ -863,7 +853,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
             //Rotation for mounted connections aligns using orientation, not angle-deltas.
             orientation.set(rotation).convertToAngles();
 
-            //For syncing, just add our deltas. We don't actually do sync operations here.
+            //For syncing, just add our deltas.  We don't actually do syncing operations here.
             if (world.isClient()) {
                 clientDeltaM.add(motionApplied);
                 rotationApplied.angles.set(orientation.angles).subtract(prevOrientation.angles).clamp180();
@@ -876,7 +866,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     }
 
     /**
-     * Checks if we have a collided collision box. If so, true is returned.
+     *  Checks if we have a collided collision box.  If so, true is returned.
      */
     private boolean isCollisionBoxCollided() {
         if (motion.length() > 0.001) {
@@ -893,14 +883,14 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     }
 
     /**
-     * If a collision box collided, we need to restrict our proposed movement.
-     * Do this by removing motions that cause collisions.
-     * If the motion has a value of 0, skip it as it couldn't have caused the collision.
-     * Note that even though motionY may have been adjusted for ground device operation prior to this call,
-     * we shouldn't have an issue with the change as this logic takes priority over that logic to ensure
-     * no collision box collides with another block, even if it requires all the ground devices to be collided.
-     * If true is returned here, it means this vehicle was destroyed in a collision, and no further processing should
-     * be done on it as states may be un-defined.
+     *  If a collision box collided, we need to restrict our proposed movement.
+     *  Do this by removing motions that cause collisions.
+     *  If the motion has a value of 0, skip it as it couldn't have caused the collision.
+     *  Note that even though motionY may have been adjusted for ground device operation prior to this call,
+     *  we shouldn't have an issue with the change as this logic takes priority over that logic to ensure 
+     *  no collision box collides with another block, even if it requires all the ground devices to be collided.
+     *  If true is returned here, it means this vehicle was destroyed in a collision, and no further processing should
+     *  be done on it as states may be un-defined.
      */
     private boolean correctCollidingMovement() {
         //First check the X-axis.
@@ -1014,13 +1004,13 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     protected abstract double getSteeringAngle();
 
     /**
-     * Adds to the steering angle. Passed-in value is the number
-     * of degrees to add. Clamping may be applied if required.
+     * Adds to the steering angle.  Passed-in value is the number
+     * of degrees to add.  Clamping may be applied if required.
      * Note: this will only be called on the server from internal
-     * methods. Clients should be sent a packet based on the
+     * methods.  Clients should be sent a packet based on the
      * actual state changes.
      */
-    protected abstract void addToSteeringAngle(float degrees);
+    protected abstract void addToSteeringAngle(double degrees);
 
     /**
      * Method block for force and motion calculations.

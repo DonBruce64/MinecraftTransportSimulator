@@ -1,22 +1,31 @@
 package minecrafttransportsimulator.items.instances;
 
+import java.util.List;
+
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable.PlayerOwnerState;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
-import minecrafttransportsimulator.entities.instances.*;
+import minecrafttransportsimulator.entities.instances.APart;
+import minecrafttransportsimulator.entities.instances.EntityFluidTank;
+import minecrafttransportsimulator.entities.instances.EntityFurnace;
+import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
+import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
+import minecrafttransportsimulator.entities.instances.PartInteractable;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.components.IItemVehicleInteractable;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
-import minecrafttransportsimulator.mcinterface.*;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketFurnaceFuelAdd;
 import minecrafttransportsimulator.packets.instances.PacketItemInteractable;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.systems.ConfigSystem;
-
-import java.util.List;
 
 public class ItemPartInteractable extends AItemPart implements IItemVehicleInteractable {
 
@@ -30,8 +39,8 @@ public class ItemPartInteractable extends AItemPart implements IItemVehicleInter
     }
 
     @Override
-    public PartInteractable createPart(AEntityF_Multipart<?> entity, IWrapperPlayer placingPlayer, JSONPartDefinition packVehicleDef, IWrapperNBT partData, APart parentPart) {
-        return new PartInteractable(entity, placingPlayer, packVehicleDef, partData, parentPart);
+    public PartInteractable createPart(AEntityF_Multipart<?> entity, IWrapperPlayer placingPlayer, JSONPartDefinition packVehicleDef, IWrapperNBT partData) {
+        return new PartInteractable(entity, placingPlayer, packVehicleDef, partData);
     }
 
     @Override
@@ -70,14 +79,14 @@ public class ItemPartInteractable extends AItemPart implements IItemVehicleInter
                 if (rightClick) {
                     IWrapperItemStack stack = player.getHeldStack();
                     IWrapperNBT data = stack.getData();
-                    String jerrycanFluid = data.getString("jerrycanFluid");
+                    String jerrrycanFluid = data.getString("jerrycanFluid");
 
                     //If we clicked a tank on the vehicle, attempt to pull from it rather than fill the vehicle.
                     //Unless this is a liquid furnace, in which case we fill that instead.
                     if (part instanceof PartInteractable) {
                         EntityFluidTank tank = ((PartInteractable) part).tank;
                         if (tank != null) {
-                            if (jerrycanFluid.isEmpty()) {
+                            if (jerrrycanFluid.isEmpty()) {
                                 if (tank.getFluidLevel() >= 1000) {
                                     data.setString("jerrycanFluid", tank.getFluid());
                                     stack.setData(data);
@@ -87,10 +96,10 @@ public class ItemPartInteractable extends AItemPart implements IItemVehicleInter
                         }
 
                         EntityFurnace furnace = ((PartInteractable) part).furnace;
-                        if (furnace != null && !jerrycanFluid.isEmpty()) {
-                            if (ConfigSystem.settings.fuel.fuels.get(EntityFurnace.FURNACE_FUEL_NAME).containsKey(jerrycanFluid)) {
+                        if (furnace != null && !jerrrycanFluid.isEmpty()) {
+                            if (ConfigSystem.settings.fuel.fuels.get(EntityFurnace.FURNACE_FUEL_NAME).containsKey(jerrrycanFluid)) {
                                 //Packet assumes we add at 0, need to "fool" it.
-                                int addedFuel = (int) (ConfigSystem.settings.fuel.fuels.get(EntityFurnace.FURNACE_FUEL_NAME).get(jerrycanFluid) * 1000 * 20 * furnace.definition.furnaceEfficiency);
+                                int addedFuel = (int) (ConfigSystem.settings.fuel.fuels.get(EntityFurnace.FURNACE_FUEL_NAME).get(jerrrycanFluid) * 1000 * 20 * furnace.definition.furnaceEfficiency);
                                 int priorFuel = furnace.ticksLeftOfFuel;
                                 furnace.ticksLeftOfFuel = addedFuel;
                                 InterfaceManager.packetInterface.sendToAllClients(new PacketFurnaceFuelAdd(furnace));
@@ -104,12 +113,12 @@ public class ItemPartInteractable extends AItemPart implements IItemVehicleInter
                                 player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_JERRYCAN_WRONGTYPE));
                             }
                         }
-                    } else if (!jerrycanFluid.isEmpty()) {
-                        if (vehicle.fuelTank.getFluid().isEmpty() || vehicle.fuelTank.getFluid().equals(jerrycanFluid)) {
+                    } else if (!jerrrycanFluid.isEmpty()) {
+                        if (vehicle.fuelTank.getFluid().isEmpty() || vehicle.fuelTank.getFluid().equals(jerrrycanFluid)) {
                             if (vehicle.fuelTank.getFluidLevel() + 1000 > vehicle.fuelTank.getMaxLevel()) {
                                 player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_JERRYCAN_TOOFULL));
                             } else {
-                                vehicle.fuelTank.fill(jerrycanFluid, 1000, true);
+                                vehicle.fuelTank.fill(jerrrycanFluid, 1000, true);
                                 data.setString("jerrycanFluid", "");
                                 stack.setData(data);
                                 player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_JERRYCAN_SUCCESS));

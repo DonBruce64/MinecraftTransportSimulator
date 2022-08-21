@@ -1,22 +1,21 @@
 package minecrafttransportsimulator.baseclasses;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 
-import java.util.HashMap;
-import java.util.Map;
-
-/**
- * Beacon class. Responsible for containing the state of a beacon, which includes
+/**Beacon class.  Responsible for containing the state of a beacon, which includes
  * the beacon's position, and other properties.
- *
+ * 
  * @author don_bruce
  */
 public class NavBeacon {
     private static final String BEACON_LISTING_KEY = "beacons";
-    private static final Map<AWrapperWorld, Map<String, NavBeacon>> cachedBeaconMaps = new HashMap<>();
+    private static final Map<AWrapperWorld, Map<String, NavBeacon>> cachedBeaconMaps = new HashMap<AWrapperWorld, Map<String, NavBeacon>>();
 
     public final String name;
     public final double glideSlope;
@@ -27,7 +26,7 @@ public class NavBeacon {
         if (!cachedBeaconMaps.containsKey(world)) {
             IWrapperNBT beaconListing = world.getData(BEACON_LISTING_KEY);
             if (beaconListing != null) {
-                Map<String, NavBeacon> beaconMap = new HashMap<>();
+                Map<String, NavBeacon> beaconMap = new HashMap<String, NavBeacon>();
                 for (String beaconName : beaconListing.getAllNames()) {
                     beaconMap.put(beaconName, new NavBeacon(beaconListing.getData(beaconName)));
                 }
@@ -72,16 +71,20 @@ public class NavBeacon {
         }
         beaconListing.setData(name, save(InterfaceManager.coreInterface.getNewNBTWrapper()));
         world.setData(BEACON_LISTING_KEY, beaconListing);
-        cachedBeaconMaps.remove(world);
+        if (cachedBeaconMaps.containsKey(world)) {
+            cachedBeaconMaps.remove(world);
+        }
     }
 
     public double getBearingDelta(AEntityB_Existing entity) {
         //Add 180 to the bearing, as players enter the direction to land, but the bearing delta needs to return the
-        //delta between the entity and the beacon's "beam". This requires the beam to be opposite of the landing direction.
+        //delta between the entity and the beacon's "beam".  This requires the beam to be opposite of the landing direction.
         //Normally we'd subtract the bearing here, but MC inverts y-coords, so players enter the bearing backwards.
         double delta = Math.toDegrees(Math.atan2(entity.position.x - position.x, entity.position.z - position.z)) + bearing + 180;
-        while (delta < -180) delta += 360;
-        while (delta > 180) delta -= 360;
+        while (delta < -180)
+            delta += 360;
+        while (delta > 180)
+            delta -= 360;
         return delta;
     }
 

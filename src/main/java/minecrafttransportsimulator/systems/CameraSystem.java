@@ -5,18 +5,17 @@ import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
-import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
+import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.jsondefs.JSONCameraObject;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 
-/**
- * System for handling camera zoom, position, and overlays. Note that actual overlay
+/**System for handling camera zoom, position, and overlays.  Note that actual overlay
  * rendering is left up to the interface: this class only maintains which overlay
- * needs to be rendered, if any.
+ * needs to be rendered, if any. 
  *
  * @author don_bruce
  */
@@ -32,7 +31,7 @@ public class CameraSystem {
     private static final Point3D cameraOffset = new Point3D();
 
     /**
-     * Adjusts the camera zoom, zooming in or out depending on the flag.
+     *  Adjusts the camera zoom, zooming in or out depending on the flag.
      */
     public static void changeCameraZoom(boolean zoomIn) {
         if (zoomIn && zoomLevel > 0) {
@@ -45,22 +44,22 @@ public class CameraSystem {
     /**
      * Call to have the camera position and rotation set to whatever the camera system required.
      * Passed-in position and rotation should be zero, and will be set to the desired position
-     * and rotation, or left at zero if no transforms are required. The important thing is
+     * and rotation, or left at zero if no transforms are required.  The important thing is
      * that after calling this method, no other camera modification operations are performed
-     * and the camera is set to the position and rotation that were passed in. We may or may not
-     * specify an overlay for {@link #customCameraOverlay}.
-     * This is assured to not change until this method is next called. If we want to use global
-     * transforms for the camera, return true. If we only offset the camera and want to keep its
+     * and the camera is set to the position and rotation that were passed in.  We may or may not 
+     * specify an overlay for {@link #customCameraOverlay}.  
+     * This is assured to not change until this method is next called.  If we want to use global
+     * transforms for the camera, return true.  If we only offset the camera and want to keep its 
      * frame of reference and use local transformations rather than global, return false.
      */
     public static boolean adjustCamera(IWrapperPlayer player, Point3D cameraAdjustedPosition, TransformationMatrix cameraOrientation, float partialTicks) {
         //Get variables.
         AEntityE_Interactable<?> ridingEntity = player.getEntityRiding();
-        AEntityF_Multipart<?> multipart = ridingEntity instanceof AEntityF_Multipart ? (AEntityF_Multipart<?>) ridingEntity : null;
-        PartSeat sittingSeat = multipart != null ? multipart.getSeatForRider(player) : null;
+        PartSeat sittingSeat = ridingEntity instanceof PartSeat ? (PartSeat) ridingEntity : null;
+        EntityVehicleF_Physics ridingVehicle = sittingSeat != null ? sittingSeat.vehicleOn : null;
         EntityPlayerGun playerGunEntity = EntityPlayerGun.playerClientGuns.get(player.getID());
 
-        //Reset FOV adn overlay.
+        //Reset FOV and overlay.
         if (!enableCustomCameras && currentFOV != 0) {
             InterfaceManager.clientInterface.setFOV(currentFOV);
             currentFOV = 0;
@@ -91,14 +90,14 @@ public class CameraSystem {
                 AEntityD_Definable<?> cameraProvider = null;
                 AnimationSwitchbox switchbox = null;
 
-                if (multipart != null) {
-                    camera = checkProviderForCameras(multipart, partialTicks);
+                if (ridingVehicle != null) {
+                    camera = checkProviderForCameras(ridingVehicle, partialTicks);
                     if (camera != null) {
-                        cameraProvider = multipart;
-                        switchbox = multipart.cameraSwitchboxes.get(camera);
+                        cameraProvider = ridingVehicle;
+                        switchbox = ridingVehicle.cameraSwitchboxes.get(camera);
                     }
                     if (camera == null) {
-                        for (APart part : multipart.parts) {
+                        for (APart part : ridingVehicle.allParts) {
                             camera = checkProviderForCameras(part, partialTicks);
                             if (camera != null) {
                                 cameraProvider = part;
@@ -115,7 +114,7 @@ public class CameraSystem {
                     }
                 }
 
-                //If we found a camera, use it. If not, turn off custom cameras and go back to first-person mode.
+                //If we found a camera, use it.  If not, turn off custom cameras and go back to first-person mode.
                 if (camera != null) {
                     //Set current overlay for future calls.
                     customCameraOverlay = camera.overlay != null ? camera.overlay + ".png" : null;
@@ -153,7 +152,7 @@ public class CameraSystem {
                         cameraOrientation.applyRotation(camera.rot);
                     }
 
-                    //Rotational portion is good. Finally, get the offset from the player to the provider origin.
+                    //Rotational portion is good.  Finally, get the offset from the player to the provider origin.
                     //This is required as that's the camera's reference point.
                     //However, the math is in global space so just add to our offset.
                     cameraOffset.set(cameraProvider.prevPosition).interpolate(cameraProvider.position, partialTicks).subtract(player.getRenderedPosition(partialTicks));
@@ -162,7 +161,7 @@ public class CameraSystem {
                     return true;
                 }
 
-                //We aren't running a custom camera. Set running variable to false.
+                //We wern't running a custom camera.  Set running variable to false.
                 enableCustomCameras = false;
                 runningCustomCameras = false;
             } else if (sittingSeat != null) {
@@ -174,15 +173,16 @@ public class CameraSystem {
                 cameraOrientation.applyRotation(player.getOrientation());
                 return true;
             } else {
-                //No custom camera, and no seat camera modifications. Standard world view.
+                //No custom camera, and no seat camera modifications.  Standard world view.
+                enableCustomCameras = false;
                 runningCustomCameras = false;
                 return false;
             }
         } else if (InterfaceManager.clientInterface.inThirdPerson()) {
             //If we were running a custom camera, and hit the switch key, increment our camera index.
             //We then go back to first-person to render the proper camera.
-            //If we weren't running a custom camera, try running one. This will become active when we
-            //go back into first-person mode. This only has an effect if we are riding an entity.
+            //If we weren't running a custom camera, try running one.  This will become active when we
+            //go back into first-person mode.  This only has an effect if we are riding an entity.
             if (runningCustomCameras) {
                 if (InterfaceManager.clientInterface.changedCameraState()) {
                     ++customCameraIndex;
@@ -193,7 +193,7 @@ public class CameraSystem {
                 enableCustomCameras = true;
                 customCameraIndex = 0;
 
-                //Add the zoom offset for third-person view. This takes hold if we don't have any custom cameras.
+                //Add the zoom offset for third-person view.  This takes hold if we don't have any custom cameras.
                 sittingSeat.getRiderInterpolatedOrientation(cameraOrientation, partialTicks);
                 double eyeHeight = player.getEyeHeight();
                 double seatOffset = player.getSeatOffset();
@@ -210,10 +210,10 @@ public class CameraSystem {
             //If we do have custom cameras, use them instead.
             if (sittingSeat != null) {
                 if (InterfaceManager.clientInterface.changedCameraState()) {
-                    if (multipart.definition.rendering.cameraObjects != null) {
+                    if (ridingVehicle.definition.rendering.cameraObjects != null) {
                         InterfaceManager.clientInterface.toggleFirstPerson();
                     } else {
-                        for (APart part : multipart.parts) {
+                        for (APart part : ridingVehicle.allParts) {
                             if (part.definition.rendering != null && part.definition.rendering.cameraObjects != null) {
                                 InterfaceManager.clientInterface.toggleFirstPerson();
                                 break;

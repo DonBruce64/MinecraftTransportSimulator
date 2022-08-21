@@ -1,9 +1,11 @@
 {
     "_comment": "Translated by don_bruce",
+
     "advancements.mts.root.title": "Immersive Vehicles (MTS)",
     "advancements.mts.root.description": "Start your journey into powered transport!",
     "advancements.mts.rtfm.title": "RTFM",
     "advancements.mts.rtfm.description": "Craft a Manual",
+
     "advancements.mts.custombench.title": "Custom Parts",
     "advancements.mts.custombench.description": "Create a Tool Bench",
     "advancements.mts.decorbench.title": "I Thought This Was Decocraft..",
@@ -16,7 +18,7 @@
     "advancements.mts.instrumentbench.description": "Create an Instrument Bench",
     "advancements.mts.itembench.title": "You Can Buy Anything Online",
     "advancements.mts.itembench.description": "Create an Item Bench",
-    "advancements.mts.propellerbench.title": "Prop wash",
+    "advancements.mts.propellerbench.title": "Propwash",
     "advancements.mts.propellerbench.description": "Create a Propeller Bench",
     "advancements.mts.seatbench.title": "Seats, Supplies, and Storage",
     "advancements.mts.seatbench.description": "Create a Table Saw",
@@ -24,6 +26,7 @@
     "advancements.mts.vehiclebench.description": "Create a Drafting Bench",
     "advancements.mts.wheelbench.title": "Moving on the Ground (or Water)",
     "advancements.mts.wheelbench.description": "Create a Wheel Workbench",
+
     "advancements.mts.fuelhose.title": "Transfer Time",
     "advancements.mts.fuelhose.description": "Create a fuel hose",
     "advancements.mts.fuelpump.title": "Fill 'Er Up",
@@ -43,5 +46,5 @@
     "advancements.mts.ticket.title": "Ticket to Ride",
     "advancements.mts.ticket.description": "Create a Ticket to load entities into vehicles",
     "advancements.mts.wrench.title": "Better Than Duct Tape",
-    "advancements.mts.wrench.description": "Create a wrench for repairing vehicles"
+    "advancements.mts.wrench.description": "Create a wrench for reparing vehicles"
 }

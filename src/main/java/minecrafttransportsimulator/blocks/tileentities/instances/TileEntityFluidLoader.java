@@ -12,7 +12,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 
 public class TileEntityFluidLoader extends ATileEntityLoader implements ITileEntityFluidTankProvider {
-    private final EntityFluidTank tank;
+    private EntityFluidTank tank;
 
     public TileEntityFluidLoader(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, IWrapperNBT data) {
         super(world, position, placingPlayer, data);
@@ -70,7 +70,6 @@ public class TileEntityFluidLoader extends ATileEntityLoader implements ITileEnt
             updateNearestPart();
         }
     }
-
 
     @Override
     public EntityFluidTank getTank() {

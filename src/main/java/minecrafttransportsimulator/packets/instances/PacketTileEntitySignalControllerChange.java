@@ -7,12 +7,11 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
-/**
- * Packet sent to signal controllers when the confirm button is clicked in the controller GUI to update their state.
- * This packet arrives on the server and sets the states of the controller as if it was loaded from NBT. These states
- * are then loaded and sent to all clients to keep them in-sync. While the NBT has some overhead due to saving non-essential
+/**Packet sent to signal controllers when the confirm button is clicked in the controller GUI to update their state.
+ * This packet arrives on the server and sets the states of the controller as if it was loaded from NBT.  These states
+ * are then loaded and sent to all clients to keep them in-sync.  While the NBT has some overhead due to saving non-essential
  * variables, it's far less work than the alternative of specifying the entire parameter list.
- *
+ * 
  * @author don_bruce
  */
 public class PacketTileEntitySignalControllerChange extends APacketEntity<TileEntitySignalController> {

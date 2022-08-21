@@ -5,10 +5,9 @@ import minecrafttransportsimulator.entities.instances.PartGroundDevice;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
-/**
- * Packet used to send signals to ground devices. Currently only used to make wheel-typed
+/**Packet used to send signals to ground devices.  Currently only used to make wheel-typed
  * ground devices flat on clients after they have been set as such on the server.
- *
+ * 
  * @author don_bruce
  */
 public class PacketPartGroundDevice extends APacketEntity<PartGroundDevice> {

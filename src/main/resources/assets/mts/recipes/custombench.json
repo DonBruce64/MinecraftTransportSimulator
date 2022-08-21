@@ -1,20 +1,15 @@
 {
     "type": "minecraft:crafting_shaped",
-    "pattern": [
+    "pattern":[
         "aaa",
         "aba",
         "aaa"
     ],
-    "key": {
-        "a": {
-            "type": "forge:ore_dict",
-            "ore": "ingotIron"
-        },
-        "b": {
-            "item": "minecraft:crafting_table"
-        }
+    "key":{
+        "a":{"type": "forge:ore_dict", "ore": "ingotIron"},
+		"b":{"item": "minecraft:crafting_table"}
     },
-    "result": {
+    "result":{
         "item": "mts:mts.custombench"
     }
 }

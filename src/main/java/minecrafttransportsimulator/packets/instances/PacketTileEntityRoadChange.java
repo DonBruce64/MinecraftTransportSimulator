@@ -9,11 +9,10 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.packets.components.APacketEntityInteract;
 import minecrafttransportsimulator.packloading.PackParser;
 
-/**
- * Packet sent to roads to change their states. This gets sent when a player clicks a road on the client.
+/**Packet sent to roads to change their states.  This gets sent when a player clicks a road on the client.
  * Packet is sent to the server to change the road state to match what item the player is holding.
- * If the player isn't holding an item, they may have wrenched the component to remove it.
- *
+ * If the player isn't holding an item, they may have wreneched the component to remove it.
+ * 
  * @author don_bruce
  */
 public class PacketTileEntityRoadChange extends APacketEntityInteract<TileEntityRoad, IWrapperPlayer> {
@@ -52,7 +51,7 @@ public class PacketTileEntityRoadChange extends APacketEntityInteract<TileEntity
     @Override
     protected boolean handle(AWrapperWorld world, TileEntityRoad road, IWrapperPlayer player) {
         if (componentItem != null) {
-            //Player clicked with a component. Add/change it.
+            //Player clicked with a component.  Add/change it.
             road.components.put(componentType, componentItem);
             if (!player.isCreative()) {
                 player.getInventory().removeFromSlot(player.getHotbarIndex(), 1);

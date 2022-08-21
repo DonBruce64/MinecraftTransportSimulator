@@ -1,11 +1,14 @@
 package minecrafttransportsimulator.entities.instances;
 
-import minecrafttransportsimulator.baseclasses.*;
+import java.util.HashSet;
+import java.util.Set;
+
+import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.ColorRGB;
+import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.TowingConnection;
+import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityG_Towable;
-import minecrafttransportsimulator.items.components.AItemBase;
-import minecrafttransportsimulator.items.components.AItemPart;
-import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
-import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
@@ -15,16 +18,11 @@ import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncreme
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
-import java.util.HashSet;
-import java.util.Map.Entry;
-import java.util.Set;
-
-/**
- * This class adds the final layer of physics calculations on top of the
- * existing entity calculations. Various control surfaces are present, as
+/**This class adds the final layer of physics calculations on top of the
+ * existing entity calculations.  Various control surfaces are present, as
  * well as helper functions and logic for controlling those surfaces.
  * Note that angle variables here should be divided by 10 to get actual angle.
- *
+ * 
  * @author don_bruce
  */
 public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
@@ -95,7 +93,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     private final Point3D sideVector = new Point3D();
     private final Point3D hitchPrevOffset = new Point3D();
     private final Point3D hitchCurrentOffset = new Point3D();
-    private final Set<AEntityG_Towable<?>> towedEntitiesCheckedForWeights = new HashSet<>();
+    private final Set<AEntityG_Towable<?>> towedEntitiesCheckedForWeights = new HashSet<AEntityG_Towable<?>>();
 
     //Properties.
     @ModifiedValue
@@ -114,18 +112,6 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     public float currentBallastVolume;
     @ModifiedValue
     public float currentAxleRatio;
-    @ModifiedValue
-    public float currentRollAngle;
-    @ModifiedValue
-    public float currentPitchAngle;
-    @ModifiedValue
-    public float currentYawAngle;
-    @ModifiedValue
-    public float currentRollForce;
-    @ModifiedValue
-    public float currentPitchForce;
-    @ModifiedValue
-    public float currentYawForce;
 
     //Coefficients.
     private double wingLiftCoeff;
@@ -142,8 +128,8 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     private double rudderForce;//kg*m/ticks^2
     private double ballastForce;//kg*m/ticks^2
     private double gravitationalForce;//kg*m/ticks^2
-    private final Point3D thrustForce = new Point3D();//kg*m/ticks^2
-    private final Point3D totalForce = new Point3D();//kg*m/ticks^2
+    private Point3D thrustForce = new Point3D();//kg*m/ticks^2
+    private Point3D totalForce = new Point3D();//kg*m/ticks^2
 
     //Torques.
     private double momentRoll;//kg*m^2
@@ -152,10 +138,9 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     private double aileronTorque;//kg*m^2/ticks^2
     private double elevatorTorque;//kg*m^2/ticks^2
     private double rudderTorque;//kg*m^2/ticks^2
-    private final Point3D thrustTorque = new Point3D();//kg*m^2/ticks^2
-    private final Point3D totalTorque = new Point3D();//kg*m^2/ticks^2
-    private final Point3D rotorRotation = new Point3D();//degrees
-
+    private Point3D thrustTorque = new Point3D();//kg*m^2/ticks^2
+    private Point3D totalTorque = new Point3D();//kg*m^2/ticks^2
+    private Point3D rotorRotation = new Point3D();//degrees
 
     public EntityVehicleF_Physics(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data) {
         super(world, placingPlayer, data);
@@ -197,11 +182,11 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
 
     @Override
     public double getMass() {
-        //Need to use a list here to make sure we don't end up with infinite recursion due to bad trailer links.
+        //Need to use a list here to make sure we don't end up with infinite recursion due to bad trailer linkings.
         //This could lock up a world if not detected!
         double combinedMass = super.getMass();
         if (!towingConnections.isEmpty()) {
-            AEntityG_Towable<?> towedEntity;
+            AEntityG_Towable<?> towedEntity = null;
             for (TowingConnection connection : towingConnections) {
                 //Only check once per base entity.
                 towedEntity = connection.towedVehicle;
@@ -225,9 +210,9 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     }
 
     @Override
-    protected void addToSteeringAngle(float degrees) {
+    protected void addToSteeringAngle(double degrees) {
         //Invert the degrees, as rudder is inverted from normal steering.
-        double delta;
+        double delta = 0;
         if (rudderInput - degrees > MAX_RUDDER_ANGLE) {
             delta = MAX_RUDDER_ANGLE - rudderInput;
         } else if (rudderInput - degrees < -MAX_RUDDER_ANGLE) {
@@ -253,12 +238,6 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         currentOverSteer = definition.motorized.overSteer;
         currentUnderSteer = definition.motorized.underSteer;
         currentAxleRatio = definition.motorized.axleRatio;
-        currentRollAngle = definition.motorized.rollAngle;
-		currentPitchAngle = definition.motorized.pitchAngle;
-		currentYawAngle = definition.motorized.yawAngle;
-		currentRollForce = definition.motorized.rollForce;
-		currentPitchForce = definition.motorized.pitchForce;
-		currentYawForce = definition.motorized.yawForce;
         aileronAngle = aileronInput;
         setVariable(AILERON_VARIABLE, aileronAngle);
         elevatorAngle = elevatorInput;
@@ -306,24 +285,6 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                     case "axleRatio":
                         currentAxleRatio = adjustVariable(modifier, currentAxleRatio);
                         break;
-                    case "rollAngle":
-                        currentRollAngle = adjustVariable(modifier, currentRollAngle);
-                        break;
-					case "pitchAngle":
-                        currentPitchAngle = adjustVariable(modifier, currentPitchAngle);
-                        break;
-					case "yawAngle":
-                        currentYawAngle = adjustVariable(modifier, currentYawAngle);
-                        break;
-					case "rollForce":
-                        currentRollForce = adjustVariable(modifier, currentRollForce);
-                        break;
-					case "pitchForce":
-                        currentPitchForce = adjustVariable(modifier, currentPitchForce);
-                        break;
-					case "yawForce":
-                        currentYawForce = adjustVariable(modifier, currentYawForce);
-                        break;
                     case AILERON_VARIABLE:
                         aileronAngle = adjustVariable(modifier, (float) aileronAngle);
                         setVariable(AILERON_VARIABLE, aileronAngle);
@@ -344,10 +305,9 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         }
     }
 
-    @SuppressWarnings("UnnecessaryContinue")
     @Override
     protected void getForcesAndMotions() {
-        //If we are free, do normal updates. But if we are towed by a vehicle, do trailer forces instead.
+        //If we are free, do normal updates.  But if we are towed by a vehicle, do trailer forces instead.
         //This prevents trailers from behaving badly and flinging themselves into the abyss.
         if (towedByConnection == null) {
             //Set moments and air density.
@@ -361,13 +321,13 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             thrustForce.set(0, 0, 0);
             thrustTorque.set(0, 0, 0);
             rotorRotation.set(0, 0, 0);
-            for (APart part : parts) {
+            for (APart part : allParts) {
                 if (part instanceof PartEngine) {
                     ((PartEngine) part).addToForceOutput(thrustForce, thrustTorque);
                 } else if (part instanceof PartPropeller) {
                     PartPropeller propeller = (PartPropeller) part;
                     propeller.addToForceOutput(thrustForce, thrustTorque);
-                    if (propeller.definition.propeller.isRotor && propeller.angularVelocity > 0 && groundDeviceCollective.isAnythingOnGround()) {
+                    if (propeller.definition.propeller.isRotor && !groundDeviceCollective.isAnythingOnGround()) {
                         hasRotors = true;
                         if (getVariable(AUTOLEVEL_VARIABLE) != 0) {
                             rotorRotation.set((-(elevatorAngle + elevatorTrim) - orientation.angles.x) / MAX_ELEVATOR_ANGLE, -5D * rudderAngle / MAX_RUDDER_ANGLE, ((aileronAngle + aileronTrim) - orientation.angles.z) / MAX_AILERON_ANGLE);
@@ -398,20 +358,20 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                 }
             }
 
-            //Get forces. Some forces are specific to JSON sections.
+            //Get forces.  Some forces are specific to JSON sections.
             //First get gravity.
             gravitationalForce = currentBallastVolume == 0 ? currentMass * (9.8 / 400) : 0;
             if (!definition.motorized.isAircraft) {
                 gravitationalForce *= ConfigSystem.settings.general.gravityFactor.value;
             }
 
-            //Get the track angle. This is used for control surfaces.
+            //Get the track angle.  This is used for control surfaces.
             trackAngle = -Math.toDegrees(Math.asin(verticalVector.dotProduct(normalizedVelocityVector, true)));
 
             //Set blimp-specific states before calculating forces.
             if (definition.motorized.isBlimp) {
-                //Blimps are turned with rudders, not ailerons. This puts the keys at an odd location. To compensate,
-                //we set the rudder to the aileron if the aileron is greater or less than the rudder. That way no matter
+                //Blimps are turned with rudders, not ailerons.  This puts the keys at an odd location.  To compensate, 
+                //we set the rudder to the aileron if the aileron is greater or less than the rudder.  That way no matter 
                 //which key is pressed, they both activate the rudder for turning.
                 if ((aileronAngle < 0 && aileronAngle < rudderAngle) || (aileronAngle > 0 && aileronAngle > rudderAngle)) {
                     rudderAngle = aileronAngle;
@@ -480,13 +440,13 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             elevatorForce = 0.5F * airDensity * axialVelocity * axialVelocity * currentElevatorArea * elevatorLiftCoeff;
             rudderForce = 0.5F * airDensity * axialVelocity * axialVelocity * currentRudderArea * rudderLiftCoeff;
 
-            //Get torques. Point for ailerons is 0.75% to the edge of the wing.
+            //Get torques.  Point for ailerons is 0.75% to the edge of the wing.
             aileronTorque = aileronForce * currentWingSpan * 0.5F * 0.75F;
             elevatorTorque = elevatorForce * definition.motorized.tailDistance;
             rudderTorque = rudderForce * definition.motorized.tailDistance;
 
-            //If the elevator torque is low, don't apply it. This prevents elevators from
-            //having effects at slow speeds. We use a faux-torque here from the main plane
+            //If the elevator torque is low, don't apply it.  This prevents elevators from
+            //having effects at slow speeds.  We use a faux-torque here from the main plane
             //body to check if we are below this point.
             if (Math.abs(elevatorTorque) < 2D * currentMass / 400D) {
                 elevatorTorque = 0;
@@ -520,7 +480,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
 
             //As a special case, if the vehicle is a stalled plane, add a forwards pitch to allow the plane to right itself.
             //This is needed to prevent the plane from getting stuck in a vertical position and crashing.
-            if (currentWingArea > 0 && trackAngle > 40 && orientation.angles.x < 45 && motion.y < -0.1 && groundDeviceCollective.isAnythingOnGround()) {
+            if (currentWingArea > 0 && trackAngle > 40 && orientation.angles.x < 45 && motion.y < -0.1 && !groundDeviceCollective.isAnythingOnGround()) {
                 elevatorTorque += 100;
             }
 
@@ -566,7 +526,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                 //Need to apply both motion to move the trailer, and yaw to adjust the trailer's angle relative to the truck.
                 //Yaw is applied based on the current and next position of the truck's hookup.
                 //Motion is applied after yaw corrections to ensure the trailer follows the truck.
-                //Start by getting the hitch offsets. We save the current offset as we'll change it for angle calculations.
+                //Start by getting the hitch offsets.  We save the current offset as we'll change it for angle calculations.
                 //For these offsets, we want them to be local to our coordinates, as that is what system we will need to apply yaw in.
                 hitchPrevOffset.set(towedByConnection.hitchPriorPosition).subtract(prevPosition).reOrigin(orientation);
                 hitchCurrentOffset.set(towedByConnection.hitchCurrentPosition).subtract(position).reOrigin(orientation);
@@ -584,10 +544,10 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                 rotation.updateToAngles();
                 towedByConnection.hookupCurrentPosition.set(towedByConnection.hookupConnection.pos).multiply(towedByConnection.towedEntity.scale).rotate(towedByConnection.towedEntity.orientation).rotate(rotation).add(towedByConnection.towedEntity.position);
             }
-            //Now get positional delta. This assumes perfectly-aligned orientation.
+            //Now get positional delta.  This assumes perfectly-aligned orientation.				
             motion.set(towedByConnection.hitchCurrentPosition).subtract(towedByConnection.hookupCurrentPosition).scale(1 / speedFactor);
         } else {
-            //Towed vehicle on a road with towing vehicle. Just use same deltas.
+            //Towed vehicle on a road with towing vehicle.  Just use same deltas.
             motion.set(towedByConnection.towingVehicle.motion);
             rotation.angles.set(0, 0, 0);
         }
@@ -613,7 +573,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         }
 
         if (hasRotors) {
-            //Helicopter. Do auto-hover code if required.
+            //Helicopter.  Do auto-hover code if required.
             if (autopilotSetting != 0) {
                 //Change throttle to maintain altitude.
                 //Only do this once every 1/2 second to allow for thrust changes.
@@ -665,7 +625,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                 }
             }
         } else if (definition.motorized.isAircraft && autopilotSetting != 0) {
-            //Normal aircraft. Do autopilot operations if required.
+            //Normal aircraft.  Do autopilot operations if required.
             //If we are not flying at a steady elevation, angle the elevator to compensate
             if (-motion.y * 100 > elevatorTrim + 1 && elevatorTrim < MAX_ELEVATOR_TRIM) {
                 setVariable(ELEVATOR_TRIM_VARIABLE, elevatorTrim + 0.1);
@@ -749,16 +709,19 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             return towedByConnection.towingVehicle.getRawVariableValue(variable, partialTicks);
         }
 
-        //Not a part of a forwarded variable. Just return normally.
+        //Not a part of a forwarded variable.  Just return normally.
         switch (variable) {
             //Vehicle world state cases.
             case ("yaw"):
                 return orientation.angles.y;
             case ("heading"):
                 double heading = -orientation.angles.y;
-                if (ConfigSystem.client.controlSettings.north360.value) heading += 180;
-                while (heading < 0) heading += 360;
-                while (heading > 360) heading -= 360;
+                if (ConfigSystem.client.controlSettings.north360.value)
+                    heading += 180;
+                while (heading < 0)
+                    heading += 360;
+                while (heading > 360)
+                    heading -= 360;
                 return heading;
             case ("pitch"):
                 return orientation.angles.x;
@@ -853,52 +816,10 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             }
         }
 
-        //Not a vehicle variable or a part variable. We could have an error, but likely we have an older pack,
+        //Not a vehicle variable or a part variable.  We could have an error, but likely we have an older pack,
         //a closed door, a missing part, a custom variable that's not on, or something else entirely.
         //Just return super here.
         return super.getRawVariableValue(variable, partialTicks);
-    }
-
-    @Override
-    protected void renderHolographicBoxes(TransformationMatrix transform) {
-        //If we are holding a part, render the valid slots.
-        //If we are holding a scanner, render all slots.
-        world.beginProfiling("PartHoloboxes", true);
-        IWrapperPlayer player = InterfaceManager.clientInterface.getClientPlayer();
-        AItemBase heldItem = player.getHeldItem();
-        AItemPart heldPart = heldItem instanceof AItemPart ? (AItemPart) heldItem : null;
-        boolean holdingScanner = player.isHoldingItemType(ItemComponentType.SCANNER);
-        if (heldPart != null || holdingScanner) {
-            if (holdingScanner) {
-                for (Entry<BoundingBox, JSONPartDefinition> partSlotEntry : allPartSlotBoxes.entrySet()) {
-                    JSONPartDefinition placementDefinition = partSlotEntry.getValue();
-                    if (!areVariablesBlocking(placementDefinition, player) && (placementDefinition.validSubNames == null || placementDefinition.validSubNames.contains(subName))) {
-                        BoundingBox box = partSlotEntry.getKey();
-                        Point3D boxCenterDelta = box.globalCenter.copy().subtract(position);
-                        box.renderHolographic(transform, boxCenterDelta, ColorRGB.BLUE);
-                    }
-                }
-            } else {
-                for (Entry<BoundingBox, JSONPartDefinition> partSlotEntry : activePartSlotBoxes.entrySet()) {
-                    boolean isHoldingCorrectTypePart = false;
-                    boolean isHoldingCorrectParamPart = false;
-
-                    if (heldPart.isPartValidForPackDef(partSlotEntry.getValue(), subName, false)) {
-                        isHoldingCorrectTypePart = true;
-                        if (heldPart.isPartValidForPackDef(partSlotEntry.getValue(), subName, true)) {
-                            isHoldingCorrectParamPart = true;
-                        }
-                    }
-
-                    if (isHoldingCorrectTypePart) {
-                        BoundingBox box = partSlotEntry.getKey();
-                        Point3D boxCenterDelta = box.globalCenter.copy().subtract(position);
-                        box.renderHolographic(transform, boxCenterDelta, isHoldingCorrectParamPart ? ColorRGB.GREEN : ColorRGB.RED);
-                    }
-                }
-            }
-        }
-        world.endProfiling();
     }
 
     @Override

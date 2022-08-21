@@ -1,6 +1,18 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
-import minecrafttransportsimulator.baseclasses.*;
+import java.nio.FloatBuffer;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import minecrafttransportsimulator.baseclasses.BezierCurve;
+import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.ColorRGB;
+import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
+import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.instances.BlockCollision;
@@ -13,35 +25,31 @@ import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent.JSONLaneSector;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent.JSONRoadCollisionArea;
-import minecrafttransportsimulator.mcinterface.*;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityRoadCollisionUpdate;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
-import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.rendering.AModelParser;
 import minecrafttransportsimulator.rendering.RenderableObject;
+import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
-import java.nio.FloatBuffer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
-/**
- * Road tile entity. Contains the definition so we know how
+/**Road tile entity.  Contains the definition so we know how
  * to render this in the TESR call, as well as stores the "fake"
  * block positions of blocks that make up this road segment.
  * Optionally stores the next and prior road in the segment, if one exists.
  * This can be used to create smooth road segments.
  * Note that while the number of connection points is finite, there may be multiple
- * curves connected to and from each point. However, each road segment can only have
- * one curve from any one lane connection. Therefore, to make junctions you will have
+ * curves connected to and from each point.  However, each road segment can only have
+ * one curve from any one lane connection.  Therefore, to make junctions you will have
  * multiple segments connected to the same point, but each of those segments will only be
  * connected to that junction and nowhere else.
- * Also note that all points and positions are relative. This is done for simpler
- * math operations. Should the world-based point be needed, simply offset any relative
+ * Also note that all points and positions are relative.  This is done for simpler
+ * math operations.  Should the world-based point be needed, simply offset any relative
  * point by the position of this TE.
  *
  * @author don_bruce
@@ -53,10 +61,10 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
 
     //Dynamic variables based on states.
     private boolean isActive;
-    public final Map<RoadComponent, ItemRoadComponent> components = new HashMap<>();
-    public final Map<RoadComponent, RenderableObject> componentRenderables = new HashMap<>();
-    public final List<RenderableObject> devRenderables = new ArrayList<>();
-    public final List<BoundingBox> blockingBoundingBoxes = new ArrayList<>();
+    public final Map<RoadComponent, ItemRoadComponent> components = new HashMap<RoadComponent, ItemRoadComponent>();
+    public final Map<RoadComponent, RenderableObject> componentRenderables = new HashMap<RoadComponent, RenderableObject>();
+    public final List<RenderableObject> devRenderables = new ArrayList<RenderableObject>();
+    public final List<BoundingBox> blockingBoundingBoxes = new ArrayList<BoundingBox>();
     public final List<Point3D> collisionBlockOffsets;
     public final List<Point3D> collidingBlockOffsets;
 
@@ -70,7 +78,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
         //Get the active state.
         this.isActive = data.getBoolean("isActive");
 
-        //Load components back in. Our core component will always be our definition.
+        //Load components back in.  Our core component will always be our definition.
         for (RoadComponent componentType : RoadComponent.values()) {
             String packID = data.getString("packID" + componentType.name());
             if (!packID.isEmpty()) {
@@ -79,10 +87,10 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
                 components.put(componentType, newComponent);
             }
         }
-        components.put(definition.road.type, getItem());
+        components.put(definition.road.type, (ItemRoadComponent) getItem());
 
-        //Load curve and lane data. We may not have this yet if we're in the process of creating a new road.
-        this.lanes = new ArrayList<>();
+        //Load curve and lane data.  We may not have this yet if we're in the process of creating a new road.
+        this.lanes = new ArrayList<RoadLane>();
         Point3D startingOffset = data.getPoint3d("startingOffset");
         Point3D endingOffset = data.getPoint3d("endingOffset");
         if (!endingOffset.isZero()) {
@@ -103,7 +111,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
     public double getPlacementRotation(IWrapperPlayer player) {
         if (!definition.road.type.equals(RoadComponent.CORE_DYNAMIC)) {
             int clampAngle = getRotationIncrement();
-            //Normally blocks are placed facing us. For roads though, we want us to have the angles the player is facing.
+            //Normally blocks are placed facing us.  For roads though, we want us to have the angles the player is facing.
             return Math.round((player.getYaw()) / clampAngle) * clampAngle % 360;
         } else {
             return 0;
@@ -111,17 +119,17 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
     }
 
     /**
-     * Returns true if this road is active. Active roads may be considered
-     * to have all their collision blocks and no blocking blocks.
+     *  Returns true if this road is active.  Active roads may be considered
+     *  to have all their collision blocks and no blocking blocks.
      */
     public boolean isActive() {
         return isActive;
     }
 
     /**
-     * Sets this road as active or inactive. This happens after collision creation for
-     * setting it as active, or prior to destruction for inactive. This method should
-     * handle any logic that needs to happen once the block is active and valid.
+     *  Sets this road as active or inactive.  This happens after collision creation for
+     *  setting it as active, or prior to destruction for inactive.  This method should
+     *  handle any logic that needs to happen once the block is active and valid.
      */
     public void setActive(boolean active) {
         isActive = active;
@@ -171,7 +179,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
 
     @Override
     public boolean interact(IWrapperPlayer player) {
-        //Check if we aren't active. If not, try to spawn collision again.
+        //Check if we aren't active.  If not, try to spawn collision again.
         if (!isActive) {
             spawnCollisionBlocks(player);
             return true;
@@ -181,8 +189,8 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
     }
 
     /**
-     * Helper method to get information on what was clicked.
-     * Takes the player's rotation into account, as well as the block they clicked.
+     *  Helper method to get information on what was clicked.
+     *  Takes the player's rotation into account, as well as the block they clicked.
      */
     public RoadClickData getClickData(Point3D blockClicked, boolean curveStart) {
         Point3D blockOffsetClicked = blockClicked.copy().add(0.5, 0, 0.5).subtract(position);
@@ -191,7 +199,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
         if (!definition.road.type.equals(RoadComponent.CORE_DYNAMIC)) {
             double closestSectorDistance = Double.MAX_VALUE;
             for (RoadLane lane : lanes) {
-                //Only check start points. End points are for other sectors.
+                //Only check start points.  End points are for other sectors.
                 double distanceToSectorStart = lane.curves.get(0).startPos.distanceTo(blockClicked);
                 if (distanceToSectorStart < closestSectorDistance) {
                     closestSectorDistance = distanceToSectorStart;
@@ -203,9 +211,9 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
     }
 
     /**
-     * Helper method to populate the lanes for this road. This depends on if we are
-     * a static or dynamic road. Data is passed-in, but may be null if we're generating
-     * lanes for the first time.
+     *  Helper method to populate the lanes for this road.  This depends on if we are
+     *  a static or dynamic road.  Data is passed-in, but may be null if we're generating
+     *  lanes for the first time.
      */
     public void generateLanes(IWrapperNBT data) {
         int totalLanes = 0;
@@ -225,15 +233,15 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
     }
 
     /**
-     * Helper method to spawn collision boxes for this road. Returns true and makes
-     * this road non-holographic if the boxes could be spawned. False if there are
-     * blocking blocks. OP and creative-mode players override blocking block checks.
-     * Road width is considered to extend to the left and right border, minus 1/2 a block.
+     *  Helper method to spawn collision boxes for this road.  Returns true and makes
+     *  this road non-holographic if the boxes could be spawned.  False if there are
+     *  blocking blocks.  OP and creative-mode players override blocking block checks.
+     *  Road width is considered to extend to the left and right border, minus 1/2 a block.
      */
     protected Map<Point3D, Integer> generateCollisionPoints() {
         collisionBlockOffsets.clear();
         collidingBlockOffsets.clear();
-        Map<Point3D, Integer> collisionHeightMap = new HashMap<>();
+        Map<Point3D, Integer> collisionHeightMap = new HashMap<Point3D, Integer>();
         if (definition.road.type.equals(RoadComponent.CORE_DYNAMIC)) {
             //Get all the points that make up our collision points for our dynamic curve.
             //If we find any colliding points, note them.
@@ -243,12 +251,12 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
                 for (float offset = 0; offset <= definition.road.roadWidth; offset += segmentDelta) {
                     testOffset.set(offset, 0, 0).rotate(dynamicCurve.getRotationAt(f));
                     dynamicCurve.offsetPointByPositionAt(testOffset, f);
-                    testOffset.subtract(position);
+                    testOffset.subtract(position).add(0, definition.road.collisionHeight / 16F, 0);
                     Point3D testPoint = new Point3D((int) testOffset.x, (int) Math.floor(testOffset.y), (int) testOffset.z);
 
                     //If we don't have a block in this position, check if we need one.
                     if (!testPoint.isZero() && !collisionBlockOffsets.contains(testPoint) && !collidingBlockOffsets.contains(testPoint)) {
-                        //Offset the point to the global coordinate space, get the block, and offset back.
+                        //Offset the point to the global cordinate space, get the block, and offset back.
                         testPoint.add(position);
                         if (world.isAir(testPoint)) {
                             //Need a collision box here.
@@ -258,7 +266,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
 
                             collisionHeightMap.put(testPoint, collisionBoxIndex);
                         } else if (!(world.getBlock(testPoint) instanceof BlockCollision)) {
-                            //Some block is blocking us that's not part of a road. Flag it.
+                            //Some block is blocking us that's not part of a road.  Flag it.
                             testPoint.subtract(position);
                             collidingBlockOffsets.add(testPoint);
                         }
@@ -275,7 +283,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
                         testPoint.z = (int) testPoint.z;
 
                         if (!testPoint.isZero() && !collisionBlockOffsets.contains(testPoint) && !collidingBlockOffsets.contains(testPoint)) {
-                            //Offset the point to the global coordinate space, get the block, and offset back.
+                            //Offset the point to the global cordinate space, get the block, and offset back.
                             testPoint.add(position);
                             if (world.isAir(testPoint)) {
                                 //Need a collision box here.
@@ -283,7 +291,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
                                 collisionBlockOffsets.add(testPoint);
                                 collisionHeightMap.put(testPoint, collisionArea.collisionHeight == 16 ? 15 : collisionArea.collisionHeight);
                             } else if (!(world.getBlock(testPoint) instanceof BlockCollision)) {
-                                //Some block is blocking us that's not part of a road. Flag it.
+                                //Some block is blocking us that's not part of a road.  Flag it.
                                 testPoint.subtract(position);
                                 collidingBlockOffsets.add(testPoint);
                             }
@@ -296,9 +304,9 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
     }
 
     /**
-     * Method to spawn collision boxes for this road structure.
-     * Returns true and makes this TE active if all the boxes could be spawned.
-     * False if there are blocking blocks. OP and creative-mode players override blocking block checks.
+     *  Method to spawn collision boxes for this road structure.
+     *  Returns true and makes this TE active if all the boxes could be spawned.
+     *  False if there are blocking blocks.  OP and creative-mode players override blocking block checks.
      */
     public boolean spawnCollisionBlocks(IWrapperPlayer player) {
         Map<Point3D, Integer> collisionHeightMap = generateCollisionPoints();
@@ -325,6 +333,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
             //Render road components.
             for (RoadComponent component : components.keySet()) {
                 if (!componentRenderables.containsKey(component)) {
+                    ;
                     ItemRoadComponent componentItem = components.get(component);
                     switch (component) {
                         case CORE_STATIC: {
@@ -377,7 +386,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
                             boolean finalSegment = false;
                             float priorIndex = 0;
                             float currentIndex = 0;
-                            List<float[]> segmentVertices = new ArrayList<>();
+                            List<float[]> segmentVertices = new ArrayList<float[]>();
                             while (!finalSegment) {
                                 //If we are at the last index, do special logic to get the very end point.
                                 //We check here in case FPEs have accumulated and we won't end on the exact end segment.
@@ -419,7 +428,7 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
                                 for (int i = 0; i < parsedVertices.capacity(); i += 8) {
                                     float[] convertedVertexData = new float[8];
 
-                                    //Add the normals and UVs first. These won't change.
+                                    //Add the normals and UVs first.  These won't change.
                                     parsedVertices.get(convertedVertexData, 0, 5);
 
                                     //Now convert the XYZ points.
@@ -678,12 +687,12 @@ public class TileEntityRoad extends ATileEntityBase<JSONRoadComponent> {
     }
 
     /**
-     * Enums for part-specific stuff.
+     *  Enums for part-specific stuff.
      */
-    public enum RoadComponent {
-        @JSONDescription("The core component. This must be placed down before any other road components. This is a static component with defined lanes and collision.")
+    public static enum RoadComponent {
+        @JSONDescription("The core component.  This must be placed down before any other road components.  This is a static component with defined lanes and collision.")
         CORE_STATIC,
-        @JSONDescription("The core component. This must be placed down before any other road components. This is a dynamic component with flexible collision and lane paths, but defined lane counts and offsets.")
-        CORE_DYNAMIC
+        @JSONDescription("The core component.  This must be placed down before any other road components.  This is a dynamic component with flexible collision and lane paths, but defined lane counts and offsets.")
+        CORE_DYNAMIC;
     }
 }

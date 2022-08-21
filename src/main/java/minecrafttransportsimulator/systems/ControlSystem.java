@@ -2,7 +2,13 @@ package minecrafttransportsimulator.systems;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.entities.instances.*;
+import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
+import minecrafttransportsimulator.entities.instances.APart;
+import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
+import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
+import minecrafttransportsimulator.entities.instances.PartEngine;
+import minecrafttransportsimulator.entities.instances.PartGun;
+import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIPanelAircraft;
 import minecrafttransportsimulator.guis.instances.GUIPanelGround;
@@ -13,11 +19,15 @@ import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.packets.instances.*;
+import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
+import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
+import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
+import minecrafttransportsimulator.packets.instances.PacketPartGun;
+import minecrafttransportsimulator.packets.instances.PacketPartSeat;
+import minecrafttransportsimulator.packets.instances.PacketVehicleInteract;
 
-/**
- * Class that handles all control operations.
- *
+/**Class that handles all control operations.
+ * 
  * @author don_bruce
  */
 public final class ControlSystem {
@@ -34,12 +44,13 @@ public final class ControlSystem {
 
     private static BoundingBox closestBox = null;
     private static EntityVehicleF_Physics closestVehicle = null;
+    private static AEntityF_Multipart<?> closestEntity = null;
 
     /**
      * Static initializer for the IWrapper inputs, as we need to iterate through the enums to initialize them
-     * prior to using them in any of the methods contained in this IWrapper (because they'll be null).
+     * prior to using them in any of the methods contained in this IWrapper (cause they'll be null).
      * Joystick enums need to come first, as the Keyboard enums take them as constructor args.
-     * After we initialize the keyboard enums, we set their default values.
+     * After we initialize the keboard enums, we set their default values.
      * Once all this is done, save the results back to the disk to ensure the systems are synced.
      * Note that since this class won't be called until the world loads because we won't process inputs
      * out-of-world, it can be assumed that the ConfigSystem has already been initialized.
@@ -97,7 +108,6 @@ public final class ControlSystem {
         if (playerGun != null && playerGun.activeGun != null) {
             InterfaceManager.packetInterface.sendToServer(new PacketPartGun(playerGun.activeGun, clickingLeft, clickingRight));
         }
-        //Fire off un-click to vehicle last clicked.
         if (clickingLeft || clickingRight) {
             Point3D startPosition = player.getPosition();
             startPosition.y += (player.getEyeHeight() + player.getSeatOffset()) * player.getVerticalScale();
@@ -107,6 +117,7 @@ public final class ControlSystem {
 
             closestBox = null;
             closestVehicle = null;
+            closestEntity = null;
             for (EntityVehicleF_Physics vehicle : player.getWorld().getEntitiesOfType(EntityVehicleF_Physics.class)) {
                 if (vehicle.encompassingBox.intersects(clickBounds)) {
                     //Could have hit this vehicle, check if and what we did via raytracing.
@@ -115,14 +126,21 @@ public final class ControlSystem {
                             if (closestBox == null || startPosition.isFirstCloserThanSecond(box.globalCenter, closestBox.globalCenter)) {
                                 closestBox = box;
                                 closestVehicle = vehicle;
+                                closestEntity = vehicle.getPartWithBox(closestBox);
+                                if (closestEntity == null) {
+                                    closestEntity = closestVehicle;
+                                }
                             }
                         }
                     }
                 }
             }
-        }
-        if (closestBox != null) {
-            InterfaceManager.packetInterface.sendToServer(new PacketVehicleInteract(closestVehicle, player, closestBox, clickingLeft, clickingRight));
+            if (closestBox != null) {
+                InterfaceManager.packetInterface.sendToServer(new PacketVehicleInteract(closestEntity, player, closestBox, clickingLeft, clickingRight));
+            }
+        } else if (closestBox != null) {
+            //Fire off un-click to entity last clicked.
+            InterfaceManager.packetInterface.sendToServer(new PacketVehicleInteract(closestEntity, player, closestBox, clickingLeft, clickingRight));
         }
     }
 
@@ -137,7 +155,7 @@ public final class ControlSystem {
 
     private static void controlCamera(ControlsKeyboard camLock, ControlsKeyboard zoomIn, ControlsKeyboard zoomOut, ControlsJoystick changeView) {
         if (camLock.isPressed()) {
-            EntityVehicleF_Physics.lockCameraToMovement = !EntityVehicleF_Physics.lockCameraToMovement;
+            PartSeat.lockCameraToMovement = !PartSeat.lockCameraToMovement;
         }
 
         if (zoomIn.isPressed()) {
@@ -200,15 +218,16 @@ public final class ControlSystem {
 
     private static void controlGun(EntityVehicleF_Physics vehicle, ControlsKeyboard gunTrigger, ControlsKeyboard gunSwitch) {
         boolean gunSwitchPressedThisScan = gunSwitch.isPressed();
-        for (APart part : vehicle.parts) {
+        IWrapperPlayer clientPlayer = InterfaceManager.clientInterface.getClientPlayer();
+        for (APart part : vehicle.allParts) {
             if (part instanceof PartGun) {
                 PartGun gun = (PartGun) part;
-                if (InterfaceManager.clientInterface.getClientPlayer().equals(gun.getGunController())) {
+                if (clientPlayer.equals(gun.getGunController())) {
                     InterfaceManager.packetInterface.sendToServer(new PacketPartGun(gun, gunTrigger.isPressed(), false));
                 }
             } else if (part instanceof PartSeat) {
                 if (gunSwitchPressedThisScan) {
-                    if (InterfaceManager.clientInterface.getClientPlayer().equals(vehicle.riderLocationMap.get(part.placementOffset))) {
+                    if (clientPlayer.equals(part.rider)) {
                         InterfaceManager.packetInterface.sendToServer(new PacketPartSeat((PartSeat) part));
                     }
                 }
@@ -220,7 +239,7 @@ public final class ControlSystem {
         if (radio.isPressed()) {
             if (AGUIBase.activeInputGUI instanceof GUIRadio) {
                 AGUIBase.activeInputGUI.close();
-            } else if (InterfaceManager.clientInterface.isGUIOpen()) {
+            } else if (!InterfaceManager.clientInterface.isGUIOpen()) {
                 new GUIRadio(vehicle.radio);
             }
         }
@@ -277,7 +296,7 @@ public final class ControlSystem {
             if (aircraft.canPlayerStartEngines(clientPlayer)) {
                 if (AGUIBase.activeInputGUI instanceof GUIPanelAircraft) {
                     AGUIBase.activeInputGUI.close();
-                } else if (InterfaceManager.clientInterface.isGUIOpen()) {
+                } else if (!InterfaceManager.clientInterface.isGUIOpen()) {
                     new GUIPanelAircraft(aircraft);
                 }
             }
@@ -322,9 +341,9 @@ public final class ControlSystem {
         controlControlSurface(aircraft, ControlsJoystick.AIRCRAFT_YAW, ControlsKeyboard.AIRCRAFT_YAW_R, ControlsKeyboard.AIRCRAFT_YAW_L, ConfigSystem.client.controlSettings.steeringControlRate.value, EntityVehicleF_Physics.MAX_RUDDER_ANGLE, EntityVehicleF_Physics.RUDDER_INPUT_VARIABLE, aircraft.rudderInput);
         controlControlTrim(aircraft, ControlsJoystick.AIRCRAFT_TRIM_YAW_R, ControlsJoystick.AIRCRAFT_TRIM_YAW_L, EntityVehicleF_Physics.MAX_RUDDER_TRIM, EntityVehicleF_Physics.RUDDER_TRIM_VARIABLE);
 
-        //Check is mouse yoke is enabled. If so do controls by mouse rather than buttons.
+        //Check is mouse yoke is enabled.  If so do controls by mouse rather than buttons.
         if (ConfigSystem.client.controlSettings.mouseYoke.value) {
-            if (EntityVehicleF_Physics.lockCameraToMovement && AGUIBase.activeInputGUI == null) {
+            if (PartSeat.lockCameraToMovement && AGUIBase.activeInputGUI == null) {
                 long mouseDelta = InterfaceManager.inputInterface.getMouseDelta();
                 double deltaAileron = ConfigSystem.client.controlSettings.flightControlRate.value * ((short) (mouseDelta >> Integer.SIZE));
                 double deltaElevator = ConfigSystem.client.controlSettings.flightControlRate.value * ((short) ((int) -mouseDelta));
@@ -364,18 +383,18 @@ public final class ControlSystem {
             if (powered.canPlayerStartEngines(clientPlayer)) {
                 if (AGUIBase.activeInputGUI instanceof GUIPanelGround) {
                     AGUIBase.activeInputGUI.close();
-                } else if (InterfaceManager.clientInterface.isGUIOpen()) {
+                } else if (!InterfaceManager.clientInterface.isGUIOpen()) {
                     new GUIPanelGround(powered);
                 }
             }
         }
 
-        //Check brake and gas. Depends on how the controls are configured.
+        //Check brake and gas.  Depends on how the controls are configured.
         if (powered.definition.motorized.hasIncrementalThrottle) {
-            //Check brake and gas. Brake always changes, gas goes up-down.
+            //Check brake and gas.  Brake always changes, gas goes up-down.
             controlBrake(powered, ControlsKeyboardDynamic.CAR_PARK, ControlsJoystick.CAR_BRAKE, ControlsJoystick.CAR_BRAKE_DIGITAL, ControlsJoystick.CAR_PARK);
             if (InterfaceManager.inputInterface.isJoystickPresent(ControlsJoystick.CAR_GAS.config.joystickName)) {
-                //Send throttle over if throttle and cruise control are off or if throttle is less than the axis level.
+                //Send throttle over if throttle if cruise control is off, or if throttle is less than the axis level.
                 double throttleLevel = ControlsJoystick.CAR_GAS.getAxisState(true) * EntityVehicleF_Physics.MAX_THROTTLE;
                 if (powered.autopilotSetting == 0 || powered.throttle < throttleLevel) {
                     InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, throttleLevel));
@@ -439,7 +458,7 @@ public final class ControlSystem {
                     }
 
                     //If we are going slow, and don't have gas or brake, automatically set the brake.
-                    //Otherwise, send normal values if we are in neutral or forwards,
+                    //Otherwise send normal values if we are in neutral or forwards,
                     //and invert controls if we are in a reverse gear.
                     if (throttleValue == 0 && brakeValue == 0 && powered.axialVelocity < PartEngine.MAX_SHIFT_SPEED) {
                         InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.BRAKE_VARIABLE, EntityVehicleF_Physics.MAX_BRAKE));
@@ -474,7 +493,7 @@ public final class ControlSystem {
                             InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, EntityVehicleF_Physics.MAX_THROTTLE / 2D));
                         }
                     } else {
-                        //Send gas off packet if we don't have cruise control on.
+                        //Send gas off packet if we don't have cruise on.
                         if (powered.autopilotSetting == 0) {
                             InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, 0D));
                         }
@@ -483,10 +502,10 @@ public final class ControlSystem {
             }
         }
 
-        //Check steering. If mouse yoke is enabled, we do controls by mouse rather than buttons.
+        //Check steering.  If mouse yoke is enabled, we do controls by mouse rather than buttons.
         if (!powered.lockedOnRoad) {
             if (ConfigSystem.client.controlSettings.mouseYoke.value) {
-                if (EntityVehicleF_Physics.lockCameraToMovement && AGUIBase.activeInputGUI == null) {
+                if (PartSeat.lockCameraToMovement && AGUIBase.activeInputGUI == null) {
                     long mouseDelta = InterfaceManager.inputInterface.getMouseDelta();
                     double deltaRudder = ConfigSystem.client.controlSettings.flightControlRate.value * ((short) (mouseDelta >> Integer.SIZE));
                     InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableIncrement(powered, EntityVehicleF_Physics.RUDDER_INPUT_VARIABLE, deltaRudder, -EntityVehicleF_Physics.MAX_RUDDER_ANGLE, EntityVehicleF_Physics.MAX_RUDDER_ANGLE));
@@ -552,7 +571,7 @@ public final class ControlSystem {
         //Change turn signal status depending on turning status.
         //Keep signals on until we have been moving without turning in the
         //pressed direction for 2 seconds, or if we turn in the other direction.
-        //This only happens if the signals are set to automatic. For manual signals, we let the player control them.
+        //This only happens if the signals are set to automatic.  For manual signals, we let the player control them.
         if (ConfigSystem.client.controlSettings.autoTrnSignals.value) {
             if (!powered.turningLeft && powered.rudderInput < -20) {
                 powered.turningLeft = true;
@@ -578,12 +597,11 @@ public final class ControlSystem {
         }
     }
 
-    /**
-     * List of enums representing all controls present. Add new controls by adding their enum values here
+    /**List of enums representing all controls present.  Add new controls by adding their enum values here
      *
      * @author don_bruce
      */
-    public enum ControlsKeyboard {
+    public static enum ControlsKeyboard {
         AIRCRAFT_MOD(ControlsJoystick.AIRCRAFT_MOD, false, "RSHIFT", JSONConfigLanguage.INPUT_MOD),
         AIRCRAFT_CAMLOCK(ControlsJoystick.AIRCRAFT_CAMLOCK, true, "RCONTROL", JSONConfigLanguage.INPUT_CAMLOCK),
         AIRCRAFT_YAW_R(ControlsJoystick.AIRCRAFT_YAW, false, "L", JSONConfigLanguage.INPUT_YAW_R),
@@ -625,7 +643,6 @@ public final class ControlSystem {
         CAR_TURNSIGNAL_R(ControlsJoystick.CAR_TURNSIGNAL_R, true, "NUMPAD6", JSONConfigLanguage.INPUT_TURNSIGNAL_R),
         CAR_JS_INHIBIT(ControlsJoystick.CAR_JS_INHIBIT, true, "SCROLL", JSONConfigLanguage.INPUT_JS_INHIBIT);
 
-
         public final boolean isMomentary;
         public final String systemName;
         public final LanguageEntry language;
@@ -635,7 +652,7 @@ public final class ControlSystem {
 
         private boolean wasPressedLastCall;
 
-        ControlsKeyboard(ControlsJoystick linkedJoystick, boolean isMomentary, String defaultKeyName, LanguageEntry language) {
+        private ControlsKeyboard(ControlsJoystick linkedJoystick, boolean isMomentary, String defaultKeyName, LanguageEntry language) {
             this.linkedJoystick = linkedJoystick;
             this.isMomentary = isMomentary;
             this.systemName = this.name().toLowerCase().replaceFirst("_", ".");
@@ -649,10 +666,10 @@ public final class ControlSystem {
         }
 
         /**
-         * Returns true if the given key is currently pressed. If our linked
-         * joystick is pressed, return true. If the joystick is not, but it
-         * is bound, and we are using keyboard overrides, return false.
-         * Otherwise return the actual key state.
+         *  Returns true if the given key is currently pressed.  If our linked
+         *  joystick is pressed, return true.  If the joystick is not, but it
+         *  is bound, and we are using keyboard overrides, return false.
+         *  Otherwise return the actual key state.
          */
         public boolean isPressed() {
             if (linkedJoystick.isPressed()) {
@@ -675,7 +692,7 @@ public final class ControlSystem {
         }
     }
 
-    public enum ControlsJoystick {
+    public static enum ControlsJoystick {
         AIRCRAFT_MOD(false, false, JSONConfigLanguage.INPUT_MOD),
         AIRCRAFT_CAMLOCK(false, true, JSONConfigLanguage.INPUT_CAMLOCK),
         AIRCRAFT_YAW(true, false, JSONConfigLanguage.INPUT_YAW),
@@ -709,7 +726,6 @@ public final class ControlSystem {
         AIRCRAFT_REVERSE(false, true, JSONConfigLanguage.INPUT_REVERSE),
         AIRCRAFT_JS_INHIBIT(false, true, JSONConfigLanguage.INPUT_JS_INHIBIT),
 
-
         CAR_MOD(false, false, JSONConfigLanguage.INPUT_MOD),
         CAR_CAMLOCK(false, true, JSONConfigLanguage.INPUT_CAMLOCK),
         CAR_TURN(true, false, JSONConfigLanguage.INPUT_TURN),
@@ -737,7 +753,6 @@ public final class ControlSystem {
         CAR_TURNSIGNAL_R(false, true, JSONConfigLanguage.INPUT_TURNSIGNAL_R),
         CAR_JS_INHIBIT(false, true, JSONConfigLanguage.INPUT_JS_INHIBIT);
 
-
         public final boolean isAxis;
         public final boolean isMomentary;
         public final String systemName;
@@ -746,7 +761,7 @@ public final class ControlSystem {
 
         private boolean wasPressedLastCall;
 
-        ControlsJoystick(boolean isAxis, boolean isMomentary, LanguageEntry language) {
+        private ControlsJoystick(boolean isAxis, boolean isMomentary, LanguageEntry language) {
             this.isAxis = isAxis;
             this.isMomentary = isMomentary;
             this.systemName = this.name().toLowerCase().replaceFirst("_", ".");
@@ -817,7 +832,7 @@ public final class ControlSystem {
         }
     }
 
-    public enum ControlsKeyboardDynamic {
+    public static enum ControlsKeyboardDynamic {
         AIRCRAFT_PARK(ControlsKeyboard.AIRCRAFT_BRAKE, ControlsKeyboard.AIRCRAFT_MOD, JSONConfigLanguage.INPUT_PARK),
 
         CAR_PARK(ControlsKeyboard.CAR_BRAKE, ControlsKeyboard.CAR_MOD, JSONConfigLanguage.INPUT_PARK),
@@ -829,14 +844,14 @@ public final class ControlSystem {
         public final ControlsKeyboard mainControl;
         public final ControlsKeyboard modControl;
 
-        ControlsKeyboardDynamic(ControlsKeyboard mainControl, ControlsKeyboard modControl, LanguageEntry language) {
+        private ControlsKeyboardDynamic(ControlsKeyboard mainControl, ControlsKeyboard modControl, LanguageEntry language) {
             this.language = language;
             this.mainControl = mainControl;
             this.modControl = modControl;
         }
 
         public boolean isPressed() {
-            return this.modControl.isPressed() && this.mainControl.isPressed();
+            return this.modControl.isPressed() ? this.mainControl.isPressed() : false;
         }
     }
 }

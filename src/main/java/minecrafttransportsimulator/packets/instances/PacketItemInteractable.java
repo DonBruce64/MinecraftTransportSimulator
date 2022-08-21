@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.packets.instances;
 
+import java.util.UUID;
+
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
 import minecrafttransportsimulator.guis.instances.GUIInventoryContainer;
@@ -9,16 +11,13 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.components.APacketPlayer;
 
-import java.util.UUID;
-
-/**
- * Packet used to sync hand-held interactable crate inventory. This is first sent by the server to the client
- * to open the crate GUI. Once the client closes the GUI, this packet is sent back to the server to update
- * the item data with whatever changes the player made. The server will ensure that the inventory exists before
- * sending this packet, but the client will have to create the inventory. This is because this packet is designed
- * for inventories that are not normally created in the world. Currently only item inventories on players fit
+/**Packet used to sync hand-held interactable crate inventory.  This is first sent by the server to the client
+ * to open the crate GUI.  Once the client closes the GUI, this packet is sent back to the server to update
+ * the item data with whatever changes the player made.  The server will ensure that the inventory exists before
+ * sending this packet, but the client will have to create the inventory.  This is because this packet is designed
+ * for inventories that are not normally created in the world.  Currently only item inventories on players fit
  * this description.
- *
+ * 
  * @author don_bruce
  */
 public class PacketItemInteractable extends APacketPlayer {

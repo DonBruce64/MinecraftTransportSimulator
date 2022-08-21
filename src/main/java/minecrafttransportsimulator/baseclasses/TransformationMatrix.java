@@ -1,9 +1,8 @@
 package minecrafttransportsimulator.baseclasses;
 
-/**
- * 4D Matrix class for orientation operations. This allows for
+/**4D Matrix class for orientation operations.  This allows for
  * storing of a  rotational, translation, and scalar component
- * of orientation. This is designed to be used with OpenGL
+ * of orientation.  This is designed to be used with OpenGL
  * systems and positional systems where multiple transformations
  * may be performed in sequence.
  * All methods return this object for nested operations, unless
@@ -100,7 +99,7 @@ public class TransformationMatrix extends RotationMatrix {
     }
 
     /**
-     * Resets this matrix transform to default. This should be done
+     * Resets this matrix transform to default.  This should be done
      * prior to applying any transforms on it.
      */
     public TransformationMatrix resetTransforms() {
@@ -176,7 +175,7 @@ public class TransformationMatrix extends RotationMatrix {
     /**
      * Applies a the rotation transform to this transform.
      * Note that if there is a scaling component in this transform, it will
-     * be lumped in to this transformation. As such, it is recommended to
+     * be lumped in to this transformation.  As such, it is recommended to
      * call this method LAST in operations.
      */
     public TransformationMatrix applyRotation(RotationMatrix rotation) {

@@ -1,13 +1,29 @@
 package minecrafttransportsimulator.guis.instances;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.guis.components.*;
+import minecrafttransportsimulator.guis.components.AGUIBase;
+import minecrafttransportsimulator.guis.components.GUIComponent3DModel;
+import minecrafttransportsimulator.guis.components.GUIComponentButton;
+import minecrafttransportsimulator.guis.components.GUIComponentCutout;
+import minecrafttransportsimulator.guis.components.GUIComponentItem;
+import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent.PoleComponentType;
 import minecrafttransportsimulator.items.instances.ItemVehicle;
-import minecrafttransportsimulator.jsondefs.*;
+import minecrafttransportsimulator.jsondefs.AJSONItem;
+import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
+import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
+import minecrafttransportsimulator.jsondefs.JSONCraftingBench;
+import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
+import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
+import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPlayerCraftItem;
@@ -15,22 +31,16 @@ import minecrafttransportsimulator.packloading.PackMaterialComponent;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-/**
- * A GUI that is used to craft vehicle parts and other pack components. This GUI displays
+/**A GUI that is used to craft vehicle parts and other pack components.  This GUI displays
  * the items required to craft a vehicle, the item that will be crafted, and some properties
- * of that item. Allows for scrolling via a scroll wheel, and remembers the last item that
+ * of that item.  Allows for scrolling via a scroll wheel, and remembers the last item that
  * was selected to allow for faster lookup next time the GUI is opened.
- *
+ * 
  * @author don_bruce
  */
 public class GUIPartBench extends AGUIBase {
-    /*Last item this GUI was on when closed. Keyed by definition instance to keep all benches in-sync.*/
-    private static final Map<JSONCraftingBench, AItemPack<? extends AJSONItem>> lastOpenedItem = new HashMap<>();
+    /*Last item this GUI was on when closed.  Keyed by definition instance to keep all benches in-sync.*/
+    private static final Map<JSONCraftingBench, AItemPack<? extends AJSONItem>> lastOpenedItem = new HashMap<JSONCraftingBench, AItemPack<? extends AJSONItem>>();
 
     //Init variables.
     private final JSONCraftingBench definition;
@@ -57,8 +67,8 @@ public class GUIPartBench extends AGUIBase {
     private GUIComponentButton confirmButton;
 
     //Crafting components.
-    private final List<GUIComponentItem> craftingItemIcons = new ArrayList<>();
-    private final List<GUIComponentCutout> craftingItemBackgrounds = new ArrayList<>();
+    private final List<GUIComponentItem> craftingItemIcons = new ArrayList<GUIComponentItem>();
+    private final List<GUIComponentCutout> craftingItemBackgrounds = new ArrayList<GUIComponentCutout>();
     private List<PackMaterialComponent> normalMaterials;
     private List<PackMaterialComponent> repairMaterials;
 
@@ -80,7 +90,6 @@ public class GUIPartBench extends AGUIBase {
     private AItemPack<? extends AJSONItem> prevSubItem;
     private AItemPack<? extends AJSONItem> nextSubItem;
     boolean displayVehicleInfo = false;
-
 
     public GUIPartBench(JSONCraftingBench definition) {
         super();
@@ -124,7 +133,6 @@ public class GUIPartBench extends AGUIBase {
         int centerBetweenButtons = prevPackButton.constructedX + prevPackButton.width + (nextPackButton.constructedX - (prevPackButton.constructedX + prevPackButton.width)) / 2;
         addComponent(packName = new GUIComponentLabel(centerBetweenButtons, guiTop + 16, ColorRGB.WHITE, "", TextAlignment.CENTERED, 1.0F));
 
-
         //Create part navigation section.
         addComponent(prevPartButton = new GUIComponentButton(prevPackButton.constructedX, prevPackButton.constructedY + prevPackButton.height, 20, 20, 40, 196, 20, 20) {
             @Override
@@ -144,7 +152,6 @@ public class GUIPartBench extends AGUIBase {
         addComponent(partInfo = new GUIComponentLabel(guiLeft + 17, guiTop + 60, ColorRGB.WHITE, "", TextAlignment.LEFT_ALIGNED, 0.75F, 150));
         addComponent(vehicleInfo = new GUIComponentLabel(guiLeft + 17, guiTop + 60, ColorRGB.WHITE, "", TextAlignment.LEFT_ALIGNED, 1.0F, 150));
 
-
         //Create color navigation section.
         addComponent(prevColorButton = new GUIComponentButton(guiLeft + 175, guiTop + 131, 20, 15, 40, 196, 20, 20) {
             @Override
@@ -162,8 +169,7 @@ public class GUIPartBench extends AGUIBase {
         });
         addComponent(new GUIComponentLabel(prevColorButton.constructedX + prevColorButton.width + (nextColorButton.constructedX - (prevColorButton.constructedX + prevColorButton.width)) / 2, guiTop + 136, ColorRGB.WHITE, JSONConfigLanguage.GUI_PART_BENCH_COLOR.value, TextAlignment.CENTERED, 1.0F).setButton(nextColorButton));
 
-
-        //Create the crafting item slots. 14 16X16 slots (7X2) need to be made here.
+        //Create the crafting item slots.  14 16X16 slots (7X2) need to be made here.
         craftingItemIcons.clear();
         craftingItemBackgrounds.clear();
         for (byte i = 0; i < 7 * 2; ++i) {
@@ -176,11 +182,9 @@ public class GUIPartBench extends AGUIBase {
             craftingItemBackgrounds.add(itemBackground);
         }
 
-
-        //Create both the item and OBJ renders. We choose which to display later.
+        //Create both the item and OBJ renders.  We choose which to display later.
         addComponent(itemRender = new GUIComponentItem(guiLeft + 175, guiTop + 56, 5.625F));
         addComponent(modelRender = new GUIComponent3DModel(guiLeft + 220, guiTop + 101, 32.0F, true, true, false));
-
 
         //Create the info switching button.
         addComponent(vehicleInfoButton = new GUIComponentButton(guiLeft + 147, guiTop + 159, 20, 20, 100, 196, 20, 20) {
@@ -196,7 +200,6 @@ public class GUIPartBench extends AGUIBase {
             }
         });
 
-
         //Create the crafting switching button.
         addComponent(repairCraftingButton = new GUIComponentButton(guiLeft + 127, guiTop + 159, 20, 20, 120, 196, 20, 20) {
             @Override
@@ -210,7 +213,6 @@ public class GUIPartBench extends AGUIBase {
                 viewingRepair = false;
             }
         });
-
 
         //Create the confirm button.
         addComponent(confirmButton = new GUIComponentButton(guiLeft + 211, guiTop + 156, 20, 20, 20, 196, 20, 20) {
@@ -258,15 +260,15 @@ public class GUIPartBench extends AGUIBase {
                 int materialIndex = i + materialOffset;
                 if (materialIndex < materials.size()) {
                     craftingItemIcons.get(i).stacks = materials.get(materialIndex).possibleItems;
-                    craftingItemBackgrounds.get(i).visible = !player.isCreative() && inClockPeriod(20, 10) && (viewingRepair ? player.getInventory().hasSpecificMaterial(currentItem, i, true, true, true) : player.getInventory().hasSpecificMaterial(currentItem, i, true, true, false));
+                    craftingItemBackgrounds.get(i).visible = !player.isCreative() && inClockPeriod(20, 10) && (viewingRepair ? !player.getInventory().hasSpecificMaterial(currentItem, i, true, true, true) : !player.getInventory().hasSpecificMaterial(currentItem, i, true, true, false));
                 } else {
                     craftingItemIcons.get(i).stacks = null;
                     craftingItemBackgrounds.get(i).visible = false;
                 }
             }
         } else {
-            for (GUIComponentItem craftingItemIcon : craftingItemIcons) {
-                craftingItemIcon.stacks = null;
+            for (byte i = 0; i < craftingItemIcons.size(); ++i) {
+                craftingItemIcons.get(i).stacks = null;
             }
         }
 
@@ -303,13 +305,10 @@ public class GUIPartBench extends AGUIBase {
      * uses the order to determine which pack/item to scroll to when a button is clicked.
      * Sets the variables to be used on a button action, so once an action is performed this
      * logic MUST be called to update the button action states!
-     *
-     * Some IDEs think otherwise, but the casts are needed
      */
-    @SuppressWarnings("RedundantCast")
     private void updateNames() {
         //Get all pack indexes.
-        List<String> packIDs = new ArrayList<>(PackParser.getAllPackIDs());
+        List<String> packIDs = new ArrayList<String>(PackParser.getAllPackIDs());
         int currentPackIndex = packIDs.indexOf(currentPack);
 
         //Loop forwards to find a pack that has the items we need and set that as the next pack.
@@ -339,7 +338,6 @@ public class GUIPartBench extends AGUIBase {
                 }
             }
         }
-
 
         //Set item indexes.
         //If we don't have a pack, it means we don't have any items that are for this bench, so we shouldn't do anything else.
@@ -376,7 +374,7 @@ public class GUIPartBench extends AGUIBase {
         if (currentItemIndex < packItems.size()) {
             for (int i = currentItemIndex + 1; i < packItems.size() && nextItem == null; ++i) {
                 if (packItems.get(i).isBenchValid(definition)) {
-                    //If we are for subTyped item, and this item is the same sub-item classification,
+                    //If we are for subTyped item, and this item is the same sub-item classification, 
                     //set nextSubItem and continue on.
                     if (currentItem.definition instanceof AJSONMultiModelProvider) {
                         if (packItems.get(i).definition.systemName.equals(currentItem.definition.systemName)) {
@@ -402,7 +400,7 @@ public class GUIPartBench extends AGUIBase {
                     //If we are for a subTyped item, and we didn't switch items, and this item
                     //is the same sub-item classification, set prevSubItem and continue on.
                     //If we did switch, we want the first subItem in the set of items to
-                    //be the prevItem we pick. This ensures when we switch we'll be on the
+                    //be the prevItem we pick.  This ensures when we switch we'll be on the 
                     //same subItem each time we switch items.
                     if (currentItem.definition instanceof AJSONMultiModelProvider) {
                         if (packItems.get(i).definition.systemName.equals(currentItem.definition.systemName)) {
@@ -424,13 +422,12 @@ public class GUIPartBench extends AGUIBase {
             }
         }
 
-
-        //All pack and part bits are now set and updated. Update info labels and item icons.
+        //All pack and part bits are now set and updated.  Update info labels and item icons.
         packName.text = PackParser.getPackConfiguration(currentPack).packName;
         partName.text = currentItem.getItemName();
 
         //Create part description text.
-        List<String> descriptiveLines = new ArrayList<>();
+        List<String> descriptiveLines = new ArrayList<String>();
         currentItem.addTooltipLines(descriptiveLines, InterfaceManager.coreInterface.getNewNBTWrapper());
         partInfo.text = "";
         for (String line : descriptiveLines) {
@@ -456,7 +453,7 @@ public class GUIPartBench extends AGUIBase {
             modelRender.modelLocation = ((AItemSubTyped<?>) currentItem).definition.getModelLocation(((AItemSubTyped<?>) currentItem).subName);
             modelRender.textureLocation = ((AItemSubTyped<?>) currentItem).definition.getTextureLocation(((AItemSubTyped<?>) currentItem).subName);
             itemRender.stack = null;
-            //Don't spin signs. That gets annoying.
+            //Don't spin signs.  That gets annoying.
             modelRender.spin = !(currentItem.definition instanceof JSONPoleComponent && ((JSONPoleComponent) currentItem.definition).pole.type.equals(PoleComponentType.SIGN));
         } else {
             itemRender.stack = currentItem.getNewStack(null);
@@ -516,17 +513,17 @@ public class GUIPartBench extends AGUIBase {
 
         //Combine translated header and info text together into a single string and return.
         String totalInformation = "";
-        totalInformation += JSONConfigLanguage.GUI_PART_BENCH_WEIGHT.value + vehicleDefinition.motorized.emptyMass + "\n";
-        totalInformation += JSONConfigLanguage.GUI_PART_BENCH_FUEL.value + vehicleDefinition.motorized.fuelCapacity + "\n";
-        totalInformation += JSONConfigLanguage.GUI_PART_BENCH_CONTROLLERS.value + controllers + "\n";
-        totalInformation += JSONConfigLanguage.GUI_PART_BENCH_PASSENGERS.value + passengers + "\n";
-        totalInformation += JSONConfigLanguage.GUI_PART_BENCH_CARGO.value + cargo + "\n";
-        totalInformation += JSONConfigLanguage.GUI_PART_BENCH_MIXED.value + mixed + "\n";
+        totalInformation += JSONConfigLanguage.GUI_PART_BENCH_WEIGHT.value + String.valueOf(vehicleDefinition.motorized.emptyMass) + "\n";
+        totalInformation += JSONConfigLanguage.GUI_PART_BENCH_FUEL.value + String.valueOf(vehicleDefinition.motorized.fuelCapacity) + "\n";
+        totalInformation += JSONConfigLanguage.GUI_PART_BENCH_CONTROLLERS.value + String.valueOf(controllers) + "\n";
+        totalInformation += JSONConfigLanguage.GUI_PART_BENCH_PASSENGERS.value + String.valueOf(passengers) + "\n";
+        totalInformation += JSONConfigLanguage.GUI_PART_BENCH_CARGO.value + String.valueOf(cargo) + "\n";
+        totalInformation += JSONConfigLanguage.GUI_PART_BENCH_MIXED.value + String.valueOf(mixed) + "\n";
         if (minFuelConsumption != 99) {
-            totalInformation += JSONConfigLanguage.GUI_PART_BENCH_ENGINE.value + minFuelConsumption + "-" + maxFuelConsumption + "\n";
+            totalInformation += JSONConfigLanguage.GUI_PART_BENCH_ENGINE.value + String.valueOf(minFuelConsumption) + "-" + String.valueOf(maxFuelConsumption) + "\n";
         }
         if (minWheelSize != 99) {
-            totalInformation += JSONConfigLanguage.GUI_PART_BENCH_WHEEL.value + minWheelSize + "-" + maxWheelSize + "\n";
+            totalInformation += JSONConfigLanguage.GUI_PART_BENCH_WHEEL.value + String.valueOf(minWheelSize) + "-" + String.valueOf(maxWheelSize) + "\n";
         }
         return totalInformation;
     }

@@ -7,11 +7,10 @@ import minecrafttransportsimulator.packets.components.APacketBase;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
 
-/**
- * Packet used to send NBT data to clients when requested for it. Driven by the arrival of a
- * {@link PacketEntityCSHandshakeClient} on the server. This is used for both normal and tile
+/**Packet used to send NBT data to clients when requested for it.  Driven by the arrival of a
+ * {@link PacketEntityCSHandshakeClient} on the server.  This is used for both normal and tile
  * entities, depending on the format of the string passed-in.
- *
+ * 
  * @author don_bruce
  */
 public class PacketEntityCSHandshakeServer extends APacketBase {
@@ -47,7 +46,7 @@ public class PacketEntityCSHandshakeServer extends APacketBase {
     public void handle(AWrapperWorld world) {
         if (builderID.contains(",")) {
             String[] stringPos = builderID.split(",");
-            BuilderTileEntity<?> tile = (BuilderTileEntity<?>) ((WrapperWorld) world).world.getTileEntity(new BlockPos(Integer.parseInt(stringPos[0]), Integer.parseInt(stringPos[1]), Integer.parseInt(stringPos[2])));
+            BuilderTileEntity<?> tile = (BuilderTileEntity<?>) ((WrapperWorld) world).world.getTileEntity(new BlockPos(Integer.valueOf(stringPos[0]), Integer.valueOf(stringPos[1]), Integer.valueOf(stringPos[2])));
             if (tile != null) {
                 tile.lastLoadedNBT = ((WrapperNBT) data).tag;
                 tile.loadFromSavedNBT = true;

@@ -1,5 +1,20 @@
 package mcinterface1122;
 
+import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.lwjgl.BufferUtils;
+import org.lwjgl.openal.AL;
+import org.lwjgl.openal.AL10;
+
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.instances.EntityRadio;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
@@ -17,58 +32,37 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.relauncher.Side;
-import org.lwjgl.BufferUtils;
-import org.lwjgl.openal.AL;
-import org.lwjgl.openal.AL10;
 
-import java.io.InputStream;
-import java.nio.ByteBuffer;
-import java.nio.IntBuffer;
-import java.util.*;
-
-/**
- * Interface for the sound system. This is responsible for playing sound from vehicles/interactions.
+/**Interface for the sound system.  This is responsible for playing sound from vehicles/interactions.
  * As well as from the internal radio.
  *
  * @author don_bruce
  */
 @EventBusSubscriber(Side.CLIENT)
 public class InterfaceSound implements IInterfaceSound {
-    /**
-     * Flag for game paused state. Gets set when the game is paused.
-     **/
+    /**Flag for game paused state.  Gets set when the game is paused.**/
     private static boolean isSystemPaused;
 
-    /**
-     * Map of String-based file-names to Integer pointers to buffer locations. Used for loading sounds into
-     * memory to prevent the need to load them every time they are played.
-     **/
-    private static final Map<String, Integer> dataSourceBuffers = new HashMap<>();
+    /**Map of String-based file-names to Integer pointers to buffer locations.  Used for loading sounds into
+     * memory to prevent the need to load them every time they are played.**/
+    private static final Map<String, Integer> dataSourceBuffers = new HashMap<String, Integer>();
 
-    /**
-     * List of sounds currently playing. Queued for updates every tick.
-     **/
-    private static final Set<SoundInstance> playingSounds = new HashSet<>();
+    /**List of sounds currently playing.  Queued for updates every tick.**/
+    private static final Set<SoundInstance> playingSounds = new HashSet<SoundInstance>();
 
-    /**
-     * List of playing {@link RadioStation} objects.
-     **/
-    private static final List<RadioStation> playingStations = new ArrayList<>();
+    /**List of playing {@link RadioStation} objects.**/
+    private static final List<RadioStation> playingStations = new ArrayList<RadioStation>();
 
-    /**
-     * List of sounds to start playing next update. Split from playing sounds to avoid CMEs and odd states.
-     **/
-    private static final List<SoundInstance> queuedSounds = new ArrayList<>();
+    /**List of sounds to start playing next update.  Split from playing sounds to avoid CMEs and odd states.**/
+    private static volatile List<SoundInstance> queuedSounds = new ArrayList<SoundInstance>();
 
-    /**
-     * This gets incremented whenever we try to get a source and fail. If we get to 10, the sound system
-     * will stop attempting to play sounds. Used for when mods take all the sources.
-     **/
+    /**This gets incremented whenever we try to get a source and fail.  If we get to 10, the sound system
+     * will stop attempting to play sounds.  Used for when mods take all the sources.**/
     private static byte sourceGetFailures = 0;
 
     /**
-     * Main update loop. Call every tick to update playing sounds,
-     * as well as queue up sounds that aren't playing yet but need to.
+     *  Main update loop.  Call every tick to update playing sounds,
+     *  as well as queue up sounds that aren't playing yet but need to.
      */
     public static void update() {
         if (!AL.isCreated()) {
@@ -148,26 +142,26 @@ public class InterfaceSound implements IInterfaceSound {
                     if (sound.soundDef != null && sound.soundDef.looping && !sound.entity.equals(player.getEntityRiding())) {
                         Point3D playerVelocity = player.getVelocity();
                         playerVelocity.y = 0;
-                        double initialDelta = player.getPosition().subtract(sound.entity.position).length();
+                        double initalDelta = player.getPosition().subtract(sound.entity.position).length();
                         double finalDelta = player.getPosition().add(playerVelocity).subtract(sound.entity.position).add(-sound.entity.motion.x, 0D, -sound.entity.motion.z).length();
-                        float dopplerFactor = (float) (initialDelta > finalDelta ? 1 + 0.25 * (initialDelta - finalDelta) / initialDelta : 1 - 0.25 * (finalDelta - initialDelta) / finalDelta);
+                        float dopplerFactor = (float) (initalDelta > finalDelta ? 1 + 0.25 * (initalDelta - finalDelta) / initalDelta : 1 - 0.25 * (finalDelta - initalDelta) / finalDelta);
                         AL10.alSourcef(sound.sourceIndex, AL10.AL_PITCH, sound.pitch * dopplerFactor);
                     } else {
                         AL10.alSourcef(sound.sourceIndex, AL10.AL_PITCH, sound.pitch);
                     }
 
-                    //Update roll off distance, which is based on pitch.
+                    //Update rolloff distance, which is based on pitch.
                     AL10.alSourcef(sound.sourceIndex, AL10.AL_ROLLOFF_FACTOR, 1F / (0.25F + 3 * sound.pitch));
                 }
             } else {
-                //We are a stopped sound. Un-bind and delete any sources and buffers we are using.
+                //We are a stopped sound.  Un-bind and delete any sources and buffers we are using.
                 if (sound.radio == null) {
                     //Normal sound. Un-bind buffer and make sure we're flagged as stopped.
                     //We could have just reached the end of the sound.
                     AL10.alSourcei(sound.sourceIndex, AL10.AL_BUFFER, AL10.AL_NONE);
                     sound.stopSound = true;
                 } else if (sound.stopSound) {
-                    //Radio with stop command. Un-bind all radio buffers.
+                    //Radio with stop command.  Un-bind all radio buffers.
                     int boundBuffers = AL10.alGetSourcei(sound.sourceIndex, AL10.AL_BUFFERS_PROCESSED);
                     if (boundBuffers > 0) {
                         IntBuffer buffers = BufferUtils.createIntBuffer(boundBuffers);
@@ -175,7 +169,7 @@ public class InterfaceSound implements IInterfaceSound {
                     }
                 }
                 if (sound.stopSound) {
-                    //Sound was commanded to be stopped. Delete sound source to free up slot.
+                    //Sound was commanded to be stopped.  Delete sound source to free up slot.
                     IntBuffer sourceBuffer = BufferUtils.createIntBuffer(1);
                     sourceBuffer.put(sound.sourceIndex).flip();
                     AL10.alDeleteSources(sourceBuffer);
@@ -194,7 +188,7 @@ public class InterfaceSound implements IInterfaceSound {
 
         //If the sound system was reset, blow out all saved data points.
         if (soundSystemReset) {
-            InterfaceManager.coreInterface.logError("Had an invalid sound name. Was the sound system reset? Clearing all sounds, playing or not!");
+            InterfaceManager.coreInterface.logError("Had an invalid sound name.  Was the sound system reset?  Clearing all sounds, playing or not!");
             dataSourceBuffers.clear();
             for (SoundInstance sound : playingSounds) {
                 sound.entity.sounds.remove(sound);
@@ -248,7 +242,7 @@ public class InterfaceSound implements IInterfaceSound {
                 AL10.alSource3f(sound.sourceIndex, AL10.AL_POSITION, (float) sound.entity.position.x, (float) sound.entity.position.y, (float) sound.entity.position.z);
                 AL10.alSourcei(sound.sourceIndex, AL10.AL_BUFFER, dataBufferPointer);
 
-                //Done setting up buffer. Queue sound to start playing.
+                //Done setting up buffer.  Queue sound to start playing.
                 queuedSounds.add(sound);
                 sound.entity.sounds.add(sound);
             }
@@ -306,7 +300,9 @@ public class InterfaceSound implements IInterfaceSound {
         boolean freeBuffer = true;
         EntityRadio badRadio = null;
         AL10.alGetError();
-        for (EntityRadio radio : playingRadios) {
+        Iterator<EntityRadio> iterator = playingRadios.iterator();
+        while (iterator.hasNext()) {
+            EntityRadio radio = iterator.next();
             SoundInstance sound = radio.getPlayingSound();
             if (AL10.alGetSourcei(sound.sourceIndex, AL10.AL_BUFFERS_PROCESSED) == 0) {
                 freeBuffer = false;
@@ -345,18 +341,18 @@ public class InterfaceSound implements IInterfaceSound {
     }
 
     /**
-     * Loads an OGG file in its entirety using the {@link OGGDecoder}.
-     * The sound is then stored in a dataBuffer keyed by soundName located in {@link #dataSourceBuffers}.
-     * The pointer to the dataBuffer is returned for convenience as it allows for transparent sound caching.
-     * If a sound with the same name is passed-in at a later time, it is assumed to be the same and rather
-     * than re-parse the sound the system will simply return the same pointer index to be bound.
+     *  Loads an OGG file in its entirety using the {@link InterfaceOGGDecoder}. 
+     *  The sound is then stored in a dataBuffer keyed by soundName located in {@link #dataSourceBuffers}.
+     *  The pointer to the dataBuffer is returned for convenience as it allows for transparent sound caching.
+     *  If a sound with the same name is passed-in at a later time, it is assumed to be the same and rather
+     *  than re-parse the sound the system will simply return the same pointer index to be bound.
      */
     private static Integer loadOGGJarSound(String soundName) {
         if (dataSourceBuffers.containsKey(soundName)) {
-            //Already parsed the data. Return the buffer.
+            //Already parsed the data.  Return the buffer.
             return dataSourceBuffers.get(soundName);
         } else {
-            //Need to parse the data. Do so now.
+            //Need to parse the data.  Do so now.
             String soundDomain = soundName.substring(0, soundName.indexOf(':'));
             String soundPath = soundName.substring(soundDomain.length() + 1);
             InputStream soundStream = InterfaceSound.class.getResourceAsStream("/assets/" + soundDomain + "/sounds/" + soundPath + ".ogg");
@@ -377,7 +373,7 @@ public class InterfaceSound implements IInterfaceSound {
                 //Bind the decoder output buffer to the data buffer pointer.
                 AL10.alBufferData(dataBufferPointers.get(0), AL10.AL_FORMAT_MONO16, decodedData, decoder.getSampleRate());
 
-                //Done parsing. Map the dataBuffer(s) to the soundName and return the index.
+                //Done parsing.  Map the dataBuffer(s) to the soundName and return the index.
                 dataSourceBuffers.put(soundName, dataBufferPointers.get(0));
                 return dataSourceBuffers.get(soundName);
             } else {
@@ -398,7 +394,7 @@ public class InterfaceSound implements IInterfaceSound {
                 update();
             } catch (Exception e) {
                 e.printStackTrace();
-                //Do nothing. We only get exceptions here if OpenAL isn't ready.
+                //Do nothing.  We only get exceptions here if OpenAL isn't ready.
             }
         }
     }
@@ -409,7 +405,12 @@ public class InterfaceSound implements IInterfaceSound {
     @SubscribeEvent
     public static void on(WorldEvent.Unload event) {
         if (event.getWorld().isRemote) {
-            queuedSounds.removeIf(soundInstance -> event.getWorld() == ((WrapperWorld) soundInstance.entity.world).world);
+            Iterator<SoundInstance> iterator = queuedSounds.iterator();
+            while (iterator.hasNext()) {
+                if (event.getWorld() == ((WrapperWorld) iterator.next().entity.world).world) {
+                    iterator.remove();
+                }
+            }
             for (SoundInstance sound : playingSounds) {
                 if (event.getWorld() == ((WrapperWorld) sound.entity.world).world) {
                     if (sound.radio != null) {

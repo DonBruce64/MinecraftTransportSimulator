@@ -7,7 +7,11 @@ import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
-import minecrafttransportsimulator.mcinterface.*;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketFurnaceFuelAdd;
 import minecrafttransportsimulator.packets.instances.PacketPartInteractable;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
@@ -17,12 +21,12 @@ public final class PartInteractable extends APart {
     public final EntityFurnace furnace;
     public final EntityInventoryContainer inventory;
     public final EntityFluidTank tank;
-    public final String jerrycanFluid;
+    public String jerrycanFluid;
     public PartInteractable linkedPart;
     public EntityVehicleF_Physics linkedVehicle;
 
-    public PartInteractable(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, IWrapperNBT data, APart parentPart) {
-        super(entityOn, placingPlayer, placementDefinition, data, parentPart);
+    public PartInteractable(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, IWrapperNBT data) {
+        super(entityOn, placingPlayer, placementDefinition, data);
         if (definition.interactable.interactionType.equals(InteractableComponentType.FURNACE)) {
             this.furnace = new EntityFurnace(world, data.getDataOrNew("furnace"), definition.interactable);
             this.inventory = furnace;
@@ -114,7 +118,7 @@ public final class PartInteractable extends APart {
         }
 
         //Check to see if we are linked and need to send fluid to the linked tank.
-        //Only do checks on the server. Clients get packets.
+        //Only do checks on the server.  Clients get packets.
         if (!world.isClient()) {
             EntityFluidTank linkedTank = null;
             LanguageEntry linkedMessage = null;
@@ -152,7 +156,7 @@ public final class PartInteractable extends APart {
                 }
             }
 
-            //If we have an error message, display it and null our links.
+            //If we have an error message, display it an null our our linkings.
             if (linkedMessage != null) {
                 linkedVehicle = null;
                 linkedPart = null;
@@ -166,8 +170,8 @@ public final class PartInteractable extends APart {
     }
 
     /**
-     * Helper method to check for fuels for furnaces and add them.
-     * Only call on the server-side, except for electric furnaces.
+     *  Helper method to check for fuels for furnaces and add them.
+     *  Only call on the server-side, except for electric furnaces.
      */
     private void addFurnaceFuel() {
         //Try to fill the furnace with the appropriate fuel type, if we have it.
@@ -274,9 +278,9 @@ public final class PartInteractable extends APart {
     }
 
     /**
-     * Gets the explosive power of this part. Used when it is blown up or attacked.
-     * For our calculations, only ammo is checked. While we could check for fuel, we assume
-     * that fuel-containing items are stable enough to not blow up when this container is hit.
+     *  Gets the explosive power of this part.  Used when it is blown up or attacked.
+     *  For our calculations, only ammo is checked.  While we could check for fuel, we assume
+     *  that fuel-containing items are stable enough to not blow up when this container is hit.
      */
     public double getExplosiveContribution() {
         if (inventory != null) {

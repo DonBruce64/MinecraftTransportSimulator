@@ -1,5 +1,11 @@
 package mcinterface1122;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
@@ -8,8 +14,6 @@ import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.NonNullList;
-
-import java.util.*;
 
 class WrapperNBT implements IWrapperNBT {
     protected final NBTTagCompound tag;
@@ -69,7 +73,7 @@ class WrapperNBT implements IWrapperNBT {
 
     @Override
     public List<String> getStrings(String name, int count) {
-        List<String> values = new ArrayList<>();
+        List<String> values = new ArrayList<String>();
         for (int i = 0; i < count; ++i) {
             values.add(getString(name + i));
         }
@@ -97,8 +101,8 @@ class WrapperNBT implements IWrapperNBT {
 
     @Override
     public List<IWrapperItemStack> getStacks(int count) {
-        List<IWrapperItemStack> stacks = new ArrayList<>();
-        NonNullList<ItemStack> mcList = NonNullList.withSize(count, ItemStack.EMPTY);
+        List<IWrapperItemStack> stacks = new ArrayList<IWrapperItemStack>();
+        NonNullList<ItemStack> mcList = NonNullList.<ItemStack>withSize(count, ItemStack.EMPTY);
         ItemStackHelper.loadAllItems(tag, mcList);
         for (ItemStack stack : mcList) {
             stacks.add(new WrapperItemStack(stack));
@@ -129,7 +133,7 @@ class WrapperNBT implements IWrapperNBT {
 
     @Override
     public List<Point3D> getPoint3ds(String name) {
-        List<Point3D> values = new ArrayList<>();
+        List<Point3D> values = new ArrayList<Point3D>();
         int count = getInteger(name + "count");
         for (int i = 0; i < count; ++i) {
             Point3D point = getPoint3d(name + i);
@@ -163,7 +167,7 @@ class WrapperNBT implements IWrapperNBT {
 
     @Override
     public List<Point3D> getPoint3dsCompact(String name) {
-        List<Point3D> values = new ArrayList<>();
+        List<Point3D> values = new ArrayList<Point3D>();
         int count = getInteger(name + "count");
         for (int i = 0; i < count; ++i) {
             Point3D point = getPoint3dCompact(name + i);

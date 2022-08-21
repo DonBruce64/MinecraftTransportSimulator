@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.baseclasses;
 
+import java.util.UUID;
+
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
@@ -8,11 +10,8 @@ import minecrafttransportsimulator.jsondefs.JSONConnectionGroup;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 
-import java.util.UUID;
-
-/**
- * Class for easier save/load of towing connections.
- *
+/**Class for easier save/load of towing connections.
+ * 
  * @author don_bruce
  */
 public class TowingConnection {
@@ -57,10 +56,10 @@ public class TowingConnection {
     }
 
     /**
-     * Tries to initialize the connection, finding all entities. Returns true if the connection
-     * was initialized, false if an entity could not be found. It is likely that this method will
+     * Tries to initialize the connection, finding all entities.  Returns true if the connection
+     * was initialized, false if an entity could not be found.  It is likely that this method will
      * not return true on the first tick of the entity this connection was saved on due to differing load
-     * times of entities in the world. Just call it during later ticks for a few calls until you think
+     * times of entities in the world.  Just call it during later ticks for a few calls until you think
      * too much time has passed and the entities just don't exist in the world.
      */
     public boolean initConnection(AWrapperWorld world) {

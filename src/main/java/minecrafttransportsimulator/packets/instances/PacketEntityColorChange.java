@@ -3,18 +3,16 @@ package minecrafttransportsimulator.packets.instances;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
-import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperInventory;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.packets.components.APacketEntityInteract;
 
-/**
- * Packet sent to entities to update their their subName (color). This gets sent from
- * a client when they change the color in the paint gun GUI. Change is applied to the
+/**Packet sent to entities to update their their subName (color).  This gets sent from
+ * a client when they change the color in the paint gun GUI.  Change is applied to the
  * entity and all parts (if applicable).
- *
+ * 
  * @author don_bruce
  */
 public class PacketEntityColorChange extends APacketEntityInteract<AEntityD_Definable<?>, IWrapperPlayer> {
@@ -48,9 +46,7 @@ public class PacketEntityColorChange extends APacketEntityInteract<AEntityD_Defi
 
             //If we have parts, and have a second tone, change parts to match if possible.
             if (entity instanceof AEntityF_Multipart) {
-                for (APart part : ((AEntityF_Multipart<?>) entity).parts) {
-                    ((AEntityF_Multipart<?>) entity).updatePartTone(part);
-                }
+                ((AEntityF_Multipart<?>) entity).parts.forEach(part -> part.updateTone(true));
             }
             return true;
         }

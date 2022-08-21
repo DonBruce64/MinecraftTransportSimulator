@@ -95,24 +95,24 @@ public class WrapperItemStack implements IWrapperItemStack {
         IFluidHandlerItem handler = stack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null);
         if (handler != null) {
             if (!player.isSneaking()) {
-                //Item can provide fluid. Check if the tank can accept it.
+                //Item can provide fluid.  Check if the tank can accept it.
                 FluidStack drainedStack = handler.drain(Integer.MAX_VALUE, false);
                 if (drainedStack != null) {
                     //Able to take fluid from item, attempt to do so.
                     int amountToDrain = (int) tank.fill(drainedStack.getFluid().getName(), drainedStack.amount, false);
                     drainedStack = handler.drain(amountToDrain, !player.isCreative());
                     if (drainedStack != null) {
-                        //Was able to provide liquid from item. Fill the tank.
+                        //Was able to provide liquid from item.  Fill the tank.
                         tank.fill(drainedStack.getFluid().getName(), drainedStack.amount, true);
                         player.setHeldStack(new WrapperItemStack(handler.getContainer()));
                     }
                 }
             } else {
-                //Item can hold fluid. Check if we can fill it.
+                //Item can hold fluid.  Check if we can fill it.
                 FluidStack containedStack = FluidRegistry.getFluidStack(tank.getFluid(), (int) tank.getFluidLevel());
                 int amountFilled = handler.fill(containedStack, !player.isCreative());
                 if (amountFilled > 0) {
-                    //Were able to fill the item. Apply state change to tank and item.
+                    //Were able to fill the item.  Apply state change to tank and item.
                     tank.drain(tank.getFluid(), amountFilled, true);
                     player.setHeldStack(new WrapperItemStack(handler.getContainer()));
                 }

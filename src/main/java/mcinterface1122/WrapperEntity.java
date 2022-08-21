@@ -1,11 +1,15 @@
 package mcinterface1122;
 
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.UUID;
+
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
-import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
@@ -29,22 +33,17 @@ import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
-import javax.annotation.Nonnull;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-
 @EventBusSubscriber
 public class WrapperEntity implements IWrapperEntity {
-    private static final Map<Entity, WrapperEntity> entityWrappers = new HashMap<>();
+    private static final Map<Entity, WrapperEntity> entityWrappers = new HashMap<Entity, WrapperEntity>();
 
     protected final Entity entity;
 
     /**
-     * Returns a wrapper instance for the passed-in entity instance.
-     * Null may be passed-in safely to ease function-forwarding.
-     * Wrapper is cached to avoid re-creating the wrapper each time it is requested.
-     * If the entity is a player, then a player wrapper is returned.
+     *  Returns a wrapper instance for the passed-in entity instance.
+     *  Null may be passed-in safely to ease function-forwarding.
+     *  Wrapper is cached to avoid re-creating the wrapper each time it is requested.
+     *  If the entity is a player, then a player wrapper is returned.
      */
     public static WrapperEntity getWrapperFor(Entity entity) {
         if (entity instanceof EntityPlayer) {
@@ -100,8 +99,8 @@ public class WrapperEntity implements IWrapperEntity {
         Entity mcEntityRiding = entity.getRidingEntity();
         if (mcEntityRiding instanceof BuilderEntityLinkedSeat) {
             AEntityE_Interactable<?> entityRiding = ((BuilderEntityLinkedSeat) mcEntityRiding).entity;
-            //Need to check this as MC might have us as a rider on the builder, but we might not be a rider on the entity.
-            if (entityRiding != null && entityRiding.riderLocationMap.containsValue(this)) {
+            //Need to check this as MC might have us as a rider on the builer, but we might not be a rider on the entity.
+            if (entityRiding != null && this.equals(entityRiding.rider)) {
                 return entityRiding;
             }
         }
@@ -133,9 +132,8 @@ public class WrapperEntity implements IWrapperEntity {
     @Override
     public double getVerticalScale() {
         AEntityE_Interactable<?> riding = getEntityRiding();
-        if (riding instanceof AEntityF_Multipart) {
-            AEntityF_Multipart<?> multipart = (AEntityF_Multipart<?>) riding;
-            PartSeat seat = multipart.getSeatForRider(this);
+        if (riding instanceof PartSeat) {
+            PartSeat seat = (PartSeat) riding;
             if (seat != null) {
                 if (seat.placementDefinition.playerScale != null) {
                     if (seat.definition.seat.playerScale != null) {
@@ -233,11 +231,11 @@ public class WrapperEntity implements IWrapperEntity {
 
     @Override
     public Point3D getLineOfSight(double distance) {
-        //Need to check if we're riding a vehicle or not. Vehicles adjust sight vectors.
+        //Need to check if we're riding a vehicle or not.  Vehicles adjust sight vectors.
         PartSeat seat = null;
         AEntityE_Interactable<?> riding = getEntityRiding();
-        if (riding instanceof AEntityF_Multipart) {
-            seat = ((AEntityF_Multipart<?>) riding).getSeatForRider(this);
+        if (riding instanceof PartSeat) {
+            seat = (PartSeat) riding;
         }
 
         mutableSight.set(0, 0, distance).rotate(getOrientation());
@@ -257,7 +255,7 @@ public class WrapperEntity implements IWrapperEntity {
     @Override
     public void setBodyYaw(double yaw) {
         if (entity instanceof EntityLivingBase) {
-            entity.setRenderYawOffset((float) -yaw);
+            ((EntityLivingBase) entity).setRenderYawOffset((float) -yaw);
         }
     }
 
@@ -311,9 +309,8 @@ public class WrapperEntity implements IWrapperEntity {
             throw new IllegalArgumentException("ERROR: Cannot attack an entity with a damage of no type and language component!");
         }
         DamageSource newSource = new DamageSource(damage.language.value) {
-            @Nonnull
             @Override
-            public ITextComponent getDeathMessage(@Nonnull EntityLivingBase player) {
+            public ITextComponent getDeathMessage(EntityLivingBase player) {
                 if (damage.entityResponsible != null) {
                     return new TextComponentString(String.format(damage.language.value, player.getDisplayName().getFormattedText(), ((WrapperEntity) damage.entityResponsible).entity.getDisplayName().getFormattedText()));
                 } else {
@@ -337,7 +334,7 @@ public class WrapperEntity implements IWrapperEntity {
             newSource.setDamageBypassesArmor();
         }
         if (damage.ignoreCooldown && entity instanceof EntityLivingBase) {
-            entity.hurtResistantTime = 0;
+            ((EntityLivingBase) entity).hurtResistantTime = 0;
         }
         if (ConfigSystem.settings.general.creativeDamage.value) {
             newSource.setDamageAllowedInCreativeMode();
@@ -394,10 +391,15 @@ public class WrapperEntity implements IWrapperEntity {
     }
 
     /**
-     * Remove all entities from our maps if we unload the world. This will cause duplicates if we don't.
+     * Remove all entities from our maps if we unload the world.  This will cause duplicates if we don't.
      */
     @SubscribeEvent
     public static void on(WorldEvent.Unload event) {
-        entityWrappers.keySet().removeIf(entity1 -> event.getWorld() == entity1.world);
+        Iterator<Entity> iterator = entityWrappers.keySet().iterator();
+        while (iterator.hasNext()) {
+            if (event.getWorld() == iterator.next().world) {
+                iterator.remove();
+            }
+        }
     }
 }

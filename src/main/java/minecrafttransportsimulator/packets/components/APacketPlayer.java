@@ -1,18 +1,17 @@
 package minecrafttransportsimulator.packets.components;
 
+import java.util.UUID;
+
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 
-import java.util.UUID;
-
-/**
- * Packet class that includes a default implementation for transmitting a player
- * with a packet. Useful for packets where something happens to the player, or the player
+/**Packet class that includes a default implementation for transmitting a player
+ * with a packet.  Useful for packets where something happens to the player, or the player
  * triggers something.
- * Similar to {@link APacketEntityInteract}, but without an entity to interact with and
+ * Similar to {@link APacketEntityInteract}, but without an entity to interact with and 
  * without callback functionality, as player-based packets are usually one-way state changes,
- * and not syncing or actions in the world.
+ * and not synncing or actions in the world.
  *
  * @author don_bruce
  */
@@ -27,7 +26,7 @@ public abstract class APacketPlayer extends APacketBase {
     public APacketPlayer(ByteBuf buf) {
         super(buf);
         this.playerID = readUUIDFromBuffer(buf);
-    }
+    };
 
     @Override
     public void writeToBuffer(ByteBuf buf) {
@@ -44,9 +43,9 @@ public abstract class APacketPlayer extends APacketBase {
     }
 
     /**
-     * Handler method with an extra parameter for the player for this packet.
-     * If the player is null,  then this method won't be called.
-     * Saves having to do null checks for every packet type.
+     *  Handler method with an extra parameter for the player for this packet.
+     *  If the player is null,  then this method won't be called.
+     *  Saves having to do null checks for every packet type.
      */
     protected abstract void handle(AWrapperWorld world, IWrapperPlayer player);
 }

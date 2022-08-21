@@ -5,11 +5,10 @@ import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLane.LaneSelectionRequest;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 
-/**
- * Helper class for containing the following state of a road.
+/**Helper class for containing the following state of a road.
  * Contains the road, lane, and curve tracked, as well
  * as if the follower is oriented forwards or backwards
- * on the curve. Also contains methods for updating the
+ * on the curve.  Also contains methods for updating the
  * curve state.
  *
  * @author don_bruce
@@ -19,7 +18,6 @@ public class RoadFollowingState {
     private final BezierCurve curve;
     private final boolean goingForwards;
     private float currentSegment;
-
 
     public RoadFollowingState(RoadLane lane, BezierCurve curve, boolean goingForwards, float currentSegment) {
         this.lane = lane;
@@ -48,11 +46,11 @@ public class RoadFollowingState {
     /**
      * Updates this curve to the proper point, returning itself.
      * If the point delta requested has gone past the curve's bounds, then the next
-     * follower is returned instead. If no follower is present because this is the
+     * follower is returned instead.  If no follower is present because this is the
      * end of the curve, null is returned.
      */
     public RoadFollowingState updateCurvePoints(float segmentDelta, LaneSelectionRequest requestedNextCurve) {
-        //Check that our TE is still active. It might have been destroyed.
+        //Check that our TE is still active.  It might have been destroyed.
         if (lane.road.isActive()) {
             currentSegment += goingForwards ? segmentDelta : -segmentDelta;
 
@@ -64,7 +62,7 @@ public class RoadFollowingState {
                     if (priorRoad != null) {
                         RoadLane priorLane = priorRoad.lanes.get(priorConnection.laneNumber);
                         BezierCurve priorCurve = priorLane.curves.get(priorConnection.curveNumber);
-                        boolean newForwardsState = priorConnection.connectedToStart != goingForwards;
+                        boolean newForwardsState = priorConnection.connectedToStart ? !goingForwards : goingForwards;
                         float segmentRemainder = priorConnection.connectedToStart ? -currentSegment : currentSegment;
                         if (!newForwardsState) {
                             segmentRemainder = -segmentRemainder;
@@ -82,7 +80,7 @@ public class RoadFollowingState {
                     if (nextRoad != null) {
                         RoadLane nextLane = nextRoad.lanes.get(nextConnection.laneNumber);
                         BezierCurve nextCurve = nextLane.curves.get(nextConnection.curveNumber);
-                        boolean newForwardsState = nextConnection.connectedToStart == goingForwards;
+                        boolean newForwardsState = nextConnection.connectedToStart ? goingForwards : !goingForwards;
                         float segmentRemainder = nextConnection.connectedToStart ? currentSegment - curve.pathLength : -(currentSegment - curve.pathLength);
                         if (!newForwardsState) {
                             segmentRemainder = -segmentRemainder;
@@ -102,7 +100,7 @@ public class RoadFollowingState {
 
     /**
      * Returns the current point on this curve we set to in the world.
-     * This should be called AFTER {@link #updateCurvePoints(float, LaneSelectionRequest)},
+     * This should be called AFTER {@link #updateCurvePoints(float, int)},
      * otherwise you may get out of the curve's bounds.
      */
     public Point3D getCurrentPoint() {
@@ -113,7 +111,7 @@ public class RoadFollowingState {
 
     /**
      * Returns the current roll-rotation on this curve we set to in the world.
-     * This should be called AFTER {@link #updateCurvePoints(float, LaneSelectionRequest)},
+     * This should be called AFTER {@link #updateCurvePoints(float, int)},
      * otherwise you may get out of the curve's bounds.
      */
     public double getCurrentRotation() {

@@ -1,22 +1,30 @@
 package minecrafttransportsimulator.sound;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 
-import java.io.*;
-import java.util.*;
-
-/**
- * Class that manages all radios and stations. Responsible for creating new stations and storing them,
- * as well as giving said stations to radios when they request them. This class also interfaces with
+/**Class that manages all radios and stations.  Responsible for creating new stations and storing them,
+ * as well as giving said stations to radios when they request them.  This class also interfaces with
  * the files on the local machine and keeps track of the order they are played in.
- *
- * @author don_bruce
- */
+*
+* @author don_bruce
+*/
 public class RadioManager {
-    private static final File musicDir;
-    private static final File radioStationsFile;
-    private static final Map<Integer, RadioStation> localSourcesMap = new HashMap<>();
-    private static final Map<String, RadioStation> internetSourcesMap = new HashMap<>();
+    private static File musicDir;
+    private static File radioStationsFile;
+    private static Map<Integer, RadioStation> localSourcesMap = new HashMap<Integer, RadioStation>();
+    private static Map<String, RadioStation> internetSourcesMap = new HashMap<String, RadioStation>();
 
     /**
      * Need to set up global radio variables before we can create an instance of a radio.
@@ -40,7 +48,7 @@ public class RadioManager {
      */
     public static RadioStation getLocalStation(int index, boolean randomOrder) {
         //No clue why we have to use Integer.valueOf, but whatever...
-        Integer mapKey = index;
+        Integer mapKey = Integer.valueOf(index);
         if (!localSourcesMap.containsKey(mapKey)) {
             localSourcesMap.put(mapKey, new RadioStation(index, randomOrder));
         }
@@ -63,8 +71,8 @@ public class RadioManager {
      * Returns the files in the directory if they were found, or an empty list otherwise.
      */
     public static List<File> parseLocalDirectory(int index, boolean randomOrder) {
-        List<File> musicDirectories = new ArrayList<>();
-        List<File> musicFiles = new ArrayList<>();
+        List<File> musicDirectories = new ArrayList<File>();
+        List<File> musicFiles = new ArrayList<File>();
         for (File file : musicDir.listFiles()) {
             if (file.isDirectory()) {
                 musicDirectories.add(file);
@@ -90,10 +98,10 @@ public class RadioManager {
 
     /**
      * Gets the radio URL for the specified index in the radio_stations.txt file in the mts_music directory.
-     */
+    */
     public static String getLocalStationURL(int index) {
         try {
-            List<String> stations = new ArrayList<>();
+            List<String> stations = new ArrayList<String>();
             BufferedReader radioStationFileReader = new BufferedReader(new FileReader(radioStationsFile));
             while (radioStationFileReader.ready()) {
                 stations.add(radioStationFileReader.readLine());
@@ -108,7 +116,7 @@ public class RadioManager {
                 return "";
             }
         } catch (IOException e) {
-            InterfaceManager.coreInterface.logError("Unable to parse radio_stations.txt file. Is it in use?");
+            InterfaceManager.coreInterface.logError("Unable to parse radio_stations.txt file.  Is it in use?");
             InterfaceManager.coreInterface.logError(e.getMessage());
             return "";
         }
@@ -119,7 +127,7 @@ public class RadioManager {
      */
     public static void setLocalStationURL(String stationURL, int index) {
         try {
-            List<String> stations = new ArrayList<>();
+            List<String> stations = new ArrayList<String>();
             BufferedReader radioStationFileReader = new BufferedReader(new FileReader(radioStationsFile));
             while (radioStationFileReader.ready()) {
                 stations.add(radioStationFileReader.readLine());
@@ -139,7 +147,7 @@ public class RadioManager {
             }
             radioStationFileWriter.close();
         } catch (IOException e) {
-            InterfaceManager.coreInterface.logError("Unable to save radio_stations.txt file. Is it in use?");
+            InterfaceManager.coreInterface.logError("Unable to save radio_stations.txt file.  Is it in use?");
             InterfaceManager.coreInterface.logError(e.getMessage());
         }
     }
@@ -147,6 +155,6 @@ public class RadioManager {
     public enum RadioSources {
         LOCAL,
         SERVER,
-        INTERNET
+        INTERNET;
     }
 }

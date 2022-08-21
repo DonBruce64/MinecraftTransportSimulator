@@ -1,8 +1,10 @@
 package minecrafttransportsimulator.items.instances;
 
+import java.util.List;
+import java.util.Map.Entry;
+
 import minecrafttransportsimulator.blocks.components.ABlockBase.BlockMaterial;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
-import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.PartGroundDevice;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
@@ -10,9 +12,6 @@ import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-
-import java.util.List;
-import java.util.Map.Entry;
 
 public class ItemPartGroundDevice extends AItemPart {
 
@@ -26,8 +25,8 @@ public class ItemPartGroundDevice extends AItemPart {
     }
 
     @Override
-    public PartGroundDevice createPart(AEntityF_Multipart<?> entity, IWrapperPlayer placingPlayer, JSONPartDefinition packVehicleDef, IWrapperNBT partData, APart parentPart) {
-        return new PartGroundDevice(entity, placingPlayer, packVehicleDef, partData, parentPart);
+    public PartGroundDevice createPart(AEntityF_Multipart<?> entity, IWrapperPlayer placingPlayer, JSONPartDefinition packVehicleDef, IWrapperNBT partData) {
+        return new PartGroundDevice(entity, placingPlayer, packVehicleDef, partData);
     }
 
     @Override
@@ -36,20 +35,20 @@ public class ItemPartGroundDevice extends AItemPart {
         tooltipLines.add(JSONConfigLanguage.ITEMINFO_GROUND_DEVICE_DIAMETER.value + definition.ground.height);
         tooltipLines.add(JSONConfigLanguage.ITEMINFO_GROUND_DEVICE_MOTIVEFRICTION.value + definition.ground.motiveFriction);
         tooltipLines.add(JSONConfigLanguage.ITEMINFO_GROUND_DEVICE_LATERALFRICTION.value + definition.ground.lateralFriction);
-        StringBuilder modifierString = null;
+        String modifierString = null;
         int modifierCount = 0;
         for (Entry<BlockMaterial, Float> modifier : definition.ground.frictionModifiers.entrySet()) {
             if (modifierString == null) {
-                modifierString = new StringBuilder("\n");
+                modifierString = "\n";
             } else {
                 if (++modifierCount == 2) {
                     modifierCount = 0;
-                    modifierString.append("\n");
+                    modifierString += "\n";
                 } else {
-                    modifierString.append(", ");
+                    modifierString += ", ";
                 }
             }
-            modifierString.append(modifier.getKey().name().toLowerCase()).append(": ").append(modifier.getValue());
+            modifierString += modifier.getKey().name().toLowerCase() + ": " + modifier.getValue();
         }
         tooltipLines.add(JSONConfigLanguage.ITEMINFO_GROUND_DEVICE_FRICTIONMODIFIERS.value + modifierString);
         tooltipLines.add(definition.ground.isWheel ? JSONConfigLanguage.ITEMINFO_GROUND_DEVICE_ROTATESONSHAFT_TRUE.value : JSONConfigLanguage.ITEMINFO_GROUND_DEVICE_ROTATESONSHAFT_FALSE.value);

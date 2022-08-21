@@ -12,9 +12,8 @@ import minecrafttransportsimulator.jsondefs.JSONInstrument.JSONInstrumentCompone
 import minecrafttransportsimulator.jsondefs.JSONInstrumentDefinition;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
-/**
- * Main render class for instruments. This class contains a main method that takes an instance of {@link ItemInstrument},
- * as well as the engine associated with that instrument and the vehicle the instrument is on. This allows for an
+/**Main render class for instruments.  This class contains a main method that takes an instance of {@link ItemInstrument},
+ * as well as the engine associated with that instrument and the vehicle the instrument is on.  This allows for an
  * instrument to be rendered a vehicle, GUI, or HUD.}.
  *
  * @author don_bruce
@@ -22,7 +21,7 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 public final class RenderInstrument {
     private static int partNumber = 0;
     private static RenderableObject renderObject = null;
-    private static final TransformationMatrix textTransform = new TransformationMatrix();
+    private static TransformationMatrix textTransform = new TransformationMatrix();
     private static final Point3D bottomLeft = new Point3D();
     private static final Point3D topLeft = new Point3D();
     private static final Point3D topRight = new Point3D();
@@ -32,10 +31,10 @@ public final class RenderInstrument {
     private static final float[][] instrumentSingleComponentPoints = new float[6][8];
 
     /**
-     * Renders the passed-in instrument using the entity's current state. Note that this method does NOT take any
-     * entity JSON parameters into account as it does not know which instrument is being rendered. This means that
+     * Renders the passed-in instrument using the entity's current state.  Note that this method does NOT take any 
+     * entity JSON parameters into account as it does not know which instrument is being rendered.  This means that 
      * any transformations that need to be applied for translation should be applied prior to calling this method.
-     * Also note that the parameters in the JSON here are in png-texture space, so y is inverted. Hence the various
+     * Also note that the parameters in the JSON here are in png-texture space, so y is inverted.  Hence the various
      * negations in translation transforms.
      */
     public static void drawInstrument(AEntityE_Interactable<?> entity, TransformationMatrix transform, int slot, boolean onGUI, boolean blendingEnabled, float partialTicks) {
@@ -43,7 +42,7 @@ public final class RenderInstrument {
         ItemInstrument instrument = entity.instruments.get(slot);
         JSONInstrumentDefinition slotDefinition = entity.definition.instruments.get(slot);
 
-        //Check if the lights are on. If so, render the overlays and the text lit if requested.
+        //Check if the lights are on.  If so, render the overlays and the text lit if requested.
         boolean lightsOn = entity.renderTextLit();
 
         //Get scale of the instrument, before component scaling.
@@ -57,8 +56,8 @@ public final class RenderInstrument {
         //This is more efficient than rendering each one individually.
         for (int i = 0; i < instrument.definition.components.size(); ++i) {
             JSONInstrumentComponent component = instrument.definition.components.get(i);
-            if (component.overlayTexture == blendingEnabled) {
-                //If we have text, do a text render. Otherwise, do a normal instrument render.
+            if (component.overlayTexture ? blendingEnabled : !blendingEnabled) {
+                //If we have text, do a text render.  Otherwise, do a normal instrument render.
                 if (component.textObject != null) {
                     //Also translate slightly away from the instrument location to prevent clipping.
                     textTransform.set(transform);
@@ -97,7 +96,7 @@ public final class RenderInstrument {
                         topRight.add(component.textureXCenter, component.textureYCenter, 0);
                         bottomRight.add(component.textureXCenter, component.textureYCenter, 0);
 
-                        //Divide the Points by 1024. This converts the points from pixels to the 0-1 UV values.
+                        //Divide the Points by 1024.  This converts the points from pixels to the 0-1 UV values.
                         bottomLeft.scale(1D / 1024D);
                         topLeft.scale(1D / 1024D);
                         topRight.scale(1D / 1024D);
@@ -120,7 +119,7 @@ public final class RenderInstrument {
     }
 
     /**
-     * Custom instrument switchbox class.
+     *  Custom instrument switchbox class.
      */
     public static class InstrumentSwitchbox extends AnimationSwitchbox {
         private final JSONInstrumentComponent component;
@@ -237,13 +236,12 @@ public final class RenderInstrument {
      * Helper method for setting points for rendering.
      */
     private static void renderComponentFromState(JSONInstrumentComponent component) {
-        //Set X, Y, U, V, and normal Z. All other values are 0.
+        //Set X, Y, U, V, and normal Z.  All other values are 0.
         //Also invert V, as we're going off of pixel-coords here.
         for (int i = 0; i < instrumentSingleComponentPoints.length; ++i) {
             float[] vertex = instrumentSingleComponentPoints[i];
             switch (i) {
-                case (0):
-                case (3): {//Bottom-right
+                case (0): {//Bottom-right
                     vertex[5] = component.textureWidth / 2;
                     vertex[6] = -component.textureHeight / 2;
                     vertex[3] = (float) bottomRight.x;
@@ -257,7 +255,20 @@ public final class RenderInstrument {
                     vertex[4] = (float) topRight.y;
                     break;
                 }
-                case (2):
+                case (2): {//Top-left
+                    vertex[5] = -component.textureWidth / 2;
+                    vertex[6] = component.textureHeight / 2;
+                    vertex[3] = (float) topLeft.x;
+                    vertex[4] = (float) topLeft.y;
+                    break;
+                }
+                case (3): {//Bottom-right
+                    vertex[5] = component.textureWidth / 2;
+                    vertex[6] = -component.textureHeight / 2;
+                    vertex[3] = (float) bottomRight.x;
+                    vertex[4] = (float) bottomRight.y;
+                    break;
+                }
                 case (4): {//Top-left
                     vertex[5] = -component.textureWidth / 2;
                     vertex[6] = component.textureHeight / 2;

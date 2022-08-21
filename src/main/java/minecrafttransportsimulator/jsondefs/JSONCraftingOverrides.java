@@ -3,11 +3,10 @@ package minecrafttransportsimulator.jsondefs;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Custom class designed to hold crafting overrides. Split from the main config file
- * to prevent nuking the file if the config loading fails. We can do without crafting
- * overrides just fine. Not so for configs.
- *
+/**Custom class designed to hold crafting overrides.  Split from the main config file
+ * to prevent nuking the file if the config loading fails.  We can do without crafting
+ * overrides just fine.  Not so for configs.
+ * 
  * @author don_bruce
  */
 public class JSONCraftingOverrides {

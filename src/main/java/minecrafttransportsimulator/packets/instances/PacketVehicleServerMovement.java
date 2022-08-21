@@ -6,16 +6,15 @@ import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
-/**
- * Packet used to send server vehicle movement to clients. This packet doesn't directly
+/**Packet used to send server vehicle movement to clients.  This packet doesn't directly
  * move the vehicle (such an action results in horrid movement lag due to network
  * latency and packet handling pipelines), rather it simply tells the client how much
- * the vehicle has moved since it was first spawned. This way clients can adjust the
+ * the vehicle has moved since it was first spawned.  This way clients can adjust the
  * vehicle position while at the same time running their own calculations to "soft-sync"
- * the position and rotation. This system of syncing has the side effect of significant
- * rubber banding when server TPS suffers or networking goes bad, but it's far better than
+ * the position and rotation.  This system of syncing has the side-effect of significant
+ * rubberbanding when server TPS suffers or networking goes bad, but it's far better than
  * the alternatives when the connection is good, hence why we use it.
- *
+ * 
  * @author don_bruce
  */
 public class PacketVehicleServerMovement extends APacketEntity<EntityVehicleF_Physics> {

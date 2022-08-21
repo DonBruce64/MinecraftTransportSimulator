@@ -5,9 +5,8 @@ import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPol
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 
-/**
- * Lighted pole component. Renders a constant beam when turned on.
- *
+/**Lighted pole component.  Renders a constant beam when turned on.
+ * 
  * @author don_bruce
  */
 public class TileEntityPole_StreetLight extends ATileEntityPole_Component {

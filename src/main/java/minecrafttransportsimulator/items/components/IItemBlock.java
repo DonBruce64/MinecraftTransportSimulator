@@ -1,35 +1,34 @@
 package minecrafttransportsimulator.items.components;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 
-import java.util.HashMap;
-import java.util.Map;
-
-/**
- * Interface that allows for this item to spawn an instance of {@link ABlockBase} into the world.
+/**Interface that allows for this item to spawn an instance of {@link ABlockBase} into the world.
  * This interface doesn't actually spawn the item; rather, it allows such an item to be obtained.
- *
+ * 
  * @author don_bruce
  */
 public interface IItemBlock {
-    Map<IItemBlock, ABlockBase> itemToBlockMap = new HashMap<>();
+    public static final Map<IItemBlock, ABlockBase> itemToBlockMap = new HashMap<IItemBlock, ABlockBase>();
 
     /**
-     * Returns the block class that goes to this IItemBlock.
-     * Used to create an instance of the block, but functions
-     * as a key to prevent creating gobs of block instances
-     * that we just throw away after registration.
+     *  Returns the block class that goes to this IItemBlock.
+     *  Used to create an instance of the block, but functions
+     *  as a key to prevent creating gobs of block instances
+     *  that we just throw away after registration.
      */
-    Class<? extends ABlockBase> getBlockClass();
+    public Class<? extends ABlockBase> getBlockClass();
 
     /**
-     * Gets the block for this IItemBlock.
+     *  Gets the block for this IItemBlock.
      */
-    default ABlockBase getBlock() {
+    public default ABlockBase getBlock() {
         if (!itemToBlockMap.containsKey(this)) {
             //First check to see if we already created the block class.
             Class<? extends ABlockBase> blockClass = getBlockClass();
@@ -58,10 +57,10 @@ public interface IItemBlock {
     }
 
     /**
-     * Tries to let this player place the block for this IItemBlock into the world.
-     * Returns true if the block was placed.
+     *  Tries to let this player place the block for this IItemBlock into the world.
+     *  Returns true if the block was placed.
      */
-    default boolean placeBlock(AWrapperWorld world, IWrapperPlayer player, Point3D position, Axis axis) {
+    public default boolean placeBlock(AWrapperWorld world, IWrapperPlayer player, Point3D position, Axis axis) {
         return world.setBlock(getBlock(), position, player, axis);
     }
 }

@@ -1,11 +1,11 @@
 {
-    "general": {
-        "name": "Custom Bench",
-        "materials": [],
-        "width": 1.0,
-        "height": 1.0,
-        "depth": 1.0,
-        "itemTypes": ["part"],
-        "partTypes": ["generic"]
-    }
+	"general": {
+		"name" : "Custom Bench",
+		"materials" : [],
+		"width" : 1.0,
+		"height" : 1.0,
+		"depth" : 1.0,
+		"itemTypes" : ["part"],
+		"partTypes" : ["generic"]
+	}
 }

@@ -1,9 +1,18 @@
 package mcinterface1122;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.annotation.Nullable;
+
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.entities.components.*;
+import minecrafttransportsimulator.entities.components.AEntityB_Existing;
+import minecrafttransportsimulator.entities.components.AEntityD_Definable;
+import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
+import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
+import minecrafttransportsimulator.entities.components.AEntityG_Towable;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.IItemEntityProvider;
@@ -26,44 +35,28 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.registry.EntityEntry;
 import net.minecraftforge.fml.common.registry.EntityEntryBuilder;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.HashMap;
-import java.util.Map;
-
-/**
- * Builder for the main entity classes for MTS. This builder allows us to create a new entity
+/**Builder for the main entity classes for MTS.  This builder allows us to create a new entity
  * class that we can control that doesn't have the wonky systems the MC entities have, such
  * as no roll axis, a single hitbox, and tons of immutable objects that get thrown away every update.
  * Constructor simply takes in a world instance per default MC standards, but doesn't create the actual
- * {@link AEntityB_Existing} until later. This is because we can't build our entity at the same time MC creates
- * this instance as we might not yet have NBT data. Instead, we simply hold on to the class and construct
+ * {@link AEntityB_Existing} until later.  This is because we can't build our entity at the same time MC creates 
+ * this instance as we might not yet have NBT data.  Instead, we simply hold on to the class and construct 
  * it whenever we get called to do so.
  *
  * @author don_bruce
  */
 @EventBusSubscriber
 public class BuilderEntityExisting extends ABuilderEntityBase {
-    /**
-     * Maps Entity class names to instances of the IItemEntityProvider class that creates them.
-     **/
-    protected static final Map<String, IItemEntityProvider<?>> entityMap = new HashMap<>();
+    /**Maps Entity class names to instances of the IItemEntityProvider class that creates them.**/
+    protected static final Map<String, IItemEntityProvider<?>> entityMap = new HashMap<String, IItemEntityProvider<?>>();
 
-    /**
-     * Current entity we are built around. This MAY be null if we haven't loaded NBT from the server yet.
-     **/
+    /**Current entity we are built around.  This MAY be null if we haven't loaded NBT from the server yet.**/
     protected AEntityB_Existing entity;
-    /**
-     * Last saved explosion position (used for damage calcs).
-     **/
+    /**Last saved explosion position (used for damage calcs).**/
     private static Point3D lastExplosionPosition;
-    /**
-     * Collective for interaction boxes. These are used by this entity to allow players to interact with it.
-     **/
+    /**Collective for interaction boxes.  These are used by this entity to allow players to interact with it.**/
     private WrapperAABBCollective interactionBoxes;
-    /**
-     * Collective for collision boxes. These are used by this entity to make things collide with it.
-     **/
+    /**Collective for collision boxes.  These are used by this entity to make things collide with it.**/
     private WrapperAABBCollective collisionBoxes;
 
     public BuilderEntityExisting(World world) {
@@ -131,12 +124,16 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
             if (!loadedFromSavedNBT && loadFromSavedNBT) {
                 WrapperWorld worldWrapper = WrapperWorld.getWrapperFor(world);
                 try {
-                    entity = entityMap.get(lastLoadedNBT.getString("entityid")).createEntity(worldWrapper, null, new WrapperNBT(lastLoadedNBT));
+                    WrapperNBT data = new WrapperNBT(lastLoadedNBT);
+                    entity = entityMap.get(lastLoadedNBT.getString("entityid")).createEntity(worldWrapper, null, data);
+                    if (entity instanceof AEntityF_Multipart) {
+                        ((AEntityF_Multipart<?>) entity).addPartsPostAddition(null, data);
+                    }
                     entity.world.addEntity(entity);
                     loadedFromSavedNBT = true;
                     lastLoadedNBT = null;
                 } catch (Exception e) {
-                    InterfaceManager.coreInterface.logError("Failed to load entity on builder from saved NBT. Did a pack change?");
+                    InterfaceManager.coreInterface.logError("Failed to load entity on builder from saved NBT.  Did a pack change?");
                     InterfaceManager.coreInterface.logError(e.getMessage());
                     setDead();
                 }
@@ -154,14 +151,14 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
     }
 
     @Override
-    public boolean attackEntityFrom(@Nonnull DamageSource source, float amount) {
+    public boolean attackEntityFrom(DamageSource source, float amount) {
         if (ConfigSystem.settings.damage.allowExternalDamage.value && !world.isRemote && entity instanceof AEntityE_Interactable) {
             AEntityE_Interactable<?> interactable = ((AEntityE_Interactable<?>) entity);
             Entity attacker = source.getImmediateSource();
             Entity trueSource = source.getTrueSource();
             WrapperPlayer playerSource = trueSource instanceof EntityPlayer ? WrapperPlayer.getWrapperFor((EntityPlayer) trueSource) : null;
             if (lastExplosionPosition != null && source.isExplosion()) {
-                //We encountered an explosion. These may or may not have have entities linked to them. Depends on if
+                //We encountered an explosion.  These may or may not have have entities linked to them.  Depends on if
                 //it's a player firing a gun that had a bullet, or a random TNT lighting in the world.
                 //Explosions, unlike other damage sources, can hit multiple collision boxes on an entity at once.
                 BoundingBox explosiveBounds = new BoundingBox(lastExplosionPosition, amount, amount, amount);
@@ -201,7 +198,6 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
         return true;
     }
 
-    @Nonnull
     @Override
     public AxisAlignedBB getEntityBoundingBox() {
         //Override this to make interaction checks work with the multiple collision points.
@@ -217,9 +213,8 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
         return collisionBoxes != null ? collisionBoxes : super.getCollisionBoundingBox();
     }
 
-    @Nonnull
     @Override
-    public ItemStack getPickedResult(@Nonnull RayTraceResult target) {
+    public ItemStack getPickedResult(RayTraceResult target) {
         if (entity instanceof AEntityF_Multipart) {
             for (APart part : ((AEntityF_Multipart<?>) entity).parts) {
                 for (BoundingBox box : part.interactionBoxes) {
@@ -241,23 +236,22 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
         return collisionBoxes != null && !collisionBoxes.boxes.isEmpty();
     }
 
-    @Nonnull
     @Override
-    public NBTTagCompound writeToNBT(@Nonnull NBTTagCompound tagCompound) {
-        super.writeToNBT(tagCompound);
+    public NBTTagCompound writeToNBT(NBTTagCompound tag) {
+        super.writeToNBT(tag);
         if (entity != null) {
             //Entity is valid, save it and return the modified tag.
             //Also save the class ID so we know what to construct when MC loads this Entity back up.
-            entity.save(new WrapperNBT(tagCompound));
-            tagCompound.setString("entityid", entity.getClass().getSimpleName());
+            entity.save(new WrapperNBT(tag));
+            tag.setString("entityid", entity.getClass().getSimpleName());
         }
-        return tagCompound;
+        return tag;
     }
 
     /**
      * We need to use explosion events here as we don't know where explosions occur in the world.
      * This results in them being position-less, so we can't get the collision box they hit for damage.
-     * Whenever we have an explosion detonated in the world, save it's position. We can then use it
+     * Whenever we have an explosion detonated in the world, save it's position.  We can then use it
      * in {@link #attackEntityFrom(DamageSource, float)} to tell the system which part to attack.
      */
     @SubscribeEvent

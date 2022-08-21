@@ -9,14 +9,13 @@ import minecrafttransportsimulator.sound.RadioManager.RadioSources;
 import minecrafttransportsimulator.sound.RadioStation;
 import minecrafttransportsimulator.sound.SoundInstance;
 
-/**
- * Base class for radios. Used to provide a common set of tools for all radio implementations.
+/**Base class for radios.  Used to provide a common set of tools for all radio implementations.
  * This class keeps track of the radio station currently selected, as well as the
- * current volume for the source and equalization settings. The actual station being planed
+ * current volume for the source and equalization settings.  The actual station being planed
  * is in the {@link RadioStation} class, which is handled by the {@link RadioManager}.
- *
- * @author don_bruce
- */
+*
+* @author don_bruce
+*/
 public class EntityRadio extends AEntityB_Existing {
 
     //Public variables for modifying state.
@@ -66,7 +65,7 @@ public class EntityRadio extends AEntityB_Existing {
 
     @Override
     public boolean shouldSavePosition() {
-        //Don't save positional data. We don't care about that as that comes from our provider.
+        //Don't save positional data.  We don't care about that as that comes from our provider.
         return false;
     }
 
@@ -160,7 +159,7 @@ public class EntityRadio extends AEntityB_Existing {
     }
 
     /**
-     * Sets the station for this radio. Station is responsible for starting playback of sounds.
+     * Sets the station for this radio.  Station is responsible for starting playback of sounds.
      */
     public void startLocalPlayback(int index, boolean randomRequested) {
         stop();
@@ -193,7 +192,7 @@ public class EntityRadio extends AEntityB_Existing {
     }
 
     /**
-     * Sets the properties without doing any operations. Used on servers to track state changes.
+     * Sets the properties without doing any operations.  Used on servers to track state changes.
      */
     public void setProperties(RadioSources source, int volume, int preset, boolean randomOrder, String currentURL) {
         this.currentSource = source;
@@ -202,7 +201,6 @@ public class EntityRadio extends AEntityB_Existing {
         this.randomOrder = randomOrder;
         this.currentURL = currentURL;
     }
-
 
     @Override
     public IWrapperNBT save(IWrapperNBT data) {

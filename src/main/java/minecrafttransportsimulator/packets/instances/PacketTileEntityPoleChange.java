@@ -9,16 +9,14 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.packets.components.APacketEntityInteract;
 
-/**
- * Packet sent to poles to change their states. This gets sent when a player clicks a pole on the server
+/**Packet sent to poles to change their states.  This gets sent when a player clicks a pole on the server
  * and a component is added or removed from the pole.
- *
+ * 
  * @author don_bruce
  */
 public class PacketTileEntityPoleChange extends APacketEntityInteract<TileEntityPole, IWrapperPlayer> {
     private final Axis axis;
     private final IWrapperNBT data;
-
 
     public PacketTileEntityPoleChange(TileEntityPole pole, IWrapperPlayer player, Axis axis, IWrapperNBT data) {
         super(pole, player);
@@ -51,7 +49,7 @@ public class PacketTileEntityPoleChange extends APacketEntityInteract<TileEntity
     @Override
     protected boolean handle(AWrapperWorld world, TileEntityPole pole, IWrapperPlayer player) {
         if (data != null) {
-            //Player clicked with a component. Add it.
+            //Player clicked with a component.  Add it.
             pole.changeComponent(axis, PoleComponentType.createComponent(pole, player, axis, data));
         } else {
             pole.changeComponent(axis, null);

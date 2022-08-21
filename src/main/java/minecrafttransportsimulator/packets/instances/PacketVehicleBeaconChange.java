@@ -6,11 +6,10 @@ import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
-/**
- * Packet sent to vehicles to update their selected beacons. This is sent from clients when they
- * change the beacon parameters in the panel. A callback packet is then sent from the server to
+/**Packet sent to vehicles to update their selected beacons.  This is sent from clients when they
+ * change the beacon parameters in the panel.  A callback packet is then sent from the server to
  * all clients to update their states.
- *
+ * 
  * @author don_bruce
  */
 public class PacketVehicleBeaconChange extends APacketEntity<EntityVehicleF_Physics> {

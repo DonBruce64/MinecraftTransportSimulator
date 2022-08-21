@@ -1,32 +1,34 @@
 package minecrafttransportsimulator.entities.instances;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
+import java.util.UUID;
+
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.NavBeacon;
-import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
-import minecrafttransportsimulator.mcinterface.*;
-import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
-import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
-import minecrafttransportsimulator.packets.instances.PacketPartEngine;
-import minecrafttransportsimulator.packets.instances.PacketPartEngine.Signal;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
-import java.util.*;
-
-/**
- * This class adds engine components for vehicles, such as fuel, throttle,
- * and electricity. Contains numerous methods for gauges, HUDs, and fuel systems.
+/**This class adds engine components for vehicles, such as fuel, throttle,
+ * and electricity.  Contains numerous methods for gauges, HUDs, and fuel systems.
  * This is added on-top of the D level to keep the crazy movement calculations
- * separate from the vehicle power overhead bits. This is the first level of
+ * separate from the vehicle power overhead bits.  This is the first level of
  * class that can be used for references in systems as it's the last common class for
- * vehicles. All other sub-levels are simply functional building-blocks to keep this
- * class from having 1000+ lines of code and to better segment things out.
- *
+ * vehicles.  All other sub-levels are simply functional building-blocks to keep this
+ *  class from having 1000+ lines of code and to better segment things out.
+ * 
  * @author don_bruce
  */
 abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
@@ -52,7 +54,6 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
     public double throttle;
     public static final double MAX_THROTTLE = 1.0D;
 
-
     //Internal states.
     public int gearMovementTime;
     public double electricPower;
@@ -60,13 +61,13 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
     public double electricFlow;
     public String selectedBeaconName;
     public NavBeacon selectedBeacon;
-    public final EntityFluidTank fuelTank;
+    public EntityFluidTank fuelTank;
 
     //Part maps.
     public final BiMap<Byte, PartEngine> engines = HashBiMap.create();
 
     //Map containing incoming missiles, sorted by distance, which is the value for this map.
-    public final List<EntityBullet> missilesIncoming = new ArrayList<>();
+    public final List<EntityBullet> missilesIncoming = new ArrayList<EntityBullet>();
 
     public AEntityVehicleE_Powered(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data) {
         super(world, placingPlayer, data);
@@ -94,7 +95,7 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
 
         //If we have space for fuel, and we have tanks with it, transfer it.
         if (!world.isClient() && fuelTank.getFluidLevel() < definition.motorized.fuelCapacity - 100) {
-            for (APart part : parts) {
+            for (APart part : allParts) {
                 if (part instanceof PartInteractable && part.isActive && part.definition.interactable.feedsVehicles) {
                     EntityFluidTank tank = ((PartInteractable) part).tank;
                     if (tank != null) {
@@ -158,7 +159,7 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
                 electricPower = towedByConnection.towingVehicle.electricPower;
             }
         } else if (damageAmount < definition.general.health) {
-            electricPower = Math.max(0, Math.min(13, electricPower - electricUsage));
+            electricPower = Math.max(0, Math.min(13, electricPower -= electricUsage));
             electricFlow = electricUsage;
             electricUsage = 0;
         } else {
@@ -180,73 +181,23 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
 
         //Check that missiles are still valid.
         //If they are, update their distances. Otherwise, remove them.
-        missilesIncoming.removeIf(entityBullet -> !entityBullet.isValid);
-        missilesIncoming.sort((missile1, missile2) -> missile1.targetDistance < missile2.targetDistance ? -1 : 1);
+        Iterator<EntityBullet> iterator = missilesIncoming.iterator();
+        while (iterator.hasNext()) {
+            if (!iterator.next().isValid) {
+                iterator.remove();
+            }
+        }
+        missilesIncoming.sort(new Comparator<EntityBullet>() {
+            @Override
+            public int compare(EntityBullet missle1, EntityBullet missile2) {
+                return missle1.targetDistance < missile2.targetDistance ? -1 : 1;
+            }
+        });
         world.endProfiling();
     }
 
     @Override
-    public boolean addRider(IWrapperEntity rider, Point3D riderLocation) {
-        if (super.addRider(rider, riderLocation)) {
-            if (world.isClient() && ConfigSystem.client.controlSettings.autostartEng.value && rider.equals(InterfaceManager.clientInterface.getClientPlayer())) {
-                if (rider instanceof IWrapperPlayer && getSeatForRider(rider).placementDefinition.isController && canPlayerStartEngines((IWrapperPlayer) rider)) {
-                    for (PartEngine engine : engines.values()) {
-                        if (!definition.motorized.isAircraft) {
-                            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE));
-                        }
-                        InterfaceManager.packetInterface.sendToServer(new PacketPartEngine(engine, Signal.AS_ON));
-                    }
-                    if (parkingBrakeOn) {
-                        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(this, PARKINGBRAKE_VARIABLE));
-                    }
-                }
-            }
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    @Override
-    public void removeRider(IWrapperEntity rider) {
-        PartSeat seat = getSeatForRider(rider);
-        //De-select active gun if required.
-        if (seat.placementDefinition.canDisableGun) {
-            seat.activeGun = null;
-        }
-
-        if (world.isClient() && ConfigSystem.client.controlSettings.autostartEng.value && rider.equals(InterfaceManager.clientInterface.getClientPlayer())) {
-            if (rider instanceof IWrapperPlayer && seat.placementDefinition.isController) {
-                //Check if another player is in a controller seat. If so, don't stop the engines.
-                boolean otherController = false;
-                for (IWrapperEntity otherRider : riderLocationMap.inverse().keySet()) {
-                    if (!rider.equals(otherRider) && otherRider instanceof IWrapperPlayer && getSeatForRider(otherRider).placementDefinition.isController) {
-                        otherController = true;
-                        break;
-                    }
-                }
-                if (!otherController) {
-                    for (PartEngine engine : engines.values()) {
-                        if (engine.magnetoOn) {
-                            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.MAGNETO_VARIABLE));
-                        }
-                        if (engine.electricStarterEngaged) {
-                            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.ELECTRIC_STARTER_VARIABLE));
-                        }
-                    }
-                    InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(this, BRAKE_VARIABLE, 0));
-                    if (!parkingBrakeOn) {
-                        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(this, PARKINGBRAKE_VARIABLE));
-                    }
-                }
-            }
-        }
-        super.removeRider(rider);
-    }
-
-    @Override
     public void destroy(BoundingBox box) {
-        super.destroy(box);
         //Spawn instruments in the world.
         for (ItemInstrument instrument : instruments) {
             if (instrument != null) {
@@ -254,18 +205,21 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
             }
         }
 
-        //Oh, and add explosions. Because those are always fun.
+        //Oh, and add explosions.  Because those are always fun.
         //Note that this is done after spawning all parts here and in the super call,
         //so although all parts are DROPPED, not all parts may actually survive the explosion.
         if (ConfigSystem.settings.damage.explosions.value) {
             double explosivePower = 0;
-            for (APart part : parts) {
+            for (APart part : allParts) {
                 if (part instanceof PartInteractable) {
                     explosivePower += ((PartInteractable) part).getExplosiveContribution();
                 }
             }
             world.spawnExplosion(box.globalCenter, explosivePower + fuelTank.getExplosiveness() + 1D, true);
         }
+
+        //Now call super, since super might modify parts.
+        super.destroy(box);
     }
 
     @Override
@@ -284,7 +238,7 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
                 for (String type : partDef.types) {
                     if (type.startsWith("engine")) {
                         //Part goes into this slot.
-                        if (part.placementOffset.equals(partDef.pos)) {
+                        if (part.placementSlot == definition.parts.indexOf(partDef)) {
                             engines.put(engineNumber, (PartEngine) part);
                             return;
                         }
@@ -293,6 +247,11 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
                     }
                 }
             }
+
+            //Engine position not found.  Get the next free slot and add it.
+            while (engines.containsKey(engineNumber++))
+                ;
+            engineNumber--;
             engines.put(engineNumber, (PartEngine) part);
         }
     }

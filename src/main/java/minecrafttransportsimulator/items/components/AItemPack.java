@@ -1,19 +1,21 @@
 package minecrafttransportsimulator.items.components;
 
+import java.util.List;
+
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
-import minecrafttransportsimulator.jsondefs.*;
+import minecrafttransportsimulator.jsondefs.AJSONItem;
+import minecrafttransportsimulator.jsondefs.JSONCraftingBench;
+import minecrafttransportsimulator.jsondefs.JSONPack;
+import minecrafttransportsimulator.jsondefs.JSONPart;
+import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
-import java.util.Arrays;
-import java.util.List;
-
-/**
- * Base item class for all pack-created items. Stores information such as the
+/**Base item class for all pack-created items.  Stores information such as the
  * pack the item belongs to and the class that extends {@link AJSONItem} that
  * is the instance of the item's pack.
- *
+ * 
  * @author don_bruce
  */
 public abstract class AItemPack<JSONDefinition extends AJSONItem> extends AItemBase {
@@ -38,7 +40,9 @@ public abstract class AItemPack<JSONDefinition extends AJSONItem> extends AItemB
 
     @Override
     public void addTooltipLines(List<String> tooltipLines, IWrapperNBT data) {
-        tooltipLines.addAll(Arrays.asList(ConfigSystem.language.packs.get(definition.packID).get(getRegistrationName()).description.split("\n")));
+        for (String tooltipLine : ConfigSystem.language.packs.get(definition.packID).get(getRegistrationName()).description.split("\n")) {
+            tooltipLines.add(tooltipLine);
+        }
     }
 
     @Override
@@ -102,7 +106,7 @@ public abstract class AItemPack<JSONDefinition extends AJSONItem> extends AItemB
     }
 
     /**
-     * Repairs the item. What happens during repair differs from item to item.
+     * Repairs the item.  What happens during repair differs from item to item.
      */
     public void repair(IWrapperNBT data) {
         if (this instanceof IItemEntityProvider && AEntityE_Interactable.class.isAssignableFrom(((IItemEntityProvider<?>) this).getEntityClass())) {

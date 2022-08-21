@@ -1,5 +1,9 @@
 package mcinterface1122;
 
+import java.util.Collection;
+
+import javax.annotation.Nullable;
+
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import net.minecraft.util.EnumFacing;
@@ -7,16 +11,11 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.Collection;
-
-/**
- * This class is essentially a collective list of BoundingBoxes. It intercepts all AABB
+/**This class is essentially a collective list of BoundingBoxes.  It intercepts all AABB 
  * calls and does checks for each BoundingBox that's in the passed-in list.
  * Mostly used for entities that need complex collision mapping, because MC don't let you have more
  * than one AABB per entity, but somehow you can have more than one for something as small as a block?
- *
+ * 
  * @author don_bruce
  */
 class WrapperAABBCollective extends AxisAlignedBB {
@@ -24,24 +23,17 @@ class WrapperAABBCollective extends AxisAlignedBB {
     protected BoundingBox lastBoxRayTraced;
 
     public WrapperAABBCollective(BoundingBox encompassingBox, Collection<BoundingBox> boxes) {
-        super(encompassingBox.globalCenter.x - encompassingBox.widthRadius,
-                encompassingBox.globalCenter.y - encompassingBox.heightRadius,
-                encompassingBox.globalCenter.z - encompassingBox.depthRadius,
-                encompassingBox.globalCenter.x + encompassingBox.widthRadius,
-                encompassingBox.globalCenter.y + encompassingBox.heightRadius,
-                encompassingBox.globalCenter.z + encompassingBox.depthRadius
-        );
+        super(encompassingBox.globalCenter.x - encompassingBox.widthRadius, encompassingBox.globalCenter.y - encompassingBox.heightRadius, encompassingBox.globalCenter.z - encompassingBox.depthRadius, encompassingBox.globalCenter.x + encompassingBox.widthRadius, encompassingBox.globalCenter.y + encompassingBox.heightRadius, encompassingBox.globalCenter.z + encompassingBox.depthRadius);
         this.boxes = boxes;
     }
 
-    @Nonnull
     @Override
     public WrapperAABBCollective grow(double value) {
         return this;
     }
 
     @Override
-    public double calculateXOffset(@Nonnull AxisAlignedBB box, double offset) {
+    public double calculateXOffset(AxisAlignedBB box, double offset) {
         for (BoundingBox testBox : boxes) {
             if (box.maxY > testBox.globalCenter.y - testBox.heightRadius && box.minY < testBox.globalCenter.y + testBox.heightRadius && box.maxZ > testBox.globalCenter.z - testBox.depthRadius && box.minZ < testBox.globalCenter.z + testBox.depthRadius) {
                 if (offset > 0.0D) {
@@ -63,7 +55,7 @@ class WrapperAABBCollective extends AxisAlignedBB {
     }
 
     @Override
-    public double calculateYOffset(@Nonnull AxisAlignedBB box, double offset) {
+    public double calculateYOffset(AxisAlignedBB box, double offset) {
         for (BoundingBox testBox : boxes) {
             if (box.maxX > testBox.globalCenter.x - testBox.widthRadius && box.minX < testBox.globalCenter.x + testBox.widthRadius && box.maxZ > testBox.globalCenter.z - testBox.depthRadius && box.minZ < testBox.globalCenter.z + testBox.depthRadius) {
                 if (offset > 0.0D) {
@@ -85,7 +77,7 @@ class WrapperAABBCollective extends AxisAlignedBB {
     }
 
     @Override
-    public double calculateZOffset(@Nonnull AxisAlignedBB box, double offset) {
+    public double calculateZOffset(AxisAlignedBB box, double offset) {
         for (BoundingBox testBox : boxes) {
             if (box.maxX > testBox.globalCenter.x - testBox.widthRadius && box.minX < testBox.globalCenter.x + testBox.widthRadius && box.maxY > testBox.globalCenter.y - testBox.heightRadius && box.minY < testBox.globalCenter.y + testBox.heightRadius) {
                 if (offset > 0.0D) {
@@ -111,13 +103,7 @@ class WrapperAABBCollective extends AxisAlignedBB {
         //CHeck super first, as that's the encompassing box.
         if (super.intersects(otherMinX, otherMinY, otherMinZ, otherMaxX, otherMaxY, otherMaxZ)) {
             for (BoundingBox testBox : boxes) {
-                if (
-                        otherMaxX > testBox.globalCenter.x - testBox.widthRadius &&
-                                otherMinX < testBox.globalCenter.x + testBox.widthRadius &&
-                                otherMaxY > testBox.globalCenter.y - testBox.heightRadius &&
-                                otherMinY < testBox.globalCenter.y + testBox.heightRadius &&
-                                otherMaxZ > testBox.globalCenter.z - testBox.depthRadius &&
-                                otherMinZ < testBox.globalCenter.z + testBox.depthRadius) {
+                if (otherMaxX > testBox.globalCenter.x - testBox.widthRadius && otherMinX < testBox.globalCenter.x + testBox.widthRadius && otherMaxY > testBox.globalCenter.y - testBox.heightRadius && otherMinY < testBox.globalCenter.y + testBox.heightRadius && otherMaxZ > testBox.globalCenter.z - testBox.depthRadius && otherMinZ < testBox.globalCenter.z + testBox.depthRadius) {
                     return true;
                 }
             }

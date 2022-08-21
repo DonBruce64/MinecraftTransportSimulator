@@ -8,10 +8,9 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
-/**
- * Packet used to send signals to entities to connect/disconnect towing entities. Sent from the server to all clients when
+/**Packet used to send signals to entities to connect/disconnect towing entities.  Sent from the server to all clients when 
  * towing linking changes.
- *
+ * 
  * @author don_bruce
  */
 public class PacketEntityTowingChange extends APacketEntity<AEntityG_Towable<?>> {

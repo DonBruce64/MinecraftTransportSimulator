@@ -1,5 +1,10 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.instances.BlockPole;
@@ -10,27 +15,25 @@ import minecrafttransportsimulator.items.instances.ItemPoleComponent;
 import minecrafttransportsimulator.items.instances.ItemPoleComponent.PoleComponentType;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
-import minecrafttransportsimulator.mcinterface.*;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest.EntityGUIType;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleChange;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleCollisionUpdate;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
-/**
- * Pole tile entity. Remembers what components we have attached and the state of the components.
+/**Pole tile entity.  Remembers what components we have attached and the state of the components.
  * This tile entity does not tick, as states can be determined without ticks or are controlled
  * from other tickable TEs.
- *
- * @author don_bruce
- */
+*
+* @author don_bruce
+*/
 public class TileEntityPole extends ATileEntityBase<JSONPoleComponent> {
-    public final Map<Axis, ATileEntityPole_Component> components = new HashMap<>();
+    public final Map<Axis, ATileEntityPole_Component> components = new HashMap<Axis, ATileEntityPole_Component>();
 
     private float maxTotalLightLevel;
 
@@ -84,7 +87,7 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent> {
 
     @Override
     public boolean interact(IWrapperPlayer player) {
-        //Fire a packet to interact with this pole. Will either add, remove, or allow editing of the pole.
+        //Fire a packet to interact with this pole.  Will either add, remove, or allow editing of the pole.
         //Only fire packet if player is holding a pole component that's not an actual pole, a wrench,
         //or is clicking a sign with text.
         Axis axis = Axis.getFromRotation(player.getYaw(), definition.pole.allowsDiagonals).getOpposite();
@@ -104,11 +107,11 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent> {
                     return true;
                 }
             } else if (clickedComponent instanceof TileEntityPole_Sign && clickedComponent.definition.rendering != null && clickedComponent.definition.rendering.textObjects != null) {
-                //Player clicked a sign with text. Open the GUI to edit it.
+                //Player clicked a sign with text.  Open the GUI to edit it.
                 player.sendPacket(new PacketEntityGUIRequest(clickedComponent, player, EntityGUIType.TEXT_EDITOR));
                 return true;
             } else if (heldItem instanceof ItemPoleComponent && !((ItemPoleComponent) heldItem).definition.pole.type.equals(PoleComponentType.CORE) && !components.containsKey(axis)) {
-                //Player is holding component that could be added. Try and do so.
+                //Player is holding component that could be added.  Try and do so.
                 ItemPoleComponent componentItem = (ItemPoleComponent) heldItem;
                 IWrapperNBT stackData = heldStack.getData();
                 componentItem.populateDefaultData(stackData);
@@ -145,8 +148,8 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent> {
     }
 
     /**
-     * Helper method to add/remove components to this pole. Ensures all states are maintained
-     * for bounding boxes and component position. To remove a component, pass-in null for the axis.
+     * Helper method to add/remove components to this pole.  Ensures all states are maintained
+     * for bounding boxes and component position.  To remove a component, pass-in null for the axis.
      */
     public void changeComponent(Axis newAxis, ATileEntityPole_Component newComponent) {
         //Update component map.
@@ -264,8 +267,8 @@ public class TileEntityPole extends ATileEntityBase<JSONPoleComponent> {
 
     @Override
     public boolean disableRendering(float partialTicks) {
-        //We don't render poles themselves. Just their components.
-        return false;
+        //We don't render poles themselves.  Just their components.
+        return true;
     }
 
     @Override

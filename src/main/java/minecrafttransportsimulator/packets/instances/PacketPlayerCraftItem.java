@@ -3,16 +3,19 @@ package minecrafttransportsimulator.packets.instances;
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
-import minecrafttransportsimulator.mcinterface.*;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperInventory;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.packets.components.APacketPlayer;
 import minecrafttransportsimulator.packloading.PackParser;
 
-/**
- * Packet used to craft items from crafting benches. This goes to the server which verifies the
- * player has the appropriate materials. If so, the item is crafted on the server and materials
- * are deducted if required. Packet is not sent back to the client as MC will auto-add the item
+/**Packet used to craft items from crafting benches.  This goes to the server which verifies the
+ * player has the appropriate materials.  If so, the item is crafted on the server and materials
+ * are deducted if required.  Packet is not sent back to the client as MC will auto-add the item
  * into the player's inventory and will do updates for us.
- *
+ * 
  * @author don_bruce
  */
 public class PacketPlayerCraftItem extends APacketPlayer {
@@ -57,8 +60,7 @@ public class PacketPlayerCraftItem extends APacketPlayer {
                 item.repair(stackData);
                 stack.setData(stackData);
                 if (!player.isCreative()) {
-                    //forRepair is true at this point
-                    inventory.removeMaterials(itemToCraft, true, true, true);
+                    inventory.removeMaterials(itemToCraft, true, true, forRepair);
                 }
                 //Need to set stack after item removal, as removal code removes this item.
                 inventory.setStack(stack, repairIndex);
@@ -66,8 +68,7 @@ public class PacketPlayerCraftItem extends APacketPlayer {
                 //Check we can add the stack before removing materials.
                 if (inventory.addStack(itemToCraft.getNewStack(null))) {
                     if (!player.isCreative()) {
-                        //forRepair is false at this point
-                        inventory.removeMaterials(itemToCraft, true, true, false);
+                        inventory.removeMaterials(itemToCraft, true, true, forRepair);
                     }
                 }
             }

@@ -1,5 +1,16 @@
 package mcinterface1122;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -10,20 +21,30 @@ import minecrafttransportsimulator.blocks.components.ABlockBaseTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
-import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityBullet;
 import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
+import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
-import minecrafttransportsimulator.mcinterface.*;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataRequest;
 import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataUpdate;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import net.minecraft.block.*;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockBush;
+import net.minecraft.block.BlockCrops;
+import net.minecraft.block.BlockDirt;
+import net.minecraft.block.BlockSlab;
+import net.minecraft.block.IGrowable;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
@@ -60,32 +81,27 @@ import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 
-import java.io.File;
-import java.nio.file.Files;
-import java.util.*;
-
-/**
- * Wrapper to a world instance. This contains many common methods that
+/**Wrapper to a world instance.  This contains many common methods that 
  * MC has seen fit to change over multiple versions (such as lighting) and as such
- * provides a single point of entry to the world to interface with it. Note that
+ * provides a single point of entry to the world to interface with it.  Note that
  * clients and servers don't share world interfaces, and there are world interfaces for
  * every loaded world, so multiple interfaces will always be present on a system.
  *
  * @author don_bruce
  */
 public class WrapperWorld extends AWrapperWorld {
-    private static final Map<World, WrapperWorld> worldWrappers = new HashMap<>();
-    private final Map<UUID, BuilderEntityExisting> playerServerGunBuilders = new HashMap<>();
-    private final Map<UUID, Integer> ticksSincePlayerJoin = new HashMap<>();
-    private final List<AxisAlignedBB> mutableCollidingAABBs = new ArrayList<>();
-    private final Set<BlockPos> knownAirBlocks = new HashSet<>();
+    private static final Map<World, WrapperWorld> worldWrappers = new HashMap<World, WrapperWorld>();
+    private final Map<UUID, BuilderEntityExisting> playerServerGunBuilders = new HashMap<UUID, BuilderEntityExisting>();
+    private final Map<UUID, Integer> ticksSincePlayerJoin = new HashMap<UUID, Integer>();
+    private final List<AxisAlignedBB> mutableCollidingAABBs = new ArrayList<AxisAlignedBB>();
+    private final Set<BlockPos> knownAirBlocks = new HashSet<BlockPos>();
 
     protected final World world;
     private final IWrapperNBT savedData;
 
     /**
-     * Returns a wrapper instance for the passed-in world instance.
-     * Wrapper is cached to avoid re-creating the wrapper each time it is requested.
+     *  Returns a wrapper instance for the passed-in world instance.
+     *  Wrapper is cached to avoid re-creating the wrapper each time it is requested.
      */
     public static WrapperWorld getWrapperFor(World world) {
         if (world != null) {
@@ -110,7 +126,7 @@ public class WrapperWorld extends AWrapperWorld {
             //Load data from disk.
             try {
                 if (getDataFile().exists()) {
-                    this.savedData = new WrapperNBT(CompressedStreamTools.readCompressed(Files.newInputStream(getDataFile().toPath())));
+                    this.savedData = new WrapperNBT(CompressedStreamTools.readCompressed(new FileInputStream(getDataFile())));
                 } else {
                     this.savedData = InterfaceManager.coreInterface.getNewNBTWrapper();
                 }
@@ -129,7 +145,7 @@ public class WrapperWorld extends AWrapperWorld {
 
     @Override
     public long getTime() {
-        return world.getWorldTime();
+        return world.getWorldTime() % 24000;
     }
 
     @Override
@@ -170,7 +186,7 @@ public class WrapperWorld extends AWrapperWorld {
         savedData.setData(name, value);
         if (!isClient()) {
             try {
-                CompressedStreamTools.writeCompressed(((WrapperNBT) savedData).tag, Files.newOutputStream(getDataFile().toPath()));
+                CompressedStreamTools.writeCompressed(((WrapperNBT) savedData).tag, new FileOutputStream(getDataFile()));
                 InterfaceManager.packetInterface.sendToAllClients(new PacketWorldSavedDataUpdate(name, value));
             } catch (Exception e) {
                 e.printStackTrace();
@@ -196,7 +212,7 @@ public class WrapperWorld extends AWrapperWorld {
 
     @Override
     public List<IWrapperEntity> getEntitiesWithin(BoundingBox box) {
-        List<IWrapperEntity> entities = new ArrayList<>();
+        List<IWrapperEntity> entities = new ArrayList<IWrapperEntity>();
         for (Entity entity : world.getEntitiesWithinAABB(Entity.class, box.convert())) {
             if (!(entity instanceof ABuilderEntityBase)) {
                 entities.add(WrapperEntity.getWrapperFor(entity));
@@ -207,7 +223,7 @@ public class WrapperWorld extends AWrapperWorld {
 
     @Override
     public List<IWrapperEntity> getEntitiesHostile(IWrapperEntity lookingEntity, double radius) {
-        List<IWrapperEntity> entities = new ArrayList<>();
+        List<IWrapperEntity> entities = new ArrayList<IWrapperEntity>();
         Entity mcLooker = ((WrapperEntity) lookingEntity).entity;
         for (Entity entity : world.getEntitiesWithinAABBExcludingEntity(mcLooker, mcLooker.getEntityBoundingBox().grow(radius))) {
             if (entity instanceof IMob && !entity.isDead && (!(entity instanceof EntityLivingBase) || ((EntityLivingBase) entity).deathTime == 0)) {
@@ -247,7 +263,7 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     /**
-     * Internal method to spawn entities and return their builders.
+     *  Internal method to spawn entities and return their builders.
      */
     protected BuilderEntityExisting spawnEntityInternal(AEntityB_Existing entity) {
         BuilderEntityExisting builder = new BuilderEntityExisting(((WrapperWorld) entity.world).world);
@@ -259,7 +275,6 @@ public class WrapperWorld extends AWrapperWorld {
         return builder;
     }
 
-    @SuppressWarnings("UnnecessaryContinue")
     @Override
     public List<IWrapperEntity> attackEntities(Damage damage, Point3D motion, boolean generateList) {
         AxisAlignedBB mcBox = damage.box.convert();
@@ -268,15 +283,17 @@ public class WrapperWorld extends AWrapperWorld {
         //Get collided entities.
         if (motion != null) {
             mcBox = mcBox.expand(motion.x, motion.y, motion.z);
+            collidedEntities = world.getEntitiesWithinAABB(Entity.class, mcBox);
+        } else {
+            collidedEntities = world.getEntitiesWithinAABB(Entity.class, mcBox);
         }
-        collidedEntities = world.getEntitiesWithinAABB(Entity.class, mcBox);
 
         //Get variables.  If we aren't moving, we won't need these.
-        Point3D startPoint;
-        Point3D endPoint;
+        Point3D startPoint = null;
+        Point3D endPoint = null;
         Vec3d start = null;
         Vec3d end = null;
-        List<IWrapperEntity> hitEntities = new ArrayList<>();
+        List<IWrapperEntity> hitEntities = new ArrayList<IWrapperEntity>();
 
         if (motion != null) {
             startPoint = damage.box.globalCenter;
@@ -289,15 +306,15 @@ public class WrapperWorld extends AWrapperWorld {
         //Also get rayTrace hits for advanced checking.
         for (Entity mcEntityCollided : collidedEntities) {
             if (!(mcEntityCollided instanceof ABuilderEntityBase)) {
-                if (damage.damageSource != null) {
+                if (damage.damgeSource != null) {
                     Entity ridingEntity = mcEntityCollided.getRidingEntity();
                     if (ridingEntity instanceof BuilderEntityLinkedSeat) {
                         AEntityB_Existing internalEntity = ((BuilderEntityLinkedSeat) ridingEntity).entity;
-                        if (damage.damageSource == internalEntity) {
+                        if (damage.damgeSource == internalEntity) {
                             //Don't attack riders of the source of the damage.
                             continue;
-                        } else if (damage.damageSource instanceof APart) {
-                            APart damagingPart = (APart) damage.damageSource;
+                        } else if (damage.damgeSource instanceof APart) {
+                            APart damagingPart = (APart) damage.damgeSource;
                             if (damagingPart.entityOn == internalEntity) {
                                 //Don't attack riders of the multipart the part applying damage is a part of.
                                 continue;
@@ -307,10 +324,7 @@ public class WrapperWorld extends AWrapperWorld {
                 }
 
                 //Didn't hit a rider on the damage source. Do normal raytracing or just add if there's no motion.
-                if (motion != null && mcEntityCollided.getEntityBoundingBox().calculateIntercept(start, end) == null) {
-                    //Raytracing doesn't intercept the box, so no hits.
-                    continue;
-                } else {
+                if (motion == null || mcEntityCollided.getEntityBoundingBox().calculateIntercept(start, end) == null) {
                     hitEntities.add(WrapperEntity.getWrapperFor(mcEntityCollided));
                 }
             }
@@ -327,17 +341,12 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     @Override
-    public void loadEntities(BoundingBox box, AEntityE_Interactable<?> entityToLoad) {
+    public void loadEntities(BoundingBox box, EntityVehicleF_Physics vehicleToLoad) {
         for (Entity entity : world.getEntitiesWithinAABB(Entity.class, box.convert())) {
             if (!entity.isRiding() && (entity instanceof INpc || entity instanceof EntityCreature) && !(entity instanceof IMob)) {
-                for (Point3D rideableLocation : entityToLoad.rideableLocations) {
-                    if (!entityToLoad.riderLocationMap.containsKey(rideableLocation)) {
-                        if (entityToLoad instanceof EntityVehicleF_Physics) {
-                            if (((EntityVehicleF_Physics) entityToLoad).getPartAtLocation(rideableLocation).placementDefinition.isController) {
-                                continue;
-                            }
-                        }
-                        entityToLoad.addRider(new WrapperEntity(entity), rideableLocation);
+                for (APart part : vehicleToLoad.parts) {
+                    if (part instanceof PartSeat && part.rider == null && !part.placementDefinition.isController) {
+                        part.setRider(new WrapperEntity(entity), true);
                         break;
                     }
                 }
@@ -387,7 +396,7 @@ public class WrapperWorld extends AWrapperWorld {
         IBlockState state = world.getBlockState(pos);
         NonNullList<ItemStack> drops = NonNullList.create();
         state.getBlock().getDrops(drops, world, pos, state, 0);
-        List<IWrapperItemStack> convertedList = new ArrayList<>();
+        List<IWrapperItemStack> convertedList = new ArrayList<IWrapperItemStack>();
         for (ItemStack stack : drops) {
             convertedList.add(new WrapperItemStack(stack.copy()));
         }
@@ -400,7 +409,9 @@ public class WrapperWorld extends AWrapperWorld {
         RayTraceResult trace = world.rayTraceBlocks(start, start.add(delta.x, delta.y, delta.z), false, true, false);
         if (trace != null) {
             BlockPos pos = trace.getBlockPos();
-            return new Point3D(pos.getX(), pos.getY(), pos.getZ());
+            if (pos != null) {
+                return new Point3D(pos.getX(), pos.getY(), pos.getZ());
+            }
         }
         return null;
     }
@@ -412,7 +423,7 @@ public class WrapperWorld extends AWrapperWorld {
             IBlockState state = world.getBlockState(pos);
             Block offsetMCBlock = state.getBlock();
             EnumFacing facing = EnumFacing.valueOf(axis.name());
-            return !offsetMCBlock.equals(Blocks.BARRIER) && state.isSideSolid(world, pos, facing);
+            return offsetMCBlock != null ? !offsetMCBlock.equals(Blocks.BARRIER) && state.isSideSolid(world, pos, facing) : false;
         } else {
             return false;
         }
@@ -584,7 +595,7 @@ public class WrapperWorld extends AWrapperWorld {
                 if (item != null && mcPayer.canPlayerEdit(pos, facing, stack.stack) && world.mayPlace(wrapper, pos, false, facing, null)) {
                     IBlockState newState = wrapper.getStateForPlacement(world, pos, facing, 0, 0, 0, 0, mcPayer, EnumHand.MAIN_HAND);
                     if (world.setBlockState(pos, newState, 11)) {
-                        //Block is set. See if we need to set TE data.
+                        //Block is set.  See if we need to set TE data.
                         if (block instanceof ABlockBaseTileEntity) {
                             BuilderTileEntity<TileEntityType> builderTile = (BuilderTileEntity<TileEntityType>) world.getTileEntity(pos);
                             IWrapperNBT data = stack.getData();
@@ -601,7 +612,9 @@ public class WrapperWorld extends AWrapperWorld {
                 }
             } else {
                 IBlockState newState = wrapper.getDefaultState();
-                return world.setBlockState(pos, newState, 11);
+                if (world.setBlockState(pos, newState, 11)) {
+                    return true;
+                }
             }
         }
         return false;
@@ -676,8 +689,7 @@ public class WrapperWorld extends AWrapperWorld {
             Block cropBlock = cropState.getBlock();
             if (cropBlock instanceof IGrowable) {
                 IGrowable growable = (IGrowable) cropState.getBlock();
-                //isRemote is false at this point
-                if (growable.canGrow(world, cropPos, cropState, false)) {
+                if (growable.canGrow(world, cropPos, cropState, world.isRemote)) {
                     ItemDye.applyBonemeal(mcStack.copy(), world, cropPos);
                     return true;
                 }
@@ -690,13 +702,13 @@ public class WrapperWorld extends AWrapperWorld {
     public List<IWrapperItemStack> harvestBlock(Point3D position) {
         BlockPos pos = new BlockPos(position.x, position.y, position.z);
         IBlockState state = world.getBlockState(pos);
-        List<IWrapperItemStack> cropDrops = new ArrayList<>();
+        List<IWrapperItemStack> cropDrops = new ArrayList<IWrapperItemStack>();
         if ((state.getBlock() instanceof BlockCrops && ((BlockCrops) state.getBlock()).isMaxAge(state)) || state.getBlock() instanceof BlockBush) {
             Block harvestedBlock = state.getBlock();
             NonNullList<ItemStack> drops = NonNullList.create();
             world.playSound(pos.getX(), pos.getY(), pos.getZ(), harvestedBlock.getSoundType(state, world, pos, null).getBreakSound(), SoundCategory.BLOCKS, 1.0F, 1.0F, false);
 
-            //Only return drops on servers. Clients don't do items.
+            //Only return drops on servers.  Clients don't do items.
             if (!world.isRemote) {
                 harvestedBlock.getDrops(drops, world, pos, state, 0);
                 world.setBlockToAir(pos);
@@ -747,7 +759,7 @@ public class WrapperWorld extends AWrapperWorld {
     public boolean plowBlock(Point3D position) {
         BlockPos pos = new BlockPos(position.x, position.y, position.z);
         IBlockState oldState = world.getBlockState(pos);
-        IBlockState newState;
+        IBlockState newState = null;
         Block block = oldState.getBlock();
         if (block.equals(Blocks.GRASS) || block.equals(Blocks.GRASS_PATH)) {
             newState = Blocks.FARMLAND.getDefaultState();
@@ -835,15 +847,13 @@ public class WrapperWorld extends AWrapperWorld {
         world.newExplosion(null, location.x, location.y, location.z, (float) strength, flames, ConfigSystem.settings.general.blockBreakage.value);
     }
 
-
     /**
-     * Spawn "follower" entities for the player if they don't exist already.
-     * This only happens 3 seconds after the player joins.
-     * This delay is done to ensure all chunks are loaded before spawning any followers.
-     * We also track followers, and ensure that if the player doesn't exist, they are removed.
-     * This handles players leaving. We could use events for this, but they're not reliable.
-     */
-    @SuppressWarnings("UnnecessaryContinue")
+    * Spawn "follower" entities for the player if they don't exist already.
+    * This only happens 3 seconds after the player joins.
+    * This delay is done to ensure all chunks are loaded before spawning any followers.
+    * We also track followers, and ensure that if the player doesn't exist, they are removed.
+    * This handles players leaving.  We could use events for this, but they're not reliable.
+    */
     @SubscribeEvent
     public void on(TickEvent.WorldTickEvent event) {
         //Need to check if it's our world, because Forge is stupid like that.
@@ -857,13 +867,12 @@ public class WrapperWorld extends AWrapperWorld {
                     //We check basic states, and then the watchdog bit that gets reset every tick.
                     //This way if we're in the world, but not valid we will know.
                     if (gunBuilder.world != player.world || player.isDead || !gunBuilder.entity.isValid || gunBuilder.idleTickCounter == 20) {
-                        //Follower is not linked. Remove it and re-create in code below.
+                        //Follower is not linked.  Remove it and re-create in code below.
                         gunBuilder.setDead();
                         playerServerGunBuilders.remove(playerUUID);
                         ticksSincePlayerJoin.remove(playerUUID);
                     } else {
                         ++gunBuilder.idleTickCounter;
-                        continue;
                     }
                 } else if (!player.isDead) {
                     //Gun does not exist, check if player has been present for 3 seconds and spawn it.
@@ -874,8 +883,10 @@ public class WrapperWorld extends AWrapperWorld {
                     if (++totalTicksWaited == 60) {
                         //Spawn gun.
                         IWrapperPlayer playerWrapper = WrapperPlayer.getWrapperFor(player);
-                        EntityPlayerGun entity = new EntityPlayerGun(this, playerWrapper, InterfaceManager.coreInterface.getNewNBTWrapper());
+                        IWrapperNBT newData = InterfaceManager.coreInterface.getNewNBTWrapper();
+                        EntityPlayerGun entity = new EntityPlayerGun(this, playerWrapper, newData);
                         playerServerGunBuilders.put(playerUUID, spawnEntityInternal(entity));
+                        entity.addPartsPostAddition(playerWrapper, newData);
 
                         //If the player is new, also add handbooks.
                         if (!ConfigSystem.settings.general.joinedPlayers.value.contains(playerUUID)) {
@@ -899,9 +910,9 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     /**
-     * Remove all entities from our maps if we unload the world. This will cause duplicates if we don't.
-     * Also remove this wrapper from the created lists, as it's invalid.
-     */
+    * Remove all entities from our maps if we unload the world.  This will cause duplicates if we don't.
+    * Also remove this wrapper from the created lists, as it's invalid.
+    */
     @SubscribeEvent
     public void on(WorldEvent.Unload event) {
         //Need to check if it's our world, because Forge is stupid like that.

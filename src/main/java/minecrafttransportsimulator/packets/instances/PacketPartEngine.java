@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.packets.instances;
 
+import java.util.UUID;
+
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
@@ -8,15 +10,12 @@ import minecrafttransportsimulator.entities.instances.PartEngine;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
-import java.util.UUID;
-
-/**
- * Packet used to send signals to engines. This can be a state change or damage from an attack.
+/**Packet used to send signals to engines.  This can be a state change or damage from an attack.
  * Constructors are present for each of these situations, though the side this packet is present
- * on differ between packet types. For example engine signal data is sent both from clients to
+ * on differ between packet types.  For example engine signal data is sent both from clients to
  * the server, and from the server to clients, while damage information is only sent from
  * servers to clients.
- *
+ * 
  * @author don_bruce
  */
 public class PacketPartEngine extends APacketEntity<PartEngine> {
@@ -58,7 +57,7 @@ public class PacketPartEngine extends APacketEntity<PartEngine> {
         this.fuelLeak = false;
         this.brokenStarter = false;
         this.linkedID = linkedEngine.entityOn.uniqueUUID;
-        this.linkedPos = linkedEngine.placementOffset;
+        this.linkedPos = linkedEngine.placementDefinition.pos;
     }
 
     public PacketPartEngine(ByteBuf buf) {
@@ -111,15 +110,6 @@ public class PacketPartEngine extends APacketEntity<PartEngine> {
             case BACKFIRE:
                 engine.backfireEngine();
                 break;
-            case SHIFT_UP:
-                engine.shiftUp();
-                break;
-            case SHIFT_DOWN:
-                engine.shiftDown();
-                break;
-            case SHIFT_NEUTRAL:
-                engine.shiftNeutral();
-                break;
             case BAD_SHIFT:
                 engine.badShiftEngine();
                 break;
@@ -127,9 +117,17 @@ public class PacketPartEngine extends APacketEntity<PartEngine> {
                 engine.startEngine();
                 break;
             case FUEL_OUT:
+                engine.stallEngine(packetType);
+                break;
             case TOO_SLOW:
+                engine.stallEngine(packetType);
+                break;
             case DEAD_VEHICLE:
+                engine.stallEngine(packetType);
+                break;
             case INVALID_DIMENSION:
+                engine.stallEngine(packetType);
+                break;
             case DROWN:
                 engine.stallEngine(packetType);
                 break;
@@ -150,7 +148,7 @@ public class PacketPartEngine extends APacketEntity<PartEngine> {
                 AEntityF_Multipart<?> otherEntity = world.getEntity(linkedID);
                 if (otherEntity != null) {
                     for (APart part : otherEntity.parts) {
-                        if (part.placementOffset.equals(linkedPos)) {
+                        if (part.placementDefinition.pos.equals(linkedPos)) {
                             ((PartEngine) part).linkedEngine = engine;
                             engine.linkedEngine = (PartEngine) part;
                             return false;
@@ -166,9 +164,6 @@ public class PacketPartEngine extends APacketEntity<PartEngine> {
         HS_ON,
         AS_ON,
         BACKFIRE,
-        SHIFT_UP,
-        SHIFT_DOWN,
-        SHIFT_NEUTRAL,
         BAD_SHIFT,
         START,
         FUEL_OUT,
@@ -177,6 +172,6 @@ public class PacketPartEngine extends APacketEntity<PartEngine> {
         TOO_SLOW,
         DROWN,
         DAMAGE,
-        LINK
+        LINK;
     }
 }

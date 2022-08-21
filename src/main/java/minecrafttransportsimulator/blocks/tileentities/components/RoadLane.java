@@ -1,5 +1,9 @@
 package minecrafttransportsimulator.blocks.tileentities.components;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+
 import minecrafttransportsimulator.baseclasses.BezierCurve;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
@@ -15,12 +19,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityRoadConnectionUpdate;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-
-/**
- * Helper class for containing lane data. Lanes contain a reference to the road
+/**Helper class for containing lane data.  Lanes contain a reference to the road
  * they are a part of,  the lane number they represent, the curves that define
  * the path this lane can take, the prior segment this lane connects to,
  * and the next segment for each curve this lane connects to.
@@ -43,13 +42,13 @@ public class RoadLane {
         this.sectorNumber = sectorNumber;
         this.sectorLaneNumber = sectorLaneNumber;
         this.laneNumber = laneNumber;
-        this.curves = new ArrayList<>();
+        this.curves = new ArrayList<BezierCurve>();
         generateCurves();
-        this.priorConnections = new ArrayList<>();
-        this.nextConnections = new ArrayList<>();
+        this.priorConnections = new ArrayList<List<RoadLaneConnection>>();
+        this.nextConnections = new ArrayList<List<RoadLaneConnection>>();
         for (int i = 0; i < curves.size(); ++i) {
-            priorConnections.add(new ArrayList<>());
-            nextConnections.add(new ArrayList<>());
+            priorConnections.add(new ArrayList<RoadLaneConnection>());
+            nextConnections.add(new ArrayList<RoadLaneConnection>());
         }
         if (data != null) {
             for (int i = 0; i < curves.size(); ++i) {
@@ -70,11 +69,11 @@ public class RoadLane {
 
     private void generateCurves() {
         //Curves are generated based on the definition of the road, and the points for our lane.
-        //If we are a dynamic road, then we don't use end points. Instead, we use an
-        //end offset point. If we were made from a dynamic road, then the road's curve will be non-null;
+        //If we are a dynamic road, then we don't use end points.  Instead, we use an
+        //end offset point.  If we were made from a dynamic road, then the road's curve will be non-null;
         if (road.dynamicCurve != null) {
             //Only one curve, as we are a dynamic lane.
-            BezierCurve dynamicCurve = road.dynamicCurve.generateOffsetCurve(road.definition.road.laneOffsets[laneNumber]);
+            BezierCurve dynamicCurve = road.dynamicCurve.generateOffsetCurve(new Point3D(road.definition.road.laneOffsets[laneNumber], road.definition.road.collisionHeight / 16D, 0));
             curves.add(dynamicCurve);
         } else {
             //Generate all curves for our lane as defined by the static mapping.)
@@ -91,16 +90,16 @@ public class RoadLane {
     }
 
     /**
-     * Attempts to set this lane's connection points. This should be done on initial placement only.
+     * Attempts to set this lane's connection points.  This should be done on initial placement only.
      * If a connection is made, it is saved, and a packet is sent to establish it on clients.
-     * For times when a road is broken, use {@link #removeConnections()} on the lanes of the road being broken,
+     * For times when a road is broken, use {@link #removeConnections()} on the lanes of the road being broken, 
      * not this method on the lane that was connected to the broken road.
      */
     public void generateConnections() {
         //Iterate over all lane-curves in the road and connect to those that we line up with.
-        //Start with prior connections. For these, we get the blocks surrounding the start
-        //point, and check if they are part of a road. If so, we get the curves on that road
-        //and check if they connect to ourselves. After this, we do the end points.
+        //Start with prior connections.  For these, we get the blocks surrounding the start
+        //point, and check if they are part of a road.  If so, we get the curves on that road
+        //and check if they connect to ourselves.  After this, we do the end points.
         for (BezierCurve curve : curves) {
             checkAndAddConnections(curve, true);
             checkAndAddConnections(curve, false);
@@ -132,7 +131,7 @@ public class RoadLane {
 
                             //For any connection we make here, we send the packet to the OTHER curve.
                             //The reason being that this curve/lane won't be generated on the client
-                            //before the packet gets to it, so it won't execute. By sending the packet
+                            //before the packet gets to it, so it won't execute.  By sending the packet
                             //to the other curve, we update it, and then let the normal NBT data sync
                             //transfer work for this lane/road's new generated connections.
                             //We also don't want to make start-start or end-end connections to static roads.
@@ -181,7 +180,7 @@ public class RoadLane {
 
     /**
      * Removes all connections from this lane, and removes those connections from other
-     * connected lanes/roads. This should be done when this lane or road is removed from the world.
+     * connected lanes/roads.  This should be done when this lane or road is removed from the world.
      * Call this ONLY from the server: clients will get update packets as appropriate.
      */
     public void removeConnections() {
@@ -204,7 +203,7 @@ public class RoadLane {
                         InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityRoadConnectionUpdate(otherLane, curvePriorConnection.curveNumber, false, null));
                     }
                 } catch (Exception e) {
-                    InterfaceManager.coreInterface.logError("Couldn't get TE at position " + curvePriorConnection.tileLocation + " to break prior road connection. Was it changed?");
+                    InterfaceManager.coreInterface.logError("Couldn't get TE at position " + curvePriorConnection.tileLocation + " to break prior road connection.  Was it changed?");
                 }
             }
         }
@@ -227,7 +226,7 @@ public class RoadLane {
                         InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityRoadConnectionUpdate(otherLane, curveNextConnection.curveNumber, false, null));
                     }
                 } catch (Exception e) {
-                    InterfaceManager.coreInterface.logError("Couldn't get TE at position " + curveNextConnection.tileLocation + " to break next road connection. Was it changed?");
+                    InterfaceManager.coreInterface.logError("Couldn't get TE at position " + curveNextConnection.tileLocation + " to break next road connection.  Was it changed?");
                 }
             }
         }
@@ -240,7 +239,12 @@ public class RoadLane {
         List<RoadLaneConnection> connections = nextCurve ? nextConnections.get(curves.indexOf(curve)) : priorConnections.get(curves.indexOf(curve));
         if (!connections.isEmpty()) {
             //Sort the connections by curve net angle.
-            connections.sort(Comparator.comparingDouble(arg0 -> arg0.curveNetAngle));
+            connections.sort(new Comparator<RoadLaneConnection>() {
+                @Override
+                public int compare(RoadLaneConnection arg0, RoadLaneConnection arg1) {
+                    return arg0.curveNetAngle < arg1.curveNetAngle ? -1 : (arg0.curveNetAngle > arg1.curveNetAngle ? 1 : 0);
+                }
+            });
 
             //Get the connection requested.
             switch (requestedNextCurve) {
@@ -279,9 +283,9 @@ public class RoadLane {
         return data;
     }
 
-    public enum LaneSelectionRequest {
+    public static enum LaneSelectionRequest {
         LEFT,
         RIGHT,
-        NONE
+        NONE;
     }
 }

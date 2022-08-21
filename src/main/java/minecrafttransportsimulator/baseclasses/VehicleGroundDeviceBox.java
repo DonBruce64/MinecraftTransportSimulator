@@ -1,21 +1,20 @@
 package minecrafttransportsimulator.baseclasses;
 
-import minecrafttransportsimulator.entities.instances.APart;
-import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
-import minecrafttransportsimulator.entities.instances.PartGroundDevice;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-/**
- * This class is a IWrapper for vehicle ground device collision points. It's used to get a point
+import minecrafttransportsimulator.entities.instances.APart;
+import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
+import minecrafttransportsimulator.entities.instances.PartGroundDevice;
+
+/**This class is a IWrapper for vehicle ground device collision points.  It's used to get a point
  * to reference for ground collisions, and contains helper methods for doing calculations of those
- * points. Four of these can be used in a set to get four ground device points to use in
- * ground device operations on a vehicle. Note that this class differentiates between floating
- * and non-floating objects, and includes collision boxes for the latter. This ensures a
+ * points.  Four of these can be used in a set to get four ground device points to use in
+ * ground device operations on a vehicle.  Note that this class differentiates between floating
+ * and non-floating objects, and includes collision boxes for the latter.  This ensures a
  * seamless transition from a floating to ground state in movement.
- *
+ * 
  * @author don_bruce
  */
 public class VehicleGroundDeviceBox {
@@ -24,9 +23,9 @@ public class VehicleGroundDeviceBox {
     private final boolean isLeft;
     private final BoundingBox solidBox = new BoundingBox(new Point3D(), new Point3D(), 0D, 0D, 0D, false);
     private final BoundingBox liquidBox = new BoundingBox(new Point3D(), new Point3D(), 0D, 0D, 0D, true);
-    private final List<BoundingBox> liquidCollisionBoxes = new ArrayList<>();
-    private final List<PartGroundDevice> groundDevices = new ArrayList<>();
-    private final List<PartGroundDevice> liquidDevices = new ArrayList<>();
+    private final List<BoundingBox> liquidCollisionBoxes = new ArrayList<BoundingBox>();
+    private final List<PartGroundDevice> groundDevices = new ArrayList<PartGroundDevice>();
+    private final List<PartGroundDevice> liquidDevices = new ArrayList<PartGroundDevice>();
 
     public boolean canRollOnGround;
     public boolean contactedEntity;
@@ -38,10 +37,10 @@ public class VehicleGroundDeviceBox {
     public boolean isAbleToDoGroundOperations;
     public boolean isAbleToDoGroundOperationsLiquid;
     public double collisionDepth;
-    /**
-     * The point where this box contacts the world, in local coords to the vehicle it is on
-     **/
+    /**The point where this box contacts the world, in local coords to the vehicle it is on**/
     public final Point3D contactPoint = new Point3D();
+
+    private static final double MAX_DELTA_FROM_ZERO = 0.25;
 
     public VehicleGroundDeviceBox(EntityVehicleF_Physics vehicle, boolean isFront, boolean isLeft) {
         this.vehicle = vehicle;
@@ -50,10 +49,10 @@ public class VehicleGroundDeviceBox {
     }
 
     /**
-     * Updates what objects make up this GDB. These should change as parts are added and removed.
+     * Updates what objects make up this GDB.  These should change as parts are added and removed.
      */
     public void updateMembers() {
-        //Get all liquid collision boxes. Parts can add these via their collision boxes.
+        //Get all liquid collision boxes.  Parts can add these via their collision boxes.
         liquidCollisionBoxes.clear();
         for (BoundingBox box : vehicle.allBlockCollisionBoxes) {
             APart partOn = vehicle.getPartWithBox(box);
@@ -62,9 +61,10 @@ public class VehicleGroundDeviceBox {
                 final boolean boxLeft;
                 final boolean boxRight;
                 if (partOn != null) {
-                    boxFront = partOn.placementOffset.z > 0;
-                    boxLeft = partOn.placementOffset.x >= 0;
-                    boxRight = partOn.placementOffset.x <= 0;
+                    Point3D relativePosition = partOn.position.copy().subtract(partOn.vehicleOn.position).reOrigin(partOn.vehicleOn.orientation);
+                    boxFront = relativePosition.z > 0;
+                    boxLeft = relativePosition.x >= -MAX_DELTA_FROM_ZERO;
+                    boxRight = relativePosition.x <= MAX_DELTA_FROM_ZERO;
                 } else {
                     boxFront = box.localCenter.z > 0;
                     boxLeft = box.localCenter.x >= 0;
@@ -86,17 +86,17 @@ public class VehicleGroundDeviceBox {
             }
         }
 
-        //Get all part-based collision boxes. This includes solid and liquid ground devices.
+        //Get all part-based collision boxes.  This includes solid and liquid ground devices.
         groundDevices.clear();
         liquidDevices.clear();
         canRollOnGround = false;
-        for (APart part : vehicle.parts) {
+        for (APart part : vehicle.allParts) {
             if (part instanceof PartGroundDevice) {
-                if (!part.placementDefinition.isSpare) {
+                if (!part.isSpare) {
                     //X-offsets of 0 are both left and right as they are center points.
                     //This ensures we don't roll to try and align a center point.
-                    if (isFront && part.placementOffset.z > 0) {
-                        if (isLeft && part.placementOffset.x >= 0) {
+                    if (isFront && part.localOffset.z > MAX_DELTA_FROM_ZERO) {
+                        if (isLeft && part.localOffset.x >= -MAX_DELTA_FROM_ZERO) {
                             groundDevices.add((PartGroundDevice) part);
                             if (part.definition.ground.isWheel || part.definition.ground.isTread) {
                                 canRollOnGround = true;
@@ -104,7 +104,7 @@ public class VehicleGroundDeviceBox {
                             if (part.definition.ground.canFloat) {
                                 liquidDevices.add((PartGroundDevice) part);
                             }
-                        } else if (!isLeft && part.placementOffset.x <= 0) {
+                        } else if (!isLeft && part.localOffset.x <= MAX_DELTA_FROM_ZERO) {
                             groundDevices.add((PartGroundDevice) part);
                             if (part.definition.ground.isWheel || part.definition.ground.isTread) {
                                 canRollOnGround = true;
@@ -113,8 +113,8 @@ public class VehicleGroundDeviceBox {
                                 liquidDevices.add((PartGroundDevice) part);
                             }
                         }
-                    } else if (!isFront && part.placementOffset.z <= 0) {
-                        if (isLeft && part.placementOffset.x >= 0) {
+                    } else if (!isFront && part.localOffset.z <= MAX_DELTA_FROM_ZERO) {
+                        if (isLeft && part.localOffset.x >= -MAX_DELTA_FROM_ZERO) {
                             groundDevices.add((PartGroundDevice) part);
                             if (part.definition.ground.isWheel || part.definition.ground.isTread) {
                                 canRollOnGround = true;
@@ -122,7 +122,7 @@ public class VehicleGroundDeviceBox {
                             if (part.definition.ground.canFloat) {
                                 liquidDevices.add((PartGroundDevice) part);
                             }
-                        } else if (!isLeft && part.placementOffset.x <= 0) {
+                        } else if (!isLeft && part.localOffset.x <= MAX_DELTA_FROM_ZERO) {
                             groundDevices.add((PartGroundDevice) part);
                             if (part.definition.ground.isWheel || part.definition.ground.isTread) {
                                 canRollOnGround = true;
@@ -138,7 +138,7 @@ public class VehicleGroundDeviceBox {
     }
 
     /**
-     * Updates this boxes' bounds to match the included members. This should only be done when we
+     * Updates this boxes' bounds to match the included members.  This should only be done when we
      * change members, or if a member has changed position.
      */
     public void updateBounds() {
@@ -297,7 +297,7 @@ public class VehicleGroundDeviceBox {
 
     /**
      * Returns true if this box if it collides with any boxes using the passed-in transformation.
-     * This transformation is a local transform to the vehicle the box is on. Does not change any state-flags
+     * This transformation is a local transform to the vehicle the box is on.  Does not change any state-flags
      * of this box.
      */
     public boolean collidedWithTransform(TransformationMatrix transform, Point3D groundMotion) {
@@ -305,16 +305,18 @@ public class VehicleGroundDeviceBox {
         Point3D vehicleMotionOffset = contactPoint.copy().transform(transform).subtract(contactPoint).rotate(vehicle.orientation).rotate(vehicle.rotation).addScaled(vehicle.motion, vehicle.speedFactor).add(groundMotion);
         if (!groundDevices.isEmpty()) {
             if (vehicle.world.checkForCollisions(solidBox, vehicleMotionOffset, false)) {
-                return false;
+                return true;
             }
         }
 
         if (!canRollOnGround || !isAbleToDoGroundOperations) {
             if (!liquidDevices.isEmpty() || !liquidCollisionBoxes.isEmpty()) {
-                return !vehicle.world.checkForCollisions(liquidBox, vehicleMotionOffset, false);
+                if (vehicle.world.checkForCollisions(liquidBox, vehicleMotionOffset, false)) {
+                    return true;
+                }
             }
         }
-        return true;
+        return false;
     }
 
     /**
@@ -324,19 +326,23 @@ public class VehicleGroundDeviceBox {
         boolean didCollision = false;
         for (EntityVehicleF_Physics otherVehicle : vehicle.world.getEntitiesOfType(EntityVehicleF_Physics.class)) {
             if (!otherVehicle.equals(vehicle) && vehicle.canCollideWith(otherVehicle) && !otherVehicle.collidedEntities.contains(vehicle) && otherVehicle.encompassingBox.intersects(solidBox)) {
-                //We know we could have hit this entity. Check if we actually did.
+                //We know we could have hit this entity.  Check if we actually did.
                 BoundingBox collidingBox = null;
-                double boxCollisionDepth;
+                double boxCollisionDepth = 0;
                 for (BoundingBox box : otherVehicle.getCollisionBoxes()) {
                     if (box.intersects(solidBox)) {
                         if (collisionMotion.y > 0) {
                             boxCollisionDepth = solidBox.globalCenter.y + solidBox.heightRadius - (box.globalCenter.y - box.heightRadius);
+                            if (boxCollisionDepth > solidBox.currentCollisionDepth.y) {
+                                solidBox.currentCollisionDepth.y = boxCollisionDepth;
+                                collidingBox = box;
+                            }
                         } else {
                             boxCollisionDepth = box.globalCenter.y + box.heightRadius - (solidBox.globalCenter.y - solidBox.heightRadius);
-                        }
-                        if (boxCollisionDepth > solidBox.currentCollisionDepth.y) {
-                            solidBox.currentCollisionDepth.y = boxCollisionDepth;
-                            collidingBox = box;
+                            if (boxCollisionDepth > solidBox.currentCollisionDepth.y) {
+                                solidBox.currentCollisionDepth.y = boxCollisionDepth;
+                                collidingBox = box;
+                            }
                         }
                     }
                 }
@@ -357,7 +363,7 @@ public class VehicleGroundDeviceBox {
     }
 
     /**
-     * Returns the bounding box that currently represents this box. This can change depending on what
+     * Returns the bounding box that currently represents this box.  This can change depending on what
      * ground devices we have and if we are colliding with liquids or solids.
      */
     public BoundingBox getBoundingBox() {
@@ -367,7 +373,7 @@ public class VehicleGroundDeviceBox {
     /**
      * Returns true if the passed-in ground device is part of this box.
      */
-    public boolean isPartOfBox(PartGroundDevice groundDevice) {
+    public boolean isPartofBox(PartGroundDevice groundDevice) {
         return groundDevices.contains(groundDevice) || liquidDevices.contains(groundDevice);
     }
 

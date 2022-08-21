@@ -1,24 +1,27 @@
 package minecrafttransportsimulator.sound;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.net.URL;
+import java.net.URLConnection;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+
 import javazoom.jl.decoder.Equalizer;
 import minecrafttransportsimulator.entities.instances.EntityRadio;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.sound.RadioManager.RadioSources;
 
-import java.io.File;
-import java.net.URL;
-import java.net.URLConnection;
-import java.nio.ByteBuffer;
-import java.nio.file.Files;
-import java.util.*;
-
-/**
- * Radio stations are sources that radios can hook into to provide sound. All radios share the
+/**Radio stations are sources that radios can hook into to provide sound.  All radios share the
  * same common set of stations, which means that should two radios start playing the same station, they
  * will both play in-sync with one another.
- *
- * @author don_bruce
- */
+*
+* @author don_bruce
+*/
 public class RadioStation {
     //Created variables.
     private final RadioSources source;
@@ -26,14 +29,14 @@ public class RadioStation {
     private final boolean randomOrder;
     private final String url;
     private final List<File> musicFiles;
-    private final Set<EntityRadio> queuedRadios = new HashSet<>();
-    private final Set<EntityRadio> playingRadios = new HashSet<>();
+    private final Set<EntityRadio> queuedRadios = new HashSet<EntityRadio>();
+    private final Set<EntityRadio> playingRadios = new HashSet<EntityRadio>();
 
     //Runtime variables.
     //Due to how the mp3 parser works, we can only have one equalizer per station.
     public String displayText = "";
     public final Equalizer equalizer;
-    private final List<Integer> activeBuffers = new ArrayList<>();
+    private volatile List<Integer> activeBuffers = new ArrayList<Integer>();
     private volatile IStreamDecoder decoder;
     private volatile DecoderThread decoderThread;
 
@@ -57,16 +60,16 @@ public class RadioStation {
         this.randomOrder = false;
         this.url = url;
         if (url.isEmpty()) {
-            displayText = "No station set for this preset. Press SET to teach a station.";
+            displayText = "No station set for this preset.  Press SET to teach a station.";
         }
-        musicFiles = new ArrayList<>();
+        musicFiles = new ArrayList<File>();
         InterfaceManager.soundInterface.addRadioStation(this);
     }
 
     /**
-     * Generates a new buffer for this station from the current decoder and
-     * stores it in the list of active buffers. Also updates the displayText
-     * to reflect the buffer count. Returns the index of the newly-created
+     * Generates a new buffer for this station from the current decoder and 
+     * stores it in the list of active buffers.  Also updates the displayText
+     * to reflect the buffer count.  Returns the index of the newly-created
      * buffer, or 0 if the buffer wasn't able to be created.
      */
     private int generateBufferIndex() {
@@ -88,9 +91,9 @@ public class RadioStation {
     }
 
     /**
-     * Adds a radio to this station for playback. If the station isn't playing to any radios, then
-     * the station is started and the radio will start playing as soon as its ready. If the station
-     * is playing, then the radio is queued to start on the next buffer call. This allows for syncing
+     * Adds a radio to this station for playback.  If the station isn't playing to any radios, then
+     * the station is started and the radio will start playing as soon as its ready.  If the station
+     * is playing, then the radio is queued to start on the next buffer call.  This allows for syncing
      * of radios in the world.
      */
     public void addRadio(EntityRadio radio) {
@@ -106,8 +109,8 @@ public class RadioStation {
     }
 
     /**
-     * Updates the station. Responsible for managing buffers, encoder calls,
-     * starting new queued radios, and the like. This will be called from
+     * Updates the station.  Responsible for managing buffers, encoder calls,
+     * starting new queued radios, and the like.  This will be called from
      * the audio thread, so watch out for CMEs!
      */
     public void update() {
@@ -123,7 +126,7 @@ public class RadioStation {
                     //First check if we have any buffers that are done playing that we can re-claim.
                     freeBufferIndex = InterfaceManager.soundInterface.getFreeStationBuffer(playingRadios);
                     if (freeBufferIndex != 0) {
-                        activeBuffers.remove((Integer) freeBufferIndex);
+                        activeBuffers.remove(activeBuffers.indexOf(freeBufferIndex));
                         InterfaceManager.soundInterface.deleteBuffer(freeBufferIndex);
                     }
                 }
@@ -166,9 +169,9 @@ public class RadioStation {
     }
 
     /**
-     * Starts playback of this station. This is called when we first add a radio,
-     * or when the radio stops playing. This creates a new encoder for parsing data
-     * and populates the buffers via a thread. Radios will be started in the update
+     * Starts playback of this station.  This is called when we first add a radio,
+     * or when the radio stops playing.  This creates a new encoder for parsing data
+     * and populates the buffers via a thread.  Radios will be started in the update
      * method when the buffer is full.
      */
     private void startPlayback() {
@@ -228,7 +231,7 @@ public class RadioStation {
     }
 
     /**
-     * Starts playing the Internet stream for this station. Returns true if the stream started, false if there
+     * Starts playing the Internet stream for this station.  Returns true if the stream started, false if there
      * was an error.
      */
     private boolean playFromInternet() {
@@ -240,26 +243,27 @@ public class RadioStation {
             //Verify stream is actually an HTTP stream.
             String contentType = connection.getHeaderField("Content-Type");
             if (contentType == null) {
-                displayText = "ERROR: No Content-Type header found. Contact the mod author for more information.";
+                displayText = "ERROR: No Content-Type header found.  Contact the mod author for more information.";
                 return false;
             }
 
             //Check to make sure stream isn't an invalid type.
             switch (contentType) {
                 case ("audio/mpeg"):
+                    break;
                 case ("application/ogg"):
                     break;
                 case ("audio/x-wav"):
-                    displayText = "ERROR: WAV file format not supported...yet. Contact the mod author.";
+                    displayText = "ERROR: WAV file format not supported...yet.  Contact the mod author.";
                     return false;
                 case ("audio/flac"):
-                    displayText = "ERROR: Who the heck streams in FLAC? Contact the mod author.";
+                    displayText = "ERROR: Who the heck streams in FLAC?  Contact the mod author.";
                     return false;
                 default: {
                     if (contentType.startsWith("audio")) {
-                        displayText = "ERROR: Unsupported audio format of " + contentType + ". Contact the mod author.";
+                        displayText = "ERROR: Unsupported audio format of " + contentType + ".  Contact the mod author.";
                     } else {
-                        displayText = "ERROR: Format " + contentType + " is NOT an audio format. Is this really a music URL?";
+                        displayText = "ERROR: Format " + contentType + " is NOT an audio format.  Is this really a music URL?";
                     }
                     return false;
                 }
@@ -279,13 +283,12 @@ public class RadioStation {
             return true;
         } catch (Exception e) {
             e.printStackTrace();
-            displayText = "ERROR: Unable to open URL. Have you tried playing it in another application first?";
+            displayText = "ERROR: Unable to open URL.  Have you tried playing it in another application first?";
             return false;
         }
     }
 
-    /**
-     * Custom thread class to prevent blocking of the main thread when playing audio.
+    /**Custom thread class to prevent blocking of the main thread when playing audio.
      * This thread parses out the audio from the source, and keeps the decoder inside of it.
      *
      * @author don_bruce
@@ -324,7 +327,7 @@ public class RadioStation {
                             break;
                     }
                 } else {
-                    station.decoder = new MP3Decoder(Files.newInputStream(contentFile.toPath()), station.equalizer);
+                    station.decoder = new MP3Decoder(new FileInputStream(contentFile), station.equalizer);
                 }
                 //Prime the buffers before setting the thread to null.
                 //This prevents the buffers from running out from starting too quickly.

@@ -5,15 +5,19 @@ import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemDecor;
 import minecrafttransportsimulator.items.instances.ItemPartInteractable;
-import minecrafttransportsimulator.mcinterface.*;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperInventory;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.components.APacketEntityInteract;
 
-/**
- * Packet used to send transfer an item to or from a player inventory to an inventory in a
- * {@link EntityInventoryContainer}. While containers have their own packets for this, player
- * inventory is handled by MC, and does not follow the same architecture. However, it does sync
+/**Packet used to send transfer an item to or from a player inventory to an inventory in a
+ * {@link EntityInventoryContainer}.  While containers have their own packets for this, player
+ * inventory is handled by MC, and does not follow the same architecture.  However, it does sync
  * on changes like ours, so we don't need to send a client packet back for either.
- *
+ * 
  * @author don_bruce
  */
 public class PacketPlayerItemTransfer extends APacketEntityInteract<EntityInventoryContainer, IWrapperPlayer> {

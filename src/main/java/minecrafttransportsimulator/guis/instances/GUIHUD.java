@@ -1,5 +1,8 @@
 package minecrafttransportsimulator.guis.instances;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
@@ -12,15 +15,11 @@ import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
 import minecrafttransportsimulator.systems.CameraSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
-import java.util.ArrayList;
-import java.util.List;
-
-/**
- * A GUI that is used to render the HUG. This is used in {@link GUIInstruments}
- * as well as the {@link InterfaceManager#renderingInterface} to render the HUD. Note that when
+/**A GUI that is used to render the HUG.  This is used in {@link GUIInstruments}
+ * as well as the {@link InterfaceManager.renderingInterface} to render the HUD.  Note that when
  * the HUD is rendered in the vehicle it will NOT inhibit key inputs as the
  * HUD there is designed to be an overlay rather than an actual GUI.
- *
+ * 
  * @author don_bruce
  */
 public class GUIHUD extends AGUIBase {
@@ -28,7 +27,7 @@ public class GUIHUD extends AGUIBase {
     private static final int HUD_HEIGHT = 140;
     private final EntityVehicleF_Physics vehicle;
     private final PartSeat seat;
-    private final List<GUIComponentInstrument> instruments = new ArrayList<>();
+    private final List<GUIComponentInstrument> instruments = new ArrayList<GUIComponentInstrument>();
     private GUIComponentLabel healthLabel;
     private GUIComponentLabel gunTypeLabel;
 
@@ -43,33 +42,38 @@ public class GUIHUD extends AGUIBase {
 
     @Override
     public void setupComponents() {
-        //Need to adjust GUITop if we are a half hud. This makes everything go down 1/4 height.
-        if (halfHUDActive) {
-            guiTop += getHeight() / 2;
-        }
-        super.setupComponents();
-
-        //Add instruments. These go wherever they are specified in the JSON.
-        instruments.clear();
-        for (int i = 0; i < vehicle.instruments.size(); ++i) {
-            if (vehicle.instruments.get(i) != null && !vehicle.definition.instruments.get(i).placeOnPanel) {
-                GUIComponentInstrument instrument = new GUIComponentInstrument(guiLeft, guiTop, vehicle, i);
-                instruments.add(instrument);
-                addComponent(instrument);
+        //Only show instruments and background if we are a controller.
+        if (seat.placementDefinition.isController) {
+            //Need to adjust GUITop if we are a half hud.  This makes everything go down 1/4 height.
+            if (halfHUDActive) {
+                guiTop += getHeight() / 2;
             }
-        }
-        //Now add part instruments.
-        for (APart part : vehicle.parts) {
-            for (int i = 0; i < part.instruments.size(); ++i) {
-                if (part.instruments.get(i) != null && !part.definition.instruments.get(i).placeOnPanel) {
-                    addComponent(new GUIComponentInstrument(guiLeft, guiTop, part, i));
+            super.setupComponents();
+
+            //Add instruments.  These go wherever they are specified in the JSON.
+            instruments.clear();
+            for (int i = 0; i < vehicle.instruments.size(); ++i) {
+                if (vehicle.instruments.get(i) != null && !vehicle.definition.instruments.get(i).placeOnPanel) {
+                    GUIComponentInstrument instrument = new GUIComponentInstrument(guiLeft, guiTop, vehicle, i);
+                    instruments.add(instrument);
+                    addComponent(instrument);
                 }
             }
-        }
+            //Now add part instruments.
+            for (APart part : vehicle.parts) {
+                for (int i = 0; i < part.instruments.size(); ++i) {
+                    if (part.instruments.get(i) != null && !part.definition.instruments.get(i).placeOnPanel) {
+                        addComponent(new GUIComponentInstrument(guiLeft, guiTop, part, i));
+                    }
+                }
+            }
 
-        //Set top back to normal.
-        if (halfHUDActive) {
-            guiTop -= getHeight() / 2;
+            //Set top back to normal.
+            if (halfHUDActive) {
+                guiTop -= getHeight() / 2;
+            }
+        } else {
+            super.setupComponents();
         }
 
         //Add labels.
@@ -81,7 +85,7 @@ public class GUIHUD extends AGUIBase {
 
     @Override
     public void setStates() {
-        //Check to see if HUD setting changed. If so, we need to re-create our components.
+        //Check to see if HUD setting changed.  If so, we need to re-create our components.
         //Do this before doing anything else.
         if (halfHUDActive ^ (InterfaceManager.clientInterface.inFirstPerson() ? !ConfigSystem.client.renderingSettings.fullHUD_1P.value : !ConfigSystem.client.renderingSettings.fullHUD_3P.value)) {
             halfHUDActive = !halfHUDActive;
@@ -97,15 +101,15 @@ public class GUIHUD extends AGUIBase {
 
         //Set health label text and visibility.
         healthLabel.text = String.format("Health:%3.1f%%", 100 * (vehicle.definition.general.health - vehicle.damageAmount) / vehicle.definition.general.health);
-        healthLabel.visible = seat.placementDefinition.isController;
+        healthLabel.visible = seat.placementDefinition.isController || seat.canControlGuns;
 
         //Set gun label text, if we are in a seat that has one.
         //If we are in a seat controlling a gun, render a text line for it.
-        if (seat.canControlGuns && InterfaceManager.clientInterface.isChatOpen()) {
+        if (seat.canControlGuns && !InterfaceManager.clientInterface.isChatOpen()) {
             gunTypeLabel.visible = true;
             gunTypeLabel.text = "Active Gun: ";
-            if (seat.activeGun != null) {
-                gunTypeLabel.text += seat.activeGun.getItemName() + (seat.activeGun.definition.gun.fireSolo ? " [" + (seat.gunIndex + 1) + "]" : "");
+            if (seat.activeGunItem != null) {
+                gunTypeLabel.text += seat.activeGunItem.getItemName() + (seat.activeGunItem.definition.gun.fireSolo ? " [" + (seat.gunIndex + 1) + "]" : "");
             } else {
                 gunTypeLabel.text += "None";
             }

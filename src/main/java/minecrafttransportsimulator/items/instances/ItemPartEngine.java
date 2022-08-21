@@ -1,7 +1,9 @@
 package minecrafttransportsimulator.items.instances;
 
+import java.util.List;
+import java.util.Map.Entry;
+
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
-import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.PartEngine;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
@@ -11,9 +13,6 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.systems.ConfigSystem;
-
-import java.util.List;
-import java.util.Map.Entry;
 
 public class ItemPartEngine extends AItemPart {
 
@@ -27,8 +26,8 @@ public class ItemPartEngine extends AItemPart {
     }
 
     @Override
-    public PartEngine createPart(AEntityF_Multipart<?> entity, IWrapperPlayer placingPlayer, JSONPartDefinition packVehicleDef, IWrapperNBT partData, APart parentPart) {
-        return new PartEngine(entity, placingPlayer, packVehicleDef, partData, parentPart);
+    public PartEngine createPart(AEntityF_Multipart<?> entity, IWrapperPlayer placingPlayer, JSONPartDefinition packVehicleDef, IWrapperNBT partData) {
+        return new PartEngine(entity, placingPlayer, packVehicleDef, partData);
     }
 
     @Override
@@ -50,10 +49,10 @@ public class ItemPartEngine extends AItemPart {
         }
         tooltipLines.add(JSONConfigLanguage.ITEMINFO_ENGINE_FUELTYPE.value + definition.engine.fuelType);
         if (ConfigSystem.settings.fuel.fuels.containsKey(definition.engine.fuelType)) {
-            StringBuilder line = new StringBuilder(JSONConfigLanguage.ITEMINFO_ENGINE_FLUIDS.value);
+            String line = JSONConfigLanguage.ITEMINFO_ENGINE_FLUIDS.value;
             for (Entry<String, Double> fuelEntry : ConfigSystem.settings.fuel.fuels.get(definition.engine.fuelType).entrySet()) {
                 if (InterfaceManager.coreInterface.isFluidValid(fuelEntry.getKey())) {
-                    line.append(InterfaceManager.clientInterface.getFluidName(fuelEntry.getKey())).append("@").append(fuelEntry.getValue()).append(", ");
+                    line += InterfaceManager.clientInterface.getFluidName(fuelEntry.getKey()) + "@" + fuelEntry.getValue() + ", ";
                 }
             }
             tooltipLines.add(line.substring(0, line.length() - 2));
@@ -64,14 +63,14 @@ public class ItemPartEngine extends AItemPart {
             tooltipLines.add(definition.engine.isAutomatic ? JSONConfigLanguage.ITEMINFO_ENGINE_AUTOMATIC.value : JSONConfigLanguage.ITEMINFO_ENGINE_MANUAL.value);
             tooltipLines.add(JSONConfigLanguage.ITEMINFO_ENGINE_GEARRATIOS.value);
             for (byte i = 0; i < definition.engine.gearRatios.size(); i += 5) {
-                StringBuilder gearRatios = new StringBuilder();
+                String gearRatios = "";
                 for (byte j = i; j < i + 5 && j < definition.engine.gearRatios.size(); ++j) {
-                    gearRatios.append(definition.engine.gearRatios.get(j));
+                    gearRatios += String.valueOf(definition.engine.gearRatios.get(j));
                     if (j < definition.engine.gearRatios.size() - 1) {
-                        gearRatios.append(",  ");
+                        gearRatios += ",  ";
                     }
                 }
-                tooltipLines.add(gearRatios.toString());
+                tooltipLines.add(gearRatios);
             }
 
         } else {

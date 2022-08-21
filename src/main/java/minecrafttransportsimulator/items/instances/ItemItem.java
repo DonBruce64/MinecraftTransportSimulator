@@ -1,5 +1,8 @@
 package minecrafttransportsimulator.items.instances;
 
+import java.util.List;
+import java.util.UUID;
+
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
@@ -7,7 +10,11 @@ import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBas
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityDecor;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable.PlayerOwnerState;
-import minecrafttransportsimulator.entities.instances.*;
+import minecrafttransportsimulator.entities.instances.APart;
+import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
+import minecrafttransportsimulator.entities.instances.PartEngine;
+import minecrafttransportsimulator.entities.instances.PartInteractable;
+import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.components.IItemFood;
@@ -17,19 +24,26 @@ import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.jsondefs.JSONItem;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
-import minecrafttransportsimulator.mcinterface.*;
-import minecrafttransportsimulator.packets.instances.*;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
+import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
+import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
+import minecrafttransportsimulator.packets.instances.PacketGUIRequest;
+import minecrafttransportsimulator.packets.instances.PacketPartEngine;
+import minecrafttransportsimulator.packets.instances.PacketPartInteractable;
+import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
-import java.util.List;
-import java.util.UUID;
-
 public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInteractable, IItemFood {
-    /*Current page of this item, if it's a booklet. Kept here locally as only one item class is constructed for each booklet definition.*/
+    /*Current page of this item, if it's a booklet.  Kept here locally as only one item class is constructed for each booklet definition.*/
     public int pageNumber;
-    /*First engine clicked for jumper cable items. Kept here locally as only one item class is constructed for each jumper cable definition.*/
+    /*First engine clicked for jumper cable items.  Kept here locally as only one item class is constructed for each jumper cable definition.*/
     private static PartEngine firstEngineClicked;
-    /*First part clicked for fuel hose items. Kept here locally as only one item class is constructed for each jumper cable definition.*/
+    /*First part clicked for fuel hose items.  Kept here locally as only one item class is constructed for each jumper cable definition.*/
     private static PartInteractable firstPartClicked;
 
     public ItemItem(JSONItem definition) {
@@ -49,14 +63,14 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
                     //If the player isn't the owner of the vehicle, they can't interact with it.
                     if (!ownerState.equals(PlayerOwnerState.USER)) {
                         if (rightClick) {
-                            if (ConfigSystem.settings.general.devMode.value && vehicle.equals(player.getEntityRiding())) {
+                            if (ConfigSystem.settings.general.devMode.value && vehicle.allParts.contains(player.getEntityRiding())) {
                                 player.sendPacket(new PacketEntityGUIRequest(vehicle, player, PacketEntityGUIRequest.EntityGUIType.PACK_EXPORTER));
                             } else if (player.isSneaking()) {
                                 player.sendPacket(new PacketEntityGUIRequest(vehicle, player, PacketEntityGUIRequest.EntityGUIType.TEXT_EDITOR));
                             } else {
                                 player.sendPacket(new PacketEntityGUIRequest(vehicle, player, PacketEntityGUIRequest.EntityGUIType.INSTRUMENTS));
                             }
-                        } else if (!vehicle.world.isClient()) {
+                        } else {
                             if (part != null && !player.isSneaking() && !part.placementDefinition.isPermanent && part.isValid) {
                                 LanguageEntry partResult = part.checkForRemoval();
                                 if (partResult != null) {
@@ -65,10 +79,10 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
                                 } else {
                                     //Player can remove part, spawn item in the world and remove part.
                                     //Make sure to remove the part before spawning the item.
-                                    vehicle.removePart(part, null);
+                                    part.entityOn.removePart(part, null);
                                     AItemPart droppedItem = part.getItem();
                                     if (droppedItem != null) {
-                                        vehicle.world.spawnItem(droppedItem, part.save(InterfaceManager.coreInterface.getNewNBTWrapper()), part.position);
+                                        part.entityOn.world.spawnItem(droppedItem, part.save(InterfaceManager.coreInterface.getNewNBTWrapper()), part.position);
                                     }
                                 }
                             } else if (player.isSneaking()) {
@@ -113,13 +127,14 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
                         //Check if we are the owner before making this a valid key.
                         if (vehicle.ownerUUID != null && ownerState.equals(PlayerOwnerState.USER)) {
                             player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_KEY_NOTOWNER));
+                            return CallbackType.NONE;
                         } else {
                             keyVehicleUUID = vehicle.uniqueUUID;
                             data.setUUID("vehicle", keyVehicleUUID);
                             stack.setData(data);
                             player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_KEY_BIND));
+                            return CallbackType.NONE;
                         }
-                        return CallbackType.NONE;
                     }
 
                     //Try to lock or unlock this vehicle.
@@ -166,9 +181,9 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
             case TICKET: {
                 if (!vehicle.world.isClient() && rightClick) {
                     if (player.isSneaking()) {
-                        for (IWrapperEntity entity : vehicle.riderLocationMap.inverse().keySet()) {
-                            if (!(entity instanceof IWrapperPlayer)) {
-                                vehicle.removeRider(entity);
+                        for (APart otherPart : vehicle.allParts) {
+                            if (otherPart.rider != null) {
+                                otherPart.removeRider();
                             }
                         }
                     } else {
@@ -295,7 +310,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
                     return true;
                 } else if (tile instanceof TileEntityPole) {
                     TileEntityPole pole = (TileEntityPole) tile;
-                    //Change the axis to match the 8-dim axis for poles. Blocks only get a 4-dim axis.
+                    //Change the axis to match the 8-dim axis for poles.  Blocks only get a 4-dim axis.
                     axis = Axis.getFromRotation(player.getYaw(), pole.definition.pole.allowsDiagonals).getOpposite();
                     if (pole.components.containsKey(axis)) {
                         player.sendPacket(new PacketEntityGUIRequest(pole.components.get(axis), player, PacketEntityGUIRequest.EntityGUIType.PAINT_GUN));
@@ -311,7 +326,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
     public boolean onUsed(AWrapperWorld world, IWrapperPlayer player) {
         if (definition.item.type.equals(ItemComponentType.BOOKLET)) {
             if (!world.isClient()) {
-                player.sendPacket(new PacketGUIRequest(player, PacketGUIRequest.GUIType.BOOKLET));
+                player.sendPacket(new PacketGUIRequest(player, PacketGUIRequest.GUIType.BOOKELET));
             }
         } else if (definition.item.type.equals(ItemComponentType.Y2K_BUTTON)) {
             if (!world.isClient() && player.isOP()) {

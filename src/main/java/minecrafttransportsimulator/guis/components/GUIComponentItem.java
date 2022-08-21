@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.guis.components;
 
+import java.util.List;
+
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
@@ -7,17 +9,14 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.RenderText;
 import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
 
-import java.util.List;
-
-/**
- * Custom item render class. This class is designed to render a {@link IWrapperItemStack}
- * or list of stacks into the GUI. This allows us to use a simple string
+/**Custom item render class.  This class is designed to render a {@link IWrapperItemStack} 
+ * or list of stacks into the GUI.  This allows us to use a simple string 
  * name for the render rather than a bunch of MC calls.
  * Note that this component does not get a stack assigned during construction: you must
  * assign it manually either by setting {@link #stack} for a single stack rendering operation,
- * or {@link #stacks} for a cyclic rendering operation. This allows for switching items in GUIs.
+ * or {@link #stacks} for a cyclclic rendering operation.  This allows for switching items in GUIs.
  * This is especially useful in crafting GUIs, where you want a static set of item components
- * that switch their states depending on other selections. The scale is based on the assumption that
+ * that switch their states depending on other selections.  The scale is based on the assumption that
  * a single item is 16x16px.
  *
  * @author don_bruce
@@ -27,11 +26,9 @@ public class GUIComponentItem extends AGUIComponent {
     public IWrapperItemStack stack;
     public List<IWrapperItemStack> stacks;
     private IWrapperItemStack stackToRender;
-    private final TransformationMatrix transform = new TransformationMatrix();
+    private TransformationMatrix transform = new TransformationMatrix();
 
-    /**
-     * Default item constructor.
-     **/
+    /**Default item constructor.**/
     public GUIComponentItem(int x, int y, float scale) {
         super(x, y, (int) (16 * scale), (int) (16 * scale));
         this.scale = scale;
@@ -40,9 +37,7 @@ public class GUIComponentItem extends AGUIComponent {
         this.textPosition.set(position.x + scale * 16, position.y - 16F * scale + scale * 8, textPosition.z);
     }
 
-    /**
-     * Constructor for an item linked with a button. Button is assumed to be 18x18px so item will be offset 1px to center.
-     **/
+    /**Constructor for an item linked with a button.  Button is assumed to be 18x18px so item will be offset 1px to center.**/
     public GUIComponentItem(GUIComponentButton linkedButton) {
         this(linkedButton.constructedX + 1, linkedButton.constructedY + 1, 1.0F);
     }
@@ -70,7 +65,7 @@ public class GUIComponentItem extends AGUIComponent {
             InterfaceManager.renderingInterface.renderItemModel(stackToRender, transform);
 
             if (stackToRender.getSize() > 1) {
-                text = RenderText.FORMATTING_CHAR + String.valueOf(RenderText.BOLD_FORMATTING_CHAR) + stackToRender.getSize();
+                text = String.valueOf(RenderText.FORMATTING_CHAR) + String.valueOf(RenderText.BOLD_FORMATTING_CHAR) + String.valueOf(stackToRender.getSize());
             } else {
                 text = null;
             }

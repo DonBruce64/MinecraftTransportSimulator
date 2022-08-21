@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
-
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
@@ -9,8 +8,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 
-/**
- * Chest tile entity.
+/**Chest tile entity.
  *
  * @author don_bruce
  */

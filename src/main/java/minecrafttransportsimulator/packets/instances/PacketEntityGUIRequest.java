@@ -9,17 +9,24 @@ import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.instances.EntityRadio;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
-import minecrafttransportsimulator.guis.instances.*;
+import minecrafttransportsimulator.guis.instances.GUIFuelPump;
+import minecrafttransportsimulator.guis.instances.GUIInstruments;
+import minecrafttransportsimulator.guis.instances.GUIInventoryContainer;
+import minecrafttransportsimulator.guis.instances.GUIPackExporter;
+import minecrafttransportsimulator.guis.instances.GUIPaintGun;
+import minecrafttransportsimulator.guis.instances.GUIPartBench;
+import minecrafttransportsimulator.guis.instances.GUIRadio;
+import minecrafttransportsimulator.guis.instances.GUISignalController;
+import minecrafttransportsimulator.guis.instances.GUITextEditor;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.packets.components.APacketEntityInteract;
 
-/**
- * Packet sent to entities to request a GUI be opened on them. The GUI to be sent is an enum
- * and is used to open the proper GUI. This packet is sent from servers the specific clients
- * when they click on something to open a GUI. We do this as it lets us do validation, and prevents
+/**Packet sent to entities to request a GUI be opened on them.  The GUI to be sent is an enum
+ * and is used to open the proper GUI.  This packet is sent from servers the specific clients
+ * when they click on something to open a GUI.  We do this as it lets us do validation, and prevents
  * handling the request on multiple clients, where multiple GUIs may be opened.
- *
+ * 
  * @author don_bruce
  */
 public class PacketEntityGUIRequest extends APacketEntityInteract<AEntityB_Existing, IWrapperPlayer> {
@@ -78,7 +85,7 @@ public class PacketEntityGUIRequest extends APacketEntityInteract<AEntityB_Exist
         return true;
     }
 
-    public enum EntityGUIType {
+    public static enum EntityGUIType {
         INSTRUMENTS,
         INVENTORY_CHEST,
         FUEL_PUMP,
@@ -88,7 +95,7 @@ public class PacketEntityGUIRequest extends APacketEntityInteract<AEntityB_Exist
         PART_BENCH,
         RADIO,
         SIGNAL_CONTROLLER,
-        TEXT_EDITOR
+        TEXT_EDITOR;
 
     }
 }

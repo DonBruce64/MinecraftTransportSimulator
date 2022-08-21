@@ -1,5 +1,8 @@
 package minecrafttransportsimulator.entities.components;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.TowingConnection;
@@ -12,25 +15,25 @@ import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.jsondefs.JSONConnection;
 import minecrafttransportsimulator.jsondefs.JSONConnectionGroup;
-import minecrafttransportsimulator.mcinterface.*;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityTowingChange;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 
-import java.util.ArrayList;
-import java.util.List;
-
-/**
- * Base entity class containing towing states and methods.
+/**Base entity class containing towing states and methods.
  * At this level as not all multiparts can be towed.
- *
+ * 
  * @author don_bruce
  */
 public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider> extends AEntityF_Multipart<JSONDefinition> {
     //Connection data.
     public TowingConnection towedByConnection;
-    public final List<TowingConnection> towingConnections = new ArrayList<>();
+    public final List<TowingConnection> towingConnections = new ArrayList<TowingConnection>();
     private TowingConnection savedTowedByConnection;
-    private final List<TowingConnection> savedTowingConnections = new ArrayList<>();
+    private final List<TowingConnection> savedTowingConnections = new ArrayList<TowingConnection>();
     public static final String TOWING_CONNECTION_REQUEST_VARIABLE = "connection_requested";
 
     public AEntityG_Towable(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data) {
@@ -55,11 +58,11 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
         super.update();
         world.beginProfiling("EntityG_Level", true);
         if (!world.isClient()) {
-            //Do validity checks for towing variables. We could do this whenever we disconnect,
-            //but there are tons of ways this could happen. The trailer could blow up, the
+            //Do validity checks for towing variables.  We could do this whenever we disconnect,
+            //but there are tons of ways this could happen.  The trailer could blow up, the 
             //part-hitch could have been blown up, the trailer could have gotten wrenched, the
-            //part hitch could have gotten wrenched, etc. And that doesn't even count what the
-            //thing towing us could have done!
+            //part hitch could have gotten wrenched, etc.  And that doesn't even count what the
+            //thing towing us could have done! 
             if (towedByConnection != null) {
                 if (!towedByConnection.towingEntity.isValid) {
                     towedByConnection.towingVehicle.disconnectTrailer(towedByConnection.towingVehicle.towingConnections.indexOf(towedByConnection));
@@ -80,7 +83,7 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
             //See if we need to link connections.
             //We need to wait on this in case the entity didn't load at the same time.
             //That being said, it may be the vehicle we are loading is in another chunk.
-            //As such we wait only some time, and if we can't find all entities, we remove
+            //As such we wait only some time, and if we caon't find all entities, we remove
             //them from the listing of entities to find.
             //Only do this once a second, and if we hit 5 seconds, bail.
             //We do this linking both ways, as we don't know if the towed vehicle or the towing vehicle will load first.
@@ -92,7 +95,7 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
                         }
                     } else {
                         savedTowedByConnection = null;
-                        InterfaceManager.coreInterface.logError("Could not hook-up trailer to entity towing it. Did the JSON or pack change?");
+                        InterfaceManager.coreInterface.logError("Could not hook-up trailer to entity towing it.  Did the JSON or pack change?");
                     }
                 }
             }
@@ -107,12 +110,12 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
                                     --i;
                                 }
                             } catch (Exception e) {
-                                InterfaceManager.coreInterface.logError("Could not connect trailer(s) to the entity towing them. Did the JSON or pack change?");
+                                InterfaceManager.coreInterface.logError("Could not connect trailer(s) to the entity towing them.  Did the JSON or pack change?");
                             }
                         }
                     } else {
                         savedTowingConnections.clear();
-                        InterfaceManager.coreInterface.logError("Could not connect trailer(s) to the entity towing them. Did the JSON or pack change?");
+                        InterfaceManager.coreInterface.logError("Could not connect trailer(s) to the entity towing them.  Did the JSON or pack change?");
                     }
                 }
             }
@@ -122,17 +125,17 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
         int connectionRequestIndex = (int) getVariable(TOWING_CONNECTION_REQUEST_VARIABLE);
         if (connectionRequestIndex != 0) {
             if (!world.isClient()) {
-                //Don't handle requests on the client. These get packets.
+                //Don't handle requests on the client.  These get packets.
                 handleConnectionRequest(this, connectionRequestIndex - 1);
             }
             setVariable(TOWING_CONNECTION_REQUEST_VARIABLE, 0);
         }
         //also check parts, in case they got a request.
-        for (APart part : parts) {
+        for (APart part : allParts) {
             connectionRequestIndex = (int) part.getVariable(TOWING_CONNECTION_REQUEST_VARIABLE);
             if (connectionRequestIndex != 0) {
                 if (!world.isClient()) {
-                    //Don't handle requests on the client. These get packets.
+                    //Don't handle requests on the client.  These get packets.
                     handleConnectionRequest(part, connectionRequestIndex - 1);
                 }
                 part.setVariable(TOWING_CONNECTION_REQUEST_VARIABLE, 0);
@@ -159,8 +162,8 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
             String[] variableData = variable.split("_");
             if (variableData.length == 4) {
                 boolean isHookup = false;
-                int groupIndex = Integer.parseInt(variableData[1]) - 1;
-                int connectionIndex = Integer.parseInt(variableData[2]) - 1;
+                int groupIndex = Integer.valueOf(variableData[1]) - 1;
+                int connectionIndex = Integer.valueOf(variableData[2]) - 1;
                 if (towedByConnection != null) {
                     if (towedByConnection.hookupGroupIndex == groupIndex && towedByConnection.hookupConnectionIndex == connectionIndex) {
                         isHookup = true;
@@ -226,7 +229,9 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
     }
 
     protected boolean matchesTowed(AEntityB_Existing entityToCollide) {
-        if (!towingConnections.isEmpty()) {
+        if (towingConnections.isEmpty()) {
+            return false;
+        } else {
             for (TowingConnection connection : towingConnections) {
                 if (entityToCollide.equals(connection.towedVehicle)) {
                     return true;
@@ -234,8 +239,8 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
                     return true;
                 }
             }
+            return false;
         }
-        return false;
     }
 
     /**
@@ -262,14 +267,15 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
 
         if (connectionToDisconnect == null) {
             TrailerConnectionResult result;
-            List<AEntityG_Towable<?>> entitiesToCheck = new ArrayList<>(world.getEntitiesOfType(EntityVehicleF_Physics.class));
+            List<AEntityG_Towable<?>> entitiesToCheck = new ArrayList<AEntityG_Towable<?>>();
+            entitiesToCheck.addAll(world.getEntitiesOfType(EntityVehicleF_Physics.class));
 
             if (requestedGroup.isHookup) {
                 //Find entity that can tow us.
                 for (AEntityG_Towable<?> testEntity : entitiesToCheck) {
                     result = testEntity.checkIfTrailerCanConnect(testEntity, testEntity, -1, this, connectionDefiner, connectionGroupIndex);
                     if (result.skip) {
-                        for (APart testPart : testEntity.parts) {
+                        for (APart testPart : testEntity.allParts) {
                             result = testEntity.checkIfTrailerCanConnect(testEntity, testPart, -1, this, connectionDefiner, connectionGroupIndex);
                             if (!result.skip) {
                                 result.handlePacket(this);
@@ -286,7 +292,7 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
                 for (AEntityG_Towable<?> testEntity : entitiesToCheck) {
                     result = checkIfTrailerCanConnect(this, connectionDefiner, connectionGroupIndex, testEntity, testEntity, -1);
                     if (result.skip) {
-                        for (APart testPart : testEntity.parts) {
+                        for (APart testPart : testEntity.allParts) {
                             result = checkIfTrailerCanConnect(this, connectionDefiner, connectionGroupIndex, testEntity, testPart, -1);
                             if (!result.skip) {
                                 result.handlePacket(this);
@@ -311,13 +317,13 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
         }
     }
 
-
     /**
-     * Checks if the other entity can be connected to this entity. The other entity may be a trailer we
-     * want to connect, or it may be a trailer that has requested to connect to us. In all cases, we
+     * Checks if the other entity can be connected to this entity.  The other entity may be a trailer we
+     * want to connect, or it may be a trailer that has requested to connect to us.  In all cases, we
      * are the main entity and will start towing the trailer if the connection is successful.
      * For connection indexes, a -1 will allow for any index, while a value other than -1 will try to connect
      * using only that connection group.
+     * 
      */
     private TrailerConnectionResult checkIfTrailerCanConnect(AEntityG_Towable<?> hitchEntity, AEntityE_Interactable<?> hitchConnectionDefiner, int requestedHitchGroupIndex, AEntityG_Towable<?> hookupEntity, AEntityE_Interactable<?> hookupConnectionDefiner, int requestedHookupGroupIndex) {
         //Make sure we should be connecting.
@@ -346,7 +352,7 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
                             JSONConnectionGroup hookupConnectionGroup = hookupConnectionDefiner.definition.connectionGroups.get(hookupGroupIndex);
                             if (hookupConnectionGroup.isHookup && (requestedHookupGroupIndex == -1 || hookupGroupIndex == requestedHookupGroupIndex)) {
                                 //We can potentially connect these two entities with this hitch/hookup group
-                                //as they match our requested connection parameters. See if we actually can.
+                                //as they match our requested connection parameters.  See if we actually can.
                                 //Iterate though connections on the groups to find two that match types and are close enough.
                                 for (int hitchConnectionIndex = 0; hitchConnectionIndex < hitchConnectionGroup.connections.size(); ++hitchConnectionIndex) {
                                     JSONConnection hitchConnection = hitchConnectionGroup.connections.get(hitchConnectionIndex);
@@ -394,7 +400,7 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
     private boolean isAlreadyTowing(AEntityG_Towable<?> vehicleTowing, AEntityG_Towable<?> vehicleToTow) {
         for (TowingConnection connection : towingConnections) {
             if (connection.towedVehicle.equals(vehicleTowing) || connection.towedVehicle.equals(vehicleToTow)) {
-                return true; //We can't
+                return true; //We can't 
             } else {
                 for (TowingConnection nextConnection : connection.towedVehicle.towingConnections) {
                     if (((AEntityG_Towable<?>) nextConnection.towedVehicle).isAlreadyTowing(vehicleTowing, vehicleToTow)) {
@@ -439,8 +445,8 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
     }
 
     /**
-     * Method-block for disconnecting all connections from this entity. Used when this
-     * entity is removed from the world to prevent lingering connections. Mainly done in item form,
+     * Method-block for disconnecting all connections from this entity.  Used when this
+     * entity is removed from the world to prevent lingering connections.  Mainly done in item form,
      * as during removal it will be marked invalid, so all entities connected to it will automatically
      * disconnect; this just ensures it won't try to re-connect to those entities if re-spawned.
      * As such, this method does NOT send packets to clients as it's assumed the entity will be gone
@@ -468,9 +474,9 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
     }
 
     /**
-     * Enum for easier functions for trailer connections.
+     * Emum for easier functions for trailer connections.
      */
-    private enum TrailerConnectionResult {
+    private static enum TrailerConnectionResult {
         FEEDBACK_LOOP(true, JSONConfigLanguage.INTERACT_TRAILER_FEEDBACKLOOP),
         ALREADY_TOWED(true, JSONConfigLanguage.INTERACT_TRAILER_ALREADYTOWED),
         NOTFOUND(true, JSONConfigLanguage.INTERACT_TRAILER_NOTFOUND),
@@ -480,10 +486,10 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
         CONNECTED(false, JSONConfigLanguage.INTERACT_TRAILER_CONNECTED),
         DISCONNECTED(false, JSONConfigLanguage.INTERACT_TRAILER_DISCONNECTED);
 
-        private final boolean skip;
-        private final LanguageEntry language;
+        private boolean skip;
+        private LanguageEntry language;
 
-        TrailerConnectionResult(boolean skip, LanguageEntry language) {
+        private TrailerConnectionResult(boolean skip, LanguageEntry language) {
             this.skip = skip;
             this.language = language;
         }

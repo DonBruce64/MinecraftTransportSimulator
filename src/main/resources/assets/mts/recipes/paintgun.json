@@ -1,26 +1,17 @@
 {
     "type": "minecraft:crafting_shaped",
-    "pattern": [
+    "pattern":[
         " a ",
         "bc ",
         "  d"
     ],
-    "key": {
-        "a": {
-            "item": "minecraft:bucket"
-        },
-        "b": {
-            "item": "minecraft:dispenser"
-        },
-        "c": {
-            "type": "forge:ore_dict",
-            "ore": "ingotIron"
-        },
-        "d": {
-            "item": "minecraft:stick"
-        }
+    "key":{
+        "a":{"item": "minecraft:bucket"},
+		"b":{"item": "minecraft:dispenser"},
+		"c":{"type": "forge:ore_dict", "ore": "ingotIron"},
+		"d":{"item": "minecraft:stick"}
     },
-    "result": {
+    "result":{
         "item": "mts:mts.paintgun"
     }
 }

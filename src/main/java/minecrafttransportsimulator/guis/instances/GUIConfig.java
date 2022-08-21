@@ -1,7 +1,17 @@
 package minecrafttransportsimulator.guis.instances;
 
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.guis.components.*;
+import minecrafttransportsimulator.guis.components.AGUIBase;
+import minecrafttransportsimulator.guis.components.GUIComponentButton;
+import minecrafttransportsimulator.guis.components.GUIComponentCutout;
+import minecrafttransportsimulator.guis.components.GUIComponentLabel;
+import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.jsondefs.JSONConfigEntry;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
@@ -12,12 +22,6 @@ import minecrafttransportsimulator.systems.ControlSystem.ControlsJoystick;
 import minecrafttransportsimulator.systems.ControlSystem.ControlsKeyboard;
 import minecrafttransportsimulator.systems.ControlSystem.ControlsKeyboardDynamic;
 
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 public class GUIConfig extends AGUIBase {
     //Global variables.
     private GUIComponentButton renderConfigScreenButton;
@@ -27,13 +31,13 @@ public class GUIConfig extends AGUIBase {
     //Config variables.
     private boolean configuringControls = true;
     private boolean configuringRendering = false;
-    private final Map<GUIComponentButton, JSONConfigEntry<Boolean>> renderConfigButtons = new HashMap<>();
-    private final Map<GUIComponentButton, JSONConfigEntry<Boolean>> controlConfigButtons = new HashMap<>();
+    private Map<GUIComponentButton, JSONConfigEntry<Boolean>> renderConfigButtons = new HashMap<GUIComponentButton, JSONConfigEntry<Boolean>>();
+    private Map<GUIComponentButton, JSONConfigEntry<Boolean>> controlConfigButtons = new HashMap<GUIComponentButton, JSONConfigEntry<Boolean>>();
 
-    //Key bind selection variables.
+    //Keybind selection variables.
     private String vehicleConfiguring = "";
-    private final String[] vehicleTypes = new String[]{"car", "aircraft"};
-    private final Map<GUIComponentButton, String> vehicleSelectionButtons = new HashMap<>();
+    private String[] vehicleTypes = new String[] { "car", "aircraft" };
+    private Map<GUIComponentButton, String> vehicleSelectionButtons = new HashMap<GUIComponentButton, String>();
     private GUIComponentLabel vehicleSelectionFaultLabel;
     private GUIComponentButton finishKeyboardBindingsButton;
 
@@ -44,11 +48,11 @@ public class GUIConfig extends AGUIBase {
 
     //Keyboard assignment variables.
     private boolean configuringKeyboard;
-    private final Map<String, Map<GUIComponentTextBox, ControlsKeyboard>> keyboardBoxes = new HashMap<>();
-    private final Map<String, Map<GUIComponentLabel, ControlsKeyboardDynamic>> keyboardLabels = new HashMap<>();
+    private Map<String, Map<GUIComponentTextBox, ControlsKeyboard>> keyboardBoxes = new HashMap<String, Map<GUIComponentTextBox, ControlsKeyboard>>();
+    private Map<String, Map<GUIComponentLabel, ControlsKeyboardDynamic>> keyboardLabels = new HashMap<String, Map<GUIComponentLabel, ControlsKeyboardDynamic>>();
 
     //Joystick selection variables.
-    private final List<GUIComponentButton> joystickSelectionButtons = new ArrayList<>();
+    private List<GUIComponentButton> joystickSelectionButtons = new ArrayList<GUIComponentButton>();
 
     //Joystick component selection variables.
     private int scrollSpot = 0;
@@ -59,9 +63,9 @@ public class GUIConfig extends AGUIBase {
     private GUIComponentButton deadzone_moreButton;
     private GUIComponentButton deadzone_lessButton;
     private GUIComponentTextBox deadzone_text;
-    private final List<GUIComponentButton> joystickComponentSelectionButtons = new ArrayList<>();
-    private final List<GUIComponentCutout> joystickComponentStateBackgrounds = new ArrayList<>();
-    private final List<GUIComponentCutout> joystickComponentStateForegrounds = new ArrayList<>();
+    private List<GUIComponentButton> joystickComponentSelectionButtons = new ArrayList<GUIComponentButton>();
+    private List<GUIComponentCutout> joystickComponentStateBackgrounds = new ArrayList<GUIComponentCutout>();
+    private List<GUIComponentCutout> joystickComponentStateForegrounds = new ArrayList<GUIComponentCutout>();
 
     //Joystick assignment variables.
     private boolean assigningDigital;
@@ -70,10 +74,10 @@ public class GUIConfig extends AGUIBase {
     private GUIComponentButton clearAssignmentButton;
 
     //Joystick digital assignment variables.
-    private final Map<String, Map<GUIComponentButton, ControlsJoystick>> digitalAssignButtons = new HashMap<>();
+    private Map<String, Map<GUIComponentButton, ControlsJoystick>> digitalAssignButtons = new HashMap<String, Map<GUIComponentButton, ControlsJoystick>>();
 
     //Joystick analog assignment variables.
-    private final Map<String, Map<GUIComponentButton, ControlsJoystick>> analogAssignButtons = new HashMap<>();
+    private Map<String, Map<GUIComponentButton, ControlsJoystick>> analogAssignButtons = new HashMap<String, Map<GUIComponentButton, ControlsJoystick>>();
 
     //Joystick analog calibration variables.
     private boolean calibrating = false;
@@ -94,7 +98,7 @@ public class GUIConfig extends AGUIBase {
     public void setupComponents() {
         super.setupComponents();
         //Global header buttons.
-        addComponent(renderConfigScreenButton = new GUIComponentButton(guiLeft, guiTop - 20, 85, 20, JSONConfigLanguage.GUI_CONFIG_HEADER_RENDERING.value) {
+        addComponent(renderConfigScreenButton = new GUIComponentButton(guiLeft + 0, guiTop - 20, 85, 20, JSONConfigLanguage.GUI_CONFIG_HEADER_RENDERING.value) {
             @Override
             public void onClicked(boolean leftSide) {
                 configuringControls = false;
@@ -125,15 +129,13 @@ public class GUIConfig extends AGUIBase {
             }
         });
 
-
         //Config buttons and text.
-        //We have two sets here. One for rendering, one for controls.
+        //We have two sets here.  One for rendering, one for controls.
         populateConfigButtonList(renderConfigButtons, ConfigSystem.client.renderingSettings);
         populateConfigButtonList(controlConfigButtons, ConfigSystem.client.controlSettings);
 
-
         //Vehicle selection buttons and text.
-        //We only have two types. Car and aircraft.
+        //We only have two types.  Car and aircraft.
         vehicleSelectionButtons.clear();
         addComponent(vehicleSelectionFaultLabel = new GUIComponentLabel(guiLeft + 10, guiTop + 90, ColorRGB.BLACK, "", TextAlignment.LEFT_ALIGNED, 0.8F, 240));
         for (String vehicleType : vehicleTypes) {
@@ -169,7 +171,7 @@ public class GUIConfig extends AGUIBase {
                 ConfigSystem.saveToDisk();
             }
         });
-        addComponent(volumeLabel = new GUIComponentLabel(guiLeft + 128, guiTop + 165, ColorRGB.BLACK, JSONConfigLanguage.GUI_CONFIG_CONTROLS_VOLUME.value + ConfigSystem.client.controlSettings.masterVolume.value, TextAlignment.CENTERED, 1.0F));
+        addComponent(volumeLabel = new GUIComponentLabel(guiLeft + 128, guiTop + 165, ColorRGB.BLACK, JSONConfigLanguage.GUI_CONFIG_CONTROLS_VOLUME.value + String.valueOf(ConfigSystem.client.controlSettings.masterVolume.value), TextAlignment.CENTERED, 1.0F));
         volumeLabel.setButton(volumeDownButton);
 
         //Now add joystick buttons.
@@ -187,7 +189,6 @@ public class GUIConfig extends AGUIBase {
             addComponent(buttonJoystick);
         }
 
-
         //Keyboard buttons and text.
         keyboardBoxes.clear();
         keyboardLabels.clear();
@@ -195,7 +196,7 @@ public class GUIConfig extends AGUIBase {
             //First add the editable controls.
             int verticalOffset = 20;
             int horizontalOffset = 80;
-            Map<GUIComponentTextBox, ControlsKeyboard> boxesForVehicle = new HashMap<>();
+            Map<GUIComponentTextBox, ControlsKeyboard> boxesForVehicle = new HashMap<GUIComponentTextBox, ControlsKeyboard>();
             for (ControlsKeyboard keyboardControl : ControlSystem.ControlsKeyboard.values()) {
                 if (keyboardControl.systemName.contains(vehicleType)) {
                     //First create the text box for input.
@@ -206,8 +207,7 @@ public class GUIConfig extends AGUIBase {
                             keyboardBoxes.get(vehicleConfiguring).get(this).config.keyCode = typedCode;
                             ConfigSystem.saveToDisk();
                             focused = false;
-                        }
-
+                        };
                     };
                     boxesForVehicle.put(box, keyboardControl);
                     addComponent(box);
@@ -226,7 +226,7 @@ public class GUIConfig extends AGUIBase {
 
             //Now add the dynamic controls.
             byte offset = 0;
-            Map<GUIComponentLabel, ControlsKeyboardDynamic> dynamicLabels = new HashMap<>();
+            Map<GUIComponentLabel, ControlsKeyboardDynamic> dynamicLabels = new HashMap<GUIComponentLabel, ControlsKeyboardDynamic>();
             for (ControlsKeyboardDynamic dynamicControl : ControlsKeyboardDynamic.values()) {
                 if (dynamicControl.name().toLowerCase().contains(vehicleType)) {
                     GUIComponentLabel label = new GUIComponentLabel(guiLeft + 10, guiTop + 135 + offset, ColorRGB.BLACK, "");
@@ -243,7 +243,6 @@ public class GUIConfig extends AGUIBase {
                 vehicleConfiguring = "";
             }
         });
-
 
         //Joystick selection buttons.
         joystickSelectionButtons.clear();
@@ -265,7 +264,6 @@ public class GUIConfig extends AGUIBase {
             }
         }
 
-
         //Joystick component selection buttons and text.
         joystickComponentSelectionButtons.clear();
         joystickComponentStateBackgrounds.clear();
@@ -275,7 +273,11 @@ public class GUIConfig extends AGUIBase {
                 @Override
                 public void onClicked(boolean leftSide) {
                     joystickComponentId = joystickComponentSelectionButtons.indexOf(this) + scrollSpot;
-                    assigningDigital = !InterfaceManager.inputInterface.isJoystickComponentAxis(selectedJoystickName, joystickComponentId);
+                    if (InterfaceManager.inputInterface.isJoystickComponentAxis(selectedJoystickName, joystickComponentId)) {
+                        assigningDigital = false;
+                    } else {
+                        assigningDigital = true;
+                    }
                 }
             };
             joystickComponentSelectionButtons.add(button);
@@ -319,7 +321,6 @@ public class GUIConfig extends AGUIBase {
         addComponent(new GUIComponentLabel(guiLeft + 100, guiTop + 35, ColorRGB.BLACK, JSONConfigLanguage.GUI_CONFIG_JOYSTICK_STATE.value).setButton(componentListUpButton));
         addComponent(new GUIComponentLabel(guiLeft + 140, guiTop + 35, ColorRGB.BLACK, JSONConfigLanguage.GUI_CONFIG_JOYSTICK_ASSIGNMENT.value).setButton(componentListUpButton));
 
-
         //Joystick assignment buttons and text.
         //Global buttons and labels for digital and analog.
         addComponent(cancelAssignmentButton = new GUIComponentButton(guiLeft + 125, guiTop + 160, 100, 20, JSONConfigLanguage.GUI_CONFIG_JOYSTICK_CANCEL.value) {
@@ -344,7 +345,6 @@ public class GUIConfig extends AGUIBase {
         });
         addComponent(new GUIComponentLabel(guiLeft + 20, guiTop + 10, ColorRGB.BLACK, JSONConfigLanguage.GUI_CONFIG_JOYSTICK_CHOOSEMAP.value).setButton(clearAssignmentButton));
 
-
         //Digital and analog buttons.
         digitalAssignButtons.clear();
         analogAssignButtons.clear();
@@ -352,8 +352,8 @@ public class GUIConfig extends AGUIBase {
             short leftOffsetDigital = 0;
             short topOffsetDigital = 0;
             short topOffsetAnalog = 0;
-            Map<GUIComponentButton, ControlsJoystick> digitalControlButtons = new HashMap<>();
-            Map<GUIComponentButton, ControlsJoystick> analogControlButtons = new HashMap<>();
+            Map<GUIComponentButton, ControlsJoystick> digitalControlButtons = new HashMap<GUIComponentButton, ControlsJoystick>();
+            Map<GUIComponentButton, ControlsJoystick> analogControlButtons = new HashMap<GUIComponentButton, ControlsJoystick>();
             for (ControlsJoystick joystickControl : ControlsJoystick.values()) {
                 if (joystickControl.systemName.startsWith(vehicleType)) {
                     if (!joystickControl.isAxis) {
@@ -391,13 +391,12 @@ public class GUIConfig extends AGUIBase {
             analogAssignButtons.put(vehicleType, analogControlButtons);
         }
 
-
         //Analog calibration components.
         addComponent(confirmBoundsButton = new GUIComponentButton(guiLeft + 25, guiTop + 160, 100, 20, JSONConfigLanguage.GUI_CONFIRM.value) {
             @Override
             public void onClicked(boolean leftSide) {
                 boolean isInverted = invertAxisButton.text.contains(JSONConfigLanguage.GUI_CONFIG_JOYSTICK_INVERT.value);
-                controlCalibrating.setAxisControl(selectedJoystickName, joystickComponentId, Double.parseDouble(axisMinBoundsTextBox.getText()), Double.parseDouble(axisMaxBoundsTextBox.getText()), isInverted);
+                controlCalibrating.setAxisControl(selectedJoystickName, joystickComponentId, Double.valueOf(axisMinBoundsTextBox.getText()), Double.valueOf(axisMaxBoundsTextBox.getText()), isInverted);
                 joystickComponentId = -1;
                 calibrating = false;
             }
@@ -424,10 +423,9 @@ public class GUIConfig extends AGUIBase {
     public void setStates() {
         super.setStates();
         //Global headers are just toggles depending on operation.
-        renderConfigScreenButton.enabled = configuringControls || !configuringRendering;
-        controlConfigScreenButton.enabled = configuringControls || configuringRendering;
+        renderConfigScreenButton.enabled = configuringControls || (!configuringControls && !configuringRendering);
+        controlConfigScreenButton.enabled = configuringControls || (!configuringControls && configuringRendering);
         controlScreenButton.enabled = !configuringControls;
-
 
         //If we are not configuring controls, render the appropriate config buttons and labels.
         for (GUIComponentButton button : renderConfigButtons.keySet()) {
@@ -436,7 +434,6 @@ public class GUIConfig extends AGUIBase {
         for (GUIComponentButton button : controlConfigButtons.keySet()) {
             button.visible = !controlConfigScreenButton.enabled;
         }
-
 
         //If we are configuring controls, and haven't selected a vehicle, render the vehicle selection components.
         vehicleSelectionFaultLabel.visible = !InterfaceManager.inputInterface.isJoystickSupportEnabled() && configuringControls && !configuringKeyboard;
@@ -447,19 +444,17 @@ public class GUIConfig extends AGUIBase {
             button.visible = configuringControls && vehicleConfiguring.isEmpty() && (!vehicleSelectionButtons.get(button).endsWith(".joystick") || InterfaceManager.inputInterface.isJoystickSupportEnabled());
         }
 
-
         //If we haven't selected anything, render the volume controls.
         if (configuringControls && vehicleConfiguring.isEmpty()) {
             volumeUpButton.visible = true;
             volumeUpButton.enabled = ConfigSystem.client.controlSettings.masterVolume.value < 1.5;
             volumeDownButton.visible = true;
             volumeDownButton.enabled = ConfigSystem.client.controlSettings.masterVolume.value > 0;
-            volumeLabel.text = JSONConfigLanguage.GUI_CONFIG_CONTROLS_VOLUME.value + ConfigSystem.client.controlSettings.masterVolume.value;
+            volumeLabel.text = JSONConfigLanguage.GUI_CONFIG_CONTROLS_VOLUME.value + String.valueOf(ConfigSystem.client.controlSettings.masterVolume.value);
         } else {
             volumeUpButton.visible = false;
             volumeDownButton.visible = false;
         }
-
 
         //If we have selected a vehicle, and are configuring a keyboard, render the keyboard controls.
         //Only enable the boxes and labels for the vehicle we are configuring, however.
@@ -481,7 +476,6 @@ public class GUIConfig extends AGUIBase {
             }
         }
 
-
         //If we have selected a vehicle, and are not configuring a keyboard, but haven't selected a joystick
         //make the joystick selection screen components visible.
         List<String> allJoystickNames = InterfaceManager.inputInterface.getAllJoystickNames();
@@ -494,7 +488,6 @@ public class GUIConfig extends AGUIBase {
                 button.visible = false;
             }
         }
-
 
         //If we have selected a joystick, but not a component, make the component selection buttons visible.
         boolean onComponentSelectScreen = selectedJoystickName != null && joystickComponentId == -1;
@@ -543,7 +536,7 @@ public class GUIConfig extends AGUIBase {
                     } else if (pollData == 1) {
                         componentForeground.textureYOffset = STANDARD_RED_HEIGHT_OFFSET;
                     } else {
-                        //For digital with fractions like hats.
+                        //For digitals with fractions like hats.
                         componentForeground.textureYOffset = STANDARD_YELLOW_HEIGHT_OFFSET;
                     }
                 }
@@ -560,9 +553,8 @@ public class GUIConfig extends AGUIBase {
             deadzone_lessButton.enabled = ConfigSystem.client.controlSettings.joystickDeadZone.value > 0;
             deadzone_moreButton.enabled = ConfigSystem.client.controlSettings.joystickDeadZone.value < 1;
             deadzone_text.enabled = false;
-            deadzone_text.setText(JSONConfigLanguage.GUI_CONFIG_JOYSTICK_DEADZONE.value + " " + ConfigSystem.client.controlSettings.joystickDeadZone.value);
+            deadzone_text.setText(JSONConfigLanguage.GUI_CONFIG_JOYSTICK_DEADZONE.value + " " + String.valueOf(ConfigSystem.client.controlSettings.joystickDeadZone.value));
         }
-
 
         //If we have selected a component, render the assignment buttons.
         //These are global, so they are always visible.
@@ -585,7 +577,6 @@ public class GUIConfig extends AGUIBase {
             }
         }
 
-
         //If we are calibrating an analog control, render the components of that screen.
         //Only attempt to set the state of the text boxes if we are calibrating.
         confirmBoundsButton.visible = calibrating;
@@ -596,9 +587,9 @@ public class GUIConfig extends AGUIBase {
         if (calibrating) {
             float pollData = InterfaceManager.inputInterface.getJoystickAxisValue(selectedJoystickName, joystickComponentId);
             if (pollData < 0) {
-                axisMinBoundsTextBox.setText(String.valueOf(Math.min(Double.parseDouble(axisMinBoundsTextBox.getText()), pollData)));
+                axisMinBoundsTextBox.setText(String.valueOf(Math.min(Double.valueOf(axisMinBoundsTextBox.getText()), pollData)));
             } else {
-                axisMaxBoundsTextBox.setText(String.valueOf(Math.max(Double.parseDouble(axisMaxBoundsTextBox.getText()), pollData)));
+                axisMaxBoundsTextBox.setText(String.valueOf(Math.max(Double.valueOf(axisMaxBoundsTextBox.getText()), pollData)));
             }
         }
     }
@@ -614,14 +605,14 @@ public class GUIConfig extends AGUIBase {
                         GUIComponentButton button = new GUIComponentButton(guiLeft + 85 + 120 * (configButtons.size() % 2), guiTop + 20 + 16 * (configButtons.size() / 2), 40, 16, String.valueOf(configEntry.value)) {
                             @Override
                             public void onClicked(boolean leftSide) {
-                                configButtons.get(this).value = !Boolean.parseBoolean(text);
+                                configButtons.get(this).value = !Boolean.valueOf(text);
                                 ConfigSystem.saveToDisk();
                                 text = String.valueOf(configButtons.get(this).value);
                             }
 
                             @Override
                             public List<String> getTooltipText() {
-                                List<String> tooltipText = new ArrayList<>();
+                                List<String> tooltipText = new ArrayList<String>();
                                 tooltipText.add(configEntry.comment);
                                 return tooltipText;
                             }

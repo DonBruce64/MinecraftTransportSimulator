@@ -6,10 +6,9 @@ import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.components.APacketBase;
 
-/**
- * Packet sent when a bullet hits a block.
+/**Packet sent when a bullet hits a block.
  * Really all this is for is to play break sounds.
- *
+ * 
  * @author don_bruce
  */
 public class PacketEntityBulletHitBlock extends APacketBase {

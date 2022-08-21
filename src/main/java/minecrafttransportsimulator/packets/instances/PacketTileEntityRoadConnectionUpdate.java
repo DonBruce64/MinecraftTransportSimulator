@@ -8,13 +8,12 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
-/**
- * Packet sent to road lanes to change their connections. This is sent from servers to all clients
- * when a connection state changes. The data sent consists of the lane/curve that we need
- * to update the connection for, as well as connection data to update it with. If this data
- * is null, then we just remove the specified connection. Note that the road/lane we are connecting
- * to with this data MAY not be loaded. This is due to chunk populations on servers/clients being different.
- *
+/**Packet sent to road lanes to change their connections.  This is sent from servers to all clients
+ * when a connection state changes.  The data sent consists of the lane/curve that we need
+ * to update the connection for, as well as connection data to update it with.  If this data
+ * is null, then we just remove the specified connection.  Note that the road/lane we are connecting
+ * to with this data MAY not be loaded.  This is due to chunk populations on servers/clients being different.
+ * 
  * @author don_bruce
  */
 public class PacketTileEntityRoadConnectionUpdate extends APacketEntity<TileEntityRoad> {
@@ -94,7 +93,7 @@ public class PacketTileEntityRoadConnectionUpdate extends APacketEntity<TileEnti
     protected boolean handle(AWrapperWorld world, TileEntityRoad road) {
         RoadLane lane = road.lanes.get(laneNumber);
         if (otherPosition != null) {
-            //Connecting to another curve. Create connection from this curve to the other one.
+            //Connecting to another curve.  Create connection from this curve to the other one.
             if (connectedToStart) {
                 lane.priorConnections.get(curveNumber).add(new RoadLaneConnection(otherPosition, otherLaneNumber, otherCurveNumber, otherCurveNetAngle, otherConnectedToStart));
             } else {
@@ -105,7 +104,7 @@ public class PacketTileEntityRoadConnectionUpdate extends APacketEntity<TileEnti
                 otherRoad.devRenderables.clear();
             }
         } else {
-            //No other curve. This is a connection deletion request.
+            //No other curve.  This is a connection deletion request.
             if (connectedToStart) {
                 lane.priorConnections.get(curveNumber).clear();
             } else {

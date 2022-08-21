@@ -6,13 +6,12 @@ import minecrafttransportsimulator.items.instances.ItemBullet;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
-/**
- * Packet used to send signals to guns. This can be either to start/stop the firing of the gun,
- * or to re-load the gun with the specified bullets. If we are doing start/stop commands, then
- * this packet first gets sent to the server from the client who requested the command. After this,
- * it is send to all players tracking the gun. If this packet is for re-loading bullets, then it will
+/**Packet used to send signals to guns.  This can be either to start/stop the firing of the gun,
+ * or to re-load the gun with the specified bullets.  If we are doing start/stop commands, then
+ * this packet first gets sent to the server from the client who requested the command.  After this,
+ * it is send to all players tracking the gun.  If this packet is for re-loading bullets, then it will
  * only appear on clients after the server has verified the bullets can in fact be loaded.
- *
+ * 
  * @author don_bruce
  */
 public class PacketPartGun extends APacketEntity<PartGun> {

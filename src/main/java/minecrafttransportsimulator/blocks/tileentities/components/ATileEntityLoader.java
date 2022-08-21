@@ -19,10 +19,10 @@ public abstract class ATileEntityLoader extends TileEntityDecor {
     @Override
     public void update() {
         super.update();
-        //Do load/unload checks. Checks only occur on servers. Clients get packets for state changes.
+        //Do load/unload checks.  Checks only occur on servers.  Clients get packets for state changes.
         if (!world.isClient()) {
             if (connectedPart == null) {
-                //Check for a new part every second. We don't want every tick as this would increase server loads.
+                //Check for a new part every second.  We don't want every tick as this would increase server loads.
                 if (ticksExisted % 20 == 0) {
                     updateNearestPart();
                 }
@@ -66,10 +66,9 @@ public abstract class ATileEntityLoader extends TileEntityDecor {
         }
     }
 
-
     /**
-     * Connects this loader to the specified part. This should be done to change
-     * the part the loader is connected to. Do NOT modify the variable
+     *  Connects this loader to the specified part.  This should be done to change
+     *  the part the loader is connected to.  Do NOT modify the variable
      */
     public void connectToPart(PartInteractable part) {
         connectedPart = part;

@@ -1,5 +1,9 @@
 package minecrafttransportsimulator.entities.instances;
 
+import java.util.Iterator;
+import java.util.List;
+import java.util.TreeMap;
+
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -18,19 +22,15 @@ import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncreme
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
-import java.util.List;
-import java.util.TreeMap;
-
-/**
- * This part class is special, in that it does not extend APart.
+/**This part class is special, in that it does not extend APart.
  * This is because bullets do not render as vehicle parts, and instead
- * are particles. This allows them to be independent of the
+ * are particles.  This allows them to be independent of the
  * vehicle that fired them.
- * <p>
- * As particles, bullets are client-side only. This prevents them from getting stuck
+ * 
+ * As particles, bullets are client-side only.  This prevents them from getting stuck
  * in un-loaded chunks on the server, and prevents the massive network usage that
  * would be required to spawn 100s of bullets from a machine gun into the world.
- *
+ * 
  * @author don_bruce
  */
 
@@ -45,7 +45,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
     private final ItemBullet item;
 
     //States
-    private int impactDespawnTimer = -1;
+    private int impactDesapawnTimer = -1;
     private Point3D targetPosition;
     public double targetDistance;
     private double armorPenetrated;
@@ -54,9 +54,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
     private IWrapperEntity externalEntityTargeted;
     private HitType lastHit;
 
-    /**
-     * Generic constructor for no target.
-     **/
+    /**Generic constructor for no target.**/
     public EntityBullet(Point3D position, Point3D motion, RotationMatrix orientation, PartGun gun) {
         super(gun.world, position, motion, ZERO_FOR_CONSTRUCTOR, gun.loadedBullet);
         this.item = getItem();
@@ -77,17 +75,13 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
         prevOrientation.set(orientation);
     }
 
-    /**
-     * Positional target.
-     **/
+    /**Positional target.**/
     private EntityBullet(Point3D position, Point3D motion, RotationMatrix orientation, PartGun gun, Point3D targetPosition) {
         this(position, motion, orientation, gun);
         this.targetPosition = targetPosition;
     }
 
-    /**
-     * Engine target.
-     **/
+    /**Engine target.**/
     public EntityBullet(Point3D position, Point3D motion, RotationMatrix orientation, PartGun gun, PartEngine engineTargeted) {
         this(position, motion, orientation, gun, engineTargeted.position);
         if (engineTargeted.entityOn instanceof EntityVehicleF_Physics) {
@@ -97,9 +91,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
         displayDebugMessage("LOCKON ENGINE " + engineTargeted.definition.systemName + " @ " + targetPosition);
     }
 
-    /**
-     * IWrapper target.
-     **/
+    /**IWrapper target.**/
     public EntityBullet(Point3D position, Point3D motion, RotationMatrix orientation, PartGun gun, IWrapperEntity externalEntityTargeted) {
         this(position, motion, orientation, gun, externalEntityTargeted.getPosition().copy());
         this.externalEntityTargeted = externalEntityTargeted;
@@ -109,9 +101,9 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
     @Override
     public void update() {
         super.update();
-        //Check if we impacted. If so, don't process anything and just stay in place.
-        if (impactDespawnTimer >= 0) {
-            if (impactDespawnTimer-- == 0) {
+        //Check if we impacted.  If so, don't process anything and just stay in place.
+        if (impactDesapawnTimer >= 0) {
+            if (impactDesapawnTimer-- == 0) {
                 remove();
             }
             return;
@@ -139,14 +131,14 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
             motion.add(motionToAddEachTick);
         }
 
-        //We have a target. Go to it, unless we are waiting for acceleration.
+        //We have a target.  Go to it, unless we are waiting for acceleration.
         //If the target is an external entity, update target position.
         if (targetPosition != null && !notAcceleratingYet) {
             if (externalEntityTargeted != null) {
                 if (externalEntityTargeted.isValid()) {
                     targetPosition.set(externalEntityTargeted.getPosition());
                 } else {
-                    //Entity is dead. Don't target it anymore.
+                    //Entity is dead.  Don't target it anymore.
                     externalEntityTargeted = null;
                     targetPosition = null;
                 }
@@ -201,7 +193,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
             //Check to make sure we don't hit our controller.
             //This can happen with hand-held guns at speed.
             if (!entity.equals(gun.lastController)) {
-                //Only attack the first entity. Bullets don't get to attack multiple per scan.
+                //Only attack the first entity.  Bullets don't get to attack multiple per scan.
                 position.set(entity.getPosition());
                 lastHit = HitType.ENTITY;
                 if (!world.isClient()) {
@@ -216,15 +208,15 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
         //Check for collided internal entities and attack them.
         //This is a bit more involved, as we need to check all possible types and check hitbox distance.
         Point3D endPoint = position.copy().add(motion);
-        BoundingBox bulletMovementBounds = new BoundingBox(position, endPoint);
+        BoundingBox bulletMovmenetBounds = new BoundingBox(position, endPoint);
         for (EntityVehicleF_Physics hitVehicle : world.getEntitiesOfType(EntityVehicleF_Physics.class)) {
             //Don't attack the entity that has the gun that fired us.
-            if (!hitVehicle.parts.contains(gun)) {
+            if (!hitVehicle.allParts.contains(gun)) {
                 //Make sure that we could even possibly hit this vehicle before we try and attack it.
-                if (hitVehicle.encompassingBox.intersects(bulletMovementBounds)) {
+                if (hitVehicle.encompassingBox.intersects(bulletMovmenetBounds)) {
                     //Get all collision boxes on the vehicle, and check if we hit any of them.
                     //Sort them by distance for later.
-                    TreeMap<Double, BoundingBox> hitBoxes = new TreeMap<>();
+                    TreeMap<Double, BoundingBox> hitBoxes = new TreeMap<Double, BoundingBox>();
                     for (BoundingBox box : hitVehicle.allInteractionBoxes) {
                         if (!hitVehicle.allPartSlotBoxes.containsKey(box)) {
                             Point3D delta = box.getIntersectionPoint(position, endPoint);
@@ -241,7 +233,9 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                     }
 
                     //Check all boxes for armor and see if we penetrated them.
-                    for (BoundingBox hitBox : hitBoxes.values()) {
+                    Iterator<BoundingBox> hitBoxIterator = hitBoxes.values().iterator();
+                    while (hitBoxIterator.hasNext()) {
+                        BoundingBox hitBox = hitBoxIterator.next();
                         APart hitPart = hitVehicle.getPartWithBox(hitBox);
                         AEntityE_Interactable<?> hitEntity = hitPart != null ? hitPart : hitVehicle;
 
@@ -257,7 +251,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                                 InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(hitEntity, variableName, damage.amount));
                             }
                             hitEntity.setVariable(variableName, currentDamage);
-                            displayDebugMessage("HIT HEALTH BOX. ATTACKED FOR: " + damage.amount + ". BOX CURRENT DAMAGE: " + currentDamage + " OF " + hitBox.groupDef.health);
+                            displayDebugMessage("HIT HEALTH BOX.  ATTACKED FOR: " + damage.amount + ".  BOX CURRENT DAMAGE: " + currentDamage + " OF " + hitBox.groupDef.health);
                         }
 
                         double armorThickness = hitBox.definition != null ? (definition.bullet.isHeat && hitBox.definition.heatArmorThickness != 0 ? hitBox.definition.heatArmorThickness : hitBox.definition.armorThickness) : 0;
@@ -266,10 +260,10 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                             armorPenetrated += armorThickness;
                             displayDebugMessage("HIT ARMOR OF: " + (int) armorThickness);
                             if (armorPenetrated > penetrationPotential) {
-                                //Hit too much armor. We die now.
+                                //Hit too much armor.  We die now.
                                 position.set(hitBox.globalCenter);
                                 lastHit = HitType.ARMOR;
-                                displayDebugMessage("HIT TOO MUCH ARMOR. MAX PEN: " + (int) penetrationPotential);
+                                displayDebugMessage("HIT TOO MUCH ARMOR.  MAX PEN: " + (int) penetrationPotential);
                                 startDespawn();
                                 return;
                             }
@@ -305,7 +299,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                                     if (!world.isClient()) {
                                         hitVehicle.attack(damage);
                                     }
-                                    displayDebugMessage("FORWARDING DAMAGE TO VEHICLE. CURRENT DAMAGE IS: " + (int) hitVehicle.damageAmount);
+                                    displayDebugMessage("FORWARDING DAMAGE TO VEHICLE.  CURRENT DAMAGE IS: " + (int) hitVehicle.damageAmount);
                                     startDespawn();
                                     return;
                                 }
@@ -316,7 +310,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
             }
         }
 
-        //Didn't hit an entity. Check for blocks.
+        //Didn't hit an entity.  Check for blocks.
         Point3D hitPos = world.getBlockHit(position, motion);
         if (hitPos != null) {
             //Only change block state on the server.
@@ -334,7 +328,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                             world.setToFire(hitPos);
                         }
                     } else {
-                        //Couldn't break the block or set it on fire. Have clients do sounds.
+                        //Couldn't break the block or set it on fire.  Have clients do sounds.
                         InterfaceManager.packetInterface.sendToAllClients(new PacketEntityBulletHitBlock(hitPos));
                     }
                 }
@@ -401,7 +395,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
             float blastSize = definition.bullet.blastStrength == 0 ? definition.bullet.diameter / 10F : definition.bullet.blastStrength;
             world.spawnExplosion(position, blastSize, definition.bullet.types.contains(BulletType.INCENDIARY));
         }
-        impactDespawnTimer = definition.bullet.impactDespawnTime;
+        impactDesapawnTimer = definition.bullet.impactDespawnTime;
     }
 
     private void displayDebugMessage(String message) {
@@ -445,11 +439,11 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
         return false;
     }
 
-    private enum HitType {
+    private static enum HitType {
         BLOCK,
         ENTITY,
         PART,
         ARMOR,
-        BURST
+        BURST;
     }
 }

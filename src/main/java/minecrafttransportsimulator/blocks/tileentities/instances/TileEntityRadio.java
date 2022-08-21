@@ -5,8 +5,7 @@ import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 
-/**
- * Radio tile entity.
+/**Radio tile entity.
  *
  * @author don_bruce
  */

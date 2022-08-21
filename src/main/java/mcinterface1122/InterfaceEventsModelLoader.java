@@ -1,5 +1,21 @@
 package mcinterface1122;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
+
+import org.lwjgl.opengl.GL11;
+
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
@@ -12,8 +28,7 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.culling.ICamera;
 import net.minecraft.client.renderer.entity.Render;
-import net.minecraft.client.renderer.texture.TextureUtil;
-import net.minecraft.client.resources.DefaultResourcePack;
+import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.resources.IResourcePack;
 import net.minecraft.client.resources.data.IMetadataSection;
 import net.minecraft.client.resources.data.MetadataSerializer;
@@ -23,25 +38,13 @@ import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.client.resource.VanillaResourceType;
 import net.minecraftforge.fml.client.FMLClientHandler;
+import net.minecraftforge.fml.client.registry.IRenderFactory;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
-import org.lwjgl.opengl.GL11;
 
-import javax.annotation.Nonnull;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.Field;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
-import java.util.concurrent.ConcurrentLinkedQueue;
-
-/**
- * Interface for handling events pertaining to loading models into MC. These events are mainly for item models,
+/**Interface for handling events pertaining to loading models into MC.  These events are mainly for item models,
  * though events for Entity and Tile Entity model rendering classes are also included here as they are registered
  * like item models.
  *
@@ -51,62 +54,69 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public class InterfaceEventsModelLoader {
 
     /**
-     * Event that's called to register models. We register our render wrapper
-     * classes here, as well as all item JSONs.
+     *  Event that's called to register models.  We register our render wrapper
+     *  classes here, as well as all item JSONs.
      */
-    @SuppressWarnings({"unchecked"})
+    @SuppressWarnings({ "unchecked" })
     @SubscribeEvent
     public static void registerModels(ModelRegistryEvent event) {
         //Register the global entity rendering class.
-        RenderingRegistry.registerEntityRenderingHandler(BuilderEntityRenderForwarder.class, manager -> new Render<BuilderEntityRenderForwarder>(manager) {
+        RenderingRegistry.registerEntityRenderingHandler(BuilderEntityRenderForwarder.class, new IRenderFactory<BuilderEntityRenderForwarder>() {
             @Override
-            protected ResourceLocation getEntityTexture(@Nonnull BuilderEntityRenderForwarder builder) {
-                return null;
-            }
-
-            @Override
-            public boolean shouldRender(@Nonnull BuilderEntityRenderForwarder builder, @Nonnull ICamera camera, double camX, double camY, double camZ) {
-                //Always render the forwarder, no matter where the camera is.
-                return true;
-            }
-
-            @Override
-            public void doRender(@Nonnull BuilderEntityRenderForwarder builder, double x, double y, double z, float entityYaw, float partialTicks) {
-                //Get all entities in the world, and render them manually for this one builder.
-                //Only do this if the player the builder is following is the client player.
-                WrapperWorld world = WrapperWorld.getWrapperFor(builder.world);
-                if (Minecraft.getMinecraft().player.equals(builder.playerFollowing) && builder.shouldRenderEntity(partialTicks)) {
-                    ConcurrentLinkedQueue<AEntityC_Renderable> allEntities = world.renderableEntities;
-                    boolean blendingEnabled = MinecraftForgeClient.getRenderPass() == 1;
-
-                    //Use smooth shading for model rendering.
-                    GL11.glShadeModel(GL11.GL_SMOOTH);
-                    //Disable alpha testing on blended pass as it discards transparent fragments.
-                    if (blendingEnabled) {
-                        GlStateManager.disableAlpha();
-                    }
-                    //Enable normal re-scaling for model rendering.
-                    //This prevents bad lighting.
-                    GlStateManager.enableRescaleNormal();
-
-                    //Start master profiling section.
-                    for (AEntityC_Renderable entity : allEntities) {
-                        world.beginProfiling("MTSRendering", true);
-                        entity.render(blendingEnabled, partialTicks);
-                        world.endProfiling();
+            public Render<? super BuilderEntityRenderForwarder> createRenderFor(RenderManager manager) {
+                return new Render<BuilderEntityRenderForwarder>(manager) {
+                    @Override
+                    protected ResourceLocation getEntityTexture(BuilderEntityRenderForwarder builder) {
+                        return null;
                     }
 
-                    //Reset states.
-                    GL11.glShadeModel(GL11.GL_FLAT);
-                    if (blendingEnabled) {
-                        GlStateManager.enableAlpha();
+                    @Override
+                    public boolean shouldRender(BuilderEntityRenderForwarder builder, ICamera camera, double camX, double camY, double camZ) {
+                        //Always render the forwarder, no matter where the camera is.
+                        return true;
                     }
-                    GlStateManager.disableRescaleNormal();
-                }
+
+                    @Override
+                    public void doRender(BuilderEntityRenderForwarder builder, double x, double y, double z, float entityYaw, float partialTicks) {
+                        //Get all entities in the world, and render them manually for this one builder.
+                        //Only do this if the player the builder is following is the client player.
+                        WrapperWorld world = WrapperWorld.getWrapperFor(builder.world);
+                        if (Minecraft.getMinecraft().player.equals(builder.playerFollowing) && builder.shouldRenderEntity(partialTicks)) {
+                            ConcurrentLinkedQueue<AEntityC_Renderable> allEntities = world.renderableEntities;
+                            if (allEntities != null) {
+                                boolean blendingEnabled = MinecraftForgeClient.getRenderPass() == 1;
+
+                                //Use smooth shading for model rendering.
+                                GL11.glShadeModel(GL11.GL_SMOOTH);
+                                //Disable alpha testing on blended pass as it discards transparent fragments.
+                                if (blendingEnabled) {
+                                    GlStateManager.disableAlpha();
+                                }
+                                //Enable normal re-scaling for model rendering.
+                                //This prevents bad lighting.
+                                GlStateManager.enableRescaleNormal();
+
+                                //Start master profiling section.
+                                for (AEntityC_Renderable entity : allEntities) {
+                                    world.beginProfiling("MTSRendering", true);
+                                    entity.render(blendingEnabled, partialTicks);
+                                    world.endProfiling();
+                                }
+
+                                //Reset states.
+                                GL11.glShadeModel(GL11.GL_FLAT);
+                                if (blendingEnabled) {
+                                    GlStateManager.enableAlpha();
+                                }
+                                GlStateManager.disableRescaleNormal();
+                            }
+                        }
+                    }
+                };
             }
         });
 
-        //Get the list of default resource packs here to inject a custom parser for auto-generating JSONs.
+        //Get the list of default resource packs here to inject a custom parser for auto-generating JSONS.
         //FAR easier than trying to use the bloody bakery system.
         //Normally we'd add our pack to the current loader, but this gets wiped out during reloads and unless we add our pack to the main list, it won't stick.
         //To do this, we use reflection to get the field from the main MC class that holds the master list to add our custom ones.
@@ -154,21 +164,20 @@ public class InterfaceEventsModelLoader {
     }
 
     /**
-     * Custom ResourcePack class for auto-generating item JSONs.
+     *  Custom ResourcePack class for auto-generating item JSONs.
      */
     private static class PackResourcePack implements IResourcePack {
-        private static final Map<String, PackResourcePack> createdLoaders = new HashMap<>();
+        private static final Map<String, PackResourcePack> createdLoaders = new HashMap<String, PackResourcePack>();
         private final String domain;
         private final Set<String> domains;
 
         private PackResourcePack(String domain) {
             this.domain = domain;
-            domains = new HashSet<>();
+            domains = new HashSet<String>();
             domains.add(domain);
             createdLoaders.put(domain, this);
         }
 
-        @Nonnull
         @Override
         public InputStream getInputStream(ResourceLocation location) throws IOException {
             //Create stream return variable and get raw data.
@@ -176,14 +185,14 @@ public class InterfaceEventsModelLoader {
             String rawPackInfo = location.getPath();
 
             //If we are for an item JSON, try to find that JSON, or generate one automatically.
-            //If we are for an item PNG, just load the PNG as-is. If we don't find it, then just let MC purple checker it.
+            //If we are for an item PNG, just load the PNG as-is.  If we don't find it, then just let MC purple checker it.
             //Note that the internal mts_packs loader does not do PNG loading, as it re-directs the PNG files to the pack's loaders.
             if (rawPackInfo.endsWith(".json")) {
                 //Strip the suffix from the packInfo, and then test to see if it's an internal
                 //JSON reference from an item JSON, or if it's the primary JSON for the item being loaded..
                 String strippedSuffix = rawPackInfo.substring(0, rawPackInfo.lastIndexOf("."));
                 if (!strippedSuffix.contains(".")) {
-                    //JSON reference. Get the specified file.
+                    //JSON reference.  Get the specified file.
                     stream = getClass().getResourceAsStream("/assets/" + domain + "/" + rawPackInfo);
                     if (stream == null) {
                         InterfaceManager.coreInterface.logError("Could not find JSON-specified file: " + rawPackInfo);
@@ -194,7 +203,7 @@ public class InterfaceEventsModelLoader {
                     String itemTexturePath = "";
 
                     //Strip off the auto-generated prefix.
-                    String combinedPackInfo;
+                    String combinedPackInfo = rawPackInfo;
                     combinedPackInfo = strippedSuffix.substring("models/item/".length());
 
                     //Get the pack information, and try to load the resource.
@@ -260,7 +269,11 @@ public class InterfaceEventsModelLoader {
                                 String streamJSONLocation = "/assets/" + packID + "/" + rawPackInfo;
                                 stream = getClass().getResourceAsStream(streamJSONLocation);
                                 if (stream == null) {
-                                    InterfaceManager.coreInterface.logError("Could not find item PNG at specified location: " + streamLocation + "  Or potential JSON location: " + streamJSONLocation);
+                                    if (streamLocation != null) {
+                                        InterfaceManager.coreInterface.logError("Could not find item PNG at specified location: " + streamLocation + "  Or potential JSON location: " + streamJSONLocation);
+                                    } else {
+                                        InterfaceManager.coreInterface.logError("Could not find JSON PNG: " + streamJSONLocation);
+                                    }
                                     throw new FileNotFoundException(rawPackInfo);
                                 }
                             } else {
@@ -269,7 +282,7 @@ public class InterfaceEventsModelLoader {
                             }
                         }
                     } else {
-                        //No pack item for this texture. Must be an internal texture for other things.
+                        //No pack item for this texture.  Must be an internal texture for other things.
                         //In this case, we just get the stream exact location.
                         String streamLocation = "/assets/" + domain + "/" + rawPackInfo;
                         stream = getClass().getResourceAsStream(streamLocation);
@@ -295,31 +308,24 @@ public class InterfaceEventsModelLoader {
 
         @Override
         public boolean resourceExists(ResourceLocation location) {
-            return domains.contains(location.getNamespace())
-                    && !location.getPath().contains("blockstates")
-                    && !location.getPath().contains("armatures")
-                    && !location.getPath().contains("mcmeta")
-                    && ((location.getPath().endsWith(".json") && !location.getPath().equals("sounds.json")) || location.getPath().endsWith(".png"));
+            return domains.contains(location.getNamespace()) && !location.getPath().contains("blockstates") && !location.getPath().contains("armatures") && !location.getPath().contains("mcmeta") && ((location.getPath().endsWith(".json") && !location.getPath().equals("sounds.json")) || location.getPath().endsWith(".png"));
         }
 
-        @Nonnull
         @Override
         public Set<String> getResourceDomains() {
             return domains;
         }
 
         @Override
-        public <T extends IMetadataSection> T getPackMetadata(@Nonnull MetadataSerializer metadataSerializer, @Nonnull String metadataSectionName) {
+        public <T extends IMetadataSection> T getPackMetadata(MetadataSerializer metadataSerializer, String metadataSectionName) throws IOException {
             return null;
         }
 
-        @Nonnull
         @Override
         public BufferedImage getPackImage() throws IOException {
-            return TextureUtil.readBufferedImage(DefaultResourcePack.class.getResourceAsStream("/" + (new ResourceLocation("pack.png")).getPath()));
+            return null;
         }
 
-        @Nonnull
         @Override
         public String getPackName() {
             return "Internal:" + domain;

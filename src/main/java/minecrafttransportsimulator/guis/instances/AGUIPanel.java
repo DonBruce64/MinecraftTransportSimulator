@@ -1,5 +1,8 @@
 package minecrafttransportsimulator.guis.instances;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import minecrafttransportsimulator.baseclasses.TowingConnection;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityG_Towable;
@@ -14,14 +17,10 @@ import minecrafttransportsimulator.jsondefs.JSONConnectionGroup;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 
-import java.util.ArrayList;
-import java.util.List;
-
-/**
- * A GUI/control system hybrid, this takes the place of the HUD when called up.
+/**A GUI/control system hybrid, this takes the place of the HUD when called up.
  * This class is abstract and contains the base code for rendering things common to
- * all vehicles, such as lights and engines. Other things may be added as needed.
- *
+ * all vehicles, such as lights and engines.  Other things may be added as needed.
+ * 
  * @author don_bruce
  */
 public abstract class AGUIPanel extends AGUIBase {
@@ -36,9 +35,8 @@ public abstract class AGUIPanel extends AGUIBase {
 
     protected final EntityVehicleF_Physics vehicle;
     protected final boolean haveReverseThrustOption;
-    protected final List<SwitchEntry> trailerSwitchDefs = new ArrayList<>();
+    protected final List<SwitchEntry> trailerSwitchDefs = new ArrayList<SwitchEntry>();
     protected int xOffset;
-
 
     public AGUIPanel(EntityVehicleF_Physics vehicle) {
         super();
@@ -69,14 +67,14 @@ public abstract class AGUIPanel extends AGUIBase {
         //This method allows for recursion for connected trailers.
         if (entity.definition.connectionGroups != null) {
             for (JSONConnectionGroup connectionGroup : entity.definition.connectionGroups) {
-                if (connectionGroup.canInitiateConnections) {
+                if (connectionGroup.canIntiateConnections) {
                     trailerSwitchDefs.add(new SwitchEntry(entity, connectionGroup));
                 }
             }
 
             //Also check things we are towing, if we are set to do so.
             for (TowingConnection connection : entity.towingConnections) {
-                if (connection.hookupConnectionGroup.canInitiateSubConnections) {
+                if (connection.hookupConnectionGroup.canIntiateSubConnections) {
                     setupTowingButtons(connection.towedVehicle);
                 }
             }
@@ -86,7 +84,7 @@ public abstract class AGUIPanel extends AGUIBase {
         for (APart part : entity.parts) {
             if (part.definition.connectionGroups != null) {
                 for (JSONConnectionGroup connectionGroup : part.definition.connectionGroups) {
-                    if (connectionGroup.canInitiateConnections) {
+                    if (connectionGroup.canIntiateConnections) {
                         trailerSwitchDefs.add(new SwitchEntry(part, connectionGroup));
                     }
                 }
@@ -95,8 +93,8 @@ public abstract class AGUIPanel extends AGUIBase {
     }
 
     /**
-     * Call this if this GUI is open and a trailer connection changes. This allows this GUI to
-     * reset its states on a trailer change, if the trailer that state was changed was one of our switches.
+     *  Call this if this GUI is open and a trailer connection changes.  This allows this GUI to
+     *  reset its states on a trailer change, if the trailer that state was changed was one of our switches.
      */
     public void handleConnectionChange(TowingConnection connection) {
         boolean recreatePanel = false;
@@ -121,25 +119,25 @@ public abstract class AGUIPanel extends AGUIBase {
         //This allows for things to be on different columns depending on vehicle configuration.
         //We make this method final and create an abstract method to use instead of this one for
         //setting up any extra components.
-        xOffset = (int) (1.25D * GAP_BETWEEN_SELECTORS);
+        xOffset = (int) 1.25D * GAP_BETWEEN_SELECTORS;
 
-        //Add light selectors. These are on the left-most side of the panel.
+        //Add light selectors.  These are on the left-most side of the panel.
         setupLightComponents(guiLeft, guiTop);
         xOffset += GAP_BETWEEN_SELECTORS + SELECTOR_SIZE;
 
-        //Add engine selectors. These are to the right of the light switches.
+        //Add engine selectors.  These are to the right of the light switches.
         setupEngineComponents(guiLeft, guiTop);
         xOffset += GAP_BETWEEN_SELECTORS + SELECTOR_SIZE;
 
-        //Add general selectors. These are panel-specific, and to the right of the engine selectors.
+        //Add general selectors.  These are panel-specific, and to the right of the engine selectors.
         setupGeneralComponents(guiLeft, guiTop);
         xOffset += GAP_BETWEEN_SELECTORS + SELECTOR_SIZE;
 
-        //Add custom selectors. These are vehicle-specific, and their placement is panel-specific.
+        //Add custom selectors.  These are vehicle-specific, and their placement is panel-specific.
         //These are rendered to the right of the general selectors.
         setupCustomComponents(guiLeft, guiTop);
 
-        //Add instruments. These go wherever they are specified in the JSON.
+        //Add instruments.  These go wherever they are specified in the JSON.
         for (int i = 0; i < vehicle.instruments.size(); ++i) {
             if (vehicle.instruments.get(i) != null && vehicle.definition.instruments.get(i).placeOnPanel) {
                 addComponent(new GUIComponentInstrument(guiLeft, guiTop, vehicle, i));
@@ -201,7 +199,7 @@ public abstract class AGUIPanel extends AGUIBase {
     @Override
     public void close() {
         super.close();
-        //Turn starters off. This prevents stuck engine starters.
+        //Turn starters off.  This prevents stuck engine starters.
         for (PartEngine engine : vehicle.engines.values()) {
             if (engine.electricStarterEngaged) {
                 InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.ELECTRIC_STARTER_VARIABLE));
@@ -209,7 +207,7 @@ public abstract class AGUIPanel extends AGUIBase {
         }
     }
 
-    protected static class SwitchEntry {
+    protected class SwitchEntry {
         protected final AEntityE_Interactable<?> connectionDefiner;
         protected final EntityVehicleF_Physics vehicleOn;
         protected final JSONConnectionGroup connectionGroup;

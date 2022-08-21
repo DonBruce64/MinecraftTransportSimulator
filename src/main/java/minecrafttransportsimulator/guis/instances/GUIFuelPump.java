@@ -1,5 +1,8 @@
 package minecrafttransportsimulator.guis.instances;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityFuelPump;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
@@ -9,21 +12,17 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketInventoryContainerChange;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpDispense;
 
-import java.util.ArrayList;
-import java.util.List;
-
-/**
- * A GUI that is used to set up fuel pumps as a pay-to-use system. Allows for setting various items
- * for various fluid amounts. Opened when the pump is clicked by a wrench from an OP player.
+/**A GUI that is used to set up fuel pumps as a pay-to-use system.  Allows for setting various items
+ * for various fluid amounts.  Opened when the pump is clicked by a wrench from an OP player.
  * Will also open when a non-OP clicks the pump to let them select which item to spend on the fuel.
- *
+ * 
  * @author don_bruce
  */
 public class GUIFuelPump extends AGUIInventory {
 
     private final TileEntityFuelPump pump;
     private final boolean configuring;
-    private final List<GUIComponentTextBox> interactableSlotBoxes = new ArrayList<>();
+    private final List<GUIComponentTextBox> interactableSlotBoxes = new ArrayList<GUIComponentTextBox>();
 
     public GUIFuelPump(TileEntityFuelPump pump, boolean configuring) {
         super(null);
@@ -67,13 +66,13 @@ public class GUIFuelPump extends AGUIInventory {
                 @Override
                 public boolean isTextValid(String newText) {
                     //Only allow whole numbers.
-                    return newText.matches("\\d+");
+                    return newText.matches("[0-9]+");
                 }
 
                 @Override
                 public void handleTextChange() {
                     //Set new values on the pump.
-                    InterfaceManager.packetInterface.sendToServer(new PacketTileEntityFuelPumpDispense(pump, player, interactableSlotBoxes.indexOf(this), Integer.parseInt(this.getText())));
+                    InterfaceManager.packetInterface.sendToServer(new PacketTileEntityFuelPumpDispense(pump, player, interactableSlotBoxes.indexOf(this), Integer.valueOf(this.getText())));
                 }
             };
             fuelAmount.visible = !stack.isEmpty() || configuring;
@@ -101,7 +100,7 @@ public class GUIFuelPump extends AGUIInventory {
     @Override
     protected void handlePlayerItemClick(int slotClicked) {
         if (configuring) {
-            //player clicked on item during config. Set stack in next free slot.
+            //player clicked on item during config.  Set stack in next free slot.
             for (int i = 0; i < pump.fuelItems.getSize(); ++i) {
                 IWrapperItemStack stack = pump.fuelItems.getStack(i);
                 if (stack.isEmpty()) {

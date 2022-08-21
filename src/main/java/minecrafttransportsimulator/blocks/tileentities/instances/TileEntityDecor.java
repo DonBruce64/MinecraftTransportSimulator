@@ -13,8 +13,7 @@ import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 
-/**
- * Decor tile entity. Contains the definition so we know how
+/**Decor tile entity.  Contains the definition so we know how
  * to render this in the TESR call, as well as if we need to do
  * crafting operations if we are a crafting decor type.
  *
@@ -98,10 +97,13 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> {
         //Adjust current variables to modifiers, if any exist.
         if (definition.variableModifiers != null) {
             for (JSONVariableModifier modifier : definition.variableModifiers) {
-                if ("lightLevel".equals(modifier.variable)) {
-                    lightLevel = adjustVariable(modifier, lightLevel);
-                } else {
-                    setVariable(modifier.variable, adjustVariable(modifier, (float) getVariable(modifier.variable)));
+                switch (modifier.variable) {
+                    case "lightLevel":
+                        lightLevel = adjustVariable(modifier, lightLevel);
+                        break;
+                    default:
+                        setVariable(modifier.variable, adjustVariable(modifier, (float) getVariable(modifier.variable)));
+                        break;
                 }
             }
         }

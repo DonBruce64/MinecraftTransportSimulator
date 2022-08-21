@@ -1,5 +1,9 @@
 package mcinterface1122;
 
+import java.io.IOException;
+
+import org.lwjgl.input.Keyboard;
+
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.AGUIComponent;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
@@ -8,13 +12,9 @@ import minecrafttransportsimulator.guis.components.GUIComponentTextBox.TextBoxCo
 import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.init.SoundEvents;
-import org.lwjgl.input.Keyboard;
 
-import java.io.IOException;
-
-/**
- * Builder for MC GUI classes. Created when {@link InterfaceClient#setActiveGUI(AGUIBase)}}
- * is called to open a GUI. This builder is purely to handle input forwarding and game pause
+/**Builder for MC GUI classes.  Created when {@link InterfaceClient#setActiveGUI(AGUIBase)}}
+ * is called to open a GUI.  This builer is purely to handle input forwarding and game pause
  * requests and does no actual rendering as that's left for non-GUI generic rendering code.
  *
  * @author don_bruce
@@ -22,9 +22,7 @@ import java.io.IOException;
 public class BuilderGUI extends GuiScreen {
     private GUIComponentButton lastButtonClicked;
 
-    /**
-     * Current gui we are built around.
-     **/
+    /**Current gui we are built around.**/
     public final AGUIBase gui;
 
     public BuilderGUI(AGUIBase gui) {
@@ -32,13 +30,13 @@ public class BuilderGUI extends GuiScreen {
     }
 
     /**
-     * This is called by the main MC system for click events. We override it here to check
-     * to see if we have clicked any of the registered components. If so, we fire the appropriate
-     * event for those components. If we click something, we don't check any other components as
-     * that could result in us being in a transition state when doing checks.
+     *  This is called by the main MC system for click events.  We override it here to check
+     *  to see if we have clicked any of the registered components.  If so, we fire the appropriate 
+     *  event for those components.  If we click something, we don't check any other components as 
+     *  that could result in us being in a transition state when doing checks.
      */
     @Override
-    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) {
+    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
         for (AGUIComponent component : gui.components) {
             if (component instanceof GUIComponentButton) {
                 GUIComponentButton button = (GUIComponentButton) component;
@@ -58,10 +56,10 @@ public class BuilderGUI extends GuiScreen {
     }
 
     /**
-     * This is called by the main MC system for click events. We override it here to tell
-     * the last selector we clicked, if any, that the mouse has been released. This allows
-     * the selector to resume to it's "resting" state. This is dependent on the selector code;
-     * some selectors may not do anything with this action.
+     *  This is called by the main MC system for click events.  We override it here to tell 
+     *  the last selector we clicked, if any, that the mouse has been released.  This allows
+     *  the selector to resume to it's "resting" state.  This is dependent on the selector code;
+     *  some selectors may not do anything with this action.
      */
     @Override
     protected void mouseReleased(int mouseX, int mouseY, int actionType) {
@@ -72,10 +70,9 @@ public class BuilderGUI extends GuiScreen {
     }
 
     /**
-     * This is called by the main MC system for keyboard events. We Override it here to check
-     * to forward the inputs to focused textBoxes for further processing.
+     *  This is called by the main MC system for keyboard events.  We Override it here to check
+     *  to forward the inputs to focused textBoxes for further processing.
      */
-    @SuppressWarnings("UnnecessaryContinue")
     @Override
     protected void keyTyped(char key, int keyCode) throws IOException {
         super.keyTyped(key, keyCode);
@@ -103,7 +100,6 @@ public class BuilderGUI extends GuiScreen {
                                 continue;
                             default:
                                 textBox.handleKeyTyped(key, keyCode, null);
-                                continue;
                         }
                     }
                 }

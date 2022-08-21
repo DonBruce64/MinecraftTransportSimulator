@@ -1,24 +1,28 @@
 package minecrafttransportsimulator.guis.instances;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.entities.instances.EntityRadio;
-import minecrafttransportsimulator.guis.components.*;
+import minecrafttransportsimulator.guis.components.AGUIBase;
+import minecrafttransportsimulator.guis.components.AGUIComponent;
+import minecrafttransportsimulator.guis.components.GUIComponentButton;
+import minecrafttransportsimulator.guis.components.GUIComponentCutout;
+import minecrafttransportsimulator.guis.components.GUIComponentLabel;
+import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketRadioStateChange;
 import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
 import minecrafttransportsimulator.sound.RadioManager;
 import minecrafttransportsimulator.sound.RadioManager.RadioSources;
 
-import java.util.ArrayList;
-import java.util.List;
-
-/**
- * GUI for interfacing with radios.
+/**GUI for interfacing with radios.
  * This GUI allows for state changes to radios, which are then
  * picked up by the audio system to affect the playing song.
- *
- * @author don_bruce
- */
+*
+* @author don_bruce
+*/
 public class GUIRadio extends AGUIBase {
     //Buttons.
     private GUIComponentButton offButton;
@@ -33,10 +37,10 @@ public class GUIRadio extends AGUIBase {
     private GUIComponentButton equalizerResetButton;
     private GUIComponentButton volUpButton;
     private GUIComponentButton volDnButton;
-    private final List<GUIComponentButton> presetButtons = new ArrayList<>();
-    private final List<GUIComponentButton> equalizerButtons = new ArrayList<>();
-    private final List<GUIComponentCutout> equalizerSliderBands = new ArrayList<>();
-    private final List<GUIComponentCutout> equalizerSliders = new ArrayList<>();
+    private List<GUIComponentButton> presetButtons = new ArrayList<GUIComponentButton>();
+    private List<GUIComponentButton> equalizerButtons = new ArrayList<GUIComponentButton>();
+    private List<GUIComponentCutout> equalizerSliderBands = new ArrayList<GUIComponentCutout>();
+    private List<GUIComponentCutout> equalizerSliders = new ArrayList<GUIComponentCutout>();
 
     //Input boxes
     private GUIComponentTextBox stationDisplay;
@@ -181,7 +185,7 @@ public class GUIRadio extends AGUIBase {
         });
 
         //Equalizer band setting buttons, slots, and sliders.
-        //We only show one in every 4 bands (8 bands total). Nobody needs a 32-band equalizer...
+        //We only show one in every 4 bands (8 bands total).  Nobody needs a 32-band equalizer...
         equalizerButtons.clear();
         equalizerSliderBands.clear();
         equalizerSliders.clear();
@@ -240,7 +244,7 @@ public class GUIRadio extends AGUIBase {
 
         //Set volume system states to current volume settings.
         volumeDisplay.enabled = false;
-        volumeDisplay.setText("VOL        " + radio.volume);
+        volumeDisplay.setText("VOL        " + String.valueOf(radio.volume));
         volUpButton.enabled = radio.volume < 10;
         volDnButton.enabled = radio.volume > 1;
 
@@ -269,7 +273,7 @@ public class GUIRadio extends AGUIBase {
     private void presetButtonClicked(GUIComponentButton buttonClicked) {
         int presetClicked = presetButtons.indexOf(buttonClicked);
         if (teachMode) {
-            //In teach mode. Set Internet radio stations.
+            //In teach mode.  Set Internet radio stations.
             RadioManager.setLocalStationURL(stationDisplay.getText(), presetClicked);
             stationDisplay.setText("Station set to preset " + (presetClicked + 1));
             teachMode = false;
@@ -293,7 +297,7 @@ public class GUIRadio extends AGUIBase {
 
         @Override
         public void onClicked(boolean leftSide) {
-            //Set the current band. We use integer division as we have two buttons per band.
+            //Set the current band.  We use integer division as we have two buttons per band.
             int bandIndex = bandsToSkip * (equalizerButtons.indexOf(this) / 2);
             float level = radio.currentStation.equalizer.getBand(bandIndex);
             if (increment ? level < 0.9F : level > -0.9F) {

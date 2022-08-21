@@ -6,11 +6,10 @@ import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 import minecrafttransportsimulator.sound.RadioManager.RadioSources;
 
-/**
- * This packet is sent to servers when a radio changes state. It sets the state on the server. After this,
- * the radio will send out packets to all clients to update their states. This allows song changes to be
+/**This packet is sent to servers when a radio changes state. It sets the state on the server.  After this,
+ * the radio will send out packets to all clients to update their states.  This allows song changes to be 
  * on both servers and clients.
- *
+ * 
  * @author don_bruce
  */
 public class PacketRadioStateChange extends APacketEntity<EntityRadio> {
@@ -20,9 +19,7 @@ public class PacketRadioStateChange extends APacketEntity<EntityRadio> {
     private final boolean randomOrder;
     private final String currentURL;
 
-    /**
-     * Source change constructor
-     **/
+    /**Source change constructor**/
     public PacketRadioStateChange(EntityRadio radio, RadioSources source) {
         super(radio);
         this.source = source;
@@ -32,9 +29,7 @@ public class PacketRadioStateChange extends APacketEntity<EntityRadio> {
         this.currentURL = radio.currentURL;
     }
 
-    /**
-     * Volume change constructor
-     **/
+    /**Volume change constructor**/
     public PacketRadioStateChange(EntityRadio radio, int volume) {
         super(radio);
         this.source = radio.getSource();
@@ -44,9 +39,7 @@ public class PacketRadioStateChange extends APacketEntity<EntityRadio> {
         this.currentURL = radio.currentURL;
     }
 
-    /**
-     * Local playback start constructor
-     **/
+    /**Local playback start constructor**/
     public PacketRadioStateChange(EntityRadio radio, int preset, boolean randomOrder) {
         super(radio);
         this.source = radio.getSource();
@@ -56,9 +49,7 @@ public class PacketRadioStateChange extends APacketEntity<EntityRadio> {
         this.currentURL = radio.currentURL;
     }
 
-    /**
-     * Internet playback start constructor
-     **/
+    /**Internet playback start constructor**/
     public PacketRadioStateChange(EntityRadio radio, int preset, String currentURL) {
         super(radio);
         this.source = radio.getSource();
@@ -68,9 +59,7 @@ public class PacketRadioStateChange extends APacketEntity<EntityRadio> {
         this.currentURL = currentURL;
     }
 
-    /**
-     * Stop playback start constructor
-     **/
+    /**Stop playback start constructor**/
     public PacketRadioStateChange(EntityRadio radio) {
         super(radio);
         this.source = radio.getSource();
