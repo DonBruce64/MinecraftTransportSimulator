@@ -1,12 +1,14 @@
 package minecrafttransportsimulator.entities.instances;
 
+import java.util.List;
+import java.util.TreeMap;
+
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
-import minecrafttransportsimulator.items.instances.ItemBullet;
 import minecrafttransportsimulator.jsondefs.JSONBullet;
 import minecrafttransportsimulator.jsondefs.JSONBullet.BulletType;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
@@ -17,9 +19,6 @@ import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitBlock;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.systems.ConfigSystem;
-
-import java.util.List;
-import java.util.TreeMap;
 
 /**
  * This part class is special, in that it does not extend APart.
@@ -41,8 +40,6 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
     public final double initialVelocity;
     private final double velocityToAddEachTick;
     private final Point3D motionToAddEachTick;
-    //TODO remove this with common items in update.
-    private final ItemBullet item;
 
     //States
     private int impactDesapawnTimer = -1;
@@ -59,7 +56,6 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
      **/
     public EntityBullet(Point3D position, Point3D motion, RotationMatrix orientation, PartGun gun) {
         super(gun.world, position, motion, ZERO_FOR_CONSTRUCTOR, gun.loadedBullet);
-        this.item = getItem();
         this.gun = gun;
         this.isBomb = gun.definition.gun.muzzleVelocity == 0;
         this.boundingBox.widthRadius = definition.bullet.diameter / 1000D / 2D;
@@ -193,7 +189,7 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
         //Now that we have an accurate motion, check for collisions.
         //First get a damage object to try to attack entities with.
         Damage damage = new Damage((velocity / initialVelocity) * definition.bullet.damage * ConfigSystem.settings.damage.bulletDamageFactor.value, boundingBox, gun, gun.lastController, gun.lastController != null ? JSONConfigLanguage.DEATH_BULLET_PLAYER : JSONConfigLanguage.DEATH_BULLET_NULL);
-        damage.setBullet(item);
+        damage.setBullet(getItem());
 
         //Check for collided external entities and attack them.
         List<IWrapperEntity> attackedEntities = world.attackEntities(damage, motion, true);

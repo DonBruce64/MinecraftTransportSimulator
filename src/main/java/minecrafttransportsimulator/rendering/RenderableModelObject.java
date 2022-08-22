@@ -46,7 +46,6 @@ public class RenderableModelObject {
      * Map of tread points, keyed by the model the tread is pathing about, then the part slot, then the spacing of the tread.
      * This can be shared for two different treads of the same spacing as they render the same.
      **/
-    //TODO replace with part slot in branched version.
     private static final Map<String, Map<Integer, Map<Float, List<Double[]>>>> treadPoints = new HashMap<>();
     private static final TransformationMatrix treadPathBaseTransform = new TransformationMatrix();
     private static final RotationMatrix treadRotation = new RotationMatrix();
