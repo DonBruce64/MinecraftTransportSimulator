@@ -105,6 +105,9 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("The mass of this part.  Is normally 0 to avoid heavy seats, but may be used for generic parts or engines or the like.")
         public int mass;
 
+        @JSONDescription("This parameter is optional.  If included, then the model will be rendered with this texture in the part bench, even if it has a different one defined or uses the vehicle texture.")
+        public String benchTexture;
+
         @JSONDescription("This is a list of animatedObjects that can be used to move this part based on the animation values. This movement applies before the movement defined in the part slot.  This is primarially used to move the part based on properties of sub-parts, mostly for guns, but may be used for other things.")
         public List<JSONAnimationDefinition> movementAnimations;
 
