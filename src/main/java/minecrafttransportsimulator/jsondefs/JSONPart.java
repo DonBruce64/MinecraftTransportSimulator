@@ -1,5 +1,8 @@
 package minecrafttransportsimulator.jsondefs;
 
+import java.util.LinkedHashMap;
+import java.util.List;
+
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase.BlockMaterial;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable.ModifiableValue;
@@ -7,9 +10,6 @@ import minecrafttransportsimulator.jsondefs.JSONConfigSettings.ConfigFuel.FuelDe
 import minecrafttransportsimulator.packloading.JSONParser.JSONDefaults;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
-
-import java.util.LinkedHashMap;
-import java.util.List;
 
 @JSONDescription("Parts go on vehicles.  Simple, no?  There's not much to most part JSONs, and some parts, like seats, will have less than 10 lines to mess with.\nNote: while every part type has its own section, there is one cross-over: the generic section.  Being generic, it can be used on all parts to define their generic properties.  This may not apply on some parts, such as wheels, which define properties like height based on other parameters, but it will work on the majority of parts for more fine-tuning of things like interaction box size.")
 public class JSONPart extends AJSONPartProvider {
@@ -113,13 +113,15 @@ public class JSONPart extends AJSONPartProvider {
     }
 
     public static class JSONPartEngine {
+        @JSONRequired
+        @JSONDescription("The type of engine.  Different engines use different paramters.  But at least one type must be specified.")
+        public EngineType type;
+
         @JSONDescription("Should the engine change gears on its own.  This only affects cars and will prevent users from shifting into higher or lower gears using shiftUp and shiftDown. Instead, the engine will attempt to choose the best gear for the situation.  Note that MTS's automatic transmission system isn't the best and may get confused when gear ratios are close together.  For this reason, it is recommended to either use manual transmissions on vehicles with more than 5-6 gears, or to define the RPM at which a gear is shifted up or down via upShiftRPM and downShiftRPM.")
         public boolean isAutomatic;
 
         @JSONDescription("If true, the automatic starter will be distabled for this engine.  Instead, it must be started by hand.  Note that while normally this requires hitting the propeller, but in this case the engine itself may be hit too.  This is for outboard motors and the like.")
         public boolean disableAutomaticStarter;
-
-        public boolean isSteamPowered;
 
         @JSONDescription("This is how much 'oomph' the starter outputs on a single firing.  When the starter key is held the engine RPM will be increased by this amount every 4 ticks, or every 0.2 seconds.  Note that for engines with high loads, such as those with larger propellers, its quite possible to make a starter power that literally can't start the engine.")
         public int starterPower;
@@ -160,6 +162,9 @@ public class JSONPart extends AJSONPartProvider {
 
         @JSONDescription("The rate at which this engine's RPM winds down per tick after sputtering out or being turned off. 10 by default, and can be configured to make engines wind down quicker or slower.")
         public int engineWinddownRate;
+
+        @JSONDescription("Normally, engines run off of the fuel from the main vehicle.  However, one can give them rocket fuel, which will be used rather than the vehicle's fuel.  The moment the engine turns on, the fuel will ignite and run as if full throttle until the fuel runs out, at which point they must be crafted again to re-fuel them for their next use.")
+        public int rocketFuel;
 
         @ModifiableValue
         @JSONDescription("The rate at which this engine heats up, which gets lobbed into the math with fuel consumption, velocity... etc")
@@ -249,6 +254,13 @@ public class JSONPart extends AJSONPartProvider {
             @Deprecated
             public boolean volumeAdvanced;
         }
+    }
+
+    public enum EngineType {
+        @JSONDescription("A standard internal-combustion engine.  Requires fuel from the vehicle's fuel tanks to run.")
+        NORMAL,
+        @JSONDescription("A rocket-powered engine.  Uses only internal fuel and must be rebuilt each use.")
+        ROCKET;
     }
 
     public static class JSONPartGroundDevice {
