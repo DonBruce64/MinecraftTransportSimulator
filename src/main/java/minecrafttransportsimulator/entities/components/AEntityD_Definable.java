@@ -651,6 +651,8 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                 return Math.cos(Math.toRadians(ticksExisted + partialTicks));
             case ("time"):
                 return world.getTime();
+            case ("random"):
+                return Math.random();
             case ("rain_strength"):
                 return (int) world.getRainStrength(position);
             case ("rain_sin"): {
