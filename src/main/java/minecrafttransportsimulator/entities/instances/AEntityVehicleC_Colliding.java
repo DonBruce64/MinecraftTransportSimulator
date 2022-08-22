@@ -1,5 +1,8 @@
 package minecrafttransportsimulator.entities.instances;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -7,11 +10,12 @@ import minecrafttransportsimulator.entities.components.AEntityG_Towable;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.jsondefs.JSONVehicle;
-import minecrafttransportsimulator.mcinterface.*;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.systems.ConfigSystem;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Now that we have an existing vehicle its time to add the ability to collide with it,
@@ -97,6 +101,9 @@ abstract class AEntityVehicleC_Colliding extends AEntityG_Towable<JSONVehicle> {
                         if (!world.isClient()) {
                             if (ticksExisted > 500) {
                                 world.destroyBlock(blockPosition, true);
+                                if (box.groupDef != null && blockHardness > 0) {
+                                    damageCollisionBox(box, blockHardness >= 20 ? blockHardness * 2 : blockHardness * 4);
+                                }
                             } else {
                                 motion.set(0D, 0D, 0D);
                                 return -1;

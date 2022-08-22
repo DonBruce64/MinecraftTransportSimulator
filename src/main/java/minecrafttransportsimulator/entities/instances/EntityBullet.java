@@ -16,7 +16,6 @@ import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityBulletHitBlock;
-import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
@@ -243,16 +242,9 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
 
                         //First check if we need to reduce health of the hitbox.
                         if (!world.isClient() && hitBox.groupDef != null && hitBox.groupDef.health != 0 && !damage.isWater) {
+                            hitEntity.damageCollisionBox(hitBox, damage.amount);
                             String variableName = "collision_" + (hitEntity.definition.collisionGroups.indexOf(hitBox.groupDef) + 1) + "_damage";
-                            double currentDamage = hitEntity.getVariable(variableName) + damage.amount;
-                            if (currentDamage > hitBox.groupDef.health) {
-                                double amountActuallyNeeded = damage.amount - (currentDamage - hitBox.groupDef.health);
-                                currentDamage = hitBox.groupDef.health;
-                                InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(hitEntity, variableName, amountActuallyNeeded));
-                            } else {
-                                InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(hitEntity, variableName, damage.amount));
-                            }
-                            hitEntity.setVariable(variableName, currentDamage);
+                            double currentDamage = hitEntity.getVariable(variableName);
                             displayDebugMessage("HIT HEALTH BOX.  ATTACKED FOR: " + damage.amount + ".  BOX CURRENT DAMAGE: " + currentDamage + " OF " + hitBox.groupDef.health);
                         }
 

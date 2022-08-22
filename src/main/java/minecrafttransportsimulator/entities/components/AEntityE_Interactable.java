@@ -1,10 +1,35 @@
 package minecrafttransportsimulator.entities.components;
 
-import minecrafttransportsimulator.baseclasses.*;
+import java.nio.FloatBuffer;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
+import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
+import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.ColorRGB;
+import minecrafttransportsimulator.baseclasses.Damage;
+import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
+import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
-import minecrafttransportsimulator.jsondefs.*;
+import minecrafttransportsimulator.jsondefs.AJSONInteractableEntity;
+import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
+import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
+import minecrafttransportsimulator.jsondefs.JSONCollisionGroup;
 import minecrafttransportsimulator.jsondefs.JSONInstrument.JSONInstrumentComponent;
-import minecrafttransportsimulator.mcinterface.*;
+import minecrafttransportsimulator.jsondefs.JSONInstrumentDefinition;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
@@ -13,9 +38,6 @@ import minecrafttransportsimulator.rendering.RenderInstrument;
 import minecrafttransportsimulator.rendering.RenderInstrument.InstrumentSwitchbox;
 import minecrafttransportsimulator.rendering.RenderableObject;
 import minecrafttransportsimulator.systems.ConfigSystem;
-
-import java.nio.FloatBuffer;
-import java.util.*;
 
 /**
  * Base entity class containing riders and their positions on this entity.  Used for
@@ -325,6 +347,24 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
             encompassingBox.depthRadius = (float) Math.max(encompassingBox.depthRadius, Math.abs(box.globalCenter.z - position.z + box.depthRadius));
         }
         encompassingBox.updateToEntity(this, null);
+    }
+
+    /**
+     * Applies damage to the collision group the passed-in box is a part of.
+     * The box MUST have a {@link BoundingBox#groupDef} defined or this method will crash.
+     * Only call this method on the server: clients will update via variable packets.
+     */
+    public void damageCollisionBox(BoundingBox box, double damageAmount) {
+        String variableName = "collision_" + (definition.collisionGroups.indexOf(box.groupDef) + 1) + "_damage";
+        double currentDamage = getVariable(variableName) + damageAmount;
+        if (currentDamage > box.groupDef.health) {
+            double amountActuallyNeeded = damageAmount - (currentDamage - box.groupDef.health);
+            currentDamage = box.groupDef.health;
+            InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, variableName, amountActuallyNeeded));
+        } else {
+            InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, variableName, damageAmount));
+        }
+        setVariable(variableName, currentDamage);
     }
 
     @Override
