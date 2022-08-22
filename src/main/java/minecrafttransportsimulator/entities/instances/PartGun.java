@@ -1,6 +1,13 @@
 package minecrafttransportsimulator.entities.instances;
 
-import minecrafttransportsimulator.baseclasses.*;
+import java.util.ArrayList;
+import java.util.List;
+
+import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.ColorRGB;
+import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
+import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemBullet;
@@ -8,13 +15,15 @@ import minecrafttransportsimulator.jsondefs.JSONMuzzle;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONText;
-import minecrafttransportsimulator.mcinterface.*;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.mcinterface.IWrapperInventory;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPartGun;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Basic gun class.  This class is responsible for representing a gun in the world.  This gun
@@ -727,7 +736,7 @@ public class PartGun extends APart {
         if (definition.gun.muzzleVelocity != 0) {
             bulletVelocity.set(0, 0, definition.gun.muzzleVelocity / 20D / 10D);
             //Randomize the spread for normal bullet and pellets
-            if (definition.gun.bulletSpreadFactor > 0 || loadedBullet.definition.bullet.pelletSpreadFactor > 0) {
+            if (definition.gun.bulletSpreadFactor > 0 || (loadedBullet != null && loadedBullet.definition.bullet.pelletSpreadFactor > 0)) {
                 firingSpreadRotation.angles.set((Math.random() - 0.5F) * (definition.gun.bulletSpreadFactor + loadedBullet.definition.bullet.pelletSpreadFactor),
                         (Math.random() - 0.5F) * (definition.gun.bulletSpreadFactor + loadedBullet.definition.bullet.pelletSpreadFactor), 0D);
                 bulletVelocity.rotate(firingSpreadRotation);
