@@ -73,6 +73,8 @@ public class PartEngine extends APart {
     private float currentSuperchargerFuelConsumption;
     @ModifiedValue
     private float currentSuperchargerEfficiency;
+    @ModifiedValue
+    private float currentGearRatio;
 
     //Internal variables.
     private boolean isPropellerInLiquid;
@@ -80,7 +82,6 @@ public class PartEngine extends APart {
     private int starterLevel;
     private int shiftCooldown;
     private int backfireCooldown;
-    private float currentGearRatio;
     private double lowestWheelVelocity;
     private double desiredWheelVelocity;
     private double propellerAxialVelocity;
@@ -217,9 +218,6 @@ public class PartEngine extends APart {
         if (downshiftCountdown > 0) {
             --downshiftCountdown;
         }
-
-        //Set current gear ratio based on current gear.
-        currentGearRatio = definition.engine.gearRatios.get(currentGear + reverseGears);
 
         if (vehicleOn != null) {
             //Check to see if we are linked and need to equalize power between us and another engine.
@@ -686,6 +684,7 @@ public class PartEngine extends APart {
         currentCoolingCoefficient = definition.engine.coolingCoefficient;
         currentSuperchargerFuelConsumption = definition.engine.superchargerFuelConsumption;
         currentSuperchargerEfficiency = definition.engine.superchargerEfficiency;
+        currentGearRatio = definition.engine.gearRatios.get(currentGear + reverseGears);
 
         //Adjust current variables to modifiers, if any exist.
         if (definition.variableModifiers != null) {
@@ -717,6 +716,9 @@ public class PartEngine extends APart {
                         break;
                     case "superchargerEfficiency":
                         currentSuperchargerEfficiency = adjustVariable(modifier, currentSuperchargerEfficiency);
+                        break;
+                    case "currentGearRatio:":
+                        currentGearRatio = adjustVariable(modifier, currentGearRatio);
                         break;
                     default:
                         setVariable(modifier.variable, adjustVariable(modifier, (float) getVariable(modifier.variable)));
