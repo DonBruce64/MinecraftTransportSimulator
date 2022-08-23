@@ -1954,7 +1954,7 @@ public final class LegacyCompatSystem {
         //Set mirroring to new format.  Only do this for wheels, or things with inverse mirroring set.
         for (byte i = 0; i < partDef.types.size(); ++i) {
             String partName = partDef.types.get(i);
-            if (partName.startsWith("ground_wheel") || partDef.inverseMirroring) {
+            if (partDef.rot == null && (partName.startsWith("ground_wheel") || partDef.inverseMirroring)) {
                 partDef.isMirrored = (partDef.pos.x < 0 && !partDef.inverseMirroring) || (partDef.pos.x >= 0 && partDef.inverseMirroring);
                 if (partDef.isMirrored && partDef.rot == null) {
                     partDef.rot = new RotationMatrix().rotateY(180);
