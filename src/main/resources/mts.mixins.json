@@ -1,0 +1,13 @@
+{
+    "required": true,
+    "package": "mcinterface1122.mixin",
+    "compatibilityLevel": "JAVA_8",
+    "client": [
+        "client.MixinSplashProgress"
+    ],
+    "injectors": {
+        "defaultRequire": 1
+    },
+    "refmap": "mts.mixin-refmap.json",
+    "minVersion": "0.8"
+}

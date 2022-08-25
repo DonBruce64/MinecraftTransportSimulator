@@ -1,19 +1,23 @@
 buildscript {
     repositories {
         maven { url = "https://maven.minecraftforge.net" }
+        maven { url = "https://repo.spongepowered.org/maven" }
         mavenCentral()
     }
     dependencies {
-        classpath group: "net.minecraftforge.gradle", name: "ForgeGradle", version: "3.+", changing: true
+        classpath group: "net.minecraftforge.gradle", name: "ForgeGradle", version: "5.+", changing: true
+        classpath "org.spongepowered:mixingradle:0.7-SNAPSHOT"
     }
 }
 
 //Apply plugins
 apply plugin: "net.minecraftforge.gradle"
+apply plugin: "org.spongepowered.mixin"
 apply plugin: "eclipse"
+apply plugin: "idea"
 
 //Set file name.
-version = "1.12.2-22.1.0"
+version = "1.12.2-21.4.0-BETA49"
 group = "minecrafttransportsimulator"
 archivesBaseName = "Immersive Vehicles"
 
@@ -32,10 +36,13 @@ minecraft {
     // official   MCVersion  Official field/method names from Mojang mapping files
     mappings channel: "stable", version: "39-1.12"
 
+    accessTransformer = file("src/main/resources/mts_at.cfg")
+
     //Run configurations.
     runs {
         client {
             workingDirectory project.file("run")
+            property "fml.coreMods.load", "mcinterface1122.core.CoreMod"
         }
 
         server {
@@ -49,6 +56,8 @@ repositories {
     maven { url = "https://mvnrepository.com/artifact/org.jcraft/jorbis" }
     //JEI
     maven { url = "https://dvs1.progwml6.com/files/maven/" }
+    //Mixins
+    maven { url = "https://repo.spongepowered.org/maven" }
 }
 
 //Configuration that holds jars to include in the jar
@@ -66,12 +75,25 @@ dependencies {
     embed("com.googlecode.soundlibs:jlayer:1.0.1.4")
     embed("org.jcraft:jorbis:0.0.17")
 
+    implementation("org.spongepowered:mixin:0.8.5") {
+        exclude module: "guava"
+        exclude module: "commons-io"
+        exclude module: "gson"
+    }
+
+    annotationProcessor "org.spongepowered:mixin:0.8.5:processor"
+
     //Compile against the JEI API but do not include it at runtime
     compileOnly fg.deobf("mezz.jei:jei_1.12.2:4.16.1.302:api")
     //At runtime, use the full JEI jar
-    //Disabled as Access Transformers don"t work on FG higher than 2.3 despite them saying they do.
+    //Disabled as Access Transformers don"t work on FG 3.0 runtimes despite them saying they do.
     //Not a huge issue, as it just prevents using JEI in-dev, and we already have it working so don"t really need to test.
     //runtimeOnly fg.deobf("mezz.jei:jei_1.12.2:4.16.1.302")
+}
+
+
+mixin {
+    add sourceSets.main, "mts.mixin-refmap.json"
 }
 
 //Here is where we zip up all embeds and add them to our jar.
@@ -79,6 +101,22 @@ jar {
     from {
         configurations.embed.collect { it.isDirectory() ? it : zipTree(it) }
     }
+
+    manifest {
+        attributes([
+                "FMLAT"                      : "mts_at.cfg",
+                "FMLCorePlugin"              : "mcinterface1122.core.CoreMod",
+                "FMLCorePluginContainsFMLMod": true,
+                "ForceLoadAsMod"             : true,
+                "TweakClass"                 : "org.spongepowered.asm.launch.MixinTweaker",
+                "TweakOrder"                 : "0",
+                "MixinConfigs"               : "mts.mixins.json"
+        ])
+    }
+}
+
+processResources {
+    rename "mts_at.cfg", "META-INF/mts_at.cfg"
 }
 
 //Now compile the mod.
