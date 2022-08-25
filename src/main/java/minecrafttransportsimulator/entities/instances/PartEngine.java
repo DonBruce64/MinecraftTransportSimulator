@@ -717,7 +717,7 @@ public class PartEngine extends APart {
                     case "superchargerEfficiency":
                         currentSuperchargerEfficiency = adjustVariable(modifier, currentSuperchargerEfficiency);
                         break;
-                    case "currentGearRatio:":
+                    case "currentGearRatio":
                         currentGearRatio = adjustVariable(modifier, currentGearRatio);
                         break;
                     default:
@@ -1045,6 +1045,7 @@ public class PartEngine extends APart {
                 } else {
                     wheelForce = (engineTargetRPM - rpm) / currentMaxRPM * currentGearRatio * vehicleOn.currentAxleRatio * (currentFuelConsumption + (currentSuperchargerFuelConsumption * currentSuperchargerEfficiency)) * 0.6F * 30F;
                 }
+
                 if (wheelForce != 0) {
                     //Check to see if the wheels need to spin out.
                     //If they do, we'll need to provide less force.
@@ -1076,7 +1077,7 @@ public class PartEngine extends APart {
 
                 //Don't let us have negative engine force at low speeds.
                 //This causes odd reversing behavior when the engine tries to maintain speed.
-                if (((wheelForce < 0 && currentGear > 0) || (wheelForce > 0 && currentGear < 0)) && vehicleOn.velocity < 0.25) {
+                if (((wheelForce < 0 && currentGearRatio > 0) || (wheelForce > 0 && currentGearRatio < 0)) && vehicleOn.velocity < 0.25) {
                     wheelForce = 0;
                 }
             } else {

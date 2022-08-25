@@ -36,9 +36,9 @@ public class CameraSystem {
      */
     public static void changeCameraZoom(boolean zoomIn) {
         if (zoomIn && zoomLevel > 0) {
-            zoomLevel -= 2;
+            --zoomLevel;
         } else if (!zoomIn) {
-            zoomLevel += 2;
+            ++zoomLevel;
         }
     }
 

@@ -3,7 +3,12 @@ package minecrafttransportsimulator.systems;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
-import minecrafttransportsimulator.entities.instances.*;
+import minecrafttransportsimulator.entities.instances.APart;
+import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
+import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
+import minecrafttransportsimulator.entities.instances.PartEngine;
+import minecrafttransportsimulator.entities.instances.PartGun;
+import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIPanelAircraft;
 import minecrafttransportsimulator.guis.instances.GUIPanelGround;
@@ -14,7 +19,12 @@ import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.packets.instances.*;
+import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
+import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
+import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
+import minecrafttransportsimulator.packets.instances.PacketPartGun;
+import minecrafttransportsimulator.packets.instances.PacketPartSeat;
+import minecrafttransportsimulator.packets.instances.PacketVehicleInteract;
 
 /**
  * Class that handles all control operations.
@@ -256,10 +266,6 @@ public final class ControlSystem {
                 InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableIncrement(vehicle, variable, rate * (currentValue < 0 ? 2 : 1), -bounds, bounds));
             } else if (decrement.isPressed()) {
                 InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableIncrement(vehicle, variable, -rate * (currentValue > 0 ? 2 : 1), -bounds, bounds));
-            } else if (currentValue > 0) {
-                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableIncrement(vehicle, variable, -rate, 0, bounds));
-            } else if (currentValue < 0) {
-                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableIncrement(vehicle, variable, rate, -bounds, 0));
             }
         }
     }

@@ -1,7 +1,14 @@
 package minecrafttransportsimulator.entities.instances;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import mcinterface1122.InterfaceLoader;
-import minecrafttransportsimulator.baseclasses.*;
+import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.ColorRGB;
+import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.TowingConnection;
+import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityG_Towable;
 import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
@@ -11,9 +18,6 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.systems.ConfigSystem;
-
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * This class adds the final layer of physics calculations on top of the
@@ -31,6 +35,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     public double aileronAngle;
     @DerivedValue
     public double aileronTrim;
+    private byte aileronInputCooldown;
     public static final double MAX_AILERON_ANGLE = 25;
     public static final double MAX_AILERON_TRIM = 10;
     public static final double AILERON_DAMPEN_RATE = 0.6;
@@ -45,6 +50,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     public double elevatorAngle;
     @DerivedValue
     public double elevatorTrim;
+    private byte elevatorInputCooldown;
     public static final double MAX_ELEVATOR_ANGLE = 25;
     public static final double MAX_ELEVATOR_TRIM = 10;
     public static final double ELEVATOR_DAMPEN_RATE = 0.6;
@@ -59,6 +65,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     public double rudderAngle;
     @DerivedValue
     public double rudderTrim;
+    private byte rudderInputCooldown;
     public static final double MAX_RUDDER_ANGLE = 45;
     public static final double MAX_RUDDER_TRIM = 10;
     public static final double RUDDER_DAMPEN_RATE = 2.0;
@@ -222,6 +229,35 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     }
 
     @Override
+    public void setVariable(String variable, double value) {
+        switch (variable) {
+            case AILERON_INPUT_VARIABLE:
+                aileronInputCooldown = 6;
+                break;
+            case ELEVATOR_INPUT_VARIABLE:
+                elevatorInputCooldown = 6;
+                break;
+            case RUDDER_INPUT_VARIABLE:
+                rudderInputCooldown = 6;
+                break;
+        }
+        super.setVariable(variable, value);
+    }
+
+    @Override
+    public boolean incrementVariable(String variable, double incrementValue, double minValue, double maxValue) {
+        switch (variable) {
+            case AILERON_INPUT_VARIABLE:
+                aileronInputCooldown = 6;
+            case ELEVATOR_INPUT_VARIABLE:
+                elevatorInputCooldown = 6;
+            case RUDDER_INPUT_VARIABLE:
+                rudderInputCooldown = 6;
+        }
+        return super.incrementVariable(variable, incrementValue, minValue, maxValue);
+    }
+
+    @Override
     protected void updateVariableModifiers() {
         currentWingArea = (float) (definition.motorized.wingArea + definition.motorized.wingArea * 0.15F * flapCurrentAngle / MAX_FLAP_ANGLE_REFERENCE);
         currentWingSpan = definition.motorized.wingSpan;
@@ -350,7 +386,6 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                             }
                         }
                     }
-                } else {
                 }
             }
 
@@ -640,40 +675,57 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             }
         }
 
-        //If we don't have a controller, reset control states to 0.
-        if (getController() == null && !lockedOnRoad) {
-            if (aileronInput > AILERON_DAMPEN_RATE) {
-                setVariable(AILERON_INPUT_VARIABLE, aileronInput - AILERON_DAMPEN_RATE);
-                InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_INPUT_VARIABLE, -AILERON_DAMPEN_RATE, 0, MAX_AILERON_ANGLE));
-            } else if (aileronInput < -AILERON_DAMPEN_RATE) {
-                setVariable(AILERON_INPUT_VARIABLE, aileronInput + AILERON_DAMPEN_RATE);
-                InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_INPUT_VARIABLE, AILERON_DAMPEN_RATE, -MAX_AILERON_ANGLE, 0));
-            } else if (aileronInput != 0) {
-                setVariable(AILERON_INPUT_VARIABLE, 0);
-                InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, AILERON_INPUT_VARIABLE, 0));
+        //If we aren't currently sending control inputs, reset control states to 0.
+        //Don't do this on roads, since those manually set our controls.
+        if (!lockedOnRoad) {
+            if (aileronInputCooldown == 0) {
+                if (aileronInput > AILERON_DAMPEN_RATE) {
+                    setVariable(AILERON_INPUT_VARIABLE, aileronInput - AILERON_DAMPEN_RATE);
+                    InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_INPUT_VARIABLE, -AILERON_DAMPEN_RATE, 0, MAX_AILERON_ANGLE));
+                } else if (aileronInput < -AILERON_DAMPEN_RATE) {
+                    setVariable(AILERON_INPUT_VARIABLE, aileronInput + AILERON_DAMPEN_RATE);
+                    InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_INPUT_VARIABLE, AILERON_DAMPEN_RATE, -MAX_AILERON_ANGLE, 0));
+                } else if (aileronInput != 0) {
+                    setVariable(AILERON_INPUT_VARIABLE, 0);
+                    InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, AILERON_INPUT_VARIABLE, 0));
+                }
+                aileronInputCooldown = 0;
+            } else {
+                --aileronInputCooldown;
             }
 
-            if (elevatorInput > ELEVATOR_DAMPEN_RATE) {
-                setVariable(ELEVATOR_INPUT_VARIABLE, elevatorInput - ELEVATOR_DAMPEN_RATE);
-                InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_INPUT_VARIABLE, -ELEVATOR_DAMPEN_RATE, 0, MAX_ELEVATOR_ANGLE));
-            } else if (elevatorInput < -ELEVATOR_DAMPEN_RATE) {
-                setVariable(ELEVATOR_INPUT_VARIABLE, elevatorInput + ELEVATOR_DAMPEN_RATE);
-                InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_INPUT_VARIABLE, ELEVATOR_DAMPEN_RATE, -MAX_ELEVATOR_ANGLE, 0));
-            } else if (elevatorInput != 0) {
-                setVariable(ELEVATOR_INPUT_VARIABLE, 0);
-                InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, ELEVATOR_INPUT_VARIABLE, 0));
+            if (elevatorInputCooldown == 0) {
+                if (elevatorInput > ELEVATOR_DAMPEN_RATE) {
+                    setVariable(ELEVATOR_INPUT_VARIABLE, elevatorInput - ELEVATOR_DAMPEN_RATE);
+                    InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_INPUT_VARIABLE, -ELEVATOR_DAMPEN_RATE, 0, MAX_ELEVATOR_ANGLE));
+                } else if (elevatorInput < -ELEVATOR_DAMPEN_RATE) {
+                    setVariable(ELEVATOR_INPUT_VARIABLE, elevatorInput + ELEVATOR_DAMPEN_RATE);
+                    InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_INPUT_VARIABLE, ELEVATOR_DAMPEN_RATE, -MAX_ELEVATOR_ANGLE, 0));
+                } else if (elevatorInput != 0) {
+                    setVariable(ELEVATOR_INPUT_VARIABLE, 0);
+                    InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, ELEVATOR_INPUT_VARIABLE, 0));
+                }
+                elevatorInputCooldown = 0;
+            } else {
+                --elevatorInputCooldown;
             }
 
-            if (rudderInput > RUDDER_DAMPEN_RATE) {
-                setVariable(RUDDER_INPUT_VARIABLE, rudderInput - RUDDER_DAMPEN_RATE);
-                InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, RUDDER_INPUT_VARIABLE, -RUDDER_DAMPEN_RATE, 0, MAX_RUDDER_ANGLE));
-            } else if (rudderInput < -RUDDER_DAMPEN_RATE) {
-                setVariable(RUDDER_INPUT_VARIABLE, rudderInput + RUDDER_DAMPEN_RATE);
-                InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, RUDDER_INPUT_VARIABLE, RUDDER_DAMPEN_RATE, -MAX_RUDDER_ANGLE, 0));
-            } else if (rudderInput != 0) {
-                setVariable(RUDDER_INPUT_VARIABLE, 0);
-                InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, RUDDER_INPUT_VARIABLE, 0));
+            if (rudderInputCooldown == 0) {
+                if (rudderInput > RUDDER_DAMPEN_RATE) {
+                    setVariable(RUDDER_INPUT_VARIABLE, rudderInput - RUDDER_DAMPEN_RATE);
+                    InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, RUDDER_INPUT_VARIABLE, -RUDDER_DAMPEN_RATE, 0, MAX_RUDDER_ANGLE));
+                } else if (rudderInput < -RUDDER_DAMPEN_RATE) {
+                    setVariable(RUDDER_INPUT_VARIABLE, rudderInput + RUDDER_DAMPEN_RATE);
+                    InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, RUDDER_INPUT_VARIABLE, RUDDER_DAMPEN_RATE, -MAX_RUDDER_ANGLE, 0));
+                } else if (rudderInput != 0) {
+                    setVariable(RUDDER_INPUT_VARIABLE, 0);
+                    InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, RUDDER_INPUT_VARIABLE, 0));
+                }
+                rudderInputCooldown = 0;
+            } else {
+                --rudderInputCooldown;
             }
+
         }
     }
 
