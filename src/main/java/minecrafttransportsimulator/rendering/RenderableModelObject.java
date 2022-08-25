@@ -264,10 +264,10 @@ public class RenderableModelObject {
         //We manually set point 0 here due to the fact it's a joint between two differing angles.
         //We also need to translate to that point to start rendering as we're currently at 0,0,0.
         //For each remaining point, we only translate the delta of the point.
-        float treadLinearPosition = tread.vehicleOn != null ? (float) ((Math.abs(tread.angularPosition) + tread.angularVelocity * partialTicks) * tread.vehicleOn.speedFactor) : 0;
-        float treadMovementPercentage = treadLinearPosition % tread.definition.ground.spacing / tread.definition.ground.spacing;
-        if (tread.angularPosition < 0) {
-            treadMovementPercentage = 1 - treadMovementPercentage;
+        float treadLinearPosition = (float) (tread.getRawVariableValue("ground_rotation", partialTicks) / 360D);
+        float treadMovementPercentage = (treadLinearPosition % tread.definition.ground.spacing) / tread.definition.ground.spacing;
+        if (treadMovementPercentage < 0) {
+            ++treadMovementPercentage;
         }
         Double[] point;
         Double[] nextPoint;
