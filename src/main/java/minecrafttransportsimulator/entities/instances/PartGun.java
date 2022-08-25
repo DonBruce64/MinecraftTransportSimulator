@@ -469,9 +469,6 @@ public class PartGun extends APart {
                 seatsControllingGun.add((PartSeat) part);
             }
         }
-        if (entityOn instanceof PartSeat) {
-            seatsControllingGun.add((PartSeat) entityOn);
-        }
     }
 
     /**
@@ -715,11 +712,17 @@ public class PartGun extends APart {
             return entityOn.rider;
         }
 
+        //Check any child seats.  These take priority over global seats.
+        for (APart part : parts) {
+            if (part instanceof PartSeat && part.rider != null) {
+                return part.rider;
+            }
+        }
+
         //Check any linked seats.
         //This also includes seats on us, and the seat we are on (if we are on one).
         for (PartSeat seat : seatsControllingGun) {
-            //Check to make sure linking is both ways, we could be in the process of linking.
-            if (seat.rider != null && seat.rider.getEntityRiding() != null) {
+            if (seat.rider != null) {
                 return seat.rider;
             }
         }

@@ -474,8 +474,8 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
                 rider.setYaw(0);
                 rider.setPitch(0);
             }
+            rider.setRiding(this);
             if (!world.isClient()) {
-                rider.setRiding(this);
                 InterfaceManager.packetInterface.sendToAllClients(new PacketEntityRiderChange(this, rider, facesForwards));
             }
             return true;
@@ -486,8 +486,8 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
      * Called to remove the rider that is currently riding this entity.
      */
     public void removeRider() {
+        rider.setRiding(null);
         if (!world.isClient()) {
-            rider.setRiding(null);
             InterfaceManager.packetInterface.sendToAllClients(new PacketEntityRiderChange(this, rider));
         }
         rider = null;

@@ -1,5 +1,9 @@
 package mcinterface1122;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -28,15 +32,12 @@ import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-
 @EventBusSubscriber
 public class WrapperEntity implements IWrapperEntity {
     private static final Map<Entity, WrapperEntity> entityWrappers = new HashMap<>();
 
     protected final Entity entity;
+    private AEntityE_Interactable<?> cachedEntityRiding;
 
     /**
      * Returns a wrapper instance for the passed-in entity instance.
@@ -95,15 +96,19 @@ public class WrapperEntity implements IWrapperEntity {
 
     @Override
     public AEntityE_Interactable<?> getEntityRiding() {
-        Entity mcEntityRiding = entity.getRidingEntity();
-        if (mcEntityRiding instanceof BuilderEntityLinkedSeat) {
-            AEntityE_Interactable<?> entityRiding = ((BuilderEntityLinkedSeat) mcEntityRiding).entity;
-            //Need to check this as MC might have us as a rider on the builer, but we might not be a rider on the entity.
-            if (entityRiding != null && this.equals(entityRiding.rider)) {
-                return entityRiding;
+        if (cachedEntityRiding != null) {
+            return cachedEntityRiding;
+        } else {
+            Entity mcEntityRiding = entity.getRidingEntity();
+            if (mcEntityRiding instanceof BuilderEntityLinkedSeat) {
+                AEntityE_Interactable<?> entityRiding = ((BuilderEntityLinkedSeat) mcEntityRiding).entity;
+                //Need to check this as MC might have us as a rider on the builer, but we might not be a rider on the entity.
+                if (entityRiding != null && this.equals(entityRiding.rider)) {
+                    return entityRiding;
+                }
             }
+            return null;
         }
-        return null;
     }
 
     @Override
@@ -113,18 +118,23 @@ public class WrapperEntity implements IWrapperEntity {
             //This just causes extra execution logic.
             AEntityE_Interactable<?> entityRiding = getEntityRiding();
             if (entityRiding == null) {
-                BuilderEntityLinkedSeat seat = new BuilderEntityLinkedSeat(((WrapperWorld) entityToRide.world).world);
-                seat.loadedFromSavedNBT = true;
-                seat.setPositionAndRotation(entityToRide.position.x, entityToRide.position.y, entityToRide.position.z, 0, 0);
-                seat.entity = entityToRide;
-                entity.world.spawnEntity(seat);
-                entity.startRiding(seat, true);
+                //Only spawn and start riding on the server, clients will get packets.
+                if (!entity.world.isRemote) {
+                    BuilderEntityLinkedSeat seat = new BuilderEntityLinkedSeat(((WrapperWorld) entityToRide.world).world);
+                    seat.loadedFromSavedNBT = true;
+                    seat.setPositionAndRotation(entityToRide.position.x, entityToRide.position.y, entityToRide.position.z, 0, 0);
+                    seat.entity = entityToRide;
+                    entity.world.spawnEntity(seat);
+                    entity.startRiding(seat, true);
+                }
             } else {
                 //Just change entity reference, we will already be a rider on the entity at this point.
                 ((BuilderEntityLinkedSeat) entity.getRidingEntity()).entity = entityToRide;
             }
+            cachedEntityRiding = entityToRide;
         } else {
             entity.dismountRidingEntity();
+            cachedEntityRiding = null;
         }
     }
 

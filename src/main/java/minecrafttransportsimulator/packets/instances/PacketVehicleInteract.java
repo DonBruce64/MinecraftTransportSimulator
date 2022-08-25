@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.packets.instances;
 
+import java.util.Map.Entry;
+
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
@@ -18,8 +20,6 @@ import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.components.APacketEntityInteract;
-
-import java.util.Map.Entry;
 
 /**
  * Packet used to interact with vehicles.  Initially sent from clients to the server
@@ -76,7 +76,7 @@ public class PacketVehicleInteract extends APacketEntityInteract<AEntityF_Multip
                         player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_VEHICLE_OWNED));
                     } else {
                         //Attempt to add a part.  Entity is responsible for callback packet here.
-                        if (heldItem instanceof AItemPart) {
+                        if (heldItem instanceof AItemPart && !player.isSneaking()) {
                             if (entity.addPartFromItem((AItemPart) heldItem, player, heldStack.getData(), entity.definition.parts.indexOf(slotEntry.getValue())) != null && !player.isCreative()) {
                                 player.getInventory().removeFromSlot(player.getHotbarIndex(), 1);
                             }
