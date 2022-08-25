@@ -173,7 +173,8 @@ public class PartGroundDevice extends APart {
                 }
             }
             prevAngularPosition = angularPosition;
-            if (isMirrored) {
+            //Invert rotation for all ground devices except treads.
+            if (isMirrored && !definition.ground.isTread) {
                 angularPosition -= angularVelocity;
             } else {
                 angularPosition += angularVelocity;
