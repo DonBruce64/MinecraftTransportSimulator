@@ -1,16 +1,5 @@
 package mcinterface1122;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -21,30 +10,16 @@ import minecrafttransportsimulator.blocks.components.ABlockBaseTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
-import minecrafttransportsimulator.entities.instances.APart;
-import minecrafttransportsimulator.entities.instances.EntityBullet;
-import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
-import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
-import minecrafttransportsimulator.entities.instances.PartSeat;
+import minecrafttransportsimulator.entities.instances.*;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
-import minecrafttransportsimulator.mcinterface.AWrapperWorld;
-import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.mcinterface.*;
 import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataRequest;
 import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataUpdate;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockBush;
-import net.minecraft.block.BlockCrops;
-import net.minecraft.block.BlockDirt;
-import net.minecraft.block.BlockSlab;
-import net.minecraft.block.IGrowable;
+import net.minecraft.block.*;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
@@ -81,7 +56,12 @@ import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 
-/**Wrapper to a world instance.  This contains many common methods that 
+import java.io.File;
+import java.nio.file.Files;
+import java.util.*;
+
+/**
+ * Wrapper to a world instance.  This contains many common methods that
  * MC has seen fit to change over multiple versions (such as lighting) and as such
  * provides a single point of entry to the world to interface with it.  Note that
  * clients and servers don't share world interfaces, and there are world interfaces for
@@ -90,18 +70,18 @@ import net.minecraftforge.items.IItemHandler;
  * @author don_bruce
  */
 public class WrapperWorld extends AWrapperWorld {
-    private static final Map<World, WrapperWorld> worldWrappers = new HashMap<World, WrapperWorld>();
-    private final Map<UUID, BuilderEntityExisting> playerServerGunBuilders = new HashMap<UUID, BuilderEntityExisting>();
-    private final Map<UUID, Integer> ticksSincePlayerJoin = new HashMap<UUID, Integer>();
-    private final List<AxisAlignedBB> mutableCollidingAABBs = new ArrayList<AxisAlignedBB>();
-    private final Set<BlockPos> knownAirBlocks = new HashSet<BlockPos>();
+    private static final Map<World, WrapperWorld> worldWrappers = new HashMap<>();
+    private final Map<UUID, BuilderEntityExisting> playerServerGunBuilders = new HashMap<>();
+    private final Map<UUID, Integer> ticksSincePlayerJoin = new HashMap<>();
+    private final List<AxisAlignedBB> mutableCollidingAABBs = new ArrayList<>();
+    private final Set<BlockPos> knownAirBlocks = new HashSet<>();
 
     protected final World world;
     private final IWrapperNBT savedData;
 
     /**
-     *  Returns a wrapper instance for the passed-in world instance.
-     *  Wrapper is cached to avoid re-creating the wrapper each time it is requested.
+     * Returns a wrapper instance for the passed-in world instance.
+     * Wrapper is cached to avoid re-creating the wrapper each time it is requested.
      */
     public static WrapperWorld getWrapperFor(World world) {
         if (world != null) {
@@ -126,7 +106,7 @@ public class WrapperWorld extends AWrapperWorld {
             //Load data from disk.
             try {
                 if (getDataFile().exists()) {
-                    this.savedData = new WrapperNBT(CompressedStreamTools.readCompressed(new FileInputStream(getDataFile())));
+                    this.savedData = new WrapperNBT(CompressedStreamTools.readCompressed(Files.newInputStream(getDataFile().toPath())));
                 } else {
                     this.savedData = InterfaceManager.coreInterface.getNewNBTWrapper();
                 }
@@ -186,7 +166,7 @@ public class WrapperWorld extends AWrapperWorld {
         savedData.setData(name, value);
         if (!isClient()) {
             try {
-                CompressedStreamTools.writeCompressed(((WrapperNBT) savedData).tag, new FileOutputStream(getDataFile()));
+                CompressedStreamTools.writeCompressed(((WrapperNBT) savedData).tag, Files.newOutputStream(getDataFile().toPath()));
                 InterfaceManager.packetInterface.sendToAllClients(new PacketWorldSavedDataUpdate(name, value));
             } catch (Exception e) {
                 e.printStackTrace();
@@ -212,7 +192,7 @@ public class WrapperWorld extends AWrapperWorld {
 
     @Override
     public List<IWrapperEntity> getEntitiesWithin(BoundingBox box) {
-        List<IWrapperEntity> entities = new ArrayList<IWrapperEntity>();
+        List<IWrapperEntity> entities = new ArrayList<>();
         for (Entity entity : world.getEntitiesWithinAABB(Entity.class, box.convert())) {
             if (!(entity instanceof ABuilderEntityBase)) {
                 entities.add(WrapperEntity.getWrapperFor(entity));
@@ -223,7 +203,7 @@ public class WrapperWorld extends AWrapperWorld {
 
     @Override
     public List<IWrapperEntity> getEntitiesHostile(IWrapperEntity lookingEntity, double radius) {
-        List<IWrapperEntity> entities = new ArrayList<IWrapperEntity>();
+        List<IWrapperEntity> entities = new ArrayList<>();
         Entity mcLooker = ((WrapperEntity) lookingEntity).entity;
         for (Entity entity : world.getEntitiesWithinAABBExcludingEntity(mcLooker, mcLooker.getEntityBoundingBox().grow(radius))) {
             if (entity instanceof IMob && !entity.isDead && (!(entity instanceof EntityLivingBase) || ((EntityLivingBase) entity).deathTime == 0)) {
@@ -263,7 +243,7 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     /**
-     *  Internal method to spawn entities and return their builders.
+     * Internal method to spawn entities and return their builders.
      */
     protected BuilderEntityExisting spawnEntityInternal(AEntityB_Existing entity) {
         BuilderEntityExisting builder = new BuilderEntityExisting(((WrapperWorld) entity.world).world);
@@ -283,17 +263,15 @@ public class WrapperWorld extends AWrapperWorld {
         //Get collided entities.
         if (motion != null) {
             mcBox = mcBox.expand(motion.x, motion.y, motion.z);
-            collidedEntities = world.getEntitiesWithinAABB(Entity.class, mcBox);
-        } else {
-            collidedEntities = world.getEntitiesWithinAABB(Entity.class, mcBox);
         }
+        collidedEntities = world.getEntitiesWithinAABB(Entity.class, mcBox);
 
         //Get variables.  If we aren't moving, we won't need these.
-        Point3D startPoint = null;
-        Point3D endPoint = null;
+        Point3D startPoint;
+        Point3D endPoint;
         Vec3d start = null;
         Vec3d end = null;
-        List<IWrapperEntity> hitEntities = new ArrayList<IWrapperEntity>();
+        List<IWrapperEntity> hitEntities = new ArrayList<>();
 
         if (motion != null) {
             startPoint = damage.box.globalCenter;
@@ -396,7 +374,7 @@ public class WrapperWorld extends AWrapperWorld {
         IBlockState state = world.getBlockState(pos);
         NonNullList<ItemStack> drops = NonNullList.create();
         state.getBlock().getDrops(drops, world, pos, state, 0);
-        List<IWrapperItemStack> convertedList = new ArrayList<IWrapperItemStack>();
+        List<IWrapperItemStack> convertedList = new ArrayList<>();
         for (ItemStack stack : drops) {
             convertedList.add(new WrapperItemStack(stack.copy()));
         }
@@ -423,7 +401,7 @@ public class WrapperWorld extends AWrapperWorld {
             IBlockState state = world.getBlockState(pos);
             Block offsetMCBlock = state.getBlock();
             EnumFacing facing = EnumFacing.valueOf(axis.name());
-            return offsetMCBlock != null ? !offsetMCBlock.equals(Blocks.BARRIER) && state.isSideSolid(world, pos, facing) : false;
+            return offsetMCBlock != null && !offsetMCBlock.equals(Blocks.BARRIER) && state.isSideSolid(world, pos, facing);
         } else {
             return false;
         }
@@ -612,9 +590,7 @@ public class WrapperWorld extends AWrapperWorld {
                 }
             } else {
                 IBlockState newState = wrapper.getDefaultState();
-                if (world.setBlockState(pos, newState, 11)) {
-                    return true;
-                }
+                return world.setBlockState(pos, newState, 11);
             }
         }
         return false;
@@ -702,7 +678,7 @@ public class WrapperWorld extends AWrapperWorld {
     public List<IWrapperItemStack> harvestBlock(Point3D position) {
         BlockPos pos = new BlockPos(position.x, position.y, position.z);
         IBlockState state = world.getBlockState(pos);
-        List<IWrapperItemStack> cropDrops = new ArrayList<IWrapperItemStack>();
+        List<IWrapperItemStack> cropDrops = new ArrayList<>();
         if ((state.getBlock() instanceof BlockCrops && ((BlockCrops) state.getBlock()).isMaxAge(state)) || state.getBlock() instanceof BlockBush) {
             Block harvestedBlock = state.getBlock();
             NonNullList<ItemStack> drops = NonNullList.create();
@@ -759,7 +735,7 @@ public class WrapperWorld extends AWrapperWorld {
     public boolean plowBlock(Point3D position) {
         BlockPos pos = new BlockPos(position.x, position.y, position.z);
         IBlockState oldState = world.getBlockState(pos);
-        IBlockState newState = null;
+        IBlockState newState;
         Block block = oldState.getBlock();
         if (block.equals(Blocks.GRASS) || block.equals(Blocks.GRASS_PATH)) {
             newState = Blocks.FARMLAND.getDefaultState();
@@ -848,12 +824,12 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     /**
-    * Spawn "follower" entities for the player if they don't exist already.
-    * This only happens 3 seconds after the player joins.
-    * This delay is done to ensure all chunks are loaded before spawning any followers.
-    * We also track followers, and ensure that if the player doesn't exist, they are removed.
-    * This handles players leaving.  We could use events for this, but they're not reliable.
-    */
+     * Spawn "follower" entities for the player if they don't exist already.
+     * This only happens 3 seconds after the player joins.
+     * This delay is done to ensure all chunks are loaded before spawning any followers.
+     * We also track followers, and ensure that if the player doesn't exist, they are removed.
+     * This handles players leaving.  We could use events for this, but they're not reliable.
+     */
     @SubscribeEvent
     public void on(TickEvent.WorldTickEvent event) {
         //Need to check if it's our world, because Forge is stupid like that.
@@ -910,9 +886,9 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     /**
-    * Remove all entities from our maps if we unload the world.  This will cause duplicates if we don't.
-    * Also remove this wrapper from the created lists, as it's invalid.
-    */
+     * Remove all entities from our maps if we unload the world.  This will cause duplicates if we don't.
+     * Also remove this wrapper from the created lists, as it's invalid.
+     */
     @SubscribeEvent
     public void on(WorldEvent.Unload event) {
         //Need to check if it's our world, because Forge is stupid like that.

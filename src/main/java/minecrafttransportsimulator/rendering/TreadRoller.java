@@ -2,7 +2,8 @@ package minecrafttransportsimulator.rendering;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
 
-/**Helper class of sorts that stores a tread roller object.  Created from
+/**
+ * Helper class of sorts that stores a tread roller object.  Created from
  * the vertices of the roller in the model, and used for pathing math.
  *
  * @author don_bruce

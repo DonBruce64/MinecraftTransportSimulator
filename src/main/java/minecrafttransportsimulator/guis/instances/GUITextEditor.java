@@ -1,37 +1,34 @@
 package minecrafttransportsimulator.guis.instances;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityPole_Sign;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.APart;
-import minecrafttransportsimulator.guis.components.AGUIBase;
-import minecrafttransportsimulator.guis.components.GUIComponent3DModel;
-import minecrafttransportsimulator.guis.components.GUIComponentButton;
-import minecrafttransportsimulator.guis.components.GUIComponentLabel;
-import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
+import minecrafttransportsimulator.guis.components.*;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityTextChange;
 import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+
 public class GUITextEditor extends AGUIBase {
     //Buttons.
     private GUIComponentButton confirmButton;
 
     //Input boxes and their field names.
-    private final List<GUIComponentTextBox> textInputBoxes = new ArrayList<GUIComponentTextBox>();
-    private final List<String> textInputFieldNames = new ArrayList<String>();
+    private final List<GUIComponentTextBox> textInputBoxes = new ArrayList<>();
+    private final List<String> textInputFieldNames = new ArrayList<>();
 
     //Entity clicked.
     private final AEntityD_Definable<?> entity;
 
     //Labels for sign.  These do fancy rendering.
-    private final List<GUIComponentLabel> signTextLabels = new ArrayList<GUIComponentLabel>();
+    private final List<GUIComponentLabel> signTextLabels = new ArrayList<>();
 
     public GUITextEditor(AEntityD_Definable<?> entity) {
         super();
@@ -54,10 +51,8 @@ public class GUITextEditor extends AGUIBase {
 
             //Set text and text objects.
             boxWidth = 100;
-            textObjects = new ArrayList<JSONText>();
-            textLines = new ArrayList<String>();
-            textObjects.addAll(entity.text.keySet());
-            textLines.addAll(entity.text.values());
+            textObjects = new ArrayList<>(entity.text.keySet());
+            textLines = new ArrayList<>(entity.text.values());
 
             //Add render-able labels for the sign object.
             signTextLabels.clear();
@@ -69,14 +64,12 @@ public class GUITextEditor extends AGUIBase {
             }
         } else {
             boxWidth = 200;
-            textObjects = new ArrayList<JSONText>();
-            textLines = new ArrayList<String>();
-            textObjects.addAll(entity.text.keySet());
-            textLines.addAll(entity.text.values());
+            textObjects = new ArrayList<>(entity.text.keySet());
+            textLines = new ArrayList<>(entity.text.values());
 
             //Add part text objects if we are a multipart.
             if (entity instanceof AEntityF_Multipart) {
-                for (APart part : ((AEntityF_Multipart<?>) entity).parts) {
+                for (APart part : ((AEntityF_Multipart<?>) entity).allParts) {
                     textObjects.addAll(part.text.keySet());
                     textLines.addAll(part.text.values());
                 }
@@ -105,9 +98,9 @@ public class GUITextEditor extends AGUIBase {
         addComponent(confirmButton = new GUIComponentButton(guiLeft + 150, guiTop + 15, 80, 20, JSONConfigLanguage.GUI_CONFIRM.value) {
             @Override
             public void onClicked(boolean leftSide) {
-                List<String> packetTextLines = new ArrayList<String>();
+                LinkedHashMap<String, String> packetTextLines = new LinkedHashMap<String, String>();
                 for (JSONText textObject : textObjects) {
-                    packetTextLines.add(textInputBoxes.get(textInputFieldNames.indexOf(textObject.fieldName)).getText());
+                    packetTextLines.put(textObject.fieldName, textInputBoxes.get(textInputFieldNames.indexOf(textObject.fieldName)).getText());
                 }
                 InterfaceManager.packetInterface.sendToServer(new PacketEntityTextChange(entity, packetTextLines));
                 close();

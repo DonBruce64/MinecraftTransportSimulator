@@ -1,9 +1,5 @@
 package minecrafttransportsimulator.guis.instances;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map.Entry;
-
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -26,15 +22,20 @@ import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.CameraSystem;
 
-/**A GUI that is used to render overlay components.  These components are independent of 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map.Entry;
+
+/**
+ * A GUI that is used to render overlay components.  These components are independent of
  * any vehicle or entity the player is riding, and are always visible.
- * 
+ *
  * @author don_bruce
  */
 public class GUIOverlay extends AGUIBase {
     private GUIComponentLabel mouseoverLabel;
     private GUIComponentItem scannerItem;
-    private List<String> tooltipText = new ArrayList<String>();
+    private final List<String> tooltipText = new ArrayList<>();
 
     @Override
     public void setupComponents() {
@@ -90,7 +91,7 @@ public class GUIOverlay extends AGUIBase {
 
                 if (mousedOverBox != null) {
                     //Populate stacks.
-                    List<AItemPart> validParts = new ArrayList<AItemPart>();
+                    List<AItemPart> validParts = new ArrayList<>();
                     for (AItemPack<?> packItem : PackParser.getAllPackItems()) {
                         if (packItem instanceof AItemPart) {
                             AItemPart part = (AItemPart) packItem;
@@ -102,9 +103,9 @@ public class GUIOverlay extends AGUIBase {
 
                     //Get the slot info.
                     tooltipText.add("Types: " + packVehicleDef.types.toString());
-                    tooltipText.add("Min/Max: " + String.valueOf(packVehicleDef.minValue) + "/" + String.valueOf(packVehicleDef.maxValue));
+                    tooltipText.add("Min/Max: " + packVehicleDef.minValue + "/" + packVehicleDef.maxValue);
                     if (packVehicleDef.customTypes != null) {
-                        tooltipText.add("CustomTypes: " + packVehicleDef.customTypes.toString());
+                        tooltipText.add("CustomTypes: " + packVehicleDef.customTypes);
                     } else {
                         tooltipText.add("CustomTypes: None");
                     }

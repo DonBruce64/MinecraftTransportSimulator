@@ -1,11 +1,5 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -19,11 +13,14 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 
-/**Traffic signal controller tile entity.  Responsible for keeping the state of traffic
+import java.util.*;
+
+/**
+ * Traffic signal controller tile entity.  Responsible for keeping the state of traffic
  * intersections.
-*
-* @author don_bruce
-*/
+ *
+ * @author don_bruce
+ */
 public class TileEntitySignalController extends TileEntityDecor {
     private static final TransformationMatrix holoboxTransform = new TransformationMatrix();
 
@@ -41,18 +38,22 @@ public class TileEntitySignalController extends TileEntityDecor {
     public int greenCrossTime = 10 * 20;
     public int yellowMainTime = 2 * 20;
     public int yellowCrossTime = 2 * 20;
-    public int allRedTime = 1 * 20;
+    public int allRedTime = 20;
 
     /*Locations of blocks where signals are.**/
-    public final Set<Point3D> componentLocations = new HashSet<Point3D>();
-    private final Set<Point3D> missingLocations = new HashSet<Point3D>();
+    public final Set<Point3D> componentLocations = new HashSet<>();
+    private final Set<Point3D> missingLocations = new HashSet<>();
 
-    /**Signal blocks used in this controller.  Based on components.**/
-    public final Map<Axis, Set<SignalGroup>> signalGroups = new HashMap<Axis, Set<SignalGroup>>();
-    public final Set<TileEntityPole_TrafficSignal> controlledSignals = new HashSet<TileEntityPole_TrafficSignal>();
+    /**
+     * Signal blocks used in this controller.  Based on components.
+     **/
+    public final Map<Axis, Set<SignalGroup>> signalGroups = new HashMap<>();
+    public final Set<TileEntityPole_TrafficSignal> controlledSignals = new HashSet<>();
 
-    /**Lane counts and intersection widths.**/
-    public final Map<Axis, IntersectionProperties> intersectionProperties = new HashMap<Axis, IntersectionProperties>();
+    /**
+     * Lane counts and intersection widths.
+     **/
+    public final Map<Axis, IntersectionProperties> intersectionProperties = new HashMap<>();
 
     public TileEntitySignalController(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, IWrapperNBT data) {
         super(world, position, placingPlayer, data);
@@ -71,7 +72,7 @@ public class TileEntitySignalController extends TileEntityDecor {
                 Iterator<Point3D> iterator = missingLocations.iterator();
                 while (iterator.hasNext()) {
                     Point3D poleLocation = iterator.next();
-                    TileEntityPole pole = (TileEntityPole) world.getTileEntity(poleLocation);
+                    TileEntityPole pole = world.getTileEntity(poleLocation);
                     if (pole != null) {
                         iterator.remove();
                         for (Axis axis : Axis.values()) {
@@ -114,10 +115,10 @@ public class TileEntitySignalController extends TileEntityDecor {
     }
 
     /**
-     *  Updates all components and creates the signal groups for an intersection.  Also updates
-     *  the settings for the controller based on the saved NBT.  Use this whenever the controller
-     *  settings are changed, either by placing the block the first time, or updating via the GUI.
-     *  If the GUI is used, pass null in here to prevent data re-parsing.  Otherwise, pass-in the data.
+     * Updates all components and creates the signal groups for an intersection.  Also updates
+     * the settings for the controller based on the saved NBT.  Use this whenever the controller
+     * settings are changed, either by placing the block the first time, or updating via the GUI.
+     * If the GUI is used, pass null in here to prevent data re-parsing.  Otherwise, pass-in the data.
      */
     public void initializeController(IWrapperNBT data) {
         if (data == null) {
@@ -158,7 +159,7 @@ public class TileEntitySignalController extends TileEntityDecor {
         signalGroups.clear();
         for (Axis axis : Axis.values()) {
             if (axis.xzPlanar) {
-                Set<SignalGroup> signalSet = new HashSet<SignalGroup>();
+                Set<SignalGroup> signalSet = new HashSet<>();
                 signalSet.add(new SignalGroupCenter(axis, data.getDataOrNew(axis.name() + SignalDirection.CENTER.name())));
                 signalSet.add(new SignalGroupLeft(axis, data.getDataOrNew(axis.name() + SignalDirection.LEFT.name())));
                 signalSet.add(new SignalGroupRight(axis, data.getDataOrNew(axis.name() + SignalDirection.RIGHT.name())));
@@ -186,7 +187,7 @@ public class TileEntitySignalController extends TileEntityDecor {
     }
 
     /**
-     *  Clear found pole variables.  This is done on controller init or when we are removed.
+     * Clear found pole variables.  This is done on controller init or when we are removed.
      */
     public void clearFoundPoles() {
         controlledSignals.clear();
@@ -497,11 +498,10 @@ public class TileEntitySignalController extends TileEntityDecor {
                 case EAST: { //Other signal to the right.
                     switch (otherSignal.direction) {
                         case CENTER:
+                        case RIGHT:
                             return true;
                         case LEFT:
                             return !isRightHandDrive;
-                        case RIGHT:
-                            return true;
                     }
                 }
                 case NORTH: { //Opposite direction.
@@ -517,7 +517,6 @@ public class TileEntitySignalController extends TileEntityDecor {
                 case WEST: { //Other signal to the left.
                     switch (otherSignal.direction) {
                         case CENTER:
-                            return true;
                         case LEFT:
                             return true;
                         case RIGHT:
@@ -604,7 +603,6 @@ public class TileEntitySignalController extends TileEntityDecor {
                 case WEST: { //Other signal to the left.
                     switch (otherSignal.direction) {
                         case CENTER:
-                            return !isRightHandDrive;
                         case LEFT:
                             return !isRightHandDrive;
                         case RIGHT:
@@ -704,7 +702,7 @@ public class TileEntitySignalController extends TileEntityDecor {
         }
     }
 
-    public static enum LightType {
+    public enum LightType {
         STOP_LIGHT,
         CAUTION_LIGHT,
         GO_LIGHT,
@@ -719,14 +717,14 @@ public class TileEntitySignalController extends TileEntityDecor {
 
         public final String lowercaseName;
 
-        private LightType() {
+        LightType() {
             this.lowercaseName = name().toLowerCase();
         }
     }
 
-    public static enum SignalDirection {
+    public enum SignalDirection {
         CENTER,
         LEFT,
-        RIGHT;
+        RIGHT
     }
 }

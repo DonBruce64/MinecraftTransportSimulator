@@ -1,8 +1,5 @@
 package minecrafttransportsimulator.guis.instances;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
@@ -15,11 +12,15 @@ import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
 import minecrafttransportsimulator.systems.CameraSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
-/**A GUI that is used to render the HUG.  This is used in {@link GUIInstruments}
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * A GUI that is used to render the HUG.  This is used in {@link GUIInstruments}
  * as well as the {@link InterfaceManager.renderingInterface} to render the HUD.  Note that when
  * the HUD is rendered in the vehicle it will NOT inhibit key inputs as the
  * HUD there is designed to be an overlay rather than an actual GUI.
- * 
+ *
  * @author don_bruce
  */
 public class GUIHUD extends AGUIBase {
@@ -27,7 +28,7 @@ public class GUIHUD extends AGUIBase {
     private static final int HUD_HEIGHT = 140;
     private final EntityVehicleF_Physics vehicle;
     private final PartSeat seat;
-    private final List<GUIComponentInstrument> instruments = new ArrayList<GUIComponentInstrument>();
+    private final List<GUIComponentInstrument> instruments = new ArrayList<>();
     private GUIComponentLabel healthLabel;
     private GUIComponentLabel gunTypeLabel;
 

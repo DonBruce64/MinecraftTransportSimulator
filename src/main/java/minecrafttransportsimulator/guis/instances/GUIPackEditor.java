@@ -1,53 +1,32 @@
 package minecrafttransportsimulator.guis.instances;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Font;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
+import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.jsondefs.*;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.packloading.JSONParser;
+import minecrafttransportsimulator.packloading.JSONParser.JSONDefaults;
+import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
+import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
+import minecrafttransportsimulator.packloading.PackParser;
+
+import javax.swing.*;
+import javax.swing.border.TitledBorder;
+import java.awt.*;
+import java.awt.event.*;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.swing.*;
-import javax.swing.border.TitledBorder;
-
-import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.jsondefs.AJSONItem;
-import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
-import minecrafttransportsimulator.jsondefs.JSONDecor;
-import minecrafttransportsimulator.jsondefs.JSONInstrument;
-import minecrafttransportsimulator.jsondefs.JSONPack;
-import minecrafttransportsimulator.jsondefs.JSONPart;
-import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
-import minecrafttransportsimulator.jsondefs.JSONSkin;
-import minecrafttransportsimulator.jsondefs.JSONVehicle;
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.packloading.JSONParser;
-import minecrafttransportsimulator.packloading.PackParser;
-import minecrafttransportsimulator.packloading.JSONParser.JSONDefaults;
-import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
-import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
-
-/**This is a special GUI that doesn't use the normal GUI code.  Instead, it uses the Swing
+/**
+ * This is a special GUI that doesn't use the normal GUI code.  Instead, it uses the Swing
  * libraries to allow for an interactive JSON editor.  This allows pack authors to edit
  * JSONs with a comprehensive system rather than though Notepad or something.
- * 
+ *
  * @author don_bruce
  */
 public class GUIPackEditor extends JFrame {
@@ -89,16 +68,13 @@ public class GUIPackEditor extends JFrame {
         newButton.setEnabled(false);
         newButton.setFont(MAIN_BUTTON_FONT);
         newButton.setText("New JSON");
-        newButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent event) {
-                try {
-                    currentJSON = currentJSONClass.newInstance();
-                    if (currentJSON != null) {
-                        initEditor();
-                    }
-                } catch (Exception e) {
+        newButton.addActionListener(event -> {
+            try {
+                currentJSON = currentJSONClass.newInstance();
+                if (currentJSON != null) {
+                    initEditor();
                 }
+            } catch (Exception e) {
             }
         });
         filePanel.add(newButton);
@@ -108,23 +84,20 @@ public class GUIPackEditor extends JFrame {
         openButton.setEnabled(false);
         openButton.setFont(MAIN_BUTTON_FONT);
         openButton.setText("Open JSON");
-        openButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent event) {
-                JFileChooser fileSelection = lastFileAccessed != null ? new JFileChooser(lastFileAccessed.getParent()) : new JFileChooser();
-                fileSelection.setFont(MAIN_BUTTON_FONT);
-                fileSelection.setDialogTitle(openButton.getText());
-                if (fileSelection.showOpenDialog(filePanel) == JFileChooser.APPROVE_OPTION) {
-                    try {
-                        File file = fileSelection.getSelectedFile();
-                        currentJSON = JSONParser.parseStream(new FileInputStream(file), currentJSONClass, null, null);
+        openButton.addActionListener(event -> {
+            JFileChooser fileSelection = lastFileAccessed != null ? new JFileChooser(lastFileAccessed.getParent()) : new JFileChooser();
+            fileSelection.setFont(MAIN_BUTTON_FONT);
+            fileSelection.setDialogTitle(openButton.getText());
+            if (fileSelection.showOpenDialog(filePanel) == JFileChooser.APPROVE_OPTION) {
+                try {
+                    File file = fileSelection.getSelectedFile();
+                    currentJSON = JSONParser.parseStream(Files.newInputStream(file.toPath()), currentJSONClass, null, null);
+                    lastFileAccessed = file;
+                    if (currentJSON != null) {
+                        initEditor();
                         lastFileAccessed = file;
-                        if (currentJSON != null) {
-                            initEditor();
-                            lastFileAccessed = file;
-                        }
-                    } catch (Exception e) {
                     }
+                } catch (Exception e) {
                 }
             }
         });
@@ -135,37 +108,34 @@ public class GUIPackEditor extends JFrame {
         saveButton.setEnabled(false);
         saveButton.setFont(MAIN_BUTTON_FONT);
         saveButton.setText("Save JSON");
-        saveButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent event) {
-                JFileChooser fileSelection = lastFileAccessed != null ? new JFileChooser(lastFileAccessed.getParent()) : new JFileChooser();
-                fileSelection.setApproveButtonText("Save");
-                fileSelection.setApproveButtonToolTipText("Saves the JSON in the editor to the file.");
-                fileSelection.setFont(MAIN_BUTTON_FONT);
-                fileSelection.setDialogTitle(saveButton.getText());
-                if (lastFileAccessed != null) {
-                    fileSelection.setSelectedFile(lastFileAccessed);
-                }
-                if (fileSelection.showOpenDialog(filePanel) == JFileChooser.APPROVE_OPTION) {
+        saveButton.addActionListener(event -> {
+            JFileChooser fileSelection = lastFileAccessed != null ? new JFileChooser(lastFileAccessed.getParent()) : new JFileChooser();
+            fileSelection.setApproveButtonText("Save");
+            fileSelection.setApproveButtonToolTipText("Saves the JSON in the editor to the file.");
+            fileSelection.setFont(MAIN_BUTTON_FONT);
+            fileSelection.setDialogTitle(saveButton.getText());
+            if (lastFileAccessed != null) {
+                fileSelection.setSelectedFile(lastFileAccessed);
+            }
+            if (fileSelection.showOpenDialog(filePanel) == JFileChooser.APPROVE_OPTION) {
+                try {
+                    File file = fileSelection.getSelectedFile();
+                    JSONParser.exportStream(currentJSON, Files.newOutputStream(file.toPath()));
+                    lastFileAccessed = file;
                     try {
-                        File file = fileSelection.getSelectedFile();
-                        JSONParser.exportStream(currentJSON, new FileOutputStream(file));
-                        lastFileAccessed = file;
-                        try {
-                            if (currentJSON instanceof AJSONItem) {
-                                AJSONItem definition = (AJSONItem) currentJSON;
-                                if (definition.packID != null && definition.systemName != null) {
-                                    if (definition instanceof AJSONMultiModelProvider) {
-                                        JOptionPane.showMessageDialog(null, JSONParser.hotloadJSON(file, PackParser.getItem(definition.packID, definition.systemName, ((AJSONMultiModelProvider) definition).definitions.get(0).subName).definition));
-                                    } else {
-                                        JOptionPane.showMessageDialog(null, JSONParser.hotloadJSON(file, PackParser.getItem(definition.packID, definition.systemName).definition));
-                                    }
+                        if (currentJSON instanceof AJSONItem) {
+                            AJSONItem definition = (AJSONItem) currentJSON;
+                            if (definition.packID != null && definition.systemName != null) {
+                                if (definition instanceof AJSONMultiModelProvider) {
+                                    JOptionPane.showMessageDialog(null, JSONParser.hotloadJSON(file, PackParser.getItem(definition.packID, definition.systemName, ((AJSONMultiModelProvider) definition).definitions.get(0).subName).definition));
+                                } else {
+                                    JOptionPane.showMessageDialog(null, JSONParser.hotloadJSON(file, PackParser.getItem(definition.packID, definition.systemName).definition));
                                 }
                             }
-                        } catch (Exception e) {
                         }
                     } catch (Exception e) {
                     }
+                } catch (Exception e) {
                 }
             }
         });
@@ -173,7 +143,7 @@ public class GUIPackEditor extends JFrame {
 
         //Create drop-down for JSON type selection.
         //Create map to store entries.  Putting these in directly messes up the box formatting.
-        Map<String, Class<?>> jsonClasses = new LinkedHashMap<String, Class<?>>();
+        Map<String, Class<?>> jsonClasses = new LinkedHashMap<>();
         jsonClasses.put("JSON Type - Select first!.", null);
         jsonClasses.put(JSONPack.class.getSimpleName(), JSONPack.class);
         jsonClasses.put(JSONVehicle.class.getSimpleName(), JSONVehicle.class);
@@ -184,26 +154,23 @@ public class GUIPackEditor extends JFrame {
         jsonClasses.put(JSONSkin.class.getSimpleName(), JSONSkin.class);
 
         //Create the box itself.
-        JComboBox<String> typeComboBox = new JComboBox<String>();
+        JComboBox<String> typeComboBox = new JComboBox<>();
         typeComboBox.setFont(MAIN_BUTTON_FONT);
         typeComboBox.setAlignmentX(LEFT_ALIGNMENT);
         for (String className : jsonClasses.keySet()) {
             typeComboBox.addItem(className);
         }
         typeComboBox.setRenderer(generateClassTooltipRenderer(jsonClasses.values().toArray(new Class<?>[jsonClasses.size()])));
-        typeComboBox.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                currentJSONClass = jsonClasses.get(typeComboBox.getSelectedItem());
-                if (currentJSONClass != null) {
-                    newButton.setEnabled(true);
-                    openButton.setEnabled(true);
-                    saveButton.setEnabled(true);
-                } else {
-                    newButton.setEnabled(false);
-                    openButton.setEnabled(false);
-                    saveButton.setEnabled(false);
-                }
+        typeComboBox.addActionListener(e -> {
+            currentJSONClass = jsonClasses.get(typeComboBox.getSelectedItem());
+            if (currentJSONClass != null) {
+                newButton.setEnabled(true);
+                openButton.setEnabled(true);
+                saveButton.setEnabled(true);
+            } else {
+                newButton.setEnabled(false);
+                openButton.setEnabled(false);
+                saveButton.setEnabled(false);
             }
         });
         filePanel.add(typeComboBox);
@@ -316,19 +283,16 @@ public class GUIPackEditor extends JFrame {
             JButton newEntryButton = new JButton();
             newEntryButton.setFont(NORMAL_FONT);
             newEntryButton.setText("New Entry");
-            newEntryButton.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent event) {
-                    try {
-                        Object listEntry = createNewObjectInstance(paramClass, declaringObject);
-                        listObject.add(listEntry);
-                        ListElementPanel newPanel = new ListElementPanel(listContentsPanel, listObject, listEntry);
-                        listContentsPanel.add(newPanel);
-                        listContentsPanel.revalidate();
-                        listContentsPanel.repaint();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+            newEntryButton.addActionListener(event -> {
+                try {
+                    Object listEntry = createNewObjectInstance(paramClass, declaringObject);
+                    listObject.add(listEntry);
+                    ListElementPanel newPanel = new ListElementPanel(listContentsPanel, listObject, listEntry);
+                    listContentsPanel.add(newPanel);
+                    listContentsPanel.revalidate();
+                    listContentsPanel.repaint();
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
             });
             listObjectPanel.add(newEntryButton, BorderLayout.PAGE_START);
@@ -434,7 +398,7 @@ public class GUIPackEditor extends JFrame {
     }
 
     private static <EnumType> JComboBox<EnumType> createNewEnumBox(Object obj, Class<EnumType> objectClass, FocusListener listener) {
-        JComboBox<EnumType> comboBox = new JComboBox<EnumType>();
+        JComboBox<EnumType> comboBox = new JComboBox<>();
         comboBox.setFont(NORMAL_FONT);
         comboBox.setPreferredSize(STRING_TEXT_BOX_DIM);
         EnumType[] enumConstants = objectClass.getEnumConstants();
@@ -448,7 +412,7 @@ public class GUIPackEditor extends JFrame {
     }
 
     private static <EnumType> JComboBox<String> createNewStringBox(Class<EnumType> objectClass, ItemListener listener) {
-        JComboBox<String> comboBox = new JComboBox<String>();
+        JComboBox<String> comboBox = new JComboBox<>();
         comboBox.setEditable(true);
         comboBox.setFont(NORMAL_FONT);
         comboBox.setPreferredSize(STRING_TEXT_BOX_DIM);
@@ -515,9 +479,9 @@ public class GUIPackEditor extends JFrame {
                 }
                 return null;
             } else if (fieldClass.equals(Integer.class)) {
-                return Integer.valueOf(0);
+                return 0;
             } else if (fieldClass.equals(Float.class)) {
-                return Float.valueOf(0);
+                return (float) 0;
             } else {
                 try {
                     return fieldClass.getConstructor().newInstance();
@@ -532,11 +496,11 @@ public class GUIPackEditor extends JFrame {
     }
 
     private static String formatTooltipText(String annotationText) {
-        String tooltipText = "<html>";
+        StringBuilder tooltipText = new StringBuilder("<html>");
         for (String annotationSegment : annotationText.split("\n")) {
             int breakIndex = annotationSegment.indexOf(" ", 150);
             while (breakIndex != -1) {
-                tooltipText += annotationSegment.substring(0, breakIndex) + "<br>";
+                tooltipText.append(annotationSegment.substring(0, breakIndex)).append("<br>");
                 annotationSegment = annotationSegment.substring(breakIndex);
                 breakIndex = annotationSegment.indexOf(" ", 150);
                 int listStartIndex = annotationSegment.indexOf("<ul>");
@@ -544,7 +508,7 @@ public class GUIPackEditor extends JFrame {
                     breakIndex = annotationSegment.indexOf("</ul>");
                 }
             }
-            tooltipText += annotationSegment + "<br><br>";
+            tooltipText.append(annotationSegment).append("<br><br>");
         }
         return tooltipText + "</html>";
     }
@@ -575,31 +539,25 @@ public class GUIPackEditor extends JFrame {
             JButton deleteEntryButton = new JButton();
             deleteEntryButton.setFont(NORMAL_FONT);
             deleteEntryButton.setText("Delete");
-            deleteEntryButton.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent event) {
-                    list.remove(listEntry);
-                    parentPanel.remove(thisPanel);
-                    parentPanel.revalidate();
-                    parentPanel.repaint();
-                }
+            deleteEntryButton.addActionListener(event -> {
+                list.remove(listEntry);
+                parentPanel.remove(thisPanel);
+                parentPanel.revalidate();
+                parentPanel.repaint();
             });
             buttonPanel.add(deleteEntryButton);
 
             JButton copyEntryButton = new JButton();
             copyEntryButton.setFont(NORMAL_FONT);
             copyEntryButton.setText("Copy");
-            copyEntryButton.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent event) {
-                    try {
-                        Object newObj = JSONParser.duplicateJSON(listEntry);
-                        list.add(newObj);
-                        parentPanel.add(new ListElementPanel(parentPanel, list, newObj));
-                        parentPanel.revalidate();
-                        parentPanel.repaint();
-                    } catch (Exception e) {
-                    }
+            copyEntryButton.addActionListener(event -> {
+                try {
+                    Object newObj = JSONParser.duplicateJSON(listEntry);
+                    list.add(newObj);
+                    parentPanel.add(new ListElementPanel(parentPanel, list, newObj));
+                    parentPanel.revalidate();
+                    parentPanel.repaint();
+                } catch (Exception e) {
                 }
             });
             buttonPanel.add(copyEntryButton);
@@ -639,13 +597,13 @@ public class GUIPackEditor extends JFrame {
                     //Don't want to change the color of the whole panel.  Just the box we are in.
                     int fieldChecking = 1;
                     try {
-                        double x = Float.valueOf(((JTextField) component.getComponent(fieldChecking)).getText());
+                        double x = Float.parseFloat(((JTextField) component.getComponent(fieldChecking)).getText());
                         component.getComponent(fieldChecking).setBackground(Color.WHITE);
                         fieldChecking += 2;
-                        double y = Float.valueOf(((JTextField) component.getComponent(fieldChecking)).getText());
+                        double y = Float.parseFloat(((JTextField) component.getComponent(fieldChecking)).getText());
                         component.getComponent(fieldChecking).setBackground(Color.WHITE);
                         fieldChecking += 2;
-                        double z = Float.valueOf(((JTextField) component.getComponent(fieldChecking)).getText());
+                        double z = Float.parseFloat(((JTextField) component.getComponent(fieldChecking)).getText());
                         component.getComponent(fieldChecking).setBackground(Color.WHITE);
 
                         Point3D newPoint = new Point3D(x, y, z);
@@ -702,13 +660,13 @@ public class GUIPackEditor extends JFrame {
                     //Don't want to change the color of the whole panel.  Just the box we are in.
                     int fieldChecking = 1;
                     try {
-                        double x = Float.valueOf(((JTextField) component.getComponent(fieldChecking)).getText());
+                        double x = Float.parseFloat(((JTextField) component.getComponent(fieldChecking)).getText());
                         component.getComponent(fieldChecking).setBackground(Color.WHITE);
                         fieldChecking += 2;
-                        double y = Float.valueOf(((JTextField) component.getComponent(fieldChecking)).getText());
+                        double y = Float.parseFloat(((JTextField) component.getComponent(fieldChecking)).getText());
                         component.getComponent(fieldChecking).setBackground(Color.WHITE);
                         fieldChecking += 2;
-                        double z = Float.valueOf(((JTextField) component.getComponent(fieldChecking)).getText());
+                        double z = Float.parseFloat(((JTextField) component.getComponent(fieldChecking)).getText());
                         component.getComponent(fieldChecking).setBackground(Color.WHITE);
 
                         Point3D newPoint = new Point3D(x, y, z);

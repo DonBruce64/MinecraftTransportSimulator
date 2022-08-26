@@ -1,11 +1,11 @@
 package minecrafttransportsimulator.jsondefs;
 
-import java.util.List;
-
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
+
+import java.util.List;
 
 public class JSONLight {
     @JSONRequired
@@ -24,7 +24,7 @@ public class JSONLight {
     @JSONDescription("Causes the light to automatically dim relative to the electric power of the thing it is on. Should normally be true to prevent vehicles from having lights with dead batteries.")
     public boolean isElectric;
 
-    @JSONRequired(dependentField = "emissive", dependentValues = { "true" })
+    @JSONRequired(dependentField = "emissive", dependentValues = {"true"})
     @JSONDescription("A hexadecimal color code.  This tells MTS what color this light should be.  Required for emissive lights and lights with blendableComponents.")
     public ColorRGB color;
 
@@ -34,7 +34,7 @@ public class JSONLight {
     @JSONDescription("A listing of blendable components for this light.  Used to allow for multiple flares or beams for a single light object.")
     public List<JSONLightBlendableComponent> blendableComponents;
 
-    public class JSONLightBlendableComponent {
+    public static class JSONLightBlendableComponent {
         @JSONDescription("The position at which the blendable component will be rendered at.")
         public Point3D pos;
 

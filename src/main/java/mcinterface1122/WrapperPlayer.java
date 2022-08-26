@@ -1,20 +1,12 @@
 package mcinterface1122;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
-import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-import minecrafttransportsimulator.mcinterface.IWrapperInventory;
-import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.mcinterface.*;
 import minecrafttransportsimulator.packets.components.APacketBase;
 import net.minecraft.block.BlockWorkbench;
 import net.minecraft.client.Minecraft;
@@ -30,18 +22,21 @@ import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @EventBusSubscriber
 public class WrapperPlayer extends WrapperEntity implements IWrapperPlayer {
-    private static final Map<EntityPlayer, WrapperPlayer> playerWrappers = new HashMap<EntityPlayer, WrapperPlayer>();
+    private static final Map<EntityPlayer, WrapperPlayer> playerWrappers = new HashMap<>();
 
     protected final EntityPlayer player;
 
     /**
-     *  Returns a wrapper instance for the passed-in player instance.
-     *  Null may be passed-in safely to ease function-forwarding.
-     *  Note that the wrapped player class MAY be side-specific, so avoid casting
-     *  the wrapped entity directly if you aren't sure what its class is.
-     *  Wrapper is cached to avoid re-creating the wrapper each time it is requested.
+     * Returns a wrapper instance for the passed-in player instance.
+     * Null may be passed-in safely to ease function-forwarding.
+     * Note that the wrapped player class MAY be side-specific, so avoid casting
+     * the wrapped entity directly if you aren't sure what its class is.
+     * Wrapper is cached to avoid re-creating the wrapper each time it is requested.
      */
     public static WrapperPlayer getWrapperFor(EntityPlayer player) {
         if (player != null) {
@@ -169,11 +164,6 @@ public class WrapperPlayer extends WrapperEntity implements IWrapperPlayer {
      */
     @SubscribeEvent
     public static void on(WorldEvent.Unload event) {
-        Iterator<EntityPlayer> iterator = playerWrappers.keySet().iterator();
-        while (iterator.hasNext()) {
-            if (iterator.next().world.equals(event.getWorld())) {
-                iterator.remove();
-            }
-        }
+        playerWrappers.keySet().removeIf(entityPlayer -> entityPlayer.world.equals(event.getWorld()));
     }
 }

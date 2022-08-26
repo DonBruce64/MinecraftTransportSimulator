@@ -5,8 +5,9 @@ import minecrafttransportsimulator.entities.instances.EntityFurnace;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
-/**Packet sent to furnaces to add ore set smelting time to them.
- * 
+/**
+ * Packet sent to furnaces to add ore set smelting time to them.
+ *
  * @author don_bruce
  */
 public class PacketFurnaceTimeSet extends APacketEntity<EntityFurnace> {

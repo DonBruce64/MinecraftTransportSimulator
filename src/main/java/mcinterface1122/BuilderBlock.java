@@ -1,12 +1,5 @@
 package mcinterface1122;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.annotation.Nullable;
-
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.ABlockBaseTileEntity;
@@ -28,11 +21,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumBlockRenderType;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.*;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
@@ -43,7 +32,14 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 
-/**Builder for a basic MC Block class.  This builder assumes the block will not be a solid
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Builder for a basic MC Block class.  This builder assumes the block will not be a solid
  * block (so no culling) and may have alpha channels in the texture (like glass).
  * It also assumes the block can be rotated, and saves the rotation as a set of
  * FACING properties.  This MAY change in later versions to TE data though...
@@ -52,14 +48,20 @@ import net.minecraftforge.fml.common.registry.GameRegistry;
  */
 @EventBusSubscriber
 public class BuilderBlock extends Block {
-    /**Map of created blocks linked to their builder instances.  Used for interface operations.**/
-    protected static final Map<ABlockBase, BuilderBlock> blockMap = new HashMap<ABlockBase, BuilderBlock>();
+    /**
+     * Map of created blocks linked to their builder instances.  Used for interface operations.
+     **/
+    protected static final Map<ABlockBase, BuilderBlock> blockMap = new HashMap<>();
 
-    /**Current block we are built around.**/
+    /**
+     * Current block we are built around.
+     **/
     protected final ABlockBase block;
-    /**Holding map for block drops.  MC calls breakage code after the TE is removed, so we need to store drops 
-    created during the drop checks here to ensure they actually drop when the block is broken. **/
-    private static final Map<BlockPos, List<IWrapperItemStack>> dropsAtPositions = new HashMap<BlockPos, List<IWrapperItemStack>>();
+    /**
+     * Holding map for block drops.  MC calls breakage code after the TE is removed, so we need to store drops
+     * created during the drop checks here to ensure they actually drop when the block is broken.
+     **/
+    private static final Map<BlockPos, List<IWrapperItemStack>> dropsAtPositions = new HashMap<>();
 
     BuilderBlock(ABlockBase block) {
         super(Material.ROCK);
@@ -89,27 +91,27 @@ public class BuilderBlock extends Block {
     }
 
     /**
-    *  Helper method for creating new Wrapper TEs for this block.
-    *  Far better than ? all over for generics in the createTileEntity method.
-    */
+     * Helper method for creating new Wrapper TEs for this block.
+     * Far better than ? all over for generics in the createTileEntity method.
+     */
     private static <TileEntityType extends ATileEntityBase<?>> BuilderTileEntity<TileEntityType> getTileEntityGenericWrapper(ABlockBase block) {
-        return new BuilderTileEntity<TileEntityType>();
+        return new BuilderTileEntity<>();
     }
 
     /**
-     *  Helper method for creating new Wrapper TEs for this block.
-     *  Far better than ? all over for generics in the createTileEntity method.
+     * Helper method for creating new Wrapper TEs for this block.
+     * Far better than ? all over for generics in the createTileEntity method.
      */
     private static <TileEntityType extends ATileEntityBase<?> & ITileEntityInventoryProvider> BuilderTileEntity<TileEntityType> getTileEntityInventoryWrapper(ABlockBase block) {
-        return new BuilderTileEntityInventoryContainer<TileEntityType>();
+        return new BuilderTileEntityInventoryContainer<>();
     }
 
     /**
-    *  Helper method for creating new Wrapper TEs for this block.
-    *  Far better than ? all over for generics in the createTileEntity method.
-    */
+     * Helper method for creating new Wrapper TEs for this block.
+     * Far better than ? all over for generics in the createTileEntity method.
+     */
     private static <TileEntityType extends ATileEntityBase<?> & ITileEntityFluidTankProvider> BuilderTileEntity<TileEntityType> getTileEntityTankWrapper(ABlockBase block) {
-        return new BuilderTileEntityFluidTank<TileEntityType>();
+        return new BuilderTileEntityFluidTank<>();
     }
 
     @Override
@@ -199,7 +201,7 @@ public class BuilderBlock extends Block {
             TileEntity tile = world.getTileEntity(pos);
             if (tile instanceof BuilderTileEntity) {
                 if (((BuilderTileEntity<?>) tile).tileEntity != null) {
-                    List<IWrapperItemStack> drops = new ArrayList<IWrapperItemStack>();
+                    List<IWrapperItemStack> drops = new ArrayList<>();
                     ((BuilderTileEntity<?>) tile).tileEntity.addDropsToList(drops);
                     dropsAtPositions.put(pos, drops);
                 }
@@ -321,7 +323,7 @@ public class BuilderBlock extends Block {
         //iterate over all items and get the blocks they spawn.
         //Not only does this prevent us from having to manually set the blocks
         //we also pre-generate the block classes here.
-        List<ABlockBase> blocksRegistred = new ArrayList<ABlockBase>();
+        List<ABlockBase> blocksRegistred = new ArrayList<>();
         for (AItemBase item : BuilderItem.itemMap.keySet()) {
             if (item instanceof IItemBlock) {
                 ABlockBase itemBlockBlock = ((IItemBlock) item).getBlock();

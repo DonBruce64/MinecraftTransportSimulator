@@ -1,7 +1,5 @@
 package minecrafttransportsimulator.blocks.tileentities.components;
 
-import java.util.List;
-
 import minecrafttransportsimulator.baseclasses.BezierCurve;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
@@ -9,8 +7,11 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad.RoadComponent;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent.JSONLaneSector;
 
-/**Helper class for containing data of what was clicked on this road.
- * The position and rotation variables are used to create a new road from this data, 
+import java.util.List;
+
+/**
+ * Helper class for containing data of what was clicked on this road.
+ * The position and rotation variables are used to create a new road from this data,
  * should this be desired.  Simply pass them in as the start or end position of a {@link BezierCurve}.
  *
  * @author don_bruce

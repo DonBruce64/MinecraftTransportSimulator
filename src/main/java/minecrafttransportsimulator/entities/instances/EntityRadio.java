@@ -9,13 +9,14 @@ import minecrafttransportsimulator.sound.RadioManager.RadioSources;
 import minecrafttransportsimulator.sound.RadioStation;
 import minecrafttransportsimulator.sound.SoundInstance;
 
-/**Base class for radios.  Used to provide a common set of tools for all radio implementations.
+/**
+ * Base class for radios.  Used to provide a common set of tools for all radio implementations.
  * This class keeps track of the radio station currently selected, as well as the
  * current volume for the source and equalization settings.  The actual station being planed
  * is in the {@link RadioStation} class, which is handled by the {@link RadioManager}.
-*
-* @author don_bruce
-*/
+ *
+ * @author don_bruce
+ */
 public class EntityRadio extends AEntityB_Existing {
 
     //Public variables for modifying state.

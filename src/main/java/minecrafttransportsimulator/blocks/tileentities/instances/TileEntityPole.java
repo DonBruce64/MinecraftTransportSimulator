@@ -26,14 +26,15 @@ import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleChange;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityPoleCollisionUpdate;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
-/**Pole tile entity.  Remembers what components we have attached and the state of the components.
+/**
+ * Pole tile entity.  Remembers what components we have attached and the state of the components.
  * This tile entity does not tick, as states can be determined without ticks or are controlled
  * from other tickable TEs.
-*
-* @author don_bruce
-*/
+ *
+ * @author don_bruce
+ */
 public class TileEntityPole extends ATileEntityBase<JSONPoleComponent> {
-    public final Map<Axis, ATileEntityPole_Component> components = new HashMap<Axis, ATileEntityPole_Component>();
+    public final Map<Axis, ATileEntityPole_Component> components = new HashMap<>();
 
     private float maxTotalLightLevel;
 

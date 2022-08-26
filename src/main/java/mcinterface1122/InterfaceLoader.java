@@ -1,22 +1,22 @@
 package mcinterface1122;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.logging.log4j.Logger;
-
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
-import net.minecraftforge.fml.common.Mod.Instance;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-/**Loader interface for the mod.  This class is not actually an interface, unlike everything else.
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Loader interface for the mod.  This class is not actually an interface, unlike everything else.
  * Instead, it keeps references to all interfaces, which are passed-in during construction.
  * It also handles initialization calls when the game is first booted.  There will only
  * be ONE loader per running instance of Minecraft.
@@ -24,20 +24,21 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
  * @author don_bruce
  */
 @Mod(modid = InterfaceLoader.MODID, name = InterfaceLoader.MODNAME, version = InterfaceLoader.MODVER)
-public class InterfaceLoader {
+public final class InterfaceLoader {
     public static final String MODID = "mts";
     public static final String MODNAME = "Immersive Vehicles (MTS)";
-    public static final String MODVER = "21.4.0-BETA39";
-    public static Logger logger;
+    public static final String MODVER = "21.4.0-BETA66";
+    public static final Logger LOGGER = LogManager.getLogger(InterfaceLoader.MODID);
 
-    @Instance(MODID)
+    @Mod.Instance(MODID)
     public static InterfaceLoader INSTANCE;
 
     static {
-        //Enable universal bucket so we can use buckets on fuel pumps.
+        //Enable universal bucket so that we can use buckets on fuel pumps.
         FluidRegistry.enableUniversalBucket();
     }
 
+    @SuppressWarnings("InstantiationOfUtilityClass")
     @EventHandler
     public void preInit(FMLPreInitializationEvent event) {
         //Get game directory.
@@ -50,14 +51,11 @@ public class InterfaceLoader {
             new InterfaceManager(MODID, gameDirectory, new InterfaceCore(), new InterfacePacket(), null, null, null, null);
         }
 
-        //Set logger and add log items from pre-boot operations.
-        logger = event.getModLog();
-        InterfaceManager.coreInterface.flushLogQueue();
-        InterfaceManager.coreInterface.logError("Welcome to MTS VERSION:" + MODVER);
+        InterfaceLoader.LOGGER.error("Welcome to MTS VERSION:" + MODVER);
 
-        //Parse packs now that we have a logger.
+        //Parse packs
         ConfigSystem.loadFromDisk(new File(gameDirectory, "config"), event.getSide().isClient());
-        List<File> packDirectories = new ArrayList<File>();
+        List<File> packDirectories = new ArrayList<>();
         File modDirectory = new File(gameDirectory, "mods");
         if (modDirectory.exists()) {
             packDirectories.add(modDirectory);
@@ -72,7 +70,7 @@ public class InterfaceLoader {
             PackParser.addDefaultItems();
             PackParser.parsePacks(packDirectories, event.getSide().isClient());
         } else {
-            InterfaceManager.coreInterface.logError("Could not find mods directory!  Game directory is confirmed to: " + gameDirectory);
+            InterfaceLoader.LOGGER.error("Could not find mods directory!  Game directory is confirmed to: " + gameDirectory);
         }
     }
 
@@ -88,7 +86,7 @@ public class InterfaceLoader {
             //Also put all liquids into the config file for use by modpack makers.
             ConfigSystem.settings.fuel.lastLoadedFluids = InterfaceManager.clientInterface.getAllFluidNames();
 
-            //Also diable playerTweaks if some known-problematic mods are present.
+            //Also disable playerTweaks if some known-problematic mods are present.
             if (InterfaceManager.coreInterface.isModPresent("tails") || InterfaceManager.coreInterface.isModPresent("obfuscate") || InterfaceManager.coreInterface.isModPresent("mobends")) {
                 ConfigSystem.client.renderingSettings.playerTweaks.value = false;
             }

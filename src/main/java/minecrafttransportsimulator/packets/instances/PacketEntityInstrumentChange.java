@@ -10,12 +10,13 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.packets.components.APacketEntityInteract;
 import minecrafttransportsimulator.packloading.PackParser;
 
-/**Packet used to change instruments on entities.  Sent to the server
+/**
+ * Packet used to change instruments on entities.  Sent to the server
  * to process the instrument change, and then sent to all clients if
  * the change is able to be made.  Does not check ownership as that's
  * done before {@link GUIInstruments} is opened by checking for
  * ownership in {@link ItemItem#doVehicleInteraction}.
- * 
+ *
  * @author don_bruce
  */
 public class PacketEntityInstrumentChange extends APacketEntityInteract<AEntityE_Interactable<?>, IWrapperPlayer> {

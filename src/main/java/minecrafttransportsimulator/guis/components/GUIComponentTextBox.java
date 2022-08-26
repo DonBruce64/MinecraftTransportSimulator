@@ -4,7 +4,8 @@ import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.rendering.RenderText;
 import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
 
-/**Custom text box class.  This class is designed to remove the need to check for clicking of
+/**
+ * Custom text box class.  This class is designed to remove the need to check for clicking of
  * text boxes and to manually set their text, as well as the odd getter/setter methods
  * that MC's text boxes have that aren't in other components.  Provides a more streamlined
  * object this way.  This text box also allows for word-wrapping of text.  Something
@@ -22,7 +23,7 @@ public class GUIComponentTextBox extends GUIComponentCutout {
     public boolean focused = false;
 
     private int textIndex;
-    private int maxTextLength;
+    private final int maxTextLength;
     private String flashText;
 
     public GUIComponentTextBox(int x, int y, int width, String text) {
@@ -42,8 +43,8 @@ public class GUIComponentTextBox extends GUIComponentCutout {
     }
 
     /**
-     *  Updates the focused property depending on mouse position and state.  Should be called whenever
-     *  the mouse is clicked to focus the text box and allow the GUI to send user input to it. 
+     * Updates the focused property depending on mouse position and state.  Should be called whenever
+     * the mouse is clicked to focus the text box and allow the GUI to send user input to it.
      */
     public void updateFocus(int mouseX, int mouseY) {
         focused = visible && enabled && isMouseInBounds(mouseX, mouseY);
@@ -54,13 +55,13 @@ public class GUIComponentTextBox extends GUIComponentCutout {
     }
 
     /**
-     *  Handles the current key input.  Depending on the key, this will either add 
-     *  the typed character to the text, delete a character, or change the current
-     *  cursor position.  Note that keyCode is one of the pre-defined {@link TextBoxControlKey}s.
-     *  This allows for consistent handling of inputs locally, and makes it up to the caller of
-     *  this function to decide what inputs constitute the control keys.  The main reason
-     *  for this is that it prevents the need to call in any specific LWJGL libraries that may
-     *  or may not change for the heck of it.
+     * Handles the current key input.  Depending on the key, this will either add
+     * the typed character to the text, delete a character, or change the current
+     * cursor position.  Note that keyCode is one of the pre-defined {@link TextBoxControlKey}s.
+     * This allows for consistent handling of inputs locally, and makes it up to the caller of
+     * this function to decide what inputs constitute the control keys.  The main reason
+     * for this is that it prevents the need to call in any specific LWJGL libraries that may
+     * or may not change for the heck of it.
      */
     public void handleKeyTyped(char typedChar, int typedCode, TextBoxControlKey control) {
         //Handle control operation, or basic key typed.
@@ -68,7 +69,7 @@ public class GUIComponentTextBox extends GUIComponentCutout {
             if (control.equals(TextBoxControlKey.BACKSPACE)) {
                 if (textIndex != 0) {
                     //Remove the char before the current position.
-                    text = text.substring(0, textIndex - 1) + text.substring(textIndex, text.length());
+                    text = text.substring(0, textIndex - 1) + text.substring(textIndex);
                     --textIndex;
                     if (isTextValid(text)) {
                         handleTextChange();
@@ -77,7 +78,7 @@ public class GUIComponentTextBox extends GUIComponentCutout {
             } else if (control.equals(TextBoxControlKey.DELETE)) {
                 if (textIndex != text.length()) {
                     //Remove the char at the current position.
-                    text = text.substring(0, textIndex) + text.substring(textIndex + 1, text.length());
+                    text = text.substring(0, textIndex) + text.substring(textIndex + 1);
                     if (isTextValid(text)) {
                         handleTextChange();
                     }
@@ -93,7 +94,7 @@ public class GUIComponentTextBox extends GUIComponentCutout {
             }
         } else if (Character.isLetterOrDigit(typedChar) || VALID_SPECIAL_CHARS.contains(Character.toString(typedChar))) {
             if (text.length() < maxTextLength) {
-                text = text.substring(0, textIndex) + typedChar + text.substring(textIndex, text.length());
+                text = text.substring(0, textIndex) + typedChar + text.substring(textIndex);
                 ++textIndex;
                 if (isTextValid(text)) {
                     handleTextChange();
@@ -107,30 +108,30 @@ public class GUIComponentTextBox extends GUIComponentCutout {
         } else if (textIndex == text.length()) {
             flashText = text + "_";
         } else {
-            flashText = text.substring(0, textIndex) + "_" + text.substring(textIndex + 1, text.length());
+            flashText = text.substring(0, textIndex) + "_" + text.substring(textIndex + 1);
         }
     }
 
     /**
-     *  Returns true if this text is valid for this text box.  This won't prevent invalid text from being entered,
-     *  but will prevent {@link #handleTextChange()} from being called if the text is invalid.
+     * Returns true if this text is valid for this text box.  This won't prevent invalid text from being entered,
+     * but will prevent {@link #handleTextChange()} from being called if the text is invalid.
      */
     public boolean isTextValid(String newText) {
         return true;
     }
 
     /**
-     *  Gets the current text of this component.
+     * Gets the current text of this component.
      */
     public String getText() {
         return text;
     }
 
     /**
-     *  Sets the text for this component.  Trimming it to meet the maxTextLength
-     *  parameter if required.  Also updates flashText to ensure proper rendering.
-     *  This also resets the pointer to the end of the passed-in string to prevent
-     *  an old reference.
+     * Sets the text for this component.  Trimming it to meet the maxTextLength
+     * parameter if required.  Also updates flashText to ensure proper rendering.
+     * This also resets the pointer to the end of the passed-in string to prevent
+     * an old reference.
      */
     public void setText(String newText) {
         if (newText.length() > maxTextLength) {
@@ -153,9 +154,9 @@ public class GUIComponentTextBox extends GUIComponentCutout {
     }
 
     /**
-     *  Called when text is changed in this text box.  This happens only after a keypress
-     *  changes the text, and {@link #isTextValid(String)} returns true.  This ensures that
-     *  only valid text changes are processed.  By default this method does nothing.
+     * Called when text is changed in this text box.  This happens only after a keypress
+     * changes the text, and {@link #isTextValid(String)} returns true.  This ensures that
+     * only valid text changes are processed.  By default this method does nothing.
      */
     public void handleTextChange() {
     }
@@ -176,13 +177,13 @@ public class GUIComponentTextBox extends GUIComponentCutout {
     }
 
     /**
-     *  Enums for control keys of this text box.  Send these in when a specific action needs to occur other
-     *  than adding text.
+     * Enums for control keys of this text box.  Send these in when a specific action needs to occur other
+     * than adding text.
      */
     public enum TextBoxControlKey {
         BACKSPACE,
         DELETE,
         LEFT,
-        RIGHT;
+        RIGHT
     }
 }

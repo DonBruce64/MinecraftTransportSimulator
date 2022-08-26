@@ -1,18 +1,9 @@
 package mcinterface1122;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.annotation.Nullable;
-
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.entities.components.AEntityB_Existing;
-import minecrafttransportsimulator.entities.components.AEntityD_Definable;
-import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
-import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
-import minecrafttransportsimulator.entities.components.AEntityG_Towable;
+import minecrafttransportsimulator.entities.components.*;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.IItemEntityProvider;
@@ -35,28 +26,43 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.registry.EntityEntry;
 import net.minecraftforge.fml.common.registry.EntityEntryBuilder;
 
-/**Builder for the main entity classes for MTS.  This builder allows us to create a new entity
+import javax.annotation.Nullable;
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Builder for the main entity classes for MTS.  This builder allows us to create a new entity
  * class that we can control that doesn't have the wonky systems the MC entities have, such
  * as no roll axis, a single hitbox, and tons of immutable objects that get thrown away every update.
  * Constructor simply takes in a world instance per default MC standards, but doesn't create the actual
- * {@link AEntityB_Existing} until later.  This is because we can't build our entity at the same time MC creates 
- * this instance as we might not yet have NBT data.  Instead, we simply hold on to the class and construct 
+ * {@link AEntityB_Existing} until later.  This is because we can't build our entity at the same time MC creates
+ * this instance as we might not yet have NBT data.  Instead, we simply hold on to the class and construct
  * it whenever we get called to do so.
  *
  * @author don_bruce
  */
 @EventBusSubscriber
 public class BuilderEntityExisting extends ABuilderEntityBase {
-    /**Maps Entity class names to instances of the IItemEntityProvider class that creates them.**/
-    protected static final Map<String, IItemEntityProvider<?>> entityMap = new HashMap<String, IItemEntityProvider<?>>();
+    /**
+     * Maps Entity class names to instances of the IItemEntityProvider class that creates them.
+     **/
+    protected static final Map<String, IItemEntityProvider<?>> entityMap = new HashMap<>();
 
-    /**Current entity we are built around.  This MAY be null if we haven't loaded NBT from the server yet.**/
+    /**
+     * Current entity we are built around.  This MAY be null if we haven't loaded NBT from the server yet.
+     **/
     protected AEntityB_Existing entity;
-    /**Last saved explosion position (used for damage calcs).**/
+    /**
+     * Last saved explosion position (used for damage calcs).
+     **/
     private static Point3D lastExplosionPosition;
-    /**Collective for interaction boxes.  These are used by this entity to allow players to interact with it.**/
+    /**
+     * Collective for interaction boxes.  These are used by this entity to allow players to interact with it.
+     **/
     private WrapperAABBCollective interactionBoxes;
-    /**Collective for collision boxes.  These are used by this entity to make things collide with it.**/
+    /**
+     * Collective for collision boxes.  These are used by this entity to make things collide with it.
+     **/
     private WrapperAABBCollective collisionBoxes;
 
     public BuilderEntityExisting(World world) {
@@ -133,8 +139,8 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
                     loadedFromSavedNBT = true;
                     lastLoadedNBT = null;
                 } catch (Exception e) {
-                    InterfaceManager.coreInterface.logError("Failed to load entity on builder from saved NBT.  Did a pack change?");
-                    InterfaceManager.coreInterface.logError(e.getMessage());
+                    InterfaceLoader.LOGGER.error("Failed to load entity on builder from saved NBT.  Did a pack change?");
+                    InterfaceLoader.LOGGER.error(e.getMessage());
                     setDead();
                 }
             }

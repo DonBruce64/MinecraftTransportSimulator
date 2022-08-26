@@ -21,12 +21,13 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.components.APacketEntityInteract;
 
-/**Packet used to interact with vehicles.  Initially sent from clients to the server
+/**
+ * Packet used to interact with vehicles.  Initially sent from clients to the server
  * to handle players clicking on either the vehicle or a part on it.  Actions (if any) are performed on the server.
  * A corresponding interaction packet may be sent to all players tracking the entity if the
  * action requires updates on clients.  This can be driven by the logic in this packet, or
  * the logic in {@link IItemVehicleInteractable#doVehicleInteraction(IWrapperItemStack, EntityVehicleF_Physics, APart, IWrapperPlayer, PlayerOwnerState, boolean)}
- * 
+ *
  * @author don_bruce
  */
 public class PacketVehicleInteract extends APacketEntityInteract<AEntityF_Multipart<?>, IWrapperPlayer> {
@@ -75,7 +76,7 @@ public class PacketVehicleInteract extends APacketEntityInteract<AEntityF_Multip
                         player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_VEHICLE_OWNED));
                     } else {
                         //Attempt to add a part.  Entity is responsible for callback packet here.
-                        if (heldItem instanceof AItemPart) {
+                        if (heldItem instanceof AItemPart && !player.isSneaking()) {
                             if (entity.addPartFromItem((AItemPart) heldItem, player, heldStack.getData(), entity.definition.parts.indexOf(slotEntry.getValue())) != null && !player.isCreative()) {
                                 player.getInventory().removeFromSlot(player.getHotbarIndex(), 1);
                             }

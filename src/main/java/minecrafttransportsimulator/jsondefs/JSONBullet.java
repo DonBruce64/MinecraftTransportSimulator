@@ -12,7 +12,7 @@ public class JSONBullet extends AJSONMultiModelProvider {
     @JSONDescription("Bullet-specific properties.")
     public Bullet bullet;
 
-    public class Bullet {
+    public static class Bullet {
         @JSONRequired
         @JSONDescription("A list of types describing the bullet.  This defines how it inflicts damage on whatever it hits.")
         public List<BulletType> types;
@@ -75,7 +75,7 @@ public class JSONBullet extends AJSONMultiModelProvider {
         public float pelletSpreadFactor;
     }
 
-    public static enum BulletType {
+    public enum BulletType {
         @JSONDescription("Explodes when it hits something.  Explosion size is based on the bullet's diameter.")
         EXPLOSIVE,
         @JSONDescription("Sets whatever it hits on fire, if it's flammable.  This includes entities.")
@@ -83,6 +83,6 @@ public class JSONBullet extends AJSONMultiModelProvider {
         @JSONDescription("Like incendiary, but puts out fires rather than starts them.")
         WATER,
         @JSONDescription("A bullet that pierces player armor.  Useful for pesky super-suits.")
-        ARMOR_PIERCING;
+        ARMOR_PIERCING
     }
 }

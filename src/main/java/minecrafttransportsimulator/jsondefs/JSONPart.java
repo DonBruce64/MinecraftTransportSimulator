@@ -18,31 +18,31 @@ public class JSONPart extends AJSONPartProvider {
     @JSONDescription("Properties for all parts.")
     public JSONPartGeneric generic;
 
-    @JSONRequired(dependentField = "type", dependentValues = { "engine" }, subField = "generic")
+    @JSONRequired(dependentField = "type", dependentValues = {"engine"}, subField = "generic")
     @JSONDescription("Properties for engines.")
     public JSONPartEngine engine;
 
-    @JSONRequired(dependentField = "type", dependentValues = { "ground" }, subField = "generic")
+    @JSONRequired(dependentField = "type", dependentValues = {"ground"}, subField = "generic")
     @JSONDescription("Properties for ground devices.")
     public JSONPartGroundDevice ground;
 
-    @JSONRequired(dependentField = "type", dependentValues = { "propeller" }, subField = "generic")
+    @JSONRequired(dependentField = "type", dependentValues = {"propeller"}, subField = "generic")
     @JSONDescription("Properties for propellers.")
     public JSONPartPropeller propeller;
 
-    @JSONRequired(dependentField = "type", dependentValues = { "seat" }, subField = "generic")
+    @JSONRequired(dependentField = "type", dependentValues = {"seat"}, subField = "generic")
     @JSONDescription("Properties for seats.")
     public JSONPartSeat seat;
 
-    @JSONRequired(dependentField = "type", dependentValues = { "gun" }, subField = "generic")
+    @JSONRequired(dependentField = "type", dependentValues = {"gun"}, subField = "generic")
     @JSONDescription("Properties for guns.")
     public JSONPartGun gun;
 
-    @JSONRequired(dependentField = "type", dependentValues = { "interactable" }, subField = "generic")
+    @JSONRequired(dependentField = "type", dependentValues = {"interactable"}, subField = "generic")
     @JSONDescription("Properties for interactables.")
     public JSONPartInteractable interactable;
 
-    @JSONRequired(dependentField = "type", dependentValues = { "effector" }, subField = "generic")
+    @JSONRequired(dependentField = "type", dependentValues = {"effector"}, subField = "generic")
     @JSONDescription("Properties for effectors.")
     public JSONPartEffector effector;
 
@@ -59,7 +59,7 @@ public class JSONPart extends AJSONPartProvider {
     @Deprecated
     public PartTread tread;
 
-    public static enum PartType {
+    public enum PartType {
         @JSONDescription("This isn't so much a part as it is an add-on component to your main vehicle.  Generic parts don't do anything and can't be interacted with, but that's actually a GOOD thing as they won't try to move your vehicle or let players sit in random locations.\nWant a set of spoilers to add to your sports cars without making new models?  Generic parts.\nWant to make a freight vehicle like the GMC with different rear-ends?  Generic parts.\nWant to make different tops for your Jeep?  Generic parts.\nGeneric parts are particularly versatile when combined with sub-parts.  In this capacity they can be used to add truck beds with places to put crates for cargo slots, axles to allow for more wheels and mounts for guns that wouldn't normally be on the vehicle.\nIf you do plan on using the generic type, it is highly suggested that you give them a unique, yet common, type name.  For example, generic_bumpersticker, or generic_pickupbed.  This will not only ensure that other generic parts will go on your vehicle, but also lets other packs have the same generic parts for cross-pack compatibility.")
         GENERIC,
         @JSONDescription("Engines are the most complex JSON in MTS.  While all engines use the same generic code under the hood, each application has specific tweaks that will need to be made.  For example, an aircraft engine that has propellers on it will need to have a propeller subPart to allow for a propeller to be placed on it, or an additionalPart on the vehicle, should the propeller be a vehicle option rather than an engine option (such as a car that has a boat propeller for water travel).  Because of this, the forces that come out of your engine depend on what it's put in and what's attached to it more than anything else.\nWhile engines have a type parameter, this is only used for classifying engines into distinct categories to prevent users from putting jet engines on semi trucks.")
@@ -75,10 +75,10 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("Interactable is a generic bucket for parts that can be interacted with.  These parts don't do anything to the vehicle.  Rather, they are mainly for player interaction.  They may display a GUI for the player to use, store items, or run tasks set by the player.  Exactly what they do depends on the interactionType parameter.")
         INTERACTABLE,
         @JSONDescription("Effectors are parts that effect the world they are in.  Different effectors do different things, but the one thing they have in common is they do something with blocks in the world.  Unlike interactable parts, they do not have any inventories or GUIs.  To have such functionality, they should be combined with an interactable part.  For example, a planter combined with a crate to hold seeds for the planter.")
-        EFFECTOR;
+        EFFECTOR
     }
 
-    public class JSONPartGeneric {
+    public static class JSONPartGeneric {
         @JSONRequired
         @JSONDefaults(PartType.class)
         @JSONDescription("The type-name for this part.  This MUST start with the name of the part section you are wanting to make.  For example engine_somename, gun_othername.  Other than that, there are no restrictions.  There is, however, a generally-agreed on naming format for most parts made in community packs, so check with the community if you want inter-pack compatibility.  All possible prefixes are in the default list, so while you may use any type you want, it should start with one of these.")
@@ -105,6 +105,9 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("The mass of this part.  Is normally 0 to avoid heavy seats, but may be used for generic parts or engines or the like.")
         public int mass;
 
+        @JSONDescription("This parameter is optional.  If included, then the model will be rendered with this texture in the part bench, even if it has a different one defined or uses the vehicle texture.")
+        public String benchTexture;
+
         @JSONDescription("This is a list of animatedObjects that can be used to move this part based on the animation values. This movement applies before the movement defined in the part slot.  This is primarially used to move the part based on properties of sub-parts, mostly for guns, but may be used for other things.")
         public List<JSONAnimationDefinition> movementAnimations;
 
@@ -112,14 +115,16 @@ public class JSONPart extends AJSONPartProvider {
         public List<JSONAnimationDefinition> activeAnimations;
     }
 
-    public class JSONPartEngine {
+    public static class JSONPartEngine {
+        @JSONRequired
+        @JSONDescription("The type of engine.  Different engines use different paramters.  But at least one type must be specified.")
+        public EngineType type;
+
         @JSONDescription("Should the engine change gears on its own.  This only affects cars and will prevent users from shifting into higher or lower gears using shiftUp and shiftDown. Instead, the engine will attempt to choose the best gear for the situation.  Note that MTS's automatic transmission system isn't the best and may get confused when gear ratios are close together.  For this reason, it is recommended to either use manual transmissions on vehicles with more than 5-6 gears, or to define the RPM at which a gear is shifted up or down via upShiftRPM and downShiftRPM.")
         public boolean isAutomatic;
 
         @JSONDescription("If true, the automatic starter will be distabled for this engine.  Instead, it must be started by hand.  Note that while normally this requires hitting the propeller, but in this case the engine itself may be hit too.  This is for outboard motors and the like.")
         public boolean disableAutomaticStarter;
-
-        public boolean isSteamPowered;
 
         @JSONDescription("This is how much 'oomph' the starter outputs on a single firing.  When the starter key is held the engine RPM will be increased by this amount every 4 ticks, or every 0.2 seconds.  Note that for engines with high loads, such as those with larger propellers, its quite possible to make a starter power that literally can't start the engine.")
         public int starterPower;
@@ -160,6 +165,9 @@ public class JSONPart extends AJSONPartProvider {
 
         @JSONDescription("The rate at which this engine's RPM winds down per tick after sputtering out or being turned off. 10 by default, and can be configured to make engines wind down quicker or slower.")
         public int engineWinddownRate;
+
+        @JSONDescription("Normally, engines run off of the fuel from the main vehicle.  However, one can give them rocket fuel, which will be used rather than the vehicle's fuel.  The moment the engine turns on, the fuel will ignite and run as if full throttle until the fuel runs out, at which point they must be crafted again to re-fuel them for their next use.")
+        public int rocketFuel;
 
         @ModifiableValue
         @JSONDescription("The rate at which this engine heats up, which gets lobbed into the math with fuel consumption, velocity... etc")
@@ -212,7 +220,7 @@ public class JSONPart extends AJSONPartProvider {
         public boolean isCrankingNotPitched;
 
         @Deprecated
-        public EngineSound customSoundset[];
+        public EngineSound[] customSoundset;
 
         @Deprecated
         public class EngineSound {
@@ -251,7 +259,14 @@ public class JSONPart extends AJSONPartProvider {
         }
     }
 
-    public class JSONPartGroundDevice {
+    public enum EngineType {
+        @JSONDescription("A standard internal-combustion engine.  Requires fuel from the vehicle's fuel tanks to run.")
+        NORMAL,
+        @JSONDescription("A rocket-powered engine.  Uses only internal fuel and must be rebuilt each use.")
+        ROCKET;
+    }
+
+    public static class JSONPartGroundDevice {
         @JSONDescription("If true, then this part will be considered a wheel.  Wheels can transmit power from engines to the ground, making them the go-to choice for ground-based vehicles.")
         public boolean isWheel;
 
@@ -295,7 +310,7 @@ public class JSONPart extends AJSONPartProvider {
         public boolean canGoFlat;
     }
 
-    public class JSONPartPropeller {
+    public static class JSONPartPropeller {
         @JSONDescription("If this is present and set, the propeller will have a dynamic pitch.  Propellers with dynamic pitch automatically change their pitch to keep their speed at the top end of the max RPM of the engine.  Below that range their pitch will decrease to a minimum of 45, and above that range it will increase to whatever value is specified by the 'pitch' parameter.  Dynamic pitch propellers are also able to provide reverse thrust, though at a significantly reduced power level to their forward-thrust capabilities.")
         public boolean isDynamicPitch;
 
@@ -309,7 +324,7 @@ public class JSONPart extends AJSONPartProvider {
         public int diameter;
     }
 
-    public class JSONPartSeat {
+    public static class JSONPartSeat {
         @JSONDescription("If true, the player will stand in this seat rather than sit.  Note that some mods may mess this up and force the player to sit, so be advised of this.")
         public boolean standing;
 
@@ -323,7 +338,7 @@ public class JSONPart extends AJSONPartProvider {
         public float heightScale;
     }
 
-    public class JSONPartGun {
+    public static class JSONPartGun {
         @JSONDescription("If set, this causes the gun to automatically reload from the vehicle's inventory when its ammo count hits 0.  Guns will prefer to reload the same ammo that was previously in the gun, and will only reload different (yet compatible) ammo if the old ammo is not found.")
         public boolean autoReload;
 
@@ -396,11 +411,11 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("Used when resetPosition is true. Defaults to 0 if not set.")
         public float defaultPitch;
 
-        @JSONRequired(dependentField = "handHeld", dependentValues = { "true" })
+        @JSONRequired(dependentField = "handHeld", dependentValues = {"true"})
         @JSONDescription("The offset where this gun will be when held normally by the player.  An offset of 0,0,0 will render the gun in the center of the player's right shoulder rotation point.  For reference, this is 0.3125 blocks to the right, and 1.375 blocks from the bottom-center of the player's feet.")
         public Point3D handHeldNormalOffset;
 
-        @JSONRequired(dependentField = "handHeld", dependentValues = { "true" })
+        @JSONRequired(dependentField = "handHeld", dependentValues = {"true"})
         @JSONDescription("Like the normal offset, but this applies when the player starts sneaking/aiming.")
         public Point3D handHeldAimedOffset;
 
@@ -412,12 +427,12 @@ public class JSONPart extends AJSONPartProvider {
         public float length;
     }
 
-    public class JSONPartInteractable {
+    public static class JSONPartInteractable {
         @JSONRequired
         @JSONDescription("What this interactable does when interacted with.")
         public InteractableComponentType interactionType;
 
-        @JSONRequired(dependentField = "interactionType", dependentValues = { "FURNACE" })
+        @JSONRequired(dependentField = "interactionType", dependentValues = {"FURNACE"})
         @JSONDescription("What type of furnace this is.  Only required if this is a furnace component.")
         public FurnaceComponentType furnaceType;
 
@@ -446,7 +461,7 @@ public class JSONPart extends AJSONPartProvider {
         public JSONCraftingBench crafting;
     }
 
-    public static enum InteractableComponentType {
+    public enum InteractableComponentType {
         @JSONDescription("Stores items.  If feedsVehicles is set, then this crate will allow other parts such as guns, engines, and effectors to pull inventory out for their operations.  If the vehicle containing this crate explodes, and the crate contains ammo, the explosion size will be increased based on the amount and size of the ammo.  Additionally, if this crate has ammo and is struck by a bullet, it will blow up, taking the vehicle with it.")
         CRATE,
         @JSONDescription("Stores liquid.  If feedsVehicles is set, and this barrel contains fuel, then fuel will be taken out of this barrel to be put into the main fuel tank.  If the vehicle containing this barrel explodes, and the barrel contains fuel, the explosion size will be increased as if the vehicle had the fuel in the barrel in its fuel tank.")
@@ -460,19 +475,19 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("Works as a jerrycan, allowing for fuel to be stored inside and then used to fuel vehicles without a fuel pump.")
         JERRYCAN,
         @JSONDescription("Works as a MTS crafting bench when clicked.  This requires supplemental parameters.")
-        CRAFTING_BENCH;
+        CRAFTING_BENCH
     }
 
-    public static enum FurnaceComponentType {
+    public enum FurnaceComponentType {
         @JSONDescription("Standard furnace with Vanilla burnable fuel.  Will pull from crates if those feed vehicles.")
         STANDARD,
         @JSONDescription("Runs off fuel liquid stored in barrels on the vehicle.")
         FUEL,
         @JSONDescription("Runs off electric power.  Only valid for vehicles.")
-        ELECTRIC;
+        ELECTRIC
     }
 
-    public class JSONPartEffector {
+    public static class JSONPartEffector {
         @JSONRequired
         @JSONDescription("The type of the effector.  This defines what this effector does.")
         public EffectorComponentType type;
@@ -487,7 +502,7 @@ public class JSONPart extends AJSONPartProvider {
         public int drillDurability;
     }
 
-    public static enum EffectorComponentType {
+    public enum EffectorComponentType {
         @JSONDescription("Checks for plants on the ground and applies bonemeal to them contained in crates.")
         FERTILIZER,
         @JSONDescription("Will harvest plants that pass through it, depositing items into vehicle crates, or on the ground if no crates are present, or their inventories are full.  Will also break bush blocks like tall grass, flowers, and saplings, depositing them on the ground.")
@@ -499,37 +514,37 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("Removes snow from the world when touched.")
         SNOWPLOW,
         @JSONDescription("Removes blocks matching the parameters from the world when touched.")
-        DRILL;
+        DRILL
     }
 
     @Deprecated
-    public class PartCustom {
+    public static class PartCustom {
         public float width;
         public float height;
     }
 
     @Deprecated
-    public class PartWheel {
+    public static class PartWheel {
         public float diameter;
         public float motiveFriction;
         public float lateralFriction;
     }
 
     @Deprecated
-    public class PartSkid {
+    public static class PartSkid {
         public float width;
         public float lateralFriction;
     }
 
     @Deprecated
-    public class PartPontoon {
+    public static class PartPontoon {
         public float width;
         public float lateralFriction;
         public float extraCollisionBoxOffset;
     }
 
     @Deprecated
-    public class PartTread {
+    public static class PartTread {
         public float width;
         public float motiveFriction;
         public float lateralFriction;

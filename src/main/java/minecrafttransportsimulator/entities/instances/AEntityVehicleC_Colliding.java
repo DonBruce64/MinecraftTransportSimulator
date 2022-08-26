@@ -1,7 +1,6 @@
 package minecrafttransportsimulator.entities.instances;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.BoundingBox;
@@ -9,8 +8,8 @@ import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityG_Towable;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
-import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
+import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
@@ -18,12 +17,13 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
-/**Now that we have an existing vehicle its time to add the ability to collide with it,
+/**
+ * Now that we have an existing vehicle its time to add the ability to collide with it,
  * and for it to do collision with other entities in the world.  This is where collision
  * bounds are added, as well as the mass of the entity is calculated, as that's required
  * for collision physics forces.  We also add vectors here for the vehicle's orientation,
  * as those are required for us to know how the vehicle collided in the first place.
- * 
+ *
  * @author don_bruce
  */
 abstract class AEntityVehicleC_Colliding extends AEntityG_Towable<JSONVehicle> {
@@ -34,7 +34,9 @@ abstract class AEntityVehicleC_Colliding extends AEntityG_Towable<JSONVehicle> {
     public double axialVelocity;
     public final Point3D headingVector = new Point3D();
 
-    /**Cached value for speedFactor.  Saves us from having to use the long form all over.*/
+    /**
+     * Cached value for speedFactor.  Saves us from having to use the long form all over.
+     */
     public final double speedFactor;
 
     public AEntityVehicleC_Colliding(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data) {
@@ -63,12 +65,7 @@ abstract class AEntityVehicleC_Colliding extends AEntityG_Towable<JSONVehicle> {
         //Only do this once a second to prevent lag.
         if (velocity > 0.5 && ticksExisted % 20 == 0) {
             world.beginProfiling("CloseDoors", false);
-            Iterator<String> variableIterator = variables.keySet().iterator();
-            while (variableIterator.hasNext()) {
-                if (variableIterator.next().startsWith("door")) {
-                    variableIterator.remove();
-                }
-            }
+            variables.keySet().removeIf(s -> s.startsWith("door"));
         }
 
         //Set hardness hit this tick to 0 to reset collision force calculations.
@@ -104,6 +101,9 @@ abstract class AEntityVehicleC_Colliding extends AEntityG_Towable<JSONVehicle> {
                         if (!world.isClient()) {
                             if (ticksExisted > 500) {
                                 world.destroyBlock(blockPosition, true);
+                                if (box.groupDef != null && blockHardness > 0) {
+                                    damageCollisionBox(box, blockHardness >= 20 ? blockHardness * 2 : blockHardness * 4);
+                                }
                             } else {
                                 motion.set(0D, 0D, 0D);
                                 return -1;
@@ -145,7 +145,7 @@ abstract class AEntityVehicleC_Colliding extends AEntityG_Towable<JSONVehicle> {
     @Override
     public void destroy(BoundingBox box) {
         //Get drops.
-        List<IWrapperItemStack> drops = new ArrayList<IWrapperItemStack>();
+        List<IWrapperItemStack> drops = new ArrayList<>();
         addDropsToList(drops);
 
         //Do part things before we call super, as that will remove the parts from this vehicle.

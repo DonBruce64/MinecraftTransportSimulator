@@ -18,7 +18,7 @@ public class JSONPotionEffect {
     @JSONDescription("Impacts the intensity of the effect (must be an integer between 0 and 255). Has no impact on many potion effects, so for those, it can be left out or set to zero. Note that Minecraft adds 1 to this value, so a strength effect with an amplifier of 1 will appear as \"Strength II\".")
     public int amplifier;
 
-    public static enum ParticleDefaults {
+    public enum ParticleDefaults {
         SPEED,
         SLOWNESS,
         HASTE,
@@ -45,6 +45,6 @@ public class JSONPotionEffect {
         GLOWING,
         LEVITATION,
         LUCK,
-        UNLUCK;
+        UNLUCK
     }
 }

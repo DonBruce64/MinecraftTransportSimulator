@@ -1,21 +1,10 @@
 package minecrafttransportsimulator.guis.instances;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
-import minecrafttransportsimulator.guis.components.AGUIBase;
-import minecrafttransportsimulator.guis.components.GUIComponentButton;
-import minecrafttransportsimulator.guis.components.GUIComponentCutout;
-import minecrafttransportsimulator.guis.components.GUIComponentInstrument;
-import minecrafttransportsimulator.guis.components.GUIComponentItem;
-import minecrafttransportsimulator.guis.components.GUIComponentLabel;
+import minecrafttransportsimulator.guis.components.*;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
@@ -26,12 +15,15 @@ import minecrafttransportsimulator.packets.instances.PacketEntityInstrumentChang
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
 
-/**A GUI that is used to put instruments into vehicles.  This GUI is essentially an overlay
+import java.util.*;
+
+/**
+ * A GUI that is used to put instruments into vehicles.  This GUI is essentially an overlay
  * to {@link GUIHUD} and {@link AGUIPanel} that uses the textures from those GUIs, but does
  * custom rendering over them rather than the usual rendering routines.  This prevents players
  * from messing with the panel while adding instruments, as well as easier tracking of the
  * spots where blank instruments are located (normally those aren't saved in variables).
- * 
+ *
  * @author don_bruce
  */
 public class GUIInstruments extends AGUIBase {
@@ -39,7 +31,7 @@ public class GUIInstruments extends AGUIBase {
     //GUIs components created at opening.
     private final EntityVehicleF_Physics vehicle;
     private final IWrapperPlayer player;
-    private final TreeMap<String, List<ItemInstrument>> playerInstruments = new TreeMap<String, List<ItemInstrument>>();
+    private final TreeMap<String, List<ItemInstrument>> playerInstruments = new TreeMap<>();
 
     //Runtime variables.
     private GUIComponentButton prevPackButton;
@@ -55,9 +47,9 @@ public class GUIInstruments extends AGUIBase {
     private AEntityE_Interactable<?> selectedEntity;
     private JSONInstrumentDefinition selectedInstrumentDefinition;
 
-    private final List<GUIComponentButton> instrumentSlots = new ArrayList<GUIComponentButton>();
-    private final List<GUIComponentItem> instrumentSlotIcons = new ArrayList<GUIComponentItem>();
-    private final Map<AEntityE_Interactable<?>, List<InstrumentSlotBlock>> entityInstrumentBlocks = new HashMap<AEntityE_Interactable<?>, List<InstrumentSlotBlock>>();
+    private final List<GUIComponentButton> instrumentSlots = new ArrayList<>();
+    private final List<GUIComponentItem> instrumentSlotIcons = new ArrayList<>();
+    private final Map<AEntityE_Interactable<?>, List<InstrumentSlotBlock>> entityInstrumentBlocks = new HashMap<>();
 
     public GUIInstruments(EntityVehicleF_Physics vehicle) {
         super();
@@ -145,7 +137,7 @@ public class GUIInstruments extends AGUIBase {
 
         //Get all entities with instruments and adds them to the list. definitions, and add them to a map-list.
         //These come from the vehicle and all parts.
-        List<AEntityE_Interactable<?>> entitiesWithInstruments = new ArrayList<AEntityE_Interactable<?>>();
+        List<AEntityE_Interactable<?>> entitiesWithInstruments = new ArrayList<>();
         if (vehicle.definition.instruments != null) {
             entitiesWithInstruments.add(vehicle);
         }
@@ -160,7 +152,7 @@ public class GUIInstruments extends AGUIBase {
         //This allows us to render instruments as they are added or removed.
         entityInstrumentBlocks.clear();
         for (AEntityE_Interactable<?> entity : entitiesWithInstruments) {
-            List<InstrumentSlotBlock> instrumentBlocks = new ArrayList<InstrumentSlotBlock>();
+            List<InstrumentSlotBlock> instrumentBlocks = new ArrayList<>();
             for (JSONInstrumentDefinition packInstrument : entity.definition.instruments) {
                 if (hudSelected ^ packInstrument.placeOnPanel) {
                     instrumentBlocks.add(new InstrumentSlotBlock(guiLeft, guiTop, entity, packInstrument));
@@ -188,7 +180,7 @@ public class GUIInstruments extends AGUIBase {
                     if (player.isCreative() || player.getInventory().getSlotForStack(packItem.getNewStack(null)) != -1) {
                         //Add the instrument to the list of instruments the player has.
                         if (!playerInstruments.containsKey(packID)) {
-                            playerInstruments.put(packID, new ArrayList<ItemInstrument>());
+                            playerInstruments.put(packID, new ArrayList<>());
                             if (firstPackSeen == null) {
                                 firstPackSeen = packID;
                             }

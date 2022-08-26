@@ -1,8 +1,5 @@
 package mcinterface1122;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
@@ -10,32 +7,48 @@ import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 
-/**Builder for a basic MC Entity class.  This builder provides basic entity logic that's common
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Builder for a basic MC Entity class.  This builder provides basic entity logic that's common
  * to all entities we may want to spawn.
  *
  * @author don_bruce
  */
 public abstract class ABuilderEntityBase extends Entity {
-    /**This flag is true if we need to get server data for syncing.  Set on construction tick, but only used on clients.**/
+    /**
+     * This flag is true if we need to get server data for syncing.  Set on construction tick, but only used on clients.
+     **/
     private boolean needDataFromServer = true;
-    /**Data loaded on last NBT call.  Saved here to prevent loading of things until the update method.  This prevents
+    /**
+     * Data loaded on last NBT call.  Saved here to prevent loading of things until the update method.  This prevents
      * loading entity data when this entity isn't being ticked.  Some mods love to do this by making a lot of entities
      * to do their funky logic.  I'm looking at YOU The One Probe!  This should be either set by NBT loaded from disk
-     * on servers, or set by packet on clients.*/
+     * on servers, or set by packet on clients.
+     */
     public NBTTagCompound lastLoadedNBT;
-    /**Set to true when NBT is loaded on servers from disk, or when NBT arrives from clients on servers.  This is set on the update loop when data is
+    /**
+     * Set to true when NBT is loaded on servers from disk, or when NBT arrives from clients on servers.  This is set on the update loop when data is
      * detected from server NBT loading, but for clients this is set when a data packet arrives.  This prevents loading client-based NBT before
-     * the packet arrives, which is possible if a partial NBT load is performed by the core game or a mod.**/
+     * the packet arrives, which is possible if a partial NBT load is performed by the core game or a mod.
+     **/
     public boolean loadFromSavedNBT;
-    /**Set to true when loaded NBT is parsed and loaded.  This is done to prevent re-parsing of NBT from triggering a second load command.
-     * Note that if this entity is being spawned manually rather than loaded from disk, this should be set prior to ticking.**/
+    /**
+     * Set to true when loaded NBT is parsed and loaded.  This is done to prevent re-parsing of NBT from triggering a second load command.
+     * Note that if this entity is being spawned manually rather than loaded from disk, this should be set prior to ticking.
+     **/
     public boolean loadedFromSavedNBT;
-    /**Players requesting data for this builder.  This is populated by packets sent to the server.  Each tick players in this list are
+    /**
+     * Players requesting data for this builder.  This is populated by packets sent to the server.  Each tick players in this list are
      * sent data about this builder, and the list cleared.  Done this way to prevent the server from trying to handle the packet before
-     * it has created the entity, as the entity is created on the update call, but the packet might get here due to construction.**/
-    public final List<IWrapperPlayer> playersRequestingData = new ArrayList<IWrapperPlayer>();
-    /**An idle tick counter.  This is set to 0 each time the update method is called, but is incremented each game tick.
-     * This allows us to track how long this entity has been idle, and do logic if it's been idle too long.**/
+     * it has created the entity, as the entity is created on the update call, but the packet might get here due to construction.
+     **/
+    public final List<IWrapperPlayer> playersRequestingData = new ArrayList<>();
+    /**
+     * An idle tick counter.  This is set to 0 each time the update method is called, but is incremented each game tick.
+     * This allows us to track how long this entity has been idle, and do logic if it's been idle too long.
+     **/
     public int idleTickCounter;
 
     public ABuilderEntityBase(World world) {

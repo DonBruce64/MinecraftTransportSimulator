@@ -5,7 +5,8 @@ import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 
-/**Helper class for containing connection data.
+/**
+ * Helper class for containing connection data.
  * Contains location of connected road, as well
  * the lane connected to, and if we are connected
  * to the start of that lane or not.

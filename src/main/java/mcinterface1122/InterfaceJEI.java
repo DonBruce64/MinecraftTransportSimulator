@@ -1,8 +1,5 @@
 package mcinterface1122;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import mezz.jei.api.IGuiHelper;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.IModRegistry;
@@ -24,14 +21,18 @@ import minecrafttransportsimulator.packloading.PackParser;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 
-/**Interface for the JEI system.  This is responsible for populating JEI with the various items,
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Interface for the JEI system.  This is responsible for populating JEI with the various items,
  * benches, configurations and whatnots.
  *
  * @author don_bruce
  */
 @JEIPlugin
 public class InterfaceJEI implements IModPlugin {
-    private static final List<BenchRecipeCategory> benchCategories = new ArrayList<BenchRecipeCategory>();
+    private static final List<BenchRecipeCategory> benchCategories = new ArrayList<>();
 
     @Override
     public void registerCategories(IRecipeCategoryRegistration registry) {
@@ -42,7 +43,7 @@ public class InterfaceJEI implements IModPlugin {
                 if (benchItem.definition.decor.crafting != null) {
 
                     //For each bench, get all things they can craft, and add them as recipes.
-                    List<IRecipeWrapper> benchRecipes = new ArrayList<IRecipeWrapper>();
+                    List<IRecipeWrapper> benchRecipes = new ArrayList<>();
                     for (AItemPack<?> packItemToTest : PackParser.getAllPackItems()) {
                         if (packItemToTest.isBenchValid(benchItem.definition.decor.crafting)) {
                             benchRecipes.add(new PackRecipeWrapper(packItemToTest, false));
@@ -81,9 +82,9 @@ public class InterfaceJEI implements IModPlugin {
 
         @Override
         public void getIngredients(IIngredients ingredients) {
-            List<List<ItemStack>> inputs = new ArrayList<List<ItemStack>>();
+            List<List<ItemStack>> inputs = new ArrayList<>();
             for (PackMaterialComponent component : PackMaterialComponent.parseFromJSON(packItem, true, true, false, forRepair)) {
-                List<ItemStack> stacks = new ArrayList<ItemStack>();
+                List<ItemStack> stacks = new ArrayList<>();
                 for (IWrapperItemStack stack : component.possibleItems) {
                     stacks.add(((WrapperItemStack) stack).stack);
                 }

@@ -1,11 +1,12 @@
 package minecrafttransportsimulator.entities.components;
 
-import java.util.UUID;
-
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 
-/**Base entity class.  This class is the base for all in-game entities.  What these
+import java.util.UUID;
+
+/**
+ * Base entity class.  This class is the base for all in-game entities.  What these
  * entities are is up to the extending class.  They could be players, vehicles, blocks,
  * guns, etc.  The key part here is this base class keeps track of all these entities, and
  * is responsible for assigning them a global ID number when created.  This can be used to
@@ -16,21 +17,30 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
  * for loading will be passed-in to the constructor.  This data should be used to create the entity
  * in its loaded state.  For saving, which can happen multiple times in the entity's lifetime,
  * {@link #save(IWrapperNBT)} is called.  All data required in the constructor should be saved there.
- * 
- * 
+ *
  * @author don_bruce
  */
 public abstract class AEntityA_Base {
-    /**The world this entity is a part of.**/
+    /**
+     * The world this entity is a part of.
+     **/
     public final AWrapperWorld world;
-    /**A unique ID for this entity.  This is only set when this entity is first spawned, and never changes, even on save/load operations.  Ideal if you need a static reference to the entity.**/
+    /**
+     * A unique ID for this entity.  This is only set when this entity is first spawned, and never changes, even on save/load operations.  Ideal if you need a static reference to the entity.
+     **/
     public final UUID uniqueUUID;
-    /**True as long as this entity is part of the world and being ticked.  May be set false internally or externally to remove this entity from the world.**/
+    /**
+     * True as long as this entity is part of the world and being ticked.  May be set false internally or externally to remove this entity from the world.
+     **/
     public boolean isValid = true;
-    /**Returns true if this entity was newly created and not loaded from saved data.  More formally, it checks if the {@link #uniqueUUID} was not stored in the data, or if the data was null.
-     * In this case, we know that the data was not valid for the entity and thus the entity has to have been created without data.**/
+    /**
+     * Returns true if this entity was newly created and not loaded from saved data.  More formally, it checks if the {@link #uniqueUUID} was not stored in the data, or if the data was null.
+     * In this case, we know that the data was not valid for the entity and thus the entity has to have been created without data.
+     **/
     public final boolean newlyCreated;
-    /**Counter for how many ticks this entity has existed in the world.  Realistically, it's the number of update cycles.**/
+    /**
+     * Counter for how many ticks this entity has existed in the world.  Realistically, it's the number of update cycles.
+     **/
     public long ticksExisted;
 
     public AEntityA_Base(AWrapperWorld world, IWrapperNBT data) {
@@ -52,9 +62,9 @@ public abstract class AEntityA_Base {
     }
 
     /**
-    * Called to update this entity.  This  may not be called if the entity extending this class
-    * is not slated for updates in some sort of system.
-    */
+     * Called to update this entity.  This  may not be called if the entity extending this class
+     * is not slated for updates in some sort of system.
+     */
     public void update() {
         ++ticksExisted;
     }
@@ -92,9 +102,9 @@ public abstract class AEntityA_Base {
     }
 
     /**
-     *  Called when the entity needs to be saved to disk.  The passed-in IWrapper
-     *  should be written to at this point with any data needing to be saved.
-     *  Returns the passed-in data IWrapper for convenience.
+     * Called when the entity needs to be saved to disk.  The passed-in IWrapper
+     * should be written to at this point with any data needing to be saved.
+     * Returns the passed-in data IWrapper for convenience.
      */
     public IWrapperNBT save(IWrapperNBT data) {
         data.setUUID("uniqueUUID", uniqueUUID);

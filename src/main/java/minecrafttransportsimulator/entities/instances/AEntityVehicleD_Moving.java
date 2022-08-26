@@ -1,11 +1,6 @@
 package minecrafttransportsimulator.entities.instances;
 
-import minecrafttransportsimulator.baseclasses.BezierCurve;
-import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.baseclasses.RotationMatrix;
-import minecrafttransportsimulator.baseclasses.TowingConnection;
-import minecrafttransportsimulator.baseclasses.VehicleGroundDeviceCollection;
+import minecrafttransportsimulator.baseclasses.*;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.instances.BlockCollision;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadFollowingState;
@@ -25,12 +20,13 @@ import minecrafttransportsimulator.packets.instances.PacketVehicleServerMovement
 import minecrafttransportsimulator.packets.instances.PacketVehicleServerSync;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
-/**At the final basic vehicle level we add in the functionality for state-based movement.
+/**
+ * At the final basic vehicle level we add in the functionality for state-based movement.
  * Here is where the functions for moving permissions, such as collision detection
  * routines and ground device effects come in.  We also add functionality to keep
  * servers and clients from de-syncing.  At this point we now have a basic vehicle
- *  that can be manipulated for movement in the world.  
- * 
+ * that can be manipulated for movement in the world.
+ *
  * @author don_bruce
  */
 abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
@@ -154,7 +150,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
 
             //Add on -0.1 blocks for the default collision clamping.
             //This prevents the clamping of the collision boxes from hitting the ground if they were clamped.
-            furthestDownPoint += -0.1;
+            furthestDownPoint -= 0.1;
 
             //Apply the boost, and check collisions.
             //If the core collisions are colliding, set the vehicle as dead and abort.
@@ -261,7 +257,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 if (road != null) {
                     //Check to see which lane we are on, if any.
                     Point3D testPoint = new Point3D();
-                    Point3D testRotation = new Point3D();
+                    Point3D testRotation;
                     for (RoadLane lane : road.lanes) {
                         //Check path-points on the curve.  If our angles and position are close, set this as the curve.
                         for (BezierCurve curve : lane.curves) {
@@ -569,7 +565,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                 //Check for the potential to change the requested segment.
                 //We can only do this if both our followers are on the same segment.
                 LaneSelectionRequest requestedSegment;
-                if (!(isVariableActive(LEFTTURNLIGHT_VARIABLE) ^ isVariableActive(RIGHTTURNLIGHT_VARIABLE))) {
+                if (isVariableActive(LEFTTURNLIGHT_VARIABLE) == isVariableActive(RIGHTTURNLIGHT_VARIABLE)) {
                     requestedSegment = LaneSelectionRequest.NONE;
                 } else if (isVariableActive(LEFTTURNLIGHT_VARIABLE)) {
                     requestedSegment = goingInReverse ? LaneSelectionRequest.RIGHT : LaneSelectionRequest.LEFT;
@@ -866,7 +862,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     }
 
     /**
-     *  Checks if we have a collided collision box.  If so, true is returned.
+     * Checks if we have a collided collision box.  If so, true is returned.
      */
     private boolean isCollisionBoxCollided() {
         if (motion.length() > 0.001) {
@@ -883,14 +879,14 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     }
 
     /**
-     *  If a collision box collided, we need to restrict our proposed movement.
-     *  Do this by removing motions that cause collisions.
-     *  If the motion has a value of 0, skip it as it couldn't have caused the collision.
-     *  Note that even though motionY may have been adjusted for ground device operation prior to this call,
-     *  we shouldn't have an issue with the change as this logic takes priority over that logic to ensure 
-     *  no collision box collides with another block, even if it requires all the ground devices to be collided.
-     *  If true is returned here, it means this vehicle was destroyed in a collision, and no further processing should
-     *  be done on it as states may be un-defined.
+     * If a collision box collided, we need to restrict our proposed movement.
+     * Do this by removing motions that cause collisions.
+     * If the motion has a value of 0, skip it as it couldn't have caused the collision.
+     * Note that even though motionY may have been adjusted for ground device operation prior to this call,
+     * we shouldn't have an issue with the change as this logic takes priority over that logic to ensure
+     * no collision box collides with another block, even if it requires all the ground devices to be collided.
+     * If true is returned here, it means this vehicle was destroyed in a collision, and no further processing should
+     * be done on it as states may be un-defined.
      */
     private boolean correctCollidingMovement() {
         //First check the X-axis.

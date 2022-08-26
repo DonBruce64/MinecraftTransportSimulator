@@ -23,7 +23,8 @@ import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
-/**This class represents an object that can be rendered from a model.  This object is a set of
+/**
+ * This class represents an object that can be rendered from a model.  This object is a set of
  * faces that are rendered during the main rendering routine.  Various transforms may be performed on
  * this object via the various rendering classes.  These transforms are applied to the mesh prior
  * to rendering, either manipulating the mesh directly, or manipulating the OpenGL state.
@@ -38,13 +39,14 @@ public class RenderableModelObject {
     private final RenderableObject interiorWindowObject;
     private RenderableObject colorObject;
     private RenderableObject coverObject;
-    private final Map<JSONLight, RenderableObject> flareObjects = new HashMap<JSONLight, RenderableObject>();
-    private final Map<JSONLight, RenderableObject> beamObjects = new HashMap<JSONLight, RenderableObject>();
+    private final Map<JSONLight, RenderableObject> flareObjects = new HashMap<>();
+    private final Map<JSONLight, RenderableObject> beamObjects = new HashMap<>();
 
-    /**Map of tread points, keyed by the model the tread is pathing about, then the part slot, then the spacing of the tread.
-     * This can be shared for two different treads of the same spacing as they render the same.**/
-    //TODO replace with part slot in branched version.
-    private static final Map<String, Map<Integer, Map<Float, List<Double[]>>>> treadPoints = new HashMap<String, Map<Integer, Map<Float, List<Double[]>>>>();
+    /**
+     * Map of tread points, keyed by the model the tread is pathing about, then the part slot, then the spacing of the tread.
+     * This can be shared for two different treads of the same spacing as they render the same.
+     **/
+    private static final Map<String, Map<Integer, Map<Float, List<Double[]>>>> treadPoints = new HashMap<>();
     private static final TransformationMatrix treadPathBaseTransform = new TransformationMatrix();
     private static final RotationMatrix treadRotation = new RotationMatrix();
     private static final float COLOR_OFFSET = 0.0001F;
@@ -88,9 +90,10 @@ public class RenderableModelObject {
     }
 
     /**
-     *  Renders this object, applying any transforms that need to happen.  This method also
-     *  renders any objects that depend on this object's transforms after rendering.
+     * Renders this object, applying any transforms that need to happen.  This method also
+     * renders any objects that depend on this object's transforms after rendering.
      */
+    @SuppressWarnings("RedundantCast")
     public void render(AEntityD_Definable<?> entity, TransformationMatrix transform, boolean blendingEnabled, float partialTicks) {
         //Do pre-render checks based on the object we are rendering.
         //This may block rendering if there are false visibility transforms or the wrong render pass.
@@ -160,7 +163,7 @@ public class RenderableModelObject {
                         object.enableBrightBlending = ConfigSystem.client.renderingSettings.blendedLights.value;
                         object.alpha = Math.min((1 - entity.world.getLightBrightness(entity.position, false)) * lightLevel, 1);
                         object.render();
-                    } else if (!(blendingEnabled ^ object.isTranslucent)) {
+                    } else if (blendingEnabled == object.isTranslucent) {
                         //Either solid texture on solid pass, or translucent texture on blended pass.
                         //Need to disable light-mapping from daylight if we are a light-up texture.
                         object.disableLighting = ConfigSystem.client.renderingSettings.brightLights.value && lightDef != null && lightLevel > 0 && !lightDef.emissive && !lightDef.isBeam;
@@ -191,8 +194,8 @@ public class RenderableModelObject {
     }
 
     /**
-     *  Call to destory this renderable object.  This should be done prior to re-parsing the model
-     *  as it allows for the freeing of OpenGL resources.
+     * Call to destory this renderable object.  This should be done prior to re-parsing the model
+     * as it allows for the freeing of OpenGL resources.
      */
     public void destroy() {
         object.destroy();
@@ -242,11 +245,11 @@ public class RenderableModelObject {
         String treadPathModel = tread.entityOn.definition.getModelLocation(tread.entityOn.subName);
         Map<Integer, Map<Float, List<Double[]>>> treadPointsMap = treadPoints.get(treadPathModel);
         if (treadPointsMap == null) {
-            treadPointsMap = new HashMap<Integer, Map<Float, List<Double[]>>>();
+            treadPointsMap = new HashMap<>();
         }
         Map<Float, List<Double[]>> treadPointsSubMap = treadPointsMap.get(tread.placementSlot);
         if (treadPointsSubMap == null) {
-            treadPointsSubMap = new HashMap<Float, List<Double[]>>();
+            treadPointsSubMap = new HashMap<>();
         }
         List<Double[]> points = treadPointsSubMap.get(tread.definition.ground.spacing);
 
@@ -261,10 +264,10 @@ public class RenderableModelObject {
         //We manually set point 0 here due to the fact it's a joint between two differing angles.
         //We also need to translate to that point to start rendering as we're currently at 0,0,0.
         //For each remaining point, we only translate the delta of the point.
-        float treadLinearPosition = tread.vehicleOn != null ? (float) ((Math.abs(tread.angularPosition) + tread.angularVelocity * partialTicks) * tread.vehicleOn.speedFactor) : 0;
-        float treadMovementPercentage = treadLinearPosition % tread.definition.ground.spacing / tread.definition.ground.spacing;
-        if (tread.angularPosition < 0) {
-            treadMovementPercentage = 1 - treadMovementPercentage;
+        float treadLinearPosition = (float) (tread.getRawVariableValue("ground_rotation", partialTicks) / 360D);
+        float treadMovementPercentage = (treadLinearPosition % tread.definition.ground.spacing) / tread.definition.ground.spacing;
+        if (treadMovementPercentage < 0) {
+            ++treadMovementPercentage;
         }
         Double[] point;
         Double[] nextPoint;
@@ -386,8 +389,8 @@ public class RenderableModelObject {
                 RenderableObject flareObject = flareObjects.get(lightDef);
                 RenderableObject beamObject = beamObjects.get(lightDef);
                 if (flareObject == null && beamObject == null) {
-                    List<JSONLightBlendableComponent> flareDefs = new ArrayList<JSONLightBlendableComponent>();
-                    List<JSONLightBlendableComponent> beamDefs = new ArrayList<JSONLightBlendableComponent>();
+                    List<JSONLightBlendableComponent> flareDefs = new ArrayList<>();
+                    List<JSONLightBlendableComponent> beamDefs = new ArrayList<>();
                     for (JSONLightBlendableComponent component : lightDef.blendableComponents) {
                         if (component.flareHeight > 0) {
                             flareDefs.add(component);
@@ -478,8 +481,7 @@ public class RenderableModelObject {
     private static RenderableObject generateFlares(List<JSONLightBlendableComponent> flareDefs) {
         //6 vertices per flare due to triangle rendering.
         RenderableObject flareObject = new RenderableObject("flares", "mts:textures/rendering/lensflare.png", new ColorRGB(), FloatBuffer.allocate(flareDefs.size() * 6 * 8), false);
-        for (int i = 0; i < flareDefs.size(); ++i) {
-            JSONLightBlendableComponent flareDef = flareDefs.get(i);
+        for (JSONLightBlendableComponent flareDef : flareDefs) {
             //Get the matrix  that is needed to rotate points to the normalized vector.
             RotationMatrix rotation = new RotationMatrix().setToVector(flareDef.axis, false);
             Point3D vertexOffset = new Point3D();
@@ -489,6 +491,7 @@ public class RenderableModelObject {
                 //Get the current UV points.
                 switch (j) {
                     case (0):
+                    case (3):
                         newVertex[3] = 0.0F;
                         newVertex[4] = 0.0F;
                         break;
@@ -497,13 +500,6 @@ public class RenderableModelObject {
                         newVertex[4] = 1.0F;
                         break;
                     case (2):
-                        newVertex[3] = 1.0F;
-                        newVertex[4] = 1.0F;
-                        break;
-                    case (3):
-                        newVertex[3] = 0.0F;
-                        newVertex[4] = 0.0F;
-                        break;
                     case (4):
                         newVertex[3] = 1.0F;
                         newVertex[4] = 1.0F;
@@ -541,8 +537,7 @@ public class RenderableModelObject {
         //Number of cone faces is equal to the number of segments for beams.
         //We render two beams.  One inner and one outer.
         RenderableObject beamObject = new RenderableObject("beams", "mts:textures/rendering/lightbeam.png", new ColorRGB(), FloatBuffer.allocate(beamDefs.size() * 2 * BEAM_SEGMENTS * 3 * 8), false);
-        for (int i = 0; i < beamDefs.size(); ++i) {
-            JSONLightBlendableComponent beamDef = beamDefs.get(i);
+        for (JSONLightBlendableComponent beamDef : beamDefs) {
             //Get the matrix that is needed to rotate points to the normalized vector.
             RotationMatrix rotation = new RotationMatrix().setToVector(beamDef.axis, false);
             Point3D vertexOffset = new Point3D();
@@ -605,7 +600,7 @@ public class RenderableModelObject {
         //If we don't have the deltas, calculate them based on the points of the rollers defined in the JSON.			
         //Search through rotatable parts on the model and grab the rollers.
         List<RenderableObject> parsedModel = AModelParser.parseModel(entityTreadAttachedTo.definition.getModelLocation(entityTreadAttachedTo.definition.definitions.get(0).subName));
-        List<TreadRoller> rollers = new ArrayList<TreadRoller>();
+        List<TreadRoller> rollers = new ArrayList<>();
         if (tread.placementDefinition.treadPath == null) {
             throw new IllegalArgumentException("No tread path found for part slot on " + entityTreadAttachedTo.getItem().getItemName() + "!");
         }
@@ -703,7 +698,7 @@ public class RenderableModelObject {
         double leftoverPathLength = 0;
         double yPoint = 0;
         double zPoint = 0;
-        List<Double[]> points = new ArrayList<Double[]>();
+        List<Double[]> points = new ArrayList<>();
         for (int i = 0; i < rollers.size(); ++i) {
             TreadRoller roller = rollers.get(i);
             //Follow the curve of the roller from the start and end point.
@@ -726,7 +721,7 @@ public class RenderableModelObject {
             if (i == 0) {
                 yPoint = roller.centerPoint.y + roller.radius * Math.cos(Math.toRadians(currentAngle));
                 zPoint = roller.centerPoint.z + roller.radius * Math.sin(Math.toRadians(currentAngle));
-                points.add(new Double[] { yPoint, zPoint, currentAngle + 180 });
+                points.add(new Double[]{yPoint, zPoint, currentAngle + 180});
             }
 
             //If we have any leftover straight path, account for it here to keep spacing consistent.
@@ -751,7 +746,7 @@ public class RenderableModelObject {
                     currentAngle += 360D * (deltaDist / roller.circumference);
                     yPoint = roller.centerPoint.y + roller.radius * Math.cos(Math.toRadians(currentAngle));
                     zPoint = roller.centerPoint.z + roller.radius * Math.sin(Math.toRadians(currentAngle));
-                    points.add(new Double[] { yPoint, zPoint, currentAngle + 180 });
+                    points.add(new Double[]{yPoint, zPoint, currentAngle + 180});
                 }
             }
 
@@ -798,7 +793,7 @@ public class RenderableModelObject {
                     catenaryPointY = tread.placementDefinition.treadDroopConstant * Math.cosh(catenaryPointZ / tread.placementDefinition.treadDroopConstant);
                     yPoint = roller.endY + normalizedY * catenaryFunctionPercent + catenaryPointY - catenaryPathEdgeY;
                     zPoint = roller.endZ + catenaryPointZ + straightPathLength / 2D;
-                    points.add(new Double[] { yPoint, zPoint, currentAngle + 180 - Math.toDegrees(Math.asin(catenaryFunctionCurrent / tread.placementDefinition.treadDroopConstant)) });
+                    points.add(new Double[]{yPoint, zPoint, currentAngle + 180 - Math.toDegrees(Math.asin(catenaryFunctionCurrent / tread.placementDefinition.treadDroopConstant))});
                 }
                 leftoverPathLength = catenaryPathLength;
             } else {
@@ -814,7 +809,7 @@ public class RenderableModelObject {
                         zPoint += normalizedZ * deltaDist;
                         straightPathLength -= deltaDist;
                     }
-                    points.add(new Double[] { yPoint, zPoint, currentAngle + 180 });
+                    points.add(new Double[]{yPoint, zPoint, currentAngle + 180});
                 }
                 leftoverPathLength = straightPathLength;
             }

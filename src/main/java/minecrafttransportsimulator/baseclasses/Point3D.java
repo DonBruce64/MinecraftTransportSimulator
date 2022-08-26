@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.baseclasses;
 
-/**Basic 3D point class.  Allows for saving of positions in a less recourse-heavy
+/**
+ * Basic 3D point class.  Allows for saving of positions in a less recourse-heavy
  * format than Minecraft's vectors.  This class is mutable to allow
  * the point to change, cause we don't need to create a new point every time we
  * move a thing.  As this point can be used for vectors, methods exist for vector
@@ -83,9 +84,9 @@ public class Point3D {
     }
 
     /**
-     * Adds the scaled value of the scale multiplied by the 
+     * Adds the scaled value of the scale multiplied by the
      * passed-in vector to this point.  This is useful
-     * if you don't want to modify the vector, but want 
+     * if you don't want to modify the vector, but want
      * to translate along it's path.
      */
     public Point3D addScaled(Point3D point, double scale) {
@@ -189,9 +190,9 @@ public class Point3D {
 
     /**
      * Returns the dot product between this point and the passed-in point.
-     * Note: if normalized is true, then this method assumes both points are 
-     * normalized and clamps between-1.0 and 1.0 to prevent out-of-bounds errors 
-     * when the return value is used in trigonometric functions, even if the math 
+     * Note: if normalized is true, then this method assumes both points are
+     * normalized and clamps between-1.0 and 1.0 to prevent out-of-bounds errors
+     * when the return value is used in trigonometric functions, even if the math
      * doesn't strictly result in that value.  If the parameter is false, then
      * the actual dot product is returned.
      */

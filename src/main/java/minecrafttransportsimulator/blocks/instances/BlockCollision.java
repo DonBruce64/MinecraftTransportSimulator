@@ -1,8 +1,5 @@
 package minecrafttransportsimulator.blocks.instances;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
@@ -11,7 +8,11 @@ import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
-/**Slightly-less basic block class.  This class is used for collision operations where a non-standard collision is required.
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Slightly-less basic block class.  This class is used for collision operations where a non-standard collision is required.
  * Mainly used on roads, but could be used on other things in the future.
  *
  * @author don_bruce
@@ -38,16 +39,15 @@ public class BlockCollision extends ABlockBase {
             //destroying all collisions, including this one.  However, since
             //we check if the road block is isActive, and that gets set before destroying
             //all collision blocks, the recursive call won't make it down here.
-            world.destroyBlock(((ATileEntityBase<?>) masterBlock).position, true);
-            return;
+            world.destroyBlock(masterBlock.position, true);
         }
     }
 
     /**
-     *  Helper method to get the master road instance given the position of a block in the world.
-     *  This is made non-static simply to ensure people obtain a reference to an actual collision block
-     *  prior to trying to call this method, as there aren't any bound-able checks we can do on the two
-     *  input variables.
+     * Helper method to get the master road instance given the position of a block in the world.
+     * This is made non-static simply to ensure people obtain a reference to an actual collision block
+     * prior to trying to call this method, as there aren't any bound-able checks we can do on the two
+     * input variables.
      */
     public TileEntityRoad getMasterRoad(AWrapperWorld world, Point3D position) {
         Point3D blockOffset = new Point3D();
@@ -71,8 +71,8 @@ public class BlockCollision extends ABlockBase {
         return null;
     }
 
-    private static final List<BlockCollision> createCollisionBlocks() {
-        List<BlockCollision> blocks = new ArrayList<BlockCollision>();
+    private static List<BlockCollision> createCollisionBlocks() {
+        List<BlockCollision> blocks = new ArrayList<>();
         for (int i = 0; i < 16; ++i) {
             blocks.add(new BlockCollision(i));
         }

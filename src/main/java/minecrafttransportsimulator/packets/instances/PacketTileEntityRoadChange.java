@@ -9,10 +9,11 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.packets.components.APacketEntityInteract;
 import minecrafttransportsimulator.packloading.PackParser;
 
-/**Packet sent to roads to change their states.  This gets sent when a player clicks a road on the client.
+/**
+ * Packet sent to roads to change their states.  This gets sent when a player clicks a road on the client.
  * Packet is sent to the server to change the road state to match what item the player is holding.
  * If the player isn't holding an item, they may have wreneched the component to remove it.
- * 
+ *
  * @author don_bruce
  */
 public class PacketTileEntityRoadChange extends APacketEntityInteract<TileEntityRoad, IWrapperPlayer> {

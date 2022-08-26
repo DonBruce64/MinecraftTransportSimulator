@@ -67,8 +67,8 @@ public abstract class ATileEntityLoader extends TileEntityDecor {
     }
 
     /**
-     *  Connects this loader to the specified part.  This should be done to change
-     *  the part the loader is connected to.  Do NOT modify the variable
+     * Connects this loader to the specified part.  This should be done to change
+     * the part the loader is connected to.  Do NOT modify the variable
      */
     public void connectToPart(PartInteractable part) {
         connectedPart = part;

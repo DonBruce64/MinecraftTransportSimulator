@@ -17,6 +17,7 @@ import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.guis.components.GUIComponentSelector;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
+import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
@@ -25,9 +26,10 @@ import minecrafttransportsimulator.packets.instances.PacketVehicleBeaconChange;
 import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
-/**A GUI/control system hybrid, this takes the place of the HUD when called up.
+/**
+ * A GUI/control system hybrid, this takes the place of the HUD when called up.
  * Used for controlling engines, lights, trim, and other things.
- * 
+ *
  * @author don_bruce
  */
 public class GUIPanelAircraft extends AGUIPanel {
@@ -56,10 +58,10 @@ public class GUIPanelAircraft extends AGUIPanel {
     private static final int TRAILER_TEXTURE_WIDTH_OFFSET = CUSTOM_TEXTURE_WIDTH_OFFSET + 20;
     private static final int TRAILER_TEXTURE_HEIGHT_OFFSET = 216;
 
-    private final Map<String, GUIComponentSelector> lightSelectors = new HashMap<String, GUIComponentSelector>();
-    private final Map<Byte, GUIComponentSelector> magnetoSelectors = new HashMap<Byte, GUIComponentSelector>();
-    private final Map<Byte, GUIComponentSelector> starterSelectors = new HashMap<Byte, GUIComponentSelector>();
-    private final List<GUIComponentSelector> customSelectors = new ArrayList<GUIComponentSelector>();
+    private final Map<String, GUIComponentSelector> lightSelectors = new HashMap<>();
+    private final Map<Byte, GUIComponentSelector> magnetoSelectors = new HashMap<>();
+    private final Map<Byte, GUIComponentSelector> starterSelectors = new HashMap<>();
+    private final List<GUIComponentSelector> customSelectors = new ArrayList<>();
     private GUIComponentSelector aileronTrimSelector;
     private GUIComponentSelector elevatorTrimSelector;
     private GUIComponentSelector rudderTrimSelector;
@@ -89,10 +91,6 @@ public class GUIPanelAircraft extends AGUIPanel {
                 public void onClicked(boolean leftSide) {
                     InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.NAVIGATIONLIGHT_VARIABLE));
                 }
-
-                @Override
-                public void onReleased() {
-                }
             };
             lightSelectors.put(EntityVehicleF_Physics.NAVIGATIONLIGHT_VARIABLE, lightSwitch);
             addComponent(lightSwitch);
@@ -102,10 +100,6 @@ public class GUIPanelAircraft extends AGUIPanel {
                 @Override
                 public void onClicked(boolean leftSide) {
                     InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.STROBELIGHT_VARIABLE));
-                }
-
-                @Override
-                public void onReleased() {
                 }
             };
             lightSelectors.put(EntityVehicleF_Physics.STROBELIGHT_VARIABLE, lightSwitch);
@@ -117,10 +111,6 @@ public class GUIPanelAircraft extends AGUIPanel {
                 public void onClicked(boolean leftSide) {
                     InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.TAXILIGHT_VARIABLE));
                 }
-
-                @Override
-                public void onReleased() {
-                }
             };
             lightSelectors.put(EntityVehicleF_Physics.TAXILIGHT_VARIABLE, lightSwitch);
             addComponent(lightSwitch);
@@ -130,10 +120,6 @@ public class GUIPanelAircraft extends AGUIPanel {
                 @Override
                 public void onClicked(boolean leftSide) {
                     InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.LANDINGLIGHT_VARIABLE));
-                }
-
-                @Override
-                public void onReleased() {
                 }
             };
             lightSelectors.put(EntityVehicleF_Physics.LANDINGLIGHT_VARIABLE, lightSwitch);
@@ -153,10 +139,6 @@ public class GUIPanelAircraft extends AGUIPanel {
                         for (PartEngine engine : vehicle.engines.values()) {
                             InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.MAGNETO_VARIABLE));
                         }
-                    }
-
-                    @Override
-                    public void onReleased() {
                     }
                 };
                 magnetoSelectors.put(ENGINE_SINGLE_SELECTOR_INDEX, magnetoSwitch);
@@ -197,10 +179,6 @@ public class GUIPanelAircraft extends AGUIPanel {
                     public void onClicked(boolean leftSide) {
                         InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicle.engines.get(engineNumber), PartEngine.MAGNETO_VARIABLE));
                     }
-
-                    @Override
-                    public void onReleased() {
-                    }
                 };
                 magnetoSelectors.put(engineNumber, magnetoSwitch);
                 addComponent(magnetoSwitch);
@@ -234,7 +212,7 @@ public class GUIPanelAircraft extends AGUIPanel {
     @Override
     protected void setupGeneralComponents(int guiLeft, int guiTop) {
         //Add the trim selectors first.
-        aileronTrimSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 0 * (SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE * 2, SELECTOR_SIZE, JSONConfigLanguage.GUI_PANEL_TRIM_ROLL.value, vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, TRIM_TEXTURE_WIDTH_OFFSET, TRIM_TEXTURE_HEIGHT_OFFSET, SELECTOR_TEXTURE_SIZE * 2, SELECTOR_TEXTURE_SIZE) {
+        aileronTrimSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS, SELECTOR_SIZE * 2, SELECTOR_SIZE, JSONConfigLanguage.GUI_PANEL_TRIM_ROLL.value, vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, TRIM_TEXTURE_WIDTH_OFFSET, TRIM_TEXTURE_HEIGHT_OFFSET, SELECTOR_TEXTURE_SIZE * 2, SELECTOR_TEXTURE_SIZE) {
             @Override
             public void onClicked(boolean leftSide) {
                 selectedTrimSelector = this;
@@ -250,7 +228,7 @@ public class GUIPanelAircraft extends AGUIPanel {
         };
         addComponent(aileronTrimSelector);
 
-        elevatorTrimSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + 1 * (SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE * 2, SELECTOR_SIZE, JSONConfigLanguage.GUI_PANEL_TRIM_PITCH.value, vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, TRIM_TEXTURE_WIDTH_OFFSET, TRIM_TEXTURE_HEIGHT_OFFSET, SELECTOR_TEXTURE_SIZE * 2, SELECTOR_TEXTURE_SIZE) {
+        elevatorTrimSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + (SELECTOR_SIZE + GAP_BETWEEN_SELECTORS), SELECTOR_SIZE * 2, SELECTOR_SIZE, JSONConfigLanguage.GUI_PANEL_TRIM_PITCH.value, vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, TRIM_TEXTURE_WIDTH_OFFSET, TRIM_TEXTURE_HEIGHT_OFFSET, SELECTOR_TEXTURE_SIZE * 2, SELECTOR_TEXTURE_SIZE) {
             @Override
             public void onClicked(boolean leftSide) {
                 selectedTrimSelector = this;
@@ -290,10 +268,6 @@ public class GUIPanelAircraft extends AGUIPanel {
                 public void onClicked(boolean leftSide) {
                     InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.REVERSE_THRUST_VARIABLE));
                 }
-
-                @Override
-                public void onReleased() {
-                }
             };
             addComponent(reverseSelector);
 
@@ -306,10 +280,6 @@ public class GUIPanelAircraft extends AGUIPanel {
                         InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(vehicle, EntityVehicleF_Physics.AUTOPILOT_VARIABLE, 0));
                     }
                 }
-
-                @Override
-                public void onReleased() {
-                }
             };
             addComponent(autopilotSelector);
         } else if (haveReverseThrustOption) {
@@ -317,10 +287,6 @@ public class GUIPanelAircraft extends AGUIPanel {
                 @Override
                 public void onClicked(boolean leftSide) {
                     InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.REVERSE_THRUST_VARIABLE));
-                }
-
-                @Override
-                public void onReleased() {
                 }
             };
             addComponent(reverseSelector);
@@ -333,10 +299,6 @@ public class GUIPanelAircraft extends AGUIPanel {
                     } else {
                         InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(vehicle, EntityVehicleF_Physics.AUTOPILOT_VARIABLE, 0));
                     }
-                }
-
-                @Override
-                public void onReleased() {
                 }
             };
             addComponent(autopilotSelector);
@@ -351,7 +313,7 @@ public class GUIPanelAircraft extends AGUIPanel {
         //Add custom selectors if we have any.
         //These are the right-most selector and are vehicle-specific.
         //We render two rows of side-by-side selectors here.
-        Set<String> customVariables = new LinkedHashSet<String>();
+        Set<String> customVariables = new LinkedHashSet<>();
         if (vehicle.definition.rendering.customVariables != null) {
             customVariables.addAll(vehicle.definition.rendering.customVariables);
         }
@@ -367,10 +329,6 @@ public class GUIPanelAircraft extends AGUIPanel {
                 @Override
                 public void onClicked(boolean leftSide) {
                     InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicle, this.text));
-                }
-
-                @Override
-                public void onReleased() {
                 }
             };
             customSelectors.add(customSelector);
@@ -401,10 +359,6 @@ public class GUIPanelAircraft extends AGUIPanel {
                 public void onClicked(boolean leftSide) {
                     InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.GEAR_VARIABLE));
                 }
-
-                @Override
-                public void onReleased() {
-                }
             };
             addComponent(gearSelector);
 
@@ -414,10 +368,6 @@ public class GUIPanelAircraft extends AGUIPanel {
                     SwitchEntry switchDef = trailerSwitchDefs.get(0);
                     InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(switchDef.connectionDefiner, AEntityG_Towable.TOWING_CONNECTION_REQUEST_VARIABLE, switchDef.connectionGroupIndex + 1));
                 }
-
-                @Override
-                public void onReleased() {
-                }
             };
             addComponent(trailerSelector);
         } else if (vehicle.definition.motorized.gearSequenceDuration != 0) {
@@ -425,10 +375,6 @@ public class GUIPanelAircraft extends AGUIPanel {
                 @Override
                 public void onClicked(boolean leftSide) {
                     InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.GEAR_VARIABLE));
-                }
-
-                @Override
-                public void onReleased() {
                 }
             };
             addComponent(gearSelector);
@@ -438,10 +384,6 @@ public class GUIPanelAircraft extends AGUIPanel {
                 public void onClicked(boolean leftSide) {
                     SwitchEntry switchDef = trailerSwitchDefs.get(0);
                     InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(switchDef.connectionDefiner, AEntityG_Towable.TOWING_CONNECTION_REQUEST_VARIABLE, switchDef.connectionGroupIndex + 1));
-                }
-
-                @Override
-                public void onReleased() {
                 }
             };
             addComponent(trailerSelector);
@@ -476,7 +418,7 @@ public class GUIPanelAircraft extends AGUIPanel {
         if (vehicle.definition.motorized.hasSingleEngineControl) {
             for (PartEngine engine : vehicle.engines.values()) {
                 starterSelectors.get(ENGINE_SINGLE_SELECTOR_INDEX).selectorState = engine.magnetoOn ? (engine.electricStarterEngaged ? 2 : 1) : 0;
-                starterSelectors.get(ENGINE_SINGLE_SELECTOR_INDEX).visible = !engine.definition.engine.disableAutomaticStarter;
+                starterSelectors.get(ENGINE_SINGLE_SELECTOR_INDEX).visible = !engine.definition.engine.disableAutomaticStarter && engine.definition.engine.type == JSONPart.EngineType.NORMAL;
                 break;
             }
         } else {

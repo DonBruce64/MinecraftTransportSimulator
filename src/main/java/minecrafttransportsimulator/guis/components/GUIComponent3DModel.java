@@ -1,16 +1,17 @@
 package minecrafttransportsimulator.guis.components;
 
-import java.nio.FloatBuffer;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.rendering.AModelParser;
 import minecrafttransportsimulator.rendering.RenderableObject;
 
-/**Custom #D model render class.  This allows for rendering a parsed model into a GUI.
+import java.nio.FloatBuffer;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Custom #D model render class.  This allows for rendering a parsed model into a GUI.
  * Mainly used to render vehicles, though can be used for other models if desired.
  * This class keeps a list of all parsed models for caching, as this allows for faster
  * switching as we don't need to parse the models each time we view them.  These lists
@@ -23,10 +24,12 @@ import minecrafttransportsimulator.rendering.RenderableObject;
  * @author don_bruce
  */
 public class GUIComponent3DModel extends AGUIComponent {
-    /**Parsed vertex indexes.  Keyed by model name.*/
-    private static final Map<String, RenderableObject> modelParsedObjects = new HashMap<String, RenderableObject>();
-    private static final Map<String, Float> modelScalingFactors = new HashMap<String, Float>();
-    private static final RotationMatrix ISOMETRIC_ROTATION = new RotationMatrix().setToAxisAngle(0, 1, 0, -45).multiply(new RotationMatrix().setToAxisAngle(0.70712, 0, -0.70712, 35.264));;
+    /**
+     * Parsed vertex indexes.  Keyed by model name.
+     */
+    private static final Map<String, RenderableObject> modelParsedObjects = new HashMap<>();
+    private static final Map<String, Float> modelScalingFactors = new HashMap<>();
+    private static final RotationMatrix ISOMETRIC_ROTATION = new RotationMatrix().setToAxisAngle(0, 1, 0, -45).multiply(new RotationMatrix().setToAxisAngle(0.70712, 0, -0.70712, 35.264));
 
     public final float scaleFactor;
     public final boolean isometric;
@@ -51,7 +54,7 @@ public class GUIComponent3DModel extends AGUIComponent {
     }
 
     /**
-     *  Renders the model that this component defines.
+     * Renders the model that this component defines.
      */
     @Override
     public void render(AGUIBase gui, int mouseX, int mouseY, boolean renderBright, boolean renderLitTexture, boolean blendingEnabled, float partialTicks) {
@@ -117,10 +120,10 @@ public class GUIComponent3DModel extends AGUIComponent {
     }
 
     /**
-     *  Clear the caches.  Call this when closing the GUI this component is a part of to free up RAM.
+     * Clear the caches.  Call this when closing the GUI this component is a part of to free up RAM.
      */
     public static void clearModelCaches() {
-        modelParsedObjects.values().forEach(modelParsedObject -> modelParsedObject.destroy());
+        modelParsedObjects.values().forEach(RenderableObject::destroy);
         modelParsedObjects.clear();
     }
 }

@@ -10,11 +10,12 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.components.APacketEntityInteract;
 
-/**Packet sent to pumps to allow dispensing of fluids to vehicles.  This will remove an item
+/**
+ * Packet sent to pumps to allow dispensing of fluids to vehicles.  This will remove an item
  * from the player's inventory for the use of the pump if they have it, and will then allow
  * the pump to draw that much fluid into it for pumping.  However, if an amount is given, it is
  * assumed that this packet is changing the amount to pump, not requesting the pumping be started.
- * 
+ *
  * @author don_bruce
  */
 public class PacketTileEntityFuelPumpDispense extends APacketEntityInteract<TileEntityFuelPump, IWrapperPlayer> {

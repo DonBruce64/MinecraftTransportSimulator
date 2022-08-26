@@ -13,7 +13,8 @@ import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 
-/**Decor tile entity.  Contains the definition so we know how
+/**
+ * Decor tile entity.  Contains the definition so we know how
  * to render this in the TESR call, as well as if we need to do
  * crafting operations if we are a crafting decor type.
  *

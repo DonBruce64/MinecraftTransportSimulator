@@ -9,11 +9,12 @@ import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPlayerItemTransfer;
 
-/**A GUI that is used to interface with furnaces.   Displays the player's items on the bottom,
+/**
+ * A GUI that is used to interface with furnaces.   Displays the player's items on the bottom,
  * and the furnace type/status in the top.  Works a bit differently than the MC GUIs, as it
  * doesn't support item dragging or movement.  Rather, furnace fuel is clicked to put it into
  * the furnace, and items are clicked to add them to the furnace and remove them when smelted.
- * 
+ *
  * @author don_bruce
  */
 public class GUIFurnace extends AGUIInventory {

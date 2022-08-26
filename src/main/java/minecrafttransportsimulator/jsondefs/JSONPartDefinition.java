@@ -1,14 +1,13 @@
 package minecrafttransportsimulator.jsondefs;
 
-import java.util.List;
-
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 
-public class JSONPartDefinition {
+import java.util.List;
 
+public class JSONPartDefinition {
     @JSONRequired
     @JSONDescription("An entry of x, y, and z coordinates that define the center point of where this part will attach to the object.")
     public Point3D pos;
@@ -175,7 +174,7 @@ public class JSONPartDefinition {
     public List<JSONParticle> particleObjects;
 
     @Deprecated
-    public class ExhaustObject {
+    public static class ExhaustObject {
         public Point3D pos;
         public Point3D velocity;
         public float scale;

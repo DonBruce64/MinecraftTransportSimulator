@@ -15,14 +15,15 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPartGroundDevice;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
-/**A ground device is simply a part of a vehicle that touches the ground.
- * This class is used to perform ground physics, which include steering, 
- * turning, and hill climbing.  Can be a wheel-based part that rolls and 
+/**
+ * A ground device is simply a part of a vehicle that touches the ground.
+ * This class is used to perform ground physics, which include steering,
+ * turning, and hill climbing.  Can be a wheel-based part that rolls and
  * provides power from engines, a solid part that doesn't provide power but
- * still allows for movement, a longer part with multiple hitboxes, a 
+ * still allows for movement, a longer part with multiple hitboxes, a
  * floating part, etc.  Each property is set via the JSON definition, though
- * a few are vehicle-dependent. 
- * 
+ * a few are vehicle-dependent.
+ *
  * @author don_bruce
  */
 public class PartGroundDevice extends APart {
@@ -172,7 +173,8 @@ public class PartGroundDevice extends APart {
                 }
             }
             prevAngularPosition = angularPosition;
-            if (isMirrored) {
+            //Invert rotation for all ground devices except treads.
+            if (isMirrored && !definition.ground.isTread) {
                 angularPosition -= angularVelocity;
             } else {
                 angularPosition += angularVelocity;

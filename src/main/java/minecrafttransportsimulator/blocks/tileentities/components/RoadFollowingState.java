@@ -5,7 +5,8 @@ import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadLane.LaneSelectionRequest;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 
-/**Helper class for containing the following state of a road.
+/**
+ * Helper class for containing the following state of a road.
  * Contains the road, lane, and curve tracked, as well
  * as if the follower is oriented forwards or backwards
  * on the curve.  Also contains methods for updating the
@@ -62,7 +63,7 @@ public class RoadFollowingState {
                     if (priorRoad != null) {
                         RoadLane priorLane = priorRoad.lanes.get(priorConnection.laneNumber);
                         BezierCurve priorCurve = priorLane.curves.get(priorConnection.curveNumber);
-                        boolean newForwardsState = priorConnection.connectedToStart ? !goingForwards : goingForwards;
+                        boolean newForwardsState = priorConnection.connectedToStart != goingForwards;
                         float segmentRemainder = priorConnection.connectedToStart ? -currentSegment : currentSegment;
                         if (!newForwardsState) {
                             segmentRemainder = -segmentRemainder;
@@ -80,7 +81,7 @@ public class RoadFollowingState {
                     if (nextRoad != null) {
                         RoadLane nextLane = nextRoad.lanes.get(nextConnection.laneNumber);
                         BezierCurve nextCurve = nextLane.curves.get(nextConnection.curveNumber);
-                        boolean newForwardsState = nextConnection.connectedToStart ? goingForwards : !goingForwards;
+                        boolean newForwardsState = nextConnection.connectedToStart == goingForwards;
                         float segmentRemainder = nextConnection.connectedToStart ? currentSegment - curve.pathLength : -(currentSegment - curve.pathLength);
                         if (!newForwardsState) {
                             segmentRemainder = -segmentRemainder;

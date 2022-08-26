@@ -138,7 +138,7 @@ public class ItemPartInteractable extends AItemPart implements IItemVehicleInter
 
     @Override
     public boolean onUsed(AWrapperWorld world, IWrapperPlayer player) {
-        if (definition.interactable.canBeOpenedInHand && definition.interactable.interactionType.equals(InteractableComponentType.CRATE)) {
+        if (definition.interactable.canBeOpenedInHand && definition.interactable.interactionType.equals(InteractableComponentType.CRATE) && player.isSneaking()) {
             if (!world.isClient()) {
                 EntityInventoryContainer inventory = new EntityInventoryContainer(world, player.getHeldStack().getData().getDataOrNew("inventory"), (int) (definition.interactable.inventoryUnits * 9F));
                 world.addEntity(inventory);

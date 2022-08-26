@@ -1,23 +1,23 @@
 package minecrafttransportsimulator.jsondefs;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @JSONDescription("Instruments are most likely something you won't be messing with unless you really don't like the stock options available in the Official Content Pack.  Should you want to make your own, pay close attention to this section.  The instrument system is powerful, yet somewhat complex, making it easy to slip up in the JSON file and end up with a tachometer that looks like something clobbered together with spare parts.\nBefore you start, it's important to know the texture sheet for instruments is located in the texture folder, but NOT in a sub-folder like other pack components.  Additionally, the texture must be 1024x1024, otherwise rendering will be odd.  You may orient your instruments in this file however you like, so you shouldn't run out of space.\nIf you hadn't noticed already, the MTS instrument system works by taking a bunch of textures and layering them on top of one another to make instruments.  This is a lightweight way of rendering, and since they are textures they work with shaders straight out of the box.  MTS iterates through all the component sections when rendering instruments, so however you set them is how the instrument will render.\nThe JSON structure itself consists of two parts.  The first being the 'general' section, which is standard.  The second section is a list of Components that make up the instrument.")
 public class JSONInstrument extends AJSONItem {
 
     @JSONRequired
     @JSONDescription("Each instrument component represents a single rendering of a texture from the master instrument PNG file.  These components may be modified in multiple ways.  The standard way is for them to be rotated, translated, made invisible, have their lighting changed, or change what sections of the texture sheet they are pulling their texture from.")
-    public List<JSONInstrumentComponent> components = new ArrayList<JSONInstrumentComponent>();
+    public List<JSONInstrumentComponent> components = new ArrayList<>();
 
     @JSONRequired
     @JSONDescription("The texture sheet to pull this instrument from.  Defaults to instruments.png if not set.  You may use sub-folders here if you wish.")
     public String textureName;
 
-    public class JSONInstrumentComponent {
+    public static class JSONInstrumentComponent {
         @JSONDescription("The center position to render this instrument component.  By default components will be centered at the center of the instrument, but you can specify this parameter to have the component render to the left or right of the center point.")
         public int xCenter;
 

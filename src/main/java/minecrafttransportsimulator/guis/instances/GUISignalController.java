@@ -1,10 +1,5 @@
 package minecrafttransportsimulator.guis.instances;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
@@ -22,6 +17,11 @@ import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketTileEntitySignalControllerChange;
 import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class GUISignalController extends AGUIBase {
 
@@ -47,9 +47,9 @@ public class GUISignalController extends AGUIBase {
     private GUIComponentNumericTextBox allRedTimeText;
 
     //Intersection property boxes.
-    private final Set<GUIComponentIntersectionProperties> intersectionPropertyComponents = new HashSet<GUIComponentIntersectionProperties>();
-    private final List<GUIComponentLabel> upperPropertyLabels = new ArrayList<GUIComponentLabel>();
-    private final List<GUIComponentLabel> lowerPropertyLabels = new ArrayList<GUIComponentLabel>();
+    private final Set<GUIComponentIntersectionProperties> intersectionPropertyComponents = new HashSet<>();
+    private final List<GUIComponentLabel> upperPropertyLabels = new ArrayList<>();
+    private final List<GUIComponentLabel> lowerPropertyLabels = new ArrayList<>();
 
     //Controller we're linked to.
     private final TileEntitySignalController controller;
@@ -73,7 +73,7 @@ public class GUISignalController extends AGUIBase {
             @Override
             public void onClicked(boolean leftSide) {
                 controller.componentLocations.clear();
-                int scanDistance = Integer.valueOf(scanDistanceText.getText());
+                int scanDistance = Integer.parseInt(scanDistanceText.getText());
                 double minX = Double.MAX_VALUE;
                 double maxX = -Double.MAX_VALUE;
                 double minZ = Double.MAX_VALUE;
@@ -148,7 +148,7 @@ public class GUISignalController extends AGUIBase {
         addComponent(new GUIComponentLabel(leftTextOffset, topOffset, ColorRGB.WHITE, JSONConfigLanguage.GUI_SIGNALCONTROLLER_SCANDISTANCE.value).setBox(scanDistanceText));
 
         //Found count.
-        addComponent(trafficSignalCount = new GUIComponentLabel(scanDistanceText.constructedX + scanDistanceText.width + 5, topOffset, ColorRGB.WHITE, JSONConfigLanguage.GUI_SIGNALCONTROLLER_SCANFOUND.value + String.valueOf(controller.componentLocations.size())));
+        addComponent(trafficSignalCount = new GUIComponentLabel(scanDistanceText.constructedX + scanDistanceText.width + 5, topOffset, ColorRGB.WHITE, JSONConfigLanguage.GUI_SIGNALCONTROLLER_SCANFOUND.value + controller.componentLocations.size()));
         topOffset += scanDistanceText.height + rowSpacing * 3;
 
         //RHD/LHD switch.
@@ -305,7 +305,7 @@ public class GUISignalController extends AGUIBase {
     @Override
     public void setStates() {
         super.setStates();
-        trafficSignalCount.text = JSONConfigLanguage.GUI_SIGNALCONTROLLER_SCANFOUND.value + String.valueOf(controller.componentLocations.size());
+        trafficSignalCount.text = JSONConfigLanguage.GUI_SIGNALCONTROLLER_SCANFOUND.value + controller.componentLocations.size();
 
         scanButton.visible = !onLaneScreen;
         directionButton.visible = !onLaneScreen;
@@ -382,20 +382,20 @@ public class GUISignalController extends AGUIBase {
                 if (floatingPoint) {
                     return newText.matches("-?\\d+(\\.\\d+)?");
                 } else {
-                    return newText.matches("[0-9]+");
+                    return newText.matches("\\d+");
                 }
             }
         }
 
         protected void setVariable() {
-        };
+        }
 
         protected int getIntegerValue() {
-            return text.isEmpty() ? 0 : Integer.valueOf(text);
+            return text.isEmpty() ? 0 : Integer.parseInt(text);
         }
 
         protected double getDoubleValue() {
-            return text.isEmpty() ? 0 : Double.valueOf(text);
+            return text.isEmpty() ? 0 : Double.parseDouble(text);
         }
     }
 

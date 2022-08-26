@@ -1,14 +1,7 @@
 package minecrafttransportsimulator.entities.instances;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.List;
-import java.util.UUID;
-
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
-
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.NavBeacon;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
@@ -21,14 +14,20 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
-/**This class adds engine components for vehicles, such as fuel, throttle,
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.UUID;
+
+/**
+ * This class adds engine components for vehicles, such as fuel, throttle,
  * and electricity.  Contains numerous methods for gauges, HUDs, and fuel systems.
  * This is added on-top of the D level to keep the crazy movement calculations
  * separate from the vehicle power overhead bits.  This is the first level of
  * class that can be used for references in systems as it's the last common class for
  * vehicles.  All other sub-levels are simply functional building-blocks to keep this
- *  class from having 1000+ lines of code and to better segment things out.
- * 
+ * class from having 1000+ lines of code and to better segment things out.
+ *
  * @author don_bruce
  */
 abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
@@ -67,7 +66,7 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
     public final BiMap<Byte, PartEngine> engines = HashBiMap.create();
 
     //Map containing incoming missiles, sorted by distance, which is the value for this map.
-    public final List<EntityBullet> missilesIncoming = new ArrayList<EntityBullet>();
+    public final List<EntityBullet> missilesIncoming = new ArrayList<>();
 
     public AEntityVehicleE_Powered(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data) {
         super(world, placingPlayer, data);
@@ -181,18 +180,8 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
 
         //Check that missiles are still valid.
         //If they are, update their distances. Otherwise, remove them.
-        Iterator<EntityBullet> iterator = missilesIncoming.iterator();
-        while (iterator.hasNext()) {
-            if (!iterator.next().isValid) {
-                iterator.remove();
-            }
-        }
-        missilesIncoming.sort(new Comparator<EntityBullet>() {
-            @Override
-            public int compare(EntityBullet missle1, EntityBullet missile2) {
-                return missle1.targetDistance < missile2.targetDistance ? -1 : 1;
-            }
-        });
+        missilesIncoming.removeIf(entityBullet -> !entityBullet.isValid);
+        missilesIncoming.sort((missle1, missile2) -> missle1.targetDistance < missile2.targetDistance ? -1 : 1);
         world.endProfiling();
     }
 

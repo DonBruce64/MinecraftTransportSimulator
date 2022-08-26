@@ -43,7 +43,7 @@ public class JSONCollisionBox {
     @JSONDescription("The max value for this box to set.  Only used when the variable type is increment.")
     public float clampMax;
 
-    public static enum VariableType {
+    public enum VariableType {
         @JSONDescription("Clicking this box will toggle the variable from 0 to 1.")
         TOGGLE,
         @JSONDescription("Clicking this box will set the variable to the defined value.")
@@ -51,7 +51,7 @@ public class JSONCollisionBox {
         @JSONDescription("Clicking this box will increment the variable by the defined value.")
         INCREMENT,
         @JSONDescription("Clicking this box will set the variable to the value. When the player lets go of the mouse button, it will be set back to 0.")
-        BUTTON;
+        BUTTON
     }
 
     @Deprecated

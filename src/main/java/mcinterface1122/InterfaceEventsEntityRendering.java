@@ -1,13 +1,5 @@
 package mcinterface1122;
 
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
-import org.lwjgl.input.Mouse;
-import org.lwjgl.opengl.GL11;
-
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
@@ -31,16 +23,20 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
-import net.minecraftforge.client.event.RenderGameOverlayEvent;
-import net.minecraftforge.client.event.RenderHandEvent;
-import net.minecraftforge.client.event.RenderLivingEvent;
-import net.minecraftforge.client.event.RenderSpecificHandEvent;
-import net.minecraftforge.client.event.RenderWorldLastEvent;
+import net.minecraftforge.client.event.*;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
+import org.lwjgl.input.Mouse;
+import org.lwjgl.opengl.GL11;
 
-/**Interface for handling events pertaining to entity rendering.  This modifies the player's rendered state
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Interface for handling events pertaining to entity rendering.  This modifies the player's rendered state
  * to handle them being in vehicles, as well as ensuring their model adapts to any objects they may be holding.
  * This also handles the final world rendering pass, which may render entities, and the 2D GUI rendering.
  *
@@ -57,15 +53,15 @@ public class InterfaceEventsEntityRendering {
     private static final Point3D leftArmAngles = new Point3D();
     private static final Point3D rightArmAngles = new Point3D();
     private static final Point3D entityScale = new Point3D();
-    private static RotationMatrix riderBodyOrientation = new RotationMatrix();
-    private static RotationMatrix riderHeadOrientation = new RotationMatrix();
-    private static TransformationMatrix riderTotalTransformation = new TransformationMatrix();
+    private static final RotationMatrix riderBodyOrientation = new RotationMatrix();
+    private static final RotationMatrix riderHeadOrientation = new RotationMatrix();
+    private static final TransformationMatrix riderTotalTransformation = new TransformationMatrix();
 
     /**
-     *  World last event.  This occurs at the end of rendering in a special pass of -1.
-     *  We normally don't do anything here.  The exception is if the {@link BuilderEntityRenderForwarder}
-     *  didn't get rendered.  In this case, we manually render it.  The rendering pipelines
-     *  of those methods are set up to handle this and will tread a -1 pass as a combined 0/1 pass.
+     * World last event.  This occurs at the end of rendering in a special pass of -1.
+     * We normally don't do anything here.  The exception is if the {@link BuilderEntityRenderForwarder}
+     * didn't get rendered.  In this case, we manually render it.  The rendering pipelines
+     * of those methods are set up to handle this and will tread a -1 pass as a combined 0/1 pass.
      */
     @SubscribeEvent
     public static void on(RenderWorldLastEvent event) {
@@ -278,9 +274,9 @@ public class InterfaceEventsEntityRendering {
             //If we aren't the rider, translate the rider to us so it rotates on the proper coordinate system.
             EntityPlayerSP masterPlayer = Minecraft.getMinecraft().player;
             if (!entity.equals(masterPlayer)) {
-                double playerDistanceX = entity.lastTickPosX + -masterPlayer.lastTickPosX + (entity.posX - entity.lastTickPosX - (masterPlayer.posX - masterPlayer.lastTickPosX)) * event.getPartialRenderTick();
-                double playerDistanceY = entity.lastTickPosY + -masterPlayer.lastTickPosY + (entity.posY - entity.lastTickPosY - (masterPlayer.posY - masterPlayer.lastTickPosY)) * event.getPartialRenderTick();
-                double playerDistanceZ = entity.lastTickPosZ + -masterPlayer.lastTickPosZ + (entity.posZ - entity.lastTickPosZ - (masterPlayer.posZ - masterPlayer.lastTickPosZ)) * event.getPartialRenderTick();
+                double playerDistanceX = entity.lastTickPosX - masterPlayer.lastTickPosX + (entity.posX - entity.lastTickPosX - (masterPlayer.posX - masterPlayer.lastTickPosX)) * event.getPartialRenderTick();
+                double playerDistanceY = entity.lastTickPosY - masterPlayer.lastTickPosY + (entity.posY - entity.lastTickPosY - (masterPlayer.posY - masterPlayer.lastTickPosY)) * event.getPartialRenderTick();
+                double playerDistanceZ = entity.lastTickPosZ - masterPlayer.lastTickPosZ + (entity.posZ - entity.lastTickPosZ - (masterPlayer.posZ - masterPlayer.lastTickPosZ)) * event.getPartialRenderTick();
                 GL11.glTranslated(playerDistanceX, playerDistanceY, playerDistanceZ);
                 InterfaceManager.renderingInterface.applyTransformOpenGL(riderTotalTransformation, false);
                 GL11.glTranslated(-playerDistanceX, -playerDistanceY, -playerDistanceZ);
@@ -341,8 +337,7 @@ public class InterfaceEventsEntityRendering {
 
                             @SuppressWarnings("unchecked")
                             Map<String, RenderPlayer> skinMap = (Map<String, RenderPlayer>) renderManagerField.get(Minecraft.getMinecraft().getRenderManager());
-                            List<String> skinTypes = new ArrayList<String>();
-                            skinTypes.addAll(skinMap.keySet());
+                            List<String> skinTypes = new ArrayList<>(skinMap.keySet());
 
                             for (String skinType : skinTypes) {
                                 RenderPlayer render = skinMap.get(skinType);
@@ -436,8 +431,8 @@ public class InterfaceEventsEntityRendering {
     }
 
     /**
-     *  Hand render events.  We use these to disable rendering of the item in the player's hand
-     *  if they are holding a gun.  Not sure why there's two events, but we cancel them both!
+     * Hand render events.  We use these to disable rendering of the item in the player's hand
+     * if they are holding a gun.  Not sure why there's two events, but we cancel them both!
      */
     @SubscribeEvent
     public static void on(RenderHandEvent event) {

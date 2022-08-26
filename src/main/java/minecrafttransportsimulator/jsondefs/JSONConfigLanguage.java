@@ -1,24 +1,25 @@
 package minecrafttransportsimulator.jsondefs;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.PackParser;
 
-/**Config class for language interfacing.  This contains all default text strings, and will be loaded
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+/**
+ * Config class for language interfacing.  This contains all default text strings, and will be loaded
  * by both the client and server.  When choosing a file to load, the current language suffix will be used
  * on clients, whereas servers will always use the default, english language.  If a file doesn't exist,
  * or is missing an entry, then the default value will be used instead.
- * 
+ *
  * @author don_bruce
  */
 public class JSONConfigLanguage {
-    public Map<String, String> core = new LinkedHashMap<String, String>();
-    public Map<String, Map<String, JSONItemEntry>> packs = new LinkedHashMap<String, Map<String, JSONItemEntry>>();
-    public static final Map<String, LanguageEntry> coreEntries = new LinkedHashMap<String, LanguageEntry>();
+    public Map<String, String> core = new LinkedHashMap<>();
+    public Map<String, Map<String, JSONItemEntry>> packs = new LinkedHashMap<>();
+    public static final Map<String, LanguageEntry> coreEntries = new LinkedHashMap<>();
 
     public void populateEntries(boolean isClient) {
         boolean overrideJSONWithDefinedValues = !isClient || InterfaceManager.clientInterface.usingDefaultLanguage();
@@ -33,11 +34,7 @@ public class JSONConfigLanguage {
 
         //Populate pack entries.
         for (String packID : PackParser.getAllPackIDs()) {
-            Map<String, JSONItemEntry> packMap = packs.get(packID);
-            if (packMap == null) {
-                packMap = new LinkedHashMap<String, JSONItemEntry>();
-                packs.put(packID, packMap);
-            }
+            Map<String, JSONItemEntry> packMap = packs.computeIfAbsent(packID, k -> new LinkedHashMap<>());
             for (AItemPack<?> packItem : PackParser.getAllItemsForPack(packID, true)) {
                 String itemKey = packItem.getRegistrationName();
                 JSONItemEntry entry = packMap.get(itemKey);
@@ -59,7 +56,7 @@ public class JSONConfigLanguage {
                     itemName = packItem.definition.general.name != null ? packItem.definition.general.name : packItem.definition.systemName;
                 }
                 String itemDescription = packItem.definition.general.description != null ? packItem.definition.general.description : "";
-                if (!itemName.equals(entry.name) || (itemDescription != null && !itemDescription.equals(entry.description)) || overrideJSONWithDefinedValues) {
+                if (!itemName.equals(entry.name) || !itemDescription.equals(entry.description) || overrideJSONWithDefinedValues) {
                     if (entry.name == null || overrideJSONWithDefinedValues) {
                         entry.name = itemName;
                     }
@@ -92,8 +89,8 @@ public class JSONConfigLanguage {
     public static final LanguageEntry DEATH_BULLET_NULL = new LanguageEntry("death.bullet.null", "%s was shot by a spy");
     public static final LanguageEntry DEATH_BULLET_PLAYER = new LanguageEntry("death.bullet.player", "%s was shot by %s");
 
-    public static final LanguageEntry DEATH_PROPELLOR_NULL = new LanguageEntry("death.propellor.null", "%s was shredded by a propeller");
-    public static final LanguageEntry DEATH_PROPELLOR_PLAYER = new LanguageEntry("death.propellor.player", "%s was shredded by %s's propeller");
+    public static final LanguageEntry DEATH_PROPELLER_NULL = new LanguageEntry("death.propeller.null", "%s was shredded by a propeller");
+    public static final LanguageEntry DEATH_PROPELLER_PLAYER = new LanguageEntry("death.propeller.player", "%s was shredded by %s's propeller");
 
     public static final LanguageEntry DEATH_JETINTAKE_NULL = new LanguageEntry("death.jet_intake.null", "%s was sucked into a jet engine");
     public static final LanguageEntry DEATH_JETINTAKE_PLAYER = new LanguageEntry("death.jet_intake.player", "%s was sucked into %s's jet engine");
@@ -359,7 +356,7 @@ public class JSONConfigLanguage {
     public static final LanguageEntry INPUT_GAS = new LanguageEntry("input.gas", "Gas");
     public static final LanguageEntry INPUT_SHIFT_U = new LanguageEntry("input.shift_u", "ShiftUp");
     public static final LanguageEntry INPUT_SHIFT_D = new LanguageEntry("input.shift_d", "ShiftDown");
-    public static final LanguageEntry INPUT_SHIFT_N = new LanguageEntry("input.shift_n", "ShiftNeutral");;
+    public static final LanguageEntry INPUT_SHIFT_N = new LanguageEntry("input.shift_n", "ShiftNeutral");
     public static final LanguageEntry INPUT_HORN = new LanguageEntry("input.horn", "Horn");
     public static final LanguageEntry INPUT_SLOW = new LanguageEntry("input.slow", "Slow");
     public static final LanguageEntry INPUT_LIGHTS = new LanguageEntry("input.lights", "Lights");

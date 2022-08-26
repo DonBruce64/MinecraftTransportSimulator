@@ -1,19 +1,7 @@
 package minecrafttransportsimulator.entities.components;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
-import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
-import minecrafttransportsimulator.baseclasses.BoundingBox;
-import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.Damage;
-import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.baseclasses.TransformationMatrix;
+import mcinterface1122.InterfaceLoader;
+import minecrafttransportsimulator.baseclasses.*;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPart;
@@ -22,60 +10,77 @@ import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONText;
-import minecrafttransportsimulator.mcinterface.AWrapperWorld;
-import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.mcinterface.*;
 import minecrafttransportsimulator.packets.instances.PacketPartChange;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packloading.PackParser;
 
-/**Base class for multipart entities.  These entities hold other, part-based entities.  These part
+import java.util.*;
+import java.util.Map.Entry;
+
+/**
+ * Base class for multipart entities.  These entities hold other, part-based entities.  These part
  * entities may be added or removed from this entity based on the implementation, but assurances
  * are made with how they are stored and how they are accessed.
- * 
+ *
  * @author don_bruce
  */
 public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvider> extends AEntityE_Interactable<JSONDefinition> {
 
-    /**This list contains all parts this entity has.  Do NOT directly modify this list.  Instead,
+    /**
+     * This list contains all parts this entity has.  Do NOT directly modify this list.  Instead,
      * call {@link #addPart}, {@link #addPartFromItem}, or {@link #removePart} to ensure all sub-classed
      * operations are performed.  Note that if you are iterating over this list when you call one of those
      * methods, and you don't pass the method an iterator instance, you will get a CME!.
      */
-    public final List<APart> parts = new ArrayList<APart>();
+    public final List<APart> parts = new ArrayList<>();
 
-    /**Like {@link #parts}, except contains all parts on parts as well, recursively to the lowest part.
+    /**
+     * Like {@link #parts}, except contains all parts on parts as well, recursively to the lowest part.
      */
-    public final List<APart> allParts = new ArrayList<APart>();
+    public final List<APart> allParts = new ArrayList<>();
 
-    /**Identical to {@link #parts}, except this list has null elements for empty slots.  Designed
+    /**
+     * Identical to {@link #parts}, except this list has null elements for empty slots.  Designed
      * for obtaining the part in a specific slot rather than iterative operations.
      */
-    public final List<APart> partsInSlots = new ArrayList<APart>();
+    public final List<APart> partsInSlots = new ArrayList<>();
 
-    /**List of block collision boxes, with all part block collision boxes included.**/
-    public final List<BoundingBox> allBlockCollisionBoxes = new ArrayList<BoundingBox>();
+    /**
+     * List of block collision boxes, with all part block collision boxes included.
+     **/
+    public final List<BoundingBox> allBlockCollisionBoxes = new ArrayList<>();
 
-    /**List of entity collision boxes, with all part collision boxes included.**/
-    public final List<BoundingBox> allEntityCollisionBoxes = new ArrayList<BoundingBox>();
+    /**
+     * List of entity collision boxes, with all part collision boxes included.
+     **/
+    public final List<BoundingBox> allEntityCollisionBoxes = new ArrayList<>();
 
-    /**List of interaction boxes, plus all part boxes included.**/
-    public final List<BoundingBox> allInteractionBoxes = new ArrayList<BoundingBox>();
+    /**
+     * List of interaction boxes, plus all part boxes included.
+     **/
+    public final List<BoundingBox> allInteractionBoxes = new ArrayList<>();
 
-    /**List of bullet boxes, plus all part boxes included.**/
-    public final List<BoundingBox> allBulletCollisionBoxes = new ArrayList<BoundingBox>();
+    /**
+     * List of bullet boxes, plus all part boxes included.
+     **/
+    public final List<BoundingBox> allBulletCollisionBoxes = new ArrayList<>();
 
-    /**Map of part slot boxes.  Key is the box, value is the definition for that slot.**/
-    public final Map<BoundingBox, JSONPartDefinition> partSlotBoxes = new HashMap<BoundingBox, JSONPartDefinition>();
-    private final Map<JSONPartDefinition, AnimationSwitchbox> partSlotSwitchboxes = new HashMap<JSONPartDefinition, AnimationSwitchbox>();
+    /**
+     * Map of part slot boxes.  Key is the box, value is the definition for that slot.
+     **/
+    public final Map<BoundingBox, JSONPartDefinition> partSlotBoxes = new HashMap<>();
+    private final Map<JSONPartDefinition, AnimationSwitchbox> partSlotSwitchboxes = new HashMap<>();
 
-    /**Map of active part slot boxes.  Boxes in here will also be in {@link #partSlotBoxes}.**/
-    public final Map<BoundingBox, JSONPartDefinition> activePartSlotBoxes = new HashMap<BoundingBox, JSONPartDefinition>();
+    /**
+     * Map of active part slot boxes.  Boxes in here will also be in {@link #partSlotBoxes}.
+     **/
+    public final Map<BoundingBox, JSONPartDefinition> activePartSlotBoxes = new HashMap<>();
 
-    /**Map of part slot boxes, plus all part boxes included.**/
-    public final Map<BoundingBox, JSONPartDefinition> allPartSlotBoxes = new HashMap<BoundingBox, JSONPartDefinition>();
+    /**
+     * Map of part slot boxes, plus all part boxes included.
+     **/
+    public final Map<BoundingBox, JSONPartDefinition> allPartSlotBoxes = new HashMap<>();
 
     //Constants
     private final float PART_SLOT_HITBOX_WIDTH = 0.75F;
@@ -96,7 +101,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             partSlotSwitchboxes.clear();
             for (JSONPartDefinition partDef : definition.parts) {
                 if (partDef.animations != null || partDef.applyAfter != null) {
-                    List<JSONAnimationDefinition> animations = new ArrayList<JSONAnimationDefinition>();
+                    List<JSONAnimationDefinition> animations = new ArrayList<>();
                     if (partDef.animations != null) {
                         animations.addAll(partDef.animations);
                     }
@@ -123,9 +128,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 
         //Update part slot box positions.
         world.beginProfiling("PartSlotPositions", true);
-        partSlotBoxes.entrySet().forEach(entry -> {
-            BoundingBox box = entry.getKey();
-            JSONPartDefinition partDef = entry.getValue();
+        partSlotBoxes.forEach((box, partDef) -> {
             AnimationSwitchbox switchBox = partSlotSwitchboxes.get(partDef);
             if (switchBox != null) {
                 if (switchBox.runSwitchbox(0, false)) {
@@ -204,11 +207,13 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
     }
 
     @Override
-    public void updateText(List<String> textLines) {
-        int linesChecked = 0;
-        for (Entry<JSONText, String> textEntry : text.entrySet()) {
-            textEntry.setValue(textLines.get(linesChecked++));
-        }
+    public void updateText(LinkedHashMap<String, String> textLines) {
+        super.updateText(textLines);
+        allParts.forEach(part -> {
+            for (Entry<JSONText, String> textEntry : part.text.entrySet()) {
+                textEntry.setValue(textLines.get(textEntry.getKey().fieldName));
+            }
+        });
     }
 
     @Override
@@ -318,7 +323,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                         }
                     } else {
                         double value = getRawVariableValue(variableName, 0);
-                        if (value > 0 && !Double.isNaN(value)) {
+                        if (!Double.isNaN(value) && value > 0) {
                             //Normal variable value is non-zero 0, therefore list is true.
                             listIsTrue = true;
                             break;
@@ -331,11 +336,9 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                 }
             }
             //No false lists were found for this collection, therefore no variables are blocking.
-            return false;
-        } else {
-            //No lists found for this entry, therefore no variables are blocking.
-            return false;
-        }
+        }  //No lists found for this entry, therefore no variables are blocking.
+
+        return false;
     }
 
     /**
@@ -379,12 +382,12 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                         addPartFromItem(partItem, placingPlayer, partData, partSlot);
                     }
                 } catch (Exception e) {
-                    InterfaceManager.coreInterface.logError("Could not load part from NBT.  Did you un-install a pack?");
+                    InterfaceLoader.LOGGER.error("Could not load part from NBT.  Did you un-install a pack?");
                     e.printStackTrace();
                 }
 
                 //Add default parts.  We need to do this after we actually create this part so its slots are valid.
-                //We also need to know if we it is a new part or not, since that allows non-permanent default parts to be added.
+                //We also need to know if it is a new part or not, since that allows non-permanent default parts to be added.
                 JSONPartDefinition partDef = definition.parts.get(i);
                 if (newEntity && partDef.defaultPart != null) {
                     addDefaultPart(partDef, placingPlayer, definition);
@@ -444,7 +447,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             masterEntity = ((APart) masterEntity).entityOn;
         }
         masterEntity.updateAllpartList();
-        masterEntity.doPostAllpartUpdates();
+        masterEntity.updatePartList();
     }
 
     /**
@@ -480,7 +483,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             masterEntity = ((APart) masterEntity).entityOn;
         }
         masterEntity.updateAllpartList();
-        masterEntity.doPostAllpartUpdates();
+        masterEntity.updatePartList();
     }
 
     /**
@@ -502,8 +505,8 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
      * This includes both parent and child lists.  Operations that reference the allpart
      * list should occur here, not in {@link #updateAllpartList()}.
      */
-    public void doPostAllpartUpdates() {
-        parts.forEach(part -> part.doPostAllpartUpdates());
+    public void updatePartList() {
+        parts.forEach(APart::updatePartList);
     }
 
     /**
@@ -720,8 +723,8 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
     }
 
     /**
-     *  Helper method used to get the controlling entity for this entity.
-     *  Is normally the player, but may be a NPC if one is in the seat.
+     * Helper method used to get the controlling entity for this entity.
+     * Is normally the player, but may be a NPC if one is in the seat.
      */
     public IWrapperEntity getController() {
         for (APart part : parts) {

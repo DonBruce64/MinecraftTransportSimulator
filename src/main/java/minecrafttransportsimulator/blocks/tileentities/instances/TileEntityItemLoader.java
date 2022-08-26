@@ -7,14 +7,10 @@ import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityInv
 import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
 import minecrafttransportsimulator.entities.instances.PartInteractable;
 import minecrafttransportsimulator.jsondefs.JSONDecor.DecorComponentType;
-import minecrafttransportsimulator.mcinterface.AWrapperWorld;
-import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.mcinterface.*;
 
 public class TileEntityItemLoader extends ATileEntityLoader implements ITileEntityInventoryProvider {
-    private EntityInventoryContainer inventory;
+    private final EntityInventoryContainer inventory;
     private static final int LOADING_RATE = 10;
 
     public TileEntityItemLoader(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, IWrapperNBT data) {

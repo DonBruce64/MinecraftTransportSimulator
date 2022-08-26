@@ -7,7 +7,6 @@ import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
-import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.guis.components.AGUIBase;
@@ -36,13 +35,13 @@ import minecrafttransportsimulator.systems.ControlSystem;
 
 public final class PartSeat extends APart {
     public static boolean lockCameraToMovement = true;
-
     public boolean canControlGuns;
+    private boolean riderChangingSeats;
     public ItemPartGun activeGunItem;
     public int gunSequenceCooldown;
     public int gunGroupIndex;
     public int gunIndex;
-    public final HashMap<ItemPartGun, List<PartGun>> gunGroups = new LinkedHashMap<ItemPartGun, List<PartGun>>();
+    public final HashMap<ItemPartGun, List<PartGun>> gunGroups = new LinkedHashMap<>();
 
     public PartSeat(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, IWrapperNBT data) {
         super(entityOn, placingPlayer, placementDefinition, data);
@@ -78,15 +77,14 @@ public final class PartSeat extends APart {
                             //Check if the rider is riding something before adding them.
                             //If they are riding something, remove them from it first.
                             //If they are riding our vehicle, don't adjust their head position.
-                            AEntityE_Interactable<?> playerEntityRiding = player.getEntityRiding();
-                            if (playerEntityRiding != null) {
-                                playerEntityRiding.removeRider();
+                            AEntityE_Interactable<?> entityPlayerRiding = player.getEntityRiding();
+                            if (entityPlayerRiding != null) {
+                                if(entityPlayerRiding instanceof PartSeat) {
+                                   ((PartSeat) entityPlayerRiding).riderChangingSeats = true;
+                                }
+                                entityPlayerRiding.removeRider();
                             }
-                            if (playerEntityRiding instanceof PartSeat && ((PartSeat) playerEntityRiding).vehicleOn == vehicleOn) {
-                                setRider(player, false);
-                            } else {
-                                setRider(player, true);
-                            }
+                            setRider(player, !(entityPlayerRiding instanceof PartSeat) || ((PartSeat) entityPlayerRiding).vehicleOn != vehicleOn);
 
                             //If this seat can control a gun, and isn't controlling one, set it now.
                             //This prevents the need to select a gun when initially mounting.
@@ -124,16 +122,15 @@ public final class PartSeat extends APart {
         //This keeps us from clicking our own seat when we want to click other things.
         if (world.isClient() && rider != null && InterfaceManager.clientInterface.getClientPlayer().equals(rider)) {
             allInteractionBoxes.clear();
-            return;
         }
     }
 
     @Override
-    public void doPostAllpartUpdates() {
-        super.doPostAllpartUpdates();
+    public void updatePartList() {
+        super.updatePartList();
 
         //Update gun list, this is grouped by the specific gun.
-        List<PartGun> gunList = new ArrayList<PartGun>();
+        List<PartGun> gunList = new ArrayList<>();
         addLinkedPartsToList(gunList, PartGun.class);
         for (APart part : parts) {
             if (part instanceof PartGun) {
@@ -148,7 +145,7 @@ public final class PartSeat extends APart {
         for (PartGun gun : gunList) {
             ItemPartGun gunItem = gun.getItem();
             if (!gunGroups.containsKey(gunItem)) {
-                gunGroups.put(gunItem, new ArrayList<PartGun>());
+                gunGroups.put(gunItem, new ArrayList<>());
             }
             gunGroups.get(gunItem).add(gun);
         }
@@ -159,7 +156,7 @@ public final class PartSeat extends APart {
             gunIndex = 0;
         }
 
-        //Reset active index so we don't risk going out of range.
+        //Reset active index so that we don't risk going out of range.
         gunGroupIndex = 0;
     }
 
@@ -216,8 +213,8 @@ public final class PartSeat extends APart {
             AGUIBase.closeIfOpen(GUIHUD.class);
             AGUIBase.closeIfOpen(GUIRadio.class);
 
-            //Auto-stop engines if we have the config, and there aren't any other controllers in the vehicle.
-            if (clientRiderOnVehicle && placementDefinition.isController && ConfigSystem.client.controlSettings.autostartEng.value) {
+            //Auto-stop engines if we have the config, and there aren't any other controllers in the vehicle, and we aren't changing seats.
+            if (placementDefinition.isController && ConfigSystem.client.controlSettings.autostartEng.value) {
                 boolean otherController = false;
                 for (APart part : vehicleOn.allParts) {
                     if (part != this && part.rider instanceof IWrapperPlayer && part.placementDefinition.isController) {
@@ -249,30 +246,37 @@ public final class PartSeat extends APart {
             }
         }
 
-        //Set the rider dismount position.
-        //If we have a dismount position in the JSON.  Use it.
-        //Otherwise, put us to the right or left of the seat depending on x-offset.
-        //Make sure to take into the movement of the seat we were riding if it had moved.
-        //This ensures the dismount moves with the seat.
-        if (placementDefinition.dismountPos != null) {
-            rider.setPosition(placementDefinition.dismountPos.copy().rotate(orientation).add(position), false);
-        } else if (vehicleOn != null) {
-            Point3D dismountPosition = position.copy().subtract(vehicleOn.position).reOrigin(vehicleOn.orientation);
-            if (dismountPosition.x < 0) {
-                dismountPosition.add(-2D, 0D, 0D).rotate(vehicleOn.orientation).add(vehicleOn.position);
+        //If we are on the server, and we aren't changing seats to another of the same vehicle, handle things.
+        if (!world.isClient() && !riderChangingSeats) {
+            //Set the rider dismount position.
+            //If we have a dismount position in the JSON.  Use it.
+            //Otherwise, put us to the right or left of the seat depending on x-offset.
+            //Make sure to take into the movement of the seat we were riding if it had moved.
+            //This ensures the dismount moves with the seat.
+            if (placementDefinition.dismountPos != null) {
+                rider.setPosition(placementDefinition.dismountPos.copy().rotate(entityOn.orientation).add(entityOn.position), false);
+            } else if (vehicleOn != null) {
+                Point3D dismountPosition = position.copy().subtract(vehicleOn.position).reOrigin(vehicleOn.orientation);
+                if (dismountPosition.x < 0) {
+                    dismountPosition.add(-2D, 0D, 0D).rotate(vehicleOn.orientation).add(vehicleOn.position);
+                } else {
+                    dismountPosition.add(2D, 0D, 0D).rotate(vehicleOn.orientation).add(vehicleOn.position);
+                }
+                rider.setPosition(dismountPosition, false);
             } else {
-                dismountPosition.add(2D, 0D, 0D).rotate(vehicleOn.orientation).add(vehicleOn.position);
+                rider.setPosition(position, false);
             }
-            rider.setPosition(dismountPosition, false);
-        } else {
-            rider.setPosition(position, false);
+            rider.setOrientation(orientation);
+    
+            //Auto-open doors for the rider in this seat, if such doors exist.
+            if (placementDefinition.interactableVariables != null) {
+                placementDefinition.interactableVariables.forEach(variableList -> variableList.forEach(variable -> {
+                    entityOn.setVariable(variable, 1);
+                    InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(entityOn, variable, 1));
+                }));
+            }
         }
-        rider.setOrientation(orientation);
-
-        //Auto-open doors for the rider in this seat, if such doors exist.
-        if (placementDefinition.interactableVariables != null) {
-            placementDefinition.interactableVariables.forEach(variableList -> variableList.forEach(variable -> entityOn.setVariable(variable, 1)));
-        }
+        riderChangingSeats = false;
         super.removeRider();
     }
 
@@ -287,9 +291,9 @@ public final class PartSeat extends APart {
             }
 
             //If we are on the client, and the rider is the main client player, check controls.
-            //If the seat is a controller, and we have mouseYoke enabled, and our view is locked disable the mouse from MC.             
+            //If the seat is a controller, and we have mouseYoke enabled, and our view is locked disable the mouse from MC.
             //We also need to make sure the player in this event is the actual client player.  If we are on a server,
-            //another player could be getting us to this logic point and thus we'd be making their inputs in the vehicle.
+            //another player could be getting us to this logic point, thus we'd be making their inputs in the vehicle.
             if (vehicleOn != null && world.isClient() && !InterfaceManager.clientInterface.isChatOpen() && rider.equals(InterfaceManager.clientInterface.getClientPlayer())) {
                 ControlSystem.controlVehicle(vehicleOn, placementDefinition.isController);
                 InterfaceManager.inputInterface.setMouseEnabled(!(placementDefinition.isController && ConfigSystem.client.controlSettings.mouseYoke.value && lockCameraToMovement));
@@ -324,10 +328,10 @@ public final class PartSeat extends APart {
     }
 
     /**
-     *  Like {@link #getInterpolatedOrientation(TransformationMatrix, double)}, just for
-     *  the rider.  This is to allow for the fact the rider won't turn in the
-     *  seat when the seat turns via animations: only their rendered body will rotate.
-     *  In a nutshell, this get's the riders orientation assuming a non-rotated seat.
+     * Like {@link #getInterpolatedOrientation(RotationMatrix, double)}, just for
+     * the rider.  This is to allow for the fact the rider won't turn in the
+     * seat when the seat turns via animations: only their rendered body will rotate.
+     * In a nutshell, this get's the riders orientation assuming a non-rotated seat.
      */
     public void getRiderInterpolatedOrientation(RotationMatrix store, double partialTicks) {
         store.interploate(prevZeroReferenceOrientation, zeroReferenceOrientation, partialTicks);

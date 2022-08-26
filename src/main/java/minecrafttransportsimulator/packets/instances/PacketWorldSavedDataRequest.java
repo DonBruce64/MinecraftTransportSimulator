@@ -6,10 +6,11 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.packets.components.APacketPlayer;
 
-/**Packet used to request world NBT data from the server, and to send that data back to clients.
+/**
+ * Packet used to request world NBT data from the server, and to send that data back to clients.
  * This only happens when the world is first created.  Subsequent updates happen on-demand when
  * the data changes and will use their own packet, {@link PacketWorldSavedDataUpdate}
- * 
+ *
  * @author don_bruce
  */
 public class PacketWorldSavedDataRequest extends APacketPlayer {

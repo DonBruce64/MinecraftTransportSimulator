@@ -1,34 +1,27 @@
 package minecrafttransportsimulator.entities.instances;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
-import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
-import minecrafttransportsimulator.baseclasses.Damage;
-import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.baseclasses.RotationMatrix;
-import minecrafttransportsimulator.baseclasses.TransformationMatrix;
+import minecrafttransportsimulator.baseclasses.*;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
-import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
-import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
+import minecrafttransportsimulator.jsondefs.*;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
-import minecrafttransportsimulator.jsondefs.JSONPart;
-import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
-import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 
-/**This class is the base for all parts and should be extended for any entity-compatible parts.
- * Use {@link AEntityF_Multipart#addPart(APart, boolean)} to add parts 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+/**
+ * This class is the base for all parts and should be extended for any entity-compatible parts.
+ * Use {@link AEntityF_Multipart#addPart(APart, boolean)} to add parts
  * and {@link AEntityF_Multipart#removePart(APart, Iterator)} to remove them.
  * You may extend {@link AEntityF_Multipart} to get more functionality with those systems.
  * If you need to keep extra data ensure it is packed into whatever NBT is returned in item form.
  * This NBT will be fed into the constructor when creating this part, so expect it and ONLY look for it there.
- * 
+ *
  * @author don_bruce
  */
 public abstract class APart extends AEntityF_Multipart<JSONPart> {
@@ -38,23 +31,33 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     public final int placementSlot;
 
     //Instance properties.
-    /**The entity this part has been placed on.  May be a vehicle or a part.*/
+    /**
+     * The entity this part has been placed on,  can be a vehicle or a part.
+     */
     public final AEntityF_Multipart<?> entityOn;
-    /**The vehicle this part has been placed on.  This recurses to the vehicle itself if this part was placed on a part.
-     * Will be null, however, if this part isn't on a vehicle (say if it's on a decor).*/
+    /**
+     * The vehicle this part has been placed on.  This recurses to the vehicle itself if this part was placed on a part.
+     * Will be null, however, if this part isn't on a vehicle (say if it's on a decor).
+     */
     public final EntityVehicleF_Physics vehicleOn;
-    /**The part this part is on, or null if it's on a base entity.*/
+    /**
+     * The part this part is on, or null if it's on a base entity.
+     */
     public final APart partOn;
-    /**All linked parts for this part.  Updated whenever the part set changes.*/
-    public final List<APart> linkedParts = new ArrayList<APart>();
+    /**
+     * All linked parts for this part.  Updated whenever the part set changes.
+     */
+    public final List<APart> linkedParts = new ArrayList<>();
 
     public boolean isInvisible = false;
     public boolean isActive = true;
     public final boolean turnsWithSteer;
     public final boolean isSpare;
     public final boolean isMirrored;
-    /**The local offset from this part, to the master entity.  This may not be the offset from the part to the entity it is
-     * on if the entity is a part itself.*/
+    /*
+     * The local offset from this part, to the master entity.  This may not be the offset from the part to the entity it is
+     * on if the entity is a part itself.
+     */
     public final Point3D localOffset;
     public final RotationMatrix localOrientation;
     public final RotationMatrix zeroReferenceOrientation;
@@ -88,7 +91,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
 
         //Set initial position and rotation.  This ensures part doesn't "warp" the first tick.
         //Note that this isn't exact, as we can't calculate the exact locals until after the first tick
-        //when we init all our animations.
+        //when we initialize all of our animations.
         position.set(localOffset).add(entityOn.position);
         prevPosition.set(position);
         orientation.set(entityOn.orientation);
@@ -99,7 +102,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     protected void initializeAnimations() {
         super.initializeAnimations();
         if (placementDefinition.animations != null || placementDefinition.applyAfter != null) {
-            List<JSONAnimationDefinition> animations = new ArrayList<JSONAnimationDefinition>();
+            List<JSONAnimationDefinition> animations = new ArrayList<>();
             if (placementDefinition.animations != null) {
                 animations.addAll(placementDefinition.animations);
             }
@@ -263,8 +266,8 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     }
 
     @Override
-    public void doPostAllpartUpdates() {
-        super.doPostAllpartUpdates();
+    public void updatePartList() {
+        super.updatePartList();
         linkedParts.clear();
         addLinkedPartsToList(linkedParts, APart.class);
     }
@@ -320,7 +323,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
      * If the part doesn't match, then all child parts of that part are checked to see if they match.
      * This is done irrespective of the slot match on the sub-part, but will respect the part class.
      * This is done because wheels and other parts will frequently be attached to other parts in specific
-     * slots, such as custom axles or gun mounting hardpoints.  This method will also check in reverse, in
+     * slots, such as custom axles or gun mounting hard-points.  This method will also check in reverse, in
      * that if a part is linked to the slot of this part, then it will act as if this part had a linking to
      * the slot of the other part, provided the class matches the passed-in class.  Note that for all cases,
      * the JSON values are 1-indexed, whereas the map is 0-indexed.
@@ -391,7 +394,6 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     /**
      * Checks if this part can be removed with a wrench.  If so, then null is returned.
      * If not, a {@link LanguageEntry} is returned with the message of why it cannot be.
-     * 
      */
     public LanguageEntry checkForRemoval() {
         return null;
@@ -400,7 +402,6 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     /**
      * Returns true if this part can be clicked.  Normally true unless there are false linkedVariables.
      * However, some parts (like seats) may choose to ignore these in specific cases.
-     * 
      */
     public boolean canBeClicked() {
         return !entityOn.areVariablesBlocking(placementDefinition, InterfaceManager.clientInterface.getClientPlayer());
@@ -408,7 +409,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
 
     /**
      * This is called during part save/load calls.  Fakes parts are
-     * added to entities, but they aren't saved with the NBT.  Rather, 
+     * added to entities, but they aren't saved with the NBT.  Rather,
      * they should be re-created in the constructor of the part that added
      * them in the first place.
      */
@@ -467,7 +468,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         }
 
         //No variables, check super variables before doing generic forwarding.
-        //We need this here for position-specific values, as some of the
+        //We need this here for position-specific values, as some
         //super variables care about position, so we can't forward those.
         double value = super.getRawVariableValue(variable, partialTicks);
         if (!Double.isNaN(value)) {

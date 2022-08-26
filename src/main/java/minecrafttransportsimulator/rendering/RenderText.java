@@ -1,14 +1,5 @@
 package minecrafttransportsimulator.rendering;
 
-import java.awt.image.BufferedImage;
-import java.nio.FloatBuffer;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
-
-import javax.imageio.ImageIO;
-
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
@@ -16,7 +7,16 @@ import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.JSONText;
 
-/**Main render class for text.  This class contains a few methods for rendering text.  These mainly pertain to rendering
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.nio.FloatBuffer;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * Main render class for text.  This class contains a few methods for rendering text.  These mainly pertain to rendering
  * text strings given a specified set of formatting and position/rotation.
  *
  * @author don_bruce
@@ -32,22 +32,22 @@ public class RenderText {
     public static final char UNDERLINE_CHAR = '_';
     public static final char STRIKETHROUGH_CHAR = '-';
 
-    private static final Map<String, FontData> fontDatas = new HashMap<String, FontData>();
+    private static final Map<String, FontData> fontDatas = new HashMap<>();
     private static final TransformationMatrix transformHelper = new TransformationMatrix();
 
     /**
-     *  Draws the specified text.  This is designed for general draws where text is defined in-code, but still may
-     *  use custom fonts.  This method can render the text in multiple ways depending on the parameters passed-in.  
-     *  If a centered string is specified, then the point passed-in should be  the center point of the string, rather 
-     *  that the top-left of the string like normal.  The same goes for right-justify.  If wrapWidth is anything else but 0, 
-     *  then the wordWrap method will be called to render multi-line text.
-     *  Note that this method expects transforms to be applied such that the coordinate space is local
-     *  to the object rendering the text on, and is NOT the global coordinate space.  The coordinates MAY, however, be
-     *  in pixel-space.  This is essentially 1/16 scale of blocks, as blocks are 16 pixels each.
-     *  This is used for things that are already rendered in pixel-space, such as instruments and GUIs.
-     *  This also inverts the y coordinate as with those systems +y is down whereas normally it is up.
-     *  Also note that if a scale was applied prior to rendering this text, it should be passed-in here.
-     *  This allows for proper normal calculations to prevent needing to re-normalize the text.
+     * Draws the specified text.  This is designed for general draws where text is defined in-code, but still may
+     * use custom fonts.  This method can render the text in multiple ways depending on the parameters passed-in.
+     * If a centered string is specified, then the point passed-in should be  the center point of the string, rather
+     * that the top-left of the string like normal.  The same goes for right-justify.  If wrapWidth is anything else but 0,
+     * then the wordWrap method will be called to render multi-line text.
+     * Note that this method expects transforms to be applied such that the coordinate space is local
+     * to the object rendering the text on, and is NOT the global coordinate space.  The coordinates MAY, however, be
+     * in pixel-space.  This is essentially 1/16 scale of blocks, as blocks are 16 pixels each.
+     * This is used for things that are already rendered in pixel-space, such as instruments and GUIs.
+     * This also inverts the y coordinate as with those systems +y is down whereas normally it is up.
+     * Also note that if a scale was applied prior to rendering this text, it should be passed-in here.
+     * This allows for proper normal calculations to prevent needing to re-normalize the text.
      */
     public static void drawText(String text, String fontName, Point3D position, ColorRGB color, TextAlignment alignment, float scale, boolean autoScale, int wrapWidth, boolean renderLit) {
         if (!text.isEmpty()) {
@@ -58,8 +58,8 @@ public class RenderText {
     }
 
     /**
-     *  Similar to the 2D text drawing method, except this method will render the text according to the passed-in text JSON in 3D space at the point specified.
-     *  Essentially, this is JSON-defined rendering rather than manual entry of points.
+     * Similar to the 2D text drawing method, except this method will render the text according to the passed-in text JSON in 3D space at the point specified.
+     * Essentially, this is JSON-defined rendering rather than manual entry of points.
      */
     public static void draw3DText(String text, AEntityD_Definable<?> entity, TransformationMatrix transform, JSONText definition, boolean pixelCoords) {
         if (!text.isEmpty()) {
@@ -74,12 +74,12 @@ public class RenderText {
     }
 
     /**
-     *  Returns the width of the passed-in text.  Units are in pixels,
-     *  though these are standardized for the default font.  Fonts with
-     *  higher resolutions may result in non-whole-pixel widths.
-     *  NOTE: this applies an automatic 1.4 scaling to the default font
-     *  as this is done internally by the renderer.  This won't matter for
-     *  most things, but keep it in mind if sizes don't seem to match.
+     * Returns the width of the passed-in text.  Units are in pixels,
+     * though these are standardized for the default font.  Fonts with
+     * higher resolutions may result in non-whole-pixel widths.
+     * NOTE: this applies an automatic 1.4 scaling to the default font
+     * as this is done internally by the renderer.  This won't matter for
+     * most things, but keep it in mind if sizes don't seem to match.
      */
     public static float getStringWidth(String text, String fontName) {
         FontData font = getFontData(fontName);
@@ -91,12 +91,12 @@ public class RenderText {
     }
 
     /**
-     *  Returns the height of the number of lines of text.  Units are in pixels,
-     *  though these are standardized for the default font.  Fonts with
-     *  higher resolutions may result in non-whole-pixel widths.
-     *  NOTE: this applies an automatic 1.4 scaling to the default font
-     *  as this is done internally by the renderer.  This won't matter for
-     *  most things, but keep it in mind if sizes don't seem to match.
+     * Returns the height of the number of lines of text.  Units are in pixels,
+     * though these are standardized for the default font.  Fonts with
+     * higher resolutions may result in non-whole-pixel widths.
+     * NOTE: this applies an automatic 1.4 scaling to the default font
+     * as this is done internally by the renderer.  This won't matter for
+     * most things, but keep it in mind if sizes don't seem to match.
      */
     public static float getHeight(int numberLines, String fontName) {
         float height = numberLines * (FontData.DEFAULT_PIXELS_PER_CHAR + FontData.CHAR_SPACING);
@@ -108,9 +108,9 @@ public class RenderText {
     }
 
     /**
-     *  Returns the correct font rendering charset for the passed-in font,
-     *  creating it if it does not exist.  Does not bind the actual texture,
-     *  but does load it for calculating charset bounds.
+     * Returns the correct font rendering charset for the passed-in font,
+     * creating it if it does not exist.  Does not bind the actual texture,
+     * but does load it for calculating charset bounds.
      */
     private static FontData getFontData(String fontName) {
         FontData fontData = fontDatas.get(fontName);
@@ -122,16 +122,16 @@ public class RenderText {
     }
 
     /**
-     *  Class used for storing Unicode charset data for font rendering.
-     *  Contains font bounds and sizes.  Data is stored in an array with each
-     *  element representing the char index on the texture sheet.
+     * Class used for storing Unicode charset data for font rendering.
+     * Contains font bounds and sizes.  Data is stored in an array with each
+     * element representing the char index on the texture sheet.
      */
     private static class FontData {
         private static final byte CHARS_PER_ROWCOL = 16;
         private static final int CHARS_PER_TEXTURE_SHEET = CHARS_PER_ROWCOL * CHARS_PER_ROWCOL;
         private static final byte DEFAULT_PIXELS_PER_CHAR = 8;
         private static final float CHAR_SPACING = 0.5F;
-        private static final ColorRGB[] COLORS = new ColorRGB[] { new ColorRGB(0, 0, 0), new ColorRGB(0, 0, 170), new ColorRGB(0, 170, 0), new ColorRGB(0, 170, 170), new ColorRGB(170, 0, 0), new ColorRGB(170, 0, 170), new ColorRGB(255, 170, 0), new ColorRGB(170, 170, 170), new ColorRGB(85, 85, 85), new ColorRGB(85, 85, 255), new ColorRGB(85, 255, 85), new ColorRGB(85, 255, 255), new ColorRGB(255, 85, 85), new ColorRGB(255, 85, 255), new ColorRGB(255, 255, 85), new ColorRGB(255, 255, 255) };
+        private static final ColorRGB[] COLORS = new ColorRGB[]{new ColorRGB(0, 0, 0), new ColorRGB(0, 0, 170), new ColorRGB(0, 170, 0), new ColorRGB(0, 170, 170), new ColorRGB(170, 0, 0), new ColorRGB(170, 0, 170), new ColorRGB(255, 170, 0), new ColorRGB(170, 170, 170), new ColorRGB(85, 85, 85), new ColorRGB(85, 85, 255), new ColorRGB(85, 255, 85), new ColorRGB(85, 255, 255), new ColorRGB(255, 85, 85), new ColorRGB(255, 85, 255), new ColorRGB(255, 255, 85), new ColorRGB(255, 255, 255)};
         private static final FontRenderState[] STATES = FontRenderState.generateDefaults();
         private static final int MAX_VERTCIES_PER_RENDER = 1000 * 6;
         private static final Point3D adjustmentOffset = new Point3D();
@@ -139,32 +139,54 @@ public class RenderText {
         private final boolean isDefault;
         /*Texture locations for the font files.**/
         private final String[] fontLocations = new String[Character.MAX_VALUE / CHARS_PER_TEXTURE_SHEET];
-        /**Char width, in actual game texture pixels (not font texture pixels).  May be fractions of a pixel if the font is up-scaled.**/
+        /**
+         * Char width, in actual game texture pixels (not font texture pixels).  May be fractions of a pixel if the font is up-scaled.
+         **/
         private final float[] charWidths = new float[Character.MAX_VALUE];
-        /**Left-most offset for font text position, from 0-1, relative to the texture png.**/
+        /**
+         * Left-most offset for font text position, from 0-1, relative to the texture png.
+         **/
         private final float[] offsetsMinU = new float[Character.MAX_VALUE];
-        /**Right-most offset for font text position, from 0-1, relative to the texture png.**/
+        /**
+         * Right-most offset for font text position, from 0-1, relative to the texture png.
+         **/
         private final float[] offsetsMaxU = new float[Character.MAX_VALUE];
-        /**Bottom-most offset for font text position, from 0-1, relative to the texture png.**/
+        /**
+         * Bottom-most offset for font text position, from 0-1, relative to the texture png.
+         **/
         private final float[] offsetsMinV = new float[Character.MAX_VALUE];
-        /**Top-most offset for font text position, from 0-1, relative to the texture png.**/
+        /**
+         * Top-most offset for font text position, from 0-1, relative to the texture png.
+         **/
         private final float[] offsetsMaxV = new float[Character.MAX_VALUE];
 
-        /**Font render objects.  These are created initially for use in render calls.  Referencing is as follows:
+        /**
+         * Font render objects.  These are created initially for use in render calls.  Referencing is as follows:
          * The first array element is the texture sheet being used.
          * The second array element is the color.
-         * This ensures that there will always be one element for any permutation of states.**/
-        private static final Map<String, Map<ColorRGB, RenderableObject>> createdRenderObjects = new HashMap<String, Map<ColorRGB, RenderableObject>>();
-        /**Active font render objects.  Items are added to this list during string parsing.  
-         * At the end, it will be populated and should be looped over for drawing.*/
-        private final Set<RenderableObject> activeRenderObjects = new LinkedHashSet<RenderableObject>();
-        /**Mutable helper for doing vertex-building operations.**/
+         * This ensures that there will always be one element for any permutation of states.
+         **/
+        private static final Map<String, Map<ColorRGB, RenderableObject>> createdRenderObjects = new HashMap<>();
+        /**
+         * Active font render objects.  Items are added to this list during string parsing.
+         * At the end, it will be populated and should be looped over for drawing.
+         */
+        private final Set<RenderableObject> activeRenderObjects = new LinkedHashSet<>();
+        /**
+         * Mutable helper for doing vertex-building operations.
+         **/
         private final float[] charVertex = new float[3];
-        /**Mutable helper for doing vertex-building operations for font effects like bold and underline.**/
+        /**
+         * Mutable helper for doing vertex-building operations for font effects like bold and underline.
+         **/
         private final float[] supplementalVertex = new float[3];
-        /**Mutable helper for doing uv-building operations.**/
+        /**
+         * Mutable helper for doing uv-building operations.
+         **/
         private final float[] charUV = new float[2];
-        /**Mutable helper for doing uv-building operations for font effects like bold and underline.**/
+        /**
+         * Mutable helper for doing uv-building operations for font effects like bold and underline.
+         **/
         private final float[] supplementalUV = new float[2];
 
         private FontData(String fontName) {
@@ -252,7 +274,7 @@ public class RenderText {
             }
 
             //Pre-calculate normals, as these won't change.
-            float[] normals = new float[] { 0.0F, 0.0F, 1.0F };
+            float[] normals = new float[]{0.0F, 0.0F, 1.0F};
 
             //Check the string for a random font code char.  If we have one, we need to substitute chars.
             //Do this prior to rendering operations as this will affect string length and blocks.
@@ -598,11 +620,7 @@ public class RenderText {
                 textChar = 0;
             }
             String font = fontLocations[textChar / CHARS_PER_TEXTURE_SHEET];
-            Map<ColorRGB, RenderableObject> map1 = createdRenderObjects.get(font);
-            if (map1 == null) {
-                map1 = new HashMap<ColorRGB, RenderableObject>();
-                createdRenderObjects.put(font, map1);
-            }
+            Map<ColorRGB, RenderableObject> map1 = createdRenderObjects.computeIfAbsent(font, k -> new HashMap<>());
 
             RenderableObject object = map1.get(color);
             if (object == null) {
@@ -661,11 +679,11 @@ public class RenderText {
     }
 
     /**
-     *  List of enums that define how text is rendered.
+     * List of enums that define how text is rendered.
      */
-    public static enum TextAlignment {
+    public enum TextAlignment {
         CENTERED,
         LEFT_ALIGNED,
-        RIGHT_ALIGNED;
+        RIGHT_ALIGNED
     }
 }

@@ -13,7 +13,8 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.registry.EntityEntry;
 import net.minecraftforge.fml.common.registry.EntityEntryBuilder;
 
-/**Builder for an entity to forward rendering calls to all internal renderer.  This is due to prevent
+/**
+ * Builder for an entity to forward rendering calls to all internal renderer.  This is due to prevent
  * MC from culling entities when it should be rendering them instead.  MC does this when you can't see
  * the chunk the entity is in, or if they are above the world, but we don't want that.
  *
@@ -23,8 +24,8 @@ import net.minecraftforge.fml.common.registry.EntityEntryBuilder;
 public class BuilderEntityRenderForwarder extends ABuilderEntityBase {
 
     protected EntityPlayer playerFollowing;
-    private long[] lastTickRendered = new long[] { 0L, 0L, 0L };
-    private float[] lastPartialTickRendered = new float[] { 0F, 0F, 0F };
+    private final long[] lastTickRendered = new long[]{0L, 0L, 0L};
+    private final float[] lastPartialTickRendered = new float[]{0F, 0F, 0F};
     private boolean doneRenderingShaders;
     private static int framesShadersDetected;
     private static boolean shadersDetected;
@@ -70,9 +71,9 @@ public class BuilderEntityRenderForwarder extends ABuilderEntityBase {
     }
 
     /**
-     *  Helper method to tell if we need to render this entity on the current pass.
-     *  Always renders on passes 0 and 1, and sometimes on pass -1 if we didn't
-     *  render on pass 0 or 1.
+     * Helper method to tell if we need to render this entity on the current pass.
+     * Always renders on passes 0 and 1, and sometimes on pass -1 if we didn't
+     * render on pass 0 or 1.
      */
     public boolean shouldRenderEntity(float partialTicks) {
         //Get render pass.  Render data uses 2 for pass -1 as it uses arrays and arrays can't have a -1 index.

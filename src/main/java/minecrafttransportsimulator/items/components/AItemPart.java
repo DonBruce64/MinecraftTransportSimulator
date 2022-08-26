@@ -7,9 +7,10 @@ import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 
-/**Base class for part items.  Contains methods on what part to spawn from
+/**
+ * Base class for part items.  Contains methods on what part to spawn from
  * the item if the part is valid for the defined pack-def, etc.
- * 
+ *
  * @author don_bruce
  */
 public abstract class AItemPart extends AItemSubTyped<JSONPart> {
@@ -47,9 +48,10 @@ public abstract class AItemPart extends AItemSubTyped<JSONPart> {
      */
     public abstract APart createPart(AEntityF_Multipart<?> entity, IWrapperPlayer placingPlayer, JSONPartDefinition packVehicleDef, IWrapperNBT partData);
 
-    /**Class used to create instances of part items.  One of these should be registered
+    /**
+     * Class used to create instances of part items.  One of these should be registered
      * for every item before packs are parsed so the parser knows which to create.
-     * 
+     *
      * @author don_bruce
      */
     public static abstract class AItemPartCreator {

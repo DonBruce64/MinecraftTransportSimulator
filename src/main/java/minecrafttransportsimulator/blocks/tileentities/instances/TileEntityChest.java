@@ -8,7 +8,8 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 
-/**Chest tile entity.
+/**
+ * Chest tile entity.
  *
  * @author don_bruce
  */

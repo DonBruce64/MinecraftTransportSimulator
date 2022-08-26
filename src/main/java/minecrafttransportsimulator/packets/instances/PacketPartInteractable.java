@@ -1,7 +1,5 @@
 package minecrafttransportsimulator.packets.instances;
 
-import java.util.UUID;
-
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
@@ -14,12 +12,15 @@ import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.packets.components.APacketEntityInteract;
 
-/**Packet used to send signals to interactable parts.  This is either used used to link the interactable with
+import java.util.UUID;
+
+/**
+ * Packet used to send signals to interactable parts.  This is either used used to link the interactable with
  * a vehicle or part tank for fluid-pumping operations, or trigger a GUI to appear on the interactable.
  * Sent to servers by the fuel hose item when it does linking in the first case, and when a player clicks the
  * interactable in the second.
  * in the third.
- * 
+ *
  * @author don_bruce
  */
 public class PacketPartInteractable extends APacketEntityInteract<PartInteractable, IWrapperPlayer> {
@@ -60,7 +61,7 @@ public class PacketPartInteractable extends APacketEntityInteract<PartInteractab
                 if (linkedEntity instanceof EntityVehicleF_Physics) {
                     interactable.linkedVehicle = (EntityVehicleF_Physics) linkedEntity;
                 } else {
-                    interactable.linkedPart = (PartInteractable) (PartInteractable) linkedEntity;
+                    interactable.linkedPart = (PartInteractable) linkedEntity;
                 }
             }
         } else {

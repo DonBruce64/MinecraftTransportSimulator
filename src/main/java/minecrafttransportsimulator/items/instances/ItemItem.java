@@ -127,14 +127,13 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
                         //Check if we are the owner before making this a valid key.
                         if (vehicle.ownerUUID != null && ownerState.equals(PlayerOwnerState.USER)) {
                             player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_KEY_NOTOWNER));
-                            return CallbackType.NONE;
                         } else {
                             keyVehicleUUID = vehicle.uniqueUUID;
                             data.setUUID("vehicle", keyVehicleUUID);
                             stack.setData(data);
                             player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_KEY_BIND));
-                            return CallbackType.NONE;
                         }
+                        return CallbackType.NONE;
                     }
 
                     //Try to lock or unlock this vehicle.
@@ -326,7 +325,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
     public boolean onUsed(AWrapperWorld world, IWrapperPlayer player) {
         if (definition.item.type.equals(ItemComponentType.BOOKLET)) {
             if (!world.isClient()) {
-                player.sendPacket(new PacketGUIRequest(player, PacketGUIRequest.GUIType.BOOKELET));
+                player.sendPacket(new PacketGUIRequest(player, PacketGUIRequest.GUIType.BOOKLET));
             }
         } else if (definition.item.type.equals(ItemComponentType.Y2K_BUTTON)) {
             if (!world.isClient() && player.isOP()) {

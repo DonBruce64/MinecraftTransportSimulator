@@ -3,6 +3,7 @@ package minecrafttransportsimulator.entities.instances;
 import java.util.HashSet;
 import java.util.Set;
 
+import mcinterface1122.InterfaceLoader;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -18,11 +19,12 @@ import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncreme
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
-/**This class adds the final layer of physics calculations on top of the
+/**
+ * This class adds the final layer of physics calculations on top of the
  * existing entity calculations.  Various control surfaces are present, as
  * well as helper functions and logic for controlling those surfaces.
  * Note that angle variables here should be divided by 10 to get actual angle.
- * 
+ *
  * @author don_bruce
  */
 public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
@@ -33,6 +35,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     public double aileronAngle;
     @DerivedValue
     public double aileronTrim;
+    private byte aileronInputCooldown;
     public static final double MAX_AILERON_ANGLE = 25;
     public static final double MAX_AILERON_TRIM = 10;
     public static final double AILERON_DAMPEN_RATE = 0.6;
@@ -47,6 +50,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     public double elevatorAngle;
     @DerivedValue
     public double elevatorTrim;
+    private byte elevatorInputCooldown;
     public static final double MAX_ELEVATOR_ANGLE = 25;
     public static final double MAX_ELEVATOR_TRIM = 10;
     public static final double ELEVATOR_DAMPEN_RATE = 0.6;
@@ -61,6 +65,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     public double rudderAngle;
     @DerivedValue
     public double rudderTrim;
+    private byte rudderInputCooldown;
     public static final double MAX_RUDDER_ANGLE = 45;
     public static final double MAX_RUDDER_TRIM = 10;
     public static final double RUDDER_DAMPEN_RATE = 2.0;
@@ -93,7 +98,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     private final Point3D sideVector = new Point3D();
     private final Point3D hitchPrevOffset = new Point3D();
     private final Point3D hitchCurrentOffset = new Point3D();
-    private final Set<AEntityG_Towable<?>> towedEntitiesCheckedForWeights = new HashSet<AEntityG_Towable<?>>();
+    private final Set<AEntityG_Towable<?>> towedEntitiesCheckedForWeights = new HashSet<>();
 
     //Properties.
     @ModifiedValue
@@ -128,8 +133,8 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     private double rudderForce;//kg*m/ticks^2
     private double ballastForce;//kg*m/ticks^2
     private double gravitationalForce;//kg*m/ticks^2
-    private Point3D thrustForce = new Point3D();//kg*m/ticks^2
-    private Point3D totalForce = new Point3D();//kg*m/ticks^2
+    private final Point3D thrustForce = new Point3D();//kg*m/ticks^2
+    private final Point3D totalForce = new Point3D();//kg*m/ticks^2
 
     //Torques.
     private double momentRoll;//kg*m^2
@@ -138,9 +143,9 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     private double aileronTorque;//kg*m^2/ticks^2
     private double elevatorTorque;//kg*m^2/ticks^2
     private double rudderTorque;//kg*m^2/ticks^2
-    private Point3D thrustTorque = new Point3D();//kg*m^2/ticks^2
-    private Point3D totalTorque = new Point3D();//kg*m^2/ticks^2
-    private Point3D rotorRotation = new Point3D();//degrees
+    private final Point3D thrustTorque = new Point3D();//kg*m^2/ticks^2
+    private final Point3D totalTorque = new Point3D();//kg*m^2/ticks^2
+    private final Point3D rotorRotation = new Point3D();//degrees
 
     public EntityVehicleF_Physics(AWrapperWorld world, IWrapperPlayer placingPlayer, IWrapperNBT data) {
         super(world, placingPlayer, data);
@@ -186,17 +191,16 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         //This could lock up a world if not detected!
         double combinedMass = super.getMass();
         if (!towingConnections.isEmpty()) {
-            AEntityG_Towable<?> towedEntity = null;
+            AEntityG_Towable<?> towedEntity;
             for (TowingConnection connection : towingConnections) {
                 //Only check once per base entity.
                 towedEntity = connection.towedVehicle;
                 if (towedEntitiesCheckedForWeights.contains(towedEntity)) {
-                    InterfaceManager.coreInterface.logError("Infinite loop detected on weight checking code!  Is a trailer towing the thing that's towing it?");
+                    InterfaceLoader.LOGGER.error("Infinite loop detected on weight checking code!  Is a trailer towing the thing that's towing it?");
                     break;
                 } else {
                     towedEntitiesCheckedForWeights.add(towedEntity);
                     combinedMass += towedEntity.getMass();
-                    towedEntity = null;
                     towedEntitiesCheckedForWeights.clear();
                 }
             }
@@ -212,7 +216,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
     @Override
     protected void addToSteeringAngle(double degrees) {
         //Invert the degrees, as rudder is inverted from normal steering.
-        double delta = 0;
+        double delta;
         if (rudderInput - degrees > MAX_RUDDER_ANGLE) {
             delta = MAX_RUDDER_ANGLE - rudderInput;
         } else if (rudderInput - degrees < -MAX_RUDDER_ANGLE) {
@@ -222,6 +226,35 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
         }
         setVariable(RUDDER_INPUT_VARIABLE, rudderInput + delta);
         InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, RUDDER_INPUT_VARIABLE, delta));
+    }
+
+    @Override
+    public void setVariable(String variable, double value) {
+        switch (variable) {
+            case AILERON_INPUT_VARIABLE:
+                aileronInputCooldown = 6;
+                break;
+            case ELEVATOR_INPUT_VARIABLE:
+                elevatorInputCooldown = 6;
+                break;
+            case RUDDER_INPUT_VARIABLE:
+                rudderInputCooldown = 6;
+                break;
+        }
+        super.setVariable(variable, value);
+    }
+
+    @Override
+    public boolean incrementVariable(String variable, double incrementValue, double minValue, double maxValue) {
+        switch (variable) {
+            case AILERON_INPUT_VARIABLE:
+                aileronInputCooldown = 6;
+            case ELEVATOR_INPUT_VARIABLE:
+                elevatorInputCooldown = 6;
+            case RUDDER_INPUT_VARIABLE:
+                rudderInputCooldown = 6;
+        }
+        return super.incrementVariable(variable, incrementValue, minValue, maxValue);
     }
 
     @Override
@@ -327,7 +360,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                 } else if (part instanceof PartPropeller) {
                     PartPropeller propeller = (PartPropeller) part;
                     propeller.addToForceOutput(thrustForce, thrustTorque);
-                    if (propeller.definition.propeller.isRotor && !groundDeviceCollective.isAnythingOnGround()) {
+                    if (propeller.definition.propeller.isRotor && groundDeviceCollective.isAnythingOnGround()) {
                         hasRotors = true;
                         if (getVariable(AUTOLEVEL_VARIABLE) != 0) {
                             rotorRotation.set((-(elevatorAngle + elevatorTrim) - orientation.angles.x) / MAX_ELEVATOR_ANGLE, -5D * rudderAngle / MAX_RUDDER_ANGLE, ((aileronAngle + aileronTrim) - orientation.angles.z) / MAX_AILERON_ANGLE);
@@ -353,8 +386,6 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                             }
                         }
                     }
-                } else {
-                    continue;
                 }
             }
 
@@ -480,7 +511,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
 
             //As a special case, if the vehicle is a stalled plane, add a forwards pitch to allow the plane to right itself.
             //This is needed to prevent the plane from getting stuck in a vertical position and crashing.
-            if (currentWingArea > 0 && trackAngle > 40 && orientation.angles.x < 45 && motion.y < -0.1 && !groundDeviceCollective.isAnythingOnGround()) {
+            if (currentWingArea > 0 && trackAngle > 40 && orientation.angles.x < 45 && motion.y < -0.1 && groundDeviceCollective.isAnythingOnGround()) {
                 elevatorTorque += 100;
             }
 
@@ -644,40 +675,57 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
             }
         }
 
-        //If we don't have a controller, reset control states to 0.
-        if (getController() == null && !lockedOnRoad) {
-            if (aileronInput > AILERON_DAMPEN_RATE) {
-                setVariable(AILERON_INPUT_VARIABLE, aileronInput - AILERON_DAMPEN_RATE);
-                InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_INPUT_VARIABLE, -AILERON_DAMPEN_RATE, 0, MAX_AILERON_ANGLE));
-            } else if (aileronInput < -AILERON_DAMPEN_RATE) {
-                setVariable(AILERON_INPUT_VARIABLE, aileronInput + AILERON_DAMPEN_RATE);
-                InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_INPUT_VARIABLE, AILERON_DAMPEN_RATE, -MAX_AILERON_ANGLE, 0));
-            } else if (aileronInput != 0) {
-                setVariable(AILERON_INPUT_VARIABLE, 0);
-                InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, AILERON_INPUT_VARIABLE, 0));
+        //If we aren't currently sending control inputs, reset control states to 0.
+        //Don't do this on roads, since those manually set our controls.
+        if (!lockedOnRoad) {
+            if (aileronInputCooldown == 0) {
+                if (aileronInput > AILERON_DAMPEN_RATE) {
+                    setVariable(AILERON_INPUT_VARIABLE, aileronInput - AILERON_DAMPEN_RATE);
+                    InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_INPUT_VARIABLE, -AILERON_DAMPEN_RATE, 0, MAX_AILERON_ANGLE));
+                } else if (aileronInput < -AILERON_DAMPEN_RATE) {
+                    setVariable(AILERON_INPUT_VARIABLE, aileronInput + AILERON_DAMPEN_RATE);
+                    InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, AILERON_INPUT_VARIABLE, AILERON_DAMPEN_RATE, -MAX_AILERON_ANGLE, 0));
+                } else if (aileronInput != 0) {
+                    setVariable(AILERON_INPUT_VARIABLE, 0);
+                    InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, AILERON_INPUT_VARIABLE, 0));
+                }
+                aileronInputCooldown = 0;
+            } else {
+                --aileronInputCooldown;
             }
 
-            if (elevatorInput > ELEVATOR_DAMPEN_RATE) {
-                setVariable(ELEVATOR_INPUT_VARIABLE, elevatorInput - ELEVATOR_DAMPEN_RATE);
-                InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_INPUT_VARIABLE, -ELEVATOR_DAMPEN_RATE, 0, MAX_ELEVATOR_ANGLE));
-            } else if (elevatorInput < -ELEVATOR_DAMPEN_RATE) {
-                setVariable(ELEVATOR_INPUT_VARIABLE, elevatorInput + ELEVATOR_DAMPEN_RATE);
-                InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_INPUT_VARIABLE, ELEVATOR_DAMPEN_RATE, -MAX_ELEVATOR_ANGLE, 0));
-            } else if (elevatorInput != 0) {
-                setVariable(ELEVATOR_INPUT_VARIABLE, 0);
-                InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, ELEVATOR_INPUT_VARIABLE, 0));
+            if (elevatorInputCooldown == 0) {
+                if (elevatorInput > ELEVATOR_DAMPEN_RATE) {
+                    setVariable(ELEVATOR_INPUT_VARIABLE, elevatorInput - ELEVATOR_DAMPEN_RATE);
+                    InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_INPUT_VARIABLE, -ELEVATOR_DAMPEN_RATE, 0, MAX_ELEVATOR_ANGLE));
+                } else if (elevatorInput < -ELEVATOR_DAMPEN_RATE) {
+                    setVariable(ELEVATOR_INPUT_VARIABLE, elevatorInput + ELEVATOR_DAMPEN_RATE);
+                    InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, ELEVATOR_INPUT_VARIABLE, ELEVATOR_DAMPEN_RATE, -MAX_ELEVATOR_ANGLE, 0));
+                } else if (elevatorInput != 0) {
+                    setVariable(ELEVATOR_INPUT_VARIABLE, 0);
+                    InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, ELEVATOR_INPUT_VARIABLE, 0));
+                }
+                elevatorInputCooldown = 0;
+            } else {
+                --elevatorInputCooldown;
             }
 
-            if (rudderInput > RUDDER_DAMPEN_RATE) {
-                setVariable(RUDDER_INPUT_VARIABLE, rudderInput - RUDDER_DAMPEN_RATE);
-                InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, RUDDER_INPUT_VARIABLE, -RUDDER_DAMPEN_RATE, 0, MAX_RUDDER_ANGLE));
-            } else if (rudderInput < -RUDDER_DAMPEN_RATE) {
-                setVariable(RUDDER_INPUT_VARIABLE, rudderInput + RUDDER_DAMPEN_RATE);
-                InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, RUDDER_INPUT_VARIABLE, RUDDER_DAMPEN_RATE, -MAX_RUDDER_ANGLE, 0));
-            } else if (rudderInput != 0) {
-                setVariable(RUDDER_INPUT_VARIABLE, 0);
-                InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, RUDDER_INPUT_VARIABLE, 0));
+            if (rudderInputCooldown == 0) {
+                if (rudderInput > RUDDER_DAMPEN_RATE) {
+                    setVariable(RUDDER_INPUT_VARIABLE, rudderInput - RUDDER_DAMPEN_RATE);
+                    InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, RUDDER_INPUT_VARIABLE, -RUDDER_DAMPEN_RATE, 0, MAX_RUDDER_ANGLE));
+                } else if (rudderInput < -RUDDER_DAMPEN_RATE) {
+                    setVariable(RUDDER_INPUT_VARIABLE, rudderInput + RUDDER_DAMPEN_RATE);
+                    InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableIncrement(this, RUDDER_INPUT_VARIABLE, RUDDER_DAMPEN_RATE, -MAX_RUDDER_ANGLE, 0));
+                } else if (rudderInput != 0) {
+                    setVariable(RUDDER_INPUT_VARIABLE, 0);
+                    InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, RUDDER_INPUT_VARIABLE, 0));
+                }
+                rudderInputCooldown = 0;
+            } else {
+                --rudderInputCooldown;
             }
+
         }
     }
 

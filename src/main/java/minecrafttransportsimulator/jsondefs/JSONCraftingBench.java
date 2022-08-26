@@ -1,8 +1,8 @@
 package minecrafttransportsimulator.jsondefs;
 
-import java.util.List;
-
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
+
+import java.util.List;
 
 public class JSONCraftingBench {
 

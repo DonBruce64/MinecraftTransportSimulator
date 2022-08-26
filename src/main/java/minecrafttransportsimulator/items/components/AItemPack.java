@@ -1,21 +1,19 @@
 package minecrafttransportsimulator.items.components;
 
-import java.util.List;
-
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
-import minecrafttransportsimulator.jsondefs.AJSONItem;
-import minecrafttransportsimulator.jsondefs.JSONCraftingBench;
-import minecrafttransportsimulator.jsondefs.JSONPack;
-import minecrafttransportsimulator.jsondefs.JSONPart;
-import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
+import minecrafttransportsimulator.jsondefs.*;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
-/**Base item class for all pack-created items.  Stores information such as the
+import java.util.Collections;
+import java.util.List;
+
+/**
+ * Base item class for all pack-created items.  Stores information such as the
  * pack the item belongs to and the class that extends {@link AJSONItem} that
  * is the instance of the item's pack.
- * 
+ *
  * @author don_bruce
  */
 public abstract class AItemPack<JSONDefinition extends AJSONItem> extends AItemBase {
@@ -40,9 +38,7 @@ public abstract class AItemPack<JSONDefinition extends AJSONItem> extends AItemB
 
     @Override
     public void addTooltipLines(List<String> tooltipLines, IWrapperNBT data) {
-        for (String tooltipLine : ConfigSystem.language.packs.get(definition.packID).get(getRegistrationName()).description.split("\n")) {
-            tooltipLines.add(tooltipLine);
-        }
+        Collections.addAll(tooltipLines, ConfigSystem.language.packs.get(definition.packID).get(getRegistrationName()).description.split("\n"));
     }
 
     @Override

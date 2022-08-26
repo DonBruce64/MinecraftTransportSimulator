@@ -14,7 +14,7 @@ public class JSONConnection {
     @JSONDescription("The position of this connection on the vehicle.")
     public Point3D pos;
 
-    @JSONRequired(dependentField = "mounted", dependentValues = { "true" })
+    @JSONRequired(dependentField = "mounted", dependentValues = {"true"})
     @JSONDescription("The rotation of this connection.  Required when using mounted connections.  Has no effect on other connections.")
     public RotationMatrix rot;
 

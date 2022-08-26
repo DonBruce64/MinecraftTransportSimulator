@@ -1,34 +1,34 @@
 package minecrafttransportsimulator.jsondefs;
 
-import java.util.List;
-
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 
-@JSONDescription("While allowing users to craft vehicles is great, it can get a bit un-realistic to make a truck out of stacks of iron ingots and glass.  To help with this, MTS allows you to make custom items.  These items are loaded via JSON like all other vehicle bits, but rather than use an OBJ model they use the normal Minecraft item JSON format.  This allows you to take any JSON outputted from any modeling software (such as BlockBench) and plop it, along with a small file in the jsondefs section, into your pack for crafting use!  Items just have a general section per the default.  That's it.  If you want to add functioanlity to your items, you can do so by giving the appropriate type parameter.")
+import java.util.List;
+
+@JSONDescription("While allowing users to craft vehicles is great, it can get a bit un-realistic to make a truck out of stacks of iron ingots and glass.  To help with this, MTS allows you to make custom items.  These items are loaded via JSON like all other vehicle bits, but rather than use an OBJ model they use the normal Minecraft item JSON format.  This allows you to take any JSON outputted from any modeling software (such as BlockBench) and plop it, along with a small file in the jsondefs section, into your pack for crafting use!  Items just have a general section per the default.  That's it.  If you want to add functionality to your items, you can do so by giving the appropriate type parameter.")
 public class JSONItem extends AJSONItem {
 
     @JSONDescription("Properties for all items..")
     public JSONItemGeneric item;
 
-    @JSONRequired(dependentField = "type", dependentValues = { "booklet" }, subField = "item")
+    @JSONRequired(dependentField = "type", dependentValues = {"booklet"}, subField = "item")
     @JSONDescription("Booklet-specific item section.")
     public JSONBooklet booklet;
 
-    @JSONRequired(dependentField = "type", dependentValues = { "food" }, subField = "item")
+    @JSONRequired(dependentField = "type", dependentValues = {"food"}, subField = "item")
     @JSONDescription("Food-specific item section.")
     public JSONFood food;
 
-    @JSONRequired(dependentField = "type", dependentValues = { "weapon" }, subField = "item")
+    @JSONRequired(dependentField = "type", dependentValues = {"weapon"}, subField = "item")
     @JSONDescription("Weapon-specific item section.")
     public JSONWeapon weapon;
 
-    public class JSONItemGeneric {
+    public static class JSONItemGeneric {
         @JSONDescription("The functionality to give this item.")
         public ItemComponentType type;
     }
 
-    public class JSONBooklet {
+    public static class JSONBooklet {
         @JSONDescription("How wide of a texture, in px, this booklet uses.  Used for ALL pages")
         public int textureWidth;
 
@@ -47,7 +47,7 @@ public class JSONItem extends AJSONItem {
         @JSONDescription("A list of Page objects that make up the pages of this booklet.")
         public List<BookletPage> pages;
 
-        public class BookletPage {
+        public static class BookletPage {
             @JSONDescription("The name of the texture for this page.  Each page may use a different texture, if desired.\nHowever, all textures MUST be the same resolution as defined by textureWidth and textureHeight.")
             public String pageTexture;
 
@@ -59,7 +59,7 @@ public class JSONItem extends AJSONItem {
         }
     }
 
-    public class JSONFood {
+    public static class JSONFood {
         @JSONDescription("The animation to play while consuming this item.  If true, the drinking animation is played.  If false, the eating animation is played.")
         public boolean isDrink;
 
@@ -76,7 +76,7 @@ public class JSONItem extends AJSONItem {
         public List<JSONPotionEffect> effects;
     }
 
-    public class JSONWeapon {
+    public static class JSONWeapon {
         @JSONDescription("How much damage this weapon will inflict when it hits an entity.")
         public double attackDamage;
 
@@ -84,7 +84,7 @@ public class JSONItem extends AJSONItem {
         public double attackCooldown;
     }
 
-    public static enum ItemComponentType {
+    public enum ItemComponentType {
         @JSONDescription("Creates an item with no functionality.")
         NONE,
         @JSONDescription("Creates a booklet, which is a book-like item.")
@@ -110,6 +110,6 @@ public class JSONItem extends AJSONItem {
         @JSONDescription("Creates an item that works as a jumper pack.")
         JUMPER_PACK,
         @JSONDescription("Creates an item that works as a Y2K button.")
-        Y2K_BUTTON;
+        Y2K_BUTTON
     }
 }

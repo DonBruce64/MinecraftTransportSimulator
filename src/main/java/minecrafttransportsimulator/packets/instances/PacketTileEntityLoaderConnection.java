@@ -1,7 +1,5 @@
 package minecrafttransportsimulator.packets.instances;
 
-import java.util.UUID;
-
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityLoader;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
@@ -9,8 +7,11 @@ import minecrafttransportsimulator.entities.instances.PartInteractable;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
-/**Packet sent to loaders  on clients to change what part they are connected to.
- * 
+import java.util.UUID;
+
+/**
+ * Packet sent to loaders  on clients to change what part they are connected to.
+ *
  * @author don_bruce
  */
 public class PacketTileEntityLoaderConnection extends APacketEntity<ATileEntityLoader> {

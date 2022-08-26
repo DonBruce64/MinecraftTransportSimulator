@@ -1,8 +1,5 @@
 package mcinterface1122;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.mcinterface.IInterfaceCore;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
@@ -15,9 +12,10 @@ import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.oredict.OreDictionary;
 
-class InterfaceCore implements IInterfaceCore {
-    private List<String> queuedLogs = new ArrayList<String>();
+import java.util.ArrayList;
+import java.util.List;
 
+class InterfaceCore implements IInterfaceCore {
     @Override
     public String getGameVersion() {
         return Loader.instance().getMCVersionString().substring("Minecraft ".length());
@@ -73,7 +71,7 @@ class InterfaceCore implements IInterfaceCore {
     @Override
     public List<IWrapperItemStack> getOredictMaterials(String oreName) {
         NonNullList<ItemStack> oreDictStacks = OreDictionary.getOres(oreName, false);
-        List<IWrapperItemStack> stacks = new ArrayList<IWrapperItemStack>();
+        List<IWrapperItemStack> stacks = new ArrayList<>();
         for (ItemStack stack : oreDictStacks) {
             if (stack.getMetadata() == net.minecraftforge.oredict.OreDictionary.WILDCARD_VALUE) {
                 NonNullList<ItemStack> oreDictSubStacks = NonNullList.create();
@@ -88,21 +86,5 @@ class InterfaceCore implements IInterfaceCore {
 
         }
         return stacks;
-    }
-
-    @Override
-    public void logError(String message) {
-        if (InterfaceLoader.logger == null) {
-            queuedLogs.add(InterfaceLoader.MODID.toUpperCase() + "ERROR: " + message);
-        } else {
-            InterfaceLoader.logger.error(InterfaceLoader.MODID.toUpperCase() + "ERROR: " + message);
-        }
-    }
-
-    @Override
-    public void flushLogQueue() {
-        for (String log : queuedLogs) {
-            logError(log);
-        }
     }
 }

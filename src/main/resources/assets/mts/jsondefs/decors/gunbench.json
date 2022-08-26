@@ -1,11 +1,11 @@
 {
-	"general": {
-		"name" : "Gun Bench",
-		"materials" : [],
-		"width" : 1.0,
-		"height" : 1.0,
-		"depth" : 1.0,
-		"itemTypes" : ["part", "bullet"],
-		"partTypes" : ["gun_"]
-	}
+    "general": {
+        "name": "Gun Bench",
+        "materials": [],
+        "width": 1.0,
+        "height": 1.0,
+        "depth": 1.0,
+        "itemTypes": ["part", "bullet"],
+        "partTypes": ["gun_"]
+    }
 }

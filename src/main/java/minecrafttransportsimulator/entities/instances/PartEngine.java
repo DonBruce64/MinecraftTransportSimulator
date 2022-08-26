@@ -9,20 +9,19 @@ import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
+import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine.Signal;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 public class PartEngine extends APart {
-
     //State data.
     public boolean isCreative;
     public boolean oilLeak;
@@ -52,6 +51,7 @@ public class PartEngine extends APart {
 
     //Runtime calculated values.
     public double fuelFlow;
+    public double rocketFuel;
     public PartEngine linkedEngine;
 
     //Internal properties
@@ -73,6 +73,8 @@ public class PartEngine extends APart {
     private float currentSuperchargerFuelConsumption;
     @ModifiedValue
     private float currentSuperchargerEfficiency;
+    @ModifiedValue
+    private float currentGearRatio;
 
     //Internal variables.
     private boolean isPropellerInLiquid;
@@ -80,7 +82,6 @@ public class PartEngine extends APart {
     private int starterLevel;
     private int shiftCooldown;
     private int backfireCooldown;
-    private float currentGearRatio;
     private double lowestWheelVelocity;
     private double desiredWheelVelocity;
     private double propellerAxialVelocity;
@@ -93,9 +94,9 @@ public class PartEngine extends APart {
     private double prevEngineRotation;
     private double driveshaftRotation;
     private double prevDriveshaftRotation;
-    private final List<PartGroundDevice> linkedWheels = new ArrayList<PartGroundDevice>();
-    private final List<PartGroundDevice> drivenWheels = new ArrayList<PartGroundDevice>();
-    private final List<PartPropeller> linkedPropellers = new ArrayList<PartPropeller>();
+    private final List<PartGroundDevice> linkedWheels = new ArrayList<>();
+    private final List<PartGroundDevice> drivenWheels = new ArrayList<>();
+    private final List<PartPropeller> linkedPropellers = new ArrayList<>();
     private final Point3D engineAxisVector = new Point3D();
     private final Point3D engineForce = new Point3D();
 
@@ -138,6 +139,7 @@ public class PartEngine extends APart {
         if (vehicleOn != null && vehicleOn.definition.motorized.isAircraft) {
             setVariable(GEAR_VARIABLE, 1);
         }
+        this.rocketFuel = definition.engine.rocketFuel;
     }
 
     @Override
@@ -161,7 +163,7 @@ public class PartEngine extends APart {
             if (!isCreative) {
                 if (damage.isExplosion) {
                     hours += damage.amount * 20 * ConfigSystem.settings.general.engineHoursFactor.value;
-                    if (!definition.engine.isSteamPowered) {
+                    if (definition.engine.type == JSONPart.EngineType.NORMAL) {
                         if (!oilLeak)
                             oilLeak = Math.random() < ConfigSystem.settings.damage.engineLeakProbability.value * 10;
                         if (!fuelLeak)
@@ -172,7 +174,7 @@ public class PartEngine extends APart {
                     InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, damage.amount * 10 * ConfigSystem.settings.general.engineHoursFactor.value, oilLeak, fuelLeak, brokenStarter));
                 } else {
                     hours += damage.amount * 2 * ConfigSystem.settings.general.engineHoursFactor.value;
-                    if (!definition.engine.isSteamPowered) {
+                    if (definition.engine.type == JSONPart.EngineType.NORMAL) {
                         if (!oilLeak)
                             oilLeak = Math.random() < ConfigSystem.settings.damage.engineLeakProbability.value;
                         if (!fuelLeak)
@@ -201,7 +203,9 @@ public class PartEngine extends APart {
         //If the engine is running, but the magneto is off, turn the engine off.
         if (running && !magnetoOn) {
             running = false;
-            internalFuel = 200;
+            if (definition.engine.type == JSONPart.EngineType.NORMAL) {
+                internalFuel = 200;
+            }
         }
 
         //Set fuel flow to 0 for the start of this cycle.
@@ -214,9 +218,6 @@ public class PartEngine extends APart {
         if (downshiftCountdown > 0) {
             --downshiftCountdown;
         }
-
-        //Set current gear ratio based on current gear.
-        currentGearRatio = definition.engine.gearRatios.get(currentGear + reverseGears);
 
         if (vehicleOn != null) {
             //Check to see if we are linked and need to equalize power between us and another engine.
@@ -304,19 +305,21 @@ public class PartEngine extends APart {
             }
 
             //Check for any shifting requests.
-            if (isVariableActive(UP_SHIFT_VARIABLE)) {
-                shiftUp();
-                toggleVariable(UP_SHIFT_VARIABLE);
-            } else if (isVariableActive(DOWN_SHIFT_VARIABLE)) {
-                shiftDown();
-                toggleVariable(DOWN_SHIFT_VARIABLE);
-            } else if (isVariableActive(NEUTRAL_SHIFT_VARIABLE)) {
-                shiftNeutral();
-                toggleVariable(NEUTRAL_SHIFT_VARIABLE);
+            if (!world.isClient()) {
+                if (isVariableActive(UP_SHIFT_VARIABLE)) {
+                    toggleVariable(UP_SHIFT_VARIABLE);
+                    shiftUp();
+                } else if (isVariableActive(DOWN_SHIFT_VARIABLE)) {
+                    toggleVariable(DOWN_SHIFT_VARIABLE);
+                    shiftDown();
+                } else if (isVariableActive(NEUTRAL_SHIFT_VARIABLE)) {
+                    toggleVariable(NEUTRAL_SHIFT_VARIABLE);
+                    shiftNeutral();
+                }
             }
 
             //Check for reversing if we are on a blimp with reversed thrust.
-            if (vehicleOn != null && vehicleOn.definition.motorized.isBlimp && !linkedPropellers.isEmpty()) {
+            if (vehicleOn.definition.motorized.isBlimp && !linkedPropellers.isEmpty()) {
                 if (vehicleOn.reverseThrust && currentGear > 0) {
                     currentGear = -1;
                 } else if (!vehicleOn.reverseThrust && currentGear < 0) {
@@ -324,84 +327,34 @@ public class PartEngine extends APart {
                 }
             }
 
-            //Do running logic.
-            if (running) {
-                //Provide electric power to the vehicle we're in.
-                vehicleOn.electricUsage -= 0.05 * rpm / currentMaxRPM;
+            //Update driven wheels.  These are a subset of linked depending on the wheel state.
+            drivenWheels.clear();
+            for (PartGroundDevice wheel : linkedWheels) {
+                if (!wheel.isSpare && wheel.isActive && (wheel.definition.ground.isWheel || wheel.definition.ground.isTread)) {
+                    drivenWheels.add(wheel);
+                    wheel.drivenLastTick = true;
+                }
+            }
 
-                //Add hours to the engine.
+            //Do common running tasks.
+            if (running) {
+
+                //If we aren't creative, add hours.
                 if (!isCreative) {
                     hours += 0.001 * getTotalWearFactor();
                 }
 
-                //Do engine-type specific update logic.
-                if (definition.engine.isSteamPowered) {
-                    //TODO do steam engine logic.
-                } else {
-                    //Try to get fuel from the vehicle and calculate fuel flow.
-                    if (!isCreative && !vehicleOn.fuelTank.getFluid().isEmpty()) {
-                        if (!ConfigSystem.settings.fuel.fuels.containsKey(definition.engine.fuelType)) {
-                            throw new IllegalArgumentException("Engine:" + definition.packID + ":" + definition.systemName + " wanted fuel configs for fuel of type:" + definition.engine.fuelType + ", but these do not exist in the config file.  Fuels currently in the file are:" + ConfigSystem.settings.fuel.fuels.keySet() + "If you are on a server, this means the server and client configs are not the same.  If this is a modpack, TELL THE AUTHOR IT IS BORKEN!");
-                        } else if (!ConfigSystem.settings.fuel.fuels.get(definition.engine.fuelType).containsKey(vehicleOn.fuelTank.getFluid())) {
-                            //Clear out the fuel from this vehicle as it's the wrong type.
-                            vehicleOn.fuelTank.drain(vehicleOn.fuelTank.getFluid(), vehicleOn.fuelTank.getFluidLevel(), true);
-                        } else {
-                            fuelFlow += vehicleOn.fuelTank.drain(vehicleOn.fuelTank.getFluid(), getTotalFuelConsumption() * ConfigSystem.settings.general.fuelUsageFactor.value / ConfigSystem.settings.fuel.fuels.get(definition.engine.fuelType).get(vehicleOn.fuelTank.getFluid()) * rpm * (fuelLeak ? 1.5F : 1.0F) / currentMaxRPM, !world.isClient());
-                        }
-                    }
-
-                    //Add temp based on engine speed.
-                    temp += Math.max(0, (7 * rpm / currentMaxRPM - temp / (COLD_TEMP * 2)) / 20) * currentHeatingCoefficient * ConfigSystem.settings.general.engineSpeedTempFactor.value;
-
-                    //Adjust oil pressure based on RPM and leak status.
-                    //If this is a 0-idle RPM engine, assume it's electric and doesn't have oil.
-                    if (currentIdleRPM != 0) {
-                        pressure = Math.min(90 - temp / 10, pressure + rpm / currentIdleRPM - 0.5 * (oilLeak ? 5F : 1F) * (pressure / LOW_OIL_PRESSURE));
-
-                        //Add extra hours and temp if we have low oil.
-                        if (pressure < LOW_OIL_PRESSURE && !isCreative) {
-                            temp += Math.max(0, (20 * rpm / currentMaxRPM) / 20);
-                            hours += 0.01 * getTotalWearFactor();
-                        }
-                    }
-
-                    //Add extra hours, and possibly explode the engine, if its too hot.
-                    if (temp > OVERHEAT_TEMP_1 && !isCreative) {
-                        hours += 0.001 * (temp - OVERHEAT_TEMP_1) * getTotalWearFactor();
-                        if (temp > FAILURE_TEMP && !world.isClient()) {
-                            explodeEngine();
-                        }
-                    }
-
-                    //If the engine has high hours, give a chance for a backfire.
-                    if (hours > 250 && !world.isClient()) {
-                        if (Math.random() < (hours / 2) / (250 + (10000 - hours)) * (currentMaxSafeRPM / (rpm + currentMaxSafeRPM / 1.5))) {
-                            backfireEngine();
-                            InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.BACKFIRE));
-                        }
-                    }
-
-                    //Check if we need to stall the engine for various conditions.
-                    if (!world.isClient()) {
-                        if (!world.isClient() && isInLiquid()) {
-                            stallEngine(Signal.DROWN);
-                            InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.DROWN));
-                        } else if (!isCreative && vehicleOn.fuelTank.getFluidLevel() == 0) {
-                            stallEngine(Signal.FUEL_OUT);
-                            InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.FUEL_OUT));
-                        } else if (rpm < definition.engine.stallRPM) {
-                            stallEngine(Signal.TOO_SLOW);
-                            InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.TOO_SLOW));
-                        } else if (!isActive) {
-                            stallEngine(Signal.FUEL_OUT);
-                            InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.FUEL_OUT));
-                        } else if (vehicleOn.damageAmount == vehicleOn.definition.general.health) {
-                            stallEngine(Signal.DEAD_VEHICLE);
-                            InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.DEAD_VEHICLE));
-                        } else if (ConfigSystem.settings.general.engineDimensionWhitelist.value.isEmpty() ? ConfigSystem.settings.general.engineDimensionBlacklist.value.contains(world.getName()) : !ConfigSystem.settings.general.engineDimensionWhitelist.value.contains(world.getName())) {
-                            stallEngine(Signal.INVALID_DIMENSION);
-                            InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.INVALID_DIMENSION));
-                        }
+                //Stall engine for conditions.
+                if (!world.isClient()) {
+                    if (!isActive) {
+                        stallEngine(Signal.FUEL_OUT);
+                        InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.FUEL_OUT));
+                    } else if (vehicleOn.damageAmount == vehicleOn.definition.general.health) {
+                        stallEngine(Signal.DEAD_VEHICLE);
+                        InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.DEAD_VEHICLE));
+                    } else if (ConfigSystem.settings.general.engineDimensionWhitelist.value.isEmpty() ? ConfigSystem.settings.general.engineDimensionBlacklist.value.contains(world.getName()) : !ConfigSystem.settings.general.engineDimensionWhitelist.value.contains(world.getName())) {
+                        stallEngine(Signal.INVALID_DIMENSION);
+                        InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.INVALID_DIMENSION));
                     }
                 }
 
@@ -432,40 +385,109 @@ public class PartEngine extends APart {
                         --shiftCooldown;
                     }
                 }
-            } else {
-                //If we aren't a steam engine, set pressure and fuel flow to 0.
-                if (!definition.engine.isSteamPowered) {
-                    pressure = 0;
-                    fuelFlow = 0;
-                }
 
-                //Internal fuel is used for engine sound wind down.  NOT used for power.
-                if (internalFuel > 0) {
-                    --internalFuel;
-                    if (rpm < 500) {
-                        internalFuel = 0;
-                    }
-                }
-
-                //Start engine if the RPM is high enough to cause it to start by itself.
-                //Used for drowned engines that come out of the water, or engines that don't
-                //have the ability to engage a starter.
-                if (rpm >= definition.engine.startRPM && !world.isClient() && vehicleOn.damageAmount < vehicleOn.definition.general.health) {
-                    if (isCreative || vehicleOn.fuelTank.getFluidLevel() > 0) {
-                        if (!isInLiquid() && magnetoOn) {
-                            startEngine();
-                            InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.START));
-                        }
+                //Add extra hours, and possibly explode the engine, if it's too hot.
+                if (temp > OVERHEAT_TEMP_1 && !isCreative) {
+                    hours += 0.001 * (temp - OVERHEAT_TEMP_1) * getTotalWearFactor();
+                    if (temp > FAILURE_TEMP && !world.isClient()) {
+                        explodeEngine();
                     }
                 }
             }
 
-            //Update driven wheels.  These are a subset of linked depending on the wheel state.
-            drivenWheels.clear();
-            for (PartGroundDevice wheel : linkedWheels) {
-                if (!wheel.isSpare && wheel.isActive && (wheel.definition.ground.isWheel || wheel.definition.ground.isTread)) {
-                    drivenWheels.add(wheel);
-                    wheel.drivenLastTick = true;
+            //Do running logic.
+            switch (definition.engine.type) {
+                case NORMAL: {
+                    if (running) {
+                        //Provide electric power to the vehicle we're in.
+                        vehicleOn.electricUsage -= 0.05 * rpm / currentMaxRPM;
+
+                        //Try to get fuel from the vehicle and calculate fuel flow.
+                        if (!isCreative && !vehicleOn.fuelTank.getFluid().isEmpty()) {
+                            if (!ConfigSystem.settings.fuel.fuels.containsKey(definition.engine.fuelType)) {
+                                throw new IllegalArgumentException("Engine:" + definition.packID + ":" + definition.systemName + " wanted fuel configs for fuel of type:" + definition.engine.fuelType + ", but these do not exist in the config file.  Fuels currently in the file are:" + ConfigSystem.settings.fuel.fuels.keySet() + "If you are on a server, this means the server and client configs are not the same.  If this is a modpack, TELL THE AUTHOR IT IS BROKEN!");
+                            } else if (!ConfigSystem.settings.fuel.fuels.get(definition.engine.fuelType).containsKey(vehicleOn.fuelTank.getFluid())) {
+                                //Clear out the fuel from this vehicle as it's the wrong type.
+                                vehicleOn.fuelTank.drain(vehicleOn.fuelTank.getFluid(), vehicleOn.fuelTank.getFluidLevel(), true);
+                            } else {
+                                fuelFlow += vehicleOn.fuelTank.drain(vehicleOn.fuelTank.getFluid(), getTotalFuelConsumption() * ConfigSystem.settings.general.fuelUsageFactor.value / ConfigSystem.settings.fuel.fuels.get(definition.engine.fuelType).get(vehicleOn.fuelTank.getFluid()) * rpm * (fuelLeak ? 1.5F : 1.0F) / currentMaxRPM, !world.isClient());
+                            }
+                        }
+
+                        //Add temp based on engine speed.
+                        temp += Math.max(0, (7 * rpm / currentMaxRPM - temp / (COLD_TEMP * 2)) / 20) * currentHeatingCoefficient * ConfigSystem.settings.general.engineSpeedTempFactor.value;
+
+                        //Adjust oil pressure based on RPM and leak status.
+                        //If this is a 0-idle RPM engine, assume it's electric and doesn't have oil.
+                        //TODO remove when we get electric vehicles.
+                        if (currentIdleRPM != 0) {
+                            pressure = Math.min(90 - temp / 10, pressure + rpm / currentIdleRPM - 0.5 * (oilLeak ? 5F : 1F) * (pressure / LOW_OIL_PRESSURE));
+
+                            //Add extra hours and temp if we have low oil.
+                            if (pressure < LOW_OIL_PRESSURE && !isCreative) {
+                                temp += Math.max(0, (20 * rpm / currentMaxRPM) / 20);
+                                hours += 0.01 * getTotalWearFactor();
+                            }
+                        }
+
+                        //If the engine has high hours, give a chance for a backfire.
+                        if (hours > 250 && !world.isClient()) {
+                            if (Math.random() < (hours / 2) / (250 + (10000 - hours)) * (currentMaxSafeRPM / (rpm + currentMaxSafeRPM / 1.5))) {
+                                backfireEngine();
+                                InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.BACKFIRE));
+                            }
+                        }
+
+                        //Check if we need to stall the engine for various conditions.
+                        if (!world.isClient()) {
+                            if (isInLiquid()) {
+                                stallEngine(Signal.DROWN);
+                                InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.DROWN));
+                            } else if (!isCreative && vehicleOn.fuelTank.getFluidLevel() == 0) {
+                                stallEngine(Signal.FUEL_OUT);
+                                InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.FUEL_OUT));
+                            } else if (rpm < definition.engine.stallRPM) {
+                                stallEngine(Signal.TOO_SLOW);
+                                InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.TOO_SLOW));
+                            }
+                        }
+                    } else {
+                        //Internal fuel is used for engine sound wind down.  NOT used for power.
+                        if (internalFuel > 0) {
+                            --internalFuel;
+                            if (rpm < 500) {
+                                internalFuel = 0;
+                            }
+                        }
+
+                        //Start engine if the RPM is high enough to cause it to start by itself.
+                        //Used for drowned engines that come out of the water, or engines that don't
+                        //have the ability to engage a starter.
+                        if (rpm >= definition.engine.startRPM && !world.isClient() && vehicleOn.damageAmount < vehicleOn.definition.general.health) {
+                            if (isCreative || vehicleOn.fuelTank.getFluidLevel() > 0) {
+                                if (!isInLiquid() && magnetoOn) {
+                                    startEngine();
+                                    InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.START));
+                                }
+                            }
+                        }
+                    }
+                    break;
+                }
+
+                case ROCKET: {
+                    if (running) {
+                        //Remove fuel, and if we don't have any, turn ourselves off.
+                        rocketFuel -= getTotalFuelConsumption();
+                        if (rocketFuel <= 0) {
+                            running = false;
+                        }
+                    } else {
+                        //If the magneto comes on, and we have fuel, ignite.
+                        if (magnetoOn && rocketFuel > 0) {
+                            running = true;
+                        }
+                    }
                 }
             }
 
@@ -552,7 +574,11 @@ public class PartEngine extends APart {
             //Or, if we are not on, just slowly spin the engine down.
             if ((wheelFriction == 0 && linkedPropellers.isEmpty()) || currentGearRatio == 0) {
                 if (running) {
-                    engineTargetRPM = vehicleOn.throttle * (currentMaxRPM - currentIdleRPM) / (1 + hours / 1250) + currentIdleRPM;
+                    if (rocketFuel > 0) {
+                        engineTargetRPM = currentMaxRPM;
+                    } else {
+                        engineTargetRPM = vehicleOn.throttle * (currentMaxRPM - currentIdleRPM) / (1 + hours / 1250) + currentIdleRPM;
+                    }
                     rpm += (engineTargetRPM - rpm) / (definition.engine.revResistance * 3);
                     if (currentRevlimitRPM == -1) {
                         if (rpm > currentMaxSafeRPM) {
@@ -630,8 +656,8 @@ public class PartEngine extends APart {
     }
 
     @Override
-    public void doPostAllpartUpdates() {
-        super.doPostAllpartUpdates();
+    public void updatePartList() {
+        super.updatePartList();
 
         //Update linked wheel list.
         linkedWheels.clear();
@@ -658,6 +684,7 @@ public class PartEngine extends APart {
         currentCoolingCoefficient = definition.engine.coolingCoefficient;
         currentSuperchargerFuelConsumption = definition.engine.superchargerFuelConsumption;
         currentSuperchargerEfficiency = definition.engine.superchargerEfficiency;
+        currentGearRatio = definition.engine.gearRatios.get(currentGear + reverseGears);
 
         //Adjust current variables to modifiers, if any exist.
         if (definition.variableModifiers != null) {
@@ -689,6 +716,9 @@ public class PartEngine extends APart {
                         break;
                     case "superchargerEfficiency":
                         currentSuperchargerEfficiency = adjustVariable(modifier, currentSuperchargerEfficiency);
+                        break;
+                    case "currentGearRatio":
+                        currentGearRatio = adjustVariable(modifier, currentGearRatio);
                         break;
                     default:
                         setVariable(modifier.variable, adjustVariable(modifier, (float) getVariable(modifier.variable)));
@@ -744,6 +774,8 @@ public class PartEngine extends APart {
                 return rpm / currentMaxSafeRPM;
             case ("engine_fuel_flow"):
                 return fuelFlow * 20D * 60D / 1000D;
+            case ("engine_fuel_remaining"):
+                return rocketFuel / definition.engine.rocketFuel;
             case ("engine_temp"):
                 return temp;
             case ("engine_pressure"):
@@ -784,7 +816,7 @@ public class PartEngine extends APart {
                 String pistonVariable = variable.substring("engine_piston_".length());
                 int pistonNumber = Integer.parseInt(pistonVariable.substring(0, pistonVariable.indexOf("_")));
                 pistonVariable.substring(pistonVariable.indexOf("_"));
-                int totalPistons = Integer.parseInt(pistonVariable.substring(0, pistonVariable.indexOf("_")));
+                int totalPistons = pistonNumber;
                 long engineCycleTime = (long) (2D * (1D / (rpm / 60D / 1000D)));
 
                 if (engineCycleTime != 0) {
@@ -811,9 +843,9 @@ public class PartEngine extends APart {
     public void startEngine() {
         running = true;
 
-        //If we are not a steam engine, set oil pressure.
+        //Set oil pressure for normal engines.
         //Not setting this means we will start at 0 and damage the engine.
-        if (!definition.engine.isSteamPowered) {
+        if (definition.engine.type == JSONPart.EngineType.NORMAL) {
             pressure = 60;
         }
     }
@@ -898,7 +930,7 @@ public class PartEngine extends APart {
         }
     }
 
-    private boolean shiftUp() {
+    public boolean shiftUp() {
         byte nextGear;
         boolean doShift = false;
         if (definition.engine.jetPowerFactor == 0) {
@@ -921,7 +953,7 @@ public class PartEngine extends APart {
                 shiftCooldown = definition.engine.shiftSpeed;
                 upshiftCountdown = definition.engine.clutchTime;
                 if (!world.isClient()) {
-                    InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, UP_SHIFT_VARIABLE, 1));
+                    InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.SHIFT_UP));
                 }
             } else if (!world.isClient()) {
                 InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.BAD_SHIFT));
@@ -930,7 +962,7 @@ public class PartEngine extends APart {
         return doShift;
     }
 
-    private boolean shiftDown() {
+    public boolean shiftDown() {
         byte nextGear;
         boolean doShift = false;
         if (definition.engine.jetPowerFactor == 0) {
@@ -953,7 +985,7 @@ public class PartEngine extends APart {
                 shiftCooldown = definition.engine.shiftSpeed;
                 downshiftCountdown = definition.engine.clutchTime;
                 if (!world.isClient()) {
-                    InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, DOWN_SHIFT_VARIABLE, 1));
+                    InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.SHIFT_DOWN));
                 }
             } else if (!world.isClient()) {
                 InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.BAD_SHIFT));
@@ -962,7 +994,7 @@ public class PartEngine extends APart {
         return doShift;
     }
 
-    private void shiftNeutral() {
+    public void shiftNeutral() {
         if (definition.engine.jetPowerFactor == 0) {
             if (currentGear != 0) {//Any gear to neutral.
                 if (currentGear > 0) {
@@ -974,7 +1006,7 @@ public class PartEngine extends APart {
                 currentGear = 0;
                 setVariable(GEAR_VARIABLE, currentGear);
                 if (!world.isClient()) {
-                    InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, NEUTRAL_SHIFT_VARIABLE, 1));
+                    InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.SHIFT_NEUTRAL));
                 }
             }
         }
@@ -1013,24 +1045,17 @@ public class PartEngine extends APart {
                 } else {
                     wheelForce = (engineTargetRPM - rpm) / currentMaxRPM * currentGearRatio * vehicleOn.currentAxleRatio * (currentFuelConsumption + (currentSuperchargerFuelConsumption * currentSuperchargerEfficiency)) * 0.6F * 30F;
                 }
+
                 if (wheelForce != 0) {
                     //Check to see if the wheels need to spin out.
                     //If they do, we'll need to provide less force.
                     if (Math.abs(wheelForce / 300D) > wheelFriction || (Math.abs(lowestWheelVelocity) - Math.abs(desiredWheelVelocity) > 0.1 && Math.abs(lowestWheelVelocity) - Math.abs(desiredWheelVelocity) < Math.abs(wheelForce / 300D))) {
                         wheelForce *= vehicleOn.currentMass / 100000D * wheelFriction / Math.abs(wheelForce / 300F);
                         for (PartGroundDevice wheel : drivenWheels) {
-                            if (currentGearRatio > 0) {
-                                if (wheelForce >= 0) {
-                                    wheel.angularVelocity = Math.min(engineTargetRPM / 1200F / currentGearRatio / vehicleOn.currentAxleRatio, wheel.angularVelocity + 0.01D);
-                                } else {
-                                    wheel.angularVelocity = Math.max(engineTargetRPM / 1200F / currentGearRatio / vehicleOn.currentAxleRatio, wheel.angularVelocity - 0.01D);
-                                }
+                            if (wheelForce >= 0) {
+                                wheel.angularVelocity = Math.min(engineTargetRPM / 1200F / currentGearRatio / vehicleOn.currentAxleRatio, wheel.angularVelocity + 0.01D);
                             } else {
-                                if (wheelForce >= 0) {
-                                    wheel.angularVelocity = Math.min(engineTargetRPM / 1200F / currentGearRatio / vehicleOn.currentAxleRatio, wheel.angularVelocity + 0.01D);
-                                } else {
-                                    wheel.angularVelocity = Math.max(engineTargetRPM / 1200F / currentGearRatio / vehicleOn.currentAxleRatio, wheel.angularVelocity - 0.01D);
-                                }
+                                wheel.angularVelocity = Math.max(engineTargetRPM / 1200F / currentGearRatio / vehicleOn.currentAxleRatio, wheel.angularVelocity - 0.01D);
                             }
                             wheel.skipAngularCalcs = true;
                         }
@@ -1052,7 +1077,7 @@ public class PartEngine extends APart {
 
                 //Don't let us have negative engine force at low speeds.
                 //This causes odd reversing behavior when the engine tries to maintain speed.
-                if (((wheelForce < 0 && currentGear > 0) || (wheelForce > 0 && currentGear < 0)) && vehicleOn.velocity < 0.25) {
+                if (((wheelForce < 0 && currentGearRatio > 0) || (wheelForce > 0 && currentGearRatio < 0)) && vehicleOn.velocity < 0.25) {
                     wheelForce = 0;
                 }
             } else {
@@ -1087,7 +1112,7 @@ public class PartEngine extends APart {
             engineForce.reOrigin(vehicleOn.orientation);
             torque.y -= engineForce.z * localOffset.x + engineForce.x * localOffset.z;
             torque.z += engineForce.y * localOffset.x - engineForce.x * localOffset.y;
-            if (!vehicleOn.groundDeviceCollective.isAnythingOnGround()) {
+            if (vehicleOn.groundDeviceCollective.isAnythingOnGround()) {
                 torque.x += engineForce.z * localOffset.y - engineForce.y * localOffset.z;
             }
         }

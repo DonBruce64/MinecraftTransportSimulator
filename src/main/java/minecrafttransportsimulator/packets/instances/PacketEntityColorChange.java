@@ -9,10 +9,11 @@ import minecrafttransportsimulator.mcinterface.IWrapperInventory;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.packets.components.APacketEntityInteract;
 
-/**Packet sent to entities to update their their subName (color).  This gets sent from
+/**
+ * Packet sent to entities to update their their subName (color).  This gets sent from
  * a client when they change the color in the paint gun GUI.  Change is applied to the
  * entity and all parts (if applicable).
- * 
+ *
  * @author don_bruce
  */
 public class PacketEntityColorChange extends APacketEntityInteract<AEntityD_Definable<?>, IWrapperPlayer> {

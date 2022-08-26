@@ -9,7 +9,8 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketFurnaceFuelAdd;
 import minecrafttransportsimulator.packets.instances.PacketFurnaceTimeSet;
 
-/**Basic furnace class.  Class is essentially an inventory that holds state of smelting
+/**
+ * Basic furnace class.  Class is essentially an inventory that holds state of smelting
  * operations.  Has a method for ticking
  *
  * @author don_bruce
@@ -117,7 +118,7 @@ public class EntityFurnace extends EntityInventoryContainer {
     }
 
     /**
-     *  Saves tank data to the passed-in NBT.
+     * Saves tank data to the passed-in NBT.
      */
     @Override
     public IWrapperNBT save(IWrapperNBT data) {

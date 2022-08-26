@@ -1,27 +1,24 @@
 package minecrafttransportsimulator.sound;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.net.URL;
-import java.net.URLConnection;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-
 import javazoom.jl.decoder.Equalizer;
 import minecrafttransportsimulator.entities.instances.EntityRadio;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.sound.RadioManager.RadioSources;
 
-/**Radio stations are sources that radios can hook into to provide sound.  All radios share the
+import java.io.File;
+import java.net.URL;
+import java.net.URLConnection;
+import java.nio.ByteBuffer;
+import java.nio.file.Files;
+import java.util.*;
+
+/**
+ * Radio stations are sources that radios can hook into to provide sound.  All radios share the
  * same common set of stations, which means that should two radios start playing the same station, they
  * will both play in-sync with one another.
-*
-* @author don_bruce
-*/
+ *
+ * @author don_bruce
+ */
 public class RadioStation {
     //Created variables.
     private final RadioSources source;
@@ -29,14 +26,14 @@ public class RadioStation {
     private final boolean randomOrder;
     private final String url;
     private final List<File> musicFiles;
-    private final Set<EntityRadio> queuedRadios = new HashSet<EntityRadio>();
-    private final Set<EntityRadio> playingRadios = new HashSet<EntityRadio>();
+    private final Set<EntityRadio> queuedRadios = new HashSet<>();
+    private final Set<EntityRadio> playingRadios = new HashSet<>();
 
     //Runtime variables.
     //Due to how the mp3 parser works, we can only have one equalizer per station.
     public String displayText = "";
     public final Equalizer equalizer;
-    private volatile List<Integer> activeBuffers = new ArrayList<Integer>();
+    private final List<Integer> activeBuffers = new ArrayList<>();
     private volatile IStreamDecoder decoder;
     private volatile DecoderThread decoderThread;
 
@@ -62,12 +59,12 @@ public class RadioStation {
         if (url.isEmpty()) {
             displayText = "No station set for this preset.  Press SET to teach a station.";
         }
-        musicFiles = new ArrayList<File>();
+        musicFiles = new ArrayList<>();
         InterfaceManager.soundInterface.addRadioStation(this);
     }
 
     /**
-     * Generates a new buffer for this station from the current decoder and 
+     * Generates a new buffer for this station from the current decoder and
      * stores it in the list of active buffers.  Also updates the displayText
      * to reflect the buffer count.  Returns the index of the newly-created
      * buffer, or 0 if the buffer wasn't able to be created.
@@ -126,7 +123,7 @@ public class RadioStation {
                     //First check if we have any buffers that are done playing that we can re-claim.
                     freeBufferIndex = InterfaceManager.soundInterface.getFreeStationBuffer(playingRadios);
                     if (freeBufferIndex != 0) {
-                        activeBuffers.remove(activeBuffers.indexOf(freeBufferIndex));
+                        activeBuffers.remove((Integer) freeBufferIndex);
                         InterfaceManager.soundInterface.deleteBuffer(freeBufferIndex);
                     }
                 }
@@ -250,7 +247,6 @@ public class RadioStation {
             //Check to make sure stream isn't an invalid type.
             switch (contentType) {
                 case ("audio/mpeg"):
-                    break;
                 case ("application/ogg"):
                     break;
                 case ("audio/x-wav"):
@@ -288,7 +284,8 @@ public class RadioStation {
         }
     }
 
-    /**Custom thread class to prevent blocking of the main thread when playing audio.
+    /**
+     * Custom thread class to prevent blocking of the main thread when playing audio.
      * This thread parses out the audio from the source, and keeps the decoder inside of it.
      *
      * @author don_bruce
@@ -327,7 +324,7 @@ public class RadioStation {
                             break;
                     }
                 } else {
-                    station.decoder = new MP3Decoder(new FileInputStream(contentFile), station.equalizer);
+                    station.decoder = new MP3Decoder(Files.newInputStream(contentFile.toPath()), station.equalizer);
                 }
                 //Prime the buffers before setting the thread to null.
                 //This prevents the buffers from running out from starting too quickly.

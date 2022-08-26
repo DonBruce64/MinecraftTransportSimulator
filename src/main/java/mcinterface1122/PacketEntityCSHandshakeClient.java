@@ -7,10 +7,11 @@ import minecrafttransportsimulator.packets.components.APacketPlayer;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
 
-/**Packet used to request NBT data for entities from the server.  Used when an entity is first created 
- * on a client, as MC is too dumb to let us simply set a flag to get the NBT data from the server in an 
+/**
+ * Packet used to request NBT data for entities from the server.  Used when an entity is first created
+ * on a client, as MC is too dumb to let us simply set a flag to get the NBT data from the server in an
  * easy way.  Once on the server, it will send back a {@link PacketEntityCSHandshakeServer}.
- * 
+ *
  * @author don_bruce
  */
 public class PacketEntityCSHandshakeClient extends APacketPlayer {
@@ -43,7 +44,7 @@ public class PacketEntityCSHandshakeClient extends APacketPlayer {
         //Queue up the builder to send the player data back next update.
         if (builderID.contains(",")) {
             String[] stringPos = builderID.split(",");
-            BuilderTileEntity<?> tile = (BuilderTileEntity<?>) ((WrapperWorld) world).world.getTileEntity(new BlockPos(Integer.valueOf(stringPos[0]), Integer.valueOf(stringPos[1]), Integer.valueOf(stringPos[2])));
+            BuilderTileEntity<?> tile = (BuilderTileEntity<?>) ((WrapperWorld) world).world.getTileEntity(new BlockPos(Integer.parseInt(stringPos[0]), Integer.parseInt(stringPos[1]), Integer.parseInt(stringPos[2])));
             if (tile != null) {
                 tile.playersRequestingData.add(player);
             }

@@ -1,6 +1,7 @@
 package minecrafttransportsimulator.baseclasses;
 
-/**4D Matrix class for orientation operations.  This allows for
+/**
+ * 4D Matrix class for orientation operations.  This allows for
  * storing of a  rotational, translation, and scalar component
  * of orientation.  This is designed to be used with OpenGL
  * systems and positional systems where multiple transformations

@@ -9,9 +9,10 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.packets.components.APacketEntityInteract;
 
-/**Packet sent to poles to change their states.  This gets sent when a player clicks a pole on the server
+/**
+ * Packet sent to poles to change their states.  This gets sent when a player clicks a pole on the server
  * and a component is added or removed from the pole.
- * 
+ *
  * @author don_bruce
  */
 public class PacketTileEntityPoleChange extends APacketEntityInteract<TileEntityPole, IWrapperPlayer> {

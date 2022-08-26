@@ -1,9 +1,5 @@
 package mcinterface1122;
 
-import java.util.Collection;
-
-import javax.annotation.Nullable;
-
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import net.minecraft.util.EnumFacing;
@@ -11,11 +7,15 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 
-/**This class is essentially a collective list of BoundingBoxes.  It intercepts all AABB 
+import javax.annotation.Nullable;
+import java.util.Collection;
+
+/**
+ * This class is essentially a collective list of BoundingBoxes.  It intercepts all AABB
  * calls and does checks for each BoundingBox that's in the passed-in list.
  * Mostly used for entities that need complex collision mapping, because MC don't let you have more
  * than one AABB per entity, but somehow you can have more than one for something as small as a block?
- * 
+ *
  * @author don_bruce
  */
 class WrapperAABBCollective extends AxisAlignedBB {

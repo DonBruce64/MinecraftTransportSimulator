@@ -5,8 +5,9 @@ import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityPol
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 
-/**Core component for poles.  Allows us to change the core model.
- * 
+/**
+ * Core component for poles.  Allows us to change the core model.
+ *
  * @author don_bruce
  */
 public class TileEntityPole_Core extends ATileEntityPole_Component {

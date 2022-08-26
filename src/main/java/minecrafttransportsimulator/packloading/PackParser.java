@@ -1,48 +1,22 @@
 package minecrafttransportsimulator.packloading;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
-
+import mcinterface1122.InterfaceLoader;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.components.AItemPart.AItemPartCreator;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
-import minecrafttransportsimulator.items.instances.ItemBullet;
-import minecrafttransportsimulator.items.instances.ItemDecor;
-import minecrafttransportsimulator.items.instances.ItemInstrument;
-import minecrafttransportsimulator.items.instances.ItemItem;
-import minecrafttransportsimulator.items.instances.ItemPoleComponent;
-import minecrafttransportsimulator.items.instances.ItemRoadComponent;
-import minecrafttransportsimulator.items.instances.ItemVehicle;
-import minecrafttransportsimulator.jsondefs.AJSONItem;
-import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
-import minecrafttransportsimulator.jsondefs.JSONBullet;
-import minecrafttransportsimulator.jsondefs.JSONConfigSettings;
-import minecrafttransportsimulator.jsondefs.JSONDecor;
-import minecrafttransportsimulator.jsondefs.JSONInstrument;
-import minecrafttransportsimulator.jsondefs.JSONItem;
-import minecrafttransportsimulator.jsondefs.JSONPack;
-import minecrafttransportsimulator.jsondefs.JSONPart;
-import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
-import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
-import minecrafttransportsimulator.jsondefs.JSONSkin;
-import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
-import minecrafttransportsimulator.jsondefs.JSONVehicle;
+import minecrafttransportsimulator.items.instances.*;
+import minecrafttransportsimulator.jsondefs.*;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.PackResourceLoader.ItemClassification;
 import minecrafttransportsimulator.packloading.PackResourceLoader.PackStructure;
 import minecrafttransportsimulator.systems.ConfigSystem;
+
+import java.io.File;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 /**
  * Class responsible for parsing content pack data.  Gets properties from the text files that other parts
@@ -51,31 +25,45 @@ import minecrafttransportsimulator.systems.ConfigSystem;
  * @author don_bruce
  */
 public final class PackParser {
-    /**Links packs to the jar files that they are a part of.  Used for pack loading only: asset loading uses Java classpath systems.**/
-    private static final Map<String, File> packJarMap = new HashMap<String, File>();
+    /**
+     * Links packs to the jar files that they are a part of.  Used for pack loading only: asset loading uses Java classpath systems.
+     **/
+    private static final Map<String, File> packJarMap = new HashMap<>();
 
-    /**All registered pack definitions are stored in this list as they are added.  Used to handle loading operations.**/
-    private static final Map<String, JSONPack> packMap = new HashMap<String, JSONPack>();
+    /**
+     * All registered pack definitions are stored in this list as they are added.  Used to handle loading operations.
+     **/
+    private static final Map<String, JSONPack> packMap = new HashMap<>();
 
-    /**Part creators are put here during the boot process prior to parsing.  This allows for creators to be added after first parsing for custom items.**/
-    private static final List<AItemPartCreator> partCreators = new ArrayList<AItemPartCreator>();
+    /**
+     * Part creators are put here during the boot process prior to parsing.  This allows for creators to be added after first parsing for custom items.
+     **/
+    private static final List<AItemPartCreator> partCreators = new ArrayList<>();
 
-    /**All registered skin definitions are stored in this list as they are added.  These have to be added after all packs are loaded.**/
-    private static final Map<String, Map<String, List<JSONSkin>>> skinMap = new HashMap<String, Map<String, List<JSONSkin>>>();
+    /**
+     * All registered skin definitions are stored in this list as they are added.  These have to be added after all packs are loaded.
+     **/
+    private static final Map<String, Map<String, List<JSONSkin>>> skinMap = new HashMap<>();
 
-    /**List of pack faults.  This is for packs that didn't get loaded due to missing dependencies.**/
-    public static final Map<String, List<String>> faultMap = new HashMap<String, List<String>>();
+    /**
+     * List of pack faults.  This is for packs that didn't get loaded due to missing dependencies.
+     **/
+    public static final Map<String, List<String>> faultMap = new HashMap<>();
 
-    /**All registered pack items are stored in this map as they are added.  Used to sort items in the creative tab,
-     * and will be sent to packs for item registration when so asked via {@link #getItemsForPack(String)}.  May also
-     * be used if we need to lookup a registered part item.  Map is keyed by packID to allow sorting for items from 
+    /**
+     * All registered pack items are stored in this map as they are added.  Used to sort items in the creative tab,
+     * and will be sent to packs for item registration when so asked via {@link #getAllItemsForPack(String, boolean)}.  May also
+     * be used if we need to look up a registered part item.  Map is keyed by packID to allow sorting for items from
      * different packs, while the sub-map is keyed by the part's {@link AJSONItem#systemName}.  The pack-map is a tree
-     * map to keep consistent tab and sorting order as packs can load at different times.  The actual items are in a 
+     * map to keep consistent tab and sorting order as packs can load at different times.  The actual items are in a
      * hash map and remain un-sorted.  A sorted list may be obtained by {@link #getAllItemsForPack(String, boolean)},
-     * however this is an expensive operation as the sorted list is created each call.**/
-    private static final TreeMap<String, HashMap<String, AItemPack<?>>> packItemMap = new TreeMap<String, HashMap<String, AItemPack<?>>>();
+     * however this is an expensive operation as the sorted list is created each call.
+     **/
+    private static final TreeMap<String, HashMap<String, AItemPack<?>>> packItemMap = new TreeMap<>();
 
-    /**Comparator used for sorting pack items.**/
+    /**
+     * Comparator used for sorting pack items.
+     **/
     private static final Comparator<AItemPack<?>> packComparator = new Comparator<AItemPack<?>>() {
         @Override
         public int compare(AItemPack<?> itemA, AItemPack<?> itemB) {
@@ -117,6 +105,7 @@ public final class PackParser {
     };
 
     //-----START OF NEW INIT LOGIC-----
+
     /**
      * Called to parse all packs and set up the main mod.  All directories in the passed-in list will be checked
      * for pack definitions.  After this, they will be created and loaded into the main mod.
@@ -139,7 +128,7 @@ public final class PackParser {
 
         //Check to make sure we have all our fuels.  We may have loaded a new engine type this launch.
         if (ConfigSystem.settings.fuel.fuels == null) {
-            ConfigSystem.settings.fuel.fuels = new HashMap<String, Map<String, Double>>();
+            ConfigSystem.settings.fuel.fuels = new HashMap<>();
         }
         for (Entry<String, Map<String, Double>> fuelValues : JSONConfigSettings.ConfigFuel.getDefaultFuels().entrySet()) {
             if (!ConfigSystem.settings.fuel.fuels.containsKey(fuelValues.getKey())) {
@@ -173,7 +162,7 @@ public final class PackParser {
      * This should only be called once.  This adds the default internal items
      * into the mod.  These are hard-coded to the main mod itself.  Normally,
      * we would just let the parser get these items.  But we can't do this as
-     * when in a decompiled dev environment the items are in folders, not a jar. 
+     * when in a decompiled dev environment the items are in folders, not a jar.
      */
     public static void addDefaultItems() {
         try {
@@ -184,14 +173,13 @@ public final class PackParser {
             packDef.packItem = "wrench";
             PackParser.packMap.put(InterfaceManager.coreModID, packDef);
 
-            Map<String, ItemClassification> defaultItems = new HashMap<String, ItemClassification>();
+            Map<String, ItemClassification> defaultItems = new HashMap<>();
             defaultItems.put("fuelhose", ItemClassification.ITEM);
             defaultItems.put("handbook_car", ItemClassification.ITEM);
             defaultItems.put("handbook_plane", ItemClassification.ITEM);
             defaultItems.put("jumpercable", ItemClassification.ITEM);
             defaultItems.put("jumperpack", ItemClassification.ITEM);
             defaultItems.put("key", ItemClassification.ITEM);
-            defaultItems.put("jumperpack", ItemClassification.ITEM);
             defaultItems.put("paintgun", ItemClassification.ITEM);
             defaultItems.put("partscanner", ItemClassification.ITEM);
             defaultItems.put("ticket", ItemClassification.ITEM);
@@ -230,7 +218,7 @@ public final class PackParser {
     }
 
     /**
-     * Called to add a part item creator to the main listing. 
+     * Called to add a part item creator to the main listing.
      */
     public static void addItemPartCreator(AItemPartCreator creator) {
         partCreators.add(0, creator);
@@ -282,7 +270,7 @@ public final class PackParser {
             }
             jarFile.close();
         } catch (Exception e) {
-            InterfaceManager.coreInterface.logError("A fault was encountered when trying to check file " + packJar.getName() + " for pack data.  This pack will not be loaded.");
+            InterfaceLoader.LOGGER.error("A fault was encountered when trying to check file " + packJar.getName() + " for pack data.  This pack will not be loaded.");
             e.printStackTrace();
         }
     }
@@ -296,18 +284,17 @@ public final class PackParser {
      * create and register your pack items and use {@link #registerItem(AJSONItem)}.
      */
     private static void parseAllPacks() {
-        List<String> packIDs = new ArrayList<String>(packMap.keySet());
-        Iterator<String> iterator = packMap.keySet().iterator();
-        while (iterator.hasNext()) {
-            JSONPack packDef = packMap.get(iterator.next());
+        List<String> packIDs = new ArrayList<>(packMap.keySet());
+        for (String s : packMap.keySet()) {
+            JSONPack packDef = packMap.get(s);
             //Don't parse the core pack.  THat's all internal.
             if (packDef.packID.equals(InterfaceManager.coreModID)) {
                 continue;
             }
 
-            //Create a listing of sub-directories we need to look in for pack definitions.
+            //Create a listing of subdirectories we need to look in for pack definitions.
             //These will be modified by activators or blockers.
-            List<String> validSubDirectories = new ArrayList<String>();
+            List<String> validSubDirectories = new ArrayList<>();
 
             //If we don't have any of the activating sets, don't load the pack. 
             if (packDef.activators != null) {
@@ -389,7 +376,7 @@ public final class PackParser {
                                 try {
                                     classification = ItemClassification.fromDirectory(assetPath.substring(0, assetPath.indexOf("/") + 1));
                                 } catch (Exception e) {
-                                    InterfaceManager.coreInterface.logError("Was given an invalid classifcation sub-folder for asset: " + fileName + ".  Check your folder paths.");
+                                    InterfaceLoader.LOGGER.error("Was given an invalid classifcation sub-folder for asset: " + fileName + ".  Check your folder paths.");
                                     continue;
                                 }
 
@@ -399,8 +386,8 @@ public final class PackParser {
                                 try {
                                     definition = JSONParser.parseStream(jarFile.getInputStream(entry), classification.representingClass, packDef.packID, systemName);
                                 } catch (Exception e) {
-                                    InterfaceManager.coreInterface.logError("Could not parse: " + packDef.packID + ":" + fileName);
-                                    InterfaceManager.coreInterface.logError(e.getMessage());
+                                    InterfaceLoader.LOGGER.error("Could not parse: " + packDef.packID + ":" + fileName);
+                                    InterfaceLoader.LOGGER.error(e.getMessage());
                                     continue;
                                 }
 
@@ -419,7 +406,7 @@ public final class PackParser {
                     //Done parsing.  Close the jarfile.
                     jarFile.close();
                 } catch (Exception e) {
-                    InterfaceManager.coreInterface.logError("Could not start parsing of pack: " + packDef.packID);
+                    InterfaceLoader.LOGGER.error("Could not start parsing of pack: " + packDef.packID);
                     e.printStackTrace();
                 }
             }
@@ -429,7 +416,7 @@ public final class PackParser {
     /**
      * Called to add the passed-in item to the pack registry.  While this is normally called automatically by the
      * parser as it goes over the jar files, this may be called manually if other mods (or the core mod) want
-     * to manually register things that aren't in jars.  The other assets like OBJs models and PNG textures 
+     * to manually register things that aren't in jars.  The other assets like OBJs models and PNG textures
      * must exist somewhere in a jar in the classpath, however.  This simply bypasses the requirement that the
      * JSON file exists.  For this reason, prefixFolders is able to be defined to specify where those assets are,
      * while resourceLoader is used to specify the loader to use to load those assets.
@@ -438,7 +425,7 @@ public final class PackParser {
      * {@link AJSONItem#classification}, and {@link AJSONItem#prefixFolders} MUST be set before calling this method.
      * <br><br>
      * Also note that any Legacy Compatibility code and JSON validation is performed prior to registration.
-     * A fault in the compatibility system or in the validation will result in the item not being registered. 
+     * A fault in the compatibility system or in the validation will result in the item not being registered.
      */
     public static void registerItem(AJSONItem itemDef) {
         try {
@@ -454,10 +441,10 @@ public final class PackParser {
                 if (itemDef instanceof JSONSkin) {
                     JSONSkin skinDef = (JSONSkin) itemDef;
                     if (!skinMap.containsKey(skinDef.skin.packID)) {
-                        skinMap.put(skinDef.skin.packID, new HashMap<String, List<JSONSkin>>());
+                        skinMap.put(skinDef.skin.packID, new HashMap<>());
                     }
                     if (!skinMap.get(skinDef.skin.packID).containsKey(skinDef.skin.systemName)) {
-                        skinMap.get(skinDef.skin.packID).put(skinDef.skin.systemName, new ArrayList<JSONSkin>());
+                        skinMap.get(skinDef.skin.packID).put(skinDef.skin.systemName, new ArrayList<>());
                     }
                     skinMap.get(skinDef.skin.packID).get(skinDef.skin.systemName).add(skinDef);
                 } else {
@@ -479,12 +466,12 @@ public final class PackParser {
 
                 //Put the item in the map in the registry.
                 if (!packItemMap.containsKey(item.definition.packID)) {
-                    packItemMap.put(item.definition.packID, new HashMap<String, AItemPack<?>>());
+                    packItemMap.put(item.definition.packID, new HashMap<>());
                 }
                 packItemMap.get(item.definition.packID).put(item.definition.systemName, item);
             }
         } catch (Exception e) {
-            InterfaceManager.coreInterface.logError(e.getMessage());
+            InterfaceLoader.LOGGER.error(e.getMessage());
             e.printStackTrace();
         }
     }
@@ -528,7 +515,7 @@ public final class PackParser {
      * Generated items are added to the passed-in list.
      */
     private static void parseAllDefinitions(AJSONMultiModelProvider mainDefinition, List<JSONSubDefinition> subDefinitions, String sourcePackID) {
-        Map<String, AItemPack<?>> packItems = new HashMap<String, AItemPack<?>>();
+        Map<String, AItemPack<?>> packItems = new HashMap<>();
         for (JSONSubDefinition subDefinition : subDefinitions) {
             AItemPack<?> item = null;
             switch (mainDefinition.classification) {
@@ -544,7 +531,7 @@ public final class PackParser {
                         }
                     }
                     if (item == null) {
-                        InterfaceManager.coreInterface.logError("Was told to parse part " + partDef.packID + ":" + partDef.systemName + " with part type " + partDef.generic.type + ", but that's not a valid type for creating a part.");
+                        InterfaceLoader.LOGGER.error("Was told to parse part " + partDef.packID + ":" + partDef.systemName + " with part type " + partDef.generic.type + ", but that's not a valid type for creating a part.");
                         return;
                     }
                     break;
@@ -573,7 +560,7 @@ public final class PackParser {
 
         //All definitions were okay.  Add items to the registry.
         if (!packItemMap.containsKey(mainDefinition.packID)) {
-            packItemMap.put(mainDefinition.packID, new HashMap<String, AItemPack<?>>());
+            packItemMap.put(mainDefinition.packID, new HashMap<>());
         }
         packItemMap.get(mainDefinition.packID).putAll(packItems);
     }
@@ -585,9 +572,8 @@ public final class PackParser {
      * adding their items.
      */
     public static void sortPackItems(String packID) {
-        List<AItemPack<?>> packItems = new ArrayList<AItemPack<?>>();
         HashMap<String, AItemPack<?>> packSpecificItemMap = packItemMap.get(packID);
-        packItems.addAll(packSpecificItemMap.values());
+        List<AItemPack<?>> packItems = new ArrayList<>(packSpecificItemMap.values());
         packItems.sort(packComparator);
         packSpecificItemMap.clear();
         for (AItemPack<?> packItem : packItems) {
@@ -626,7 +612,7 @@ public final class PackParser {
     }
 
     public static List<AItemPack<?>> getAllItemsForPack(String packID, boolean sorted) {
-        List<AItemPack<?>> packItems = new ArrayList<AItemPack<?>>(packItemMap.get(packID).values());
+        List<AItemPack<?>> packItems = new ArrayList<>(packItemMap.get(packID).values());
         if (sorted) {
             packItems.sort(packComparator);
         }
@@ -634,7 +620,7 @@ public final class PackParser {
     }
 
     public static List<AItemPack<?>> getAllPackItems() {
-        List<AItemPack<?>> packItems = new ArrayList<AItemPack<?>>();
+        List<AItemPack<?>> packItems = new ArrayList<>();
         for (String packID : packItemMap.keySet()) {
             packItems.addAll(getAllItemsForPack(packID, false));
         }

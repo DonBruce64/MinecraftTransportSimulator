@@ -1,39 +1,54 @@
 package minecrafttransportsimulator.sound;
 
+import javazoom.jl.decoder.*;
+
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
 
-import javazoom.jl.decoder.Bitstream;
-import javazoom.jl.decoder.Decoder;
-import javazoom.jl.decoder.Equalizer;
-import javazoom.jl.decoder.Header;
-import javazoom.jl.decoder.SampleBuffer;
-
-/**Decoder class for MP3 files.  Reads data into ShortBuffers when called.  Also allows for
+/**
+ * Decoder class for MP3 files.  Reads data into ShortBuffers when called.  Also allows for
  * equalization operations, though they aren't studio-quality....
  *
  * @author don_bruce
  */
 public class MP3Decoder implements IStreamDecoder {
-    /**Raw input stream for data.**/
+    /**
+     * Raw input stream for data.
+     **/
     private final InputStream dataSourceStream;
-    /**Bitstream for the internal parser.**/
+    /**
+     * Bitstream for the internal parser.
+     **/
     private final Bitstream bitstream;
-    /**Decoder that decodes the Bitstream.**/
+    /**
+     * Decoder that decodes the Bitstream.
+     **/
     private final Decoder decoder;
-    /**Equalizer to use during the decoding process.**/
+    /**
+     * Equalizer to use during the decoding process.
+     **/
     private final Equalizer equalizer;
-    /**SampleBuffer to store decoded data into prior to sending to the decodedDataBuffer.**/
+    /**
+     * SampleBuffer to store decoded data into prior to sending to the decodedDataBuffer.
+     **/
     private final SampleBuffer decoderOutputBuffer;
-    /**Buffer used to store decoded data that can be sent to OpenAL.**/
+    /**
+     * Buffer used to store decoded data that can be sent to OpenAL.
+     **/
     private final ByteBuffer decodedDataBuffer;
-    /**Stereo or not.  Needed to tell OpenAL how to parse the bytes.**/
+    /**
+     * Stereo or not.  Needed to tell OpenAL how to parse the bytes.
+     **/
     private final boolean isStereo;
-    /**Sample rate.  Required for correct playback speed.**/
+    /**
+     * Sample rate.  Required for correct playback speed.
+     **/
     private final int sampleRate;
-    /**Current frame header for the next frame to be parsed.**/
+    /**
+     * Current frame header for the next frame to be parsed.
+     **/
     private Header currentFrameHeader;
 
     public MP3Decoder(InputStream dataSourceStream, Equalizer equalizer) {

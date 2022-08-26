@@ -26,8 +26,9 @@ import minecrafttransportsimulator.packets.instances.PacketPartGun;
 import minecrafttransportsimulator.packets.instances.PacketPartSeat;
 import minecrafttransportsimulator.packets.instances.PacketVehicleInteract;
 
-/**Class that handles all control operations.
- * 
+/**
+ * Class that handles all control operations.
+ *
  * @author don_bruce
  */
 public final class ControlSystem {
@@ -140,7 +141,7 @@ public final class ControlSystem {
             }
         } else if (closestBox != null) {
             //Fire off un-click to entity last clicked.
-            InterfaceManager.packetInterface.sendToServer(new PacketVehicleInteract(closestEntity, player, closestBox, clickingLeft, clickingRight));
+            InterfaceManager.packetInterface.sendToServer(new PacketVehicleInteract(closestEntity, player, closestBox, false, false));
         }
     }
 
@@ -265,10 +266,6 @@ public final class ControlSystem {
                 InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableIncrement(vehicle, variable, rate * (currentValue < 0 ? 2 : 1), -bounds, bounds));
             } else if (decrement.isPressed()) {
                 InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableIncrement(vehicle, variable, -rate * (currentValue > 0 ? 2 : 1), -bounds, bounds));
-            } else if (currentValue > 0) {
-                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableIncrement(vehicle, variable, -rate, 0, bounds));
-            } else if (currentValue < 0) {
-                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableIncrement(vehicle, variable, rate, -bounds, 0));
             }
         }
     }
@@ -597,11 +594,12 @@ public final class ControlSystem {
         }
     }
 
-    /**List of enums representing all controls present.  Add new controls by adding their enum values here
+    /**
+     * List of enums representing all controls present.  Add new controls by adding their enum values here
      *
      * @author don_bruce
      */
-    public static enum ControlsKeyboard {
+    public enum ControlsKeyboard {
         AIRCRAFT_MOD(ControlsJoystick.AIRCRAFT_MOD, false, "RSHIFT", JSONConfigLanguage.INPUT_MOD),
         AIRCRAFT_CAMLOCK(ControlsJoystick.AIRCRAFT_CAMLOCK, true, "RCONTROL", JSONConfigLanguage.INPUT_CAMLOCK),
         AIRCRAFT_YAW_R(ControlsJoystick.AIRCRAFT_YAW, false, "L", JSONConfigLanguage.INPUT_YAW_R),
@@ -652,7 +650,7 @@ public final class ControlSystem {
 
         private boolean wasPressedLastCall;
 
-        private ControlsKeyboard(ControlsJoystick linkedJoystick, boolean isMomentary, String defaultKeyName, LanguageEntry language) {
+        ControlsKeyboard(ControlsJoystick linkedJoystick, boolean isMomentary, String defaultKeyName, LanguageEntry language) {
             this.linkedJoystick = linkedJoystick;
             this.isMomentary = isMomentary;
             this.systemName = this.name().toLowerCase().replaceFirst("_", ".");
@@ -666,10 +664,10 @@ public final class ControlSystem {
         }
 
         /**
-         *  Returns true if the given key is currently pressed.  If our linked
-         *  joystick is pressed, return true.  If the joystick is not, but it
-         *  is bound, and we are using keyboard overrides, return false.
-         *  Otherwise return the actual key state.
+         * Returns true if the given key is currently pressed.  If our linked
+         * joystick is pressed, return true.  If the joystick is not, but it
+         * is bound, and we are using keyboard overrides, return false.
+         * Otherwise return the actual key state.
          */
         public boolean isPressed() {
             if (linkedJoystick.isPressed()) {
@@ -692,7 +690,7 @@ public final class ControlSystem {
         }
     }
 
-    public static enum ControlsJoystick {
+    public enum ControlsJoystick {
         AIRCRAFT_MOD(false, false, JSONConfigLanguage.INPUT_MOD),
         AIRCRAFT_CAMLOCK(false, true, JSONConfigLanguage.INPUT_CAMLOCK),
         AIRCRAFT_YAW(true, false, JSONConfigLanguage.INPUT_YAW),
@@ -761,7 +759,7 @@ public final class ControlSystem {
 
         private boolean wasPressedLastCall;
 
-        private ControlsJoystick(boolean isAxis, boolean isMomentary, LanguageEntry language) {
+        ControlsJoystick(boolean isAxis, boolean isMomentary, LanguageEntry language) {
             this.isAxis = isAxis;
             this.isMomentary = isMomentary;
             this.systemName = this.name().toLowerCase().replaceFirst("_", ".");
@@ -832,7 +830,7 @@ public final class ControlSystem {
         }
     }
 
-    public static enum ControlsKeyboardDynamic {
+    public enum ControlsKeyboardDynamic {
         AIRCRAFT_PARK(ControlsKeyboard.AIRCRAFT_BRAKE, ControlsKeyboard.AIRCRAFT_MOD, JSONConfigLanguage.INPUT_PARK),
 
         CAR_PARK(ControlsKeyboard.CAR_BRAKE, ControlsKeyboard.CAR_MOD, JSONConfigLanguage.INPUT_PARK),
@@ -844,14 +842,14 @@ public final class ControlSystem {
         public final ControlsKeyboard mainControl;
         public final ControlsKeyboard modControl;
 
-        private ControlsKeyboardDynamic(ControlsKeyboard mainControl, ControlsKeyboard modControl, LanguageEntry language) {
+        ControlsKeyboardDynamic(ControlsKeyboard mainControl, ControlsKeyboard modControl, LanguageEntry language) {
             this.language = language;
             this.mainControl = mainControl;
             this.modControl = modControl;
         }
 
         public boolean isPressed() {
-            return this.modControl.isPressed() ? this.mainControl.isPressed() : false;
+            return this.modControl.isPressed() && this.mainControl.isPressed();
         }
     }
 }

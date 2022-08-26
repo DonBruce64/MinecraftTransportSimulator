@@ -4,7 +4,8 @@ import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.rendering.RenderText;
 import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
 
-/**Custom label class.  Allows for batch rendering of text, and easier rendering of labels using
+/**
+ * Custom label class.  Allows for batch rendering of text, and easier rendering of labels using
  * state variables rather than actual text boxes.  Also allows for linking with either a
  * {@link GUIComponentButton} or {@link GUIComponentTextBox} to avoid having to set visibility
  * and instead to use the visibility of those objects.
@@ -46,9 +47,9 @@ public class GUIComponentLabel extends AGUIComponent {
     }
 
     /**
-     *  Sets the associated button for this class.  This will make
-     *  this label render only when the button is visible.
-     *  Returns this object for ease of constructing.
+     * Sets the associated button for this class.  This will make
+     * this label render only when the button is visible.
+     * Returns this object for ease of constructing.
      */
     public GUIComponentLabel setButton(GUIComponentButton button) {
         this.button = button;
@@ -56,9 +57,9 @@ public class GUIComponentLabel extends AGUIComponent {
     }
 
     /**
-     *  Sets the associated textBox for this class.  This will make
-     *  this label render only when the textBox is visible.
-     *  Returns this object for ease of constructing.
+     * Sets the associated textBox for this class.  This will make
+     * this label render only when the textBox is visible.
+     * Returns this object for ease of constructing.
      */
     public GUIComponentLabel setBox(GUIComponentTextBox box) {
         this.box = box;
