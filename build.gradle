@@ -2,19 +2,21 @@ buildscript {
     repositories {
         maven { url = "https://maven.minecraftforge.net" }
         maven { url = "https://repo.spongepowered.org/maven" }
+        maven { url = "https://gitlab.com/api/v4/projects/26758973/packages/maven" }
         mavenCentral()
     }
     dependencies {
         classpath group: "net.minecraftforge.gradle", name: "ForgeGradle", version: "5.+", changing: true
-        classpath "org.spongepowered:mixingradle:0.7-SNAPSHOT"
+        classpath "org.spongepowered:mixingradle:0.7.+"
+        classpath group: "wtf.gofancy.fancygradle", name: "wtf.gofancy.fancygradle.gradle.plugin", version: "1.1.+"
     }
 }
 
 //Apply plugins
 apply plugin: "net.minecraftforge.gradle"
 apply plugin: "org.spongepowered.mixin"
+apply plugin: "wtf.gofancy.fancygradle"
 apply plugin: "eclipse"
-apply plugin: "idea"
 
 //Set file name.
 version = "1.12.2-21.4.0-BETA49"
@@ -25,6 +27,14 @@ archivesBaseName = "Immersive Vehicles"
 sourceCompatibility = targetCompatibility = "1.8"
 compileJava {
     options.compilerArgs << "-Xlint:deprecation" << "-Xlint:unchecked"
+}
+
+fancyGradle {
+    patches {
+        coremods
+        asm
+        mergetool
+    }
 }
 
 //Minecraft mappings and run configs.
@@ -41,12 +51,13 @@ minecraft {
     //Run configurations.
     runs {
         client {
-            workingDirectory project.file("run")
+            workingDirectory file("run")
             property "fml.coreMods.load", "mcinterface1122.core.CoreMod"
+            property "tweakClass", "org.spongepowered.asm.launch.MixinTweaker"
         }
 
         server {
-            workingDirectory project.file("runServer")
+            workingDirectory file("runServer")
         }
     }
 }
@@ -90,7 +101,6 @@ dependencies {
     //Not a huge issue, as it just prevents using JEI in-dev, and we already have it working so don"t really need to test.
     //runtimeOnly fg.deobf("mezz.jei:jei_1.12.2:4.16.1.302")
 }
-
 
 mixin {
     add sourceSets.main, "mts.mixin-refmap.json"
