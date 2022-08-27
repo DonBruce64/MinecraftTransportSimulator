@@ -339,13 +339,20 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     @Override
-    public void loadEntities(BoundingBox box, EntityVehicleF_Physics vehicleToLoad) {
+    public void loadEntities(BoundingBox box, EntityVehicleF_Physics vehicleToLoad, APart clickedPart) {
         for (Entity entity : world.getEntitiesWithinAABB(Entity.class, box.convert())) {
             if (!entity.isRiding() && (entity instanceof INpc || entity instanceof EntityCreature) && !(entity instanceof IMob)) {
-                for (APart part : vehicleToLoad.parts) {
-                    if (part instanceof PartSeat && part.rider == null && !part.placementDefinition.isController) {
-                        part.setRider(new WrapperEntity(entity), true);
+                if (clickedPart instanceof PartSeat) {
+                    if (clickedPart.rider == null) {
+                        clickedPart.setRider(new WrapperEntity(entity), true);
                         break;
+                    }
+                } else {
+                    for (APart part : vehicleToLoad.parts) {
+                        if (part instanceof PartSeat && part.rider == null && !part.placementDefinition.isController) {
+                            part.setRider(new WrapperEntity(entity), true);
+                            break;
+                        }
                     }
                 }
             }
