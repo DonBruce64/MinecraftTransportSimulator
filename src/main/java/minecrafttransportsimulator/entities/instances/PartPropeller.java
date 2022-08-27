@@ -104,7 +104,7 @@ public class PartPropeller extends APart {
                 currentRPM = highestRunningRPM > 0 ? highestRunningRPM : highestPossibleRPM;
 
                 //Ensure we don't over-speed the engine if we are a dynamic propeller by requesting a pitch adjustment later.
-                if (definition.propeller.isDynamicPitch) {
+                if (currentConnectedEngine != null && definition.propeller.isDynamicPitch) {
                     if (currentPitch > MIN_DYNAMIC_PITCH) {
                         decreasePitch = currentConnectedEngine.rpm < currentConnectedEngine.definition.engine.maxSafeRPM * 0.60;
                     } else if (currentPitch < definition.propeller.pitch) {
