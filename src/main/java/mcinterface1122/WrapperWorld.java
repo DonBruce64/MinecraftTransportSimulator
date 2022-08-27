@@ -885,7 +885,7 @@ public class WrapperWorld extends AWrapperWorld {
                         entity.addPartsPostAddition(playerWrapper, newData);
 
                         //If the player is new, also add handbooks.
-                        if (!ConfigSystem.settings.general.joinedPlayers.value.contains(playerUUID)) {
+                        if (ConfigSystem.settings.general.giveManualsOnJoin.value && !ConfigSystem.settings.general.joinedPlayers.value.contains(playerUUID)) {
                             playerWrapper.getInventory().addStack(PackParser.getItem("mts", "handbook_car").getNewStack(null));
                             playerWrapper.getInventory().addStack(PackParser.getItem("mts", "handbook_plane").getNewStack(null));
                             ConfigSystem.settings.general.joinedPlayers.value.add(playerUUID);
