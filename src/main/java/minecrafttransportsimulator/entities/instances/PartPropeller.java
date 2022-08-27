@@ -1,5 +1,8 @@
 package minecrafttransportsimulator.entities.instances;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -14,9 +17,6 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine.Signal;
 import minecrafttransportsimulator.systems.ConfigSystem;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class PartPropeller extends APart {
     private double currentRPM;
@@ -89,14 +89,16 @@ public class PartPropeller extends APart {
                 double highestRunningRPM = 0;
                 PartEngine currentConnectedEngine = null;
                 for (PartEngine connectedEngine : connectedEngines) {
-                    double engineDrivenRPM = connectedEngine.rpm / connectedEngine.propellerGearboxRatio;
-                    if (currentConnectedEngine == null || engineDrivenRPM > highestPossibleRPM) {
-                        highestPossibleRPM = engineDrivenRPM;
-                        currentConnectedEngine = connectedEngine;
-                    }
-                    if (connectedEngine.running && engineDrivenRPM > highestRunningRPM) {
-                        highestRunningRPM = engineDrivenRPM;
-                        currentConnectedEngine = connectedEngine;
+                    if (connectedEngine.propellerGearboxRatio != 0) {
+                        double engineDrivenRPM = connectedEngine.rpm / connectedEngine.propellerGearboxRatio;
+                        if (currentConnectedEngine == null || engineDrivenRPM > highestPossibleRPM) {
+                            highestPossibleRPM = engineDrivenRPM;
+                            currentConnectedEngine = connectedEngine;
+                        }
+                        if (connectedEngine.running && engineDrivenRPM > highestRunningRPM) {
+                            highestRunningRPM = engineDrivenRPM;
+                            currentConnectedEngine = connectedEngine;
+                        }
                     }
                 }
                 currentRPM = highestRunningRPM > 0 ? highestRunningRPM : highestPossibleRPM;
