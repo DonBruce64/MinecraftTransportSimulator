@@ -262,9 +262,9 @@ public final class ControlSystem {
                 InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(vehicle, variable, bounds * (-1 + 2 * axisValue)));
             }
         } else {
-            if (increment.isPressed()) {
+            if (increment.isPressed() && !decrement.isPressed()) {
                 InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableIncrement(vehicle, variable, rate * (currentValue < 0 ? 2 : 1), -bounds, bounds));
-            } else if (decrement.isPressed()) {
+            } else if (decrement.isPressed() && !increment.isPressed()) {
                 InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableIncrement(vehicle, variable, -rate * (currentValue > 0 ? 2 : 1), -bounds, bounds));
             }
         }
