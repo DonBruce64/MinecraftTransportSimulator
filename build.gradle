@@ -2,20 +2,17 @@ buildscript {
     repositories {
         maven { url = "https://maven.minecraftforge.net" }
         maven { url = "https://repo.spongepowered.org/maven" }
-        maven { url = "https://gitlab.com/api/v4/projects/26758973/packages/maven" }
         mavenCentral()
     }
     dependencies {
-        classpath group: "net.minecraftforge.gradle", name: "ForgeGradle", version: "5.+", changing: true
+        classpath group: "net.minecraftforge.gradle", name: "ForgeGradle", version: "4.+", changing: true
         classpath "org.spongepowered:mixingradle:0.7.+"
-        classpath group: "wtf.gofancy.fancygradle", name: "wtf.gofancy.fancygradle.gradle.plugin", version: "1.1.+"
     }
 }
 
 //Apply plugins
 apply plugin: "net.minecraftforge.gradle"
 apply plugin: "org.spongepowered.mixin"
-apply plugin: "wtf.gofancy.fancygradle"
 apply plugin: "eclipse"
 
 //Set file name.
@@ -29,14 +26,6 @@ compileJava {
     options.compilerArgs << "-Xlint:deprecation" << "-Xlint:unchecked"
 }
 
-fancyGradle {
-    patches {
-        coremods
-        asm
-        mergetool
-    }
-}
-
 //Minecraft mappings and run configs.
 minecraft {
     // The mappings can be changed at any time, and must be in the following format.
@@ -46,18 +35,18 @@ minecraft {
     // official   MCVersion  Official field/method names from Mojang mapping files
     mappings channel: "stable", version: "39-1.12"
 
-    accessTransformer = file("src/main/resources/mts_at.cfg")
-
     //Run configurations.
     runs {
         client {
             workingDirectory file("run")
-            property "fml.coreMods.load", "mcinterface1122.core.CoreMod"
+            property "fml.coreMods.load", "mcinterface1122.core.MtsCoreMod"
             property "tweakClass", "org.spongepowered.asm.launch.MixinTweaker"
         }
 
         server {
             workingDirectory file("runServer")
+            property "fml.coreMods.load", "mcinterface1122.core.MtsCoreMod"
+            property "tweakClass", "org.spongepowered.asm.launch.MixinTweaker"
         }
     }
 }
@@ -114,8 +103,7 @@ jar {
 
     manifest {
         attributes([
-                "FMLAT"                      : "mts_at.cfg",
-                "FMLCorePlugin"              : "mcinterface1122.core.CoreMod",
+                "FMLCorePlugin"              : "mcinterface1122.core.MtsCoreMod",
                 "FMLCorePluginContainsFMLMod": true,
                 "ForceLoadAsMod"             : true,
                 "TweakClass"                 : "org.spongepowered.asm.launch.MixinTweaker",
@@ -123,10 +111,6 @@ jar {
                 "MixinConfigs"               : "mts.mixins.json"
         ])
     }
-}
-
-processResources {
-    rename "mts_at.cfg", "META-INF/mts_at.cfg"
 }
 
 //Now compile the mod.

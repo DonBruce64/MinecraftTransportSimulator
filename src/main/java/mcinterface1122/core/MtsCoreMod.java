@@ -11,7 +11,7 @@ import java.util.Map;
 
 @IFMLLoadingPlugin.MCVersion("1.12.2")
 @IFMLLoadingPlugin.Name("Immersive Vehicles")
-public class CoreMod implements IFMLLoadingPlugin {
+public class MtsCoreMod implements IFMLLoadingPlugin {
     @Override
     public String[] getASMTransformerClass() {
         return new String[0];
