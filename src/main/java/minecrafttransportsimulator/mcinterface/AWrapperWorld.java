@@ -1,5 +1,9 @@
 package minecrafttransportsimulator.mcinterface;
 
+import java.io.File;
+import java.util.List;
+import java.util.UUID;
+
 import mcinterface1122.BuilderEntityExisting;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
@@ -11,13 +15,10 @@ import minecrafttransportsimulator.blocks.components.ABlockBase.BlockMaterial;
 import minecrafttransportsimulator.blocks.components.ABlockBaseTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
+import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
-
-import java.io.File;
-import java.util.List;
-import java.util.UUID;
 
 /**
  * IWrapper to a world instance.  This contains many common methods that
@@ -140,9 +141,11 @@ public abstract class AWrapperWorld extends EntityManager {
 
     /**
      * Loads all entities that are in the passed-in range into the passed-in vehicle.
+     * Will either load the whole vehicle besides controllers if a general area of the vehicle is clicked,
+     * or the specific seat if a seat is clicked.
      * Only non-hostile mobs that are not already riding an entity will be loaded.
      */
-    public abstract void loadEntities(BoundingBox box, EntityVehicleF_Physics vehicleToLoad);
+    public abstract void loadEntities(BoundingBox box, EntityVehicleF_Physics vehicleToLoad, APart clickedPart);
 
     /**
      * Returns the block at the passed-in position, or null if it doesn't exist in the world.

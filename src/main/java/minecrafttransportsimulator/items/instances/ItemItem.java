@@ -186,7 +186,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
                             }
                         }
                     } else {
-                        vehicle.world.loadEntities(new BoundingBox(player.getPosition(), 8D, 8D, 8D), vehicle);
+                        vehicle.world.loadEntities(new BoundingBox(player.getPosition(), 8D, 8D, 8D), vehicle, part);
                     }
                 }
                 return CallbackType.NONE;

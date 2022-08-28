@@ -1,5 +1,21 @@
 package mcinterface1122;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
+
+import org.lwjgl.opengl.GL11;
+
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
@@ -7,6 +23,7 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.packloading.PackResourceLoader;
 import minecrafttransportsimulator.packloading.PackResourceLoader.ResourceType;
+import minecrafttransportsimulator.systems.ConfigSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
@@ -25,17 +42,6 @@ import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
-import org.lwjgl.opengl.GL11;
-
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.Field;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * Interface for handling events pertaining to loading models into MC.  These events are mainly for item models,
@@ -184,7 +190,9 @@ public class InterfaceEventsModelLoader {
                     //JSON reference.  Get the specified file.
                     stream = getClass().getResourceAsStream("/assets/" + domain + "/" + rawPackInfo);
                     if (stream == null) {
-                        InterfaceLoader.LOGGER.error("Could not find JSON-specified file: " + rawPackInfo);
+                        if (ConfigSystem.settings.general.devMode.value) {
+                            InterfaceLoader.LOGGER.error("Could not find JSON-specified file: " + rawPackInfo);
+                        }
                         throw new FileNotFoundException(rawPackInfo);
                     }
                 } else {
@@ -223,7 +231,9 @@ public class InterfaceEventsModelLoader {
                             stream = new ByteArrayInputStream(fakeJSON.getBytes(StandardCharsets.UTF_8));
                         }
                     } catch (Exception e) {
-                        InterfaceLoader.LOGGER.error("Could not parse out item JSON from: " + rawPackInfo + "  Looked for JSON at:" + resourcePath + (itemTexturePath.isEmpty() ? (", with fallback at:" + itemTexturePath) : ", but could not find it."));
+                        if (ConfigSystem.settings.general.devMode.value) {
+                            InterfaceLoader.LOGGER.error("Could not parse out item JSON from: " + rawPackInfo + "  Looked for JSON at:" + resourcePath + (itemTexturePath.isEmpty() ? (", with fallback at:" + itemTexturePath) : ", but could not find it."));
+                        }
                         throw new FileNotFoundException(rawPackInfo);
                     }
                 }
@@ -258,15 +268,19 @@ public class InterfaceEventsModelLoader {
                                 String streamJSONLocation = "/assets/" + packID + "/" + rawPackInfo;
                                 stream = getClass().getResourceAsStream(streamJSONLocation);
                                 if (stream == null) {
-                                    if (streamLocation != null) {
-                                        InterfaceLoader.LOGGER.error("Could not find item PNG at specified location: " + streamLocation + "  Or potential JSON location: " + streamJSONLocation);
-                                    } else {
-                                        InterfaceLoader.LOGGER.error("Could not find JSON PNG: " + streamJSONLocation);
+                                    if (ConfigSystem.settings.general.devMode.value) {
+                                        if (streamLocation != null) {
+                                            InterfaceLoader.LOGGER.error("Could not find item PNG at specified location: " + streamLocation + "  Or potential JSON location: " + streamJSONLocation);
+                                        } else {
+                                            InterfaceLoader.LOGGER.error("Could not find JSON PNG: " + streamJSONLocation);
+                                        }
                                     }
                                     throw new FileNotFoundException(rawPackInfo);
                                 }
                             } else {
-                                InterfaceLoader.LOGGER.error("Could not find OBJ PNG: " + streamLocation);
+                                if (ConfigSystem.settings.general.devMode.value) {
+                                    InterfaceLoader.LOGGER.error("Could not find OBJ PNG: " + streamLocation);
+                                }
                                 throw new FileNotFoundException(rawPackInfo);
                             }
                         }
@@ -276,7 +290,9 @@ public class InterfaceEventsModelLoader {
                         String streamLocation = "/assets/" + domain + "/" + rawPackInfo;
                         stream = getClass().getResourceAsStream(streamLocation);
                         if (stream == null) {
-                            InterfaceLoader.LOGGER.error("Couldn't find...whatever this is: " + streamLocation);
+                            if (ConfigSystem.settings.general.devMode.value) {
+                                InterfaceLoader.LOGGER.error("Couldn't find...whatever this is: " + streamLocation);
+                            }
                             throw new FileNotFoundException(rawPackInfo);
                         }
                     }
@@ -284,7 +300,9 @@ public class InterfaceEventsModelLoader {
                     if (e instanceof FileNotFoundException) {
                         throw e;
                     } else {
-                        InterfaceLoader.LOGGER.error("Could not parse which item PNG to get from: " + rawPackInfo);
+                        if (ConfigSystem.settings.general.devMode.value) {
+                            InterfaceLoader.LOGGER.error("Could not parse which item PNG to get from: " + rawPackInfo);
+                        }
                         throw new FileNotFoundException(rawPackInfo);
                     }
                 }

@@ -1,7 +1,21 @@
 package minecrafttransportsimulator.entities.components;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
 import mcinterface1122.InterfaceLoader;
-import minecrafttransportsimulator.baseclasses.*;
+import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
+import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.ColorRGB;
+import minecrafttransportsimulator.baseclasses.Damage;
+import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPart;
@@ -10,13 +24,14 @@ import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONText;
-import minecrafttransportsimulator.mcinterface.*;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPartChange;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packloading.PackParser;
-
-import java.util.*;
-import java.util.Map.Entry;
 
 /**
  * Base class for multipart entities.  These entities hold other, part-based entities.  These part
@@ -93,23 +108,48 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
     @Override
     protected void initializeAnimations() {
         super.initializeAnimations();
-        parts.forEach(part -> {
-            part.placementDefinition = definition.parts.get(part.placementSlot);
-            part.animationsInitialized = false;
-        });
+        //Check for removed slots.
         if (definition.parts != null) {
-            partSlotSwitchboxes.clear();
-            for (JSONPartDefinition partDef : definition.parts) {
-                if (partDef.animations != null || partDef.applyAfter != null) {
-                    List<JSONAnimationDefinition> animations = new ArrayList<>();
-                    if (partDef.animations != null) {
-                        animations.addAll(partDef.animations);
+            //Check for removed slots.
+            if(partsInSlots.size() > definition.parts.size()) {
+                List<APart> removedParts = new ArrayList<APart>();
+                while(partsInSlots.size() > definition.parts.size()) {
+                    APart partRemoved = partsInSlots.remove(partsInSlots.size() - 1);
+                    if (partRemoved != null) {
+                        removedParts.add(partRemoved);
                     }
-                    partSlotSwitchboxes.put(partDef, new AnimationSwitchbox(this, animations, partDef.applyAfter));
+                }
+                removedParts.forEach(part -> {
+                    //Need to manually remove, since indexes won't exist.
+                    parts.remove(part);
+                    part.remove();
+                });
+            }
+
+            //Check for added slots.
+            while (partsInSlots.size() < definition.parts.size()) {
+                partsInSlots.add(null);
+            }
+
+            //Update existing slots.
+            parts.forEach(part -> {
+                part.placementDefinition = definition.parts.get(part.placementSlot);
+                part.animationsInitialized = false;
+            });
+            if (definition.parts != null) {
+                partSlotSwitchboxes.clear();
+                for (JSONPartDefinition partDef : definition.parts) {
+                    if (partDef.animations != null || partDef.applyAfter != null) {
+                        List<JSONAnimationDefinition> animations = new ArrayList<>();
+                        if (partDef.animations != null) {
+                            animations.addAll(partDef.animations);
+                        }
+                        partSlotSwitchboxes.put(partDef, new AnimationSwitchbox(this, animations, partDef.applyAfter));
+                    }
                 }
             }
+            recalculatePartSlots();
         }
-        recalculatePartSlots();
     }
 
     @Override

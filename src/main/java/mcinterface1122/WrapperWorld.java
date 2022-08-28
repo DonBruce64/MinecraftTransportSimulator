@@ -1,5 +1,15 @@
 package mcinterface1122;
 
+import java.io.File;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -10,16 +20,30 @@ import minecrafttransportsimulator.blocks.components.ABlockBaseTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
-import minecrafttransportsimulator.entities.instances.*;
+import minecrafttransportsimulator.entities.instances.APart;
+import minecrafttransportsimulator.entities.instances.EntityBullet;
+import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
+import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
+import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
-import minecrafttransportsimulator.mcinterface.*;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataRequest;
 import minecrafttransportsimulator.packets.instances.PacketWorldSavedDataUpdate;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
-import net.minecraft.block.*;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockBush;
+import net.minecraft.block.BlockCrops;
+import net.minecraft.block.BlockDirt;
+import net.minecraft.block.BlockSlab;
+import net.minecraft.block.IGrowable;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
@@ -55,10 +79,6 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
-
-import java.io.File;
-import java.nio.file.Files;
-import java.util.*;
 
 /**
  * Wrapper to a world instance.  This contains many common methods that
@@ -302,7 +322,7 @@ public class WrapperWorld extends AWrapperWorld {
                 }
 
                 //Didn't hit a rider on the damage source. Do normal raytracing or just add if there's no motion.
-                if (motion == null || mcEntityCollided.getEntityBoundingBox().calculateIntercept(start, end) == null) {
+                if (motion == null || mcEntityCollided.getEntityBoundingBox().calculateIntercept(start, end) != null) {
                     hitEntities.add(WrapperEntity.getWrapperFor(mcEntityCollided));
                 }
             }
@@ -319,13 +339,20 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     @Override
-    public void loadEntities(BoundingBox box, EntityVehicleF_Physics vehicleToLoad) {
+    public void loadEntities(BoundingBox box, EntityVehicleF_Physics vehicleToLoad, APart clickedPart) {
         for (Entity entity : world.getEntitiesWithinAABB(Entity.class, box.convert())) {
             if (!entity.isRiding() && (entity instanceof INpc || entity instanceof EntityCreature) && !(entity instanceof IMob)) {
-                for (APart part : vehicleToLoad.parts) {
-                    if (part instanceof PartSeat && part.rider == null && !part.placementDefinition.isController) {
-                        part.setRider(new WrapperEntity(entity), true);
+                if (clickedPart instanceof PartSeat) {
+                    if (clickedPart.rider == null) {
+                        clickedPart.setRider(new WrapperEntity(entity), true);
                         break;
+                    }
+                } else {
+                    for (APart part : vehicleToLoad.parts) {
+                        if (part instanceof PartSeat && part.rider == null && !part.placementDefinition.isController) {
+                            part.setRider(new WrapperEntity(entity), true);
+                            break;
+                        }
                     }
                 }
             }
@@ -865,7 +892,7 @@ public class WrapperWorld extends AWrapperWorld {
                         entity.addPartsPostAddition(playerWrapper, newData);
 
                         //If the player is new, also add handbooks.
-                        if (!ConfigSystem.settings.general.joinedPlayers.value.contains(playerUUID)) {
+                        if (ConfigSystem.settings.general.giveManualsOnJoin.value && !ConfigSystem.settings.general.joinedPlayers.value.contains(playerUUID)) {
                             playerWrapper.getInventory().addStack(PackParser.getItem("mts", "handbook_car").getNewStack(null));
                             playerWrapper.getInventory().addStack(PackParser.getItem("mts", "handbook_plane").getNewStack(null));
                             ConfigSystem.settings.general.joinedPlayers.value.add(playerUUID);

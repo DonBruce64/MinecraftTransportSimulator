@@ -585,7 +585,9 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
                     //To compensate, we rotate them 180 here.
                     instrumentTransform.set(transform);
                     instrumentTransform.applyTranslation(packInstrument.pos);
-                    instrumentTransform.applyRotation(packInstrument.rot);
+                    if (packInstrument.rot != null) {
+                        instrumentTransform.applyRotation(packInstrument.rot);
+                    }
                     instrumentTransform.applyRotation(INSTRUMENT_ROTATION_INVERSION);
 
                     //Do transforms if required and render if allowed.
