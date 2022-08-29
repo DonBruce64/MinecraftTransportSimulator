@@ -1,8 +1,5 @@
 package minecrafttransportsimulator.entities.instances;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -17,6 +14,9 @@ import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine;
 import minecrafttransportsimulator.packets.instances.PacketPartEngine.Signal;
 import minecrafttransportsimulator.systems.ConfigSystem;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class PartPropeller extends APart {
     private double currentRPM;
@@ -239,9 +239,10 @@ public class PartPropeller extends APart {
                 propellerForce.reOrigin(vehicleOn.orientation);
                 torque.y -= propellerForce.z * localOffset.x;
                 torque.z += propellerForce.y * localOffset.x;
-                if (vehicleOn.groundDeviceCollective.isAnythingOnGround()) {
-                    torque.x += propellerForce.z * localOffset.y;
-                }
+                //Commented out according to Nax request to remove x torque from the engine cuz funky physic 22/08/29 3:40Z
+                //if (vehicleOn.groundDeviceCollective.isAnythingOnGround()) {
+                //    torque.x += propellerForce.z * localOffset.y;
+                //}
             }
         }
     }
