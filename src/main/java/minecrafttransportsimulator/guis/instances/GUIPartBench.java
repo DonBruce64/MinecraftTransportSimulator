@@ -60,6 +60,7 @@ public class GUIPartBench extends AGUIBase {
 
     private GUIComponentButton prevColorButton;
     private GUIComponentButton nextColorButton;
+    private GUIComponentButton nextRecipeButton;
 
     private GUIComponentLabel partInfo;
     private GUIComponentLabel vehicleInfo;
@@ -72,8 +73,7 @@ public class GUIPartBench extends AGUIBase {
     //Crafting components.
     private final List<GUIComponentItem> craftingItemIcons = new ArrayList<>();
     private final List<GUIComponentCutout> craftingItemBackgrounds = new ArrayList<>();
-    private List<PackMaterialComponent> normalMaterials;
-    private List<PackMaterialComponent> repairMaterials;
+    private List<PackMaterialComponent> materials;
 
     //Renders for the item.
     private GUIComponentItem itemRender;
@@ -88,6 +88,7 @@ public class GUIPartBench extends AGUIBase {
     private AItemPack<? extends AJSONItem> prevItem;
     private AItemPack<? extends AJSONItem> currentItem;
     private AItemPack<? extends AJSONItem> nextItem;
+    private int recipeIndex;
 
     //Only used for vehicles.
     private AItemPack<? extends AJSONItem> prevSubItem;
@@ -172,6 +173,17 @@ public class GUIPartBench extends AGUIBase {
         });
         addComponent(new GUIComponentLabel(prevColorButton.constructedX + prevColorButton.width + (nextColorButton.constructedX - (prevColorButton.constructedX + prevColorButton.width)) / 2, guiTop + 136, ColorRGB.WHITE, JSONConfigLanguage.GUI_PART_BENCH_COLOR.value, TextAlignment.CENTERED, 1.0F).setButton(nextColorButton));
 
+        //Create recipe selection button.
+        addComponent(nextRecipeButton = new GUIComponentButton(guiLeft + 295, guiTop + 148, 20, 20, 180, 196, 20, 20) {
+            @Override
+            public void onClicked(boolean leftSide) {
+                if (++recipeIndex == currentItem.definition.general.materialLists.size()) {
+                    recipeIndex = 0;
+                }
+                updateNames();
+            }
+        });
+
         //Create the crafting item slots.  14 16X16 slots (7X2) need to be made here.
         craftingItemIcons.clear();
         craftingItemBackgrounds.clear();
@@ -208,12 +220,16 @@ public class GUIPartBench extends AGUIBase {
             @Override
             public void onClicked(boolean leftSide) {
                 viewingRepair = true;
+                recipeIndex = 0;
+                updateNames();
             }
         });
         addComponent(normalCraftingButton = new GUIComponentButton(guiLeft + 127, guiTop + 159, 20, 20, 140, 196, 20, 20) {
             @Override
             public void onClicked(boolean leftSide) {
                 viewingRepair = false;
+                recipeIndex = 0;
+                updateNames();
             }
         });
 
@@ -221,20 +237,17 @@ public class GUIPartBench extends AGUIBase {
         addComponent(confirmButton = new GUIComponentButton(guiLeft + 211, guiTop + 156, 20, 20, 20, 196, 20, 20) {
             @Override
             public void onClicked(boolean leftSide) {
-                InterfaceManager.packetInterface.sendToServer(new PacketPlayerCraftItem(player, currentItem, viewingRepair));
+                InterfaceManager.packetInterface.sendToServer(new PacketPlayerCraftItem(player, currentItem, recipeIndex, viewingRepair));
             }
         });
+
+        //Update the names now that we have everything put together.
+        updateNames();
     }
 
     @Override
     public void setStates() {
         super.setStates();
-        //If materials are null, it means we are on first launch and need to update them.
-        //We put this here as putting it in the setup step will mask the fault because the GUI packet will catch it.
-        if (normalMaterials == null) {
-            updateNames();
-        }
-
         //Set buttons based on if we have prev or next items.
         prevPackButton.enabled = prevPack != null;
         nextPackButton.enabled = nextPack != null;
@@ -245,17 +258,19 @@ public class GUIPartBench extends AGUIBase {
         nextColorButton.visible = currentItem instanceof AItemSubTyped;
         nextColorButton.enabled = nextSubItem != null;
 
+        //Enable repair recipe button if we have multiple indexes.
+        nextRecipeButton.enabled = currentItem != null && (viewingRepair ? currentItem.definition.general.repairMaterialLists.size() > 1 : currentItem.definition.general.materialLists.size() > 1);
+
         vehicleInfoButton.visible = currentItem instanceof ItemVehicle && !displayVehicleInfo;
         vehicleDescriptionButton.visible = currentItem instanceof ItemVehicle && displayVehicleInfo;
-        repairCraftingButton.visible = !viewingRepair && currentItem != null && repairMaterials != null && !repairMaterials.isEmpty();
+        repairCraftingButton.visible = !viewingRepair && currentItem != null && currentItem.definition.general.repairMaterialLists != null && !currentItem.definition.general.repairMaterialLists.isEmpty();
         normalCraftingButton.visible = viewingRepair;
         partInfo.visible = !displayVehicleInfo;
         vehicleInfo.visible = displayVehicleInfo;
 
         //Set materials.
         //Get the offset index based on the clock-time and the number of materials.
-        if (normalMaterials != null && repairMaterials != null) {
-            List<PackMaterialComponent> materials = viewingRepair ? repairMaterials : normalMaterials;
+        if (materials != null) {
             int materialOffset = 1 + (materials.size() - 1) / craftingItemIcons.size();
             materialOffset = (int) (System.currentTimeMillis() % (materialOffset * 5000) / 5000);
             materialOffset *= craftingItemIcons.size();
@@ -263,20 +278,18 @@ public class GUIPartBench extends AGUIBase {
                 int materialIndex = i + materialOffset;
                 if (materialIndex < materials.size()) {
                     craftingItemIcons.get(i).stacks = materials.get(materialIndex).possibleItems;
-                    craftingItemBackgrounds.get(i).visible = !player.isCreative() && inClockPeriod(20, 10) && (viewingRepair ? player.getInventory().hasSpecificMaterial(currentItem, i, true, true, true) : player.getInventory().hasSpecificMaterial(currentItem, i, true, true, false));
+                    craftingItemBackgrounds.get(i).visible = !player.isCreative() && inClockPeriod(20, 10) && player.getInventory().hasSpecificMaterial(currentItem, recipeIndex, i, true, true, viewingRepair);
                 } else {
                     craftingItemIcons.get(i).stacks = null;
                     craftingItemBackgrounds.get(i).visible = false;
                 }
             }
         } else {
-            for (GUIComponentItem craftingItemIcon : craftingItemIcons) {
-                craftingItemIcon.stacks = null;
-            }
+            craftingItemIcons.forEach(icon -> icon.stacks = null);
         }
 
         //Set confirm button based on if player has materials.
-        confirmButton.enabled = currentItem != null && (player.isCreative() || (viewingRepair ? (repairMaterials != null && player.getInventory().hasMaterials(currentItem, true, true, true)) : (normalMaterials != null && player.getInventory().hasMaterials(currentItem, true, true, false))));
+        confirmButton.enabled = currentItem != null && (player.isCreative() || player.getInventory().hasMaterials(currentItem, recipeIndex, true, true, viewingRepair));
 
         //Check the mouse to see if it updated and we need to change items.
         int wheelMovement = InterfaceManager.inputInterface.getTrackedMouseWheel();
@@ -443,14 +456,28 @@ public class GUIPartBench extends AGUIBase {
         }
 
         //Parse crafting items and set icon items.
-        normalMaterials = PackMaterialComponent.parseFromJSON(currentItem, true, true, false, false);
-        if (normalMaterials == null) {
-            partInfo.text = PackMaterialComponent.lastErrorMessage;
-        }
-        repairMaterials = PackMaterialComponent.parseFromJSON(currentItem, true, true, false, true);
-        if (repairMaterials == null) {
-            partInfo.text = PackMaterialComponent.lastErrorMessage;
-        }
+        int requestedRecipe = recipeIndex;
+        String errorMessage = "";
+        do {
+            materials = PackMaterialComponent.parseFromJSON(currentItem, recipeIndex, true, true, viewingRepair);
+            if (materials != null) {
+                for (byte i = 0; i < craftingItemIcons.size(); ++i) {
+                    if (i < materials.size()) {
+                        craftingItemIcons.get(i).stacks = materials.get(i).possibleItems;
+                    }
+                }
+            } else {
+                craftingItemIcons.forEach(icon -> icon.stacks = null);
+                if (++recipeIndex == (viewingRepair ? currentItem.definition.general.repairMaterialLists.size() : currentItem.definition.general.materialLists.size())) {
+                    recipeIndex = 0;
+                }
+                errorMessage += PackMaterialComponent.lastErrorMessage + "\n";
+                if (recipeIndex == requestedRecipe) {
+                    partInfo.text = errorMessage;
+                    break;
+                }
+            }
+        } while (materials == null);
 
         //Enable render based on what component we have.
         boolean isPartWithVehicleTexture = currentItem instanceof AItemPart && ((AItemPart) currentItem).definition.generic.useVehicleTexture;

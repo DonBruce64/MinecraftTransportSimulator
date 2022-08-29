@@ -18,30 +18,34 @@ import minecrafttransportsimulator.packets.components.APacketEntityInteract;
  */
 public class PacketEntityColorChange extends APacketEntityInteract<AEntityD_Definable<?>, IWrapperPlayer> {
     private final AItemSubTyped<?> newItem;
+    private final int recipeIndex;
 
-    public PacketEntityColorChange(AEntityD_Definable<?> entity, IWrapperPlayer player, AItemSubTyped<?> newItem) {
+    public PacketEntityColorChange(AEntityD_Definable<?> entity, IWrapperPlayer player, AItemSubTyped<?> newItem, int recipeIndex) {
         super(entity, player);
         this.newItem = newItem;
+        this.recipeIndex = recipeIndex;
     }
 
     public PacketEntityColorChange(ByteBuf buf) {
         super(buf);
         this.newItem = readItemFromBuffer(buf);
+        this.recipeIndex = buf.readInt();
     }
 
     @Override
     public void writeToBuffer(ByteBuf buf) {
         super.writeToBuffer(buf);
         writeItemToBuffer(newItem, buf);
+        buf.writeInt(recipeIndex);
     }
 
     @Override
     public boolean handle(AWrapperWorld world, AEntityD_Definable<?> entity, IWrapperPlayer player) {
         IWrapperInventory inventory = player.getInventory();
-        if (player.isCreative() || inventory.hasMaterials(newItem, false, true, false)) {
+        if (player.isCreative() || inventory.hasMaterials(newItem, recipeIndex, false, true, false)) {
             //Remove livery materials (if required) and set new subName.
             if (!player.isCreative()) {
-                inventory.removeMaterials(newItem, false, true, false);
+                inventory.removeMaterials(newItem, recipeIndex, false, true, false);
             }
             entity.subName = newItem.subName;
 

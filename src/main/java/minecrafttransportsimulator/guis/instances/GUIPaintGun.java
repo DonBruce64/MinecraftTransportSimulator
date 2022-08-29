@@ -1,8 +1,16 @@
 package minecrafttransportsimulator.guis.instances;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import mcinterface1122.InterfaceLoader;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
-import minecrafttransportsimulator.guis.components.*;
+import minecrafttransportsimulator.guis.components.AGUIBase;
+import minecrafttransportsimulator.guis.components.GUIComponent3DModel;
+import minecrafttransportsimulator.guis.components.GUIComponentButton;
+import minecrafttransportsimulator.guis.components.GUIComponentItem;
+import minecrafttransportsimulator.guis.components.GUIComponentLabel;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
@@ -11,9 +19,6 @@ import minecrafttransportsimulator.packets.instances.PacketEntityColorChange;
 import minecrafttransportsimulator.packloading.PackMaterialComponent;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * A GUI that is used to craft vehicle parts and other pack components.  This GUI displays
@@ -32,6 +37,7 @@ public class GUIPaintGun extends AGUIBase {
     private GUIComponentLabel partName;
     private GUIComponentButton prevColorButton;
     private GUIComponentButton nextColorButton;
+    private GUIComponentButton nextRecipeButton;
     private GUIComponentButton confirmButton;
 
     //Crafting components.
@@ -44,6 +50,7 @@ public class GUIPaintGun extends AGUIBase {
     private AItemSubTyped<?> currentItem;
     private AItemSubTyped<?> prevSubItem;
     private AItemSubTyped<?> nextSubItem;
+    private int recipeIndex;
 
     public GUIPaintGun(AEntityD_Definable<?> entity, IWrapperPlayer player) {
         super();
@@ -70,6 +77,15 @@ public class GUIPaintGun extends AGUIBase {
                 updateNames();
             }
         });
+        addComponent(nextRecipeButton = new GUIComponentButton(guiLeft + 233, guiTop + 100, 20, 20, 80, 196, 20, 20) {
+            @Override
+            public void onClicked(boolean leftSide) {
+                if (++recipeIndex == currentItem.getExtraMaterials().size()) {
+                    recipeIndex = 0;
+                }
+                updateNames();
+            }
+        });
         addComponent(partName = new GUIComponentLabel(guiLeft + 60, guiTop + 120, ColorRGB.WHITE, "", TextAlignment.LEFT_ALIGNED, 1.0F, 98));
 
         //Create the crafting item slots.  8 16X16 slots (8X2) need to be made here.
@@ -87,7 +103,7 @@ public class GUIPaintGun extends AGUIBase {
         addComponent(confirmButton = new GUIComponentButton(guiLeft + 99, guiTop + 167, 20, 20, 20, 196, 20, 20) {
             @Override
             public void onClicked(boolean leftSide) {
-                InterfaceManager.packetInterface.sendToServer(new PacketEntityColorChange(entity, player, currentItem));
+                InterfaceManager.packetInterface.sendToServer(new PacketEntityColorChange(entity, player, currentItem, recipeIndex));
                 close();
             }
         });
@@ -103,8 +119,11 @@ public class GUIPaintGun extends AGUIBase {
         prevColorButton.enabled = prevSubItem != null;
         nextColorButton.enabled = nextSubItem != null;
 
+        //Enable repair recipe button if we have multiple indexes.
+        nextRecipeButton.enabled = currentItem.getExtraMaterials().size() > 1;
+
         //Set confirm button based on if player has materials.
-        confirmButton.enabled = currentItem != null && (player.isCreative() || player.getInventory().hasMaterials(currentItem, false, true, false));
+        confirmButton.enabled = currentItem != null && (player.isCreative() || player.getInventory().hasMaterials(currentItem, recipeIndex, false, true, false));
     }
 
     @Override
@@ -160,14 +179,30 @@ public class GUIPaintGun extends AGUIBase {
         partName.text = currentItem.getItemName();
 
         //Parse crafting items and set icon items.
-        List<PackMaterialComponent> materials = PackMaterialComponent.parseFromJSON(currentItem, false, true, false, false);
-        for (byte i = 0; i < craftingItemIcons.size(); ++i) {
-            if (materials != null && i < materials.size()) {
-                craftingItemIcons.get(i).stacks = materials.get(i).possibleItems;
+        //Check all possible recipes, since some might be for other mods or versions.
+        int requestedRecipe = recipeIndex;
+        List<PackMaterialComponent> materials = null;
+        String errorMessage = "";
+        do {
+            materials = PackMaterialComponent.parseFromJSON(currentItem, recipeIndex, false, true, false);
+            if (materials != null) {
+                for (byte i = 0; i < craftingItemIcons.size(); ++i) {
+                    if (i < materials.size()) {
+                        craftingItemIcons.get(i).stacks = materials.get(i).possibleItems;
+                    }
+                }
             } else {
-                craftingItemIcons.get(i).stacks = null;
+                craftingItemIcons.forEach(icon -> icon.stacks = null);
+                if (++recipeIndex == currentItem.getExtraMaterials().size()) {
+                    recipeIndex = 0;
+                }
+                errorMessage += PackMaterialComponent.lastErrorMessage + "\n";
+                if (recipeIndex == requestedRecipe) {
+                    InterfaceLoader.LOGGER.error(errorMessage);
+                    break;
+                }
             }
-        }
+        } while (materials == null);
 
         //Set model render properties.
         modelRender.modelLocation = currentItem.definition.getModelLocation(currentItem.subName);
