@@ -135,9 +135,6 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("For manual gear boxes only.  This parameter defines how long the clutch variable is set to 1 for up-shifting and down-shifting animations.  Has no other affect than this, as vehicles don't simulate clutches.  That's a bit TOO realistic!")
         public int clutchTime;
 
-        @JSONDescription("Normally when shifting into a gear in the opposite direction from which the vehicle is travelling the engine will refuse the shift and return 'bad_shift'. if this is true, the shift will be forced.")
-        public boolean forceShift;
-
         @JSONDescription("How long it takes for the engine RPM to 'catch up', or how fast it revs. The lower the value is, the faster the engine will react to RPM changes. If ignored, MTS will set the value of this to a default of 10.")
         public int revResistance;
 
