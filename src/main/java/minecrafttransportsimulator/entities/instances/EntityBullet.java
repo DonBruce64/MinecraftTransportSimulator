@@ -85,8 +85,8 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
      **/
     public EntityBullet(Point3D position, Point3D motion, RotationMatrix orientation, PartGun gun, PartEngine engineTargeted) {
         this(position, motion, orientation, gun, engineTargeted.position);
-        if (engineTargeted.entityOn instanceof EntityVehicleF_Physics) {
-            ((EntityVehicleF_Physics) engineTargeted.entityOn).acquireMissile(this);
+        if (engineTargeted.vehicleOn != null) {
+            engineTargeted.vehicleOn.acquireMissile(this);
         }
         this.engineTargeted = engineTargeted;
         displayDebugMessage("LOCKON ENGINE " + engineTargeted.definition.systemName + " @ " + targetPosition);

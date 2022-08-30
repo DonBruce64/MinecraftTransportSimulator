@@ -1,5 +1,8 @@
 package minecrafttransportsimulator.entities.components;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import mcinterface1122.InterfaceLoader;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -13,12 +16,13 @@ import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.jsondefs.JSONConnection;
 import minecrafttransportsimulator.jsondefs.JSONConnectionGroup;
-import minecrafttransportsimulator.mcinterface.*;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityTowingChange;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Base entity class containing towing states and methods.
@@ -254,7 +258,7 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
             connectionToDisconnect = towedByConnection;
         } else if (requestedGroup.isHitch) {
             for (TowingConnection connection : towingConnections) {
-                if (connectionDefiner.equals(connection.towingEntity)) {
+                if (connectionDefiner.equals(connection.towingEntity) && connection.hitchGroupIndex == connectionGroupIndex) {
                     connectionToDisconnect = connection;
                     break;
                 }

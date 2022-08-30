@@ -149,7 +149,8 @@ public class PartEngine extends APart {
             if (definition.engine.disableAutomaticStarter) {
                 //Check if this is a hand-start command.
                 if (damage.entityResponsible instanceof IWrapperPlayer && ((IWrapperPlayer) damage.entityResponsible).getHeldStack().isEmpty()) {
-                    if (!entityOn.equals(damage.entityResponsible.getEntityRiding())) {
+                    //Don't hand-start engines from seated players.  Lazy bums...
+                    if (!masterEntity.allParts.contains(damage.entityResponsible.getEntityRiding())) {
                         if (!magnetoOn) {
                             setVariable(MAGNETO_VARIABLE, 1);
                             InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableToggle(this, MAGNETO_VARIABLE));

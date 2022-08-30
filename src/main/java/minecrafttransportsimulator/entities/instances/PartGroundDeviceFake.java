@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.entities.instances;
 
-import minecrafttransportsimulator.items.instances.ItemPartGroundDevice;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
@@ -14,7 +13,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 public final class PartGroundDeviceFake extends PartGroundDevice {
     private final PartGroundDevice masterPart;
 
-    public PartGroundDeviceFake(PartGroundDevice masterPart, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, IWrapperNBT data, APart parentPart) {
+    public PartGroundDeviceFake(PartGroundDevice masterPart, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, IWrapperNBT data) {
         super(masterPart.entityOn, placingPlayer, placementDefinition, data);
         this.masterPart = masterPart;
     }
@@ -32,11 +31,6 @@ public final class PartGroundDeviceFake extends PartGroundDevice {
     @Override
     public double getHeight() {
         return masterPart != null ? masterPart.getHeight() : 1.0F;
-    }
-
-    @Override
-    public ItemPartGroundDevice getItem() {
-        return null;
     }
 
     @Override

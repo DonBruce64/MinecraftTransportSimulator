@@ -7,7 +7,11 @@ import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
-import minecrafttransportsimulator.mcinterface.*;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketFurnaceFuelAdd;
 import minecrafttransportsimulator.packets.instances.PacketPartInteractable;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
@@ -47,7 +51,7 @@ public final class PartInteractable extends APart {
 
     @Override
     public boolean interact(IWrapperPlayer player) {
-        if (!entityOn.locked) {
+        if (!masterEntity.locked) {
             if (definition.interactable.interactionType.equals(InteractableComponentType.CRATE) || definition.interactable.interactionType.equals(InteractableComponentType.CRAFTING_BENCH) || definition.interactable.interactionType.equals(InteractableComponentType.FURNACE)) {
                 player.sendPacket(new PacketPartInteractable(this, player));
             } else if (definition.interactable.interactionType.equals(InteractableComponentType.CRAFTING_TABLE)) {
@@ -176,7 +180,7 @@ public final class PartInteractable extends APart {
                 IWrapperItemStack currentFuel = furnace.getStack(EntityFurnace.FUEL_ITEM_SLOT);
                 if (currentFuel.isEmpty() || currentFuel.getMaxSize() < currentFuel.getSize()) {
                     //Try to find a matching burnable item from the entity.
-                    for (APart part : entityOn.parts) {
+                    for (APart part : linkedParts) {
                         if (part instanceof PartInteractable) {
                             if (part.isActive && part.definition.interactable.feedsVehicles && part.definition.interactable.interactionType.equals(InteractableComponentType.CRATE)) {
                                 PartInteractable crate = (PartInteractable) part;
@@ -198,7 +202,7 @@ public final class PartInteractable extends APart {
             }
             case FUEL: {
                 //Try to find a barrel with fuel in it.
-                for (APart part : entityOn.parts) {
+                for (APart part : linkedParts) {
                     if (part instanceof PartInteractable) {
                         if (part.isActive && part.definition.interactable.feedsVehicles && part.definition.interactable.interactionType.equals(InteractableComponentType.BARREL)) {
                             PartInteractable barrel = (PartInteractable) part;

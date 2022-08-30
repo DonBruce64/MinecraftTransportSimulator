@@ -55,7 +55,8 @@ public class PartPropeller extends APart {
         super.attack(damage);
         if (!damage.isWater) {
             if (damage.entityResponsible instanceof IWrapperPlayer && ((IWrapperPlayer) damage.entityResponsible).getHeldStack().isEmpty()) {
-                if (!entityOn.equals(damage.entityResponsible.getEntityRiding())) {
+                //Don't let players sitting in the vehicle hand-start the propeller.  Lazy bums...
+                if (!masterEntity.allParts.contains(damage.entityResponsible.getEntityRiding())) {
                     connectedEngines.forEach(connectedEngine -> {
                         connectedEngine.handStartEngine();
                         InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(connectedEngine, Signal.HS_ON));

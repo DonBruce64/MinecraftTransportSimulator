@@ -388,7 +388,7 @@ public class PartGun extends APart {
                 } else {
                     if (definition.gun.autoReload) {
                         //Iterate through all the inventory slots in crates to try to find matching ammo.
-                        for (APart part : entityOn.parts) {
+                        for (APart part : linkedParts) {
                             if (part instanceof PartInteractable && part.definition.interactable.interactionType.equals(InteractableComponentType.CRATE) && part.isActive && part.definition.interactable.feedsVehicles) {
                                 EntityInventoryContainer inventory = ((PartInteractable) part).inventory;
                                 for (int i = 0; i < inventory.getSize(); ++i) {
@@ -697,8 +697,8 @@ public class PartGun extends APart {
      * hodling this gun if the gun is hand-held.
      */
     public IWrapperEntity getGunController() {
-        //If the entity we are on is destroyed, don't allow anything to control us.
-        if (entityOn.damageAmount == entityOn.definition.general.health) {
+        //If the master entity we are on is destroyed, don't allow anything to control us.
+        if (masterEntity.damageAmount == masterEntity.definition.general.health) {
             return null;
         }
 
@@ -841,7 +841,7 @@ public class PartGun extends APart {
     @Override
     public String getRawTextVariableValue(JSONText textDef, float partialTicks) {
         if (textDef.variableName.equals("gun_lockedon_name")) {
-            return entityTarget != null ? entityTarget.getName() : (engineTarget != null ? engineTarget.entityOn.getItem().getItemName() : "");
+            return entityTarget != null ? entityTarget.getName() : (engineTarget != null ? engineTarget.masterEntity.getItem().getItemName() : "");
         }
 
         return super.getRawTextVariableValue(textDef, partialTicks);
