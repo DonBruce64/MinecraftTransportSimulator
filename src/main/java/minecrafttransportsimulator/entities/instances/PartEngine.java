@@ -75,6 +75,8 @@ public class PartEngine extends APart {
     private float currentSuperchargerEfficiency;
     @ModifiedValue
     private float currentGearRatio;
+    @ModifiedValue
+    private float currentForceShift;
 
     //Internal variables.
     private boolean isPropellerInLiquid;
@@ -686,6 +688,7 @@ public class PartEngine extends APart {
         currentSuperchargerFuelConsumption = definition.engine.superchargerFuelConsumption;
         currentSuperchargerEfficiency = definition.engine.superchargerEfficiency;
         currentGearRatio = definition.engine.gearRatios.get(currentGear + reverseGears);
+        currentForceShift = definition.engine.forceShift ? 1 : 0;
 
         //Adjust current variables to modifiers, if any exist.
         if (definition.variableModifiers != null) {
@@ -720,6 +723,9 @@ public class PartEngine extends APart {
                         break;
                     case "currentGearRatio":
                         currentGearRatio = adjustVariable(modifier, currentGearRatio);
+                        break;
+                    case "forceShift":
+                    	currentForceShift = adjustVariable(modifier, currentForceShift);
                         break;
                     default:
                         setVariable(modifier.variable, adjustVariable(modifier, (float) getVariable(modifier.variable)));
@@ -942,7 +948,7 @@ public class PartEngine extends APart {
             } else if (currentGear == 0) {
                 //Neutral to 1st.
                 nextGear = 1;
-                doShift = vehicleOn.axialVelocity < MAX_SHIFT_SPEED || wheelFriction == 0 || !vehicleOn.goingInReverse;
+                doShift = vehicleOn.axialVelocity < MAX_SHIFT_SPEED || wheelFriction == 0 || !vehicleOn.goingInReverse || currentForceShift != 0;
             } else {//Gear to next gear.
                 nextGear = (byte) (currentGear + 1);
                 doShift = true;
@@ -974,7 +980,7 @@ public class PartEngine extends APart {
             } else if (currentGear == 0) {
                 //Neutral to 1st reverse.
                 nextGear = -1;
-                doShift = vehicleOn.axialVelocity < MAX_SHIFT_SPEED || wheelFriction == 0 || vehicleOn.goingInReverse;
+                doShift = vehicleOn.axialVelocity < MAX_SHIFT_SPEED || wheelFriction == 0 || vehicleOn.goingInReverse || currentForceShift != 0;
             } else {//Gear to next gear.
                 nextGear = (byte) (currentGear - 1);
                 doShift = true;
