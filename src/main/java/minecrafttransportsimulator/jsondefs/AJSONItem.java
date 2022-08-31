@@ -1,12 +1,12 @@
 package minecrafttransportsimulator.jsondefs;
 
+import java.util.List;
+
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.packloading.PackResourceLoader.ItemClassification;
-
-import java.util.List;
 
 /**
  * Base JSON class for all pack-loaded JSONs.  All pack-loaded JSONs MUST extend this class.
@@ -60,11 +60,11 @@ public abstract class AJSONItem {
         public int health;
 
         @JSONRequired
-        @JSONDescription("A list of materials that are required to create this component.  The format for this list is [GiveString:Metadata:Qty], where GiveString is the name of the item that's found in the /give command, Metadata is the metadata of the item, and Qty is the quantity needed.  Should a component have no materials in this list, and no extraMaterials if it uses definitions, it will not be available for crafting in any benches.  If you wish to use OreDict, simply replace the GiveString with the OreDict name, and omit the Metadata parameter.")
-        public List<String> materials;
+        @JSONDescription("A set of lists of material lists that are required to create this component.  Normally, items have just one list, but can have multiple for multiple ways to craft the item.  This allows for incorperation of modded items, as well as different Minecraft versions.  The format for each material entry in each list is <GiveString:Metadata:Qty> on 1.12.2, and <GiveString:Qty> on higher versions.  Where GiveString is the name of the item that's found in the /give command, Metadata is the metadata of the item, and Qty is the quantity needed.  Should a component have no materials (and no extraMaterialLists, if it uses definitions) it will not be available for crafting in any benches.  If you wish to use OreDict, simply replace the GiveString with the OreDict name, and omit the Metadata parameter if on 1.12.2.")
+        public List<List<String>> materialLists;
 
-        @JSONDescription("A list of materials that, in combination with an existing instance of this item, can be used to craft a fresh copy.  This is mainly used for 'repair' operations.")
-        public List<String> repairMaterials;
+        @JSONDescription("Like materials, but these materials, in combination with an existing instance of this item, can be used to craft a fresh copy.")
+        public List<List<String>> repairMaterialLists;
 
         @JSONDescription("An optional oreDict name for this item.  This will make the item be part of the specified oreDict.  Note that you may use custom oreDict names if you want multiple items to be the same ingredient.")
         public String oreDict;
@@ -137,5 +137,11 @@ public abstract class AJSONItem {
             public float scale;
             public ColorRGB color;
         }
+
+        @Deprecated
+        public List<String> materials;
+
+        @Deprecated
+        public List<String> repairMaterials;
     }
 }

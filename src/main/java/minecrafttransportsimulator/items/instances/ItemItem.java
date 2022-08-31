@@ -251,14 +251,14 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
             }
             case JUMPER_CABLES: {
                 if (!vehicle.world.isClient() && rightClick) {
-                    if (part instanceof PartEngine) {
+                    if (part instanceof PartEngine && part.vehicleOn != null) {
                         PartEngine engine = (PartEngine) part;
                         if (engine.linkedEngine == null) {
                             if (firstEngineClicked == null) {
                                 firstEngineClicked = engine;
                                 player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_JUMPERCABLE_FIRSTLINK));
                             } else if (!firstEngineClicked.equals(engine)) {
-                                if (firstEngineClicked.entityOn.equals(engine.entityOn)) {
+                                if (firstEngineClicked.vehicleOn.equals(engine.vehicleOn)) {
                                     firstEngineClicked = null;
                                     player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_JUMPERCABLE_SAMEVEHICLE));
                                 } else if (engine.position.isDistanceToCloserThan(firstEngineClicked.position, 15)) {

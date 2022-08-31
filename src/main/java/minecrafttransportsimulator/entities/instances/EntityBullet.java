@@ -85,8 +85,8 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
      **/
     public EntityBullet(Point3D position, Point3D motion, RotationMatrix orientation, PartGun gun, PartEngine engineTargeted) {
         this(position, motion, orientation, gun, engineTargeted.position);
-        if (engineTargeted.entityOn instanceof EntityVehicleF_Physics) {
-            ((EntityVehicleF_Physics) engineTargeted.entityOn).acquireMissile(this);
+        if (engineTargeted.vehicleOn != null) {
+            engineTargeted.vehicleOn.acquireMissile(this);
         }
         this.engineTargeted = engineTargeted;
         displayDebugMessage("LOCKON ENGINE " + engineTargeted.definition.systemName + " @ " + targetPosition);
@@ -279,9 +279,10 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                                     startDespawn();
                                     return;
                                 }
-                            } else {
+                            } else if (hitPart != null) {
                                 //Didn't have a group def, this must be a core part box.
                                 //Damage part and keep going on, unless that part is flagged to forward damage, then we do so and die.
+                                //Note that parts can get killed by too much damage and suddenly become null during iteration, hence the null check.
 
                                 position.set(hitPart.position);
                                 lastHit = HitType.PART;

@@ -1,13 +1,17 @@
 package minecrafttransportsimulator.items.components;
 
+import java.util.Collections;
+import java.util.List;
+
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
-import minecrafttransportsimulator.jsondefs.*;
+import minecrafttransportsimulator.jsondefs.AJSONItem;
+import minecrafttransportsimulator.jsondefs.JSONCraftingBench;
+import minecrafttransportsimulator.jsondefs.JSONPack;
+import minecrafttransportsimulator.jsondefs.JSONPart;
+import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
-
-import java.util.Collections;
-import java.util.List;
 
 /**
  * Base item class for all pack-created items.  Stores information such as the
@@ -65,12 +69,12 @@ public abstract class AItemPack<JSONDefinition extends AJSONItem> extends AItemB
      * Returns true if this item can be crafted by the passed-in bench definition.
      */
     public boolean isBenchValid(JSONCraftingBench craftingDefinition) {
-        boolean hasMaterials = !definition.general.materials.isEmpty();
+        boolean hasMaterials = !definition.general.materialLists.isEmpty();
         if (!hasMaterials && this instanceof AItemSubTyped) {
             AItemSubTyped<?> subTypedItem = (AItemSubTyped<?>) this;
             for (JSONSubDefinition subDefinition : subTypedItem.definition.definitions) {
                 if (subDefinition.subName.equals(subTypedItem.subName)) {
-                    hasMaterials = !subDefinition.extraMaterials.isEmpty();
+                    hasMaterials = !subDefinition.extraMaterialLists.isEmpty();
                 }
             }
         }

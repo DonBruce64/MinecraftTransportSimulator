@@ -1,5 +1,8 @@
 package mcinterface1122;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.mcinterface.IInterfaceCore;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
@@ -11,9 +14,6 @@ import net.minecraft.util.NonNullList;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.oredict.OreDictionary;
-
-import java.util.ArrayList;
-import java.util.List;
 
 class InterfaceCore implements IInterfaceCore {
     @Override
@@ -69,7 +69,7 @@ class InterfaceCore implements IInterfaceCore {
     }
 
     @Override
-    public List<IWrapperItemStack> getOredictMaterials(String oreName) {
+    public List<IWrapperItemStack> getOredictMaterials(String oreName, int stackSize) {
         NonNullList<ItemStack> oreDictStacks = OreDictionary.getOres(oreName, false);
         List<IWrapperItemStack> stacks = new ArrayList<>();
         for (ItemStack stack : oreDictStacks) {
@@ -77,11 +77,15 @@ class InterfaceCore implements IInterfaceCore {
                 NonNullList<ItemStack> oreDictSubStacks = NonNullList.create();
                 stack.getItem().getSubItems(CreativeTabs.SEARCH, oreDictSubStacks);
                 for (ItemStack subStack : oreDictSubStacks) {
-                    stacks.add(new WrapperItemStack(subStack.copy()));
+                    ItemStack editedStack = subStack.copy();
+                    editedStack.setCount(stackSize);
+                    stacks.add(new WrapperItemStack(editedStack));
                 }
 
             } else {
-                stacks.add(new WrapperItemStack(stack.copy()));
+                ItemStack editedStack = stack.copy();
+                editedStack.setCount(stackSize);
+                stacks.add(new WrapperItemStack(editedStack));
             }
 
         }

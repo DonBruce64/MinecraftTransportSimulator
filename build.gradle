@@ -13,7 +13,7 @@ apply plugin: "net.minecraftforge.gradle"
 apply plugin: "eclipse"
 
 //Set file name.
-version = "1.12.2-22.0.0"
+version = "1.12.2-22.1.0-BETA4"
 group = "minecrafttransportsimulator"
 archivesBaseName = "Immersive Vehicles"
 
@@ -69,7 +69,7 @@ dependencies {
     //Compile against the JEI API but do not include it at runtime
     compileOnly fg.deobf("mezz.jei:jei_1.12.2:4.16.1.302:api")
     //At runtime, use the full JEI jar
-    //Disabled as Access Transformers don"t work on FG 3.0 runtimes despite them saying they do.
+    //Disabled as Access Transformers don"t work on FG higher than 2.3 despite them saying they do.
     //Not a huge issue, as it just prevents using JEI in-dev, and we already have it working so don"t really need to test.
     //runtimeOnly fg.deobf("mezz.jei:jei_1.12.2:4.16.1.302")
 }

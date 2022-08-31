@@ -1,12 +1,12 @@
 package minecrafttransportsimulator.packloading;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Class that contains information about one set of materials for a pack item.
@@ -23,24 +23,16 @@ public class PackMaterialComponent {
 
     private PackMaterialComponent(String itemText) {
         possibleItems = new ArrayList<>();
-        if (itemText.startsWith("oredict:")) {
-            qty = Integer.parseInt(itemText.substring(itemText.lastIndexOf(':') + 1));
-            itemText = itemText.substring(0, itemText.lastIndexOf(':'));
-            meta = 0;
-            String oreName = itemText.substring("oredict:".length());
-            List<IWrapperItemStack> oreDictMaterials = InterfaceManager.coreInterface.getOredictMaterials(oreName);
+        String[] itemParameters = itemText.split(":");
+        String domain = itemParameters[0];
+        String name = itemParameters[1];
+        meta = Integer.parseInt(itemParameters.length == 4 ? itemParameters[2] : "0");
+        qty = Integer.parseInt(itemParameters.length == 4 ? itemParameters[3] : itemParameters[2]);
 
-            //Set stack qty.
-            for (IWrapperItemStack stack : oreDictMaterials) {
-                stack.add(qty - 1);
-            }
-            possibleItems.addAll(oreDictMaterials);
+        if (domain.equals("oredict")) {
+            possibleItems.addAll(InterfaceManager.coreInterface.getOredictMaterials(name, qty));
         } else {
-            qty = Integer.parseInt(itemText.substring(itemText.lastIndexOf(':') + 1));
-            itemText = itemText.substring(0, itemText.lastIndexOf(':'));
-            meta = Integer.parseInt(itemText.substring(itemText.lastIndexOf(':') + 1));
-            itemText = itemText.substring(0, itemText.lastIndexOf(':'));
-            IWrapperItemStack stack = InterfaceManager.coreInterface.getStackForProperties(itemText, meta, qty);
+            IWrapperItemStack stack = InterfaceManager.coreInterface.getStackForProperties(domain + ":" + name, meta, qty);
             if (!stack.isEmpty()) {
                 possibleItems.add(stack);
             }
@@ -48,38 +40,38 @@ public class PackMaterialComponent {
     }
 
     /**
-     * Returns the Material Components require to craft the passed-in item.  The return value is a list of components.
+     * Returns the Material Components require to craft the passed-in item with the passed-in recipe.
      * Each component corresponds to a single ingredient input, with each list in the component corresponding to the
      * possible items that are valid for that ingredient.  The idea being that OreDict allows for
      * multiple items to be used.  If this component is not for crafting checks, set forCraftingCheck to false.
      * This prevents the returned stacks from having the wildcard value in their metadata and not being actual items.
      * If an error occured during parsing, then null is returned and {@link #lastErrorMessage} is set to the error.
      */
-    public static List<PackMaterialComponent> parseFromJSON(AItemPack<?> item, boolean includeMain, boolean includeSub, boolean forCraftingCheck, boolean forRepair) {
+    public static List<PackMaterialComponent> parseFromJSON(AItemPack<?> item, int recipeIndex, boolean includeMain, boolean includeSub, boolean forRepair) {
         //Get all the strings that represent the items.
-        List<String> itemTexts = new ArrayList<>();
+        List<String> itemTexts = new ArrayList<String>();
         String currentSubName = "";
         if (forRepair) {
-            if (item.definition.general.repairMaterials != null) {
+            if (item.definition.general.repairMaterialLists != null) {
                 //Get repair materials. Make sure to add actual item into the list too.
                 itemTexts.add(InterfaceManager.coreModID + ":" + item.getRegistrationName() + ":0:1");
-                itemTexts.addAll(item.definition.general.repairMaterials);
+                itemTexts.addAll(item.definition.general.repairMaterialLists.get(recipeIndex));
             }
         } else {
             //Get main materials.
             if (includeMain) {
-                itemTexts.addAll(item.definition.general.materials);
+                itemTexts.addAll(item.definition.general.materialLists.get(recipeIndex));
             }
 
             //Get subType materials, if required.
             if (includeSub && item instanceof AItemSubTyped) {
-                itemTexts.addAll(((AItemSubTyped<?>) item).getExtraMaterials());
+                itemTexts.addAll(((AItemSubTyped<?>) item).getExtraMaterials().get(recipeIndex));
                 currentSubName = ((AItemSubTyped<?>) item).subName;
             }
         }
 
         //Parse the items.
-        List<PackMaterialComponent> components = new ArrayList<>();
+        List<PackMaterialComponent> components = new ArrayList<PackMaterialComponent>();
         for (String itemText : itemTexts) {
             try {
                 PackMaterialComponent component = new PackMaterialComponent(itemText);

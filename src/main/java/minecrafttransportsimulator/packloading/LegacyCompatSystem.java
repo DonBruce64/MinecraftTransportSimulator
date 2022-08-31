@@ -101,9 +101,30 @@ public final class LegacyCompatSystem {
             }
             definition.general.modelName = null;
         }
-        //Check if the model needs a model type.
+
+        //Update materials to match new format.
+        if (definition.general.materials != null) {
+            definition.general.materialLists = new ArrayList<List<String>>();
+            definition.general.materialLists.add(definition.general.materials);
+            definition.general.materials = null;
+        }
+        if (definition.general.repairMaterials != null) {
+            definition.general.repairMaterialLists = new ArrayList<List<String>>();
+            definition.general.repairMaterialLists.add(definition.general.repairMaterials);
+            definition.general.repairMaterials = null;
+        }
+
+        //Check if the model needs a model type or has extraMaterials to convert..
         if (definition instanceof AJSONMultiModelProvider) {
             AJSONMultiModelProvider provider = (AJSONMultiModelProvider) definition;
+            for (JSONSubDefinition subDef : provider.definitions) {
+                if (subDef.extraMaterials != null) {
+                    subDef.extraMaterialLists = new ArrayList<List<String>>();
+                    subDef.extraMaterialLists.add(subDef.extraMaterials);
+                    subDef.extraMaterials = null;
+                }
+            }
+
             if (provider.rendering == null) {
                 provider.rendering = new JSONRendering();
             }

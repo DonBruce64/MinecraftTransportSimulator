@@ -1,10 +1,10 @@
 package minecrafttransportsimulator.jsondefs;
 
+import java.util.List;
+
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
-
-import java.util.List;
 
 public class JSONSubDefinition {
     @JSONRequired
@@ -30,6 +30,9 @@ public class JSONSubDefinition {
     public String description;
 
     @JSONRequired
-    @JSONDescription("These materials are simply extra ones that are needed to craft the variant specified.  This is where you can put dyes for color variants to differentiate them from one another.  These are also what will show up in the paint gun GUI.  Format is the same as the materials entry defined in the general section. ")
+    @JSONDescription("Like the materials in the general section, except these are added to the base materials to allow crafting of the variant specified.  This is where you can put dyes for color variants to differentiate them from one another.  These are also what will show up in the paint gun GUI.  Note that the number of lists here must match the number of lists in the materialLists, as each materialList entry is paired with an entry in this variable.  Also note that these are not used for repair recipes.")
+    public List<List<String>> extraMaterialLists;
+
+    @Deprecated
     public List<String> extraMaterials;
 }

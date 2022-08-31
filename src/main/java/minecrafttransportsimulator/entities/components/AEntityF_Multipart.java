@@ -133,8 +133,10 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
 
             //Update existing slots.
             parts.forEach(part -> {
-                part.placementDefinition = definition.parts.get(part.placementSlot);
-                part.animationsInitialized = false;
+                if (!part.isFake()) {
+                    part.placementDefinition = definition.parts.get(part.placementSlot);
+                    part.animationsInitialized = false;
+                }
             });
             if (definition.parts != null) {
                 partSlotSwitchboxes.clear();
@@ -396,7 +398,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                 partsInSlots.add(null);
             }
 
-            boolean newEntity = data == null || data.getString("uniqueUUID").isEmpty();
+            boolean newEntity = data.getString("uniqueUUID").isEmpty();
             for (int i = 0; i < definition.parts.size(); ++i) {
                 //Use a try-catch for parts in case they've changed since this entity was last placed.
                 //Don't want crashes due to pack updates.
@@ -468,26 +470,24 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
      */
     public void addPart(APart part, boolean sendPacket) {
         parts.add(part);
-        partsInSlots.set(part.placementSlot, part);
+        if (!part.isFake()) {
+            partsInSlots.set(part.placementSlot, part);
 
-        //Recalculate slots.
-        recalculatePartSlots();
+            //Recalculate slots.
+            recalculatePartSlots();
 
-        //If we are on the server, and need to notify clients, do so.
-        if (sendPacket && !world.isClient()) {
-            InterfaceManager.packetInterface.sendToAllClients(new PacketPartChange(this, part));
+            //If we are on the server, and need to notify clients, do so.
+            if (sendPacket && !world.isClient()) {
+                InterfaceManager.packetInterface.sendToAllClients(new PacketPartChange(this, part));
+            }
         }
 
         //Add the part to the world.
         world.addEntity(part);
 
-        //Let parts know a change was made,  This has to go through the top-level entity to filer down.
-        AEntityF_Multipart<?> masterEntity = this;
-        while (masterEntity instanceof APart) {
-            masterEntity = ((APart) masterEntity).entityOn;
-        }
-        masterEntity.updateAllpartList();
-        masterEntity.updatePartList();
+        //Let parts know a change was made.
+        part.masterEntity.updateAllpartList();
+        part.masterEntity.updatePartList();
     }
 
     /**
@@ -506,24 +506,22 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
             } else {
                 parts.remove(part);
             }
-            partsInSlots.set(definition.parts.indexOf(part.placementDefinition), null);
+            if (!part.isFake()) {
+                partsInSlots.set(definition.parts.indexOf(part.placementDefinition), null);
 
-            //If we are on the server, notify all clients of this change.
-            if (!world.isClient()) {
-                InterfaceManager.packetInterface.sendToAllClients(new PacketPartChange(this, part.placementSlot));
+                //Recalculate slots.
+                recalculatePartSlots();
+
+                //If we are on the server, notify all clients of this change.
+                if (!world.isClient()) {
+                    InterfaceManager.packetInterface.sendToAllClients(new PacketPartChange(part));
+                }
             }
         }
 
-        //Recalculate slots.
-        recalculatePartSlots();
-
-        //Let parts know a change was made,  This has to go through the top-level entity to filer down.
-        AEntityF_Multipart<?> masterEntity = this;
-        while (masterEntity instanceof APart) {
-            masterEntity = ((APart) masterEntity).entityOn;
-        }
-        masterEntity.updateAllpartList();
-        masterEntity.updatePartList();
+        //Let parts know a change was made.
+        part.masterEntity.updateAllpartList();
+        part.masterEntity.updatePartList();
     }
 
     /**
