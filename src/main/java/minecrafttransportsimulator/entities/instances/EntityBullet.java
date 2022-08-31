@@ -279,9 +279,10 @@ public class EntityBullet extends AEntityD_Definable<JSONBullet> {
                                     startDespawn();
                                     return;
                                 }
-                            } else {
+                            } else if (hitPart != null) {
                                 //Didn't have a group def, this must be a core part box.
                                 //Damage part and keep going on, unless that part is flagged to forward damage, then we do so and die.
+                                //Note that parts can get killed by too much damage and suddenly become null during iteration, hence the null check.
 
                                 position.set(hitPart.position);
                                 lastHit = HitType.PART;
