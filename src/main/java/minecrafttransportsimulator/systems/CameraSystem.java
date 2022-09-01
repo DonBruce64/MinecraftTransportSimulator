@@ -171,7 +171,7 @@ public class CameraSystem {
                 double seatOffset = player.getSeatOffset();
                 double verticalScale = player.getVerticalScale();
                 cameraAdjustedPosition.set(0, (eyeHeight + seatOffset) * verticalScale, 0).rotate(cameraOrientation).add(0, -eyeHeight, 0);
-                cameraOrientation.applyRotation(player.getOrientation());
+                cameraOrientation.applyRotation(sittingSeat.riderRelativeOrientation);
                 return true;
             } else {
                 //No custom camera, and no seat camera modifications.  Standard world view.
@@ -200,9 +200,9 @@ public class CameraSystem {
                 double seatOffset = player.getSeatOffset();
                 double verticalScale = player.getVerticalScale();
                 cameraAdjustedPosition.set(0, (eyeHeight + seatOffset) * verticalScale, 0).rotate(cameraOrientation).add(0, -eyeHeight, 0);
-                cameraOffset.set(-sittingSeat.localOffset.x, 0, -zoomLevel);
+                cameraOffset.set(0, 0, -zoomLevel);
                 cameraOrientation.setTranslation(cameraOffset);
-                cameraOrientation.applyRotation(player.getOrientation());
+                cameraOrientation.applyRotation(sittingSeat.riderRelativeOrientation);
                 return true;
             }
         } else {
@@ -229,9 +229,9 @@ public class CameraSystem {
                 double seatOffset = player.getSeatOffset();
                 double verticalScale = player.getVerticalScale();
                 cameraAdjustedPosition.set(0, (eyeHeight + seatOffset) * verticalScale, 0).rotate(cameraOrientation).add(0, -eyeHeight, 0);
-                cameraOffset.set(-sittingSeat.localOffset.x, 0, zoomLevel);
+                cameraOffset.set(0, 0, zoomLevel);
                 cameraOrientation.setTranslation(cameraOffset);
-                cameraOrientation.applyRotation(player.getOrientation());
+                cameraOrientation.applyRotation(sittingSeat.riderRelativeOrientation);
                 return true;
             }
         }

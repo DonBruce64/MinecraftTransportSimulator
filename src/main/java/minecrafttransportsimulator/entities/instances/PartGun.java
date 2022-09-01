@@ -75,6 +75,7 @@ public class PartGun extends APart {
     private long lastMillisecondFired;
     public IWrapperEntity lastController;
     private PartSeat lastControllerSeat;
+    private RotationMatrix lastControllerDelta = new RotationMatrix();
     private IWrapperEntity entityTarget;
     private PartEngine engineTarget;
     private final Point3D bulletPosition = new Point3D();
@@ -553,7 +554,8 @@ public class PartGun extends APart {
 
         //Get the delta between our orientation and the player's orientation.
         if (!(entityOn instanceof EntityPlayerGun)) {
-            handleMovement(controller.getYaw() - internalOrientation.angles.y, controller.getPitch() - internalOrientation.angles.x);
+            lastControllerDelta.set(controller.getOrientation()).multiplyTranspose(zeroReferenceOrientation).convertToAngles();
+            handleMovement(lastControllerDelta.angles.y - internalOrientation.angles.y, lastControllerDelta.angles.x - internalOrientation.angles.x);
         }
     }
 

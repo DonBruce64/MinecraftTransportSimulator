@@ -82,6 +82,7 @@ public class RotationMatrix {
 
     /**
      * Multiplies this matrix by the transpose of the passed-in matrix.
+     * This essentially "un-does" the passed-in rotation from this rotation.
      * Does not actually set the passed-in matrix to its transpose.
      */
     public RotationMatrix multiplyTranspose(RotationMatrix other) {
@@ -124,6 +125,7 @@ public class RotationMatrix {
         m20 = 0.0;
         m21 = 0.0;
         m22 = 1.0;
+
         return this;
     }
 

@@ -172,6 +172,7 @@ public final class ControlSystem {
     }
 
     private static void rotateCamera(ControlsJoystick lookR, ControlsJoystick lookL, ControlsJoystick lookU, ControlsJoystick lookD, ControlsJoystick lookA) {
+        //FIXME this causes yaw de-syncs.
         if (lookR.isPressed()) {
             clientPlayer.setYaw(clientPlayer.getYaw() - 3);
         }

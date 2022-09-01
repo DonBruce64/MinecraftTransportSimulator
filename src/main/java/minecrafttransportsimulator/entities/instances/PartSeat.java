@@ -410,9 +410,9 @@ public final class PartSeat extends APart {
             case ("seat_occupied_client"):
                 return InterfaceManager.clientInterface.getClientPlayer().equals(rider) ? 1 : 0;
             case ("seat_rider_yaw"):
-                return rider != null ? rider.getYaw() : 0;
+                return rider != null ? riderRelativeOrientation.angles.y : 0;
             case ("seat_rider_pitch"):
-                return rider != null ? rider.getPitch() : 0;
+                return rider != null ? riderRelativeOrientation.angles.x : 0;
         }
 
         return Double.NaN;

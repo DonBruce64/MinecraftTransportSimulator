@@ -1,5 +1,7 @@
 package mcinterface1122;
 
+import java.util.List;
+
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import net.minecraft.entity.Entity;
@@ -11,8 +13,6 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.registry.EntityEntry;
 import net.minecraftforge.fml.common.registry.EntityEntryBuilder;
-
-import java.util.List;
 
 /**
  * Builder for an entity to sit in so they can ride another entity.  We use this rather
@@ -104,6 +104,10 @@ public class BuilderEntityLinkedSeat extends ABuilderEntityBase {
                 }
             } else {
                 entity.updateRider();
+                //Call getters so it resets to current value.
+                //This allows the calling of the method in other areas to see MC deltas.
+                entity.rider.getYawDelta();
+                entity.rider.getPitchDelta();
             }
         }
     }

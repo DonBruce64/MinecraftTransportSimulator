@@ -106,6 +106,14 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
     public IWrapperEntity rider;
 
     /**
+     * The orientation of the {@link #rider}.  This will be relative to this entity, and not global to the world.
+     * If you desire the world-global orientation, call {@link IWrapperEntity#getOrientation()}.
+     **/
+    public final RotationMatrix riderRelativeOrientation = new RotationMatrix();
+    private static final Point3D riderTempPoint = new Point3D();
+    private static final RotationMatrix riderTempMatrix = new RotationMatrix();
+
+    /**
      * List of instruments based on their slot in the JSON.  Note that this list is created on first construction
      * and will contain null elements for any instrument that isn't present in that slot.
      * Do NOT modify this list directly.  Instead, use the add/remove methods in this class.
@@ -444,10 +452,15 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
      * However, if the rider is removed, false is returned, and further processing should halt.
      */
     public boolean updateRider() {
-        //Update entity position and motion.
+        //Update entity position, motion, and orientation.
         if (rider.isValid()) {
             rider.setPosition(position, false);
             rider.setVelocity(motion);
+            riderRelativeOrientation.angles.y += rider.getYawDelta();
+            riderRelativeOrientation.angles.x += rider.getPitchDelta();
+            riderRelativeOrientation.updateToAngles();
+            riderTempMatrix.set(orientation).multiply(riderRelativeOrientation).convertToAngles();
+            rider.setOrientation(riderTempMatrix);
             return true;
         } else {
             //Remove invalid rider.
@@ -471,9 +484,16 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
         } else {
             rider = newRider;
             if (facesForwards) {
-                rider.setYaw(0);
-                rider.setPitch(0);
+                riderRelativeOrientation.setToZero();
+            } else {
+                riderTempPoint.set(0, 0, 1).rotate(rider.getOrientation()).reOrigin(orientation);
+                riderRelativeOrientation.setToVector(riderTempPoint, false);
             }
+            riderTempMatrix.set(orientation).multiply(riderRelativeOrientation).convertToAngles();
+            rider.setOrientation(riderTempMatrix);
+            //Call getters so it resets to current value, if we don't do this, they'll get flagged for a change in the update call.
+            rider.getYawDelta();
+            rider.getPitchDelta();
             rider.setRiding(this);
             if (!world.isClient()) {
                 InterfaceManager.packetInterface.sendToAllClients(new PacketEntityRiderChange(this, rider, facesForwards));

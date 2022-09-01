@@ -229,9 +229,27 @@ public class WrapperEntity implements IWrapperEntity {
     }
 
     @Override
+    public float getPitchDelta() {
+        float value = entity.rotationPitch - lastPitch;
+        lastPitch = entity.rotationPitch;
+        return value;
+    }
+
+    private float lastPitch;
+
+    @Override
     public float getYaw() {
         return -entity.rotationYaw;
     }
+
+    @Override
+    public float getYawDelta() {
+        float value = entity.rotationYaw - lastYaw;
+        lastYaw = entity.rotationYaw;
+        return -value;
+    }
+
+    private float lastYaw;
 
     @Override
     public float getBodyYaw() {
@@ -240,17 +258,7 @@ public class WrapperEntity implements IWrapperEntity {
 
     @Override
     public Point3D getLineOfSight(double distance) {
-        //Need to check if we're riding a vehicle or not.  Vehicles adjust sight vectors.
-        PartSeat seat = null;
-        AEntityE_Interactable<?> riding = getEntityRiding();
-        if (riding instanceof PartSeat) {
-            seat = (PartSeat) riding;
-        }
-
         mutableSight.set(0, 0, distance).rotate(getOrientation());
-        if (seat != null) {
-            mutableSight.rotate(seat.zeroReferenceOrientation);
-        }
         return mutableSight;
     }
 
