@@ -240,10 +240,6 @@ public class PartPropeller extends APart {
                 propellerForce.reOrigin(vehicleOn.orientation);
                 torque.y -= propellerForce.z * localOffset.x;
                 torque.z += propellerForce.y * localOffset.x;
-                //Commented out according to Nax request to remove x torque from the engine cuz funky physic 22/08/29 3:40Z
-                //if (vehicleOn.groundDeviceCollective.isAnythingOnGround()) {
-                //    torque.x += propellerForce.z * localOffset.y;
-                //}
             }
         }
     }
