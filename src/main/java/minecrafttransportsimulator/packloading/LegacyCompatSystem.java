@@ -2035,6 +2035,14 @@ public final class LegacyCompatSystem {
                         connection.distance = 2;
                     }
                 }
+                if (connectionGroup.canIntiateConnections) {
+                    connectionGroup.canInitiateConnections = true;
+                    connectionGroup.canIntiateConnections = false;
+                }
+                if (connectionGroup.canIntiateSubConnections) {
+                    connectionGroup.canInitiateSubConnections = true;
+                    connectionGroup.canIntiateSubConnections = false;
+                }
             }
         }
     }

@@ -1,9 +1,9 @@
 package minecrafttransportsimulator.jsondefs;
 
+import java.util.List;
+
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
-
-import java.util.List;
 
 public class JSONConnectionGroup {
     @JSONRequired
@@ -27,4 +27,9 @@ public class JSONConnectionGroup {
 
     @Deprecated
     public boolean hookup;
+
+    @Deprecated
+    public boolean canIntiateConnections;
+    @Deprecated
+    public boolean canIntiateSubConnections;
 }
