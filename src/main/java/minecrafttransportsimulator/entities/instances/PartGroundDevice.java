@@ -1,14 +1,16 @@
 package minecrafttransportsimulator.entities.instances;
 
+import java.util.List;
+
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
-import minecrafttransportsimulator.items.instances.ItemPartGroundDevice;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
@@ -219,9 +221,10 @@ public class PartGroundDevice extends APart {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public ItemPartGroundDevice getItem() {
-        return isFlat ? null : super.getItem();
+    public void addDropsToList(List<IWrapperItemStack> drops) {
+        if (!isFlat) {
+            super.addDropsToList(drops);
+        }
     }
 
     @Override

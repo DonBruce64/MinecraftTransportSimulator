@@ -56,9 +56,21 @@ public class BuilderEntityLinkedSeat extends ABuilderEntityBase {
                 setDead();
             } else {
                 setPosition(entity.position.x, entity.position.y, entity.position.z);
+
+                //Constantly check for the rider.  They might take a bit to load in.
+                //If the rider dismounted us, just die.
                 List<Entity> riders = getPassengers();
-                if (!riders.isEmpty()) {
+                if (rider == null && !riders.isEmpty()) {
                     rider = WrapperEntity.getWrapperFor(riders.get(0));
+                    //Check if the entity has a rider, if so, set ourselves to it.
+                    //Otherwise, set it to ourselves.  We can get a rider here if we
+                    //load it from saved disk, or we might be given one if the entity is clicked.
+                    //Only set the rider loaded on the server though: clients will get packets.
+                    if (entity.rider != null) {
+                        rider = (WrapperEntity) entity.rider;
+                    } else if (!world.isRemote) {
+                        entity.setRider(rider, true);
+                    }
                 } else if (dismountedRider) {
                     setDead();
                 }
@@ -96,17 +108,14 @@ public class BuilderEntityLinkedSeat extends ABuilderEntityBase {
     @Override
     public void updatePassenger(Entity passenger) {
         //Forward passenger updates to the entity.
-        if (entity != null && rider != null) {
-            if (entity.rider == null) {
-                if (!world.isRemote) {
-                    //Couldn't find rider on entity.  Add them prior to update.
-                    entity.setRider(rider, true);
-                }
-            } else {
-                entity.updateRider();
-                //Call getters so it resets to current value.
-                //This allows the calling of the method in other areas to see MC deltas.
-                //FIXME why is entity.rider different than rider?  Source of odd seat bugs perhaps?
+        //Need to verify the entity has a rider, it might not if we are on the
+        //client and waiting for the rider packet.  Or on the server and waiting for loading of the player.
+        if (entity != null && entity.rider != null) {
+            entity.updateRider();
+            //Call getters so it resets to current value.
+            //This allows the calling of the method in other areas to see MC deltas.
+            //Make sure the rider wasn't removed, however.
+            if (entity.rider != null) {
                 entity.rider.getYawDelta();
                 entity.rider.getPitchDelta();
             }

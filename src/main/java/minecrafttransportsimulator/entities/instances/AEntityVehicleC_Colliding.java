@@ -144,9 +144,8 @@ abstract class AEntityVehicleC_Colliding extends AEntityG_Towable<JSONVehicle> {
 
     @Override
     public void destroy(BoundingBox box) {
-        //Get drops.
+        //Get drops from parts.  Vehicle just blows up.
         List<IWrapperItemStack> drops = new ArrayList<>();
-        addDropsToList(drops);
 
         //Do part things before we call super, as that will remove the parts from this vehicle.
         IWrapperEntity controller = getController();

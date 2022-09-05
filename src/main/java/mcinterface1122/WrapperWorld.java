@@ -312,12 +312,13 @@ public class WrapperWorld extends AWrapperWorld {
                     if (mcRidingEntity instanceof BuilderEntityLinkedSeat) {
                         //Entity hit is riding something of ours.
                         //Verify that it's not the entity that is doing the attacking.
-                        AEntityE_Interactable<?> internalEntity = ((BuilderEntityLinkedSeat) mcRidingEntity).entity;
-                        if (damage.damgeSource == internalEntity) {
+                        AEntityE_Interactable<?> internalRidingEntity = ((BuilderEntityLinkedSeat) mcRidingEntity).entity;
+                        if (damage.damgeSource == internalRidingEntity) {
+                            //Entity can't attack entities riding itself.
                             continue;
-                        } else if (damage.damgeSource instanceof APart) {
+                        } else if (internalRidingEntity instanceof APart) {
                             //Attacked entity is riding a part, don't attack if a part on that multipart is the attacker,
-                            APart ridingPart = (APart) damage.damgeSource;
+                            APart ridingPart = (APart) internalRidingEntity;
                             if (ridingPart.masterEntity.allParts.contains(damage.damgeSource)) {
                                 continue;
                             }

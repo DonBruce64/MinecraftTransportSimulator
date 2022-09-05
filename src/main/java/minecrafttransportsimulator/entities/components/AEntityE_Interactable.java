@@ -466,7 +466,10 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
             return true;
         } else {
             //Remove invalid rider.
-            removeRider();
+            //Don't call this on the client; they will get a removal packet from this method.
+            if (!world.isClient()) {
+                removeRider();
+            }
             return false;
         }
     }
