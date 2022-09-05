@@ -390,10 +390,9 @@ public class RotationMatrix {
     }
 
     /**
-     * Interpolates between the two passed-in matrixes, storing the result
-     * in this matrix.  Note that this function is NOT thread-safe!
+     * Interpolates between the two passed-in matrixes, storing the result in this matrix.
      */
-    public synchronized void interploate(RotationMatrix start, RotationMatrix end, double delta) {
+    public void interploate(RotationMatrix start, RotationMatrix end, double delta) {
         //Convert start and end matrix to quaternions.
         double quatStartw = Math.sqrt(1 + start.m00 + start.m11 + start.m22) / 2D;
         if (quatStartw == 0) {

@@ -6,7 +6,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.guis.components.AGUIBase;
@@ -325,16 +324,6 @@ public final class PartSeat extends APart {
             }
         }
         return super.canBeClicked();
-    }
-
-    /**
-     * Like {@link #getInterpolatedOrientation(RotationMatrix, double)}, just for
-     * the rider.  This is to allow for the fact the rider won't turn in the
-     * seat when the seat turns via animations: only their rendered body will rotate.
-     * In a nutshell, this get's the riders orientation assuming a non-rotated seat.
-     */
-    public void getRiderInterpolatedOrientation(RotationMatrix store, double partialTicks) {
-        store.interploate(prevZeroReferenceOrientation, zeroReferenceOrientation, partialTicks);
     }
 
     /**

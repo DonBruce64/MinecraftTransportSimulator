@@ -74,6 +74,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     public final RotationMatrix localOrientation;
     public final RotationMatrix zeroReferenceOrientation;
     public final RotationMatrix prevZeroReferenceOrientation;
+    public final Point3D externalAnglesRotated = new Point3D();
     private AnimationSwitchbox placementActiveSwitchbox;
     private AnimationSwitchbox internalActiveSwitchbox;
     private AnimationSwitchbox placementMovementSwitchbox;
@@ -175,6 +176,9 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
             //Orientation just needs to update according to new rotation.
             localOffset.transform(placementMovementSwitchbox.netMatrix);
             localOrientation.multiply(placementMovementSwitchbox.rotation);
+            externalAnglesRotated.set(placementMovementSwitchbox.rotation.convertToAngles());
+        } else {
+            externalAnglesRotated.set(0, 0, 0);
         }
 
         //Now rotate us to face the slot's requested orientation.

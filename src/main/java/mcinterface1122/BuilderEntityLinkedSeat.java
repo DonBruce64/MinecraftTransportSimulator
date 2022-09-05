@@ -106,6 +106,7 @@ public class BuilderEntityLinkedSeat extends ABuilderEntityBase {
                 entity.updateRider();
                 //Call getters so it resets to current value.
                 //This allows the calling of the method in other areas to see MC deltas.
+                //FIXME why is entity.rider different than rider?  Source of odd seat bugs perhaps?
                 entity.rider.getYawDelta();
                 entity.rider.getPitchDelta();
             }

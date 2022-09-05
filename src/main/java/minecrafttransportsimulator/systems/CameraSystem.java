@@ -2,6 +2,7 @@ package minecrafttransportsimulator.systems;
 
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
@@ -30,6 +31,7 @@ public class CameraSystem {
     public static String customCameraOverlay;
 
     private static final Point3D cameraOffset = new Point3D();
+    private static final RotationMatrix riderOrientation = new RotationMatrix();
 
     /**
      * Adjusts the camera zoom, zooming in or out depending on the flag.
@@ -166,12 +168,13 @@ public class CameraSystem {
                 enableCustomCameras = false;
                 runningCustomCameras = false;
             } else if (sittingSeat != null) {
-                sittingSeat.getRiderInterpolatedOrientation(cameraOrientation, partialTicks);
+                sittingSeat.getInterpolatedOrientation(cameraOrientation, partialTicks);
                 double eyeHeight = player.getEyeHeight();
                 double seatOffset = player.getSeatOffset();
                 double verticalScale = player.getVerticalScale();
                 cameraAdjustedPosition.set(0, (eyeHeight + seatOffset) * verticalScale, 0).rotate(cameraOrientation).add(0, -eyeHeight, 0);
-                cameraOrientation.applyRotation(sittingSeat.riderRelativeOrientation);
+                sittingSeat.getRiderInterpolatedOrientation(riderOrientation, partialTicks);
+                cameraOrientation.applyRotation(riderOrientation);
                 return true;
             } else {
                 //No custom camera, and no seat camera modifications.  Standard world view.
@@ -195,14 +198,15 @@ public class CameraSystem {
                 customCameraIndex = 0;
 
                 //Add the zoom offset for third-person view.  This takes hold if we don't have any custom cameras.
-                sittingSeat.getRiderInterpolatedOrientation(cameraOrientation, partialTicks);
+                sittingSeat.getInterpolatedOrientation(cameraOrientation, partialTicks);
                 double eyeHeight = player.getEyeHeight();
                 double seatOffset = player.getSeatOffset();
                 double verticalScale = player.getVerticalScale();
                 cameraAdjustedPosition.set(0, (eyeHeight + seatOffset) * verticalScale, 0).rotate(cameraOrientation).add(0, -eyeHeight, 0);
                 cameraOffset.set(0, 0, -zoomLevel);
                 cameraOrientation.setTranslation(cameraOffset);
-                cameraOrientation.applyRotation(sittingSeat.riderRelativeOrientation);
+                sittingSeat.getRiderInterpolatedOrientation(riderOrientation, partialTicks);
+                cameraOrientation.applyRotation(riderOrientation);
                 return true;
             }
         } else {
@@ -224,14 +228,15 @@ public class CameraSystem {
                 }
 
                 //Add the zoom offset for third-person view.
-                sittingSeat.getRiderInterpolatedOrientation(cameraOrientation, partialTicks);
+                sittingSeat.getInterpolatedOrientation(cameraOrientation, partialTicks);
                 double eyeHeight = player.getEyeHeight();
                 double seatOffset = player.getSeatOffset();
                 double verticalScale = player.getVerticalScale();
                 cameraAdjustedPosition.set(0, (eyeHeight + seatOffset) * verticalScale, 0).rotate(cameraOrientation).add(0, -eyeHeight, 0);
                 cameraOffset.set(0, 0, zoomLevel);
                 cameraOrientation.setTranslation(cameraOffset);
-                cameraOrientation.applyRotation(sittingSeat.riderRelativeOrientation);
+                sittingSeat.getRiderInterpolatedOrientation(riderOrientation, partialTicks);
+                cameraOrientation.applyRotation(riderOrientation);
                 return true;
             }
         }

@@ -110,6 +110,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
      * If you desire the world-global orientation, call {@link IWrapperEntity#getOrientation()}.
      **/
     public final RotationMatrix riderRelativeOrientation = new RotationMatrix();
+    public final RotationMatrix prevRiderRelativeOrientation = new RotationMatrix();
     private static final Point3D riderTempPoint = new Point3D();
     private static final RotationMatrix riderTempMatrix = new RotationMatrix();
 
@@ -456,6 +457,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
         if (rider.isValid()) {
             rider.setPosition(position, false);
             rider.setVelocity(motion);
+            prevRiderRelativeOrientation.set(riderRelativeOrientation);
             riderRelativeOrientation.angles.y += rider.getYawDelta();
             riderRelativeOrientation.angles.x += rider.getPitchDelta();
             riderRelativeOrientation.updateToAngles();
@@ -489,6 +491,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
                 riderTempPoint.set(0, 0, 1).rotate(rider.getOrientation()).reOrigin(orientation);
                 riderRelativeOrientation.setToVector(riderTempPoint, false);
             }
+            prevRiderRelativeOrientation.set(riderRelativeOrientation);
             riderTempMatrix.set(orientation).multiply(riderRelativeOrientation).convertToAngles();
             rider.setOrientation(riderTempMatrix);
             //Call getters so it resets to current value, if we don't do this, they'll get flagged for a change in the update call.
@@ -511,6 +514,14 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
             InterfaceManager.packetInterface.sendToAllClients(new PacketEntityRiderChange(this, rider));
         }
         rider = null;
+    }
+
+    /**
+     * Like {@link #getInterpolatedOrientation(RotationMatrix, double)}, just for
+     * the rider's {@link #riderRelativeOrientation}.
+     */
+    public void getRiderInterpolatedOrientation(RotationMatrix store, double partialTicks) {
+        store.interploate(prevRiderRelativeOrientation, riderRelativeOrientation, partialTicks);
     }
 
     /**

@@ -59,7 +59,7 @@ public class InterfaceEventsEntityRendering {
     private static final Point3D rightArmAngles = new Point3D();
     private static final Point3D entityScale = new Point3D();
     private static final RotationMatrix riderBodyOrientation = new RotationMatrix();
-    private static final RotationMatrix riderHeadOrientation = new RotationMatrix();
+    private static final Point3D riderHeadAngles = new Point3D();
     private static final TransformationMatrix riderTotalTransformation = new TransformationMatrix();
 
     /**
@@ -224,7 +224,6 @@ public class InterfaceEventsEntityRendering {
             //Head is relative to the body.
             ridingEntity.getInterpolatedOrientation(riderBodyOrientation, event.getPartialRenderTick());
             riderBodyOrientation.convertToAngles();
-            riderHeadOrientation.set(ridingEntity.riderRelativeOrientation).convertToAngles();
             if (ridingEntity instanceof PartSeat) {
                 PartSeat seat = (PartSeat) ridingEntity;
                 entityScale.set(seat.scale);
@@ -250,12 +249,9 @@ public class InterfaceEventsEntityRendering {
                 entityScale.set(1, 1, 1);
             }
 
-            //Before we do further matrix transforms, get the head yaw for the entity.
-            riderHeadOrientation.setToVector(new Point3D(0, 0, 1).rotate(riderHeadOrientation).reOrigin(riderBodyOrientation), false);
-
             //Set the entity's head yaw to the delta between their yaw and their angled yaw.
             //This needs to be relative as we're going to render relative to the body here, not the world.
-            entity.rotationYawHead = (float) -riderHeadOrientation.angles.y;
+            entity.rotationYawHead = (float) -riderHeadAngles.computeVectorAngles(entityWrapper.getOrientation(), riderBodyOrientation).y;
             entity.prevRotationYawHead = entity.rotationYawHead;
 
             //Set the entity yaw offset to 0.  This forces their body to always face the front of the seat.

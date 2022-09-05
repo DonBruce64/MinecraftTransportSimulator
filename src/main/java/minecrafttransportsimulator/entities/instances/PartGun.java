@@ -11,6 +11,7 @@ import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemBullet;
+import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.jsondefs.JSONMuzzle;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
@@ -75,7 +76,7 @@ public class PartGun extends APart {
     private long lastMillisecondFired;
     public IWrapperEntity lastController;
     private PartSeat lastControllerSeat;
-    private RotationMatrix lastControllerDelta = new RotationMatrix();
+    private Point3D controllerRelativeLookVector = new Point3D();
     private IWrapperEntity entityTarget;
     private PartEngine engineTarget;
     private final Point3D bulletPosition = new Point3D();
@@ -457,6 +458,14 @@ public class PartGun extends APart {
 
         //Now run super.  This needed to wait for the gun states to ensure proper states.
         super.update();
+
+        //If we have a controller seat on us, adjust the player's facing to account for our movement.
+        //If we don't, we'll just rotate forever.
+        if (lastControllerSeat != null && parts.contains(lastControllerSeat)) {
+            orientation.convertToAngles();
+            lastControllerSeat.riderRelativeOrientation.angles.y -= (orientation.angles.y - prevOrientation.angles.y);
+            lastControllerSeat.riderRelativeOrientation.angles.x -= (orientation.angles.x - prevOrientation.angles.x);
+        }
     }
 
     @Override
@@ -553,9 +562,29 @@ public class PartGun extends APart {
         }
 
         //Get the delta between our orientation and the player's orientation.
-        if (!(entityOn instanceof EntityPlayerGun)) {
-            lastControllerDelta.set(controller.getOrientation()).multiplyTranspose(zeroReferenceOrientation).convertToAngles();
-            handleMovement(lastControllerDelta.angles.y - internalOrientation.angles.y, lastControllerDelta.angles.x - internalOrientation.angles.x);
+        if (lastControllerSeat != null) {
+            controllerRelativeLookVector.computeVectorAngles(controller.getOrientation(), zeroReferenceOrientation);
+            handleMovement(controllerRelativeLookVector.y - internalOrientation.angles.y, controllerRelativeLookVector.x - internalOrientation.angles.x);
+            //If the seat is a part on us, or the seat has animations linked to us, adjust player rotations.
+            //This is required to ensure this gun doesn't rotate forever.
+            if (!lastControllerSeat.externalAnglesRotated.isZero() && lastControllerSeat.placementDefinition.animations != null) {
+                boolean updateYaw = false;
+                boolean updatePitch = false;
+                for (JSONAnimationDefinition def : lastControllerSeat.placementDefinition.animations) {
+                    if (def.variable.contains("gun_yaw")) {
+                        updateYaw = true;
+                    } else if (def.variable.contains("gun_pitch")) {
+                        updatePitch = true;
+                    }
+                }
+                if (updateYaw) {
+                    lastControllerSeat.riderRelativeOrientation.angles.y -= (internalOrientation.angles.y - prevInternalOrientation.angles.y);
+
+                }
+                if (updatePitch) {
+                    lastControllerSeat.riderRelativeOrientation.angles.x -= (internalOrientation.angles.x - prevInternalOrientation.angles.x);
+                }
+            }
         }
     }
 
@@ -812,9 +841,9 @@ public class PartGun extends APart {
             case ("gun_lockedon_z"):
                 return entityTarget != null ? entityTarget.getPosition().z : (engineTarget != null ? engineTarget.position.z : 0);
             case ("gun_pitch"):
-                return prevInternalOrientation.angles.x + (internalOrientation.angles.x - prevInternalOrientation.angles.x) * partialTicks;
+                return partialTicks != 0 ? prevInternalOrientation.angles.x + (internalOrientation.angles.x - prevInternalOrientation.angles.x) * partialTicks : internalOrientation.angles.x;
             case ("gun_yaw"):
-                return prevInternalOrientation.angles.y + (internalOrientation.angles.y - prevInternalOrientation.angles.y) * partialTicks;
+                return partialTicks != 0 ? prevInternalOrientation.angles.y + (internalOrientation.angles.y - prevInternalOrientation.angles.y) * partialTicks : internalOrientation.angles.y;
             case ("gun_pitching"):
                 return prevInternalOrientation.angles.x != internalOrientation.angles.x ? 1 : 0;
             case ("gun_yawing"):
