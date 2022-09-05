@@ -1119,9 +1119,6 @@ public class PartEngine extends APart {
             engineForce.reOrigin(vehicleOn.orientation);
             torque.y -= engineForce.z * localOffset.x + engineForce.x * localOffset.z;
             torque.z += engineForce.y * localOffset.x - engineForce.x * localOffset.y;
-            if (vehicleOn.groundDeviceCollective.isAnythingOnGround()) {
-                torque.x += engineForce.z * localOffset.y - engineForce.y * localOffset.z;
-            }
         }
     }
 
