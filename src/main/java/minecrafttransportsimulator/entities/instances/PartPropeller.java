@@ -240,9 +240,6 @@ public class PartPropeller extends APart {
                 propellerForce.reOrigin(vehicleOn.orientation);
                 torque.y -= propellerForce.z * localOffset.x;
                 torque.z += propellerForce.y * localOffset.x;
-                if (vehicleOn.groundDeviceCollective.isAnythingOnGround()) {
-                    torque.x += propellerForce.z * localOffset.y;
-                }
             }
         }
     }
