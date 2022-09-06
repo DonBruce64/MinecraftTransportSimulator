@@ -1,11 +1,11 @@
 package minecrafttransportsimulator.baseclasses;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
 import minecrafttransportsimulator.rendering.DurationDelayClock;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * A helper class of sorts for doing switch-based animations for {@link JSONAnimationDefinition}
@@ -183,7 +183,7 @@ public class AnimationSwitchbox {
         if (helperScalingVector.x == 0)
             helperScalingVector.x = 1.0;
         if (helperScalingVector.y == 0)
-            helperScalingVector.z = 1.0;
+            helperScalingVector.y = 1.0;
         if (helperScalingVector.z == 0)
             helperScalingVector.z = 1.0;
 
