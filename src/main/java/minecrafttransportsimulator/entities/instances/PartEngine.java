@@ -79,14 +79,12 @@ public class PartEngine extends APart {
     private float currentForceShift;
 
     //Internal variables.
-    private boolean isPropellerInLiquid;
     private boolean autoStarterEngaged;
     private int starterLevel;
     private int shiftCooldown;
     private int backfireCooldown;
     private double lowestWheelVelocity;
     private double desiredWheelVelocity;
-    private double propellerAxialVelocity;
     private double engineAxialVelocity;
     private float wheelFriction;
     private double ambientTemp;
@@ -537,16 +535,16 @@ public class PartEngine extends APart {
             }
 
             //Do logic for those propellers now.
+            propellerGearboxRatio = Math.signum(currentGearRatio) * (definition.engine.propellerRatio != 0 ? definition.engine.propellerRatio : Math.abs(currentGearRatio));
             for (PartPropeller attachedPropeller : linkedPropellers) {
-                propellerAxialVelocity = vehicleOn.motion.dotProduct(attachedPropeller.propellerAxisVector, false);
-                propellerGearboxRatio = Math.signum(currentGearRatio) * (definition.engine.propellerRatio != 0 ? definition.engine.propellerRatio : Math.abs(currentGearRatio));
-
-                //If wheel friction is 0, and we aren't in neutral, get RPM contributions for that.
-                if (wheelFriction == 0 && currentGearRatio != 0) {
-                    isPropellerInLiquid = attachedPropeller.isInLiquid();
+                //Don't try and do logic for the propeller on their first tick.
+                //They need to update once to init their properties.
+                //Also don't let the propeller affect the engine speed if we are powering wheels.
+                //Those take priority over air resistance.
+                if (attachedPropeller.ticksExisted != 0 && wheelFriction == 0 && currentGearRatio != 0) {
+                    boolean isPropellerInLiquid = attachedPropeller.isInLiquid();
                     double propellerForcePenalty = Math.max(0, (attachedPropeller.definition.propeller.diameter - 75) / (50 * (currentFuelConsumption + (currentSuperchargerFuelConsumption * currentSuperchargerEfficiency)) - 15));
-                    double propellerDesiredSpeed = 0.0254 * attachedPropeller.currentPitch * rpm / propellerGearboxRatio / 60D / 20D;
-                    double propellerFeedback = (propellerDesiredSpeed - propellerAxialVelocity) * (isPropellerInLiquid ? 130 : 40);
+                    double propellerFeedback = (attachedPropeller.airstreamLinearVelocity - attachedPropeller.desiredLinearVelocity) * (isPropellerInLiquid ? 6.5 : 2);
                     if (currentGear < 0 || attachedPropeller.currentPitch < 0) {
                         propellerFeedback *= -1;
                     }
@@ -557,13 +555,13 @@ public class PartEngine extends APart {
                         double engineRPMDifference = engineTargetRPM - rpm;
 
                         //propellerFeedback can't make an engine stall, but hours can.
-                        if (rpm + engineRPMDifference / definition.engine.revResistance > definition.engine.stallRPM && rpm + engineRPMDifference / definition.engine.revResistance - propellerFeedback < definition.engine.stallRPM) {
+                        if (rpm + engineRPMDifference / definition.engine.revResistance > definition.engine.stallRPM && rpm + engineRPMDifference / definition.engine.revResistance + propellerFeedback < definition.engine.stallRPM) {
                             rpm = definition.engine.stallRPM;
                         } else {
-                            rpm += engineRPMDifference / definition.engine.revResistance - propellerFeedback;
+                            rpm += engineRPMDifference / definition.engine.revResistance + propellerFeedback;
                         }
                     } else if (!electricStarterEngaged && !handStarterEngaged) {
-                        rpm -= (1 + propellerFeedback) * Math.abs(propellerGearboxRatio);
+                        rpm += (propellerFeedback - 1) * Math.abs(propellerGearboxRatio);
 
                         //Don't let the engine RPM go negative.  This results in physics errors.
                         if (rpm < 0) {
