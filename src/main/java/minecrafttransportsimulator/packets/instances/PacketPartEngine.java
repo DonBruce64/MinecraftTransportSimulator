@@ -22,7 +22,6 @@ public class PacketPartEngine extends APacketEntity<PartEngine> {
     private final double hours;
     private final boolean oilLeak;
     private final boolean fuelLeak;
-    private final boolean brokenStarter;
     private final UUID linkedID;
     private final int linkedIndex;
 
@@ -32,18 +31,16 @@ public class PacketPartEngine extends APacketEntity<PartEngine> {
         this.hours = 0;
         this.oilLeak = false;
         this.fuelLeak = false;
-        this.brokenStarter = false;
         this.linkedID = null;
         this.linkedIndex = 0;
     }
 
-    public PacketPartEngine(PartEngine engine, double hours, boolean oilLeak, boolean fuelLeak, boolean brokenStarter) {
+    public PacketPartEngine(PartEngine engine, double hours, boolean oilLeak, boolean fuelLeak) {
         super(engine);
         this.packetType = Signal.DAMAGE;
         this.hours = hours;
         this.oilLeak = oilLeak;
         this.fuelLeak = fuelLeak;
-        this.brokenStarter = brokenStarter;
         this.linkedID = null;
         this.linkedIndex = 0;
     }
@@ -54,7 +51,6 @@ public class PacketPartEngine extends APacketEntity<PartEngine> {
         this.hours = 0;
         this.oilLeak = false;
         this.fuelLeak = false;
-        this.brokenStarter = false;
         this.linkedID = linkedEngine.entityOn.uniqueUUID;
         this.linkedIndex = linkedEngine.placementSlot;
     }
@@ -66,12 +62,10 @@ public class PacketPartEngine extends APacketEntity<PartEngine> {
             this.hours = buf.readDouble();
             this.oilLeak = buf.readBoolean();
             this.fuelLeak = buf.readBoolean();
-            this.brokenStarter = buf.readBoolean();
         } else {
             this.hours = 0;
             this.oilLeak = false;
             this.fuelLeak = false;
-            this.brokenStarter = false;
         }
         if (packetType.equals(Signal.LINK)) {
             this.linkedID = readUUIDFromBuffer(buf);
@@ -90,7 +84,6 @@ public class PacketPartEngine extends APacketEntity<PartEngine> {
             buf.writeDouble(hours);
             buf.writeBoolean(oilLeak);
             buf.writeBoolean(fuelLeak);
-            buf.writeBoolean(brokenStarter);
         } else if (packetType.equals(Signal.LINK)) {
             writeUUIDToBuffer(linkedID, buf);
             buf.writeInt(linkedIndex);
@@ -138,9 +131,6 @@ public class PacketPartEngine extends APacketEntity<PartEngine> {
                 }
                 if (oilLeak) {
                     engine.oilLeak = true;
-                }
-                if (brokenStarter) {
-                    engine.brokenStarter = true;
                 }
                 break;
             }

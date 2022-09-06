@@ -1,5 +1,8 @@
 package minecrafttransportsimulator.items.instances;
 
+import java.util.List;
+import java.util.Map.Entry;
+
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.PartEngine;
 import minecrafttransportsimulator.items.components.AItemPart;
@@ -10,9 +13,6 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.systems.ConfigSystem;
-
-import java.util.List;
-import java.util.Map.Entry;
 
 public class ItemPartEngine extends AItemPart {
 
@@ -82,9 +82,6 @@ public class ItemPartEngine extends AItemPart {
         }
         if (data.getBoolean("fuelLeak")) {
             tooltipLines.add(JSONConfigLanguage.ITEMINFO_ENGINE_FUELLEAK.value);
-        }
-        if (data.getBoolean("brokenStarter")) {
-            tooltipLines.add(JSONConfigLanguage.ITEMINFO_ENGINE_BROKENSTARTER.value);
         }
     }
 

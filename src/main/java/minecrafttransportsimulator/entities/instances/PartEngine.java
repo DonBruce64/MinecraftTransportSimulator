@@ -26,7 +26,6 @@ public class PartEngine extends APart {
     public boolean isCreative;
     public boolean oilLeak;
     public boolean fuelLeak;
-    public boolean brokenStarter;
     public boolean backfired;
     public boolean badShift;
     public boolean running;
@@ -120,7 +119,6 @@ public class PartEngine extends APart {
         this.isCreative = data.getBoolean("isCreative");
         this.oilLeak = data.getBoolean("oilLeak");
         this.fuelLeak = data.getBoolean("fuelLeak");
-        this.brokenStarter = data.getBoolean("brokenStarter");
         this.running = data.getBoolean("running");
         this.hours = data.getDouble("hours");
         this.rpm = data.getDouble("rpm");
@@ -169,10 +167,8 @@ public class PartEngine extends APart {
                             oilLeak = Math.random() < ConfigSystem.settings.damage.engineLeakProbability.value * 10;
                         if (!fuelLeak)
                             fuelLeak = Math.random() < ConfigSystem.settings.damage.engineLeakProbability.value * 10;
-                        if (!brokenStarter)
-                            brokenStarter = Math.random() < 0.05;
                     }
-                    InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, damage.amount * 10 * ConfigSystem.settings.general.engineHoursFactor.value, oilLeak, fuelLeak, brokenStarter));
+                    InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, damage.amount * 10 * ConfigSystem.settings.general.engineHoursFactor.value, oilLeak, fuelLeak));
                 } else {
                     hours += damage.amount * 2 * ConfigSystem.settings.general.engineHoursFactor.value;
                     if (definition.engine.type == JSONPart.EngineType.NORMAL) {
@@ -181,7 +177,7 @@ public class PartEngine extends APart {
                         if (!fuelLeak)
                             fuelLeak = Math.random() < ConfigSystem.settings.damage.engineLeakProbability.value;
                     }
-                    InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, damage.amount * ConfigSystem.settings.general.engineHoursFactor.value, oilLeak, fuelLeak, brokenStarter));
+                    InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, damage.amount * ConfigSystem.settings.general.engineHoursFactor.value, oilLeak, fuelLeak));
                 }
             }
         } else {
@@ -1126,7 +1122,6 @@ public class PartEngine extends APart {
         data.setBoolean("isCreative", isCreative);
         data.setBoolean("oilLeak", oilLeak);
         data.setBoolean("fuelLeak", fuelLeak);
-        data.setBoolean("brokenStarter", brokenStarter);
         data.setBoolean("running", running);
         data.setDouble("hours", hours);
         data.setDouble("rpm", rpm);
