@@ -533,8 +533,8 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
         allParts.clear();
         parts.forEach(part -> {
             part.updateAllpartList();
-            allParts.addAll(part.allParts);
             allParts.add(part);
+            allParts.addAll(part.allParts);
         });
     }
 

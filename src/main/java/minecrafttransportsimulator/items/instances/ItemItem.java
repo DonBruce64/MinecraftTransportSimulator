@@ -336,12 +336,12 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
                         vehicle.setVariable(EntityVehicleF_Physics.PARKINGBRAKE_VARIABLE, 1);
                         InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableToggle(vehicle, EntityVehicleF_Physics.PARKINGBRAKE_VARIABLE));
                     }
-                    for (PartEngine engine : vehicle.engines.values()) {
+                    vehicle.engines.forEach(engine -> {
                         if (engine.isVariableActive(PartEngine.MAGNETO_VARIABLE)) {
                             engine.setVariable(PartEngine.MAGNETO_VARIABLE, 0);
                             InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableToggle(engine, PartEngine.MAGNETO_VARIABLE));
                         }
-                    }
+                    });
                 }
             }
         }

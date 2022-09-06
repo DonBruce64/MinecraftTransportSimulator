@@ -59,8 +59,8 @@ public class GUIPanelAircraft extends AGUIPanel {
     private static final int TRAILER_TEXTURE_HEIGHT_OFFSET = 216;
 
     private final Map<String, GUIComponentSelector> lightSelectors = new HashMap<>();
-    private final Map<Byte, GUIComponentSelector> magnetoSelectors = new HashMap<>();
-    private final Map<Byte, GUIComponentSelector> starterSelectors = new HashMap<>();
+    private final List<GUIComponentSelector> magnetoSelectors = new ArrayList<>();
+    private final List<GUIComponentSelector> starterSelectors = new ArrayList<>();
     private final List<GUIComponentSelector> customSelectors = new ArrayList<>();
     private GUIComponentSelector aileronTrimSelector;
     private GUIComponentSelector elevatorTrimSelector;
@@ -136,40 +136,41 @@ public class GUIPanelAircraft extends AGUIPanel {
                 GUIComponentSelector magnetoSwitch = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS, SELECTOR_SIZE, SELECTOR_SIZE, JSONConfigLanguage.GUI_PANEL_MAGNETO.value, vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, ENGINEMAG_TEXTURE_WIDTH_OFFSET, ENGINEMAG_TEXTURE_HEIGHT_OFFSET, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE) {
                     @Override
                     public void onClicked(boolean leftSide) {
-                        for (PartEngine engine : vehicle.engines.values()) {
+                        vehicle.engines.forEach(engine -> {
                             InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.MAGNETO_VARIABLE));
-                        }
+                        });
                     }
                 };
-                magnetoSelectors.put(ENGINE_SINGLE_SELECTOR_INDEX, magnetoSwitch);
+                magnetoSelectors.add(magnetoSwitch);
                 addComponent(magnetoSwitch);
 
                 GUIComponentSelector starterSwitch = new GUIComponentSelector(magnetoSwitch.constructedX + SELECTOR_SIZE, magnetoSwitch.constructedY, SELECTOR_SIZE, SELECTOR_SIZE, JSONConfigLanguage.GUI_PANEL_START.value, vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, ENGINESTART_TEXTURE_WIDTH_OFFSET, ENGINESTART_TEXTURE_HEIGHT_OFFSET, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE) {
                     @Override
                     public void onClicked(boolean leftSide) {
-                        for (PartEngine engine : vehicle.engines.values()) {
+                        vehicle.engines.forEach(engine -> {
                             if (engine.magnetoOn && !engine.electricStarterEngaged) {
                                 InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.ELECTRIC_STARTER_VARIABLE));
                             }
-                        }
+                        });
                     }
 
                     @Override
                     public void onReleased() {
-                        for (PartEngine engine : vehicle.engines.values()) {
+                        vehicle.engines.forEach(engine -> {
                             if (engine.magnetoOn && engine.electricStarterEngaged) {
                                 InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.ELECTRIC_STARTER_VARIABLE));
                             }
-                        }
+                        });
                     }
                 };
-                starterSelectors.put(ENGINE_SINGLE_SELECTOR_INDEX, starterSwitch);
+                starterSelectors.add(starterSwitch);
                 addComponent(starterSwitch);
             }
         } else {
             //Create magneto and stater selectors for the engines.
-            for (Byte engineNumber : vehicle.engines.keySet()) {
+            vehicle.engines.forEach(engine -> {
                 //Go to next column if we are on our 5th engine.
+                int engineNumber = vehicle.engines.indexOf(engine);
                 if (engineNumber == 4) {
                     xOffset += 2 * SELECTOR_SIZE + GAP_BETWEEN_SELECTORS;
                 }
@@ -180,7 +181,7 @@ public class GUIPanelAircraft extends AGUIPanel {
                         InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicle.engines.get(engineNumber), PartEngine.MAGNETO_VARIABLE));
                     }
                 };
-                magnetoSelectors.put(engineNumber, magnetoSwitch);
+                magnetoSelectors.add(magnetoSwitch);
                 addComponent(magnetoSwitch);
 
                 GUIComponentSelector starterSwitch = new GUIComponentSelector(magnetoSwitch.constructedX + SELECTOR_SIZE, magnetoSwitch.constructedY, SELECTOR_SIZE, SELECTOR_SIZE, JSONConfigLanguage.GUI_PANEL_START.value, vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, ENGINESTART_TEXTURE_WIDTH_OFFSET, ENGINESTART_TEXTURE_HEIGHT_OFFSET, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE) {
@@ -200,9 +201,9 @@ public class GUIPanelAircraft extends AGUIPanel {
                         }
                     }
                 };
-                starterSelectors.put(engineNumber, starterSwitch);
+                starterSelectors.add(starterSwitch);
                 addComponent(starterSwitch);
-            }
+            });
         }
 
         //Need to offset the xOffset by the selector size to account for the two engine controls.
@@ -401,33 +402,25 @@ public class GUIPanelAircraft extends AGUIPanel {
         //Set the states of the magneto selectors.
         if (vehicle.definition.motorized.hasSingleEngineControl) {
             if (!vehicle.engines.isEmpty()) {
-                for (PartEngine engine : vehicle.engines.values()) {
-                    magnetoSelectors.get((byte) -1).selectorState = engine.magnetoOn ? 1 : 0;
-                    break;
-                }
+                PartEngine engine = vehicle.engines.get(0);
+                magnetoSelectors.get(0).selectorState = engine.magnetoOn ? 1 : 0;
             }
         } else {
-            for (Entry<Byte, GUIComponentSelector> magnetoEntry : magnetoSelectors.entrySet()) {
-                if (vehicle.engines.containsKey(magnetoEntry.getKey())) {
-                    magnetoEntry.getValue().selectorState = vehicle.engines.get(magnetoEntry.getKey()).magnetoOn ? 1 : 0;
-                }
+            for (GUIComponentSelector magnetoSelector : magnetoSelectors) {
+                magnetoSelector.selectorState = vehicle.engines.get(magnetoSelectors.indexOf(magnetoSelector)).magnetoOn ? 1 : 0;
             }
         }
 
         //Set the states of the starter selectors.
         if (vehicle.definition.motorized.hasSingleEngineControl) {
-            for (PartEngine engine : vehicle.engines.values()) {
-                starterSelectors.get(ENGINE_SINGLE_SELECTOR_INDEX).selectorState = engine.magnetoOn ? (engine.electricStarterEngaged ? 2 : 1) : 0;
-                starterSelectors.get(ENGINE_SINGLE_SELECTOR_INDEX).visible = !engine.definition.engine.disableAutomaticStarter && engine.definition.engine.type == JSONPart.EngineType.NORMAL;
-                break;
-            }
+            PartEngine engine = vehicle.engines.get(0);
+            starterSelectors.get(0).selectorState = engine.magnetoOn ? (engine.electricStarterEngaged ? 2 : 1) : 0;
+            starterSelectors.get(0).visible = !engine.definition.engine.disableAutomaticStarter && engine.definition.engine.type == JSONPart.EngineType.NORMAL;
         } else {
-            for (Entry<Byte, GUIComponentSelector> starterEntry : starterSelectors.entrySet()) {
-                if (vehicle.engines.containsKey(starterEntry.getKey())) {
-                    PartEngine engine = vehicle.engines.get(starterEntry.getKey());
-                    starterEntry.getValue().selectorState = engine.magnetoOn ? (engine.electricStarterEngaged ? 2 : 1) : 0;
-                    starterEntry.getValue().visible = !engine.definition.engine.disableAutomaticStarter;
-                }
+            for (GUIComponentSelector starterSelector : starterSelectors) {
+                PartEngine engine = vehicle.engines.get(starterSelectors.indexOf(starterSelector));
+                starterSelector.selectorState = engine.magnetoOn ? (engine.electricStarterEngaged ? 2 : 1) : 0;
+                starterSelector.visible = !engine.definition.engine.disableAutomaticStarter;
             }
         }
 
@@ -451,7 +444,7 @@ public class GUIPanelAircraft extends AGUIPanel {
         if (reverseSelector != null) {
             if (vehicle.definition.motorized.isBlimp) {
                 reverseSelector.selectorState = 0;
-                for (PartEngine engine : vehicle.engines.values()) {
+                for (PartEngine engine : vehicle.engines) {
                     if (engine.currentGear < 0) {
                         reverseSelector.selectorState = 1;
                         break;

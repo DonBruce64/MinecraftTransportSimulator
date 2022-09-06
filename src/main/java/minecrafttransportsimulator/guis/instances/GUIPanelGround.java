@@ -1,11 +1,8 @@
 package minecrafttransportsimulator.guis.instances;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import minecrafttransportsimulator.baseclasses.ColorRGB;
@@ -59,7 +56,7 @@ public class GUIPanelGround extends AGUIPanel {
     private GUIComponentSelector cruiseControlSelector;
     private GUIComponentSelector gearSelector;
     private GUIComponentTextBox beaconBox;
-    private final Map<Byte, GUIComponentSelector> engineSelectors = new HashMap<>();
+    private final List<GUIComponentSelector> engineSelectors = new ArrayList<>();
     private final List<GUIComponentSelector> trailerSelectors = new ArrayList<>();
     private final List<GUIComponentSelector> customSelectors = new ArrayList<>();
 
@@ -137,8 +134,7 @@ public class GUIPanelGround extends AGUIPanel {
                 GUIComponentSelector engineSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS, SELECTOR_SIZE, SELECTOR_SIZE, JSONConfigLanguage.GUI_PANEL_ENGINE.value, vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, ENGINE_TEXTURE_WIDTH_OFFSET, ENGINE_TEXTURE_HEIGHT_OFFSET, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE) {
                     @Override
                     public void onClicked(boolean leftSide) {
-                        for (Byte engineNumber : vehicle.engines.keySet()) {
-                            PartEngine engine = vehicle.engines.get(engineNumber);
+                        vehicle.engines.forEach(engine -> {
                             if (selectorState == 1 && !leftSide) {
                                 //Clicked and held right side.  Engage electric starter if possible.
                                 if (!engine.definition.engine.disableAutomaticStarter && engine.definition.engine.type == JSONPart.EngineType.NORMAL) {
@@ -148,36 +144,35 @@ public class GUIPanelGround extends AGUIPanel {
                                 //Clicked left side, or right side on state 1. change magneto.
                                 InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.MAGNETO_VARIABLE));
                             }
-                        }
+                        });
                     }
 
                     @Override
                     public void onReleased() {
                         if (selectorState == 2) {
-                            for (Byte engineNumber : vehicle.engines.keySet()) {
+                            vehicle.engines.forEach(engine -> {
                                 //Released during sate 2.  Disengage electric starter if possible.
-                                PartEngine engine = vehicle.engines.get(engineNumber);
                                 if (!engine.definition.engine.disableAutomaticStarter && engine.definition.engine.type == JSONPart.EngineType.NORMAL) {
                                     InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.ELECTRIC_STARTER_VARIABLE));
                                 }
-                            }
+                            });
                         }
                     }
                 };
-                engineSelectors.put(ENGINE_SINGLE_SELECTOR_INDEX, engineSelector);
+                engineSelectors.add(engineSelector);
                 addComponent(engineSelector);
             }
         } else {
             //Create the engine selectors for this vehicle.
-            for (Byte engineNumber : vehicle.engines.keySet()) {
+            vehicle.engines.forEach(engine -> {
                 //Go to next column if we are on our 5th engine.
-                if (engineNumber == 5) {
+                int engineNumber = vehicle.engines.indexOf(engine);
+                if (engineNumber == 4) {
                     xOffset += SELECTOR_SIZE + GAP_BETWEEN_SELECTORS;
                 }
                 GUIComponentSelector engineSelector = new GUIComponentSelector(guiLeft + xOffset, guiTop + GAP_BETWEEN_SELECTORS + (SELECTOR_SIZE + GAP_BETWEEN_SELECTORS) * (engineNumber % 4), SELECTOR_SIZE, SELECTOR_SIZE, JSONConfigLanguage.GUI_PANEL_ENGINE.value, vehicle.definition.motorized.panelTextColor, vehicle.definition.motorized.panelLitTextColor, ENGINE_TEXTURE_WIDTH_OFFSET, ENGINE_TEXTURE_HEIGHT_OFFSET, SELECTOR_TEXTURE_SIZE, SELECTOR_TEXTURE_SIZE) {
                     @Override
                     public void onClicked(boolean leftSide) {
-                        PartEngine engine = vehicle.engines.get(engineNumber);
                         if (selectorState == 1 && !leftSide) {
                             //Clicked and held right side.  Engage electric starter if possible.
                             if (!engine.definition.engine.disableAutomaticStarter && engine.definition.engine.type == JSONPart.EngineType.NORMAL) {
@@ -193,16 +188,15 @@ public class GUIPanelGround extends AGUIPanel {
                     public void onReleased() {
                         if (selectorState == 2) {
                             //Released during sate 2.  Disengage electric starter if possible.
-                            PartEngine engine = vehicle.engines.get(engineNumber);
                             if (!engine.definition.engine.disableAutomaticStarter && engine.definition.engine.type == JSONPart.EngineType.NORMAL) {
                                 InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.ELECTRIC_STARTER_VARIABLE));
                             }
                         }
                     }
                 };
-                engineSelectors.put(engineNumber, engineSelector);
+                engineSelectors.add(engineSelector);
                 addComponent(engineSelector);
-            }
+            });
         }
 
         //If we have both reverse AND cruise control, render them side-by-side. Otherwise just render one in the middle
@@ -340,24 +334,20 @@ public class GUIPanelGround extends AGUIPanel {
         //Set the state of the engine selectors.
         if (vehicle.definition.motorized.hasSingleEngineControl) {
             if (!vehicle.engines.isEmpty()) {
-                for (PartEngine engine : vehicle.engines.values()) {
-                    if (engine.definition.engine.disableAutomaticStarter) {
-                        engineSelectors.get(ENGINE_SINGLE_SELECTOR_INDEX).selectorState = engine.magnetoOn ? 2 : 0;
-                    } else {
-                        engineSelectors.get(ENGINE_SINGLE_SELECTOR_INDEX).selectorState = engine.magnetoOn ? (engine.electricStarterEngaged ? 2 : 1) : 0;
-                    }
-                    break;
+                PartEngine engine = vehicle.engines.get(0);
+                if (engine.definition.engine.disableAutomaticStarter) {
+                    engineSelectors.get(0).selectorState = engine.magnetoOn ? 2 : 0;
+                } else {
+                    engineSelectors.get(0).selectorState = engine.magnetoOn ? (engine.electricStarterEngaged ? 2 : 1) : 0;
                 }
             }
         } else {
-            for (Entry<Byte, GUIComponentSelector> engineEntry : engineSelectors.entrySet()) {
-                if (vehicle.engines.containsKey(engineEntry.getKey())) {
-                    PartEngine engine = vehicle.engines.get(engineEntry.getKey());
-                    if (engine.definition.engine.disableAutomaticStarter) {
-                        engineEntry.getValue().selectorState = engine.magnetoOn ? 2 : 0;
-                    } else {
-                        engineEntry.getValue().selectorState = engine.magnetoOn ? (engine.electricStarterEngaged ? 2 : 1) : 0;
-                    }
+            for (GUIComponentSelector engineSelector : engineSelectors) {
+                PartEngine engine = vehicle.engines.get(engineSelectors.indexOf(engineSelector));
+                if (engine.definition.engine.disableAutomaticStarter) {
+                    engineSelector.selectorState = engine.magnetoOn ? 2 : 0;
+                } else {
+                    engineSelector.selectorState = engine.magnetoOn ? (engine.electricStarterEngaged ? 2 : 1) : 0;
                 }
             }
         }

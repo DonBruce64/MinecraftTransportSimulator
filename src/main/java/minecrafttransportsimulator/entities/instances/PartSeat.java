@@ -170,12 +170,12 @@ public final class PartSeat extends APart {
 
                 //Auto-start the engines, if we have that config enabled and we can start them.
                 if (placementDefinition.isController && ConfigSystem.client.controlSettings.autostartEng.value && vehicleOn.canPlayerStartEngines((IWrapperPlayer) rider)) {
-                    for (PartEngine engine : vehicleOn.engines.values()) {
+                    vehicleOn.engines.forEach(engine -> {
                         if (!vehicleOn.definition.motorized.isAircraft) {
                             InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE));
                         }
                         InterfaceManager.packetInterface.sendToServer(new PacketPartEngine(engine, Signal.AS_ON));
-                    }
+                    });
                     if (vehicleOn.parkingBrakeOn) {
                         InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicleOn, AEntityVehicleD_Moving.PARKINGBRAKE_VARIABLE));
                     }
@@ -222,14 +222,14 @@ public final class PartSeat extends APart {
                     }
                 }
                 if (!otherController) {
-                    for (PartEngine engine : vehicleOn.engines.values()) {
+                    vehicleOn.engines.forEach(engine -> {
                         if (engine.magnetoOn) {
                             InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.MAGNETO_VARIABLE));
                         }
                         if (engine.electricStarterEngaged) {
                             InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.ELECTRIC_STARTER_VARIABLE));
                         }
-                    }
+                    });
                     InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(vehicleOn, AEntityVehicleD_Moving.BRAKE_VARIABLE, 0));
                     if (!vehicleOn.parkingBrakeOn) {
                         InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicleOn, AEntityVehicleD_Moving.PARKINGBRAKE_VARIABLE));
