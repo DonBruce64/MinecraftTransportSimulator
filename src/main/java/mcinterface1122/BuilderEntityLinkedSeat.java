@@ -84,8 +84,8 @@ public class BuilderEntityLinkedSeat extends ABuilderEntityBase {
                     loadedFromSavedNBT = true;
                     lastLoadedNBT = null;
                 } catch (Exception e) {
-                    InterfaceLoader.LOGGER.error("Failed to load seat on builder from saved NBT.  Did a pack change?");
-                    InterfaceLoader.LOGGER.error(e.getMessage());
+                    InterfaceManager.LOGGER.error("Failed to load seat on builder from saved NBT.  Did a pack change?");
+                    InterfaceManager.LOGGER.error(e.getMessage());
                     setDead();
                 }
             }

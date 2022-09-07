@@ -6,6 +6,7 @@ import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IInterfaceRender;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.GIFParser;
 import minecrafttransportsimulator.rendering.GIFParser.GIFImageFrame;
 import minecrafttransportsimulator.rendering.GIFParser.ParsedGIF;
@@ -277,7 +278,7 @@ public class InterfaceRender implements IInterfaceRender {
                     String location = formattedLocation.substring("/assets/".length() + domain.length() + 1);
                     internalTextures.put(textureLocation, new ResourceLocation(domain, location));
                 } else {
-                    InterfaceLoader.LOGGER.error("Could not find texture: " + formattedLocation + " Reverting to fallback texture.");
+                    InterfaceManager.LOGGER.error("Could not find texture: " + formattedLocation + " Reverting to fallback texture.");
                     internalTextures.put(textureLocation, MISSING_TEXTURE);
                 }
             }

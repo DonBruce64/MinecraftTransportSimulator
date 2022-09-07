@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.guis.instances;
 
-import mcinterface1122.InterfaceLoader;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
@@ -110,8 +109,8 @@ public class GUIBooklet extends AGUIBase {
                             pageNumber = i + 1;
                         }
                     }
-                    InterfaceLoader.LOGGER.error("An error was encountered when creating booklet page #" + pageNumber);
-                    InterfaceLoader.LOGGER.error(e.getMessage());
+                    InterfaceManager.LOGGER.error("An error was encountered when creating booklet page #" + pageNumber);
+                    InterfaceManager.LOGGER.error(e.getMessage());
                 }
             }
             pageTextLabels.add(pageLabels);

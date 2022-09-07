@@ -1,6 +1,16 @@
 package minecrafttransportsimulator.mcinterface;
 
-import minecrafttransportsimulator.items.instances.*;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import minecrafttransportsimulator.items.instances.ItemPartEffector;
+import minecrafttransportsimulator.items.instances.ItemPartEngine;
+import minecrafttransportsimulator.items.instances.ItemPartGeneric;
+import minecrafttransportsimulator.items.instances.ItemPartGroundDevice;
+import minecrafttransportsimulator.items.instances.ItemPartGun;
+import minecrafttransportsimulator.items.instances.ItemPartInteractable;
+import minecrafttransportsimulator.items.instances.ItemPartPropeller;
+import minecrafttransportsimulator.items.instances.ItemPartSeat;
 import minecrafttransportsimulator.packloading.PackParser;
 
 /**
@@ -18,6 +28,7 @@ public class InterfaceManager {
     public static IInterfaceInput inputInterface;
     public static IInterfaceSound soundInterface;
     public static IInterfaceRender renderingInterface;
+    public static final Logger LOGGER = LogManager.getLogger(coreModID);
 
     public InterfaceManager(String coreModID, String gameDirectory, IInterfaceCore coreInterface, IInterfacePacket packetInterface, IInterfaceClient clientInterface, IInterfaceInput inputInterface, IInterfaceSound soundInterface, IInterfaceRender renderingInterface) {
         InterfaceManager.coreModID = coreModID;

@@ -7,7 +7,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
-import mcinterface1122.InterfaceLoader;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
@@ -2538,8 +2537,8 @@ public final class LegacyCompatSystem {
                 }
             }
         } catch (Exception e) {
-            InterfaceLoader.LOGGER.error("Could not do model-based legacy compats on " + definition.packID + ":" + definition.systemName + ".  Lights and treads will likely not be present on this model.");
-            InterfaceLoader.LOGGER.error(e.getMessage());
+            InterfaceManager.LOGGER.error("Could not do model-based legacy compats on " + definition.packID + ":" + definition.systemName + ".  Lights and treads will likely not be present on this model.");
+            InterfaceManager.LOGGER.error(e.getMessage());
         }
     }
 }

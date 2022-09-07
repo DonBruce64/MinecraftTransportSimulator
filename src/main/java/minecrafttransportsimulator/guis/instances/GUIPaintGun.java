@@ -3,7 +3,6 @@ package minecrafttransportsimulator.guis.instances;
 import java.util.ArrayList;
 import java.util.List;
 
-import mcinterface1122.InterfaceLoader;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.guis.components.AGUIBase;
@@ -198,7 +197,7 @@ public class GUIPaintGun extends AGUIBase {
                 }
                 errorMessage += PackMaterialComponent.lastErrorMessage + "\n";
                 if (recipeIndex == requestedRecipe) {
-                    InterfaceLoader.LOGGER.error(errorMessage);
+                    InterfaceManager.LOGGER.error(errorMessage);
                     break;
                 }
             }

@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import mcinterface1122.InterfaceLoader;
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
@@ -424,7 +423,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                         addPartFromItem(partItem, placingPlayer, partData, partSlot);
                     }
                 } catch (Exception e) {
-                    InterfaceLoader.LOGGER.error("Could not load part from NBT.  Did you un-install a pack?");
+                    InterfaceManager.LOGGER.error("Could not load part from NBT.  Did you un-install a pack?");
                     e.printStackTrace();
                 }
 

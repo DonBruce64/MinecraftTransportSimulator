@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.packloading;
 
-import mcinterface1122.InterfaceLoader;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.components.AItemPart.AItemPartCreator;
@@ -270,7 +269,7 @@ public final class PackParser {
             }
             jarFile.close();
         } catch (Exception e) {
-            InterfaceLoader.LOGGER.error("A fault was encountered when trying to check file " + packJar.getName() + " for pack data.  This pack will not be loaded.");
+            InterfaceManager.LOGGER.error("A fault was encountered when trying to check file " + packJar.getName() + " for pack data.  This pack will not be loaded.");
             e.printStackTrace();
         }
     }
@@ -376,7 +375,7 @@ public final class PackParser {
                                 try {
                                     classification = ItemClassification.fromDirectory(assetPath.substring(0, assetPath.indexOf("/") + 1));
                                 } catch (Exception e) {
-                                    InterfaceLoader.LOGGER.error("Was given an invalid classifcation sub-folder for asset: " + fileName + ".  Check your folder paths.");
+                                    InterfaceManager.LOGGER.error("Was given an invalid classifcation sub-folder for asset: " + fileName + ".  Check your folder paths.");
                                     continue;
                                 }
 
@@ -386,8 +385,8 @@ public final class PackParser {
                                 try {
                                     definition = JSONParser.parseStream(jarFile.getInputStream(entry), classification.representingClass, packDef.packID, systemName);
                                 } catch (Exception e) {
-                                    InterfaceLoader.LOGGER.error("Could not parse: " + packDef.packID + ":" + fileName);
-                                    InterfaceLoader.LOGGER.error(e.getMessage());
+                                    InterfaceManager.LOGGER.error("Could not parse: " + packDef.packID + ":" + fileName);
+                                    InterfaceManager.LOGGER.error(e.getMessage());
                                     continue;
                                 }
 
@@ -406,7 +405,7 @@ public final class PackParser {
                     //Done parsing.  Close the jarfile.
                     jarFile.close();
                 } catch (Exception e) {
-                    InterfaceLoader.LOGGER.error("Could not start parsing of pack: " + packDef.packID);
+                    InterfaceManager.LOGGER.error("Could not start parsing of pack: " + packDef.packID);
                     e.printStackTrace();
                 }
             }
@@ -471,7 +470,7 @@ public final class PackParser {
                 packItemMap.get(item.definition.packID).put(item.definition.systemName, item);
             }
         } catch (Exception e) {
-            InterfaceLoader.LOGGER.error(e.getMessage());
+            InterfaceManager.LOGGER.error(e.getMessage());
             e.printStackTrace();
         }
     }
@@ -531,7 +530,7 @@ public final class PackParser {
                         }
                     }
                     if (item == null) {
-                        InterfaceLoader.LOGGER.error("Was told to parse part " + partDef.packID + ":" + partDef.systemName + " with part type " + partDef.generic.type + ", but that's not a valid type for creating a part.");
+                        InterfaceManager.LOGGER.error("Was told to parse part " + partDef.packID + ":" + partDef.systemName + " with part type " + partDef.generic.type + ", but that's not a valid type for creating a part.");
                         return;
                     }
                     break;

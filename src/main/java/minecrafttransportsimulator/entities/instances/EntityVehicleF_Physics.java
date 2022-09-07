@@ -3,7 +3,6 @@ package minecrafttransportsimulator.entities.instances;
 import java.util.HashSet;
 import java.util.Set;
 
-import mcinterface1122.InterfaceLoader;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -196,7 +195,7 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                 //Only check once per base entity.
                 towedEntity = connection.towedVehicle;
                 if (towedEntitiesCheckedForWeights.contains(towedEntity)) {
-                    InterfaceLoader.LOGGER.error("Infinite loop detected on weight checking code!  Is a trailer towing the thing that's towing it?");
+                    InterfaceManager.LOGGER.error("Infinite loop detected on weight checking code!  Is a trailer towing the thing that's towing it?");
                     break;
                 } else {
                     towedEntitiesCheckedForWeights.add(towedEntity);
