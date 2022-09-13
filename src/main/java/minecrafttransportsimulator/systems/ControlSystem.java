@@ -172,6 +172,7 @@ public final class ControlSystem {
     }
 
     private static void rotateCamera(ControlsJoystick lookR, ControlsJoystick lookL, ControlsJoystick lookU, ControlsJoystick lookD, ControlsJoystick lookA) {
+        //FIXME this causes yaw de-syncs.
         if (lookR.isPressed()) {
             clientPlayer.setYaw(clientPlayer.getYaw() - 3);
         }
@@ -406,66 +407,59 @@ public final class ControlSystem {
             }
         } else {
             if (ConfigSystem.client.controlSettings.simpleThrottle.value) {
-                if (!powered.engines.values().isEmpty()) {
-                    //Get the current gear.
-                    byte currentGear = 0;
-                    for (PartEngine engine : powered.engines.values()) {
-                        currentGear = engine.currentGear;
-                    }
-
+                if (!powered.engines.isEmpty()) {
                     //Get the brake value.
-                    double brakeValue = 0;
+                    final double brakeValue;
                     if (InterfaceManager.inputInterface.isJoystickPresent(ControlsJoystick.CAR_BRAKE.config.joystickName)) {
                         brakeValue = ControlsJoystick.CAR_BRAKE.getAxisState(true);
                     } else if (ControlsKeyboard.CAR_BRAKE.isPressed() || ControlsJoystick.CAR_BRAKE_DIGITAL.isPressed()) {
                         brakeValue = EntityVehicleF_Physics.MAX_BRAKE;
+                    } else {
+                        brakeValue = 0;
                     }
 
                     //Get the throttle value.
-                    double throttleValue = 0;
+                    final double throttleValue;
                     if (InterfaceManager.inputInterface.isJoystickPresent(ControlsJoystick.CAR_GAS.config.joystickName)) {
                         throttleValue = ControlsJoystick.CAR_GAS.getAxisState(true) * EntityVehicleF_Physics.MAX_THROTTLE;
                     } else if (ControlsKeyboardDynamic.CAR_SLOW.isPressed()) {
                         throttleValue = ConfigSystem.client.controlSettings.halfThrottle.value ? EntityVehicleF_Physics.MAX_THROTTLE : EntityVehicleF_Physics.MAX_THROTTLE / 2D;
                     } else if (ControlsKeyboard.CAR_GAS.isPressed()) {
                         throttleValue = ConfigSystem.client.controlSettings.halfThrottle.value ? EntityVehicleF_Physics.MAX_THROTTLE / 2D : EntityVehicleF_Physics.MAX_THROTTLE;
-                    }
-
-                    //If we don't have velocity, and we have the appropriate control, shift.
-                    if (brakeValue > EntityVehicleF_Physics.MAX_BRAKE / 4F && currentGear >= 0 && powered.axialVelocity < 0.01F) {
-                        if (currentGear > 0) {
-                            for (PartEngine engine : powered.engines.values()) {
-                                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE));
-                            }
-                        } else {
-                            for (PartEngine engine : powered.engines.values()) {
-                                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.DOWN_SHIFT_VARIABLE));
-                            }
-                        }
-                    } else if (throttleValue > EntityVehicleF_Physics.MAX_THROTTLE / 4F && currentGear <= 0 && powered.axialVelocity < 0.01F) {
-                        if (currentGear < 0) {
-                            for (PartEngine engine : powered.engines.values()) {
-                                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE));
-                            }
-                        } else {
-                            for (PartEngine engine : powered.engines.values()) {
-                                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.UP_SHIFT_VARIABLE));
-                            }
-                        }
+                    } else {
+                        throttleValue = 0;
                     }
 
                     //If we are going slow, and don't have gas or brake, automatically set the brake.
                     //Otherwise send normal values if we are in neutral or forwards,
                     //and invert controls if we are in a reverse gear.
+                    //Use only the first engine for this.
                     if (throttleValue == 0 && brakeValue == 0 && powered.axialVelocity < PartEngine.MAX_SHIFT_SPEED) {
                         InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.BRAKE_VARIABLE, EntityVehicleF_Physics.MAX_BRAKE));
-                    } else if (currentGear >= 0) {
+                    } else if (powered.engines.get(0).currentGear >= 0) {
                         InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.BRAKE_VARIABLE, brakeValue));
                         InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, throttleValue));
                     } else {
                         InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.BRAKE_VARIABLE, throttleValue));
                         InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(powered, EntityVehicleF_Physics.THROTTLE_VARIABLE, brakeValue));
                     }
+
+                    powered.engines.forEach(engine -> {
+                        //If we don't have velocity, and we have the appropriate control, shift.
+                        if (brakeValue > EntityVehicleF_Physics.MAX_BRAKE / 4F && engine.currentGear >= 0 && powered.axialVelocity < 0.01F) {
+                            if (engine.currentGear > 0) {
+                                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE));
+                            } else {
+                                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.DOWN_SHIFT_VARIABLE));
+                            }
+                        } else if (throttleValue > EntityVehicleF_Physics.MAX_THROTTLE / 4F && engine.currentGear <= 0 && powered.axialVelocity < 0.01F) {
+                            if (engine.currentGear < 0) {
+                                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE));
+                            } else {
+                                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.UP_SHIFT_VARIABLE));
+                            }
+                        }
+                    });
                 }
             } else {
                 //Check brake and gas and set to on or off.
@@ -514,12 +508,12 @@ public final class ControlSystem {
 
         //Check if we are shifting.
         if (ControlsKeyboardDynamic.CAR_SHIFT_NU.isPressed() || ControlsKeyboardDynamic.CAR_SHIFT_ND.isPressed()) {
-            for (PartEngine engine : powered.engines.values()) {
+            powered.engines.forEach(engine -> {
                 InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE));
-            }
+            });
         } else {
             if (ControlsKeyboard.CAR_SHIFT_U.isPressed()) {
-                for (PartEngine engine : powered.engines.values()) {
+                powered.engines.forEach(engine -> {
                     if (engine.definition.engine.isAutomatic) {
                         if (engine.currentGear < 0) {
                             InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE));
@@ -529,10 +523,10 @@ public final class ControlSystem {
                     } else {
                         InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.UP_SHIFT_VARIABLE));
                     }
-                }
+                });
             }
             if (ControlsKeyboard.CAR_SHIFT_D.isPressed()) {
-                for (PartEngine engine : powered.engines.values()) {
+                powered.engines.forEach(engine -> {
                     if (engine.definition.engine.isAutomatic) {
                         if (engine.currentGear > 0) {
                             InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE));
@@ -542,7 +536,7 @@ public final class ControlSystem {
                     } else {
                         InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.DOWN_SHIFT_VARIABLE));
                     }
-                }
+                });
             }
         }
 

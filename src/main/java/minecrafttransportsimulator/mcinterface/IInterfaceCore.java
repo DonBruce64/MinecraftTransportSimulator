@@ -1,8 +1,8 @@
 package minecrafttransportsimulator.mcinterface;
 
-import minecrafttransportsimulator.items.components.AItemBase;
-
 import java.util.List;
+
+import minecrafttransportsimulator.items.components.AItemBase;
 
 /**
  * Interface to the core MC system.  This class has methods for registrations
@@ -64,5 +64,5 @@ public interface IInterfaceCore {
     /**
      * Returns all possible stacks that could be used for the passed-in OreDict name.
      */
-    List<IWrapperItemStack> getOredictMaterials(String oreName);
+    List<IWrapperItemStack> getOredictMaterials(String oreName, int stackSize);
 }

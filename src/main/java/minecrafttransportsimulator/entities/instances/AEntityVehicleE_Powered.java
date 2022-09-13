@@ -1,23 +1,19 @@
 package minecrafttransportsimulator.entities.instances;
 
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.NavBeacon;
 import minecrafttransportsimulator.items.instances.ItemInstrument;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
-import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.systems.ConfigSystem;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.UUID;
 
 /**
  * This class adds engine components for vehicles, such as fuel, throttle,
@@ -62,8 +58,8 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
     public NavBeacon selectedBeacon;
     public EntityFluidTank fuelTank;
 
-    //Part maps.
-    public final BiMap<Byte, PartEngine> engines = HashBiMap.create();
+    //Engines.
+    public final List<PartEngine> engines = new ArrayList<>();
 
     //Map containing incoming missiles, sorted by distance, which is the value for this map.
     public final List<EntityBullet> missilesIncoming = new ArrayList<>();
@@ -140,7 +136,7 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
             //Set engine state mapping variables.
             enginesOn = false;
             enginesRunning = false;
-            for (PartEngine engine : engines.values()) {
+            for (PartEngine engine : engines) {
                 if (engine.magnetoOn) {
                     enginesOn = true;
                     if (engine.running) {
@@ -217,38 +213,16 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
     }
 
     @Override
-    public void addPart(APart part, boolean sendPacket) {
-        super.addPart(part, sendPacket);
-        if (part instanceof PartEngine) {
-            //Because parts is a list, the #1 engine will always come before the #2 engine.
-            //We can use this to determine where in the list this engine needs to go.
-            byte engineNumber = 0;
-            for (JSONPartDefinition partDef : definition.parts) {
-                for (String type : partDef.types) {
-                    if (type.startsWith("engine")) {
-                        //Part goes into this slot.
-                        if (part.placementSlot == definition.parts.indexOf(partDef)) {
-                            engines.put(engineNumber, (PartEngine) part);
-                            return;
-                        }
-                        ++engineNumber;
-                        break;
-                    }
-                }
+    public void updatePartList() {
+        super.updatePartList();
+
+        //Add engines to the list of engines.
+        engines.clear();
+        allParts.forEach(part -> {
+            if (part instanceof PartEngine) {
+                engines.add((PartEngine) part);
             }
-
-            //Engine position not found.  Get the next free slot and add it.
-            while (engines.containsKey(engineNumber++))
-                ;
-            engineNumber--;
-            engines.put(engineNumber, (PartEngine) part);
-        }
-    }
-
-    @Override
-    public void removePart(APart part, Iterator<APart> iterator) {
-        super.removePart(part, iterator);
-        engines.inverse().remove(part);
+        });
     }
 
     public void acquireMissile(EntityBullet missile) {

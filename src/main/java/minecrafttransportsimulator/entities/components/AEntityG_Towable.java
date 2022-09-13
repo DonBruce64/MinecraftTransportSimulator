@@ -1,6 +1,8 @@
 package minecrafttransportsimulator.entities.components;
 
-import mcinterface1122.InterfaceLoader;
+import java.util.ArrayList;
+import java.util.List;
+
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.TowingConnection;
@@ -13,12 +15,13 @@ import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.jsondefs.JSONConnection;
 import minecrafttransportsimulator.jsondefs.JSONConnectionGroup;
-import minecrafttransportsimulator.mcinterface.*;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityTowingChange;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Base entity class containing towing states and methods.
@@ -93,7 +96,7 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
                         }
                     } else {
                         savedTowedByConnection = null;
-                        InterfaceLoader.LOGGER.error("Could not hook-up trailer to entity towing it.  Did the JSON or pack change?");
+                        InterfaceManager.LOGGER.error("Could not hook-up trailer to entity towing it.  Did the JSON or pack change?");
                     }
                 }
             }
@@ -108,12 +111,12 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
                                     --i;
                                 }
                             } catch (Exception e) {
-                                InterfaceLoader.LOGGER.error("Could not connect trailer(s) to the entity towing them.  Did the JSON or pack change?");
+                                InterfaceManager.LOGGER.error("Could not connect trailer(s) to the entity towing them.  Did the JSON or pack change?");
                             }
                         }
                     } else {
                         savedTowingConnections.clear();
-                        InterfaceLoader.LOGGER.error("Could not connect trailer(s) to the entity towing them.  Did the JSON or pack change?");
+                        InterfaceManager.LOGGER.error("Could not connect trailer(s) to the entity towing them.  Did the JSON or pack change?");
                     }
                 }
             }
@@ -254,7 +257,7 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
             connectionToDisconnect = towedByConnection;
         } else if (requestedGroup.isHitch) {
             for (TowingConnection connection : towingConnections) {
-                if (connectionDefiner.equals(connection.towingEntity)) {
+                if (connectionDefiner.equals(connection.towingEntity) && connection.hitchGroupIndex == connectionGroupIndex) {
                     connectionToDisconnect = connection;
                     break;
                 }

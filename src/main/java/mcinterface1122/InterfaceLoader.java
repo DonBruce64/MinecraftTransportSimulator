@@ -4,9 +4,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -28,8 +25,7 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 public final class InterfaceLoader {
     public static final String MODID = "mts";
     public static final String MODNAME = "Immersive Vehicles (MTS)";
-    public static final String MODVER = "22.0.0";
-    public static final Logger LOGGER = LogManager.getLogger(InterfaceLoader.MODID);
+    public static final String MODVER = "22.1.0";
 
     static {
         //Enable universal bucket so that we can use buckets on fuel pumps.
@@ -49,7 +45,7 @@ public final class InterfaceLoader {
             new InterfaceManager(MODID, gameDirectory, new InterfaceCore(), new InterfacePacket(), null, null, null, null);
         }
 
-        InterfaceLoader.LOGGER.error("Welcome to MTS VERSION:" + MODVER);
+        InterfaceManager.LOGGER.error("Welcome to MTS VERSION:" + MODVER);
 
         //Parse packs
         ConfigSystem.loadFromDisk(new File(gameDirectory, "config"), event.getSide().isClient());
@@ -68,7 +64,7 @@ public final class InterfaceLoader {
             PackParser.addDefaultItems();
             PackParser.parsePacks(packDirectories, event.getSide().isClient());
         } else {
-            InterfaceLoader.LOGGER.error("Could not find mods directory!  Game directory is confirmed to: " + gameDirectory);
+            InterfaceManager.LOGGER.error("Could not find mods directory!  Game directory is confirmed to: " + gameDirectory);
         }
     }
 

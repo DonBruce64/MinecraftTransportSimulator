@@ -1,5 +1,8 @@
 package mcinterface1122;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import mezz.jei.api.IGuiHelper;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.IModRegistry;
@@ -20,9 +23,6 @@ import minecrafttransportsimulator.packloading.PackMaterialComponent;
 import minecrafttransportsimulator.packloading.PackParser;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Interface for the JEI system.  This is responsible for populating JEI with the various items,
@@ -46,9 +46,14 @@ public class InterfaceJEI implements IModPlugin {
                     List<IRecipeWrapper> benchRecipes = new ArrayList<>();
                     for (AItemPack<?> packItemToTest : PackParser.getAllPackItems()) {
                         if (packItemToTest.isBenchValid(benchItem.definition.decor.crafting)) {
-                            benchRecipes.add(new PackRecipeWrapper(packItemToTest, false));
-                            if (packItemToTest.definition.general.repairMaterials != null) {
-                                benchRecipes.add(new PackRecipeWrapper(packItemToTest, true));
+                            for (int i = 0; i < packItemToTest.definition.general.materialLists.size(); ++i) {
+                                benchRecipes.add(new PackRecipeWrapper(packItemToTest, i, false));
+                            }
+
+                            if (packItemToTest.definition.general.repairMaterialLists != null) {
+                                for (int i = 0; i < packItemToTest.definition.general.repairMaterialLists.size(); ++i) {
+                                    benchRecipes.add(new PackRecipeWrapper(packItemToTest, i, true));
+                                }
                             }
                         }
                     }
@@ -73,17 +78,19 @@ public class InterfaceJEI implements IModPlugin {
 
     private static class PackRecipeWrapper implements IRecipeWrapper {
         private final AItemPack<?> packItem;
+        private final int recipeIndex;
         private final boolean forRepair;
 
-        private PackRecipeWrapper(AItemPack<?> packItem, boolean forRepair) {
+        private PackRecipeWrapper(AItemPack<?> packItem, int recipeIndex, boolean forRepair) {
             this.packItem = packItem;
+            this.recipeIndex = recipeIndex;
             this.forRepair = forRepair;
         }
 
         @Override
         public void getIngredients(IIngredients ingredients) {
             List<List<ItemStack>> inputs = new ArrayList<>();
-            for (PackMaterialComponent component : PackMaterialComponent.parseFromJSON(packItem, true, true, false, forRepair)) {
+            for (PackMaterialComponent component : PackMaterialComponent.parseFromJSON(packItem, recipeIndex, true, true, forRepair)) {
                 List<ItemStack> stacks = new ArrayList<>();
                 for (IWrapperItemStack stack : component.possibleItems) {
                     stacks.add(((WrapperItemStack) stack).stack);

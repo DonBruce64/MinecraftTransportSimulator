@@ -1,18 +1,26 @@
 package minecrafttransportsimulator.entities.instances;
 
-import minecrafttransportsimulator.baseclasses.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
+import minecrafttransportsimulator.baseclasses.Damage;
+import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
+import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
-import minecrafttransportsimulator.jsondefs.*;
+import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
+import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
+import minecrafttransportsimulator.jsondefs.JSONPart;
+import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
+import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
 /**
  * This class is the base for all parts and should be extended for any entity-compatible parts.
@@ -36,7 +44,11 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
      */
     public final AEntityF_Multipart<?> entityOn;
     /**
-     * The vehicle this part has been placed on.  This recurses to the vehicle itself if this part was placed on a part.
+     * The top-most entity for this part.  May be the {@link #entityOn} if the part is only one level deep.
+     */
+    public final AEntityF_Multipart<?> masterEntity;
+    /**
+     * The vehicle this part has been placed on.  Identical to {@link #masterEntity}, just saves a cast.
      * Will be null, however, if this part isn't on a vehicle (say if it's on a decor).
      */
     public final EntityVehicleF_Physics vehicleOn;
@@ -62,6 +74,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     public final RotationMatrix localOrientation;
     public final RotationMatrix zeroReferenceOrientation;
     public final RotationMatrix prevZeroReferenceOrientation;
+    public final Point3D externalAnglesRotated = new Point3D();
     private AnimationSwitchbox placementActiveSwitchbox;
     private AnimationSwitchbox internalActiveSwitchbox;
     private AnimationSwitchbox placementMovementSwitchbox;
@@ -75,6 +88,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         while (parentEntity instanceof APart) {
             parentEntity = ((APart) parentEntity).entityOn;
         }
+        this.masterEntity = parentEntity;
         this.vehicleOn = parentEntity instanceof EntityVehicleF_Physics ? (EntityVehicleF_Physics) parentEntity : null;
         this.partOn = entityOn instanceof APart ? (APart) entityOn : null;
         this.placementDefinition = placementDefinition;
@@ -162,6 +176,9 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
             //Orientation just needs to update according to new rotation.
             localOffset.transform(placementMovementSwitchbox.netMatrix);
             localOrientation.multiply(placementMovementSwitchbox.rotation);
+            externalAnglesRotated.set(placementMovementSwitchbox.rotation.convertToAngles());
+        } else {
+            externalAnglesRotated.set(0, 0, 0);
         }
 
         //Now rotate us to face the slot's requested orientation.
@@ -241,7 +258,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
             //Attacked a removable part, remove us to the player's inventory.
             //If the inventory can't fit us, don't remove us.
             IWrapperPlayer player = (IWrapperPlayer) damage.entityResponsible;
-            if (entityOn.locked) {
+            if (masterEntity.locked) {
                 player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_VEHICLE_LOCKED));
             } else {
                 if (player.getInventory().addStack(getItem().getNewStack(save(InterfaceManager.coreInterface.getNewNBTWrapper())))) {
@@ -252,17 +269,6 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
             //Not a removable part, or is an actual attack.
             super.attack(damage);
         }
-    }
-
-    @Override
-    public void addPart(APart part, boolean sendPacket) {
-        super.addPart(part, sendPacket);
-
-    }
-
-    @Override
-    public void removePart(APart part, Iterator<APart> iterator) {
-        super.removePart(part, iterator);
     }
 
     @Override

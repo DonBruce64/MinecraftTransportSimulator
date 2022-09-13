@@ -7,7 +7,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
-import mcinterface1122.InterfaceLoader;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
@@ -101,9 +100,30 @@ public final class LegacyCompatSystem {
             }
             definition.general.modelName = null;
         }
-        //Check if the model needs a model type.
+
+        //Update materials to match new format.
+        if (definition.general.materials != null) {
+            definition.general.materialLists = new ArrayList<List<String>>();
+            definition.general.materialLists.add(definition.general.materials);
+            definition.general.materials = null;
+        }
+        if (definition.general.repairMaterials != null) {
+            definition.general.repairMaterialLists = new ArrayList<List<String>>();
+            definition.general.repairMaterialLists.add(definition.general.repairMaterials);
+            definition.general.repairMaterials = null;
+        }
+
+        //Check if the model needs a model type or has extraMaterials to convert..
         if (definition instanceof AJSONMultiModelProvider) {
             AJSONMultiModelProvider provider = (AJSONMultiModelProvider) definition;
+            for (JSONSubDefinition subDef : provider.definitions) {
+                if (subDef.extraMaterials != null) {
+                    subDef.extraMaterialLists = new ArrayList<List<String>>();
+                    subDef.extraMaterialLists.add(subDef.extraMaterials);
+                    subDef.extraMaterials = null;
+                }
+            }
+
             if (provider.rendering == null) {
                 provider.rendering = new JSONRendering();
             }
@@ -2014,6 +2034,14 @@ public final class LegacyCompatSystem {
                         connection.distance = 2;
                     }
                 }
+                if (connectionGroup.canIntiateConnections) {
+                    connectionGroup.canInitiateConnections = true;
+                    connectionGroup.canIntiateConnections = false;
+                }
+                if (connectionGroup.canIntiateSubConnections) {
+                    connectionGroup.canInitiateSubConnections = true;
+                    connectionGroup.canIntiateSubConnections = false;
+                }
             }
         }
     }
@@ -2509,8 +2537,8 @@ public final class LegacyCompatSystem {
                 }
             }
         } catch (Exception e) {
-            InterfaceLoader.LOGGER.error("Could not do model-based legacy compats on " + definition.packID + ":" + definition.systemName + ".  Lights and treads will likely not be present on this model.");
-            InterfaceLoader.LOGGER.error(e.getMessage());
+            InterfaceManager.LOGGER.error("Could not do model-based legacy compats on " + definition.packID + ":" + definition.systemName + ".  Lights and treads will likely not be present on this model.");
+            InterfaceManager.LOGGER.error(e.getMessage());
         }
     }
 }

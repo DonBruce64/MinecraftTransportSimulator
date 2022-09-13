@@ -1,5 +1,13 @@
 package minecrafttransportsimulator.entities.instances;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
@@ -10,8 +18,6 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPartEffector;
-
-import java.util.*;
 
 public class PartEffector extends APart {
 
@@ -40,7 +46,7 @@ public class PartEffector extends APart {
                 switch (definition.effector.type) {
                     case FERTILIZER: {
                         //Search all inventories for fertilizer and try to use it.
-                        for (APart part : entityOn.parts) {
+                        for (APart part : linkedParts) {
                             if (part instanceof PartInteractable && part.definition.interactable.interactionType.equals(InteractableComponentType.CRATE) && part.isActive && part.definition.interactable.feedsVehicles) {
                                 EntityInventoryContainer inventory = ((PartInteractable) part).inventory;
                                 for (int i = 0; i < inventory.getSize(); ++i) {
@@ -61,7 +67,7 @@ public class PartEffector extends APart {
                     }
                     case PLANTER: {
                         //Search all inventories for seeds and try to plant them.
-                        for (APart part : entityOn.parts) {
+                        for (APart part : linkedParts) {
                             if (part instanceof PartInteractable && part.definition.interactable.interactionType.equals(InteractableComponentType.CRATE) && part.isActive && part.definition.interactable.feedsVehicles) {
                                 EntityInventoryContainer inventory = ((PartInteractable) part).inventory;
                                 for (int i = 0; i < inventory.getSize(); ++i) {
@@ -133,7 +139,7 @@ public class PartEffector extends APart {
                     Iterator<IWrapperItemStack> iterator = drops.iterator();
                     while (iterator.hasNext()) {
                         IWrapperItemStack dropStack = iterator.next();
-                        for (APart part : entityOn.parts) {
+                        for (APart part : linkedParts) {
                             if (part instanceof PartInteractable && part.isActive && part.definition.interactable.interactionType.equals(InteractableComponentType.CRATE)) {
                                 if (((PartInteractable) part).inventory.addStack(dropStack)) {
                                     iterator.remove();

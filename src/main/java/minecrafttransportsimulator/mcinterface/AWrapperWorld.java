@@ -4,7 +4,6 @@ import java.io.File;
 import java.util.List;
 import java.util.UUID;
 
-import mcinterface1122.BuilderEntityExisting;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.EntityManager;
@@ -14,6 +13,7 @@ import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.components.ABlockBase.BlockMaterial;
 import minecrafttransportsimulator.blocks.components.ABlockBaseTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
+import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
@@ -132,7 +132,7 @@ public abstract class AWrapperWorld extends EntityManager {
     /**
      * Attacks all entities that are in the passed-in damage range.
      * This only includes external entities, and NOT any entities
-     * that extend {@link BuilderEntityExisting}  If this is called with
+     * that extend {@link AEntityA_Base}  If this is called with
      * generateList as true, then this method will not attack any entities. Instead,
      * it will return a list of all entities that could have been attacked.
      * Otherwise, the method returns null.

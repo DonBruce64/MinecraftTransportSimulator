@@ -20,6 +20,7 @@ import minecrafttransportsimulator.blocks.components.ABlockBaseTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
+import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityBullet;
 import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
@@ -303,18 +304,22 @@ public class WrapperWorld extends AWrapperWorld {
         //Validate the collided entities to make sure we didn't hit something we shouldn't have.
         //Also get rayTrace hits for advanced checking.
         for (Entity mcEntityCollided : collidedEntities) {
+            //Don't check internal entities, we do this in the main classes.
             if (!(mcEntityCollided instanceof ABuilderEntityBase)) {
+                //If the damage came from a source, verify that source can hurt the entity.
                 if (damage.damgeSource != null) {
-                    Entity ridingEntity = mcEntityCollided.getRidingEntity();
-                    if (ridingEntity instanceof BuilderEntityLinkedSeat) {
-                        AEntityB_Existing internalEntity = ((BuilderEntityLinkedSeat) ridingEntity).entity;
-                        if (damage.damgeSource == internalEntity) {
-                            //Don't attack riders of the source of the damage.
+                    Entity mcRidingEntity = mcEntityCollided.getRidingEntity();
+                    if (mcRidingEntity instanceof BuilderEntityLinkedSeat) {
+                        //Entity hit is riding something of ours.
+                        //Verify that it's not the entity that is doing the attacking.
+                        AEntityE_Interactable<?> internalRidingEntity = ((BuilderEntityLinkedSeat) mcRidingEntity).entity;
+                        if (damage.damgeSource == internalRidingEntity) {
+                            //Entity can't attack entities riding itself.
                             continue;
-                        } else if (damage.damgeSource instanceof APart) {
-                            APart damagingPart = (APart) damage.damgeSource;
-                            if (damagingPart.entityOn == internalEntity) {
-                                //Don't attack riders of the multipart the part applying damage is a part of.
+                        } else if (internalRidingEntity instanceof APart) {
+                            //Attacked entity is riding a part, don't attack if a part on that multipart is the attacker,
+                            APart ridingPart = (APart) internalRidingEntity;
+                            if (ridingPart.masterEntity.allParts.contains(damage.damgeSource)) {
                                 continue;
                             }
                         }

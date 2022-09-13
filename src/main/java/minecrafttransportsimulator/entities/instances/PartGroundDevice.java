@@ -1,18 +1,21 @@
 package minecrafttransportsimulator.entities.instances;
 
+import java.util.List;
+
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
-import minecrafttransportsimulator.items.instances.ItemPartGroundDevice;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPartGroundDevice;
+import minecrafttransportsimulator.packloading.JSONParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**
@@ -72,10 +75,11 @@ public class PartGroundDevice extends APart {
         //Also set some parameters manually as fake parts have a few special properties.
         if (!isFake() && getLongPartOffset() != 0 && !isSpare) {
             //Need to swap placement for fake part so it uses the offset.
-            Point3D actualPlacement = placementDefinition.pos;
-            placementDefinition.pos = placementDefinition.pos.copy().add(0D, 0D, getLongPartOffset());
-            fakePart = new PartGroundDeviceFake(this, placingPlayer, placementDefinition, data, null);
-            placementDefinition.pos = actualPlacement;
+            JSONPartDefinition fakePlacementDef = JSONParser.duplicateJSON(placementDefinition);
+            fakePlacementDef.pos.z += getLongPartOffset();
+            IWrapperNBT fakeData = InterfaceManager.coreInterface.getNewNBTWrapper();
+            getItem().populateDefaultData(fakeData);
+            fakePart = new PartGroundDeviceFake(this, placingPlayer, fakePlacementDef, fakeData);
             entityOn.addPart(fakePart, false);
         }
     }
@@ -211,14 +215,16 @@ public class PartGroundDevice extends APart {
     public void remove() {
         super.remove();
         if (fakePart != null) {
-            fakePart.remove();
+            //Don't remove here, this could cause a CME if we're in a removal iteration loop.
+            fakePart.isValid = false;
         }
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public ItemPartGroundDevice getItem() {
-        return isFlat ? null : super.getItem();
+    public void addDropsToList(List<IWrapperItemStack> drops) {
+        if (!isFlat) {
+            super.addDropsToList(drops);
+        }
     }
 
     @Override

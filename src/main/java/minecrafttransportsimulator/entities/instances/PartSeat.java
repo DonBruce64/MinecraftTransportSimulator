@@ -6,7 +6,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.guis.components.AGUIBase;
@@ -53,7 +52,7 @@ public final class PartSeat extends APart {
         //See if we can interact with the seats of this vehicle.
         //This can happen if the vehicle is not locked, or we're already inside a locked vehicle.
         if (isActive) {
-            if (!entityOn.locked || entityOn.equals(player.getEntityRiding())) {
+            if (!masterEntity.locked || masterEntity.allParts.contains(player.getEntityRiding())) {
                 if (rider != null) {
                     //We already have a rider for this seat.  If it's not us, mark the seat as taken.
                     //If it's an entity that can be leashed, dismount the entity and leash it.
@@ -171,12 +170,12 @@ public final class PartSeat extends APart {
 
                 //Auto-start the engines, if we have that config enabled and we can start them.
                 if (placementDefinition.isController && ConfigSystem.client.controlSettings.autostartEng.value && vehicleOn.canPlayerStartEngines((IWrapperPlayer) rider)) {
-                    for (PartEngine engine : vehicleOn.engines.values()) {
+                    vehicleOn.engines.forEach(engine -> {
                         if (!vehicleOn.definition.motorized.isAircraft) {
                             InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE));
                         }
                         InterfaceManager.packetInterface.sendToServer(new PacketPartEngine(engine, Signal.AS_ON));
-                    }
+                    });
                     if (vehicleOn.parkingBrakeOn) {
                         InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicleOn, AEntityVehicleD_Moving.PARKINGBRAKE_VARIABLE));
                     }
@@ -223,14 +222,14 @@ public final class PartSeat extends APart {
                     }
                 }
                 if (!otherController) {
-                    for (PartEngine engine : vehicleOn.engines.values()) {
+                    vehicleOn.engines.forEach(engine -> {
                         if (engine.magnetoOn) {
                             InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.MAGNETO_VARIABLE));
                         }
                         if (engine.electricStarterEngaged) {
                             InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.ELECTRIC_STARTER_VARIABLE));
                         }
-                    }
+                    });
                     InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(vehicleOn, AEntityVehicleD_Moving.BRAKE_VARIABLE, 0));
                     if (!vehicleOn.parkingBrakeOn) {
                         InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicleOn, AEntityVehicleD_Moving.PARKINGBRAKE_VARIABLE));
@@ -328,16 +327,6 @@ public final class PartSeat extends APart {
     }
 
     /**
-     * Like {@link #getInterpolatedOrientation(RotationMatrix, double)}, just for
-     * the rider.  This is to allow for the fact the rider won't turn in the
-     * seat when the seat turns via animations: only their rendered body will rotate.
-     * In a nutshell, this get's the riders orientation assuming a non-rotated seat.
-     */
-    public void getRiderInterpolatedOrientation(RotationMatrix store, double partialTicks) {
-        store.interploate(prevZeroReferenceOrientation, zeroReferenceOrientation, partialTicks);
-    }
-
-    /**
      * Sets the next active gun for this seat.  Active guns are queried by checking guns to
      * see if this rider can control them.  If so, then the active gun is set to that gun type.
      */
@@ -410,9 +399,9 @@ public final class PartSeat extends APart {
             case ("seat_occupied_client"):
                 return InterfaceManager.clientInterface.getClientPlayer().equals(rider) ? 1 : 0;
             case ("seat_rider_yaw"):
-                return rider != null ? rider.getYaw() : 0;
+                return rider != null ? riderRelativeOrientation.angles.y : 0;
             case ("seat_rider_pitch"):
-                return rider != null ? rider.getPitch() : 0;
+                return rider != null ? riderRelativeOrientation.angles.x : 0;
         }
 
         return Double.NaN;

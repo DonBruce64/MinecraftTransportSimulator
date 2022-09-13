@@ -274,6 +274,16 @@ public class Point3D {
     }
 
     /**
+     * Sets this point to the angles required to rotate a vector between the two passed-in matrixes.
+     * This will have a 0-component for z-rotation.  Useful if you want to adjust something in yaw/pitch
+     * format that doesn't easily convert to matrix format.
+     * Returns the called object for nested operations.
+     */
+    public Point3D computeVectorAngles(RotationMatrix start, RotationMatrix end) {
+        return set(0, 0, 1).rotate(start).reOrigin(end).getAngles(false);
+    }
+
+    /**
      * Clamps the values to this point from -180 to 180 as if they were angles in that domain.
      * Returns the called object for nested operations.
      */

@@ -1,13 +1,13 @@
 package minecrafttransportsimulator.mcinterface;
 
+import java.util.UUID;
+
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
-
-import java.util.UUID;
 
 /**
  * IWrapper for the base Entity class.  This class mainly allows for interaction with position
@@ -141,6 +141,11 @@ public interface IWrapperEntity {
     float getPitch();
 
     /**
+     * Returns the pitch delta for this entity, relative to the last time this method was called.
+     */
+    float getPitchDelta();
+
+    /**
      * Returns the entity's yaw (y-axis rotation).
      * NOTE: the return value from this function is inverted
      * from the normal MC standard to have it follow the RHR
@@ -148,6 +153,11 @@ public interface IWrapperEntity {
      * follow it, which is why rendering is such a PITA with yaw.
      */
     float getYaw();
+
+    /**
+     * Returns the yaw delta for this entity, relative to the last time this method was called.
+     */
+    float getYawDelta();
 
     /**
      * Returns the entity's body yaw (y-axis rotation).

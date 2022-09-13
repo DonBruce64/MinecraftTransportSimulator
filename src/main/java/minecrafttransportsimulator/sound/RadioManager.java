@@ -1,6 +1,5 @@
 package minecrafttransportsimulator.sound;
 
-import mcinterface1122.InterfaceLoader;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 
 import java.io.*;
@@ -109,8 +108,8 @@ public class RadioManager {
                 return "";
             }
         } catch (IOException e) {
-            InterfaceLoader.LOGGER.error("Unable to parse radio_stations.txt file.  Is it in use?");
-            InterfaceLoader.LOGGER.error(e.getMessage());
+            InterfaceManager.LOGGER.error("Unable to parse radio_stations.txt file.  Is it in use?");
+            InterfaceManager.LOGGER.error(e.getMessage());
             return "";
         }
     }
@@ -140,8 +139,8 @@ public class RadioManager {
             }
             radioStationFileWriter.close();
         } catch (IOException e) {
-            InterfaceLoader.LOGGER.error("Unable to save radio_stations.txt file.  Is it in use?");
-            InterfaceLoader.LOGGER.error(e.getMessage());
+            InterfaceManager.LOGGER.error("Unable to save radio_stations.txt file.  Is it in use?");
+            InterfaceManager.LOGGER.error(e.getMessage());
         }
     }
 

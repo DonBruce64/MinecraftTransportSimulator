@@ -1,5 +1,8 @@
 package minecrafttransportsimulator.guis.instances;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import minecrafttransportsimulator.baseclasses.TowingConnection;
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.components.AEntityG_Towable;
@@ -14,9 +17,6 @@ import minecrafttransportsimulator.jsondefs.JSONConnectionGroup;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * A GUI/control system hybrid, this takes the place of the HUD when called up.
  * This class is abstract and contains the base code for rendering things common to
@@ -30,7 +30,6 @@ public abstract class AGUIPanel extends AGUIBase {
     protected static final int GAP_BETWEEN_SELECTORS = 12;
     protected static final int SELECTOR_SIZE = 20;
     protected static final int SELECTOR_TEXTURE_SIZE = 20;
-    protected static final byte ENGINE_SINGLE_SELECTOR_INDEX = -1;
     protected static final int BEACON_TEXTURE_WIDTH_OFFSET = 340;
     protected static final int BEACON_TEXTURE_HEIGHT_OFFSET = 196;
 
@@ -201,11 +200,11 @@ public abstract class AGUIPanel extends AGUIBase {
     public void close() {
         super.close();
         //Turn starters off.  This prevents stuck engine starters.
-        for (PartEngine engine : vehicle.engines.values()) {
+        vehicle.engines.forEach(engine -> {
             if (engine.electricStarterEngaged) {
                 InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.ELECTRIC_STARTER_VARIABLE));
             }
-        }
+        });
     }
 
     protected static class SwitchEntry {

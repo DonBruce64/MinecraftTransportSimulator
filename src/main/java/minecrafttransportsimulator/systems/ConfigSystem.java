@@ -1,18 +1,21 @@
 package minecrafttransportsimulator.systems;
 
-import mcinterface1122.InterfaceLoader;
-import minecrafttransportsimulator.items.components.AItemPack;
-import minecrafttransportsimulator.items.components.AItemSubTyped;
-import minecrafttransportsimulator.jsondefs.*;
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.packloading.JSONParser;
-import minecrafttransportsimulator.packloading.PackParser;
-
 import java.io.File;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+
+import minecrafttransportsimulator.items.components.AItemPack;
+import minecrafttransportsimulator.items.components.AItemSubTyped;
+import minecrafttransportsimulator.jsondefs.AJSONItem;
+import minecrafttransportsimulator.jsondefs.JSONConfigClient;
+import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
+import minecrafttransportsimulator.jsondefs.JSONConfigSettings;
+import minecrafttransportsimulator.jsondefs.JSONCraftingOverrides;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.packloading.JSONParser;
+import minecrafttransportsimulator.packloading.PackParser;
 
 /**
  * Class that handles all configuration settings. This file is responsible for saving and loading
@@ -45,8 +48,8 @@ public final class ConfigSystem {
             try {
                 settings = JSONParser.parseStream(Files.newInputStream(settingsFile.toPath()), JSONConfigSettings.class, null, null);
             } catch (Exception e) {
-                InterfaceLoader.LOGGER.error("ConfigSystem failed to parse settings file JSON.  Reverting to defaults.");
-                InterfaceLoader.LOGGER.error(e.getMessage());
+                InterfaceManager.LOGGER.error("ConfigSystem failed to parse settings file JSON.  Reverting to defaults.");
+                InterfaceManager.LOGGER.error(e.getMessage());
             }
         }
         if (settings == null) {
@@ -59,8 +62,8 @@ public final class ConfigSystem {
             try {
                 language = JSONParser.parseStream(Files.newInputStream(languageFile.toPath()), JSONConfigLanguage.class, null, null);
             } catch (Exception e) {
-                InterfaceLoader.LOGGER.error("ConfigSystem failed to parse language file JSON.  Reverting to defaults.");
-                InterfaceLoader.LOGGER.error(e.getMessage());
+                InterfaceManager.LOGGER.error("ConfigSystem failed to parse language file JSON.  Reverting to defaults.");
+                InterfaceManager.LOGGER.error(e.getMessage());
             }
         }
         if (language == null) {
@@ -74,8 +77,8 @@ public final class ConfigSystem {
                 try {
                     client = JSONParser.parseStream(Files.newInputStream(clientFile.toPath()), JSONConfigClient.class, null, null);
                 } catch (Exception e) {
-                    InterfaceLoader.LOGGER.error("ConfigSystem failed to parse client file JSON.  Reverting to defaults.");
-                    InterfaceLoader.LOGGER.error(e.getMessage());
+                    InterfaceManager.LOGGER.error("ConfigSystem failed to parse client file JSON.  Reverting to defaults.");
+                    InterfaceManager.LOGGER.error(e.getMessage());
                 }
             }
             if (client == null) {
@@ -108,19 +111,19 @@ public final class ConfigSystem {
                     }
                     if (packItem instanceof AItemSubTyped) {
                         List<String> materials = new ArrayList<>();
-                        materials.addAll(packItem.definition.general.materials);
-                        materials.addAll(((AItemSubTyped<?>) packItem).getExtraMaterials());
+                        materials.addAll(packItem.definition.general.materialLists.get(0));
+                        materials.addAll(((AItemSubTyped<?>) packItem).getExtraMaterials().get(0));
                         craftingOverridesObject.overrides.get(packItem.definition.packID).put(packItem.definition.systemName + ((AItemSubTyped<?>) packItem).subName, materials);
                     } else {
-                        craftingOverridesObject.overrides.get(packItem.definition.packID).put(packItem.definition.systemName, packItem.definition.general.materials);
+                        craftingOverridesObject.overrides.get(packItem.definition.packID).put(packItem.definition.systemName, packItem.definition.general.materialLists.get(0));
                     }
-                    if (packItem.definition.general.repairMaterials != null) {
-                        craftingOverridesObject.overrides.get(packItem.definition.packID).put(packItem.definition.systemName + "_repair", packItem.definition.general.repairMaterials);
+                    if (packItem.definition.general.repairMaterialLists != null) {
+                        craftingOverridesObject.overrides.get(packItem.definition.packID).put(packItem.definition.systemName + "_repair", packItem.definition.general.repairMaterialLists.get(0));
                     }
                 }
                 JSONParser.exportStream(craftingOverridesObject, Files.newOutputStream(craftingFile.toPath()));
             } catch (Exception e) {
-                InterfaceLoader.LOGGER.error("ConfigSystem failed to create fresh crafting overrides file.  Report to the mod author!");
+                InterfaceManager.LOGGER.error("ConfigSystem failed to create fresh crafting overrides file.  Report to the mod author!");
             }
         } else if (craftingFile.exists()) {
             try {
@@ -129,19 +132,21 @@ public final class ConfigSystem {
                     for (String craftingOverrideSystemName : craftingOverridesObject.overrides.get(craftingOverridePackID).keySet()) {
                         AItemPack<? extends AJSONItem> item = PackParser.getItem(craftingOverridePackID, craftingOverrideSystemName);
                         if (item instanceof AItemSubTyped) {
-                            List<String> extraMaterials = ((AItemSubTyped<?>) item).getExtraMaterials();
-                            extraMaterials.clear();
-                            extraMaterials.addAll(craftingOverridesObject.overrides.get(craftingOverridePackID).get(craftingOverrideSystemName));
-                            item.definition.general.materials.clear();
+                            List<List<String>> extraMaterialLists = ((AItemSubTyped<?>) item).getExtraMaterials();
+                            extraMaterialLists.clear();
+                            extraMaterialLists.add(craftingOverridesObject.overrides.get(craftingOverridePackID).get(craftingOverrideSystemName));
+
+                            //Clear main list, we just use extra here for the item.  Same effect.
+                            item.definition.general.materialLists.clear();
                         } else if (item != null) {
-                            item.definition.general.materials = craftingOverridesObject.overrides.get(craftingOverridePackID).get(craftingOverrideSystemName);
-                            item.definition.general.repairMaterials = craftingOverridesObject.overrides.get(craftingOverridePackID).get(craftingOverrideSystemName + "_repair");
+                            item.definition.general.materialLists.add(craftingOverridesObject.overrides.get(craftingOverridePackID).get(craftingOverrideSystemName));
                         }
+                        item.definition.general.repairMaterialLists.add(craftingOverridesObject.overrides.get(craftingOverridePackID).get(craftingOverrideSystemName + "_repair"));
                     }
                 }
             } catch (Exception e) {
-                InterfaceLoader.LOGGER.error("ConfigSystem failed to parse crafting override file JSON.  Crafting overrides will not be applied.");
-                InterfaceLoader.LOGGER.error(e.getMessage());
+                InterfaceManager.LOGGER.error("ConfigSystem failed to parse crafting override file JSON.  Crafting overrides will not be applied.");
+                InterfaceManager.LOGGER.error(e.getMessage());
             }
         }
     }
@@ -156,7 +161,7 @@ public final class ConfigSystem {
             JSONParser.exportStream(language, Files.newOutputStream(languageFile.toPath()));
             JSONParser.exportStream(client, Files.newOutputStream(clientFile.toPath()));
         } catch (Exception e) {
-            InterfaceLoader.LOGGER.error("ConfigSystem failed to save modified config files.  Report to the mod author!");
+            InterfaceManager.LOGGER.error("ConfigSystem failed to save modified config files.  Report to the mod author!");
         }
     }
 }

@@ -1,12 +1,11 @@
 package minecrafttransportsimulator.blocks.components;
 
-import mcinterface1122.BuilderBlock;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 
 /**
- * Base Block class.  This type is used in the constructor of {@link BuilderBlock} to allow us to use
+ * Base Block class.  This type is used in the constructor of the interface block to allow us to use
  * completely custom code that is not associated with MC's standard block code that changes EVERY FREAKING VERSION.
  * Seriously guys, you make a game about blocks.  How many times you gonna re-invent them?
  * Anyways... This code contains methods for the block's hardness, blast resistance, and rotation.
