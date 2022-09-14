@@ -7,6 +7,7 @@ import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.mcinterface.IInterfaceCore;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -34,6 +35,11 @@ class InterfaceCore implements IInterfaceCore {
     @Override
     public String getModName(String modID) {
         return Loader.instance().getIndexedModList().get(modID).getName();
+    }
+    
+    @Override
+    public void logError(String message) {
+    	InterfaceManager.coreInterface.logError(message);
     }
 
     @Override

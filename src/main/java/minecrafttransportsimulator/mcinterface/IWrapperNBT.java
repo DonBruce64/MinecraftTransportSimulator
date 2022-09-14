@@ -1,11 +1,11 @@
 package minecrafttransportsimulator.mcinterface;
 
-import minecrafttransportsimulator.baseclasses.Point3D;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+
+import minecrafttransportsimulator.baseclasses.Point3D;
 
 /**
  * IWrapper for interfacing with NBT data.  This pares down a few of the method to ones

@@ -1,5 +1,8 @@
 package minecrafttransportsimulator.packets.instances;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
@@ -7,9 +10,6 @@ import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.components.APacketEntity;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Packet sent to inventory containers to update the inventory in them.

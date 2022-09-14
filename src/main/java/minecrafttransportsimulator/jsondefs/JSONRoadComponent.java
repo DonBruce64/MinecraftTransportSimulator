@@ -1,12 +1,12 @@
 package minecrafttransportsimulator.jsondefs;
 
+import java.util.List;
+
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad.RoadComponent;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
-
-import java.util.List;
 
 public class JSONRoadComponent extends AJSONMultiModelProvider {
 

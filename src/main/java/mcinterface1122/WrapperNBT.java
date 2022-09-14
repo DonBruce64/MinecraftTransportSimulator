@@ -1,5 +1,11 @@
 package mcinterface1122;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
@@ -8,8 +14,6 @@ import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.NonNullList;
-
-import java.util.*;
 
 class WrapperNBT implements IWrapperNBT {
     protected final NBTTagCompound tag;

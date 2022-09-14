@@ -1,9 +1,16 @@
 package mcinterface1122;
 
+import java.io.IOException;
+
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.mcinterface.*;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IInterfacePacket;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.components.APacketBase;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.network.PacketBuffer;
@@ -14,8 +21,6 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import net.minecraftforge.fml.relauncher.Side;
-
-import java.io.IOException;
 
 class InterfacePacket implements IInterfacePacket {
     private static final SimpleNetworkWrapper network = NetworkRegistry.INSTANCE.newSimpleChannel(InterfaceLoader.MODID);

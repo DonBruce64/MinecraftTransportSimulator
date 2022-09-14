@@ -214,7 +214,7 @@ public class WrapperWorld extends AWrapperWorld {
     @Override
     public List<IWrapperEntity> getEntitiesWithin(BoundingBox box) {
         List<IWrapperEntity> entities = new ArrayList<>();
-        for (Entity entity : world.getEntitiesWithinAABB(Entity.class, box.convert())) {
+        for (Entity entity : world.getEntitiesWithinAABB(Entity.class, WrapperWorld.convert(box))) {
             if (!(entity instanceof ABuilderEntityBase)) {
                 entities.add(WrapperEntity.getWrapperFor(entity));
             }
@@ -278,7 +278,7 @@ public class WrapperWorld extends AWrapperWorld {
 
     @Override
     public List<IWrapperEntity> attackEntities(Damage damage, Point3D motion, boolean generateList) {
-        AxisAlignedBB mcBox = damage.box.convert();
+        AxisAlignedBB mcBox = WrapperWorld.convert(damage.box);
         List<Entity> collidedEntities;
 
         //Get collided entities.
@@ -345,7 +345,7 @@ public class WrapperWorld extends AWrapperWorld {
 
     @Override
     public void loadEntities(BoundingBox box, EntityVehicleF_Physics vehicleToLoad, APart clickedPart) {
-        for (Entity entity : world.getEntitiesWithinAABB(Entity.class, box.convert())) {
+        for (Entity entity : world.getEntitiesWithinAABB(Entity.class, WrapperWorld.convert(box))) {
             if (!entity.isRiding() && (entity instanceof INpc || entity instanceof EntityCreature) && !(entity instanceof IMob)) {
                 if (clickedPart instanceof PartSeat) {
                     if (clickedPart.rider == null) {
@@ -465,7 +465,7 @@ public class WrapperWorld extends AWrapperWorld {
 
     @Override
     public void updateBoundingBoxCollisions(BoundingBox box, Point3D collisionMotion, boolean ignoreIfGreater) {
-        AxisAlignedBB mcBox = box.convert();
+        AxisAlignedBB mcBox = WrapperWorld.convert(box);
         box.collidingBlockPositions.clear();
         mutableCollidingAABBs.clear();
         for (int i = (int) Math.floor(mcBox.minX); i < Math.ceil(mcBox.maxX); ++i) {
@@ -540,7 +540,7 @@ public class WrapperWorld extends AWrapperWorld {
             knownAirBlocks.clear();
         }
         mutableCollidingAABBs.clear();
-        AxisAlignedBB mcBox = box.convertWithOffset(offset.x, offset.y, offset.z);
+        AxisAlignedBB mcBox = WrapperWorld.convertWithOffset(box, offset.x, offset.y, offset.z);
         for (int i = (int) Math.floor(mcBox.minX); i < Math.ceil(mcBox.maxX); ++i) {
             for (int j = (int) Math.floor(mcBox.minY); j < Math.ceil(mcBox.maxY); ++j) {
                 for (int k = (int) Math.floor(mcBox.minZ); k < Math.ceil(mcBox.maxZ); ++k) {
@@ -853,6 +853,22 @@ public class WrapperWorld extends AWrapperWorld {
     @Override
     public void spawnExplosion(Point3D location, double strength, boolean flames) {
         world.newExplosion(null, location.x, location.y, location.z, (float) strength, flames, ConfigSystem.settings.general.blockBreakage.value);
+    }
+
+    /**
+     * Helper method to convert a BoundingBox to an AxisAlignedBB.
+     */
+    public static AxisAlignedBB convert(BoundingBox box) {
+        return new AxisAlignedBB(box.globalCenter.x - box.widthRadius, box.globalCenter.y - box.heightRadius, box.globalCenter.z - box.depthRadius, box.globalCenter.x + box.widthRadius, box.globalCenter.y + box.heightRadius, box.globalCenter.z + box.depthRadius);
+    }
+
+    /**
+     * Helper method to convert the BoundingBox to an AxisAlignedBB.
+     * This method allows for an offset to the conversion, to prevent
+     * creating two AABBs (the conversion and the offset box).
+     */
+    public static AxisAlignedBB convertWithOffset(BoundingBox box, double x, double y, double z) {
+        return new AxisAlignedBB(x + box.globalCenter.x - box.widthRadius, y + box.globalCenter.y - box.heightRadius, z + box.globalCenter.z - box.depthRadius, x + box.globalCenter.x + box.widthRadius, y + box.globalCenter.y + box.heightRadius, z + box.globalCenter.z + box.depthRadius);
     }
 
     /**

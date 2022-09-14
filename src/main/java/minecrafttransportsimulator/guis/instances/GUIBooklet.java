@@ -1,5 +1,8 @@
 package minecrafttransportsimulator.guis.instances;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
@@ -9,9 +12,6 @@ import minecrafttransportsimulator.jsondefs.JSONItem.JSONBooklet.BookletPage;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class GUIBooklet extends AGUIBase {
     //Buttons and text.
@@ -109,8 +109,8 @@ public class GUIBooklet extends AGUIBase {
                             pageNumber = i + 1;
                         }
                     }
-                    InterfaceManager.LOGGER.error("An error was encountered when creating booklet page #" + pageNumber);
-                    InterfaceManager.LOGGER.error(e.getMessage());
+                    InterfaceManager.coreInterface.logError("An error was encountered when creating booklet page #" + pageNumber);
+                    InterfaceManager.coreInterface.logError(e.getMessage());
                 }
             }
             pageTextLabels.add(pageLabels);

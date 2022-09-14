@@ -1,8 +1,8 @@
 package minecrafttransportsimulator.sound;
 
-import minecrafttransportsimulator.entities.instances.EntityRadio;
-
 import java.nio.ByteBuffer;
+
+import minecrafttransportsimulator.entities.instances.EntityRadio;
 
 /**
  * Decoder interface.  All decoders that play streaming music via {@link EntityRadio}s

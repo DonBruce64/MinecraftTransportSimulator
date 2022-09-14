@@ -1,14 +1,14 @@
 package minecrafttransportsimulator.guis.components;
 
-import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.RotationMatrix;
-import minecrafttransportsimulator.rendering.AModelParser;
-import minecrafttransportsimulator.rendering.RenderableObject;
-
 import java.nio.FloatBuffer;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import minecrafttransportsimulator.baseclasses.ColorRGB;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
+import minecrafttransportsimulator.rendering.AModelParser;
+import minecrafttransportsimulator.rendering.RenderableObject;
 
 /**
  * Custom #D model render class.  This allows for rendering a parsed model into a GUI.

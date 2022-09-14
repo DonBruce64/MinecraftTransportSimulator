@@ -1,5 +1,8 @@
 package minecrafttransportsimulator.blocks.tileentities.components;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import minecrafttransportsimulator.baseclasses.BezierCurve;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
@@ -14,9 +17,6 @@ import minecrafttransportsimulator.jsondefs.JSONRoadComponent.JSONLaneSectorPoin
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityRoadConnectionUpdate;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Helper class for containing lane data.  Lanes contain a reference to the road
@@ -203,7 +203,7 @@ public class RoadLane {
                         InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityRoadConnectionUpdate(otherLane, curvePriorConnection.curveNumber, false, null));
                     }
                 } catch (Exception e) {
-                    InterfaceManager.LOGGER.error("Couldn't get TE at position " + curvePriorConnection.tileLocation + " to break prior road connection.  Was it changed?");
+                    InterfaceManager.coreInterface.logError("Couldn't get TE at position " + curvePriorConnection.tileLocation + " to break prior road connection.  Was it changed?");
                 }
             }
         }
@@ -226,7 +226,7 @@ public class RoadLane {
                         InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityRoadConnectionUpdate(otherLane, curveNextConnection.curveNumber, false, null));
                     }
                 } catch (Exception e) {
-                    InterfaceManager.LOGGER.error("Couldn't get TE at position " + curveNextConnection.tileLocation + " to break next road connection.  Was it changed?");
+                    InterfaceManager.coreInterface.logError("Couldn't get TE at position " + curveNextConnection.tileLocation + " to break next road connection.  Was it changed?");
                 }
             }
         }

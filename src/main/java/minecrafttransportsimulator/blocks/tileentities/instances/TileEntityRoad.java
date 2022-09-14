@@ -1,6 +1,18 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
-import minecrafttransportsimulator.baseclasses.*;
+import java.nio.FloatBuffer;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import minecrafttransportsimulator.baseclasses.BezierCurve;
+import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.ColorRGB;
+import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
+import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.blocks.instances.BlockCollision;
@@ -13,7 +25,11 @@ import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent.JSONLaneSector;
 import minecrafttransportsimulator.jsondefs.JSONRoadComponent.JSONRoadCollisionArea;
-import minecrafttransportsimulator.mcinterface.*;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityRoadCollisionUpdate;
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
@@ -21,13 +37,6 @@ import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.rendering.AModelParser;
 import minecrafttransportsimulator.rendering.RenderableObject;
 import minecrafttransportsimulator.systems.ConfigSystem;
-
-import java.nio.FloatBuffer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 
 /**
  * Road tile entity.  Contains the definition so we know how

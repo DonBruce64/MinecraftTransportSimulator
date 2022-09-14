@@ -1,11 +1,11 @@
 package minecrafttransportsimulator.mcinterface;
 
+import java.util.List;
+import java.util.Map;
+
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.guis.components.AGUIBase;
-
-import java.util.List;
-import java.util.Map;
 
 /**
  * Interface to the MC client instance.  This class has methods used for determining

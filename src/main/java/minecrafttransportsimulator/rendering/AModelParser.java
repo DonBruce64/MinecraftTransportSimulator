@@ -1,11 +1,11 @@
 package minecrafttransportsimulator.rendering;
 
-import minecrafttransportsimulator.entities.components.AEntityD_Definable;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 
 /**
  * Abstract class for parsing models.  This contains methods for determining what models

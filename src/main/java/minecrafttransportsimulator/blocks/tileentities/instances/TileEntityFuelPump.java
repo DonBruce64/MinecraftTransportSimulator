@@ -1,24 +1,33 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityFluidTankProvider;
-import minecrafttransportsimulator.entities.instances.*;
+import minecrafttransportsimulator.entities.instances.APart;
+import minecrafttransportsimulator.entities.instances.EntityFluidTank;
+import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
+import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
+import minecrafttransportsimulator.entities.instances.PartEngine;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemPartInteractable;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONText;
-import minecrafttransportsimulator.mcinterface.*;
+import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
+import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
+import minecrafttransportsimulator.mcinterface.IWrapperNBT;
+import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpConnection;
 import minecrafttransportsimulator.systems.ConfigSystem;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
 
 public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityFluidTankProvider {
     public EntityVehicleF_Physics connectedVehicle;

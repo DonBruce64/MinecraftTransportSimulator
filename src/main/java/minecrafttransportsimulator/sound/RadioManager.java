@@ -1,9 +1,18 @@
 package minecrafttransportsimulator.sound;
 
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import java.io.*;
-import java.util.*;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 
 /**
  * Class that manages all radios and stations.  Responsible for creating new stations and storing them,
@@ -108,8 +117,8 @@ public class RadioManager {
                 return "";
             }
         } catch (IOException e) {
-            InterfaceManager.LOGGER.error("Unable to parse radio_stations.txt file.  Is it in use?");
-            InterfaceManager.LOGGER.error(e.getMessage());
+            InterfaceManager.coreInterface.logError("Unable to parse radio_stations.txt file.  Is it in use?");
+            InterfaceManager.coreInterface.logError(e.getMessage());
             return "";
         }
     }
@@ -139,8 +148,8 @@ public class RadioManager {
             }
             radioStationFileWriter.close();
         } catch (IOException e) {
-            InterfaceManager.LOGGER.error("Unable to save radio_stations.txt file.  Is it in use?");
-            InterfaceManager.LOGGER.error(e.getMessage());
+            InterfaceManager.coreInterface.logError("Unable to save radio_stations.txt file.  Is it in use?");
+            InterfaceManager.coreInterface.logError(e.getMessage());
         }
     }
 

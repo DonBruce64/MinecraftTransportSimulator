@@ -1,12 +1,12 @@
 package minecrafttransportsimulator.baseclasses;
 
-import minecrafttransportsimulator.entities.instances.APart;
-import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
-import minecrafttransportsimulator.entities.instances.PartGroundDevice;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+
+import minecrafttransportsimulator.entities.instances.APart;
+import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
+import minecrafttransportsimulator.entities.instances.PartGroundDevice;
 
 /**
  * This class is a IWrapper for vehicle ground device collision points.  It's used to get a point

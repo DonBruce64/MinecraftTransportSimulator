@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.packets.instances;
 
+import java.util.UUID;
+
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
 import minecrafttransportsimulator.guis.instances.GUIInventoryContainer;
@@ -8,8 +10,6 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.components.APacketPlayer;
-
-import java.util.UUID;
 
 /**
  * Packet used to sync hand-held interactable crate inventory.  This is first sent by the server to the client

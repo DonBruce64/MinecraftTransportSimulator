@@ -1,19 +1,20 @@
 package minecrafttransportsimulator.rendering;
 
-import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.baseclasses.RotationMatrix;
-import minecrafttransportsimulator.baseclasses.TransformationMatrix;
-import minecrafttransportsimulator.entities.components.AEntityD_Definable;
-import minecrafttransportsimulator.jsondefs.JSONText;
-
-import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.nio.FloatBuffer;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+
+import javax.imageio.ImageIO;
+
+import minecrafttransportsimulator.baseclasses.ColorRGB;
+import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
+import minecrafttransportsimulator.baseclasses.TransformationMatrix;
+import minecrafttransportsimulator.entities.components.AEntityD_Definable;
+import minecrafttransportsimulator.jsondefs.JSONText;
 
 /**
  * Main render class for text.  This class contains a few methods for rendering text.  These mainly pertain to rendering

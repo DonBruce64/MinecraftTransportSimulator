@@ -1,5 +1,20 @@
 package mcinterface1122;
 
+import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.lwjgl.BufferUtils;
+import org.lwjgl.openal.AL;
+import org.lwjgl.openal.AL10;
+
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.entities.instances.EntityRadio;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
@@ -17,14 +32,6 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.relauncher.Side;
-import org.lwjgl.BufferUtils;
-import org.lwjgl.openal.AL;
-import org.lwjgl.openal.AL10;
-
-import java.io.InputStream;
-import java.nio.ByteBuffer;
-import java.nio.IntBuffer;
-import java.util.*;
 
 /**
  * Interface for the sound system.  This is responsible for playing sound from vehicles/interactions.
@@ -194,7 +201,7 @@ public class InterfaceSound implements IInterfaceSound {
 
         //If the sound system was reset, blow out all saved data points.
         if (soundSystemReset) {
-            InterfaceManager.LOGGER.error("Had an invalid sound name.  Was the sound system reset?  Clearing all sounds, playing or not!");
+            InterfaceManager.coreInterface.logError("Had an invalid sound name.  Was the sound system reset?  Clearing all sounds, playing or not!");
             dataSourceBuffers.clear();
             for (SoundInstance sound : playingSounds) {
                 sound.entity.sounds.remove(sound);

@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.items.instances;
 
+import java.util.List;
+
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.PartPropeller;
 import minecrafttransportsimulator.items.components.AItemPart;
@@ -8,8 +10,6 @@ import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-
-import java.util.List;
 
 public class ItemPartPropeller extends AItemPart {
 

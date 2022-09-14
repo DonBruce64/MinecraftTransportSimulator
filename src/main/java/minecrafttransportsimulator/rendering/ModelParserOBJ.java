@@ -1,14 +1,14 @@
 package minecrafttransportsimulator.rendering;
 
-import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.List;
+
+import minecrafttransportsimulator.baseclasses.ColorRGB;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
 
 /**
  * Class responsible for parsing OBJ models into arrays that can be fed to the GPU.
@@ -50,7 +50,7 @@ public final class ModelParserOBJ extends AModelParser {
                     //Found new object name.  If we are parsing an object, finish up parsing and compile the points for it.
                     if (objectName != null) {
                         if (faceList.isEmpty()) {
-                            InterfaceManager.LOGGER.error("Object " + objectName + " found with no faces defined at line: " + lineNumber + " in: " + modelLocation);
+                            InterfaceManager.coreInterface.logError("Object " + objectName + " found with no faces defined at line: " + lineNumber + " in: " + modelLocation);
                         } else {
                             compileVertexArray(objectList, vertexList, normalList, textureList, faceList, modelLocation, objectName);
                             objectName = null;
@@ -59,7 +59,7 @@ public final class ModelParserOBJ extends AModelParser {
                     try {
                         objectName = line.trim().substring(2, line.length());
                     } catch (Exception e) {
-                        InterfaceManager.LOGGER.error("Object found with no name at line: " + lineNumber + " of: " + modelLocation + ".  Make sure your model exporter isn't making things into groups rather than objects.");
+                        InterfaceManager.coreInterface.logError("Object found with no name at line: " + lineNumber + " of: " + modelLocation + ".  Make sure your model exporter isn't making things into groups rather than objects.");
                     }
                 } else if (line.startsWith("v ")) {
                     try {
@@ -70,7 +70,7 @@ public final class ModelParserOBJ extends AModelParser {
                         coords[2] = Float.parseFloat(line.substring(line.lastIndexOf(' ') + 1));
                         vertexList.add(coords);
                     } catch (Exception e) {
-                        InterfaceManager.LOGGER.error("Could not parse vertex info at line: " + lineNumber + " of: " + modelLocation + " due to bad formatting.  Vertex lines must consist of only three numbers (X, Y, Z).");
+                        InterfaceManager.coreInterface.logError("Could not parse vertex info at line: " + lineNumber + " of: " + modelLocation + " due to bad formatting.  Vertex lines must consist of only three numbers (X, Y, Z).");
                     }
                 } else if (line.startsWith("vt ")) {
                     try {
@@ -83,7 +83,7 @@ public final class ModelParserOBJ extends AModelParser {
                         coords[1] = 1 - Float.parseFloat(line.substring(space + 1, vertexEnd));
                         textureList.add(coords);
                     } catch (Exception e) {
-                        InterfaceManager.LOGGER.error("Could not parse vertex texture info at line: " + lineNumber + " of: " + modelLocation + " due to bad formatting.  Vertex texture lines must consist of only two numbers (U, V).");
+                        InterfaceManager.coreInterface.logError("Could not parse vertex texture info at line: " + lineNumber + " of: " + modelLocation + " due to bad formatting.  Vertex texture lines must consist of only two numbers (U, V).");
                     }
                 } else if (line.startsWith("vn ")) {
                     try {
@@ -94,13 +94,13 @@ public final class ModelParserOBJ extends AModelParser {
                         coords[2] = Float.parseFloat(line.substring(line.lastIndexOf(' ') + 1));
                         normalList.add(coords);
                     } catch (Exception e) {
-                        InterfaceManager.LOGGER.error("Could not parse normals info at line: " + lineNumber + " of: " + modelLocation + " due to bad formatting.  Normals lines must consist of only three numbers (Xn, Yn, Zn).");
+                        InterfaceManager.coreInterface.logError("Could not parse normals info at line: " + lineNumber + " of: " + modelLocation + " due to bad formatting.  Normals lines must consist of only three numbers (Xn, Yn, Zn).");
                     }
                 } else if (line.startsWith("f ")) {
                     try {
                         faceList.add(line.trim().substring(2));
                     } catch (Exception e) {
-                        InterfaceManager.LOGGER.error("Could not parse face info at line: " + lineNumber + " of: " + modelLocation + " due to bad formatting.  Face lines must consist of sets of three numbers in the format (V1/T1/N1, V2/T2/N2, ...).");
+                        InterfaceManager.coreInterface.logError("Could not parse face info at line: " + lineNumber + " of: " + modelLocation + " due to bad formatting.  Face lines must consist of sets of three numbers in the format (V1/T1/N1, V2/T2/N2, ...).");
                     }
                 }
             }
@@ -117,7 +117,7 @@ public final class ModelParserOBJ extends AModelParser {
 
     private static void compileVertexArray(List<RenderableObject> objectList, List<float[]> vertexList, List<float[]> normalList, List<float[]> textureList, List<String> faceList, String modelLocation, String objectName) {
         if (objectName == null) {
-            InterfaceManager.LOGGER.error("No object name found in the entire OBJ model file of " + modelLocation + ".  Resorting to 'model' as default.  Are you using groups instead of objects by mistake?");
+            InterfaceManager.coreInterface.logError("No object name found in the entire OBJ model file of " + modelLocation + ".  Resorting to 'model' as default.  Are you using groups instead of objects by mistake?");
             objectName = "model";
         }
 
@@ -171,7 +171,7 @@ public final class ModelParserOBJ extends AModelParser {
             compiledBuffer.flip();
             objectList.add(new RenderableObject(objectName, null, ColorRGB.WHITE, compiledBuffer, true));
         } catch (Exception e) {
-            InterfaceManager.LOGGER.error("Could not compile points of: " + modelLocation + ":" + objectName + ".  This is likely due to missing UV mapping on some or all faces.");
+            InterfaceManager.coreInterface.logError("Could not compile points of: " + modelLocation + ":" + objectName + ".  This is likely due to missing UV mapping on some or all faces.");
         }
 
         //Clear face list as we don't want to compile them on the next pass.

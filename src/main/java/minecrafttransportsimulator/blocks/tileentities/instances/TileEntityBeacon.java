@@ -1,5 +1,8 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
+import java.util.LinkedHashMap;
+import java.util.Map.Entry;
+
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.NavBeacon;
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -8,9 +11,6 @@ import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
-
-import java.util.LinkedHashMap;
-import java.util.Map.Entry;
 
 /**
  * Beacon tile entity.  Contains code for handling interfacing with

@@ -1,5 +1,8 @@
 package minecrafttransportsimulator.items.instances;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import minecrafttransportsimulator.baseclasses.BezierCurve;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
@@ -20,9 +23,6 @@ import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.systems.ConfigSystem;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class ItemRoadComponent extends AItemSubTyped<JSONRoadComponent> implements IItemBlock {
     private final Map<IWrapperPlayer, Point3D> lastRoadGenPositionClicked = new HashMap<>();

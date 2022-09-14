@@ -1,16 +1,20 @@
 package minecrafttransportsimulator.sound;
 
-import javazoom.jl.decoder.Equalizer;
-import minecrafttransportsimulator.entities.instances.EntityRadio;
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.sound.RadioManager.RadioSources;
-
 import java.io.File;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+
+import javazoom.jl.decoder.Equalizer;
+import minecrafttransportsimulator.entities.instances.EntityRadio;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.sound.RadioManager.RadioSources;
 
 /**
  * Radio stations are sources that radios can hook into to provide sound.  All radios share the

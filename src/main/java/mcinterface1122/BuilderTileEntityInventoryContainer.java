@@ -1,5 +1,7 @@
 package mcinterface1122;
 
+import javax.annotation.Nullable;
+
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityInventoryProvider;
 import net.minecraft.entity.player.EntityPlayer;
@@ -8,8 +10,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.items.CapabilityItemHandler;
-
-import javax.annotation.Nullable;
 
 /**
  * Builder for tile entities that contain inventories.  This builder ticks.

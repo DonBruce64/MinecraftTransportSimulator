@@ -1,8 +1,8 @@
 package minecrafttransportsimulator.mcinterface;
 
-import minecrafttransportsimulator.systems.ControlSystem;
-
 import java.util.List;
+
+import minecrafttransportsimulator.systems.ControlSystem;
 
 /**
  * Interface for MC input classes.  Used to query various input settings

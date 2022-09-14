@@ -1,13 +1,13 @@
 package minecrafttransportsimulator.packets.instances;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityRoad;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Packet sent to roads when their collision data changes.  This can either be the blocks that make up the

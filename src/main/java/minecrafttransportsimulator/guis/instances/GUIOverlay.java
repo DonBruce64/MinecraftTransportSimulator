@@ -1,5 +1,9 @@
 package minecrafttransportsimulator.guis.instances;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map.Entry;
+
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -21,10 +25,6 @@ import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.CameraSystem;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map.Entry;
 
 /**
  * A GUI that is used to render overlay components.  These components are independent of

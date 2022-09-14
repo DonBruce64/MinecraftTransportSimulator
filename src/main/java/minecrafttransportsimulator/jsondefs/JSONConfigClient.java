@@ -1,9 +1,9 @@
 package minecrafttransportsimulator.jsondefs;
 
-import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
-
 import java.util.HashMap;
 import java.util.Map;
+
+import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 
 /**
  * Config class for client settings.  This is only loaded on the client.  This allows the

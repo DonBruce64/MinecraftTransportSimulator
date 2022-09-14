@@ -1,9 +1,18 @@
 package mcinterface1122;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.annotation.Nullable;
+
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Damage;
 import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.entities.components.*;
+import minecrafttransportsimulator.entities.components.AEntityB_Existing;
+import minecrafttransportsimulator.entities.components.AEntityD_Definable;
+import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
+import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
+import minecrafttransportsimulator.entities.components.AEntityG_Towable;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.IItemEntityProvider;
@@ -25,10 +34,6 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.registry.EntityEntry;
 import net.minecraftforge.fml.common.registry.EntityEntryBuilder;
-
-import javax.annotation.Nullable;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Builder for the main entity classes for MTS.  This builder allows us to create a new entity
@@ -139,8 +144,8 @@ public class BuilderEntityExisting extends ABuilderEntityBase {
                     loadedFromSavedNBT = true;
                     lastLoadedNBT = null;
                 } catch (Exception e) {
-                    InterfaceManager.LOGGER.error("Failed to load entity on builder from saved NBT.  Did a pack change?");
-                    InterfaceManager.LOGGER.error(e.getMessage());
+                    InterfaceManager.coreInterface.logError("Failed to load entity on builder from saved NBT.  Did a pack change?");
+                    InterfaceManager.coreInterface.logError(e.getMessage());
                     setDead();
                 }
             }

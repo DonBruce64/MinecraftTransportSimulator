@@ -1,21 +1,47 @@
 package minecrafttransportsimulator.packloading;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemPart;
 import minecrafttransportsimulator.items.components.AItemPart.AItemPartCreator;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
-import minecrafttransportsimulator.items.instances.*;
-import minecrafttransportsimulator.jsondefs.*;
+import minecrafttransportsimulator.items.instances.ItemBullet;
+import minecrafttransportsimulator.items.instances.ItemDecor;
+import minecrafttransportsimulator.items.instances.ItemInstrument;
+import minecrafttransportsimulator.items.instances.ItemItem;
+import minecrafttransportsimulator.items.instances.ItemPoleComponent;
+import minecrafttransportsimulator.items.instances.ItemRoadComponent;
+import minecrafttransportsimulator.items.instances.ItemVehicle;
+import minecrafttransportsimulator.jsondefs.AJSONItem;
+import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
+import minecrafttransportsimulator.jsondefs.JSONBullet;
+import minecrafttransportsimulator.jsondefs.JSONConfigSettings;
+import minecrafttransportsimulator.jsondefs.JSONDecor;
+import minecrafttransportsimulator.jsondefs.JSONInstrument;
+import minecrafttransportsimulator.jsondefs.JSONItem;
+import minecrafttransportsimulator.jsondefs.JSONPack;
+import minecrafttransportsimulator.jsondefs.JSONPart;
+import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
+import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
+import minecrafttransportsimulator.jsondefs.JSONSkin;
+import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
+import minecrafttransportsimulator.jsondefs.JSONVehicle;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.PackResourceLoader.ItemClassification;
 import minecrafttransportsimulator.packloading.PackResourceLoader.PackStructure;
 import minecrafttransportsimulator.systems.ConfigSystem;
-
-import java.io.File;
-import java.util.*;
-import java.util.Map.Entry;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
 /**
  * Class responsible for parsing content pack data.  Gets properties from the text files that other parts
@@ -269,7 +295,7 @@ public final class PackParser {
             }
             jarFile.close();
         } catch (Exception e) {
-            InterfaceManager.LOGGER.error("A fault was encountered when trying to check file " + packJar.getName() + " for pack data.  This pack will not be loaded.");
+            InterfaceManager.coreInterface.logError("A fault was encountered when trying to check file " + packJar.getName() + " for pack data.  This pack will not be loaded.");
             e.printStackTrace();
         }
     }
@@ -375,7 +401,7 @@ public final class PackParser {
                                 try {
                                     classification = ItemClassification.fromDirectory(assetPath.substring(0, assetPath.indexOf("/") + 1));
                                 } catch (Exception e) {
-                                    InterfaceManager.LOGGER.error("Was given an invalid classifcation sub-folder for asset: " + fileName + ".  Check your folder paths.");
+                                    InterfaceManager.coreInterface.logError("Was given an invalid classifcation sub-folder for asset: " + fileName + ".  Check your folder paths.");
                                     continue;
                                 }
 
@@ -385,8 +411,8 @@ public final class PackParser {
                                 try {
                                     definition = JSONParser.parseStream(jarFile.getInputStream(entry), classification.representingClass, packDef.packID, systemName);
                                 } catch (Exception e) {
-                                    InterfaceManager.LOGGER.error("Could not parse: " + packDef.packID + ":" + fileName);
-                                    InterfaceManager.LOGGER.error(e.getMessage());
+                                    InterfaceManager.coreInterface.logError("Could not parse: " + packDef.packID + ":" + fileName);
+                                    InterfaceManager.coreInterface.logError(e.getMessage());
                                     continue;
                                 }
 
@@ -405,7 +431,7 @@ public final class PackParser {
                     //Done parsing.  Close the jarfile.
                     jarFile.close();
                 } catch (Exception e) {
-                    InterfaceManager.LOGGER.error("Could not start parsing of pack: " + packDef.packID);
+                    InterfaceManager.coreInterface.logError("Could not start parsing of pack: " + packDef.packID);
                     e.printStackTrace();
                 }
             }
@@ -470,7 +496,7 @@ public final class PackParser {
                 packItemMap.get(item.definition.packID).put(item.definition.systemName, item);
             }
         } catch (Exception e) {
-            InterfaceManager.LOGGER.error(e.getMessage());
+            InterfaceManager.coreInterface.logError(e.getMessage());
             e.printStackTrace();
         }
     }
@@ -530,7 +556,7 @@ public final class PackParser {
                         }
                     }
                     if (item == null) {
-                        InterfaceManager.LOGGER.error("Was told to parse part " + partDef.packID + ":" + partDef.systemName + " with part type " + partDef.generic.type + ", but that's not a valid type for creating a part.");
+                        InterfaceManager.coreInterface.logError("Was told to parse part " + partDef.packID + ":" + partDef.systemName + " with part type " + partDef.generic.type + ", but that's not a valid type for creating a part.");
                         return;
                     }
                     break;

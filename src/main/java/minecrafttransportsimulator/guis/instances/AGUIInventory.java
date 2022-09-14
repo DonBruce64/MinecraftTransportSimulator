@@ -1,5 +1,8 @@
 package minecrafttransportsimulator.guis.instances;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentItem;
@@ -7,9 +10,6 @@ import minecrafttransportsimulator.mcinterface.IWrapperInventory;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Abstract GUI class used as the base for GUIs with inventory slots.  By default, it sets up slots

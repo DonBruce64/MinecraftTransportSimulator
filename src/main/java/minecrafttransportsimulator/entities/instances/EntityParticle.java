@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.entities.instances;
 
+import java.nio.FloatBuffer;
+
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -11,8 +13,6 @@ import minecrafttransportsimulator.jsondefs.JSONParticle.ParticleType;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.RenderableObject;
-
-import java.nio.FloatBuffer;
 
 /**
  * Basic particle class.  This mimic's MC's particle logic, except we can manually set

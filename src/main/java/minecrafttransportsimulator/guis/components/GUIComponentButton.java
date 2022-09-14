@@ -1,11 +1,11 @@
 package minecrafttransportsimulator.guis.components;
 
+import java.nio.FloatBuffer;
+
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.rendering.RenderText;
 import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
 import minecrafttransportsimulator.rendering.RenderableObject;
-
-import java.nio.FloatBuffer;
 
 /**
  * Custom button class.  This allows for a custom button texture, as well as a cleaner constructor.

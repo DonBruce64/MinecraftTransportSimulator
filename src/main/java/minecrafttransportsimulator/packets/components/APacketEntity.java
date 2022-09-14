@@ -1,12 +1,12 @@
 package minecrafttransportsimulator.packets.components;
 
+import java.util.UUID;
+
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
-
-import java.util.UUID;
 
 /**
  * Packet class that includes a default implementation for transmitting an entity

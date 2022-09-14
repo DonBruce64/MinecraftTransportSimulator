@@ -1,5 +1,8 @@
 package minecrafttransportsimulator.items.instances;
 
+import java.util.List;
+import java.util.Map.Entry;
+
 import minecrafttransportsimulator.blocks.components.ABlockBase.BlockMaterial;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.PartGroundDevice;
@@ -9,9 +12,6 @@ import minecrafttransportsimulator.jsondefs.JSONPart;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-
-import java.util.List;
-import java.util.Map.Entry;
 
 public class ItemPartGroundDevice extends AItemPart {
 

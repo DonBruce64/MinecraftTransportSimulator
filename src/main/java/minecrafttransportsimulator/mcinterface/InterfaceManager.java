@@ -1,8 +1,5 @@
 package minecrafttransportsimulator.mcinterface;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import minecrafttransportsimulator.items.instances.ItemPartEffector;
 import minecrafttransportsimulator.items.instances.ItemPartEngine;
 import minecrafttransportsimulator.items.instances.ItemPartGeneric;
@@ -28,8 +25,7 @@ public class InterfaceManager {
     public static IInterfaceInput inputInterface;
     public static IInterfaceSound soundInterface;
     public static IInterfaceRender renderingInterface;
-    public static final Logger LOGGER = LogManager.getLogger(coreModID);
-
+    
     public InterfaceManager(String coreModID, String gameDirectory, IInterfaceCore coreInterface, IInterfacePacket packetInterface, IInterfaceClient clientInterface, IInterfaceInput inputInterface, IInterfaceSound soundInterface, IInterfaceRender renderingInterface) {
         InterfaceManager.coreModID = coreModID;
         InterfaceManager.gameDirectory = gameDirectory;

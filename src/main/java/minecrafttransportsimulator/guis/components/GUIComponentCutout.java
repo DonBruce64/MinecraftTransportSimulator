@@ -1,9 +1,9 @@
 package minecrafttransportsimulator.guis.components;
 
+import java.nio.FloatBuffer;
+
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.rendering.RenderableObject;
-
-import java.nio.FloatBuffer;
 
 /**
  * Class that renders a cut-out area of the currently bound texture.  This is cleaner than doing manual

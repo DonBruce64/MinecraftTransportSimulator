@@ -1,13 +1,13 @@
 package minecrafttransportsimulator.guis.components;
 
+import java.nio.FloatBuffer;
+import java.util.List;
+
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.rendering.RenderText;
 import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
 import minecrafttransportsimulator.rendering.RenderableObject;
-
-import java.nio.FloatBuffer;
-import java.util.List;
 
 /**
  * Base class for all components.  Contains basic common variables to all rendering.

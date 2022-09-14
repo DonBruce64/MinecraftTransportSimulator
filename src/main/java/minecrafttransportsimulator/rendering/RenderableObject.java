@@ -1,12 +1,12 @@
 package minecrafttransportsimulator.rendering;
 
+import java.nio.FloatBuffer;
+
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
-
-import java.nio.FloatBuffer;
 
 /**
  * Class designed to represent a renderable object.  Said object has at minimum some
