@@ -1,9 +1,9 @@
 package minecrafttransportsimulator.entities.components;
 
+import java.util.UUID;
+
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
-
-import java.util.UUID;
 
 /**
  * Base entity class.  This class is the base for all in-game entities.  What these

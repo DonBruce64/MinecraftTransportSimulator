@@ -1,19 +1,27 @@
 package minecrafttransportsimulator.guis.instances;
 
-import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
-import minecrafttransportsimulator.guis.components.*;
-import minecrafttransportsimulator.items.components.AItemPack;
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.packloading.JSONParser;
-import minecrafttransportsimulator.packloading.PackParser;
-
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import minecrafttransportsimulator.baseclasses.ColorRGB;
+import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
+import minecrafttransportsimulator.guis.components.AGUIBase;
+import minecrafttransportsimulator.guis.components.GUIComponent3DModel;
+import minecrafttransportsimulator.guis.components.GUIComponentButton;
+import minecrafttransportsimulator.guis.components.GUIComponentLabel;
+import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
+import minecrafttransportsimulator.items.components.AItemPack;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.packloading.JSONParser;
+import minecrafttransportsimulator.packloading.PackParser;
 
 /**
  * This GUI is normally locked, and is only available in devMode.  It allows

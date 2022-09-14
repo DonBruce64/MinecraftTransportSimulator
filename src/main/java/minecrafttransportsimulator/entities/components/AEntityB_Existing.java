@@ -1,5 +1,8 @@
 package minecrafttransportsimulator.entities.components;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
@@ -9,9 +12,6 @@ import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.sound.SoundInstance;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Base class for entities that exist in the world. In addition to the normal functions

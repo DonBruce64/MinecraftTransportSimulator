@@ -48,8 +48,8 @@ public final class ConfigSystem {
             try {
                 settings = JSONParser.parseStream(Files.newInputStream(settingsFile.toPath()), JSONConfigSettings.class, null, null);
             } catch (Exception e) {
-                InterfaceManager.LOGGER.error("ConfigSystem failed to parse settings file JSON.  Reverting to defaults.");
-                InterfaceManager.LOGGER.error(e.getMessage());
+                InterfaceManager.coreInterface.logError("ConfigSystem failed to parse settings file JSON.  Reverting to defaults.");
+                InterfaceManager.coreInterface.logError(e.getMessage());
             }
         }
         if (settings == null) {
@@ -62,8 +62,8 @@ public final class ConfigSystem {
             try {
                 language = JSONParser.parseStream(Files.newInputStream(languageFile.toPath()), JSONConfigLanguage.class, null, null);
             } catch (Exception e) {
-                InterfaceManager.LOGGER.error("ConfigSystem failed to parse language file JSON.  Reverting to defaults.");
-                InterfaceManager.LOGGER.error(e.getMessage());
+                InterfaceManager.coreInterface.logError("ConfigSystem failed to parse language file JSON.  Reverting to defaults.");
+                InterfaceManager.coreInterface.logError(e.getMessage());
             }
         }
         if (language == null) {
@@ -77,8 +77,8 @@ public final class ConfigSystem {
                 try {
                     client = JSONParser.parseStream(Files.newInputStream(clientFile.toPath()), JSONConfigClient.class, null, null);
                 } catch (Exception e) {
-                    InterfaceManager.LOGGER.error("ConfigSystem failed to parse client file JSON.  Reverting to defaults.");
-                    InterfaceManager.LOGGER.error(e.getMessage());
+                    InterfaceManager.coreInterface.logError("ConfigSystem failed to parse client file JSON.  Reverting to defaults.");
+                    InterfaceManager.coreInterface.logError(e.getMessage());
                 }
             }
             if (client == null) {
@@ -123,7 +123,7 @@ public final class ConfigSystem {
                 }
                 JSONParser.exportStream(craftingOverridesObject, Files.newOutputStream(craftingFile.toPath()));
             } catch (Exception e) {
-                InterfaceManager.LOGGER.error("ConfigSystem failed to create fresh crafting overrides file.  Report to the mod author!");
+                InterfaceManager.coreInterface.logError("ConfigSystem failed to create fresh crafting overrides file.  Report to the mod author!");
             }
         } else if (craftingFile.exists()) {
             try {
@@ -145,8 +145,8 @@ public final class ConfigSystem {
                     }
                 }
             } catch (Exception e) {
-                InterfaceManager.LOGGER.error("ConfigSystem failed to parse crafting override file JSON.  Crafting overrides will not be applied.");
-                InterfaceManager.LOGGER.error(e.getMessage());
+                InterfaceManager.coreInterface.logError("ConfigSystem failed to parse crafting override file JSON.  Crafting overrides will not be applied.");
+                InterfaceManager.coreInterface.logError(e.getMessage());
             }
         }
     }
@@ -161,7 +161,7 @@ public final class ConfigSystem {
             JSONParser.exportStream(language, Files.newOutputStream(languageFile.toPath()));
             JSONParser.exportStream(client, Files.newOutputStream(clientFile.toPath()));
         } catch (Exception e) {
-            InterfaceManager.LOGGER.error("ConfigSystem failed to save modified config files.  Report to the mod author!");
+            InterfaceManager.coreInterface.logError("ConfigSystem failed to save modified config files.  Report to the mod author!");
         }
     }
 }

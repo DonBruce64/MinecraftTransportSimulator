@@ -133,7 +133,7 @@ public class InterfaceEventsModelLoader {
 
         //Check to make sure we have the pack list before continuing.
         if (defaultPacks == null) {
-            InterfaceManager.LOGGER.error("Could not get default pack list. Item icons will be disabled.");
+            InterfaceManager.coreInterface.logError("Could not get default pack list. Item icons will be disabled.");
             return;
         }
 
@@ -191,7 +191,7 @@ public class InterfaceEventsModelLoader {
                     stream = getClass().getResourceAsStream("/assets/" + domain + "/" + rawPackInfo);
                     if (stream == null) {
                         if (ConfigSystem.settings.general.devMode.value) {
-                            InterfaceManager.LOGGER.error("Could not find JSON-specified file: " + rawPackInfo);
+                            InterfaceManager.coreInterface.logError("Could not find JSON-specified file: " + rawPackInfo);
                         }
                         throw new FileNotFoundException(rawPackInfo);
                     }
@@ -232,7 +232,7 @@ public class InterfaceEventsModelLoader {
                         }
                     } catch (Exception e) {
                         if (ConfigSystem.settings.general.devMode.value) {
-                            InterfaceManager.LOGGER.error("Could not parse out item JSON from: " + rawPackInfo + "  Looked for JSON at:" + resourcePath + (itemTexturePath.isEmpty() ? (", with fallback at:" + itemTexturePath) : ", but could not find it."));
+                            InterfaceManager.coreInterface.logError("Could not parse out item JSON from: " + rawPackInfo + "  Looked for JSON at:" + resourcePath + (itemTexturePath.isEmpty() ? (", with fallback at:" + itemTexturePath) : ", but could not find it."));
                         }
                         throw new FileNotFoundException(rawPackInfo);
                     }
@@ -270,16 +270,16 @@ public class InterfaceEventsModelLoader {
                                 if (stream == null) {
                                     if (ConfigSystem.settings.general.devMode.value) {
                                         if (streamLocation != null) {
-                                            InterfaceManager.LOGGER.error("Could not find item PNG at specified location: " + streamLocation + "  Or potential JSON location: " + streamJSONLocation);
+                                            InterfaceManager.coreInterface.logError("Could not find item PNG at specified location: " + streamLocation + "  Or potential JSON location: " + streamJSONLocation);
                                         } else {
-                                            InterfaceManager.LOGGER.error("Could not find JSON PNG: " + streamJSONLocation);
+                                            InterfaceManager.coreInterface.logError("Could not find JSON PNG: " + streamJSONLocation);
                                         }
                                     }
                                     throw new FileNotFoundException(rawPackInfo);
                                 }
                             } else {
                                 if (ConfigSystem.settings.general.devMode.value) {
-                                    InterfaceManager.LOGGER.error("Could not find OBJ PNG: " + streamLocation);
+                                    InterfaceManager.coreInterface.logError("Could not find OBJ PNG: " + streamLocation);
                                 }
                                 throw new FileNotFoundException(rawPackInfo);
                             }
@@ -291,7 +291,7 @@ public class InterfaceEventsModelLoader {
                         stream = getClass().getResourceAsStream(streamLocation);
                         if (stream == null) {
                             if (ConfigSystem.settings.general.devMode.value) {
-                                InterfaceManager.LOGGER.error("Couldn't find...whatever this is: " + streamLocation);
+                                InterfaceManager.coreInterface.logError("Couldn't find...whatever this is: " + streamLocation);
                             }
                             throw new FileNotFoundException(rawPackInfo);
                         }
@@ -301,7 +301,7 @@ public class InterfaceEventsModelLoader {
                         throw e;
                     } else {
                         if (ConfigSystem.settings.general.devMode.value) {
-                            InterfaceManager.LOGGER.error("Could not parse which item PNG to get from: " + rawPackInfo);
+                            InterfaceManager.coreInterface.logError("Could not parse which item PNG to get from: " + rawPackInfo);
                         }
                         throw new FileNotFoundException(rawPackInfo);
                     }

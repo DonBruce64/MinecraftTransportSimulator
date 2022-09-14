@@ -1,10 +1,10 @@
 package minecrafttransportsimulator.packets.components;
 
+import java.util.UUID;
+
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-
-import java.util.UUID;
 
 /**
  * Packet class that includes a default implementation for transmitting a player

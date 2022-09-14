@@ -1,13 +1,13 @@
 package minecrafttransportsimulator.entities.instances;
 
+import java.util.Map;
+
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketFluidTankChange;
 import minecrafttransportsimulator.systems.ConfigSystem;
-
-import java.util.Map;
 
 /**
  * Basic fluid tanks class.  Class contains methods for filling and draining, as well as automatic

@@ -1,9 +1,9 @@
 package minecrafttransportsimulator.jsondefs;
 
+import java.util.List;
+
 import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
-
-import java.util.List;
 
 @JSONDescription("Bullets are special JSONs, as they're not a part, but they work with parts.  They're not an actual item like food, but they normally are only in item form.  Rather, they are an item that turns itself into a model with logic when fired from a gun.")
 public class JSONBullet extends AJSONMultiModelProvider {

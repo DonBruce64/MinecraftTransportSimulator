@@ -1,5 +1,10 @@
 package minecrafttransportsimulator.guis.instances;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
@@ -17,11 +22,6 @@ import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketTileEntitySignalControllerChange;
 import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 public class GUISignalController extends AGUIBase {
 

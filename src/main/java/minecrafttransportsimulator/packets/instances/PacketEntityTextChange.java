@@ -1,11 +1,11 @@
 package minecrafttransportsimulator.packets.instances;
 
+import java.util.LinkedHashMap;
+
 import io.netty.buffer.ByteBuf;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
-
-import java.util.LinkedHashMap;
 
 /**
  * Packet sent to entities to update their text lines.  This is sent from the

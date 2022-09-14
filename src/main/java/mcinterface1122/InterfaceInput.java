@@ -1,5 +1,17 @@
 package mcinterface1122;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import org.lwjgl.input.Controllers;
+import org.lwjgl.input.Keyboard;
+import org.lwjgl.input.Mouse;
+
 import minecrafttransportsimulator.guis.instances.GUIConfig;
 import minecrafttransportsimulator.jsondefs.JSONConfigClient.ConfigJoystick;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
@@ -17,12 +29,6 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.relauncher.Side;
-import org.lwjgl.input.Controllers;
-import org.lwjgl.input.Keyboard;
-import org.lwjgl.input.Mouse;
-
-import java.util.*;
-import java.util.Map.Entry;
 
 @EventBusSubscriber(Side.CLIENT)
 public class InterfaceInput implements IInterfaceInput {
@@ -67,19 +73,19 @@ public class InterfaceInput implements IInterfaceInput {
                 try {
                     joystickNameCounters.clear();
                     if (ConfigSystem.settings.general.devMode.value)
-                        InterfaceManager.LOGGER.error("Starting controller init.");
+                        InterfaceManager.coreInterface.logError("Starting controller init.");
                     if (runningClassicMode) {
                         if (ConfigSystem.settings.general.devMode.value)
-                            InterfaceManager.LOGGER.error("Running classic mode.");
+                            InterfaceManager.coreInterface.logError("Running classic mode.");
                         classicJoystickMap.clear();
                         if (ConfigSystem.settings.general.devMode.value)
-                            InterfaceManager.LOGGER.error("Found this many controllers: " + ControllerEnvironment.getDefaultEnvironment().getControllers().length);
+                            InterfaceManager.coreInterface.logError("Found this many controllers: " + ControllerEnvironment.getDefaultEnvironment().getControllers().length);
                         for (Controller joystick : ControllerEnvironment.getDefaultEnvironment().getControllers()) {
                             joystickEnabled = true;
                             if (joystick.getType() != null && !joystick.getType().equals(Controller.Type.MOUSE) && !joystick.getType().equals(Controller.Type.KEYBOARD) && joystick.getName() != null && joystick.getComponents().length != 0) {
                                 String joystickName = joystick.getName();
                                 if (ConfigSystem.settings.general.devMode.value)
-                                    InterfaceManager.LOGGER.error("Found valid controller: " + joystickName);
+                                    InterfaceManager.coreInterface.logError("Found valid controller: " + joystickName);
 
                                 //Add an index on this joystick to be sure we don't override multi-component units.
                                 if (!joystickNameCounters.containsKey(joystickName)) {
@@ -91,23 +97,23 @@ public class InterfaceInput implements IInterfaceInput {
                         }
                     } else {
                         if (ConfigSystem.settings.general.devMode.value)
-                            InterfaceManager.LOGGER.error("Running modern mode.");
+                            InterfaceManager.coreInterface.logError("Running modern mode.");
                         if (!Controllers.isCreated()) {
                             if (ConfigSystem.settings.general.devMode.value)
-                                InterfaceManager.LOGGER.error("Creating controller object.");
+                                InterfaceManager.coreInterface.logError("Creating controller object.");
                             Controllers.create();
                         }
                         joystickMap.clear();
                         joystickAxisCountMap.clear();
                         if (ConfigSystem.settings.general.devMode.value)
-                            InterfaceManager.LOGGER.error("Found this many controllers: " + Controllers.getControllerCount());
+                            InterfaceManager.coreInterface.logError("Found this many controllers: " + Controllers.getControllerCount());
                         for (int i = 0; i < Controllers.getControllerCount(); ++i) {
                             joystickEnabled = true;
                             org.lwjgl.input.Controller joystick = Controllers.getController(i);
                             if (joystick.getAxisCount() > 0 && joystick.getButtonCount() > 0 && joystick.getName() != null) {
                                 String joystickName = joystick.getName();
                                 if (ConfigSystem.settings.general.devMode.value)
-                                    InterfaceManager.LOGGER.error("Found valid controller: " + joystickName);
+                                    InterfaceManager.coreInterface.logError("Found valid controller: " + joystickName);
 
                                 //Add an index on this joystick to be sure we don't override multi-component units.
                                 if (!joystickNameCounters.containsKey(joystickName)) {
@@ -123,7 +129,7 @@ public class InterfaceInput implements IInterfaceInput {
                     //Validate joysticks are valid for this setup by making sure indexes aren't out of bounds.
                     Iterator<Entry<String, ConfigJoystick>> iterator = ConfigSystem.client.controls.joystick.entrySet().iterator();
                     if (ConfigSystem.settings.general.devMode.value)
-                        InterfaceManager.LOGGER.error("Performing button validity checks.");
+                        InterfaceManager.coreInterface.logError("Performing button validity checks.");
                     while (iterator.hasNext()) {
                         try {
                             Entry<String, ConfigJoystick> controllerEntry = iterator.next();
@@ -157,9 +163,9 @@ public class InterfaceInput implements IInterfaceInput {
                     joystickBlocked = false;
                 } catch (Exception e) {
                     e.printStackTrace();
-                    InterfaceManager.LOGGER.error(e.getMessage());
+                    InterfaceManager.coreInterface.logError(e.getMessage());
                     for (StackTraceElement s : e.getStackTrace()) {
-                        InterfaceManager.LOGGER.error(s.toString());
+                        InterfaceManager.coreInterface.logError(s.toString());
                     }
                 }
                 runningJoystickThread = false;

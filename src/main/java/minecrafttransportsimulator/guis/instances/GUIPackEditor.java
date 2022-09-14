@@ -1,18 +1,19 @@
 package minecrafttransportsimulator.guis.instances;
 
-import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.jsondefs.*;
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.packloading.JSONParser;
-import minecrafttransportsimulator.packloading.JSONParser.JSONDefaults;
-import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
-import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
-import minecrafttransportsimulator.packloading.PackParser;
-
-import javax.swing.*;
-import javax.swing.border.TitledBorder;
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
@@ -21,6 +22,41 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
+import javax.swing.DefaultListCellRenderer;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JComponent;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextField;
+import javax.swing.ToolTipManager;
+import javax.swing.border.TitledBorder;
+
+import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.jsondefs.AJSONItem;
+import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
+import minecrafttransportsimulator.jsondefs.JSONDecor;
+import minecrafttransportsimulator.jsondefs.JSONInstrument;
+import minecrafttransportsimulator.jsondefs.JSONPack;
+import minecrafttransportsimulator.jsondefs.JSONPart;
+import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
+import minecrafttransportsimulator.jsondefs.JSONSkin;
+import minecrafttransportsimulator.jsondefs.JSONVehicle;
+import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.packloading.JSONParser;
+import minecrafttransportsimulator.packloading.JSONParser.JSONDefaults;
+import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
+import minecrafttransportsimulator.packloading.JSONParser.JSONRequired;
+import minecrafttransportsimulator.packloading.PackParser;
 
 /**
  * This is a special GUI that doesn't use the normal GUI code.  Instead, it uses the Swing

@@ -1,15 +1,14 @@
 package minecrafttransportsimulator.baseclasses;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
 import minecrafttransportsimulator.entities.components.AEntityD_Definable;
 import minecrafttransportsimulator.jsondefs.JSONCollisionBox;
 import minecrafttransportsimulator.jsondefs.JSONCollisionGroup;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.rendering.RenderableObject;
-import net.minecraft.util.math.AxisAlignedBB;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Basic bounding box.  This class is mutable and allows for quick setting of values
@@ -296,22 +295,6 @@ public class BoundingBox {
             intersection = secondIntersection;
         }
         return intersection;
-    }
-
-    /**
-     * Helper method to convert the BoundingBox to an AxisAlignedBB.
-     */
-    public AxisAlignedBB convert() {
-        return new AxisAlignedBB(globalCenter.x - widthRadius, globalCenter.y - heightRadius, globalCenter.z - depthRadius, globalCenter.x + widthRadius, globalCenter.y + heightRadius, globalCenter.z + depthRadius);
-    }
-
-    /**
-     * Helper method to convert the BoundingBox to an AxisAlignedBB.
-     * This method allows for an offset to the conversion, to prevent
-     * creating two AABBs (the conversion and the offset box).
-     */
-    public AxisAlignedBB convertWithOffset(double x, double y, double z) {
-        return new AxisAlignedBB(x + globalCenter.x - widthRadius, y + globalCenter.y - heightRadius, z + globalCenter.z - depthRadius, x + globalCenter.x + widthRadius, y + globalCenter.y + heightRadius, z + globalCenter.z + depthRadius);
     }
 
     /**

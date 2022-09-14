@@ -1,12 +1,12 @@
 package minecrafttransportsimulator.baseclasses;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Beacon class.  Responsible for containing the state of a beacon, which includes

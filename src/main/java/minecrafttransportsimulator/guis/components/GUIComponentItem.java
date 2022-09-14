@@ -1,13 +1,13 @@
 package minecrafttransportsimulator.guis.components;
 
+import java.util.List;
+
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.rendering.RenderText;
 import minecrafttransportsimulator.rendering.RenderText.TextAlignment;
-
-import java.util.List;
 
 /**
  * Custom item render class.  This class is designed to render a {@link IWrapperItemStack}

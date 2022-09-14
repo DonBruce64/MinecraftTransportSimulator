@@ -423,7 +423,7 @@ public abstract class AEntityF_Multipart<JSONDefinition extends AJSONPartProvide
                         addPartFromItem(partItem, placingPlayer, partData, partSlot);
                     }
                 } catch (Exception e) {
-                    InterfaceManager.LOGGER.error("Could not load part from NBT.  Did you un-install a pack?");
+                    InterfaceManager.coreInterface.logError("Could not load part from NBT.  Did you un-install a pack?");
                     e.printStackTrace();
                 }
 

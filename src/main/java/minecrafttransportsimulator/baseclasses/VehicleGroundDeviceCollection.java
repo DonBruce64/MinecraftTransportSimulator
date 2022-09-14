@@ -1,13 +1,13 @@
 package minecrafttransportsimulator.baseclasses;
 
-import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
-import minecrafttransportsimulator.entities.instances.PartGroundDevice;
-import minecrafttransportsimulator.systems.ConfigSystem;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
+import minecrafttransportsimulator.entities.instances.PartGroundDevice;
+import minecrafttransportsimulator.systems.ConfigSystem;
 
 /**
  * This class is a collection for a set of four vehicle ground device points.  This allows for less

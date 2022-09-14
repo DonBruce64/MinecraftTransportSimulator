@@ -2537,8 +2537,8 @@ public final class LegacyCompatSystem {
                 }
             }
         } catch (Exception e) {
-            InterfaceManager.LOGGER.error("Could not do model-based legacy compats on " + definition.packID + ":" + definition.systemName + ".  Lights and treads will likely not be present on this model.");
-            InterfaceManager.LOGGER.error(e.getMessage());
+            InterfaceManager.coreInterface.logError("Could not do model-based legacy compats on " + definition.packID + ":" + definition.systemName + ".  Lights and treads will likely not be present on this model.");
+            InterfaceManager.coreInterface.logError(e.getMessage());
         }
     }
 }

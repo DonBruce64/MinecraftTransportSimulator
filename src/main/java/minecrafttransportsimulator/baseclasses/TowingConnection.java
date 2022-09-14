@@ -1,5 +1,7 @@
 package minecrafttransportsimulator.baseclasses;
 
+import java.util.UUID;
+
 import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
@@ -7,8 +9,6 @@ import minecrafttransportsimulator.jsondefs.JSONConnection;
 import minecrafttransportsimulator.jsondefs.JSONConnectionGroup;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
-
-import java.util.UUID;
 
 /**
  * Class for easier save/load of towing connections.

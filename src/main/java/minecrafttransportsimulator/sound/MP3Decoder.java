@@ -1,11 +1,15 @@
 package minecrafttransportsimulator.sound;
 
-import javazoom.jl.decoder.*;
-
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
+
+import javazoom.jl.decoder.Bitstream;
+import javazoom.jl.decoder.Decoder;
+import javazoom.jl.decoder.Equalizer;
+import javazoom.jl.decoder.Header;
+import javazoom.jl.decoder.SampleBuffer;
 
 /**
  * Decoder class for MP3 files.  Reads data into ShortBuffers when called.  Also allows for

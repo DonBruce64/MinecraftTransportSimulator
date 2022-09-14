@@ -1,5 +1,9 @@
 package mcinterface1122;
 
+import java.io.IOException;
+
+import org.lwjgl.input.Keyboard;
+
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.AGUIComponent;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
@@ -8,9 +12,6 @@ import minecrafttransportsimulator.guis.components.GUIComponentTextBox.TextBoxCo
 import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.init.SoundEvents;
-import org.lwjgl.input.Keyboard;
-
-import java.io.IOException;
 
 /**
  * Builder for MC GUI classes.  Created when {@link InterfaceClient#setActiveGUI(AGUIBase)}}

@@ -1,12 +1,12 @@
 package minecrafttransportsimulator.baseclasses;
 
-import minecrafttransportsimulator.entities.components.AEntityA_Base;
-import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
-import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
-
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+
+import minecrafttransportsimulator.entities.components.AEntityA_Base;
+import minecrafttransportsimulator.entities.components.AEntityC_Renderable;
+import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 
 /**
  * Class that manages entities in a world or other area.

@@ -1,5 +1,25 @@
 package mcinterface1122;
 
+import java.awt.image.BufferedImage;
+import java.net.URL;
+import java.net.URLConnection;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.DoubleBuffer;
+import java.nio.FloatBuffer;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
+
+import org.lwjgl.opengl.GL11;
+
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.TransformationMatrix;
@@ -20,20 +40,6 @@ import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.texture.TextureUtil;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
-import org.lwjgl.opengl.GL11;
-
-import javax.imageio.ImageIO;
-import javax.imageio.ImageReader;
-import javax.imageio.stream.ImageInputStream;
-import java.awt.image.BufferedImage;
-import java.net.URL;
-import java.net.URLConnection;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.DoubleBuffer;
-import java.nio.FloatBuffer;
-import java.util.*;
-import java.util.Map.Entry;
 
 /**
  * Interface for the various MC rendering engines.  This class has functions for
@@ -278,7 +284,7 @@ public class InterfaceRender implements IInterfaceRender {
                     String location = formattedLocation.substring("/assets/".length() + domain.length() + 1);
                     internalTextures.put(textureLocation, new ResourceLocation(domain, location));
                 } else {
-                    InterfaceManager.LOGGER.error("Could not find texture: " + formattedLocation + " Reverting to fallback texture.");
+                    InterfaceManager.coreInterface.logError("Could not find texture: " + formattedLocation + " Reverting to fallback texture.");
                     internalTextures.put(textureLocation, MISSING_TEXTURE);
                 }
             }

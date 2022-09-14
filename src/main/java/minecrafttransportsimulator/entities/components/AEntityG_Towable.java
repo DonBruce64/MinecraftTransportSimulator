@@ -96,7 +96,7 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
                         }
                     } else {
                         savedTowedByConnection = null;
-                        InterfaceManager.LOGGER.error("Could not hook-up trailer to entity towing it.  Did the JSON or pack change?");
+                        InterfaceManager.coreInterface.logError("Could not hook-up trailer to entity towing it.  Did the JSON or pack change?");
                     }
                 }
             }
@@ -111,12 +111,12 @@ public abstract class AEntityG_Towable<JSONDefinition extends AJSONPartProvider>
                                     --i;
                                 }
                             } catch (Exception e) {
-                                InterfaceManager.LOGGER.error("Could not connect trailer(s) to the entity towing them.  Did the JSON or pack change?");
+                                InterfaceManager.coreInterface.logError("Could not connect trailer(s) to the entity towing them.  Did the JSON or pack change?");
                             }
                         }
                     } else {
                         savedTowingConnections.clear();
-                        InterfaceManager.LOGGER.error("Could not connect trailer(s) to the entity towing them.  Did the JSON or pack change?");
+                        InterfaceManager.coreInterface.logError("Could not connect trailer(s) to the entity towing them.  Did the JSON or pack change?");
                     }
                 }
             }

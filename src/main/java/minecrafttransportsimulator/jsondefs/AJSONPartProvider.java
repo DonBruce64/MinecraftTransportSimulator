@@ -1,8 +1,8 @@
 package minecrafttransportsimulator.jsondefs;
 
-import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
-
 import java.util.List;
+
+import minecrafttransportsimulator.packloading.JSONParser.JSONDescription;
 
 public abstract class AJSONPartProvider extends AJSONInteractableEntity {
 

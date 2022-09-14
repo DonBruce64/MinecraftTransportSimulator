@@ -1,9 +1,18 @@
 package minecrafttransportsimulator.packloading;
 
-import minecrafttransportsimulator.jsondefs.*;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import minecrafttransportsimulator.jsondefs.AJSONItem;
+import minecrafttransportsimulator.jsondefs.JSONBullet;
+import minecrafttransportsimulator.jsondefs.JSONDecor;
+import minecrafttransportsimulator.jsondefs.JSONInstrument;
+import minecrafttransportsimulator.jsondefs.JSONItem;
+import minecrafttransportsimulator.jsondefs.JSONPart;
+import minecrafttransportsimulator.jsondefs.JSONPoleComponent;
+import minecrafttransportsimulator.jsondefs.JSONRoadComponent;
+import minecrafttransportsimulator.jsondefs.JSONSkin;
+import minecrafttransportsimulator.jsondefs.JSONVehicle;
 
 /**
  * Class responsible for loading pack resource files from pack archives.  This happens both during load

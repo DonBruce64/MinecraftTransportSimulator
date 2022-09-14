@@ -1,13 +1,13 @@
 package minecrafttransportsimulator.baseclasses;
 
+import java.util.List;
+
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.items.instances.ItemBullet;
 import minecrafttransportsimulator.jsondefs.JSONBullet.BulletType;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
-
-import java.util.List;
 
 /**
  * Basic damage class.  Used to make instances of damage to apply to entities.  Allows for quick addition

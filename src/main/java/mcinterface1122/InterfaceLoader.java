@@ -4,6 +4,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
@@ -32,6 +35,8 @@ public final class InterfaceLoader {
         FluidRegistry.enableUniversalBucket();
     }
 
+	public static final Logger LOGGER = LogManager.getLogger(InterfaceManager.coreModID);
+
     @SuppressWarnings("InstantiationOfUtilityClass")
     @EventHandler
     public void preInit(FMLPreInitializationEvent event) {
@@ -45,7 +50,7 @@ public final class InterfaceLoader {
             new InterfaceManager(MODID, gameDirectory, new InterfaceCore(), new InterfacePacket(), null, null, null, null);
         }
 
-        InterfaceManager.LOGGER.error("Welcome to MTS VERSION:" + MODVER);
+        InterfaceManager.coreInterface.logError("Welcome to MTS VERSION:" + MODVER);
 
         //Parse packs
         ConfigSystem.loadFromDisk(new File(gameDirectory, "config"), event.getSide().isClient());
@@ -64,7 +69,7 @@ public final class InterfaceLoader {
             PackParser.addDefaultItems();
             PackParser.parsePacks(packDirectories, event.getSide().isClient());
         } else {
-            InterfaceManager.LOGGER.error("Could not find mods directory!  Game directory is confirmed to: " + gameDirectory);
+            InterfaceManager.coreInterface.logError("Could not find mods directory!  Game directory is confirmed to: " + gameDirectory);
         }
     }
 

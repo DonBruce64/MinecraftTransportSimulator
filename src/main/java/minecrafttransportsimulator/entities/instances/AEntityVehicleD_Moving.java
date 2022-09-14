@@ -1,6 +1,11 @@
 package minecrafttransportsimulator.entities.instances;
 
-import minecrafttransportsimulator.baseclasses.*;
+import minecrafttransportsimulator.baseclasses.BezierCurve;
+import minecrafttransportsimulator.baseclasses.BoundingBox;
+import minecrafttransportsimulator.baseclasses.Point3D;
+import minecrafttransportsimulator.baseclasses.RotationMatrix;
+import minecrafttransportsimulator.baseclasses.TowingConnection;
+import minecrafttransportsimulator.baseclasses.VehicleGroundDeviceCollection;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.instances.BlockCollision;
 import minecrafttransportsimulator.blocks.tileentities.components.RoadFollowingState;

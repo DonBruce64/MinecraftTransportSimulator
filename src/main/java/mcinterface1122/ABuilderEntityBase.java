@@ -1,14 +1,14 @@
 package mcinterface1122;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Builder for a basic MC Entity class.  This builder provides basic entity logic that's common

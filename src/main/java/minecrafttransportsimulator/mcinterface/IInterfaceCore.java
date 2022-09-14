@@ -33,6 +33,11 @@ public interface IInterfaceCore {
      * Returns the text-based name for the passed-in mod.
      */
     String getModName(String modID);
+    
+    /**
+     * Logs an error to the logging system.
+     */
+    void logError(String message);
 
     /**
      * Returns a new NBT IWrapper instance with no data.

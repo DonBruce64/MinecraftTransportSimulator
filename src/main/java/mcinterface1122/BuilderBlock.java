@@ -1,5 +1,12 @@
 package mcinterface1122;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Nullable;
+
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.ABlockBaseTileEntity;
@@ -21,7 +28,11 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.*;
+import net.minecraft.util.EnumBlockRenderType;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.NonNullList;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
@@ -31,12 +42,6 @@ import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.registry.GameRegistry;
-
-import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Builder for a basic MC Block class.  This builder assumes the block will not be a solid
@@ -236,17 +241,17 @@ public class BuilderBlock extends Block {
                 ATileEntityBase<?> tile = ((BuilderTileEntity<?>) mcTile).tileEntity;
                 if (tile != null) {
                     if (globalCoords) {
-                        return tile.boundingBox.convertWithOffset(0, 0, 0);
+                        return WrapperWorld.convert(tile.boundingBox);
                     } else {
-                        return tile.boundingBox.convertWithOffset(-pos.getX(), -pos.getY(), -pos.getZ());
+                        return WrapperWorld.convertWithOffset(tile.boundingBox, -pos.getX(), -pos.getY(), -pos.getZ());
                     }
                 }
             }
         } else if (block instanceof BlockCollision) {
             if (globalCoords) {
-                return ((BlockCollision) block).blockBounds.convertWithOffset(pos.getX(), pos.getY(), pos.getZ());
+                return WrapperWorld.convertWithOffset(((BlockCollision) block).blockBounds, pos.getX(), pos.getY(), pos.getZ());
             } else {
-                return ((BlockCollision) block).blockBounds.convertWithOffset(0, 0, 0);
+                return WrapperWorld.convert(((BlockCollision) block).blockBounds);
             }
         }
         if (globalCoords) {

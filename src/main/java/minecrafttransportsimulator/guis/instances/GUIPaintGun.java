@@ -197,7 +197,7 @@ public class GUIPaintGun extends AGUIBase {
                 }
                 errorMessage += PackMaterialComponent.lastErrorMessage + "\n";
                 if (recipeIndex == requestedRecipe) {
-                    InterfaceManager.LOGGER.error(errorMessage);
+                    InterfaceManager.coreInterface.logError(errorMessage);
                     break;
                 }
             }

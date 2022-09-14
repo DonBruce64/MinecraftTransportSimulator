@@ -1,7 +1,17 @@
 package minecrafttransportsimulator.guis.instances;
 
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import minecrafttransportsimulator.baseclasses.ColorRGB;
-import minecrafttransportsimulator.guis.components.*;
+import minecrafttransportsimulator.guis.components.AGUIBase;
+import minecrafttransportsimulator.guis.components.GUIComponentButton;
+import minecrafttransportsimulator.guis.components.GUIComponentCutout;
+import minecrafttransportsimulator.guis.components.GUIComponentLabel;
+import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.jsondefs.JSONConfigEntry;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
@@ -11,12 +21,6 @@ import minecrafttransportsimulator.systems.ControlSystem;
 import minecrafttransportsimulator.systems.ControlSystem.ControlsJoystick;
 import minecrafttransportsimulator.systems.ControlSystem.ControlsKeyboard;
 import minecrafttransportsimulator.systems.ControlSystem.ControlsKeyboardDynamic;
-
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class GUIConfig extends AGUIBase {
     //Global variables.
