@@ -670,6 +670,8 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
                 return world.getLightBrightness(position, true);
             case ("terrain_distance"):
                 return world.getHeight(position);
+            case ("config_simplethrottle"):
+                return ConfigSystem.client.controlSettings.simpleThrottle.value ? 1 : 0;
         }
 
         //Check if this is a cycle variable.
