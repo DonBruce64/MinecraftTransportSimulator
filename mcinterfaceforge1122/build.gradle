@@ -45,8 +45,6 @@ minecraft {
 }
 
 repositories {
-    //MP3 library.
-    maven { url = "https://mvnrepository.com/artifact/org.jcraft/jorbis" }
     //JEI
     maven { url = "https://dvs1.progwml6.com/files/maven/" }
 }
@@ -64,10 +62,6 @@ dependencies {
     
     //Core to use.
     embed(project(":mccore"))
-
-    //Set sound code bits as embeds so they are included into the jar.
-    embed("com.googlecode.soundlibs:jlayer:1.0.1.4")
-    embed("org.jcraft:jorbis:0.0.17")
 
     //Compile against the JEI API but do not include it at runtime
     compileOnly fg.deobf("mezz.jei:jei_1.12.2:4.16.1.302:api")
