@@ -61,6 +61,9 @@ configurations {
 dependencies {
     //Minecraft to use.
     minecraft "net.minecraftforge:forge:1.12.2-14.23.5.2859"
+    
+    //Core to use.
+    embed(project(":mccore"))
 
     //Set sound code bits as embeds so they are included into the jar.
     embed("com.googlecode.soundlibs:jlayer:1.0.1.4")
