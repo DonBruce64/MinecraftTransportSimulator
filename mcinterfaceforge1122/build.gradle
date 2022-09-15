@@ -59,8 +59,6 @@ minecraft {
 }
 
 repositories {
-    //MP3 library.
-    maven { url = "https://mvnrepository.com/artifact/org.jcraft/jorbis" }
     //JEI
     maven { url = "https://dvs1.progwml6.com/files/maven/" }
     //Mixins
@@ -81,16 +79,13 @@ dependencies {
 		//Core to use.
     embed(project(":mccore"))
 
-    //Set sound code bits and mixin as embeds so they are included into the jar.
+    //Set mixin as embeds so they are included into the jar.
     embed("org.spongepowered:mixin:0.8.5") {
         exclude module: "guava"
         exclude module: "commons-io"
         exclude module: "gson"
     }
     annotationProcessor "org.spongepowered:mixin:0.8.5:processor"
-
-    embed("com.googlecode.soundlibs:jlayer:1.0.1.4")
-    embed("org.jcraft:jorbis:0.0.17")
 
     //Compile against the JEI API but do not include it at runtime
     compileOnly fg.deobf("mezz.jei:jei_1.12.2:4.16.1.302:api")
