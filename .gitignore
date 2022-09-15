@@ -1,9 +1,16 @@
+# common
+run
+build
+.gradle
+
 # eclipse
+eclipse
 bin
 *.launch
 .metadata
 .classpath
 .project
+.settings
 
 # idea
 out
@@ -11,12 +18,3 @@ out
 *.iws
 *.iml
 .idea
-
-# gradle
-build
-.gradle
-
-# other
-eclipse
-run
-libs
