@@ -77,6 +77,9 @@ configurations {
 dependencies {
     //Minecraft to use.
     minecraft "net.minecraftforge:forge:${project.mc_version}-${project.forge_version}"
+		
+		//Core to use.
+    embed(project(":mccore"))
 
     //Set sound code bits and mixin as embeds so they are included into the jar.
     embed("org.spongepowered:mixin:0.8.5") {
