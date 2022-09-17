@@ -5,7 +5,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath group: "net.minecraftforge.gradle", name: "ForgeGradle", version: "4.+", changing: true
+        classpath group: "net.minecraftforge.gradle", name: "ForgeGradle", version: "5.+", changing: true
         classpath "org.spongepowered:mixingradle:0.7.+"
     }
 }
@@ -16,9 +16,9 @@ apply plugin: "org.spongepowered.mixin"
 apply plugin: "eclipse"
 
 //Set file name.
-version = "1.12.2-21.4.0-BETA49"
-group = "minecrafttransportsimulator"
-archivesBaseName = "Immersive Vehicles"
+version = "${project.mc_version}-${project.mod_version}"
+group = project.mod_group
+archivesBaseName = project.archive_name
 
 //Options for Java version to compile to.
 sourceCompatibility = targetCompatibility = "1.8"
@@ -33,19 +33,22 @@ minecraft {
     // snapshot   YYYYMMDD   Snapshot are built nightly.
     // stable     #          Stables are built at the discretion of the MCP team.
     // official   MCVersion  Official field/method names from Mojang mapping files
-    mappings channel: "stable", version: "39-1.12"
+    mappings channel: project.mappings_channel, version: project.mappings_version
 
     //Run configurations.
     runs {
         client {
             workingDirectory file("run")
-            property "fml.coreMods.load", "mcinterface1122.core.MtsCoreMod"
+            //Tell the game to load the core mod class so that mixins will run
+            property "fml.coreMods.load", "${project.interface_group}.MtsCoreMod"
+            //Use the default mixin tweaker
             property "tweakClass", "org.spongepowered.asm.launch.MixinTweaker"
         }
 
+        //Run the server in a different directory so that the run directory isn't a mess
         server {
             workingDirectory file("runServer")
-            property "fml.coreMods.load", "mcinterface1122.core.MtsCoreMod"
+            property "fml.coreMods.load", "${project.interface_group}.MtsCoreMod"
             property "tweakClass", "org.spongepowered.asm.launch.MixinTweaker"
         }
     }
@@ -69,7 +72,7 @@ configurations {
 //Specify dependencies.
 dependencies {
     //Minecraft to use.
-    minecraft "net.minecraftforge:forge:1.12.2-14.23.5.2859"
+    minecraft "net.minecraftforge:forge:${project.mc_version}-${project.forge_version}"
 
     //Set sound code bits as embeds so they are included into the jar.
     embed("com.googlecode.soundlibs:jlayer:1.0.1.4")
@@ -87,12 +90,19 @@ dependencies {
     compileOnly fg.deobf("mezz.jei:jei_1.12.2:4.16.1.302:api")
     //At runtime, use the full JEI jar
     //Disabled as Access Transformers don"t work on FG 3.0 runtimes despite them saying they do.
-    //Not a huge issue, as it just prevents using JEI in-dev, and we already have it working so don"t really need to test.
+    //Not a huge issue, as it just prevents using JEI in-dev, and we already have it working so don't really need to test.
     //runtimeOnly fg.deobf("mezz.jei:jei_1.12.2:4.16.1.302")
 }
 
 mixin {
-    add sourceSets.main, "mts.mixin-refmap.json"
+    add sourceSets.main, project.mixin_refmap
+}
+
+processResources {
+    filesMatching(["InterfaceLoader.java", "mcmod.info"]) {
+        expand "@VERSION@": project.mod_version
+        expand "@MODID@": project.mod_id
+    }
 }
 
 //Here is where we zip up all embeds and add them to our jar.
@@ -103,12 +113,12 @@ jar {
 
     manifest {
         attributes([
-                "FMLCorePlugin"              : "mcinterface1122.core.MtsCoreMod",
+                "FMLCorePlugin"              : "${project.interface_group}.MtsCoreMod",
                 "FMLCorePluginContainsFMLMod": true,
                 "ForceLoadAsMod"             : true,
-                "TweakClass"                 : "org.spongepowered.asm.launch.MixinTweaker",
+                "TweakClass"                 : project.mixin_tweaker,
                 "TweakOrder"                 : "0",
-                "MixinConfigs"               : "mts.mixins.json"
+                "MixinConfigs"               : project.mixin_config
         ])
     }
 }

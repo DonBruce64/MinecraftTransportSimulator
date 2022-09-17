@@ -1,4 +1,4 @@
-package mcinterface1122.core;
+package mcinterface1122;
 
 import mcinterface1122.InterfaceLoader;
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
