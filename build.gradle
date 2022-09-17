@@ -40,7 +40,7 @@ minecraft {
         client {
             workingDirectory file("run")
             //Tell the game to load the core mod class so that mixins will run
-            property "fml.coreMods.load", "${project.interface_group}.MtsCoreMod"
+            property "fml.coreMods.load", "${project.interface_group}.MtsLoadingPlugin"
             //Use the default mixin tweaker
             property "tweakClass", "org.spongepowered.asm.launch.MixinTweaker"
         }
@@ -48,7 +48,7 @@ minecraft {
         //Run the server in a different directory so that the run directory isn't a mess
         server {
             workingDirectory file("runServer")
-            property "fml.coreMods.load", "${project.interface_group}.MtsCoreMod"
+            property "fml.coreMods.load", "${project.interface_group}.MtsLoadingPlugin"
             property "tweakClass", "org.spongepowered.asm.launch.MixinTweaker"
         }
     }
@@ -112,7 +112,7 @@ jar {
 
     manifest {
         attributes([
-                "FMLCorePlugin"              : "${project.interface_group}.MtsCoreMod",
+                "FMLCorePlugin"              : "${project.interface_group}.MtsLoadingPlugin",
                 "FMLCorePluginContainsFMLMod": true,
                 "ForceLoadAsMod"             : true,
                 "TweakClass"                 : project.mixin_tweaker,
