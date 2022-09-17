@@ -66,7 +66,8 @@ repositories {
 //Configuration that holds jars to include in the jar
 configurations {
     embed
-    compileOnly.extendsFrom(embed)
+    shade
+    compileOnly.extendsFrom(embed, shade)
 }
 
 //Specify dependencies.
@@ -78,10 +79,8 @@ dependencies {
     embed("com.googlecode.soundlibs:jlayer:1.0.1.4")
     embed("org.jcraft:jorbis:0.0.17")
 
-    implementation("org.spongepowered:mixin:0.8.5") {
-        exclude module: "guava"
-        exclude module: "commons-io"
-        exclude module: "gson"
+    shade("org.spongepowered:mixin:0.8.5") {
+        transitive = false
     }
 
     annotationProcessor "org.spongepowered:mixin:0.8.5:processor"
