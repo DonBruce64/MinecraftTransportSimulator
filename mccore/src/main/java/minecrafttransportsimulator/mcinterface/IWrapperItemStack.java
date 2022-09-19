@@ -30,14 +30,14 @@ public interface IWrapperItemStack {
      * if this item cannot be smelted.  Note the the returned stack is a new instance
      * and may be modified without affecting future calls to this method.
      */
-    IWrapperItemStack getSmeltedItem();
+    IWrapperItemStack getSmeltedItem(AWrapperWorld world);
 
     /**
      * Returns the time it takes to smelt this item.  Note that due to Vanilla MC jank,
      * this value MAY be non-zero even if {@link #getSmeltedItem()} returns nothing.  As such,
      * that method should be checked before this one.
      */
-    int getSmeltingTime();
+    int getSmeltingTime(AWrapperWorld world);
 
     /**
      * Returns the item for this stack.

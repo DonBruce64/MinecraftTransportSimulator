@@ -72,7 +72,7 @@ public class EntityFurnace extends EntityInventoryContainer {
                     if (--ticksLeftToSmelt == 0) {
                         //Add to output, and remove from input.
                         //Need to set the stack in case the output is empty or we have multiple items.
-                        IWrapperItemStack smeltingResult = smeltingStack.getSmeltedItem();
+                        IWrapperItemStack smeltingResult = smeltingStack.getSmeltedItem(world);
                         IWrapperItemStack stackInResult = getStack(SMELTED_ITEM_SLOT);
 
                         if (stackInResult.isEmpty()) {
@@ -94,10 +94,10 @@ public class EntityFurnace extends EntityInventoryContainer {
             if (!world.isClient()) {
                 IWrapperItemStack smeltingStack = getStack(SMELTING_ITEM_SLOT);
                 if (!smeltingStack.isEmpty()) {
-                    IWrapperItemStack smeltingResult = smeltingStack.getSmeltedItem();
+                    IWrapperItemStack smeltingResult = smeltingStack.getSmeltedItem(world);
                     IWrapperItemStack stackInResult = getStack(SMELTED_ITEM_SLOT);
                     if (stackInResult.isEmpty() || (stackInResult.isCompleteMatch(smeltingResult) && (stackInResult.getMaxSize() - stackInResult.getSize() >= smeltingResult.getSize()))) {
-                        ticksNeededToSmelt = (int) (smeltingStack.getSmeltingTime() * 1F / definition.furnaceRate);
+                        ticksNeededToSmelt = (int) (smeltingStack.getSmeltingTime(world) * 1F / definition.furnaceRate);
                         ticksLeftToSmelt = ticksNeededToSmelt;
                         InterfaceManager.packetInterface.sendToAllClients(new PacketFurnaceTimeSet(this));
                     }
@@ -109,7 +109,7 @@ public class EntityFurnace extends EntityInventoryContainer {
     @Override
     public boolean isStackValid(IWrapperItemStack stackToCheck, int index) {
         if (index == SMELTING_ITEM_SLOT) {
-            return !stackToCheck.getSmeltedItem().isEmpty();
+            return !stackToCheck.getSmeltedItem(world).isEmpty();
         } else if (index == FUEL_ITEM_SLOT) {
             return definition.furnaceType.equals(FurnaceComponentType.STANDARD) && stackToCheck.getFuelValue() != 0;
         } else {
