@@ -27,7 +27,7 @@ compileJava {
 }
 
 mixin {
-    add sourceSets.main, "mts.refmap.json"
+    add sourceSets.main, project.mixin_refmap
 }
 
 //Minecraft mappings and run configs.
@@ -70,8 +70,7 @@ repositories {
 //Configuration that holds jars to include in the jar
 configurations {
     embed
-    shade
-    compileOnly.extendsFrom(embed, shade)
+    compileOnly.extendsFrom(embed)
 }
 
 //Specify dependencies.
@@ -79,13 +78,14 @@ dependencies {
     //Minecraft to use.
     minecraft "net.minecraftforge:forge:${project.mc_version}-${project.forge_version}"
 
-    //Shade mixin so that it is added to the jar
-    shade("org.spongepowered:mixin:0.8.5") {
-        transitive = false
+    //Set sound code bits and mixin as embeds so they are included into the jar.
+    embed("org.spongepowered:mixin:0.8.3-SNAPSHOT") {
+        exclude module: "guava"
+        exclude module: "commons-io"
+        exclude module: "gson"
     }
-    annotationProcessor "org.spongepowered:mixin:0.8.5:processor"
+    annotationProcessor "org.spongepowered:mixin:0.8.3-SNAPSHOT:processor"
 
-    //Set sound code bits as embeds so they are included into the jar.
     embed("com.googlecode.soundlibs:jlayer:1.0.1.4")
     embed("org.jcraft:jorbis:0.0.17")
 
@@ -102,14 +102,8 @@ jar {
     configurations.embed.each { dependency ->
         from(project.zipTree(dependency)) {
             dependency.isDirectory() ? dependency : zipTree(dependency)
-        }
-    }
-
-    //Move the mixin libraries' license to the right directory and remove unneeded things
-    configurations.shade.each { shadeJar ->
-        from(project.zipTree(shadeJar)) {
             rename("LICENSE.txt", "org/spongepowered/LICENSE.txt")
-            exclude(["META-INF/*.SF", "META-INF/*.RSA", "META-INF/*.MF", "**/*.html"])
+            exclude(["META-INF/*.SF", "META-INF/*.RSA", "META-INF/*.MF", "**/*.html", "module-info.class"])
         }
     }
 
@@ -129,6 +123,6 @@ jar {
 //Now compile the mod.
 jar.finalizedBy("reobfJar")
 
-tasks.withType(JavaCompile) {
+tasks.withType(JavaCompile).configureEach {
     options.encoding = "UTF-8" // Use the UTF-8 charset for Java compilation
 }

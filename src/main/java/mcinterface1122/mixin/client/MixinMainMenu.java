@@ -11,6 +11,7 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.client.gui.NotificationModUpdateScreen;
 import org.lwjgl.input.Mouse;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -51,7 +52,7 @@ public abstract class MixinMainMenu extends GuiScreen {
     @Shadow(remap = false)
     private GuiButton modButton;
     @Unique
-    private GuiScreen updateNotification;
+    private NotificationModUpdateScreen updateNotification;
 
     @Shadow
     protected abstract boolean areRealmsNotificationsEnabled();
@@ -60,7 +61,7 @@ public abstract class MixinMainMenu extends GuiScreen {
     public void getModUpdateScreen(CallbackInfo ci) throws NoSuchFieldException, IllegalAccessException {
         Field modUpdateScreen = GuiMainMenu.class.getDeclaredField("modUpdateNotification");
         modUpdateScreen.setAccessible(true);
-        updateNotification = (GuiScreen) modUpdateScreen.get(this);
+        updateNotification = (NotificationModUpdateScreen) modUpdateScreen.get(this);
     }
 
     @Redirect(at = @At(value = "NEW", target = "net/minecraft/client/gui/GuiButton"), method = "initGui")

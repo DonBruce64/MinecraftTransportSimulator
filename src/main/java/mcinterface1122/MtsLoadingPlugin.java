@@ -13,7 +13,9 @@ import java.util.Map;
 public class MtsLoadingPlugin implements IFMLLoadingPlugin {
     @Override
     public String[] getASMTransformerClass() {
-        return new String[0];
+        String[] transformers = new String[1];
+        transformers[0] = MtsPhosphorTransformer.class.getName();
+        return transformers;
     }
 
     @Override
@@ -31,6 +33,7 @@ public class MtsLoadingPlugin implements IFMLLoadingPlugin {
     public void injectData(Map<String, Object> data) {
         MixinBootstrap.init();
         Mixins.addConfiguration(InterfaceLoader.MODID + ".mixins.json");
+        //MixinEnvironment.getDefaultEnvironment().setObfuscationContext("searge");
     }
 
     @Override
