@@ -1,4 +1,6 @@
-package mcinterface1122;
+package mcinterface1165;
+
+import java.util.List;
 
 import minecrafttransportsimulator.entities.instances.EntityFluidTank;
 import minecrafttransportsimulator.items.components.AItemBase;
@@ -9,15 +11,18 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.FurnaceRecipes;
-import net.minecraft.tileentity.TileEntityFurnace;
-import net.minecraftforge.fluids.FluidRegistry;
+import net.minecraft.item.crafting.FurnaceRecipe;
+import net.minecraft.item.crafting.IRecipeType;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.World;
+import net.minecraftforge.common.ForgeHooks;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
+import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
 import net.minecraftforge.fluids.capability.IFluidHandlerItem;
+import net.minecraftforge.registries.ForgeRegistries;
 
 public class WrapperItemStack implements IWrapperItemStack {
-    private static final TileEntityFurnace VANILLA_FAKE_FURNACE = new TileEntityFurnace();
 
     protected final ItemStack stack;
 
@@ -28,22 +33,25 @@ public class WrapperItemStack implements IWrapperItemStack {
     @Override
     public boolean isCompleteMatch(IWrapperItemStack other) {
         ItemStack otherStack = ((WrapperItemStack) other).stack;
-        return otherStack.isItemEqual(stack) && (otherStack.hasTagCompound() ? otherStack.getTagCompound().equals(stack.getTagCompound()) : !stack.hasTagCompound());
+        return otherStack.sameItem(stack) && (otherStack.hasTag() ? otherStack.getTag().equals(stack.getTag()) : !stack.hasTag());
     }
 
     @Override
     public int getFuelValue() {
-        return TileEntityFurnace.getItemBurnTime(stack);
+        return ForgeHooks.getBurnTime(stack, null);
     }
 
     @Override
     public IWrapperItemStack getSmeltedItem(AWrapperWorld world) {
-        return new WrapperItemStack(FurnaceRecipes.instance().getSmeltingResult(stack).copy());
+        World mcWorld = ((WrapperWorld) world).world;
+        List<FurnaceRecipe> results = mcWorld.getRecipeManager().getAllRecipesFor(IRecipeType.SMELTING);
+        return new WrapperItemStack(results.isEmpty() ? ItemStack.EMPTY : results.get(0).getResultItem());
     }
 
     @Override
     public int getSmeltingTime(AWrapperWorld world) {
-        return VANILLA_FAKE_FURNACE.getCookTime(stack);
+        World mcWorld = ((WrapperWorld) world).world;
+        return mcWorld.getRecipeManager().getAllRecipesFor(IRecipeType.SMELTING).get(0).getCookingTime();
     }
 
     @Override
@@ -88,30 +96,30 @@ public class WrapperItemStack implements IWrapperItemStack {
 
     @Override
     public IWrapperItemStack split(int qty) {
-        return new WrapperItemStack(stack.splitStack(qty));
+        return new WrapperItemStack(stack.split(qty));
     }
 
     @Override
     public boolean interactWith(EntityFluidTank tank, IWrapperPlayer player) {
-        IFluidHandlerItem handler = stack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null);
+        IFluidHandlerItem handler = stack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null).orElse(null);
         if (handler != null) {
             if (!player.isSneaking()) {
                 //Item can provide fluid.  Check if the tank can accept it.
-                FluidStack drainedStack = handler.drain(Integer.MAX_VALUE, false);
+                FluidStack drainedStack = handler.drain(Integer.MAX_VALUE, FluidAction.SIMULATE);
                 if (drainedStack != null) {
                     //Able to take fluid from item, attempt to do so.
-                    int amountToDrain = (int) tank.fill(drainedStack.getFluid().getName(), drainedStack.amount, false);
-                    drainedStack = handler.drain(amountToDrain, !player.isCreative());
+                    int amountToDrain = (int) tank.fill(drainedStack.getFluid().getRegistryName().getPath(), drainedStack.getAmount(), false);
+                    drainedStack = handler.drain(amountToDrain, player.isCreative() ? FluidAction.SIMULATE : FluidAction.EXECUTE);
                     if (drainedStack != null) {
                         //Was able to provide liquid from item.  Fill the tank.
-                        tank.fill(drainedStack.getFluid().getName(), drainedStack.amount, true);
+                        tank.fill(drainedStack.getFluid().getRegistryName().getPath(), drainedStack.getAmount(), true);
                         player.setHeldStack(new WrapperItemStack(handler.getContainer()));
                     }
                 }
             } else {
                 //Item can hold fluid.  Check if we can fill it.
-                FluidStack containedStack = FluidRegistry.getFluidStack(tank.getFluid(), (int) tank.getFluidLevel());
-                int amountFilled = handler.fill(containedStack, !player.isCreative());
+                FluidStack containedStack = new FluidStack(ForgeRegistries.FLUIDS.getValue(new ResourceLocation(tank.getFluid())), (int) tank.getFluidLevel());
+                int amountFilled = handler.fill(containedStack, player.isCreative() ? FluidAction.SIMULATE : FluidAction.EXECUTE);
                 if (amountFilled > 0) {
                     //Were able to fill the item.  Apply state change to tank and item.
                     tank.drain(tank.getFluid(), amountFilled, true);
@@ -126,11 +134,11 @@ public class WrapperItemStack implements IWrapperItemStack {
 
     @Override
     public IWrapperNBT getData() {
-        return stack.hasTagCompound() ? new WrapperNBT(stack.getTagCompound().copy()) : InterfaceManager.coreInterface.getNewNBTWrapper();
+        return stack.hasTag() ? new WrapperNBT(stack.getTag().copy()) : InterfaceManager.coreInterface.getNewNBTWrapper();
     }
 
     @Override
     public void setData(IWrapperNBT data) {
-        stack.setTagCompound(data != null ? ((WrapperNBT) data).tag : null);
+        stack.setTag(data != null ? ((WrapperNBT) data).tag : null);
     }
 }

@@ -1,0 +1,16 @@
+{
+    "parent": "mts:rtfm",
+    "display": {
+        "icon": {"item": "mts:mts.gunbench"},
+        "title": {"translate": "advancements.mts.gunbench.title"},
+        "description": {"translate": "advancements.mts.gunbench.description"}
+    },
+    "criteria": {
+        "has_gunbench": {
+            "trigger": "minecraft:inventory_changed",
+            "conditions": {
+                "items": [{"item": "mts:mts.gunbench"}]
+            }
+        }
+    }
+}

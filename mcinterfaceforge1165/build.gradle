@@ -1,0 +1,91 @@
+buildscript {
+    repositories {
+        maven { url = "https://maven.minecraftforge.net" }
+				maven { url = "https://maven.parchmentmc.org" }
+        mavenCentral()
+    }
+    dependencies {
+        classpath group: "net.minecraftforge.gradle", name: "ForgeGradle", version: "5.1.+", changing: true
+				classpath "org.parchmentmc:librarian:1.+"
+    }
+}
+
+//Apply plugins
+apply plugin: "net.minecraftforge.gradle"
+apply plugin: "org.parchmentmc.librarian.forgegradle"
+apply plugin: "eclipse"
+
+//Set file name.
+version = "1.12.2-22.1.0"
+group = "minecrafttransportsimulator"
+archivesBaseName = "Immersive Vehicles"
+
+//Options for Java version to compile to.
+sourceCompatibility = targetCompatibility = "1.8"
+compileJava {
+    options.compilerArgs << "-Xlint:deprecation" << "-Xlint:unchecked"
+}
+
+//Minecraft mappings and run configs.
+minecraft {
+    // The mappings can be changed at any time, and must be in the following format.
+    // Channel:   Version:
+    // snapshot   YYYYMMDD   Snapshot are built nightly.
+    // stable     #          Stables are built at the discretion of the MCP team.
+    // official   MCVersion  Official field/method names from Mojang mapping files
+    //mappings channel: "official", version: "1.16.5"
+		mappings channel: "parchment", version: "2022.03.06-1.16.5"
+
+    //Run configurations.
+    runs {
+        client {
+            workingDirectory project.file("run")
+        }
+
+        server {
+            workingDirectory project.file("runServer")
+        }
+    }
+}
+
+repositories {
+    //JEI
+    maven { url = "https://dvs1.progwml6.com/files/maven/" }
+}
+
+//Configuration that holds jars to include in the jar
+configurations {
+    embed
+    compileOnly.extendsFrom(embed)
+}
+
+//Specify dependencies.
+dependencies {
+    //Minecraft to use.
+    minecraft "net.minecraftforge:forge:1.16.5-36.2.23"
+    
+    //Core to use.
+    embed(project(":mccore"))
+
+    //Compile against the JEI API but do not include it at runtime
+		//JEI API changed, no JEI support for now
+    compileOnly fg.deobf("mezz.jei:jei-1.16.5:7.7.1.152:api")
+    //At runtime, use the full JEI jar
+    //Disabled as Access Transformers don"t work on FG higher than 2.3 despite them saying they do.
+    //Not a huge issue, as it just prevents using JEI in-dev, and we already have it working so don"t really need to test.
+    runtimeOnly fg.deobf("mezz.jei:jei-1.16.5:7.7.1.152")
+}
+
+//Here is where we zip up all embeds and add them to our jar.
+jar {
+    from {
+        configurations.embed.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
+
+//Now compile the mod.
+jar.finalizedBy("reobfJar")
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = "UTF-8" // Use the UTF-8 charset for Java compilation
+}

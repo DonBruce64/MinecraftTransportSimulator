@@ -1,0 +1,25 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        "a  ",
+        "abb",
+        "cbb"
+    ],
+    "key": {
+        "a": {
+            "type": "forge:ore_dict",
+            "ore": "ingotIron"
+        },
+        "b": {
+            "type": "forge:ore_dict",
+            "ore": "plankWood"
+        },
+        "c": {
+            "item": "minecraft:anvil",
+            "data": 0
+        }
+    },
+    "result": {
+        "item": "mts:mts.wheelbench"
+    }
+}
