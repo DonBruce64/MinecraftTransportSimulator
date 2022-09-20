@@ -114,21 +114,6 @@ public interface IInterfaceInput {
     void inhibitJoysticks(boolean inhibited);
 
     /**
-     * Sets the mouse to be enabled or disabled.  Disabling the mouse
-     * prevents MC from getting mouse updates, though it does not prevent
-     * updates from {@link #getTrackedMousePosition()}.
-     */
-    void setMouseEnabled(boolean enabled);
-
-    /**
-     * Returns the latest mouse deltas as a long comprised of two ints.  The
-     * first half being the X-coord, and the second half being the Y-coord.
-     * Note that this method can only get the delta the mouse has moved, not the absolute
-     * change, so unless you call this every tick you will miss mouse movement!
-     */
-    long getMouseDelta();
-
-    /**
      * Returns the current  mouse scroll wheel position, if one exists.
      * Note that this method can only get the delta the mouse wheel, not the absolute
      * change, so unless you call this every tick you will get bad data!

@@ -33,7 +33,6 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 import minecrafttransportsimulator.systems.ControlSystem;
 
 public final class PartSeat extends APart {
-    public static boolean lockCameraToMovement = true;
     public boolean canControlGuns;
     private boolean riderChangingSeats;
     public ItemPartGun activeGunItem;
@@ -203,7 +202,6 @@ public final class PartSeat extends APart {
 
         if (clientRiderOnVehicle) {
             //Client player is the one that left the vehicle.  Make sure they don't have their mouse locked or a GUI open.
-            InterfaceManager.inputInterface.setMouseEnabled(true);
             if (vehicleOn.definition.motorized.isAircraft) {
                 AGUIBase.closeIfOpen(GUIPanelAircraft.class);
             } else {
@@ -295,7 +293,6 @@ public final class PartSeat extends APart {
             //another player could be getting us to this logic point, thus we'd be making their inputs in the vehicle.
             if (vehicleOn != null && world.isClient() && !InterfaceManager.clientInterface.isChatOpen() && rider.equals(InterfaceManager.clientInterface.getClientPlayer())) {
                 ControlSystem.controlVehicle(vehicleOn, placementDefinition.isController);
-                InterfaceManager.inputInterface.setMouseEnabled(!(placementDefinition.isController && ConfigSystem.client.controlSettings.mouseYoke.value && lockCameraToMovement));
             }
             return true;
         } else {

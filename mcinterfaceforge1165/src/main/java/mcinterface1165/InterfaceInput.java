@@ -35,9 +35,6 @@ public class InterfaceInput implements IInterfaceInput {
     private static boolean repeatEnabled = false;
     private static int lastScrollValue;
 
-    //Mouse variables.
-    //private static final InhibitableMouseHelper customMouseHelper = new InhibitableMouseHelper();
-
     //Joystick variables.
     private static boolean runningJoystickThread = false;
     private static boolean runningClassicMode = false;
@@ -310,26 +307,6 @@ public class InterfaceInput implements IInterfaceInput {
     }
 
     @Override
-    public void setMouseEnabled(boolean enabled) {
-        //Replace the default MC callback class with our own.
-        //This allows us to disable mouse movement
-        //FIXME can't seem to do this since we can't replace the MC callback handler without wiping it.
-        /*if(enabled) {
-            GLFW.glfwSetCursorPosCallback(Minecraft.getInstance().getWindow().getWindow(), Minecraft.getInstance().mouseHandler);
-        }else {
-            GLFW.glfwSetCursorPosCallback(Minecraft.getInstance().getWindow().getWindow(), this);    
-        }
-        
-        Minecraft.getInstance().mouseHandler = customMouseHelper;*/
-    }
-
-    @Override
-    public long getMouseDelta() {
-        //return (((long) customMouseHelper.deltaXForced) << Integer.SIZE) | (customMouseHelper.deltaYForced & 0xffffffffL);
-        return 0;
-    }
-
-    @Override
     public int getTrackedMouseWheel() {
         return lastScrollValue;
     }
@@ -377,7 +354,7 @@ public class InterfaceInput implements IInterfaceInput {
     }
 
     /**
-     * Custom MouseHelper class that can have movement checks inhibited based on
+     * Custom MouseHelper class that can have movemgent checks inhibited based on
      * settings in this class.  Allows us to prevent player movement.
      */
     /*private static class InhibitableMouseHelper extends MouseHelper {

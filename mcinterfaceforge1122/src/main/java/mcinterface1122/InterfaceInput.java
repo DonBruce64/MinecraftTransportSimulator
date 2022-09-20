@@ -23,7 +23,6 @@ import net.java.games.input.Controller;
 import net.java.games.input.ControllerEnvironment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
-import net.minecraft.util.MouseHelper;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -34,10 +33,6 @@ import net.minecraftforge.fml.relauncher.Side;
 public class InterfaceInput implements IInterfaceInput {
     //Common variables.
     private static KeyBinding configKey;
-
-    //Mouse variables.
-    private static boolean enableMouse = false;
-    private static final InhibitableMouseHelper customMouseHelper = new InhibitableMouseHelper();
 
     //Joystick variables.
     private static boolean runningJoystickThread = false;
@@ -280,19 +275,6 @@ public class InterfaceInput implements IInterfaceInput {
     }
 
     @Override
-    public void setMouseEnabled(boolean enabled) {
-        enableMouse = enabled;
-        //Replace the default MC MouseHelper class with our own.
-        //This allows us to disable mouse movement.
-        Minecraft.getMinecraft().mouseHelper = customMouseHelper;
-    }
-
-    @Override
-    public long getMouseDelta() {
-        return (((long) customMouseHelper.deltaXForced) << Integer.SIZE) | (customMouseHelper.deltaYForced & 0xffffffffL);
-    }
-
-    @Override
     public int getTrackedMouseWheel() {
         return Mouse.hasWheel() ? Mouse.getDWheel() : 0;
     }
@@ -330,33 +312,4 @@ public class InterfaceInput implements IInterfaceInput {
             new GUIConfig();
         }
     }
-
-    /**
-     * Custom MouseHelper class that can have movement checks inhibited based on
-     * settings in this class.  Allows us to prevent player movement.
-     */
-    private static class InhibitableMouseHelper extends MouseHelper {
-        private int deltaXForced;
-        private int deltaYForced;
-
-        @Override
-        public void mouseXYChange() {
-            //If the mouse is disabled, capture the deltas and prevent MC from seeing them.
-            //Don't capture high deltas, as this is likely due to the game pausing.
-            super.mouseXYChange();
-            if (!enableMouse) {
-                deltaXForced = deltaX;
-                if (deltaXForced > 100) {
-                    deltaXForced = 0;
-                }
-                deltaYForced = deltaY;
-                if (deltaYForced > 100) {
-                    deltaYForced = 0;
-                }
-                deltaX = 0;
-                deltaY = 0;
-            }
-        }
-    }
-
 }
