@@ -51,7 +51,7 @@ public class PacketEntityCSHandshakeClient extends APacketPlayer {
                 tile.playersRequestingData.add(player);
             }
         } else {
-            Entity entity = ((WrapperWorld) world).getEntityByUUID(UUID.fromString(builderID));
+            Entity entity = ((WrapperWorld) world).getExternalEntity(UUID.fromString(builderID)).entity;
             if (entity != null) {
                 //Queue up the builder to send the player data back next update.
                 ((ABuilderEntityBase) entity).playersRequestingData.add(player);

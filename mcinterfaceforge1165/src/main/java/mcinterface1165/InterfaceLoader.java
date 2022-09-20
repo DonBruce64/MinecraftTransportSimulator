@@ -7,14 +7,21 @@ import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import minecrafttransportsimulator.blocks.components.ABlockBase;
+import minecrafttransportsimulator.blocks.instances.BlockCollision;
+import minecrafttransportsimulator.items.components.AItemBase;
+import minecrafttransportsimulator.items.components.AItemPack;
+import minecrafttransportsimulator.items.components.IItemBlock;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import net.minecraft.tileentity.TileEntityType;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
 /**
  * Loader interface for the mod.  This class is not actually an interface, unlike everything else.
@@ -33,6 +40,10 @@ public final class InterfaceLoader {
     static {
         //Enable universal bucket so that we can use buckets on fuel pumps.
         FluidRegistry.enableUniversalBucket();
+
+        //Add registries.
+        BuilderBlock.BLOCKS.register(FMLJavaModLoadingContext.get().getModEventBus());
+        BuilderTileEntity.TILE_ENTITIES.register(FMLJavaModLoadingContext.get().getModEventBus());
     }
 
 	public static final Logger LOGGER = LogManager.getLogger(InterfaceManager.coreModID);
@@ -71,6 +82,55 @@ public final class InterfaceLoader {
         } else {
             InterfaceManager.coreInterface.logError("Could not find mods directory!  Game directory is confirmed to: " + gameDirectory);
         }
+
+        //Create all pack items.  We need to do this before anything else.
+        //block registration comes first, and we use the items registered to determine
+        //which blocks we need to register.
+        for (String packID : PackParser.getAllPackIDs()) {
+            for (AItemPack<?> packItem : PackParser.getAllItemsForPack(packID, true)) {
+                if (packItem.autoGenerate()) {
+                    new BuilderItem(packItem);
+                }
+            }
+        }
+
+        //Register the IItemBlock blocks.  We cheat here and
+        //iterate over all items and get the blocks they spawn.
+        //Not only does this prevent us from having to manually set the blocks
+        //we also pre-generate the block classes here.
+        List<ABlockBase> blocksRegistred = new ArrayList<>();
+        for (AItemBase item : BuilderItem.itemMap.keySet()) {
+            if (item instanceof IItemBlock) {
+                ABlockBase itemBlockBlock = ((IItemBlock) item).getBlock();
+                if (!blocksRegistred.contains(itemBlockBlock)) {
+                    //New block class detected.  Register it and its instance.
+                    BuilderBlock wrapper = new BuilderBlock(itemBlockBlock);
+                    String name = itemBlockBlock.getClass().getSimpleName().substring("Block".length());
+                    wrapper.setRegistryName(InterfaceManager.coreModID + ":" + name);
+                    BuilderBlock.BLOCKS.register(name, () -> wrapper);
+                    BuilderBlock.blockMap.put(itemBlockBlock, wrapper);
+                    blocksRegistred.add(itemBlockBlock);
+                }
+            }
+        }
+
+        //Register the collision blocks.
+        for (int i = 0; i < BlockCollision.blockInstances.size(); ++i) {
+            BlockCollision collisionBlock = BlockCollision.blockInstances.get(i);
+            BuilderBlock wrapper = new BuilderBlock(collisionBlock);
+            String name = collisionBlock.getClass().getSimpleName().substring("Block".length()) + i;
+            wrapper.setRegistryName(InterfaceManager.coreModID + ":" + name);
+            BuilderBlock.BLOCKS.register(name, () -> wrapper);
+            BuilderBlock.blockMap.put(collisionBlock, wrapper);
+        }
+
+        //Register the TEs.  Has to be done last to ensure block maps are populated.
+        BuilderBlock[] blockArray = BuilderBlock.blockMap.values().toArray(new BuilderBlock[0]);
+        BuilderTileEntity.TE_TYPE = BuilderTileEntity.TILE_ENTITIES.register("builder_base", () -> TileEntityType.Builder.of(BuilderTileEntity::new, blockArray).build(null)).get();
+        BuilderTileEntityInventoryContainer.TE_TYPE2 = BuilderTileEntity.TILE_ENTITIES.register("builder_inventory", () -> TileEntityType.Builder.of(BuilderTileEntityInventoryContainer::new, blockArray).build(null)).get();
+
+        BuilderTileEntityInventoryContainer.TE_TYPE2.register("builder_inventory", () -> TileEntityType.Builder.of(BuilderTileEntityInventoryContainer::new, blockArray).build(null));
+        BuilderTileEntityFluidTank.TE_TYPE2.register("builder_fluid", () -> TileEntityType.Builder.of(BuilderTileEntityFluidTank::new, blockArray).build(null));
     }
 
     @EventHandler

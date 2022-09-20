@@ -13,17 +13,17 @@ class WrapperInventory implements IWrapperInventory {
 
     @Override
     public int getSize() {
-        return inventory.getSizeInventory();
+        return inventory.getContainerSize();
     }
 
     @Override
     public IWrapperItemStack getStack(int slot) {
-        return new WrapperItemStack(inventory.getStackInSlot(slot));
+        return new WrapperItemStack(inventory.getItem(slot));
     }
 
     @Override
     public void setStack(IWrapperItemStack stackToSet, int index) {
-        inventory.setInventorySlotContents(index, ((WrapperItemStack) stackToSet).stack);
-        inventory.markDirty();
+        inventory.setItem(index, ((WrapperItemStack) stackToSet).stack);
+        inventory.setChanged();
     }
 }

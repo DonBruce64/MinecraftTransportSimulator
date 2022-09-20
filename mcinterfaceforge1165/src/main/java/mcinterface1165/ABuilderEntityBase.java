@@ -108,7 +108,7 @@ public abstract class ABuilderEntityBase extends Entity {
         super.onRemovedFromWorld();
         //Catch unloaded entities from when the chunk goes away.
         if (isAlive()) {
-            kill();
+            remove();
         }
     }
 
