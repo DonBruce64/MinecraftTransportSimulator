@@ -85,11 +85,8 @@ public class InterfaceEventsEntityRendering {
                 GlStateManager.depthMask(false);
             }
 
-            for (Entity entity : Minecraft.getMinecraft().world.loadedEntityList) {
-                if (entity instanceof BuilderEntityRenderForwarder) {
-                    BuilderEntityRenderForwarder forwarder = (BuilderEntityRenderForwarder) entity;
-                    Minecraft.getMinecraft().getRenderManager().getEntityRenderObject(forwarder).doRender(forwarder, 0, 0, 0, 0, partialTicks);
-                }
+            if (BuilderEntityRenderForwarder.lastClientInstance != null) {
+                Minecraft.getMinecraft().getRenderManager().getEntityRenderObject(BuilderEntityRenderForwarder.lastClientInstance).doRender(BuilderEntityRenderForwarder.lastClientInstance, 0, 0, 0, 0, partialTicks);
             }
 
             if (pass == 1) {

@@ -2,7 +2,7 @@ package mcinterface1165;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
@@ -22,8 +22,9 @@ import net.minecraftforge.fml.common.registry.EntityEntryBuilder;
  */
 @EventBusSubscriber
 public class BuilderEntityRenderForwarder extends ABuilderEntityBase {
+    protected static BuilderEntityRenderForwarder lastClientInstance;
 
-    protected EntityPlayer playerFollowing;
+    protected PlayerEntity playerFollowing;
     private final long[] lastTickRendered = new long[]{0L, 0L, 0L};
     private final float[] lastPartialTickRendered = new float[]{0F, 0F, 0F};
     private boolean doneRenderingShaders;
@@ -33,9 +34,12 @@ public class BuilderEntityRenderForwarder extends ABuilderEntityBase {
     public BuilderEntityRenderForwarder(World world) {
         super(world);
         setSize(0.05F, 0.05F);
+        if (world.isClientSide) {
+            lastClientInstance = this;
+        }
     }
 
-    public BuilderEntityRenderForwarder(EntityPlayer playerFollowing) {
+    public BuilderEntityRenderForwarder(PlayerEntity playerFollowing) {
         this(playerFollowing.world);
         this.playerFollowing = playerFollowing;
         this.setPosition(playerFollowing.posX, playerFollowing.posY, playerFollowing.posZ);

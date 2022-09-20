@@ -1,6 +1,7 @@
 package mcinterface1165;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import minecrafttransportsimulator.items.components.AItemBase;
@@ -8,14 +9,12 @@ import minecrafttransportsimulator.mcinterface.IInterfaceCore;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import net.minecraft.client.Minecraft;
-import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.NonNullList;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.registry.Registry;
 import net.minecraftforge.fml.ModList;
-import net.minecraftforge.oredict.OreDictionary;
 import net.minecraftforge.registries.ForgeRegistries;
 
 class InterfaceCore implements IInterfaceCore {
@@ -74,30 +73,20 @@ class InterfaceCore implements IInterfaceCore {
 
     @Override
     public boolean isOredictMatch(IWrapperItemStack stackA, IWrapperItemStack stackB) {
-        return OreDictionary.itemMatches(((WrapperItemStack) stackA).stack, ((WrapperItemStack) stackB).stack, false);
+        Collection<ResourceLocation> aTags = ItemTags.getAllTags().getMatchingTags(((WrapperItemStack) stackA).stack.getItem());
+        Collection<ResourceLocation> bTags = ItemTags.getAllTags().getMatchingTags(((WrapperItemStack) stackB).stack.getItem());
+        for (ResourceLocation aTag : aTags) {
+            if (bTags.contains(aTag)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
     public List<IWrapperItemStack> getOredictMaterials(String oreName, int stackSize) {
-        NonNullList<ItemStack> oreDictStacks = OreDictionary.getOres(oreName, false);
         List<IWrapperItemStack> stacks = new ArrayList<>();
-        for (ItemStack stack : oreDictStacks) {
-            if (stack.getMetadata() == net.minecraftforge.oredict.OreDictionary.WILDCARD_VALUE) {
-                NonNullList<ItemStack> oreDictSubStacks = NonNullList.create();
-                stack.getItem().getSubItems(CreativeTabs.SEARCH, oreDictSubStacks);
-                for (ItemStack subStack : oreDictSubStacks) {
-                    ItemStack editedStack = subStack.copy();
-                    editedStack.setCount(stackSize);
-                    stacks.add(new WrapperItemStack(editedStack));
-                }
-
-            } else {
-                ItemStack editedStack = stack.copy();
-                editedStack.setCount(stackSize);
-                stacks.add(new WrapperItemStack(editedStack));
-            }
-
-        }
+        ItemTags.getAllTags().getTag(new ResourceLocation(oreName)).getValues().forEach(item -> stacks.add(new WrapperItemStack(new ItemStack(item, stackSize))));
         return stacks;
     }
 }

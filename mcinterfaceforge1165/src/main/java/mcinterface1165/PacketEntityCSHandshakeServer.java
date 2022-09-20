@@ -55,7 +55,7 @@ public class PacketEntityCSHandshakeServer extends APacketBase {
                 tile.loadFromSavedNBT = true;
             }
         } else {
-            Entity entity = ((WrapperWorld) world).getEntityByUUID(UUID.fromString(builderID));
+            Entity entity = ((WrapperWorld) world).getExternalEntity(UUID.fromString(builderID)).entity;
             if (entity != null) {
                 //Set last loaded NBT.
                 ((ABuilderEntityBase) entity).lastLoadedNBT = ((WrapperNBT) data).tag;

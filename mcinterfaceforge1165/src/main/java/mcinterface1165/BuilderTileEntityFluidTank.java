@@ -1,22 +1,21 @@
 package mcinterface1165;
 
-import javax.annotation.Nullable;
+import javax.annotation.Nonnull;
 
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityFluidTankProvider;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityFluidLoader;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.tileentity.TileEntityType;
+import net.minecraft.util.Direction;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.fluids.FluidEvent;
-import net.minecraftforge.fluids.FluidRegistry;
+import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.FluidTankInfo;
 import net.minecraftforge.fluids.IFluidTank;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
-import net.minecraftforge.fluids.capability.FluidTankProperties;
 import net.minecraftforge.fluids.capability.IFluidHandler;
-import net.minecraftforge.fluids.capability.IFluidTankProperties;
+import net.minecraftforge.registries.ForgeRegistries;
 
 /**
  * Builder for tile entities that contain fluids.  This builder ticks.
@@ -24,26 +23,27 @@ import net.minecraftforge.fluids.capability.IFluidTankProperties;
  * @author don_bruce
  */
 public class BuilderTileEntityFluidTank<FluidTankTileEntity extends ATileEntityBase<?> & ITileEntityFluidTankProvider> extends BuilderTileEntity<FluidTankTileEntity> implements IFluidTank, IFluidHandler {
+    protected static TileEntityType<BuilderTileEntityFluidTank<? extends ATileEntityBase<?>>> TE_TYPE2;
 
     public BuilderTileEntityFluidTank() {
-        super();
+        super(TE_TYPE2);
     }
 
     @Override
-    public void update() {
-        super.update();
+    public void tick() {
+        super.tick();
         if (tileEntity != null) {
             if (tileEntity instanceof TileEntityFluidLoader && ((TileEntityFluidLoader) tileEntity).isUnloader()) {
                 int currentFluidAmount = getFluidAmount();
                 if (currentFluidAmount > 0) {
                     //Pump out fluid to handler below, if we have one.
-                    TileEntity teBelow = world.getTileEntity(getPos().down());
-                    if (teBelow != null && teBelow.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, EnumFacing.UP)) {
-                        IFluidHandler fluidHandler = teBelow.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, EnumFacing.UP);
-                        int amountDrained = fluidHandler.fill(getFluid(), true);
+                    TileEntity teBelow = level.getBlockEntity(getBlockPos().below());
+                    IFluidHandler fluidHandler = teBelow.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, Direction.UP).orElse(null);
+                    if (teBelow != null && fluidHandler != null) {
+                        int amountDrained = fluidHandler.fill(getFluid(), FluidAction.EXECUTE);
                         if (amountDrained > 0 && currentFluidAmount == getFluidAmount()) {
                             //Need to drain from our tank as the system didn't do this.
-                            drain(amountDrained, true);
+                            drain(amountDrained, FluidAction.EXECUTE);
                         }
                     }
                 }
@@ -52,13 +52,8 @@ public class BuilderTileEntityFluidTank<FluidTankTileEntity extends ATileEntityB
     }
 
     @Override
-    public IFluidTankProperties[] getTankProperties() {
-        return FluidTankProperties.convert(new FluidTankInfo[]{getInfo()});
-    }
-
-    @Override
     public FluidStack getFluid() {
-        return tileEntity != null && !tileEntity.getTank().getFluid().isEmpty() ? new FluidStack(FluidRegistry.getFluid(tileEntity.getTank().getFluid()), (int) tileEntity.getTank().getFluidLevel()) : null;
+        return tileEntity != null && !tileEntity.getTank().getFluid().isEmpty() ? new FluidStack(ForgeRegistries.FLUIDS.getValue(new ResourceLocation(tileEntity.getTank().getFluid())), (int) tileEntity.getTank().getFluidLevel()) : null;
     }
 
     @Override
@@ -72,25 +67,41 @@ public class BuilderTileEntityFluidTank<FluidTankTileEntity extends ATileEntityB
     }
 
     @Override
-    public FluidTankInfo getInfo() {
-        return new FluidTankInfo(this);
+    public boolean isFluidValid(FluidStack fluid) {
+        return true;
     }
 
     @Override
-    public int fill(FluidStack stack, boolean doFill) {
+    public int getTanks() {
+        return 1;
+    }
+
+    @Override
+    public FluidStack getFluidInTank(int tank) {
+        return getFluid();
+    }
+
+    @Override
+    public int getTankCapacity(int tank) {
+        return getCapacity();
+    }
+
+    @Override
+    public boolean isFluidValid(int tank, @Nonnull FluidStack stack) {
+        return isFluidValid(stack);
+    }
+
+    @Override
+    public int fill(FluidStack stack, FluidAction doFill) {
         if (tileEntity != null) {
-            int fillAmount = (int) tileEntity.getTank().fill(stack.getFluid().getName(), stack.amount, doFill);
-            if (fillAmount > 0 && doFill) {
-                FluidEvent.fireEvent(new FluidEvent.FluidFillingEvent(new FluidStack(stack.getFluid(), fillAmount), world, getPos(), this, fillAmount));
-            }
-            return fillAmount;
+            return (int) tileEntity.getTank().fill(stack.getFluid().getRegistryName().getPath(), stack.getAmount(), doFill == FluidAction.EXECUTE);
         } else {
             return 0;
         }
     }
 
     @Override
-    public FluidStack drain(int maxDrain, boolean doDrain) {
+    public FluidStack drain(int maxDrain, FluidAction doDrain) {
         if (getFluidAmount() > 0) {
             return this.drain(new FluidStack(getFluid().getFluid(), maxDrain), doDrain);
         }
@@ -98,28 +109,15 @@ public class BuilderTileEntityFluidTank<FluidTankTileEntity extends ATileEntityB
     }
 
     @Override
-    public FluidStack drain(FluidStack stack, boolean doDrain) {
-        int drainAmount = (int) (tileEntity != null ? tileEntity.getTank().drain(stack.getFluid().getName(), stack.amount, doDrain) : 0);
-        if (drainAmount > 0 && doDrain) {
-            FluidEvent.fireEvent(new FluidEvent.FluidDrainingEvent(new FluidStack(stack.getFluid(), drainAmount), world, getPos(), this, drainAmount));
-        }
-        return new FluidStack(stack.getFluid(), drainAmount);
-    }
-
-    @Override
-    public boolean hasCapability(Capability<?> capability, @Nullable EnumFacing facing) {
-        if (capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY && EnumFacing.DOWN.equals(facing)) {
-            return true;
-        } else {
-            return super.hasCapability(capability, facing);
-        }
+    public FluidStack drain(FluidStack stack, FluidAction doDrain) {
+        return new FluidStack(stack.getFluid(), (int) (tileEntity != null ? tileEntity.getTank().drain(stack.getFluid().getRegistryName().getPath(), stack.getAmount(), doDrain == FluidAction.EXECUTE) : 0));
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public <T> T getCapability(Capability<T> capability, EnumFacing facing) {
-        if (capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY && EnumFacing.DOWN.equals(facing)) {
-            return (T) this;
+    public <T> LazyOptional<T> getCapability(Capability<T> capability, Direction facing) {
+        if (capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY && facing == Direction.DOWN) {
+            return LazyOptional.of(() -> (T) this);
         } else {
             return super.getCapability(capability, facing);
         }

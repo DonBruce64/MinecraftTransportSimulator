@@ -98,8 +98,8 @@ public class WrapperWorld extends AWrapperWorld {
 
 
     protected final World world;
-    protected final Map<UUID, Entity> entitiesByUUID = new HashMap<>();
     private final IWrapperNBT savedData;
+    protected final Map<UUID, Entity> entitiesByUUID = new HashMap<>();
 
     /**
      * Returns a wrapper instance for the passed-in world instance.
@@ -204,12 +204,7 @@ public class WrapperWorld extends AWrapperWorld {
 
     @Override
     public WrapperEntity getExternalEntity(UUID entityID) {
-        for (Entity entity : world.loadedEntityList) {
-            if (entity.getUniqueID().equals(entityID)) {
-                return WrapperEntity.getWrapperFor(entity);
-            }
-        }
-        return null;
+        return WrapperEntity.getWrapperFor(entitiesByUUID.get(entityID));
     }
 
     @Override
@@ -613,7 +608,7 @@ public class WrapperWorld extends AWrapperWorld {
                             if (item instanceof AItemPack) {
                                 ((AItemPack<JSONDefinition>) item).populateDefaultData(data);
                             }
-                            builderTile.tileEntity = (TileEntityType) ((ABlockBaseTileEntity) block).createTileEntity(this, position, playerWrapper, data);
+                            builderTile.setInternalTile(((ABlockBaseTileEntity) block).createTileEntity(this, position, playerWrapper, data));
                             addEntity(builderTile.tileEntity);
                         }
                         //Shrink stack as we placed this block.
@@ -873,25 +868,22 @@ public class WrapperWorld extends AWrapperWorld {
     }
 
     /**
-     * Helper method to get the entity by UUID.  Used internally for lookups for MC-external entities.
-     */
-    public Entity getEntityByUUID(UUID id) {
-        return entitiesByUUID.get(id);
-    }
-
-    private static final List<Entity> allEntities = new ArrayList<Entity>();
-
-    /**
      * Checks for joined and left entities to ensure we maintain a map of them for lookups.
      */
     @SubscribeEvent
     public void on(EntityJoinWorldEvent event) {
-        entitiesByUUID.put(event.getEntity().getUUID(), event.getEntity());
+        //Need to check if it's our world, because Forge is stupid like that.
+        if (event.getWorld() == world) {
+            entitiesByUUID.put(event.getEntity().getUUID(), event.getEntity());
+        }
     }
 
     @SubscribeEvent
     public void on(EntityLeaveWorldEvent event) {
-        entitiesByUUID.remove(event.getEntity().getUUID());
+        //Need to check if it's our world, because Forge is stupid like that.
+        if (event.getWorld() == world) {
+            entitiesByUUID.remove(event.getEntity().getUUID());
+        }
     }
 
     /**

@@ -14,12 +14,9 @@ import minecrafttransportsimulator.blocks.instances.BlockCollision;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityFluidTankProvider;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityInventoryProvider;
-import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
-import minecrafttransportsimulator.items.components.IItemBlock;
 import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.packloading.PackParser;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -35,17 +32,14 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
-import net.minecraftforge.event.RegistryEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
-import net.minecraftforge.fml.common.registry.GameRegistry;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
 
 /**
  * Builder for a basic MC Block class.  This builder assumes the block will not be a solid
@@ -55,8 +49,9 @@ import net.minecraftforge.fml.common.registry.GameRegistry;
  *
  * @author don_bruce
  */
-@EventBusSubscriber
 public class BuilderBlock extends Block {
+    protected static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, InterfaceLoader.MODID);
+
     /**
      * Map of created blocks linked to their builder instances.  Used for interface operations.
      **/
@@ -301,58 +296,5 @@ public class BuilderBlock extends Block {
             }
         }
         return super.getLightValue(state, world, pos);
-    }
-
-    /**
-     * Registers all blocks in the core mod, as well as any decors in packs.
-     * Also adds the respective TileEntity if the block has one.
-     */
-    @SubscribeEvent
-    public static void registerBlocks(RegistryEvent.Register<Block> event) {
-        //Create all pack items.  We need to do this here in the blocks because
-        //block registration comes first, and we use the items registered to determine
-        //which blocks we need to register.
-        for (String packID : PackParser.getAllPackIDs()) {
-            for (AItemPack<?> packItem : PackParser.getAllItemsForPack(packID, true)) {
-                if (packItem.autoGenerate()) {
-                    new BuilderItem(packItem);
-                }
-            }
-        }
-
-        //Register the TEs.
-        GameRegistry.registerTileEntity(BuilderTileEntity.class, new ResourceLocation(InterfaceManager.coreModID, BuilderTileEntity.class.getSimpleName()));
-        GameRegistry.registerTileEntity(BuilderTileEntityInventoryContainer.class, new ResourceLocation(InterfaceManager.coreModID, BuilderTileEntityInventoryContainer.class.getSimpleName()));
-        GameRegistry.registerTileEntity(BuilderTileEntityFluidTank.class, new ResourceLocation(InterfaceManager.coreModID, BuilderTileEntityFluidTank.class.getSimpleName()));
-
-        //Register the IItemBlock blocks.  We cheat here and
-        //iterate over all items and get the blocks they spawn.
-        //Not only does this prevent us from having to manually set the blocks
-        //we also pre-generate the block classes here.
-        List<ABlockBase> blocksRegistred = new ArrayList<>();
-        for (AItemBase item : BuilderItem.itemMap.keySet()) {
-            if (item instanceof IItemBlock) {
-                ABlockBase itemBlockBlock = ((IItemBlock) item).getBlock();
-                if (!blocksRegistred.contains(itemBlockBlock)) {
-                    //New block class detected.  Register it and its instance.
-                    BuilderBlock wrapper = new BuilderBlock(itemBlockBlock);
-                    String name = itemBlockBlock.getClass().getSimpleName();
-                    name = InterfaceManager.coreModID + ":" + name.substring("Block".length());
-                    event.getRegistry().register(wrapper.setRegistryName(name).setTranslationKey(name));
-                    blockMap.put(itemBlockBlock, wrapper);
-                    blocksRegistred.add(itemBlockBlock);
-                }
-            }
-        }
-
-        //Register the collision blocks.
-        for (int i = 0; i < BlockCollision.blockInstances.size(); ++i) {
-            BlockCollision collisionBlock = BlockCollision.blockInstances.get(i);
-            BuilderBlock wrapper = new BuilderBlock(collisionBlock);
-            String name = collisionBlock.getClass().getSimpleName();
-            name = InterfaceManager.coreModID + ":" + name.substring("Block".length()) + i;
-            event.getRegistry().register(wrapper.setRegistryName(name).setTranslationKey(name));
-            blockMap.put(collisionBlock, wrapper);
-        }
     }
 }

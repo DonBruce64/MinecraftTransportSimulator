@@ -2,16 +2,15 @@ package mcinterface1165;
 
 import java.io.IOException;
 
-import org.lwjgl.input.Keyboard;
-
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.components.AGUIComponent;
 import minecrafttransportsimulator.guis.components.GUIComponentButton;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox;
 import minecrafttransportsimulator.guis.components.GUIComponentTextBox.TextBoxControlKey;
+import net.java.games.input.Keyboard;
 import net.minecraft.client.audio.PositionedSoundRecord;
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.init.SoundEvents;
+import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.util.SoundEvents;
 
 /**
  * Builder for MC GUI classes.  Created when {@link InterfaceClient#setActiveGUI(AGUIBase)}}
@@ -20,7 +19,7 @@ import net.minecraft.init.SoundEvents;
  *
  * @author don_bruce
  */
-public class BuilderGUI extends GuiScreen {
+public class BuilderGUI extends Screen {
     private GUIComponentButton lastButtonClicked;
 
     /**

@@ -22,6 +22,7 @@ import net.minecraftforge.fml.common.registry.EntityEntryBuilder;
  */
 @EventBusSubscriber
 public class BuilderEntityRenderForwarder extends ABuilderEntityBase {
+    protected static BuilderEntityRenderForwarder lastClientInstance;
 
     protected EntityPlayer playerFollowing;
     private final long[] lastTickRendered = new long[]{0L, 0L, 0L};
@@ -33,6 +34,9 @@ public class BuilderEntityRenderForwarder extends ABuilderEntityBase {
     public BuilderEntityRenderForwarder(World world) {
         super(world);
         setSize(0.05F, 0.05F);
+        if (world.isRemote) {
+            lastClientInstance = this;
+        }
     }
 
     public BuilderEntityRenderForwarder(EntityPlayer playerFollowing) {

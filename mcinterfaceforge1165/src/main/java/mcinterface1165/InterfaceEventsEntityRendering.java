@@ -5,8 +5,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
+import org.spongepowered.asm.mixin.MixinEnvironment.Side;
+
+import com.mojang.blaze3d.platform.GlStateManager;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
@@ -19,10 +21,10 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.systems.CameraSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import net.java.games.input.Mouse;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.model.ModelPlayer;
-import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.entity.RenderLivingBase;
 import net.minecraft.client.renderer.entity.RenderManager;
@@ -36,9 +38,8 @@ import net.minecraftforge.client.event.RenderHandEvent;
 import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.client.event.RenderSpecificHandEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.relauncher.Side;
 
 /**
  * Interface for handling events pertaining to entity rendering.  This modifies the player's rendered state
@@ -85,11 +86,8 @@ public class InterfaceEventsEntityRendering {
                 GlStateManager.depthMask(false);
             }
 
-            for (Entity entity : Minecraft.getMinecraft().world.loadedEntityList) {
-                if (entity instanceof BuilderEntityRenderForwarder) {
-                    BuilderEntityRenderForwarder forwarder = (BuilderEntityRenderForwarder) entity;
-                    Minecraft.getMinecraft().getRenderManager().getEntityRenderObject(forwarder).doRender(forwarder, 0, 0, 0, 0, partialTicks);
-                }
+            if (BuilderEntityRenderForwarder.lastClientInstance != null) {
+                Minecraft.getMinecraft().getRenderManager().getEntityRenderObject(BuilderEntityRenderForwarder.lastClientInstance).doRender(BuilderEntityRenderForwarder.lastClientInstance, 0, 0, 0, 0, partialTicks);
             }
 
             if (pass == 1) {
