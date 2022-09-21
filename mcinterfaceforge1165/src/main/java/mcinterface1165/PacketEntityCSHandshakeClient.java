@@ -24,7 +24,7 @@ public class PacketEntityCSHandshakeClient extends APacketPlayer {
         this.builderID = builder.getStringUUID();
     }
 
-    public PacketEntityCSHandshakeClient(IWrapperPlayer player, BuilderTileEntity<?> builder) {
+    public PacketEntityCSHandshakeClient(IWrapperPlayer player, BuilderTileEntity builder) {
         super(player);
         this.builderID = builder.getBlockPos().getX() + "," + builder.getBlockPos().getY() + "," + builder.getBlockPos().getZ();
     }
@@ -46,7 +46,7 @@ public class PacketEntityCSHandshakeClient extends APacketPlayer {
         //Queue up the builder to send the player data back next update.
         if (builderID.contains(",")) {
             String[] stringPos = builderID.split(",");
-            BuilderTileEntity<?> tile = (BuilderTileEntity<?>) ((WrapperWorld) world).world.getBlockEntity(new BlockPos(Integer.parseInt(stringPos[0]), Integer.parseInt(stringPos[1]), Integer.parseInt(stringPos[2])));
+            BuilderTileEntity tile = (BuilderTileEntity) ((WrapperWorld) world).world.getBlockEntity(new BlockPos(Integer.parseInt(stringPos[0]), Integer.parseInt(stringPos[1]), Integer.parseInt(stringPos[2])));
             if (tile != null) {
                 tile.playersRequestingData.add(player);
             }

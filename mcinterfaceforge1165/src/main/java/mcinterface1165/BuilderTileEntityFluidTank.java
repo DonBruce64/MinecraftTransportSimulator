@@ -5,6 +5,7 @@ import javax.annotation.Nonnull;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityFluidTankProvider;
 import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityFluidLoader;
+import minecrafttransportsimulator.entities.instances.EntityFluidTank;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.Direction;
@@ -22,17 +23,25 @@ import net.minecraftforge.registries.ForgeRegistries;
  *
  * @author don_bruce
  */
-public class BuilderTileEntityFluidTank<FluidTankTileEntity extends ATileEntityBase<?> & ITileEntityFluidTankProvider> extends BuilderTileEntity<FluidTankTileEntity> implements IFluidTank, IFluidHandler {
-    protected static TileEntityType<BuilderTileEntityFluidTank<? extends ATileEntityBase<?>>> TE_TYPE2;
+public class BuilderTileEntityFluidTank extends BuilderTileEntity implements IFluidTank, IFluidHandler {
+    protected static TileEntityType<BuilderTileEntityFluidTank> TE_TYPE2;
+
+    private EntityFluidTank tank;
 
     public BuilderTileEntityFluidTank() {
         super(TE_TYPE2);
     }
 
     @Override
+    protected void setTileEntity(ATileEntityBase<?> tile) {
+        super.setTileEntity(tile);
+        this.tank = ((ITileEntityFluidTankProvider) tile).getTank();
+    }
+
+    @Override
     public void tick() {
         super.tick();
-        if (tileEntity != null) {
+        if (tank != null) {
             if (tileEntity instanceof TileEntityFluidLoader && ((TileEntityFluidLoader) tileEntity).isUnloader()) {
                 int currentFluidAmount = getFluidAmount();
                 if (currentFluidAmount > 0) {
@@ -53,17 +62,17 @@ public class BuilderTileEntityFluidTank<FluidTankTileEntity extends ATileEntityB
 
     @Override
     public FluidStack getFluid() {
-        return tileEntity != null && !tileEntity.getTank().getFluid().isEmpty() ? new FluidStack(ForgeRegistries.FLUIDS.getValue(new ResourceLocation(tileEntity.getTank().getFluid())), (int) tileEntity.getTank().getFluidLevel()) : null;
+        return tank != null && !tank.getFluid().isEmpty() ? new FluidStack(ForgeRegistries.FLUIDS.getValue(new ResourceLocation(tank.getFluid())), (int) tank.getFluidLevel()) : null;
     }
 
     @Override
     public int getFluidAmount() {
-        return (int) (tileEntity != null ? tileEntity.getTank().getFluidLevel() : 0);
+        return (int) (tank != null ? tank.getFluidLevel() : 0);
     }
 
     @Override
     public int getCapacity() {
-        return tileEntity != null ? tileEntity.getTank().getMaxLevel() : 0;
+        return tank != null ? tank.getMaxLevel() : 0;
     }
 
     @Override
@@ -93,8 +102,8 @@ public class BuilderTileEntityFluidTank<FluidTankTileEntity extends ATileEntityB
 
     @Override
     public int fill(FluidStack stack, FluidAction doFill) {
-        if (tileEntity != null) {
-            return (int) tileEntity.getTank().fill(stack.getFluid().getRegistryName().getPath(), stack.getAmount(), doFill == FluidAction.EXECUTE);
+        if (tank != null) {
+            return (int) tank.fill(stack.getFluid().getRegistryName().getPath(), stack.getAmount(), doFill == FluidAction.EXECUTE);
         } else {
             return 0;
         }
@@ -110,7 +119,7 @@ public class BuilderTileEntityFluidTank<FluidTankTileEntity extends ATileEntityB
 
     @Override
     public FluidStack drain(FluidStack stack, FluidAction doDrain) {
-        return new FluidStack(stack.getFluid(), (int) (tileEntity != null ? tileEntity.getTank().drain(stack.getFluid().getRegistryName().getPath(), stack.getAmount(), doDrain == FluidAction.EXECUTE) : 0));
+        return new FluidStack(stack.getFluid(), (int) (tank != null ? tank.drain(stack.getFluid().getRegistryName().getPath(), stack.getAmount(), doDrain == FluidAction.EXECUTE) : 0));
     }
 
     @SuppressWarnings("unchecked")

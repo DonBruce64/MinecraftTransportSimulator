@@ -26,7 +26,7 @@ public class PacketEntityCSHandshakeServer extends APacketBase {
         this.data = data;
     }
 
-    public PacketEntityCSHandshakeServer(BuilderTileEntity<?> builder, IWrapperNBT data) {
+    public PacketEntityCSHandshakeServer(BuilderTileEntity builder, IWrapperNBT data) {
         super(null);
         this.builderID = builder.getBlockPos().getX() + "," + builder.getBlockPos().getY() + "," + builder.getBlockPos().getZ();
         this.data = data;
@@ -49,7 +49,7 @@ public class PacketEntityCSHandshakeServer extends APacketBase {
     public void handle(AWrapperWorld world) {
         if (builderID.contains(",")) {
             String[] stringPos = builderID.split(",");
-            BuilderTileEntity<?> tile = (BuilderTileEntity<?>) ((WrapperWorld) world).world.getBlockEntity(new BlockPos(Integer.parseInt(stringPos[0]), Integer.parseInt(stringPos[1]), Integer.parseInt(stringPos[2])));
+            BuilderTileEntity tile = (BuilderTileEntity) ((WrapperWorld) world).world.getBlockEntity(new BlockPos(Integer.parseInt(stringPos[0]), Integer.parseInt(stringPos[1]), Integer.parseInt(stringPos[2])));
             if (tile != null) {
                 tile.lastLoadedNBT = ((WrapperNBT) data).tag;
                 tile.loadFromSavedNBT = true;

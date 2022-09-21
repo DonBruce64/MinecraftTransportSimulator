@@ -33,9 +33,6 @@ public class ItemPartEngine extends AItemPart {
     @Override
     public void addTooltipLines(List<String> tooltipLines, IWrapperNBT data) {
         super.addTooltipLines(tooltipLines, data);
-        if (data.getBoolean("isCreative")) {
-            tooltipLines.add(JSONConfigLanguage.ITEMINFO_ENGINE_CREATIVE.value);
-        }
         tooltipLines.add(JSONConfigLanguage.ITEMINFO_ENGINE_MAXRPM.value + definition.engine.maxRPM);
         tooltipLines.add(JSONConfigLanguage.ITEMINFO_ENGINE_MAXSAFERPM.value + definition.engine.maxSafeRPM);
         tooltipLines.add(JSONConfigLanguage.ITEMINFO_ENGINE_FUELCONSUMPTION.value + definition.engine.fuelConsumption);
@@ -83,14 +80,6 @@ public class ItemPartEngine extends AItemPart {
         if (data.getBoolean("fuelLeak")) {
             tooltipLines.add(JSONConfigLanguage.ITEMINFO_ENGINE_FUELLEAK.value);
         }
-    }
-
-    @Override
-    public void getDataBlocks(List<IWrapperNBT> dataBlocks) {
-        //Add a creative variant.
-        IWrapperNBT data = InterfaceManager.coreInterface.getNewNBTWrapper();
-        data.setBoolean("isCreative", true);
-        dataBlocks.add(data);
     }
 
     public static final AItemPartCreator CREATOR = new AItemPartCreator() {

@@ -43,12 +43,12 @@ public class InterfaceInterface {
         return null;
     }
 
-    public static ATileEntityBase<?> toInternal(BuilderTileEntity<?> tile) {
+    public static ATileEntityBase<?> toInternal(BuilderTileEntity tile) {
         return tile.tileEntity;
     }
 
-    public static BuilderTileEntity<?> toExternal(ATileEntityBase<?> tile) {
-        return (BuilderTileEntity<?>) ((WrapperWorld) tile.world).world.getBlockEntity(new BlockPos(tile.position.x, tile.position.y, tile.position.z));
+    public static BuilderTileEntity toExternal(ATileEntityBase<?> tile) {
+        return (BuilderTileEntity) ((WrapperWorld) tile.world).world.getBlockEntity(new BlockPos(tile.position.x, tile.position.y, tile.position.z));
     }
 
     public static WrapperEntity toInternal(Entity entity) {

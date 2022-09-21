@@ -1,6 +1,5 @@
 package mcinterface1122;
 
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,12 +18,10 @@ import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.items.instances.ItemPartGun;
 import minecrafttransportsimulator.jsondefs.JSONPack;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.PackParser;
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
@@ -42,7 +39,6 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
-import net.minecraft.util.NonNullList;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -110,24 +106,6 @@ public class BuilderItem extends Item implements IBuilderItemInterface {
             item.addTooltipLines(tooltipLines, new WrapperNBT(stack.getTagCompound()));
         } else {
             item.addTooltipLines(tooltipLines, InterfaceManager.coreInterface.getNewNBTWrapper());
-        }
-    }
-
-    /**
-     * Adds sub-items to the creative tab.  We override this to make custom items in the creative tab.
-     * This is currently only vehicle engines.
-     */
-    @Override
-    public void getSubItems(CreativeTabs tab, NonNullList<ItemStack> items) {
-        super.getSubItems(tab, items);
-        List<IWrapperNBT> dataBlocks = new ArrayList<>();
-        item.getDataBlocks(dataBlocks);
-        for (IWrapperNBT data : dataBlocks) {
-            if (this.isInCreativeTab(tab)) {
-                ItemStack stack = new ItemStack(this);
-                stack.setTagCompound(((WrapperNBT) data).tag);
-                items.add(stack);
-            }
         }
     }
 

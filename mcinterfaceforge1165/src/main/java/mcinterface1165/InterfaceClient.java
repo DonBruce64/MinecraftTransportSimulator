@@ -158,7 +158,7 @@ public class InterfaceClient implements IInterfaceClient {
                 BlockPos posHit = ((BlockRayTraceResult) lastHit).getBlockPos();
                 TileEntity mcTile = getClientWorld().world.getBlockEntity(posHit);
                 if (mcTile instanceof BuilderTileEntityFluidTank) {
-                    BuilderTileEntityFluidTank<?> builder = (BuilderTileEntityFluidTank<?>) mcTile;
+                    BuilderTileEntityFluidTank builder = (BuilderTileEntityFluidTank) mcTile;
                     return builder.tileEntity;
                 }
             }

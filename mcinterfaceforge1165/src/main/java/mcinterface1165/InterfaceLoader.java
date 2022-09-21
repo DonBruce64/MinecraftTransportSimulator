@@ -3,25 +3,32 @@ package mcinterface1165;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map.Entry;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import minecrafttransportsimulator.blocks.components.ABlockBase;
+import minecrafttransportsimulator.blocks.components.ABlockBaseTileEntity;
 import minecrafttransportsimulator.blocks.instances.BlockCollision;
+import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityFluidTankProvider;
+import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityInventoryProvider;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.IItemBlock;
+import minecrafttransportsimulator.items.components.IItemFood;
+import minecrafttransportsimulator.jsondefs.JSONPack;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.systems.ConfigSystem;
+import net.minecraft.item.Food;
+import net.minecraft.item.Item;
 import net.minecraft.tileentity.TileEntityType;
-import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.Mod.EventHandler;
-import net.minecraftforge.fml.common.event.FMLInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import net.minecraftforge.fml.event.lifecycle.FMLDedicatedServerSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fml.loading.FMLPaths;
 
 /**
  * Loader interface for the mod.  This class is not actually an interface, unlike everything else.
@@ -37,25 +44,33 @@ public final class InterfaceLoader {
     public static final String MODNAME = "Immersive Vehicles (MTS)";
     public static final String MODVER = "22.1.0";
 
-    static {
-        //Enable universal bucket so that we can use buckets on fuel pumps.
-        FluidRegistry.enableUniversalBucket();
+    public static final Logger LOGGER = LogManager.getLogger(InterfaceManager.coreModID);
 
+    public InterfaceLoader() {
         //Add registries.
+        BuilderItem.ITEMS.register(FMLJavaModLoadingContext.get().getModEventBus());
         BuilderBlock.BLOCKS.register(FMLJavaModLoadingContext.get().getModEventBus());
         BuilderTileEntity.TILE_ENTITIES.register(FMLJavaModLoadingContext.get().getModEventBus());
+
+        //Add ourselves to the boot process.
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::initClient);
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::initServer);
     }
 
-	public static final Logger LOGGER = LogManager.getLogger(InterfaceManager.coreModID);
+    private void initClient(FMLClientSetupEvent event) {
+        initCommon(true);
+    }
 
-    @SuppressWarnings("InstantiationOfUtilityClass")
-    @EventHandler
-    public void preInit(FMLPreInitializationEvent event) {
+    private void initServer(FMLDedicatedServerSetupEvent event) {
+        initCommon(false);
+    }
+
+    private void initCommon(boolean isClient) {
         //Get game directory.
-        String gameDirectory = event.getModConfigurationDirectory().getParent();
+        String gameDirectory = FMLPaths.GAMEDIR.get().toFile().getAbsolutePath();
 
         //Init interfaces and send to the main game system.
-        if (event.getSide().isClient()) {
+        if (isClient) {
             new InterfaceManager(MODID, gameDirectory, new InterfaceCore(), new InterfacePacket(), new InterfaceClient(), new InterfaceInput(), new InterfaceSound(), new InterfaceRender());
         } else {
             new InterfaceManager(MODID, gameDirectory, new InterfaceCore(), new InterfacePacket(), null, null, null, null);
@@ -64,7 +79,7 @@ public final class InterfaceLoader {
         InterfaceManager.coreInterface.logError("Welcome to MTS VERSION:" + MODVER);
 
         //Parse packs
-        ConfigSystem.loadFromDisk(new File(gameDirectory, "config"), event.getSide().isClient());
+        ConfigSystem.loadFromDisk(new File(gameDirectory, "config"), isClient);
         List<File> packDirectories = new ArrayList<>();
         File modDirectory = new File(gameDirectory, "mods");
         if (modDirectory.exists()) {
@@ -78,20 +93,53 @@ public final class InterfaceLoader {
 
             //Parse the packs.
             PackParser.addDefaultItems();
-            PackParser.parsePacks(packDirectories, event.getSide().isClient());
+            PackParser.parsePacks(packDirectories, isClient);
         } else {
             InterfaceManager.coreInterface.logError("Could not find mods directory!  Game directory is confirmed to: " + gameDirectory);
         }
+
+        //Create creative tabs.  Required before items since those need tabs in their constructors.
 
         //Create all pack items.  We need to do this before anything else.
         //block registration comes first, and we use the items registered to determine
         //which blocks we need to register.
         for (String packID : PackParser.getAllPackIDs()) {
-            for (AItemPack<?> packItem : PackParser.getAllItemsForPack(packID, true)) {
-                if (packItem.autoGenerate()) {
-                    new BuilderItem(packItem);
+            for (AItemPack<?> item : PackParser.getAllItemsForPack(packID, true)) {
+                if (item.autoGenerate()) {
+                    Item.Properties itemProperties = new Item.Properties();
+
+                    //Check if the creative tab is set/created.
+                    //The only except is for "invisible" parts of the core mod, these are internal.
+                    if (!item.definition.packID.equals(InterfaceManager.coreModID) || !item.definition.systemName.contains("invisible")) {
+                        String tabID = item.getCreativeTabID();
+                        if (!BuilderCreativeTab.createdTabs.containsKey(tabID)) {
+                            JSONPack packConfiguration = PackParser.getPackConfiguration(tabID);
+                            BuilderCreativeTab.createdTabs.put(tabID, new BuilderCreativeTab(packConfiguration.packName, BuilderItem.itemMap.get(PackParser.getItem(packConfiguration.packID, packConfiguration.packItem))));
+                        }
+                        itemProperties.tab(BuilderCreativeTab.createdTabs.get(tabID));
+                    }
+                    itemProperties.stacksTo(item.getStackSize());
+                    if (item instanceof IItemFood) {
+                        IItemFood food = (IItemFood) item;
+                        itemProperties.food(new Food.Builder().nutrition(food.getHungerAmount()).saturationMod(food.getSaturationAmount()).build());
+                    }
+                    new BuilderItem(new Item.Properties(), item);
                 }
             }
+        }
+
+        //Register all items in our wrapper map.
+        for (Entry<AItemBase, BuilderItem> entry : BuilderItem.itemMap.entrySet()) {
+            AItemPack<?> item = (AItemPack<?>) entry.getKey();
+            BuilderItem mcItem = entry.getValue();
+
+            //Register the item.
+            String name = InterfaceManager.coreModID + ":" + item.getRegistrationName();
+            mcItem.setRegistryName(name);
+            BuilderItem.ITEMS.register(name, () -> mcItem);
+
+            //If the item is for OreDict, add it.
+            //Well, we would if that existed....
         }
 
         //Register the IItemBlock blocks.  We cheat here and
@@ -125,20 +173,28 @@ public final class InterfaceLoader {
         }
 
         //Register the TEs.  Has to be done last to ensure block maps are populated.
-        BuilderBlock[] blockArray = BuilderBlock.blockMap.values().toArray(new BuilderBlock[0]);
-        BuilderTileEntity.TE_TYPE = BuilderTileEntity.TILE_ENTITIES.register("builder_base", () -> TileEntityType.Builder.of(BuilderTileEntity::new, blockArray).build(null)).get();
-        BuilderTileEntityInventoryContainer.TE_TYPE2 = BuilderTileEntity.TILE_ENTITIES.register("builder_inventory", () -> TileEntityType.Builder.of(BuilderTileEntityInventoryContainer::new, blockArray).build(null)).get();
+        List<BuilderBlock> normalBlocks = new ArrayList<>();
+        List<BuilderBlock> fluidBlocks = new ArrayList<>();
+        List<BuilderBlock> inventoryBlocks = new ArrayList<>();
 
-        BuilderTileEntityInventoryContainer.TE_TYPE2.register("builder_inventory", () -> TileEntityType.Builder.of(BuilderTileEntityInventoryContainer::new, blockArray).build(null));
-        BuilderTileEntityFluidTank.TE_TYPE2.register("builder_fluid", () -> TileEntityType.Builder.of(BuilderTileEntityFluidTank::new, blockArray).build(null));
-    }
+        BuilderBlock.blockMap.values().forEach(builder -> {
+            if (ITileEntityFluidTankProvider.class.isAssignableFrom(((ABlockBaseTileEntity) builder.block).getTileEntityClass())) {
+                fluidBlocks.add(builder);
+            } else if (ITileEntityInventoryProvider.class.isAssignableFrom(((ABlockBaseTileEntity) builder.block).getTileEntityClass())) {
+                inventoryBlocks.add(builder);
+            } else {
+                normalBlocks.add(builder);
+            }
+        });
 
-    @EventHandler
-    public void init(FMLInitializationEvent event) {
+        BuilderTileEntity.TE_TYPE = BuilderTileEntity.TILE_ENTITIES.register("builder_base", () -> TileEntityType.Builder.of(BuilderTileEntity::new, normalBlocks.toArray(new BuilderBlock[0])).build(null)).get();
+        BuilderTileEntityFluidTank.TE_TYPE2 = BuilderTileEntity.TILE_ENTITIES.register("builder_fluidtank", () -> TileEntityType.Builder.of(BuilderTileEntityFluidTank::new, fluidBlocks.toArray(new BuilderBlock[0])).build(null)).get();
+        BuilderTileEntityInventoryContainer.TE_TYPE2 = BuilderTileEntity.TILE_ENTITIES.register("builder_inventory", () -> TileEntityType.Builder.of(BuilderTileEntityInventoryContainer::new, inventoryBlocks.toArray(new BuilderBlock[0])).build(null)).get();
+
         //Init networking interface.  This will register packets as well.
         InterfacePacket.init();
 
-        if (event.getSide().isClient()) {
+        if (isClient) {
             //Init keybinds if we're on the client.
             InterfaceManager.inputInterface.initConfigKey();
 

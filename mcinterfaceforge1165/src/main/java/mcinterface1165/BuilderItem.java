@@ -4,55 +4,47 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import javax.annotation.Nullable;
-
-import org.spongepowered.asm.mixin.MixinEnvironment.Side;
 
 import com.google.common.collect.Multimap;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.components.ABlockBase.Axis;
 import minecrafttransportsimulator.items.components.AItemBase;
-import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.IItemFood;
 import minecrafttransportsimulator.items.instances.ItemItem;
 import minecrafttransportsimulator.items.instances.ItemPartGun;
-import minecrafttransportsimulator.jsondefs.JSONPack;
 import minecrafttransportsimulator.jsondefs.JSONPotionEffect;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.packloading.PackParser;
 import net.minecraft.advancements.CriteriaTriggers;
+import net.minecraft.block.BlockState;
 import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.SharedMonsterAttributes;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.ai.attributes.Attribute;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.inventory.EntityEquipmentSlot;
-import net.minecraft.item.EnumAction;
+import net.minecraft.entity.ai.attributes.Attributes;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.ItemUseContext;
+import net.minecraft.item.UseAction;
+import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Potion;
-import net.minecraft.potion.PotionEffect;
-import net.minecraft.stats.StatList;
 import net.minecraft.util.ActionResult;
-import net.minecraft.util.EnumActionResult;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.NonNullList;
+import net.minecraft.util.ActionResultType;
+import net.minecraft.util.Hand;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.World;
-import net.minecraftforge.event.RegistryEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
-import net.minecraftforge.fml.relauncher.SideOnly;
-import net.minecraftforge.oredict.OreDictionary;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
 
 /**
  * Builder for MC items.  Constructing a new item with this builder This will automatically
@@ -62,8 +54,9 @@ import net.minecraftforge.oredict.OreDictionary;
  *
  * @author don_bruce
  */
-@EventBusSubscriber
 public class BuilderItem extends Item implements IBuilderItemInterface {
+    protected static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, InterfaceLoader.MODID);
+
     /**
      * Map of created items linked to their builder instances.  Used for interface operations.
      **/
@@ -74,18 +67,15 @@ public class BuilderItem extends Item implements IBuilderItemInterface {
      **/
     private final AItemBase item;
 
-    public BuilderItem(AItemBase item) {
-        //FIXME need to set creative tab here prior to init, this is now static-final.
-        super();
+    public BuilderItem(Item.Properties properties, AItemBase item) {
+        super(properties);
         ((BuilderCreativeTab) category).addItem(item, this);
         this.item = item;
-        setFull3D();
-        this.setMaxStackSize(item.getStackSize());
         itemMap.put(item, this);
     }
 
     @Override
-    public AItemBase getItem() {
+    public AItemBase getWrappedItem() {
         return item;
     }
 
@@ -95,7 +85,7 @@ public class BuilderItem extends Item implements IBuilderItemInterface {
      * allow for use of the wrapper to decide what name we translate.
      */
     @Override
-    public String getItemStackDisplayName(ItemStack stack) {
+    protected String getOrCreateDescriptionId() {
         return item.getItemName();
     }
 
@@ -107,30 +97,14 @@ public class BuilderItem extends Item implements IBuilderItemInterface {
      * Also prevents us from using a MC class with a changing name.
      */
     @Override
-    @SideOnly(Side.CLIENT)
-    public void addInformation(ItemStack stack, @Nullable World world, List<String> tooltipLines, ITooltipFlag flagIn) {
-        if (stack.hasTagCompound()) {
-            item.addTooltipLines(tooltipLines, new WrapperNBT(stack.getTagCompound()));
+    @OnlyIn(Dist.CLIENT)
+    public void appendHoverText(ItemStack stack, @Nullable World world, List<ITextComponent> tooltipLines, ITooltipFlag flagIn) {
+        List<String> textLines = new ArrayList<>();
+        tooltipLines.forEach(line -> textLines.add(line.getString()));
+        if (stack.hasTag()) {
+            item.addTooltipLines(textLines, new WrapperNBT(stack.getTag()));
         } else {
-            item.addTooltipLines(tooltipLines, InterfaceManager.coreInterface.getNewNBTWrapper());
-        }
-    }
-
-    /**
-     * Adds sub-items to the creative tab.  We override this to make custom items in the creative tab.
-     * This is currently only vehicle engines.
-     */
-    @Override
-    public void getSubItems(CreativeTabs tab, NonNullList<ItemStack> items) {
-        super.getSubItems(tab, items);
-        List<IWrapperNBT> dataBlocks = new ArrayList<>();
-        item.getDataBlocks(dataBlocks);
-        for (IWrapperNBT data : dataBlocks) {
-            if (this.isInCreativeTab(tab)) {
-                ItemStack stack = new ItemStack(this);
-                stack.setTagCompound(((WrapperNBT) data).tag);
-                items.add(stack);
-            }
+            item.addTooltipLines(textLines, InterfaceManager.coreInterface.getNewNBTWrapper());
         }
     }
 
@@ -139,7 +113,7 @@ public class BuilderItem extends Item implements IBuilderItemInterface {
      * If we are a food item, this should match our eating time.
      */
     @Override
-    public int getMaxItemUseDuration(ItemStack stack) {
+    public int getUseDuration(ItemStack stack) {
         return item instanceof IItemFood ? ((IItemFood) item).getTimeToEat() : 0;
     }
 
@@ -148,26 +122,26 @@ public class BuilderItem extends Item implements IBuilderItemInterface {
      * If we are a food item, and can be eaten, return eating here.
      */
     @Override
-    public EnumAction getItemUseAction(ItemStack stack) {
+    public UseAction getUseAnimation(ItemStack stack) {
         if (item instanceof IItemFood) {
             IItemFood food = (IItemFood) item;
             if (food.getTimeToEat() > 0) {
-                return food.isDrink() ? EnumAction.DRINK : EnumAction.EAT;
+                return food.isDrink() ? UseAction.DRINK : UseAction.EAT;
             }
         }
-        return EnumAction.NONE;
+        return UseAction.NONE;
     }
 
     @Override
-    public Multimap<String, AttributeModifier> getAttributeModifiers(EntityEquipmentSlot slot, ItemStack stack) {
-        Multimap<String, AttributeModifier> multimap = super.getAttributeModifiers(slot, stack);
-        if (item instanceof ItemItem && ((ItemItem) item).definition.weapon != null && slot.equals(EntityEquipmentSlot.MAINHAND)) {
+    public Multimap<Attribute, AttributeModifier> getAttributeModifiers(EquipmentSlotType slot, ItemStack stack) {
+        Multimap<Attribute, AttributeModifier> multimap = super.getAttributeModifiers(slot, stack);
+        if (item instanceof ItemItem && ((ItemItem) item).definition.weapon != null && slot.equals(EquipmentSlotType.MAINHAND)) {
             ItemItem weapon = (ItemItem) item;
             if (weapon.definition.weapon.attackDamage != 0) {
-                multimap.put(SharedMonsterAttributes.ATTACK_DAMAGE.getName(), new AttributeModifier(ATTACK_DAMAGE_MODIFIER, "Weapon modifier", weapon.definition.weapon.attackDamage - 1, 0));
+                multimap.put(Attributes.ATTACK_DAMAGE, new AttributeModifier(BASE_ATTACK_DAMAGE_UUID, "Weapon modifier", weapon.definition.weapon.attackDamage - 1, AttributeModifier.Operation.ADDITION));
             }
             if (weapon.definition.weapon.attackCooldown != 0) {
-                multimap.put(SharedMonsterAttributes.ATTACK_SPEED.getName(), new AttributeModifier(ATTACK_SPEED_MODIFIER, "Weapon modifier", 20 / weapon.definition.weapon.attackCooldown, 0));
+                multimap.put(Attributes.ATTACK_SPEED, new AttributeModifier(BASE_ATTACK_SPEED_UUID, "Weapon modifier", 20 / weapon.definition.weapon.attackCooldown, AttributeModifier.Operation.ADDITION));
             }
         }
         return multimap;
@@ -178,11 +152,11 @@ public class BuilderItem extends Item implements IBuilderItemInterface {
      * Forwards this to the main item for processing.
      */
     @Override
-    public EnumActionResult onItemUse(EntityPlayer player, World world, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
-        if (hand.equals(EnumHand.MAIN_HAND)) {
-            return item.onBlockClicked(WrapperWorld.getWrapperFor(world), WrapperPlayer.getWrapperFor(player), new Point3D(pos.getX(), pos.getY(), pos.getZ()), Axis.valueOf(facing.name())) ? EnumActionResult.SUCCESS : EnumActionResult.FAIL;
+    public ActionResultType useOn(ItemUseContext context) {
+        if (context.getHand() == Hand.MAIN_HAND) {
+            return item.onBlockClicked(WrapperWorld.getWrapperFor(context.getLevel()), WrapperPlayer.getWrapperFor(context.getPlayer()), new Point3D(context.getClickedPos().getX(), context.getClickedPos().getY(), context.getClickedPos().getZ()), Axis.valueOf(context.getClickedFace().name())) ? ActionResultType.SUCCESS : ActionResultType.FAIL;
         } else {
-            return super.onItemUse(player, world, pos, hand, facing, hitX, hitY, hitZ);
+            return super.useOn(context);
         }
     }
 
@@ -191,16 +165,16 @@ public class BuilderItem extends Item implements IBuilderItemInterface {
      * Forwards this to the main item for processing.
      */
     @Override
-    public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, EnumHand hand) {
-        if (hand.equals(EnumHand.MAIN_HAND)) {
+    public ActionResult<ItemStack> use(World world, PlayerEntity player, Hand hand) {
+        if (hand == Hand.MAIN_HAND) {
             //If we are a food item, set our hand to start eating.
             //If we are a gun item, set our hand to prevent attacking.
             if ((item instanceof IItemFood && ((IItemFood) item).getTimeToEat() > 0 && player.canEat(true)) || (item instanceof ItemPartGun && ((ItemPartGun) item).definition.gun.handHeld)) {
-                player.setActiveHand(hand);
+                player.startUsingItem(hand);
             }
-            return item.onUsed(WrapperWorld.getWrapperFor(world), WrapperPlayer.getWrapperFor(player)) ? new ActionResult<>(EnumActionResult.SUCCESS, player.getHeldItem(hand)) : new ActionResult<>(EnumActionResult.FAIL, player.getHeldItem(hand));
+            return item.onUsed(WrapperWorld.getWrapperFor(world), WrapperPlayer.getWrapperFor(player)) ? ActionResult.success(player.getItemInHand(hand)) : ActionResult.fail(player.getItemInHand(hand));
         } else {
-            return super.onItemRightClick(world, player, hand);
+            return super.use(world, player, hand);
         }
     }
 
@@ -210,22 +184,24 @@ public class BuilderItem extends Item implements IBuilderItemInterface {
      * If this item is food, and a player is holding the item, have it apply to them.
      */
     @Override
-    public ItemStack onItemUseFinish(ItemStack stack, World world, EntityLivingBase entityLiving) {
+    public ItemStack finishUsingItem(ItemStack stack, World world, LivingEntity entityLiving) {
         if (item instanceof IItemFood) {
-            if (entityLiving instanceof EntityPlayer) {
+            if (entityLiving instanceof PlayerEntity) {
                 IItemFood food = ((IItemFood) item);
-                EntityPlayer player = (EntityPlayer) entityLiving;
+                PlayerEntity player = (PlayerEntity) entityLiving;
 
                 //Add hunger and saturation.
-                player.getFoodStats().addStats(food.getHungerAmount(), food.getSaturationAmount());
+                player.getFoodData().eat(food.getHungerAmount(), food.getSaturationAmount());
 
                 //Add effects.
                 List<JSONPotionEffect> effects = food.getEffects();
-                if (!world.isRemote && effects != null) {
+                if (!world.isClientSide && effects != null) {
                     for (JSONPotionEffect effect : effects) {
-                        Potion potion = Potion.getPotionFromResourceLocation(effect.name);
+                        Potion potion = Potion.byName(effect.name);
                         if (potion != null) {
-                            player.addPotionEffect(new PotionEffect(potion, effect.duration, effect.amplifier, false, false));
+                            potion.getEffects().forEach(mcEffect -> {
+                                entityLiving.addEffect(new EffectInstance(mcEffect.getEffect(), effect.duration, effect.amplifier, false, true));
+                            });
                         } else {
                             throw new NullPointerException("Potion " + effect.name + " does not exist.");
                         }
@@ -233,10 +209,9 @@ public class BuilderItem extends Item implements IBuilderItemInterface {
                 }
 
                 //Play sound of food being eaten and add stats.
-                world.playSound(player, player.posX, player.posY, player.posZ, SoundEvents.ENTITY_PLAYER_BURP, SoundCategory.PLAYERS, 0.5F, world.rand.nextFloat() * 0.1F + 0.9F);
-                player.addStat(StatList.getObjectUseStats(this));
-                if (player instanceof EntityPlayerMP) {
-                    CriteriaTriggers.CONSUME_ITEM.trigger((EntityPlayerMP) player, stack);
+                world.playSound(player, player.position().x, player.position().y, player.position().z, SoundEvents.PLAYER_BURP, SoundCategory.PLAYERS, 0.5F, world.random.nextFloat() * 0.1F + 0.9F);
+                if (player instanceof ServerPlayerEntity) {
+                    CriteriaTriggers.CONSUME_ITEM.trigger((ServerPlayerEntity) player, stack);
                 }
             }
             //Remove 1 item due to it being eaten.
@@ -246,38 +221,7 @@ public class BuilderItem extends Item implements IBuilderItemInterface {
     }
 
     @Override
-    public boolean canDestroyBlockInCreative(World world, BlockPos pos, ItemStack stack, EntityPlayer player) {
+    public boolean canAttackBlock(BlockState state, World world, BlockPos pos, PlayerEntity player) {
         return item.canBreakBlocks();
-    }
-
-    /**
-     * Registers all items we have created up to this point.
-     */
-    @SubscribeEvent
-    public static void registerItems(RegistryEvent.Register<Item> event) {
-        //Register all items in our wrapper map.
-        for (Entry<AItemBase, BuilderItem> entry : itemMap.entrySet()) {
-            AItemPack<?> item = (AItemPack<?>) entry.getKey();
-            BuilderItem mcItem = entry.getValue();
-
-            //First check if the creative tab is set/created.
-            //The only except is for "invisible" parts of the core mod, these are internal.
-            if (!item.definition.packID.equals(InterfaceManager.coreModID) || !item.definition.systemName.contains("invisible")) {
-                String tabID = item.getCreativeTabID();
-                if (!BuilderCreativeTab.createdTabs.containsKey(tabID)) {
-                    JSONPack packConfiguration = PackParser.getPackConfiguration(tabID);
-                    BuilderCreativeTab.createdTabs.put(tabID, new BuilderCreativeTab(packConfiguration.packName, itemMap.get(PackParser.getItem(packConfiguration.packID, packConfiguration.packItem))));
-                }
-                BuilderCreativeTab.createdTabs.get(tabID).addItem(item, mcItem);
-            }
-
-            //Register the item.
-            event.getRegistry().register(mcItem.setRegistryName(item.getRegistrationName()).setTranslationKey(item.getRegistrationName()));
-
-            //If the item is for OreDict, add it.
-            if (item.definition.general.oreDict != null) {
-                OreDictionary.registerOre(item.definition.general.oreDict, mcItem);
-            }
-        }
     }
 }
