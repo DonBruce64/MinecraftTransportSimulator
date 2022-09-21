@@ -813,28 +813,26 @@ public class PartEngine extends APart {
                 return fuelLeak ? 1 : 0;
         }
         if (variable.startsWith("engine_piston_")) {
-            if (running) {
-                String pistonVariable = variable.substring("engine_piston_".length());
-                int pistonNumber = Integer.parseInt(pistonVariable.substring(0, pistonVariable.indexOf("_")));
-                pistonVariable.substring(pistonVariable.indexOf("_"));
-                int totalPistons = pistonNumber;
-                long engineCycleTime = (long) (2D * (1D / (rpm / 60D / 1000D)));
+        	//Divide the crank shaft rotation into a number of sectors, and return 1 when the crank is in the defined sector.
+        	//i.e. engine_piston_2_6 will return 1 when the crank is in the second of 6 sectors.
+        	//When suffixed with _cam, it will instead return the sector the camshaft rotation.
 
-                if (engineCycleTime != 0) {
-                    long currentEngineTime = (long) ((ticksExisted + partialTicks) * 50D);
-                    long engineTimeInCycle = currentEngineTime % engineCycleTime;
-
-                    long pistonCycleTime = totalPistons > 1 ? engineCycleTime / totalPistons : engineCycleTime / 2;
-                    long camMin = (pistonNumber - 1) * pistonCycleTime;
-                    long camMax = camMin + pistonCycleTime;
-                    if (camMax > engineCycleTime) {
-                        return engineTimeInCycle < camMin && engineTimeInCycle > camMax ? 1 : 0;
-                    } else {
-                        return engineTimeInCycle > camMin && engineTimeInCycle < camMax ? 1 : 0;
-                    }
-                }
-            }
-            return 0;
+        	//If this a camshaft, save this so we can do math later
+        	int camMultiplier = variable.endsWith("_cam") ? 2 : 1;
+        	
+        	//Extract the two values we need
+            String pistonVariable = variable.substring("engine_piston_".length());
+            int pistonNumber = Integer.parseInt(pistonVariable.substring(0, pistonVariable.indexOf("_")));
+            int totalPistons = Integer.parseInt(pistonVariable.substring(pistonVariable.indexOf("_") + 1, pistonVariable.indexOf("_", pistonVariable.indexOf("_") + 1)));
+            
+            //Map the shaft rotation to a value between 0 and 359.99...
+            double shaftRotation = getEngineRotation(partialTicks) - ((360D * camMultiplier) * Math.floor(getEngineRotation(partialTicks) / (360D * camMultiplier)));
+            
+            //Calculate the angle of a 'sector'
+            double sector = (360D * camMultiplier) / totalPistons;
+            
+            //If the crank is in the requested sector, return 1, otherwise return 0.
+            return (0 + (sector * (pistonNumber - 1)) <= shaftRotation) && (shaftRotation < sector + (sector * (pistonNumber - 1))) ? 1 : 0;
         }
 
         return super.getRawVariableValue(variable, partialTicks);
