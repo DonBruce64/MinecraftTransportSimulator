@@ -822,6 +822,16 @@ public class PartEngine extends APart {
             int offset = Integer.parseInt(variable.substring("engine_cos_".length()));
         	return Math.cos(Math.toRadians(getEngineRotation(partialTicks) + offset));
         }
+        if (variable.startsWith("engine_driveshaft_sin_")) {
+        	//engine_driveshaft_sin_X This will offset the driveshaft rotation INPUT to the trig function by X
+            int offset = Integer.parseInt(variable.substring("engine_driveshaft_sin_".length()));
+        	return Math.sin(Math.toRadians(getDriveshaftRotation(partialTicks) + offset));
+        }
+        if (variable.startsWith("engine_driveshaft_cos_")) {
+        	//engine_driveshaft_sin_X This will offset the driveshaft rotation INPUT to the trig function by X
+            int offset = Integer.parseInt(variable.substring("engine_driveshaft_cos_".length()));
+        	return Math.cos(Math.toRadians(getDriveshaftRotation(partialTicks) + offset));
+        }
         if (variable.startsWith("engine_piston_")) {
         	//Divide the crank shaft rotation into a number of sectors, and return 1 when the crank is in the defined sector.
         	//i.e. engine_piston_2_6 will return 1 when the crank is in the second of 6 sectors.
