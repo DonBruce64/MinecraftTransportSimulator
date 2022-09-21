@@ -836,7 +836,7 @@ public class PartEngine extends APart {
             int totalPistons = Integer.parseInt(pistonVariable.substring(pistonVariable.indexOf("_") + 1, pistonVariable.indexOf("_", pistonVariable.indexOf("_") + 1)));
             
             //Safety to ensure the value always fluctuates and we don't have more sectors than are possible
-            if (pistonNumber >= totalPistons) {
+            if (pistonNumber > totalPistons || totalPistons == 1) {
             	pistonNumber = 1;
             	totalPistons = 2;
             }
