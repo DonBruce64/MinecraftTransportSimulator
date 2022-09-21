@@ -2,6 +2,7 @@ package mcinterface1165;
 
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityInventoryProvider;
+import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
@@ -16,43 +17,51 @@ import net.minecraftforge.items.CapabilityItemHandler;
  *
  * @author don_bruce
  */
-public class BuilderTileEntityInventoryContainer<InventoryTileEntity extends ATileEntityBase<?> & ITileEntityInventoryProvider> extends BuilderTileEntity<InventoryTileEntity> implements IInventory {
+public class BuilderTileEntityInventoryContainer extends BuilderTileEntity implements IInventory {
     protected static TileEntityType<BuilderTileEntityInventoryContainer> TE_TYPE2;
+
+    private EntityInventoryContainer inventory;
 
     public BuilderTileEntityInventoryContainer() {
         super(TE_TYPE2);
     }
 
     @Override
+    protected void setTileEntity(ATileEntityBase<?> tile) {
+        super.setTileEntity(tile);
+        this.inventory = ((ITileEntityInventoryProvider) tile).getInventory();
+    }
+
+    @Override
     public int getContainerSize() {
-        return tileEntity.getInventory().getSize();
+        return inventory.getSize();
     }
 
     @Override
     public boolean isEmpty() {
-        return tileEntity.getInventory().getCount() == 0;
+        return inventory.getCount() == 0;
     }
 
     @Override
     public ItemStack getItem(int index) {
-        return ((WrapperItemStack) tileEntity.getInventory().getStack(index)).stack;
+        return ((WrapperItemStack) inventory.getStack(index)).stack;
     }
 
     @Override
     public ItemStack removeItem(int index, int count) {
-        tileEntity.getInventory().removeFromSlot(index, count);
+        inventory.removeFromSlot(index, count);
         return getItem(index);
     }
 
     @Override
     public ItemStack removeItemNoUpdate(int index) {
-        tileEntity.getInventory().removeFromSlot(index, tileEntity.getInventory().getStack(index).getSize());
+        inventory.removeFromSlot(index, inventory.getStack(index).getSize());
         return ItemStack.EMPTY;
     }
 
     @Override
     public void setItem(int index, ItemStack stack) {
-        tileEntity.getInventory().setStack(new WrapperItemStack(stack), index);
+        inventory.setStack(new WrapperItemStack(stack), index);
     }
 
     @Override

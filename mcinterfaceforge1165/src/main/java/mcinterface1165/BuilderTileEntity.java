@@ -32,11 +32,11 @@ import net.minecraftforge.registries.ForgeRegistries;
  *
  * @author don_bruce
  */
-public class BuilderTileEntity<TEType extends ATileEntityBase<?>> extends TileEntity implements ITickable {
+public class BuilderTileEntity extends TileEntity implements ITickable {
     protected static final DeferredRegister<TileEntityType<?>> TILE_ENTITIES = DeferredRegister.create(ForgeRegistries.TILE_ENTITIES, InterfaceLoader.MODID);
-    protected static TileEntityType<BuilderTileEntity<ATileEntityBase<?>>> TE_TYPE;
+    protected static TileEntityType<BuilderTileEntity> TE_TYPE;
     
-    protected TEType tileEntity;
+    protected ATileEntityBase<?> tileEntity;
 
     /**
      * This flag is true if we need to get server data for syncing.  Set on construction tick, but only used on clients.
@@ -76,7 +76,6 @@ public class BuilderTileEntity<TEType extends ATileEntityBase<?>> extends TileEn
         //Override type constructor.
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public void tick() {
         //World and pos might be null on first few scans.
@@ -98,7 +97,7 @@ public class BuilderTileEntity<TEType extends ATileEntityBase<?>> extends TileEn
                         WrapperWorld worldWrapper = WrapperWorld.getWrapperFor(level);
                         Point3D position = new Point3D(worldPosition.getX(), worldPosition.getY(), worldPosition.getZ());
                         ABlockBaseTileEntity block = (ABlockBaseTileEntity) worldWrapper.getBlock(position);
-                        tileEntity = (TEType) block.createTileEntity(worldWrapper, position, null, new WrapperNBT(lastLoadedNBT));
+                        setTileEntity(block.createTileEntity(worldWrapper, position, null, new WrapperNBT(lastLoadedNBT)));
                         tileEntity.world.addEntity(tileEntity);
                         loadedFromSavedNBT = true;
                         lastLoadedNBT = null;

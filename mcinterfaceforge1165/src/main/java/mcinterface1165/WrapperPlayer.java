@@ -120,7 +120,7 @@ public class WrapperPlayer extends WrapperEntity implements IWrapperPlayer {
     @Override
     public AItemBase getHeldItem() {
         Item heldItem = player.getMainHandItem().getItem();
-        return heldItem instanceof IBuilderItemInterface ? ((IBuilderItemInterface) heldItem).getItem() : null;
+        return heldItem instanceof IBuilderItemInterface ? ((IBuilderItemInterface) heldItem).getWrappedItem() : null;
     }
 
     @Override

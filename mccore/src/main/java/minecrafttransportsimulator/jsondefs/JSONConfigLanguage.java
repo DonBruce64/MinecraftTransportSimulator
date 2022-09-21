@@ -267,7 +267,6 @@ public class JSONConfigLanguage {
     public static final LanguageEntry ITEMINFO_ENGINE_HOURS = new LanguageEntry("iteminfo.engine.hours", "Runtime hours: ");
     public static final LanguageEntry ITEMINFO_ENGINE_OILLEAK = new LanguageEntry("iteminfo.engine.oilleak", "§cHas an oil leak!");
     public static final LanguageEntry ITEMINFO_ENGINE_FUELLEAK = new LanguageEntry("iteminfo.engine.fuelleak", "§cHas a fuel leak!");
-    public static final LanguageEntry ITEMINFO_ENGINE_CREATIVE = new LanguageEntry("iteminfo.engine.creative", "§5Creative: Needs no fuel, accumulates no hours, cannot blow up.");
 
     public static final LanguageEntry ITEMINFO_GROUND_DEVICE_DIAMETER = new LanguageEntry("iteminfo.ground_device.diameter", "Diameter: ");
     public static final LanguageEntry ITEMINFO_GROUND_DEVICE_MOTIVEFRICTION = new LanguageEntry("iteminfo.ground_device.motivefrictionmotivefriction", "Power friction: ");

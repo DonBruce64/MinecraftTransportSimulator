@@ -57,7 +57,7 @@ public class WrapperItemStack implements IWrapperItemStack {
     @Override
     public AItemBase getItem() {
         Item item = stack.getItem();
-        return item instanceof IBuilderItemInterface ? ((IBuilderItemInterface) item).getItem() : null;
+        return item instanceof IBuilderItemInterface ? ((IBuilderItemInterface) item).getWrappedItem() : null;
     }
 
     @Override

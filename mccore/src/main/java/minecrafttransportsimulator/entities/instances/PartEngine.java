@@ -23,7 +23,6 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 
 public class PartEngine extends APart {
     //State data.
-    public boolean isCreative;
     public boolean oilLeak;
     public boolean fuelLeak;
     public boolean backfired;
@@ -116,7 +115,6 @@ public class PartEngine extends APart {
 
     public PartEngine(AEntityF_Multipart<?> entityOn, IWrapperPlayer placingPlayer, JSONPartDefinition placementDefinition, IWrapperNBT data) {
         super(entityOn, placingPlayer, placementDefinition, data);
-        this.isCreative = data.getBoolean("isCreative");
         this.oilLeak = data.getBoolean("oilLeak");
         this.fuelLeak = data.getBoolean("fuelLeak");
         this.running = data.getBoolean("running");
@@ -159,7 +157,7 @@ public class PartEngine extends APart {
                     }
                 }
             }
-            if (!isCreative) {
+            if (vehicleOn == null || !vehicleOn.isCreative) {
                 if (damage.isExplosion) {
                     hours += damage.amount * 20 * ConfigSystem.settings.general.engineHoursFactor.value;
                     if (definition.engine.type == JSONPart.EngineType.NORMAL) {
@@ -264,10 +262,10 @@ public class PartEngine extends APart {
                     }
                 }
                 if (starterLevel > 0) {
-                    if (!isCreative) {
+                    if (!vehicleOn.isCreative) {
                         vehicleOn.electricUsage += 0.05F;
                     }
-                    if (!isCreative) {
+                    if (!vehicleOn.isCreative) {
                         fuelFlow += vehicleOn.fuelTank.drain(vehicleOn.fuelTank.getFluid(), getTotalFuelConsumption() * ConfigSystem.settings.general.fuelUsageFactor.value, !world.isClient());
                     }
                 }
@@ -297,7 +295,7 @@ public class PartEngine extends APart {
             }
 
             //Add extra hours if we are running the engine too fast.
-            if (!isCreative && rpm > currentMaxSafeRPM) {
+            if (!vehicleOn.isCreative && rpm > currentMaxSafeRPM) {
                 hours += (rpm - currentMaxSafeRPM) / currentMaxSafeRPM * getTotalWearFactor();
             }
 
@@ -337,7 +335,7 @@ public class PartEngine extends APart {
             if (running) {
 
                 //If we aren't creative, add hours.
-                if (!isCreative) {
+                if (!vehicleOn.isCreative) {
                     hours += 0.001 * getTotalWearFactor();
                 }
 
@@ -384,7 +382,7 @@ public class PartEngine extends APart {
                 }
 
                 //Add extra hours, and possibly explode the engine, if it's too hot.
-                if (temp > OVERHEAT_TEMP_1 && !isCreative) {
+                if (temp > OVERHEAT_TEMP_1 && !vehicleOn.isCreative) {
                     hours += 0.001 * (temp - OVERHEAT_TEMP_1) * getTotalWearFactor();
                     if (temp > FAILURE_TEMP && !world.isClient()) {
                         explodeEngine();
@@ -400,7 +398,7 @@ public class PartEngine extends APart {
                         vehicleOn.electricUsage -= 0.05 * rpm / currentMaxRPM;
 
                         //Try to get fuel from the vehicle and calculate fuel flow.
-                        if (!isCreative && !vehicleOn.fuelTank.getFluid().isEmpty()) {
+                        if (!vehicleOn.isCreative && !vehicleOn.fuelTank.getFluid().isEmpty()) {
                             if (!ConfigSystem.settings.fuel.fuels.containsKey(definition.engine.fuelType)) {
                                 throw new IllegalArgumentException("Engine:" + definition.packID + ":" + definition.systemName + " wanted fuel configs for fuel of type:" + definition.engine.fuelType + ", but these do not exist in the config file.  Fuels currently in the file are:" + ConfigSystem.settings.fuel.fuels.keySet() + "If you are on a server, this means the server and client configs are not the same.  If this is a modpack, TELL THE AUTHOR IT IS BROKEN!");
                             } else if (!ConfigSystem.settings.fuel.fuels.get(definition.engine.fuelType).containsKey(vehicleOn.fuelTank.getFluid())) {
@@ -421,7 +419,7 @@ public class PartEngine extends APart {
                             pressure = Math.min(90 - temp / 10, pressure + rpm / currentIdleRPM - 0.5 * (oilLeak ? 5F : 1F) * (pressure / LOW_OIL_PRESSURE));
 
                             //Add extra hours and temp if we have low oil.
-                            if (pressure < LOW_OIL_PRESSURE && !isCreative) {
+                            if (pressure < LOW_OIL_PRESSURE && !vehicleOn.isCreative) {
                                 temp += Math.max(0, (20 * rpm / currentMaxRPM) / 20);
                                 hours += 0.01 * getTotalWearFactor();
                             }
@@ -440,7 +438,7 @@ public class PartEngine extends APart {
                             if (isInLiquid()) {
                                 stallEngine(Signal.DROWN);
                                 InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.DROWN));
-                            } else if (!isCreative && vehicleOn.fuelTank.getFluidLevel() == 0) {
+                            } else if (!vehicleOn.isCreative && vehicleOn.fuelTank.getFluidLevel() == 0) {
                                 stallEngine(Signal.FUEL_OUT);
                                 InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.FUEL_OUT));
                             } else if (rpm < definition.engine.stallRPM) {
@@ -461,7 +459,7 @@ public class PartEngine extends APart {
                         //Used for drowned engines that come out of the water, or engines that don't
                         //have the ability to engage a starter.
                         if (rpm >= definition.engine.startRPM && !world.isClient() && vehicleOn.damageAmount < vehicleOn.definition.general.health) {
-                            if (isCreative || vehicleOn.fuelTank.getFluidLevel() > 0) {
+                            if (vehicleOn.isCreative || vehicleOn.fuelTank.getFluidLevel() > 0) {
                                 if (!isInLiquid() && magnetoOn) {
                                     startEngine();
                                     InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.START));
@@ -860,7 +858,7 @@ public class PartEngine extends APart {
 
     public void autoStartEngine() {
         //Only engage auto-starter if we aren't running and we have the right fuel.
-        if (!running && (isCreative || vehicleOn.fuelTank.getFluidLevel() > 0)) {
+        if (!running && (vehicleOn.isCreative || vehicleOn.fuelTank.getFluidLevel() > 0)) {
             autoStarterEngaged = true;
             setVariable(MAGNETO_VARIABLE, 1);
             setVariable(ELECTRIC_STARTER_VARIABLE, 1);
@@ -1119,7 +1117,6 @@ public class PartEngine extends APart {
     @Override
     public IWrapperNBT save(IWrapperNBT data) {
         super.save(data);
-        data.setBoolean("isCreative", isCreative);
         data.setBoolean("oilLeak", oilLeak);
         data.setBoolean("fuelLeak", fuelLeak);
         data.setBoolean("running", running);

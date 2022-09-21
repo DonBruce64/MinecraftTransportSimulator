@@ -11,5 +11,5 @@ import minecrafttransportsimulator.items.components.AItemBase;
  * @author don_bruce
  */
 public interface IBuilderItemInterface {
-    AItemBase getItem();
+    AItemBase getWrappedItem();
 }

@@ -37,6 +37,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.world.IBlockAccess;
+import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -73,46 +74,22 @@ public class BuilderBlock extends Block {
     }
 
     @Override
-    public boolean hasTileEntity(IBlockState state) {
+    public boolean hasTileEntity(BlockState state) {
         //If our block implements the interface to be a TE, we return true.
         return block instanceof ABlockBaseTileEntity;
     }
 
     @Nullable
     @Override
-    public TileEntity createTileEntity(World world, IBlockState state) {
+    public TileEntity createTileEntity(BlockState state, IBlockReader world) {
         //Need to return a wrapper class here, not the actual TE.
         if (ITileEntityFluidTankProvider.class.isAssignableFrom(((ABlockBaseTileEntity) block).getTileEntityClass())) {
-            return getTileEntityTankWrapper(block);
+            return new BuilderTileEntityFluidTank();
         } else if (ITileEntityInventoryProvider.class.isAssignableFrom(((ABlockBaseTileEntity) block).getTileEntityClass())) {
-            return getTileEntityInventoryWrapper(block);
+            return new BuilderTileEntityInventoryContainer();
         } else {
-            return getTileEntityGenericWrapper(block);
+            return new BuilderTileEntity();
         }
-    }
-
-    /**
-     * Helper method for creating new Wrapper TEs for this block.
-     * Far better than ? all over for generics in the createTileEntity method.
-     */
-    private static <TileEntityType extends ATileEntityBase<?>> BuilderTileEntity<TileEntityType> getTileEntityGenericWrapper(ABlockBase block) {
-        return new BuilderTileEntity<>();
-    }
-
-    /**
-     * Helper method for creating new Wrapper TEs for this block.
-     * Far better than ? all over for generics in the createTileEntity method.
-     */
-    private static <TileEntityType extends ATileEntityBase<?> & ITileEntityInventoryProvider> BuilderTileEntity<TileEntityType> getTileEntityInventoryWrapper(ABlockBase block) {
-        return new BuilderTileEntityInventoryContainer<>();
-    }
-
-    /**
-     * Helper method for creating new Wrapper TEs for this block.
-     * Far better than ? all over for generics in the createTileEntity method.
-     */
-    private static <TileEntityType extends ATileEntityBase<?> & ITileEntityFluidTankProvider> BuilderTileEntity<TileEntityType> getTileEntityTankWrapper(ABlockBase block) {
-        return new BuilderTileEntityFluidTank<>();
     }
 
     @Override

@@ -168,15 +168,22 @@ public final class PartSeat extends APart {
                 new GUIHUD(vehicleOn, this);
 
                 //Auto-start the engines, if we have that config enabled and we can start them.
-                if (placementDefinition.isController && ConfigSystem.client.controlSettings.autostartEng.value && vehicleOn.canPlayerStartEngines((IWrapperPlayer) rider)) {
-                    vehicleOn.engines.forEach(engine -> {
-                        if (!vehicleOn.definition.motorized.isAircraft) {
-                            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE));
+                //Also set the vehicle creative status, if it's not true already.
+                if (placementDefinition.isController) {
+                    if (rider instanceof IWrapperPlayer && ((IWrapperPlayer) rider).isCreative() && !vehicleOn.isCreative) {
+                        vehicleOn.isCreative = true;
+                    }
+
+                    if (ConfigSystem.client.controlSettings.autostartEng.value && vehicleOn.canPlayerStartEngines((IWrapperPlayer) rider)) {
+                        vehicleOn.engines.forEach(engine -> {
+                            if (!vehicleOn.definition.motorized.isAircraft) {
+                                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE));
+                            }
+                            InterfaceManager.packetInterface.sendToServer(new PacketPartEngine(engine, Signal.AS_ON));
+                        });
+                        if (vehicleOn.parkingBrakeOn) {
+                            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicleOn, AEntityVehicleD_Moving.PARKINGBRAKE_VARIABLE));
                         }
-                        InterfaceManager.packetInterface.sendToServer(new PacketPartEngine(engine, Signal.AS_ON));
-                    });
-                    if (vehicleOn.parkingBrakeOn) {
-                        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicleOn, AEntityVehicleD_Moving.PARKINGBRAKE_VARIABLE));
                     }
                 }
             }
@@ -210,16 +217,26 @@ public final class PartSeat extends APart {
             AGUIBase.closeIfOpen(GUIHUD.class);
             AGUIBase.closeIfOpen(GUIRadio.class);
 
+            //Set creative to fal
+            if (placementDefinition.isController && rider instanceof IWrapperPlayer && ((IWrapperPlayer) rider).isCreative() && !vehicleOn.isCreative) {
+                vehicleOn.isCreative = true;
+            }
+
             //Auto-stop engines if we have the config, and there aren't any other controllers in the vehicle, and we aren't changing seats.
-            if (placementDefinition.isController && ConfigSystem.client.controlSettings.autostartEng.value) {
+            //Also un-set creative status if this is true.
+            if (placementDefinition.isController) {
                 boolean otherController = false;
+                boolean otherCreativeController = false;
                 for (APart part : vehicleOn.allParts) {
                     if (part != this && part.rider instanceof IWrapperPlayer && part.placementDefinition.isController) {
                         otherController = true;
-                        break;
+                        if (rider instanceof IWrapperPlayer && ((IWrapperPlayer) rider).isCreative()) {
+                            otherCreativeController = true;
+                            break;
+                        }
                     }
                 }
-                if (!otherController) {
+                if (!otherController && ConfigSystem.client.controlSettings.autostartEng.value) {
                     vehicleOn.engines.forEach(engine -> {
                         if (engine.magnetoOn) {
                             InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.MAGNETO_VARIABLE));
@@ -232,6 +249,9 @@ public final class PartSeat extends APart {
                     if (!vehicleOn.parkingBrakeOn) {
                         InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicleOn, AEntityVehicleD_Moving.PARKINGBRAKE_VARIABLE));
                     }
+                }
+                if (!otherCreativeController) {
+                    vehicleOn.isCreative = false;
                 }
             }
         }

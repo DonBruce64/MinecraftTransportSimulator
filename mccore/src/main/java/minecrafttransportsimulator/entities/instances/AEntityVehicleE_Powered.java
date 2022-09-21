@@ -45,6 +45,7 @@ abstract class AEntityVehicleE_Powered extends AEntityVehicleD_Moving {
     public boolean beingFueled;
     public boolean enginesOn;
     public boolean enginesRunning;
+    public boolean isCreative;
     @DerivedValue
     public double throttle;
     public static final double MAX_THROTTLE = 1.0D;
