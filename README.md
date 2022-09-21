@@ -22,7 +22,7 @@ To build from source, you will need to do a few things.  These instructions assu
 <li>Now that you have your Java set up, you can use the same Git Bash prompt inside the folder you just cloned to setup your workspace:</li>
 <ul>
 <li>If you are running Eclipse, run `./gradlew eclipse` and then `./gradlew genEclipseRuns`.  Then open your Eclipse program.  When it asks you for a "workspace location" do NOT pick any folder to do with code.  Just pick a folder somewhere where Eclipse can throw things and you can forget about.  Once this is done, you need to go into the menu and "Import Gradle Project".  Pick the folder where all your code was copied to and the files should show up in the editor.  To test them, you can click the little bug icon and then go to Debug Configurations->Java Application-runClient. Select this, and go to the Environment tab and delete the MC_VERSION entry.  Apply, close, and then select it for debugging and you're off to testing your code!</li>
-<li>If you are using IDEA, import the build script with it then run the `genIntellijRuns` Gradle task when it finishes importing.</li>
+<li>If you are using IDEA, import the build script (`build.gradle`) with IDEA then run the `genIntellijRuns` Gradle task when it finishes importing.</li>
 <li>If you are running VSCode, run `./gradlew genVSCodeRuns`.  Then bug TurboDefender on the Discord to fill this section out.</li>
 <li>If you aren't using any of these three, START DOING SO.  Notepad is not meant for coding.  Do you want a Bad Time?  I didn't think so.</li>
 </ul>
