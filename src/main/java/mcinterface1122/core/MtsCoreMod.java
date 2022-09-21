@@ -1,8 +1,9 @@
-package mcinterface1122;
+package mcinterface1122.core;
 
+import mcinterface1122.InterfaceLoader;
+import mcinterface1122.patches.PhosphorSlicePatch;
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
 import org.spongepowered.asm.launch.MixinBootstrap;
-import org.spongepowered.asm.mixin.MixinEnvironment;
 import org.spongepowered.asm.mixin.Mixins;
 
 import javax.annotation.Nullable;
@@ -10,11 +11,11 @@ import java.util.Map;
 
 @IFMLLoadingPlugin.MCVersion("1.12.2")
 @IFMLLoadingPlugin.Name("Immersive Vehicles")
-public class MtsLoadingPlugin implements IFMLLoadingPlugin {
+public class MtsCoreMod implements IFMLLoadingPlugin {
     @Override
     public String[] getASMTransformerClass() {
         String[] transformers = new String[1];
-        transformers[0] = MtsPhosphorTransformer.class.getName();
+        transformers[0] = PhosphorSlicePatch.class.getName();
         return transformers;
     }
 

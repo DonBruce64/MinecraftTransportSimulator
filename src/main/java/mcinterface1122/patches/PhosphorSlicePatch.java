@@ -1,4 +1,4 @@
-package mcinterface1122;
+package mcinterface1122.patches;
 
 import net.minecraft.launchwrapper.IClassTransformer;
 import org.objectweb.asm.ClassReader;
@@ -9,7 +9,7 @@ import org.objectweb.asm.tree.MethodNode;
 
 import java.util.ListIterator;
 
-public class MtsPhosphorTransformer implements IClassTransformer {
+public class PhosphorSlicePatch implements IClassTransformer {
     @Override
     public byte[] transform(String name, String transformedName, byte[] basicClass) {
         if (basicClass == null) return null;
