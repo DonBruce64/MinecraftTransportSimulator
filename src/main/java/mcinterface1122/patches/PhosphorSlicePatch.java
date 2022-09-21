@@ -1,5 +1,6 @@
 package mcinterface1122.patches;
 
+import mcinterface1122.InterfaceLoader;
 import net.minecraft.launchwrapper.IClassTransformer;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
@@ -27,6 +28,7 @@ public class PhosphorSlicePatch implements IClassTransformer {
                                 Object value = it.next();
 
                                 if ("slice".equals(value)) {
+                                    InterfaceLoader.LOGGER.info("Patching MixinChunk$Vanilla from Phosphor");
                                     it.remove();
                                     it.next();
                                     it.remove();
