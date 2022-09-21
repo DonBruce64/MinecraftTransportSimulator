@@ -812,6 +812,16 @@ public class PartEngine extends APart {
             case ("engine_fuelleak"):
                 return fuelLeak ? 1 : 0;
         }
+        if (variable.startsWith("engine_sin_")) {
+        	//engine_sin_X This will offset the engine rotation INPUT to the trig function by X
+            int offset = Integer.parseInt(variable.substring("engine_sin_".length()));
+        	return Math.sin(Math.toRadians(getEngineRotation(partialTicks) + offset));
+        }
+        if (variable.startsWith("engine_cos_")) {
+        	//engine_cos_X This will offset the engine rotation INPUT to the trig function by X
+            int offset = Integer.parseInt(variable.substring("engine_cos_".length()));
+        	return Math.cos(Math.toRadians(getEngineRotation(partialTicks) + offset));
+        }
         if (variable.startsWith("engine_piston_")) {
         	//Divide the crank shaft rotation into a number of sectors, and return 1 when the crank is in the defined sector.
         	//i.e. engine_piston_2_6 will return 1 when the crank is in the second of 6 sectors.
