@@ -26,6 +26,6 @@ To build from source, you will need to do a few things.  These instructions assu
 <li>If you are running VSCode, run `./gradlew genVSCodeRuns`.  Then bug TurboDefender on the Discord to fill this section out.</li>
 <li>If you aren't using any of these three, START DOING SO.  Notepad is not meant for coding.  Do you want a Bad Time?  I didn't think so.</li>
 </ul>
-<li>After making your code changes, you can use Git Bash to do a `git commit -m "Message for what you commited"`. This marks the changes, and the reason for them.  Finally, do a `git push` to push the changes back up to Git.  From there, you can create a Pull Request and have your code be part of the mod!</li>
+<li>After making your code changes, use Git Bash to do a `git add -u` to add all modified files.  Then you can do a `git commit -m "Message for what you commited"`. This marks the changes, and the reason for them.  Finally, do a `git push` to push the changes back up to Git.  From there, you can create a Pull Request and have your code be part of the mod!</li>
 </ol>
 
