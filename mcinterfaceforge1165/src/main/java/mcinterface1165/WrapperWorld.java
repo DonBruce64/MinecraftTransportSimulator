@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -44,21 +45,26 @@ import net.minecraft.block.BlockBush;
 import net.minecraft.block.BlockCrops;
 import net.minecraft.block.BlockDirt;
 import net.minecraft.block.BlockSlab;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.block.IGrowable;
+import net.minecraft.block.SlabBlock;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityCreature;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.INpc;
+import net.minecraft.entity.INPC;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.monster.IMob;
+import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemDye;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompressedStreamTools;
+import net.minecraft.state.properties.SlabType;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.Direction;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.NonNullList;
@@ -66,10 +72,12 @@ import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.RayTraceResult;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.BlockRayTraceResult;
+import net.minecraft.util.math.RayTraceContext;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.IPlantable;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
@@ -120,7 +128,7 @@ public class WrapperWorld extends AWrapperWorld {
 
     private WrapperWorld(World world) {
         this.world = world;
-        if (world.isRemote) {
+        if (world.isClientSide) {
             //Send packet to server to request data for this world.
             this.savedData = InterfaceManager.coreInterface.getNewNBTWrapper();
             InterfaceManager.packetInterface.sendToServer(new PacketWorldSavedDataRequest(InterfaceManager.clientInterface.getClientPlayer()));
@@ -142,17 +150,17 @@ public class WrapperWorld extends AWrapperWorld {
 
     @Override
     public boolean isClient() {
-        return world.isRemote;
+        return world.isClientSide;
     }
 
     @Override
     public long getTime() {
-        return world.getWorldTime() % 24000;
+        return world.getDayTime() % 24000;
     }
 
     @Override
     public String getName() {
-        return world.provider.getDimensionType().getName();
+        return world.dimensionType().effectsLocation().getPath();
     }
 
     @Override
@@ -163,15 +171,15 @@ public class WrapperWorld extends AWrapperWorld {
     @Override
     public void beginProfiling(String name, boolean subProfile) {
         if (subProfile) {
-            world.profiler.startSection(name);
+            world.getProfiler().push(name);
         } else {
-            world.profiler.endStartSection(name);
+            world.getProfiler().popPush(name);
         }
     }
 
     @Override
     public void endProfiling() {
-        world.profiler.endSection();
+        world.getProfiler().pop();
     }
 
     @Override
@@ -199,7 +207,7 @@ public class WrapperWorld extends AWrapperWorld {
 
     @Override
     public File getDataFile() {
-        return new File(world.getSaveHandler().getWorldDirectory(), "mtsdata.dat");
+        return new File(world.getLevelData()..getSaveHandler().getWorldDirectory(), "mtsdata.dat");
     }
 
     @Override
@@ -210,7 +218,7 @@ public class WrapperWorld extends AWrapperWorld {
     @Override
     public List<IWrapperEntity> getEntitiesWithin(BoundingBox box) {
         List<IWrapperEntity> entities = new ArrayList<>();
-        for (Entity entity : world.getEntitiesWithinAABB(Entity.class, WrapperWorld.convert(box))) {
+        for (Entity entity : world.getEntitiesOfClass(Entity.class, WrapperWorld.convert(box))) {
             if (!(entity instanceof ABuilderEntityBase)) {
                 entities.add(WrapperEntity.getWrapperFor(entity));
             }
@@ -222,8 +230,8 @@ public class WrapperWorld extends AWrapperWorld {
     public List<IWrapperEntity> getEntitiesHostile(IWrapperEntity lookingEntity, double radius) {
         List<IWrapperEntity> entities = new ArrayList<>();
         Entity mcLooker = ((WrapperEntity) lookingEntity).entity;
-        for (Entity entity : world.getEntitiesWithinAABBExcludingEntity(mcLooker, mcLooker.getEntityBoundingBox().grow(radius))) {
-            if (entity instanceof IMob && !entity.isDead && (!(entity instanceof EntityLivingBase) || ((EntityLivingBase) entity).deathTime == 0)) {
+        for (Entity entity : world.getEntities(mcLooker, mcLooker.getBoundingBox().inflate(radius))) {
+            if (entity instanceof IMob && entity.isAlive() && (!(entity instanceof LivingEntity) || ((LivingEntity) entity).deathTime == 0)) {
                 entities.add(WrapperEntity.getWrapperFor(entity));
             }
         }
@@ -235,16 +243,16 @@ public class WrapperWorld extends AWrapperWorld {
         double smallestDistance = searchDistance * 2;
         Entity foundEntity = null;
         Entity mcLooker = ((WrapperEntity) entityLooking).entity;
-        Vec3d raytraceStart = mcLooker.getPositionVector().add(0, (entityLooking.getEyeHeight() + entityLooking.getSeatOffset()), 0);
+        Vector3d raytraceStart = mcLooker.position().add(0, (entityLooking.getEyeHeight() + entityLooking.getSeatOffset()), 0);
         Point3D lookerLos = entityLooking.getLineOfSight(searchDistance);
-        Vec3d raytraceEnd = new Vec3d(lookerLos.x, lookerLos.y, lookerLos.z).add(raytraceStart);
-        for (Entity entity : world.getEntitiesWithinAABBExcludingEntity(mcLooker, mcLooker.getEntityBoundingBox().grow(searchDistance))) {
-            if (!(entity instanceof ABuilderEntityBase) && entity.canBeCollidedWith() && !entity.equals(mcLooker.getRidingEntity())) {
-                float distance = mcLooker.getDistance(entity);
+        Vector3d raytraceEnd = new Vector3d(lookerLos.x, lookerLos.y, lookerLos.z).add(raytraceStart);
+        for (Entity entity : world.getEntities(mcLooker, mcLooker.getBoundingBox().inflate(searchDistance))) {
+            if (!(entity instanceof ABuilderEntityBase) && entity.canBeCollidedWith() && !entity.equals(mcLooker.getVehicle())) {
+                float distance = mcLooker.distanceTo(entity);
                 if (distance < smallestDistance) {
-                    AxisAlignedBB testBox = generalArea ? entity.getEntityBoundingBox().grow(2) : entity.getEntityBoundingBox();
-                    RayTraceResult rayTrace = testBox.calculateIntercept(raytraceStart, raytraceEnd);
-                    if (rayTrace != null) {
+                    AxisAlignedBB testBox = generalArea ? entity.getBoundingBox().inflate(2) : entity.getBoundingBox();
+                    Optional<Vector3d> rayHit = testBox.clip(raytraceStart, raytraceEnd);
+                    if (rayHit != null) {
                         smallestDistance = distance;
                         foundEntity = entity;
                     }
@@ -265,9 +273,9 @@ public class WrapperWorld extends AWrapperWorld {
     protected BuilderEntityExisting spawnEntityInternal(AEntityB_Existing entity) {
         BuilderEntityExisting builder = new BuilderEntityExisting(((WrapperWorld) entity.world).world);
         builder.loadedFromSavedNBT = true;
-        builder.setPositionAndRotation(entity.position.x, entity.position.y, entity.position.z, 0, 0);
+        builder.setPos(entity.position.x, entity.position.y, entity.position.z);
         builder.entity = entity;
-        world.spawnEntity(builder);
+        world.addFreshEntity(builder);
         addEntity(entity);
         return builder;
     }
@@ -279,22 +287,22 @@ public class WrapperWorld extends AWrapperWorld {
 
         //Get collided entities.
         if (motion != null) {
-            mcBox = mcBox.expand(motion.x, motion.y, motion.z);
+            mcBox = mcBox.inflate(motion.x, motion.y, motion.z);
         }
-        collidedEntities = world.getEntitiesWithinAABB(Entity.class, mcBox);
+        collidedEntities = world.getEntitiesOfClass(Entity.class, mcBox);
 
         //Get variables.  If we aren't moving, we won't need these.
         Point3D startPoint;
         Point3D endPoint;
-        Vec3d start = null;
-        Vec3d end = null;
+        Vector3d start = null;
+        Vector3d end = null;
         List<IWrapperEntity> hitEntities = new ArrayList<>();
 
         if (motion != null) {
             startPoint = damage.box.globalCenter;
             endPoint = damage.box.globalCenter.copy().add(motion);
-            start = new Vec3d(startPoint.x, startPoint.y, startPoint.z);
-            end = new Vec3d(endPoint.x, endPoint.y, endPoint.z);
+            start = new Vector3d(startPoint.x, startPoint.y, startPoint.z);
+            end = new Vector3d(endPoint.x, endPoint.y, endPoint.z);
         }
 
         //Validate the collided entities to make sure we didn't hit something we shouldn't have.
@@ -304,7 +312,7 @@ public class WrapperWorld extends AWrapperWorld {
             if (!(mcEntityCollided instanceof ABuilderEntityBase)) {
                 //If the damage came from a source, verify that source can hurt the entity.
                 if (damage.damgeSource != null) {
-                    Entity mcRidingEntity = mcEntityCollided.getRidingEntity();
+                    Entity mcRidingEntity = mcEntityCollided.getVehicle();
                     if (mcRidingEntity instanceof BuilderEntityLinkedSeat) {
                         //Entity hit is riding something of ours.
                         //Verify that it's not the entity that is doing the attacking.
@@ -323,7 +331,7 @@ public class WrapperWorld extends AWrapperWorld {
                 }
 
                 //Didn't hit a rider on the damage source. Do normal raytracing or just add if there's no motion.
-                if (motion == null || mcEntityCollided.getEntityBoundingBox().calculateIntercept(start, end) != null) {
+                if (motion == null || mcEntityCollided.getBoundingBox().clip(start, end) != null) {
                     hitEntities.add(WrapperEntity.getWrapperFor(mcEntityCollided));
                 }
             }
@@ -341,8 +349,8 @@ public class WrapperWorld extends AWrapperWorld {
 
     @Override
     public void loadEntities(BoundingBox box, EntityVehicleF_Physics vehicleToLoad, APart clickedPart) {
-        for (Entity entity : world.getEntitiesWithinAABB(Entity.class, WrapperWorld.convert(box))) {
-            if (!entity.isRiding() && (entity instanceof INpc || entity instanceof EntityCreature) && !(entity instanceof IMob)) {
+        for (Entity entity : world.getEntitiesOfClass(Entity.class, WrapperWorld.convert(box))) {
+            if (entity.getVehicle() == null && (entity instanceof INPC || entity instanceof AnimalEntity) && !(entity instanceof IMob)) {
                 if (clickedPart instanceof PartSeat) {
                     if (clickedPart.rider == null) {
                         clickedPart.setRider(new WrapperEntity(entity), true);
@@ -369,39 +377,37 @@ public class WrapperWorld extends AWrapperWorld {
     @Override
     public float getBlockHardness(Point3D position) {
         BlockPos pos = new BlockPos(position.x, position.y, position.z);
-        return world.getBlockState(pos).getBlockHardness(world, pos);
+        return world.getBlockState(pos).getDestroySpeed(world, pos);
     }
 
     @Override
     public float getBlockSlipperiness(Point3D position) {
         BlockPos pos = new BlockPos(position.x, position.y, position.z);
-        IBlockState state = world.getBlockState(pos);
-        return state.getBlock().getSlipperiness(state, world, pos, null);
+        return world.getBlockState(pos).getSlipperiness(world, pos, null);
     }
 
     @Override
     public BlockMaterial getBlockMaterial(Point3D position) {
         BlockPos pos = new BlockPos(position.x, position.y, position.z);
         Material material = world.getBlockState(pos).getMaterial();
-        if (material.equals(Material.GROUND) || material.equals(Material.GRASS)) {
-            return world.isRainingAt(pos.up()) ? BlockMaterial.DIRT_WET : BlockMaterial.DIRT;
-        } else if (material.equals(Material.SAND)) {
-            return world.isRainingAt(pos.up()) ? BlockMaterial.SAND_WET : BlockMaterial.SAND;
-        } else if (material.equals(Material.SNOW) || material.equals(Material.CRAFTED_SNOW)) {
+        if (material == Material.DIRT || material == Material.GRASS) {
+            return world.isRainingAt(pos.above()) ? BlockMaterial.DIRT_WET : BlockMaterial.DIRT;
+        } else if (material == Material.SAND) {
+            return world.isRainingAt(pos.above()) ? BlockMaterial.SAND_WET : BlockMaterial.SAND;
+        } else if (material == Material.SNOW || material == Material.TOP_SNOW) {
             return BlockMaterial.SNOW;
-        } else if (material.equals(Material.ICE) || material.equals(Material.PACKED_ICE)) {
+        } else if (material == Material.ICE || material == Material.ICE_SOLID) {
             return BlockMaterial.ICE;
         } else {
-            return world.isRainingAt(pos.up()) ? BlockMaterial.NORMAL_WET : BlockMaterial.NORMAL;
+            return world.isRainingAt(pos.above()) ? BlockMaterial.NORMAL_WET : BlockMaterial.NORMAL;
         }
     }
 
     @Override
     public List<IWrapperItemStack> getBlockDrops(Point3D position) {
         BlockPos pos = new BlockPos(position.x, position.y, position.z);
-        IBlockState state = world.getBlockState(pos);
-        NonNullList<ItemStack> drops = NonNullList.create();
-        state.getBlock().getDrops(drops, world, pos, state, 0);
+        BlockState state = world.getBlockState(pos);
+        List<ItemStack> drops = state.getBlock().getDrops(state, (ServerWorld) world, pos, world.getBlockEntity(pos));
         List<IWrapperItemStack> convertedList = new ArrayList<>();
         for (ItemStack stack : drops) {
             convertedList.add(new WrapperItemStack(stack.copy()));
@@ -411,8 +417,8 @@ public class WrapperWorld extends AWrapperWorld {
 
     @Override
     public Point3D getBlockHit(Point3D position, Point3D delta) {
-        Vec3d start = new Vec3d(position.x, position.y, position.z);
-        RayTraceResult trace = world.rayTraceBlocks(start, start.add(delta.x, delta.y, delta.z), false, true, false);
+        Vector3d start = new Vector3d(position.x, position.y, position.z);
+        BlockRayTraceResult trace = world.clip(new RayTraceContext(start, start.add(delta.x, delta.y, delta.z), RayTraceContext.BlockMode.COLLIDER, RayTraceContext.FluidMode.NONE, null));
         if (trace != null) {
             BlockPos pos = trace.getBlockPos();
             if (pos != null) {
@@ -426,10 +432,10 @@ public class WrapperWorld extends AWrapperWorld {
     public boolean isBlockSolid(Point3D position, Axis axis) {
         if (axis.blockBased) {
             BlockPos pos = new BlockPos(position.x, position.y, position.z);
-            IBlockState state = world.getBlockState(pos);
+            BlockState state = world.getBlockState(pos);
             Block offsetMCBlock = state.getBlock();
-            EnumFacing facing = EnumFacing.valueOf(axis.name());
-            return offsetMCBlock != null && !offsetMCBlock.equals(Blocks.BARRIER) && state.isSideSolid(world, pos, facing);
+            Direction facing = Direction.valueOf(axis.name());
+            return offsetMCBlock != null && !offsetMCBlock.equals(Blocks.BARRIER) && state.isFaceSturdy(world, pos, facing);
         } else {
             return false;
         }
@@ -442,21 +448,19 @@ public class WrapperWorld extends AWrapperWorld {
 
     @Override
     public boolean isBlockBelowBottomSlab(Point3D position) {
-        IBlockState state = world.getBlockState(new BlockPos(position.x, position.y - 1, position.z));
-        Block block = state.getBlock();
-        return block instanceof BlockSlab && !((BlockSlab) block).isDouble() && state.getValue(BlockSlab.HALF) == BlockSlab.EnumBlockHalf.BOTTOM;
+        BlockState state = world.getBlockState(new BlockPos(position.x, position.y - 1, position.z));
+        return state.getBlock() instanceof SlabBlock && state.getValue(SlabBlock.TYPE) == SlabType.BOTTOM;
     }
 
     @Override
     public boolean isBlockAboveTopSlab(Point3D position) {
-        IBlockState state = world.getBlockState(new BlockPos(position.x, position.y + 1, position.z));
-        Block block = state.getBlock();
-        return block instanceof BlockSlab && !((BlockSlab) block).isDouble() && state.getValue(BlockSlab.HALF) == BlockSlab.EnumBlockHalf.TOP;
+        BlockState state = world.getBlockState(new BlockPos(position.x, position.y + 1, position.z));
+        return state.getBlock() instanceof SlabBlock && state.getValue(SlabBlock.TYPE) == SlabType.TOP;
     }
 
     @Override
     public double getHeight(Point3D position) {
-        return position.y - world.getHeight(new BlockPos(position.x, 0, position.z)).getY();
+        return position.y - world.getBlockFloorHeight(new BlockPos(position.x, 0, position.z));
     }
 
     @Override
@@ -468,10 +472,11 @@ public class WrapperWorld extends AWrapperWorld {
             for (int j = (int) Math.floor(mcBox.minY); j < Math.ceil(mcBox.maxY); ++j) {
                 for (int k = (int) Math.floor(mcBox.minZ); k < Math.ceil(mcBox.maxZ); ++k) {
                     BlockPos pos = new BlockPos(i, j, k);
-                    if (world.isBlockLoaded(pos)) {
-                        IBlockState state = world.getBlockState(pos);
-                        if (state.getBlock().canCollideCheck(state, false) && state.getCollisionBoundingBox(world, pos) != null) {
+                    if (!world.isEmptyBlock(pos)) {
+                        BlockState state = world.getBlockState(pos);
+                        if (state.getBlock().canCollideCheck(state, false) && state.getCollisionShape(world, pos) != null) {
                             int oldCollidingBlockCount = mutableCollidingAABBs.size();
+                            state.getCollisionShape(world, pos).collide(null, mcBox, 0);
                             state.addCollisionBoxToList(world, pos, mcBox, mutableCollidingAABBs, null, false);
                             if (mutableCollidingAABBs.size() > oldCollidingBlockCount) {
                                 box.collidingBlockPositions.add(new Point3D(i, j, k));
@@ -585,7 +590,7 @@ public class WrapperWorld extends AWrapperWorld {
     @Override
     @SuppressWarnings("unchecked")
     public <TileEntityType extends ATileEntityBase<JSONDefinition>, JSONDefinition extends AJSONMultiModelProvider> boolean setBlock(ABlockBase block, Point3D position, IWrapperPlayer playerWrapper, Axis axis) {
-        if (!world.isRemote) {
+        if (!world.isClientSide) {
             BuilderBlock wrapper = BuilderBlock.blockMap.get(block);
             BlockPos pos = new BlockPos(position.x, position.y, position.z);
             if (playerWrapper != null) {
@@ -897,7 +902,7 @@ public class WrapperWorld extends AWrapperWorld {
     public void on(TickEvent.WorldTickEvent event) {
         //Need to check if it's our world, because Forge is stupid like that.
         //Note that the client world never calls this method: to do client ticks we need to use the client interface.
-        if (!event.world.isRemote && event.world.equals(world) && event.phase.equals(Phase.END)) {
+        if (!event.world.isClientSide && event.world.equals(world) && event.phase.equals(Phase.END)) {
             for (EntityPlayer player : event.world.playerEntities) {
                 UUID playerUUID = player.getUniqueID();
                 BuilderEntityExisting gunBuilder = playerServerGunBuilders.get(playerUUID);
