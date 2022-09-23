@@ -174,7 +174,9 @@ public final class LegacyCompatSystem {
                             if ((definition.motorized.isFrontWheelDrive && partDef2.pos.z > 0) || definition.motorized.isRearWheelDrive && partDef2.pos.z <= 0) {
                                 for (String partDefType2 : partDef2.types) {
                                     if (partDefType2.startsWith("ground") || partDefType2.startsWith("generic")) {
-                                        partDef.linkedParts.add(definition.parts.indexOf(partDef2) + 1);
+                                        if (!partDef.linkedParts.contains(definition.parts.indexOf(partDef2) + 1)) {
+                                            partDef.linkedParts.add(definition.parts.indexOf(partDef2) + 1);
+                                        }
                                         break;
                                     }
                                 }
@@ -1756,7 +1758,9 @@ public final class LegacyCompatSystem {
                         for (JSONPartDefinition partDef2 : partDefs) {
                             for (String partDefType2 : partDef2.types) {
                                 if (partDefType2.startsWith("propeller") || (partDefType2.startsWith("ground") && ((linkFrontWheels && partDef2.pos.z > 0) || linkRearWheels && partDef2.pos.z <= 0))) {
-                                    partDef.linkedParts.add(partDefs.indexOf(partDef2) + 1);
+                                    if(!partDef.linkedParts.contains(partDefs.indexOf(partDef2) + 1)) {
+                                        partDef.linkedParts.add(partDefs.indexOf(partDef2) + 1);
+                                    }
                                     break;
                                 }
                             }
@@ -1769,7 +1773,9 @@ public final class LegacyCompatSystem {
                             for (List<String> variables : partDef.interactableVariables) {
                                 for (String variable : variables) {
                                     if (variable.startsWith("part_present")) {
-                                        partDef.linkedParts.add(Integer.valueOf(variable.substring("part_present_".length())));
+                                        if (!partDef.linkedParts.contains(Integer.parseInt(variable.substring("part_present_".length())))) {
+                                            partDef.linkedParts.add(Integer.parseInt(variable.substring("part_present_".length())));
+                                        }
                                         foundLink = true;
                                         break;
                                     }
@@ -1786,7 +1792,9 @@ public final class LegacyCompatSystem {
                                 if (partDef2.isController) {
                                     for (String partDefType2 : partDef2.types) {
                                         if (partDefType2.startsWith("seat")) {
-                                            partDef.linkedParts.add(partDefs.indexOf(partDef2) + 1);
+                                            if (!partDef.linkedParts.contains(partDefs.indexOf(partDef2) + 1)) {
+                                                partDef.linkedParts.add(partDefs.indexOf(partDef2) + 1);
+                                            }
                                             break;
                                         }
                                     }
@@ -1799,7 +1807,9 @@ public final class LegacyCompatSystem {
                         for (JSONPartDefinition partDef2 : partDefs) {
                             for (String partDefType2 : partDef2.types) {
                                 if (partDefType2.startsWith("interactable")) {
-                                    partDef.linkedParts.add(partDefs.indexOf(partDef2) + 1);
+                                    if (!partDef.linkedParts.contains(partDefs.indexOf(partDef2) + 1)) {
+                                        partDef.linkedParts.add(partDefs.indexOf(partDef2) + 1);
+                                    }
                                     break;
                                 }
                             }
