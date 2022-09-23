@@ -1,16 +1,5 @@
 package minecrafttransportsimulator.entities.components;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
 import minecrafttransportsimulator.baseclasses.AnimationSwitchbox;
 import minecrafttransportsimulator.baseclasses.ColorRGB;
 import minecrafttransportsimulator.baseclasses.Point3D;
@@ -20,22 +9,9 @@ import minecrafttransportsimulator.entities.instances.EntityParticle;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.items.components.AItemPack;
 import minecrafttransportsimulator.items.components.AItemSubTyped;
-import minecrafttransportsimulator.jsondefs.AJSONMultiModelProvider;
-import minecrafttransportsimulator.jsondefs.JSONAnimatedObject;
-import minecrafttransportsimulator.jsondefs.JSONAnimationDefinition;
-import minecrafttransportsimulator.jsondefs.JSONCameraObject;
-import minecrafttransportsimulator.jsondefs.JSONLight;
-import minecrafttransportsimulator.jsondefs.JSONParticle;
+import minecrafttransportsimulator.jsondefs.*;
 import minecrafttransportsimulator.jsondefs.JSONRendering.ModelType;
-import minecrafttransportsimulator.jsondefs.JSONSound;
-import minecrafttransportsimulator.jsondefs.JSONSubDefinition;
-import minecrafttransportsimulator.jsondefs.JSONText;
-import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
-import minecrafttransportsimulator.mcinterface.AWrapperWorld;
-import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
-import minecrafttransportsimulator.mcinterface.IWrapperNBT;
-import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
-import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.mcinterface.*;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableSet;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
@@ -47,6 +23,13 @@ import minecrafttransportsimulator.rendering.RenderableModelObject;
 import minecrafttransportsimulator.sound.SoundInstance;
 import minecrafttransportsimulator.systems.CameraSystem;
 import minecrafttransportsimulator.systems.ConfigSystem;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.util.*;
+import java.util.Map.Entry;
 
 /**
  * Base class for entities that are defined via JSON definitions and can be modeled in 3D.
@@ -532,7 +515,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
             if (soundDef.canPlayOnPartialTicks ^ partialTicks == 0) {
                 //Check if the sound should be playing before we try to update state.
                 AEntityE_Interactable<?> entityRiding = InterfaceManager.clientInterface.getClientPlayer().getEntityRiding();
-                boolean playerRidingEntity = this.equals(entityRiding) || (this instanceof AEntityF_Multipart && ((AEntityF_Multipart<?>) this).allParts.contains(entityRiding))|| (this instanceof APart && ((APart) this).masterEntity.allParts.contains(entityRiding));
+                boolean playerRidingEntity = this.equals(entityRiding) || (this instanceof AEntityF_Multipart && ((AEntityF_Multipart<?>) this).allParts.contains(entityRiding)) || (this instanceof APart && ((APart) this).masterEntity.allParts.contains(entityRiding));
                 boolean shouldSoundStartPlaying = playerRidingEntity && InterfaceManager.clientInterface.inFirstPerson() && !CameraSystem.runningCustomCameras ? !soundDef.isExterior : !soundDef.isInterior;
                 boolean anyClockMovedThisUpdate = false;
                 if (shouldSoundStartPlaying) {

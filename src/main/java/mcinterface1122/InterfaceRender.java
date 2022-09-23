@@ -254,7 +254,7 @@ public class InterfaceRender implements IInterfaceRender {
      * cached in this class once created for later use, so feel free to not cache
      * the string values that are passed-in.
      */
-    private static void bindTexture(String textureLocation) {
+    public static void bindTexture(String textureLocation) {
         if (animatedGIFs.containsKey(textureLocation)) {
             //Special case for GIFs.
             ParsedGIF parsedGIF = animatedGIFs.get(textureLocation);
