@@ -318,7 +318,7 @@ public class GUIPanelAircraft extends AGUIPanel {
         if (vehicle.definition.rendering.customVariables != null) {
             customVariables.addAll(vehicle.definition.rendering.customVariables);
         }
-        for (APart part : vehicle.parts) {
+        for (APart part : vehicle.allParts) {
             if (part.definition.rendering != null && part.definition.rendering.customVariables != null) {
                 customVariables.addAll(part.definition.rendering.customVariables);
             }
