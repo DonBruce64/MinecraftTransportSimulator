@@ -65,8 +65,12 @@ public class PackMaterialComponent {
 
             //Get subType materials, if required.
             if (includeSub && item instanceof AItemSubTyped) {
-                itemTexts.addAll(((AItemSubTyped<?>) item).getExtraMaterials().get(recipeIndex));
                 currentSubName = ((AItemSubTyped<?>) item).subName;
+                if (((AItemSubTyped<?>) item).getExtraMaterials().size() != item.definition.general.materialLists.size()) {
+                    lastErrorMessage = "This item has a mis-matched number of normal materialLists (" + item.definition.general.materialLists.size() + ") and extraMaterialLists (" + ((AItemSubTyped<?>) item).getExtraMaterials().size() + ") for " + item.definition.packID + ":" + item.definition.systemName + currentSubName + ".  Crafting will be disabled in survival mode.  Report this to the pack author!";
+                    return null;
+                }
+                itemTexts.addAll(((AItemSubTyped<?>) item).getExtraMaterials().get(recipeIndex));
             }
         }
 
