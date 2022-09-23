@@ -1749,68 +1749,77 @@ public final class LegacyCompatSystem {
         }
 
         //Update linking for engines, guns, and effectors.
+        boolean linkedPartsPresent = false;
         for (JSONPartDefinition partDef : partDefs) {
-            if (partDef.linkedParts == null) {
-                for (String partDefType : partDef.types) {
-                    if (partDefType.startsWith("engine")) {
-                        //Engine should link to as least one part on this definition.  What's the point of it if it doesn't drive anything?
-                        partDef.linkedParts = new ArrayList<>();
-                        for (JSONPartDefinition partDef2 : partDefs) {
-                            for (String partDefType2 : partDef2.types) {
-                                if (partDefType2.startsWith("propeller") || (partDefType2.startsWith("ground") && ((linkFrontWheels && partDef2.pos.z > 0) || linkRearWheels && partDef2.pos.z <= 0))) {
-                                    if(!partDef.linkedParts.contains(partDefs.indexOf(partDef2) + 1)) {
-                                        partDef.linkedParts.add(partDefs.indexOf(partDef2) + 1);
-                                    }
-                                    break;
-                                }
-                            }
-                        }
-                    } else if (partDefType.startsWith("gun")) {
-                        //If the gun requires a seat to be present to place, link it to that seat rather than the controller.
-                        partDef.linkedParts = new ArrayList<>();
-                        boolean foundLink = false;
-                        if (partDef.interactableVariables != null) {
-                            for (List<String> variables : partDef.interactableVariables) {
-                                for (String variable : variables) {
-                                    if (variable.startsWith("part_present")) {
-                                        if (!partDef.linkedParts.contains(Integer.parseInt(variable.substring("part_present_".length())))) {
-                                            partDef.linkedParts.add(Integer.parseInt(variable.substring("part_present_".length())));
+            if (partDef.linkedParts != null) {
+                linkedPartsPresent = true;
+                break;
+            }
+        }
+        if (!linkedPartsPresent) {
+            for (JSONPartDefinition partDef : partDefs) {
+                if (partDef.linkedParts == null) {
+                    for (String partDefType : partDef.types) {
+                        if (partDefType.startsWith("engine")) {
+                            //Engine should link to as least one part on this definition.  What's the point of it if it doesn't drive anything?
+                            partDef.linkedParts = new ArrayList<>();
+                            for (JSONPartDefinition partDef2 : partDefs) {
+                                for (String partDefType2 : partDef2.types) {
+                                    if (partDefType2.startsWith("propeller") || (partDefType2.startsWith("ground") && ((linkFrontWheels && partDef2.pos.z > 0) || linkRearWheels && partDef2.pos.z <= 0))) {
+                                        if (!partDef.linkedParts.contains(partDefs.indexOf(partDef2) + 1)) {
+                                            partDef.linkedParts.add(partDefs.indexOf(partDef2) + 1);
                                         }
-                                        foundLink = true;
                                         break;
                                     }
                                 }
-                                if (foundLink) {
-                                    break;
+                            }
+                        } else if (partDefType.startsWith("gun")) {
+                            //If the gun requires a seat to be present to place, link it to that seat rather than the controller.
+                            partDef.linkedParts = new ArrayList<>();
+                            boolean foundLink = false;
+                            if (partDef.interactableVariables != null) {
+                                for (List<String> variables : partDef.interactableVariables) {
+                                    for (String variable : variables) {
+                                        if (variable.startsWith("part_present")) {
+                                            if (!partDef.linkedParts.contains(Integer.parseInt(variable.substring("part_present_".length())))) {
+                                                partDef.linkedParts.add(Integer.parseInt(variable.substring("part_present_".length())));
+                                            }
+                                            foundLink = true;
+                                            break;
+                                        }
+                                    }
+                                    if (foundLink) {
+                                        break;
+                                    }
                                 }
                             }
-                        }
 
-                        if (!foundLink) {
-                            //No required seat found, just link to controller(s).
-                            for (JSONPartDefinition partDef2 : partDefs) {
-                                if (partDef2.isController) {
-                                    for (String partDefType2 : partDef2.types) {
-                                        if (partDefType2.startsWith("seat")) {
-                                            if (!partDef.linkedParts.contains(partDefs.indexOf(partDef2) + 1)) {
-                                                partDef.linkedParts.add(partDefs.indexOf(partDef2) + 1);
+                            if (!foundLink) {
+                                //No required seat found, just link to controller(s).
+                                for (JSONPartDefinition partDef2 : partDefs) {
+                                    if (partDef2.isController) {
+                                        for (String partDefType2 : partDef2.types) {
+                                            if (partDefType2.startsWith("seat")) {
+                                                if (!partDef.linkedParts.contains(partDefs.indexOf(partDef2) + 1)) {
+                                                    partDef.linkedParts.add(partDefs.indexOf(partDef2) + 1);
+                                                }
+                                                break;
                                             }
-                                            break;
                                         }
                                     }
                                 }
                             }
-                        }
-                    } else if (partDefType.startsWith("effector")) {
-                        //Effectors link to interactables (i.e. crates).  We don't link to genrics though as that would let them pull from the wrong things.
-                        partDef.linkedParts = new ArrayList<>();
-                        for (JSONPartDefinition partDef2 : partDefs) {
-                            for (String partDefType2 : partDef2.types) {
-                                if (partDefType2.startsWith("interactable")) {
-                                    if (!partDef.linkedParts.contains(partDefs.indexOf(partDef2) + 1)) {
-                                        partDef.linkedParts.add(partDefs.indexOf(partDef2) + 1);
+                        } else if (partDefType.startsWith("effector")) {
+                            //Effectors link to interactables (i.e. crates).  We don't link to genrics though as that would let them pull from the wrong things.
+                            partDef.linkedParts = new ArrayList<>();
+                            for (JSONPartDefinition partDef2 : partDefs) {
+                                for (String partDefType2 : partDef2.types) {
+                                    if (partDefType2.startsWith("interactable")) {
+                                        if (!partDef.linkedParts.contains(partDefs.indexOf(partDef2) + 1)) {
+                                            partDef.linkedParts.add(partDefs.indexOf(partDef2) + 1);
+                                        }
+                                        break;
                                     }
-                                    break;
                                 }
                             }
                         }
