@@ -26,7 +26,6 @@ public interface IItemVehicleInteractable {
      * {@link CallbackType#NONE} will abort processing and will prevent any packets from being sent.
      * {@link CallbackType#SKIP} passes over this item an allow for further vehicle processing.  Useful for items
      * that may only be active sometimes  based on their state, and shouldn't impede other vehicle interactions.
-     * {@link CallbackType#ALL_AND_MORE} will return the packet like ALL, but will also continue processing like SKIP.
      * <br><br>
      * NOTE: When this method is called on the server, the passed-in player is the player clicking the vehicle.
      * However, when the callback packet is sent to trigger this method on clients, the player instance is the
@@ -40,7 +39,6 @@ public interface IItemVehicleInteractable {
         NONE,
         PLAYER,
         ALL,
-        ALL_AND_MORE,
         SKIP
     }
 }

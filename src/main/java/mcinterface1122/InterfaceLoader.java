@@ -28,7 +28,7 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 public final class InterfaceLoader {
     public static final String MODID = "mts";
     public static final String MODNAME = "Immersive Vehicles (MTS)";
-    public static final String MODVER = "22.1.1-BETA2";
+    public static final String MODVER = "22.2.0-BETA7";
 
     static {
         //Enable universal bucket so that we can use buckets on fuel pumps.

@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +33,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
 import minecrafttransportsimulator.packets.instances.PacketEntityVariableIncrement;
+import minecrafttransportsimulator.packets.instances.PacketEntityVariableToggle;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packloading.PackParser;
 import minecrafttransportsimulator.rendering.RenderInstrument;
@@ -142,7 +144,9 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
      * Locked state.  Locked entities should not be able to be interacted with except by entities riding them,
      * their owners, or OP players (server admins).
      **/
+    @DerivedValue
     public boolean locked;
+    public static final String LOCKED_VARIABLE = "locked";
 
     /**
      * The ID of the owner of this entity. If this is null, it can be assumed that there is no owner.
@@ -263,8 +267,9 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
         super.update();
 
         world.beginProfiling("EntityE_Level", true);
-        //Update damage value
+        //Update damage and locked value
         damageAmount = getVariable(DAMAGE_VARIABLE);
+        locked = isVariableActive(LOCKED_VARIABLE);
         world.endProfiling();
     }
 
@@ -556,6 +561,28 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
                 instrumentComponentSwitchboxes.remove(component);
             }
             instrumentRenderables.set(slot, null);
+        }
+    }
+
+    /**
+     * Locks or unlocks this entity.  Allows for supplemental logic.
+     * Call this ONLY on the server.
+     */
+    public void toggleLock() {
+        locked = !locked;
+        toggleVariable(LOCKED_VARIABLE);
+        InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableToggle(this, LOCKED_VARIABLE));
+
+        //Check for doors to close on locking.
+        if (locked) {
+            Iterator<String> iterator = variables.keySet().iterator();
+            while (iterator.hasNext()) {
+                String variable = iterator.next();
+                if (variable.contains("door")) {
+                    InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableToggle(this, variable));
+                    iterator.remove();
+                }
+            }
         }
     }
 

@@ -117,8 +117,8 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
                 return CallbackType.NONE;
             }
             case KEY: {
-                if (!vehicle.world.isClient() && rightClick) {
-                    //Try to lock the vehicle.
+                if (rightClick && !vehicle.world.isClient()) {
+                        //Try to lock the vehicle.
                     //First check to see if we need to set this key's vehicle.
                     IWrapperItemStack stack = player.getHeldStack();
                     IWrapperNBT data = stack.getData();
@@ -146,34 +146,26 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
                             //Returning skip will make the seat-clicking code activate in the packet.
                             return CallbackType.SKIP;
                         } else if (vehicle.locked) {
-                            vehicle.locked = false;
+                            //Unlock vehicle and process hitbox action if it's a closed door.
+                            vehicle.toggleLock();
                             player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_KEY_UNLOCK));
-
-                            //Also check collision boxes that block seats, in case we clicked one of those.
                             if (hitBox.definition != null) {
-                                if (hitBox.definition.variableName != null) {
-                                    if (!vehicle.isVariableActive(hitBox.definition.variableName) && vehicle.getVariable(hitBox.definition.variableName) == 0) {
-                                        return CallbackType.ALL_AND_MORE;
-                                    }
+                                if (hitBox.definition.variableName != null && !vehicle.isVariableActive(hitBox.definition.variableName) && hitBox.definition.variableName.startsWith("door")) {
+                                    return CallbackType.SKIP;
                                 }
                             }
                         } else {
-                            vehicle.locked = true;
+                            //Lock vehicle.  Don't interact with hitbox unless it's NOT a door, as the locking code will close doors.
+                            //If we skipped, we'd just re-open the closed door.
+                            vehicle.toggleLock();
                             player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_KEY_LOCK));
-
-                            //Also check collision boxes that block seats, in case we clicked one of those.
                             if (hitBox.definition != null) {
-                                if (hitBox.definition.variableName != null) {
-                                    if (vehicle.isVariableActive(hitBox.definition.variableName) || vehicle.getVariable(hitBox.definition.variableName) != 0) {
-                                        return CallbackType.ALL_AND_MORE;
-                                    }
+                                if (hitBox.definition.variableName != null && vehicle.isVariableActive(hitBox.definition.variableName) && !hitBox.definition.variableName.startsWith("door")) {
+                                    return CallbackType.SKIP;
                                 }
                             }
                         }
-                        return CallbackType.ALL;
                     }
-                } else {
-                    vehicle.locked = !vehicle.locked;
                 }
                 return CallbackType.NONE;
             }

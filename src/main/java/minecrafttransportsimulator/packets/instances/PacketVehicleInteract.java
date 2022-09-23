@@ -108,14 +108,10 @@ public class PacketVehicleInteract extends APacketEntityInteract<AEntityF_Multip
 
         //If we clicked with with an item that can interact with a part or vehicle, perform that interaction.
         //If the item doesn't or couldn't interact with the vehicle, check for other interactions.
-        boolean hadAllCondition = false;
         if (heldItem instanceof IItemVehicleInteractable && (rightClick || leftClick)) {
             switch (((IItemVehicleInteractable) heldItem).doVehicleInteraction(vehicle, part, hitBox, player, ownerState, rightClick)) {
                 case ALL:
                     return true;
-                case ALL_AND_MORE:
-                    hadAllCondition = true;
-                    break;
                 case PLAYER:
                     player.sendPacket(this);
                     return false;
@@ -128,7 +124,7 @@ public class PacketVehicleInteract extends APacketEntityInteract<AEntityF_Multip
         //Check if we clicked a box with a variable attached.
         if (!leftClick && hitBox.definition != null && hitBox.definition.variableName != null) {
             //Can't touch locked vehicles.
-            if (vehicle.locked && !hadAllCondition) {
+            if (rightClick && vehicle.locked) {
                 player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_VEHICLE_LOCKED));
             } else {
                 switch (hitBox.definition.variableType) {
@@ -161,7 +157,6 @@ public class PacketVehicleInteract extends APacketEntityInteract<AEntityF_Multip
                         break;
                     }
                 }
-
             }
             return false;
         }
@@ -174,6 +169,6 @@ public class PacketVehicleInteract extends APacketEntityInteract<AEntityF_Multip
                 part.attack(new Damage(1.0F, part.boundingBox, null, player, null).setHand());
             }
         }
-        return hadAllCondition;
+        return false;
     }
 }
