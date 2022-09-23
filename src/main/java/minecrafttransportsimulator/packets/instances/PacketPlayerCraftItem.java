@@ -8,6 +8,7 @@ import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.packets.components.APacketPlayer;
+import minecrafttransportsimulator.packloading.PackMaterialComponent;
 
 /**
  * Packet used to craft items from crafting benches.  This goes to the server which verifies the
@@ -47,7 +48,7 @@ public class PacketPlayerCraftItem extends APacketPlayer {
     @Override
     public void handle(AWrapperWorld world, IWrapperPlayer player) {
         IWrapperInventory inventory = player.getInventory();
-        if (player.isCreative() || inventory.hasMaterials(itemToCraft, recipeIndex, true, true, forRepair)) {
+        if (player.isCreative() || inventory.hasMaterials(PackMaterialComponent.parseFromJSON(itemToCraft, recipeIndex, true, true, forRepair))) {
             //If this is for repair, we don't make a new stack, we just use the old stack and a method call.
             if (forRepair) {
                 //Find the repair item and repair it.

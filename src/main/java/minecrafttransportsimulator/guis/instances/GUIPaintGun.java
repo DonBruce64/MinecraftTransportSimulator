@@ -41,6 +41,7 @@ public class GUIPaintGun extends AGUIBase {
 
     //Crafting components.
     private final List<GUIComponentItem> craftingItemIcons = new ArrayList<>();
+    private List<PackMaterialComponent> materials;
 
     //Renders for the item.
     private GUIComponent3DModel modelRender;
@@ -122,7 +123,7 @@ public class GUIPaintGun extends AGUIBase {
         nextRecipeButton.enabled = currentItem.getExtraMaterials().size() > 1;
 
         //Set confirm button based on if player has materials.
-        confirmButton.enabled = currentItem != null && (player.isCreative() || player.getInventory().hasMaterials(currentItem, recipeIndex, false, true, false));
+        confirmButton.enabled = currentItem != null && (player.isCreative() || (materials != null && player.getInventory().hasMaterials(materials)));
     }
 
     @Override
@@ -180,7 +181,6 @@ public class GUIPaintGun extends AGUIBase {
         //Parse crafting items and set icon items.
         //Check all possible recipes, since some might be for other mods or versions.
         int requestedRecipe = recipeIndex;
-        List<PackMaterialComponent> materials = null;
         String errorMessage = "";
         do {
             materials = PackMaterialComponent.parseFromJSON(currentItem, recipeIndex, false, true, false);

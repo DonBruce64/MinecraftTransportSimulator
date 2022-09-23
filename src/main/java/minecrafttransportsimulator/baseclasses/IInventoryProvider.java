@@ -1,5 +1,6 @@
 package minecrafttransportsimulator.baseclasses;
 
+import java.util.List;
 import java.util.Map;
 
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
@@ -200,10 +201,11 @@ public interface IInventoryProvider {
     }
 
     /**
-     * Returns true if this inventory has all the materials to make the pack-based item.
+     * Returns true if this inventory has all the materials to make the pack-based item..  Normally uses the output
+     * of {@link PackMaterialComponent#parseFromJSON(AItemPack, int, boolean, boolean, boolean)}, but can use any input.
      */
-    default boolean hasMaterials(AItemPack<?> item, int recipeIndex, boolean includeMain, boolean includeSub, boolean forRepair) {
-        for (PackMaterialComponent material : PackMaterialComponent.parseFromJSON(item, recipeIndex, includeMain, includeSub, forRepair)) {
+    default boolean hasMaterials(List<PackMaterialComponent> materials) {
+        for (PackMaterialComponent material : materials) {
             int requiredMaterialCount = material.qty;
             for (IWrapperItemStack materialStack : material.possibleItems) {
                 for (int i = 0; i < getSize(); ++i) {

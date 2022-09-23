@@ -289,7 +289,7 @@ public class GUIPartBench extends AGUIBase {
         }
 
         //Set confirm button based on if player has materials.
-        confirmButton.enabled = currentItem != null && (player.isCreative() || player.getInventory().hasMaterials(currentItem, recipeIndex, true, true, viewingRepair));
+        confirmButton.enabled = currentItem != null && (player.isCreative() || (materials != null && player.getInventory().hasMaterials(materials)));
 
         //Check the mouse to see if it updated and we need to change items.
         int wheelMovement = InterfaceManager.inputInterface.getTrackedMouseWheel();

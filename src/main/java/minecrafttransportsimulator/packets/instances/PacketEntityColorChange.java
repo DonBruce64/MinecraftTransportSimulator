@@ -8,6 +8,7 @@ import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperInventory;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.packets.components.APacketEntityInteract;
+import minecrafttransportsimulator.packloading.PackMaterialComponent;
 
 /**
  * Packet sent to entities to update their their subName (color).  This gets sent from
@@ -42,7 +43,7 @@ public class PacketEntityColorChange extends APacketEntityInteract<AEntityD_Defi
     @Override
     public boolean handle(AWrapperWorld world, AEntityD_Definable<?> entity, IWrapperPlayer player) {
         IWrapperInventory inventory = player.getInventory();
-        if (player.isCreative() || inventory.hasMaterials(newItem, recipeIndex, false, true, false)) {
+        if (player.isCreative() || inventory.hasMaterials(PackMaterialComponent.parseFromJSON(newItem, recipeIndex, false, true, false))) {
             //Remove livery materials (if required) and set new subName.
             if (!player.isCreative()) {
                 inventory.removeMaterials(newItem, recipeIndex, false, true, false);
