@@ -54,11 +54,11 @@ public class PartGun extends APart {
 
     //Stored variables used to determine bullet firing behavior.
     private int bulletsLeft;
-    private int bulletsReloading;
     private int currentMuzzleGroupIndex;
     private final RotationMatrix internalOrientation;
     private final RotationMatrix prevInternalOrientation;
     protected ItemBullet loadedBullet;
+    private ItemBullet reloadingBullet;
     public ItemBullet clientNextBullet;
 
     //These variables are used during firing and will be reset on loading.
@@ -159,14 +159,18 @@ public class PartGun extends APart {
         //Load saved data.
         this.state = GunState.values()[data.getInteger("state")];
         this.bulletsLeft = data.getInteger("bulletsLeft");
-        this.bulletsReloading = data.getInteger("bulletsReloading");
         this.currentMuzzleGroupIndex = data.getInteger("currentMuzzleGroupIndex");
         this.internalOrientation = new RotationMatrix().setToAngles(data.getPoint3d("internalAngles"));
         this.prevInternalOrientation = new RotationMatrix().set(internalOrientation);
         String loadedBulletPack = data.getString("loadedBulletPack");
-        String loadedBulletName = data.getString("loadedBulletName");
         if (!loadedBulletPack.isEmpty()) {
+            String loadedBulletName = data.getString("loadedBulletName");
             this.loadedBullet = PackParser.getItem(loadedBulletPack, loadedBulletName);
+        }
+        String reloadingBulletPack = data.getString("reloadingBulletPack");
+        if (!reloadingBulletPack.isEmpty()) {
+            String reloadingBulletName = data.getString("reloadingBulletName");
+            this.reloadingBullet = PackParser.getItem(reloadingBulletPack, reloadingBulletName);
         }
         //If we didn't load the bullet due to pack changes, set the current bullet count to 0.
         //This prevents pack changes from locking guns.
@@ -369,7 +373,7 @@ public class PartGun extends APart {
             //If we can accept bullets, and aren't currently loading any, re-load ourselves from any inventories.
             //While the reload method checks for reload time, we check here to save on code processing.
             //No sense in looking for bullets if we can't load them anyways.
-            if (!world.isClient() && bulletsLeft < definition.gun.capacity && bulletsReloading == 0) {
+            if (!world.isClient() && bulletsLeft < definition.gun.capacity && reloadingBullet == null) {
                 if (entityOn instanceof EntityPlayerGun) {
                     if (definition.gun.autoReload || bulletsLeft == 0) {
                         //Check the player's inventory for bullets.
@@ -414,8 +418,7 @@ public class PartGun extends APart {
 
             //If we are a client, this is where we get our bullets.
             if (clientNextBullet != null) {
-                loadedBullet = clientNextBullet;
-                bulletsReloading = clientNextBullet.definition.bullet.quantity;
+                reloadingBullet = clientNextBullet;
                 reloadTimeRemaining = definition.gun.reloadTime;
                 clientNextBullet = null;
             }
@@ -426,9 +429,10 @@ public class PartGun extends APart {
             //so at some point the reload time needs to hit 0.
             if (reloadTimeRemaining > 0) {
                 --reloadTimeRemaining;
-            } else if (bulletsReloading != 0) {
-                bulletsLeft += bulletsReloading;
-                bulletsReloading = 0;
+            } else if (reloadingBullet != null) {
+                loadedBullet = reloadingBullet;
+                bulletsLeft += reloadingBullet.definition.bullet.quantity;
+                reloadingBullet = null;
             }
         } else {
             //Inactive gun, set as such and set to default position if we have one.
@@ -707,13 +711,12 @@ public class PartGun extends APart {
         //Also don't fill bullets if we are currently reloading bullets.
         if (item.definition.bullet != null) {
             boolean isNewBulletValid = item.definition.bullet.diameter == definition.gun.diameter && item.definition.bullet.caseLength >= definition.gun.minCaseLength && item.definition.bullet.caseLength <= definition.gun.maxCaseLength;
-            if (bulletsReloading == 0 && (loadedBullet == null ? isNewBulletValid : loadedBullet.equals(item))) {
+            if (reloadingBullet == null && (loadedBullet == null ? isNewBulletValid : loadedBullet.equals(item))) {
                 //Make sure we don't over-fill the gun.
                 if (item.definition.bullet.quantity + bulletsLeft <= definition.gun.capacity) {
-                    loadedBullet = item;
-                    bulletsReloading = item.definition.bullet.quantity;
+                    reloadingBullet = item;
                     reloadTimeRemaining = definition.gun.reloadTime;
-                    InterfaceManager.packetInterface.sendToAllClients(new PacketPartGun(this, loadedBullet));
+                    InterfaceManager.packetInterface.sendToAllClients(new PacketPartGun(this, reloadingBullet));
                     return true;
                 }
             }
@@ -895,12 +898,15 @@ public class PartGun extends APart {
         super.save(data);
         data.setInteger("state", (byte) state.ordinal());
         data.setInteger("bulletsLeft", bulletsLeft);
-        data.setInteger("bulletsReloading", bulletsReloading);
         data.setInteger("currentMuzzleGroupIndex", currentMuzzleGroupIndex);
         data.setPoint3d("internalAngles", internalOrientation.angles);
         if (loadedBullet != null) {
             data.setString("loadedBulletPack", loadedBullet.definition.packID);
             data.setString("loadedBulletName", loadedBullet.definition.systemName);
+        }
+        if (reloadingBullet != null) {
+            data.setString("reloadingBulletPack", reloadingBullet.definition.packID);
+            data.setString("reloadingBulletName", reloadingBullet.definition.systemName);
         }
         return data;
     }
