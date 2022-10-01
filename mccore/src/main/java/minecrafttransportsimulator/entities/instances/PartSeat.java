@@ -161,29 +161,26 @@ public final class PartSeat extends APart {
     @Override
     public boolean setRider(IWrapperEntity rider, boolean facesForwards) {
         if (super.setRider(rider, facesForwards)) {
-            boolean clientRiderOnVehicle = vehicleOn != null && world.isClient() && InterfaceManager.clientInterface.getClientPlayer().equals(rider);
+            //Set the vehicle creative status, if it's not true already.
+            if (placementDefinition.isController && rider instanceof IWrapperPlayer && ((IWrapperPlayer) rider).isCreative() && !vehicleOn.isCreative) {
+                vehicleOn.isCreative = true;
+            }
 
+            boolean clientRiderOnVehicle = vehicleOn != null && world.isClient() && InterfaceManager.clientInterface.getClientPlayer().equals(rider);
             if (clientRiderOnVehicle) {
                 //Open the HUD.  This will have been closed in the remove call.
                 new GUIHUD(vehicleOn, this);
 
                 //Auto-start the engines, if we have that config enabled and we can start them.
-                //Also set the vehicle creative status, if it's not true already.
-                if (placementDefinition.isController) {
-                    if (rider instanceof IWrapperPlayer && ((IWrapperPlayer) rider).isCreative() && !vehicleOn.isCreative) {
-                        vehicleOn.isCreative = true;
-                    }
-
-                    if (ConfigSystem.client.controlSettings.autostartEng.value && vehicleOn.canPlayerStartEngines((IWrapperPlayer) rider)) {
-                        vehicleOn.engines.forEach(engine -> {
-                            if (!vehicleOn.definition.motorized.isAircraft) {
-                                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE));
-                            }
-                            InterfaceManager.packetInterface.sendToServer(new PacketPartEngine(engine, Signal.AS_ON));
-                        });
-                        if (vehicleOn.parkingBrakeOn) {
-                            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicleOn, AEntityVehicleD_Moving.PARKINGBRAKE_VARIABLE));
+                if (placementDefinition.isController && ConfigSystem.client.controlSettings.autostartEng.value && vehicleOn.canPlayerStartEngines((IWrapperPlayer) rider)) {
+                    vehicleOn.engines.forEach(engine -> {
+                        if (!vehicleOn.definition.motorized.isAircraft) {
+                            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.NEUTRAL_SHIFT_VARIABLE));
                         }
+                        InterfaceManager.packetInterface.sendToServer(new PacketPartEngine(engine, Signal.AS_ON));
+                    });
+                    if (vehicleOn.parkingBrakeOn) {
+                        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicleOn, AEntityVehicleD_Moving.PARKINGBRAKE_VARIABLE));
                     }
                 }
             }
@@ -200,13 +197,30 @@ public final class PartSeat extends APart {
 
     @Override
     public void removeRider() {
+        //Check if we have another controller, and if they are creative.
+        boolean otherController = false;
+        boolean otherCreativeController = false;
+        for (APart part : vehicleOn.allParts) {
+            if (part != this && part.rider instanceof IWrapperPlayer && part.placementDefinition.isController) {
+                otherController = true;
+                if (rider instanceof IWrapperPlayer && ((IWrapperPlayer) rider).isCreative()) {
+                    otherCreativeController = true;
+                    break;
+                }
+            }
+        }
+
+        //Set creative to false if there are no other creative controllers.
+        if (!otherCreativeController) {
+            vehicleOn.isCreative = false;
+        }
+
         //De-select active gun if required.
         if (placementDefinition.canDisableGun) {
             activeGunItem = null;
         }
 
         boolean clientRiderOnVehicle = vehicleOn != null && world.isClient() && InterfaceManager.clientInterface.getClientPlayer().equals(rider);
-
         if (clientRiderOnVehicle) {
             //Client player is the one that left the vehicle.  Make sure they don't have their mouse locked or a GUI open.
             if (vehicleOn.definition.motorized.isAircraft) {
@@ -217,41 +231,19 @@ public final class PartSeat extends APart {
             AGUIBase.closeIfOpen(GUIHUD.class);
             AGUIBase.closeIfOpen(GUIRadio.class);
 
-            //Set creative to fal
-            if (placementDefinition.isController && rider instanceof IWrapperPlayer && ((IWrapperPlayer) rider).isCreative() && !vehicleOn.isCreative) {
-                vehicleOn.isCreative = true;
-            }
-
             //Auto-stop engines if we have the config, and there aren't any other controllers in the vehicle, and we aren't changing seats.
-            //Also un-set creative status if this is true.
-            if (placementDefinition.isController) {
-                boolean otherController = false;
-                boolean otherCreativeController = false;
-                for (APart part : vehicleOn.allParts) {
-                    if (part != this && part.rider instanceof IWrapperPlayer && part.placementDefinition.isController) {
-                        otherController = true;
-                        if (rider instanceof IWrapperPlayer && ((IWrapperPlayer) rider).isCreative()) {
-                            otherCreativeController = true;
-                            break;
-                        }
+            if (placementDefinition.isController && !otherController && ConfigSystem.client.controlSettings.autostartEng.value) {
+                vehicleOn.engines.forEach(engine -> {
+                    if (engine.magnetoOn) {
+                        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.MAGNETO_VARIABLE));
                     }
-                }
-                if (!otherController && ConfigSystem.client.controlSettings.autostartEng.value) {
-                    vehicleOn.engines.forEach(engine -> {
-                        if (engine.magnetoOn) {
-                            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.MAGNETO_VARIABLE));
-                        }
-                        if (engine.electricStarterEngaged) {
-                            InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.ELECTRIC_STARTER_VARIABLE));
-                        }
-                    });
-                    InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(vehicleOn, AEntityVehicleD_Moving.BRAKE_VARIABLE, 0));
-                    if (!vehicleOn.parkingBrakeOn) {
-                        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicleOn, AEntityVehicleD_Moving.PARKINGBRAKE_VARIABLE));
+                    if (engine.electricStarterEngaged) {
+                        InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(engine, PartEngine.ELECTRIC_STARTER_VARIABLE));
                     }
-                }
-                if (!otherCreativeController) {
-                    vehicleOn.isCreative = false;
+                });
+                InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableSet(vehicleOn, AEntityVehicleD_Moving.BRAKE_VARIABLE, 0));
+                if (!vehicleOn.parkingBrakeOn) {
+                    InterfaceManager.packetInterface.sendToServer(new PacketEntityVariableToggle(vehicleOn, AEntityVehicleD_Moving.PARKINGBRAKE_VARIABLE));
                 }
             }
         }
