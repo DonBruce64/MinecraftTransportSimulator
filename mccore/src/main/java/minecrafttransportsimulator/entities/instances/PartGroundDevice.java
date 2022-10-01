@@ -236,8 +236,6 @@ public class PartGroundDevice extends APart {
                 return vehicleOn != null ? (vehicleOn.speedFactor * (prevAngularPosition + (angularPosition - prevAngularPosition) * partialTicks) * 360D) % 360D : 0;
             case ("ground_onground"):
                 return vehicleOn != null && animateAsOnGround ? 1 : 0;
-            case ("ground_inliquid"):
-                return isInLiquid() ? 1 : 0;
             case ("ground_isflat"):
                 return isFlat ? 1 : 0;
             case ("ground_contacted"):
