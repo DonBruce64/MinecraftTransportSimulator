@@ -784,9 +784,9 @@ public class EntityVehicleF_Physics extends AEntityVehicleE_Powered {
                 return speedFactor;
             case ("acceleration"):
                 return motion.length() - prevMotion.length();
-            case ("front_road_angle"):
+            case ("road_angle_front"):
                 return frontFollower != null ? frontFollower.getCurrentYaw() - orientation.angles.y : 0;
-            case ("rear_road_angle"):
+            case ("road_angle_rear"):
                 return rearFollower != null ? rearFollower.getCurrentYaw() - orientation.angles.y : 0;
 
             //Vehicle state cases.
