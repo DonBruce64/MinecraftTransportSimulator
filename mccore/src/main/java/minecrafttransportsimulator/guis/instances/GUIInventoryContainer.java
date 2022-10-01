@@ -72,7 +72,7 @@ public class GUIInventoryContainer extends AGUIInventory {
             GUIComponentButton itemButton = new GUIComponentButton(guiLeft + 8 + GUIComponentButton.ITEM_BUTTON_SIZE * (i % 9), guiTop + 12 + inventoryRowOffset + GUIComponentButton.ITEM_BUTTON_SIZE * (i / 9), true) {
                 @Override
                 public void onClicked(boolean leftSide) {
-                    InterfaceManager.packetInterface.sendToServer(new PacketPlayerItemTransfer(inventory, player, interactableSlotButtons.indexOf(this), -1, isPlayerHolding));
+                    InterfaceManager.packetInterface.sendToServer(new PacketPlayerItemTransfer(inventory, player, interactableSlotButtons.indexOf(this) + 9 * rowOffset, -1, isPlayerHolding));
                 }
             };
             addComponent(itemButton);
