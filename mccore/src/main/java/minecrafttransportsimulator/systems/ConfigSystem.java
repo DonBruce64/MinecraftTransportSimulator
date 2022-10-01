@@ -137,11 +137,16 @@ public final class ConfigSystem {
                             extraMaterialLists.add(craftingOverridesObject.overrides.get(craftingOverridePackID).get(craftingOverrideSystemName));
 
                             //Clear main list, we just use extra here for the item.  Same effect.
+                            //Need to add blank entries though so we match counts.
                             item.definition.general.materialLists.clear();
+                            extraMaterialLists.forEach(list -> item.definition.general.materialLists.add(new ArrayList<>()));
                         } else if (item != null) {
                             item.definition.general.materialLists.add(craftingOverridesObject.overrides.get(craftingOverridePackID).get(craftingOverrideSystemName));
                         }
-                        item.definition.general.repairMaterialLists.add(craftingOverridesObject.overrides.get(craftingOverridePackID).get(craftingOverrideSystemName + "_repair"));
+                        List<String> repairMaterials = craftingOverridesObject.overrides.get(craftingOverridePackID).get(craftingOverrideSystemName + "_repair");
+                        if (repairMaterials != null) {
+                            item.definition.general.repairMaterialLists.add(craftingOverridesObject.overrides.get(craftingOverridePackID).get(craftingOverrideSystemName + "_repair"));
+                        }
                     }
                 }
             } catch (Exception e) {
