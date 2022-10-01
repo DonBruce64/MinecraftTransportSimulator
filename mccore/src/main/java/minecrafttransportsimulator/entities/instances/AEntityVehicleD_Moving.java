@@ -70,8 +70,8 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     public float currentUnderSteer;
 
     //Road-following data.
-    private RoadFollowingState frontFollower;
-    private RoadFollowingState rearFollower;
+    protected RoadFollowingState frontFollower;
+    protected RoadFollowingState rearFollower;
     private LaneSelectionRequest selectedSegment = LaneSelectionRequest.NONE;
     private double totalPathDelta;
     private double prevTotalPathDelta;
@@ -611,7 +611,7 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
                         Point3D desiredVector = frontFollower.getCurrentPoint().subtract(rearDesiredPoint);
                         double yawDelta = Math.toDegrees(Math.atan2(desiredVector.x, desiredVector.z));
                         double pitchDelta = -Math.toDegrees(Math.atan2(desiredVector.y, Math.hypot(desiredVector.x, desiredVector.z)));
-                        double rollDelta = rearFollower.getCurrentRotation();
+                        double rollDelta = rearFollower.getCurrentRoll();
                         if (definition.motorized.maxTiltAngle != 0) {
                             rollDelta -= definition.motorized.maxTiltAngle * 2.0 * Math.min(0.5, velocity / 2D) * getSteeringAngle();
                         }

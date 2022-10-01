@@ -111,11 +111,24 @@ public class RoadFollowingState {
     }
 
     /**
+     * Returns the current yaw-rotation on this curve we set to in the world.
+     * This should be called AFTER {@link #updateCurvePoints(float, int)},
+     * otherwise you may get out of the curve's bounds.
+     */
+    public double getCurrentYaw() {
+        double rotation = curve.getRotationAt(currentSegment).angles.y;
+        if (!goingForwards) {
+            rotation = rotation + 180;
+        }
+        return rotation;
+    }
+
+    /**
      * Returns the current roll-rotation on this curve we set to in the world.
      * This should be called AFTER {@link #updateCurvePoints(float, int)},
      * otherwise you may get out of the curve's bounds.
      */
-    public double getCurrentRotation() {
+    public double getCurrentRoll() {
         double rotation = curve.getRotationAt(currentSegment).angles.z;
         if (!goingForwards) {
             rotation = -rotation;
