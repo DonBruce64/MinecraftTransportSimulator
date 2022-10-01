@@ -1,0 +1,20 @@
+# common
+run
+build
+.gradle
+
+# eclipse
+eclipse
+bin
+*.launch
+.metadata
+.classpath
+.project
+.settings
+
+# idea
+out
+*.ipr
+*.iws
+*.iml
+.idea

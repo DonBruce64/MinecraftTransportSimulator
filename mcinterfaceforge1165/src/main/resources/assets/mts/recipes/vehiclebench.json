@@ -1,0 +1,24 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        "aaa",
+        "aba",
+        "c c"
+    ],
+    "key": {
+        "a": {
+            "type": "forge:ore_dict",
+            "ore": "plankWood"
+        },
+        "b": {
+            "type": "forge:ore_dict",
+            "ore": "fenceWood"
+        },
+        "c": {
+            "item": "minecraft:glass_pane"
+        }
+    },
+    "result": {
+        "item": "mts:mts.vehiclebench"
+    }
+}

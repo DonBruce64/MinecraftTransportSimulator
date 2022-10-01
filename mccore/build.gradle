@@ -1,0 +1,53 @@
+
+//Apply plugins
+apply plugin: "java"
+apply plugin: "eclipse"
+
+//Set file name.
+version = "Core"
+group = "minecrafttransportsimulator"
+archivesBaseName = "Immersive Vehicles"
+
+//Options for Java version to compile to.
+sourceCompatibility = targetCompatibility = "1.8"
+compileJava {
+    options.compilerArgs << "-Xlint:deprecation" << "-Xlint:unchecked"
+}
+
+repositories {
+    mavenCentral()
+}
+
+//Configuration that holds jars to include in the jar
+configurations {
+    embed
+    compileOnly.extendsFrom(embed)
+}
+
+//Specify dependencies.
+dependencies {
+    //The following dependencies are included by MC, but may update their versions at any point.
+    //We include the oldest for best compatibility.
+
+    //GSON for JSON parsing.
+    compileOnly("com.google.code.gson:gson:2.8.0")
+
+    //Netty for networking.
+    compileOnly("io.netty:netty-all:4.1.9.Final")
+
+
+    //Set sound code bits as embeds so they are included into the jar.  These don't come with MC.
+    embed("com.googlecode.soundlibs:jlayer:1.0.1.4")
+    embed("org.jcraft:jorbis:0.0.17")
+}
+
+//Here is where we zip up all embeds and add them to our jar.
+jar {
+    from {
+        configurations.embed.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = "UTF-8" // Use the UTF-8 charset for Java compilation
+}

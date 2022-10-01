@@ -1,0 +1,126 @@
+buildscript {
+    repositories {
+        maven { url = "https://maven.minecraftforge.net" }
+        maven { url = "https://repo.spongepowered.org/maven" }
+        mavenCentral()
+    }
+    dependencies {
+        classpath group: "net.minecraftforge.gradle", name: "ForgeGradle", version: "5.+", changing: true
+        classpath "org.spongepowered:mixingradle:0.7.+"
+    }
+}
+
+//Apply plugins
+apply plugin: "net.minecraftforge.gradle"
+apply plugin: "org.spongepowered.mixin"
+apply plugin: "eclipse"
+
+//Set file name.
+version = "${project.mc_version}-${project.mod_version}"
+group = project.mod_group
+archivesBaseName = project.archive_name
+
+//Options for Java version to compile to.
+sourceCompatibility = targetCompatibility = "1.8"
+compileJava {
+    options.compilerArgs << "-Xlint:deprecation" << "-Xlint:unchecked"
+}
+
+mixin {
+    add sourceSets.main, project.mixin_refmap
+}
+
+//Minecraft mappings and run configs.
+minecraft {
+    // The mappings can be changed at any time, and must be in the following format.
+    // Channel:   Version:
+    // snapshot   YYYYMMDD   Snapshot are built nightly.
+    // stable     #          Stables are built at the discretion of the MCP team.
+    // official   MCVersion  Official field/method names from Mojang mapping files
+    mappings channel: project.mappings_channel, version: project.mappings_version
+
+    //Run configurations.
+    runs {
+        client {
+            workingDirectory file("run")
+            //Tell the game to load the core mod class so that mixins will run
+            property "fml.coreMods.load", project.mts_coremod
+            //Use the default mixin tweaker
+            property "tweakClass", project.mixin_tweaker
+        }
+
+        //Run the server in a different directory so that the run directory isn't a mess
+        server {
+            workingDirectory file("runServer")
+            property "fml.coreMods.load", project.mts_coremod
+            property "tweakClass", project.mixin_tweaker
+        }
+    }
+}
+
+repositories {
+    //JEI
+    maven { url = "https://dvs1.progwml6.com/files/maven/" }
+    //Mixins
+    maven { url = "https://repo.spongepowered.org/maven" }
+}
+
+//Configuration that holds jars to include in the jar
+configurations {
+    embed
+    compileOnly.extendsFrom(embed)
+}
+
+//Specify dependencies.
+dependencies {
+    //Minecraft to use.
+    minecraft "net.minecraftforge:forge:${project.mc_version}-${project.forge_version}"
+		
+		//Core to use.
+    embed(project(":mccore"))
+
+    //Set mixin as embeds so they are included into the jar.
+    embed("org.spongepowered:mixin:0.8.5") {
+        exclude module: "guava"
+        exclude module: "commons-io"
+        exclude module: "gson"
+    }
+    annotationProcessor "org.spongepowered:mixin:0.8.5:processor"
+
+    //Compile against the JEI API but do not include it at runtime
+    compileOnly fg.deobf("mezz.jei:jei_1.12.2:4.16.1.302:api")
+    //At runtime, use the full JEI jar
+    //Disabled as Access Transformers don"t work on FG 3.0 runtimes despite them saying they do.
+    //Not a huge issue, as it just prevents using JEI in-dev, and we already have it working so don"t really need to test.
+    //runtimeOnly fg.deobf("mezz.jei:jei_1.12.2:4.16.1.302")
+}
+
+jar {
+    //Zip all embeds and add them to the jar
+    configurations.embed.each { dependency ->
+        from(project.zipTree(dependency)) {
+            dependency.isDirectory() ? dependency : zipTree(dependency)
+            rename("LICENSE.txt", "org/spongepowered/LICENSE.txt")
+            exclude(["META-INF/*.SF", "META-INF/*.RSA", "META-INF/*.MF", "**/*.html", "module-info.class"])
+        }
+    }
+
+    //Add properties required for mixins to the manifest
+    manifest {
+        attributes([
+                "FMLCorePlugin"              : project.mts_coremod,
+                "FMLCorePluginContainsFMLMod": true,
+                "ForceLoadAsMod"             : true,
+                "TweakClass"                 : project.mixin_tweaker,
+                "TweakOrder"                 : "0",
+                "MixinConfigs"               : project.mixin_config
+        ])
+    }
+}
+
+//Now compile the mod.
+jar.finalizedBy("reobfJar")
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = "UTF-8" // Use the UTF-8 charset for Java compilation
+}
