@@ -540,11 +540,11 @@ public class PartEngine extends APart {
                     double propellerForcePenalty = Math.max(0, (attachedPropeller.definition.propeller.diameter - 75) / (50 * (currentFuelConsumption + (currentSuperchargerFuelConsumption * currentSuperchargerEfficiency)) - 15));
                     double propellerFeedback = (attachedPropeller.airstreamLinearVelocity - attachedPropeller.desiredLinearVelocity) * (isPropellerInLiquid ? 6.5 : 2);
                     if (currentGear < 0 || attachedPropeller.currentPitch < 0) {
-                        propellerFeedback *= -1;
+                        propellerFeedback = -propellerFeedback;
                     }
 
                     if (running) {
-                        propellerFeedback += propellerForcePenalty * 50;
+                        propellerFeedback -= propellerForcePenalty * 50;
                         engineTargetRPM = vehicleOn.throttle * (currentMaxRPM - currentIdleRPM) / (1 + hours / 1250) + currentIdleRPM;
                         double engineRPMDifference = engineTargetRPM - rpm;
 
