@@ -52,6 +52,8 @@ public class PartGun extends APart {
     private final double defaultPitch;
     private final double pitchSpeed;
 
+    private final List<PartInteractable> connectedCrates = new ArrayList<>();
+
     //Stored variables used to determine bullet firing behavior.
     private int bulletsLeft;
     private int currentMuzzleGroupIndex;
@@ -394,9 +396,9 @@ public class PartGun extends APart {
                 } else {
                     if (definition.gun.autoReload) {
                         //Iterate through all the inventory slots in crates to try to find matching ammo.
-                        for (APart part : linkedParts) {
-                            if (part instanceof PartInteractable && part.definition.interactable.interactionType.equals(InteractableComponentType.CRATE) && part.isActive && part.definition.interactable.feedsVehicles) {
-                                EntityInventoryContainer inventory = ((PartInteractable) part).inventory;
+                        for (PartInteractable crate : connectedCrates) {
+                            if (crate.isActive) {
+                                EntityInventoryContainer inventory = crate.inventory;
                                 for (int i = 0; i < inventory.getSize(); ++i) {
                                     IWrapperItemStack stack = inventory.getStack(i);
                                     AItemBase item = stack.getItem();
@@ -483,6 +485,15 @@ public class PartGun extends APart {
                 seatsControllingGun.add((PartSeat) part);
             }
         }
+
+        connectedCrates.clear();
+        for (APart part : parts) {
+            if (part instanceof PartInteractable) {
+                connectedCrates.add((PartInteractable) part);
+            }
+        }
+        addLinkedPartsToList(connectedCrates, PartInteractable.class);
+        connectedCrates.removeIf(crate -> crate.definition.interactable.interactionType != InteractableComponentType.CRATE || !crate.definition.interactable.feedsVehicles);
     }
 
     /**
