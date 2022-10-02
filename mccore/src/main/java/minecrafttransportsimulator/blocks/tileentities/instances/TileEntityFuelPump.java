@@ -1,21 +1,15 @@
 package minecrafttransportsimulator.blocks.tileentities.instances;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityFluidTankProvider;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityFluidTank;
-import minecrafttransportsimulator.entities.instances.EntityInventoryContainer;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartEngine;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemPartInteractable;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
-import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONPart.InteractableComponentType;
 import minecrafttransportsimulator.jsondefs.JSONText;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
@@ -24,19 +18,12 @@ import minecrafttransportsimulator.mcinterface.IWrapperItemStack;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
-import minecrafttransportsimulator.packets.instances.PacketEntityGUIRequest;
 import minecrafttransportsimulator.packets.instances.PacketPlayerChatMessage;
 import minecrafttransportsimulator.packets.instances.PacketTileEntityFuelPumpConnection;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
-public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityFluidTankProvider {
-    public EntityVehicleF_Physics connectedVehicle;
+public class TileEntityFuelPump extends ATileEntityFuelPump implements ITileEntityFluidTankProvider {
     private final EntityFluidTank tank;
-    public final EntityInventoryContainer fuelItems;
-    public final List<Integer> fuelAmounts = new ArrayList<>();
-    public int fuelPurchasedRemaining;
-    public boolean isCreative;
-    public UUID placingPlayerID;
 
     public TileEntityFuelPump(AWrapperWorld world, Point3D position, IWrapperPlayer placingPlayer, IWrapperNBT data) {
         super(world, position, placingPlayer, data);
@@ -61,70 +48,26 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityFl
             }
         };
         world.addEntity(tank);
-        this.fuelItems = new EntityInventoryContainer(world, data.getDataOrNew("inventory"), 10);
-        world.addEntity(fuelItems);
-        for (int i = 0; i < fuelItems.getSize(); ++i) {
-            this.fuelAmounts.add(data.getInteger("fuelAmount" + i));
-        }
-        this.fuelPurchasedRemaining = data.getInteger("fuelPurchasedRemaining");
-        this.placingPlayerID = placingPlayer != null ? placingPlayer.getID() : data.getUUID("placingPlayerID");
     }
 
     @Override
     public void update() {
         super.update();
-        //Update creative status.
-        isCreative = true;
-        for (int i = 0; i < fuelItems.getSize(); ++i) {
-            if (!fuelItems.getStack(i).isEmpty()) {
-                isCreative = false;
-            }
-        }
 
         //Do fuel checks.  Fuel checks only occur on servers.  Clients get packets for state changes.
         if (connectedVehicle != null && !world.isClient()) {
-            //Don't fuel vehicles that don't exist.
-            if (!connectedVehicle.isValid) {
-                connectedVehicle.beingFueled = false;
-                connectedVehicle = null;
-                return;
-            }
-
-            //Check distance to make sure the vehicle hasn't moved away.
-            if (!connectedVehicle.position.isDistanceToCloserThan(position, 15)) {
-                InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityFuelPumpConnection(this, false));
-                for (IWrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, 25, 25, 25))) {
-                    if (entity instanceof IWrapperPlayer) {
-                        ((IWrapperPlayer) entity).sendPacket(new PacketPlayerChatMessage((IWrapperPlayer) entity, JSONConfigLanguage.INTERACT_FUELPUMP_TOOFAR));
-                    }
-                }
-                connectedVehicle.beingFueled = false;
-                connectedVehicle = null;
-                return;
-            }
             //If we have room for fuel, try to add it to the vehicle.
-            if (tank.getFluidLevel() > 0) {
+            if (isCreative ? tank.getFluidLevel() > 0 : (fuelPurchasedRemaining > 0 || tank.getFluidLevel() > 1)) {
                 double amountToFill = connectedVehicle.fuelTank.fill(tank.getFluid(), definition.decor.pumpRate, false);
                 if (amountToFill > 0) {
                     double amountToDrain = tank.drain(tank.getFluid(), amountToFill, false);
                     connectedVehicle.fuelTank.fill(tank.getFluid(), amountToDrain, true);
                     tank.drain(tank.getFluid(), amountToDrain, true);
-                } else {
-                    //No more room in the vehicle.  Disconnect.
-                    InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityFuelPumpConnection(this, false));
-                    connectedVehicle.beingFueled = false;
-                    connectedVehicle = null;
-                    for (IWrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, 16, 16, 16))) {
-                        if (entity instanceof IWrapperPlayer) {
-                            ((IWrapperPlayer) entity).sendPacket(new PacketPlayerChatMessage((IWrapperPlayer) entity, JSONConfigLanguage.INTERACT_FUELPUMP_COMPLETE));
-                        }
-                    }
                 }
             } else {
-                //No more fuel.  Disconnect vehicle.
-                InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityFuelPumpConnection(this, false));
-                connectedVehicle.beingFueled = false;
-                connectedVehicle = null;
+                //No more fuel in tank or purchased.  Disconnect vehicle.
+                setConnection(null);
+                InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityFuelPumpConnection(this));
                 for (IWrapperEntity entity : world.getEntitiesWithin(new BoundingBox(position, 16, 16, 16))) {
                     if (entity instanceof IWrapperPlayer) {
                         ((IWrapperPlayer) entity).sendPacket(new PacketPlayerChatMessage((IWrapperPlayer) entity, JSONConfigLanguage.INTERACT_FUELPUMP_EMPTY));
@@ -136,7 +79,7 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityFl
 
     @Override
     public boolean interact(IWrapperPlayer player) {
-        //If we are holding an item, interact with the pump.
+        //If we are holding a fluid-holding item, interact with the pump.
         if (player.getHeldStack().interactWith(tank, player)) {
             return true;
         }
@@ -159,71 +102,36 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityFl
             }
         }
 
-        //Check if the item is a wrench, and the player can configure this pump..
-        if (player.isHoldingItemType(ItemComponentType.WRENCH) && (player.getID().equals(placingPlayerID) || player.isOP())) {
-            player.sendPacket(new PacketEntityGUIRequest(this, player, PacketEntityGUIRequest.EntityGUIType.FUEL_PUMP_CONFIG));
-            return true;
+        //Special cases checked, do normal cases.
+        return super.interact(player);
+    }
+
+    @Override
+    protected PumpResult checkPump(EntityVehicleF_Physics vehicle) {
+        //Check to make sure this vehicle can take this fuel pump's fuel type.
+        if (!vehicle.fuelTank.getFluid().isEmpty()) {
+            if (!tank.getFluid().equals(vehicle.fuelTank.getFluid())) {
+                return PumpResult.MISMATCH;
+            }
         }
 
-        //If we aren't a creative pump, and we don't have fuel, bring up the GUI so the player can buy some.
-        if (!isCreative && fuelPurchasedRemaining == 0 && tank.getFluidLevel() <= 1) {
-            player.sendPacket(new PacketEntityGUIRequest(this, player, PacketEntityGUIRequest.EntityGUIType.FUEL_PUMP));
-            return true;
-        }
-
-        //We don't have a vehicle connected.  Try to connect one now.
-        if (connectedVehicle == null) {
-            //Get the closest vehicle within a 16-block radius.
-            EntityVehicleF_Physics nearestVehicle = null;
-            double lowestDistance = 16D;
-            for (EntityVehicleF_Physics testVehicle : world.getEntitiesOfType(EntityVehicleF_Physics.class)) {
-                double vehicleDistance = testVehicle.position.distanceTo(position);
-                if (vehicleDistance < lowestDistance) {
-                    lowestDistance = vehicleDistance;
-                    nearestVehicle = testVehicle;
+        //Fuel type can be taken by vehicle, check to make sure engines can take it.
+        for (APart part : vehicle.parts) {
+            if (part instanceof PartEngine) {
+                if (ConfigSystem.settings.fuel.fuels.get(part.definition.engine.fuelType).containsKey(tank.getFluid())) {
+                    return PumpResult.VALID;
                 }
             }
-
-            //Have a vehicle, try to connect to it.
-            if (nearestVehicle != null) {
-                if (tank.getFluidLevel() == 0) {
-                    //No fuel in the pump.
-                    player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELPUMP_NOFUEL));
-                } else {
-                    //Check to make sure this vehicle can take this fuel pump's fuel type.
-                    if (!nearestVehicle.fuelTank.getFluid().isEmpty()) {
-                        if (!tank.getFluid().equals(nearestVehicle.fuelTank.getFluid())) {
-                            player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELPUMP_WRONGTYPE));
-                            return true;
-                        }
-                    }
-
-                    //Fuel type can be taken by vehicle, check to make sure engines can take it.
-                    for (APart part : nearestVehicle.parts) {
-                        if (part instanceof PartEngine) {
-                            if (ConfigSystem.settings.fuel.fuels.get(part.definition.engine.fuelType).containsKey(tank.getFluid())) {
-                                connectedVehicle = nearestVehicle;
-                                connectedVehicle.beingFueled = true;
-                                tank.resetAmountDispensed();
-                                InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityFuelPumpConnection(this, true));
-                                player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELPUMP_CONNECT));
-                                return true;
-                            }
-                        }
-                    }
-                    player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELPUMP_WRONGENGINES));
-                }
-            } else {
-                player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELPUMP_TOOFAR));
-            }
-        } else {
-            //Connected vehicle exists, disconnect it.
-            InterfaceManager.packetInterface.sendToAllClients(new PacketTileEntityFuelPumpConnection(this, false));
-            connectedVehicle.beingFueled = false;
-            connectedVehicle = null;
-            player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELPUMP_DISCONNECT));
         }
-        return true;
+        return PumpResult.MISMATCH;
+    }
+
+    @Override
+    public void setConnection(EntityVehicleF_Physics newVehicle) {
+        super.setConnection(newVehicle);
+        if (newVehicle != null) {
+            tank.resetAmountDispensed();
+        }
     }
 
     @Override
@@ -262,14 +170,6 @@ public class TileEntityFuelPump extends TileEntityDecor implements ITileEntityFl
     public IWrapperNBT save(IWrapperNBT data) {
         super.save(data);
         data.setData("tank", tank.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
-        data.setData("inventory", fuelItems.save(InterfaceManager.coreInterface.getNewNBTWrapper()));
-        for (int i = 0; i < fuelItems.getSize(); ++i) {
-            data.setInteger("fuelAmount" + i, fuelAmounts.get(i));
-        }
-        data.setInteger("fuelPurchasedRemaining", fuelPurchasedRemaining);
-        if (placingPlayerID != null) {
-            data.setUUID("placingPlayerID", placingPlayerID);
-        }
         return data;
     }
 }

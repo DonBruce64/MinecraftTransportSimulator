@@ -16,6 +16,7 @@
     "rewards": {
         "recipes": [
             "mts:fuelpump",
+						"mts:charger",
             "mts:jumpercable",
             "mts:jumperpack"
         ]

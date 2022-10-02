@@ -11,6 +11,7 @@ import org.apache.logging.log4j.Logger;
 import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.ABlockBaseTileEntity;
 import minecrafttransportsimulator.blocks.instances.BlockCollision;
+import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityEnergyCharger;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityFluidTankProvider;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityInventoryProvider;
 import minecrafttransportsimulator.items.components.AItemBase;
@@ -176,12 +177,15 @@ public final class InterfaceLoader {
         List<BuilderBlock> normalBlocks = new ArrayList<>();
         List<BuilderBlock> fluidBlocks = new ArrayList<>();
         List<BuilderBlock> inventoryBlocks = new ArrayList<>();
+        List<BuilderBlock> chargerBlocks = new ArrayList<>();
 
         BuilderBlock.blockMap.values().forEach(builder -> {
             if (ITileEntityFluidTankProvider.class.isAssignableFrom(((ABlockBaseTileEntity) builder.block).getTileEntityClass())) {
                 fluidBlocks.add(builder);
             } else if (ITileEntityInventoryProvider.class.isAssignableFrom(((ABlockBaseTileEntity) builder.block).getTileEntityClass())) {
                 inventoryBlocks.add(builder);
+            } else if (ITileEntityEnergyCharger.class.isAssignableFrom(((ABlockBaseTileEntity) builder.block).getTileEntityClass())) {
+                chargerBlocks.add(builder);
             } else {
                 normalBlocks.add(builder);
             }
@@ -190,6 +194,7 @@ public final class InterfaceLoader {
         BuilderTileEntity.TE_TYPE = BuilderTileEntity.TILE_ENTITIES.register("builder_base", () -> TileEntityType.Builder.of(BuilderTileEntity::new, normalBlocks.toArray(new BuilderBlock[0])).build(null)).get();
         BuilderTileEntityFluidTank.TE_TYPE2 = BuilderTileEntity.TILE_ENTITIES.register("builder_fluidtank", () -> TileEntityType.Builder.of(BuilderTileEntityFluidTank::new, fluidBlocks.toArray(new BuilderBlock[0])).build(null)).get();
         BuilderTileEntityInventoryContainer.TE_TYPE2 = BuilderTileEntity.TILE_ENTITIES.register("builder_inventory", () -> TileEntityType.Builder.of(BuilderTileEntityInventoryContainer::new, inventoryBlocks.toArray(new BuilderBlock[0])).build(null)).get();
+        BuilderTileEntityEnergyCharger.TE_TYPE2 = BuilderTileEntity.TILE_ENTITIES.register("builder_charger", () -> TileEntityType.Builder.of(BuilderTileEntityEnergyCharger::new, chargerBlocks.toArray(new BuilderBlock[0])).build(null)).get();
 
         //Init networking interface.  This will register packets as well.
         InterfacePacket.init();

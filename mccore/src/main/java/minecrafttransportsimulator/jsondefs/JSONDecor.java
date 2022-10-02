@@ -42,7 +42,7 @@ public class JSONDecor extends AJSONMultiModelProvider {
         @JSONDescription("The fuel capacity of the decor. Units are in milli-buckets. Only use if this decor is a fuel pump/fluid loader. If not set, a value of 15000 is used.")
         public int fuelCapacity;
 
-        @JSONDescription("The quantity of fuel to pump per tick. Units are in milli-buckets. Only use if this decor is a fuel pump/fluid loader. If not set, a value of 10 is used.")
+        @JSONDescription("The quantity of fuel or energy to pump per tick. Units are in milli-buckets/electric. Only use if this decor is a fuel pump/fluid loader/charger. If not set, a value of 10 is used.")
         public int pumpRate;
 
         @Deprecated
@@ -62,8 +62,10 @@ public class JSONDecor extends AJSONMultiModelProvider {
         BEACON,
         @JSONDescription("Will make the decor have signal controller functionality.")
         SIGNAL_CONTROLLER,
-        @JSONDescription("Will make the decor have fuel pump functionality.  Text rendering may be added by adding textObjects in the rendering section.  These are hard-coded to render the loader's internal fluid name, level, and amount dispensed, in that order.  Adding more textObject entries starts this cycle over.")
+        @JSONDescription("Will make the decor have fuel pump functionality.")
         FUEL_PUMP,
+        @JSONDescription("Will make the decor have electric vehicle charger functionality.")
+        CHARGER,
         @JSONDescription("Will make the decor have item loader functionality.")
         ITEM_LOADER,
         @JSONDescription("Will make the decor have item unloader functionality.")

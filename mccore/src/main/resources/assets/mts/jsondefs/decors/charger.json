@@ -1,0 +1,76 @@
+{
+  "decor": {
+    "type": "charger",
+    "width": 1.0,
+    "height": 1.0,
+    "depth": 1.0,
+    "pumpRate": 3
+  },
+  "definitions": [
+    {
+      "subName": "",
+      "name": "Vehicle Charger",
+      "extraMaterialLists": [
+        []
+      ]
+    }
+  ],
+  "rendering": {
+    "textObjects": [
+      {
+        "pos": [-0.054688,0.7125,0.484586],
+        "rot": [0.0,0.0,0.0],
+        "scale": 0.125,
+        "variableFactor": 1,
+        "variableName": "charger_dispensed",
+        "variableFormat": "DSP:%01.0f",
+        "wrapWidth": 6,
+        "defaultText": "",
+        "color": "BA7C35",
+        "lightsUp": true,
+        "autoScale": true
+      },
+      {
+        "pos": [-0.054688,0.61875,0.484586],
+        "rot": [0.0,0.0,0.0],
+        "scale": 0.125,
+        "variableFactor": 1,
+        "variableName": "charger_purchased",
+        "variableFormat": "PUR:%01.0f",
+        "wrapWidth": 6,
+        "defaultText": "",
+        "color": "BA7C35",
+        "lightsUp": true,
+        "autoScale": true
+      }
+    ],
+    "lightObjects": [
+      {
+        "objectName": "light",
+        "emissive": true,
+        "color": "DE3121",
+        "brightnessAnimations": [
+          {
+            "animationType": "visibility",
+            "variable": "10_20_10_cycle",
+            "clampMin": 1.0,
+            "clampMax": 1.0
+          },
+          {
+            "animationType": "visibility",
+            "variable": "charger_active",
+            "clampMin": 1.0,
+            "clampMax": 1.0
+          }
+        ]
+      }
+    ],
+    "modelType": "obj"
+  },
+  "general": {
+    "name": "Vehicle Charger",
+    "materialLists": [
+      []
+    ]
+  }
+}

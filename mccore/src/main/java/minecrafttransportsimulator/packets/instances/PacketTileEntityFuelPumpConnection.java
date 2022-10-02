@@ -3,51 +3,55 @@ package minecrafttransportsimulator.packets.instances;
 import java.util.UUID;
 
 import io.netty.buffer.ByteBuf;
-import minecrafttransportsimulator.blocks.tileentities.instances.TileEntityFuelPump;
+import minecrafttransportsimulator.blocks.tileentities.instances.ATileEntityFuelPump;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.packets.components.APacketEntity;
 
 /**
  * Packet sent to pumps on clients to change what vehicle they are connected to.
+ * Send just a normal packet to disconnect, and one with a vehicle to connect.
  *
  * @author don_bruce
  */
-public class PacketTileEntityFuelPumpConnection extends APacketEntity<TileEntityFuelPump> {
+public class PacketTileEntityFuelPumpConnection extends APacketEntity<ATileEntityFuelPump> {
     private final UUID linkedID;
-    private final boolean connect;
 
-    public PacketTileEntityFuelPumpConnection(TileEntityFuelPump pump, boolean connect) {
+    public PacketTileEntityFuelPumpConnection(ATileEntityFuelPump pump) {
         super(pump);
-        this.linkedID = pump.connectedVehicle.uniqueUUID;
-        this.connect = connect;
+        this.linkedID = null;
+    }
+
+    public PacketTileEntityFuelPumpConnection(ATileEntityFuelPump pump, EntityVehicleF_Physics connectedVehicle) {
+        super(pump);
+        this.linkedID = connectedVehicle.uniqueUUID;
     }
 
     public PacketTileEntityFuelPumpConnection(ByteBuf buf) {
         super(buf);
-        this.linkedID = readUUIDFromBuffer(buf);
-        this.connect = buf.readBoolean();
+        this.linkedID = buf.readBoolean() ? readUUIDFromBuffer(buf) : null;
     }
 
     @Override
     public void writeToBuffer(ByteBuf buf) {
         super.writeToBuffer(buf);
-        writeUUIDToBuffer(linkedID, buf);
-        buf.writeBoolean(connect);
+        if (linkedID != null) {
+            buf.writeBoolean(true);
+            writeUUIDToBuffer(linkedID, buf);
+        } else {
+            buf.writeBoolean(false);
+        }
     }
 
     @Override
-    protected boolean handle(AWrapperWorld world, TileEntityFuelPump pump) {
-        EntityVehicleF_Physics vehicle = world.getEntity(linkedID);
-        if (vehicle != null) {
-            if (connect) {
-                pump.connectedVehicle = vehicle;
-                vehicle.beingFueled = true;
-                pump.getTank().resetAmountDispensed();
-            } else {
-                vehicle.beingFueled = false;
-                pump.connectedVehicle = null;
+    protected boolean handle(AWrapperWorld world, ATileEntityFuelPump pump) {
+        if (linkedID != null) {
+            EntityVehicleF_Physics vehicle = world.getEntity(linkedID);
+            if (vehicle != null) {
+                pump.setConnection(vehicle);
             }
+        } else {
+            pump.setConnection(null);
         }
         return true;
     }

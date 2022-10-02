@@ -195,13 +195,12 @@ public class JSONConfigLanguage {
     public static final LanguageEntry INTERACT_KEY_NOTOWNER = new LanguageEntry("interact.key.notowner", "This key is not for any vehicle, and only the owner of this vehicle may make new keys!");
     public static final LanguageEntry INTERACT_KEY_WRONGKEY = new LanguageEntry("interact.key.wrongkey", "This key does not go to this vehicle!");
 
-    public static final LanguageEntry INTERACT_FUELPUMP_TOOFAR = new LanguageEntry("interact.fuelpump.toofar", "The fuel pump is too far away from the vehicle.  The pump should be no more than 16 blocks away.");
-    public static final LanguageEntry INTERACT_FUELPUMP_NOFUEL = new LanguageEntry("interact.fuelpump.nofuel", "The fuel pump does not have any fuel in it.  You need fuel in the fuel pump to use it.");
-    public static final LanguageEntry INTERACT_FUELPUMP_WRONGTYPE = new LanguageEntry("interact.fuelpump.wrongtype", "This pump does not contain the same liquid as what is in the vehicle.");
-    public static final LanguageEntry INTERACT_FUELPUMP_WRONGENGINES = new LanguageEntry("interact.fuelpump.wrongengines", "The fuel in this pump is not a valid fuel for the engines in the vehicle.  Check the manual for details.");
-    public static final LanguageEntry INTERACT_FUELPUMP_CONNECT = new LanguageEntry("interact.fuelpump.connect", "Fuel pump connected and pumping.");
+    public static final LanguageEntry INTERACT_FUELPUMP_TOOFAR = new LanguageEntry("interact.fuelpump.toofar", "The pump is too far away from the vehicle.  The pump should be no more than 16 blocks away.");
+    public static final LanguageEntry INTERACT_FUELPUMP_WRONGTYPE = new LanguageEntry("interact.fuelpump.wrongtype", "This pump does not contain the same fuel type as what is in the vehicle.");
+    public static final LanguageEntry INTERACT_FUELPUMP_WRONGENGINES = new LanguageEntry("interact.fuelpump.wrongengines", "The contents in this pump is not a valid fuel for the engines in the vehicle.  Check the manual for details.");
+    public static final LanguageEntry INTERACT_FUELPUMP_CONNECT = new LanguageEntry("interact.fuelpump.connect", "Connected and fueling.");
     public static final LanguageEntry INTERACT_FUELPUMP_COMPLETE = new LanguageEntry("interact.fuelpump.complete", "Vehicle is full, disconnecting.");
-    public static final LanguageEntry INTERACT_FUELPUMP_EMPTY = new LanguageEntry("interact.fuelpump.empty", "Fuel pump is empty, disconnecting.");
+    public static final LanguageEntry INTERACT_FUELPUMP_EMPTY = new LanguageEntry("interact.fuelpump.empty", "Pump is empty, disconnecting.");
     public static final LanguageEntry INTERACT_FUELPUMP_DISCONNECT = new LanguageEntry("interact.fuelpump.disconnect", "Disconnecting and stopping pumping.");
 
     public static final LanguageEntry INTERACT_ROAD_SET = new LanguageEntry("interact.road.set", "Setting first dynamic road point.");

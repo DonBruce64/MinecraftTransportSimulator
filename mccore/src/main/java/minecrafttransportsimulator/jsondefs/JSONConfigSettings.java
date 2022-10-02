@@ -50,6 +50,7 @@ public class JSONConfigSettings {
         public JSONConfigEntry<Double> gravityFactor = new JSONConfigEntry<>(1.0D, "Factor for gravitational forces applied to vehicles.  Can be adjusted if you think cars are too 'floaty'.  Does not affect aircraft.");
         public JSONConfigEntry<Double> engineSpeedTempFactor = new JSONConfigEntry<>(1.0D, "Factor for how RPM affects engine temp.  Higher values will make engines heat up quicker at higher RPMs.");
         public JSONConfigEntry<Double> engineBiomeTempFactor = new JSONConfigEntry<>(1.0D, "Factor for how biome temp affects engine temp.  Higher values will make engines heat up quicker in hotter biomes.");
+        public JSONConfigEntry<Double> rfToElectricityFactor = new JSONConfigEntry<>(0.02D, "Factor for converting RF to internal electicity for vehicles.  Default value is 1/100, but can be adjusted.");
         public JSONConfigEntry<Set<String>> engineDimensionBlacklist = new JSONConfigEntry<>(new HashSet<>(), "Blacklist of dimension names where engines will be prevented from being started.  Can be used to disable vehicles in specific dimensions.  Think Galacticraft, where you don't want folks flying planes on the moon.");
         public JSONConfigEntry<Set<String>> engineDimensionWhitelist = new JSONConfigEntry<>(new HashSet<>(), "Whitelist of dimension names where engines will only be alowed to work.  Overrides the blacklist if this exists.");
         public JSONConfigEntry<Map<String, Double>> packVehicleScales = new JSONConfigEntry<>(new HashMap<>(), "Scale of all vehicles for this pack.  You probably won't want to change this, but if you do want the vehicles to be smaller for some reason, you can.");
@@ -104,11 +105,6 @@ public class JSONConfigSettings {
             for (AItemPack<?> packItem : PackParser.getAllPackItems()) {
                 if (packItem instanceof ItemPartEngine) {
                     ItemPartEngine engine = (ItemPartEngine) packItem;
-                    //For old packs, if we don't have a fuelType set it to diesel.
-                    //This is because it's the most versatile fuel, and all the old packs have heavy equipment.
-                    if (engine.definition.engine.fuelType == null) {
-                        engine.definition.engine.fuelType = "diesel";
-                    }
 
                     //If we don't have the fuel in the fuel map, add it.
                     //Default fuel list depends on the fuel name.
@@ -135,7 +131,7 @@ public class JSONConfigSettings {
                                     fluids.put("gasoline", 1.0);
                                     break;
                                 }
-                                case REDSTONE: {
+                                case ELECTRICITY: {
                                     fluids.put("lava", 1.0);
                                     fluids.put("redstone", 1.0);
                                     fluids.put("moltenredstone", 1.0);
@@ -171,7 +167,7 @@ public class JSONConfigSettings {
             GASOLINE,
             DIESEL,
             AVGAS,
-            REDSTONE
+            ELECTRICITY;
         }
     }
 }

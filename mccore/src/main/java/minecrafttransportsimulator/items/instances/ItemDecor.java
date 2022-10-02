@@ -4,6 +4,7 @@ import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.instances.BlockBeacon;
 import minecrafttransportsimulator.blocks.instances.BlockChest;
 import minecrafttransportsimulator.blocks.instances.BlockDecor;
+import minecrafttransportsimulator.blocks.instances.BlockCharger;
 import minecrafttransportsimulator.blocks.instances.BlockFluidLoader;
 import minecrafttransportsimulator.blocks.instances.BlockFuelPump;
 import minecrafttransportsimulator.blocks.instances.BlockItemLoader;
@@ -38,6 +39,8 @@ public class ItemDecor extends AItemSubTyped<JSONDecor> implements IItemBlock {
                 return BlockSignalController.class;
             case FUEL_PUMP:
                 return BlockFuelPump.class;
+            case CHARGER:
+                return BlockCharger.class;
             case ITEM_LOADER:
             case ITEM_UNLOADER:
                 return BlockItemLoader.class;

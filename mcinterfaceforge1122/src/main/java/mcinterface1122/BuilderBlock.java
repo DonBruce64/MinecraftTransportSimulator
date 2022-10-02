@@ -12,6 +12,7 @@ import minecrafttransportsimulator.blocks.components.ABlockBase;
 import minecrafttransportsimulator.blocks.components.ABlockBaseTileEntity;
 import minecrafttransportsimulator.blocks.instances.BlockCollision;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
+import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityEnergyCharger;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityFluidTankProvider;
 import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityInventoryProvider;
 import minecrafttransportsimulator.items.components.AItemBase;
@@ -90,6 +91,8 @@ public class BuilderBlock extends Block {
             return getTileEntityTankWrapper(block);
         } else if (ITileEntityInventoryProvider.class.isAssignableFrom(((ABlockBaseTileEntity) block).getTileEntityClass())) {
             return getTileEntityInventoryWrapper(block);
+        } else if (ITileEntityEnergyCharger.class.isAssignableFrom(((ABlockBaseTileEntity) block).getTileEntityClass())) {
+            return getTileEntityChargerWrapper(block);
         } else {
             return getTileEntityGenericWrapper(block);
         }
@@ -117,6 +120,14 @@ public class BuilderBlock extends Block {
      */
     private static <TileEntityType extends ATileEntityBase<?> & ITileEntityFluidTankProvider> BuilderTileEntity<TileEntityType> getTileEntityTankWrapper(ABlockBase block) {
         return new BuilderTileEntityFluidTank<>();
+    }
+
+    /**
+     * Helper method for creating new Wrapper TEs for this block.
+     * Far better than ? all over for generics in the createTileEntity method.
+     */
+    private static <TileEntityType extends ATileEntityBase<?> & ITileEntityEnergyCharger> BuilderTileEntity<TileEntityType> getTileEntityChargerWrapper(ABlockBase block) {
+        return new BuilderTileEntityEnergyCharger<>();
     }
 
     @Override
@@ -323,6 +334,7 @@ public class BuilderBlock extends Block {
         GameRegistry.registerTileEntity(BuilderTileEntity.class, new ResourceLocation(InterfaceManager.coreModID, BuilderTileEntity.class.getSimpleName()));
         GameRegistry.registerTileEntity(BuilderTileEntityInventoryContainer.class, new ResourceLocation(InterfaceManager.coreModID, BuilderTileEntityInventoryContainer.class.getSimpleName()));
         GameRegistry.registerTileEntity(BuilderTileEntityFluidTank.class, new ResourceLocation(InterfaceManager.coreModID, BuilderTileEntityFluidTank.class.getSimpleName()));
+        GameRegistry.registerTileEntity(BuilderTileEntityEnergyCharger.class, new ResourceLocation(InterfaceManager.coreModID, BuilderTileEntityEnergyCharger.class.getSimpleName()));
 
         //Register the IItemBlock blocks.  We cheat here and
         //iterate over all items and get the blocks they spawn.

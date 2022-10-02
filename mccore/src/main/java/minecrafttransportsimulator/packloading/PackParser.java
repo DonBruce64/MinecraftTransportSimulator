@@ -212,6 +212,7 @@ public final class PackParser {
             defaultItems.put("y2kbutton", ItemClassification.ITEM);
             defaultItems.put("jerrycan", ItemClassification.PART);
             defaultItems.put("fuelpump", ItemClassification.DECOR);
+            defaultItems.put("charger", ItemClassification.DECOR);
             defaultItems.put("vehiclebench", ItemClassification.DECOR);
             defaultItems.put("enginebench", ItemClassification.DECOR);
             defaultItems.put("propellerbench", ItemClassification.DECOR);
