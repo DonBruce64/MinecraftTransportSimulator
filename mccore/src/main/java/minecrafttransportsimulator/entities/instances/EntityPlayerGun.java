@@ -194,21 +194,16 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun> {
                 handRotation.setToZero().rotateY(player.getYaw());
                 position.rotate(handRotation);
 
-                //If we are riding an entity, we need to orient to the seated position.
-                //If not, then we just orient to the player.
+                //While riding an entity, the player will always be updated
+                //after this entity, as the player always updates first, and will be "lagging" in their actual position.
                 AEntityB_Existing ridingEntity = player.getEntityRiding();
-                if (ridingEntity instanceof PartSeat) {
-                    orientation.set(((PartSeat) ridingEntity).zeroReferenceOrientation);
-                    position.rotate(orientation);
-                    orientation.multiply(player.getOrientation());
-                    position.add(player.getPosition());
-                    //Also need to add the player's motion.  While riding an entity, the player will always be updated
-                    //after this entity, as the player always updates first, and will be "lagging" in their actual position.
+                if (ridingEntity != null) {
                     position.add(ridingEntity.position).subtract(ridingEntity.prevPosition);
-                } else {
-                    orientation.set(player.getOrientation());
-                    position.add(player.getPosition());
                 }
+
+                //Now do final player operations.
+                orientation.set(player.getOrientation());
+                position.add(player.getPosition());
 
                 if (!world.isClient()) {
                     //Save gun data if we stopped firing the prior tick.
