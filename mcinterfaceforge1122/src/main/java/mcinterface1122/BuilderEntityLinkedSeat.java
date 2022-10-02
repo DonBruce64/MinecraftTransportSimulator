@@ -2,7 +2,7 @@ package mcinterface1122;
 
 import java.util.List;
 
-import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
+import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NBTTagCompound;
@@ -28,7 +28,7 @@ public class BuilderEntityLinkedSeat extends ABuilderEntityBase {
     /**
      * Current entity we are a seat on.  This MAY be null if we haven't loaded NBT from the server yet.
      **/
-    protected AEntityE_Interactable<?> entity;
+    protected AEntityB_Existing entity;
     /**
      * Current rider for this seat.  This MAY be null if we haven't loaded NBT from the server yet.
      **/

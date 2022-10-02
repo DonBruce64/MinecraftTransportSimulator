@@ -8,9 +8,11 @@ import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
 import minecrafttransportsimulator.entities.instances.EntityRadio;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
+import minecrafttransportsimulator.mcinterface.IWrapperEntity;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.mcinterface.InterfaceManager;
+import minecrafttransportsimulator.packets.instances.PacketEntityRiderChange;
 import minecrafttransportsimulator.sound.SoundInstance;
 
 /**
@@ -32,6 +34,21 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
     public final Point3D prevMotion;
     public double velocity;
     public final BoundingBox boundingBox;
+
+    /**
+     * The entity that is currently riding this entity.  There is only one rider per entity, though one can
+     * make a multipart entity where each part has a rider to allow for effectively multiple riders per entity.
+     **/
+    public IWrapperEntity rider;
+
+    /**
+     * The orientation of the {@link #rider}.  This will be relative to this entity, and not global to the world.
+     * If you desire the world-global orientation, call {@link IWrapperEntity#getOrientation()}.
+     **/
+    public RotationMatrix riderRelativeOrientation;
+    public RotationMatrix prevRiderRelativeOrientation;
+    private static final Point3D riderTempPoint = new Point3D();
+    private static final RotationMatrix riderTempMatrix = new RotationMatrix();
 
     //Internal sound variables.
     public final EntityRadio radio;
@@ -117,6 +134,106 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
                 sound.stopSound = true;
             }
         }
+        if (rider != null) {
+            removeRider();
+        }
+    }
+
+    @Override
+    public double getMass() {
+        return rider != null ? 100 : 0;
+    }
+
+    /**
+     * Called to update the rider on this entity.  This gets called after the update loop,
+     * as the entity needs to move to its new position before we can know where the
+     * riders of said entity will be.  The calling function will assure that the rider
+     * is non-null at this point, so null checks are not required in this function.
+     * However, if the rider is removed, false is returned, and further processing should halt.
+     */
+    public boolean updateRider() {
+        //Update entity position, motion, and orientation.
+        if (rider.isValid()) {
+            if (changesPosition()) {
+                rider.setPosition(position, false);
+                rider.setVelocity(motion);
+                prevRiderRelativeOrientation.set(riderRelativeOrientation);
+                riderRelativeOrientation.angles.y += rider.getYawDelta();
+                riderRelativeOrientation.angles.x += rider.getPitchDelta();
+                riderRelativeOrientation.updateToAngles();
+                riderTempMatrix.set(orientation).multiply(riderRelativeOrientation).convertToAngles();
+                rider.setOrientation(riderTempMatrix);
+            }
+            return true;
+        } else {
+            //Remove invalid rider.
+            //Don't call this on the client; they will get a removal packet from this method.
+            if (!world.isClient()) {
+                removeRider();
+            }
+            return false;
+        }
+    }
+
+    /**
+     * Called to set the rider for this entity.  If this isn't possible because
+     * there is already a rider, or we shouldn't accept riders, return false.
+     * Otherwise, return true.  Call this ONLY on the server!  Packets are sent to clients
+     * for syncing so calling this on clients will result in Bad Stuff.
+     * If the rider needs to face forward when they are added, set the boolean to true.
+     * Note: this will only set them to face forwards on the tick they mount.
+     * It won't block them from turning to a different orientation later.
+     */
+    public boolean setRider(IWrapperEntity newRider, boolean facesForwards) {
+        if (rider != null) {
+            return false;
+        } else {
+            rider = newRider;
+
+            //Create variables for use in other code areas.
+            if (riderRelativeOrientation == null) {
+                riderRelativeOrientation = new RotationMatrix();
+                prevRiderRelativeOrientation = new RotationMatrix();
+            }
+
+            if (facesForwards) {
+                riderRelativeOrientation.setToZero();
+            } else {
+                riderTempPoint.set(0, 0, 1).rotate(rider.getOrientation()).reOrigin(orientation);
+                riderRelativeOrientation.setToVector(riderTempPoint, false);
+            }
+            prevRiderRelativeOrientation.set(riderRelativeOrientation);
+            riderTempMatrix.set(orientation).multiply(riderRelativeOrientation).convertToAngles();
+            rider.setOrientation(riderTempMatrix);
+            rider.setPosition(position, false);
+            //Call getters so it resets to current value, if we don't do this, they'll get flagged for a change in the update call.
+            rider.getYawDelta();
+            rider.getPitchDelta();
+            rider.setRiding(this);
+            if (!world.isClient()) {
+                InterfaceManager.packetInterface.sendToAllClients(new PacketEntityRiderChange(this, rider, facesForwards));
+            }
+            return true;
+        }
+    }
+
+    /**
+     * Called to remove the rider that is currently riding this entity.
+     */
+    public void removeRider() {
+        rider.setRiding(null);
+        if (!world.isClient()) {
+            InterfaceManager.packetInterface.sendToAllClients(new PacketEntityRiderChange(this, rider));
+        }
+        rider = null;
+    }
+
+    /**
+     * Like {@link #getInterpolatedOrientation(RotationMatrix, double)}, just for
+     * the rider's {@link #riderRelativeOrientation}.
+     */
+    public void getRiderInterpolatedOrientation(RotationMatrix store, double partialTicks) {
+        store.interploate(prevRiderRelativeOrientation, riderRelativeOrientation, partialTicks);
     }
 
     /**
@@ -129,15 +246,6 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
     public void destroy(BoundingBox box) {
         //Do normal removal operations.
         remove();
-    }
-
-    /**
-     * This method returns true if this entity needs to be chunkloaded.  This will prevent it from
-     * being unloaded server-side.  Client-side entities will still unload as clients unload their
-     * own chunks.
-     */
-    public boolean needsChunkloading() {
-        return false;
     }
 
     /**
@@ -176,7 +284,11 @@ public abstract class AEntityB_Existing extends AEntityA_Base {
      * only contains the rotational elements of this entity.
      */
     public void getInterpolatedOrientation(RotationMatrix store, double partialTicks) {
-        store.interploate(prevOrientation, orientation, partialTicks);
+        if (changesPosition()) {
+            store.interploate(prevOrientation, orientation, partialTicks);
+        } else {
+            store.set(orientation);
+        }
     }
 
     /**

@@ -531,7 +531,7 @@ public abstract class AEntityD_Definable<JSONDefinition extends AJSONMultiModelP
         for (JSONSound soundDef : allSoundDefs) {
             if (soundDef.canPlayOnPartialTicks ^ partialTicks == 0) {
                 //Check if the sound should be playing before we try to update state.
-                AEntityE_Interactable<?> entityRiding = InterfaceManager.clientInterface.getClientPlayer().getEntityRiding();
+                AEntityB_Existing entityRiding = InterfaceManager.clientInterface.getClientPlayer().getEntityRiding();
                 boolean playerRidingEntity = this.equals(entityRiding) || (this instanceof AEntityF_Multipart && ((AEntityF_Multipart<?>) this).allParts.contains(entityRiding)) || (this instanceof APart && ((APart) this).masterEntity.allParts.contains(entityRiding));
                 boolean shouldSoundStartPlaying = playerRidingEntity && InterfaceManager.clientInterface.inFirstPerson() && !CameraSystem.runningCustomCameras ? !soundDef.isExterior : !soundDef.isInterior;
                 boolean anyClockMovedThisUpdate = false;

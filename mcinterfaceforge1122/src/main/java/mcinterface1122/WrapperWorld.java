@@ -20,7 +20,6 @@ import minecrafttransportsimulator.blocks.components.ABlockBaseTileEntity;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.entities.components.AEntityA_Base;
 import minecrafttransportsimulator.entities.components.AEntityB_Existing;
-import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityBullet;
 import minecrafttransportsimulator.entities.instances.EntityPlayerGun;
@@ -312,7 +311,7 @@ public class WrapperWorld extends AWrapperWorld {
                     if (mcRidingEntity instanceof BuilderEntityLinkedSeat) {
                         //Entity hit is riding something of ours.
                         //Verify that it's not the entity that is doing the attacking.
-                        AEntityE_Interactable<?> internalRidingEntity = ((BuilderEntityLinkedSeat) mcRidingEntity).entity;
+                        AEntityB_Existing internalRidingEntity = ((BuilderEntityLinkedSeat) mcRidingEntity).entity;
                         if (damage.damgeSource == internalRidingEntity) {
                             //Entity can't attack entities riding itself.
                             continue;

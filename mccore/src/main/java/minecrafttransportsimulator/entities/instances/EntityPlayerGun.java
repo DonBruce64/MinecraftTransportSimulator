@@ -8,7 +8,7 @@ import java.util.UUID;
 import minecrafttransportsimulator.baseclasses.BoundingBox;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.baseclasses.RotationMatrix;
-import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
+import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.entities.instances.PartGun.GunState;
 import minecrafttransportsimulator.items.components.AItemBase;
@@ -196,7 +196,7 @@ public class EntityPlayerGun extends AEntityF_Multipart<JSONPlayerGun> {
 
                 //If we are riding an entity, we need to orient to the seated position.
                 //If not, then we just orient to the player.
-                AEntityE_Interactable<?> ridingEntity = player.getEntityRiding();
+                AEntityB_Existing ridingEntity = player.getEntityRiding();
                 if (ridingEntity instanceof PartSeat) {
                     orientation.set(((PartSeat) ridingEntity).zeroReferenceOrientation);
                     position.rotate(orientation);

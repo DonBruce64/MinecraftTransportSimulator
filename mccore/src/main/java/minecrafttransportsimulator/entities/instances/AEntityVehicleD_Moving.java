@@ -222,11 +222,6 @@ abstract class AEntityVehicleD_Moving extends AEntityVehicleC_Colliding {
     }
 
     @Override
-    public boolean needsChunkloading() {
-        return rearFollower != null;
-    }
-
-    @Override
     public void connectTrailer(TowingConnection connection) {
         super.connectTrailer(connection);
         AEntityVehicleD_Moving towedVehicle = connection.towedVehicle;

@@ -3,6 +3,7 @@ package minecrafttransportsimulator.blocks.tileentities.instances;
 import minecrafttransportsimulator.baseclasses.Point3D;
 import minecrafttransportsimulator.blocks.tileentities.components.ATileEntityBase;
 import minecrafttransportsimulator.jsondefs.JSONDecor;
+import minecrafttransportsimulator.jsondefs.JSONDecor.DecorComponentType;
 import minecrafttransportsimulator.jsondefs.JSONItem.ItemComponentType;
 import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
@@ -58,21 +59,29 @@ public class TileEntityDecor extends ATileEntityBase<JSONDecor> {
     }
 
     @Override
+    public boolean updateRider() {
+        if (super.updateRider()) {
+            position.y += definition.decor.sittingOffset;
+            rider.setPosition(position, false);
+            position.y -= definition.decor.sittingOffset;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    @Override
     public boolean interact(IWrapperPlayer player) {
         if (player.isHoldingItemType(ItemComponentType.PAINT_GUN)) {
             //Don't do decor actions if we are holding a paint gun.
             return false;
         } else if (definition.decor.crafting != null) {
-            if (!world.isClient()) {
-                player.sendPacket(new PacketEntityGUIRequest(this, player, PacketEntityGUIRequest.EntityGUIType.PART_BENCH));
-
-            }
+            player.sendPacket(new PacketEntityGUIRequest(this, player, PacketEntityGUIRequest.EntityGUIType.PART_BENCH));
         } else if (!text.isEmpty()) {
-            if (!world.isClient()) {
-                player.sendPacket(new PacketEntityGUIRequest(this, player, PacketEntityGUIRequest.EntityGUIType.TEXT_EDITOR));
-            }
-        }
-        if (!world.isClient()) {
+            player.sendPacket(new PacketEntityGUIRequest(this, player, PacketEntityGUIRequest.EntityGUIType.TEXT_EDITOR));
+        } else if (definition.decor.type == DecorComponentType.SEAT) {
+            setRider(player, true);
+        } else {
             setVariable(CLICKED_VARIABLE, 1);
             toggleVariable(ACTIVATED_VARIABLE);
             InterfaceManager.packetInterface.sendToAllClients(new PacketEntityVariableSet(this, CLICKED_VARIABLE, 1));

@@ -30,6 +30,9 @@ public class JSONDecor extends AJSONMultiModelProvider {
         @JSONDescription("How much light this decor gives off.  A value from 0-1, with 1 being full possible light.")
         public float lightLevel;
 
+        @JSONDescription("How much of an offset in the Y direction to make the player sit on this decor.  Only valid for seats.")
+        public float sittingOffset;
+
         @JSONDescription("A optional crafting definition for this decor.  If this is included, the decor will open a GUI for crafting pack components when clicked.")
         public JSONCraftingBench crafting;
 
@@ -75,6 +78,8 @@ public class JSONDecor extends AJSONMultiModelProvider {
         @JSONDescription("Will make the decor have fluid unloader functionality.")
         FLUID_UNLOADER,
         @JSONDescription("Will make the decor have radio functionality.  Exact same system as vehicles.  It even syncs up with them!")
-        RADIO
+        RADIO,
+        @JSONDescription("Will make the decor have seat functionality.")
+        SEAT
     }
 }

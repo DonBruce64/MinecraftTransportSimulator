@@ -3,7 +3,7 @@ package mcinterface1122;
 import java.util.HashMap;
 import java.util.Map;
 
-import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
+import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.instances.PartSeat;
 import minecrafttransportsimulator.items.components.AItemBase;
 import minecrafttransportsimulator.items.instances.ItemItem;
@@ -62,7 +62,7 @@ public class WrapperPlayer extends WrapperEntity implements IWrapperPlayer {
 
     @Override
     public double getSeatOffset() {
-        AEntityE_Interactable<?> riding = getEntityRiding();
+        AEntityB_Existing riding = getEntityRiding();
         if (riding != null) {
             if (riding instanceof PartSeat) {
                 PartSeat seat = (PartSeat) riding;

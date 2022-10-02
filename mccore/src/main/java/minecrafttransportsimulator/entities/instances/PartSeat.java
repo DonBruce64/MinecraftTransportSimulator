@@ -6,7 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 import minecrafttransportsimulator.baseclasses.Point3D;
-import minecrafttransportsimulator.entities.components.AEntityE_Interactable;
+import minecrafttransportsimulator.entities.components.AEntityB_Existing;
 import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.guis.components.AGUIBase;
 import minecrafttransportsimulator.guis.instances.GUIHUD;
@@ -75,7 +75,7 @@ public final class PartSeat extends APart {
                             //Check if the rider is riding something before adding them.
                             //If they are riding something, remove them from it first.
                             //If they are riding our vehicle, don't adjust their head position.
-                            AEntityE_Interactable<?> entityPlayerRiding = player.getEntityRiding();
+                            AEntityB_Existing entityPlayerRiding = player.getEntityRiding();
                             if (entityPlayerRiding != null) {
                                 if(entityPlayerRiding instanceof PartSeat) {
                                    ((PartSeat) entityPlayerRiding).riderChangingSeats = true;
