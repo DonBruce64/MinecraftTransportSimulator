@@ -10,6 +10,7 @@ import minecrafttransportsimulator.entities.components.AEntityF_Multipart;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage;
 import minecrafttransportsimulator.jsondefs.JSONConfigLanguage.LanguageEntry;
 import minecrafttransportsimulator.jsondefs.JSONPart;
+import minecrafttransportsimulator.jsondefs.JSONPart.EngineType;
 import minecrafttransportsimulator.jsondefs.JSONPartDefinition;
 import minecrafttransportsimulator.jsondefs.JSONVariableModifier;
 import minecrafttransportsimulator.mcinterface.IWrapperEntity;
@@ -22,6 +23,8 @@ import minecrafttransportsimulator.packets.instances.PacketPartEngine.Signal;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 public class PartEngine extends APart {
+    public static String ELECTRICITY_FUEL = "electricity";
+
     //State data.
     public boolean oilLeak;
     public boolean fuelLeak;
@@ -130,6 +133,28 @@ public class PartEngine extends APart {
             }
         }
 
+        //Verify the vehicle has the right fuel for us.  If not, clear it out.
+        //This allows us to swap in an engine with a different fuel type than the last one.
+        if (!vehicleOn.fuelTank.getFluid().isEmpty()) {
+            switch (definition.engine.type) {
+                case ELECTRIC: {
+                    //Check for electricity.
+                    if (!vehicleOn.fuelTank.getFluid().equals(ELECTRICITY_FUEL)) {
+                        vehicleOn.fuelTank.drain(vehicleOn.fuelTank.getFluid(), vehicleOn.fuelTank.getFluidLevel(), true);
+                    }
+                    break;
+                }
+                default: {
+                    //Check for matching fuel from configs.
+                    if (!ConfigSystem.settings.fuel.fuels.containsKey(definition.engine.fuelType)) {
+                        throw new IllegalArgumentException("Engine:" + definition.packID + ":" + definition.systemName + " wanted fuel configs for fuel of type:" + definition.engine.fuelType + ", but these do not exist in the config file.  Fuels currently in the file are:" + ConfigSystem.settings.fuel.fuels.keySet() + "If you are on a server, this means the server and client configs are not the same.  If this is a modpack, TELL THE AUTHOR IT IS BROKEN!");
+                    } else if (!ConfigSystem.settings.fuel.fuels.get(definition.engine.fuelType).containsKey(vehicleOn.fuelTank.getFluid())) {
+                        vehicleOn.fuelTank.drain(vehicleOn.fuelTank.getFluid(), vehicleOn.fuelTank.getFluidLevel(), true);
+                    }
+                }
+            }
+        }
+
         //If we are on an aircraft, set our gear to 1 as aircraft don't have shifters.
         //Well, except blimps, but that's a special case.
         if (vehicleOn != null && vehicleOn.definition.motorized.isAircraft) {
@@ -178,7 +203,7 @@ public class PartEngine extends APart {
                     InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, damage.amount * ConfigSystem.settings.general.engineHoursFactor.value, oilLeak, fuelLeak));
                 }
             }
-        } else {
+        } else if (definition.engine.type == JSONPart.EngineType.NORMAL) {
             stallEngine(Signal.DROWN);
             InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.DROWN));
         }
@@ -399,30 +424,19 @@ public class PartEngine extends APart {
 
                         //Try to get fuel from the vehicle and calculate fuel flow.
                         if (!vehicleOn.isCreative && !vehicleOn.fuelTank.getFluid().isEmpty()) {
-                            if (!ConfigSystem.settings.fuel.fuels.containsKey(definition.engine.fuelType)) {
-                                throw new IllegalArgumentException("Engine:" + definition.packID + ":" + definition.systemName + " wanted fuel configs for fuel of type:" + definition.engine.fuelType + ", but these do not exist in the config file.  Fuels currently in the file are:" + ConfigSystem.settings.fuel.fuels.keySet() + "If you are on a server, this means the server and client configs are not the same.  If this is a modpack, TELL THE AUTHOR IT IS BROKEN!");
-                            } else if (!ConfigSystem.settings.fuel.fuels.get(definition.engine.fuelType).containsKey(vehicleOn.fuelTank.getFluid())) {
-                                //Clear out the fuel from this vehicle as it's the wrong type.
-                                vehicleOn.fuelTank.drain(vehicleOn.fuelTank.getFluid(), vehicleOn.fuelTank.getFluidLevel(), true);
-                            } else {
-                                fuelFlow += vehicleOn.fuelTank.drain(vehicleOn.fuelTank.getFluid(), getTotalFuelConsumption() * ConfigSystem.settings.general.fuelUsageFactor.value / ConfigSystem.settings.fuel.fuels.get(definition.engine.fuelType).get(vehicleOn.fuelTank.getFluid()) * rpm * (fuelLeak ? 1.5F : 1.0F) / currentMaxRPM, !world.isClient());
-                            }
+                            fuelFlow += vehicleOn.fuelTank.drain(vehicleOn.fuelTank.getFluid(), getTotalFuelConsumption() * ConfigSystem.settings.general.fuelUsageFactor.value / ConfigSystem.settings.fuel.fuels.get(definition.engine.fuelType).get(vehicleOn.fuelTank.getFluid()) * rpm * (fuelLeak ? 1.5F : 1.0F) / currentMaxRPM, !world.isClient());
                         }
 
                         //Add temp based on engine speed.
                         temp += Math.max(0, (7 * rpm / currentMaxRPM - temp / (COLD_TEMP * 2)) / 20) * currentHeatingCoefficient * ConfigSystem.settings.general.engineSpeedTempFactor.value;
 
                         //Adjust oil pressure based on RPM and leak status.
-                        //If this is a 0-idle RPM engine, assume it's electric and doesn't have oil.
-                        //TODO remove when we get electric vehicles.
-                        if (currentIdleRPM != 0) {
-                            pressure = Math.min(90 - temp / 10, pressure + rpm / currentIdleRPM - 0.5 * (oilLeak ? 5F : 1F) * (pressure / LOW_OIL_PRESSURE));
+                        pressure = Math.min(90 - temp / 10, pressure + rpm / currentIdleRPM - 0.5 * (oilLeak ? 5F : 1F) * (pressure / LOW_OIL_PRESSURE));
 
-                            //Add extra hours and temp if we have low oil.
-                            if (pressure < LOW_OIL_PRESSURE && !vehicleOn.isCreative) {
-                                temp += Math.max(0, (20 * rpm / currentMaxRPM) / 20);
-                                hours += 0.01 * getTotalWearFactor();
-                            }
+                        //Add extra hours and temp if we have low oil.
+                        if (pressure < LOW_OIL_PRESSURE && !vehicleOn.isCreative) {
+                            temp += Math.max(0, (20 * rpm / currentMaxRPM) / 20);
+                            hours += 0.01 * getTotalWearFactor();
                         }
 
                         //If the engine has high hours, give a chance for a backfire.
@@ -483,6 +497,37 @@ public class PartEngine extends APart {
                             running = true;
                         }
                     }
+                }
+
+                case ELECTRIC: {
+                    if (running) {
+                        //Provide electric power to the vehicle we're in.
+                        vehicleOn.electricUsage -= 0.05 * rpm / currentMaxRPM;
+
+                        //Try to get fuel from the vehicle and calculate fuel flow.
+                        if (!vehicleOn.isCreative && !vehicleOn.fuelTank.getFluid().isEmpty()) {
+                            fuelFlow += vehicleOn.fuelTank.drain(vehicleOn.fuelTank.getFluid(), getTotalFuelConsumption() * ConfigSystem.settings.general.fuelUsageFactor.value * rpm / currentMaxRPM, !world.isClient());
+                        }
+
+                        //Check if we need to stall the engine for various conditions.
+                        if (!world.isClient()) {
+                            if (!vehicleOn.isCreative && vehicleOn.fuelTank.getFluidLevel() == 0) {
+                                stallEngine(Signal.FUEL_OUT);
+                                InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.FUEL_OUT));
+                            }
+                        }
+                    } else {
+                        //Turn on engine if the magneto is on and we have fuel.
+                        if (!world.isClient() && vehicleOn.damageAmount < vehicleOn.definition.general.health) {
+                            if (vehicleOn.isCreative || vehicleOn.fuelTank.getFluidLevel() > 0) {
+                                if (magnetoOn) {
+                                    startEngine();
+                                    InterfaceManager.packetInterface.sendToAllClients(new PacketPartEngine(this, Signal.START));
+                                }
+                            }
+                        }
+                    }
+                    break;
                 }
             }
 
@@ -883,9 +928,11 @@ public class PartEngine extends APart {
     public void autoStartEngine() {
         //Only engage auto-starter if we aren't running and we have the right fuel.
         if (!running && (vehicleOn.isCreative || vehicleOn.fuelTank.getFluidLevel() > 0)) {
-            autoStarterEngaged = true;
             setVariable(MAGNETO_VARIABLE, 1);
-            setVariable(ELECTRIC_STARTER_VARIABLE, 1);
+            if (definition.engine.type == JSONPart.EngineType.NORMAL) {
+                autoStarterEngaged = true;
+                setVariable(ELECTRIC_STARTER_VARIABLE, 1);
+            }
         }
     }
 
@@ -893,8 +940,9 @@ public class PartEngine extends APart {
         running = false;
 
         //If we stalled due to not drowning, set internal fuel to play wind-down sounds.
+        //Don't do this for electrics, as they just die.
         if (world.isClient()) {
-            if (signal != Signal.DROWN && signal != Signal.INVALID_DIMENSION) {
+            if (signal != Signal.DROWN && signal != Signal.INVALID_DIMENSION && definition.engine.type != EngineType.ELECTRIC) {
                 internalFuel = 100;
             }
         }

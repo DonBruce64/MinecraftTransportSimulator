@@ -128,10 +128,6 @@ public abstract class ATileEntityFuelPump extends TileEntityDecor {
                         return true;
                     }
                 }
-                {
-
-                }
-
             } else {
                 player.sendPacket(new PacketPlayerChatMessage(player, JSONConfigLanguage.INTERACT_FUELPUMP_TOOFAR));
             }

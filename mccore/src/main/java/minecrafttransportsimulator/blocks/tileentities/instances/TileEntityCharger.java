@@ -5,14 +5,13 @@ import minecrafttransportsimulator.blocks.tileentities.components.ITileEntityEne
 import minecrafttransportsimulator.entities.instances.APart;
 import minecrafttransportsimulator.entities.instances.EntityVehicleF_Physics;
 import minecrafttransportsimulator.entities.instances.PartEngine;
-import minecrafttransportsimulator.jsondefs.JSONConfigSettings.ConfigFuel.FuelDefaults;
+import minecrafttransportsimulator.jsondefs.JSONPart.EngineType;
 import minecrafttransportsimulator.mcinterface.AWrapperWorld;
 import minecrafttransportsimulator.mcinterface.IWrapperNBT;
 import minecrafttransportsimulator.mcinterface.IWrapperPlayer;
 import minecrafttransportsimulator.systems.ConfigSystem;
 
 public class TileEntityCharger extends ATileEntityFuelPump implements ITileEntityEnergyCharger {
-    private static final String ENERGY_TYPE = FuelDefaults.ELECTRICITY.name().toLowerCase();
 
     private double amountInVehicleWhenConnected;
     private double amountDispensed;
@@ -31,10 +30,10 @@ public class TileEntityCharger extends ATileEntityFuelPump implements ITileEntit
 
     @Override
     protected PumpResult checkPump(EntityVehicleF_Physics vehicle) {
-        //Assume fuel type matches, just check for electric engines instead.
+        //Just check that the engines are electric. If so, the vehicle will have the right fuel.
         for (APart part : vehicle.parts) {
             if (part instanceof PartEngine) {
-                if (part.definition.engine.fuelType.equals(ENERGY_TYPE)) {
+                if (part.definition.engine.type == EngineType.ELECTRIC) {
                     return PumpResult.VALID;
                 }
             }
@@ -62,7 +61,7 @@ public class TileEntityCharger extends ATileEntityFuelPump implements ITileEntit
 
     @Override
     public void chargeEnergy(int amount) {
-        connectedVehicle.fuelTank.fill(connectedVehicle.fuelTank.getFluid(), amount * ConfigSystem.settings.general.rfToElectricityFactor.value, true);
+        connectedVehicle.fuelTank.fill(PartEngine.ELECTRICITY_FUEL, amount * ConfigSystem.settings.general.rfToElectricityFactor.value, true);
     }
 
     @Override
@@ -76,6 +75,8 @@ public class TileEntityCharger extends ATileEntityFuelPump implements ITileEntit
                 return isCreative ? 1 : 0;
             case ("charger_purchased"):
                 return fuelPurchasedRemaining;
+            case ("charger_vehicle_percentage"):
+                return connectedVehicle != null ? connectedVehicle.fuelTank.getFluidLevel() / connectedVehicle.fuelTank.getMaxLevel() : 0;
         }
 
         return super.getRawVariableValue(variable, partialTicks);

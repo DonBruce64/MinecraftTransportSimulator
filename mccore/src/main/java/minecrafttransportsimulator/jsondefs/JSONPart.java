@@ -266,7 +266,9 @@ public class JSONPart extends AJSONPartProvider {
         @JSONDescription("A standard internal-combustion engine.  Requires fuel from the vehicle's fuel tanks to run.")
         NORMAL,
         @JSONDescription("A rocket-powered engine.  Uses only internal fuel and must be rebuilt each use.")
-        ROCKET;
+        ROCKET,
+        @JSONDescription("An electric engine.  Gets power from chargers connected to the grid.")
+        ELECTRIC;
     }
 
     public static class JSONPartGroundDevice {

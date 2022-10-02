@@ -46,7 +46,7 @@ public class JSONDecor extends AJSONMultiModelProvider {
         public int fuelCapacity;
 
         @JSONDescription("The quantity of fuel or energy to pump per tick. Units are in milli-buckets/electric. Only use if this decor is a fuel pump/fluid loader/charger. If not set, a value of 10 is used.")
-        public int pumpRate;
+        public float pumpRate;
 
         @Deprecated
         public List<String> itemTypes;

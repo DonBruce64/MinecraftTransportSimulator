@@ -131,7 +131,7 @@ public class JSONConfigSettings {
                                     fluids.put("gasoline", 1.0);
                                     break;
                                 }
-                                case ELECTRICITY: {
+                                case REDSTONE: {
                                     fluids.put("lava", 1.0);
                                     fluids.put("redstone", 1.0);
                                     fluids.put("moltenredstone", 1.0);
@@ -167,7 +167,7 @@ public class JSONConfigSettings {
             GASOLINE,
             DIESEL,
             AVGAS,
-            ELECTRICITY;
+            REDSTONE;
         }
     }
 }
