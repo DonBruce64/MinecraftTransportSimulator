@@ -362,7 +362,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
             world.endProfiling();
 
             //Move all entities that are touching this entity.
-            if (!entityCollisionBoxes.isEmpty()) {
+            if (!entityCollisionBoxes.isEmpty() && velocity != 0) {
                 world.beginProfiling("MoveAlongEntities", true);
                 encompassingBox.heightRadius += 1.0;
                 List<IWrapperEntity> nearbyEntities = world.getEntitiesWithin(encompassingBox);
@@ -381,7 +381,7 @@ public abstract class AEntityE_Interactable<JSONDefinition extends AJSONInteract
                                 if (entityBottomDelta >= -0.5 && entityBottomDelta <= 0.5) {
                                     //Only move the entity if it's going slow or in the delta.  Don't move if it's going fast as they might have jumped.
                                     Point3D entityVelocity = entity.getVelocity();
-                                    if (entityVelocity.y < 0 || entityVelocity.y < entityBottomDelta) {
+                                    if (entityVelocity.y <= 0 || entityVelocity.y < entityBottomDelta) {
                                         //Get how much the entity moved the collision box the entity collided with so we know how much to move the entity.
                                         //This lets entities "move along" with entities when touching a collision box.
                                         Point3D entityPositionVector = entity.getPosition().copy().subtract(position);
