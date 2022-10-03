@@ -73,6 +73,20 @@ import minecrafttransportsimulator.systems.ConfigSystem;
 public final class LegacyCompatSystem {
 
     public static void performLegacyCompats(AJSONItem definition) {
+        //If we are a multi-model provider without a definition, add one so we don't crash on other systems.
+        if (definition instanceof AJSONMultiModelProvider) {
+            AJSONMultiModelProvider provider = (AJSONMultiModelProvider) definition;
+            if (provider.definitions == null) {
+                provider.definitions = new ArrayList<>();
+                JSONSubDefinition subDefinition = new JSONSubDefinition();
+                subDefinition.extraMaterials = new ArrayList<>();
+                subDefinition.name = provider.general.name;
+                subDefinition.subName = "";
+                provider.definitions.add(subDefinition);
+            }
+        }
+
+        //Do JSON-specific compats.
         if (definition instanceof JSONVehicle) {
             performVehicleLegacyCompats((JSONVehicle) definition);
         } else if (definition instanceof JSONPart) {
@@ -92,6 +106,7 @@ public final class LegacyCompatSystem {
         } else if (definition instanceof JSONBullet) {
             performBulletLegacyCompats((JSONBullet) definition);
         }
+
         //This goes after we've made default definitions.
         if (definition.general.modelName != null) {
             AJSONMultiModelProvider provider = (AJSONMultiModelProvider) definition;
@@ -481,16 +496,6 @@ public final class LegacyCompatSystem {
             definition.general.customType = null;
             definition.generic.useVehicleTexture = definition.general.useVehicleTexture;
             definition.general.useVehicleTexture = false;
-        }
-
-        //If we are a part without a definition, add one so we don't crash on other systems.
-        if (definition.definitions == null) {
-            definition.definitions = new ArrayList<>();
-            JSONSubDefinition subDefinition = new JSONSubDefinition();
-            subDefinition.extraMaterials = new ArrayList<>();
-            subDefinition.name = definition.general.name;
-            subDefinition.subName = "";
-            definition.definitions.add(subDefinition);
         }
 
         //Move subParts to parts if we have them there.
@@ -1357,16 +1362,6 @@ public final class LegacyCompatSystem {
     }
 
     private static void performPoleLegacyCompats(JSONPoleComponent definition) {
-        //If we are a pole without a definition, add one so we don't crash on other systems.
-        if (definition.definitions == null) {
-            definition.definitions = new ArrayList<>();
-            JSONSubDefinition subDefinition = new JSONSubDefinition();
-            subDefinition.extraMaterials = new ArrayList<>();
-            subDefinition.name = definition.general.name;
-            subDefinition.subName = "";
-            definition.definitions.add(subDefinition);
-        }
-
         //If we are a sign using the old textlines, update them.
         if (definition.general.textLines != null) {
             definition.general.textObjects = new ArrayList<>();
@@ -1505,16 +1500,6 @@ public final class LegacyCompatSystem {
             if (definition.decor.pumpRate == 0) {
                 definition.decor.pumpRate = 10;
             }
-        }
-
-        //If we are a decor without a definition, add one so we don't crash on other systems.
-        if (definition.definitions == null) {
-            definition.definitions = new ArrayList<>();
-            JSONSubDefinition subDefinition = new JSONSubDefinition();
-            subDefinition.extraMaterials = new ArrayList<>();
-            subDefinition.name = definition.general.name;
-            subDefinition.subName = "";
-            definition.definitions.add(subDefinition);
         }
 
         //If we are a decor using the old textlines, update them.
@@ -1680,6 +1665,16 @@ public final class LegacyCompatSystem {
     }
 
     private static void performBulletLegacyCompats(JSONBullet definition) {
+        //If we are a bullet without a definition, add one so we don't crash on other systems.
+        if (definition.definitions == null) {
+            definition.definitions = new ArrayList<>();
+            JSONSubDefinition subDefinition = new JSONSubDefinition();
+            subDefinition.extraMaterials = new ArrayList<>();
+            subDefinition.name = definition.general.name;
+            subDefinition.subName = "";
+            definition.definitions.add(subDefinition);
+        }
+
         //Add damage value.
         if (definition.bullet.damage == 0) {
             definition.bullet.damage = definition.bullet.diameter / 5F;
