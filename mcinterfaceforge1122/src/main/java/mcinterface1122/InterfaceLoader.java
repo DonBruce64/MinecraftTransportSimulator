@@ -29,13 +29,13 @@ public final class InterfaceLoader {
     public static final String MODID = "mts";
     public static final String MODNAME = "Immersive Vehicles (MTS)";
     public static final String MODVER = "22.2.0";
-
-    static {
+	public static final Logger LOGGER = LogManager.getLogger(InterfaceManager.coreModID);
+	
+	@EventHandler
+    public void modConstruction(FMLConstructionEvent event) {
         //Enable universal bucket so that we can use buckets on fuel pumps.
         FluidRegistry.enableUniversalBucket();
     }
-
-	public static final Logger LOGGER = LogManager.getLogger(InterfaceManager.coreModID);
 
     @SuppressWarnings("InstantiationOfUtilityClass")
     @EventHandler

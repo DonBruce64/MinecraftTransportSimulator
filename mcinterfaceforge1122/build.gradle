@@ -61,8 +61,8 @@ minecraft {
 repositories {
     //JEI
     maven { url = "https://dvs1.progwml6.com/files/maven/" }
-    //Mixins
-    maven { url = "https://repo.spongepowered.org/maven" }
+	//Local directory for fixed mixin library
+    flatDir { dirs "libs" }
 }
 
 //Configuration that holds jars to include in the jar
@@ -79,13 +79,13 @@ dependencies {
 		//Core to use.
     embed(project(":mccore"))
 
-    //Set mixin as embeds so they are included into the jar.
-    embed("org.spongepowered:mixin:0.8.5") {
+    //Set mixin as embed so the libraries are included into the jar.
+    embed(name: "mixin-0.8.5-fixed") {
         exclude module: "guava"
         exclude module: "commons-io"
         exclude module: "gson"
     }
-    annotationProcessor "org.spongepowered:mixin:0.8.5:processor"
+    annotationProcessor(name: "mixin-0.8.5-fixed-processor")
 
     //Compile against the JEI API but do not include it at runtime
     compileOnly fg.deobf("mezz.jei:jei_1.12.2:4.16.1.302:api")

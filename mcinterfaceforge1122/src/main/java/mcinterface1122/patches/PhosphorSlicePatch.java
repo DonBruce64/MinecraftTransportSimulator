@@ -11,6 +11,8 @@ import org.objectweb.asm.tree.MethodNode;
 import java.util.ListIterator;
 
 public class PhosphorSlicePatch implements IClassTransformer {
+	private static final Logger LOGGER = LogManager.getLogger("MTS Phosphor Patch");
+	
     @Override
     public byte[] transform(String name, String transformedName, byte[] basicClass) {
         if (basicClass == null) return null;
@@ -28,7 +30,7 @@ public class PhosphorSlicePatch implements IClassTransformer {
                                 Object value = it.next();
 
                                 if ("slice".equals(value)) {
-                                    InterfaceLoader.LOGGER.info("Patching MixinChunk$Vanilla from Phosphor");
+                                    LOGGER.info("Patching MixinChunk$Vanilla from Phosphor");
                                     it.remove();
                                     it.next();
                                     it.remove();
