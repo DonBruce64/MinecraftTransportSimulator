@@ -1,7 +1,8 @@
 package mcinterface1122.patches;
 
-import mcinterface1122.InterfaceLoader;
 import net.minecraft.launchwrapper.IClassTransformer;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.tree.AnnotationNode;
