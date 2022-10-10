@@ -880,13 +880,21 @@ public class PartEngine extends APart {
         	//i.e. engine_piston_2_6 will return 1 when the crank is in the second of 6 sectors.
         	//When suffixed with _cam, it will instead return the sector the camshaft rotation.
 
-        	//If this a camshaft, save this so we can do math later
-        	int camMultiplier = variable.endsWith("_cam") ? 2 : 1;
+        	//If this a camshaft, set the multiplier to 2 and chop off the end of the variable string
+        	int camMultiplier = 1;
+        	if (variable.endsWith("_cam")) {
+        		camMultiplier = 2;
+        		variable = variable.substring(0, variable.length() - "_cam".length());
+        	}
         	
-        	//Extract the two values we need
-            String pistonVariable = variable.substring("engine_piston_".length());
-            int pistonNumber = Integer.parseInt(pistonVariable.substring(0, pistonVariable.indexOf("_")));
-            int totalPistons = Integer.parseInt(pistonVariable.substring(pistonVariable.indexOf("_") + 1, pistonVariable.indexOf("_", pistonVariable.indexOf("_") + 1)));
+        	//Extract the values we need
+            String[] parsedVariable = variable.substring("engine_piston_".length()).split("_");
+            int pistonNumber = Integer.parseInt(parsedVariable[0]);
+            int totalPistons = Integer.parseInt(parsedVariable[1]);
+            int offset = 0;
+            if (parsedVariable.length >= 3) {
+                offset = camMultiplier * Integer.parseInt(parsedVariable[2]);
+            }
             
             //Safety to ensure the value always fluctuates and we don't have more sectors than are possible
             if (pistonNumber > totalPistons || totalPistons == 1) {
@@ -895,7 +903,7 @@ public class PartEngine extends APart {
             }
             
             //Map the shaft rotation to a value between 0 and 359.99...
-            double shaftRotation = getEngineRotation(partialTicks) - ((360D * camMultiplier) * Math.floor(getEngineRotation(partialTicks) / (360D * camMultiplier)));
+            double shaftRotation = (offset + getEngineRotation(partialTicks)) - ((360D * camMultiplier) * Math.floor((offset + getEngineRotation(partialTicks)) / (360D * camMultiplier)));
             
             //Calculate the angle of a 'sector'
             double sector = (360D * camMultiplier) / totalPistons;
