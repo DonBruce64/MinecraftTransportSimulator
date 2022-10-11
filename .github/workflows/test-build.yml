@@ -30,6 +30,8 @@ jobs:
           sudo apt update ; DEBIAN_FRONTEND=noninteractive sudo apt install -y openjdk-8-jdk
           export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
           chmod +x ./gradlew
+          mkdir -pv out/core
+          mkdir -pv out/1.12.2
           PULL_DEPS=1 ./gradlew buildForge1.12.2
       - name: Publish Artifact
         uses: actions/upload-artifact@v2
