@@ -13,7 +13,6 @@ bin
 .settings
 
 # idea
-out
 *.ipr
 *.iws
 *.iml
