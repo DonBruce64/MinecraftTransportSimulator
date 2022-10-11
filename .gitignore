@@ -17,3 +17,6 @@ bin
 *.iws
 *.iml
 .idea
+
+# don't want compiled jars in the repo
+out
