@@ -1,4 +1,3 @@
-
 //Apply plugins
 apply plugin: "java"
 apply plugin: "eclipse"

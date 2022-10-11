@@ -207,7 +207,7 @@ public class WrapperWorld extends AWrapperWorld {
 
     @Override
     public File getDataFile() {
-        return new File(world.getLevelData()..getSaveHandler().getWorldDirectory(), "mtsdata.dat");
+        return new File(world.getLevelData().getSaveHandler().getWorldDirectory(), "mtsdata.dat");
     }
 
     @Override

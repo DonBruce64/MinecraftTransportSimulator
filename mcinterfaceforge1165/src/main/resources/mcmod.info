@@ -3,6 +3,8 @@
         "modid": "mts",
         "name": "Immersive Vehicles (formerly MTS)",
         "description": "Realistic planes and cars for Minecraft!",
+        "version": "22.2.1",
+        "mcversion": "1.16.5",
         "credits": "Don Bruce & The Modeling Crew.",
         "logoFile": "vignette.png",
         "url": "https://www.curseforge.com/minecraft/mc-mods/minecraft-transport-simulator",
