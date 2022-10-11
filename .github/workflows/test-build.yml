@@ -29,7 +29,7 @@ jobs:
         run: |
           sudo apt update ; DEBIAN_FRONTEND=noninteractive sudo apt install -y openjdk-8-jdk
           export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
-          PULL_DEPS=1 ./buildscript.sh
+          PULL_DEPS=1 ./gradlew buildFor1.12.2
       - name: Publish Artifact
         uses: actions/upload-artifact@v2
         with:
