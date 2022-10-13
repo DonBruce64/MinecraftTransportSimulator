@@ -71,7 +71,7 @@ public class ItemItem extends AItemPack<JSONItem> implements IItemVehicleInterac
                                 player.sendPacket(new PacketEntityGUIRequest(vehicle, player, PacketEntityGUIRequest.EntityGUIType.INSTRUMENTS));
                             }
                         } else {
-                            if (part != null && !player.isSneaking() && !part.placementDefinition.isPermanent && part.isValid) {
+                            if (part != null && !player.isSneaking() && !part.isPermanent && part.isValid) {
                                 LanguageEntry partResult = part.checkForRemoval();
                                 if (partResult != null) {
                                     player.sendPacket(new PacketPlayerChatMessage(player, partResult));

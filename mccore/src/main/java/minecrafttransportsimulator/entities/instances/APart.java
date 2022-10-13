@@ -66,6 +66,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     public final boolean turnsWithSteer;
     public final boolean isSpare;
     public final boolean isMirrored;
+    public final boolean isPermanent;
     /**
      * The local offset from this part, to the master entity.  This may not be the offset from the part to the entity it is
      * on if the entity is a part itself.
@@ -102,6 +103,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         this.turnsWithSteer = placementDefinition.turnsWithSteer || (partOn != null && partOn.turnsWithSteer);
         this.isSpare = placementDefinition.isSpare || (partOn != null && partOn.isSpare);
         this.isMirrored = placementDefinition.isMirrored || (partOn != null && partOn.isMirrored);
+        this.isPermanent = areVariablesLocking(placementDefinition, InterfaceManager.clientInterface.getClientPlayer(),placementDefinition.isPermanent);
 
         //Set initial position and rotation.  This ensures part doesn't "warp" the first tick.
         //Note that this isn't exact, as we can't calculate the exact locals until after the first tick
@@ -243,7 +245,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
         //Again, this only applies on clients for that client player.
         if (world.isClient() && InterfaceManager.clientInterface.getClientPlayer().isHoldingItemType(ItemComponentType.WRENCH)) {
             for (APart childPart : parts) {
-                if (!childPart.placementDefinition.isPermanent) {
+                if (!childPart.isPermanent) {
                     allInteractionBoxes.removeAll(interactionBoxes);
                     return;
                 }
@@ -254,7 +256,7 @@ public abstract class APart extends AEntityF_Multipart<JSONPart> {
     @Override
     public void attack(Damage damage) {
         //Check if we can be removed by this attack.
-        if (!placementDefinition.isPermanent && definition.generic.canBeRemovedByHand && damage.isHand) {
+        if (!isPermanent && definition.generic.canBeRemovedByHand && damage.isHand) {
             //Attacked a removable part, remove us to the player's inventory.
             //If the inventory can't fit us, don't remove us.
             IWrapperPlayer player = (IWrapperPlayer) damage.entityResponsible;
